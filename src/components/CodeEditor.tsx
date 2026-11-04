@@ -97,7 +97,8 @@ const marksField = StateField.define<{ marks: readonly CodeMark[]; set: Decorati
 /**
  * A code editor on CodeMirror for JSON, YAML or plain text: highlighted in the theme's colors, with
  * line numbers, bracket matching, undo, and Tab indenting (Escape then Tab leaves the editor).
- * `marks` washes whole lines by tone, as a check's findings. The value is controlled: a new
+ * `marks` washes whole lines by tone, as a check's findings. `wrap` folds long lines at the
+ * editor's edge, for prose such as a prompt. The value is controlled: a new
  * `value` replaces the document, and an edit is reported through `onChange`.
  */
 export function CodeEditor({
@@ -106,6 +107,7 @@ export function CodeEditor({
     language = 'text',
     readOnly = false,
     lineNumbers: numbered = true,
+    wrap = false,
     marks = [],
     placeholder,
     label,
@@ -117,6 +119,8 @@ export function CodeEditor({
     language?: CodeLanguage
     readOnly?: boolean
     lineNumbers?: boolean
+    /** Folds long lines at the editor's edge instead of scrolling sideways. */
+    wrap?: boolean
     marks?: readonly CodeMark[]
     placeholder?: string
     /** What the editor holds, for a screen reader. */
@@ -128,17 +132,23 @@ export function CodeEditor({
     const view = useRef<EditorView | null>(null)
     const report = useRef(onChange)
     report.current = onChange
-    const compartments = useRef({ language: new Compartment(), readOnly: new Compartment(), gutter: new Compartment() })
+    const compartments = useRef({
+        language: new Compartment(),
+        readOnly: new Compartment(),
+        gutter: new Compartment(),
+        wrap: new Compartment(),
+    })
 
     useEffect(() => {
         if (host.current === null) return
-        const { language: lang, readOnly: ro, gutter } = compartments.current
+        const { language: lang, readOnly: ro, gutter, wrap: folding } = compartments.current
         const editor = new EditorView({
             parent: host.current,
             state: EditorState.create({
                 doc: value,
                 extensions: [
                     gutter.of(numbered ? [lineNumbers(), highlightActiveLineGutter()] : []),
+                    folding.of(wrap ? EditorView.lineWrapping : []),
                     history(),
                     drawSelection(),
                     indentOnInput(),
@@ -188,6 +198,10 @@ export function CodeEditor({
             effects: compartments.current.gutter.reconfigure(numbered ? [lineNumbers(), highlightActiveLineGutter()] : []),
         })
     }, [numbered])
+
+    useEffect(() => {
+        view.current?.dispatch({ effects: compartments.current.wrap.reconfigure(wrap ? EditorView.lineWrapping : []) })
+    }, [wrap])
 
     useEffect(() => {
         view.current?.dispatch({ effects: setMarks.of(marks) })
