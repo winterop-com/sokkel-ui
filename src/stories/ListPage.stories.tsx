@@ -226,7 +226,7 @@ function ConnectionForm() {
                             <Textarea id="description" defaultValue="The DHIS2 play demo, for the tour pipelines." />
                         </Field>
                         <div className="lg:col-span-2">
-                            <SwitchField id="verify-tls" label="Verify TLS" explain="Refuse an instance whose certificate does not check." defaultChecked />
+                            <SwitchField id="verify-tls" label="Verify TLS" explain="Check that the server's HTTPS certificate is valid. Turn off only for a test server with a self-signed certificate." defaultChecked />
                         </div>
                         <div className="flex justify-end gap-2 lg:col-span-2">
                             <Button variant="ghost">Cancel</Button>
