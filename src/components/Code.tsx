@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 
 import { useHighlightedCode } from '../hooks/use-highlighted-code'
+import { hasLanguage } from '../lib/highlighter'
 import {
     CodeBlock,
     CodeBlockActions,
@@ -43,7 +44,7 @@ export function Code({
     const lines = useHighlightedCode(value, language)
     const marked = new Set(highlight)
     return (
-        <CodeBlock size={size} variant={variant} className={className}>
+        <CodeBlock size={size} variant={variant} className={className} data-plain={hasLanguage(language) ? undefined : ''}>
             {title !== undefined ? (
                 <CodeBlockHeader>
                     <CodeBlockTitle>{title}</CodeBlockTitle>

@@ -1,19 +1,8 @@
 import { Code2, Image } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
+import { useDark } from '../hooks/use-dark'
 import { CopyButton } from './CopyButton'
-
-/** Whether the document is in its dark scheme, following the `.dark` class as it changes. */
-function useDark(): boolean {
-    const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'))
-    useEffect(() => {
-        const root = document.documentElement
-        const observer = new MutationObserver(() => setDark(root.classList.contains('dark')))
-        observer.observe(root, { attributes: true, attributeFilter: ['class'] })
-        return () => observer.disconnect()
-    }, [])
-    return dark
-}
 
 let count = 0
 

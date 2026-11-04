@@ -26,6 +26,17 @@ test('every story looks the way it was approved', async ({ page, request }) => {
                     await page.goto(`/iframe.html?id=${story.id}&viewMode=story&globals=theme:${mode}`)
                     await page.locator('#storybook-root > *').first().waitFor()
                     await page.evaluate(() => document.fonts.ready)
+                    // Highlighting lands after the first paint; a block marked plain is never highlighted.
+                    await page
+                        .waitForFunction(
+                            () =>
+                                [
+                                    ...document.querySelectorAll('[data-slot=code-block]:not([data-plain]) [data-slot=code-block-code]'),
+                                ].every((code) => code.textContent === '' || code.querySelector('span[style]') !== null),
+                            null,
+                            { timeout: 5000 },
+                        )
+                        .catch(() => undefined)
                     await page.waitForTimeout(300)
                     await expect(page).toHaveScreenshot(`${story.id}--${name}-${mode}.png`)
                 })

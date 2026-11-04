@@ -8,7 +8,17 @@
     "trailingComma": "all",
     "sortTailwindcss": {
         "stylesheet": "src/styles/index.css",
-        "functions": ["cn", "cva"]
+        "functions": [
+            "cn",
+            "cva"
+        ]
     },
-    "ignorePatterns": ["dist", "storybook-static", "components.json", "src/styles/tokens.css", "e2e/__screenshots__"]
+    "ignorePatterns": [
+        "dist",
+        "storybook-static",
+        "components.json",
+        "src/styles/tokens.css",
+        "e2e/__screenshots__",
+        "src/styles/shadcn.css"
+    ]
 }
