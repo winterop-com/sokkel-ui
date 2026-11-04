@@ -18,12 +18,12 @@ import {
 const meta: Meta = { title: 'Primitives/Menus/Menubar' }
 export default meta
 
-function EditorMenubar({ open }: { open?: 'pipeline' | 'view' }) {
+function EditorMenubar({ open }: { open?: 'job' | 'view' }) {
     return (
         <div className="min-h-svh bg-background p-6 text-foreground">
             <Menubar className="w-fit">
-                <MenubarMenu defaultOpen={open === 'pipeline'}>
-                    <MenubarTrigger>Pipeline</MenubarTrigger>
+                <MenubarMenu defaultOpen={open === 'job'}>
+                    <MenubarTrigger>Job</MenubarTrigger>
                     <MenubarContent>
                         <MenubarItem>
                             Run now
@@ -35,14 +35,14 @@ function EditorMenubar({ open }: { open?: 'pipeline' | 'view' }) {
                         </MenubarItem>
                         <MenubarItem disabled>Publish</MenubarItem>
                         <MenubarSeparator />
-                        <MenubarItem variant="destructive">Delete weather-gate</MenubarItem>
+                        <MenubarItem variant="destructive">Delete import-orders</MenubarItem>
                     </MenubarContent>
                 </MenubarMenu>
                 <MenubarMenu>
-                    <MenubarTrigger>Blocks</MenubarTrigger>
+                    <MenubarTrigger>Steps</MenubarTrigger>
                     <MenubarContent>
-                        <MenubarItem>dhis2.import</MenubarItem>
-                        <MenubarItem>jq.transform</MenubarItem>
+                        <MenubarItem>rows.check</MenubarItem>
+                        <MenubarItem>rows.map</MenubarItem>
                     </MenubarContent>
                 </MenubarMenu>
                 <MenubarMenu defaultOpen={open === 'view'}>
@@ -66,5 +66,5 @@ function EditorMenubar({ open }: { open?: 'pipeline' | 'view' }) {
 }
 
 export const Closed: StoryObj = { render: () => <EditorMenubar /> }
-export const PipelineOpen: StoryObj = { render: () => <EditorMenubar open="pipeline" /> }
+export const JobOpen: StoryObj = { render: () => <EditorMenubar open="job" /> }
 export const ViewOpen: StoryObj = { render: () => <EditorMenubar open="view" /> }

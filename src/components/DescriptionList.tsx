@@ -12,7 +12,7 @@ export interface Description {
 }
 
 /**
- * Facts about one thing as terms and values: a run's trigger and duration, a connection's base
+ * Facts about one thing as terms and values: a run's state and duration, a service's base
  * URL. A value that is missing is drawn as a quiet dash, never as a blank. `columns={2}` sets the
  * pairs two to a row on wide screens; `stacked` puts each term above its value.
  */

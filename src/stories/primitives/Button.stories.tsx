@@ -63,7 +63,7 @@ export const Variants: StoryObj = {
                 </Labeled>
                 <Labeled label="icon inline-end">
                     <Button variant="outline">
-                        New pipeline
+                        New job
                         <Plus data-icon="inline-end" />
                     </Button>
                 </Labeled>
@@ -106,8 +106,8 @@ export const RunActions: StoryObj = {
             <div className="flex flex-col gap-4 rounded-lg border border-border p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex flex-col gap-1">
-                        <p className="text-sm font-medium">Weather gate</p>
-                        <p className="font-mono text-xs text-muted-foreground">weather-gate</p>
+                        <p className="text-sm font-medium">Import orders</p>
+                        <p className="font-mono text-xs text-muted-foreground">import-orders</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
                         <Button variant="ghost" size="sm">
@@ -121,13 +121,13 @@ export const RunActions: StoryObj = {
                             <Play data-icon="inline-start" />
                             Run now
                         </Button>
-                        <Button variant="destructive" size="icon-sm" aria-label="Delete pipeline">
+                        <Button variant="destructive" size="icon-sm" aria-label="Delete job">
                             <Trash2 />
                         </Button>
                     </div>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                    Last run failed at 2026-11-04 14:02 after 0.3s. The fetch step could not reach dhis2-play.
+                    Last run failed at 2026-11-04 14:02 after 0.3s. The fetch step could not reach api.example.org.
                 </p>
             </div>
         </Ground>

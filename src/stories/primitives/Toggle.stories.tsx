@@ -99,7 +99,7 @@ export const LogToolbar: StoryObj = {
                 </div>
                 <pre className="overflow-x-auto p-3 font-mono text-xs whitespace-pre-wrap text-muted-foreground">
                     {`2026-11-04 14:02:11 fetch    started
-2026-11-04 14:02:11 fetch    GET https://play.dhis2.org/api/dataValueSets
+2026-11-04 14:02:11 fetch    GET https://api.example.org/v1/orders?month=2026-10
 2026-11-04 14:02:11 fetch    failed after 0.3s: connection refused`}
                 </pre>
             </div>

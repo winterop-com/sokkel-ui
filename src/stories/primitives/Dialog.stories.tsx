@@ -24,10 +24,10 @@ function Closed() {
         <div className="min-h-svh bg-background p-6 text-foreground">
             <div className="flex flex-wrap gap-3">
                 <Dialog>
-                    <DialogTrigger render={<Button variant="outline" />}>Rename pipeline</DialogTrigger>
+                    <DialogTrigger render={<Button variant="outline" />}>Rename job</DialogTrigger>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>Rename pipeline</DialogTitle>
+                            <DialogTitle>Rename job</DialogTitle>
                         </DialogHeader>
                     </DialogContent>
                 </Dialog>
@@ -40,15 +40,15 @@ function Open() {
     return (
         <div className="min-h-svh bg-background p-6 text-foreground">
             <Dialog defaultOpen>
-                <DialogTrigger render={<Button variant="outline" />}>Rename pipeline</DialogTrigger>
+                <DialogTrigger render={<Button variant="outline" />}>Rename job</DialogTrigger>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Rename pipeline</DialogTitle>
-                        <DialogDescription>The name is a title only. The code weather-gate stays as it is.</DialogDescription>
+                        <DialogTitle>Rename job</DialogTitle>
+                        <DialogDescription>The name is a title only. The code import-orders stays as it is.</DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-2">
-                        <Label htmlFor="pipeline-name">Name</Label>
-                        <Input id="pipeline-name" defaultValue="Weather gate" />
+                        <Label htmlFor="job-name">Name</Label>
+                        <Input id="job-name" defaultValue="Import orders" />
                     </div>
                     <DialogFooter showCloseButton>
                         <Button>Save</Button>
@@ -65,8 +65,8 @@ function WithoutCloseButton() {
             <Dialog defaultOpen>
                 <DialogContent showCloseButton={false}>
                     <DialogHeader>
-                        <DialogTitle>Connection saved</DialogTitle>
-                        <DialogDescription>dhis2-play is ready for blocks to use.</DialogDescription>
+                        <DialogTitle>Service saved</DialogTitle>
+                        <DialogDescription>api is ready for jobs to use.</DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
                         <DialogClose render={<Button />}>Done</DialogClose>
@@ -77,7 +77,7 @@ function WithoutCloseButton() {
     )
 }
 
-function RunPipeline() {
+function RunJob() {
     const [open, setOpen] = useState(true)
     return (
         <div className="min-h-svh bg-background p-6 text-foreground">
@@ -88,18 +88,18 @@ function RunPipeline() {
                 </DialogTrigger>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Run weather-gate</DialogTitle>
+                        <DialogTitle>Run import-orders</DialogTitle>
                         <DialogDescription>
                             The run starts now, outside its schedule. The last run succeeded at 2026-11-04 14:02 in 1.2s.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-2">
-                        <Label htmlFor="period">Period</Label>
-                        <Input id="period" defaultValue="2026-10" />
+                        <Label htmlFor="month">Month</Label>
+                        <Input id="month" defaultValue="2026-10" />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="station">Station</Label>
-                        <Input id="station" defaultValue="oslo-blindern" />
+                        <Label htmlFor="file">File</Label>
+                        <Input id="file" defaultValue="orders-2026-10.csv" />
                     </div>
                     <DialogFooter>
                         <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
@@ -117,4 +117,4 @@ function RunPipeline() {
 export const Trigger: StoryObj = { render: () => <Closed /> }
 export const Opened: StoryObj = { render: () => <Open /> }
 export const NoCloseButton: StoryObj = { render: () => <WithoutCloseButton /> }
-export const RunNow: StoryObj = { render: () => <RunPipeline /> }
+export const RunNow: StoryObj = { render: () => <RunJob /> }

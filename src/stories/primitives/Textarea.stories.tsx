@@ -30,16 +30,16 @@ export const Variants: StoryObj = {
         <Ground>
             <div className="flex flex-wrap gap-6">
                 <Labeled label="empty">
-                    <Textarea aria-label="Description" placeholder="What this pipeline does, in a sentence or two." />
+                    <Textarea aria-label="Description" placeholder="What this job does, in a sentence or two." />
                 </Labeled>
                 <Labeled label="filled">
                     <Textarea
                         aria-label="Description"
-                        defaultValue="Fetches daily station readings, gates on the schema, and stores the rows that pass."
+                        defaultValue="Fetches the day's orders, validates each row, and uploads the rows that pass."
                     />
                 </Labeled>
                 <Labeled label="mono">
-                    <Textarea aria-label="Filter" className="font-mono" defaultValue={'.rows\n| map(select(.value > 0))\n| length'} />
+                    <Textarea aria-label="Filter" className="font-mono" defaultValue={'.rows\n| map(select(.amount > 0))\n| length'} />
                 </Labeled>
             </div>
         </Ground>
@@ -51,10 +51,10 @@ export const States: StoryObj = {
         <Ground>
             <div className="flex flex-wrap gap-6">
                 <Labeled label="disabled">
-                    <Textarea aria-label="Description" disabled defaultValue="Managed by the dhis2 pack." />
+                    <Textarea aria-label="Description" disabled defaultValue="Managed by the harbor project." />
                 </Labeled>
                 <Labeled label="invalid">
-                    <Textarea aria-label="Filter" className="font-mono" aria-invalid defaultValue=".rows | map(select(.value >" />
+                    <Textarea aria-label="Filter" className="font-mono" aria-invalid defaultValue=".rows | map(select(.amount >" />
                 </Labeled>
                 <Labeled label="read only">
                     <Textarea aria-label="Description" readOnly defaultValue="Written by the run; it cannot be changed." />
@@ -71,7 +71,7 @@ export const RunNote: StoryObj = {
                 <Label htmlFor="note">Note on run 01a1a5c2</Label>
                 <Textarea
                     id="note"
-                    defaultValue="Failed at 2026-11-04 14:02 after 0.3s: dhis2-play refused the connection during its maintenance window. Retried by hand at 14:20."
+                    defaultValue="Failed at 2026-11-04 14:02 after 0.3s: api refused the request during its maintenance window. Retried by hand at 14:20."
                 />
                 <p className="text-xs text-muted-foreground">Markdown is fine. Everyone who can see the run sees the note.</p>
                 <div className="flex justify-end">

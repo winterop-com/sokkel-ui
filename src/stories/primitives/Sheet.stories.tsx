@@ -42,8 +42,8 @@ function Closed() {
 
 const STEPS: [string, Status, string][] = [
     ['fetch', 'succeeded', '0.8s'],
-    ['gate', 'succeeded', '0.1s'],
-    ['store', 'failed', '0.3s'],
+    ['validate', 'succeeded', '0.1s'],
+    ['upload', 'failed', '0.3s'],
 ]
 
 function RunDetail() {
@@ -53,7 +53,7 @@ function RunDetail() {
                 <SheetContent side="right">
                     <SheetHeader>
                         <SheetTitle>Run 01a1a5c2</SheetTitle>
-                        <SheetDescription>weather-gate, started 2026-11-04 14:02 by nightly-sync.</SheetDescription>
+                        <SheetDescription>import-orders, started 2026-11-04 14:02 by nightly-sync.</SheetDescription>
                     </SheetHeader>
                     <div className="flex flex-col gap-2 px-4">
                         {STEPS.map(([step, status, duration]) => (
@@ -65,9 +65,7 @@ function RunDetail() {
                                 </span>
                             </div>
                         ))}
-                        <p className="text-sm text-muted-foreground">
-                            store refused the batch: the schema readings-v2 has no field humidity.
-                        </p>
+                        <p className="text-sm text-muted-foreground">upload was refused: the API token cannot write to harbor-exports.</p>
                     </div>
                     <SheetFooter>
                         <Button>Run again</Button>
@@ -85,11 +83,11 @@ function Bottom() {
             <Sheet defaultOpen>
                 <SheetContent side="bottom">
                     <SheetHeader>
-                        <SheetTitle>Blocks</SheetTitle>
-                        <SheetDescription>Pick a block to add after gate.</SheetDescription>
+                        <SheetTitle>Steps</SheetTitle>
+                        <SheetDescription>Pick a step to add after validate.</SheetDescription>
                     </SheetHeader>
                     <div className="flex flex-wrap gap-2 px-4 pb-4">
-                        {['dhis2.import', 'parquet.write', 'jq.transform', 'http.post'].map((code) => (
+                        {['bucket.put', 'parquet.write', 'rows.map', 'http.post'].map((code) => (
                             <Button key={code} variant="outline" size="sm" className="font-mono">
                                 {code}
                             </Button>

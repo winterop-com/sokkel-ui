@@ -1,16 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import {
-    Blocks,
     BookOpen,
-    Cable,
+    CalendarClock,
     ChevronsUpDownIcon,
-    FileJson,
+    FileText,
     MoreHorizontalIcon,
     Play,
     PlusIcon,
+    Server,
     Settings,
+    Webhook,
     Workflow,
-    Zap,
     type LucideIcon,
 } from 'lucide-react'
 import type { ReactNode } from 'react'
@@ -62,39 +62,39 @@ const GROUPS: { title: string; entries: Entry[] }[] = [
         title: 'Operate',
         entries: [
             { label: 'Runs', icon: Play, badge: '2' },
-            { label: 'Triggers', icon: Zap },
+            { label: 'Schedules', icon: CalendarClock },
         ],
     },
     {
         title: 'Build',
         entries: [
-            { label: 'Pipelines', icon: Workflow, active: true },
-            { label: 'Connections', icon: Cable },
-            { label: 'Schemas', icon: FileJson },
+            { label: 'Jobs', icon: Workflow, active: true },
+            { label: 'Services', icon: Server },
+            { label: 'Webhooks', icon: Webhook },
         ],
     },
     {
         title: 'Reference',
         entries: [
-            { label: 'Blocks', icon: Blocks },
+            { label: 'Docs', icon: FileText },
             { label: 'Examples', icon: BookOpen },
         ],
     },
 ]
 
-const PIPELINES = ['weather-gate', 'dhis2-play', 'fhir-tour', 'connections-tour']
+const JOBS = ['import-orders', 'nightly-export', 'sync-inventory', 'rebuild-index']
 
 function Workspace() {
     return (
         <SidebarMenu>
             <SidebarMenuItem>
-                <SidebarMenuButton size="lg" tooltip="dirigent">
+                <SidebarMenuButton size="lg" tooltip="atlas">
                     <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
                         <Workflow />
                     </span>
                     <span className="flex min-w-0 flex-col leading-tight">
-                        <span className="truncate font-medium">dirigent</span>
-                        <span className="truncate font-mono text-xs text-muted-foreground">dhis2-play</span>
+                        <span className="truncate font-medium">atlas</span>
+                        <span className="truncate font-mono text-xs text-muted-foreground">api.example.org</span>
                     </span>
                     <ChevronsUpDownIcon className="ml-auto" />
                 </SidebarMenuButton>
@@ -110,7 +110,7 @@ function Navigation() {
                 <SidebarGroup key={group.title}>
                     <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
                     {group.title === 'Build' ? (
-                        <SidebarGroupAction title="New pipeline">
+                        <SidebarGroupAction title="New job">
                             <PlusIcon />
                         </SidebarGroupAction>
                     ) : null}
@@ -125,9 +125,9 @@ function Navigation() {
                                     {entry.badge ? <SidebarMenuBadge>{entry.badge}</SidebarMenuBadge> : null}
                                     {entry.active ? (
                                         <SidebarMenuSub>
-                                            {PIPELINES.map((code) => (
+                                            {JOBS.map((code) => (
                                                 <SidebarMenuSubItem key={code}>
-                                                    <SidebarMenuSubButton href="#" isActive={code === 'weather-gate'}>
+                                                    <SidebarMenuSubButton href="#" isActive={code === 'import-orders'}>
                                                         <span className="font-mono">{code}</span>
                                                     </SidebarMenuSubButton>
                                                 </SidebarMenuSubItem>
@@ -154,13 +154,13 @@ function Account() {
                 </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-                <SidebarMenuButton size="lg" tooltip="admin">
+                <SidebarMenuButton size="lg" tooltip="ada">
                     <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-xs font-medium">
-                        AD
+                        AL
                     </span>
                     <span className="flex min-w-0 flex-col leading-tight">
-                        <span className="truncate font-medium">Admin</span>
-                        <span className="truncate font-mono text-xs text-muted-foreground">admin</span>
+                        <span className="truncate font-medium">Ada Lovelace</span>
+                        <span className="truncate font-mono text-xs text-muted-foreground">ada</span>
                     </span>
                 </SidebarMenuButton>
                 <SidebarMenuAction aria-label="Account menu">
@@ -206,14 +206,14 @@ function Frame({
             <SidebarInset>
                 <header className="flex h-12 items-center gap-2 border-b border-border px-4">
                     <SidebarTrigger />
-                    <span className="text-sm text-muted-foreground">Pipelines</span>
+                    <span className="text-sm text-muted-foreground">Jobs</span>
                     <span className="text-sm text-muted-foreground">/</span>
-                    <span className="font-mono text-sm">weather-gate</span>
+                    <span className="font-mono text-sm">import-orders</span>
                 </header>
                 <div className="flex max-w-[1100px] flex-col gap-4 p-6">
                     <div>
-                        <h1 className="text-lg font-medium">Weather gate</h1>
-                        <p className="font-mono text-xs text-muted-foreground">weather-gate</p>
+                        <h1 className="text-lg font-medium">Import orders</h1>
+                        <p className="font-mono text-xs text-muted-foreground">import-orders</p>
                     </div>
                     <div className="overflow-x-auto rounded-lg border border-border">
                         <table className="w-full text-sm">
@@ -310,12 +310,12 @@ export const Variants: StoryObj = {
                     <Static>
                         <SidebarContent>
                             <SidebarGroup>
-                                <SidebarGroupLabel>Connections</SidebarGroupLabel>
+                                <SidebarGroupLabel>Services</SidebarGroupLabel>
                                 <SidebarMenu>
                                     <SidebarMenuItem>
                                         <SidebarMenuButton disabled>
-                                            <Cable />
-                                            <span>dhis2-prod</span>
+                                            <Server />
+                                            <span>scheduler</span>
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>
                                     {[0, 1, 2].map((at) => (

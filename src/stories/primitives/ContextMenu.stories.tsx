@@ -24,11 +24,11 @@ function StepMenu({ open }: { open?: boolean }) {
         <div className="min-h-svh bg-background p-6 text-foreground">
             <ContextMenu defaultOpen={open}>
                 <ContextMenuTrigger className="flex h-40 max-w-md items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground">
-                    Right-click the step gate
+                    Right-click the step validate
                 </ContextMenuTrigger>
                 <ContextMenuContent className="w-52">
                     <ContextMenuGroup>
-                        <ContextMenuLabel>gate</ContextMenuLabel>
+                        <ContextMenuLabel>validate</ContextMenuLabel>
                         <ContextMenuItem>
                             <Play />
                             Run from here
@@ -46,8 +46,8 @@ function StepMenu({ open }: { open?: boolean }) {
                     <ContextMenuSub>
                         <ContextMenuSubTrigger>Insert after</ContextMenuSubTrigger>
                         <ContextMenuSubContent>
-                            <ContextMenuItem>jq.transform</ContextMenuItem>
-                            <ContextMenuItem>parquet.write</ContextMenuItem>
+                            <ContextMenuItem>rows.map</ContextMenuItem>
+                            <ContextMenuItem>bucket.put</ContextMenuItem>
                         </ContextMenuSubContent>
                     </ContextMenuSub>
                     <ContextMenuCheckboxItem checked>Stop the run on failure</ContextMenuCheckboxItem>

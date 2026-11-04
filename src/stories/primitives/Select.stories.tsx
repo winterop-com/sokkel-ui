@@ -96,8 +96,8 @@ export const States: StoryObj = {
                 </Labeled>
                 <Labeled label="empty">
                     <Select items={[]}>
-                        <SelectTrigger className="w-40" aria-label="Schema">
-                            <SelectValue placeholder="No schemas yet" />
+                        <SelectTrigger className="w-40" aria-label="Webhook">
+                            <SelectValue placeholder="No webhooks yet" />
                         </SelectTrigger>
                         <SelectContent />
                     </Select>
@@ -117,26 +117,26 @@ export const Open: StoryObj = {
     ),
 }
 
-const CONNECTIONS = [
-    { value: 'dhis2-play', label: 'dhis2-play', kind: 'dhis2' },
-    { value: 'dhis2-prod', label: 'dhis2-prod', kind: 'dhis2' },
-    { value: 'chap-local', label: 'chap-local', kind: 'chap' },
-    { value: 's3-archive', label: 's3-archive', kind: 's3' },
+const SOURCES = [
+    { value: 'api', label: 'api', kind: 'service' },
+    { value: 'worker', label: 'worker', kind: 'service' },
+    { value: 'orders-feed', label: 'orders-feed', kind: 'webhook' },
+    { value: 'harbor-exports', label: 'harbor-exports', kind: 'bucket' },
 ]
 
-export const StepConnection: StoryObj = {
+export const StepSource: StoryObj = {
     render: () => (
         <Ground>
             <div className="flex h-96 max-w-md flex-col gap-2">
-                <p className="text-sm font-medium">Connection for step fetch</p>
-                <Select items={CONNECTIONS} defaultValue="dhis2-play" defaultOpen>
-                    <SelectTrigger className="w-full" aria-label="Connection">
+                <p className="text-sm font-medium">Source for step fetch</p>
+                <Select items={SOURCES} defaultValue="api" defaultOpen>
+                    <SelectTrigger className="w-full" aria-label="Source">
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent alignItemWithTrigger={false}>
                         <SelectGroup>
-                            <SelectLabel>DHIS2</SelectLabel>
-                            {CONNECTIONS.filter((c) => c.kind === 'dhis2').map((c) => (
+                            <SelectLabel>Services</SelectLabel>
+                            {SOURCES.filter((c) => c.kind === 'service').map((c) => (
                                 <SelectItem key={c.value} value={c.value}>
                                     <span className="font-mono">{c.label}</span>
                                 </SelectItem>
@@ -145,7 +145,7 @@ export const StepConnection: StoryObj = {
                         <SelectSeparator />
                         <SelectGroup>
                             <SelectLabel>Other</SelectLabel>
-                            {CONNECTIONS.filter((c) => c.kind !== 'dhis2').map((c) => (
+                            {SOURCES.filter((c) => c.kind !== 'service').map((c) => (
                                 <SelectItem key={c.value} value={c.value}>
                                     <span className="font-mono">{c.label}</span>
                                     <span className="text-xs text-muted-foreground">{c.kind}</span>
@@ -154,7 +154,7 @@ export const StepConnection: StoryObj = {
                         </SelectGroup>
                         <SelectSeparator />
                         <SelectItem value="disabled" disabled>
-                            fhir-sandbox (unreachable)
+                            scheduler (unreachable)
                         </SelectItem>
                     </SelectContent>
                 </Select>

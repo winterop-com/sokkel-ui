@@ -43,7 +43,7 @@ export function diffLines(before: string, after: string): DiffLine[] {
 
 /**
  * Two versions of a text as one list of lines, the removed ones marked `-` and the added ones `+`:
- * a pipeline before and after an edit, a schema against the one it replaces. A count of each heads
+ * a job definition before and after an edit, a config against the one it replaces. A count of each heads
  * it beside the title.
  */
 export function DiffView({

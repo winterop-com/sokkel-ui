@@ -59,10 +59,10 @@ export const Variants: StoryObj = {
                         <TraceCollapsible>
                             <TraceCollapsibleTrigger>
                                 <TraceLine>
-                                    <TraceTitle>Searched 3 connections</TraceTitle>
+                                    <TraceTitle>Searched 3 services</TraceTitle>
                                 </TraceLine>
                             </TraceCollapsibleTrigger>
-                            <TraceCollapsibleContent>dhis2-play, met-no, fhir-sandbox</TraceCollapsibleContent>
+                            <TraceCollapsibleContent>api, worker, scheduler</TraceCollapsibleContent>
                         </TraceCollapsible>
                     </Trace>
                 </div>
@@ -72,10 +72,10 @@ export const Variants: StoryObj = {
                         <TraceCollapsible defaultOpen>
                             <TraceCollapsibleTrigger>
                                 <TraceLine>
-                                    <TraceTitle>Searched 3 connections</TraceTitle>
+                                    <TraceTitle>Searched 3 services</TraceTitle>
                                 </TraceLine>
                             </TraceCollapsibleTrigger>
-                            <TraceCollapsibleContent>dhis2-play, met-no, fhir-sandbox</TraceCollapsibleContent>
+                            <TraceCollapsibleContent>api, worker, scheduler</TraceCollapsibleContent>
                         </TraceCollapsible>
                     </Trace>
                 </div>
@@ -101,7 +101,7 @@ export const States: StoryObj = {
                         <Trace>
                             <TraceLine status={status}>
                                 <TraceIcon>{status === 'error' ? <TriangleAlertIcon /> : <DatabaseIcon />}</TraceIcon>
-                                <TraceTitle>Read the log of block gate</TraceTitle>
+                                <TraceTitle>Read the log of step validate</TraceTitle>
                                 {status === undefined || status === 'error' ? <TraceDescription>0.1s</TraceDescription> : null}
                             </TraceLine>
                         </Trace>
@@ -121,7 +121,7 @@ export const ToolCalls: StoryObj = {
                         <TraceIcon>
                             <SearchIcon />
                         </TraceIcon>
-                        <TraceTitle>Found the last failed run of weather-gate</TraceTitle>
+                        <TraceTitle>Found the last failed run of import-orders</TraceTitle>
                         <TraceDescription>0.1s</TraceDescription>
                     </TraceLine>
                     <TraceCollapsible defaultOpen>
@@ -141,7 +141,7 @@ export const ToolCalls: StoryObj = {
                                 <dt>state</dt>
                                 <dd className="font-mono">failed</dd>
                                 <dt>step</dt>
-                                <dd className="font-mono">gate</dd>
+                                <dd className="font-mono">validate</dd>
                                 <dt>took</dt>
                                 <dd className="font-mono">0.3s</dd>
                             </dl>
@@ -153,13 +153,13 @@ export const ToolCalls: StoryObj = {
                                 <TraceIcon>
                                     <TriangleAlertIcon />
                                 </TraceIcon>
-                                <TraceTitle>Read the log of block gate</TraceTitle>
+                                <TraceTitle>Read the log of step validate</TraceTitle>
                                 <TraceDescription>0.1s</TraceDescription>
                             </TraceLine>
                         </TraceCollapsibleTrigger>
                         <TraceCollapsibleContent>
                             <p className="font-mono text-xs">
-                                14:02:07 gate failed: .properties.timeseries | length &gt; 0 evaluated to false
+                                14:02:07 validate failed: 37 of 2,184 rows have an amount that is not a number
                             </p>
                         </TraceCollapsibleContent>
                     </TraceCollapsible>
@@ -167,7 +167,7 @@ export const ToolCalls: StoryObj = {
                         <TraceIcon>
                             <CheckIcon />
                         </TraceIcon>
-                        <TraceTitle>Read pipelines/weather-gate.yaml</TraceTitle>
+                        <TraceTitle>Read jobs/import-orders.yaml</TraceTitle>
                         <TraceDescription>0.1s</TraceDescription>
                     </TraceLine>
                 </Trace>

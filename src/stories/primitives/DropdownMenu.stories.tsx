@@ -27,7 +27,7 @@ function Closed() {
     return (
         <div className="min-h-svh bg-background p-6 text-foreground">
             <DropdownMenu>
-                <DropdownMenuTrigger render={<Button variant="outline" size="icon" aria-label="Pipeline actions" />}>
+                <DropdownMenuTrigger render={<Button variant="outline" size="icon" aria-label="Job actions" />}>
                     <Ellipsis />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
@@ -39,7 +39,7 @@ function Closed() {
 }
 
 function Variants() {
-    const [columns, setColumns] = useState({ duration: true, trigger: false })
+    const [columns, setColumns] = useState({ duration: true, startedBy: false })
     const [sort, setSort] = useState('newest')
     return (
         <div className="min-h-svh bg-background p-6 text-foreground">
@@ -55,10 +55,10 @@ function Variants() {
                             Duration
                         </DropdownMenuCheckboxItem>
                         <DropdownMenuCheckboxItem
-                            checked={columns.trigger}
-                            onCheckedChange={(trigger) => setColumns({ ...columns, trigger })}
+                            checked={columns.startedBy}
+                            onCheckedChange={(startedBy) => setColumns({ ...columns, startedBy })}
                         >
-                            Trigger
+                            Started by
                         </DropdownMenuCheckboxItem>
                     </DropdownMenuGroup>
                     <DropdownMenuSeparator />
@@ -85,16 +85,16 @@ function Variants() {
     )
 }
 
-function PipelineActions() {
+function JobActions() {
     return (
         <div className="min-h-svh bg-background p-6 text-foreground">
             <div className="flex max-w-xl flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-3">
                 <div className="flex flex-col">
-                    <span className="font-medium">Weather gate</span>
-                    <span className="font-mono text-xs text-muted-foreground">weather-gate</span>
+                    <span className="font-medium">Import orders</span>
+                    <span className="font-mono text-xs text-muted-foreground">import-orders</span>
                 </div>
                 <DropdownMenu defaultOpen>
-                    <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" aria-label="Pipeline actions" />}>
+                    <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" aria-label="Job actions" />}>
                         <Ellipsis />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-52">
@@ -135,4 +135,4 @@ function PipelineActions() {
 
 export const Trigger: StoryObj = { render: () => <Closed /> }
 export const Items: StoryObj = { render: () => <Variants /> }
-export const RowActions: StoryObj = { render: () => <PipelineActions /> }
+export const RowActions: StoryObj = { render: () => <JobActions /> }

@@ -31,7 +31,7 @@ export const Variants: StoryObj = {
                     <div key={variant} className="flex flex-col gap-1.5">
                         <Caption>{variant}</Caption>
                         <Bubble variant={variant}>
-                            <BubbleContent>Run 01a1a5c2 of weather-gate failed at the gate step after 0.3s.</BubbleContent>
+                            <BubbleContent>Run 01a1a5c2 of import-orders failed at the validate step after 0.3s.</BubbleContent>
                         </Bubble>
                     </div>
                 ))}
@@ -44,7 +44,7 @@ export const Variants: StoryObj = {
                 <div className="flex flex-col gap-1.5 pb-4">
                     <Caption>with reactions</Caption>
                     <Bubble variant="muted">
-                        <BubbleContent>The connection dhis2-play is healthy again.</BubbleContent>
+                        <BubbleContent>The service api is healthy again.</BubbleContent>
                         <BubbleReactions>
                             <CheckIcon className="size-3.5" />
                         </BubbleReactions>
@@ -65,7 +65,7 @@ export const States: StoryObj = {
                         <BubbleContent render={<button type="button" />}>
                             <span className="inline-flex items-center gap-1.5">
                                 <RotateCcwIcon className="size-3.5" />
-                                Rerun weather-gate
+                                Rerun import-orders
                             </span>
                         </BubbleContent>
                     </Bubble>
@@ -80,7 +80,7 @@ export const States: StoryObj = {
                     <Caption>a long unbroken value</Caption>
                     <Bubble variant="muted">
                         <BubbleContent>
-                            connection-url=https://play.dhis2.org/40.5.0/api/dataValueSets?dataSet=BfMAe6Itzgt&amp;period=202611&amp;orgUnit=ImspTQPwCqd
+                            source-url=https://api.example.org/v1/orders/export?project=atlas&amp;month=2026-10&amp;after=ord-10412
                         </BubbleContent>
                     </Bubble>
                 </div>
@@ -97,7 +97,7 @@ export const Exchange: StoryObj = {
                     <MessageContent>
                         <BubbleGroup>
                             <Bubble align="end">
-                                <BubbleContent>Is the trigger on weather-gate still active?</BubbleContent>
+                                <BubbleContent>Is the schedule on nightly-export still active?</BubbleContent>
                             </Bubble>
                             <Bubble align="end">
                                 <BubbleContent>It ran at 14:02 and I did not expect that.</BubbleContent>
@@ -109,10 +109,10 @@ export const Exchange: StoryObj = {
                     <MessageContent>
                         <BubbleGroup>
                             <Bubble variant="muted">
-                                <BubbleContent>Yes. The trigger every-hour fires at minute 2, so the next run is at 15:02.</BubbleContent>
+                                <BubbleContent>Yes. The schedule every-hour fires at minute 2, so the next run is at 15:02.</BubbleContent>
                             </Bubble>
                             <Bubble variant="tinted">
-                                <BubbleContent>Pause it from the Triggers page, or say so here and I will.</BubbleContent>
+                                <BubbleContent>Pause it from the Schedules page, or say so here and I will.</BubbleContent>
                             </Bubble>
                         </BubbleGroup>
                     </MessageContent>

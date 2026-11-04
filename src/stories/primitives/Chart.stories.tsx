@@ -27,7 +27,7 @@ function Caption({ children }: { children: ReactNode }) {
     return <p className="text-xs text-muted-foreground">{children}</p>
 }
 
-/** Seconds a run of weather-gate took, per day, from 2026-10-22 to 2026-11-04. */
+/** Seconds a run of sync-inventory took, per day, from 2026-10-22 to 2026-11-04. */
 const DURATIONS = [
     { day: '10-22', median: 1.2, p95: 1.9, runs: 24, failed: 0 },
     { day: '10-23', median: 1.3, p95: 2.1, runs: 24, failed: 1 },
@@ -170,7 +170,7 @@ export const RunDurations: StoryObj = {
                 <header className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
                     <div>
                         <h2 className="text-sm font-medium">Run durations</h2>
-                        <p className="font-mono text-xs text-muted-foreground">weather-gate</p>
+                        <p className="font-mono text-xs text-muted-foreground">sync-inventory</p>
                     </div>
                     <p className="text-xs text-muted-foreground">2026-10-22 to 2026-11-04, 14 days, 324 runs</p>
                 </header>

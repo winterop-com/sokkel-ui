@@ -25,15 +25,15 @@ function ReadStates() {
             <Caption>loading</Caption>
             <PageState loading>{null}</PageState>
             <Caption>refused, with the server's diagnostic</Caption>
-            <PageState loading={false} status={403} error="The token for `dhis2-play` may read `dataValueSets` but not `analytics`.">
+            <PageState loading={false} status={403} error="The token for `api` may read `orders` but not `invoices`.">
                 {null}
             </PageState>
             <Caption>missing (404)</Caption>
-            <PageState loading={false} status={404} error="No pipeline has the code `weather-gaet`.">
+            <PageState loading={false} status={404} error="No job has the code `import-ordres`.">
                 {null}
             </PageState>
             <Caption>unreachable</Caption>
-            <PageState loading={false} status="unreachable" error="No answer from `https://play.dhis2.org` after 10s.">
+            <PageState loading={false} status="unreachable" error="No answer from `https://api.example.org` after 10s.">
                 {null}
             </PageState>
             <Caption>empty, one line</Caption>
@@ -46,10 +46,10 @@ function ReadStates() {
                 empty
                 emptyRender={
                     <div className="flex flex-col items-start gap-3 rounded-surface border border-dashed border-border-strong px-4 py-6">
-                        <p className="text-sm">No connections.</p>
+                        <p className="text-sm">No services.</p>
                         <Button size="sm">
                             <Plus aria-hidden />
-                            New connection
+                            New service
                         </Button>
                     </div>
                 }
@@ -66,15 +66,15 @@ function Unfolding() {
             <Unfoldable heading="Inputs" aside="3 bindings" defaultOpen>
                 <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
                     <dt className="text-muted-foreground">source</dt>
-                    <dd className="font-mono">dhis2-play</dd>
-                    <dt className="text-muted-foreground">period</dt>
-                    <dd className="font-mono">LAST_12_MONTHS</dd>
-                    <dt className="text-muted-foreground">org unit</dt>
-                    <dd className="font-mono">ImspTQPwCqd</dd>
+                    <dd className="font-mono">orders-2026-10.csv</dd>
+                    <dt className="text-muted-foreground">month</dt>
+                    <dd className="font-mono">2026-10</dd>
+                    <dt className="text-muted-foreground">project</dt>
+                    <dd className="font-mono">atlas</dd>
                 </dl>
             </Unfoldable>
             <Unfoldable heading="Outputs" aside="1 table">
-                <p className="text-sm">readings.parquet</p>
+                <p className="text-sm">orders.parquet</p>
             </Unfoldable>
             <Unfoldable heading="Retry policy">
                 <p className="text-sm">Three tries, 30s apart.</p>
@@ -90,7 +90,7 @@ function Prose() {
     return (
         <Ground>
             <p className="text-sm">
-                <ProseText text="Set `base_url` on the connection, then run `dg check` again." />
+                <ProseText text="Set `base_url` on the service, then run `jobs check` again." />
             </p>
             <p className="text-sm text-muted-foreground">
                 <ProseText text="The step `fetch` wrote 0 rows, so `validate` was skipped." />

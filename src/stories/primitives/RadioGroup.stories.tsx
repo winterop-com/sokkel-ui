@@ -100,8 +100,8 @@ export const StepFailurePolicy: StoryObj = {
     render: () => (
         <Ground>
             <FieldSet className="max-w-md">
-                <FieldLegend>When the step store fails</FieldLegend>
-                <FieldDescription>Applies to every run of weather-gate.</FieldDescription>
+                <FieldLegend>When the step upload fails</FieldLegend>
+                <FieldDescription>Applies to every run of nightly-export.</FieldDescription>
                 <RadioGroup defaultValue="retry">
                     {ON_FAILURE.map((choice) => (
                         <FieldLabel key={choice.value} htmlFor={`p-${choice.value}`}>

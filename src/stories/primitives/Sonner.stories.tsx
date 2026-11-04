@@ -27,19 +27,20 @@ function Toasts({ toasts, expand }: { toasts: Shown[]; expand?: boolean }) {
 const forever = { duration: Infinity }
 
 const KINDS: Shown[] = [
-    { id: 'plain', show: (id) => toast('Schema saved', { ...forever, id, description: 'readings-v2 is checked on the next run.' }) },
+    { id: 'plain', show: (id) => toast('Rules saved', { ...forever, id, description: 'The orders rules apply from the next run.' }) },
     {
         id: 'success',
-        show: (id) => toast.success('weather-gate succeeded', { ...forever, id, description: 'Run 01a1a5c6 finished in 1.2s.' }),
+        show: (id) => toast.success('nightly-export succeeded', { ...forever, id, description: 'Run 01a1a5c6 finished in 1.2s.' }),
     },
     {
         id: 'info',
-        show: (id) => toast.info('Trigger paused', { ...forever, id, description: 'nightly-sync starts no runs until resumed.' }),
+        show: (id) => toast.info('Schedule paused', { ...forever, id, description: 'nightly-sync starts no runs until resumed.' }),
     },
-    { id: 'warning', show: (id) => toast.warning('Connection slow', { ...forever, id, description: 'dhis2-play answered in 4.8s.' }) },
+    { id: 'warning', show: (id) => toast.warning('Service slow', { ...forever, id, description: 'api answered in 4.8s.' }) },
     {
         id: 'error',
-        show: (id) => toast.error('weather-gate failed', { ...forever, id, description: 'store refused the batch at 2026-11-04 14:02.' }),
+        show: (id) =>
+            toast.error('import-orders failed', { ...forever, id, description: 'validate rejected 37 rows at 2026-11-04 14:02.' }),
     },
 ]
 
@@ -47,17 +48,17 @@ const FAILED: Shown[] = [
     {
         id: 'failed',
         show: (id) =>
-            toast.error('weather-gate failed', {
+            toast.error('import-orders failed', {
                 ...forever,
                 id,
-                description: 'Run 01a1a5c2 stopped at store after 0.3s.',
+                description: 'Run 01a1a5c2 stopped at validate after 0.3s.',
                 action: { label: 'View run', onClick: () => {} },
             }),
     },
 ]
 
 const RUNNING: Shown[] = [
-    { id: 'running', show: (id) => toast.loading('Running weather-gate', { ...forever, id, description: 'Step 2 of 3, gate.' }) },
+    { id: 'running', show: (id) => toast.loading('Running import-orders', { ...forever, id, description: 'Step 3 of 5, validate.' }) },
 ]
 
 export const Variants: StoryObj = { render: () => <Toasts toasts={KINDS} expand /> }

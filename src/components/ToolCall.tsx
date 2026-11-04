@@ -27,8 +27,8 @@ function brief(value: unknown): string {
 
 /**
  * A payload said in one line: the first three `key: value` pairs of an object, the length of a
- * list, a scalar as itself. `{ code: 'weather-gate', limit: 20, since: '…' }` reads
- * `code: "weather-gate", limit: 20, since: "…"`.
+ * list, a scalar as itself. `{ code: 'import-orders', limit: 20, since: '…' }` reads
+ * `code: "import-orders", limit: 20, since: "…"`.
  */
 export function digest(payload: unknown, pairs = 3): string {
     if (payload === undefined) return ''

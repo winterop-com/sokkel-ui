@@ -49,13 +49,13 @@ export const Variants: StoryObj = {
                     <States3 defaultValue="" />
                 </Labeled>
                 <Labeled label="option groups">
-                    <NativeSelect aria-label="Connection" defaultValue="dhis2-play">
-                        <NativeSelectOptGroup label="DHIS2">
-                            <NativeSelectOption value="dhis2-play">dhis2-play</NativeSelectOption>
-                            <NativeSelectOption value="dhis2-prod">dhis2-prod</NativeSelectOption>
+                    <NativeSelect aria-label="Destination" defaultValue="api">
+                        <NativeSelectOptGroup label="Services">
+                            <NativeSelectOption value="api">api</NativeSelectOption>
+                            <NativeSelectOption value="worker">worker</NativeSelectOption>
                         </NativeSelectOptGroup>
                         <NativeSelectOptGroup label="Storage">
-                            <NativeSelectOption value="s3-archive">s3-archive</NativeSelectOption>
+                            <NativeSelectOption value="harbor-exports">harbor-exports</NativeSelectOption>
                         </NativeSelectOptGroup>
                     </NativeSelect>
                 </Labeled>

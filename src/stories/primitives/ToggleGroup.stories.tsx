@@ -112,7 +112,7 @@ function RunFilter() {
         <Ground>
             <div className="flex flex-col gap-3">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                    <p className="text-sm font-medium">Runs of weather-gate</p>
+                    <p className="text-sm font-medium">Runs of import-orders</p>
                     <ToggleGroup variant="outline" size="sm" spacing={0} multiple value={states} onValueChange={setStates}>
                         <ToggleGroupItem value="succeeded">Succeeded</ToggleGroupItem>
                         <ToggleGroupItem value="failed">Failed</ToggleGroupItem>

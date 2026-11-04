@@ -56,12 +56,12 @@ export const Variants: StoryObj = {
                             items={[{ name: 'action', choices: [{ value: 'rerun' }, { value: 'pause' }, { value: 'nothing' }] }]}
                         >
                             <QuestionnaireItem name="action">
-                                <QuestionnaireTitle>What should happen to weather-gate?</QuestionnaireTitle>
+                                <QuestionnaireTitle>What should happen to import-orders?</QuestionnaireTitle>
                                 <QuestionnaireChoices>
                                     <QuestionnaireChoice value="rerun" defaultChecked>
                                         Rerun it now
                                     </QuestionnaireChoice>
-                                    <QuestionnaireChoice value="pause">Pause its trigger</QuestionnaireChoice>
+                                    <QuestionnaireChoice value="pause">Pause its schedule</QuestionnaireChoice>
                                     <QuestionnaireChoice value="nothing">Leave it</QuestionnaireChoice>
                                 </QuestionnaireChoices>
                             </QuestionnaireItem>
@@ -84,11 +84,11 @@ export const Variants: StoryObj = {
                                 <QuestionnaireChoices>
                                     <QuestionnaireChoice value="email" defaultChecked>
                                         Email
-                                        <QuestionnaireChoiceDescription>The pipeline's owners</QuestionnaireChoiceDescription>
+                                        <QuestionnaireChoiceDescription>The job's owners</QuestionnaireChoiceDescription>
                                     </QuestionnaireChoice>
                                     <QuestionnaireChoice value="slack" defaultChecked>
                                         Slack
-                                        <QuestionnaireChoiceDescription>#pipelines</QuestionnaireChoiceDescription>
+                                        <QuestionnaireChoiceDescription>#orders</QuestionnaireChoiceDescription>
                                     </QuestionnaireChoice>
                                     <QuestionnaireChoice value="webhook">
                                         Webhook
@@ -105,10 +105,10 @@ export const Variants: StoryObj = {
                 <div className="flex w-full max-w-md flex-col gap-2">
                     <Caption>typed answer</Caption>
                     <Panel>
-                        <Questionnaire items={[{ name: 'station' }]}>
-                            <QuestionnaireItem name="station">
-                                <QuestionnaireTitle>Which station should the gate read?</QuestionnaireTitle>
-                                <QuestionnaireInput defaultValue="SN18700" />
+                        <Questionnaire items={[{ name: 'file' }]}>
+                            <QuestionnaireItem name="file">
+                                <QuestionnaireTitle>Which file should fetch read?</QuestionnaireTitle>
+                                <QuestionnaireInput defaultValue="orders-2026-10.csv" />
                             </QuestionnaireItem>
                             <QuestionnaireActions>
                                 <QuestionnaireSubmit />
@@ -130,9 +130,9 @@ export const States: StoryObj = {
                     <Panel>
                         <Questionnaire items={[{ name: 'code', required: true }]}>
                             <QuestionnaireItem name="code" required invalid>
-                                <QuestionnaireTitle>Name the new trigger</QuestionnaireTitle>
+                                <QuestionnaireTitle>Name the new schedule</QuestionnaireTitle>
                                 <QuestionnaireInput placeholder="every-hour" aria-invalid />
-                                <QuestionnaireError>Give the trigger a code.</QuestionnaireError>
+                                <QuestionnaireError>Give the schedule a code.</QuestionnaireError>
                             </QuestionnaireItem>
                             <QuestionnaireActions>
                                 <QuestionnaireSubmit />
@@ -144,17 +144,19 @@ export const States: StoryObj = {
                     <Caption>a disabled choice</Caption>
                     <Panel>
                         <Questionnaire
-                            items={[{ name: 'target', choices: [{ value: 'dhis2-play' }, { value: 'dhis2-prod', disabled: true }] }]}
+                            items={[
+                                { name: 'target', choices: [{ value: 'harbor-staging' }, { value: 'harbor-exports', disabled: true }] },
+                            ]}
                         >
                             <QuestionnaireItem name="target">
-                                <QuestionnaireTitle>Where should store write?</QuestionnaireTitle>
+                                <QuestionnaireTitle>Where should upload write?</QuestionnaireTitle>
                                 <QuestionnaireChoices>
-                                    <QuestionnaireChoice value="dhis2-play" defaultChecked>
-                                        dhis2-play
+                                    <QuestionnaireChoice value="harbor-staging" defaultChecked>
+                                        harbor-staging
                                     </QuestionnaireChoice>
-                                    <QuestionnaireChoice value="dhis2-prod" disabled>
-                                        dhis2-prod
-                                        <QuestionnaireChoiceDescription>You cannot write to this connection</QuestionnaireChoiceDescription>
+                                    <QuestionnaireChoice value="harbor-exports" disabled>
+                                        harbor-exports
+                                        <QuestionnaireChoiceDescription>You cannot write to this bucket</QuestionnaireChoiceDescription>
                                     </QuestionnaireChoice>
                                 </QuestionnaireChoices>
                             </QuestionnaireItem>
@@ -185,7 +187,7 @@ export const States: StoryObj = {
 
 const STEPS = [
     { name: 'action', choices: [{ value: 'rerun' }, { value: 'pause' }, { value: 'edit' }] },
-    { name: 'source', choices: [{ value: 'forecast' }, { value: 'readings' }] },
+    { name: 'source', choices: [{ value: 'api' }, { value: 'upload' }] },
     { name: 'note' },
 ]
 
@@ -202,28 +204,30 @@ export const FollowUp: StoryObj = {
                             <Questionnaire shortcuts="letters" items={STEPS} defaultItem="source">
                                 <QuestionnaireProgress />
                                 <QuestionnaireItem name="action">
-                                    <QuestionnaireTitle>What should happen to weather-gate?</QuestionnaireTitle>
+                                    <QuestionnaireTitle>What should happen to import-orders?</QuestionnaireTitle>
                                     <QuestionnaireChoices>
                                         <QuestionnaireChoice value="rerun">Rerun it now</QuestionnaireChoice>
-                                        <QuestionnaireChoice value="pause">Pause its trigger</QuestionnaireChoice>
+                                        <QuestionnaireChoice value="pause">Pause its schedule</QuestionnaireChoice>
                                         <QuestionnaireChoice value="edit" defaultChecked>
-                                            Change the gate step
+                                            Change the validate step
                                         </QuestionnaireChoice>
                                     </QuestionnaireChoices>
                                 </QuestionnaireItem>
                                 <QuestionnaireItem name="source">
-                                    <QuestionnaireTitle>Which source should the gate check?</QuestionnaireTitle>
+                                    <QuestionnaireTitle>Which rows should validate check?</QuestionnaireTitle>
                                     <QuestionnaireDescription>
-                                        The forecast had no rows for SN18700 at 14:02; your readings CSV has 288.
+                                        The api had no orders for 2026-10 at 14:02; your uploaded CSV has 2,184.
                                     </QuestionnaireDescription>
                                     <QuestionnaireChoices>
-                                        <QuestionnaireChoice value="forecast">
-                                            The forecast from met-no
+                                        <QuestionnaireChoice value="api">
+                                            The orders from the api
                                             <QuestionnaireChoiceDescription>As it is configured now</QuestionnaireChoiceDescription>
                                         </QuestionnaireChoice>
-                                        <QuestionnaireChoice value="readings" defaultChecked>
-                                            The uploaded readings
-                                            <QuestionnaireChoiceDescription>Checked against schema readings</QuestionnaireChoiceDescription>
+                                        <QuestionnaireChoice value="upload" defaultChecked>
+                                            The uploaded orders-2026-10.csv
+                                            <QuestionnaireChoiceDescription>
+                                                Checked against the orders rules
+                                            </QuestionnaireChoiceDescription>
                                         </QuestionnaireChoice>
                                     </QuestionnaireChoices>
                                 </QuestionnaireItem>

@@ -116,7 +116,7 @@ function Backfill() {
         <Ground>
             <div className="flex max-w-md flex-col gap-3 rounded-lg border border-border p-4">
                 <div className="flex flex-col gap-1">
-                    <p className="text-sm font-medium">Backfill weather-gate</p>
+                    <p className="text-sm font-medium">Backfill nightly-export</p>
                     <p className="text-sm text-muted-foreground">
                         Start one run per day in the range. Runs that already succeeded are skipped.
                     </p>

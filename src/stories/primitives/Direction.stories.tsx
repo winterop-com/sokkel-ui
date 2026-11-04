@@ -41,7 +41,7 @@ function Sample({ dir }: { dir: 'ltr' | 'rtl' }) {
                 </div>
                 <div className="flex flex-wrap gap-2">
                     <Button variant="outline">Cancel</Button>
-                    <Button>Run weather-gate</Button>
+                    <Button>Run import-orders</Button>
                 </div>
             </div>
         </DirectionProvider>
@@ -79,7 +79,7 @@ export const NestedLtrIsland: StoryObj = {
                         <div dir="ltr" className="flex flex-col gap-2 rounded-md bg-muted p-3">
                             <Caption>ltr island for code</Caption>
                             <Reads />
-                            <p className="font-mono text-xs">expression: .properties.timeseries | length &gt; 0</p>
+                            <p className="font-mono text-xs">expression: .orders[].amount | length &gt; 0</p>
                         </div>
                     </DirectionProvider>
                 </div>

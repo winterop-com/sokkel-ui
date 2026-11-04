@@ -23,11 +23,11 @@ function Step({ open, disabled }: { open?: boolean; disabled?: boolean }) {
         <Collapsible defaultOpen={open} disabled={disabled} className="w-full max-w-md rounded-lg border border-border">
             <CollapsibleTrigger render={<Button variant="ghost" className="group w-full justify-start rounded-b-none" />}>
                 <ChevronRightIcon className="transition-transform group-data-panel-open:rotate-90" />
-                <span className="font-mono">gate</span>
-                <span className="ml-auto text-xs text-muted-foreground">jq.assert</span>
+                <span className="font-mono">validate</span>
+                <span className="ml-auto text-xs text-muted-foreground">rows.check</span>
             </CollapsibleTrigger>
             <CollapsibleContent className="border-t border-border px-3 py-2 font-mono text-xs text-muted-foreground">
-                expression: .properties.timeseries | length &gt; 0
+                rules: orders, on_invalid: fail
             </CollapsibleContent>
         </Collapsible>
     )
@@ -56,13 +56,13 @@ export const States: StoryObj = {
 }
 
 const STEPS = [
-    { code: 'fetch', block: 'http.get', with: 'connection: met-no', took: '0.2s' },
-    { code: 'gate', block: 'jq.assert', with: 'expression: .properties.timeseries | length > 0', took: '0.1s' },
-    { code: 'store', block: 'dhis2.data-values', with: 'connection: dhis2-play', took: '-' },
+    { code: 'fetch', uses: 'http.get', with: 'url: https://files.example.org/orders-2026-10.csv', took: '0.2s' },
+    { code: 'validate', uses: 'rows.check', with: 'rules: orders, on_invalid: fail', took: '0.1s' },
+    { code: 'upload', uses: 'bucket.put', with: 'bucket: harbor-exports', took: '-' },
 ]
 
-function PipelineSteps() {
-    const [open, setOpen] = useState<string | null>('gate')
+function JobSteps() {
+    const [open, setOpen] = useState<string | null>('validate')
     return (
         <div className="flex w-full max-w-xl flex-col divide-y divide-border rounded-lg border border-border">
             {STEPS.map((step) => (
@@ -70,7 +70,7 @@ function PipelineSteps() {
                     <CollapsibleTrigger render={<Button variant="ghost" className="group w-full justify-start rounded-none" />}>
                         <ChevronRightIcon className="transition-transform group-data-panel-open:rotate-90" />
                         <span className="font-mono">{step.code}</span>
-                        <span className="text-xs text-muted-foreground">{step.block}</span>
+                        <span className="text-xs text-muted-foreground">{step.uses}</span>
                         <span className="ml-auto text-xs text-muted-foreground tabular-nums">{step.took}</span>
                     </CollapsibleTrigger>
                     <CollapsibleContent className="px-3 py-2 font-mono text-xs text-muted-foreground">{step.with}</CollapsibleContent>
@@ -85,9 +85,9 @@ export const Steps: StoryObj = {
         <Ground>
             <div className="flex flex-col gap-2">
                 <h2 className="text-sm font-medium">
-                    Steps of <span className="font-mono">weather-gate</span>
+                    Steps of <span className="font-mono">import-orders</span>
                 </h2>
-                <PipelineSteps />
+                <JobSteps />
             </div>
         </Ground>
     ),

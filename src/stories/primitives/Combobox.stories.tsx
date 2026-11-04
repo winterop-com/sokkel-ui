@@ -35,10 +35,10 @@ function Labeled({ label, children }: { label: string; children: ReactNode }) {
     )
 }
 
-const PIPELINES = ['weather-gate', 'dhis2-sync', 'chap-forecast', 'climate-ingest', 'fhir-export', 'nightly-backup']
+const JOBS = ['import-orders', 'nightly-export', 'sync-inventory', 'rebuild-index', 'send-digest', 'archive-logs']
 
-function PipelineCombobox({
-    placeholder = 'Find a pipeline',
+function JobCombobox({
+    placeholder = 'Find a job',
     showClear,
     invalid,
     disabled,
@@ -53,17 +53,17 @@ function PipelineCombobox({
     defaultInputValue?: string
 }) {
     return (
-        <Combobox items={PIPELINES} disabled={disabled} {...props}>
+        <Combobox items={JOBS} disabled={disabled} {...props}>
             <ComboboxInput
                 placeholder={placeholder}
                 showClear={showClear}
                 disabled={disabled}
                 aria-invalid={invalid || undefined}
-                aria-label="Pipeline"
+                aria-label="Job"
                 className="w-full"
             />
             <ComboboxContent>
-                <ComboboxEmpty>No pipeline matches.</ComboboxEmpty>
+                <ComboboxEmpty>No job matches.</ComboboxEmpty>
                 <ComboboxList>
                     {(item: string) => (
                         <ComboboxItem key={item} value={item}>
@@ -79,7 +79,7 @@ function PipelineCombobox({
 function TagChips() {
     const anchor = useComboboxAnchor()
     return (
-        <Combobox multiple items={['dhis2', 'climate', 'nightly', 'export', 'staging']} defaultValue={['dhis2', 'nightly']}>
+        <Combobox multiple items={['orders', 'inventory', 'nightly', 'export', 'staging']} defaultValue={['orders', 'nightly']}>
             <ComboboxChips ref={anchor} className="w-full">
                 <ComboboxValue>
                     {(values: string[]) => (
@@ -114,13 +114,13 @@ export const Variants: StoryObj = {
         <Ground>
             <div className="flex flex-wrap gap-6">
                 <Labeled label="empty">
-                    <PipelineCombobox />
+                    <JobCombobox />
                 </Labeled>
                 <Labeled label="picked">
-                    <PipelineCombobox defaultValue="weather-gate" />
+                    <JobCombobox defaultValue="import-orders" />
                 </Labeled>
                 <Labeled label="with clear">
-                    <PipelineCombobox defaultValue="weather-gate" showClear />
+                    <JobCombobox defaultValue="import-orders" showClear />
                 </Labeled>
                 <Labeled label="chips, multiple">
                     <TagChips />
@@ -135,10 +135,10 @@ export const States: StoryObj = {
         <Ground>
             <div className="flex flex-wrap gap-6">
                 <Labeled label="disabled">
-                    <PipelineCombobox disabled defaultValue="weather-gate" />
+                    <JobCombobox disabled defaultValue="import-orders" />
                 </Labeled>
                 <Labeled label="invalid">
-                    <PipelineCombobox invalid placeholder="Pick a pipeline" />
+                    <JobCombobox invalid placeholder="Pick a job" />
                 </Labeled>
             </div>
         </Ground>
@@ -149,7 +149,7 @@ export const Open: StoryObj = {
     render: () => (
         <Ground>
             <div className="h-80 max-w-xs">
-                <PipelineCombobox defaultOpen defaultValue="weather-gate" />
+                <JobCombobox defaultOpen defaultValue="import-orders" />
             </div>
         </Ground>
     ),
@@ -159,29 +159,29 @@ export const OpenNoMatch: StoryObj = {
     render: () => (
         <Ground>
             <div className="h-40 max-w-xs">
-                <PipelineCombobox defaultOpen defaultInputValue="salesforce" />
+                <JobCombobox defaultOpen defaultInputValue="payroll" />
             </div>
         </Ground>
     ),
 }
 
-const BLOCKS = [
-    { group: 'Fetch', items: ['dhis2.fetch-data-values', 'http.get', 'climate.era5'] },
-    { group: 'Check', items: ['schema.gate', 'jq.filter'] },
-    { group: 'Store', items: ['parquet.write', 's3.put', 'dhis2.import'] },
+const ACTIONS = [
+    { group: 'Fetch', items: ['http.get', 'files.read', 'api.list-orders'] },
+    { group: 'Check', items: ['rows.check', 'rows.filter'] },
+    { group: 'Store', items: ['bucket.put', 'files.write', 'api.post'] },
 ]
 
-export const AddBlock: StoryObj = {
+export const AddStep: StoryObj = {
     render: () => (
         <Ground>
             <div className="flex h-[28rem] max-w-sm flex-col gap-2">
-                <p className="text-sm font-medium">Add a step to weather-gate</p>
-                <Combobox items={BLOCKS} defaultOpen>
-                    <ComboboxInput placeholder="Search blocks" aria-label="Block" className="w-full" />
+                <p className="text-sm font-medium">Add a step to import-orders</p>
+                <Combobox items={ACTIONS} defaultOpen>
+                    <ComboboxInput placeholder="Search actions" aria-label="Action" className="w-full" />
                     <ComboboxContent>
-                        <ComboboxEmpty>No block matches.</ComboboxEmpty>
+                        <ComboboxEmpty>No action matches.</ComboboxEmpty>
                         <ComboboxList>
-                            {(group: (typeof BLOCKS)[number], index: number) => (
+                            {(group: (typeof ACTIONS)[number], index: number) => (
                                 <ComboboxGroup key={group.group} items={group.items}>
                                     {index > 0 && <ComboboxSeparator />}
                                     <ComboboxLabel>{group.group}</ComboboxLabel>

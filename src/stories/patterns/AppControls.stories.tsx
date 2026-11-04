@@ -28,8 +28,8 @@ function Toggle() {
     return (
         <Ground>
             <div className="flex h-shell-top items-center gap-2 rounded-surface border border-border-strong bg-sidebar px-3">
-                <span className="text-sm font-medium">dirigent</span>
-                <span className="font-mono text-xs text-muted-foreground">0.36.0</span>
+                <span className="text-sm font-medium">atlas</span>
+                <span className="font-mono text-xs text-muted-foreground">1.4.0</span>
                 <div className="flex-1" />
                 <ThemeToggle dark={dark} onToggle={() => setDark(!dark)} />
             </div>
@@ -57,14 +57,14 @@ function Shortcuts() {
                         title: 'Go to',
                         shortcuts: [
                             { id: 'runs', action: 'Runs', keys: ['G', 'R'] },
-                            { id: 'pipelines', action: 'Pipelines', keys: ['G', 'P'] },
-                            { id: 'connections', action: 'Connections', keys: ['G', 'C'] },
+                            { id: 'jobs', action: 'Jobs', keys: ['G', 'J'] },
+                            { id: 'services', action: 'Services', keys: ['G', 'S'] },
                         ],
                     },
                     {
                         title: 'Editor',
                         shortcuts: [
-                            { id: 'save', action: 'Save the pipeline', keys: ['⌘', 'S'] },
+                            { id: 'save', action: 'Save the job', keys: ['⌘', 'S'] },
                             { id: 'run', action: 'Run it', keys: ['⌘', 'Enter'] },
                         ],
                     },

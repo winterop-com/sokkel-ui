@@ -36,7 +36,7 @@ function Open() {
                 <PopoverContent align="start">
                     <PopoverHeader>
                         <PopoverTitle>nightly-sync</PopoverTitle>
-                        <PopoverDescription>Starts weather-gate every day at 02:00. The next run is 2026-11-05 02:00.</PopoverDescription>
+                        <PopoverDescription>Starts sync-inventory every day at 02:00. The next run is 2026-11-05 02:00.</PopoverDescription>
                     </PopoverHeader>
                 </PopoverContent>
             </Popover>
@@ -55,7 +55,7 @@ function FilterRuns() {
                 <PopoverContent align="start">
                     <PopoverHeader>
                         <PopoverTitle>Filter runs</PopoverTitle>
-                        <PopoverDescription>Show runs of weather-gate that match.</PopoverDescription>
+                        <PopoverDescription>Show runs of import-orders that match.</PopoverDescription>
                     </PopoverHeader>
                     <div className="grid gap-2">
                         <Label htmlFor="since">Since</Label>

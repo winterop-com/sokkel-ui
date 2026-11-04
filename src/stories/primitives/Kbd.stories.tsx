@@ -60,10 +60,10 @@ export const Variants: StoryObj = {
 }
 
 const SHORTCUTS = [
-    { keys: ['Ctrl', 'K'], does: 'Search pipelines, runs and connections' },
+    { keys: ['Ctrl', 'K'], does: 'Search jobs, runs and services' },
     { keys: ['G', 'R'], does: 'Go to runs' },
-    { keys: ['G', 'P'], does: 'Go to pipelines' },
-    { keys: ['Ctrl', 'Enter'], does: 'Run the open pipeline' },
+    { keys: ['G', 'J'], does: 'Go to jobs' },
+    { keys: ['Ctrl', 'Enter'], does: 'Run the open job' },
     { keys: ['Esc'], does: 'Close the side panel' },
 ]
 

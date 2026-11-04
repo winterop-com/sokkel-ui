@@ -36,7 +36,7 @@ export function ConfirmCard({
     onDeny,
     words = WORDS,
 }: {
-    /** What approving does, said plainly: "Delete the pipeline weather-gate". */
+    /** What approving does, said plainly: "Delete the job import-orders". */
     action: ReactNode
     tool: string
     args?: unknown

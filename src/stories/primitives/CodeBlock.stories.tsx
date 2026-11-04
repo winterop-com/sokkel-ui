@@ -31,30 +31,30 @@ function Caption({ children }: { children: ReactNode }) {
     return <p className="text-xs text-muted-foreground">{children}</p>
 }
 
-const PIPELINE = `code: weather-gate
-name: Weather gate
-trigger: every-hour
+const JOB = `code: import-orders
+name: Import orders
+schedule: "0 2 * * *"
 steps:
   fetch:
-    block: http.get
+    uses: http.get
     with:
-      connection: met-no
-      path: /weatherapi/locationforecast/2.0/compact
-  gate:
-    block: jq.assert
+      service: api
+      path: /v1/orders/export?month=2026-10
+  validate:
+    uses: rows.check
     with:
       input: \${{ steps.fetch.output }}
-      expression: .properties.timeseries | length > 0
-      message: no forecast rows for station SN18700
-  store:
-    block: dhis2.data-values
+      expression: .amount | type == "number"
+      message: amount is not a number in orders-2026-10.csv
+  upload:
+    uses: bucket.put
     with:
-      connection: dhis2-play
+      bucket: harbor-exports
 `
 
-const RUN = `$ dg run weather-gate
+const RUN = `$ jobs run import-orders
 {"kind":"run.started","run":"01a1a5c2","at":"2026-11-04 14:02"}
-{"kind":"step.failed","step":"gate","duration_ms":312}`
+{"kind":"step.failed","step":"validate","duration_ms":312}`
 
 function Highlighted({
     code,
@@ -92,10 +92,10 @@ export const Variants: StoryObj = {
                         <CodeBlockHeader>
                             <CodeBlockTitle>
                                 <TriangleAlertIcon />
-                                gate failed
+                                validate failed
                             </CodeBlockTitle>
                         </CodeBlockHeader>
-                        <CodeBlockContent>.properties.timeseries | length &gt; 0 evaluated to false</CodeBlockContent>
+                        <CodeBlockContent>{'.amount | type == "number" was false for 37 of 2,184 rows'}</CodeBlockContent>
                     </CodeBlock>
                 </div>
                 <div className="flex min-w-0 flex-col gap-2">
@@ -117,7 +117,7 @@ export const Variants: StoryObj = {
                     <Caption>line numbers, footer</Caption>
                     <CodeBlock>
                         <CodeBlockContent lineNumbers startLine={11}>
-                            {'  gate:\n    block: jq.assert\n    with:\n      expression: .properties.timeseries | length > 0'}
+                            {'  validate:\n    uses: rows.check\n    with:\n      expression: .amount | type == "number"'}
                         </CodeBlockContent>
                         <CodeBlockFooter className="text-xs">YAML, lines 11 to 14</CodeBlockFooter>
                     </CodeBlock>
@@ -127,7 +127,7 @@ export const Variants: StoryObj = {
                     <CodeBlock>
                         <CodeBlockContent wrap>
                             {
-                                'GET https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=59.94&lon=10.72&altitude=94 answered 200 with 0 timeseries rows'
+                                'GET https://api.example.org/v1/orders/export?project=atlas&month=2026-10&format=csv answered 200 with 2,184 rows, 37 invalid'
                             }
                         </CodeBlockContent>
                     </CodeBlock>
@@ -137,7 +137,7 @@ export const Variants: StoryObj = {
                     <CodeBlock>
                         <CodeBlockContent>
                             {
-                                'GET https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=59.94&lon=10.72&altitude=94 answered 200 with 0 timeseries rows'
+                                'GET https://api.example.org/v1/orders/export?project=atlas&month=2026-10&format=csv answered 200 with 2,184 rows, 37 invalid'
                             }
                         </CodeBlockContent>
                     </CodeBlock>
@@ -147,9 +147,11 @@ export const Variants: StoryObj = {
                     <CodeBlock>
                         <CodeBlockContent lineNumbers startLine={14}>
                             <CodeBlockLine>{'      input: ${{ steps.fetch.output }}'}</CodeBlockLine>
-                            <CodeBlockLine variant="removed">{'      expression: .properties.timeseries | length > 0'}</CodeBlockLine>
-                            <CodeBlockLine variant="added">{'      expression: .rows | length > 0'}</CodeBlockLine>
-                            <CodeBlockLine variant="highlighted">{'      message: no forecast rows for station SN18700'}</CodeBlockLine>
+                            <CodeBlockLine variant="removed">{'      expression: .amount | type == "number"'}</CodeBlockLine>
+                            <CodeBlockLine variant="added">{'      expression: .amount | tonumber? != null'}</CodeBlockLine>
+                            <CodeBlockLine variant="highlighted">
+                                {'      message: amount is not a number in orders-2026-10.csv'}
+                            </CodeBlockLine>
                         </CodeBlockContent>
                     </CodeBlock>
                 </div>
@@ -175,7 +177,7 @@ export const States: StoryObj = {
                     <Caption>a language the highlighter does not know shows plain</Caption>
                     <CodeBlock>
                         <CodeBlockContent>
-                            <Highlighted code={'[gate]\nexpression = ".properties.timeseries | length > 0"'} language="toml" />
+                            <Highlighted code={'[validate]\nrules = "orders"\non_invalid = "fail"'} language="toml" />
                         </CodeBlockContent>
                     </CodeBlock>
                 </div>
@@ -192,16 +194,16 @@ export const FailingStep: StoryObj = {
                     <CodeBlockHeader>
                         <CodeBlockTitle>
                             <FileTextIcon />
-                            pipelines/weather-gate.yaml
+                            jobs/import-orders.yaml
                         </CodeBlockTitle>
                         <CodeBlockActions>
-                            <CodeBlockCopyButton value={PIPELINE} />
+                            <CodeBlockCopyButton value={JOB} />
                         </CodeBlockActions>
                     </CodeBlockHeader>
                     <CodeBlockContent lineNumbers>
-                        <Highlighted code={PIPELINE} language="yaml" mark={{ 14: 'highlighted' }} />
+                        <Highlighted code={JOB} language="yaml" mark={{ 14: 'highlighted' }} />
                     </CodeBlockContent>
-                    <CodeBlockFooter className="text-xs">The gate step stopped run 01a1a5c2 on line 14.</CodeBlockFooter>
+                    <CodeBlockFooter className="text-xs">The validate step stopped run 01a1a5c2 on line 14.</CodeBlockFooter>
                 </CodeBlock>
             </div>
         </Ground>

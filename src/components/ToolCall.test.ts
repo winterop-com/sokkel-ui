@@ -4,7 +4,7 @@ import { digest } from './ToolCall'
 
 describe('a payload in one line', () => {
     test('names the first pairs of an object and marks the rest as elided', () => {
-        expect(digest({ code: 'weather-gate', limit: 20 })).toBe('code: "weather-gate", limit: 20')
+        expect(digest({ code: 'import-orders', limit: 20 })).toBe('code: "import-orders", limit: 20')
         expect(digest({ a: 1, b: 2, c: 3, d: 4 })).toBe('a: 1, b: 2, c: 3, …')
     })
 

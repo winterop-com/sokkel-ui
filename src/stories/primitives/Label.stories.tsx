@@ -32,7 +32,7 @@ export const Variants: StoryObj = {
                 <Labeled label="over an input">
                     <div className="flex w-full flex-col gap-2">
                         <Label htmlFor="label-code">Code</Label>
-                        <Input id="label-code" defaultValue="weather-gate" />
+                        <Input id="label-code" defaultValue="import-orders" />
                     </div>
                 </Labeled>
                 <Labeled label="beside a checkbox">
@@ -64,7 +64,7 @@ export const States: StoryObj = {
                 <Labeled label="group disabled">
                     <div className="group flex flex-col gap-2" data-disabled="true">
                         <Label htmlFor="label-group">Base URL</Label>
-                        <Input id="label-group" disabled defaultValue="https://play.dhis2.org/api" />
+                        <Input id="label-group" disabled defaultValue="https://api.example.org" />
                     </div>
                 </Labeled>
             </div>

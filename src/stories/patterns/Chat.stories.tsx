@@ -22,38 +22,38 @@ function Ground({ children }: { children: React.ReactNode }) {
     )
 }
 
-const ANSWER = `The run **failed at \`validate\`**, step 4 of 7. The \`fetch\` step read 2,184 rows from \`dhis2-play\`, but 37 of them carry a \`value\` that is not a number.
+const ANSWER = `The run **failed at \`validate\`**, step 3 of 5. The \`fetch\` step read 2,184 rows from \`orders-2026-10.csv\`, but 37 of them carry an \`amount\` that is not a number.
 
-| period | org unit | value |
+| row | order | amount |
 | --- | --- | --- |
-| 202610 | \`ImspTQPwCqd\` | \`n/a\` |
-| 202610 | \`O6uvpzGd5pu\` | \`-\` |
+| 412 | \`ord-10412\` | \`n/a\` |
+| 977 | \`ord-10977\` | \`-\` |
 
 Two ways forward:
 
-1. Drop rows whose value does not parse, before \`validate\`:
+1. Drop rows whose amount does not parse, in \`transform\`, before \`validate\`:
 
 \`\`\`yaml
 steps:
-  clean:
-    block: filter
+  transform:
+    uses: rows.filter
     with:
-      where: "try_cast(value as double) is not null"
+      where: "try_cast(amount as double) is not null"
 \`\`\`
 
 2. Or keep them and let \`validate\` warn instead of fail, with \`on_invalid: warn\`.
 
-See the [filter block](https://example.org/blocks/filter) for the expression syntax.`
+See the [rows.filter reference](https://docs.example.org/steps/rows-filter) for the expression syntax.`
 
 const FLOW = `flowchart LR
-  fetch --> clean --> validate --> write
+  fetch --> transform --> validate --> upload
   validate -. warn .-> notify`
 
 const CALLS: ToolCallEntry[] = [
     {
         id: '1',
         name: 'runs.get',
-        args: { pipeline: 'weather-gate', run: 'run_01JCF8Q2' },
+        args: { job: 'import-orders', run: 'run_01JCF8Q2' },
         result: { state: 'failed', failed_step: 'validate', duration_ms: 4180 },
         status: 'done',
         duration: '0.2s',
@@ -62,12 +62,12 @@ const CALLS: ToolCallEntry[] = [
         id: '2',
         name: 'runs.log',
         args: { run: 'run_01JCF8Q2', step: 'validate', tail: 50 },
-        result: '37 rows failed: value is not a number',
+        result: '37 rows failed: amount is not a number',
         status: 'error',
         duration: '0.4s',
     },
-    { id: '3', name: 'blocks.describe', args: { block: 'filter' }, status: 'running' },
-    { id: '4', name: 'pipelines.diff', args: { pipeline: 'weather-gate' }, status: 'pending' },
+    { id: '3', name: 'docs.search', args: { query: 'rows.filter' }, status: 'running' },
+    { id: '4', name: 'jobs.diff', args: { job: 'import-orders' }, status: 'pending' },
 ]
 
 function Answer() {
@@ -91,20 +91,15 @@ function Confirm() {
     return (
         <Ground>
             <ConfirmCard
-                action="Add a clean step to weather-gate and save it"
-                tool="pipelines.update"
-                args={{ pipeline: 'weather-gate', insert_before: 'validate', step: { block: 'filter' } }}
+                action="Add a filter step to import-orders and save it"
+                tool="jobs.update"
+                args={{ job: 'import-orders', insert_before: 'validate', step: { uses: 'rows.filter' } }}
                 state={state}
                 onApprove={() => setState('approved')}
                 onDeny={() => setState('denied')}
             />
-            <ConfirmCard
-                action="Delete the pipeline weather-gate"
-                tool="pipelines.delete"
-                args={{ pipeline: 'weather-gate' }}
-                state="denied"
-            />
-            <ConfirmCard action="Run weather-gate now" tool="runs.start" args={{ pipeline: 'weather-gate' }} state="expired" />
+            <ConfirmCard action="Delete the job import-orders" tool="jobs.delete" args={{ job: 'import-orders' }} state="denied" />
+            <ConfirmCard action="Run import-orders now" tool="runs.start" args={{ job: 'import-orders' }} state="expired" />
         </Ground>
     )
 }
@@ -113,18 +108,18 @@ function CodeAndDiagram() {
     return (
         <Ground>
             <Code
-                title="weather-gate.yaml"
+                title="import-orders.yaml"
                 language="yaml"
                 lineNumbers
                 highlight={[6, 7]}
-                value={`code: weather-gate
+                value={`code: import-orders
 steps:
   fetch:
-    block: dhis2.data-values
-    with: { connection: dhis2-play, period: LAST_12_MONTHS }
+    uses: http.get
+    with: { url: https://files.example.org/orders-2026-10.csv }
   validate:
-    block: schema.check
-    with: { schema: readings, on_invalid: fail }
+    uses: rows.check
+    with: { rules: orders, on_invalid: fail }
 `}
             />
             <MermaidDiagram code={FLOW} />

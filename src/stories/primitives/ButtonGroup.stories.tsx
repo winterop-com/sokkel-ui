@@ -33,14 +33,14 @@ export const Variants: StoryObj = {
                 <Labeled label="horizontal">
                     <ButtonGroup>
                         <Button variant="outline">Runs</Button>
-                        <Button variant="outline">Triggers</Button>
+                        <Button variant="outline">Schedules</Button>
                         <Button variant="outline">Alerts</Button>
                     </ButtonGroup>
                 </Labeled>
                 <Labeled label="vertical">
                     <ButtonGroup orientation="vertical">
                         <Button variant="outline">Runs</Button>
-                        <Button variant="outline">Triggers</Button>
+                        <Button variant="outline">Schedules</Button>
                         <Button variant="outline">Alerts</Button>
                     </ButtonGroup>
                 </Labeled>
@@ -66,7 +66,7 @@ export const Variants: StoryObj = {
                 </Labeled>
                 <Labeled label="with input">
                     <ButtonGroup>
-                        <Input readOnly defaultValue="https://play.dhis2.org/api" aria-label="Base URL" />
+                        <Input readOnly defaultValue="https://api.example.org" aria-label="Base URL" />
                         <Button variant="outline" size="icon" aria-label="Copy base URL">
                             <Copy />
                         </Button>

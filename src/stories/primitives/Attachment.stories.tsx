@@ -37,7 +37,7 @@ function Csv({ size, orientation }: { size: 'default' | 'sm' | 'xs'; orientation
                 <FileSpreadsheetIcon />
             </AttachmentMedia>
             <AttachmentContent>
-                <AttachmentTitle>readings-2026-11-04.csv</AttachmentTitle>
+                <AttachmentTitle>orders-2026-10.csv</AttachmentTitle>
                 <AttachmentDescription>CSV, 4.2 KB</AttachmentDescription>
             </AttachmentContent>
             <AttachmentActions>
@@ -83,7 +83,7 @@ export const Variants: StoryObj = {
                             <div className="aspect-square w-full bg-linear-to-br from-chart-2 to-chart-3" />
                         </AttachmentMedia>
                         <AttachmentContent>
-                            <AttachmentTitle>graph-weather-gate.png</AttachmentTitle>
+                            <AttachmentTitle>graph-import-orders.png</AttachmentTitle>
                             <AttachmentDescription>PNG, 88 KB</AttachmentDescription>
                         </AttachmentContent>
                     </Attachment>
@@ -91,13 +91,13 @@ export const Variants: StoryObj = {
                 <div className="flex flex-col gap-1.5">
                     <Caption>clickable, with a trigger</Caption>
                     <Attachment>
-                        <AttachmentTrigger aria-label="Open schema patient-v2.json" />
+                        <AttachmentTrigger aria-label="Open validation rules orders-v2.json" />
                         <AttachmentMedia>
                             <FileJsonIcon />
                         </AttachmentMedia>
                         <AttachmentContent>
-                            <AttachmentTitle>patient-v2.json</AttachmentTitle>
-                            <AttachmentDescription>Schema, 2.1 KB</AttachmentDescription>
+                            <AttachmentTitle>orders-v2.json</AttachmentTitle>
+                            <AttachmentDescription>Rules, 2.1 KB</AttachmentDescription>
                         </AttachmentContent>
                     </Attachment>
                 </div>
@@ -129,7 +129,7 @@ export const States: StoryObj = {
                             <Spinner />
                         </AttachmentMedia>
                         <AttachmentContent>
-                            <AttachmentTitle>readings-2026-11-04.csv</AttachmentTitle>
+                            <AttachmentTitle>orders-2026-10.csv</AttachmentTitle>
                             <AttachmentDescription>2.1 of 4.2 KB</AttachmentDescription>
                         </AttachmentContent>
                     </Attachment>
@@ -141,8 +141,8 @@ export const States: StoryObj = {
                             <FileSpreadsheetIcon />
                         </AttachmentMedia>
                         <AttachmentContent>
-                            <AttachmentTitle>readings-2026-11-04.csv</AttachmentTitle>
-                            <AttachmentDescription>Checking against schema readings</AttachmentDescription>
+                            <AttachmentTitle>orders-2026-10.csv</AttachmentTitle>
+                            <AttachmentDescription>Checking against the orders rules</AttachmentDescription>
                         </AttachmentContent>
                     </Attachment>
                 </div>
@@ -153,7 +153,7 @@ export const States: StoryObj = {
                             <FileSpreadsheetIcon />
                         </AttachmentMedia>
                         <AttachmentContent>
-                            <AttachmentTitle>readings-2026-11-03.csv</AttachmentTitle>
+                            <AttachmentTitle>orders-2026-09.csv</AttachmentTitle>
                             <AttachmentDescription>Larger than the 16 MB limit</AttachmentDescription>
                         </AttachmentContent>
                         <AttachmentActions>
@@ -185,13 +185,13 @@ export const InAMessage: StoryObj = {
                                     <FileTextIcon />
                                 </AttachmentMedia>
                                 <AttachmentContent>
-                                    <AttachmentTitle>weather-gate.yaml</AttachmentTitle>
-                                    <AttachmentDescription>Pipeline, 0.6 KB</AttachmentDescription>
+                                    <AttachmentTitle>import-orders.yaml</AttachmentTitle>
+                                    <AttachmentDescription>Job, 0.6 KB</AttachmentDescription>
                                 </AttachmentContent>
                             </Attachment>
                         </AttachmentGroup>
                         <Bubble align="end">
-                            <BubbleContent>Why did weather-gate fail at 14:02 with these readings?</BubbleContent>
+                            <BubbleContent>Why did import-orders fail at 14:02 with these orders?</BubbleContent>
                         </Bubble>
                     </MessageContent>
                 </Message>

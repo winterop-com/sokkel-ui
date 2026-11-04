@@ -38,7 +38,7 @@ export const Variants: StoryObj = {
             <div className="flex flex-wrap gap-6">
                 <Labeled label="icon inline-start">
                     <InputGroup>
-                        <InputGroupInput aria-label="Search" placeholder="Search pipelines" />
+                        <InputGroupInput aria-label="Search" placeholder="Search jobs" />
                         <InputGroupAddon>
                             <Search />
                         </InputGroupAddon>
@@ -46,7 +46,7 @@ export const Variants: StoryObj = {
                 </Labeled>
                 <Labeled label="text inline-start">
                     <InputGroup>
-                        <InputGroupInput aria-label="Host" defaultValue="play.dhis2.org" />
+                        <InputGroupInput aria-label="Host" defaultValue="api.example.org" />
                         <InputGroupAddon>
                             <InputGroupText>https://</InputGroupText>
                         </InputGroupAddon>
@@ -62,7 +62,7 @@ export const Variants: StoryObj = {
                 </Labeled>
                 <Labeled label="button inline-end">
                     <InputGroup>
-                        <InputGroupInput aria-label="Token" type="password" defaultValue="d2pat_abcdefghijkl" />
+                        <InputGroupInput aria-label="Token" type="password" defaultValue="tok_abcdefghijklm" />
                         <InputGroupAddon align="inline-end">
                             <InputGroupButton size="icon-xs" aria-label="Show token">
                                 <Eye />
@@ -83,7 +83,7 @@ export const Variants: StoryObj = {
                 </Labeled>
                 <Labeled label="block-end textarea">
                     <InputGroup>
-                        <InputGroupTextarea aria-label="Filter" defaultValue=".rows | map(select(.value > 0))" />
+                        <InputGroupTextarea aria-label="Filter" defaultValue=".rows | map(select(.amount > 0))" />
                         <InputGroupAddon align="block-end">
                             <InputGroupText>jq</InputGroupText>
                             <InputGroupButton className="ml-auto" variant="default">
@@ -103,7 +103,7 @@ export const States: StoryObj = {
             <div className="flex flex-wrap gap-6">
                 <Labeled label="disabled">
                     <InputGroup data-disabled="true">
-                        <InputGroupInput aria-label="Host" disabled defaultValue="play.dhis2.org" />
+                        <InputGroupInput aria-label="Host" disabled defaultValue="api.example.org" />
                         <InputGroupAddon>
                             <Globe />
                         </InputGroupAddon>
@@ -119,7 +119,7 @@ export const States: StoryObj = {
                 </Labeled>
                 <Labeled label="loading">
                     <InputGroup>
-                        <InputGroupInput aria-label="Search" defaultValue="dhis2" />
+                        <InputGroupInput aria-label="Search" defaultValue="orders" />
                         <InputGroupAddon align="inline-end">
                             <Loader2 className="animate-spin" />
                         </InputGroupAddon>
@@ -134,12 +134,12 @@ export const WebhookUrl: StoryObj = {
     render: () => (
         <Ground>
             <div className="flex max-w-lg flex-col gap-2">
-                <p className="text-sm font-medium">Webhook for trigger on-upload</p>
+                <p className="text-sm font-medium">Webhook for import-orders</p>
                 <InputGroup>
                     <InputGroupAddon>
                         <InputGroupText>POST</InputGroupText>
                     </InputGroupAddon>
-                    <InputGroupInput aria-label="Webhook URL" readOnly defaultValue="https://dirigent.example.org/hooks/weather-gate" />
+                    <InputGroupInput aria-label="Webhook URL" readOnly defaultValue="https://api.example.org/hooks/import-orders" />
                     <InputGroupAddon align="inline-end">
                         <InputGroupButton size="icon-xs" aria-label="Copy URL">
                             <Copy />

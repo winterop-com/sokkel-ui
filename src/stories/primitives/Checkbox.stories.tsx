@@ -74,7 +74,7 @@ const EVENTS = [
     { id: 'failed', label: 'A run fails', detail: 'Any step ends failed and retries are spent.' },
     { id: 'recovered', label: 'A run recovers', detail: 'The first success after a failure.' },
     { id: 'slow', label: 'A run is slow', detail: 'It takes more than twice its median duration.' },
-    { id: 'succeeded', label: 'Every success', detail: 'Noisy on a pipeline that runs each minute.' },
+    { id: 'succeeded', label: 'Every success', detail: 'Noisy on a job that runs each minute.' },
 ]
 
 function AlertEvents() {
@@ -84,7 +84,7 @@ function AlertEvents() {
     return (
         <Ground>
             <FieldSet className="max-w-md">
-                <FieldLegend>Alert on weather-gate when</FieldLegend>
+                <FieldLegend>Alert on import-orders when</FieldLegend>
                 <Field orientation="horizontal">
                     <Checkbox
                         id="ev-all"

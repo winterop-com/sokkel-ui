@@ -24,10 +24,10 @@ function Closed() {
         <div className="min-h-svh bg-background p-6 text-foreground">
             <div className="flex flex-wrap gap-3">
                 <AlertDialog>
-                    <AlertDialogTrigger render={<Button variant="destructive" />}>Delete pipeline</AlertDialogTrigger>
+                    <AlertDialogTrigger render={<Button variant="destructive" />}>Delete job</AlertDialogTrigger>
                     <AlertDialogContent>
                         <AlertDialogHeader>
-                            <AlertDialogTitle>Delete weather-gate?</AlertDialogTitle>
+                            <AlertDialogTitle>Delete import-orders?</AlertDialogTitle>
                         </AlertDialogHeader>
                     </AlertDialogContent>
                 </AlertDialog>
@@ -44,7 +44,7 @@ function Default() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Cancel the running run?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Run 01a1a5c6 of weather-gate has been running for 42.0s. Steps that finished keep their output.
+                            Run 01a1a5c6 of import-orders has been running for 42.0s. Steps that finished keep their output.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -66,8 +66,10 @@ function Small() {
                         <AlertDialogMedia>
                             <TriangleAlert />
                         </AlertDialogMedia>
-                        <AlertDialogTitle>Disable the trigger?</AlertDialogTitle>
-                        <AlertDialogDescription>nightly-sync stops starting runs until it is enabled again.</AlertDialogDescription>
+                        <AlertDialogTitle>Disable the schedule?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            nightly-export stops running on its schedule until it is enabled again.
+                        </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Keep</AlertDialogCancel>
@@ -79,20 +81,20 @@ function Small() {
     )
 }
 
-function DeletePipeline() {
+function DeleteJob() {
     const [open, setOpen] = useState(true)
     return (
         <div className="min-h-svh bg-background p-6 text-foreground">
             <AlertDialog open={open} onOpenChange={setOpen}>
-                <AlertDialogTrigger render={<Button variant="destructive" />}>Delete pipeline</AlertDialogTrigger>
+                <AlertDialogTrigger render={<Button variant="destructive" />}>Delete job</AlertDialogTrigger>
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogMedia className="bg-destructive/10 text-destructive">
                             <Trash2 />
                         </AlertDialogMedia>
-                        <AlertDialogTitle>Delete weather-gate?</AlertDialogTitle>
+                        <AlertDialogTitle>Delete import-orders?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Its 128 runs stay in the history. The trigger nightly-sync stops, and the connection dhis2-play is kept.
+                            Its 128 runs stay in the history. Its schedule stops, and the bucket harbor-exports is kept.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -110,4 +112,4 @@ function DeletePipeline() {
 export const Trigger: StoryObj = { render: () => <Closed /> }
 export const Opened: StoryObj = { render: () => <Default /> }
 export const SmallWithMedia: StoryObj = { render: () => <Small /> }
-export const Destructive: StoryObj = { render: () => <DeletePipeline /> }
+export const Destructive: StoryObj = { render: () => <DeleteJob /> }

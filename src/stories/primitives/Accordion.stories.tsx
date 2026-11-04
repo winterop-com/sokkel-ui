@@ -20,8 +20,8 @@ function Caption({ children }: { children: React.ReactNode }) {
 function Steps() {
     return (
         <>
-            <AccordionItem value="extract">
-                <AccordionTrigger>extract</AccordionTrigger>
+            <AccordionItem value="fetch">
+                <AccordionTrigger>fetch</AccordionTrigger>
                 <AccordionContent>Reads the orders placed since the last run.</AccordionContent>
             </AccordionItem>
             <AccordionItem value="validate">
@@ -41,13 +41,13 @@ export const Variants: StoryObj = {
         <Ground>
             <div className="flex max-w-lg flex-col gap-2">
                 <Caption>single, first item open</Caption>
-                <Accordion defaultValue={['extract']}>
+                <Accordion defaultValue={['fetch']}>
                     <Steps />
                 </Accordion>
             </div>
             <div className="flex max-w-lg flex-col gap-2">
                 <Caption>multiple, two items open</Caption>
-                <Accordion multiple defaultValue={['extract', 'upload']}>
+                <Accordion multiple defaultValue={['fetch', 'upload']}>
                     <Steps />
                 </Accordion>
             </div>
@@ -94,8 +94,8 @@ export const RunSteps: StoryObj = {
                     Run <span className="font-mono">01a1a5c2</span> of <span className="font-mono">nightly-export</span>
                 </h2>
                 <Accordion defaultValue={['validate']}>
-                    <AccordionItem value="extract">
-                        <StepTrigger code="extract" detail="0.8s" />
+                    <AccordionItem value="fetch">
+                        <StepTrigger code="fetch" detail="0.8s" />
                         <AccordionContent>
                             <p className="text-muted-foreground">Read 312 orders at 2026-11-04 14:02.</p>
                         </AccordionContent>

@@ -20,10 +20,10 @@ function Closed() {
         <div className="min-h-svh bg-background p-6 text-foreground">
             <div className="flex flex-wrap gap-3">
                 <Drawer>
-                    <DrawerTrigger render={<Button variant="outline" />}>Trigger details</DrawerTrigger>
+                    <DrawerTrigger render={<Button variant="outline" />}>Schedule details</DrawerTrigger>
                     <DrawerContent>
                         <DrawerHeader>
-                            <DrawerTitle>nightly-sync</DrawerTitle>
+                            <DrawerTitle>every-night</DrawerTitle>
                         </DrawerHeader>
                     </DrawerContent>
                 </Drawer>
@@ -33,20 +33,20 @@ function Closed() {
 }
 
 const FACTS: [string, string][] = [
-    ['Pipeline', 'weather-gate'],
+    ['Job', 'nightly-export'],
     ['Schedule', 'Every day at 02:00'],
     ['Last run', '2026-11-04 02:00, succeeded in 1.2s'],
     ['Next run', '2026-11-05 02:00'],
 ]
 
-function TriggerDetail() {
+function ScheduleDetail() {
     return (
         <div className="min-h-svh bg-background p-6 text-foreground">
             <Drawer defaultOpen showSwipeHandle>
                 <DrawerContent>
                     <DrawerHeader>
-                        <DrawerTitle>nightly-sync</DrawerTitle>
-                        <DrawerDescription>A schedule trigger that starts weather-gate once a day.</DrawerDescription>
+                        <DrawerTitle>every-night</DrawerTitle>
+                        <DrawerDescription>A schedule that starts nightly-export once a day.</DrawerDescription>
                     </DrawerHeader>
                     <dl className="grid gap-2 p-4 text-sm">
                         {FACTS.map(([term, value]) => (
@@ -72,8 +72,8 @@ function Right() {
             <Drawer defaultOpen swipeDirection="right">
                 <DrawerContent>
                     <DrawerHeader>
-                        <DrawerTitle>dhis2-play</DrawerTitle>
-                        <DrawerDescription>A DHIS2 connection used by 3 pipelines.</DrawerDescription>
+                        <DrawerTitle>api</DrawerTitle>
+                        <DrawerDescription>A service used by 3 jobs.</DrawerDescription>
                     </DrawerHeader>
                     <div className="p-4 text-sm text-muted-foreground">Last checked 2026-11-04 14:02. The server answered in 0.4s.</div>
                     <DrawerFooter>
@@ -86,5 +86,5 @@ function Right() {
 }
 
 export const Trigger: StoryObj = { render: () => <Closed /> }
-export const BottomWithHandle: StoryObj = { render: () => <TriggerDetail /> }
+export const BottomWithHandle: StoryObj = { render: () => <ScheduleDetail /> }
 export const FromRight: StoryObj = { render: () => <Right /> }

@@ -48,7 +48,7 @@ export const Variants: StoryObj = {
                 <Labeled label="vertical">
                     <Field>
                         <FieldLabel htmlFor="f-code">Code</FieldLabel>
-                        <Input id="f-code" defaultValue="weather-gate" />
+                        <Input id="f-code" defaultValue="import-orders" />
                         <FieldDescription>Lowercase letters, digits and dashes.</FieldDescription>
                     </Field>
                 </Labeled>
@@ -62,7 +62,7 @@ export const Variants: StoryObj = {
                     <Field orientation="horizontal">
                         <FieldContent>
                             <FieldLabel htmlFor="f-paused">Paused</FieldLabel>
-                            <FieldDescription>Triggers stay registered but start no runs.</FieldDescription>
+                            <FieldDescription>Schedules stay in place but start no runs.</FieldDescription>
                         </FieldContent>
                         <Switch id="f-paused" />
                     </Field>
@@ -81,7 +81,7 @@ export const Variants: StoryObj = {
                 <Labeled label="fieldset with legend">
                     <FieldSet>
                         <FieldLegend>Run when</FieldLegend>
-                        <FieldDescription>Pick what starts this pipeline.</FieldDescription>
+                        <FieldDescription>Pick what starts this job.</FieldDescription>
                         <RadioGroup defaultValue="schedule">
                             <Field orientation="horizontal">
                                 <RadioGroupItem id="f-schedule" value="schedule" />
@@ -109,12 +109,12 @@ export const Variants: StoryObj = {
                     <FieldGroup>
                         <Field>
                             <FieldLabel htmlFor="f-a">Name</FieldLabel>
-                            <Input id="f-a" defaultValue="Weather gate" />
+                            <Input id="f-a" defaultValue="Import orders" />
                         </Field>
                         <FieldSeparator>or</FieldSeparator>
                         <Field>
                             <FieldLabel htmlFor="f-b">Copy from</FieldLabel>
-                            <Input id="f-b" placeholder="A pipeline code" />
+                            <Input id="f-b" placeholder="A job code" />
                         </Field>
                     </FieldGroup>
                 </Labeled>
@@ -130,21 +130,21 @@ export const States: StoryObj = {
                 <Labeled label="invalid">
                     <Field data-invalid="true">
                         <FieldLabel htmlFor="s-code">Code</FieldLabel>
-                        <Input id="s-code" aria-invalid defaultValue="Weather Gate" />
+                        <Input id="s-code" aria-invalid defaultValue="Import Orders" />
                         <FieldError>Use lowercase letters, digits and dashes.</FieldError>
                     </Field>
                 </Labeled>
                 <Labeled label="several errors">
                     <Field data-invalid="true">
                         <FieldLabel htmlFor="s-url">Base URL</FieldLabel>
-                        <Input id="s-url" aria-invalid defaultValue="play.dhis2" />
+                        <Input id="s-url" aria-invalid defaultValue="api.example" />
                         <FieldError errors={[{ message: 'Start with https://.' }, { message: 'Name a full host.' }]} />
                     </Field>
                 </Labeled>
                 <Labeled label="disabled">
                     <Field data-disabled="true">
                         <FieldLabel htmlFor="s-dis">Code</FieldLabel>
-                        <Input id="s-dis" disabled defaultValue="weather-gate" />
+                        <Input id="s-dis" disabled defaultValue="import-orders" />
                         <FieldDescription>A code cannot change once runs exist.</FieldDescription>
                     </Field>
                 </Labeled>
@@ -160,16 +160,16 @@ const AUTH_KINDS = [
     { value: 'oauth2', label: 'OAuth 2 client credentials' },
 ]
 
-function ConnectionFormDemo() {
-    const [code, setCode] = useState('dhis2-play')
+function ServiceFormDemo() {
+    const [code, setCode] = useState('orders-api')
     const [auth, setAuth] = useState<string | null>('token')
     const codeOk = /^[a-z0-9][a-z0-9-]*$/.test(code)
     return (
         <Ground>
             <form className="flex max-w-lg flex-col gap-6 rounded-lg border border-border p-5" onSubmit={(event) => event.preventDefault()}>
                 <FieldSet>
-                    <FieldLegend>New connection</FieldLegend>
-                    <FieldDescription>Blocks reach an outside system through a connection.</FieldDescription>
+                    <FieldLegend>New service</FieldLegend>
+                    <FieldDescription>Jobs reach an outside system through a service.</FieldDescription>
                     <FieldGroup>
                         <Field data-invalid={!codeOk}>
                             <FieldLabel htmlFor="c-code">Code</FieldLabel>
@@ -181,18 +181,18 @@ function ConnectionFormDemo() {
                                 onChange={(event) => setCode(event.target.value)}
                             />
                             {codeOk ? (
-                                <FieldDescription>What pipelines name this connection by.</FieldDescription>
+                                <FieldDescription>What jobs name this service by.</FieldDescription>
                             ) : (
                                 <FieldError>Use lowercase letters, digits and dashes.</FieldError>
                             )}
                         </Field>
                         <Field>
                             <FieldLabel htmlFor="c-name">Name</FieldLabel>
-                            <Input id="c-name" defaultValue="DHIS2 play server" />
+                            <Input id="c-name" defaultValue="Orders API" />
                         </Field>
                         <Field>
                             <FieldLabel htmlFor="c-url">Base URL</FieldLabel>
-                            <Input id="c-url" type="url" defaultValue="https://play.dhis2.org/api" />
+                            <Input id="c-url" type="url" defaultValue="https://api.example.org" />
                         </Field>
                         <Field>
                             <FieldLabel htmlFor="c-auth">Auth kind</FieldLabel>
@@ -241,4 +241,4 @@ function ConnectionFormDemo() {
     )
 }
 
-export const ConnectionForm: StoryObj = { render: () => <ConnectionFormDemo /> }
+export const ServiceForm: StoryObj = { render: () => <ServiceFormDemo /> }

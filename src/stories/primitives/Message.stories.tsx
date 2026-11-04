@@ -44,25 +44,25 @@ function Assistant() {
 }
 
 function Person() {
-    return <MessageAvatar className="size-8 text-xs font-medium">MH</MessageAvatar>
+    return <MessageAvatar className="size-8 text-xs font-medium">AL</MessageAvatar>
 }
 
 const STEP = `steps:
   fetch:
-    block: http.get
+    uses: http.get
     with:
-      connection: met-no
-      path: /weatherapi/locationforecast/2.0/compact
-  gate:
-    block: jq.assert
+      url: https://files.example.org/orders-2026-10.csv
+      format: csv
+  validate:
+    uses: rows.check
     with:
       input: \${{ steps.fetch.output }}
-      expression: .properties.timeseries | length > 0
-      message: no forecast rows for station SN18700
-  store:
-    block: dhis2.data-values
+      expression: .amount | type == "number"
+      message: amount is not a number
+  upload:
+    uses: bucket.put
     with:
-      connection: dhis2-play`
+      bucket: harbor-exports`
 
 function FailingStep() {
     const lines = useHighlightedCode(STEP, 'yaml')
@@ -71,7 +71,7 @@ function FailingStep() {
             <CodeBlockHeader>
                 <CodeBlockTitle>
                     <FileTextIcon />
-                    pipelines/weather-gate.yaml
+                    jobs/import-orders.yaml
                 </CodeBlockTitle>
             </CodeBlockHeader>
             <CodeBlockContent lineNumbers>
@@ -99,12 +99,12 @@ function ConversationView() {
                             <FileSpreadsheetIcon />
                         </AttachmentMedia>
                         <AttachmentContent>
-                            <AttachmentTitle>readings-2026-11-04.csv</AttachmentTitle>
-                            <AttachmentDescription>CSV, 4.2 KB</AttachmentDescription>
+                            <AttachmentTitle>orders-2026-10.csv</AttachmentTitle>
+                            <AttachmentDescription>CSV, 182 KB</AttachmentDescription>
                         </AttachmentContent>
                     </Attachment>
                     <Bubble align="end">
-                        <BubbleContent>Why did weather-gate fail at 14:02? The readings I attached look complete to me.</BubbleContent>
+                        <BubbleContent>Why did import-orders fail at 14:02? The orders I attached look complete to me.</BubbleContent>
                     </Bubble>
                 </MessageContent>
             </Message>
@@ -117,7 +117,7 @@ function ConversationView() {
                             <TraceIcon>
                                 <FileTextIcon />
                             </TraceIcon>
-                            <TraceTitle>Read run 01a1a5c2 of weather-gate</TraceTitle>
+                            <TraceTitle>Read run 01a1a5c2 of import-orders</TraceTitle>
                             <TraceDescription>0.2s</TraceDescription>
                         </TraceLine>
                         <TraceCollapsible defaultOpen>
@@ -126,27 +126,27 @@ function ConversationView() {
                                     <TraceIcon>
                                         <TriangleAlertIcon />
                                     </TraceIcon>
-                                    <TraceTitle>Read the log of block gate</TraceTitle>
+                                    <TraceTitle>Read the log of step validate</TraceTitle>
                                     <TraceDescription>0.1s</TraceDescription>
                                 </TraceLine>
                             </TraceCollapsibleTrigger>
                             <TraceCollapsibleContent>
                                 <p className="font-mono text-xs">
-                                    2026-11-04 14:02:07 gate failed: .properties.timeseries | length &gt; 0 evaluated to false
+                                    2026-11-04 14:02:07 validate failed: 37 of 2,184 rows have an amount that is not a number
                                 </p>
                             </TraceCollapsibleContent>
                         </TraceCollapsible>
                     </Trace>
                     <Bubble variant="ghost">
                         <BubbleContent>
-                            The fetch step succeeded, but the forecast it returned had no rows for station SN18700, so the gate stopped the
-                            run before store. Your CSV is fine; it never reached the pipeline. The assertion is on line 11:
+                            The fetch step read all 2,184 rows, but 37 of them carry an amount that is not a number, such as n/a on row 412,
+                            so validate stopped the run before upload. The rows are all there; the check is on line 11:
                         </BubbleContent>
                     </Bubble>
                     <FailingStep />
                     <Bubble variant="ghost">
                         <BubbleContent>
-                            Rerun once the forecast service has data for the station, or point the gate at the readings source.
+                            Fix those 37 amounts in the file and rerun, or drop them in a transform step before validate.
                         </BubbleContent>
                     </Bubble>
                 </MessageContent>
@@ -169,7 +169,7 @@ export const Variants: StoryObj = {
                         <MessageContent>
                             <MessageHeader>Assistant</MessageHeader>
                             <Bubble variant="muted">
-                                <BubbleContent>The last run of dhis2-play succeeded in 1.2s.</BubbleContent>
+                                <BubbleContent>The last run of nightly-export succeeded in 1.2s.</BubbleContent>
                             </Bubble>
                         </MessageContent>
                     </Message>
@@ -191,7 +191,7 @@ export const Variants: StoryObj = {
                     <Message>
                         <MessageContent>
                             <Bubble variant="outline">
-                                <BubbleContent>Two runs failed: weather-gate at 14:02 and fhir-tour at 09:41.</BubbleContent>
+                                <BubbleContent>Two runs failed: import-orders at 14:02 and sync-inventory at 09:41.</BubbleContent>
                             </Bubble>
                         </MessageContent>
                     </Message>
@@ -202,7 +202,7 @@ export const Variants: StoryObj = {
                         <Message align="end">
                             <MessageContent>
                                 <Bubble align="end">
-                                    <BubbleContent>Pause the trigger on weather-gate.</BubbleContent>
+                                    <BubbleContent>Pause the schedule on import-orders.</BubbleContent>
                                 </Bubble>
                             </MessageContent>
                         </Message>
@@ -231,7 +231,7 @@ export const States: StoryObj = {
                         <MessageContent>
                             <Trace>
                                 <TraceLine status="running">
-                                    <TraceTitle>Reading runs of weather-gate</TraceTitle>
+                                    <TraceTitle>Reading runs of import-orders</TraceTitle>
                                 </TraceLine>
                             </Trace>
                         </MessageContent>
@@ -243,7 +243,7 @@ export const States: StoryObj = {
                         <Assistant />
                         <MessageContent>
                             <Bubble variant="destructive">
-                                <BubbleContent>The connection dhis2-play refused the request. Check its credentials.</BubbleContent>
+                                <BubbleContent>The service api refused the request. Check its API token.</BubbleContent>
                             </Bubble>
                             <MessageFooter>2026-11-04 14:06</MessageFooter>
                         </MessageContent>

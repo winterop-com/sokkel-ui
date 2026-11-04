@@ -17,26 +17,26 @@ function Caption({ children }: { children: ReactNode }) {
     return <p className="text-xs text-muted-foreground">{children}</p>
 }
 
-const PIPELINES: { code: string; name: string; status: Status; at: string; took: string }[] = [
-    { code: 'weather-gate', name: 'Weather gate', status: 'failed', at: '2026-11-04 14:02', took: '0.3s' },
-    { code: 'dhis2-play', name: 'DHIS2 play sync', status: 'succeeded', at: '2026-11-04 14:00', took: '1.2s' },
-    { code: 'fhir-tour', name: 'FHIR tour', status: 'succeeded', at: '2026-11-04 09:21', took: '3.8s' },
-    { code: 'connections-tour', name: 'Connections tour', status: 'running', at: '2026-11-04 14:04', took: '-' },
-    { code: 'climate-monthly', name: 'Climate, monthly', status: 'queued', at: '2026-11-04 14:05', took: '-' },
+const JOBS: { code: string; name: string; status: Status; at: string; took: string }[] = [
+    { code: 'import-orders', name: 'Import orders', status: 'failed', at: '2026-11-04 14:02', took: '0.3s' },
+    { code: 'nightly-export', name: 'Nightly export', status: 'succeeded', at: '2026-11-04 14:00', took: '1.2s' },
+    { code: 'rebuild-index', name: 'Rebuild index', status: 'succeeded', at: '2026-11-04 09:21', took: '3.8s' },
+    { code: 'sync-inventory', name: 'Sync inventory', status: 'running', at: '2026-11-04 14:04', took: '-' },
+    { code: 'send-digest', name: 'Send digest', status: 'queued', at: '2026-11-04 14:05', took: '-' },
 ]
 
-function PipelineCard({ pipeline }: { pipeline: (typeof PIPELINES)[number] }) {
+function JobCard({ job }: { job: (typeof JOBS)[number] }) {
     return (
         <div className="flex h-full flex-col gap-2 rounded-lg border border-border bg-card p-4 text-card-foreground">
             <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">{pipeline.name}</p>
-                    <p className="truncate font-mono text-xs text-muted-foreground">{pipeline.code}</p>
+                    <p className="truncate text-sm font-medium">{job.name}</p>
+                    <p className="truncate font-mono text-xs text-muted-foreground">{job.code}</p>
                 </div>
-                <StatusChip status={pipeline.status} />
+                <StatusChip status={job.status} />
             </div>
             <p className="mt-auto text-xs text-muted-foreground tabular-nums">
-                {pipeline.at}, {pipeline.took}
+                {job.at}, {job.took}
             </p>
         </div>
     )
@@ -52,9 +52,9 @@ export const Variants: StoryObj = {
                 <Caption>horizontal, one slide at a time</Caption>
                 <Carousel className="w-full max-w-sm">
                     <CarouselContent>
-                        {PIPELINES.map((pipeline) => (
-                            <CarouselItem key={pipeline.code}>
-                                <PipelineCard pipeline={pipeline} />
+                        {JOBS.map((job) => (
+                            <CarouselItem key={job.code}>
+                                <JobCard job={job} />
                             </CarouselItem>
                         ))}
                     </CarouselContent>
@@ -66,9 +66,9 @@ export const Variants: StoryObj = {
                 <Caption>vertical</Caption>
                 <Carousel orientation="vertical" opts={{ align: 'start' }} className="my-12 w-full max-w-sm">
                     <CarouselContent className="h-48">
-                        {PIPELINES.map((pipeline) => (
-                            <CarouselItem key={pipeline.code} className="basis-1/2">
-                                <PipelineCard pipeline={pipeline} />
+                        {JOBS.map((job) => (
+                            <CarouselItem key={job.code} className="basis-1/2">
+                                <JobCard job={job} />
                             </CarouselItem>
                         ))}
                     </CarouselContent>
@@ -80,16 +80,16 @@ export const Variants: StoryObj = {
     ),
 }
 
-export const RecentPipelines: StoryObj = {
+export const RecentJobs: StoryObj = {
     render: () => (
         <Ground>
             <div className="flex flex-col gap-3 px-12">
                 <h2 className="text-sm font-medium">Recently run</h2>
                 <Carousel opts={{ align: 'start' }} className="w-full">
                     <CarouselContent>
-                        {PIPELINES.map((pipeline) => (
-                            <CarouselItem key={pipeline.code} className="sm:basis-1/2 lg:basis-1/3">
-                                <PipelineCard pipeline={pipeline} />
+                        {JOBS.map((job) => (
+                            <CarouselItem key={job.code} className="sm:basis-1/2 lg:basis-1/3">
+                                <JobCard job={job} />
                             </CarouselItem>
                         ))}
                     </CarouselContent>

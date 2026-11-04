@@ -66,27 +66,27 @@ export const States: StoryObj = {
     ),
 }
 
-const TRIGGERS = [
+const SCHEDULES = [
     { code: 'nightly', detail: 'Cron 0 2 * * *, next at 2026-11-05 02:00', on: true },
     { code: 'on-upload', detail: 'Webhook, last called 2026-11-04 14:02', on: true },
-    { code: 'backfill', detail: 'Manual only, last run 2026-10-28 09:15', on: false },
+    { code: 'backfill', detail: 'Cron 0 4 * * 0, last run 2026-10-25 04:00', on: false },
 ]
 
-export const PipelineTriggers: StoryObj = {
+export const JobSchedules: StoryObj = {
     render: () => (
         <Ground>
             <div className="flex max-w-lg flex-col gap-3">
-                <p className="text-sm font-medium">Triggers of weather-gate</p>
+                <p className="text-sm font-medium">Schedules and webhooks of sync-inventory</p>
                 <FieldGroup className="gap-0 divide-y divide-border rounded-lg border border-border">
-                    {TRIGGERS.map((trigger) => (
-                        <Field key={trigger.code} orientation="horizontal" className="px-3 py-3">
+                    {SCHEDULES.map((schedule) => (
+                        <Field key={schedule.code} orientation="horizontal" className="px-3 py-3">
                             <FieldContent>
-                                <FieldLabel htmlFor={`t-${trigger.code}`} className="font-mono">
-                                    {trigger.code}
+                                <FieldLabel htmlFor={`s-${schedule.code}`} className="font-mono">
+                                    {schedule.code}
                                 </FieldLabel>
-                                <FieldDescription>{trigger.detail}</FieldDescription>
+                                <FieldDescription>{schedule.detail}</FieldDescription>
                             </FieldContent>
-                            <Switch id={`t-${trigger.code}`} defaultChecked={trigger.on} />
+                            <Switch id={`s-${schedule.code}`} defaultChecked={schedule.on} />
                         </Field>
                     ))}
                 </FieldGroup>

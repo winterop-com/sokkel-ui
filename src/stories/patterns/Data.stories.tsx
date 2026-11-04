@@ -24,9 +24,9 @@ function Facts() {
                 <DescriptionList
                     columns={2}
                     items={[
-                        { term: 'Pipeline', value: 'weather-gate', code: true },
+                        { term: 'Job', value: 'import-orders', code: true },
                         { term: 'State', value: 'failed' },
-                        { term: 'Trigger', value: 'schedule, every hour' },
+                        { term: 'Started by', value: 'schedule, every hour' },
                         { term: 'Started', value: '2026-11-04 14:02' },
                         { term: 'Duration', value: '4.2s' },
                         { term: 'Retried from', value: null },
@@ -34,13 +34,13 @@ function Facts() {
                     ]}
                 />
             </Section>
-            <Section title="Connection">
+            <Section title="Service">
                 <DescriptionList
                     stacked
                     columns={2}
                     items={[
-                        { term: 'Base URL', value: 'https://play.dhis2.org/40.4', code: true },
-                        { term: 'Auth', value: 'personal access token' },
+                        { term: 'Base URL', value: 'https://api.example.org', code: true },
+                        { term: 'Auth', value: 'API token' },
                         { term: 'Timeout', value: '30s' },
                         { term: 'Verify TLS', value: 'on' },
                     ]}
@@ -75,7 +75,7 @@ function Numbers() {
                     trend={<Sparkline values={FAILURES} tone="good" label="Failure rate, last 14 days" />}
                 />
                 <Stat label="Median duration" value="4.2" unit="s" change="+0.6s" good={false} note="p50, last 24 hours" />
-                <Stat label="Pipelines" value="18" note="3 paused" />
+                <Stat label="Jobs" value="18" note="3 paused" />
             </div>
         </Ground>
     )
@@ -91,29 +91,29 @@ function Events() {
                             id: '1',
                             title: <span className="font-mono">fetch</span>,
                             at: '14:02:11',
-                            detail: '2,184 rows from dhis2-play',
+                            detail: '2,184 rows from orders-2026-10.csv',
                             tone: 'succeeded',
                         },
                         {
                             id: '2',
-                            title: <span className="font-mono">clean</span>,
+                            title: <span className="font-mono">transform</span>,
                             at: '14:02:12',
-                            detail: '37 rows dropped',
+                            detail: '2,184 rows mapped',
                             tone: 'succeeded',
                         },
                         {
                             id: '3',
                             title: <span className="font-mono">validate</span>,
                             at: '14:02:13',
-                            detail: 'value is not a number in 37 rows',
+                            detail: 'amount is not a number in 37 rows',
                             tone: 'failed',
                         },
-                        { id: '4', title: <span className="font-mono">write</span>, detail: 'skipped after a failure', tone: 'skipped' },
+                        { id: '4', title: <span className="font-mono">upload</span>, detail: 'skipped after a failure', tone: 'skipped' },
                         {
                             id: '5',
                             title: <span className="font-mono">notify</span>,
                             at: 'now',
-                            detail: 'posting to #data-alerts',
+                            detail: 'posting to #orders',
                             tone: 'running',
                         },
                     ]}
@@ -123,8 +123,8 @@ function Events() {
                 <Timeline
                     events={[
                         { id: 'a', title: 'ada changed the schedule to every hour', at: '2026-11-04 09:14' },
-                        { id: 'b', title: 'Added the step clean', at: '2026-11-03 16:40' },
-                        { id: 'c', title: 'Created weather-gate', at: '2026-10-28 11:02' },
+                        { id: 'b', title: 'Added the step transform', at: '2026-11-03 16:40' },
+                        { id: 'c', title: 'Created import-orders', at: '2026-10-28 11:02' },
                     ]}
                 />
             </Section>
@@ -133,15 +133,15 @@ function Events() {
 }
 
 const LOG: LogLine[] = [
-    { at: '14:02:11.204', level: 'info', source: 'fetch', text: 'GET /api/dataValueSets?period=LAST_12_MONTHS&orgUnit=ImspTQPwCqd' },
+    { at: '14:02:11.204', level: 'info', source: 'fetch', text: 'GET /v1/exports/orders-2026-10.csv?project=atlas' },
     { at: '14:02:11.902', level: 'info', source: 'fetch', text: 'read 2,184 rows in 0.7s' },
-    { at: '14:02:12.010', level: 'debug', source: 'clean', text: 'where: try_cast(value as double) is not null' },
-    { at: '14:02:12.115', level: 'warning', source: 'clean', text: 'dropped 37 rows whose value does not parse' },
+    { at: '14:02:12.010', level: 'debug', source: 'transform', text: 'map: amount = try_cast(amount as double)' },
+    { at: '14:02:12.115', level: 'warning', source: 'transform', text: '37 rows carry an amount that does not parse' },
     {
         at: '14:02:13.420',
         level: 'error',
         source: 'validate',
-        text: 'schema readings: field value must be a number (37 rows), first at row 112: {"period":"202610","orgUnit":"ImspTQPwCqd","value":"n/a"}',
+        text: 'rules orders: field amount must be a number (37 rows), first at row 412: {"order":"ord-10412","month":"2026-10","amount":"n/a"}',
     },
     { at: '14:02:13.421', level: 'info', source: 'run', text: 'failed after 2.2s' },
 ]
@@ -161,7 +161,7 @@ function Json() {
             <Section title="Payload">
                 <JsonTree
                     value={{
-                        pipeline: 'weather-gate',
+                        job: 'import-orders',
                         run: 'run_01JCF8Q2',
                         state: 'failed',
                         duration_ms: 4180,
@@ -169,9 +169,9 @@ function Json() {
                         error: null,
                         steps: [
                             { code: 'fetch', state: 'succeeded', rows: 2184 },
-                            { code: 'validate', state: 'failed', problems: [{ row: 112, field: 'value', message: 'must be a number' }] },
+                            { code: 'validate', state: 'failed', problems: [{ row: 412, field: 'amount', message: 'must be a number' }] },
                         ],
-                        labels: { team: 'climate', region: 'west' },
+                        labels: { team: 'billing', project: 'atlas' },
                     }}
                 />
             </Section>
@@ -183,27 +183,27 @@ function Diff() {
     return (
         <Ground>
             <DiffView
-                title="weather-gate.yaml"
-                before={`code: weather-gate
-schedule: every day at 06:00
+                title="import-orders.yaml"
+                before={`code: import-orders
+schedule: every day at 02:00
 steps:
   fetch:
-    block: dhis2.data-values
+    uses: http.get
   validate:
-    block: schema.check
-    with: { schema: readings, on_invalid: fail }
+    uses: rows.check
+    with: { rules: orders, on_invalid: fail }
 `}
-                after={`code: weather-gate
+                after={`code: import-orders
 schedule: every hour
 steps:
   fetch:
-    block: dhis2.data-values
-  clean:
-    block: filter
-    with: { where: "try_cast(value as double) is not null" }
+    uses: http.get
+  transform:
+    uses: rows.filter
+    with: { where: "try_cast(amount as double) is not null" }
   validate:
-    block: schema.check
-    with: { schema: readings, on_invalid: warn }
+    uses: rows.check
+    with: { rules: orders, on_invalid: warn }
 `}
             />
         </Ground>

@@ -30,27 +30,27 @@ function Caption({ children }: { children: ReactNode }) {
 }
 
 const TURNS: { id: string; from: 'person' | 'assistant'; text: string; at: string }[] = [
-    { id: 'm1', from: 'person', text: 'Which pipelines ran this morning?', at: '2026-11-04 09:12' },
+    { id: 'm1', from: 'person', text: 'Which jobs ran this morning?', at: '2026-11-04 09:12' },
     {
         id: 'm2',
         from: 'assistant',
-        text: 'Four: dhis2-play, weather-gate, fhir-tour and connections-tour. Three succeeded; fhir-tour failed at 09:41.',
+        text: 'Four: nightly-export, sync-inventory, rebuild-index and send-digest. Three succeeded; sync-inventory failed at 09:41.',
         at: '2026-11-04 09:12',
     },
-    { id: 'm3', from: 'person', text: 'Why did fhir-tour fail?', at: '2026-11-04 09:13' },
+    { id: 'm3', from: 'person', text: 'Why did sync-inventory fail?', at: '2026-11-04 09:13' },
     {
         id: 'm4',
         from: 'assistant',
-        text: 'The block fhir.bundle rejected a Patient resource without an identifier. The schema patient-v2 requires one.',
+        text: 'The step transform rejected an item of inventory.json without a SKU. The rules for inventory require one.',
         at: '2026-11-04 09:13',
     },
     { id: 'm5', from: 'person', text: 'Rerun it with the fixed export.', at: '2026-11-04 09:20' },
-    { id: 'm6', from: 'assistant', text: 'Run 01a1a4f0 of fhir-tour succeeded in 3.8s.', at: '2026-11-04 09:21' },
-    { id: 'm7', from: 'person', text: 'Why did weather-gate fail at 14:02?', at: '2026-11-04 14:03' },
+    { id: 'm6', from: 'assistant', text: 'Run 01a1a4f0 of sync-inventory succeeded in 3.8s.', at: '2026-11-04 09:21' },
+    { id: 'm7', from: 'person', text: 'Why did import-orders fail at 14:02?', at: '2026-11-04 14:03' },
     {
         id: 'm8',
         from: 'assistant',
-        text: 'The gate step found no forecast rows for station SN18700, so it stopped the run before store.',
+        text: 'The validate step found 37 rows of orders-2026-10.csv whose amount is not a number, so it stopped the run before upload.',
         at: '2026-11-04 14:03',
     },
 ]
@@ -82,7 +82,7 @@ function Column({ turns, position }: { turns: typeof TURNS; position: 'start' | 
                     <MessageScrollerViewport aria-label="Conversation">
                         <MessageScrollerContent className="p-4">
                             {turns.length === 0 ? (
-                                <p className="m-auto text-sm text-muted-foreground">Ask about a pipeline, a run or a connection.</p>
+                                <p className="m-auto text-sm text-muted-foreground">Ask about a job, a run or a service.</p>
                             ) : (
                                 turns.map((turn) => (
                                     <MessageScrollerItem key={turn.id} messageId={turn.id} scrollAnchor={turn.from === 'person'}>

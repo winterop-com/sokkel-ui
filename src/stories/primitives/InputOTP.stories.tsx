@@ -120,7 +120,7 @@ export const ConfirmDelete: StoryObj = {
                 <div className="flex flex-col gap-1">
                     <p className="text-sm font-medium">Confirm with your authenticator</p>
                     <p className="text-sm text-muted-foreground">
-                        Deleting the connection dhis2-play stops 4 pipelines. Enter the six-digit code to go on.
+                        Deleting the service api stops 4 jobs. Enter the six-digit code to go on.
                     </p>
                 </div>
                 <Otp maxLength={6} initial="4829" aria-label="Authenticator code">

@@ -30,10 +30,10 @@ function Banners() {
                         </Button>
                     }
                 >
-                    No answer from <span className="font-mono">https://dirigent.example.org</span>.
+                    No answer from <span className="font-mono">https://api.example.org</span>.
                 </Banner>
             )}
-            <Banner tone="warning">This instance is read-only while it is being upgraded to 0.37.0.</Banner>
+            <Banner tone="warning">This instance is read-only while it is being upgraded to 1.5.0.</Banner>
             <Banner
                 tone="info"
                 actions={
@@ -44,7 +44,7 @@ function Banners() {
             >
                 A newer version of the app is ready.
             </Banner>
-            <Banner tone="good">All 18 pipelines ran in the last hour.</Banner>
+            <Banner tone="good">All 18 jobs ran in the last hour.</Banner>
         </Ground>
     )
 }
@@ -70,22 +70,22 @@ function Health() {
                 <CheckList
                     checks={[
                         { name: 'Database', status: 'ok', detail: 'sqlite, 48 MB, schema current' },
-                        { name: 'Storage', status: 'ok', detail: 's3://dirigent-artifacts, 2.1 GB used' },
-                        { name: 'Packs', status: 'warn', detail: '3 installed' },
-                        { name: 'dirigent-dhis2', status: 'ok', detail: '0.36.0', group: 'Packs' },
+                        { name: 'Storage', status: 'ok', detail: 'bucket harbor-exports, 2.1 GB used' },
+                        { name: 'Workers', status: 'warn', detail: '3 running' },
+                        { name: 'worker-1', status: 'ok', detail: '1.4.0', group: 'Workers' },
                         {
-                            name: 'dirigent-fhir',
+                            name: 'worker-2',
                             status: 'warn',
-                            detail: '0.35.0',
-                            hint: 'One version behind the server; run uv sync to update it.',
-                            group: 'Packs',
+                            detail: '1.3.0',
+                            hint: 'One version behind the api; redeploy it to update it.',
+                            group: 'Workers',
                         },
-                        { name: 'dirigent-contrib', status: 'ok', detail: '0.36.0', group: 'Packs' },
+                        { name: 'worker-3', status: 'ok', detail: '1.4.0', group: 'Workers' },
                         {
                             name: 'Scheduler',
                             status: 'fail',
                             detail: 'last tick 14 minutes ago',
-                            hint: 'Restart the server to resume schedules.',
+                            hint: 'Restart the scheduler to resume schedules.',
                         },
                     ]}
                 />

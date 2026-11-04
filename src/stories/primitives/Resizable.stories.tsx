@@ -120,7 +120,7 @@ export const RunInspector: StoryObj = {
                                 <div className="flex flex-col gap-1 p-4">
                                     <p className="font-mono text-sm">01a1a5c2</p>
                                     <p className="text-sm text-muted-foreground">
-                                        weather-gate, started 2026-11-04 14:02, failed at gate after 0.3s
+                                        import-orders, started 2026-11-04 14:02, failed at validate after 0.3s
                                     </p>
                                 </div>
                             </ResizablePanel>
@@ -128,7 +128,7 @@ export const RunInspector: StoryObj = {
                             <ResizablePanel defaultSize="45">
                                 <pre className="h-full overflow-auto p-4 font-mono text-xs text-muted-foreground">
                                     {
-                                        '14:02:07 fetch succeeded in 0.2s\n14:02:07 gate failed: .properties.timeseries | length > 0 evaluated to false\n14:02:07 store skipped'
+                                        '14:02:07 fetch succeeded in 0.2s\n14:02:07 validate failed: 37 of 2,184 rows have an amount that is not a number\n14:02:07 upload skipped'
                                     }
                                 </pre>
                             </ResizablePanel>

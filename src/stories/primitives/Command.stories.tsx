@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { Blocks, Cable, FileJson, Play, Workflow, Zap } from 'lucide-react'
+import { BookOpen, CalendarClock, Play, Server, Webhook, Workflow } from 'lucide-react'
 import { useState } from 'react'
 
 import {
@@ -21,45 +21,45 @@ function Palette({ search = '' }: { search?: string }) {
     const [value, setValue] = useState(search)
     return (
         <>
-            <CommandInput placeholder="Search pipelines, connections, schemas" value={value} onValueChange={setValue} />
+            <CommandInput placeholder="Search jobs, services, webhooks" value={value} onValueChange={setValue} />
             <CommandList>
                 <CommandEmpty>Nothing matches.</CommandEmpty>
-                <CommandGroup heading="Pipelines">
-                    <CommandItem value="weather-gate">
+                <CommandGroup heading="Jobs">
+                    <CommandItem value="import-orders">
                         <Workflow />
-                        <span className="font-mono text-xs">weather-gate</span>
+                        <span className="font-mono text-xs">import-orders</span>
                     </CommandItem>
-                    <CommandItem value="dhis2-sync">
+                    <CommandItem value="sync-inventory">
                         <Workflow />
-                        <span className="font-mono text-xs">dhis2-sync</span>
+                        <span className="font-mono text-xs">sync-inventory</span>
                     </CommandItem>
                 </CommandGroup>
                 <CommandSeparator />
                 <CommandGroup heading="Go to">
-                    <CommandItem value="connections">
-                        <Cable />
-                        Connections
-                        <CommandShortcut>G C</CommandShortcut>
-                    </CommandItem>
-                    <CommandItem value="schemas">
-                        <FileJson />
-                        Schemas
+                    <CommandItem value="services">
+                        <Server />
+                        Services
                         <CommandShortcut>G S</CommandShortcut>
                     </CommandItem>
-                    <CommandItem value="triggers">
-                        <Zap />
-                        Triggers
+                    <CommandItem value="webhooks">
+                        <Webhook />
+                        Webhooks
+                        <CommandShortcut>G W</CommandShortcut>
                     </CommandItem>
-                    <CommandItem value="blocks" disabled>
-                        <Blocks />
-                        Blocks
+                    <CommandItem value="schedules">
+                        <CalendarClock />
+                        Schedules
+                    </CommandItem>
+                    <CommandItem value="docs" disabled>
+                        <BookOpen />
+                        Docs
                     </CommandItem>
                 </CommandGroup>
                 <CommandSeparator />
                 <CommandGroup heading="Actions">
-                    <CommandItem value="run weather-gate">
+                    <CommandItem value="run import-orders">
                         <Play />
-                        Run weather-gate
+                        Run import-orders
                         <CommandShortcut>R</CommandShortcut>
                     </CommandItem>
                 </CommandGroup>
@@ -82,7 +82,7 @@ export const Empty: StoryObj = {
     render: () => (
         <div className="min-h-svh bg-background p-6 text-foreground">
             <Command className="max-w-md rounded-xl border">
-                <Palette search="humidity" />
+                <Palette search="payroll" />
             </Command>
         </div>
     ),
@@ -91,7 +91,7 @@ export const Empty: StoryObj = {
 export const InDialog: StoryObj = {
     render: () => (
         <div className="min-h-svh bg-background p-6 text-foreground">
-            <CommandDialog defaultOpen title="Go to" description="Search pipelines, connections and schemas.">
+            <CommandDialog defaultOpen title="Go to" description="Search jobs, services and webhooks.">
                 <Command>
                     <Palette />
                 </Command>

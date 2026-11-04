@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { Blocks, Cable, FileJson, Play, Workflow, Zap } from 'lucide-react'
+import { BookOpen, CalendarClock, Play, Server, Webhook, Workflow } from 'lucide-react'
 import type { ComponentType } from 'react'
 
 import {
@@ -18,14 +18,14 @@ export default meta
 type Entry = { label: string; detail: string; icon: ComponentType<{ className?: string }> }
 
 const BUILD: Entry[] = [
-    { label: 'Pipelines', detail: 'Steps that move data, 12 in this project.', icon: Workflow },
-    { label: 'Connections', detail: 'Servers a block reaches, like dhis2-play.', icon: Cable },
-    { label: 'Schemas', detail: 'The shapes a value is checked against.', icon: FileJson },
+    { label: 'Jobs', detail: 'Steps that move data, 12 in this project.', icon: Workflow },
+    { label: 'Services', detail: 'Servers a step reaches, like api.', icon: Server },
+    { label: 'Webhooks', detail: 'URLs that start a job when called.', icon: Webhook },
 ]
 
 const OPERATE: Entry[] = [
     { label: 'Runs', detail: 'Every run, its state and its duration.', icon: Play },
-    { label: 'Triggers', detail: 'Schedules and webhooks that start runs.', icon: Zap },
+    { label: 'Schedules', detail: 'The times each job starts on its own.', icon: CalendarClock },
 ]
 
 function Links({ entries }: { entries: Entry[] }) {
@@ -65,8 +65,8 @@ function ProductNav({ open }: { open?: string }) {
                     </NavigationMenuItem>
                     <NavigationMenuItem>
                         <NavigationMenuLink href="#" className={navigationMenuTriggerStyle()}>
-                            <Blocks />
-                            Blocks
+                            <BookOpen />
+                            Docs
                         </NavigationMenuLink>
                     </NavigationMenuItem>
                 </NavigationMenuList>

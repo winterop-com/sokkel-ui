@@ -26,17 +26,7 @@ const RUNS = Array.from({ length: 24 }, (_, at) => ({
     took: `${(1 + ((at * 7) % 10) / 10).toFixed(1)}s`,
 }))
 
-const BLOCKS = [
-    'http.get',
-    'jq.assert',
-    'jq.map',
-    'dhis2.data-values',
-    'dhis2.metadata',
-    'fhir.bundle',
-    'parquet.write',
-    's3.put',
-    'csv.read',
-]
+const ACTIONS = ['http.get', 'rows.check', 'rows.map', 'rows.filter', 'csv.read', 'json.parse', 'parquet.write', 'bucket.put', 'chat.post']
 
 const meta: Meta = { title: 'Primitives/Layout/ScrollArea' }
 export default meta
@@ -62,9 +52,9 @@ export const Variants: StoryObj = {
                     <Caption>horizontal</Caption>
                     <ScrollArea className="w-full rounded-lg border border-border">
                         <div className="flex w-max gap-2 p-3">
-                            {BLOCKS.map((block) => (
-                                <span key={block} className="rounded-md border border-border px-2 py-1 font-mono text-xs">
-                                    {block}
+                            {ACTIONS.map((action) => (
+                                <span key={action} className="rounded-md border border-border px-2 py-1 font-mono text-xs">
+                                    {action}
                                 </span>
                             ))}
                         </div>
@@ -74,7 +64,7 @@ export const Variants: StoryObj = {
                 <div className="flex w-full max-w-xs flex-col gap-2">
                     <Caption>short content, no scrollbar</Caption>
                     <ScrollArea className="h-64 rounded-lg border border-border">
-                        <p className="p-3 text-sm text-muted-foreground">No runs of fhir-tour today.</p>
+                        <p className="p-3 text-sm text-muted-foreground">No runs of rebuild-index today.</p>
                     </ScrollArea>
                 </div>
             </div>
@@ -86,7 +76,7 @@ export const RunHistory: StoryObj = {
     render: () => (
         <Ground>
             <div className="flex max-w-xl flex-col gap-2">
-                <h2 className="text-sm font-medium">Runs of weather-gate today</h2>
+                <h2 className="text-sm font-medium">Runs of import-orders today</h2>
                 <ScrollArea className="h-80 rounded-lg border border-border">
                     <table className="w-full min-w-[28rem] text-sm">
                         <tbody>

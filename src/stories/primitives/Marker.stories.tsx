@@ -40,7 +40,7 @@ export const Variants: StoryObj = {
                         <MarkerIcon>
                             <PlayIcon />
                         </MarkerIcon>
-                        <MarkerContent>Run 01a1a5c2 of weather-gate started at 14:02</MarkerContent>
+                        <MarkerContent>Run 01a1a5c2 of import-orders started at 14:02</MarkerContent>
                     </Marker>
                 </div>
                 <div className="flex flex-col gap-2">
@@ -69,7 +69,7 @@ export const Timeline: StoryObj = {
                 <Message align="end">
                     <MessageContent>
                         <Bubble align="end">
-                            <BubbleContent>Pause weather-gate until the forecast is back.</BubbleContent>
+                            <BubbleContent>Pause sync-inventory until the api service is back.</BubbleContent>
                         </Bubble>
                     </MessageContent>
                 </Message>
@@ -77,12 +77,12 @@ export const Timeline: StoryObj = {
                     <MarkerIcon>
                         <PauseIcon />
                     </MarkerIcon>
-                    <MarkerContent>Trigger every-hour on weather-gate paused at 14:06</MarkerContent>
+                    <MarkerContent>Schedule every-hour on sync-inventory paused at 14:06</MarkerContent>
                 </Marker>
                 <Message>
                     <MessageContent>
                         <Bubble variant="muted">
-                            <BubbleContent>Paused. It will not run until you resume the trigger.</BubbleContent>
+                            <BubbleContent>Paused. It will not run until you resume the schedule.</BubbleContent>
                         </Bubble>
                     </MessageContent>
                 </Message>

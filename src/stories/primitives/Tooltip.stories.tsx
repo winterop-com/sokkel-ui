@@ -16,7 +16,7 @@ function Closed() {
                     <TooltipTrigger render={<Button variant="outline" size="icon" aria-label="Run" />}>
                         <Play />
                     </TooltipTrigger>
-                    <TooltipContent>Run weather-gate now</TooltipContent>
+                    <TooltipContent>Run import-orders now</TooltipContent>
                 </Tooltip>
             </TooltipProvider>
         </div>
@@ -31,7 +31,7 @@ function Open() {
                     <TooltipTrigger render={<Button variant="outline" size="icon" aria-label="Run" />}>
                         <Play />
                     </TooltipTrigger>
-                    <TooltipContent>Run weather-gate now</TooltipContent>
+                    <TooltipContent>Run import-orders now</TooltipContent>
                 </Tooltip>
             </TooltipProvider>
         </div>
@@ -50,7 +50,7 @@ function Toolbar() {
                         <TooltipContent>Run</TooltipContent>
                     </Tooltip>
                     <Tooltip defaultOpen>
-                        <TooltipTrigger render={<Button variant="outline" size="icon" aria-label="Pause trigger" />}>
+                        <TooltipTrigger render={<Button variant="outline" size="icon" aria-label="Pause schedule" />}>
                             <Pause />
                         </TooltipTrigger>
                         <TooltipContent side="bottom">

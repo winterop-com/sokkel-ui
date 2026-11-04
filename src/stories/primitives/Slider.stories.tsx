@@ -83,7 +83,7 @@ function Concurrency() {
                     onValueChange={(next) => setValue(Array.isArray(next) ? next[0] : next)}
                 />
                 <FieldDescription>
-                    How many runs of weather-gate may be running at once. Further triggers queue until one finishes.
+                    How many runs of sync-inventory may be running at once. Further runs queue until one finishes.
                 </FieldDescription>
             </Field>
         </Ground>

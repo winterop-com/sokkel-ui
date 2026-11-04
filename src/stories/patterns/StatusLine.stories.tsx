@@ -11,11 +11,11 @@ function Lines() {
     return (
         <div className="flex min-h-svh flex-col gap-6 bg-background p-6 text-foreground">
             <Strip>
-                <StatusLine note="weather-gate is running" tone="live" live>
+                <StatusLine note="import-orders is running" tone="live" live>
                     <StatusItem label="run" code>
                         run_01JCF8Q2
                     </StatusItem>
-                    <StatusItem>step 3 of 7</StatusItem>
+                    <StatusItem>step 3 of 5</StatusItem>
                 </StatusLine>
             </Strip>
             <Strip>
@@ -38,7 +38,7 @@ function Lines() {
                     <StatusItem label="branch" code>
                         main
                     </StatusItem>
-                    <StatusItem>0.36.0</StatusItem>
+                    <StatusItem>1.4.0</StatusItem>
                 </StatusLine>
             </Strip>
         </div>
