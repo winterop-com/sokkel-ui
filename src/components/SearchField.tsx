@@ -45,7 +45,7 @@ export function SearchField({
         <label
             data-slot="search-field"
             className={cn(
-                'flex h-(--density-control) min-w-0 items-center gap-2 rounded-control border border-input bg-field px-2.5 text-sm transition-colors focus-within:border-ring',
+                'flex h-(--density-control) min-w-0 items-center gap-2 rounded-control border border-input bg-field px-2.5 text-sm transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring',
                 className,
             )}
         >
