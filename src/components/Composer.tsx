@@ -81,7 +81,7 @@ export function Composer({
     return (
         <div
             className={cn(
-                'relative flex flex-col rounded-lg border border-border-strong bg-field shadow-surface transition-colors focus-within:border-ring',
+                'relative flex flex-col rounded-lg border border-border-strong bg-field shadow-surface transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring',
                 over && 'border-primary ring-2 ring-primary/30',
                 disabled && 'opacity-60',
                 className,
