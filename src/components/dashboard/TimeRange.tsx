@@ -1,0 +1,199 @@
+import { CalendarRange, ChevronDown, RefreshCw } from 'lucide-react'
+import { useRef, useState } from 'react'
+import type { DateRange } from 'react-day-picker'
+
+import { cn } from '../../lib/cn'
+import { Button } from '../ui/button'
+import { Calendar } from '../ui/calendar'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '../ui/dropdown-menu'
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
+
+/** A named range a dashboard covers: the last hour, the last 7 days. */
+export interface RangePreset {
+    id: string
+    label: string
+}
+
+/** What a dashboard covers: a preset, or a custom span of days. */
+export type TimeRangeValue = { preset: string } | { from: Date; to: Date }
+
+export const DEFAULT_PRESETS: RangePreset[] = [
+    { id: '1h', label: 'Last hour' },
+    { id: '24h', label: 'Last 24 hours' },
+    { id: '7d', label: 'Last 7 days' },
+    { id: '30d', label: 'Last 30 days' },
+    { id: '90d', label: 'Last 90 days' },
+]
+
+/** A custom range said for a reader: `Oct 3 to Oct 17, 2026`. */
+export function rangeLabel(from: Date, to: Date, locale = 'en-US'): string {
+    const short = new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' })
+    const year = new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', year: 'numeric' })
+    return `${short.format(from)} to ${year.format(to)}`
+}
+
+/**
+ * The range a dashboard covers: a trigger naming the current range, opening a list of presets
+ * beside a calendar for a custom span. Choosing a preset applies it at once; a custom span applies
+ * with the Apply button.
+ */
+export function TimeRangePicker({
+    value,
+    onChange,
+    presets = DEFAULT_PRESETS,
+    defaultMonth,
+    today,
+    open: openProp,
+    words = { custom: 'Custom range', apply: 'Apply' },
+    className,
+}: {
+    value: TimeRangeValue
+    onChange: (value: TimeRangeValue) => void
+    presets?: readonly RangePreset[]
+    /** The month the calendar shows first. */
+    defaultMonth?: Date
+    /** The day the calendar marks as today; the clock's day when omitted. */
+    today?: Date
+    /** Holds the popover open, for a static view of it. */
+    open?: boolean
+    words?: { custom: string; apply: string }
+    className?: string
+}) {
+    const [open, setOpen] = useState(openProp ?? false)
+    const chosenRef = useRef<HTMLButtonElement>(null)
+    const [draft, setDraft] = useState<DateRange | undefined>('from' in value ? { from: value.from, to: value.to } : undefined)
+    const label =
+        'preset' in value ? (presets.find((preset) => preset.id === value.preset)?.label ?? value.preset) : rangeLabel(value.from, value.to)
+    return (
+        <Popover open={openProp ?? open} onOpenChange={setOpen}>
+            <PopoverTrigger render={<Button variant="outline" size="sm" className={cn('gap-1.5', className)} />}>
+                <CalendarRange aria-hidden />
+                {label}
+                <ChevronDown className="text-muted-foreground" aria-hidden />
+            </PopoverTrigger>
+            <PopoverContent align="end" initialFocus={chosenRef} className="flex w-auto flex-row gap-0 p-0">
+                <ul className="flex w-40 flex-col gap-0.5 border-r border-border p-1.5">
+                    {presets.map((preset) => {
+                        const chosen = 'preset' in value && value.preset === preset.id
+                        return (
+                            <li key={preset.id}>
+                                <button
+                                    ref={chosen ? chosenRef : undefined}
+                                    type="button"
+                                    aria-pressed={chosen}
+                                    onClick={() => {
+                                        onChange({ preset: preset.id })
+                                        setOpen(false)
+                                    }}
+                                    className={cn(
+                                        'flex h-8 w-full items-center rounded-md px-2 text-left text-sm outline-none hover:bg-secondary focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid',
+                                        chosen && 'bg-secondary font-medium',
+                                    )}
+                                >
+                                    {preset.label}
+                                </button>
+                            </li>
+                        )
+                    })}
+                </ul>
+                <div className="flex flex-col max-sm:hidden">
+                    <p className="px-3 pt-2.5 text-xs font-medium text-muted-foreground">{words.custom}</p>
+                    <Calendar
+                        mode="range"
+                        numberOfMonths={2}
+                        defaultMonth={defaultMonth}
+                        today={today}
+                        selected={draft}
+                        onSelect={setDraft}
+                    />
+                    <div className="flex justify-end border-t border-border p-2">
+                        <Button
+                            size="sm"
+                            aria-disabled={draft?.from === undefined || draft.to === undefined || undefined}
+                            className={cn((draft?.from === undefined || draft.to === undefined) && 'cursor-not-allowed opacity-50')}
+                            onClick={() => {
+                                if (draft?.from === undefined || draft.to === undefined) return
+                                onChange({ from: draft.from, to: draft.to })
+                                setOpen(false)
+                            }}
+                        >
+                            {words.apply}
+                        </Button>
+                    </div>
+                </div>
+            </PopoverContent>
+        </Popover>
+    )
+}
+
+/** How often a dashboard refreshes itself, in seconds; 0 is never. */
+export const REFRESH_INTERVALS = [0, 10, 30, 60, 300] as const
+
+/**
+ * Refreshing a dashboard: a button that refreshes now and spins while it does, a menu choosing how
+ * often it refreshes by itself, and when it last did, already written for a reader.
+ */
+export function RefreshControl({
+    onRefresh,
+    refreshing = false,
+    interval,
+    onIntervalChange,
+    updated,
+    words = {
+        refresh: 'Refresh',
+        every: 'Refresh every',
+        off: 'Off',
+        seconds: (count: number) => (count < 60 ? `${count}s` : `${count / 60}m`),
+    },
+}: {
+    onRefresh: () => void
+    refreshing?: boolean
+    /** Seconds between refreshes; 0 is never. */
+    interval: number
+    onIntervalChange: (seconds: number) => void
+    /** When it last refreshed: `updated 2 min ago`. */
+    updated?: string
+    words?: { refresh: string; every: string; off: string; seconds: (count: number) => string }
+}) {
+    return (
+        <div className="flex items-center gap-2">
+            {updated !== undefined && <span className="text-xs text-muted-foreground max-sm:hidden">{updated}</span>}
+            <div className="flex items-center rounded-control border border-border">
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    className="rounded-r-none"
+                    aria-label={words.refresh}
+                    title={words.refresh}
+                    onClick={onRefresh}
+                >
+                    <RefreshCw className={cn(refreshing && 'animate-spin')} aria-hidden />
+                </Button>
+                <DropdownMenu>
+                    <DropdownMenuTrigger
+                        render={
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="rounded-l-none border-l border-border px-2 tabular-nums"
+                                aria-label={words.every}
+                            />
+                        }
+                    >
+                        {interval === 0 ? words.off : words.seconds(interval)}
+                        <ChevronDown className="text-muted-foreground" aria-hidden />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-36">
+                        <DropdownMenuRadioGroup value={String(interval)} onValueChange={(next) => onIntervalChange(Number(next))}>
+                            {REFRESH_INTERVALS.map((seconds) => (
+                                <DropdownMenuRadioItem key={seconds} value={String(seconds)}>
+                                    {seconds === 0 ? words.off : words.seconds(seconds)}
+                                </DropdownMenuRadioItem>
+                            ))}
+                        </DropdownMenuRadioGroup>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
+        </div>
+    )
+}
