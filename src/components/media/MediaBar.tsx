@@ -1,5 +1,5 @@
 import { Music, Repeat, Repeat1, Shuffle, SkipBack, SkipForward } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import { useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
 
 import { cn } from '../../lib/cn'
 import { PlayButton, Position, TransportButton, VolumeControl } from './MediaControls'
@@ -110,12 +110,15 @@ export function MediaBar({
 }: MediaBarProps) {
     const words = { ...LABELS, ...labels }
     const [scrub, setScrub] = useState<number | null>(null)
+    const bar = useRef<HTMLDivElement | null>(null)
+    const wide = useWide(bar)
     const at = scrub ?? position
     const level = muted ? 0 : volume
     const repeatLabel = repeat === 'one' ? words.repeatOne : repeat === 'all' ? words.repeatAll : words.repeatOff
 
     return (
         <div
+            ref={bar}
             data-slot="media-bar"
             data-playing={playing || undefined}
             className={cn('@container border-t border-border-strong bg-sidebar text-sidebar-foreground', className)}
@@ -160,28 +163,50 @@ export function MediaBar({
                                 {repeat === 'one' ? <Repeat1 aria-hidden /> : <Repeat aria-hidden />}
                             </TransportButton>
                         )}
-                        {extra !== undefined && <div className="flex items-center gap-1 @2xl:hidden">{extra}</div>}
+                        {!wide && extra !== undefined && <div className="flex items-center gap-1">{extra}</div>}
                     </div>
-                    <div className="hidden @2xl:block">
+                    {wide && (
+                        <Position at={at} duration={duration} buffered={buffered} label={words.seek} onSeek={onSeek} onScrub={setScrub} />
+                    )}
+                </div>
+
+                {!wide && (
+                    <div className="col-span-2">
                         <Position at={at} duration={duration} buffered={buffered} label={words.seek} onSeek={onSeek} onScrub={setScrub} />
                     </div>
-                </div>
+                )}
 
-                <div className="col-span-2 @2xl:hidden">
-                    <Position at={at} duration={duration} buffered={buffered} label={words.seek} onSeek={onSeek} onScrub={setScrub} />
-                </div>
-
-                <div className="hidden min-w-0 items-center justify-end gap-2 @2xl:flex">
-                    <VolumeControl
-                        level={level}
-                        muted={muted}
-                        onMutedChange={onMutedChange}
-                        onVolumeChange={onVolumeChange}
-                        words={words}
-                    />
-                    {extra !== undefined && <div className="flex items-center gap-1">{extra}</div>}
-                </div>
+                {wide && (
+                    <div className="flex min-w-0 items-center justify-end gap-2">
+                        <VolumeControl
+                            level={level}
+                            muted={muted}
+                            onMutedChange={onMutedChange}
+                            onVolumeChange={onVolumeChange}
+                            words={words}
+                        />
+                        {extra !== undefined && <div className="flex items-center gap-1">{extra}</div>}
+                    </div>
+                )}
             </div>
         </div>
     )
+}
+
+/** The width at which the bar lays out on one row, the `@2xl` container size. */
+const WIDE = 672
+
+/** Whether the element is at least `WIDE` pixels across, measured before paint and on every resize. */
+function useWide(ref: RefObject<HTMLDivElement | null>): boolean {
+    const [wide, setWide] = useState(true)
+    useLayoutEffect(() => {
+        const element = ref.current
+        if (element === null) return
+        const measure = () => setWide(element.clientWidth >= WIDE)
+        measure()
+        const observer = new ResizeObserver(measure)
+        observer.observe(element)
+        return () => observer.disconnect()
+    }, [ref])
+    return wide
 }
