@@ -26,18 +26,35 @@ const STATUS: Record<string, string> = {
 }
 
 const NAV = [
-    ['Operate', [['Runs', Play], ['Triggers', Zap]]],
-    ['Build', [['Pipelines', Workflow], ['Connections', Cable], ['Schemas', FileJson]]],
-    ['Reference', [['Blocks', Blocks], ['Examples', BookOpen]]],
+    [
+        'Operate',
+        [
+            ['Runs', Play],
+            ['Triggers', Zap],
+        ],
+    ],
+    [
+        'Build',
+        [
+            ['Pipelines', Workflow],
+            ['Connections', Cable],
+            ['Schemas', FileJson],
+        ],
+    ],
+    [
+        'Reference',
+        [
+            ['Blocks', Blocks],
+            ['Examples', BookOpen],
+        ],
+    ],
 ] as const
 
 export function RunsPage() {
     return (
         <div className="flex h-screen min-h-0 bg-background text-foreground">
             <aside className="flex w-56 shrink-0 flex-col border-r border-border-strong bg-sidebar">
-                <div className="flex h-shell-top items-center px-(--density-panel-pad) font-semibold">
-                    dirigent
-                </div>
+                <div className="flex h-shell-top items-center px-(--density-panel-pad) font-semibold">dirigent</div>
                 <nav className="flex flex-col gap-1 px-2">
                     {NAV.map(([group, items]) => (
                         <div key={group}>
@@ -77,7 +94,10 @@ export function RunsPage() {
                     <div className="flex items-center gap-2">
                         <label className="flex h-(--density-control) w-64 items-center gap-2 rounded-control border border-input bg-field px-2.5 text-sm">
                             <Search className="size-4 text-faint" aria-hidden />
-                            <input className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-faint" placeholder="Search runs" />
+                            <input
+                                className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-faint"
+                                placeholder="Search runs"
+                            />
                             <kbd className="font-mono text-xs text-faint">/</kbd>
                         </label>
                         <button className="flex h-(--density-control) items-center gap-1.5 rounded-control border border-input bg-field px-2.5 text-sm">
@@ -123,7 +143,9 @@ export function RunsPage() {
                             </div>
                             <div className="flex flex-col gap-(--density-section-gap) p-(--density-panel-pad) text-sm">
                                 <p>
-                                    <span className="rounded-chip bg-status-failed/15 px-1.5 py-0.5 text-xs text-status-failed-ink">failed</span>{' '}
+                                    <span className="rounded-chip bg-status-failed/15 px-1.5 py-0.5 text-xs text-status-failed-ink">
+                                        failed
+                                    </span>{' '}
                                     at <span className="font-mono">gate</span>
                                 </p>
                                 <div className="rounded-control border border-critical/35 bg-critical/10 p-(--density-panel-pad) text-critical-ink">
@@ -145,4 +167,3 @@ export function RunsPage() {
         </div>
     )
 }
-

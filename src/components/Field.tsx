@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 
-import { Label } from '@/components/ui/label'
-import { cn } from '@/lib/cn'
+import { Label } from './ui/label'
+import { cn } from '../lib/cn'
 
 /**
  * A form control with its label, an optional hint beside the label, help under the control, and

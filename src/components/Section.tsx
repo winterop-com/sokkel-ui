@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-import { cn } from '@/lib/cn'
+import { cn } from '../lib/cn'
 
 /**
  * A titled part of a page.
@@ -55,7 +55,5 @@ export function Section({
 
 /** A bordered surface with no heading of its own, for content that is a surface: a graph, a list. */
 export function Surface({ children, className }: { children: ReactNode; className?: string }) {
-    return (
-        <div className={cn('overflow-hidden rounded-surface border border-border-strong bg-card', className)}>{children}</div>
-    )
+    return <div className={cn('overflow-hidden rounded-surface border border-border-strong bg-card', className)}>{children}</div>
 }

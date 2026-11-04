@@ -26,7 +26,7 @@ const preview: Preview = {
     globalTypes: {
         look: {
             description: 'Theme',
-            toolbar: { title: 'Theme', items: ['default',  'paper',  'contrast',  'tokyo',  'vinyl',  'cassette',  'neon'], dynamicTitle: true },
+            toolbar: { title: 'Theme', items: ['default', 'paper', 'contrast', 'tokyo', 'vinyl', 'cassette', 'neon'], dynamicTitle: true },
         },
         density: {
             description: 'Density',

@@ -1,4 +1,4 @@
-import { cn } from '@/lib/cn'
+import { cn } from '../lib/cn'
 
 /** The states a status chip knows, each drawn in its own status color. */
 export type Status =

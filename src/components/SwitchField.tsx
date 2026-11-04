@@ -1,7 +1,7 @@
 import { Tooltip } from '@base-ui/react/tooltip'
 import { CircleHelp } from 'lucide-react'
 
-import { Switch } from '@/components/ui/switch'
+import { Switch } from './ui/switch'
 
 /**
  * An on/off setting: its label and the switch at the row's right edge. What it does, where the

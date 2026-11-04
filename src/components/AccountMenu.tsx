@@ -31,7 +31,9 @@ export function AccountMenu({
 }) {
     const initial = name.slice(0, 1).toUpperCase()
     const avatar = (size: string) => (
-        <span className={`flex ${size} shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground`}>
+        <span
+            className={`flex ${size} shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground`}
+        >
             {initial}
         </span>
     )

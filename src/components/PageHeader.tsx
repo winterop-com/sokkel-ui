@@ -27,7 +27,13 @@ export function PageHeader({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div className="min-w-0">
                 <div className="flex items-baseline gap-2">
-                    <h1 className={showCode || code === undefined ? 'truncate text-page font-medium tracking-tight' : 'truncate font-mono text-page font-medium tracking-tight'}>
+                    <h1
+                        className={
+                            showCode || code === undefined
+                                ? 'truncate text-page font-medium tracking-tight'
+                                : 'truncate font-mono text-page font-medium tracking-tight'
+                        }
+                    >
                         {title}
                     </h1>
                     {count !== undefined && <span className="shrink-0 font-mono text-xs text-muted-foreground">{count}</span>}

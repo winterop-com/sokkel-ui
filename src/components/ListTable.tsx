@@ -1,6 +1,6 @@
 import type { KeyboardEvent, ReactNode } from 'react'
 
-import { cn } from '@/lib/cn'
+import { cn } from '../lib/cn'
 
 /** One column: its header, how wide it is, and how a row draws its cell. */
 export interface Column<T> {
@@ -64,7 +64,12 @@ export function ListTable<T>({
                   },
               }
     return (
-        <div className={cn('@container flex min-h-0 flex-col overflow-hidden rounded-surface border border-border-strong bg-card', className)}>
+        <div
+            className={cn(
+                '@container flex min-h-0 flex-col overflow-hidden rounded-surface border border-border-strong bg-card',
+                className,
+            )}
+        >
             {rows.length > 0 && (
                 <ul className="divide-y divide-border @xl:hidden">
                     {rows.map((row) => (
@@ -116,7 +121,8 @@ export function ListTable<T>({
                                 aria-selected={onSelect === undefined ? undefined : chosen}
                                 className={cn(
                                     'grid h-(--density-row) items-center gap-3 border-b border-border px-(--density-panel-pad) text-sm last:border-b-0',
-                                    onSelect !== undefined && 'cursor-pointer outline-none hover:bg-secondary/60 focus-visible:bg-secondary',
+                                    onSelect !== undefined &&
+                                        'cursor-pointer outline-none hover:bg-secondary/60 focus-visible:bg-secondary',
                                     chosen && 'bg-secondary',
                                 )}
                                 style={{ gridTemplateColumns: template }}
@@ -133,7 +139,11 @@ export function ListTable<T>({
                                 }
                             >
                                 {columns.map((column) => (
-                                    <span key={column.id} role="cell" className={cn('min-w-0 truncate', column.align === 'end' && 'text-right')}>
+                                    <span
+                                        key={column.id}
+                                        role="cell"
+                                        className={cn('min-w-0 truncate', column.align === 'end' && 'text-right')}
+                                    >
                                         {column.cell(row)}
                                     </span>
                                 ))}
