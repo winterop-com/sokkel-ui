@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 import { Kbd, KbdGroup } from './ui/kbd'
 import {
@@ -56,17 +56,21 @@ export function CommandPalette({
     open,
     onOpenChange,
     groups,
+    defaultQuery = '',
     words = { placeholder: 'Search or run a command', empty: 'No command matches.', title: 'Command palette' },
 }: {
     open: boolean
     onOpenChange: (open: boolean) => void
     groups: readonly PaletteGroup[]
+    /** What the search holds when the palette opens. */
+    defaultQuery?: string
     words?: { placeholder: string; empty: string; title: string }
 }) {
+    const [query, setQuery] = useState(defaultQuery)
     return (
         <CommandDialog open={open} onOpenChange={onOpenChange} title={words.title} description={words.placeholder}>
             <Command>
-                <CommandInput placeholder={words.placeholder} />
+                <CommandInput placeholder={words.placeholder} value={query} onValueChange={setQuery} />
                 <CommandList className="max-h-[min(24rem,60svh)] scroll-fade-b pb-1.5">
                     <CommandEmpty>{words.empty}</CommandEmpty>
                     {groups.map((group, index) => (
