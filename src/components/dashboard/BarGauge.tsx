@@ -80,7 +80,7 @@ export function BarGauge({
                             <li
                                 key={bar.name}
                                 style={{ '--tone': tone } as CSSProperties}
-                                className="grid grid-cols-[minmax(0,7rem)_minmax(0,1fr)_4rem] items-center gap-2 text-xs"
+                                className="grid grid-cols-[minmax(0,6rem)_minmax(0,1fr)_auto] items-center gap-2 text-xs"
                             >
                                 <span className="truncate font-mono text-muted-foreground">{bar.name}</span>
                                 <span
@@ -101,7 +101,7 @@ export function BarGauge({
                                         style={{ width: `${(share * 100).toFixed(1)}%` }}
                                     />
                                 </span>
-                                <span className="text-right font-mono font-medium text-(--tone) tabular-nums">
+                                <span className="min-w-10 text-right font-mono font-medium text-(--tone) tabular-nums">
                                     {bar.value === null ? '-' : write(bar.value)}
                                 </span>
                             </li>
