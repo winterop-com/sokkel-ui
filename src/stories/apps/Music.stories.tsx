@@ -1,22 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import {
-    Clapperboard,
-    Disc3,
-    Heart,
-    ListMusic,
-    MicVocal,
-    MoreHorizontal,
-    Music2,
-    Play,
-    Shuffle,
-    Tv,
-    Volume2,
-    type LucideIcon,
-} from 'lucide-react'
+import { Clapperboard, Disc3, Heart, ListMusic, MicVocal, MoreHorizontal, Music2, Play, Shuffle, Tv, type LucideIcon } from 'lucide-react'
 import { useState } from 'react'
 
 import { AccountMenu } from '../../components/AccountMenu'
 import { MediaBar, type RepeatMode } from '../../components/media/MediaBar'
+import { MediaCard, MediaGrid } from '../../components/media/MediaCard'
 import { formatTime } from '../../components/media/time'
 import { TrackList, type Track } from '../../components/media/TrackList'
 import { VideoPlayer } from '../../components/media/VideoPlayer'
@@ -28,8 +16,8 @@ import { Page, Shell } from '../../components/Shell'
 import { PanelSection, SidePanel } from '../../components/SidePanel'
 import { TopBar, type Crumb } from '../../components/TopBar'
 import { Button } from '../../components/ui/button'
+import { DropdownMenuItem } from '../../components/ui/dropdown-menu'
 import { TooltipProvider } from '../../components/ui/tooltip'
-import { cn } from '../../lib/cn'
 import { Artwork, type Cover } from '../fixtures/Artwork'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import captions from '../media/fixtures/captions.vtt?url'
@@ -41,7 +29,7 @@ import clip from '../media/fixtures/clip.webm?url'
  * queue in the side panel, a film in the video player, and the player bar across the whole
  * window under all of it.
  */
-type View = 'library' | 'album' | 'queue' | 'video'
+type View = 'library' | 'album' | 'queue' | 'series' | 'video'
 
 interface Release {
     id: string
@@ -159,7 +147,7 @@ function groups(view: View): RailGroup[] {
         {
             id: 'library',
             entries: [
-                entry('albums', 'Albums', Disc3, view !== 'video'),
+                entry('albums', 'Albums', Disc3, view !== 'video' && view !== 'series'),
                 entry('artists', 'Artists', MicVocal),
                 entry('tracks', 'Tracks', Music2),
                 entry('favorites', 'Favorites', Heart),
@@ -178,7 +166,7 @@ function groups(view: View): RailGroup[] {
         {
             id: 'watch',
             title: 'Watch',
-            entries: [entry('films', 'Films', Clapperboard), entry('series', 'Series', Tv, view === 'video')],
+            entries: [entry('films', 'Films', Clapperboard), entry('series', 'Series', Tv, view === 'video' || view === 'series')],
         },
     ]
 }
@@ -187,43 +175,62 @@ const TRAILS: Record<View, Crumb[]> = {
     library: [{ label: 'Albums' }],
     album: [{ label: 'Albums', href: '#' }, { label: PLAYING.title }],
     queue: [{ label: 'Albums', href: '#' }, { label: PLAYING.title }],
+    series: [{ label: 'Series', href: '#' }, { label: FILM.series }],
     video: [{ label: 'Series', href: '#' }, { label: FILM.series, href: '#' }, { label: FILM.title }],
-}
-
-/** An album in the grid: its cover, its title, and who made it when. */
-function AlbumCard({ album, playing }: { album: Release; playing: boolean }) {
-    return (
-        <li>
-            <a
-                href="#"
-                className="group flex min-w-0 flex-col gap-2.5 rounded-surface outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-                <span className="relative block aspect-square overflow-hidden rounded-surface bg-muted shadow-xs ring-1 ring-border [&>svg]:block [&>svg]:size-full">
-                    <Artwork cover={album.cover} />
-                    {playing && (
-                        <span className="absolute right-2 bottom-2 flex size-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-pop">
-                            <Volume2 className="size-3.5" aria-label="Now playing" />
-                        </span>
-                    )}
-                </span>
-                <span className="min-w-0">
-                    <span className={cn('block truncate text-sm font-medium', playing && 'text-primary-ink')}>{album.title}</span>
-                    <span className="block truncate text-xs text-muted-foreground">
-                        {album.artist} · {album.year}
-                    </span>
-                </span>
-            </a>
-        </li>
-    )
 }
 
 function AlbumGrid({ albums }: { albums: Release[] }) {
     return (
-        <ul className="grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-x-5 gap-y-6">
+        <MediaGrid label="Albums">
             {albums.map((album) => (
-                <AlbumCard key={album.id} album={album} playing={album.id === PLAYING.id} />
+                <MediaCard
+                    key={album.id}
+                    title={album.title}
+                    subtitle={`${album.artist} · ${String(album.year)}`}
+                    cover={<Artwork cover={album.cover} />}
+                    href="#"
+                    playing={album.id === PLAYING.id}
+                    onPlay={() => undefined}
+                    menu={
+                        <>
+                            <DropdownMenuItem>Play next</DropdownMenuItem>
+                            <DropdownMenuItem>Add to queue</DropdownMenuItem>
+                            <DropdownMenuItem>Go to artist</DropdownMenuItem>
+                        </>
+                    }
+                />
             ))}
-        </ul>
+        </MediaGrid>
+    )
+}
+
+/** How far each episode of the series was watched. */
+const WATCHED: Record<string, number> = { e1: 1, e2: 0.42 }
+
+function SeriesPage() {
+    return (
+        <Page>
+            <PageHeader title={FILM.series} count={`${String(EPISODES.length)} episodes`} />
+            <p className="-mt-2 max-w-prose text-sm text-muted-foreground">
+                A year along a northern coast, from the first light over the water to the last ferry of the evening. By {FILM.by},{' '}
+                {String(FILM.year)}.
+            </p>
+            <MediaGrid shape="wide" label={`${FILM.series}, episodes`}>
+                {EPISODES.map((episode) => (
+                    <MediaCard
+                        key={episode.id}
+                        shape="wide"
+                        title={String(episode.title)}
+                        subtitle={episode.subtitle}
+                        cover={episode.artwork}
+                        badge={formatTime(episode.duration ?? 0)}
+                        progress={WATCHED[episode.id]}
+                        href="#"
+                        onPlay={() => undefined}
+                    />
+                ))}
+            </MediaGrid>
+        </Page>
     )
 }
 
@@ -461,10 +468,11 @@ function MusicApp({ view }: { view: View }) {
                         />
                     ) : undefined
                 }
-                bottom={view === 'video' ? undefined : <Player queueOpen={queue} />}
+                bottom={view === 'video' || view === 'series' ? undefined : <Player queueOpen={queue} />}
             >
                 {view === 'library' && <LibraryPage />}
                 {view === 'album' && <AlbumPage />}
+                {view === 'series' && <SeriesPage />}
                 {view === 'video' && <Watch />}
                 {queue && (
                     <>
@@ -497,6 +505,9 @@ export const Album: StoryObj = { name: 'Album', render: () => <MusicApp view="al
 
 /** The queue in the side panel beside the album, its button pressed in the bar; on a phone the queue is the page. */
 export const Queue: StoryObj = { name: 'Queue', render: () => <MusicApp view="queue" /> }
+
+/** A series' episodes as wide covers, with their lengths and how far each was watched. */
+export const Series: StoryObj = { name: 'Series', render: () => <MusicApp view="series" /> }
 
 /** A film in the video player with its controls shown and the rest of its series beside it. */
 export const Video: StoryObj = { name: 'Video', render: () => <MusicApp view="video" /> }
