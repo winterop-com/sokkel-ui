@@ -21,7 +21,7 @@ function Fitted() {
     const [selected, setSelected] = useState<string | null>('transform')
     return (
         <div className="min-h-svh bg-background p-4 text-foreground md:p-6">
-            <div className="mx-auto flex max-w-4xl flex-col gap-4">
+            <div className="flex flex-col gap-4">
                 <Section title="Steps" meta="7">
                     <PipelineGraph
                         steps={NIGHTLY_EXPORT}

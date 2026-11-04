@@ -24,6 +24,31 @@ async function graphsSettled(page: Page): Promise<void> {
     )
 }
 
+/** Resolves once every video has seeked to the time its `#t=` asks for, then covers its picture. */
+async function videosSettled(page: Page): Promise<void> {
+    await page.waitForFunction(
+        () =>
+            [...document.querySelectorAll('video')].every((video) => {
+                const at = /#t=([\d.]+)/.exec(video.currentSrc || video.src)
+                const target = at === null ? 0 : Number(at[1])
+                return video.readyState >= 2 && !video.seeking && Math.abs(video.currentTime - target) < 0.5
+            }),
+        null,
+        { timeout: 20_000 },
+    )
+    // A decoded frame differs between runs, so each picture is covered by a plain panel that sits
+    // under the player's controls; the player around it is what the screenshot holds.
+    await page.evaluate(() => {
+        for (const video of document.querySelectorAll('video')) {
+            if (video.nextElementSibling?.hasAttribute('data-screenshot-cover')) continue
+            const cover = document.createElement('div')
+            cover.setAttribute('data-screenshot-cover', '')
+            cover.style.cssText = 'position:absolute;inset:0;background:#0b0f17;pointer-events:none'
+            video.after(cover)
+        }
+    })
+}
+
 const VIEWPORTS = { desktop: { width: 1440, height: 900 }, phone: { width: 390, height: 844 } }
 const MODES = ['dark', 'light'] as const
 
@@ -49,6 +74,7 @@ for (const story of stories) {
                     await page.locator('#storybook-root > *').first().waitFor()
                     await mapsSettled(page)
                     await graphsSettled(page)
+                    await videosSettled(page)
                     await page.evaluate(() => document.fonts.ready)
                     // Highlighting lands after the first paint; a block marked plain is never highlighted.
                     await page
