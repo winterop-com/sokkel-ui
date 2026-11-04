@@ -60,6 +60,7 @@ const preview: Preview = {
     parameters: {
         layout: 'fullscreen',
         backgrounds: { disable: true },
+        controls: { disable: true },
     },
     globalTypes: {
         theme: {

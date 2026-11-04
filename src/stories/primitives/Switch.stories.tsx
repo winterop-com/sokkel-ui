@@ -24,6 +24,18 @@ function Labeled({ label, children }: { label: string; children: ReactNode }) {
 const meta: Meta = { title: 'Primitives/Inputs/Switch' }
 export default meta
 
+/** Every prop of a switch, to try live. */
+export const Playground: StoryObj<{ checked: boolean; size: 'sm' | 'default'; disabled: boolean }> = {
+    parameters: { controls: { disable: false } },
+    args: { checked: true, size: 'default', disabled: false },
+    argTypes: { size: { control: 'inline-radio', options: ['sm', 'default'] } },
+    render: (args) => (
+        <div className="min-h-svh bg-background p-6 text-foreground">
+            <Switch aria-label="Weekly digest" checked={args.checked} size={args.size} disabled={args.disabled} />
+        </div>
+    ),
+}
+
 export const Variants: StoryObj = {
     render: () => (
         <Ground>
