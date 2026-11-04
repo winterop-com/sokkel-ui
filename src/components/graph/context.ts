@@ -9,3 +9,6 @@ export const GraphDirectionContext = createContext<GraphDirection>('right')
 export function useGraphDirection(): GraphDirection {
     return useContext(GraphDirectionContext)
 }
+
+/** Whether the canvas a node stands on is editable, which shows its ports. */
+export const GraphEditableContext = createContext(false)

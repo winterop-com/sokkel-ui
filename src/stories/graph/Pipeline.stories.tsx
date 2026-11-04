@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { PipelineGraph, type PipelineStep } from '../../components/graph/PipelineGraph'
 import { Section } from '../../components/Section'
 import type { GraphDirection } from '../../components/graph/layout'
+import { Editor } from './Editing'
 import { Stage } from './Frame'
 import { LARGE, NIGHTLY_EXPORT, SHORT } from './data'
 
@@ -59,3 +60,6 @@ export const OnAPage: Story = { name: 'On a page', render: () => <Fitted /> }
 
 /** 57 steps: too wide to fit at a readable zoom, so the fit stops at its floor and the graph starts at the left edge. */
 export const Large: Story = { render: () => <Pipeline steps={LARGE} title="rebuild-index" meta="larkspur, 57 steps" /> }
+
+/** The pipeline as an editor with local state: drag from a port to connect, Delete removes the chosen step or edge, a box drags, right-click opens its menu, and a connection dropped on empty ground adds a step there. */
+export const Editing: Story = { render: () => <Editor /> }
