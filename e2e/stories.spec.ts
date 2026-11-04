@@ -1,17 +1,21 @@
+import { existsSync, readFileSync } from 'node:fs'
+
 import { expect, test, type Page } from '@playwright/test'
 
 import { mapsSettled, routeTiles } from './tiles.ts'
 
 /**
  * Every story, in dark and in light, at a desktop and a phone width, held to the screenshot it
- * was last approved at. `bunx playwright test --update-snapshots` takes new ones once a change is
- * meant.
+ * was last approved at. One test per story, read from the built `storybook-static/index.json`,
+ * so the stories run across workers and `-g <story id>` retakes one alone.
  */
 interface Entry {
     id: string
     type: string
     tags?: string[]
 }
+
+const INDEX = 'storybook-static/index.json'
 
 /** Resolves once every graph on the page has been placed by elk and fitted. */
 async function graphsSettled(page: Page): Promise<void> {
@@ -23,17 +27,24 @@ async function graphsSettled(page: Page): Promise<void> {
 const VIEWPORTS = { desktop: { width: 1440, height: 900 }, phone: { width: 390, height: 844 } }
 const MODES = ['dark', 'light'] as const
 
-test('every story looks the way it was approved', async ({ page, request }, info) => {
-    test.setTimeout(60 * 60_000)
-    await routeTiles(page, info.config.updateSnapshots === 'all' || info.config.updateSnapshots === 'changed')
-    const index = (await (await request.get('/index.json')).json()) as { entries: Record<string, Entry> }
-    const stories = Object.values(index.entries).filter((entry) => entry.type === 'story' && !entry.tags?.includes('no-screenshot'))
-    expect(stories.length).toBeGreaterThan(0)
-    for (const story of stories) {
+const stories: Entry[] = existsSync(INDEX)
+    ? Object.values((JSON.parse(readFileSync(INDEX, 'utf8')) as { entries: Record<string, Entry> }).entries).filter(
+          (entry) => entry.type === 'story' && !entry.tags?.includes('no-screenshot'),
+      )
+    : []
+
+test('the stories are built', () => {
+    expect(stories.length, `no stories in ${INDEX}: run bun run build-storybook first`).toBeGreaterThan(0)
+})
+
+for (const story of stories) {
+    test(story.id, async ({ page }, info) => {
+        test.setTimeout(3 * 60_000)
+        await routeTiles(page, info.config.updateSnapshots === 'all' || info.config.updateSnapshots === 'changed')
         for (const [name, size] of Object.entries(VIEWPORTS)) {
             await page.setViewportSize(size)
             for (const mode of MODES) {
-                await test.step(`${story.id} ${name} ${mode}`, async () => {
+                await test.step(`${name} ${mode}`, async () => {
                     await page.goto(`/iframe.html?id=${story.id}&viewMode=story&globals=theme:${mode}`)
                     await page.locator('#storybook-root > *').first().waitFor()
                     await mapsSettled(page)
@@ -55,5 +66,5 @@ test('every story looks the way it was approved', async ({ page, request }, info
                 })
             }
         }
-    }
-})
+    })
+}

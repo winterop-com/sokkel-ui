@@ -27,7 +27,6 @@ jobs:
             options: --ipc=host
         env:
             CI: '1'
-            STORYBOOK_STATIC: '1'
         steps:
             - uses: actions/checkout@v5
             - uses: oven-sh/setup-bun@v2

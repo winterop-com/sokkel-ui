@@ -2,11 +2,8 @@ import { defineConfig, devices } from '@playwright/test'
 
 const PORT = Number(process.env.STORYBOOK_PORT ?? 6199)
 
-/** With STORYBOOK_STATIC set, the suite serves the built `storybook-static/` rather than the dev server. */
-const command =
-    process.env.STORYBOOK_STATIC === undefined
-        ? `bunx storybook dev -p ${PORT} --ci --no-open`
-        : `bunx http-server storybook-static -p ${PORT} -s -c-1`
+/** The suite runs against the built `storybook-static/`, which `bun run build-storybook` makes. */
+const command = `bunx http-server storybook-static -p ${PORT} -s -c-1`
 
 export default defineConfig({
     testDir: 'e2e',

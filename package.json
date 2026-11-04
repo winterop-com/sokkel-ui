@@ -42,15 +42,15 @@
         "build-storybook": "storybook build -o storybook-static",
         "typecheck": "tsc --noEmit",
         "test": "vitest run",
-        "test:visual": "playwright test",
-        "test:visual:update": "playwright test --update-snapshots",
+        "test:visual": "bun run build-storybook && playwright test",
+        "test:visual:update": "bun run build-storybook && playwright test --update-snapshots",
         "test:visual:tiles": "node e2e/record-tiles.ts",
         "build": "vite build -c vite.lib.config.ts && tsc -p tsconfig.build.json",
         "lint": "oxlint --deny-warnings",
         "fmt": "oxfmt",
         "fmt:check": "oxfmt --check",
         "test:visual:linux": "scripts/visual-linux.sh",
-        "test:visual:linux:update": "scripts/visual-linux.sh --update"
+        "test:visual:linux:update": "scripts/visual-linux.sh --update-snapshots"
     },
     "dependencies": {
         "@base-ui/react": "^1.9.0",
