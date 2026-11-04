@@ -95,3 +95,12 @@ worst we can do". To study:
 The result is a set of rendered options for the owner to pick from, then Field, DialogShell and the
 toasts built to the pick.
 
+## Later
+
+- Find a better name for the library than `winterop-ui`, then rename the repository and the package.
+- Publish to a registry when apps adopt the library (see Distribution).
+- Pick the themes to keep from the candidates in Storybook and fold them into `tokens/tokens.json`;
+  name each for how it looks.
+- Draw mermaid diagrams in the theme's colors and typefaces instead of mermaid's own themes.
+- Fill InputGroup, the combobox input and NativeSelect on the `--field` ground, as Input is.
+- Validation and notification, after the research above.

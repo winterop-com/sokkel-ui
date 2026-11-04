@@ -1,0 +1,77 @@
+[
+    {
+        "value": "stabbur-base",
+        "title": "Base",
+        "app": "stabbur"
+    },
+    {
+        "value": "stabbur-indigo",
+        "title": "Indigo",
+        "app": "stabbur"
+    },
+    {
+        "value": "stabbur-paper",
+        "title": "Paper",
+        "app": "stabbur"
+    },
+    {
+        "value": "stabbur-contrast",
+        "title": "Contrast",
+        "app": "stabbur"
+    },
+    {
+        "value": "stabbur-terminal",
+        "title": "Terminal",
+        "app": "stabbur"
+    },
+    {
+        "value": "dhis2w-fhir-base",
+        "title": "Base",
+        "app": "dhis2w-fhir"
+    },
+    {
+        "value": "dhis2w-fhir-indigo",
+        "title": "Indigo",
+        "app": "dhis2w-fhir"
+    },
+    {
+        "value": "dhis2w-fhir-paper",
+        "title": "Paper",
+        "app": "dhis2w-fhir"
+    },
+    {
+        "value": "dhis2w-fhir-contrast",
+        "title": "Contrast",
+        "app": "dhis2w-fhir"
+    },
+    {
+        "value": "dhis2w-fhir-terminal",
+        "title": "Terminal",
+        "app": "dhis2w-fhir"
+    },
+    {
+        "value": "dhis2w-fhir-dhis2",
+        "title": "Dhis2",
+        "app": "dhis2w-fhir"
+    },
+    {
+        "value": "dhis2w-fhir-fhir",
+        "title": "Fhir",
+        "app": "dhis2w-fhir"
+    },
+    {
+        "value": "dirigent-base",
+        "title": "Base",
+        "app": "dirigent"
+    },
+    {
+        "value": "dirigent-paper",
+        "title": "Paper",
+        "app": "dirigent"
+    },
+    {
+        "value": "dirigent-contrast",
+        "title": "Contrast",
+        "app": "dirigent"
+    }
+]

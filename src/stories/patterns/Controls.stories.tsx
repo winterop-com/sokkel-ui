@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
 import { CopyButton } from '../../components/CopyButton'
-import { Segmented } from '../../components/Segmented'
+import { Segmented, type SegmentedVariant } from '../../components/Segmented'
 import { TooltipProvider } from '../../components/ui/tooltip'
 
 /** The small controls a settings row or a code line carries: a segmented choice and a copy button. */
@@ -10,13 +10,36 @@ function Ground({ children }: { children: React.ReactNode }) {
     return (
         <TooltipProvider>
             <div className="min-h-svh bg-background p-6 text-foreground">
-                <div className="flex max-w-3xl flex-col gap-6">{children}</div>
+                <div className="flex max-w-5xl flex-col gap-6">{children}</div>
             </div>
         </TooltipProvider>
     )
 }
 
-function Row({ label, hint, fill, children }: { label: string; hint?: string; fill: boolean; children: React.ReactNode }) {
+function Row({
+    label,
+    hint,
+    fill,
+    stacked = false,
+    children,
+}: {
+    label: string
+    hint?: string
+    fill: boolean
+    stacked?: boolean
+    children: React.ReactNode
+}) {
+    if (stacked) {
+        return (
+            <div className="flex w-full max-w-80 flex-col gap-1.5">
+                <span className="flex flex-col">
+                    <span className="text-sm font-medium whitespace-nowrap">{label}</span>
+                    {hint !== undefined && <span className="font-mono text-xs text-faint">{hint}</span>}
+                </span>
+                {children}
+            </div>
+        )
+    }
     return (
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
             <div className="flex flex-col">
@@ -28,15 +51,16 @@ function Row({ label, hint, fill, children }: { label: string; hint?: string; fi
     )
 }
 
-function SegmentedSettings({ fill }: { fill: boolean }) {
+function Settings({ fill, variant, stacked = false }: { fill: boolean; variant: SegmentedVariant; stacked?: boolean }) {
     const [scheme, setScheme] = useState<'system' | 'light' | 'dark'>('system')
     const [clock, setClock] = useState<'utc' | 'local'>('utc')
     const [density, setDensity] = useState<'regular' | 'compact'>('regular')
     return (
-        <Ground>
-            <Row fill={fill} label="Appearance">
+        <div className="flex flex-col gap-4">
+            <Row stacked={stacked} fill={fill} label="Appearance">
                 <Segmented
                     fill={fill}
+                    variant={variant}
                     label="Appearance"
                     value={scheme}
                     onChoose={setScheme}
@@ -47,9 +71,10 @@ function SegmentedSettings({ fill }: { fill: boolean }) {
                     ]}
                 />
             </Row>
-            <Row fill={fill} label="Schedule clock" hint="schedule.timezone">
+            <Row stacked={stacked} fill={fill} label="Schedule clock" hint="schedule.timezone">
                 <Segmented
                     fill={fill}
+                    variant={variant}
                     label="Schedule clock"
                     value={clock}
                     onChoose={setClock}
@@ -59,9 +84,10 @@ function SegmentedSettings({ fill }: { fill: boolean }) {
                     ]}
                 />
             </Row>
-            <Row fill={fill} label="Density">
+            <Row stacked={stacked} fill={fill} label="Density" hint="disabled">
                 <Segmented
                     fill={fill}
+                    variant={variant}
                     label="Density"
                     value={density}
                     onChoose={setDensity}
@@ -72,6 +98,63 @@ function SegmentedSettings({ fill }: { fill: boolean }) {
                     ]}
                 />
             </Row>
+        </div>
+    )
+}
+
+const VARIANTS: { variant: SegmentedVariant; name: string; from: string }[] = [
+    {
+        variant: 'track',
+        name: 'Track and thumb (default)',
+        from: 'as the Tabs primitive, Apple, Radix Themes, GitHub Primer and Vercel draw it',
+    },
+    { variant: 'tint', name: 'Tint', from: 'no frame, the chosen option on an accent tint' },
+    { variant: 'outline', name: 'Outline, neutral', from: 'a bordered group with dividers, as the shadcn toggle group' },
+    { variant: 'solid', name: 'Solid accent', from: 'the chosen option filled with the accent' },
+]
+
+function SegmentedOptions() {
+    return (
+        <Ground>
+            <div className="grid gap-x-10 gap-y-8 lg:grid-cols-2">
+                {VARIANTS.map((entry, index) => (
+                    <section key={entry.variant} className="flex flex-col gap-3">
+                        <div>
+                            <h3 className="text-sm font-medium">
+                                {String.fromCharCode(65 + index)}. {entry.name}
+                            </h3>
+                            <p className="text-xs text-muted-foreground">{entry.from}</p>
+                        </div>
+                        <Settings fill={false} variant={entry.variant} />
+                    </section>
+                ))}
+            </div>
+        </Ground>
+    )
+}
+
+function SegmentedStacked() {
+    return (
+        <Ground>
+            <p className="text-xs text-muted-foreground">Labels above, each control the column's width, up to 320px.</p>
+            <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
+                {VARIANTS.map((entry, index) => (
+                    <section key={entry.variant} className="flex flex-col gap-3">
+                        <h3 className="text-sm font-medium">
+                            {String.fromCharCode(65 + index)}. {entry.name}
+                        </h3>
+                        <Settings fill stacked variant={entry.variant} />
+                    </section>
+                ))}
+            </div>
+        </Ground>
+    )
+}
+
+function SegmentedSettings({ fill }: { fill: boolean }) {
+    return (
+        <Ground>
+            <Settings fill={fill} variant="track" />
         </Ground>
     )
 }
@@ -101,7 +184,7 @@ function SegmentedInForm() {
 function CopyLines() {
     const lines = [
         { label: 'Run', value: 'run_01JCF8Q2T7W4M3' },
-        { label: 'Webhook', value: 'https://dirigent.example.org/hooks/weather-gate' },
+        { label: 'Webhook', value: 'https://example.org/hooks/nightly-export' },
         { label: 'Trace', value: '4bf92f3577b34da6a3ce929d0e0e4736' },
     ]
     return (
@@ -127,6 +210,8 @@ function CopyLines() {
 const meta: Meta = { title: 'Patterns/Controls' }
 export default meta
 
+export const SegmentedVariants: StoryObj = { name: 'Segmented, options', render: () => <SegmentedOptions /> }
+export const SegmentedStackedLayout: StoryObj = { name: 'Segmented, stacked', render: () => <SegmentedStacked /> }
 export const SegmentedAligned: StoryObj = { name: 'Segmented, aligned', render: () => <SegmentedSettings fill /> }
 export const SegmentedChoice: StoryObj = { name: 'Segmented, natural width', render: () => <SegmentedSettings fill={false} /> }
 export const SegmentedField: StoryObj = { name: 'Segmented in a form', render: () => <SegmentedInForm /> }

@@ -8,10 +8,7 @@
     "trailingComma": "all",
     "sortTailwindcss": {
         "stylesheet": "src/styles/index.css",
-        "functions": [
-            "cn",
-            "cva"
-        ]
+        "functions": ["cn", "cva"]
     },
     "ignorePatterns": [
         "dist",

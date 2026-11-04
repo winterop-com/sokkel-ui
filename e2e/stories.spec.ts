@@ -8,6 +8,7 @@ import { expect, test } from '@playwright/test'
 interface Entry {
     id: string
     type: string
+    tags?: string[]
 }
 
 const VIEWPORTS = { desktop: { width: 1440, height: 900 }, phone: { width: 390, height: 844 } }
@@ -16,7 +17,7 @@ const MODES = ['dark', 'light'] as const
 test('every story looks the way it was approved', async ({ page, request }) => {
     test.setTimeout(15 * 60_000)
     const index = (await (await request.get('/index.json')).json()) as { entries: Record<string, Entry> }
-    const stories = Object.values(index.entries).filter((entry) => entry.type === 'story')
+    const stories = Object.values(index.entries).filter((entry) => entry.type === 'story' && !entry.tags?.includes('no-screenshot'))
     expect(stories.length).toBeGreaterThan(0)
     for (const story of stories) {
         for (const [name, size] of Object.entries(VIEWPORTS)) {
@@ -25,6 +26,9 @@ test('every story looks the way it was approved', async ({ page, request }) => {
                 await test.step(`${story.id} ${name} ${mode}`, async () => {
                     await page.goto(`/iframe.html?id=${story.id}&viewMode=story&globals=theme:${mode}`)
                     await page.locator('#storybook-root > *').first().waitFor()
+                    await page.waitForFunction(() =>
+                        [...document.querySelectorAll('[data-map-view]')].every((map) => map.hasAttribute('data-map-idle')),
+                    )
                     await page.evaluate(() => document.fonts.ready)
                     // Highlighting lands after the first paint; a block marked plain is never highlighted.
                     await page

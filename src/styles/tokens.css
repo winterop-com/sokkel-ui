@@ -22,18 +22,18 @@
     --text-graph-small--line-height: 0.9375rem;
     --spacing-shell-top: 46px;
     --spacing-finger: 44px;
-    --radius-mini: 3px;
-    --radius-chip: 3px;
-    --radius-control: 4px;
-    --radius-node: 4px;
-    --radius-surface: 4px;
-    --radius-sm: 3px;
-    --radius-md: 4px;
-    --radius-lg: 4px;
-    --radius-xl: 4px;
-    --radius-2xl: 4px;
-    --radius-3xl: 6px;
-    --radius-4xl: 6px;
+    --radius-mini: calc(var(--radius) - 2px);
+    --radius-chip: calc(var(--radius) - 2px);
+    --radius-control: var(--radius);
+    --radius-node: var(--radius);
+    --radius-surface: var(--radius);
+    --radius-sm: calc(var(--radius) - 1px);
+    --radius-md: var(--radius);
+    --radius-lg: var(--radius);
+    --radius-xl: var(--radius);
+    --radius-2xl: var(--radius);
+    --radius-3xl: calc(var(--radius) + 2px);
+    --radius-4xl: calc(var(--radius) + 2px);
     --shadow-surface: var(--elevation-surface);
     --shadow-node: var(--elevation-node);
     --shadow-pop: var(--elevation-pop);
@@ -238,6 +238,7 @@
     --terminal-graph-edge: oklch(0.42 0.015 255);
     --terminal-graph-faint: oklch(0.29 0.013 255);
     --spacing-panel-head: 2.875rem;
+    --radius: 5px;
 }
 
 .dark {
@@ -1116,6 +1117,7 @@ html.dark[data-theme='neon'] {
     --terminal-graph-edge: oklch(0.42 0.015 255);
     --terminal-graph-faint: oklch(0.29 0.013 255);
     --spacing-panel-head: 2.875rem;
+    --radius: 5px;
 }
 
 .dark [data-theme-scope='default'] {
@@ -1221,6 +1223,7 @@ html.dark[data-theme='neon'] {
     --terminal-graph-edge: oklch(0.31 0.016 255);
     --terminal-graph-faint: oklch(0.155 0.012 255);
     --spacing-panel-head: 2.875rem;
+    --radius: 5px;
     --terminal-bar: oklch(0.21 0.013 255);
 }
 
@@ -1327,6 +1330,7 @@ html.dark[data-theme='neon'] {
     --terminal-graph-edge: oklch(0.42 0.015 255);
     --terminal-graph-faint: oklch(0.29 0.013 255);
     --spacing-panel-head: 2.875rem;
+    --radius: 5px;
 }
 
 .dark [data-theme-scope='paper'] {
@@ -1432,6 +1436,7 @@ html.dark[data-theme='neon'] {
     --terminal-graph-edge: oklch(0.31 0.016 255);
     --terminal-graph-faint: oklch(0.155 0.012 255);
     --spacing-panel-head: 2.875rem;
+    --radius: 5px;
     --terminal-bar: oklch(0.21 0.013 255);
 }
 
@@ -1538,6 +1543,7 @@ html.dark[data-theme='neon'] {
     --terminal-graph-edge: oklch(0.42 0.015 255);
     --terminal-graph-faint: oklch(0.29 0.013 255);
     --spacing-panel-head: 2.875rem;
+    --radius: 5px;
 }
 
 .dark [data-theme-scope='contrast'] {
@@ -1643,6 +1649,7 @@ html.dark[data-theme='neon'] {
     --terminal-graph-edge: oklch(0.31 0.016 255);
     --terminal-graph-faint: oklch(0.155 0.012 255);
     --spacing-panel-head: 2.875rem;
+    --radius: 5px;
     --terminal-bar: oklch(0.21 0.013 255);
 }
 
@@ -1749,6 +1756,7 @@ html.dark[data-theme='neon'] {
     --terminal-graph-edge: oklch(0.42 0.015 255);
     --terminal-graph-faint: oklch(0.29 0.013 255);
     --spacing-panel-head: 2.875rem;
+    --radius: 5px;
 }
 
 .dark [data-theme-scope='tokyo'] {
@@ -1854,6 +1862,7 @@ html.dark[data-theme='neon'] {
     --terminal-graph-edge: oklch(0.31 0.016 255);
     --terminal-graph-faint: oklch(0.155 0.012 255);
     --spacing-panel-head: 2.875rem;
+    --radius: 5px;
     --terminal-bar: oklch(0.21 0.013 255);
 }
 
@@ -1960,6 +1969,7 @@ html.dark[data-theme='neon'] {
     --terminal-graph-edge: oklch(0.42 0.015 255);
     --terminal-graph-faint: oklch(0.29 0.013 255);
     --spacing-panel-head: 2.875rem;
+    --radius: 5px;
 }
 
 .dark [data-theme-scope='vinyl'] {
@@ -2065,6 +2075,7 @@ html.dark[data-theme='neon'] {
     --terminal-graph-edge: oklch(0.31 0.016 255);
     --terminal-graph-faint: oklch(0.155 0.012 255);
     --spacing-panel-head: 2.875rem;
+    --radius: 5px;
     --terminal-bar: oklch(0.21 0.013 255);
 }
 
@@ -2171,6 +2182,7 @@ html.dark[data-theme='neon'] {
     --terminal-graph-edge: oklch(0.42 0.015 255);
     --terminal-graph-faint: oklch(0.29 0.013 255);
     --spacing-panel-head: 2.875rem;
+    --radius: 5px;
 }
 
 .dark [data-theme-scope='cassette'] {
@@ -2276,6 +2288,7 @@ html.dark[data-theme='neon'] {
     --terminal-graph-edge: oklch(0.31 0.016 255);
     --terminal-graph-faint: oklch(0.155 0.012 255);
     --spacing-panel-head: 2.875rem;
+    --radius: 5px;
     --terminal-bar: oklch(0.21 0.013 255);
 }
 
@@ -2382,6 +2395,7 @@ html.dark[data-theme='neon'] {
     --terminal-graph-edge: oklch(0.42 0.015 255);
     --terminal-graph-faint: oklch(0.29 0.013 255);
     --spacing-panel-head: 2.875rem;
+    --radius: 5px;
 }
 
 .dark [data-theme-scope='neon'] {
@@ -2487,6 +2501,7 @@ html.dark[data-theme='neon'] {
     --terminal-graph-edge: oklch(0.31 0.016 255);
     --terminal-graph-faint: oklch(0.155 0.012 255);
     --spacing-panel-head: 2.875rem;
+    --radius: 5px;
     --terminal-bar: oklch(0.21 0.013 255);
 }
 

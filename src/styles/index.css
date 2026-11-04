@@ -22,3 +22,10 @@
         @apply bg-background font-sans text-base text-foreground antialiased;
     }
 }
+
+/* The delayed spinner fading in once its wait is over. */
+@keyframes pending-in {
+    to {
+        opacity: 1;
+    }
+}
