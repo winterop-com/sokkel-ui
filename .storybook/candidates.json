@@ -1,0 +1,77 @@
+[
+    {
+        "value": "a-base",
+        "title": "Base",
+        "app": "set a"
+    },
+    {
+        "value": "a-indigo",
+        "title": "Indigo",
+        "app": "set a"
+    },
+    {
+        "value": "a-paper",
+        "title": "Paper",
+        "app": "set a"
+    },
+    {
+        "value": "a-contrast",
+        "title": "Contrast",
+        "app": "set a"
+    },
+    {
+        "value": "a-terminal",
+        "title": "Terminal",
+        "app": "set a"
+    },
+    {
+        "value": "b-base",
+        "title": "Base",
+        "app": "set b"
+    },
+    {
+        "value": "b-indigo",
+        "title": "Indigo",
+        "app": "set b"
+    },
+    {
+        "value": "b-paper",
+        "title": "Paper",
+        "app": "set b"
+    },
+    {
+        "value": "b-contrast",
+        "title": "Contrast",
+        "app": "set b"
+    },
+    {
+        "value": "b-terminal",
+        "title": "Terminal",
+        "app": "set b"
+    },
+    {
+        "value": "b-steel",
+        "title": "Steel",
+        "app": "set b"
+    },
+    {
+        "value": "b-ember",
+        "title": "Ember",
+        "app": "set b"
+    },
+    {
+        "value": "c-base",
+        "title": "Base",
+        "app": "set c"
+    },
+    {
+        "value": "c-paper",
+        "title": "Paper",
+        "app": "set c"
+    },
+    {
+        "value": "c-contrast",
+        "title": "Contrast",
+        "app": "set c"
+    }
+]

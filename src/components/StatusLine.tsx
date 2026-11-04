@@ -1,0 +1,59 @@
+import type { ReactNode } from 'react'
+
+import { cn } from '../lib/cn'
+
+/** How a note in the foot strip is inked. Something live is information, not a warning. */
+export type StatusTone = 'quiet' | 'live' | 'warn' | 'error'
+
+const TONE: Record<StatusTone, string> = {
+    quiet: 'text-muted-foreground',
+    live: 'text-info',
+    warn: 'text-warning',
+    error: 'text-destructive',
+}
+
+/**
+ * What the shell's foot strip says for the screen: a short note at the left and identifiers at the
+ * right, on one row of fixed height. It holds short facts, never a sentence, so it never grows.
+ */
+export function StatusLine({
+    note,
+    tone = 'quiet',
+    live = false,
+    children,
+}: {
+    note?: ReactNode
+    tone?: StatusTone
+    /** A dot before the note that pulses, for something happening now. */
+    live?: boolean
+    /** Identifiers and counts at the right end, each a `StatusItem`. */
+    children?: ReactNode
+}) {
+    return (
+        <div className="flex h-full min-w-0 flex-1 items-center gap-3 text-xs">
+            {note !== undefined && (
+                <span className={cn('flex min-w-0 items-center gap-2', TONE[tone])}>
+                    {live && (
+                        <span className="relative flex size-2 shrink-0" aria-hidden>
+                            <span className="absolute inline-flex size-full animate-ping rounded-full bg-current opacity-50" />
+                            <span className="relative inline-flex size-2 rounded-full bg-current" />
+                        </span>
+                    )}
+                    <span className="truncate">{note}</span>
+                </span>
+            )}
+            <div className="flex-1" />
+            {children !== undefined && <div className="flex shrink-0 items-center gap-3 text-muted-foreground">{children}</div>}
+        </div>
+    )
+}
+
+/** One fact at the foot strip's right end, an identifier in the code face when `code` is set. */
+export function StatusItem({ label, children, code = false }: { label?: string; children: ReactNode; code?: boolean }) {
+    return (
+        <span className="flex items-center gap-1.5 whitespace-nowrap">
+            {label !== undefined && <span className="text-faint">{label}</span>}
+            <span className={cn(code && 'font-mono text-foreground')}>{children}</span>
+        </span>
+    )
+}

@@ -1,0 +1,62 @@
+import type { Meta, StoryObj } from '@storybook/react-vite'
+import { CalendarClock, FileText, FolderGit2, ListChecks, Moon, Play, Plus, Settings, Users } from 'lucide-react'
+import { useCallback, useState } from 'react'
+
+import { CommandPalette, usePaletteShortcut, type PaletteGroup } from '../../components/CommandPalette'
+import { Button } from '../../components/ui/button'
+import { Kbd } from '../../components/ui/kbd'
+
+/** The palette open over an app, with places, actions and recent records. */
+const GROUPS: PaletteGroup[] = [
+    {
+        title: 'Go to',
+        commands: [
+            { id: 'runs', label: 'Runs', icon: Play, keys: ['G', 'R'], onSelect: () => undefined },
+            { id: 'jobs', label: 'Jobs', icon: ListChecks, keys: ['G', 'J'], onSelect: () => undefined },
+            { id: 'schedules', label: 'Schedules', icon: CalendarClock, onSelect: () => undefined },
+            { id: 'projects', label: 'Projects', icon: FolderGit2, onSelect: () => undefined },
+            { id: 'people', label: 'People', icon: Users, onSelect: () => undefined },
+        ],
+    },
+    {
+        title: 'Create',
+        commands: [
+            { id: 'new-job', label: 'New job', icon: Plus, keys: ['C'], onSelect: () => undefined },
+            { id: 'new-schedule', label: 'New schedule', icon: Plus, onSelect: () => undefined },
+        ],
+    },
+    {
+        title: 'Recent',
+        commands: [
+            { id: 'r-export', label: 'nightly-export', icon: FileText, hint: 'job, failed 02:00', onSelect: () => undefined },
+            { id: 'r-import', label: 'import-orders', icon: FileText, hint: 'job, running', onSelect: () => undefined },
+        ],
+    },
+    {
+        title: 'App',
+        commands: [
+            { id: 'theme', label: 'Switch to light', icon: Moon, keywords: ['theme', 'dark', 'scheme'], onSelect: () => undefined },
+            { id: 'settings', label: 'Settings', icon: Settings, keys: ['⌘', ','], onSelect: () => undefined },
+        ],
+    },
+]
+
+function Palette({ initial }: { initial: boolean }) {
+    const [open, setOpen] = useState(initial)
+    const show = useCallback(() => setOpen(true), [])
+    usePaletteShortcut(show)
+    return (
+        <div className="flex min-h-svh flex-col items-center gap-3 bg-background p-6 text-foreground">
+            <Button variant="outline" size="sm" onClick={show}>
+                Open the palette <Kbd>⌘K</Kbd>
+            </Button>
+            <CommandPalette open={open} onOpenChange={setOpen} groups={GROUPS} />
+        </div>
+    )
+}
+
+const meta: Meta = { title: 'Patterns/Command palette' }
+export default meta
+
+export const Open: StoryObj = { render: () => <Palette initial /> }
+export const Closed: StoryObj = { render: () => <Palette initial={false} /> }

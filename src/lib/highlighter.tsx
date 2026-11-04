@@ -112,3 +112,8 @@ export async function highlightCode(code: string, language: string) {
 
     return highlighter ? highlighter.highlight(code).lines : null
 }
+
+/** Whether a language is one the highlighter colors; code in any other is drawn plain. */
+export function hasLanguage(language: string): boolean {
+    return getLanguage(language) !== null
+}

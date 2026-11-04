@@ -4,15 +4,15 @@ import { codeProblem, normalizeCode } from './CodeField'
 
 describe('a code', () => {
     test('is shaped as it is typed', () => {
-        expect(normalizeCode('DHIS2 Play')).toBe('dhis2-play')
-        expect(normalizeCode('org_unit  tree')).toBe('org-unit-tree')
+        expect(normalizeCode('Nightly Export')).toBe('nightly-export')
+        expect(normalizeCode('send_daily  digest')).toBe('send-daily-digest')
     })
 
     test('names the one thing to change', () => {
-        expect(codeProblem('dhis2-play')).toBeNull()
+        expect(codeProblem('nightly-export')).toBeNull()
         expect(codeProblem('')).toBeNull()
-        expect(codeProblem('2-play')).toBe('Start with a letter.')
-        expect(codeProblem('-play')).toBe('Start with a letter.')
-        expect(codeProblem('play.dhis2')).toBe('Use only letters, digits and hyphens.')
+        expect(codeProblem('2-export')).toBe('Start with a letter.')
+        expect(codeProblem('-export')).toBe('Start with a letter.')
+        expect(codeProblem('nightly.export')).toBe('Use only letters, digits and hyphens.')
     })
 })

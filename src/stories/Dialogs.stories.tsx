@@ -12,7 +12,7 @@ import { Textarea } from '../components/ui/textarea'
  * The dialog shell open over a page: a form that creates something, with a shut Create that says
  * why; and a confirm whose title is the question. On a phone both are full-screen sheets.
  */
-function CreateSchema() {
+function CreateJob() {
     const [open, setOpen] = useState(true)
     const [code, setCode] = useState('')
     return (
@@ -20,25 +20,25 @@ function CreateSchema() {
             <DialogShell
                 open={open}
                 onOpenChange={setOpen}
-                title="New schema"
-                description="The body is written on the schema's own page."
+                title="New job"
+                description="The steps are written on the job's own page."
                 confirm={{
                     label: 'Create',
                     onConfirm: () => setOpen(false),
-                    why: code === '' ? 'Give the schema a code.' : undefined,
+                    why: code === '' ? 'Give the job a code.' : undefined,
                 }}
             >
                 <CodeField id="code" value={code} onChange={setCode} />
                 <Field id="name" label="Name">
-                    <Input id="name" defaultValue="A batch of readings" />
+                    <Input id="name" defaultValue="Import orders" />
                 </Field>
                 <Field id="description" label="Description">
-                    <Textarea id="description" defaultValue="Readings a station sent in one upload." />
+                    <Textarea id="description" defaultValue="Loads the monthly orders file into the warehouse." />
                 </Field>
                 <SwitchField
                     id="strict"
-                    label="Refuse unknown fields"
-                    explain="A value with a field the schema does not name fails the check."
+                    label="Stop at the first failure"
+                    explain="A step that fails ends the run, and the steps after it are skipped."
                 />
             </DialogShell>
         </div>
@@ -52,8 +52,8 @@ function ConfirmDelete() {
             <ConfirmDialog
                 open={open}
                 onOpenChange={setOpen}
-                question="Delete weather-gate?"
-                detail="Its runs stay in the history; the pipeline stops running."
+                question="Delete import-orders?"
+                detail="Its runs stay in the history; the job stops running."
                 confirm={{ label: 'Delete', destructive: true, onConfirm: () => setOpen(false) }}
             />
         </div>
@@ -63,5 +63,5 @@ function ConfirmDelete() {
 const meta: Meta = { title: 'Patterns/Dialogs' }
 export default meta
 
-export const Create: StoryObj = { render: () => <CreateSchema /> }
+export const Create: StoryObj = { render: () => <CreateJob /> }
 export const Confirm: StoryObj = { render: () => <ConfirmDelete /> }

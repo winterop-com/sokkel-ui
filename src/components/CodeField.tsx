@@ -16,7 +16,7 @@ const WORDS: CodeWords = {
 
 /**
  * What typing makes of a code before it is checked: lower case, and spaces and underscores as
- * hyphens. "DHIS2 Play" becomes "dhis2-play"; nothing a person typed on purpose is removed.
+ * hyphens. "Nightly Export" becomes "nightly-export"; nothing a person typed on purpose is removed.
  */
 export function normalizeCode(text: string): string {
     return text.toLowerCase().replace(/[\s_]+/g, '-')

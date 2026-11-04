@@ -89,7 +89,7 @@ export function DialogShell({
 }
 
 /**
- * A question with one answer to confirm: the title is the question ("Delete weather-gate?"),
+ * A question with one answer to confirm: the title is the question ("Delete import-orders?"),
  * there is no body, and a destructive answer is drawn as one.
  */
 export function ConfirmDialog({
