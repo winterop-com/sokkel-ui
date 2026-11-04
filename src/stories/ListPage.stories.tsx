@@ -3,7 +3,8 @@ import { Blocks, BookOpen, Cable, FileJson, Play, Workflow, Zap } from 'lucide-r
 import { useMemo, useState } from 'react'
 
 import { AccountMenu } from '@/components/AccountMenu'
-import { Field, describedBy } from '@/components/Field'
+import { CodeField } from '@/components/CodeField'
+import { Field } from '@/components/Field'
 import { FilterChip } from '@/components/FilterChip'
 import { ListTable, type Column } from '@/components/ListTable'
 import { PageHeader } from '@/components/PageHeader'
@@ -248,26 +249,14 @@ function RunsListPage() {
 }
 
 function ConnectionForm() {
-    const [code, setCode] = useState('dhis2 play')
-    const [touched, setTouched] = useState(true)
-    const codeError = /^[a-z0-9][a-z0-9-]*$/.test(code) ? null : 'A code is lower case letters, digits and hyphens.'
+    const [code, setCode] = useState('2-play')
     return (
         <Frame active="connections">
             <Page>
                 <PageHeader title="New connection" />
                 <Section title="Connection">
                     <div className="grid gap-4 @container lg:grid-cols-2">
-                        <Field id="code" label="Code" required hint="lower case, digits and hyphens" error={touched ? codeError : null}>
-                            <Input
-                                id="code"
-                                className="font-mono"
-                                value={code}
-                                aria-invalid={touched && codeError !== null}
-                                aria-describedby={describedBy('code', { error: touched ? codeError : null })}
-                                onChange={(event) => setCode(event.target.value)}
-                                onBlur={() => setTouched(true)}
-                            />
-                        </Field>
+                        <CodeField id="code" value={code} onChange={setCode} />
                         <Field id="base-url" label="Base URL" hint="base_url" keyHint help="Where the instance answers, without /api.">
                             <Input id="base-url" className="font-mono" defaultValue="https://play.dhis2.org/2.43" aria-describedby="base-url-help" />
                         </Field>
