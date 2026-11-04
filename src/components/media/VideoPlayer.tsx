@@ -1,12 +1,11 @@
-import { Captions, Maximize, Minimize, Pause, PictureInPicture2, Play } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type Ref } from 'react'
+import { Captions, Maximize, Minimize, PictureInPicture2, Play, RotateCcw, RotateCw } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode, type Ref } from 'react'
 
 import { cn } from '../../lib/cn'
 import { Button } from '../ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '../ui/dropdown-menu'
-import { VolumeGlyph } from './MediaBar'
-import { MediaSlider } from './MediaSlider'
-import { formatTime, type MediaRange } from './time'
+import { PlayButton, Position, TransportButton, VolumeControl } from './MediaControls'
+import { type MediaRange } from './time'
 
 /** One text track the player offers. */
 export interface VideoTrack {
@@ -34,6 +33,8 @@ export interface VideoPlayerLabels {
     exitPictureInPicture: string
     fullscreen: string
     exitFullscreen: string
+    back: string
+    forward: string
 }
 
 const LABELS: VideoPlayerLabels = {
@@ -50,6 +51,8 @@ const LABELS: VideoPlayerLabels = {
     exitPictureInPicture: 'Exit picture in picture',
     fullscreen: 'Fullscreen',
     exitFullscreen: 'Exit fullscreen',
+    back: 'Back 10 seconds',
+    forward: 'Forward 10 seconds',
 }
 
 const RATES = [0.5, 0.75, 1, 1.25, 1.5, 2]
@@ -57,6 +60,8 @@ const RATES = [0.5, 0.75, 1, 1.25, 1.5, 2]
 /** How far the left and right arrows seek, in seconds, and how far up and down move the volume. */
 const SEEK_STEP = 5
 const VOLUME_STEP = 0.1
+/** How far the back and forward buttons skip, in seconds. */
+const SKIP = 10
 
 /** A control drawn over the picture, light on dark in either scheme. */
 const ON_PICTURE =
@@ -64,6 +69,8 @@ const ON_PICTURE =
 
 export interface VideoPlayerProps {
     src: string
+    /** What is playing, shown at the controls' left. */
+    title?: ReactNode
     /** A picture shown until the first frame is ready. */
     poster?: string
     tracks?: readonly VideoTrack[]
@@ -115,6 +122,7 @@ function rangesOf(video: HTMLVideoElement): MediaRange[] {
  */
 export function VideoPlayer({
     src,
+    title,
     poster,
     tracks = [],
     rates = RATES,
@@ -453,123 +461,119 @@ export function VideoPlayer({
                     if (!event.currentTarget.contains(event.relatedTarget)) setHeld(false)
                 }}
             >
-                <div className="px-1.5">
-                    <MediaSlider
+                <div className="px-1">
+                    <Position
                         tone="overlay"
-                        value={at}
-                        max={state.duration}
+                        at={at}
+                        duration={state.duration}
                         buffered={state.buffered}
                         label={words.seek}
-                        valueText={(value) => `${formatTime(value)} / ${formatTime(state.duration)}`}
-                        step={SEEK_STEP}
-                        largeStep={30}
-                        onChange={seekTo}
+                        onSeek={seekTo}
                         onScrub={setScrub}
                     />
                 </div>
-                <div className="flex items-center gap-0.5">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={state.playing ? words.pause : words.play}
-                        onClick={toggle}
-                        className={ON_PICTURE}
-                    >
-                        {state.playing ? <Pause className="fill-current" aria-hidden /> : <Play className="fill-current" aria-hidden />}
-                    </Button>
-                    <div className="group/volume flex items-center">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            aria-label={state.muted ? words.unmute : words.mute}
-                            aria-pressed={state.muted}
-                            onClick={toggleMute}
-                            className={ON_PICTURE}
-                        >
-                            <VolumeGlyph level={level} />
-                        </Button>
-                        <div className="hidden w-20 pr-2 pl-1 @md:block">
-                            <MediaSlider
+                <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+                    <div className="flex min-w-0 items-center">
+                        {title !== undefined && (
+                            <span className="hidden truncate px-1.5 text-sm font-medium text-terminal-foreground @md:inline">{title}</span>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <TransportButton tone="overlay" label={words.back} onClick={() => seekTo(at - SKIP)}>
+                            <RotateCcw aria-hidden />
+                        </TransportButton>
+                        <PlayButton tone="overlay" playing={state.playing} onToggle={toggle} words={words} />
+                        <TransportButton tone="overlay" label={words.forward} onClick={() => seekTo(at + SKIP)}>
+                            <RotateCw aria-hidden />
+                        </TransportButton>
+                    </div>
+                    <div className="flex min-w-0 items-center justify-end gap-0.5">
+                        <div className="hidden @md:block">
+                            <VolumeControl
                                 tone="overlay"
-                                value={Math.round(level * 100)}
-                                max={100}
-                                label={words.volume}
-                                valueText={(value) => `${String(Math.round(value))}%`}
-                                onChange={(value) => {
-                                    setVolume(value / 100)
-                                }}
-                                onScrub={(value) => {
-                                    if (value !== null) setVolume(value / 100)
-                                }}
+                                level={level}
+                                muted={state.muted}
+                                onMutedChange={() => toggleMute()}
+                                onVolumeChange={setVolume}
+                                words={words}
                             />
                         </div>
-                    </div>
-                    <span className="px-1.5 font-mono text-xs whitespace-nowrap text-terminal-foreground tabular-nums">
-                        {formatTime(at)}
-                        <span className="text-terminal-muted"> / {formatTime(state.duration)}</span>
-                    </span>
-                    <div className="flex-1" />
-                    {tracks.length > 0 && (
-                        <CaptionsControl
-                            tracks={tracks}
-                            caption={caption}
-                            onCaption={setCaption}
-                            words={words}
-                            container={root}
-                            onOpenChange={setMenuOpen}
-                        />
-                    )}
-                    {rates.length > 1 && (
-                        <DropdownMenu onOpenChange={setMenuOpen}>
-                            <DropdownMenuTrigger
-                                render={
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        aria-label={words.speed}
-                                        className={cn(ON_PICTURE, 'w-auto min-w-8 px-1.5 font-mono text-xs tabular-nums')}
-                                    />
-                                }
-                            >
-                                {`${String(state.rate)}x`}
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent container={root} side="top" align="end" className="w-auto min-w-24">
-                                <DropdownMenuRadioGroup
-                                    value={String(state.rate)}
-                                    onValueChange={(value: string) => {
-                                        setRate(Number(value))
-                                    }}
+                        <div className="@md:hidden">
+                            <VolumeControl
+                                tone="overlay"
+                                compact
+                                level={level}
+                                muted={state.muted}
+                                onMutedChange={() => toggleMute()}
+                                onVolumeChange={setVolume}
+                                words={words}
+                            />
+                        </div>
+                        {tracks.length > 0 && (
+                            <CaptionsControl
+                                tracks={tracks}
+                                caption={caption}
+                                onCaption={setCaption}
+                                words={words}
+                                container={root}
+                                onOpenChange={setMenuOpen}
+                            />
+                        )}
+                        {rates.length > 1 && (
+                            <DropdownMenu onOpenChange={setMenuOpen}>
+                                <DropdownMenuTrigger
+                                    render={
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            aria-label={words.speed}
+                                            className={cn(
+                                                ON_PICTURE,
+                                                'hidden w-auto min-w-8 px-1.5 font-mono text-xs tabular-nums @md:inline-flex',
+                                            )}
+                                        />
+                                    }
                                 >
-                                    {rates.map((rate) => (
-                                        <DropdownMenuRadioItem key={rate} value={String(rate)} className="font-mono tabular-nums">
-                                            {`${String(rate)}x`}
-                                        </DropdownMenuRadioItem>
-                                    ))}
-                                </DropdownMenuRadioGroup>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    )}
-                    {pipSupported && (
+                                    {`${String(state.rate)}x`}
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent container={root} side="top" align="end" className="w-auto min-w-24">
+                                    <DropdownMenuRadioGroup
+                                        value={String(state.rate)}
+                                        onValueChange={(value: string) => {
+                                            setRate(Number(value))
+                                        }}
+                                    >
+                                        {rates.map((rate) => (
+                                            <DropdownMenuRadioItem key={rate} value={String(rate)} className="font-mono tabular-nums">
+                                                {`${String(rate)}x`}
+                                            </DropdownMenuRadioItem>
+                                        ))}
+                                    </DropdownMenuRadioGroup>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        )}
+                        {pipSupported && (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                aria-label={pictureInPicture ? words.exitPictureInPicture : words.pictureInPicture}
+                                aria-pressed={pictureInPicture}
+                                onClick={togglePictureInPicture}
+                                className={cn(ON_PICTURE, 'hidden @sm:inline-flex')}
+                            >
+                                <PictureInPicture2 aria-hidden />
+                            </Button>
+                        )}
                         <Button
                             variant="ghost"
                             size="icon"
-                            aria-label={pictureInPicture ? words.exitPictureInPicture : words.pictureInPicture}
-                            aria-pressed={pictureInPicture}
-                            onClick={togglePictureInPicture}
-                            className={cn(ON_PICTURE, 'hidden @sm:inline-flex')}
+                            aria-label={fullscreen ? words.exitFullscreen : words.fullscreen}
+                            onClick={toggleFullscreen}
+                            className={ON_PICTURE}
                         >
-                            <PictureInPicture2 aria-hidden />
+                            {fullscreen ? <Minimize aria-hidden /> : <Maximize aria-hidden />}
                         </Button>
-                    )}
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={fullscreen ? words.exitFullscreen : words.fullscreen}
-                        onClick={toggleFullscreen}
-                        className={ON_PICTURE}
-                    >
-                        {fullscreen ? <Minimize aria-hidden /> : <Maximize aria-hidden />}
-                    </Button>
+                    </div>
                 </div>
             </div>
         </div>
