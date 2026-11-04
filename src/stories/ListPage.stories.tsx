@@ -206,8 +206,8 @@ function ConnectionForm() {
         <Frame active="connections">
             <Page>
                 <h1 className="text-page font-medium tracking-tight">New connection</h1>
-                <Section title="Connection" className="max-w-2xl">
-                    <div className="flex flex-col gap-4">
+                <Section title="Connection">
+                    <div className="grid gap-4 @container lg:grid-cols-2">
                         <Field id="code" label="Code" required hint="lower case, digits and hyphens" error={touched ? codeError : null}>
                             <Input
                                 id="code"
@@ -222,17 +222,17 @@ function ConnectionForm() {
                         <Field id="base-url" label="base_url" mono help="Where the instance answers, without /api.">
                             <Input id="base-url" className="font-mono" defaultValue="https://play.dhis2.org/2.43" aria-describedby="base-url-help" />
                         </Field>
-                        <Field id="description" label="Description">
+                        <Field id="description" label="Description" className="lg:col-span-2">
                             <Textarea id="description" className="min-h-20" defaultValue="The DHIS2 play demo, for the tour pipelines." />
                         </Field>
-                        <label className="flex items-center justify-between gap-4 text-sm">
+                        <label className="flex items-center justify-between gap-4 text-sm lg:col-span-2">
                             <span>
                                 Verify TLS
                                 <span className="block text-xs text-muted-foreground">Refuse an instance whose certificate does not check.</span>
                             </span>
                             <Switch defaultChecked />
                         </label>
-                        <div className="flex justify-end gap-2">
+                        <div className="flex justify-end gap-2 lg:col-span-2">
                             <Button variant="ghost">Cancel</Button>
                             <Button>Create</Button>
                         </div>
