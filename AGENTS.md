@@ -50,6 +50,10 @@ and ask before acting.
   tiles.
 - Look at every new or changed story in dark and light, at desktop and phone width, before
   committing it.
+- Desktop is the main target; phones and tablets must still work. A story is written once, at
+  full width, and the viewport toolbar shows it at the widths layouts are checked at: 360, 390
+  and 430 for phones, 768 and 1024 for tablets, 1280, 1440 and 1920. No story exists only to
+  show a narrower width.
 
 ## Design
 
