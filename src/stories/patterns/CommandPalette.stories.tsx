@@ -41,7 +41,18 @@ const GROUPS: PaletteGroup[] = [
     },
 ]
 
-function Palette({ initial }: { initial: boolean }) {
+const SHORT: PaletteGroup[] = [
+    {
+        title: 'Go to',
+        commands: [
+            { id: 'runs', label: 'Runs', icon: Play, keys: ['G', 'R'], onSelect: () => undefined },
+            { id: 'jobs', label: 'Jobs', icon: ListChecks, keys: ['G', 'J'], onSelect: () => undefined },
+            { id: 'settings', label: 'Settings', icon: Settings, keys: ['⌘', ','], onSelect: () => undefined },
+        ],
+    },
+]
+
+function Palette({ initial, groups = GROUPS, query }: { initial: boolean; groups?: PaletteGroup[]; query?: string }) {
     const [open, setOpen] = useState(initial)
     const show = useCallback(() => setOpen(true), [])
     usePaletteShortcut(show)
@@ -50,7 +61,7 @@ function Palette({ initial }: { initial: boolean }) {
             <Button variant="outline" size="sm" onClick={show}>
                 Open the palette <Kbd>⌘K</Kbd>
             </Button>
-            <CommandPalette open={open} onOpenChange={setOpen} groups={GROUPS} />
+            <CommandPalette open={open} onOpenChange={setOpen} groups={groups} defaultQuery={query} />
         </div>
     )
 }
@@ -58,5 +69,12 @@ function Palette({ initial }: { initial: boolean }) {
 const meta: Meta = { title: 'Patterns/Command palette' }
 export default meta
 
-export const Open: StoryObj = { render: () => <Palette initial /> }
+/** Many commands: the list scrolls and fades at its bottom edge. */
+export const Open: StoryObj = { name: 'Long list', render: () => <Palette initial /> }
+/** A few commands: the palette is as tall as its rows, with no scrolling. */
+export const Short: StoryObj = { render: () => <Palette initial groups={SHORT} /> }
+/** A search narrowing the long list to what matches. */
+export const Searching: StoryObj = { render: () => <Palette initial query="new" /> }
+/** A search that matches nothing. */
+export const NoMatch: StoryObj = { name: 'No match', render: () => <Palette initial query="invoices" /> }
 export const Closed: StoryObj = { render: () => <Palette initial={false} /> }
