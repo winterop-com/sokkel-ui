@@ -101,8 +101,6 @@ toasts built to the pick.
 - Publish to a registry when apps adopt the library (see Distribution).
 - Pick the themes to keep from the candidates in Storybook and fold them into `tokens/tokens.json`;
   name each for how it looks.
-- Draw mermaid diagrams in the theme's colors and typefaces instead of mermaid's own themes.
-- Fill InputGroup, the combobox input and NativeSelect on the `--field` ground, as Input is.
 - One focus treatment for every control: today inputs draw an accent border and a 3px halo, which
   reads as a double frame on large controls (the code editor now draws the border alone).
 - Validation and notification, after the research above.

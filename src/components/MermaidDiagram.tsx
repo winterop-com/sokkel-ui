@@ -1,14 +1,90 @@
 import { Code2, Image } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
-import { useDark } from '../hooks/use-dark'
 import { CopyButton } from './CopyButton'
 
 let count = 0
 
-async function render(code: string, dark: boolean): Promise<string> {
+/** A key that changes whenever the document's scheme, theme or inline token overrides change. */
+function useLook(): string {
+    const read = () => {
+        const root = document.documentElement
+        return `${root.className}|${root.getAttribute('data-theme') ?? ''}|${root.getAttribute('style') ?? ''}`
+    }
+    const [look, setLook] = useState(read)
+    useEffect(() => {
+        const observer = new MutationObserver(() => setLook(read()))
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme', 'style'] })
+        return () => observer.disconnect()
+    }, [])
+    return look
+}
+
+/** A token's color as hex, read back from a painted pixel, since mermaid takes no other form. */
+function tokenHex(name: string, probe: HTMLElement, context: CanvasRenderingContext2D): string {
+    probe.style.color = `var(--${name})`
+    context.clearRect(0, 0, 1, 1)
+    context.fillStyle = getComputedStyle(probe).color
+    context.fillRect(0, 0, 1, 1)
+    const [r, g, b] = context.getImageData(0, 0, 1, 1).data
+    return `#${[r, g, b].map((channel) => channel.toString(16).padStart(2, '0')).join('')}`
+}
+
+/** Mermaid's theme variables from the current theme's tokens and typeface. */
+function themeVariables(): Record<string, string> {
+    const probe = document.createElement('span')
+    document.body.append(probe)
+    const context = document.createElement('canvas').getContext('2d', { willReadFrequently: true })
+    try {
+        if (context === null) return {}
+        const hex = (name: string) => tokenHex(name, probe, context)
+        const root = getComputedStyle(document.documentElement)
+        return {
+            fontFamily: root.getPropertyValue('--typeface-sans').trim(),
+            fontSize: '13px',
+            background: hex('card'),
+            primaryColor: hex('secondary'),
+            primaryTextColor: hex('foreground'),
+            primaryBorderColor: hex('border-strong'),
+            secondaryColor: hex('muted'),
+            secondaryTextColor: hex('foreground'),
+            secondaryBorderColor: hex('border-strong'),
+            tertiaryColor: hex('card'),
+            tertiaryTextColor: hex('foreground'),
+            tertiaryBorderColor: hex('border'),
+            lineColor: hex('muted-foreground'),
+            textColor: hex('foreground'),
+            mainBkg: hex('secondary'),
+            nodeBorder: hex('border-strong'),
+            clusterBkg: hex('muted'),
+            clusterBorder: hex('border'),
+            edgeLabelBackground: hex('card'),
+            titleColor: hex('foreground'),
+            noteBkgColor: hex('muted'),
+            noteTextColor: hex('foreground'),
+            noteBorderColor: hex('border-strong'),
+            actorBkg: hex('secondary'),
+            actorBorder: hex('border-strong'),
+            actorTextColor: hex('foreground'),
+            signalColor: hex('muted-foreground'),
+            signalTextColor: hex('foreground'),
+        }
+    } finally {
+        probe.remove()
+    }
+}
+
+async function render(code: string): Promise<string> {
     const mermaid = (await import('mermaid')).default
-    mermaid.initialize({ startOnLoad: false, theme: dark ? 'dark' : 'neutral', securityLevel: 'strict', suppressErrorRendering: true })
+    const radius = getComputedStyle(document.documentElement).getPropertyValue('--radius').trim() || '4px'
+    mermaid.initialize({
+        startOnLoad: false,
+        theme: 'base',
+        themeVariables: themeVariables(),
+        themeCSS: `.node rect, .node polygon, .node circle, .cluster rect { filter: none !important; } .node rect, .cluster rect { rx: ${radius}; ry: ${radius}; }`,
+        securityLevel: 'strict',
+        suppressErrorRendering: true,
+    })
     // Parsing first refuses bad source before mermaid draws its own error graphic into the page.
     await mermaid.parse(code)
     count += 1
@@ -17,7 +93,8 @@ async function render(code: string, dark: boolean): Promise<string> {
 }
 
 /**
- * A mermaid diagram, drawn in the current scheme and redrawn when it changes. Its source shows
+ * A mermaid diagram, drawn in the current theme's colors and typeface and redrawn when the scheme,
+ * the theme or a token override changes. Its source shows
  * while the diagram loads, while it is still streaming, and when it does not parse; a toggle flips
  * between the two. Mermaid loads the first time a diagram is drawn.
  */
@@ -30,7 +107,7 @@ export function MermaidDiagram({
     streaming?: boolean
     words?: { source: string; diagram: string; failed: string }
 }) {
-    const dark = useDark()
+    const look = useLook()
     const [svg, setSvg] = useState<string | null>(null)
     const [failed, setFailed] = useState(false)
     const [source, setSource] = useState(false)
@@ -38,7 +115,7 @@ export function MermaidDiagram({
     useEffect(() => {
         if (streaming) return
         let cancelled = false
-        render(code, dark).then(
+        render(code).then(
             (out) => {
                 if (cancelled) return
                 setFailed(false)
@@ -53,7 +130,7 @@ export function MermaidDiagram({
         return () => {
             cancelled = true
         }
-    }, [code, dark, streaming])
+    }, [code, look, streaming])
 
     const asSource = streaming || failed || source || svg === null
     return (
