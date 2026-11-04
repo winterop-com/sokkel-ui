@@ -29,3 +29,13 @@
         opacity: 1;
     }
 }
+
+/* The segment of a loading bar whose progress is unknown, sliding across its track. */
+@keyframes loading-slide {
+    0% {
+        transform: translateX(-10%);
+    }
+    100% {
+        transform: translateX(260%);
+    }
+}
