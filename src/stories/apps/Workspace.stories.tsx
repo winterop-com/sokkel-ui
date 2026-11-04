@@ -255,5 +255,5 @@ function Workspace({ dock = false }: { dock?: boolean }) {
 const meta: Meta = { title: 'Apps/Workspace' }
 export default meta
 
-export const ListAndPanel: StoryObj = { name: 'List with side panel', render: () => <Workspace /> }
-export const WithDock: StoryObj = { name: 'With a log dock', render: () => <Workspace dock /> }
+export const ListAndPanel: StoryObj = { name: 'List and panel', render: () => <Workspace /> }
+export const WithDock: StoryObj = { name: 'Log dock', render: () => <Workspace dock /> }

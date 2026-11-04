@@ -73,6 +73,7 @@ export const Variants: StoryObj = {
 }
 
 export const WithHeaderAndFooter: StoryObj = {
+    name: 'Header and footer',
     render: () => (
         <Ground>
             <div className="flex max-w-xl flex-col gap-2">

@@ -238,7 +238,7 @@
     --terminal-graph-edge: oklch(0.42 0.015 255);
     --terminal-graph-faint: oklch(0.29 0.013 255);
     --spacing-panel-head: 2.875rem;
-    --radius: 5px;
+    --radius: 4.5px;
 }
 
 .dark {
@@ -1117,7 +1117,7 @@ html.dark[data-theme='neon'] {
     --terminal-graph-edge: oklch(0.42 0.015 255);
     --terminal-graph-faint: oklch(0.29 0.013 255);
     --spacing-panel-head: 2.875rem;
-    --radius: 5px;
+    --radius: 4.5px;
 }
 
 .dark [data-theme-scope='default'] {
@@ -1223,7 +1223,7 @@ html.dark[data-theme='neon'] {
     --terminal-graph-edge: oklch(0.31 0.016 255);
     --terminal-graph-faint: oklch(0.155 0.012 255);
     --spacing-panel-head: 2.875rem;
-    --radius: 5px;
+    --radius: 4.5px;
     --terminal-bar: oklch(0.21 0.013 255);
 }
 
@@ -1330,7 +1330,7 @@ html.dark[data-theme='neon'] {
     --terminal-graph-edge: oklch(0.42 0.015 255);
     --terminal-graph-faint: oklch(0.29 0.013 255);
     --spacing-panel-head: 2.875rem;
-    --radius: 5px;
+    --radius: 4.5px;
 }
 
 .dark [data-theme-scope='paper'] {
@@ -1436,7 +1436,7 @@ html.dark[data-theme='neon'] {
     --terminal-graph-edge: oklch(0.31 0.016 255);
     --terminal-graph-faint: oklch(0.155 0.012 255);
     --spacing-panel-head: 2.875rem;
-    --radius: 5px;
+    --radius: 4.5px;
     --terminal-bar: oklch(0.21 0.013 255);
 }
 
@@ -1543,7 +1543,7 @@ html.dark[data-theme='neon'] {
     --terminal-graph-edge: oklch(0.42 0.015 255);
     --terminal-graph-faint: oklch(0.29 0.013 255);
     --spacing-panel-head: 2.875rem;
-    --radius: 5px;
+    --radius: 4.5px;
 }
 
 .dark [data-theme-scope='contrast'] {
@@ -1649,7 +1649,7 @@ html.dark[data-theme='neon'] {
     --terminal-graph-edge: oklch(0.31 0.016 255);
     --terminal-graph-faint: oklch(0.155 0.012 255);
     --spacing-panel-head: 2.875rem;
-    --radius: 5px;
+    --radius: 4.5px;
     --terminal-bar: oklch(0.21 0.013 255);
 }
 
@@ -1756,7 +1756,7 @@ html.dark[data-theme='neon'] {
     --terminal-graph-edge: oklch(0.42 0.015 255);
     --terminal-graph-faint: oklch(0.29 0.013 255);
     --spacing-panel-head: 2.875rem;
-    --radius: 5px;
+    --radius: 4.5px;
 }
 
 .dark [data-theme-scope='tokyo'] {
@@ -1862,7 +1862,7 @@ html.dark[data-theme='neon'] {
     --terminal-graph-edge: oklch(0.31 0.016 255);
     --terminal-graph-faint: oklch(0.155 0.012 255);
     --spacing-panel-head: 2.875rem;
-    --radius: 5px;
+    --radius: 4.5px;
     --terminal-bar: oklch(0.21 0.013 255);
 }
 
@@ -1969,7 +1969,7 @@ html.dark[data-theme='neon'] {
     --terminal-graph-edge: oklch(0.42 0.015 255);
     --terminal-graph-faint: oklch(0.29 0.013 255);
     --spacing-panel-head: 2.875rem;
-    --radius: 5px;
+    --radius: 4.5px;
 }
 
 .dark [data-theme-scope='vinyl'] {
@@ -2075,7 +2075,7 @@ html.dark[data-theme='neon'] {
     --terminal-graph-edge: oklch(0.31 0.016 255);
     --terminal-graph-faint: oklch(0.155 0.012 255);
     --spacing-panel-head: 2.875rem;
-    --radius: 5px;
+    --radius: 4.5px;
     --terminal-bar: oklch(0.21 0.013 255);
 }
 
@@ -2182,7 +2182,7 @@ html.dark[data-theme='neon'] {
     --terminal-graph-edge: oklch(0.42 0.015 255);
     --terminal-graph-faint: oklch(0.29 0.013 255);
     --spacing-panel-head: 2.875rem;
-    --radius: 5px;
+    --radius: 4.5px;
 }
 
 .dark [data-theme-scope='cassette'] {
@@ -2288,7 +2288,7 @@ html.dark[data-theme='neon'] {
     --terminal-graph-edge: oklch(0.31 0.016 255);
     --terminal-graph-faint: oklch(0.155 0.012 255);
     --spacing-panel-head: 2.875rem;
-    --radius: 5px;
+    --radius: 4.5px;
     --terminal-bar: oklch(0.21 0.013 255);
 }
 
@@ -2395,7 +2395,7 @@ html.dark[data-theme='neon'] {
     --terminal-graph-edge: oklch(0.42 0.015 255);
     --terminal-graph-faint: oklch(0.29 0.013 255);
     --spacing-panel-head: 2.875rem;
-    --radius: 5px;
+    --radius: 4.5px;
 }
 
 .dark [data-theme-scope='neon'] {
@@ -2501,7 +2501,7 @@ html.dark[data-theme='neon'] {
     --terminal-graph-edge: oklch(0.31 0.016 255);
     --terminal-graph-faint: oklch(0.155 0.012 255);
     --spacing-panel-head: 2.875rem;
-    --radius: 5px;
+    --radius: 4.5px;
     --terminal-bar: oklch(0.21 0.013 255);
 }
 

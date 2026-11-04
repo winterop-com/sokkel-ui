@@ -214,5 +214,5 @@ export const SegmentedVariants: StoryObj = { name: 'Segmented, options', render:
 export const SegmentedStackedLayout: StoryObj = { name: 'Segmented, stacked', render: () => <SegmentedStacked /> }
 export const SegmentedAligned: StoryObj = { name: 'Segmented, aligned', render: () => <SegmentedSettings fill /> }
 export const SegmentedChoice: StoryObj = { name: 'Segmented, natural width', render: () => <SegmentedSettings fill={false} /> }
-export const SegmentedField: StoryObj = { name: 'Segmented in a form', render: () => <SegmentedInForm /> }
+export const SegmentedField: StoryObj = { name: 'Form field', render: () => <SegmentedInForm /> }
 export const Copy: StoryObj = { name: 'Copy button', render: () => <CopyLines /> }

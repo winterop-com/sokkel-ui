@@ -14,6 +14,8 @@
   `src/styles/tokens.css` is generated and never edited by hand.
 - Comments say what the thing does, or the constraint the code cannot show. Rationale goes in the
   commit message.
+- A story's name is one to three words ("Open", "Layer panel"); what it shows goes in its doc
+  comment, not its name.
 - Every component has stories, including complex compositions with real-shaped data, and is
   looked at in both palettes, dark and light, before it merges.
 - The license is proprietary, as `LICENSE` says; code carried under another license is listed in

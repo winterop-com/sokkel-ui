@@ -127,4 +127,4 @@ function SettingsApp() {
 const meta: Meta = { title: 'Apps/Settings' }
 export default meta
 
-export const WithNavBar: StoryObj = { name: 'Settings under a navbar', render: () => <SettingsApp /> }
+export const WithNavBar: StoryObj = { name: 'Navbar', render: () => <SettingsApp /> }

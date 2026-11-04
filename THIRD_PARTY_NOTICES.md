@@ -10,6 +10,8 @@ are not listed.
   registry on top of Base UI, and since modified: Copyright (c) 2023 shadcn.
 - `src/styles/shadcn.css` is `dist/tailwind.css` from the `shadcn` package, version 4.23.0:
   Copyright (c) 2023 shadcn.
+- `src/components/ui/waveform.tsx` and `src/components/ui/bar-visualizer.tsx` come from the
+  ElevenLabs UI registry, and since modified: Copyright (c) 2025 Eleven Labs Inc.
 
 ```
 Permission is hereby granted, free of charge, to any person obtaining a copy
