@@ -24,7 +24,8 @@ toggle-group, tooltip, trace.
 ## Patterns
 
 Shell, Rail, Page, PageHeader, Section, Surface, Field, CodeField, SwitchField, SearchField,
-FilterChip, ListTable, StatusChip, AccountMenu, SidePanel, DialogShell, ConfirmDialog.
+FilterChip, ListTable, StatusChip, AccountMenu, SidePanel, DialogShell, ConfirmDialog,
+TreeSelect, AsyncSelect.
 
 ## Graphs
 
@@ -39,7 +40,6 @@ empty ground, each reported to the app, which owns the graph. Views select only 
 
 ## Still to build
 
-- AsyncSelect: a searchable popover select that loads its options.
 - A filterable picker with capability chips.
 - A toggle for the side panel in the top bar.
 - SchemaForm: a form generated from a JSON Schema, built from Field and the inputs, validated
