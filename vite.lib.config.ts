@@ -26,6 +26,7 @@ export default defineConfig({
                 ...entries('components'),
                 ...entries('components/ui'),
                 ...entries('components/map'),
+                ...entries('components/media'),
                 ...entries('hooks'),
                 ...entries('lib'),
             },
