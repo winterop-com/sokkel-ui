@@ -11,6 +11,8 @@ export interface GraphEdgeData extends Record<string, unknown> {
     tone?: 'plain' | 'quiet' | 'strong'
     /** An arrowhead at the target end. */
     arrow?: boolean
+    /** The edge leaves and returns to one node, drawn as a loop beside it. */
+    loop?: boolean
 }
 
 /** The edge kind React Flow draws a graph edge for. */
@@ -36,13 +38,33 @@ function behind(tip: GraphPoint, side: Position): GraphPoint {
     return { x: tip.x, y: tip.y + ARROW }
 }
 
+const LOOP = 36
+
+/** A loop from a node's source handle back to its target handle: over the top drawn right, round the right side drawn down. */
+function loopOf(sx: number, sy: number, tx: number, ty: number, down: boolean): { path: string; from: GraphPoint; labelAt: GraphPoint } {
+    if (down) {
+        const side = Math.max(sx, tx) + LOOP * 2
+        return {
+            path: `M ${String(sx)} ${String(sy)} C ${String(side)} ${String(sy + LOOP)}, ${String(side)} ${String(ty - LOOP)}, ${String(tx)} ${String(ty)}`,
+            from: { x: tx + 4, y: ty - ARROW },
+            labelAt: { x: side - LOOP / 2, y: (sy + ty) / 2 },
+        }
+    }
+    const top = Math.min(sy, ty) - LOOP * 1.6
+    return {
+        path: `M ${String(sx)} ${String(sy)} C ${String(sx + LOOP)} ${String(top)}, ${String(tx - LOOP)} ${String(top)}, ${String(tx)} ${String(ty)}`,
+        from: { x: tx - ARROW, y: ty - 4 },
+        labelAt: { x: (sx + tx) / 2, y: top + LOOP * 0.4 },
+    }
+}
+
 /**
  * One edge, along the route elk gave it, or a stepped line between the two handles until elk has
  * answered. A label sits where elk made room for it, or at the middle of the line.
  */
 export function GraphEdge({ id, data, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition }: EdgeProps<GraphEdgeKind>) {
     const points = data?.points
-    const routed = points !== undefined && points.length >= 2
+    const routed = points !== undefined && points.length >= 2 && data?.loop !== true
     const [stepped, middleX, middleY] = getSmoothStepPath({
         sourceX,
         sourceY,
@@ -52,10 +74,11 @@ export function GraphEdge({ id, data, sourceX, sourceY, targetX, targetY, source
         targetPosition,
         borderRadius: 6,
     })
-    const path = routed ? routedPath(points) : stepped
+    const loop = data?.loop === true ? loopOf(sourceX, sourceY, targetX, targetY, sourcePosition === Position.Bottom) : null
+    const path = loop?.path ?? (routed ? routedPath(points) : stepped)
     const tip = routed ? (points[points.length - 1] as GraphPoint) : { x: targetX, y: targetY }
-    const from = routed ? (points[points.length - 2] as GraphPoint) : behind(tip, targetPosition)
-    const labelAt = data?.labelAt ?? (routed ? midpointOf(points) : undefined) ?? { x: middleX, y: middleY }
+    const from = loop?.from ?? (routed ? (points[points.length - 2] as GraphPoint) : behind(tip, targetPosition))
+    const labelAt = loop?.labelAt ?? data?.labelAt ?? (routed ? midpointOf(points) : undefined) ?? { x: middleX, y: middleY }
     const tone = data?.tone ?? 'plain'
     const stroke = tone === 'strong' ? 'var(--muted-foreground)' : 'var(--xy-edge-stroke)'
     return (

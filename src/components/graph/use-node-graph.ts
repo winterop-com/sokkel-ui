@@ -15,6 +15,8 @@ export interface GraphItem {
     type?: string
     /** The size a node of another kind is drawn at; a box is measured from its words. */
     size?: { width: number; height: number }
+    /** False for a node that cannot be chosen, such as a marker. */
+    selectable?: boolean
 }
 
 /** One edge of a graph given as data. */
@@ -88,6 +90,8 @@ export function useNodeGraph(
                     height: node.height,
                     measured: { width: node.width, height: node.height },
                     selected: node.id === selected,
+                    selectable: item.selectable ?? true,
+                    focusable: item.selectable ?? true,
                     draggable: false,
                     connectable: false,
                     className:
@@ -101,7 +105,9 @@ export function useNodeGraph(
     const edges = useMemo<Edge[]>(() => {
         const byId = new Map(placed.edges.map((edge) => [edge.id, edge]))
         return links.flatMap((link, index) => {
-            const edge = byId.get(ids[index] as string)
+            const id = ids[index] as string
+            // A link from a node to itself is not placed; it is drawn as a loop beside its node.
+            const edge = link.source === link.target ? { id, source: link.source, target: link.target } : byId.get(id)
             if (edge === undefined) return []
             const data: GraphEdgeData = {
                 ...(edge.points === undefined ? {} : { points: edge.points }),
@@ -109,6 +115,7 @@ export function useNodeGraph(
                 ...(link.label === undefined ? {} : { label: link.label }),
                 ...(link.tone === undefined ? {} : { tone: link.tone }),
                 ...(link.arrow === undefined ? {} : { arrow: link.arrow }),
+                ...(link.source === link.target ? { loop: true } : {}),
             }
             return [{ id: edge.id, source: edge.source, target: edge.target, type: 'graph', data }]
         })
