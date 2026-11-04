@@ -127,7 +127,7 @@ export const Variants: StoryObj = {
                     <CodeBlock>
                         <CodeBlockContent wrap>
                             {
-                                'GET https://api.example.org/v1/orders/export?project=atlas&month=2026-10&format=csv answered 200 with 2,184 rows, 37 invalid'
+                                'GET https://api.example.org/v1/orders/export?project=larkspur&month=2026-10&format=csv answered 200 with 2,184 rows, 37 invalid'
                             }
                         </CodeBlockContent>
                     </CodeBlock>
@@ -137,7 +137,7 @@ export const Variants: StoryObj = {
                     <CodeBlock>
                         <CodeBlockContent>
                             {
-                                'GET https://api.example.org/v1/orders/export?project=atlas&month=2026-10&format=csv answered 200 with 2,184 rows, 37 invalid'
+                                'GET https://api.example.org/v1/orders/export?project=larkspur&month=2026-10&format=csv answered 200 with 2,184 rows, 37 invalid'
                             }
                         </CodeBlockContent>
                     </CodeBlock>

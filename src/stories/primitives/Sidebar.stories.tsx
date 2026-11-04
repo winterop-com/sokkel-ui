@@ -88,12 +88,12 @@ function Workspace() {
     return (
         <SidebarMenu>
             <SidebarMenuItem>
-                <SidebarMenuButton size="lg" tooltip="atlas">
+                <SidebarMenuButton size="lg" tooltip="Tidevann">
                     <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
                         <Workflow />
                     </span>
                     <span className="flex min-w-0 flex-col leading-tight">
-                        <span className="truncate font-medium">atlas</span>
+                        <span className="truncate font-medium">Tidevann</span>
                         <span className="truncate font-mono text-xs text-muted-foreground">api.example.org</span>
                     </span>
                     <ChevronsUpDownIcon className="ml-auto" />

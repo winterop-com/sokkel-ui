@@ -24,7 +24,7 @@ export type Values = Record<Key, string>
 export const START: Values = {
     code: '24h-export',
     name: '',
-    endpoint: 'https://hooks.example.org/atlas/export',
+    endpoint: 'https://hooks.example.org/larkspur/export',
     schedule: '0 * * * *',
     timeout: '2h',
 }
@@ -463,7 +463,7 @@ export function JobDialog({
                         New job
                     </h2>
                     <p id={`${form.prefix}-lede`} className="text-muted-foreground">
-                        Calls the endpoint on its schedule, in the atlas project.
+                        Calls the endpoint on its schedule, in the larkspur project.
                     </p>
                 </header>
                 {top}

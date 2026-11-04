@@ -80,7 +80,7 @@ export const States: StoryObj = {
                     <Caption>a long unbroken value</Caption>
                     <Bubble variant="muted">
                         <BubbleContent>
-                            source-url=https://api.example.org/v1/orders/export?project=atlas&amp;month=2026-10&amp;after=ord-10412
+                            source-url=https://api.example.org/v1/orders/export?project=larkspur&amp;month=2026-10&amp;after=ord-10412
                         </BubbleContent>
                     </Bubble>
                 </div>

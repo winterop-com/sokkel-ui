@@ -25,12 +25,12 @@ steps:
     schema: orders
     on_invalid: fail
   upload:
-    to: s3://atlas-exports/orders/
+    to: s3://larkspur-exports/orders/
 `
 
 const RECORD = {
     code: 'nightly-export',
-    project: 'atlas',
+    project: 'larkspur',
     owner: 'ada',
     schedule: { every: 'day', at: '02:00', timezone: 'UTC' },
     last_run: { state: 'failed', started: '2026-11-04T02:00:04Z', duration_ms: 4180, failed_step: 'validate' },
@@ -63,7 +63,7 @@ function Editors() {
                         value={query}
                         onChange={setQuery}
                         lineNumbers={false}
-                        placeholder="state = failed and project = atlas"
+                        placeholder="state = failed and project = larkspur"
                         className="h-24"
                     />
                 </Field>
