@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
 import { mapsSettled, routeTiles } from './tiles.ts'
 
@@ -11,6 +11,13 @@ interface Entry {
     id: string
     type: string
     tags?: string[]
+}
+
+/** Resolves once every graph on the page has been placed by elk and fitted. */
+async function graphsSettled(page: Page): Promise<void> {
+    await page.waitForFunction(() =>
+        [...document.querySelectorAll('[data-graph-view]')].every((graph) => graph.hasAttribute('data-graph-settled')),
+    )
 }
 
 const VIEWPORTS = { desktop: { width: 1440, height: 900 }, phone: { width: 390, height: 844 } }
@@ -30,6 +37,7 @@ test('every story looks the way it was approved', async ({ page, request }, info
                     await page.goto(`/iframe.html?id=${story.id}&viewMode=story&globals=theme:${mode}`)
                     await page.locator('#storybook-root > *').first().waitFor()
                     await mapsSettled(page)
+                    await graphsSettled(page)
                     await page.evaluate(() => document.fonts.ready)
                     // Highlighting lands after the first paint; a block marked plain is never highlighted.
                     await page

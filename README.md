@@ -28,6 +28,8 @@ The Storybook is published at **https://winterop-com.github.io/winterop-ui/**.
   waveforms.
 - **Maps:** MapView on maplibre, with boundary, point and grid layers, legends, popups,
   basemaps, a layer panel and a period slider.
+- **Graphs:** PipelineGraph and RunGraph on React Flow, laid out by elk, with the canvas, node
+  box, layout and hook they are built from.
 - **Apps:** whole-app compositions in Storybook, showing how the parts fit together.
 
 ## Tokens and themes
