@@ -17,7 +17,12 @@ const NODES: TreeNode[] = [
 describe('a tree', () => {
     test('shows the top level until a node is opened', () => {
         expect(visibleRows(NODES, new Set(), null).map((row) => row.node.id)).toEqual(['larkspur', 'harbor'])
-        expect(visibleRows(NODES, new Set(['larkspur']), null).map((row) => row.node.id)).toEqual(['larkspur', 'exports', 'imports', 'harbor'])
+        expect(visibleRows(NODES, new Set(['larkspur']), null).map((row) => row.node.id)).toEqual([
+            'larkspur',
+            'exports',
+            'imports',
+            'harbor',
+        ])
     })
 
     test('keeps each match with its ancestors while searching, whatever is open', () => {
