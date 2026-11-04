@@ -58,6 +58,9 @@ and ask before acting.
   terminal, code, an editor, a log, a table, a schema, a graph, a chart, a video, a track list)
   fills the canvas, and the height too when it scrolls. One with a natural width (an input, a menu,
   a button, a card, a dialog) keeps that width.
+- Screenshot baselines are Linux renders, taken in the Playwright image as CI takes them:
+  `bun run test:visual:linux:update`. Never commit baselines taken on a Mac. A change that alters
+  a story's look carries its retaken baselines in the same PR.
 
 ## Design
 
