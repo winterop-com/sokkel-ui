@@ -1,0 +1,36 @@
+<script>
+    // A link to a story that no longer exists lands on the first story of its component, or of the
+    // nearest section that still has one, rather than on "not found".
+    ;(function () {
+        var params = new URLSearchParams(location.search)
+        var path = params.get('path') || ''
+        var match = /^\/(story|docs)\/(.+)$/.exec(path)
+        if (!match) return
+        var id = match[2]
+        fetch('./index.json', { cache: 'no-store' })
+            .then(function (response) {
+                return response.ok ? response.json() : null
+            })
+            .then(function (index) {
+                if (!index || !index.entries || index.entries[id]) return
+                var stories = Object.keys(index.entries).filter(function (key) {
+                    return index.entries[key].type === 'story'
+                })
+                var parts = id.split('--')[0].split('-')
+                for (var length = parts.length; length > 0; length -= 1) {
+                    var prefix = parts.slice(0, length).join('-') + (length === parts.length ? '--' : '-')
+                    var found = stories.find(function (key) {
+                        return key.indexOf(prefix) === 0
+                    })
+                    if (found) {
+                        params.set('path', '/story/' + found)
+                        location.replace(location.pathname + '?' + params.toString())
+                        return
+                    }
+                }
+                params.delete('path')
+                location.replace(location.pathname + (params.toString() ? '?' + params.toString() : ''))
+            })
+            .catch(function () {})
+    })()
+</script>
