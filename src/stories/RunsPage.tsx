@@ -1,5 +1,7 @@
 import { BookOpen, CalendarClock, ChevronDown, Filter, Library, Play, Search, Server, Webhook, Workflow, X } from 'lucide-react'
 
+import { Problem } from '../components/Problem'
+
 /**
  * A list page drawn on the tokens alone, to compare the three densities before any component
  * exists: the shell's rail and top bar, a page header, a toolbar, a listing with its column bar,
@@ -148,9 +150,11 @@ export function RunsPage() {
                                     </span>{' '}
                                     at <span className="font-mono">validate</span>
                                 </p>
-                                <div className="rounded-control border border-critical/35 bg-critical/10 p-(--density-panel-pad) text-critical-ink">
-                                    at $.amount: &apos;n/a&apos; does not match &apos;^[0-9]+[.][0-9]{'{2}'}$&apos;
-                                </div>
+                                <Problem
+                                    title="37 rows have an amount that is not a number"
+                                    detail="The first is row 112, where `amount` is `n/a`. Amounts are written like `12.50`."
+                                    technical="at $.amount: 'n/a' does not match '^[0-9]+[.][0-9]{2}$'"
+                                />
                                 <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
                                     <dt className="text-muted-foreground">job</dt>
                                     <dd>import-orders</dd>
