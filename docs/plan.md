@@ -78,3 +78,20 @@ None of the apps has these yet:
 - a diff view;
 - a stat;
 - a choropleth layer for the map.
+
+## Validation and notification
+
+Research before building. The owner's words: a red label under an input box is "basically the
+worst we can do". To study:
+
+- how good form libraries and apps say a value is wrong: inline, at the field, as a summary at the
+  form's head that links to each field, or as a status in the dialog footer beside the verb;
+- when a message appears: on blur, on submit, or as a value is typed;
+- how a refusal from the server lands back on the field it concerns;
+- what announces it to a screen reader;
+- how notification differs from validation: toasts, banners, the status strip, and an inbox for
+  events a person missed.
+
+The result is a set of rendered options for the owner to pick from, then Field, DialogShell and the
+toasts built to the pick.
+
