@@ -69,12 +69,12 @@ function Palette({ initial, groups = GROUPS, query }: { initial: boolean; groups
 const meta: Meta = { title: 'Patterns/Command palette' }
 export default meta
 
-/** Many commands: the list scrolls and fades at its bottom edge. */
-export const Open: StoryObj = { name: 'Long list', render: () => <Palette initial /> }
+export const Closed: StoryObj = { render: () => <Palette initial={false} /> }
 /** A few commands: the palette is as tall as its rows, with no scrolling. */
 export const Short: StoryObj = { render: () => <Palette initial groups={SHORT} /> }
+/** Many commands: the list scrolls and fades at its bottom edge. */
+export const Open: StoryObj = { name: 'Long', render: () => <Palette initial /> }
 /** A search narrowing the long list to what matches. */
 export const Searching: StoryObj = { render: () => <Palette initial query="new" /> }
 /** A search that matches nothing. */
 export const NoMatch: StoryObj = { name: 'No match', render: () => <Palette initial query="invoices" /> }
-export const Closed: StoryObj = { render: () => <Palette initial={false} /> }

@@ -41,6 +41,9 @@ and ask before acting.
 - Every component has stories, including compositions with real-shaped neutral data.
 - A story's name is one to three words ("Open", "Layer panel"). What it shows goes in its doc
   comment.
+- The order of a file's exports is the sidebar's order: export stories from the simplest to the
+  fullest (closed, short, long, then special cases), and put a new story where it belongs in that
+  order rather than at the end.
 - A story renders the same every time without interaction: no dates from the clock, no
   randomness, overlays opened by `open` or `defaultOpen`, and no network except the recorded map
   tiles.
