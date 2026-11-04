@@ -2,11 +2,15 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Blocks, BookOpen, Cable, FileJson, Play, Workflow, Zap } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
+import { AccountMenu } from '@/components/AccountMenu'
 import { Field, describedBy } from '@/components/Field'
 import { FilterChip } from '@/components/FilterChip'
 import { ListTable, type Column } from '@/components/ListTable'
+import { PageHeader } from '@/components/PageHeader'
 import { Rail, type RailGroup } from '@/components/Rail'
 import { SearchField } from '@/components/SearchField'
+import { PanelSection, SidePanel } from '@/components/SidePanel'
+import { StatusChip, type Status as RunStatus } from '@/components/StatusChip'
 import { Section } from '@/components/Section'
 import { SwitchField } from '@/components/SwitchField'
 import { Page, Shell } from '@/components/Shell'
@@ -41,14 +45,6 @@ const RUNS: Run[] = [
     { id: '01a1a571', pipeline: 'fhir-edits', status: 'succeeded', step: null, at: '58 min ago', took: '5.1s' },
 ]
 
-const STATUS: Record<string, string> = {
-    succeeded: 'bg-status-succeeded/15 text-status-succeeded-ink',
-    failed: 'bg-status-failed/15 text-status-failed-ink',
-    running: 'bg-status-running/15 text-status-running-ink',
-    queued: 'bg-status-queued/15 text-status-queued-ink',
-    cancelled: 'bg-status-cancelled/15 text-status-cancelled-ink',
-    completed_with_errors: 'bg-status-completed-with-errors/15 text-status-completed-with-errors-ink',
-}
 
 const GROUPS: RailGroup[] = [
     {
@@ -78,9 +74,7 @@ const GROUPS: RailGroup[] = [
     },
 ]
 
-const Status = ({ status }: { status: string }) => (
-    <span className={`rounded-chip px-1.5 py-0.5 text-xs ${STATUS[status]}`}>{status.replaceAll('_', ' ')}</span>
-)
+const Status = ({ status }: { status: string }) => <StatusChip status={status as RunStatus} />
 
 const COLUMNS: Column<Run>[] = [
     { id: 'run', header: 'Run', width: '6rem', cell: (run) => <span className="font-mono text-xs text-muted-foreground">{run.id}</span> },
@@ -100,7 +94,17 @@ const COLUMNS: Column<Run>[] = [
     { id: 'took', header: 'Took', width: '4rem', align: 'end', cell: (run) => <span className="font-mono text-xs">{run.took}</span> },
 ]
 
-function Frame({ children, active = 'runs' }: { children: React.ReactNode; active?: string }) {
+function Frame({
+    children,
+    active = 'runs',
+    panel,
+    foot,
+}: {
+    children: React.ReactNode
+    active?: string
+    panel?: React.ReactNode
+    foot?: React.ReactNode
+}) {
     const [collapsed, setCollapsed] = useState(false)
     const groups = GROUPS.map((group) => ({
         ...group,
@@ -115,8 +119,20 @@ function Frame({ children, active = 'runs' }: { children: React.ReactNode; activ
                     groups={groups}
                     collapsed={collapsed}
                     onCollapsedChange={setCollapsed}
+                    foot={
+                        <AccountMenu
+                            name="admin"
+                            where="dirigent · local · 0.36.0"
+                            collapsed={collapsed}
+                            onSettings={() => {}}
+                            onShortcuts={() => {}}
+                            onSignOut={() => {}}
+                        />
+                    }
                 />
             }
+            panel={panel}
+            foot={foot}
             top={
                 <>
                     <span className="text-sm text-muted-foreground">{active === 'runs' ? 'Runs' : 'Connections'}</span>
@@ -138,16 +154,74 @@ function RunsListPage() {
         [query, status],
     )
     const open = RUNS.find((run) => run.id === chosen) ?? null
+    const [tab, setTab] = useState('run')
+    const panel =
+        open === null ? undefined : (
+            <SidePanel
+                active={tab}
+                onActiveChange={setTab}
+                onClose={() => setChosen('')}
+                tabs={[
+                    {
+                        id: 'run',
+                        label: 'Run',
+                        content: (
+                            <>
+                                <PanelSection title="State">
+                                    <p className="text-sm">
+                                        <Status status={open.status} />
+                                        {open.step !== null && (
+                                            <>
+                                                {' '}
+                                                at <span className="font-mono">{open.step}</span>
+                                            </>
+                                        )}
+                                    </p>
+                                    {open.status === 'failed' && (
+                                        <p className="rounded-control border border-critical/35 bg-critical/10 px-2.5 py-2 text-sm text-critical-ink">
+                                            at $.station: &apos;oslo&apos; does not match the station code pattern
+                                        </p>
+                                    )}
+                                </PanelSection>
+                                <PanelSection title="Facts">
+                                    <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+                                        <dt className="text-muted-foreground">Pipeline</dt>
+                                        <dd>{open.pipeline}</dd>
+                                        <dt className="text-muted-foreground">Started</dt>
+                                        <dd>{open.at}</dd>
+                                        <dt className="text-muted-foreground">Took</dt>
+                                        <dd className="font-mono">{open.took}</dd>
+                                        <dt className="text-muted-foreground">Run</dt>
+                                        <dd className="font-mono">{open.id}</dd>
+                                    </dl>
+                                </PanelSection>
+                            </>
+                        ),
+                    },
+                    {
+                        id: 'attempts',
+                        label: 'Attempts',
+                        content: (
+                            <PanelSection title="Attempts">
+                                <p className="text-sm text-muted-foreground">One attempt per step.</p>
+                            </PanelSection>
+                        ),
+                    },
+                ]}
+            />
+        )
     return (
-        <Frame>
+        <Frame
+            panel={panel}
+            foot={
+                <>
+                    <span>{rows.length} shown</span>
+                    <span className="ml-auto font-mono">{open?.id ?? ''}</span>
+                </>
+            }
+        >
             <Page>
-                <div className="flex items-end justify-between gap-4">
-                    <div>
-                        <h1 className="text-page font-medium tracking-tight">Runs</h1>
-                        <p className="font-mono text-xs text-muted-foreground">{RUNS.length} loaded</p>
-                    </div>
-                    <Button>Run a pipeline</Button>
-                </div>
+                <PageHeader title="Runs" count={`${RUNS.length} loaded`} actions={<Button>Run a pipeline</Button>} />
                 <div className="flex flex-wrap items-center gap-2">
                     <SearchField value={query} onChange={setQuery} placeholder="Search runs" className="w-64" />
                     <FilterChip
@@ -159,40 +233,15 @@ function RunsListPage() {
                     <FilterChip facet="Pipeline" />
                     <FilterChip facet="Trigger" />
                 </div>
-                <div className="grid min-h-0 items-start gap-(--density-page-gap) lg:grid-cols-[minmax(0,1fr)_20rem]">
-                    <ListTable
-                        columns={COLUMNS}
-                        rows={rows}
-                        rowKey={(run) => run.id}
-                        selected={(run) => run.id === chosen}
-                        onSelect={(run) => setChosen(run.id)}
-                        empty="No run matches."
-                        foot={`${rows.length} of ${RUNS.length} loaded`}
-                    />
-                    {open !== null && (
-                        <Section title={`Run ${open.id}`}>
-                            <div className="flex flex-col gap-(--density-section-gap) text-sm">
-                                <p>
-                                    <Status status={open.status} />
-                                    {open.step !== null && (
-                                        <>
-                                            {' '}
-                                            at <span className="font-mono">{open.step}</span>
-                                        </>
-                                    )}
-                                </p>
-                                <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
-                                    <dt className="text-muted-foreground">pipeline</dt>
-                                    <dd>{open.pipeline}</dd>
-                                    <dt className="text-muted-foreground">started</dt>
-                                    <dd>{open.at}</dd>
-                                    <dt className="text-muted-foreground">took</dt>
-                                    <dd className="font-mono">{open.took}</dd>
-                                </dl>
-                            </div>
-                        </Section>
-                    )}
-                </div>
+                <ListTable
+                    columns={COLUMNS}
+                    rows={rows}
+                    rowKey={(run) => run.id}
+                    selected={(run) => run.id === chosen}
+                    onSelect={(run) => setChosen(run.id)}
+                    empty="No run matches."
+                    foot={`${rows.length} of ${RUNS.length} loaded`}
+                />
             </Page>
         </Frame>
     )
@@ -205,7 +254,7 @@ function ConnectionForm() {
     return (
         <Frame active="connections">
             <Page>
-                <h1 className="text-page font-medium tracking-tight">New connection</h1>
+                <PageHeader title="New connection" />
                 <Section title="Connection">
                     <div className="grid gap-4 @container lg:grid-cols-2">
                         <Field id="code" label="Code" required hint="lower case, digits and hyphens" error={touched ? codeError : null}>
