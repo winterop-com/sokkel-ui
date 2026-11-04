@@ -9,7 +9,7 @@ const withPaletteAndDensity: Decorator = (Story, context) => {
     const root = document.documentElement
     if (palette === undefined || palette === 'dirigent') root.removeAttribute('data-theme')
     else root.setAttribute('data-theme', palette)
-    root.setAttribute('data-density', density ?? 'standard')
+    root.setAttribute('data-density', density ?? 'regular')
     return <Story />
 }
 
@@ -25,10 +25,10 @@ const preview: Preview = {
         },
         density: {
             description: 'Density',
-            toolbar: { title: 'Density', items: ['comfortable', 'standard', 'compact'], dynamicTitle: true },
+            toolbar: { title: 'Density', items: ['regular', 'compact'], dynamicTitle: true },
         },
     },
-    initialGlobals: { palette: 'dirigent', density: 'standard' },
+    initialGlobals: { palette: 'dirigent', density: 'regular' },
     decorators: [
         withPaletteAndDensity,
         withThemeByClassName({ themes: { dark: 'dark', light: '' }, defaultTheme: 'dark', parentSelector: 'html' }),
