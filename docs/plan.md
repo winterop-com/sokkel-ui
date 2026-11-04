@@ -33,7 +33,9 @@ GraphCanvas (React Flow in the tokens, fit, zoom buttons, a stage or a fitted fr
 (the node box), the layout (a rank layout at once, elk loaded lazily and answering after),
 useGraphLayout and useNodeGraph, and the views PipelineGraph, RunGraph, DependencyGraph (a lineage
 of datasets and jobs) and StateMachine (labeled transitions, initial and final markers, the
-current state).
+current state). A canvas given `editing`, and PipelineGraph with it, becomes an editor: ports
+to connect, Delete to remove, boxes to drag, a menu on right-click and a connection dropped on
+empty ground, each reported to the app, which owns the graph. Views select only by default.
 
 ## Still to build
 
