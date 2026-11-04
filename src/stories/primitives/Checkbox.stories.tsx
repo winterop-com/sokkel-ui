@@ -25,6 +25,26 @@ function Labeled({ label, children }: { label: string; children: ReactNode }) {
 const meta: Meta = { title: 'Primitives/Inputs/Checkbox' }
 export default meta
 
+/** Every prop of a checkbox, to try live. */
+export const Playground: StoryObj<{ label: string; checked: boolean; indeterminate: boolean; disabled: boolean; invalid: boolean }> = {
+    parameters: { controls: { disable: false } },
+    args: { label: 'Email me when a job fails', checked: true, indeterminate: false, disabled: false, invalid: false },
+    render: (args) => (
+        <div className="min-h-svh bg-background p-6 text-foreground">
+            <div className="flex items-center gap-2">
+                <Checkbox
+                    id="playground"
+                    checked={args.checked}
+                    indeterminate={args.indeterminate}
+                    disabled={args.disabled}
+                    aria-invalid={args.invalid || undefined}
+                />
+                <Label htmlFor="playground">{args.label}</Label>
+            </div>
+        </div>
+    ),
+}
+
 export const Variants: StoryObj = {
     render: () => (
         <Ground>

@@ -210,6 +210,42 @@ function CopyLines() {
 const meta: Meta = { title: 'Patterns/Controls' }
 export default meta
 
+/** Every prop of a segmented control, to try live. */
+export const Playground: StoryObj<{ variant: SegmentedVariant; size: 'sm' | 'md'; fill: boolean; disabled: boolean; options: number }> = {
+    parameters: { controls: { disable: false } },
+    args: { variant: 'track', size: 'sm', fill: false, disabled: false, options: 3 },
+    argTypes: {
+        variant: { control: 'inline-radio', options: ['track', 'tint', 'outline', 'solid'] },
+        size: { control: 'inline-radio', options: ['sm', 'md'] },
+        options: { control: { type: 'range', min: 2, max: 5 } },
+    },
+    render: (args) => {
+        const all = [
+            { value: 'hour', label: 'Hour' },
+            { value: 'day', label: 'Day' },
+            { value: 'week', label: 'Week' },
+            { value: 'month', label: 'Month' },
+            { value: 'year', label: 'Year' },
+        ]
+        return (
+            <div className="min-h-svh bg-background p-6 text-foreground">
+                <div className="w-full max-w-80">
+                    <Segmented
+                        label="Period"
+                        value="day"
+                        onChoose={() => undefined}
+                        options={all.slice(0, args.options)}
+                        variant={args.variant}
+                        size={args.size}
+                        fill={args.fill}
+                        disabled={args.disabled}
+                    />
+                </div>
+            </div>
+        )
+    },
+}
+
 export const SegmentedVariants: StoryObj = { name: 'Segmented, options', render: () => <SegmentedOptions /> }
 export const SegmentedStackedLayout: StoryObj = { name: 'Segmented, stacked', render: () => <SegmentedStacked /> }
 export const SegmentedAligned: StoryObj = { name: 'Segmented, aligned', render: () => <SegmentedSettings fill /> }
