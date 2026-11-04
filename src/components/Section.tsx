@@ -5,15 +5,15 @@ import { cn } from '@/lib/cn'
 /**
  * A titled part of a page.
  *
- * `flat` is a heading over a rule with the content on the page's own ground. `boxed` is a
- * bordered surface whose head is a bar of its own. Either takes actions at the right end of its
+ * `boxed`, the default, is a bordered surface whose head is a bar of its own. `flat` is a heading
+ * over a rule with the content on the page's own ground, for the rare page that wants it. Either takes actions at the right end of its
  * heading, and a count or a fact beside the title.
  */
 export function Section({
     title,
     meta,
     actions,
-    variant = 'flat',
+    variant = 'boxed',
     flush = false,
     children,
     className,
