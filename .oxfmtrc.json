@@ -16,6 +16,7 @@
         "components.json",
         "src/styles/tokens.css",
         "e2e/__screenshots__",
+        "e2e/tiles",
         "src/styles/shadcn.css"
     ]
 }
