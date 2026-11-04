@@ -68,3 +68,5 @@ toasts built to the pick.
 - Pick the themes to keep from the candidates in Storybook and fold them into `tokens/tokens.json`;
   name each for how it looks.
 - Validation and notification, after the research above.
+- One engine per job, never two: ECharts draws every chart, maplibre every map, React Flow every
+  interactive graph, Mermaid every diagram written as text. Sparklines are plain SVG.

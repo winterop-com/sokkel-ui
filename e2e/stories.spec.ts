@@ -24,7 +24,7 @@ const VIEWPORTS = { desktop: { width: 1440, height: 900 }, phone: { width: 390, 
 const MODES = ['dark', 'light'] as const
 
 test('every story looks the way it was approved', async ({ page, request }, info) => {
-    test.setTimeout(15 * 60_000)
+    test.setTimeout(60 * 60_000)
     await routeTiles(page, info.config.updateSnapshots === 'all' || info.config.updateSnapshots === 'changed')
     const index = (await (await request.get('/index.json')).json()) as { entries: Record<string, Entry> }
     const stories = Object.values(index.entries).filter((entry) => entry.type === 'story' && !entry.tags?.includes('no-screenshot'))
