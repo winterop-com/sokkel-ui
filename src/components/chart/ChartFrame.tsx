@@ -70,6 +70,7 @@ export function ChartFrame({
     loading = false,
     empty = false,
     bodyClassName = 'h-56',
+    fit = false,
     words = WORDS,
     className,
     children,
@@ -92,6 +93,8 @@ export function ChartFrame({
     empty?: boolean
     /** The chart area's size; it fills the screen in fullscreen. */
     bodyClassName?: string
+    /** The content sets the body's height, for content laid out in the page rather than drawn on a canvas. */
+    fit?: boolean
     words?: ChartFrameWords
     className?: string
     children: (state: ChartState) => ReactNode
@@ -186,13 +189,19 @@ export function ChartFrame({
                 </header>
             )}
             <div className={cn('flex min-h-0 flex-col px-2 pb-2', full && 'flex-1', !head && 'pt-2')}>
-                <LoadingOverlay loading={loading} label={words.loading} className={cn('min-h-0', full ? 'flex-1' : bodyClassName)}>
+                <LoadingOverlay
+                    loading={loading}
+                    label={words.loading}
+                    className={cn('min-h-0', full ? 'flex-1' : fit ? (empty ? 'h-24' : undefined) : bodyClassName)}
+                >
                     {empty ? (
                         <p className="absolute inset-0 flex items-center justify-center text-center text-xs text-muted-foreground">
                             {words.empty}
                         </p>
                     ) : (
-                        <div className="absolute inset-0">{children({ hidden, hovered, handle, fullscreen: full })}</div>
+                        <div className={fit ? undefined : 'absolute inset-0'}>
+                            {children({ hidden, hovered, handle, fullscreen: full })}
+                        </div>
                     )}
                 </LoadingOverlay>
                 {showLegend && (

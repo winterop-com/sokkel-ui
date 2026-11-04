@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 
+import { EChart } from '../../components/chart/EChart'
+import type { ChartLook } from '../../components/chart/look'
 import { CheckList } from '../../components/CheckList'
 import { DashboardGrid, DashboardPanel, KpiRow } from '../../components/dashboard/DashboardGrid'
 import { RefreshControl, TimeRangePicker, type TimeRangeValue } from '../../components/dashboard/TimeRange'
@@ -9,7 +10,6 @@ import { LogView } from '../../components/LogView'
 import { Sparkline } from '../../components/Stat'
 import { StatusChip, type Status } from '../../components/StatusChip'
 import { Timeline } from '../../components/Timeline'
-import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '../../components/ui/chart'
 import { DropdownMenuItem } from '../../components/ui/dropdown-menu'
 import { TooltipProvider } from '../../components/ui/tooltip'
 
@@ -24,10 +24,22 @@ const BY_DAY = DAYS.map((day, index) => ({
     succeeded: [212, 230, 198, 241, 255, 249, 262][index],
     failed: [9, 6, 12, 4, 5, 7, 3][index],
 }))
-const CONFIG = {
-    succeeded: { label: 'Succeeded', color: 'var(--status-succeeded)' },
-    failed: { label: 'Failed', color: 'var(--status-failed)' },
-} satisfies ChartConfig
+const BY_DAY_OPTION = (look: ChartLook) => ({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    xAxis: { type: 'category', data: DAYS },
+    yAxis: { type: 'value', splitNumber: 4 },
+    series: [
+        { name: 'Succeeded', type: 'bar', stack: 'runs', data: BY_DAY.map((d) => d.succeeded), color: look.token('status-succeeded') },
+        {
+            name: 'Failed',
+            type: 'bar',
+            stack: 'runs',
+            data: BY_DAY.map((d) => d.failed),
+            color: look.token('status-failed'),
+            itemStyle: { borderRadius: [3, 3, 0, 0] },
+        },
+    ],
+})
 
 const RUNS: { job: string; state: Status; took: string }[] = [
     { job: 'import-orders', state: 'running', took: '1m 12s' },
@@ -103,22 +115,9 @@ function Dashboard() {
                                 </>
                             }
                         >
-                            <ChartContainer config={CONFIG} className="h-56 w-full">
-                                <BarChart data={BY_DAY} accessibilityLayer>
-                                    <CartesianGrid vertical={false} />
-                                    <XAxis dataKey="day" tickLine={false} axisLine={false} tickMargin={8} />
-                                    <YAxis tickLine={false} axisLine={false} width={32} />
-                                    <ChartTooltip content={<ChartTooltipContent />} />
-                                    <Bar dataKey="succeeded" stackId="runs" fill="var(--color-succeeded)" isAnimationActive={false} />
-                                    <Bar
-                                        dataKey="failed"
-                                        stackId="runs"
-                                        fill="var(--color-failed)"
-                                        radius={[3, 3, 0, 0]}
-                                        isAnimationActive={false}
-                                    />
-                                </BarChart>
-                            </ChartContainer>
+                            <div className="h-56">
+                                <EChart option={BY_DAY_OPTION} label="Runs by day, succeeded and failed" />
+                            </div>
                         </DashboardPanel>
                         <DashboardPanel title="Health" span="third" flush>
                             <CheckList
