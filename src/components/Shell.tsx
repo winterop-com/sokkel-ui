@@ -1,5 +1,5 @@
-import { Menu } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import { Menu, PanelRight } from 'lucide-react'
+import { useEffect, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 
@@ -15,6 +15,12 @@ import { cn } from '../lib/cn'
  *
  * Below the `md` breakpoint the rail leaves the frame: a menu button at the start of the top bar
  * opens it as a drawer over the content, and a press outside it or on a link closes it.
+ *
+ * A panel is shown or hidden by a toggle at the end of the top bar. From the `lg` breakpoint it is
+ * the right column; below it, an open panel slides over the content from the right and a press
+ * outside it closes it. Left to itself it starts open on a wide window and closed on a narrow one;
+ * `panelOpen` with `onPanelOpenChange` holds it from outside, which is how a panel's own close
+ * button closes it.
  */
 export function Shell({
     rail,
@@ -22,8 +28,10 @@ export function Shell({
     foot,
     panel,
     bottom,
+    panelOpen,
+    onPanelOpenChange,
     children,
-    words = { menu: 'Open the navigation', close: 'Close the navigation' },
+    words: given,
 }: {
     rail: ReactNode
     /** What the top bar holds: a search, the version, the theme control. */
@@ -34,10 +42,28 @@ export function Shell({
     panel?: ReactNode
     /** A strip across the whole window under the rail, the content and the panel. */
     bottom?: ReactNode
+    /** Whether the panel shows; held inside the shell when not given. */
+    panelOpen?: boolean
+    onPanelOpenChange?: (open: boolean) => void
     children: ReactNode
-    words?: { menu: string; close: string }
+    words?: Partial<ShellWords>
 }) {
+    const words = { ...WORDS, ...given }
     const [drawer, setDrawer] = useState(false)
+    const wide = useWide()
+    const [ownOpen, setOwnOpen] = useState<boolean | null>(null)
+    const open = panelOpen ?? ownOpen ?? wide
+    const setOpen = (next: boolean) => {
+        if (panelOpen === undefined) setOwnOpen(next)
+        onPanelOpenChange?.(next)
+    }
+    // A panel opened over a narrow window closes when the window is widened to the column, and
+    // is not carried back over the content when it narrows again.
+    const [wasWide, setWasWide] = useState(wide)
+    if (wasWide !== wide) {
+        setWasWide(wide)
+        if (panelOpen === undefined) setOwnOpen(null)
+    }
     return (
         <div className="flex h-svh min-h-0 flex-col bg-background text-foreground">
             <div className="flex min-h-0 flex-1">
@@ -73,6 +99,21 @@ export function Shell({
                                 <Menu className="size-4" aria-hidden />
                             </button>
                             {top}
+                            {panel !== undefined && (
+                                <button
+                                    type="button"
+                                    aria-label={open ? words.hidePanel : words.showPanel}
+                                    aria-pressed={open}
+                                    title={open ? words.hidePanel : words.showPanel}
+                                    className={cn(
+                                        'flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-secondary hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid',
+                                        open && 'text-foreground',
+                                    )}
+                                    onClick={() => setOpen(!open)}
+                                >
+                                    <PanelRight className="size-4" aria-hidden />
+                                </button>
+                            )}
                         </header>
                     )}
                     <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>
@@ -82,11 +123,52 @@ export function Shell({
                         </footer>
                     )}
                 </div>
-                {panel !== undefined && <div className="hidden lg:flex">{panel}</div>}
+                {panel !== undefined && open && wide && <div className="flex">{panel}</div>}
+                {panel !== undefined && open && !wide && (
+                    <div className="fixed inset-0 z-40">
+                        <button
+                            type="button"
+                            aria-label={words.hidePanel}
+                            className="absolute inset-0 bg-scrim"
+                            onClick={() => setOpen(false)}
+                        />
+                        <div className="absolute inset-y-0 right-0 flex max-w-[calc(100vw-3rem)] shadow-pop [&>*]:max-w-full">{panel}</div>
+                    </div>
+                )}
             </div>
             {bottom !== undefined && <div className="shrink-0">{bottom}</div>}
         </div>
     )
+}
+
+export interface ShellWords {
+    menu: string
+    close: string
+    showPanel: string
+    hidePanel: string
+}
+
+const WORDS: ShellWords = {
+    menu: 'Open the navigation',
+    close: 'Close the navigation',
+    showPanel: 'Show the panel',
+    hidePanel: 'Hide the panel',
+}
+
+/** The `lg` breakpoint, from which the panel is a column rather than a sheet. */
+const WIDE = '(min-width: 64rem)'
+
+/** Whether the window is at least `lg` wide, followed as it is resized. */
+function useWide(): boolean {
+    const [wide, setWide] = useState(() => typeof window === 'undefined' || window.matchMedia(WIDE).matches)
+    useEffect(() => {
+        const query = window.matchMedia(WIDE)
+        const change = () => setWide(query.matches)
+        change()
+        query.addEventListener('change', change)
+        return () => query.removeEventListener('change', change)
+    }, [])
+    return wide
 }
 
 /** The content's own padding, the density's page inset, for a page to sit in. */

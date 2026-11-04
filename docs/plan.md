@@ -41,7 +41,6 @@ empty ground, each reported to the app, which owns the graph. Views select only 
 ## Still to build
 
 - A filterable picker with capability chips.
-- A toggle for the side panel in the top bar.
 - SchemaForm: a form generated from a JSON Schema, built from Field and the inputs, validated
   against the schema.
 
