@@ -26,58 +26,11 @@ toggle-group, tooltip, trace.
 Shell, Rail, Page, PageHeader, Section, Surface, Field, CodeField, SwitchField, SearchField,
 FilterChip, ListTable, StatusChip, AccountMenu, SidePanel, DialogShell, ConfirmDialog.
 
-## Lifted from the apps
+## Still to build
 
-From Maneki (`desktop/app/src/components`):
-
-- Segmented: segmented control that wraps to a grid on a phone.
-- Skeleton: list-shaped loading placeholders.
-- Spinner: a spinner that appears after a delay, with a screen-reader label.
-- StatusBar: the full-width foot strip made of cells.
-- ConnectionBanner: the offline strip, without the app's store.
-- ThemeToggle.
-- ShortcutsDialog.
-- NavDrawer.
-- A resizable Rail.
-
-From stabbur (`frontend/src/components`), the chat set, ported off Radix:
-
-- Markdown: GFM, sanitized and highlighted.
-- CodeBlock: with a copy button.
-- MermaidDiagram.
-- ChatImage: with a lightbox.
-- CopyButton.
-- ToolCallChip: a tool call digested to one line.
-- ConfirmCard: approve or deny a held action.
-- MessageItem: with its actions.
-- Composer: attachments and voice, without the app's API.
-- BarVisualizer.
-- Waveform.
-- StatusTree: a parent shows its worst child.
+- AsyncSelect: a searchable popover select that loads its options.
 - A filterable picker with capability chips.
-
-From dhis2w-fhir (`packages/dhis2w-fhir-serve/frontend/src`), ported off Radix:
-
-- MapView on maplibre, split into BasemapSwitcher, MapLegend and MapPopup.
-- Unfoldable.
-- PageState: loading, error and not found.
-- RailToggle.
-- TreeSelect, generalized from the org unit picker.
-- AsyncSelect: a searchable popover select.
-- RawSheet: the source of a record in a sheet.
-- CodeEditor on CodeMirror.
-
-## Missing everywhere
-
-None of the apps has these yet:
-
-- a timeline;
-- a log view;
-- a JSON tree;
-- a description list (key and value);
-- a diff view;
-- a stat;
-- a choropleth layer for the map.
+- A toggle for the side panel in the top bar.
 
 ## Validation and notification
 

@@ -1,77 +1,77 @@
 [
     {
-        "value": "stabbur-base",
+        "value": "a-base",
         "title": "Base",
-        "app": "stabbur"
+        "app": "set a"
     },
     {
-        "value": "stabbur-indigo",
+        "value": "a-indigo",
         "title": "Indigo",
-        "app": "stabbur"
+        "app": "set a"
     },
     {
-        "value": "stabbur-paper",
+        "value": "a-paper",
         "title": "Paper",
-        "app": "stabbur"
+        "app": "set a"
     },
     {
-        "value": "stabbur-contrast",
+        "value": "a-contrast",
         "title": "Contrast",
-        "app": "stabbur"
+        "app": "set a"
     },
     {
-        "value": "stabbur-terminal",
+        "value": "a-terminal",
         "title": "Terminal",
-        "app": "stabbur"
+        "app": "set a"
     },
     {
-        "value": "dhis2w-fhir-base",
+        "value": "b-base",
         "title": "Base",
-        "app": "dhis2w-fhir"
+        "app": "set b"
     },
     {
-        "value": "dhis2w-fhir-indigo",
+        "value": "b-indigo",
         "title": "Indigo",
-        "app": "dhis2w-fhir"
+        "app": "set b"
     },
     {
-        "value": "dhis2w-fhir-paper",
+        "value": "b-paper",
         "title": "Paper",
-        "app": "dhis2w-fhir"
+        "app": "set b"
     },
     {
-        "value": "dhis2w-fhir-contrast",
+        "value": "b-contrast",
         "title": "Contrast",
-        "app": "dhis2w-fhir"
+        "app": "set b"
     },
     {
-        "value": "dhis2w-fhir-terminal",
+        "value": "b-terminal",
         "title": "Terminal",
-        "app": "dhis2w-fhir"
+        "app": "set b"
     },
     {
-        "value": "dhis2w-fhir-dhis2",
-        "title": "Dhis2",
-        "app": "dhis2w-fhir"
+        "value": "b-steel",
+        "title": "Steel",
+        "app": "set b"
     },
     {
-        "value": "dhis2w-fhir-fhir",
-        "title": "Fhir",
-        "app": "dhis2w-fhir"
+        "value": "b-ember",
+        "title": "Ember",
+        "app": "set b"
     },
     {
-        "value": "dirigent-base",
+        "value": "c-base",
         "title": "Base",
-        "app": "dirigent"
+        "app": "set c"
     },
     {
-        "value": "dirigent-paper",
+        "value": "c-paper",
         "title": "Paper",
-        "app": "dirigent"
+        "app": "set c"
     },
     {
-        "value": "dirigent-contrast",
+        "value": "c-contrast",
         "title": "Contrast",
-        "app": "dirigent"
+        "app": "set c"
     }
 ]
