@@ -28,6 +28,7 @@ export default defineConfig({
                 ...entries('components/map'),
                 ...entries('components/media'),
                 ...entries('components/terminal'),
+                ...entries('components/dashboard'),
                 ...entries('hooks'),
                 ...entries('lib'),
             },
