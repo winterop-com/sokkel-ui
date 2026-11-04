@@ -12,7 +12,7 @@ import { DropdownMenuItem } from '../../components/ui/dropdown-menu'
 function Ground({ children }: { children: React.ReactNode }) {
     return (
         <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="mx-auto grid max-w-5xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">{children}</div>
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(min(18rem,100%),1fr))] gap-4">{children}</div>
         </div>
     )
 }

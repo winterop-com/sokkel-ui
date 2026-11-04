@@ -56,7 +56,7 @@ const EPISODES: Track[] = [
     duration: episode.duration,
 }))
 
-function Ground({ children, width = 'max-w-2xl' }: { children: ReactNode; width?: string }) {
+function Ground({ children, width = '' }: { children: ReactNode; width?: string }) {
     return (
         <div className="min-h-svh bg-background p-4 text-foreground sm:p-8">
             <div className={`mx-auto ${width}`}>{children}</div>

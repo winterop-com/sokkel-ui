@@ -11,9 +11,7 @@ import { TooltipProvider } from '../../components/ui/tooltip'
 function Ground({ children }: { children: React.ReactNode }) {
     return (
         <TooltipProvider>
-            <div className="min-h-svh bg-background p-6 text-foreground">
-                <div className="mx-auto flex max-w-4xl flex-col gap-6">{children}</div>
-            </div>
+            <div className="flex h-svh flex-col bg-background p-6 text-foreground">{children}</div>
         </TooltipProvider>
     )
 }
@@ -48,7 +46,7 @@ function Session() {
     const [entries, setEntries] = useState(SESSION)
     return (
         <Ground>
-            <Terminal title="ada@tidevann: ~/jobs" entries={entries} onClear={() => setEntries([])} className="h-80" />
+            <Terminal title="ada@tidevann: ~/jobs" entries={entries} onClear={() => setEntries([])} className="min-h-0 flex-1" />
         </Ground>
     )
 }
@@ -60,7 +58,7 @@ function Midway() {
             <Terminal
                 title="ada@tidevann: ~/jobs"
                 streaming
-                className="h-64"
+                className="min-h-0 flex-1"
                 entries={[
                     {
                         id: '1',
@@ -103,7 +101,7 @@ function Live() {
             <Terminal
                 title="ada@tidevann: ~/jobs"
                 streaming={step < STEPS.length}
-                className="h-56"
+                className="min-h-0 flex-1"
                 onClear={() => {
                     setOutput('')
                     setStep(0)

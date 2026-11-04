@@ -8,7 +8,7 @@ import { TidevannMark } from '../fixtures/TidevannMark'
 export function Ground({ title, columns = 2, children }: { title: string; columns?: 1 | 2; children: ReactNode }) {
     return (
         <div className="min-h-svh bg-background p-4 text-foreground md:p-6">
-            <div className="mx-auto flex max-w-6xl flex-col gap-3">
+            <div className="flex flex-col gap-3">
                 <header className="flex items-center gap-2 text-sm">
                     <TidevannMark className="size-4 text-primary" />
                     <span className="font-medium">Tidevann</span>

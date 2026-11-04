@@ -43,7 +43,7 @@ function Ground({ title, children }: { title: string; children: ReactNode }) {
     return (
         <TooltipProvider>
             <div className="min-h-svh bg-background p-3 text-foreground md:p-4">
-                <div className="mx-auto flex max-w-7xl flex-col gap-2">
+                <div className="flex flex-col gap-2">
                     <header className="flex items-center gap-2 text-sm">
                         <TidevannMark className="size-4 text-primary" />
                         <span className="font-medium">Tidevann</span>

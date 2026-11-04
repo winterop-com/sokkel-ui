@@ -189,7 +189,7 @@ export const States: StoryObj = {
 export const FailingStep: StoryObj = {
     render: () => (
         <Ground>
-            <div className="max-w-2xl">
+            <div>
                 <CodeBlock>
                     <CodeBlockHeader>
                         <CodeBlockTitle>
