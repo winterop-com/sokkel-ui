@@ -1,10 +1,11 @@
 /**
  * Write src/styles/tokens.css from tokens/tokens.json, the one place a token is defined.
  *
- * `default` answers on `:root` and `.dark`. Every other theme answers on `html[data-theme]`,
- * overriding what it changes; a token it sets in light but not in dark takes the default's dark
- * value, so a theme never carries a light value into dark mode. A theme may override any token,
- * the density levels' included.
+ * `default` answers on `:root` and `.dark`. Every other theme answers on `html[data-theme]` for
+ * the whole app, overriding what it changes; a token it sets in light but not in dark takes the
+ * default's dark value, so a theme never carries a light value into dark mode. Every theme also
+ * answers on `[data-theme-scope]` for one element and what is inside it, as a theme picker's
+ * preview swatch is. A theme may override any token, the density levels' included.
  *
  *   bun scripts/build-tokens.ts          write the CSS
  *   bun scripts/build-tokens.ts --check  fail when the CSS is not what the tokens make
@@ -37,14 +38,23 @@ const parts: string[] = [
     block(['.dark'], base.dark),
 ]
 
+// A whole app's theme on `html`: the overrides alone, over the default on `:root`.
+const scoped: string[] = []
 for (const [name, theme] of Object.entries(tokens.themes)) {
-    if (name === 'default') continue
     const dark: Vars = { ...theme.dark }
     for (const key of Object.keys(theme.light)) {
         if (!(key in dark)) dark[key] = base.dark[key] ?? base.light[key]
     }
-    parts.push(block([`html[data-theme='${name}']`], theme.light), block([`html.dark[data-theme='${name}']`], dark))
+    if (name !== 'default') {
+        parts.push(block([`html[data-theme='${name}']`], theme.light), block([`html.dark[data-theme='${name}']`], dark))
+    }
+    // One element's theme: the whole set, so it shows that theme whatever the page around it uses.
+    scoped.push(
+        block([`[data-theme-scope='${name}']`], { ...base.light, ...theme.light }),
+        block([`.dark [data-theme-scope='${name}']`], { ...base.light, ...base.dark, ...theme.light, ...dark }),
+    )
 }
+parts.push(...scoped)
 
 // Density: the default level answers on `:root`, every level on its own `[data-density]`.
 const levels = Object.keys(tokens.density).filter((key) => key !== 'default' && !key.startsWith('$'))
