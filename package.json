@@ -8,13 +8,18 @@
     "./styles.css": "./src/styles/index.css",
     "./tokens.json": "./tokens/tokens.json"
   },
-  "files": ["src", "tokens"],
+  "files": [
+    "src",
+    "tokens"
+  ],
   "scripts": {
     "tokens": "bun scripts/build-tokens.ts",
     "storybook": "storybook dev -p 6106 --no-open",
     "build-storybook": "storybook build -o storybook-static",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:visual": "playwright test",
+    "test:visual:update": "playwright test --update-snapshots"
   },
   "peerDependencies": {
     "react": "^19.2.0",
