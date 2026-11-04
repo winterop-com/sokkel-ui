@@ -49,8 +49,9 @@ The Storybook is published at **https://winterop-com.github.io/winterop-ui/**.
 density, the corner radius and the typeface. The theme menu also lists candidate themes for
 judging before one is adopted into the tokens (`bun scripts/import-candidates.ts`).
 
-`bun run test:visual` holds every story to its approved screenshot in dark and light at desktop
-and phone width; `bun run test:visual:update` takes new ones.
+Every story is held to its approved screenshot in dark and light, at desktop and phone width.
+The screenshots are Linux renders taken in the Playwright image, as CI checks them:
+`bun run test:visual:linux` compares and `bun run test:visual:linux:update` takes new ones.
 
 ## Using it
 
