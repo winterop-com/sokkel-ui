@@ -26,6 +26,7 @@ export default defineConfig({
                 ...entries('components'),
                 ...entries('components/ui'),
                 ...entries('components/map'),
+                ...entries('components/graph'),
                 ...entries('components/media'),
                 ...entries('components/terminal'),
                 ...entries('components/dashboard'),

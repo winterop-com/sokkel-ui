@@ -26,6 +26,13 @@ toggle-group, tooltip, trace.
 Shell, Rail, Page, PageHeader, Section, Surface, Field, CodeField, SwitchField, SearchField,
 FilterChip, ListTable, StatusChip, AccountMenu, SidePanel, DialogShell, ConfirmDialog.
 
+## Graphs
+
+Their own entry under `graph/`, so an app that draws no graph loads neither React Flow nor elk.
+GraphCanvas (React Flow in the tokens, fit, zoom buttons, a stage or a fitted frame), GraphNode
+(the node box), the layout (a rank layout at once, elk loaded lazily and answering after),
+useGraphLayout and useNodeGraph, and the views PipelineGraph and RunGraph.
+
 ## Still to build
 
 - AsyncSelect: a searchable popover select that loads its options.
@@ -33,12 +40,8 @@ FilterChip, ListTable, StatusChip, AccountMenu, SidePanel, DialogShell, ConfirmD
 - A toggle for the side panel in the top bar.
 - SchemaForm: a form generated from a JSON Schema, built from Field and the inputs, validated
   against the schema.
-- Graph views on React Flow (`@xyflow/react`, laid out by `elkjs`), in their own entry so an app
-  that draws no graph does not load them. A themed canvas (fit view, zoom, keyboard, both schemes,
-  neutral selection, status as the only color on a node), then ready-made views that take data
-  rather than nodes: a pipeline of steps with ports, a run of that pipeline with live status and
-  timings, a dependency or lineage graph, and a state machine. The node, edge and layout pieces
-  are exported too, for a graph none of the views cover.
+- Graph views, after the pipeline and run graphs: a dependency or lineage graph, and a state
+  machine.
 
 ## Validation and notification
 
