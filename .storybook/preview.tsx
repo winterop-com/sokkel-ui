@@ -2,6 +2,11 @@ import { withThemeByClassName } from '@storybook/addon-themes'
 import type { Decorator, Preview } from '@storybook/react-vite'
 
 import '../src/styles/index.css'
+// Candidate typefaces, loaded for the font comparison stories only.
+import '@fontsource-variable/inter'
+import '@fontsource-variable/geist'
+import '@fontsource-variable/geist-mono'
+import '@fontsource-variable/jetbrains-mono'
 
 /** The theme and density a story is drawn in, set on the document the way an app sets them. */
 const withThemeAndDensity: Decorator = (Story, context) => {
