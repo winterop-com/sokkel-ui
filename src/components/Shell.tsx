@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react'
+import { Menu } from 'lucide-react'
+import { useState, type ReactNode } from 'react'
 
 import { cn } from '@/lib/cn'
 
@@ -8,12 +9,16 @@ import { cn } from '@/lib/cn'
  *
  * The top bar and the rail's head are the same height and share one rule, so the shell reads as
  * one strip across the window; the foot strip lines up with the rail's foot cell the same way.
+ *
+ * Below the `md` breakpoint the rail leaves the frame: a menu button at the start of the top bar
+ * opens it as a drawer over the content, and a press outside it or on a link closes it.
  */
 export function Shell({
     rail,
     top,
     foot,
     children,
+    words = { menu: 'Open the navigation', close: 'Close the navigation' },
 }: {
     rail: ReactNode
     /** What the top bar holds: a search, the version, the theme control. */
@@ -21,13 +26,42 @@ export function Shell({
     /** What the foot strip holds to the right of the rail's foot cell, if anything. */
     foot?: ReactNode
     children: ReactNode
+    words?: { menu: string; close: string }
 }) {
+    const [drawer, setDrawer] = useState(false)
     return (
         <div className="flex h-svh min-h-0 bg-background text-foreground">
-            {rail}
+            <div className="hidden md:flex">{rail}</div>
+            {drawer && (
+                <div className="fixed inset-0 z-40 md:hidden">
+                    <button
+                        type="button"
+                        aria-label={words.close}
+                        className="absolute inset-0 bg-scrim"
+                        onClick={() => setDrawer(false)}
+                    />
+                    <div
+                        className="absolute inset-y-0 left-0 flex shadow-pop"
+                        onClick={(event) => {
+                            if ((event.target as HTMLElement).closest('a')) setDrawer(false)
+                        }}
+                    >
+                        {rail}
+                    </div>
+                </div>
+            )}
             <div className="flex min-w-0 flex-1 flex-col">
                 {top !== undefined && (
                     <header className="flex h-shell-top shrink-0 items-center gap-2 border-b border-border-strong bg-sidebar px-3">
+                        <button
+                            type="button"
+                            aria-label={words.menu}
+                            title={words.menu}
+                            className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary md:hidden"
+                            onClick={() => setDrawer(true)}
+                        >
+                            <Menu className="size-4" aria-hidden />
+                        </button>
                         {top}
                     </header>
                 )}
