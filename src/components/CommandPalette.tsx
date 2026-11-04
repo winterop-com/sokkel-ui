@@ -67,7 +67,7 @@ export function CommandPalette({
         <CommandDialog open={open} onOpenChange={onOpenChange} title={words.title} description={words.placeholder}>
             <Command>
                 <CommandInput placeholder={words.placeholder} />
-                <CommandList>
+                <CommandList className="max-h-[min(24rem,60svh)] scroll-fade-b pb-1.5">
                     <CommandEmpty>{words.empty}</CommandEmpty>
                     {groups.map((group, index) => (
                         <div key={group.title}>
