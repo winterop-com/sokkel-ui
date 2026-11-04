@@ -36,7 +36,7 @@ export function PageHeader({
                     >
                         {title}
                     </h1>
-                    {count !== undefined && <span className="shrink-0 font-mono text-xs text-muted-foreground">{count}</span>}
+                    {count !== undefined && <span className="shrink-0 text-xs text-muted-foreground tabular-nums">{count}</span>}
                 </div>
                 {showCode && <p className="truncate font-mono text-xs text-muted-foreground">{code}</p>}
             </div>

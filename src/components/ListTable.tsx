@@ -32,6 +32,7 @@ export function ListTable<T>({
     empty = 'Nothing here.',
     foot,
     maxHeight,
+    headerCase = 'theme',
     className,
 }: {
     columns: Column<T>[]
@@ -45,6 +46,8 @@ export function ListTable<T>({
     foot?: ReactNode
     /** Caps the listing's height, after which its rows scroll inside it. */
     maxHeight?: string
+    /** How the column names are written: as the theme says (uppercase by default), or set here. */
+    headerCase?: 'theme' | 'upper' | 'sentence'
     className?: string
 }) {
     const template = columns.map((column) => column.width).join(' ')
@@ -99,7 +102,14 @@ export function ListTable<T>({
             >
                 <div
                     role="row"
-                    className="sticky top-0 z-10 grid h-(--density-panel-head) items-center gap-3 border-b border-border-strong bg-panel-ground px-(--density-panel-pad) text-xs font-medium text-muted-foreground"
+                    className={cn(
+                        'sticky top-0 z-10 grid h-(--density-panel-head) items-center gap-3 border-b border-border-strong bg-panel-ground px-(--density-panel-pad) font-medium text-muted-foreground',
+                        headerCase === 'upper'
+                            ? 'text-[length:var(--table-head-size)] tracking-[var(--table-head-tracking)] uppercase'
+                            : headerCase === 'sentence'
+                              ? 'text-xs normal-case'
+                              : 'text-[length:var(--table-head-size)] tracking-[var(--table-head-tracking)] [text-transform:var(--table-head-transform)]',
+                    )}
                     style={{ gridTemplateColumns: template }}
                 >
                     {columns.map((column) => (

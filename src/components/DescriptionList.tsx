@@ -20,7 +20,7 @@ export function DescriptionList({
     items,
     columns = 1,
     stacked = false,
-    termWidth = '9rem',
+    termWidth = '6rem',
     className,
 }: {
     items: readonly Description[]
@@ -32,7 +32,7 @@ export function DescriptionList({
 }) {
     return (
         <dl
-            className={cn('grid gap-x-6 gap-y-2 text-sm', columns === 2 && 'md:grid-cols-2', className)}
+            className={cn('grid gap-x-6 gap-y-2 text-sm leading-5', columns === 2 && 'md:grid-cols-2', className)}
             style={{ '--term-width': termWidth } as React.CSSProperties}
         >
             {items.map((item, index) => {
@@ -46,7 +46,7 @@ export function DescriptionList({
                             item.wide === true && 'md:col-span-full',
                         )}
                     >
-                        <dt className={cn('text-muted-foreground', stacked && 'text-xs')}>{item.term}</dt>
+                        <dt className="text-xs leading-5 text-muted-foreground">{item.term}</dt>
                         <dd className={cn('min-w-0 break-words', item.code === true && !empty && 'font-mono', empty && 'text-faint')}>
                             {empty ? '-' : item.value}
                         </dd>
