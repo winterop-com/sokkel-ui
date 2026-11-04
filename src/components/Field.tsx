@@ -5,7 +5,8 @@ import { cn } from '@/lib/cn'
 
 /**
  * A form control with its label, an optional hint beside the label, help under the control, and
- * the error that replaces nothing else when there is one.
+ * the error that replaces nothing else when there is one. A required field is marked by a star
+ * after its label, and says "required" to a screen reader.
  *
  * The control is passed as children and takes `id` itself; `describedBy(id, …)` gives it the
  * `aria-describedby` that points at the help and the error.
@@ -48,8 +49,15 @@ export function Field({
             <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
                 <Label htmlFor={id} className={cn('leading-5', mono && 'font-mono')}>
                     {label}
+                    {required === true && (
+                        <>
+                            <span className="-ml-1 text-critical-ink" aria-hidden>
+                                *
+                            </span>
+                            <span className="sr-only">{words.required}</span>
+                        </>
+                    )}
                 </Label>
-                {required === true && <span className="text-xs text-foreground">{words.required}</span>}
                 {hint !== undefined && (
                     <span className={cn('text-xs', keyHint ? 'font-mono text-muted-foreground' : 'text-faint')}>{hint}</span>
                 )}
