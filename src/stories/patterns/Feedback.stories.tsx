@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Banner } from '../../components/Banner'
 import { CheckList } from '../../components/CheckList'
 import { ListSkeleton, Pending } from '../../components/Loading'
+import { Problem } from '../../components/Problem'
 import { Section } from '../../components/Section'
 import { Button } from '../../components/ui/button'
 
@@ -94,9 +95,38 @@ function Health() {
     )
 }
 
+/** A failure said for a person, with the raw message folded away, and a warning with a way forward. */
+function Problems() {
+    return (
+        <Ground>
+            <Problem
+                title="37 rows have an amount that is not a number"
+                detail="The first is row 112, where `amount` is `n/a`. Amounts are written like `12.50`."
+                technical="at $.amount: 'n/a' does not match '^[0-9]+[.][0-9]{2}$'"
+            />
+            <Problem
+                title="The api did not answer"
+                detail="No answer from `https://api.example.org` within 30 seconds. The job tries again in 5 minutes."
+                technical={'ConnectTimeout: timed out after 30000 ms\n  at fetch (worker/http.ts:88)'}
+                actions={
+                    <Button size="sm" variant="outline">
+                        Try now
+                    </Button>
+                }
+            />
+            <Problem
+                tone="warning"
+                title="12 rows had no currency"
+                detail="They were read as `EUR`. Set `currency` on the source to stop guessing."
+            />
+        </Ground>
+    )
+}
+
 const meta: Meta = { title: 'Patterns/Feedback' }
 export default meta
 
 export const Banners_: StoryObj = { name: 'Banner', render: () => <Banners /> }
 export const Skeletons: StoryObj = { name: 'Loading', render: () => <Loading /> }
 export const Checks: StoryObj = { name: 'Check list', render: () => <Health /> }
+export const Problems_: StoryObj = { name: 'Problem', render: () => <Problems /> }
