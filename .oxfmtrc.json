@@ -1,0 +1,14 @@
+{
+    "$schema": "./node_modules/oxfmt/configuration_schema.json",
+    "tabWidth": 4,
+    "printWidth": 140,
+    "singleQuote": true,
+    "jsxSingleQuote": false,
+    "semi": false,
+    "trailingComma": "all",
+    "sortTailwindcss": {
+        "stylesheet": "src/styles/index.css",
+        "functions": ["cn", "cva"]
+    },
+    "ignorePatterns": ["dist", "storybook-static", "components.json", "src/styles/tokens.css", "e2e/__screenshots__"]
+}
