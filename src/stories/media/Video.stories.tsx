@@ -41,6 +41,7 @@ export const ControlsShown: StoryObj = {
                 src={`${clip}#t=24`}
                 preload="auto"
                 defaultControlsVisible
+                title="Coastline, morning to evening"
                 tracks={[
                     { src: captions, label: 'English', lang: 'en', default: true },
                     { src: captions, label: 'English (plain)', lang: 'en-x-plain' },

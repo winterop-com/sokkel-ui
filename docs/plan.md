@@ -31,6 +31,14 @@ FilterChip, ListTable, StatusChip, AccountMenu, SidePanel, DialogShell, ConfirmD
 - AsyncSelect: a searchable popover select that loads its options.
 - A filterable picker with capability chips.
 - A toggle for the side panel in the top bar.
+- SchemaForm: a form generated from a JSON Schema, built from Field and the inputs, validated
+  against the schema.
+- Graph views on React Flow (`@xyflow/react`, laid out by `elkjs`), in their own entry so an app
+  that draws no graph does not load them. A themed canvas (fit view, zoom, keyboard, both schemes,
+  neutral selection, status as the only color on a node), then ready-made views that take data
+  rather than nodes: a pipeline of steps with ports, a run of that pipeline with live status and
+  timings, a dependency or lineage graph, and a state machine. The node, edge and layout pieces
+  are exported too, for a graph none of the views cover.
 
 ## Validation and notification
 
@@ -54,6 +62,4 @@ toasts built to the pick.
 - Publish to a registry when apps adopt the library (see Distribution).
 - Pick the themes to keep from the candidates in Storybook and fold them into `tokens/tokens.json`;
   name each for how it looks.
-- One focus treatment for every control: today inputs draw an accent border and a 3px halo, which
-  reads as a double frame on large controls (the code editor now draws the border alone).
 - Validation and notification, after the research above.

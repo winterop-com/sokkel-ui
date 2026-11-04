@@ -38,6 +38,19 @@ const RECORD = {
     paused: false,
 }
 
+const NOTE = `Write a short note to the team about why nightly-export failed last night. Say which step failed, how many rows it rejected and why, and what we changed so it does not happen again. Keep it under a hundred words.`
+
+function WrappedText() {
+    const [note, setNote] = useState(NOTE)
+    return (
+        <Ground>
+            <Field id="note" label="Prompt" hint="Long lines fold at the edge.">
+                <CodeEditor label="Prompt" value={note} onChange={setNote} wrap lineNumbers={false} className="h-40" />
+            </Field>
+        </Ground>
+    )
+}
+
 function Editors() {
     const [job, setJob] = useState(JOB)
     const [query, setQuery] = useState('')
@@ -97,4 +110,6 @@ const meta: Meta = { title: 'Patterns/Editor' }
 export default meta
 
 export const Editors_: StoryObj = { name: 'Code editor', render: () => <Editors /> }
+/** Prose in the editor with its long lines folded at the edge rather than scrolling sideways. */
+export const Wrapped: StoryObj = { name: 'Wrapped text', render: () => <WrappedText /> }
 export const SourceOpen: StoryObj = { name: 'Source sheet, open', render: () => <Source open /> }
