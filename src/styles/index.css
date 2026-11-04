@@ -39,3 +39,10 @@
         transform: translateX(260%);
     }
 }
+
+/* The terminal's cursor, on for half a second and off for half. */
+@keyframes terminal-blink {
+    50% {
+        opacity: 0;
+    }
+}
