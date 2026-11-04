@@ -8,7 +8,7 @@ import clip from './fixtures/clip.webm?url'
 function Ground({ children }: { children: React.ReactNode }) {
     return (
         <div className="min-h-svh bg-background p-4 text-foreground sm:p-8">
-            <div className="mx-auto flex max-w-4xl flex-col gap-3">
+            <div className="flex flex-col gap-3">
                 {children}
                 <div>
                     <p className="text-sm font-medium">Coastline, morning to evening</p>

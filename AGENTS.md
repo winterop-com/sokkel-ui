@@ -54,6 +54,10 @@ and ask before acting.
   full width, and the viewport toolbar shows it at the widths layouts are checked at: 360, 390
   and 430 for phones, 768 and 1024 for tablets, 1280, 1440 and 1920. No story exists only to
   show a narrower width.
+- A story uses the room the component would have in an app. One that fills its container there (a
+  terminal, code, an editor, a log, a table, a schema, a graph, a chart, a video, a track list)
+  fills the canvas, and the height too when it scrolls. One with a natural width (an input, a menu,
+  a button, a card, a dialog) keeps that width.
 - Screenshot baselines are Linux renders, taken in the Playwright image as CI takes them:
   `bun run test:visual:linux:update`. Never commit baselines taken on a Mac. A change that alters
   a story's look carries its retaken baselines in the same PR.

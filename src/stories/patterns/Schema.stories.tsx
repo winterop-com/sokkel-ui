@@ -14,7 +14,7 @@ import { Section } from '../../components/Section'
 function Ground({ children }: { children: React.ReactNode }) {
     return (
         <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="mx-auto flex max-w-3xl flex-col gap-6">{children}</div>
+            <div className="flex flex-col gap-6">{children}</div>
         </div>
     )
 }
