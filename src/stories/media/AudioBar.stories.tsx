@@ -41,7 +41,7 @@ function Artwork({ hues, id }: { hues: [string, string]; id: string }) {
 }
 
 /** A bar at the foot of an empty screen, wired to state so its controls answer. */
-function Player({ startPlaying, queue = false, narrow = false }: { startPlaying: boolean; queue?: boolean; narrow?: boolean }) {
+function Player({ startPlaying, queue = false }: { startPlaying: boolean; queue?: boolean }) {
     const [index, setIndex] = useState(0)
     const [playing, setPlaying] = useState(startPlaying)
     const [position, setPosition] = useState(83)
@@ -57,7 +57,7 @@ function Player({ startPlaying, queue = false, narrow = false }: { startPlaying:
     }
     return (
         <div className="flex min-h-svh justify-center bg-background text-foreground">
-            <div className={cn('flex min-h-svh w-full flex-col', narrow && 'max-w-[390px] border-x border-border')}>
+            <div className="flex min-h-svh w-full flex-col">
                 <div className="flex flex-1 flex-col justify-end p-4">
                     {queueOpen && (
                         <section className="ml-auto w-full max-w-sm rounded-surface border border-border-strong bg-popover text-popover-foreground shadow-md">
@@ -153,6 +153,3 @@ export const Paused: StoryObj = { render: () => <Player startPlaying={false} /> 
 
 /** The queue opened from the bar's extra slot, with the playing track marked. */
 export const WithQueue: StoryObj = { name: 'With queue', render: () => <Player startPlaying queue /> }
-
-/** The bar in a phone's width at any window size: title beside the transport, over the position. */
-export const PhoneWidth: StoryObj = { name: 'Phone width', render: () => <Player startPlaying narrow /> }

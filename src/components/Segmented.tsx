@@ -84,7 +84,10 @@ export function Segmented<T extends string>({
                 FRAME[variant],
                 size === 'md'
                     ? cn('grid w-full grid-cols-2 md:flex md:h-8', !fill && 'md:w-auto')
-                    : cn('min-h-finger auto-cols-fr grid-flow-col md:h-7 md:min-h-0', fill ? 'grid w-full' : 'inline-grid'),
+                    : cn(
+                          'min-h-finger auto-cols-[minmax(max-content,1fr)] grid-flow-col md:h-7 md:min-h-0',
+                          fill ? 'grid w-full' : 'inline-grid shrink-0',
+                      ),
                 disabled && 'opacity-50',
                 className,
             )}

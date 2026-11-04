@@ -7,23 +7,39 @@ import { Stat } from '../Stat'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '../ui/dropdown-menu'
 
-/** How much of the grid's width a panel takes on a wide screen; every panel is full width on a phone. */
-export type PanelSpan = 'quarter' | 'third' | 'half' | 'two-thirds' | 'full'
+/**
+ * How much of the grid's width a panel takes on a wide screen. Every panel is full width on a
+ * phone but a sixth, which takes half the width in a dense grid, as a stat tile does.
+ */
+export type PanelSpan = 'sixth' | 'quarter' | 'third' | 'half' | 'two-thirds' | 'full'
 
-const SPAN: Record<PanelSpan, string> = {
-    quarter: 'md:col-span-3 xl:col-span-3',
-    third: 'md:col-span-6 xl:col-span-4',
-    half: 'md:col-span-6 xl:col-span-6',
-    'two-thirds': 'md:col-span-6 xl:col-span-8',
-    full: 'md:col-span-6 xl:col-span-12',
+/** The grid classes for a panel's span. */
+export const SPAN: Record<PanelSpan, string> = {
+    sixth: 'col-span-1 md:col-span-2 xl:col-span-2',
+    quarter: 'col-span-full md:col-span-3 xl:col-span-3',
+    third: 'col-span-full md:col-span-6 xl:col-span-4',
+    half: 'col-span-full md:col-span-6 xl:col-span-6',
+    'two-thirds': 'col-span-full md:col-span-6 xl:col-span-8',
+    full: 'col-span-full',
 }
 
 /**
  * The grid a dashboard's panels sit in: twelve columns on a wide screen, six on a tablet, one on a
- * phone, with panels in a row stretched to the same height.
+ * phone, with panels in a row stretched to the same height. A dense grid packs panels with small
+ * gaps and puts two stat tiles side by side on a phone.
  */
-export function DashboardGrid({ children, className }: { children: ReactNode; className?: string }) {
-    return <div className={cn('grid grid-cols-1 gap-(--density-section-gap) md:grid-cols-6 xl:grid-cols-12', className)}>{children}</div>
+export function DashboardGrid({ dense = false, children, className }: { dense?: boolean; children: ReactNode; className?: string }) {
+    return (
+        <div
+            className={cn(
+                'grid md:grid-cols-6 xl:grid-cols-12',
+                dense ? 'grid-cols-2 gap-1.5' : 'grid-cols-1 gap-(--density-section-gap)',
+                className,
+            )}
+        >
+            {children}
+        </div>
+    )
 }
 
 export interface PanelWords {

@@ -14,7 +14,7 @@ Until then nothing installs it.
 
 The shadcn `base-nova` set on Base UI, restyled to the tokens: accordion, alert, alert-dialog,
 aspect-ratio, attachment, avatar, badge, breadcrumb, bubble, button, button-group, calendar, card,
-carousel, chart, checkbox, code-block, collapsible, combobox, command, context-menu, dialog,
+carousel, checkbox, code-block, collapsible, combobox, command, context-menu, dialog,
 direction, drawer, dropdown-menu, empty, field, hover-card, input, input-group, input-otp, item,
 kbd, label, marker, menubar, message, message-scroller, native-select, navigation-menu, pagination,
 popover, progress, questionnaire, radio-group, resizable, scroll-area, select, separator, sheet,
