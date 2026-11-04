@@ -25,7 +25,7 @@ toggle-group, tooltip, trace.
 
 Shell, Rail, Page, PageHeader, Section, Surface, Field, CodeField, SwitchField, SearchField,
 FilterChip, ListTable, StatusChip, AccountMenu, SidePanel, DialogShell, ConfirmDialog,
-TreeSelect, AsyncSelect.
+TreeSelect, AsyncSelect, CapabilityPicker.
 
 ## Graphs
 
@@ -40,7 +40,6 @@ empty ground, each reported to the app, which owns the graph. Views select only 
 
 ## Still to build
 
-- A filterable picker with capability chips.
 - SchemaForm: a form generated from a JSON Schema, built from Field and the inputs, validated
   against the schema.
 
