@@ -8,10 +8,10 @@ import { ListTable, type Column } from '@/components/ListTable'
 import { Rail, type RailGroup } from '@/components/Rail'
 import { SearchField } from '@/components/SearchField'
 import { Section } from '@/components/Section'
+import { SwitchField } from '@/components/SwitchField'
 import { Page, Shell } from '@/components/Shell'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 
 /**
@@ -225,13 +225,9 @@ function ConnectionForm() {
                         <Field id="description" label="Description" className="lg:col-span-2">
                             <Textarea id="description" defaultValue="The DHIS2 play demo, for the tour pipelines." />
                         </Field>
-                        <label className="flex items-center justify-between gap-4 text-sm lg:col-span-2">
-                            <span>
-                                Verify TLS
-                                <span className="block text-xs text-muted-foreground">Refuse an instance whose certificate does not check.</span>
-                            </span>
-                            <Switch defaultChecked />
-                        </label>
+                        <div className="lg:col-span-2">
+                            <SwitchField id="verify-tls" label="Verify TLS" explain="Refuse an instance whose certificate does not check." defaultChecked />
+                        </div>
                         <div className="flex justify-end gap-2 lg:col-span-2">
                             <Button variant="ghost">Cancel</Button>
                             <Button>Create</Button>
