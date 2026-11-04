@@ -7,6 +7,10 @@ never copy from it, so one fix here reaches every app at its next version.
 - `tokens/tokens.json` is the only place a token is defined. `bun run tokens` writes
   `src/styles/tokens.css` from it, and `bun scripts/build-tokens.ts --check` fails when the two
   disagree.
-- `bun run storybook` serves the stories on port 6106, with the palette, the density and light or
+- Themes are named for how they look, never for an app: `default` defines every token and the
+  others (paper, contrast, tokyo, vinyl, cassette, neon) override what they change, which may be
+  any token, colors, radius, type or density. An app picks its default theme on
+  `<html data-theme>`, and `.dark` picks dark mode.
+- `bun run storybook` serves the stories on port 6106, with the theme, the density and light or
   dark in the toolbar.
 - Apps import `@winterop/ui/styles.css` for the tokens and base styles.

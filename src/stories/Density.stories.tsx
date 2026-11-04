@@ -48,7 +48,7 @@ function ListPage() {
                                     key={item}
                                     className={
                                         item === 'Runs'
-                                            ? 'flex h-(--density-row) items-center gap-3 rounded-l-sm rounded-r-md border-l-2 border-brand bg-sidebar-accent px-3 text-sm font-medium'
+                                            ? 'flex h-(--density-row) items-center gap-3 rounded-l-sm rounded-r-md border-l-2 border-sidebar-primary bg-sidebar-accent px-3 text-sm font-medium'
                                             : 'flex h-(--density-row) items-center gap-3 rounded-l-sm rounded-r-md border-l-2 border-transparent px-3 text-sm text-muted-foreground hover:bg-secondary'
                                     }
                                 >
