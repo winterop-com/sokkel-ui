@@ -32,6 +32,7 @@ import { Timeline } from '../../components/Timeline'
 import { TopBar } from '../../components/TopBar'
 import { Button } from '../../components/ui/button'
 import { TooltipProvider } from '../../components/ui/tooltip'
+import { TidevannMark } from '../fixtures/TidevannMark'
 
 /**
  * A whole app in the library's frame: the rail, the top bar with the trail and search, a list page
@@ -160,8 +161,8 @@ function Workspace({ dock = false }: { dock?: boolean }) {
             <Shell
                 rail={
                     <Rail
-                        mark="A"
-                        name="atlas"
+                        mark={<TidevannMark />}
+                        name="Tidevann"
                         groups={GROUPS}
                         collapsed={collapsed}
                         onCollapsedChange={setCollapsed}
@@ -170,7 +171,7 @@ function Workspace({ dock = false }: { dock?: boolean }) {
                         foot={
                             <AccountMenu
                                 name="ada"
-                                where="atlas.example.org"
+                                where="tidevann.example.org"
                                 collapsed={collapsed}
                                 onSettings={() => undefined}
                                 onSignOut={() => undefined}
@@ -180,7 +181,7 @@ function Workspace({ dock = false }: { dock?: boolean }) {
                 }
                 top={
                     <TopBar
-                        trail={[{ label: 'atlas', href: '#' }, { label: 'Runs' }]}
+                        trail={[{ label: 'Tidevann', href: '#' }, { label: 'Runs' }]}
                         onSearch={() => undefined}
                         actions={<ThemeToggle dark={dark} onToggle={() => setDark(!dark)} />}
                     />

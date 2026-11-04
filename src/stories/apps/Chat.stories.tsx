@@ -14,6 +14,7 @@ import { Bubble, BubbleContent } from '../../components/ui/bubble'
 import { Button } from '../../components/ui/button'
 import { Message, MessageContent, MessageFooter } from '../../components/ui/message'
 import { TooltipProvider } from '../../components/ui/tooltip'
+import { TidevannMark } from '../fixtures/TidevannMark'
 
 /**
  * An assistant app in the library's frame: conversations in the rail, the exchange in a reading
@@ -140,12 +141,12 @@ function ChatApp() {
             <Shell
                 rail={
                     <Rail
-                        mark="A"
-                        name="assistant"
+                        mark={<TidevannMark />}
+                        name="Tidevann"
                         groups={GROUPS}
                         collapsed={collapsed}
                         onCollapsedChange={setCollapsed}
-                        foot={<AccountMenu name="ada" where="assistant.example.org" collapsed={collapsed} onSettings={() => undefined} />}
+                        foot={<AccountMenu name="ada" where="tidevann.example.org" collapsed={collapsed} onSettings={() => undefined} />}
                     />
                 }
                 top={

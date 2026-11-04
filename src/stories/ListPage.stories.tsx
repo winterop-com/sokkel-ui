@@ -18,6 +18,7 @@ import { Page, Shell } from '../components/Shell'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Textarea } from '../components/ui/textarea'
+import { TidevannMark } from './fixtures/TidevannMark'
 
 /**
  * The Runs page built from the library alone, with real-shaped data and working controls: the
@@ -114,8 +115,8 @@ function Frame({
         <Shell
             rail={
                 <Rail
-                    mark={<Workflow className="size-4" aria-hidden />}
-                    name="atlas"
+                    mark={<TidevannMark />}
+                    name="Tidevann"
                     groups={groups}
                     collapsed={collapsed}
                     onCollapsedChange={setCollapsed}
@@ -136,7 +137,7 @@ function Frame({
             top={
                 <>
                     <span className="text-sm text-muted-foreground">{active === 'runs' ? 'Runs' : 'Services'}</span>
-                    <span className="ml-auto font-mono text-xs text-muted-foreground">atlas 1.4.0</span>
+                    <span className="ml-auto font-mono text-xs text-muted-foreground">Tidevann 1.4.0</span>
                 </>
             }
         >

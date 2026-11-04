@@ -581,7 +581,7 @@ function lineE(form: JobForm, k: Key): { tone: Tone; text: string; icon?: Lucide
     if (warn !== null) return { tone: 'warning', text: `${sayDuration(seconds(value) ?? 0)}: ${warn.text.toLowerCase()}` }
     switch (k) {
         case 'code':
-            return { tone: 'quiet', text: value === '' ? 'Lowercase, as in nightly-export' : `In addresses as atlas/jobs/${value}` }
+            return { tone: 'quiet', text: value === '' ? 'Lowercase, as in nightly-export' : `In addresses as larkspur/jobs/${value}` }
         case 'name':
             return { tone: 'quiet', text: 'Shown in lists and alerts' }
         case 'endpoint': {

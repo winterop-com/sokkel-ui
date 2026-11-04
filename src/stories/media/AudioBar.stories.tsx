@@ -16,11 +16,11 @@ interface Track {
 }
 
 const QUEUE: Track[] = [
-    { title: 'Northern Coast', artist: 'Ada', album: 'Atlas', duration: 245, hues: ['var(--kind-blue)', 'var(--kind-teal)'] },
-    { title: 'Valley Road', artist: 'Ada', album: 'Atlas', duration: 198, hues: ['var(--kind-green)', 'var(--kind-jade)'] },
+    { title: 'Northern Coast', artist: 'Ada', album: 'Larkspur', duration: 245, hues: ['var(--kind-blue)', 'var(--kind-teal)'] },
+    { title: 'Valley Road', artist: 'Ada', album: 'Larkspur', duration: 198, hues: ['var(--kind-green)', 'var(--kind-jade)'] },
     { title: 'Harbor at Dusk', artist: 'Grace', album: 'Juniper', duration: 312, hues: ['var(--kind-violet)', 'var(--kind-pink)'] },
     { title: 'Mountain Pass', artist: 'Linus', album: 'Juniper', duration: 227, hues: ['var(--kind-teal)', 'var(--kind-blue)'] },
-    { title: 'Desert Morning', artist: 'Margaret', album: 'Atlas', duration: 263, hues: ['var(--kind-pink)', 'var(--kind-violet)'] },
+    { title: 'Desert Morning', artist: 'Margaret', album: 'Larkspur', duration: 263, hues: ['var(--kind-pink)', 'var(--kind-violet)'] },
 ]
 
 /** A square cover drawn as a two-color gradient with a sun. */
