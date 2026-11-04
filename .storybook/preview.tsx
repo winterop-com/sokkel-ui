@@ -3,12 +3,12 @@ import type { Decorator, Preview } from '@storybook/react-vite'
 
 import '../src/styles/index.css'
 
-/** The palette and density a story is drawn in, set on the document the way an app sets them. */
-const withPaletteAndDensity: Decorator = (Story, context) => {
-    const { palette, density } = context.globals as { palette?: string; density?: string }
+/** The theme and density a story is drawn in, set on the document the way an app sets them. */
+const withThemeAndDensity: Decorator = (Story, context) => {
+    const { look, density } = context.globals as { look?: string; density?: string }
     const root = document.documentElement
-    if (palette === undefined || palette === 'dirigent') root.removeAttribute('data-theme')
-    else root.setAttribute('data-theme', palette)
+    if (look === undefined || look === 'default') root.removeAttribute('data-theme')
+    else root.setAttribute('data-theme', look)
     root.setAttribute('data-density', density ?? 'regular')
     return <Story />
 }
@@ -19,18 +19,18 @@ const preview: Preview = {
         backgrounds: { disable: true },
     },
     globalTypes: {
-        palette: {
-            description: 'Palette',
-            toolbar: { title: 'Palette', items: ['dirigent', 'paper', 'contrast'], dynamicTitle: true },
+        look: {
+            description: 'Theme',
+            toolbar: { title: 'Theme', items: ['default',  'paper',  'contrast',  'tokyo',  'vinyl',  'cassette',  'neon'], dynamicTitle: true },
         },
         density: {
             description: 'Density',
             toolbar: { title: 'Density', items: ['regular', 'compact'], dynamicTitle: true },
         },
     },
-    initialGlobals: { palette: 'dirigent', density: 'regular' },
+    initialGlobals: { look: 'default', density: 'regular' },
     decorators: [
-        withPaletteAndDensity,
+        withThemeAndDensity,
         withThemeByClassName({ themes: { dark: 'dark', light: '' }, defaultTheme: 'dark', parentSelector: 'html' }),
     ],
 }
