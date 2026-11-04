@@ -31,7 +31,7 @@ export default meta
 
 type Story = StoryObj<typeof Typeface>
 
-export const PlexSansAndMono: Story = { args: { pair: 'plex' } }
-export const InterAndJetBrainsMono: Story = { args: { pair: 'inter' } }
-export const GeistAndGeistMono: Story = { args: { pair: 'geist' } }
+export const PlexSansAndMono: Story = { name: 'Plex', args: { pair: 'plex' } }
+export const InterAndJetBrainsMono: Story = { name: 'Inter', args: { pair: 'inter' } }
+export const GeistAndGeistMono: Story = { name: 'Geist', args: { pair: 'geist' } }
 export const SystemFonts: Story = { args: { pair: 'system' } }

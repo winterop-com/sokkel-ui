@@ -22,7 +22,13 @@ export default defineConfig({
         emptyOutDir: true,
         sourcemap: true,
         lib: {
-            entry: { ...entries('components'), ...entries('components/ui'), ...entries('hooks'), ...entries('lib') },
+            entry: {
+                ...entries('components'),
+                ...entries('components/ui'),
+                ...entries('components/map'),
+                ...entries('hooks'),
+                ...entries('lib'),
+            },
             formats: ['es'],
         },
         rolldownOptions: {

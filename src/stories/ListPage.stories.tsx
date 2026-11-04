@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { Blocks, BookOpen, Cable, FileJson, Play, Workflow, Zap } from 'lucide-react'
+import { BookOpen, CalendarClock, Library, Play, Server, Webhook, Workflow } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 import { AccountMenu } from '../components/AccountMenu'
@@ -26,7 +26,7 @@ import { Textarea } from '../components/ui/textarea'
  */
 interface Run {
     id: string
-    pipeline: string
+    job: string
     status: string
     step: string | null
     at: string
@@ -34,16 +34,16 @@ interface Run {
 }
 
 const RUNS: Run[] = [
-    { id: '01a1a5c6', pipeline: 'dhis2-health', status: 'succeeded', step: null, at: '2 min ago', took: '1.4s' },
-    { id: '01a1a5c2', pipeline: 'weather-gate', status: 'failed', step: 'gate', at: '6 min ago', took: '0.3s' },
-    { id: '01a1a5b9', pipeline: 'fhir-tour', status: 'running', step: 'measure', at: '7 min ago', took: '-' },
-    { id: '01a1a5b1', pipeline: 'connections-tour', status: 'succeeded', step: null, at: '12 min ago', took: '8.2s' },
-    { id: '01a1a5a7', pipeline: 'dhis2-value-inbox', status: 'completed_with_errors', step: 'import', at: '14 min ago', took: '2.9s' },
-    { id: '01a1a59e', pipeline: 'kafka-tour', status: 'queued', step: null, at: '15 min ago', took: '-' },
-    { id: '01a1a591', pipeline: 'run-controls', status: 'cancelled', step: 'slow', at: '21 min ago', took: '4.0s' },
-    { id: '01a1a588', pipeline: 'dhis2-blocks-local', status: 'succeeded', step: null, at: '33 min ago', took: '19.5s' },
-    { id: '01a1a580', pipeline: 'weather-gate', status: 'failed', step: 'gate', at: '41 min ago', took: '0.2s' },
-    { id: '01a1a571', pipeline: 'fhir-edits', status: 'succeeded', step: null, at: '58 min ago', took: '5.1s' },
+    { id: '01a1a5c6', job: 'nightly-export', status: 'succeeded', step: null, at: '2 min ago', took: '1.4s' },
+    { id: '01a1a5c2', job: 'import-orders', status: 'failed', step: 'validate', at: '6 min ago', took: '0.3s' },
+    { id: '01a1a5b9', job: 'sync-inventory', status: 'running', step: 'transform', at: '7 min ago', took: '-' },
+    { id: '01a1a5b1', job: 'rebuild-index', status: 'succeeded', step: null, at: '12 min ago', took: '8.2s' },
+    { id: '01a1a5a7', job: 'send-digest', status: 'completed_with_errors', step: 'notify', at: '14 min ago', took: '2.9s' },
+    { id: '01a1a59e', job: 'rebuild-index', status: 'queued', step: null, at: '15 min ago', took: '-' },
+    { id: '01a1a591', job: 'nightly-export', status: 'cancelled', step: 'upload', at: '21 min ago', took: '4.0s' },
+    { id: '01a1a588', job: 'sync-inventory', status: 'succeeded', step: null, at: '33 min ago', took: '19.5s' },
+    { id: '01a1a580', job: 'import-orders', status: 'failed', step: 'validate', at: '41 min ago', took: '0.2s' },
+    { id: '01a1a571', job: 'send-digest', status: 'succeeded', step: null, at: '58 min ago', took: '5.1s' },
 ]
 
 const GROUPS: RailGroup[] = [
@@ -52,24 +52,24 @@ const GROUPS: RailGroup[] = [
         title: 'Operate',
         entries: [
             { id: 'runs', label: 'Runs', icon: Play, href: '#', active: true },
-            { id: 'triggers', label: 'Triggers', icon: Zap, href: '#' },
+            { id: 'schedules', label: 'Schedules', icon: CalendarClock, href: '#' },
         ],
     },
     {
         id: 'build',
         title: 'Build',
         entries: [
-            { id: 'pipelines', label: 'Pipelines', icon: Workflow, href: '#' },
-            { id: 'connections', label: 'Connections', icon: Cable, href: '#' },
-            { id: 'schemas', label: 'Schemas', icon: FileJson, href: '#' },
+            { id: 'jobs', label: 'Jobs', icon: Workflow, href: '#' },
+            { id: 'services', label: 'Services', icon: Server, href: '#' },
+            { id: 'webhooks', label: 'Webhooks', icon: Webhook, href: '#' },
         ],
     },
     {
         id: 'reference',
         title: 'Reference',
         entries: [
-            { id: 'blocks', label: 'Blocks', icon: Blocks, href: '#' },
-            { id: 'examples', label: 'Examples', icon: BookOpen, href: '#' },
+            { id: 'docs', label: 'Docs', icon: BookOpen, href: '#' },
+            { id: 'examples', label: 'Examples', icon: Library, href: '#' },
         ],
     },
 ]
@@ -79,12 +79,12 @@ const Status = ({ status }: { status: string }) => <StatusChip status={status as
 const COLUMNS: Column<Run>[] = [
     { id: 'run', header: 'Run', width: '6rem', cell: (run) => <span className="font-mono text-xs text-muted-foreground">{run.id}</span> },
     {
-        id: 'pipeline',
-        header: 'Pipeline',
+        id: 'job',
+        header: 'Job',
         width: 'minmax(0,1fr)',
         cell: (run) => (
             <>
-                {run.pipeline}
+                {run.job}
                 {run.step !== null && <span className="text-faint"> at {run.step}</span>}
             </>
         ),
@@ -115,14 +115,14 @@ function Frame({
             rail={
                 <Rail
                     mark={<Workflow className="size-4" aria-hidden />}
-                    name="dirigent"
+                    name="atlas"
                     groups={groups}
                     collapsed={collapsed}
                     onCollapsedChange={setCollapsed}
                     foot={
                         <AccountMenu
-                            name="admin"
-                            where="dirigent · local · 0.36.0"
+                            name="ada"
+                            where="api.example.org · 1.4.0"
                             collapsed={collapsed}
                             onSettings={() => {}}
                             onShortcuts={() => {}}
@@ -135,8 +135,8 @@ function Frame({
             foot={foot}
             top={
                 <>
-                    <span className="text-sm text-muted-foreground">{active === 'runs' ? 'Runs' : 'Connections'}</span>
-                    <span className="ml-auto font-mono text-xs text-muted-foreground">dirigent 0.36.0</span>
+                    <span className="text-sm text-muted-foreground">{active === 'runs' ? 'Runs' : 'Services'}</span>
+                    <span className="ml-auto font-mono text-xs text-muted-foreground">atlas 1.4.0</span>
                 </>
             }
         >
@@ -150,7 +150,7 @@ function RunsListPage() {
     const [status, setStatus] = useState<string | undefined>('failed')
     const [chosen, setChosen] = useState<string>('01a1a5c2')
     const rows = useMemo(
-        () => RUNS.filter((run) => (status === undefined || run.status === status) && run.pipeline.includes(query.trim())),
+        () => RUNS.filter((run) => (status === undefined || run.status === status) && run.job.includes(query.trim())),
         [query, status],
     )
     const open = RUNS.find((run) => run.id === chosen) ?? null
@@ -179,14 +179,14 @@ function RunsListPage() {
                                     </p>
                                     {open.status === 'failed' && (
                                         <p className="rounded-control border border-critical/35 bg-critical/10 px-2.5 py-2 text-sm text-critical-ink">
-                                            at $.station: &apos;oslo&apos; does not match the station code pattern
+                                            at $.amount: &apos;n/a&apos; is not of type &apos;number&apos;
                                         </p>
                                     )}
                                 </PanelSection>
                                 <PanelSection title="Facts">
                                     <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
-                                        <dt className="text-muted-foreground">Pipeline</dt>
-                                        <dd>{open.pipeline}</dd>
+                                        <dt className="text-muted-foreground">Job</dt>
+                                        <dd>{open.job}</dd>
                                         <dt className="text-muted-foreground">Started</dt>
                                         <dd>{open.at}</dd>
                                         <dt className="text-muted-foreground">Took</dt>
@@ -221,7 +221,7 @@ function RunsListPage() {
             }
         >
             <Page>
-                <PageHeader title="Runs" count={`${RUNS.length} loaded`} actions={<Button>Run a pipeline</Button>} />
+                <PageHeader title="Runs" count={`${RUNS.length} loaded`} actions={<Button>Run a job</Button>} />
                 <div className="flex flex-wrap items-center gap-2">
                     <SearchField value={query} onChange={setQuery} placeholder="Search runs" className="w-64" />
                     <FilterChip
@@ -230,8 +230,8 @@ function RunsListPage() {
                         onOpen={() => setStatus(status === undefined ? 'failed' : status)}
                         onClear={() => setStatus(undefined)}
                     />
-                    <FilterChip facet="Pipeline" />
-                    <FilterChip facet="Trigger" />
+                    <FilterChip facet="Job" />
+                    <FilterChip facet="Started by" />
                 </div>
                 <ListTable
                     columns={COLUMNS}
@@ -247,25 +247,25 @@ function RunsListPage() {
     )
 }
 
-function ConnectionForm() {
-    const [code, setCode] = useState('2-play')
+function ServiceForm() {
+    const [code, setCode] = useState('2-api')
     return (
-        <Frame active="connections">
+        <Frame active="services">
             <Page>
-                <PageHeader title="New connection" />
-                <Section title="Connection">
+                <PageHeader title="New service" />
+                <Section title="Service">
                     <div className="@container grid gap-4 lg:grid-cols-2">
                         <CodeField id="code" value={code} onChange={setCode} />
-                        <Field id="base-url" label="Base URL" hint="base_url" keyHint help="Where the instance answers, without /api.">
+                        <Field id="base-url" label="Base URL" hint="base_url" keyHint help="Where the service answers, without /v1.">
                             <Input
                                 id="base-url"
                                 className="font-mono"
-                                defaultValue="https://play.dhis2.org/2.43"
+                                defaultValue="https://api.example.org"
                                 aria-describedby="base-url-help"
                             />
                         </Field>
                         <Field id="description" label="Description" className="lg:col-span-2">
-                            <Textarea id="description" defaultValue="The DHIS2 play demo, for the tour pipelines." />
+                            <Textarea id="description" defaultValue="The orders API, read by the import jobs." />
                         </Field>
                         <div className="lg:col-span-2">
                             <SwitchField
@@ -290,4 +290,4 @@ const meta: Meta = { title: 'Patterns/Pages' }
 export default meta
 
 export const RunsList: StoryObj = { render: () => <RunsListPage /> }
-export const Form: StoryObj = { render: () => <ConnectionForm /> }
+export const Form: StoryObj = { render: () => <ServiceForm /> }

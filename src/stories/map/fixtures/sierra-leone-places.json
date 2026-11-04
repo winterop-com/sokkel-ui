@@ -1,0 +1,3329 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "id": "r5WWF9WDzoa",
+            "properties": { "name": "Baama", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.3329, 8.3588] }
+        },
+        {
+            "type": "Feature",
+            "id": "yMCshbaVExv",
+            "properties": { "name": "Babara", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-13.1317, 8.8295] }
+        },
+        {
+            "type": "Feature",
+            "id": "Jiymtq0A01x",
+            "properties": { "name": "Bafodia", "region": "qhqAxPSTUXp" },
+            "geometry": { "type": "Point", "coordinates": [-11.732, 9.6835] }
+        },
+        {
+            "type": "Feature",
+            "id": "Rll4VmTDRiE",
+            "properties": { "name": "Bai Largo", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-11.8752, 8.2806] }
+        },
+        {
+            "type": "Feature",
+            "id": "XtuhRhmbrJM",
+            "properties": { "name": "Baiama", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-10.9677, 8.5167] }
+        },
+        {
+            "type": "Feature",
+            "id": "c41XRVOYNJm",
+            "properties": { "name": "Baiima", "region": "jUb8gELQApl" },
+            "geometry": { "type": "Point", "coordinates": [-10.7692, 8.034] }
+        },
+        {
+            "type": "Feature",
+            "id": "Eyj2kiEJ7M3",
+            "properties": { "name": "Bailor", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-13.2392, 8.8219] }
+        },
+        {
+            "type": "Feature",
+            "id": "MHAWZr2Caxw",
+            "properties": { "name": "Bakeloko", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-12.2933, 8.3955] }
+        },
+        {
+            "type": "Feature",
+            "id": "mUuCjQWMaOc",
+            "properties": { "name": "Bambara", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.3454, 8.3164] }
+        },
+        {
+            "type": "Feature",
+            "id": "aSfF9kuNINJ",
+            "properties": { "name": "Bambuibu Tommy", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.1625, 7.9794] }
+        },
+        {
+            "type": "Feature",
+            "id": "FNnj3jKGS7i",
+            "properties": { "name": "Bandajuma", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.6522, 7.5724] }
+        },
+        {
+            "type": "Feature",
+            "id": "ABM75Q1UfoP",
+            "properties": { "name": "Bandajuma Kpolihun", "region": "jUb8gELQApl" },
+            "geometry": { "type": "Point", "coordinates": [-10.5735, 8.2753] }
+        },
+        {
+            "type": "Feature",
+            "id": "MpcMjLmbATv",
+            "properties": { "name": "Bandajuma Yawei", "region": "jUb8gELQApl" },
+            "geometry": { "type": "Point", "coordinates": [-10.5735, 8.2755] }
+        },
+        {
+            "type": "Feature",
+            "id": "uPshwz3B3Uu",
+            "properties": { "name": "Bandasuma", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.4089, 7.3691] }
+        },
+        {
+            "type": "Feature",
+            "id": "aF6iPGbrcRk",
+            "properties": { "name": "Bandasuma Fiama", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-10.7983, 8.6966] }
+        },
+        {
+            "type": "Feature",
+            "id": "t1aAdpBbDB3",
+            "properties": { "name": "Bandusuma", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-10.7096, 8.5268] }
+        },
+        {
+            "type": "Feature",
+            "id": "t52CJEyLhch",
+            "properties": { "name": "Baoma", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-10.7867, 8.4249] }
+        },
+        {
+            "type": "Feature",
+            "id": "FLjwMPWLrL2",
+            "properties": { "name": "Baomahun", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.6677, 8.4165] }
+        },
+        {
+            "type": "Feature",
+            "id": "weLTzWrLXCO",
+            "properties": { "name": "Bapuya", "region": "PMa2VCrupOd" },
+            "geometry": { "type": "Point", "coordinates": [-13.1107, 9.0087] }
+        },
+        {
+            "type": "Feature",
+            "id": "y5hLlID8ihI",
+            "properties": { "name": "Barlie", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.5839, 8.0202] }
+        },
+        {
+            "type": "Feature",
+            "id": "vyIl6s0lhKc",
+            "properties": { "name": "Barmoi Luma", "region": "PMa2VCrupOd" },
+            "geometry": { "type": "Point", "coordinates": [-12.9062, 9.0382] }
+        },
+        {
+            "type": "Feature",
+            "id": "vELaJEPLOPF",
+            "properties": { "name": "Barmoi Munu", "region": "PMa2VCrupOd" },
+            "geometry": { "type": "Point", "coordinates": [-12.75, 9.092] }
+        },
+        {
+            "type": "Feature",
+            "id": "sDTodaygv5u",
+            "properties": { "name": "Bath Bana", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-12.4486, 8.3348] }
+        },
+        {
+            "type": "Feature",
+            "id": "agM0BKQlTh3",
+            "properties": { "name": "Batkanu", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.0258, 9.3924] }
+        },
+        {
+            "type": "Feature",
+            "id": "k92yudERPlv",
+            "properties": { "name": "Bayama", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.7258, 7.4082] }
+        },
+        {
+            "type": "Feature",
+            "id": "PwgoRuWEDvJ",
+            "properties": { "name": "Belebu", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.0428, 7.6057] }
+        },
+        {
+            "type": "Feature",
+            "id": "uFp0ztDOFbI",
+            "properties": { "name": "Bendu", "region": "lc3eMKXaEfw" },
+            "geometry": { "type": "Point", "coordinates": [-12.3013, 7.4966] }
+        },
+        {
+            "type": "Feature",
+            "id": "amgb83zVxp5",
+            "properties": { "name": "Bendu Mameima", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-10.9705, 8.1001] }
+        },
+        {
+            "type": "Feature",
+            "id": "DQHGtTGOP6b",
+            "properties": { "name": "Bendu Yawei", "region": "jUb8gELQApl" },
+            "geometry": { "type": "Point", "coordinates": [-10.5741, 8.2762] }
+        },
+        {
+            "type": "Feature",
+            "id": "o0BgK1dLhF8",
+            "properties": { "name": "Bendugu", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-11.4941, 9.0633] }
+        },
+        {
+            "type": "Feature",
+            "id": "Wr8kmywwseZ",
+            "properties": { "name": "Benduma", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.5217, 8.0261] }
+        },
+        {
+            "type": "Feature",
+            "id": "n7wN9gMFfZ5",
+            "properties": { "name": "Benduma", "region": "lc3eMKXaEfw" },
+            "geometry": { "type": "Point", "coordinates": [-12.0, 7.3] }
+        },
+        {
+            "type": "Feature",
+            "id": "wQ71REGAMet",
+            "properties": { "name": "Benkeh", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.5365, 7.8303] }
+        },
+        {
+            "type": "Feature",
+            "id": "OcRCVRy2M7X",
+            "properties": { "name": "Benkia", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.8975, 8.6553] }
+        },
+        {
+            "type": "Feature",
+            "id": "GHHvGp7tgtZ",
+            "properties": { "name": "Binkolo", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-11.9822, 8.9503] }
+        },
+        {
+            "type": "Feature",
+            "id": "kUzpbgPCwVA",
+            "properties": { "name": "Blama", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.3465, 7.8719] }
+        },
+        {
+            "type": "Feature",
+            "id": "xXhKbgwL39t",
+            "properties": { "name": "Blama Massaquoi", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.6356, 7.3492] }
+        },
+        {
+            "type": "Feature",
+            "id": "L5gENbBNNup",
+            "properties": { "name": "Boajibu", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.3423, 8.187] }
+        },
+        {
+            "type": "Feature",
+            "id": "PB8FMGbn19r",
+            "properties": { "name": "Bombohun", "region": "jUb8gELQApl" },
+            "geometry": { "type": "Point", "coordinates": [-10.8373, 7.9594] }
+        },
+        {
+            "type": "Feature",
+            "id": "VXrJKs8hic4",
+            "properties": { "name": "Bomie", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.0464, 8.2318] }
+        },
+        {
+            "type": "Feature",
+            "id": "H97XE5Ea089",
+            "properties": { "name": "Bomotoke", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.6548, 7.8188] }
+        },
+        {
+            "type": "Feature",
+            "id": "NnQpISrLYWZ",
+            "properties": { "name": "Bonthe", "region": "lc3eMKXaEfw" },
+            "geometry": { "type": "Point", "coordinates": [-12.5789, 7.5918] }
+        },
+        {
+            "type": "Feature",
+            "id": "szbAJSWOXjT",
+            "properties": { "name": "Boroma", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-10.9456, 8.6668] }
+        },
+        {
+            "type": "Feature",
+            "id": "vRC0stJ5y9Q",
+            "properties": { "name": "Bucksal", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.7259, 7.9403] }
+        },
+        {
+            "type": "Feature",
+            "id": "EJoI3HArJ2W",
+            "properties": { "name": "Bum Kaku", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.8774, 7.5052] }
+        },
+        {
+            "type": "Feature",
+            "id": "OI0BQUurVFS",
+            "properties": { "name": "Bumban", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-11.9099, 9.0709] }
+        },
+        {
+            "type": "Feature",
+            "id": "LZclRdyVk1t",
+            "properties": { "name": "Bumbanday", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.0048, 9.0892] }
+        },
+        {
+            "type": "Feature",
+            "id": "DwpbWkiqjMy",
+            "properties": { "name": "Bumbeh", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.5642, 7.4905] }
+        },
+        {
+            "type": "Feature",
+            "id": "Q2USZSJmcNK",
+            "properties": { "name": "Bumbuna", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-11.7449, 9.0449] }
+        },
+        {
+            "type": "Feature",
+            "id": "E497Rk80ivZ",
+            "properties": { "name": "Bumpe", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.9033, 7.8894] }
+        },
+        {
+            "type": "Feature",
+            "id": "wbtk73Zwhj9",
+            "properties": { "name": "Bumpeh", "region": "jUb8gELQApl" },
+            "geometry": { "type": "Point", "coordinates": [-10.8071, 8.2203] }
+        },
+        {
+            "type": "Feature",
+            "id": "d9zRBAoM8OC",
+            "properties": { "name": "Bumpeh Perri", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.5656, 7.2841] }
+        },
+        {
+            "type": "Feature",
+            "id": "mkIugjeYSjE",
+            "properties": { "name": "Bumpeh River", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-10.5735, 8.2755] }
+        },
+        {
+            "type": "Feature",
+            "id": "HVQ6gJE8R24",
+            "properties": { "name": "Bundulai", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.9069, 8.7642] }
+        },
+        {
+            "type": "Feature",
+            "id": "rpAgG9XCWhO",
+            "properties": { "name": "Bureh", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.8555, 8.8958] }
+        },
+        {
+            "type": "Feature",
+            "id": "h9q3qixffZT",
+            "properties": { "name": "Campbell Town", "region": "at6UHUQatSo" },
+            "geometry": { "type": "Point", "coordinates": [-13.053, 8.3098] }
+        },
+        {
+            "type": "Feature",
+            "id": "U4FzUXMvbI8",
+            "properties": { "name": "Conakry Dee", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-13.2379, 8.6976] }
+        },
+        {
+            "type": "Feature",
+            "id": "yTMrs5kClCv",
+            "properties": { "name": "Condama", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-11.2034, 8.6319] }
+        },
+        {
+            "type": "Feature",
+            "id": "U2QkKSeyL5r",
+            "properties": { "name": "Crossing", "region": "at6UHUQatSo" },
+            "geometry": { "type": "Point", "coordinates": [-12.9709, 8.3578] }
+        },
+        {
+            "type": "Feature",
+            "id": "wByqtWCCuDJ",
+            "properties": { "name": "Damballa", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.7036, 8.1207] }
+        },
+        {
+            "type": "Feature",
+            "id": "RpRJUDOPtt7",
+            "properties": { "name": "Dandabu", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.685, 7.4774] }
+        },
+        {
+            "type": "Feature",
+            "id": "m5BX6CvJ6Ex",
+            "properties": { "name": "Daru", "region": "jUb8gELQApl" },
+            "geometry": { "type": "Point", "coordinates": [-10.8443, 7.9901] }
+        },
+        {
+            "type": "Feature",
+            "id": "JemZqD90S44",
+            "properties": { "name": "Dawa", "region": "jUb8gELQApl" },
+            "geometry": { "type": "Point", "coordinates": [-10.5745, 8.2754] }
+        },
+        {
+            "type": "Feature",
+            "id": "C1tAqIpKB9k",
+            "properties": { "name": "Degbuama", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.2063, 7.8631] }
+        },
+        {
+            "type": "Feature",
+            "id": "oIgBLlEo6eH",
+            "properties": { "name": "Deima", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.2595, 7.9779] }
+        },
+        {
+            "type": "Feature",
+            "id": "sSgOnY1Xqd9",
+            "properties": { "name": "Delken", "region": "lc3eMKXaEfw" },
+            "geometry": { "type": "Point", "coordinates": [-12.7954, 7.5718] }
+        },
+        {
+            "type": "Feature",
+            "id": "qHBTf9A89xW",
+            "properties": { "name": "Dia", "region": "jUb8gELQApl" },
+            "geometry": { "type": "Point", "coordinates": [-10.5736, 8.2754] }
+        },
+        {
+            "type": "Feature",
+            "id": "jKZ0U8Og5aV",
+            "properties": { "name": "Dodo", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.1733, 8.1519] }
+        },
+        {
+            "type": "Feature",
+            "id": "rwfuVQHnZJ5",
+            "properties": { "name": "Dodo Kortuma", "region": "jUb8gELQApl" },
+            "geometry": { "type": "Point", "coordinates": [-10.5736, 8.2754] }
+        },
+        {
+            "type": "Feature",
+            "id": "hKD6hpZUh9v",
+            "properties": { "name": "Faala", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.3818, 8.2862] }
+        },
+        {
+            "type": "Feature",
+            "id": "K6oyIMh7Lee",
+            "properties": { "name": "Fadugu", "region": "qhqAxPSTUXp" },
+            "geometry": { "type": "Point", "coordinates": [-11.7651, 9.3901] }
+        },
+        {
+            "type": "Feature",
+            "id": "Gm7YUjhVi9Q",
+            "properties": { "name": "Fairo", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.4045, 7.0881] }
+        },
+        {
+            "type": "Feature",
+            "id": "YTQRSW91PxO",
+            "properties": { "name": "Falaba", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.3796, 8.2111] }
+        },
+        {
+            "type": "Feature",
+            "id": "kuqKh33SPgg",
+            "properties": { "name": "Falaba", "region": "qhqAxPSTUXp" },
+            "geometry": { "type": "Point", "coordinates": [-11.3208, 9.8571] }
+        },
+        {
+            "type": "Feature",
+            "id": "pRg7dkjqNPc",
+            "properties": { "name": "Falaba", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.5289, 7.4203] }
+        },
+        {
+            "type": "Feature",
+            "id": "fmLRqcL9sWF",
+            "properties": { "name": "Fankoya", "region": "qhqAxPSTUXp" },
+            "geometry": { "type": "Point", "coordinates": [-11.279, 8.961] }
+        },
+        {
+            "type": "Feature",
+            "id": "JLKGG67z7oj",
+            "properties": { "name": "Fatkom Muchendeh", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-10.9707, 8.6429] }
+        },
+        {
+            "type": "Feature",
+            "id": "r4W2vzlmPhm",
+            "properties": { "name": "Feiba", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.9229, 7.6842] }
+        },
+        {
+            "type": "Feature",
+            "id": "rYIkxCJFtTX",
+            "properties": { "name": "Feuror", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-10.6418, 8.5924] }
+        },
+        {
+            "type": "Feature",
+            "id": "xKaB8tfbTzm",
+            "properties": { "name": "Fintonia", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.225, 9.674] }
+        },
+        {
+            "type": "Feature",
+            "id": "aVycEyoSBJx",
+            "properties": { "name": "Fogbo WAR", "region": "at6UHUQatSo" },
+            "geometry": { "type": "Point", "coordinates": [-13.0593, 8.4432] }
+        },
+        {
+            "type": "Feature",
+            "id": "D3oZZXtXjNk",
+            "properties": { "name": "Foindu", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-12.0712, 8.3175] }
+        },
+        {
+            "type": "Feature",
+            "id": "z1ielwdLtPl",
+            "properties": { "name": "Foredugu", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.4992, 8.7502] }
+        },
+        {
+            "type": "Feature",
+            "id": "JKhjdiwoQZu",
+            "properties": { "name": "Foria", "region": "qhqAxPSTUXp" },
+            "geometry": { "type": "Point", "coordinates": [-11.4577, 9.25] }
+        },
+        {
+            "type": "Feature",
+            "id": "OwhDCucf4Ue",
+            "properties": { "name": "Fotaneh Junction", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-11.3831, 8.5906] }
+        },
+        {
+            "type": "Feature",
+            "id": "eRg3KZyWUSJ",
+            "properties": { "name": "Fullawahun", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.7607, 7.9562] }
+        },
+        {
+            "type": "Feature",
+            "id": "uDzWmUDHKeR",
+            "properties": { "name": "Futa", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.574, 7.5612] }
+        },
+        {
+            "type": "Feature",
+            "id": "UWhv0MQOqoB",
+            "properties": { "name": "Gambia", "region": "lc3eMKXaEfw" },
+            "geometry": { "type": "Point", "coordinates": [-12.1758, 7.5355] }
+        },
+        {
+            "type": "Feature",
+            "id": "IWb1hstfROc",
+            "properties": { "name": "Gandorhun", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.4489, 7.6147] }
+        },
+        {
+            "type": "Feature",
+            "id": "ZdPkczYqeIY",
+            "properties": { "name": "Gandorhun", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.6144, 8.1034] }
+        },
+        {
+            "type": "Feature",
+            "id": "GAvxcmr5jB1",
+            "properties": { "name": "Gao", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.1884, 7.7155] }
+        },
+        {
+            "type": "Feature",
+            "id": "ei21lW7hFPX",
+            "properties": { "name": "Gbaama", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.6133, 7.839] }
+        },
+        {
+            "type": "Feature",
+            "id": "kedYKTsv95j",
+            "properties": { "name": "Gbado", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.2776, 8.0109] }
+        },
+        {
+            "type": "Feature",
+            "id": "jGYT5U5qJP6",
+            "properties": { "name": "Gbaiima", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.8495, 8.1094] }
+        },
+        {
+            "type": "Feature",
+            "id": "QFcMulIoEii",
+            "properties": { "name": "Gbainkfay", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-11.3387, 8.0452] }
+        },
+        {
+            "type": "Feature",
+            "id": "nDoybVJLD74",
+            "properties": { "name": "Gbalahun", "region": "jUb8gELQApl" },
+            "geometry": { "type": "Point", "coordinates": [-10.4887, 8.2545] }
+        },
+        {
+            "type": "Feature",
+            "id": "IPvrsWbm0EM",
+            "properties": { "name": "Gbalamuya", "region": "PMa2VCrupOd" },
+            "geometry": { "type": "Point", "coordinates": [-12.6562, 9.0] }
+        },
+        {
+            "type": "Feature",
+            "id": "AlLmKZIIIT4",
+            "properties": { "name": "Gbamandu", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-10.669, 8.6426] }
+        },
+        {
+            "type": "Feature",
+            "id": "D2rB1GRuh8C",
+            "properties": { "name": "Gbamgbama", "region": "lc3eMKXaEfw" },
+            "geometry": { "type": "Point", "coordinates": [-12.3097, 7.7058] }
+        },
+        {
+            "type": "Feature",
+            "id": "lQIe6vtSe1P",
+            "properties": { "name": "Gbangadu", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-10.857, 8.7842] }
+        },
+        {
+            "type": "Feature",
+            "id": "ubsjwFFBaJM",
+            "properties": { "name": "Gbangbatoke", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.3805, 7.8077] }
+        },
+        {
+            "type": "Feature",
+            "id": "VH7hLUaypel",
+            "properties": { "name": "Gbangeima", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.3059, 8.1724] }
+        },
+        {
+            "type": "Feature",
+            "id": "E9oBVjyEaCe",
+            "properties": { "name": "Gbanja Town", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.7435, 7.9897] }
+        },
+        {
+            "type": "Feature",
+            "id": "uedNhvYPMNu",
+            "properties": { "name": "Gbanti", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.2658, 9.2491] }
+        },
+        {
+            "type": "Feature",
+            "id": "TEVtOFKcLAP",
+            "properties": { "name": "Gbap", "region": "lc3eMKXaEfw" },
+            "geometry": { "type": "Point", "coordinates": [-12.2, 7.4] }
+        },
+        {
+            "type": "Feature",
+            "id": "U8tyWV7WmIB",
+            "properties": { "name": "Gbeika", "region": "jUb8gELQApl" },
+            "geometry": { "type": "Point", "coordinates": [-10.5736, 8.2754] }
+        },
+        {
+            "type": "Feature",
+            "id": "y77LiPqLMoq",
+            "properties": { "name": "Gbenikoro", "region": "qhqAxPSTUXp" },
+            "geometry": { "type": "Point", "coordinates": [-11.4701, 9.6228] }
+        },
+        {
+            "type": "Feature",
+            "id": "D7UVRRE9iUC",
+            "properties": { "name": "Gbentu", "region": "qhqAxPSTUXp" },
+            "geometry": { "type": "Point", "coordinates": [-11.6447, 9.9432] }
+        },
+        {
+            "type": "Feature",
+            "id": "qELjt3LRkSD",
+            "properties": { "name": "Gberifeh", "region": "qhqAxPSTUXp" },
+            "geometry": { "type": "Point", "coordinates": [-11.1447, 9.4149] }
+        },
+        {
+            "type": "Feature",
+            "id": "LFpl1falVZi",
+            "properties": { "name": "Gbindi", "region": "qhqAxPSTUXp" },
+            "geometry": { "type": "Point", "coordinates": [-11.4434, 9.9115] }
+        },
+        {
+            "type": "Feature",
+            "id": "TYq1YW7qs7k",
+            "properties": { "name": "Gbo-Lambayama 2", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.1993, 7.8604] }
+        },
+        {
+            "type": "Feature",
+            "id": "vwvDblM3MNX",
+            "properties": { "name": "Gbolon", "region": "PMa2VCrupOd" },
+            "geometry": { "type": "Point", "coordinates": [-12.7379, 9.3485] }
+        },
+        {
+            "type": "Feature",
+            "id": "X3D19LoA2Ij",
+            "properties": { "name": "Gbombana", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.6572, 8.9258] }
+        },
+        {
+            "type": "Feature",
+            "id": "bHcw141PTsE",
+            "properties": { "name": "Gbondapi", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.8495, 7.3193] }
+        },
+        {
+            "type": "Feature",
+            "id": "tGf942oWszb",
+            "properties": { "name": "Gbongboma", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.7861, 8.0307] }
+        },
+        {
+            "type": "Feature",
+            "id": "MMrdfNDfBIi",
+            "properties": { "name": "Gbongeh", "region": "lc3eMKXaEfw" },
+            "geometry": { "type": "Point", "coordinates": [-12.066, 7.6719] }
+        },
+        {
+            "type": "Feature",
+            "id": "rebbn0ooFSO",
+            "properties": { "name": "Gbongeima", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.3878, 8.0557] }
+        },
+        {
+            "type": "Feature",
+            "id": "HOgWkpYH3KB",
+            "properties": { "name": "Gbongongor", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-10.6357, 8.8919] }
+        },
+        {
+            "type": "Feature",
+            "id": "BXJnMD2eJAx",
+            "properties": { "name": "Gbonkobana", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.3161, 9.2398] }
+        },
+        {
+            "type": "Feature",
+            "id": "zm9breCeT1m",
+            "properties": { "name": "Gbonkoh Kareneh", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.8428, 8.7827] }
+        },
+        {
+            "type": "Feature",
+            "id": "v2vi8UaIYlo",
+            "properties": { "name": "Gbonkonka", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.5042, 9.0331] }
+        },
+        {
+            "type": "Feature",
+            "id": "i7qaYfmGVDr",
+            "properties": { "name": "Gbotima", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.7296, 7.9718] }
+        },
+        {
+            "type": "Feature",
+            "id": "DA2BEQMhv9B",
+            "properties": { "name": "Gbuihun", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.1244, 8.2511] }
+        },
+        {
+            "type": "Feature",
+            "id": "FZxJ0KST9jn",
+            "properties": { "name": "Gelehun", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.3916, 7.8975] }
+        },
+        {
+            "type": "Feature",
+            "id": "W3t0pSZLtrC",
+            "properties": { "name": "Gendema", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.3478, 8.233] }
+        },
+        {
+            "type": "Feature",
+            "id": "FbD5Z8z22Yb",
+            "properties": { "name": "Geoma Jagor", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.694, 7.5099] }
+        },
+        {
+            "type": "Feature",
+            "id": "m0XorV4WWg0",
+            "properties": { "name": "Ginger Hall", "region": "at6UHUQatSo" },
+            "geometry": { "type": "Point", "coordinates": [-13.2185, 8.4817] }
+        },
+        {
+            "type": "Feature",
+            "id": "lf7FRlrchg3",
+            "properties": { "name": "Gofor", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.3602, 7.2429] }
+        },
+        {
+            "type": "Feature",
+            "id": "azRICFoILuh",
+            "properties": { "name": "Golu", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.5444, 7.9049] }
+        },
+        {
+            "type": "Feature",
+            "id": "fRV3Fhz1IP8",
+            "properties": { "name": "Gondama", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.1349, 7.753] }
+        },
+        {
+            "type": "Feature",
+            "id": "QpRIPul20Sb",
+            "properties": { "name": "Gorahun", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.2373, 7.467] }
+        },
+        {
+            "type": "Feature",
+            "id": "lL2LBkhlsmV",
+            "properties": { "name": "Grassfield", "region": "at6UHUQatSo" },
+            "geometry": { "type": "Point", "coordinates": [-13.1842, 8.4746] }
+        },
+        {
+            "type": "Feature",
+            "id": "ARAZtL7Bdpy",
+            "properties": { "name": "Guala", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.2368, 8.1251] }
+        },
+        {
+            "type": "Feature",
+            "id": "UCwtaCrNUls",
+            "properties": { "name": "Heremakono", "region": "qhqAxPSTUXp" },
+            "geometry": { "type": "Point", "coordinates": [-11.5979, 9.5007] }
+        },
+        {
+            "type": "Feature",
+            "id": "J1x66stNjk2",
+            "properties": { "name": "Hunduwa", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.061, 9.2366] }
+        },
+        {
+            "type": "Feature",
+            "id": "W7ekX3gi0ut",
+            "properties": { "name": "Jaiama Sewafe", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-11.2411, 8.542] }
+        },
+        {
+            "type": "Feature",
+            "id": "t7bcrWLjL1m",
+            "properties": { "name": "Jao", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.1446, 7.6138] }
+        },
+        {
+            "type": "Feature",
+            "id": "Umh4HKqqFp6",
+            "properties": { "name": "Jembe", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.4283, 7.9197] }
+        },
+        {
+            "type": "Feature",
+            "id": "QzPf0qKBU4n",
+            "properties": { "name": "Jendema", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.3911, 7.0244] }
+        },
+        {
+            "type": "Feature",
+            "id": "DvzKyuC0G4w",
+            "properties": { "name": "Jojoima", "region": "jUb8gELQApl" },
+            "geometry": { "type": "Point", "coordinates": [-10.7871, 7.8767] }
+        },
+        {
+            "type": "Feature",
+            "id": "f7yRhIeFn1k",
+            "properties": { "name": "Jokibu", "region": "jUb8gELQApl" },
+            "geometry": { "type": "Point", "coordinates": [-10.5741, 8.2761] }
+        },
+        {
+            "type": "Feature",
+            "id": "RzgSFJ9E46G",
+            "properties": { "name": "Jormu", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.6279, 7.8716] }
+        },
+        {
+            "type": "Feature",
+            "id": "V6QWyB0KqvP",
+            "properties": { "name": "Juma", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.205, 8.2552] }
+        },
+        {
+            "type": "Feature",
+            "id": "EQUwHqZOb5L",
+            "properties": { "name": "Kabaima", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.1866, 7.9578] }
+        },
+        {
+            "type": "Feature",
+            "id": "Xk2fvz4aTBU",
+            "properties": { "name": "Kabati", "region": "lc3eMKXaEfw" },
+            "geometry": { "type": "Point", "coordinates": [-12.2472, 7.6685] }
+        },
+        {
+            "type": "Feature",
+            "id": "TWMVxJANJeU",
+            "properties": { "name": "Kabba Ferry", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.2184, 9.5834] }
+        },
+        {
+            "type": "Feature",
+            "id": "wfGRNqXqf92",
+            "properties": { "name": "Kabonka", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-11.9119, 9.0001] }
+        },
+        {
+            "type": "Feature",
+            "id": "duGLGssecoD",
+            "properties": { "name": "Kagbaneh", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-11.9536, 9.0677] }
+        },
+        {
+            "type": "Feature",
+            "id": "TjZwphhxCuV",
+            "properties": { "name": "Kagbere", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.1405, 9.2205] }
+        },
+        {
+            "type": "Feature",
+            "id": "OTlKtnhvEm1",
+            "properties": { "name": "Kagbo", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-11.9913, 9.0256] }
+        },
+        {
+            "type": "Feature",
+            "id": "Sglj9VCoQmc",
+            "properties": { "name": "Kagboray", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.3115, 9.5189] }
+        },
+        {
+            "type": "Feature",
+            "id": "KKoPh1lDd9j",
+            "properties": { "name": "Kainkordu", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-10.7213, 8.6171] }
+        },
+        {
+            "type": "Feature",
+            "id": "NJolnlvYgLr",
+            "properties": { "name": "Kakoya", "region": "qhqAxPSTUXp" },
+            "geometry": { "type": "Point", "coordinates": [-11.6664, 9.6968] }
+        },
+        {
+            "type": "Feature",
+            "id": "OGaAWQD6SYs",
+            "properties": { "name": "Kalainkay", "region": "PMa2VCrupOd" },
+            "geometry": { "type": "Point", "coordinates": [-13.0941, 8.8831] }
+        },
+        {
+            "type": "Feature",
+            "id": "UqXSUMp19FB",
+            "properties": { "name": "Kalangba", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-13.1405, 8.808] }
+        },
+        {
+            "type": "Feature",
+            "id": "aSxNNRxPuBP",
+            "properties": { "name": "Kalangba", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.6562, 9.0] }
+        },
+        {
+            "type": "Feature",
+            "id": "mt47bcb0Rcj",
+            "properties": { "name": "Kamabai", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-11.9619, 9.157] }
+        },
+        {
+            "type": "Feature",
+            "id": "OwHjzJEVEUN",
+            "properties": { "name": "Kamabaio", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.2949, 9.4636] }
+        },
+        {
+            "type": "Feature",
+            "id": "KnU2XHRvyiX",
+            "properties": { "name": "Kamakwie", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.2377, 9.4981] }
+        },
+        {
+            "type": "Feature",
+            "id": "HNv1aLPdMYb",
+            "properties": { "name": "Kamalo", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.244, 9.4009] }
+        },
+        {
+            "type": "Feature",
+            "id": "bSj2UnYhTFb",
+            "properties": { "name": "Kamaranka", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.2061, 9.2976] }
+        },
+        {
+            "type": "Feature",
+            "id": "ZxuSbAmsLCn",
+            "properties": { "name": "Kamasikie", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-11.9088, 9.3181] }
+        },
+        {
+            "type": "Feature",
+            "id": "wO4z5Aqo0hf",
+            "properties": { "name": "Kamawornie", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.3726, 9.4863] }
+        },
+        {
+            "type": "Feature",
+            "id": "mYMJHVqdBKt",
+            "properties": { "name": "Kambama", "region": "jUb8gELQApl" },
+            "geometry": { "type": "Point", "coordinates": [-10.5738, 8.2752] }
+        },
+        {
+            "type": "Feature",
+            "id": "UUgajyaViT7",
+            "properties": { "name": "Kambia", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.2948, 9.3407] }
+        },
+        {
+            "type": "Feature",
+            "id": "N7mHLD3ljYc",
+            "properties": { "name": "Kambia GH", "region": "PMa2VCrupOd" },
+            "geometry": { "type": "Point", "coordinates": [-12.9133, 9.125] }
+        },
+        {
+            "type": "Feature",
+            "id": "kO9xe2HCovK",
+            "properties": { "name": "Kambia Makama", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.5834, 8.8169] }
+        },
+        {
+            "type": "Feature",
+            "id": "hHKKi9WNoBG",
+            "properties": { "name": "Kamiendor", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-10.5153, 8.6827] }
+        },
+        {
+            "type": "Feature",
+            "id": "wUmVUKhnPuy",
+            "properties": { "name": "Kangahun", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.287, 8.0805] }
+        },
+        {
+            "type": "Feature",
+            "id": "AGrsLyKWrVX",
+            "properties": { "name": "Kania", "region": "qhqAxPSTUXp" },
+            "geometry": { "type": "Point", "coordinates": [-11.6091, 9.211] }
+        },
+        {
+            "type": "Feature",
+            "id": "nDwbwJZQUYU",
+            "properties": { "name": "Kanikay", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-11.8612, 9.308] }
+        },
+        {
+            "type": "Feature",
+            "id": "CTOMXJg41hz",
+            "properties": { "name": "Kaniya", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.9937, 7.682] }
+        },
+        {
+            "type": "Feature",
+            "id": "KGN2jvZ0GJy",
+            "properties": { "name": "Kantia", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.4809, 9.2225] }
+        },
+        {
+            "type": "Feature",
+            "id": "GhDwjKv07iC",
+            "properties": { "name": "Kapethe", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-11.9826, 8.9869] }
+        },
+        {
+            "type": "Feature",
+            "id": "Crgx572DnXR",
+            "properties": { "name": "Kaponkie", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.2865, 9.5165] }
+        },
+        {
+            "type": "Feature",
+            "id": "YBZcWphXQ99",
+            "properties": { "name": "Kareneh", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.5748, 8.9166] }
+        },
+        {
+            "type": "Feature",
+            "id": "ObV5AR1NECl",
+            "properties": { "name": "Karina", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.0134, 9.1722] }
+        },
+        {
+            "type": "Feature",
+            "id": "K00jR5dmoFZ",
+            "properties": { "name": "Karlu", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.7632, 7.2412] }
+        },
+        {
+            "type": "Feature",
+            "id": "OqBiNJjKQAu",
+            "properties": { "name": "Kasongha", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-13.1876, 8.6092] }
+        },
+        {
+            "type": "Feature",
+            "id": "cJkZLwhL8RP",
+            "properties": { "name": "Kasse", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.9198, 7.537] }
+        },
+        {
+            "type": "Feature",
+            "id": "pmzk0ho80aA",
+            "properties": { "name": "Kathanta Bana", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-11.9286, 8.8772] }
+        },
+        {
+            "type": "Feature",
+            "id": "NjyJYiIuKIG",
+            "properties": { "name": "Kathanta Yimbor", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.1699, 9.546] }
+        },
+        {
+            "type": "Feature",
+            "id": "yEU926iVAJJ",
+            "properties": { "name": "Kathombo", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-11.7623, 9.0678] }
+        },
+        {
+            "type": "Feature",
+            "id": "qMbxFg9McOF",
+            "properties": { "name": "Kawaya", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.2927, 7.9614] }
+        },
+        {
+            "type": "Feature",
+            "id": "k8ZPul89UDm",
+            "properties": { "name": "Kayima", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-11.1599, 8.8908] }
+        },
+        {
+            "type": "Feature",
+            "id": "tEgxbwwrwUd",
+            "properties": { "name": "Kayongoro", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-11.9221, 9.2126] }
+        },
+        {
+            "type": "Feature",
+            "id": "QMnoFLTLpkY",
+            "properties": { "name": "Kemedugu", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-11.6616, 9.0067] }
+        },
+        {
+            "type": "Feature",
+            "id": "djMCTPYvltl",
+            "properties": { "name": "Kenema", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.1852, 7.8754] }
+        },
+        {
+            "type": "Feature",
+            "id": "s7SLtx8wmRA",
+            "properties": { "name": "Kenema Gbandoma", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.1217, 8.0863] }
+        },
+        {
+            "type": "Feature",
+            "id": "UjusePB4jmP",
+            "properties": { "name": "Kensay", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-10.9879, 8.6393] }
+        },
+        {
+            "type": "Feature",
+            "id": "lCEeiuv4NaB",
+            "properties": { "name": "Kholifaga", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-11.5914, 9.0432] }
+        },
+        {
+            "type": "Feature",
+            "id": "egv5Es0QlQP",
+            "properties": { "name": "Kigbai", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.5052, 7.8704] }
+        },
+        {
+            "type": "Feature",
+            "id": "gei3Sqw8do7",
+            "properties": { "name": "KingHarman Rd", "region": "at6UHUQatSo" },
+            "geometry": { "type": "Point", "coordinates": [-13.2482, 8.4731] }
+        },
+        {
+            "type": "Feature",
+            "id": "lekPjgUm0o2",
+            "properties": { "name": "Kingtom MI Room", "region": "at6UHUQatSo" },
+            "geometry": { "type": "Point", "coordinates": [-13.2549, 8.4556] }
+        },
+        {
+            "type": "Feature",
+            "id": "EQc3n1juPFn",
+            "properties": { "name": "Koakor", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-10.9919, 8.7955] }
+        },
+        {
+            "type": "Feature",
+            "id": "SnCrOCRrxGX",
+            "properties": { "name": "Koakoyima", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-10.9945, 8.6224] }
+        },
+        {
+            "type": "Feature",
+            "id": "PwoQgMJNWbR",
+            "properties": { "name": "Koardu", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-10.5828, 8.6151] }
+        },
+        {
+            "type": "Feature",
+            "id": "VF7LfO19vxS",
+            "properties": { "name": "Kochero", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-10.9094, 8.9077] }
+        },
+        {
+            "type": "Feature",
+            "id": "zsqxu7ZZRpO",
+            "properties": { "name": "Koeyor", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-10.9475, 8.6488] }
+        },
+        {
+            "type": "Feature",
+            "id": "Ls2ESQONh9S",
+            "properties": { "name": "Koidu", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-10.9659, 8.6481] }
+        },
+        {
+            "type": "Feature",
+            "id": "OzjRQLn3G24",
+            "properties": { "name": "Koidu", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-10.965, 8.648] }
+        },
+        {
+            "type": "Feature",
+            "id": "DMxw0SASFih",
+            "properties": { "name": "Koindu", "region": "jUb8gELQApl" },
+            "geometry": { "type": "Point", "coordinates": [-10.5736, 8.2753] }
+        },
+        {
+            "type": "Feature",
+            "id": "bqSIIRuZ1qj",
+            "properties": { "name": "Koindukura", "region": "qhqAxPSTUXp" },
+            "geometry": { "type": "Point", "coordinates": [-11.1676, 9.8765] }
+        },
+        {
+            "type": "Feature",
+            "id": "F2TAF765q1b",
+            "properties": { "name": "Kokoru", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.1165, 7.6297] }
+        },
+        {
+            "type": "Feature",
+            "id": "m7fBMpmVpSM",
+            "properties": { "name": "Kolisokor", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.1982, 8.7685] }
+        },
+        {
+            "type": "Feature",
+            "id": "T62lSjsZe9n",
+            "properties": { "name": "Komba Yendeh", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-10.7089, 8.7864] }
+        },
+        {
+            "type": "Feature",
+            "id": "mhJQYk2Jwym",
+            "properties": { "name": "Konabu", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.1034, 7.8955] }
+        },
+        {
+            "type": "Feature",
+            "id": "jkPHBqdn9SA",
+            "properties": { "name": "Konda", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.1847, 8.1909] }
+        },
+        {
+            "type": "Feature",
+            "id": "ZSBnWFBpPPJ",
+            "properties": { "name": "Kondewakoro", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-10.5955, 9.017] }
+        },
+        {
+            "type": "Feature",
+            "id": "OynYyQiFu82",
+            "properties": { "name": "Kondeya", "region": "qhqAxPSTUXp" },
+            "geometry": { "type": "Point", "coordinates": [-11.5287, 9.562] }
+        },
+        {
+            "type": "Feature",
+            "id": "d7hw1ababST",
+            "properties": { "name": "Konjo", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.0538, 8.2703] }
+        },
+        {
+            "type": "Feature",
+            "id": "mokUyyg3olJ",
+            "properties": { "name": "Konjo", "region": "jUb8gELQApl" },
+            "geometry": { "type": "Point", "coordinates": [-10.5736, 8.2753] }
+        },
+        {
+            "type": "Feature",
+            "id": "SVEfwJ0BGeD",
+            "properties": { "name": "Kono Bendu", "region": "jUb8gELQApl" },
+            "geometry": { "type": "Point", "coordinates": [-10.5736, 8.2755] }
+        },
+        {
+            "type": "Feature",
+            "id": "AQQCxQqDxLe",
+            "properties": { "name": "Konta", "region": "PMa2VCrupOd" },
+            "geometry": { "type": "Point", "coordinates": [-12.66, 9.38] }
+        },
+        {
+            "type": "Feature",
+            "id": "nornKUJmQqn",
+            "properties": { "name": "Konta-Line", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.5449, 8.4743] }
+        },
+        {
+            "type": "Feature",
+            "id": "lwHs72tP6Kh",
+            "properties": { "name": "Kordebotehun", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.1828, 7.8991] }
+        },
+        {
+            "type": "Feature",
+            "id": "hCm2Nh7C8BW",
+            "properties": { "name": "Korgbotuma", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.4627, 8.0525] }
+        },
+        {
+            "type": "Feature",
+            "id": "mwN7QuEfT8m",
+            "properties": { "name": "Koribondo", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.5899, 8.2665] }
+        },
+        {
+            "type": "Feature",
+            "id": "S9QckzKX6Lg",
+            "properties": { "name": "Kormende", "region": "lc3eMKXaEfw" },
+            "geometry": { "type": "Point", "coordinates": [-11.0083, 7.9827] }
+        },
+        {
+            "type": "Feature",
+            "id": "CSDGDOa7wHd",
+            "properties": { "name": "Kornia", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.0719, 7.8652] }
+        },
+        {
+            "type": "Feature",
+            "id": "z6v73gowbuM",
+            "properties": { "name": "Kortohun", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.1149, 9.1225] }
+        },
+        {
+            "type": "Feature",
+            "id": "jr5hIZcJBXB",
+            "properties": { "name": "Kowama", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.5706, 7.4362] }
+        },
+        {
+            "type": "Feature",
+            "id": "brnL0W3Fbsj",
+            "properties": { "name": "Koya", "region": "PMa2VCrupOd" },
+            "geometry": { "type": "Point", "coordinates": [-13.035, 8.9658] }
+        },
+        {
+            "type": "Feature",
+            "id": "PFZbQjwty2n",
+            "properties": { "name": "Kpandebu", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.0713, 8.2141] }
+        },
+        {
+            "type": "Feature",
+            "id": "TljiT6C5D0J",
+            "properties": { "name": "Kpandebu", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.1959, 7.7551] }
+        },
+        {
+            "type": "Feature",
+            "id": "So2b8zJfcMa",
+            "properties": { "name": "Kpayama 1", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.1774, 7.8679] }
+        },
+        {
+            "type": "Feature",
+            "id": "geVF87N7qTw",
+            "properties": { "name": "Kpayama 2", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.1796, 7.8657] }
+        },
+        {
+            "type": "Feature",
+            "id": "RTixJpRqS4C",
+            "properties": { "name": "Kpetema", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.9917, 7.82] }
+        },
+        {
+            "type": "Feature",
+            "id": "kDxbU1uSBFh",
+            "properties": { "name": "Kpetema", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.1857, 7.856] }
+        },
+        {
+            "type": "Feature",
+            "id": "GIRLSZ1tB00",
+            "properties": { "name": "Kpetema Toli", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-10.6539, 8.9599] }
+        },
+        {
+            "type": "Feature",
+            "id": "mGmu0GJ5neg",
+            "properties": { "name": "Kpetewoma", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.8153, 7.7346] }
+        },
+        {
+            "type": "Feature",
+            "id": "bM4Ky73uMao",
+            "properties": { "name": "Kpolies", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.7344, 7.9579] }
+        },
+        {
+            "type": "Feature",
+            "id": "QkczRcSeNck",
+            "properties": { "name": "Kpowubu", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.5709, 7.3429] }
+        },
+        {
+            "type": "Feature",
+            "id": "S7KwVLbFlss",
+            "properties": { "name": "Kpuabu", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.7436, 8.1919] }
+        },
+        {
+            "type": "Feature",
+            "id": "sM0Us0NkSez",
+            "properties": { "name": "Kroo Bay", "region": "at6UHUQatSo" },
+            "geometry": { "type": "Point", "coordinates": [-13.2407, 8.4868] }
+        },
+        {
+            "type": "Feature",
+            "id": "M9JyYBZTqR7",
+            "properties": { "name": "Kukuna", "region": "PMa2VCrupOd" },
+            "geometry": { "type": "Point", "coordinates": [-12.6704, 9.3884] }
+        },
+        {
+            "type": "Feature",
+            "id": "bJ0VSATHwO2",
+            "properties": { "name": "Kumrabai Yoni", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-12.3205, 8.4387] }
+        },
+        {
+            "type": "Feature",
+            "id": "jYPY8mT8gn6",
+            "properties": { "name": "Kundundu", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-10.6815, 8.8989] }
+        },
+        {
+            "type": "Feature",
+            "id": "tdhB1JXYBx2",
+            "properties": { "name": "Kunsho", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.0791, 8.9542] }
+        },
+        {
+            "type": "Feature",
+            "id": "WUQrS4Yqmoy",
+            "properties": { "name": "Kuranko", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.8726, 8.4754] }
+        },
+        {
+            "type": "Feature",
+            "id": "PcADvhvcaI2",
+            "properties": { "name": "Kychom", "region": "PMa2VCrupOd" },
+            "geometry": { "type": "Point", "coordinates": [-13.1436, 8.928] }
+        },
+        {
+            "type": "Feature",
+            "id": "yg7uxUol97F",
+            "properties": { "name": "Laiya", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.1062, 9.4544] }
+        },
+        {
+            "type": "Feature",
+            "id": "iOA3z6Y3cq5",
+            "properties": { "name": "Largo", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.1054, 8.0538] }
+        },
+        {
+            "type": "Feature",
+            "id": "X7ZVgRPt31q",
+            "properties": { "name": "Lawana", "region": "lc3eMKXaEfw" },
+            "geometry": { "type": "Point", "coordinates": [-12.0149, 7.6424] }
+        },
+        {
+            "type": "Feature",
+            "id": "rs87nYgwbKv",
+            "properties": { "name": "Lengekoro", "region": "qhqAxPSTUXp" },
+            "geometry": { "type": "Point", "coordinates": [-11.6759, 9.4663] }
+        },
+        {
+            "type": "Feature",
+            "id": "Bf9R1R91mw4",
+            "properties": { "name": "Levuma", "region": "jUb8gELQApl" },
+            "geometry": { "type": "Point", "coordinates": [-10.7263, 8.0369] }
+        },
+        {
+            "type": "Feature",
+            "id": "BgOhMcH9bxq",
+            "properties": { "name": "Levuma Kai", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.372, 8.1168] }
+        },
+        {
+            "type": "Feature",
+            "id": "tBRDdxfKbMx",
+            "properties": { "name": "Liya", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.6021, 6.989] }
+        },
+        {
+            "type": "Feature",
+            "id": "hIpcmjLrDDW",
+            "properties": { "name": "London Blama", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.3401, 7.8679] }
+        },
+        {
+            "type": "Feature",
+            "id": "Z7UAnjpK74g",
+            "properties": { "name": "Looking Town", "region": "at6UHUQatSo" },
+            "geometry": { "type": "Point", "coordinates": [-13.1963, 8.4619] }
+        },
+        {
+            "type": "Feature",
+            "id": "IW3guWF3uvF",
+            "properties": { "name": "Loppa", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.2439, 7.6746] }
+        },
+        {
+            "type": "Feature",
+            "id": "cgqkFdShPzg",
+            "properties": { "name": "Loreto", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.0437, 8.8868] }
+        },
+        {
+            "type": "Feature",
+            "id": "IlMQTFvcq9r",
+            "properties": { "name": "Lowoma", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-10.9907, 8.2187] }
+        },
+        {
+            "type": "Feature",
+            "id": "gsypzntLahf",
+            "properties": { "name": "Lungi . , Port Loko", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-13.2042, 8.628] }
+        },
+        {
+            "type": "Feature",
+            "id": "ntQSuMb7J21",
+            "properties": { "name": "Lungi Town", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-13.16, 8.55] }
+        },
+        {
+            "type": "Feature",
+            "id": "q56204kKXgZ",
+            "properties": { "name": "Lunsar", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.5313, 8.6821] }
+        },
+        {
+            "type": "Feature",
+            "id": "xRsoZIRmnt4",
+            "properties": { "name": "Mabai", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-12.2494, 8.5395] }
+        },
+        {
+            "type": "Feature",
+            "id": "MiYhwDprCCA",
+            "properties": { "name": "Mabella", "region": "at6UHUQatSo" },
+            "geometry": { "type": "Point", "coordinates": [-13.2265, 8.4905] }
+        },
+        {
+            "type": "Feature",
+            "id": "taKiTcaf05H",
+            "properties": { "name": "Mabenteh", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-11.9874, 9.4466] }
+        },
+        {
+            "type": "Feature",
+            "id": "PybxeRWVSrI",
+            "properties": { "name": "Mabolleh", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.0543, 8.8214] }
+        },
+        {
+            "type": "Feature",
+            "id": "fmkqsEx6MRo",
+            "properties": { "name": "Mabora", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.7381, 8.5531] }
+        },
+        {
+            "type": "Feature",
+            "id": "ApLCxUmnT6q",
+            "properties": { "name": "Maborie", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-12.0682, 8.6506] }
+        },
+        {
+            "type": "Feature",
+            "id": "TmCsvdJLHoX",
+            "properties": { "name": "Mabunduka", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.2384, 9.1345] }
+        },
+        {
+            "type": "Feature",
+            "id": "FupvWBUFXr7",
+            "properties": { "name": "MacDonald", "region": "at6UHUQatSo" },
+            "geometry": { "type": "Point", "coordinates": [-13.0796, 8.2837] }
+        },
+        {
+            "type": "Feature",
+            "id": "rIgJX4N0DGZ",
+            "properties": { "name": "Macauley", "region": "at6UHUQatSo" },
+            "geometry": { "type": "Point", "coordinates": [-13.2283, 8.4795] }
+        },
+        {
+            "type": "Feature",
+            "id": "kFScvrF3wPo",
+            "properties": { "name": "Madina", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.6309, 9.1597] }
+        },
+        {
+            "type": "Feature",
+            "id": "pJj2r2HElLE",
+            "properties": { "name": "Madina Fullah", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.3182, 9.3577] }
+        },
+        {
+            "type": "Feature",
+            "id": "SZrG4yHGV4x",
+            "properties": { "name": "Madina Gbonkobor", "region": "lc3eMKXaEfw" },
+            "geometry": { "type": "Point", "coordinates": [-11.9492, 7.4637] }
+        },
+        {
+            "type": "Feature",
+            "id": "I48Qu6R0sGm",
+            "properties": { "name": "Madina Loko", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.0513, 9.094] }
+        },
+        {
+            "type": "Feature",
+            "id": "QBRQnWPRO3V",
+            "properties": { "name": "Madopolahun", "region": "jUb8gELQApl" },
+            "geometry": { "type": "Point", "coordinates": [-10.5735, 8.2753] }
+        },
+        {
+            "type": "Feature",
+            "id": "OjRCvy71kAL",
+            "properties": { "name": "Mafaray", "region": "PMa2VCrupOd" },
+            "geometry": { "type": "Point", "coordinates": [-12.9192, 9.2171] }
+        },
+        {
+            "type": "Feature",
+            "id": "simyC07XwnS",
+            "properties": { "name": "Maforay", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.8051, 8.7137] }
+        },
+        {
+            "type": "Feature",
+            "id": "L3GgannGGKl",
+            "properties": { "name": "Mafufuneh", "region": "PMa2VCrupOd" },
+            "geometry": { "type": "Point", "coordinates": [-13.0747, 9.0051] }
+        },
+        {
+            "type": "Feature",
+            "id": "XjpmsLNjyrz",
+            "properties": { "name": "Magbaft", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-12.5973, 8.4569] }
+        },
+        {
+            "type": "Feature",
+            "id": "cTU2WmWcJKx",
+            "properties": { "name": "Magbaikoli", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.2106, 8.9155] }
+        },
+        {
+            "type": "Feature",
+            "id": "DIQl5jJ17IE",
+            "properties": { "name": "Magbaingba", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.3463, 8.9273] }
+        },
+        {
+            "type": "Feature",
+            "id": "sFgNRYS5pBo",
+            "properties": { "name": "Magbass", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-12.424, 8.4199] }
+        },
+        {
+            "type": "Feature",
+            "id": "UJ80rknbJtm",
+            "properties": { "name": "Magbeni", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.8132, 8.5552] }
+        },
+        {
+            "type": "Feature",
+            "id": "n9HIySyR00g",
+            "properties": { "name": "Magbil", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.4889, 8.6935] }
+        },
+        {
+            "type": "Feature",
+            "id": "XfVYz6l2rzg",
+            "properties": { "name": "Magbolonthor", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.6722, 9.0644] }
+        },
+        {
+            "type": "Feature",
+            "id": "mEUUK7MHLSF",
+            "properties": { "name": "Magburaka", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-11.9388, 8.7208] }
+        },
+        {
+            "type": "Feature",
+            "id": "CKJ9YS2AbWy",
+            "properties": { "name": "Maharibo", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.1498, 9.3911] }
+        },
+        {
+            "type": "Feature",
+            "id": "qEQFWnKh4gs",
+            "properties": { "name": "Maharie", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.224, 8.9515] }
+        },
+        {
+            "type": "Feature",
+            "id": "LnToY3ExKxL",
+            "properties": { "name": "Mahera", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-13.199, 8.6037] }
+        },
+        {
+            "type": "Feature",
+            "id": "ShdRyzuLKA2",
+            "properties": { "name": "Majihun", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.1181, 7.8484] }
+        },
+        {
+            "type": "Feature",
+            "id": "kSo9KSpHUPL",
+            "properties": { "name": "Makaba", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.9152, 8.6074] }
+        },
+        {
+            "type": "Feature",
+            "id": "en0j7qFnySQ",
+            "properties": { "name": "Makabo", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.6622, 8.633] }
+        },
+        {
+            "type": "Feature",
+            "id": "ewh5SKxcCAl",
+            "properties": { "name": "Makaiba", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.2088, 9.2598] }
+        },
+        {
+            "type": "Feature",
+            "id": "scc4QyxenJd",
+            "properties": { "name": "Makali", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-11.6608, 8.6302] }
+        },
+        {
+            "type": "Feature",
+            "id": "CgunjDKbM45",
+            "properties": { "name": "Makalie", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.7186, 8.4142] }
+        },
+        {
+            "type": "Feature",
+            "id": "Dbn6fyCgMBV",
+            "properties": { "name": "Makama", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.0557, 8.8624] }
+        },
+        {
+            "type": "Feature",
+            "id": "XePkcmza9e8",
+            "properties": { "name": "Makarankay", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.6539, 8.4068] }
+        },
+        {
+            "type": "Feature",
+            "id": "wSHfjjFqUay",
+            "properties": { "name": "Makarie", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.1263, 8.8648] }
+        },
+        {
+            "type": "Feature",
+            "id": "NwX8noGxLoz",
+            "properties": { "name": "Makelleh", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-12.102, 8.4718] }
+        },
+        {
+            "type": "Feature",
+            "id": "dmdYffw2I0F",
+            "properties": { "name": "Makeni-Lol", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-11.9981, 8.74] }
+        },
+        {
+            "type": "Feature",
+            "id": "jbfISeV6Wdu",
+            "properties": { "name": "Makeni-Rokfullah", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-12.5409, 8.4255] }
+        },
+        {
+            "type": "Feature",
+            "id": "YldSFPxB6WH",
+            "properties": { "name": "Makiteh", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.6678, 8.4556] }
+        },
+        {
+            "type": "Feature",
+            "id": "KwSj4DlRWAm",
+            "properties": { "name": "Makoba Bana", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-12.3177, 8.6081] }
+        },
+        {
+            "type": "Feature",
+            "id": "si34vmovtgR",
+            "properties": { "name": "Makolor", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-11.9556, 8.7597] }
+        },
+        {
+            "type": "Feature",
+            "id": "CebtBqqp1fp",
+            "properties": { "name": "Makoni Line", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-11.5743, 8.6373] }
+        },
+        {
+            "type": "Feature",
+            "id": "G5NCnFJ3bbV",
+            "properties": { "name": "Makrugbeh", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-11.8119, 8.6483] }
+        },
+        {
+            "type": "Feature",
+            "id": "E7IDb3nNiW7",
+            "properties": { "name": "Makump Bana", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.0393, 8.8057] }
+        },
+        {
+            "type": "Feature",
+            "id": "LWlh25dfvEA",
+            "properties": { "name": "Makundu", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-12.5722, 8.3622] }
+        },
+        {
+            "type": "Feature",
+            "id": "FFU3PJ3pY7s",
+            "properties": { "name": "Malal", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.7345, 8.8474] }
+        },
+        {
+            "type": "Feature",
+            "id": "kBrq7i12aan",
+            "properties": { "name": "Malama", "region": "at6UHUQatSo" },
+            "geometry": { "type": "Point", "coordinates": [-13.2542, 8.4506] }
+        },
+        {
+            "type": "Feature",
+            "id": "ZoHdXy2ueVn",
+            "properties": { "name": "Malambay", "region": "at6UHUQatSo" },
+            "geometry": { "type": "Point", "coordinates": [-13.0226, 8.314] }
+        },
+        {
+            "type": "Feature",
+            "id": "dCvUVvKnhMe",
+            "properties": { "name": "Malema 1", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.4081, 7.0705] }
+        },
+        {
+            "type": "Feature",
+            "id": "F0uVXCVvOPO",
+            "properties": { "name": "Malone", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-11.9229, 8.6687] }
+        },
+        {
+            "type": "Feature",
+            "id": "d9uZeZ5fMUo",
+            "properties": { "name": "Mamaka", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.3347, 9.0217] }
+        },
+        {
+            "type": "Feature",
+            "id": "eP4F9eB76B0",
+            "properties": { "name": "Mamankie", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-13.145, 8.5681] }
+        },
+        {
+            "type": "Feature",
+            "id": "T1lTKu6zkHN",
+            "properties": { "name": "Mamanso Kafla", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-12.1414, 8.4932] }
+        },
+        {
+            "type": "Feature",
+            "id": "YFlZA0y0Vi6",
+            "properties": { "name": "Mamanso Sanka", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-11.549, 8.7192] }
+        },
+        {
+            "type": "Feature",
+            "id": "RAsstekPRco",
+            "properties": { "name": "Mambolo", "region": "PMa2VCrupOd" },
+            "geometry": { "type": "Point", "coordinates": [-13.0288, 8.907] }
+        },
+        {
+            "type": "Feature",
+            "id": "w3vRmEz3J7t",
+            "properties": { "name": "Mamboma", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.6574, 7.8392] }
+        },
+        {
+            "type": "Feature",
+            "id": "F7u30K5OIpi",
+            "properties": { "name": "Mamboma Peje Bongre", "region": "jUb8gELQApl" },
+            "geometry": { "type": "Point", "coordinates": [-10.574, 8.276] }
+        },
+        {
+            "type": "Feature",
+            "id": "FRX63UWciyO",
+            "properties": { "name": "Mamusa", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.6215, 8.7006] }
+        },
+        {
+            "type": "Feature",
+            "id": "U9klfqqGlRa",
+            "properties": { "name": "Mana II", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.9693, 8.7077] }
+        },
+        {
+            "type": "Feature",
+            "id": "CTnuuI55SOj",
+            "properties": { "name": "Manewa", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-12.1419, 8.703] }
+        },
+        {
+            "type": "Feature",
+            "id": "gaOSAjPM07w",
+            "properties": { "name": "Mangay Loko", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.0882, 8.9213] }
+        },
+        {
+            "type": "Feature",
+            "id": "w3mBVfrWhXl",
+            "properties": { "name": "Mange", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.8567, 8.9244] }
+        },
+        {
+            "type": "Feature",
+            "id": "mMvt6zhCclb",
+            "properties": { "name": "Manjama", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-10.6971, 8.6102] }
+        },
+        {
+            "type": "Feature",
+            "id": "J3wTSn87RP2",
+            "properties": { "name": "Manjeihun", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.2155, 8.0889] }
+        },
+        {
+            "type": "Feature",
+            "id": "Uwcj0mz78BV",
+            "properties": { "name": "Manjoro", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-11.9738, 9.2684] }
+        },
+        {
+            "type": "Feature",
+            "id": "gowgzHWc8FT",
+            "properties": { "name": "Manna", "region": "qhqAxPSTUXp" },
+            "geometry": { "type": "Point", "coordinates": [-11.4945, 9.7533] }
+        },
+        {
+            "type": "Feature",
+            "id": "va2lE4FiVVb",
+            "properties": { "name": "Mano", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.089, 8.0408] }
+        },
+        {
+            "type": "Feature",
+            "id": "vlNXjc2lk9y",
+            "properties": { "name": "Mano Menima", "region": "jUb8gELQApl" },
+            "geometry": { "type": "Point", "coordinates": [-10.5735, 8.2754] }
+        },
+        {
+            "type": "Feature",
+            "id": "Fbq6Vxa4MIx",
+            "properties": { "name": "Mano Njeigbla", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.0995, 7.5238] }
+        },
+        {
+            "type": "Feature",
+            "id": "hLGkoHmvBgI",
+            "properties": { "name": "Mano-Jaiama", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.6135, 7.749] }
+        },
+        {
+            "type": "Feature",
+            "id": "PaNv9VyD06n",
+            "properties": { "name": "Manowa", "region": "jUb8gELQApl" },
+            "geometry": { "type": "Point", "coordinates": [-10.5738, 8.2759] }
+        },
+        {
+            "type": "Feature",
+            "id": "GyH8bjdOTsD",
+            "properties": { "name": "Mansadu", "region": "qhqAxPSTUXp" },
+            "geometry": { "type": "Point", "coordinates": [-11.3345, 9.4064] }
+        },
+        {
+            "type": "Feature",
+            "id": "RVAkLOVWSWc",
+            "properties": { "name": "Mansumana", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-11.9882, 8.4737] }
+        },
+        {
+            "type": "Feature",
+            "id": "mshIal30ffW",
+            "properties": { "name": "Mapaki", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-11.9078, 8.7882] }
+        },
+        {
+            "type": "Feature",
+            "id": "SIxGTeya5lN",
+            "properties": { "name": "Mapillah", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-13.0371, 8.7502] }
+        },
+        {
+            "type": "Feature",
+            "id": "v0HMlSxlH7l",
+            "properties": { "name": "Maraka", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-11.9883, 8.4737] }
+        },
+        {
+            "type": "Feature",
+            "id": "UoLtRvXxNaB",
+            "properties": { "name": "Maronko", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.5689, 8.7344] }
+        },
+        {
+            "type": "Feature",
+            "id": "wB4R3E1X6pC",
+            "properties": { "name": "Masanga Leprosy", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-11.8371, 8.7505] }
+        },
+        {
+            "type": "Feature",
+            "id": "eyfrdOUUkXO",
+            "properties": { "name": "Masankorie", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.2807, 9.4457] }
+        },
+        {
+            "type": "Feature",
+            "id": "CY8cV5khn7e",
+            "properties": { "name": "Maselleh", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.0432, 9.0166] }
+        },
+        {
+            "type": "Feature",
+            "id": "EURoFVjowXs",
+            "properties": { "name": "Masiaka", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.7499, 8.4919] }
+        },
+        {
+            "type": "Feature",
+            "id": "eKoXODABUJe",
+            "properties": { "name": "Masofinia", "region": "qhqAxPSTUXp" },
+            "geometry": { "type": "Point", "coordinates": [-11.0375, 9.0803] }
+        },
+        {
+            "type": "Feature",
+            "id": "D6B4jrCpCwu",
+            "properties": { "name": "Masoko", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-12.0327, 8.5431] }
+        },
+        {
+            "type": "Feature",
+            "id": "PhR1PdMTzhW",
+            "properties": { "name": "Masongbo Limba", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-11.8873, 8.9817] }
+        },
+        {
+            "type": "Feature",
+            "id": "xWjiTeok0Sr",
+            "properties": { "name": "Masorie", "region": "at6UHUQatSo" },
+            "geometry": { "type": "Point", "coordinates": [-12.942, 8.3144] }
+        },
+        {
+            "type": "Feature",
+            "id": "dqHvtpUqLwB",
+            "properties": { "name": "Masory", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.0972, 8.7112] }
+        },
+        {
+            "type": "Feature",
+            "id": "Z0q0Y3GRugt",
+            "properties": { "name": "Massabendu", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-11.2511, 8.6949] }
+        },
+        {
+            "type": "Feature",
+            "id": "GA7eQkgK5mX",
+            "properties": { "name": "Massahun", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-10.968, 8.0509] }
+        },
+        {
+            "type": "Feature",
+            "id": "vpNGJvZ0ljF",
+            "properties": { "name": "Massam", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.686, 7.3549] }
+        },
+        {
+            "type": "Feature",
+            "id": "cag6vQQ9SQk",
+            "properties": { "name": "Masselleh", "region": "PMa2VCrupOd" },
+            "geometry": { "type": "Point", "coordinates": [-12.7107, 9.2148] }
+        },
+        {
+            "type": "Feature",
+            "id": "OY7mYDATra3",
+            "properties": { "name": "Massingbi", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-11.4735, 8.6419] }
+        },
+        {
+            "type": "Feature",
+            "id": "XzmWizbR343",
+            "properties": { "name": "Masuba", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.0366, 8.8914] }
+        },
+        {
+            "type": "Feature",
+            "id": "UlgEReuUPM4",
+            "properties": { "name": "Masumana", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.801, 8.4898] }
+        },
+        {
+            "type": "Feature",
+            "id": "EXbPGmEUdnc",
+            "properties": { "name": "Mateboi", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.3627, 9.1038] }
+        },
+        {
+            "type": "Feature",
+            "id": "rLaGvUnv2BF",
+            "properties": { "name": "Mathonkara", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-11.8134, 8.7537] }
+        },
+        {
+            "type": "Feature",
+            "id": "OTn9VMNEkdo",
+            "properties": { "name": "Mathufulie", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-11.9027, 8.6354] }
+        },
+        {
+            "type": "Feature",
+            "id": "KcCbIDzRcui",
+            "properties": { "name": "Matotoka", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-11.8591, 8.6573] }
+        },
+        {
+            "type": "Feature",
+            "id": "PnMPARoMhWW",
+            "properties": { "name": "Mattru Jong", "region": "lc3eMKXaEfw" },
+            "geometry": { "type": "Point", "coordinates": [-12.1696, 7.6871] }
+        },
+        {
+            "type": "Feature",
+            "id": "Qu0QOykPdcD",
+            "properties": { "name": "Mattru on the Rail", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.7885, 7.9431] }
+        },
+        {
+            "type": "Feature",
+            "id": "Srnpwq8jKbp",
+            "properties": { "name": "Mawoma", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.734, 8.4622] }
+        },
+        {
+            "type": "Feature",
+            "id": "XiORvSsxn6s",
+            "properties": { "name": "Mayogbor", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-12.0345, 8.3737] }
+        },
+        {
+            "type": "Feature",
+            "id": "vQYIk5G9NxP",
+            "properties": { "name": "Mayossoh", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-11.983, 8.592] }
+        },
+        {
+            "type": "Feature",
+            "id": "nImgPWDVQIa",
+            "properties": { "name": "Mbokie", "region": "lc3eMKXaEfw" },
+            "geometry": { "type": "Point", "coordinates": [-12.56, 7.5] }
+        },
+        {
+            "type": "Feature",
+            "id": "EuoA3Crpqts",
+            "properties": { "name": "Mbundorbu", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.511, 7.9235] }
+        },
+        {
+            "type": "Feature",
+            "id": "sYjp3h6amhA",
+            "properties": { "name": "Mendekelema", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-10.9767, 7.7661] }
+        },
+        {
+            "type": "Feature",
+            "id": "YWXXO0XMkQe",
+            "properties": { "name": "Mendewa", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.4844, 8.1597] }
+        },
+        {
+            "type": "Feature",
+            "id": "VjVYaKZ9t4K",
+            "properties": { "name": "Menicurve", "region": "PMa2VCrupOd" },
+            "geometry": { "type": "Point", "coordinates": [-12.8594, 9.0139] }
+        },
+        {
+            "type": "Feature",
+            "id": "WoqN1oUBX2R",
+            "properties": { "name": "Mile 38", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.8543, 8.4529] }
+        },
+        {
+            "type": "Feature",
+            "id": "MXdbul7bBqV",
+            "properties": { "name": "Mobai", "region": "jUb8gELQApl" },
+            "geometry": { "type": "Point", "coordinates": [-10.7542, 7.9935] }
+        },
+        {
+            "type": "Feature",
+            "id": "ua3kNk4uraZ",
+            "properties": { "name": "Modia", "region": "PMa2VCrupOd" },
+            "geometry": { "type": "Point", "coordinates": [-13.2239, 8.6414] }
+        },
+        {
+            "type": "Feature",
+            "id": "kqyeoWyfDmQ",
+            "properties": { "name": "Mofombo", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-11.897, 8.1361] }
+        },
+        {
+            "type": "Feature",
+            "id": "wGsBlwh6Zzt",
+            "properties": { "name": "Mogbuama", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-11.8951, 8.2071] }
+        },
+        {
+            "type": "Feature",
+            "id": "jIkxZKctVhB",
+            "properties": { "name": "Mogbwemo", "region": "lc3eMKXaEfw" },
+            "geometry": { "type": "Point", "coordinates": [-12.5775, 7.7769] }
+        },
+        {
+            "type": "Feature",
+            "id": "bLYNonGzr0Y",
+            "properties": { "name": "Mokainsumana", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.8198, 7.994] }
+        },
+        {
+            "type": "Feature",
+            "id": "WxMmxNU6Gla",
+            "properties": { "name": "Mokaiyegbeh", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.7277, 8.0385] }
+        },
+        {
+            "type": "Feature",
+            "id": "cNAp6CJeLxk",
+            "properties": { "name": "Mokanji", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.1913, 7.9032] }
+        },
+        {
+            "type": "Feature",
+            "id": "kd2Aqw5S07V",
+            "properties": { "name": "Mokassie", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.4112, 8.0022] }
+        },
+        {
+            "type": "Feature",
+            "id": "RxmgoSlw9YF",
+            "properties": { "name": "Mokellay", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.2935, 8.297] }
+        },
+        {
+            "type": "Feature",
+            "id": "SC0nM3cbGHy",
+            "properties": { "name": "Mokobo", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.6452, 7.9544] }
+        },
+        {
+            "type": "Feature",
+            "id": "BedE3DKQDFf",
+            "properties": { "name": "Mokongbetty", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.7681, 8.0006] }
+        },
+        {
+            "type": "Feature",
+            "id": "cHqboEGRUiY",
+            "properties": { "name": "Mokorbu", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.9307, 8.1926] }
+        },
+        {
+            "type": "Feature",
+            "id": "sAO5hEWo4z5",
+            "properties": { "name": "Mokorewa", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.2484, 8.1689] }
+        },
+        {
+            "type": "Feature",
+            "id": "qcYG2Id7GS8",
+            "properties": { "name": "Mokpanabom", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.7241, 7.7678] }
+        },
+        {
+            "type": "Feature",
+            "id": "am6EFqHGKeU",
+            "properties": { "name": "Mokpende", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.9505, 7.712] }
+        },
+        {
+            "type": "Feature",
+            "id": "fA43H8Ds0Ja",
+            "properties": { "name": "Momajo", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.9379, 7.5753] }
+        },
+        {
+            "type": "Feature",
+            "id": "PC3Ag91n82e",
+            "properties": { "name": "Mongere", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.7347, 8.3228] }
+        },
+        {
+            "type": "Feature",
+            "id": "xMn4Wki9doK",
+            "properties": { "name": "Moriba Town", "region": "lc3eMKXaEfw" },
+            "geometry": { "type": "Point", "coordinates": [-12.2977, 7.7936] }
+        },
+        {
+            "type": "Feature",
+            "id": "HHz1kAG1LKn",
+            "properties": { "name": "Mosenegor", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.4188, 7.8704] }
+        },
+        {
+            "type": "Feature",
+            "id": "XmfqaErvQ2T",
+            "properties": { "name": "Mosenessie Junction", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.2689, 7.8374] }
+        },
+        {
+            "type": "Feature",
+            "id": "g3O1pGAfgK1",
+            "properties": { "name": "Motema", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-11.0224, 8.6117] }
+        },
+        {
+            "type": "Feature",
+            "id": "fvytjjnlQlK",
+            "properties": { "name": "Motoni", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.7935, 8.3054] }
+        },
+        {
+            "type": "Feature",
+            "id": "BpWJ3cRsO6g",
+            "properties": { "name": "Motonkoh", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.8429, 8.2624] }
+        },
+        {
+            "type": "Feature",
+            "id": "Gtnbmf4LkOz",
+            "properties": { "name": "Motorbong", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.8337, 8.121] }
+        },
+        {
+            "type": "Feature",
+            "id": "rCKWdLr4B8K",
+            "properties": { "name": "Motuo", "region": "lc3eMKXaEfw" },
+            "geometry": { "type": "Point", "coordinates": [-12.0474, 7.614] }
+        },
+        {
+            "type": "Feature",
+            "id": "U8uqyDAu5bH",
+            "properties": { "name": "Moyamba", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.4343, 8.1597] }
+        },
+        {
+            "type": "Feature",
+            "id": "WhCQNekdIwM",
+            "properties": { "name": "Moyeamoh", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.7739, 8.0743] }
+        },
+        {
+            "type": "Feature",
+            "id": "zEsMdeJOty4",
+            "properties": { "name": "Moyiba", "region": "at6UHUQatSo" },
+            "geometry": { "type": "Point", "coordinates": [-13.2064, 8.473] }
+        },
+        {
+            "type": "Feature",
+            "id": "UgUcwzbEv2C",
+            "properties": { "name": "Moyollo", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.3533, 8.159] }
+        },
+        {
+            "type": "Feature",
+            "id": "sY1WN6LjmAx",
+            "properties": { "name": "Moyowa", "region": "lc3eMKXaEfw" },
+            "geometry": { "type": "Point", "coordinates": [-12.1005, 7.6449] }
+        },
+        {
+            "type": "Feature",
+            "id": "sTOXJA2KcY2",
+            "properties": { "name": "Musaia", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-13.1859, 8.7914] }
+        },
+        {
+            "type": "Feature",
+            "id": "rm60vuHyQXj",
+            "properties": { "name": "Nengbema", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.6528, 8.1271] }
+        },
+        {
+            "type": "Feature",
+            "id": "lzz1UhTzO4E",
+            "properties": { "name": "New Maforkie", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.762, 8.747] }
+        },
+        {
+            "type": "Feature",
+            "id": "m3VnSQbE8CD",
+            "properties": { "name": "Newton", "region": "at6UHUQatSo" },
+            "geometry": { "type": "Point", "coordinates": [-13.0212, 8.3336] }
+        },
+        {
+            "type": "Feature",
+            "id": "YnuwSqXPx9H",
+            "properties": { "name": "Ngaiya", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-11.0394, 8.6095] }
+        },
+        {
+            "type": "Feature",
+            "id": "CvBAqD6RzLZ",
+            "properties": { "name": "Ngalu", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.5574, 8.1074] }
+        },
+        {
+            "type": "Feature",
+            "id": "P4upLKrpkHP",
+            "properties": { "name": "Ngegbwema", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.1552, 7.5797] }
+        },
+        {
+            "type": "Feature",
+            "id": "DiszpKrYNg8",
+            "properties": { "name": "Ngelehun", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.4197, 8.1039] }
+        },
+        {
+            "type": "Feature",
+            "id": "FwKJ7gYEv8U",
+            "properties": { "name": "Ngelehun", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.113, 8.0125] }
+        },
+        {
+            "type": "Feature",
+            "id": "hBPtNXkQ3mP",
+            "properties": { "name": "Ngiehun", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.6751, 7.9867] }
+        },
+        {
+            "type": "Feature",
+            "id": "KuGO75X47Gk",
+            "properties": { "name": "Ngiewahun", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.2013, 7.6059] }
+        },
+        {
+            "type": "Feature",
+            "id": "al4GkB6X2X3",
+            "properties": { "name": "Ngieyehun", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.8714, 7.6946] }
+        },
+        {
+            "type": "Feature",
+            "id": "p9ZtyC3LQ9f",
+            "properties": { "name": "Niagorehun", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.7684, 7.6817] }
+        },
+        {
+            "type": "Feature",
+            "id": "BJMWTGwuGiw",
+            "properties": { "name": "Niahun Gboyama", "region": "jUb8gELQApl" },
+            "geometry": { "type": "Point", "coordinates": [-10.5736, 8.2754] }
+        },
+        {
+            "type": "Feature",
+            "id": "YXdC9hjYPqQ",
+            "properties": { "name": "Ninkikoro", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-11.6387, 8.9903] }
+        },
+        {
+            "type": "Feature",
+            "id": "VjygCFzqcYu",
+            "properties": { "name": "Njagbahun", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.0612, 8.2517] }
+        },
+        {
+            "type": "Feature",
+            "id": "QoROdPmIdY1",
+            "properties": { "name": "Njagbahun Fakunya", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.2836, 8.2615] }
+        },
+        {
+            "type": "Feature",
+            "id": "MUnd4KWox8m",
+            "properties": { "name": "Njagbwema", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-11.1434, 8.6408] }
+        },
+        {
+            "type": "Feature",
+            "id": "aV9VVijeVB2",
+            "properties": { "name": "Njagbwema", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-11.1371, 8.355] }
+        },
+        {
+            "type": "Feature",
+            "id": "sLKHXoBIqSs",
+            "properties": { "name": "Njagbwema Fiama", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-10.8235, 8.6276] }
+        },
+        {
+            "type": "Feature",
+            "id": "QsAwd531Cpd",
+            "properties": { "name": "Njala", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.4596, 8.2006] }
+        },
+        {
+            "type": "Feature",
+            "id": "vPz4Irz7sxR",
+            "properties": { "name": "Njala", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-11.054, 8.5732] }
+        },
+        {
+            "type": "Feature",
+            "id": "Bpvug2zxHEZ",
+            "properties": { "name": "Njala University", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.0716, 8.1111] }
+        },
+        {
+            "type": "Feature",
+            "id": "kvzdkXBxHoN",
+            "properties": { "name": "Njaluahun", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.4446, 7.3924] }
+        },
+        {
+            "type": "Feature",
+            "id": "WMj6mBDw76A",
+            "properties": { "name": "Njama", "region": "jUb8gELQApl" },
+            "geometry": { "type": "Point", "coordinates": [-10.5735, 8.2754] }
+        },
+        {
+            "type": "Feature",
+            "id": "hzf90qz08AW",
+            "properties": { "name": "Njama", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-11.941, 8.0822] }
+        },
+        {
+            "type": "Feature",
+            "id": "fdsRQbuuAuh",
+            "properties": { "name": "Nonkoba", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.5806, 8.5937] }
+        },
+        {
+            "type": "Feature",
+            "id": "mVvEwzoFutG",
+            "properties": { "name": "Nyandehun", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.76, 7.5891] }
+        },
+        {
+            "type": "Feature",
+            "id": "dNT8lAL4zGo",
+            "properties": { "name": "Nyeama", "region": "jUb8gELQApl" },
+            "geometry": { "type": "Point", "coordinates": [-10.5735, 8.2755] }
+        },
+        {
+            "type": "Feature",
+            "id": "LqH7ZGU9KAx",
+            "properties": { "name": "PCM", "region": "at6UHUQatSo" },
+            "geometry": { "type": "Point", "coordinates": [-13.2191, 8.49] }
+        },
+        {
+            "type": "Feature",
+            "id": "PEZNsGbZaVJ",
+            "properties": { "name": "Panguma", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.1368, 8.1846] }
+        },
+        {
+            "type": "Feature",
+            "id": "zLiMZ1WrxdG",
+            "properties": { "name": "Panlap", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.031, 8.9164] }
+        },
+        {
+            "type": "Feature",
+            "id": "tSBcgrTDdB8",
+            "properties": { "name": "Paramedical", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.7486, 7.9498] }
+        },
+        {
+            "type": "Feature",
+            "id": "CqARw68kXbB",
+            "properties": { "name": "Pehala", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.6188, 7.5234] }
+        },
+        {
+            "type": "Feature",
+            "id": "BTXwf2gl7av",
+            "properties": { "name": "Pejewa", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.5063, 7.5872] }
+        },
+        {
+            "type": "Feature",
+            "id": "MQHszd6K6V5",
+            "properties": { "name": "Pelewahun", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.4587, 7.8851] }
+        },
+        {
+            "type": "Feature",
+            "id": "pJv8NJlJNhU",
+            "properties": { "name": "Pendembu", "region": "jUb8gELQApl" },
+            "geometry": { "type": "Point", "coordinates": [-10.6953, 8.0961] }
+        },
+        {
+            "type": "Feature",
+            "id": "fYmE4ymzZSe",
+            "properties": { "name": "Pendembu Njeigbla", "region": "jUb8gELQApl" },
+            "geometry": { "type": "Point", "coordinates": [-10.574, 8.2761] }
+        },
+        {
+            "type": "Feature",
+            "id": "XXlzHWzhf5d",
+            "properties": { "name": "Pepel", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-13.0547, 8.5893] }
+        },
+        {
+            "type": "Feature",
+            "id": "f6xGA6BZBLO",
+            "properties": { "name": "Perrie", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.0787, 7.6621] }
+        },
+        {
+            "type": "Feature",
+            "id": "ke2gwHKHP3z",
+            "properties": { "name": "Petifu", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-13.1078, 8.6953] }
+        },
+        {
+            "type": "Feature",
+            "id": "byOPfWkK6M6",
+            "properties": { "name": "Petifu Line", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-11.5408, 8.6272] }
+        },
+        {
+            "type": "Feature",
+            "id": "zQ2pFkzGtIg",
+            "properties": { "name": "Peya", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-11.2143, 8.4967] }
+        },
+        {
+            "type": "Feature",
+            "id": "FGV6TAbL0eN",
+            "properties": { "name": "Peyima", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-11.048, 8.758] }
+        },
+        {
+            "type": "Feature",
+            "id": "oV9P0VvL9Jh",
+            "properties": { "name": "Plantain Island", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.9557, 7.9099] }
+        },
+        {
+            "type": "Feature",
+            "id": "k6lOze3vTzP",
+            "properties": { "name": "Potoru", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.4814, 7.5031] }
+        },
+        {
+            "type": "Feature",
+            "id": "STv4PP4Hiyl",
+            "properties": { "name": "Pujehun", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.7191, 7.3508] }
+        },
+        {
+            "type": "Feature",
+            "id": "xXYv82KlBUh",
+            "properties": { "name": "Quarry", "region": "at6UHUQatSo" },
+            "geometry": { "type": "Point", "coordinates": [-13.2141, 8.4803] }
+        },
+        {
+            "type": "Feature",
+            "id": "u6ZGNI8yUmt",
+            "properties": { "name": "Rina", "region": "at6UHUQatSo" },
+            "geometry": { "type": "Point", "coordinates": [-13.25, 8.48] }
+        },
+        {
+            "type": "Feature",
+            "id": "ym42ZOlfZ1P",
+            "properties": { "name": "Robaka", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.5957, 8.8175] }
+        },
+        {
+            "type": "Feature",
+            "id": "gP6hn503KUX",
+            "properties": { "name": "Robat", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.0607, 8.7916] }
+        },
+        {
+            "type": "Feature",
+            "id": "fHqBRE3LTiQ",
+            "properties": { "name": "Robina", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-12.3586, 8.6429] }
+        },
+        {
+            "type": "Feature",
+            "id": "PHo0IV7Vk50",
+            "properties": { "name": "Rochem Kamandao", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-12.1813, 8.3968] }
+        },
+        {
+            "type": "Feature",
+            "id": "X9zzzyPZViR",
+            "properties": { "name": "Rochen Malal", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-12.2855, 8.6612] }
+        },
+        {
+            "type": "Feature",
+            "id": "jSPLEMDwXN4",
+            "properties": { "name": "Rofoindu", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.7852, 8.4431] }
+        },
+        {
+            "type": "Feature",
+            "id": "pvTYrkG1d6f",
+            "properties": { "name": "Rogbaneh", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.6227, 8.8463] }
+        },
+        {
+            "type": "Feature",
+            "id": "yvDKjcRRQsR",
+            "properties": { "name": "Rogbin", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.2241, 9.2117] }
+        },
+        {
+            "type": "Feature",
+            "id": "UxpUYgdb4oU",
+            "properties": { "name": "Rokai", "region": "PMa2VCrupOd" },
+            "geometry": { "type": "Point", "coordinates": [-13.02, 9.02] }
+        },
+        {
+            "type": "Feature",
+            "id": "pVuRAzSstbn",
+            "properties": { "name": "Rokimbi", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-12.3755, 8.4766] }
+        },
+        {
+            "type": "Feature",
+            "id": "mepHuAA9l51",
+            "properties": { "name": "Rokonta", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.0482, 8.7452] }
+        },
+        {
+            "type": "Feature",
+            "id": "X79FDd4EAgo",
+            "properties": { "name": "Rokulan", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.2112, 9.1945] }
+        },
+        {
+            "type": "Feature",
+            "id": "QZtMuEEV9Vv",
+            "properties": { "name": "Rokupr", "region": "PMa2VCrupOd" },
+            "geometry": { "type": "Point", "coordinates": [-12.9443, 9.0163] }
+        },
+        {
+            "type": "Feature",
+            "id": "FQ5CCuUKNLf",
+            "properties": { "name": "Romando", "region": "PMa2VCrupOd" },
+            "geometry": { "type": "Point", "coordinates": [-12.9873, 8.8628] }
+        },
+        {
+            "type": "Feature",
+            "id": "GCbYmPqcOOP",
+            "properties": { "name": "Romeni", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.7202, 8.899] }
+        },
+        {
+            "type": "Feature",
+            "id": "B9RxRfRUi2R",
+            "properties": { "name": "Ronietta", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-12.4601, 8.3633] }
+        },
+        {
+            "type": "Feature",
+            "id": "x3ti3t9eOuX",
+            "properties": { "name": "Rosengbeh", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-11.9275, 8.5859] }
+        },
+        {
+            "type": "Feature",
+            "id": "el8sgzyHuEe",
+            "properties": { "name": "Rosint Buya", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.4929, 8.8152] }
+        },
+        {
+            "type": "Feature",
+            "id": "gUPhNWkSXvD",
+            "properties": { "name": "Rotifunk", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.6772, 8.2282] }
+        },
+        {
+            "type": "Feature",
+            "id": "wicmjKI3xiP",
+            "properties": { "name": "SLRCS", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-11.9355, 8.7209] }
+        },
+        {
+            "type": "Feature",
+            "id": "WZ8PTx8qQlE",
+            "properties": { "name": "Saama", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.5565, 7.2076] }
+        },
+        {
+            "type": "Feature",
+            "id": "PuZOFApTSeo",
+            "properties": { "name": "Sahn", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.598, 8.1582] }
+        },
+        {
+            "type": "Feature",
+            "id": "NDqR2cWlVy3",
+            "properties": { "name": "Sahn Bumpe", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.8432, 7.4362] }
+        },
+        {
+            "type": "Feature",
+            "id": "rFelzKE3SEp",
+            "properties": { "name": "Salima", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.622, 7.4798] }
+        },
+        {
+            "type": "Feature",
+            "id": "BnVjTzwis3o",
+            "properties": { "name": "Samaya", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.3937, 9.5118] }
+        },
+        {
+            "type": "Feature",
+            "id": "vgOQ7fWmMyZ",
+            "properties": { "name": "Sambaya", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-10.5062, 8.7279] }
+        },
+        {
+            "type": "Feature",
+            "id": "yXBtSoD0IRS",
+            "properties": { "name": "Samiquidu", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-11.0588, 8.6941] }
+        },
+        {
+            "type": "Feature",
+            "id": "oUR5HPmim7E",
+            "properties": { "name": "Sandayeima", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.0681, 8.2184] }
+        },
+        {
+            "type": "Feature",
+            "id": "vcY0lzBz6fU",
+            "properties": { "name": "Sandia", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-11.2681, 8.6418] }
+        },
+        {
+            "type": "Feature",
+            "id": "UqHuR4IYvTY",
+            "properties": { "name": "Sanya", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.3786, 9.8371] }
+        },
+        {
+            "type": "Feature",
+            "id": "uoPC2z9r7Cc",
+            "properties": { "name": "Seidu", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-11.097, 8.728] }
+        },
+        {
+            "type": "Feature",
+            "id": "IWM4eKPJJSc",
+            "properties": { "name": "Sembehun", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.3277, 8.0208] }
+        },
+        {
+            "type": "Feature",
+            "id": "egjrZ1PHNtT",
+            "properties": { "name": "Sembehun", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.5375, 7.9388] }
+        },
+        {
+            "type": "Feature",
+            "id": "DqfiI6NVnB1",
+            "properties": { "name": "Sembehun 17", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.7243, 7.7801] }
+        },
+        {
+            "type": "Feature",
+            "id": "REtQE1gstTf",
+            "properties": { "name": "Sembeima", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.0273, 8.2109] }
+        },
+        {
+            "type": "Feature",
+            "id": "NqTZjfTIsxC",
+            "properties": { "name": "Semewebu", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.0527, 8.2005] }
+        },
+        {
+            "type": "Feature",
+            "id": "Jyv7sjpl9bA",
+            "properties": { "name": "Sendumei", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.3867, 7.7138] }
+        },
+        {
+            "type": "Feature",
+            "id": "oLuhRyYPxRO",
+            "properties": { "name": "Senehun", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-11.9487, 8.1698] }
+        },
+        {
+            "type": "Feature",
+            "id": "Efmr3Xo36DR",
+            "properties": { "name": "Senehun Gbloh", "region": "lc3eMKXaEfw" },
+            "geometry": { "type": "Point", "coordinates": [-12.1133, 7.4039] }
+        },
+        {
+            "type": "Feature",
+            "id": "xX4lIVqF4yb",
+            "properties": { "name": "Senekedugu", "region": "qhqAxPSTUXp" },
+            "geometry": { "type": "Point", "coordinates": [-11.5543, 9.6233] }
+        },
+        {
+            "type": "Feature",
+            "id": "aRXfvyonenP",
+            "properties": { "name": "Sengema", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.7843, 7.4932] }
+        },
+        {
+            "type": "Feature",
+            "id": "MnfykVk3zin",
+            "properties": { "name": "Senjehun", "region": "lc3eMKXaEfw" },
+            "geometry": { "type": "Point", "coordinates": [-12.0141, 7.5318] }
+        },
+        {
+            "type": "Feature",
+            "id": "Qr41Mw2MSjo",
+            "properties": { "name": "Senthai", "region": "PMa2VCrupOd" },
+            "geometry": { "type": "Point", "coordinates": [-12.8863, 9.0668] }
+        },
+        {
+            "type": "Feature",
+            "id": "wjP03y8OY5k",
+            "properties": { "name": "Serabu Koya", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.1532, 8.2801] }
+        },
+        {
+            "type": "Feature",
+            "id": "ZOZ4s2gTPj7",
+            "properties": { "name": "Serekolia", "region": "qhqAxPSTUXp" },
+            "geometry": { "type": "Point", "coordinates": [-11.0768, 9.5348] }
+        },
+        {
+            "type": "Feature",
+            "id": "kzmwOrwmzbW",
+            "properties": { "name": "Seria", "region": "qhqAxPSTUXp" },
+            "geometry": { "type": "Point", "coordinates": [-10.9216, 9.4654] }
+        },
+        {
+            "type": "Feature",
+            "id": "p9KfD6eaRvu",
+            "properties": { "name": "Shenge", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.9517, 7.9085] }
+        },
+        {
+            "type": "Feature",
+            "id": "Bq5nb7UAEGd",
+            "properties": { "name": "Sierra Rutile", "region": "lc3eMKXaEfw" },
+            "geometry": { "type": "Point", "coordinates": [-12.458, 7.6966] }
+        },
+        {
+            "type": "Feature",
+            "id": "IlnqGuxfQAw",
+            "properties": { "name": "Sinkunia", "region": "qhqAxPSTUXp" },
+            "geometry": { "type": "Point", "coordinates": [-11.4291, 9.863] }
+        },
+        {
+            "type": "Feature",
+            "id": "pXDcgDRz8Od",
+            "properties": { "name": "Songo", "region": "at6UHUQatSo" },
+            "geometry": { "type": "Point", "coordinates": [-12.9303, 8.3706] }
+        },
+        {
+            "type": "Feature",
+            "id": "kpDoH80fwdX",
+            "properties": { "name": "Static", "region": "qhqAxPSTUXp" },
+            "geometry": { "type": "Point", "coordinates": [-11.3015, 9.5283] }
+        },
+        {
+            "type": "Feature",
+            "id": "w9XjBMJYL9R",
+            "properties": { "name": "Static", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.4341, 8.1591] }
+        },
+        {
+            "type": "Feature",
+            "id": "EoIjKXqXxi2",
+            "properties": { "name": "Sukudu Soa", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-10.6806, 8.504] }
+        },
+        {
+            "type": "Feature",
+            "id": "PfZXxl6Wp3F",
+            "properties": { "name": "Sulima", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.5773, 6.9679] }
+        },
+        {
+            "type": "Feature",
+            "id": "GvstqlRRnpV",
+            "properties": { "name": "Sumbaria", "region": "qhqAxPSTUXp" },
+            "geometry": { "type": "Point", "coordinates": [-11.2611, 8.8685] }
+        },
+        {
+            "type": "Feature",
+            "id": "W2KnxOMvmgE",
+            "properties": { "name": "Sumbuya", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.9641, 7.6524] }
+        },
+        {
+            "type": "Feature",
+            "id": "pUZIL5xBsve",
+            "properties": { "name": "Sumbuya", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.8979, 8.4205] }
+        },
+        {
+            "type": "Feature",
+            "id": "rJ25bHbIujw",
+            "properties": { "name": "Susan's Bay", "region": "at6UHUQatSo" },
+            "geometry": { "type": "Point", "coordinates": [-13.2273, 8.4897] }
+        },
+        {
+            "type": "Feature",
+            "id": "fzBpuujglTY",
+            "properties": { "name": "Swarray Town", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-10.9621, 8.6228] }
+        },
+        {
+            "type": "Feature",
+            "id": "s5aXfzOL456",
+            "properties": { "name": "Talia", "region": "lc3eMKXaEfw" },
+            "geometry": { "type": "Point", "coordinates": [-12.1298, 7.4386] }
+        },
+        {
+            "type": "Feature",
+            "id": "dU3vTbLRLHy",
+            "properties": { "name": "Tambeyama", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.5141, 7.4722] }
+        },
+        {
+            "type": "Feature",
+            "id": "agEKP19IUKI",
+            "properties": { "name": "Tambiama", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.1103, 8.9948] }
+        },
+        {
+            "type": "Feature",
+            "id": "Fhko00f3hXT",
+            "properties": { "name": "Taninahun", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.4078, 7.4116] }
+        },
+        {
+            "type": "Feature",
+            "id": "iHQVo7h7KOQ",
+            "properties": { "name": "Taninihun Kapuima", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.2309, 8.0043] }
+        },
+        {
+            "type": "Feature",
+            "id": "Cc9kMNFpGmC",
+            "properties": { "name": "Taninihun Mboka", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.5411, 8.1075] }
+        },
+        {
+            "type": "Feature",
+            "id": "GHPuYdLcVN5",
+            "properties": { "name": "Tawahun", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.0292, 7.8633] }
+        },
+        {
+            "type": "Feature",
+            "id": "nAH0uNc3b5f",
+            "properties": { "name": "Tefeya", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-11.2113, 8.7066] }
+        },
+        {
+            "type": "Feature",
+            "id": "erqWTArTsyJ",
+            "properties": { "name": "Telu", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.639, 7.8029] }
+        },
+        {
+            "type": "Feature",
+            "id": "AhnK8hb3JWm",
+            "properties": { "name": "The White House", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-10.9815, 8.6447] }
+        },
+        {
+            "type": "Feature",
+            "id": "BzEwqabuW19",
+            "properties": { "name": "Thompson Bay", "region": "at6UHUQatSo" },
+            "geometry": { "type": "Point", "coordinates": [-13.2725, 8.4799] }
+        },
+        {
+            "type": "Feature",
+            "id": "ua5GXy2uhBR",
+            "properties": { "name": "Tihun", "region": "lc3eMKXaEfw" },
+            "geometry": { "type": "Point", "coordinates": [-12.0898, 7.5666] }
+        },
+        {
+            "type": "Feature",
+            "id": "KYXbIQBQgP1",
+            "properties": { "name": "Tikonko", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.7815, 7.8783] }
+        },
+        {
+            "type": "Feature",
+            "id": "CFPrsD3dNeb",
+            "properties": { "name": "Tissana", "region": "lc3eMKXaEfw" },
+            "geometry": { "type": "Point", "coordinates": [-12.7061, 7.5391] }
+        },
+        {
+            "type": "Feature",
+            "id": "GGDHb8xd8jc",
+            "properties": { "name": "Tokeh", "region": "at6UHUQatSo" },
+            "geometry": { "type": "Point", "coordinates": [-13.1913, 8.3136] }
+        },
+        {
+            "type": "Feature",
+            "id": "lxxASQqPUqd",
+            "properties": { "name": "Tombodu", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-11.0121, 8.702] }
+        },
+        {
+            "type": "Feature",
+            "id": "K3jhn3TXF3a",
+            "properties": { "name": "Tongo Field", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.0581, 8.2154] }
+        },
+        {
+            "type": "Feature",
+            "id": "xIMxph4NMP1",
+            "properties": { "name": "Tonkomba", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.2665, 8.8744] }
+        },
+        {
+            "type": "Feature",
+            "id": "rZkUcho9Z65",
+            "properties": { "name": "Torma Bum", "region": "lc3eMKXaEfw" },
+            "geometry": { "type": "Point", "coordinates": [-12.0092, 7.4143] }
+        },
+        {
+            "type": "Feature",
+            "id": "PdGktj8bAML",
+            "properties": { "name": "UBC Under 5", "region": "lc3eMKXaEfw" },
+            "geometry": { "type": "Point", "coordinates": [-12.1676, 7.605] }
+        },
+        {
+            "type": "Feature",
+            "id": "Ykx8Ovui7g0",
+            "properties": { "name": "Upper Saama", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.8618, 7.6677] }
+        },
+        {
+            "type": "Feature",
+            "id": "up9gjdODKXE",
+            "properties": { "name": "Vaahun", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.0037, 8.0275] }
+        },
+        {
+            "type": "Feature",
+            "id": "GjJjES51GvK",
+            "properties": { "name": "Vaama", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.4124, 7.5426] }
+        },
+        {
+            "type": "Feature",
+            "id": "dyn5pihalrJ",
+            "properties": { "name": "Victoria", "region": "lc3eMKXaEfw" },
+            "geometry": { "type": "Point", "coordinates": [-12.3309, 7.646] }
+        },
+        {
+            "type": "Feature",
+            "id": "zCSWBz2pyMd",
+            "properties": { "name": "Wai", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.4542, 7.0472] }
+        },
+        {
+            "type": "Feature",
+            "id": "YPSCWmJ3TyN",
+            "properties": { "name": "Waiima", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.4531, 7.4467] }
+        },
+        {
+            "type": "Feature",
+            "id": "m0PiiU5BteW",
+            "properties": { "name": "Walia", "region": "qhqAxPSTUXp" },
+            "geometry": { "type": "Point", "coordinates": [-10.9602, 9.6549] }
+        },
+        {
+            "type": "Feature",
+            "id": "DXegteybeb5",
+            "properties": { "name": "Warima", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-12.6382, 8.4899] }
+        },
+        {
+            "type": "Feature",
+            "id": "CKkE4GBJekz",
+            "properties": { "name": "Weima", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-10.9459, 8.1675] }
+        },
+        {
+            "type": "Feature",
+            "id": "AtZJOoQiGHd",
+            "properties": { "name": "Woama", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-10.9648, 8.5512] }
+        },
+        {
+            "type": "Feature",
+            "id": "Qwzs1iinAI7",
+            "properties": { "name": "Wonkibor", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-11.6182, 8.5959] }
+        },
+        {
+            "type": "Feature",
+            "id": "bW5BaqrBM4K",
+            "properties": { "name": "Wordu", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-11.0992, 8.9375] }
+        },
+        {
+            "type": "Feature",
+            "id": "XbyObqerCya",
+            "properties": { "name": "Yabaima", "region": "kJq2mPyFEHo" },
+            "geometry": { "type": "Point", "coordinates": [-11.4761, 7.6407] }
+        },
+        {
+            "type": "Feature",
+            "id": "AnXoUM1tfNT",
+            "properties": { "name": "Yakaji", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.4277, 8.0041] }
+        },
+        {
+            "type": "Feature",
+            "id": "nX05QLraDhO",
+            "properties": { "name": "Yamandu", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.4894, 7.9341] }
+        },
+        {
+            "type": "Feature",
+            "id": "QDoO5r6Sae7",
+            "properties": { "name": "Yambama", "region": "O6uvpzGd5pu" },
+            "geometry": { "type": "Point", "coordinates": [-11.8915, 7.6541] }
+        },
+        {
+            "type": "Feature",
+            "id": "SQz3xtx1Sgr",
+            "properties": { "name": "Yankasa", "region": "fdc6uOvgoji" },
+            "geometry": { "type": "Point", "coordinates": [-12.3094, 8.7978] }
+        },
+        {
+            "type": "Feature",
+            "id": "M9q1wOOsrXp",
+            "properties": { "name": "Yara", "region": "qhqAxPSTUXp" },
+            "geometry": { "type": "Point", "coordinates": [-11.5822, 9.2701] }
+        },
+        {
+            "type": "Feature",
+            "id": "XctPvvWIIcF",
+            "properties": { "name": "Yargoi", "region": "lc3eMKXaEfw" },
+            "geometry": { "type": "Point", "coordinates": [-12.3374, 7.5738] }
+        },
+        {
+            "type": "Feature",
+            "id": "g031LbUPMmh",
+            "properties": { "name": "Yeben", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-11.9933, 8.4001] }
+        },
+        {
+            "type": "Feature",
+            "id": "dBD9OHJFN8u",
+            "properties": { "name": "Yekior", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-10.878, 8.5759] }
+        },
+        {
+            "type": "Feature",
+            "id": "sesv0eXljBq",
+            "properties": { "name": "Yele", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-11.8329, 8.4141] }
+        },
+        {
+            "type": "Feature",
+            "id": "PA1spYiNZfv",
+            "properties": { "name": "Yengema", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-11.0427, 8.6167] }
+        },
+        {
+            "type": "Feature",
+            "id": "YDDOlgRBEAA",
+            "properties": { "name": "Yongoro", "region": "TEQlaapDQoK" },
+            "geometry": { "type": "Point", "coordinates": [-13.2015, 8.5922] }
+        },
+        {
+            "type": "Feature",
+            "id": "x5ZxMDvEQUb",
+            "properties": { "name": "Yonibana", "region": "eIQbndfxQMb" },
+            "geometry": { "type": "Point", "coordinates": [-12.2435, 8.4394] }
+        },
+        {
+            "type": "Feature",
+            "id": "TGRCfJEnXJr",
+            "properties": { "name": "Yorgbofore", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.8331, 7.8653] }
+        },
+        {
+            "type": "Feature",
+            "id": "roGdTjEqLZQ",
+            "properties": { "name": "Yormandu", "region": "Vth0fbpFcsO" },
+            "geometry": { "type": "Point", "coordinates": [-11.1019, 8.7393] }
+        },
+        {
+            "type": "Feature",
+            "id": "VdXuxcNkiad",
+            "properties": { "name": "Yoyema", "region": "jmIPBj66vD6" },
+            "geometry": { "type": "Point", "coordinates": [-12.4948, 8.1729] }
+        },
+        {
+            "type": "Feature",
+            "id": "BNFrspDBKel",
+            "properties": { "name": "Zimmi", "region": "bL4ooGhyHRQ" },
+            "geometry": { "type": "Point", "coordinates": [-11.309, 7.3213] }
+        }
+    ]
+}
