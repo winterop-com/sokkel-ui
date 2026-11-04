@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { LayoutGrid, List, Rows3 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
+import { StatusChip, type Status } from '../../components/StatusChip'
 import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group'
 
 function Ground({ children }: { children: ReactNode }) {
@@ -121,11 +122,13 @@ function RunFilter() {
                 </div>
                 <ul className="divide-y divide-border rounded-lg border border-border">
                     {shown.map((run) => (
-                        <li key={run.id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm">
+                        <li key={run.id} className="grid grid-cols-[6rem_6.5rem_minmax(0,1fr)_3rem] items-center gap-3 px-3 py-2 text-sm">
                             <span className="font-mono text-xs">{run.id}</span>
-                            <span>{run.state}</span>
-                            <span className="text-muted-foreground">{run.at}</span>
-                            <span className="w-10 text-right text-muted-foreground tabular-nums">{run.took}</span>
+                            <span>
+                                <StatusChip status={run.state as Status} />
+                            </span>
+                            <span className="truncate text-muted-foreground tabular-nums">{run.at}</span>
+                            <span className="text-right text-muted-foreground tabular-nums">{run.took === '' ? '-' : run.took}</span>
                         </li>
                     ))}
                     {shown.length === 0 && <li className="px-3 py-4 text-center text-sm text-muted-foreground">No runs match.</li>}
