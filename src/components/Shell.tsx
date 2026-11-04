@@ -1,0 +1,57 @@
+import type { ReactNode } from 'react'
+
+import { cn } from '@/lib/cn'
+
+/**
+ * The app's frame: the rail on the left, a thin top bar over the content, the content as the one
+ * thing that scrolls, and an optional foot strip.
+ *
+ * The top bar and the rail's head are the same height and share one rule, so the shell reads as
+ * one strip across the window; the foot strip lines up with the rail's foot cell the same way.
+ */
+export function Shell({
+    rail,
+    top,
+    foot,
+    children,
+}: {
+    rail: ReactNode
+    /** What the top bar holds: a search, the version, the theme control. */
+    top?: ReactNode
+    /** What the foot strip holds to the right of the rail's foot cell, if anything. */
+    foot?: ReactNode
+    children: ReactNode
+}) {
+    return (
+        <div className="flex h-svh min-h-0 bg-background text-foreground">
+            {rail}
+            <div className="flex min-w-0 flex-1 flex-col">
+                {top !== undefined && (
+                    <header className="flex h-shell-top shrink-0 items-center gap-2 border-b border-border-strong bg-sidebar px-3">
+                        {top}
+                    </header>
+                )}
+                <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>
+                {foot !== undefined && (
+                    <footer className="flex h-shell-foot shrink-0 items-center gap-3 border-t border-border-strong bg-sidebar px-3 text-xs text-muted-foreground">
+                        {foot}
+                    </footer>
+                )}
+            </div>
+        </div>
+    )
+}
+
+/** The content's own padding, the density's page inset, for a page to sit in. */
+export function Page({ children, className }: { children: ReactNode; className?: string }) {
+    return (
+        <div
+            className={cn(
+                'flex flex-col gap-(--density-page-gap) px-(--density-page-inset) pt-(--density-page-top) pb-10',
+                className,
+            )}
+        >
+            {children}
+        </div>
+    )
+}

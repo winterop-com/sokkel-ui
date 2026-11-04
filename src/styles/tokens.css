@@ -4,8 +4,8 @@
 
 @theme inline {
     --font-heading: var(--font-sans);
-    --font-sans: 'IBM Plex Sans Variable', 'IBM Plex Sans', system-ui, sans-serif;
-    --font-mono: 'IBM Plex Mono', 'SF Mono', Menlo, Consolas, monospace;
+    --font-sans: var(--typeface-sans);
+    --font-mono: var(--typeface-mono);
     --text-xs: 0.75rem;
     --text-xs--line-height: 1.125rem;
     --text-sm: 0.875rem;
@@ -136,6 +136,8 @@
 }
 
 :root {
+    --typeface-sans: 'IBM Plex Sans Variable', 'IBM Plex Sans', system-ui, sans-serif;
+    --typeface-mono: 'IBM Plex Mono', 'SF Mono', Menlo, Consolas, monospace;
     --background: oklch(0.985 0.002 255);
     --foreground: oklch(0.18 0.012 255);
     --card: oklch(1 0 0);
