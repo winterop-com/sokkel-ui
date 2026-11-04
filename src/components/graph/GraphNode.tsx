@@ -51,6 +51,8 @@ const CHROME = 22
 const GAP = 6
 const DOT = 8
 const GLYPH = 12
+/** The extra padding across a round box. */
+const ROUND_PAD = 8
 
 /** The words on a node box's two lines. */
 function linesOf(data: GraphNodeData): { title: string; named: boolean; line: string; duration: string | null } {
@@ -68,7 +70,10 @@ export function graphNodeSize(data: GraphNodeData, measure: Measure): { width: n
         measure(title, named ? 'title' : 'title-mono') +
         (data.status === undefined ? 0 : GAP + DOT)
     const foot = (line === '' ? 0 : measure(line, 'small-mono')) + (duration === null ? 0 : GAP + 2 + measure(duration, 'small-mono'))
-    const width = Math.min(NODE_MAX_WIDTH, Math.max(NODE_MIN_WIDTH, Math.ceil(Math.max(head, foot) + CHROME)))
+    const width = Math.min(
+        NODE_MAX_WIDTH,
+        Math.max(NODE_MIN_WIDTH, Math.ceil(Math.max(head, foot) + CHROME + (data.shape === 'round' ? ROUND_PAD : 0))),
+    )
     return { width, height: line === '' && duration === null ? NODE_HEIGHT_SHORT : NODE_HEIGHT }
 }
 

@@ -179,6 +179,7 @@ export function elkOptions(direction: GraphDirection): Record<string, string> {
         'elk.direction': direction === 'right' ? 'RIGHT' : 'DOWN',
         'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
         'elk.layered.considerModelOrder.strategy': 'NODES_AND_EDGES',
+        'elk.layered.cycleBreaking.strategy': 'MODEL_ORDER',
         'elk.layered.spacing.nodeNodeBetweenLayers': String(RANK_GAP),
         'elk.spacing.nodeNode': String(NODE_GAP),
         'elk.edgeRouting': 'ORTHOGONAL',
