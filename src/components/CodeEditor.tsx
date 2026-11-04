@@ -199,7 +199,7 @@ export function CodeEditor({
             data-slot="code-editor"
             aria-invalid={invalid || undefined}
             className={cn(
-                'min-h-24 overflow-hidden rounded-control border border-input bg-field focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 aria-invalid:border-destructive [&_.cm-editor]:h-full',
+                'min-h-24 overflow-hidden rounded-control border border-input bg-field focus-within:border-ring/80 aria-invalid:border-destructive [&_.cm-editor]:h-full',
                 readOnly && 'bg-muted/40',
                 className,
             )}
