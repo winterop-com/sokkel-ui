@@ -1,11 +1,9 @@
-import { Music, Pause, Play, Repeat, Repeat1, Shuffle, SkipBack, SkipForward, Volume1, Volume2, VolumeX } from 'lucide-react'
+import { Music, Repeat, Repeat1, Shuffle, SkipBack, SkipForward } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
 import { cn } from '../../lib/cn'
-import { Button } from '../ui/button'
-import { Slider } from '../ui/slider'
-import { MediaSlider } from './MediaSlider'
-import { formatRemaining, formatTime, type MediaRange } from './time'
+import { PlayButton, Position, TransportButton, VolumeControl } from './MediaControls'
+import type { MediaRange } from './time'
 
 /** How a queue repeats: not at all, the whole queue, or the one item playing. */
 export type RepeatMode = 'off' | 'all' | 'one'
@@ -42,10 +40,6 @@ const LABELS: MediaBarLabels = {
 }
 
 const NEXT_REPEAT: Record<RepeatMode, RepeatMode> = { off: 'all', all: 'one', one: 'off' }
-
-/** How far one arrow key moves the position, and how far Page Up and Page Down move it, in seconds. */
-const SEEK_STEP = 5
-const SEEK_LARGE_STEP = 30
 
 export interface MediaBarProps {
     title: ReactNode
@@ -120,28 +114,6 @@ export function MediaBar({
     const level = muted ? 0 : volume
     const repeatLabel = repeat === 'one' ? words.repeatOne : repeat === 'all' ? words.repeatAll : words.repeatOff
 
-    const playButton = (
-        <Button
-            size="icon"
-            aria-label={playing ? words.pause : words.play}
-            onClick={() => {
-                onPlayingChange(!playing)
-            }}
-        >
-            {playing ? <Pause className="fill-current" aria-hidden /> : <Play className="fill-current" aria-hidden />}
-        </Button>
-    )
-    const previousButton = (
-        <Button variant="ghost" size="icon-sm" aria-label={words.previous} onClick={onPrevious} disabled={onPrevious === undefined}>
-            <SkipBack className="fill-current" aria-hidden />
-        </Button>
-    )
-    const nextButton = (
-        <Button variant="ghost" size="icon-sm" aria-label={words.next} onClick={onNext} disabled={onNext === undefined}>
-            <SkipForward className="fill-current" aria-hidden />
-        </Button>
-    )
-
     return (
         <div
             data-slot="media-bar"
@@ -162,35 +134,31 @@ export function MediaBar({
                 <div className="flex min-w-0 items-center justify-end gap-1 @2xl:flex-col @2xl:items-stretch @2xl:justify-center @2xl:gap-0.5">
                     <div className="flex items-center justify-center gap-1 @2xl:gap-2">
                         {onShuffleChange !== undefined && (
-                            <Button
-                                variant="ghost"
-                                size="icon-sm"
-                                aria-label={words.shuffle}
-                                aria-pressed={shuffle}
-                                onClick={() => {
-                                    onShuffleChange(!shuffle)
-                                }}
-                                className={cn('hidden @2xl:inline-flex', shuffle ? 'text-primary-ink' : 'text-muted-foreground')}
+                            <TransportButton
+                                label={words.shuffle}
+                                pressed={shuffle}
+                                onClick={() => onShuffleChange(!shuffle)}
+                                className="hidden @2xl:inline-flex"
                             >
                                 <Shuffle aria-hidden />
-                            </Button>
+                            </TransportButton>
                         )}
-                        {previousButton}
-                        {playButton}
-                        {nextButton}
+                        <TransportButton label={words.previous} onClick={onPrevious} disabled={onPrevious === undefined}>
+                            <SkipBack className="fill-current" aria-hidden />
+                        </TransportButton>
+                        <PlayButton playing={playing} onToggle={() => onPlayingChange(!playing)} words={words} />
+                        <TransportButton label={words.next} onClick={onNext} disabled={onNext === undefined}>
+                            <SkipForward className="fill-current" aria-hidden />
+                        </TransportButton>
                         {onRepeatChange !== undefined && (
-                            <Button
-                                variant="ghost"
-                                size="icon-sm"
-                                aria-label={repeatLabel}
-                                aria-pressed={repeat !== 'off'}
-                                onClick={() => {
-                                    onRepeatChange(NEXT_REPEAT[repeat])
-                                }}
-                                className={cn('hidden @2xl:inline-flex', repeat === 'off' ? 'text-muted-foreground' : 'text-primary-ink')}
+                            <TransportButton
+                                label={repeatLabel}
+                                pressed={repeat !== 'off'}
+                                onClick={() => onRepeatChange(NEXT_REPEAT[repeat])}
+                                className="hidden @2xl:inline-flex"
                             >
                                 {repeat === 'one' ? <Repeat1 aria-hidden /> : <Repeat aria-hidden />}
-                            </Button>
+                            </TransportButton>
                         )}
                         {extra !== undefined && <div className="flex items-center gap-1 @2xl:hidden">{extra}</div>}
                     </div>
@@ -204,77 +172,16 @@ export function MediaBar({
                 </div>
 
                 <div className="hidden min-w-0 items-center justify-end gap-2 @2xl:flex">
-                    <div className="flex w-36 items-center gap-1">
-                        <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            aria-label={muted ? words.unmute : words.mute}
-                            aria-pressed={muted}
-                            disabled={onMutedChange === undefined}
-                            onClick={() => {
-                                onMutedChange?.(!muted)
-                            }}
-                            className="text-muted-foreground"
-                        >
-                            <VolumeGlyph level={level} />
-                        </Button>
-                        <Slider
-                            aria-label={words.volume}
-                            value={Math.round(level * 100)}
-                            onValueChange={(next) => {
-                                const value = Array.isArray(next) ? next[0] : next
-                                onVolumeChange(value / 100)
-                                if (muted && value > 0) onMutedChange?.(false)
-                            }}
-                            className="min-w-0 flex-1"
-                        />
-                    </div>
+                    <VolumeControl
+                        level={level}
+                        muted={muted}
+                        onMutedChange={onMutedChange}
+                        onVolumeChange={onVolumeChange}
+                        words={words}
+                    />
                     {extra !== undefined && <div className="flex items-center gap-1">{extra}</div>}
                 </div>
             </div>
         </div>
     )
-}
-
-/** The seek slider between the elapsed and the remaining time. */
-function Position({
-    at,
-    duration,
-    buffered,
-    label,
-    onSeek,
-    onScrub,
-}: {
-    at: number
-    duration: number
-    buffered?: readonly MediaRange[]
-    label: string
-    onSeek: (seconds: number) => void
-    onScrub: (value: number | null) => void
-}) {
-    return (
-        <div className="flex items-center gap-2 font-mono text-xs text-muted-foreground tabular-nums">
-            <span className="w-11 shrink-0 text-right">{formatTime(at)}</span>
-            <MediaSlider
-                value={at}
-                max={duration}
-                label={label}
-                valueText={(value) => `${formatTime(value)} / ${formatTime(duration)}`}
-                buffered={buffered}
-                step={SEEK_STEP}
-                largeStep={SEEK_LARGE_STEP}
-                onChange={onSeek}
-                onScrub={onScrub}
-                className="min-w-0 flex-1"
-            />
-            <span className="w-11 shrink-0">{formatRemaining(at, duration)}</span>
-        </div>
-    )
-}
-
-/** Loud, quiet or silent, in the glyph. */
-export function VolumeGlyph({ level, className }: { level: number; className?: string }) {
-    if (level <= 0) return <VolumeX className={className} aria-hidden />
-    if (level < 0.5) return <Volume1 className={className} aria-hidden />
-    return <Volume2 className={className} aria-hidden />
 }
