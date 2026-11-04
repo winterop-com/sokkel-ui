@@ -3,9 +3,8 @@
 ## Conventions
 
 - Conventional commits (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`), no attribution lines, no emojis.
-- British English in prose, comments and story text: colour, behaviour, centre, organise. Code
-  and CSS names keep the spelling the language or the standard fixes (`color`, `--color-*`,
-  `colorScheme`).
+- American English everywhere, prose, comments and story text as well as code: color, behavior,
+  center, organize.
 - Apps install this package and never copy from it: a component an app needs to differ gets a new
   option here, never a local edit in the app.
 - `tokens/tokens.json` is the only place a token is defined. Run `bun run tokens` after editing it;
