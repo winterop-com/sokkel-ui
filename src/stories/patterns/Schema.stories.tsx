@@ -1,6 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
+import { IOCard } from '../../components/schema/IOCard'
 import { SchemaView } from '../../components/schema/SchemaView'
+import { StatusChip } from '../../components/StatusChip'
+import { DropdownMenuItem } from '../../components/ui/dropdown-menu'
 import type { JsonSchema } from '../../components/schema/read'
 import { Section } from '../../components/Section'
 
@@ -99,6 +102,70 @@ export const Nested: StoryObj = {
                     <SchemaView schema={ORDER} open={2} />
                 </div>
             </Section>
+        </Ground>
+    ),
+}
+
+const VALIDATE_IN: JsonSchema = {
+    type: 'object',
+    required: ['rows'],
+    properties: {
+        rows: { type: 'array', description: 'The rows read by the step before.', items: { $ref: '#/$defs/Order' } },
+        strict: { type: 'boolean', default: false, description: 'Fail on the first bad row instead of collecting them.' },
+    },
+    $defs: {
+        Order: {
+            type: 'object',
+            required: ['sku', 'amount'],
+            properties: { sku: { type: 'string' }, amount: { type: 'string', pattern: '^[0-9]+[.][0-9]{2}$' } },
+        },
+    },
+}
+
+const VALIDATE_OUT: JsonSchema = {
+    type: 'object',
+    required: ['accepted', 'rejected'],
+    properties: {
+        accepted: { type: 'integer', minimum: 0, description: 'Rows that passed.' },
+        rejected: {
+            type: 'array',
+            description: 'Rows that failed, with why.',
+            items: {
+                type: 'object',
+                required: ['row', 'field', 'problem'],
+                properties: { row: { type: 'integer' }, field: { type: 'string' }, problem: { type: 'string' } },
+            },
+        },
+    },
+}
+
+/** A step's input and output as JSON Schemas, with a filled-in example on each side. */
+export const InputOutput: StoryObj = {
+    name: 'Input and output',
+    render: () => (
+        <Ground>
+            <IOCard
+                title="Validate orders"
+                code="validate"
+                description="Checks each order row against the rules and splits them into accepted and rejected."
+                status={<StatusChip status="failed" label="failed in the last run" />}
+                menu={
+                    <>
+                        <DropdownMenuItem>Open the step</DropdownMenuItem>
+                        <DropdownMenuItem>Copy the schemas</DropdownMenuItem>
+                    </>
+                }
+                input={{ schema: VALIDATE_IN, example: { rows: [{ sku: 'A-20431', amount: '12.50' }], strict: false } }}
+                output={{
+                    schema: VALIDATE_OUT,
+                    example: { accepted: 2147, rejected: [{ row: 112, field: 'amount', problem: 'not a number' }] },
+                }}
+            />
+            <IOCard
+                code="send-digest"
+                description="Takes nothing and sends the weekly digest."
+                output={{ schema: { type: 'object', properties: { sent: { type: 'integer', description: 'How many emails went out.' } } } }}
+            />
         </Ground>
     ),
 }
