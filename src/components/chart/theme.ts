@@ -6,7 +6,7 @@ export function chartTheme(look: ChartLook): Record<string, unknown> {
     const axis = {
         axisLine: { show: true, lineStyle: { color: look.border } },
         axisTick: { show: false },
-        axisLabel: { color: look.muted, fontFamily: look.font, fontSize: 10 },
+        axisLabel: { color: look.muted, fontFamily: look.font, fontSize: 11 },
         nameTextStyle: { color: look.muted, fontFamily: look.font, fontSize: 10 },
         splitLine: { show: true, lineStyle: { color: look.grid, width: 1 } },
         splitArea: { show: false },

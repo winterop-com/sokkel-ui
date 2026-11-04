@@ -55,7 +55,7 @@ function SparkArea({ values, className }: { values: readonly number[]; className
  * One reading as a dashboard tile: a small title, the value written large, and optionally a trend
  * drawn faintly behind it and a change against an earlier period. `thresholds` pick the reading's
  * color, which inks the value (`colorMode="value"`) or fills the tile (`colorMode="background"`).
- * A null value says there is no data.
+ * A null value says there is no data, in neutral ink and without its trend.
  */
 export function StatPanel({
     title,
@@ -100,7 +100,7 @@ export function StatPanel({
     words?: StatWords
     className?: string
 }) {
-    const tone = thresholdColor(value, thresholds) ?? color
+    const tone = value === null ? undefined : (thresholdColor(value, thresholds) ?? color)
     const filled = colorMode === 'background' && tone !== undefined
     const inked = colorMode === 'value' && tone !== undefined
     const written = value === null ? words.noData : format !== undefined ? format(value) : formatValue(value, decimals)
@@ -118,7 +118,7 @@ export function StatPanel({
                 className,
             )}
         >
-            {sparkline !== undefined && (
+            {sparkline !== undefined && value !== null && (
                 <SparkArea
                     values={sparkline}
                     className={cn('-z-10', filled ? 'text-on-fill' : inked ? 'text-(--tone)' : 'text-muted-foreground')}
@@ -128,6 +128,23 @@ export function StatPanel({
                 <h3 className={cn('min-w-0 flex-1 truncate text-xs font-medium', filled ? 'text-on-fill/90' : 'text-muted-foreground')}>
                     {title}
                 </h3>
+                {delta !== undefined && value !== null && (
+                    <span
+                        className={cn(
+                            'flex shrink-0 items-center gap-0.5 text-xs font-medium tabular-nums',
+                            filled
+                                ? 'text-on-fill/90'
+                                : good === undefined
+                                  ? 'text-muted-foreground'
+                                  : good
+                                    ? 'text-good'
+                                    : 'text-critical',
+                        )}
+                    >
+                        {rising ? <ArrowUpRight className="size-3.5" aria-hidden /> : <ArrowDownRight className="size-3.5" aria-hidden />}
+                        {delta}
+                    </span>
+                )}
                 {info !== undefined && (
                     <Tooltip>
                         <TooltipTrigger
@@ -156,25 +173,8 @@ export function StatPanel({
                             <span className={cn('text-sm font-medium', !filled && !inked && 'text-muted-foreground')}>{unit}</span>
                         )}
                     </p>
-                    {(delta !== undefined || note !== undefined) && (
-                        <p className={cn('flex items-center gap-1.5 text-xs', filled ? 'text-on-fill/85' : 'text-muted-foreground')}>
-                            {delta !== undefined && (
-                                <span
-                                    className={cn(
-                                        'flex items-center gap-0.5 font-medium tabular-nums',
-                                        !filled && good !== undefined && (good ? 'text-good' : 'text-critical'),
-                                    )}
-                                >
-                                    {rising ? (
-                                        <ArrowUpRight className="size-3.5" aria-hidden />
-                                    ) : (
-                                        <ArrowDownRight className="size-3.5" aria-hidden />
-                                    )}
-                                    {delta}
-                                </span>
-                            )}
-                            {note !== undefined && <span className="truncate">{note}</span>}
-                        </p>
+                    {note !== undefined && (
+                        <p className={cn('truncate text-xs', filled ? 'text-on-fill/85' : 'text-muted-foreground')}>{note}</p>
                     )}
                 </div>
             </LoadingOverlay>

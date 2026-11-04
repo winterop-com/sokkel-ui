@@ -84,10 +84,17 @@ export function timeSeriesOption({
                             ? {
                                   silent: true,
                                   symbol: 'none',
-                                  label: { show: false },
                                   data: lines.map((line) => ({
                                       yAxis: line.value,
                                       lineStyle: { color: look.token(line.color), type: 'dashed', width: 1 },
+                                      label: {
+                                          show: true,
+                                          position: 'insideEndTop',
+                                          formatter: () => write(line.value ?? 0),
+                                          color: look.token(line.color),
+                                          fontFamily: look.font,
+                                          fontSize: 10,
+                                      },
                                   })),
                               }
                             : undefined,
