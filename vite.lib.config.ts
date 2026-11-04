@@ -30,6 +30,7 @@ export default defineConfig({
                 ...entries('components/terminal'),
                 ...entries('components/dashboard'),
                 ...entries('components/schema'),
+                ...entries('components/chart'),
                 ...entries('hooks'),
                 ...entries('lib'),
             },
