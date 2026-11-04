@@ -133,7 +133,7 @@ function Events() {
 }
 
 const LOG: LogLine[] = [
-    { at: '14:02:11.204', level: 'info', source: 'fetch', text: 'GET /v1/exports/orders-2026-10.csv?project=atlas' },
+    { at: '14:02:11.204', level: 'info', source: 'fetch', text: 'GET /v1/exports/orders-2026-10.csv?project=larkspur' },
     { at: '14:02:11.902', level: 'info', source: 'fetch', text: 'read 2,184 rows in 0.7s' },
     { at: '14:02:12.010', level: 'debug', source: 'transform', text: 'map: amount = try_cast(amount as double)' },
     { at: '14:02:12.115', level: 'warning', source: 'transform', text: '37 rows carry an amount that does not parse' },
@@ -171,7 +171,7 @@ function Json() {
                             { code: 'fetch', state: 'succeeded', rows: 2184 },
                             { code: 'validate', state: 'failed', problems: [{ row: 412, field: 'amount', message: 'must be a number' }] },
                         ],
-                        labels: { team: 'billing', project: 'atlas' },
+                        labels: { team: 'billing', project: 'larkspur' },
                     }}
                 />
             </Section>

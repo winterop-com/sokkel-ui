@@ -38,7 +38,7 @@ export const Variants: StoryObj = {
                         </BreadcrumbItem>
                         <BreadcrumbSeparator />
                         <BreadcrumbItem>
-                            <BreadcrumbPage>Atlas</BreadcrumbPage>
+                            <BreadcrumbPage>Larkspur</BreadcrumbPage>
                         </BreadcrumbItem>
                     </BreadcrumbList>
                 </Breadcrumb>
@@ -92,7 +92,7 @@ export const RunPath: StoryObj = {
                         </BreadcrumbItem>
                         <BreadcrumbSeparator />
                         <BreadcrumbItem>
-                            <BreadcrumbLink href="#">Atlas</BreadcrumbLink>
+                            <BreadcrumbLink href="#">Larkspur</BreadcrumbLink>
                         </BreadcrumbItem>
                         <BreadcrumbSeparator />
                         <BreadcrumbItem>

@@ -23,7 +23,7 @@ const E = '\u001b['
 const SESSION: TerminalEntry[] = [
     {
         id: '1',
-        command: 'jobs list --project atlas',
+        command: 'jobs list --project larkspur',
         output: `${E}2mCODE              STATE       LAST RUN${E}0m
 nightly-export    ${E}31mfailed${E}0m      02:00
 import-orders     ${E}36mrunning${E}0m     14:02
@@ -48,7 +48,7 @@ function Session() {
     const [entries, setEntries] = useState(SESSION)
     return (
         <Ground>
-            <Terminal title="ada@atlas: ~/jobs" entries={entries} onClear={() => setEntries([])} className="h-80" />
+            <Terminal title="ada@tidevann: ~/jobs" entries={entries} onClear={() => setEntries([])} className="h-80" />
         </Ground>
     )
 }
@@ -58,7 +58,7 @@ function Midway() {
     return (
         <Ground>
             <Terminal
-                title="ada@atlas: ~/jobs"
+                title="ada@tidevann: ~/jobs"
                 streaming
                 className="h-64"
                 entries={[
@@ -101,7 +101,7 @@ function Live() {
     return (
         <Ground>
             <Terminal
-                title="ada@atlas: ~/jobs"
+                title="ada@tidevann: ~/jobs"
                 streaming={step < STEPS.length}
                 className="h-56"
                 onClear={() => {

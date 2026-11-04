@@ -61,7 +61,7 @@ export const Variants: StoryObj = {
                     </Badge>
                 </Labeled>
                 <Labeled label="as a link">
-                    <Badge render={<a href="#" />}>atlas</Badge>
+                    <Badge render={<a href="#" />}>larkspur</Badge>
                 </Labeled>
             </div>
         </Ground>
@@ -105,7 +105,7 @@ export const JobTags: StoryObj = {
                     </Badge>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                    <Badge variant="outline">atlas</Badge>
+                    <Badge variant="outline">larkspur</Badge>
                     <Badge variant="outline">csv</Badge>
                     <Badge variant="secondary">
                         <Repeat data-icon="inline-start" />

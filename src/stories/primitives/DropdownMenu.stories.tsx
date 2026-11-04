@@ -136,7 +136,7 @@ function JobActions() {
 /** Submenus open two levels deep, with checkbox and radio items inside them. */
 function Submenus() {
     const [labels, setLabels] = useState<string[]>(['exports'])
-    const [project, setProject] = useState('atlas')
+    const [project, setProject] = useState('larkspur')
     const toggle = (label: string) =>
         setLabels((current) => (current.includes(label) ? current.filter((each) => each !== label) : [...current, label]))
     return (
@@ -157,7 +157,7 @@ function Submenus() {
                             <DropdownMenuGroup>
                                 <DropdownMenuLabel>Projects</DropdownMenuLabel>
                                 <DropdownMenuRadioGroup value={project} onValueChange={setProject}>
-                                    <DropdownMenuRadioItem value="atlas">atlas</DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem value="larkspur">larkspur</DropdownMenuRadioItem>
                                     <DropdownMenuRadioItem value="harbor">harbor</DropdownMenuRadioItem>
                                     <DropdownMenuRadioItem value="juniper">juniper</DropdownMenuRadioItem>
                                 </DropdownMenuRadioGroup>

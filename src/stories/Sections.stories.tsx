@@ -5,6 +5,7 @@ import type { ReactNode } from 'react'
 import { Rail, type RailGroup } from '../components/Rail'
 import { Section, Surface } from '../components/Section'
 import { Page, Shell } from '../components/Shell'
+import { TidevannMark } from './fixtures/TidevannMark'
 
 /**
  * A job's overview page in the three ways a page can be divided, drawn with the shell and
@@ -163,11 +164,11 @@ function Overview({ layout }: { layout: 'flat' | 'boxed' | 'hybrid' }) {
         )
     return (
         <Shell
-            rail={<Rail mark={<Workflow className="size-4" aria-hidden />} name="atlas" groups={GROUPS} onCollapsedChange={() => {}} />}
+            rail={<Rail mark={<TidevannMark />} name="Tidevann" groups={GROUPS} onCollapsedChange={() => {}} />}
             top={
                 <>
                     <span className="text-sm text-muted-foreground">Jobs</span>
-                    <span className="ml-auto font-mono text-xs text-muted-foreground">atlas 1.4.0</span>
+                    <span className="ml-auto font-mono text-xs text-muted-foreground">Tidevann 1.4.0</span>
                 </>
             }
         >

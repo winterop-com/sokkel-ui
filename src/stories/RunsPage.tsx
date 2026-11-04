@@ -15,6 +15,7 @@ import { TopBar } from '../components/TopBar'
 import { Button } from '../components/ui/button'
 import { DropdownMenuItem } from '../components/ui/dropdown-menu'
 import { TooltipProvider } from '../components/ui/tooltip'
+import { TidevannMark } from './fixtures/TidevannMark'
 
 /**
  * A list page built from the library's parts, as an app builds one: the rail and top bar, a page
@@ -95,8 +96,8 @@ export function RunsPage() {
     return (
         <TooltipProvider>
             <Shell
-                rail={<Rail mark="A" name="atlas" groups={GROUPS} />}
-                top={<TopBar trail={[{ label: 'atlas', href: '#' }, { label: 'Runs' }]} />}
+                rail={<Rail mark={<TidevannMark />} name="Tidevann" groups={GROUPS} />}
+                top={<TopBar trail={[{ label: 'Tidevann', href: '#' }, { label: 'Runs' }]} />}
             >
                 <Page className="h-full">
                     <PageHeader title="Runs" count="8 today" actions={<Button size="sm">Run a job</Button>} />

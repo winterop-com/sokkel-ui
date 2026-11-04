@@ -70,7 +70,7 @@ function Unfolding() {
                     <dt className="text-muted-foreground">month</dt>
                     <dd className="font-mono">2026-10</dd>
                     <dt className="text-muted-foreground">project</dt>
-                    <dd className="font-mono">atlas</dd>
+                    <dd className="font-mono">larkspur</dd>
                 </dl>
             </Unfoldable>
             <Unfoldable heading="Outputs" aside="1 table">

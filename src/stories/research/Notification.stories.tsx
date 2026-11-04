@@ -51,7 +51,7 @@ function Frame({
     return (
         <div ref={frame} className="relative flex h-80 min-w-0 flex-col overflow-hidden rounded-xl border bg-background shadow-surface">
             <div className="flex h-10 shrink-0 items-center gap-1.5 border-b border-border-strong bg-sidebar px-3 text-xs">
-                <span className="font-medium">atlas</span>
+                <span className="font-medium">larkspur</span>
                 <span className="text-faint">/</span>
                 <span className="text-muted-foreground">Jobs</span>
                 <div className="flex-1" />
@@ -247,7 +247,7 @@ function StripNote() {
     }
     const rows: [string, ReactNode][] = [
         ['Schedule', 'Every day at 02:00 UTC'],
-        ['Endpoint', <span className="font-mono">https://hooks.example.org/atlas/export</span>],
+        ['Endpoint', <span className="font-mono">https://hooks.example.org/larkspur/export</span>],
         ['Timeout', '15 minutes'],
     ]
     return (

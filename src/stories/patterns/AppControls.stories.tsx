@@ -28,7 +28,7 @@ function Toggle() {
     return (
         <Ground>
             <div className="flex h-shell-top items-center gap-2 rounded-surface border border-border-strong bg-sidebar px-3">
-                <span className="text-sm font-medium">atlas</span>
+                <span className="text-sm font-medium">Tidevann</span>
                 <span className="font-mono text-xs text-muted-foreground">1.4.0</span>
                 <div className="flex-1" />
                 <ThemeToggle dark={dark} onToggle={() => setDark(!dark)} />

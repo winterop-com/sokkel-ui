@@ -11,6 +11,7 @@ import { ThemeToggle } from '../../components/ThemeToggle'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { TooltipProvider } from '../../components/ui/tooltip'
+import { TidevannMark } from '../fixtures/TidevannMark'
 
 /**
  * An app with few places, framed by the navbar along the top instead of a rail: a settings page of
@@ -25,8 +26,8 @@ function SettingsApp() {
         <TooltipProvider>
             <div className="flex h-svh flex-col bg-background text-foreground">
                 <NavBar
-                    mark="H"
-                    name="harbor"
+                    mark={<TidevannMark />}
+                    name="Tidevann"
                     links={[
                         { id: 'overview', label: 'Overview', href: '#' },
                         { id: 'projects', label: 'Projects', href: '#' },
@@ -82,10 +83,10 @@ function SettingsApp() {
                         <Section title="Workspace" actions={<Button size="sm">Save</Button>}>
                             <div className="grid gap-4 md:grid-cols-2">
                                 <Field id="name" label="Name">
-                                    <Input id="name" defaultValue="Harbor" />
+                                    <Input id="name" defaultValue="Tidevann" />
                                 </Field>
                                 <Field id="url" label="Address" hint="base_url" keyHint>
-                                    <Input id="url" className="font-mono" defaultValue="https://harbor.example.org" />
+                                    <Input id="url" className="font-mono" defaultValue="https://tidevann.example.org" />
                                 </Field>
                                 <div className="flex w-full flex-col gap-1.5">
                                     <span className="text-sm font-medium">Schedule clock</span>

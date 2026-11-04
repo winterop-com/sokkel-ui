@@ -8,13 +8,14 @@ and ask before acting.
 - Never write the name of a product or app that uses this library. Only the library's own name
   may appear. That covers files, story data, comments, docs, theme and story names, scripts,
   commit messages, PR titles and bodies, and the repository's description.
-- No app's domain words or data either: no app's entities, codes, hosts or vocabulary. Stories use
-  one neutral fictional workspace:
+- No app's domain words or data either: no app's entities, codes, hosts or vocabulary. Every
+  example belongs to one fictional app, Tidevann ("tidewater"), drawn with its mark from
+  `src/stories/fixtures/TidevannMark.tsx`, and uses its neutral workspace:
     - jobs such as nightly-export, sync-inventory, rebuild-index, send-digest and import-orders;
     - run states succeeded, failed, running, queued, cancelled and skipped;
     - steps fetch, transform, validate, upload and notify;
     - people ada, grace, linus and margaret;
-    - projects atlas, harbor and juniper;
+    - the app Tidevann, with the projects harbor, juniper and larkspur;
     - services api, worker and scheduler;
     - places by plain geography: continents, countries, cities, regions, sites;
     - hosts on example.org.

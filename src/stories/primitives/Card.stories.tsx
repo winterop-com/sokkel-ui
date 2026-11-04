@@ -78,8 +78,8 @@ export const Variants: StoryObj = {
 
 const PROJECTS = [
     {
-        code: 'atlas',
-        name: 'Atlas',
+        code: 'larkspur',
+        name: 'Larkspur',
         description: 'Order exports and the reports built on them.',
         jobs: 4,
         last: 'succeeded',
