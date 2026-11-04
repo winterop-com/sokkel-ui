@@ -19,9 +19,25 @@ const THEMES = [
     ...candidates.map((entry) => ({ value: entry.value, title: `${entry.title} (candidate)`, right: entry.app })),
 ]
 
-/** The scheme, theme, density and corners a story is drawn in, set on the document as an app sets them. */
+/** Typefaces a theme may choose, sans and mono together, to try on every story. */
+const TYPEFACES: Record<string, { sans: string; mono: string }> = {
+    inter: { sans: "'Inter Variable', system-ui, sans-serif", mono: "'JetBrains Mono Variable', ui-monospace, monospace" },
+    geist: { sans: "'Geist Variable', system-ui, sans-serif", mono: "'Geist Mono Variable', ui-monospace, monospace" },
+    system: {
+        sans: "system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif",
+        mono: "ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace",
+    },
+}
+
+/** The scheme, theme, density, corners and typeface a story is drawn in, set on the document as an app sets them. */
 const withLook: Decorator = (Story, context) => {
-    const { theme, look, density, corners } = context.globals as { theme?: string; look?: string; density?: string; corners?: string }
+    const { theme, look, density, corners, typeface } = context.globals as {
+        theme?: string
+        look?: string
+        density?: string
+        corners?: string
+        typeface?: string
+    }
     const root = document.documentElement
     root.classList.toggle('dark', theme !== 'light')
     if (look === undefined || look === 'default') root.removeAttribute('data-theme')
@@ -29,6 +45,14 @@ const withLook: Decorator = (Story, context) => {
     root.setAttribute('data-density', density ?? 'regular')
     if (corners === undefined || corners === 'theme') root.style.removeProperty('--radius')
     else root.style.setProperty('--radius', corners)
+    const face = typeface === undefined ? undefined : TYPEFACES[typeface]
+    if (face === undefined) {
+        root.style.removeProperty('--typeface-sans')
+        root.style.removeProperty('--typeface-mono')
+    } else {
+        root.style.setProperty('--typeface-sans', face.sans)
+        root.style.setProperty('--typeface-mono', face.mono)
+    }
     return <Story />
 }
 
@@ -84,8 +108,22 @@ const preview: Preview = {
                 dynamicTitle: true,
             },
         },
+        typeface: {
+            description: 'Typeface, overriding the theme',
+            toolbar: {
+                title: 'Typeface',
+                icon: 'markup',
+                items: [
+                    { value: 'theme', title: "Theme's typeface" },
+                    { value: 'inter', title: 'Inter and JetBrains Mono' },
+                    { value: 'geist', title: 'Geist and Geist Mono' },
+                    { value: 'system', title: 'System (SF Pro, Segoe UI, Roboto)' },
+                ],
+                dynamicTitle: true,
+            },
+        },
     },
-    initialGlobals: { theme: 'dark', look: 'default', density: 'regular', corners: 'theme' },
+    initialGlobals: { theme: 'dark', look: 'default', density: 'regular', corners: 'theme', typeface: 'theme' },
     decorators: [withLook],
 }
 

@@ -1,7 +1,8 @@
 import { PanelRightClose } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { ResizeHandle } from './ResizeHandle'
 
 /** One tab of a side panel. */
 export interface SidePanelTab {
@@ -16,7 +17,8 @@ export interface SidePanelTab {
  * the content scrolling under it.
  *
  * The header lines up with the shell's top bar, so the panel reads as a column of the shell, not
- * as a card dropped beside the page.
+ * as a card dropped beside the page. Given `size` and `onSizeChange`, its left edge drags to
+ * resize it; otherwise it keeps `width`.
  */
 export function SidePanel({
     tabs,
@@ -24,59 +26,91 @@ export function SidePanel({
     onActiveChange,
     onClose,
     width = '22rem',
+    size,
+    onSizeChange,
+    minSize = 280,
+    maxSize = 640,
+    defaultSize = 352,
     className,
-    words = { close: 'Close the side panel' },
+    words = { close: 'Close the side panel', resize: 'Resize the side panel' },
 }: {
     tabs: SidePanelTab[]
     active?: string
     onActiveChange?: (id: string) => void
     onClose?: () => void
-    /** A CSS width. */
+    /** A CSS width, when the panel is not resizable. */
     width?: string
+    /** The width in pixels; with `onSizeChange` the left edge drags to resize it. */
+    size?: number
+    onSizeChange?: (size: number) => void
+    minSize?: number
+    maxSize?: number
+    /** The width a double click on the edge returns to. */
+    defaultSize?: number
     className?: string
-    words?: { close: string }
+    words?: { close: string; resize: string }
 }) {
     const current = tabs.find((tab) => tab.id === active) ?? tabs[0]
+    const panel = useRef<HTMLElement>(null)
+    const resizable = size !== undefined && onSizeChange !== undefined
     return (
-        <aside className={cn('flex h-full shrink-0 flex-col border-l border-border-strong bg-sidebar', className)} style={{ width }}>
-            <div className="flex h-shell-top shrink-0 items-center gap-1 border-b border-border-strong px-2">
-                {tabs.length === 1 ? (
-                    <h2 className="truncate px-1.5 text-sm font-medium">{current?.label}</h2>
-                ) : (
-                    <div role="tablist" className="flex min-w-0 items-center gap-1">
-                        {tabs.map((tab) => (
-                            <button
-                                key={tab.id}
-                                type="button"
-                                role="tab"
-                                aria-selected={tab.id === current?.id}
-                                className={cn(
-                                    'h-7 rounded-md px-2.5 text-sm',
-                                    tab.id === current?.id
-                                        ? 'bg-secondary font-medium text-foreground'
-                                        : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground',
-                                )}
-                                onClick={() => onActiveChange?.(tab.id)}
-                            >
-                                {tab.label}
-                            </button>
-                        ))}
-                    </div>
-                )}
-                {onClose !== undefined && (
-                    <button
-                        type="button"
-                        aria-label={words.close}
-                        title={words.close}
-                        className="ml-auto flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground"
-                        onClick={onClose}
-                    >
-                        <PanelRightClose className="size-4" aria-hidden />
-                    </button>
-                )}
-            </div>
-            <div className="min-h-0 flex-1 overflow-y-auto">{current?.content}</div>
-        </aside>
+        <>
+            {resizable && (
+                <ResizeHandle
+                    target={panel}
+                    size={size}
+                    onSize={onSizeChange}
+                    min={minSize}
+                    max={maxSize}
+                    reset={defaultSize}
+                    grows={-1}
+                    label={words.resize}
+                />
+            )}
+            <aside
+                ref={panel}
+                className={cn('flex h-full shrink-0 flex-col border-l border-border-strong bg-sidebar', className)}
+                style={{ width: resizable ? size : width }}
+            >
+                <div className="flex h-shell-top shrink-0 items-center gap-1 border-b border-border-strong px-2">
+                    {tabs.length === 1 ? (
+                        <h2 className="truncate px-1.5 text-sm font-medium">{current?.label}</h2>
+                    ) : (
+                        <div role="tablist" className="flex min-w-0 items-center gap-1">
+                            {tabs.map((tab) => (
+                                <button
+                                    key={tab.id}
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={tab.id === current?.id}
+                                    className={cn(
+                                        'h-7 rounded-md px-2.5 text-sm',
+                                        tab.id === current?.id
+                                            ? 'bg-secondary font-medium text-foreground'
+                                            : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground',
+                                    )}
+                                    onClick={() => onActiveChange?.(tab.id)}
+                                >
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                    {onClose !== undefined && (
+                        <button
+                            type="button"
+                            aria-label={words.close}
+                            title={words.close}
+                            className="ml-auto flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground"
+                            onClick={onClose}
+                        >
+                            <PanelRightClose className="size-4" aria-hidden />
+                        </button>
+                    )}
+                </div>
+                <div className="min-h-0 flex-1 overflow-y-auto">{current?.content}</div>
+            </aside>
+        </>
     )
 }
 

@@ -9,7 +9,7 @@ export interface LogLine {
     /** When it was written, already formatted: `14:02:11.204`. */
     at?: string
     level?: LogLevel
-    /** Where it came from: a step, a block, a logger. */
+    /** Where it came from: a step, a service, a logger. */
     source?: string
     text: string
 }
@@ -98,8 +98,8 @@ export function LogView({
                             {line.source !== undefined && <td className="pr-3 whitespace-nowrap text-terminal-accent">{line.source}</td>}
                             <td
                                 className={cn(
-                                    'pr-3',
-                                    wrap ? 'w-full [overflow-wrap:anywhere] whitespace-pre-wrap' : 'whitespace-pre',
+                                    'w-full pr-3',
+                                    wrap ? '[overflow-wrap:anywhere] whitespace-pre-wrap' : 'whitespace-pre',
                                     line.level === 'error' && 'text-terminal-critical',
                                 )}
                             >
