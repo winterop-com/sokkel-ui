@@ -242,7 +242,7 @@ function LibraryPage() {
             <PageHeader title="Albums" count={`${String(ALBUMS.length)} albums`} />
             <div className="flex flex-wrap items-center gap-2">
                 <SearchField value={query} onChange={setQuery} placeholder="Search albums" className="w-full sm:w-64" />
-                <div className="flex flex-1 items-center justify-between gap-2 sm:justify-end">
+                <div className="flex flex-1 flex-wrap items-center justify-between gap-2 sm:justify-end">
                     <Segmented
                         label="Order"
                         value={order}
