@@ -54,6 +54,9 @@ and ask before acting.
   full width, and the viewport toolbar shows it at the widths layouts are checked at: 360, 390
   and 430 for phones, 768 and 1024 for tablets, 1280, 1440 and 1920. No story exists only to
   show a narrower width.
+- Screenshot baselines are Linux renders, taken in the Playwright image as CI takes them:
+  `bun run test:visual:linux:update`. Never commit baselines taken on a Mac. A change that alters
+  a story's look carries its retaken baselines in the same PR.
 
 ## Design
 
