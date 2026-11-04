@@ -1,7 +1,10 @@
 name: storybook
 
+# Publishes only a commit on main whose CI passed.
 on:
-    push:
+    workflow_run:
+        workflows: [ci]
+        types: [completed]
         branches: [main]
     workflow_dispatch:
 
@@ -17,13 +20,15 @@ concurrency:
 jobs:
     deploy:
         # Runs once GitHub Pages is enabled for the repository with GitHub Actions as its source.
-        if: github.event.repository.has_pages
+        if: github.event.repository.has_pages && (github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'))
         runs-on: ubuntu-latest
         environment:
             name: github-pages
             url: ${{ steps.deployment.outputs.page_url }}
         steps:
             - uses: actions/checkout@v5
+              with:
+                  ref: ${{ github.event.workflow_run.head_sha || github.sha }}
             - uses: oven-sh/setup-bun@v2
             - run: bun install --frozen-lockfile
             - run: bun run build-storybook
