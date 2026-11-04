@@ -7,7 +7,7 @@ export interface GraphEdgeData extends Record<string, unknown> {
     points?: GraphPoint[]
     labelAt?: GraphPoint
     label?: string
-    /** `quiet` is dashed, for a way not taken yet; `strong` is drawn darker, for the way in use. */
+    /** `quiet` is dashed, for a way not taken yet; `strong` is drawn darker, for the way in use. A chosen edge is drawn in the foreground. */
     tone?: 'plain' | 'quiet' | 'strong'
     /** An arrowhead at the target end. */
     arrow?: boolean
@@ -62,7 +62,17 @@ function loopOf(sx: number, sy: number, tx: number, ty: number, down: boolean): 
  * One edge, along the route elk gave it, or a stepped line between the two handles until elk has
  * answered. A label sits where elk made room for it, or at the middle of the line.
  */
-export function GraphEdge({ id, data, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition }: EdgeProps<GraphEdgeKind>) {
+export function GraphEdge({
+    id,
+    data,
+    selected,
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+    sourcePosition,
+    targetPosition,
+}: EdgeProps<GraphEdgeKind>) {
     const points = data?.points
     const routed = points !== undefined && points.length >= 2 && data?.loop !== true
     const [stepped, middleX, middleY] = getSmoothStepPath({
@@ -80,13 +90,17 @@ export function GraphEdge({ id, data, sourceX, sourceY, targetX, targetY, source
     const from = loop?.from ?? (routed ? (points[points.length - 2] as GraphPoint) : behind(tip, targetPosition))
     const labelAt = loop?.labelAt ?? data?.labelAt ?? (routed ? midpointOf(points) : undefined) ?? { x: middleX, y: middleY }
     const tone = data?.tone ?? 'plain'
-    const stroke = tone === 'strong' ? 'var(--muted-foreground)' : 'var(--xy-edge-stroke)'
+    const stroke = selected === true ? 'var(--foreground)' : tone === 'strong' ? 'var(--muted-foreground)' : 'var(--xy-edge-stroke)'
     return (
         <>
             <BaseEdge
                 id={id}
                 path={path}
-                style={{ stroke, strokeWidth: tone === 'strong' ? 1.75 : 1.4, strokeDasharray: tone === 'quiet' ? '4 4' : undefined }}
+                style={{
+                    stroke,
+                    strokeWidth: selected === true ? 2.25 : tone === 'strong' ? 1.75 : 1.4,
+                    strokeDasharray: tone === 'quiet' ? '4 4' : undefined,
+                }}
             />
             {data?.arrow === true && <path d={arrowPath(tip, from)} style={{ fill: stroke }} aria-hidden />}
             {data?.label !== undefined && (

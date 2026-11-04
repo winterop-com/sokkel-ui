@@ -1,9 +1,9 @@
 import { Handle, Position, type Node, type NodeProps } from '@xyflow/react'
-import type { ComponentType } from 'react'
+import { useContext, type ComponentType } from 'react'
 
 import { cn } from '../../lib/cn'
 import type { Status } from '../StatusChip'
-import { useGraphDirection } from './context'
+import { GraphEditableContext, useGraphDirection } from './context'
 import type { Measure } from './measure'
 
 /** What one node box says. */
@@ -105,17 +105,24 @@ const PROGRESS_TONE: Partial<Record<Status, string>> = {
 
 /**
  * Where a node's edges end. React Flow routes an edge only to a handle, so a box keeps two, on the
- * sides its graph's direction gives them; in a view they are invisible and connect nothing.
+ * sides its graph's direction gives them; in a view they are invisible and connect nothing, and on
+ * an editable canvas they are the ports a connection is drawn between.
  */
 export function GraphHandles() {
     const down = useGraphDirection() === 'down'
+    const editable = useContext(GraphEditableContext)
+    const port = editable ? PORT : 'invisible'
     return (
         <>
-            <Handle type="target" position={down ? Position.Top : Position.Left} isConnectable={false} className="invisible" />
-            <Handle type="source" position={down ? Position.Bottom : Position.Right} isConnectable={false} className="invisible" />
+            <Handle type="target" position={down ? Position.Top : Position.Left} isConnectable={editable} className={port} />
+            <Handle type="source" position={down ? Position.Bottom : Position.Right} isConnectable={editable} className={port} />
         </>
     )
 }
+
+/** A port on an editable canvas: a quiet dot that takes the ring tone under the pointer and while any connection is drawn. */
+const PORT =
+    'size-2.5! rounded-chip! border! border-border-strong! bg-card! transition-colors hover:border-ring! hover:bg-ring! group-data-graph-connecting/graph:border-ring! group-data-graph-connecting/graph:bg-[color-mix(in_oklab,var(--ring)_45%,var(--card))]!'
 
 /**
  * One node as a box: the title (the name, or else the code in the code face) with an optional glyph

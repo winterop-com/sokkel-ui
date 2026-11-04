@@ -39,7 +39,16 @@ const LABEL_CHROME = { width: 10, height: 17 }
 export function useNodeGraph(
     items: readonly GraphItem[],
     links: readonly GraphLink[],
-    { direction = 'right', selected = null }: { direction?: GraphDirection; selected?: string | null } = {},
+    {
+        direction = 'right',
+        selected = null,
+        positions,
+    }: {
+        direction?: GraphDirection
+        selected?: string | null
+        /** Where nodes were moved to, by id, over where the layout put them. */
+        positions?: Readonly<Record<string, { x: number; y: number }>>
+    } = {},
 ): { nodes: Node[]; edges: Edge[]; settled: boolean } {
     const { measure, ready } = useMeasure()
 
@@ -85,22 +94,20 @@ export function useNodeGraph(
                 {
                     id: node.id,
                     type: item.type ?? 'box',
-                    position: { x: node.x, y: node.y },
+                    position: positions?.[node.id] ?? { x: node.x, y: node.y },
                     width: node.width,
                     height: node.height,
                     measured: { width: node.width, height: node.height },
                     selected: node.id === selected,
                     selectable: item.selectable ?? true,
                     focusable: item.selectable ?? true,
-                    draggable: false,
-                    connectable: false,
                     className:
                         'rounded-node outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring',
                     data: item.data,
                 },
             ]
         })
-    }, [items, placed, selected])
+    }, [items, placed, selected, positions])
 
     const edges = useMemo<Edge[]>(() => {
         const byId = new Map(placed.edges.map((edge) => [edge.id, edge]))
@@ -109,9 +116,11 @@ export function useNodeGraph(
             // A link from a node to itself is not placed; it is drawn as a loop beside its node.
             const edge = link.source === link.target ? { id, source: link.source, target: link.target } : byId.get(id)
             if (edge === undefined) return []
+            // A route elk drew no longer fits an edge whose node was moved.
+            const routed = positions?.[edge.source] === undefined && positions?.[edge.target] === undefined
             const data: GraphEdgeData = {
-                ...(edge.points === undefined ? {} : { points: edge.points }),
-                ...(edge.labelAt === undefined ? {} : { labelAt: edge.labelAt }),
+                ...(edge.points === undefined || !routed ? {} : { points: edge.points }),
+                ...(edge.labelAt === undefined || !routed ? {} : { labelAt: edge.labelAt }),
                 ...(link.label === undefined ? {} : { label: link.label }),
                 ...(link.tone === undefined ? {} : { tone: link.tone }),
                 ...(link.arrow === undefined ? {} : { arrow: link.arrow }),
@@ -119,7 +128,7 @@ export function useNodeGraph(
             }
             return [{ id: edge.id, source: edge.source, target: edge.target, type: 'graph', data }]
         })
-    }, [links, ids, placed])
+    }, [links, ids, placed, positions])
 
     return { nodes, edges, settled: placed.settled }
 }
