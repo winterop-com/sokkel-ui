@@ -17,6 +17,7 @@ export function Shell({
     rail,
     top,
     foot,
+    panel,
     children,
     words = { menu: 'Open the navigation', close: 'Close the navigation' },
 }: {
@@ -25,6 +26,8 @@ export function Shell({
     top?: ReactNode
     /** What the foot strip holds to the right of the rail's foot cell, if anything. */
     foot?: ReactNode
+    /** A side panel as the shell's right column, full height, its header level with the top bar. */
+    panel?: ReactNode
     children: ReactNode
     words?: { menu: string; close: string }
 }) {
@@ -72,6 +75,7 @@ export function Shell({
                     </footer>
                 )}
             </div>
+            {panel !== undefined && <div className="hidden lg:flex">{panel}</div>}
         </div>
     )
 }
