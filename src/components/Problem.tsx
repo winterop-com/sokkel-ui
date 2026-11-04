@@ -35,8 +35,8 @@ export function Problem({
         <div
             role={tone === 'error' ? 'alert' : 'status'}
             className={cn(
-                'flex flex-col gap-1.5 rounded-control border p-3 text-sm',
-                tone === 'error' ? 'border-critical/30 bg-critical/8' : 'border-warning/30 bg-warning/8',
+                'flex flex-col gap-1.5 rounded-r-control border-l-2 py-2.5 pr-3 pl-3 text-sm',
+                tone === 'error' ? 'border-critical bg-critical/6' : 'border-warning bg-warning/6',
                 className,
             )}
         >
