@@ -9,6 +9,9 @@ import { cn } from '@/lib/cn'
  *
  * The control is passed as children and takes `id` itself; `describedBy(id, …)` gives it the
  * `aria-describedby` that points at the help and the error.
+ *
+ * A setting a document names by key is labeled in words, with the key beside the label as a
+ * `keyHint`: the words can be translated, the key never is.
  */
 export function Field({
     id,
@@ -18,6 +21,7 @@ export function Field({
     help,
     error,
     mono = false,
+    keyHint = false,
     children,
     className,
     words = { required: 'required' },
@@ -33,6 +37,8 @@ export function Field({
     error?: string | null
     /** The label names a key, so it is drawn in the code face. */
     mono?: boolean
+    /** The hint is the setting's key, as a document or a command line writes it: drawn in the code face, never translated. */
+    keyHint?: boolean
     children: ReactNode
     className?: string
     words?: { required: string }
@@ -44,7 +50,9 @@ export function Field({
                     {label}
                 </Label>
                 {required === true && <span className="text-xs text-foreground">{words.required}</span>}
-                {hint !== undefined && <span className="text-xs text-faint">{hint}</span>}
+                {hint !== undefined && (
+                    <span className={cn('text-xs', keyHint ? 'font-mono text-muted-foreground' : 'text-faint')}>{hint}</span>
+                )}
             </div>
             {children}
             {help !== undefined && (

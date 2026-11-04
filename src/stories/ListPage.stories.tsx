@@ -219,11 +219,11 @@ function ConnectionForm() {
                                 onBlur={() => setTouched(true)}
                             />
                         </Field>
-                        <Field id="base-url" label="base_url" mono help="Where the instance answers, without /api.">
+                        <Field id="base-url" label="Base URL" hint="base_url" keyHint help="Where the instance answers, without /api.">
                             <Input id="base-url" className="font-mono" defaultValue="https://play.dhis2.org/2.43" aria-describedby="base-url-help" />
                         </Field>
                         <Field id="description" label="Description" className="lg:col-span-2">
-                            <Textarea id="description" className="min-h-20" defaultValue="The DHIS2 play demo, for the tour pipelines." />
+                            <Textarea id="description" defaultValue="The DHIS2 play demo, for the tour pipelines." />
                         </Field>
                         <label className="flex items-center justify-between gap-4 text-sm lg:col-span-2">
                             <span>
