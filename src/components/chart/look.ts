@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 
 /** The tokens series take in order when they name no color of their own. */
-export const SERIES_ORDER = ['chart-2', 'chart-3', 'chart-4', 'chart-5', 'kind-teal', 'kind-pink', 'kind-green', 'chart-1'] as const
+export const SERIES_ORDER = ['chart-2', 'chart-3', 'chart-4', 'kind-teal', 'kind-pink', 'kind-green', 'kind-blue', 'chart-5'] as const
 
 /**
  * The current theme's colors and typeface, resolved to hex for a renderer that takes no CSS.
