@@ -1,7 +1,7 @@
 import { Menu } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
-import { cn } from '@/lib/cn'
+import { cn } from '../lib/cn'
 
 /**
  * The app's frame: the rail on the left, a thin top bar over the content, the content as the one
@@ -37,12 +37,7 @@ export function Shell({
             <div className="hidden md:flex">{rail}</div>
             {drawer && (
                 <div className="fixed inset-0 z-40 md:hidden">
-                    <button
-                        type="button"
-                        aria-label={words.close}
-                        className="absolute inset-0 bg-scrim"
-                        onClick={() => setDrawer(false)}
-                    />
+                    <button type="button" aria-label={words.close} className="absolute inset-0 bg-scrim" onClick={() => setDrawer(false)} />
                     <div
                         className="absolute inset-y-0 left-0 flex shadow-pop"
                         onClick={(event) => {
@@ -83,12 +78,7 @@ export function Shell({
 /** The content's own padding, the density's page inset, for a page to sit in. */
 export function Page({ children, className }: { children: ReactNode; className?: string }) {
     return (
-        <div
-            className={cn(
-                'flex flex-col gap-(--density-page-gap) px-(--density-page-inset) pt-(--density-page-top) pb-10',
-                className,
-            )}
-        >
+        <div className={cn('flex flex-col gap-(--density-page-gap) px-(--density-page-inset) pt-(--density-page-top) pb-10', className)}>
             {children}
         </div>
     )

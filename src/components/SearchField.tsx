@@ -1,7 +1,7 @@
 import { Search, X } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 
-import { cn } from '@/lib/cn'
+import { cn } from '../lib/cn'
 
 /**
  * The one search box: a glyph, the text, a clear button once there is text, and the `/` key that

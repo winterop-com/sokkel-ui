@@ -1,7 +1,7 @@
 import { ChevronDown, X } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { cn } from '@/lib/cn'
+import { cn } from '../lib/cn'
 
 /**
  * One filter in a toolbar: the facet it filters on, and what it is set to.
@@ -38,12 +38,7 @@ export function FilterChip({
                 className,
             )}
         >
-            <button
-                type="button"
-                className="flex items-center gap-1.5 px-2.5 hover:bg-secondary/60"
-                aria-haspopup="menu"
-                onClick={onOpen}
-            >
+            <button type="button" className="flex items-center gap-1.5 px-2.5 hover:bg-secondary/60" aria-haspopup="menu" onClick={onOpen}>
                 {icon}
                 <span className={set ? 'text-muted-foreground' : undefined}>{facet}</span>
                 {set && <span className="font-medium">{value}</span>}

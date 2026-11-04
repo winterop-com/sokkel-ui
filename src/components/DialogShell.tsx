@@ -1,16 +1,8 @@
 import type { ReactNode } from 'react'
 
-import { Button } from '@/components/ui/button'
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog'
-import { cn } from '@/lib/cn'
+import { Button } from './ui/button'
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog'
+import { cn } from '../lib/cn'
 
 const WIDTHS = {
     sm: 'sm:max-w-sm',

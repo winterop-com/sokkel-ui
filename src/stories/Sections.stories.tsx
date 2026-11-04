@@ -2,9 +2,9 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Blocks, BookOpen, Cable, FileJson, Maximize2, Play, Workflow, Zap } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { Rail, type RailGroup } from '@/components/Rail'
-import { Section, Surface } from '@/components/Section'
-import { Page, Shell } from '@/components/Shell'
+import { Rail, type RailGroup } from '../components/Rail'
+import { Section, Surface } from '../components/Section'
+import { Page, Shell } from '../components/Shell'
 
 /**
  * A pipeline's overview page in the three ways a page can be divided, drawn with the shell and
@@ -103,7 +103,11 @@ function Facts() {
 }
 
 const tool = (
-    <button type="button" aria-label="Open the graph in a window" className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary">
+    <button
+        type="button"
+        aria-label="Open the graph in a window"
+        className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary"
+    >
         <Maximize2 className="size-3.5" aria-hidden />
     </button>
 )
@@ -177,7 +181,10 @@ function Overview({ layout }: { layout: 'flat' | 'boxed' | 'hybrid' }) {
                         <button type="button" className="h-(--density-control) rounded-control border border-input px-3 text-sm">
                             Edit
                         </button>
-                        <button type="button" className="h-(--density-control) rounded-control bg-primary px-3 text-sm font-medium text-primary-foreground">
+                        <button
+                            type="button"
+                            className="h-(--density-control) rounded-control bg-primary px-3 text-sm font-medium text-primary-foreground"
+                        >
                             Run
                         </button>
                     </div>

@@ -58,8 +58,7 @@ parts.push(...scoped)
 
 // Density: the default level answers on `:root`, every level on its own `[data-density]`.
 const levels = Object.keys(tokens.density).filter((key) => key !== 'default' && !key.startsWith('$'))
-const prefixed = (vars: Vars): Vars =>
-    Object.fromEntries(Object.entries(vars).map(([name, value]) => [`density-${name}`, value]))
+const prefixed = (vars: Vars): Vars => Object.fromEntries(Object.entries(vars).map(([name, value]) => [`density-${name}`, value]))
 parts.push(block([':root'], prefixed(tokens.density[tokens.density.default] as Vars)))
 for (const level of levels) parts.push(block([`html[data-density='${level}']`], prefixed(tokens.density[level] as Vars)))
 

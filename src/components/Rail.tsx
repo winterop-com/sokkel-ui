@@ -2,7 +2,7 @@ import { Tooltip } from '@base-ui/react/tooltip'
 import { PanelLeftClose, PanelLeftOpen, type LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { cn } from '@/lib/cn'
+import { cn } from '../lib/cn'
 
 /** One place the rail leads to. */
 export interface RailEntry {
@@ -104,9 +104,7 @@ export function Rail({
                             (collapsed ? (
                                 <div className="mx-2 mt-3 mb-1 border-t border-border-strong" aria-hidden />
                             ) : (
-                                <p className="px-2 pt-4 pb-1.5 text-xs font-medium tracking-wide text-faint uppercase">
-                                    {group.title}
-                                </p>
+                                <p className="px-2 pt-4 pb-1.5 text-xs font-medium tracking-wide text-faint uppercase">{group.title}</p>
                             ))}
                         {group.entries.map((entry) => (
                             <RailLink key={entry.id} entry={entry} collapsed={collapsed} renderLink={renderLink} />
@@ -114,9 +112,7 @@ export function Rail({
                     </nav>
                 ))}
             </div>
-            {foot !== undefined && (
-                <div className="flex h-shell-foot shrink-0 items-stretch border-t border-border-strong">{foot}</div>
-            )}
+            {foot !== undefined && <div className="flex h-shell-foot shrink-0 items-stretch border-t border-border-strong">{foot}</div>}
         </aside>
     )
 }

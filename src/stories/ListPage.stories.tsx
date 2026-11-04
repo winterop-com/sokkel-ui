@@ -2,22 +2,22 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Blocks, BookOpen, Cable, FileJson, Play, Workflow, Zap } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
-import { AccountMenu } from '@/components/AccountMenu'
-import { CodeField } from '@/components/CodeField'
-import { Field } from '@/components/Field'
-import { FilterChip } from '@/components/FilterChip'
-import { ListTable, type Column } from '@/components/ListTable'
-import { PageHeader } from '@/components/PageHeader'
-import { Rail, type RailGroup } from '@/components/Rail'
-import { SearchField } from '@/components/SearchField'
-import { PanelSection, SidePanel } from '@/components/SidePanel'
-import { StatusChip, type Status as RunStatus } from '@/components/StatusChip'
-import { Section } from '@/components/Section'
-import { SwitchField } from '@/components/SwitchField'
-import { Page, Shell } from '@/components/Shell'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
+import { AccountMenu } from '../components/AccountMenu'
+import { CodeField } from '../components/CodeField'
+import { Field } from '../components/Field'
+import { FilterChip } from '../components/FilterChip'
+import { ListTable, type Column } from '../components/ListTable'
+import { PageHeader } from '../components/PageHeader'
+import { Rail, type RailGroup } from '../components/Rail'
+import { SearchField } from '../components/SearchField'
+import { PanelSection, SidePanel } from '../components/SidePanel'
+import { StatusChip, type Status as RunStatus } from '../components/StatusChip'
+import { Section } from '../components/Section'
+import { SwitchField } from '../components/SwitchField'
+import { Page, Shell } from '../components/Shell'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+import { Textarea } from '../components/ui/textarea'
 
 /**
  * The Runs page built from the library alone, with real-shaped data and working controls: the
@@ -45,7 +45,6 @@ const RUNS: Run[] = [
     { id: '01a1a580', pipeline: 'weather-gate', status: 'failed', step: 'gate', at: '41 min ago', took: '0.2s' },
     { id: '01a1a571', pipeline: 'fhir-edits', status: 'succeeded', step: null, at: '58 min ago', took: '5.1s' },
 ]
-
 
 const GROUPS: RailGroup[] = [
     {
@@ -255,16 +254,26 @@ function ConnectionForm() {
             <Page>
                 <PageHeader title="New connection" />
                 <Section title="Connection">
-                    <div className="grid gap-4 @container lg:grid-cols-2">
+                    <div className="@container grid gap-4 lg:grid-cols-2">
                         <CodeField id="code" value={code} onChange={setCode} />
                         <Field id="base-url" label="Base URL" hint="base_url" keyHint help="Where the instance answers, without /api.">
-                            <Input id="base-url" className="font-mono" defaultValue="https://play.dhis2.org/2.43" aria-describedby="base-url-help" />
+                            <Input
+                                id="base-url"
+                                className="font-mono"
+                                defaultValue="https://play.dhis2.org/2.43"
+                                aria-describedby="base-url-help"
+                            />
                         </Field>
                         <Field id="description" label="Description" className="lg:col-span-2">
                             <Textarea id="description" defaultValue="The DHIS2 play demo, for the tour pipelines." />
                         </Field>
                         <div className="lg:col-span-2">
-                            <SwitchField id="verify-tls" label="Verify TLS" explain="Check that the server's HTTPS certificate is valid. Turn off only for a test server with a self-signed certificate." defaultChecked />
+                            <SwitchField
+                                id="verify-tls"
+                                label="Verify TLS"
+                                explain="Check that the server's HTTPS certificate is valid. Turn off only for a test server with a self-signed certificate."
+                                defaultChecked
+                            />
                         </div>
                         <div className="flex justify-end gap-2 lg:col-span-2">
                             <Button variant="ghost">Cancel</Button>

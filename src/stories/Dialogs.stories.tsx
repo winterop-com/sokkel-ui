@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { ConfirmDialog, DialogShell } from '@/components/DialogShell'
-import { CodeField } from '@/components/CodeField'
-import { Field } from '@/components/Field'
-import { SwitchField } from '@/components/SwitchField'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
+import { ConfirmDialog, DialogShell } from '../components/DialogShell'
+import { CodeField } from '../components/CodeField'
+import { Field } from '../components/Field'
+import { SwitchField } from '../components/SwitchField'
+import { Input } from '../components/ui/input'
+import { Textarea } from '../components/ui/textarea'
 
 /**
  * The dialog shell open over a page: a form that creates something, with a shut Create that says
@@ -35,7 +35,11 @@ function CreateSchema() {
                 <Field id="description" label="Description">
                     <Textarea id="description" defaultValue="Readings a station sent in one upload." />
                 </Field>
-                <SwitchField id="strict" label="Refuse unknown fields" explain="A value with a field the schema does not name fails the check." />
+                <SwitchField
+                    id="strict"
+                    label="Refuse unknown fields"
+                    explain="A value with a field the schema does not name fails the check."
+                />
             </DialogShell>
         </div>
     )

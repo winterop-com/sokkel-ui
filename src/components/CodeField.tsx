@@ -1,5 +1,5 @@
-import { Field } from '@/components/Field'
-import { Input } from '@/components/ui/input'
+import { Field } from './Field'
+import { Input } from './ui/input'
 
 /** The words a code field says when a value cannot be made into a code. */
 export interface CodeWords {

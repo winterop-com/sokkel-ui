@@ -1,7 +1,7 @@
 import { PanelRightClose } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { cn } from '@/lib/cn'
+import { cn } from '../lib/cn'
 
 /** One tab of a side panel. */
 export interface SidePanelTab {
@@ -38,10 +38,7 @@ export function SidePanel({
 }) {
     const current = tabs.find((tab) => tab.id === active) ?? tabs[0]
     return (
-        <aside
-            className={cn('flex h-full shrink-0 flex-col border-l border-border-strong bg-sidebar', className)}
-            style={{ width }}
-        >
+        <aside className={cn('flex h-full shrink-0 flex-col border-l border-border-strong bg-sidebar', className)} style={{ width }}>
             <div className="flex h-shell-top shrink-0 items-center gap-1 border-b border-border-strong px-2">
                 {tabs.length === 1 ? (
                     <h2 className="truncate px-1.5 text-sm font-medium">{current?.label}</h2>
