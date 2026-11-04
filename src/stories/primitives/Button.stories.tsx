@@ -28,6 +28,30 @@ const ICON_SIZES = ['icon-xs', 'icon-sm', 'icon', 'icon-lg'] as const
 const meta: Meta = { title: 'Primitives/Actions/Button' }
 export default meta
 
+/** Every prop of a button, to try live. */
+export const Playground: StoryObj<{
+    label: string
+    variant: 'default' | 'outline' | 'secondary' | 'ghost' | 'destructive' | 'link'
+    size: 'xs' | 'sm' | 'default' | 'lg'
+    icon: boolean
+    disabled: boolean
+}> = {
+    parameters: { controls: { disable: false } },
+    args: { label: 'Run now', variant: 'default', size: 'default', icon: true, disabled: false },
+    argTypes: {
+        variant: { control: 'select', options: ['default', 'outline', 'secondary', 'ghost', 'destructive', 'link'] },
+        size: { control: 'inline-radio', options: ['xs', 'sm', 'default', 'lg'] },
+    },
+    render: (args) => (
+        <div className="min-h-svh bg-background p-6 text-foreground">
+            <Button variant={args.variant} size={args.size} disabled={args.disabled}>
+                {args.icon && <Play aria-hidden />}
+                {args.label}
+            </Button>
+        </div>
+    ),
+}
+
 export const Variants: StoryObj = {
     render: () => (
         <Ground>

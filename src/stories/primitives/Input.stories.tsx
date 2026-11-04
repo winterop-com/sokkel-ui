@@ -24,6 +24,34 @@ function Labeled({ label, children }: { label: string; children: ReactNode }) {
 const meta: Meta = { title: 'Primitives/Inputs/Input' }
 export default meta
 
+/** Every prop of an input, to try live. */
+export const Playground: StoryObj<{
+    label: string
+    placeholder: string
+    value: string
+    code: boolean
+    invalid: boolean
+    disabled: boolean
+}> = {
+    parameters: { controls: { disable: false } },
+    args: { label: 'Endpoint', placeholder: 'https://api.example.org', value: '', code: false, invalid: false, disabled: false },
+    render: (args) => (
+        <div className="min-h-svh bg-background p-6 text-foreground">
+            <div className="flex max-w-sm flex-col gap-1.5">
+                <Label htmlFor="playground">{args.label}</Label>
+                <Input
+                    id="playground"
+                    placeholder={args.placeholder}
+                    defaultValue={args.value}
+                    className={args.code ? 'font-mono' : undefined}
+                    aria-invalid={args.invalid || undefined}
+                    disabled={args.disabled}
+                />
+            </div>
+        </div>
+    ),
+}
+
 export const Variants: StoryObj = {
     render: () => (
         <Ground>

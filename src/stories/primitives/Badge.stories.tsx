@@ -6,6 +6,18 @@ import { Badge } from '../../components/ui/badge'
 const meta: Meta = { title: 'Primitives/Display/Badge' }
 export default meta
 
+/** Every prop of a badge, to try live. */
+export const Playground: StoryObj<{ label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' | 'ghost' | 'link' }> = {
+    parameters: { controls: { disable: false } },
+    args: { label: 'nightly', variant: 'secondary' },
+    argTypes: { variant: { control: 'select', options: ['default', 'secondary', 'destructive', 'outline', 'ghost', 'link'] } },
+    render: (args) => (
+        <div className="min-h-svh bg-background p-6 text-foreground">
+            <Badge variant={args.variant}>{args.label}</Badge>
+        </div>
+    ),
+}
+
 function Ground({ children }: { children: React.ReactNode }) {
     return (
         <div className="min-h-svh bg-background p-6 text-foreground">
