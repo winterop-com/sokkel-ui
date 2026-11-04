@@ -5,35 +5,35 @@
 @theme inline {
     --font-heading: var(--font-sans);
     --font-sans: 'IBM Plex Sans Variable', 'IBM Plex Sans', system-ui, sans-serif;
-    --font-mono: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
+    --font-mono: 'IBM Plex Mono', 'SF Mono', Menlo, Consolas, monospace;
     --text-xs: 0.75rem;
     --text-xs--line-height: 1.125rem;
-    --text-sm: 0.8125rem;
-    --text-sm--line-height: 1.1875rem;
-    --text-base: 0.875rem;
-    --text-base--line-height: 1.3125rem;
-    --text-title: 0.9375rem;
-    --text-title--line-height: 1.375rem;
-    --text-page: 1.625rem;
+    --text-sm: 0.875rem;
+    --text-sm--line-height: 1.25rem;
+    --text-base: 1rem;
+    --text-base--line-height: 1.5rem;
+    --text-title: 1rem;
+    --text-title--line-height: 1.5rem;
+    --text-page: 1.5rem;
     --text-page--line-height: 2rem;
     --text-graph-title: 0.75rem;
     --text-graph-title--line-height: 0.9375rem;
     --text-graph-small: 0.6875rem;
     --text-graph-small--line-height: 0.9375rem;
-    --spacing-shell-top: 56px;
-    --spacing-finger: 42px;
-    --radius-mini: 2px;
-    --radius-chip: 2px;
-    --radius-control: 3px;
-    --radius-node: 4px;
-    --radius-surface: 4px;
-    --radius-sm: 2px;
-    --radius-md: 3px;
-    --radius-lg: 3px;
-    --radius-xl: 4px;
-    --radius-2xl: 4px;
-    --radius-3xl: 4px;
-    --radius-4xl: 4px;
+    --spacing-shell-top: 46px;
+    --spacing-finger: 44px;
+    --radius-mini: 4px;
+    --radius-chip: 4px;
+    --radius-control: 6px;
+    --radius-node: 6px;
+    --radius-surface: 6px;
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 6px;
+    --radius-xl: 6px;
+    --radius-2xl: 6px;
+    --radius-3xl: 8px;
+    --radius-4xl: 8px;
     --shadow-surface: var(--elevation-surface);
     --shadow-node: var(--elevation-node);
     --shadow-pop: var(--elevation-pop);
@@ -131,6 +131,7 @@
     --color-kind-pink: var(--kind-pink);
     --color-kind-pink-ink: var(--kind-pink-ink);
     --color-binding-ink: var(--binding-ink);
+    --spacing-shell-foot: 46px;
 }
 
 :root {
@@ -624,41 +625,34 @@ html.dark[data-theme='contrast'],
 }
 
 :root {
-    --density-page-inset: 1.5rem;
-    --density-page-gap: 1rem;
+    --density-page-inset: 2rem;
+    --density-page-top: 1.5rem;
+    --density-page-gap: 1.5rem;
     --density-panel-head: 2.25rem;
     --density-panel-pad: 0.75rem;
     --density-row: 2.25rem;
     --density-control: 2rem;
-    --density-section-gap: 0.75rem;
-}
-
-[data-density='comfortable'] {
-    --density-page-inset: 2rem;
-    --density-page-gap: 1.5rem;
-    --density-panel-head: 2.5rem;
-    --density-panel-pad: 1rem;
-    --density-row: 2.5rem;
-    --density-control: 2.25rem;
     --density-section-gap: 1rem;
 }
 
-[data-density='standard'] {
-    --density-page-inset: 1.5rem;
-    --density-page-gap: 1rem;
+[data-density='regular'] {
+    --density-page-inset: 2rem;
+    --density-page-top: 1.5rem;
+    --density-page-gap: 1.5rem;
     --density-panel-head: 2.25rem;
     --density-panel-pad: 0.75rem;
     --density-row: 2.25rem;
     --density-control: 2rem;
-    --density-section-gap: 0.75rem;
+    --density-section-gap: 1rem;
 }
 
 [data-density='compact'] {
     --density-page-inset: 1rem;
-    --density-page-gap: 0.75rem;
+    --density-page-top: 1rem;
+    --density-page-gap: 1rem;
     --density-panel-head: 2rem;
-    --density-panel-pad: 0.625rem;
-    --density-row: 2rem;
+    --density-panel-pad: 0.5rem;
+    --density-row: 2.125rem;
     --density-control: 1.75rem;
-    --density-section-gap: 0.5rem;
+    --density-section-gap: 0.75rem;
 }

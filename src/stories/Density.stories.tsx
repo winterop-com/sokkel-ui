@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { ChevronDown, Filter, Search, X } from 'lucide-react'
+import { Blocks, BookOpen, Cable, ChevronDown, FileJson, Filter, Play, Search, Workflow, X, Zap } from 'lucide-react'
 
 /**
  * A list page drawn on the tokens alone, to compare the three densities before any component
@@ -27,31 +27,32 @@ const STATUS: Record<string, string> = {
 }
 
 const NAV = [
-    ['Operate', ['Runs', 'Triggers']],
-    ['Build', ['Pipelines', 'Connections', 'Schemas']],
-    ['Reference', ['Blocks', 'Examples']],
+    ['Operate', [['Runs', Play], ['Triggers', Zap]]],
+    ['Build', [['Pipelines', Workflow], ['Connections', Cable], ['Schemas', FileJson]]],
+    ['Reference', [['Blocks', Blocks], ['Examples', BookOpen]]],
 ] as const
 
 function ListPage() {
     return (
         <div className="flex h-screen min-h-0 bg-background text-foreground">
             <aside className="flex w-56 shrink-0 flex-col border-r border-border-strong bg-sidebar">
-                <div className="flex h-(--density-panel-head) items-center px-(--density-panel-pad) font-semibold">
+                <div className="flex h-shell-top items-center px-(--density-panel-pad) font-semibold">
                     dirigent
                 </div>
-                <nav className="flex flex-col gap-0.5 px-2">
+                <nav className="flex flex-col gap-1 px-2">
                     {NAV.map(([group, items]) => (
                         <div key={group}>
-                            <p className="px-2 pt-3 pb-1 text-xs tracking-wide text-faint uppercase">{group}</p>
-                            {items.map((item) => (
+                            <p className="px-2 pt-4 pb-1.5 text-xs font-medium tracking-wide text-faint uppercase">{group}</p>
+                            {items.map(([item, Icon]) => (
                                 <a
                                     key={item}
                                     className={
                                         item === 'Runs'
-                                            ? 'flex h-(--density-row) items-center rounded-r-md border-l-2 border-primary bg-sidebar-accent px-3 text-sm font-medium'
-                                            : 'flex h-(--density-row) items-center rounded-r-md border-l-2 border-transparent px-3 text-sm text-muted-foreground hover:bg-secondary'
+                                            ? 'flex h-(--density-row) items-center gap-3 rounded-l-sm rounded-r-md border-l-2 border-brand bg-sidebar-accent px-3 text-sm font-medium'
+                                            : 'flex h-(--density-row) items-center gap-3 rounded-l-sm rounded-r-md border-l-2 border-transparent px-3 text-sm text-muted-foreground hover:bg-secondary'
                                     }
                                 >
+                                    <Icon className="size-4 shrink-0" aria-hidden />
                                     {item}
                                 </a>
                             ))}
@@ -60,11 +61,11 @@ function ListPage() {
                 </nav>
             </aside>
             <div className="flex min-w-0 flex-1 flex-col">
-                <header className="flex h-(--density-panel-head) shrink-0 items-center gap-2 border-b border-border-strong px-(--density-page-inset) text-sm text-muted-foreground">
+                <header className="flex h-shell-top shrink-0 items-center gap-2 border-b border-border-strong px-(--density-page-inset) text-sm text-muted-foreground">
                     <span>Runs</span>
                     <span className="ml-auto font-mono text-xs">dirigent 0.36.0</span>
                 </header>
-                <main className="flex min-h-0 flex-1 flex-col gap-(--density-page-gap) overflow-y-auto p-(--density-page-inset)">
+                <main className="flex min-h-0 flex-1 flex-col gap-(--density-page-gap) overflow-y-auto px-(--density-page-inset) pt-(--density-page-top) pb-10">
                     <div className="flex items-end justify-between gap-4">
                         <div>
                             <h1 className="text-page font-medium tracking-tight">Runs</h1>
@@ -154,6 +155,5 @@ export default meta
 
 type Story = StoryObj<typeof ListPage>
 
-export const Comfortable: Story = { globals: { density: 'comfortable' } }
-export const Standard: Story = { globals: { density: 'standard' } }
+export const Regular: Story = { globals: { density: 'regular' } }
 export const Compact: Story = { globals: { density: 'compact' } }
