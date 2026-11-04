@@ -1,0 +1,7 @@
+node_modules/
+storybook-static/
+dist/
+test-results/
+playwright-report/
+.playwright-mcp/
+*.log
