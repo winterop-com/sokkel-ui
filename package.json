@@ -44,8 +44,7 @@
         "build": "vite build -c vite.lib.config.ts && tsc -p tsconfig.build.json",
         "lint": "oxlint --deny-warnings",
         "fmt": "oxfmt",
-        "fmt:check": "oxfmt --check",
-        "prepare": "bun run build"
+        "fmt:check": "oxfmt --check"
     },
     "dependencies": {
         "@base-ui/react": "^1.9.0",

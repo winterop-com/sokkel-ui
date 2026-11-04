@@ -3,6 +3,13 @@
 The library comes first; apps adopt it once it is whole. Every component has a story in Storybook
 with real-shaped data, held to screenshot baselines in both schemes at desktop and phone width.
 
+## Distribution
+
+`dist/` is built, not committed, so an install from a git URL gets no compiled code (bun also
+blocks a git dependency's install scripts). When apps adopt the library it is published to a
+registry (npm under `@winterop`, or GitHub Packages) by a tag workflow, and apps pin that version.
+Until then nothing installs it.
+
 ## Primitives
 
 The shadcn `base-nova` set on Base UI, restyled to the tokens: accordion, alert, alert-dialog,
