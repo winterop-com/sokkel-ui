@@ -31,7 +31,9 @@ FilterChip, ListTable, StatusChip, AccountMenu, SidePanel, DialogShell, ConfirmD
 Their own entry under `graph/`, so an app that draws no graph loads neither React Flow nor elk.
 GraphCanvas (React Flow in the tokens, fit, zoom buttons, a stage or a fitted frame), GraphNode
 (the node box), the layout (a rank layout at once, elk loaded lazily and answering after),
-useGraphLayout and useNodeGraph, and the views PipelineGraph and RunGraph.
+useGraphLayout and useNodeGraph, and the views PipelineGraph, RunGraph, DependencyGraph (a lineage
+of datasets and jobs) and StateMachine (labeled transitions, initial and final markers, the
+current state).
 
 ## Still to build
 
@@ -40,8 +42,6 @@ useGraphLayout and useNodeGraph, and the views PipelineGraph and RunGraph.
 - A toggle for the side panel in the top bar.
 - SchemaForm: a form generated from a JSON Schema, built from Field and the inputs, validated
   against the schema.
-- Graph views, after the pipeline and run graphs: a dependency or lineage graph, and a state
-  machine.
 
 ## Validation and notification
 
