@@ -183,7 +183,7 @@ function build(): Entry[] {
             detail: 'Room Fjord',
             notes: 'Walk the board from Review back to Ready. In progress is over its limit of four.',
         }),
-        entry('team', 'one-on-one', '1:1 ada and grace', at(5, 13), at(5, 13, 45), { people: ['ada', 'grace'], detail: 'Video call' }),
+        entry('team', 'one-on-one', '1:1 ada and grace', at(5, 13), at(5, 13, 30), { people: ['ada', 'grace'], detail: 'Video call' }),
         entry('deploys', 'deploy-juniper', 'Deploy juniper 2.1.0', at(5, 13, 30), at(5, 14, 15), {
             host: 'api.example.org',
             people: ['linus'],
@@ -392,7 +392,7 @@ function CalendarApp({ view: initialView = 'week', open = null }: { view?: View;
                                 </Button>
                             </div>
                             <h1 className="min-w-0 flex-1 truncate text-base font-semibold">
-                                {phone && view === 'week' ? format(anchor, 'EEE d MMM') : title}
+                                {phone ? format(anchor, view === 'week' ? 'EEE d MMM' : 'MMM yyyy') : title}
                             </h1>
                             <Segmented
                                 label="View"
@@ -490,7 +490,7 @@ function CalendarApp({ view: initialView = 'week', open = null }: { view?: View;
 const meta: Meta = { title: 'Apps/Calendar' }
 export default meta
 
-/** The week of 2 November from 07:00, with today's line at 09:30 and three events splitting Thursday at 13:00. */
+/** The week of 2 November from 07:00, with today's line at 09:30 and the events at 13:00 on Thursday sharing its width. */
 export const Week: StoryObj = { name: 'Week', render: () => <CalendarApp /> }
 
 /** November as a grid; a day with more events than it has room for says how many more. */
