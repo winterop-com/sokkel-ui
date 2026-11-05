@@ -1,8 +1,8 @@
-# winterop-ui
+# sokkel-ui
 
-[![CI](https://github.com/winterop-com/winterop-ui/actions/workflows/ci.yaml/badge.svg)](https://github.com/winterop-com/winterop-ui/actions/workflows/ci.yaml)
-[![Storybook](https://github.com/winterop-com/winterop-ui/actions/workflows/pages.yaml/badge.svg)](https://winterop-com.github.io/winterop-ui/)
-[![Browse the Storybook](https://img.shields.io/badge/storybook-browse-ff4785?logo=storybook&logoColor=white)](https://winterop-com.github.io/winterop-ui/)
+[![CI](https://github.com/winterop-com/sokkel-ui/actions/workflows/ci.yaml/badge.svg)](https://github.com/winterop-com/sokkel-ui/actions/workflows/ci.yaml)
+[![Storybook](https://github.com/winterop-com/sokkel-ui/actions/workflows/pages.yaml/badge.svg)](https://winterop-com.github.io/sokkel-ui/)
+[![Browse the Storybook](https://img.shields.io/badge/storybook-browse-ff4785?logo=storybook&logoColor=white)](https://winterop-com.github.io/sokkel-ui/)
 ![React 19](https://img.shields.io/badge/react-19-61dafb?logo=react&logoColor=white)
 ![Base UI](https://img.shields.io/badge/base%20ui-1.9-000000)
 ![Tailwind CSS 4](https://img.shields.io/badge/tailwind%20css-4-38bdf8?logo=tailwindcss&logoColor=white)
@@ -13,7 +13,7 @@ A shared React component library: one set of tokens and themes, Base UI primitiv
 apps are built from, and the Storybook stories that show and test them. Apps install it as a
 package and never copy from it, so one fix here reaches every app at its next version.
 
-The Storybook is published at **https://winterop-com.github.io/winterop-ui/**.
+The Storybook is published at **https://winterop-com.github.io/sokkel-ui/**.
 
 ## What is in it
 
@@ -56,7 +56,7 @@ The screenshots are Linux renders taken in the Playwright image, as CI checks th
 
 ## Using it
 
-The package is `@winterop-com/ui` on GitHub Packages. An app points the scope at that registry in
+The package is `@winterop-com/sokkel-ui` on GitHub Packages. An app points the scope at that registry in
 its `.npmrc`, with a token that can read packages, and pins a version:
 
 ```
@@ -65,14 +65,14 @@ its `.npmrc`, with a token that can read packages, and pins a version:
 ```
 
 ```
-bun add @winterop-com/ui@0.4.0
+bun add @winterop-com/sokkel-ui@0.4.0
 ```
 
-An app that brings its own Tailwind imports `@winterop-com/ui/tokens.css` (the tokens, themes and
+An app that brings its own Tailwind imports `@winterop-com/sokkel-ui/tokens.css` (the tokens, themes and
 density levels), with `motion.css` (the motion setting) and `typography.css` (mono sized to the text
-around it); one that does not imports `@winterop-com/ui/styles.css` (Tailwind, the fonts, the
-tokens and base styles). Components import by path, such as `@winterop-com/ui/DialogShell` or
-`@winterop-com/ui/primitives/button`.
+around it); one that does not imports `@winterop-com/sokkel-ui/styles.css` (Tailwind, the fonts, the
+tokens and base styles). Components import by path, such as `@winterop-com/sokkel-ui/DialogShell` or
+`@winterop-com/sokkel-ui/primitives/button`.
 
 ## License
 
