@@ -319,7 +319,7 @@ export const RowMenus: StoryObj = {
     render: () => (
         <div className="grid h-svh grid-rows-4 gap-4 bg-background p-4 text-foreground lg:grid-cols-2 lg:grid-rows-2">
             {MENUS.map((menu) => (
-                <section key={menu.title} className="flex min-h-0 flex-col gap-2">
+                <section key={menu.title} className="flex min-h-0 min-w-0 flex-col gap-2">
                     <div className="text-sm">
                         <span className="font-medium">{menu.title}</span>
                         <span className="ml-2 text-xs text-muted-foreground">{menu.what}</span>

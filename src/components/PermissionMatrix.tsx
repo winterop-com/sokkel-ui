@@ -92,7 +92,8 @@ export function PermissionMatrix({
     const stuck = 'sticky left-0 z-10 bg-card'
     return (
         <div className={cn('min-w-0 overflow-hidden rounded-surface border border-border-strong bg-card', className)}>
-            <div className="overflow-x-auto">
+            {/* Relative, so the labels drawn for screen readers only stay inside the scroll and never widen the page. */}
+            <div className="relative overflow-x-auto">
                 <table className="w-full border-collapse text-sm">
                     <thead>
                         <tr className="border-b border-border-strong bg-panel-ground">
