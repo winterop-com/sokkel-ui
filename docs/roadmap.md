@@ -28,6 +28,12 @@ The first release under the new name.
 
 ## Next
 
+- **A real example app.** `examples/` holds a small Vite app built from the Tidevann stories (the
+  workspace shell, runs, the data table, settings) that installs the package as an app would and
+  builds in CI, so a break in the published package fails a check rather than an app.
+- **Desktop shells.** Thin Electron and Tauri shells around that example app, each building in
+  CI, to prove the library in Chromium and in the system webviews, Safari's engine on macOS
+  included.
 - **Adoption.** Apps adopt the library one pattern per PR, each pinning a published version. The
   app adds a check in the same PR that refuses its own hand-rolled version of that pattern, so it
   cannot come back. A part an app needs to differ becomes an option here, never a local edit.
