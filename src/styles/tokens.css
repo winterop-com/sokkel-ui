@@ -6,10 +6,10 @@
     --font-heading: var(--font-sans);
     --font-sans: var(--typeface-sans);
     --font-mono: var(--typeface-mono);
-    --text-xs: 0.75rem;
-    --text-xs--line-height: 1.125rem;
-    --text-sm: 0.875rem;
-    --text-sm--line-height: 1.25rem;
+    --text-xs: 0.8125rem;
+    --text-xs--line-height: 1.25rem;
+    --text-sm: 0.9375rem;
+    --text-sm--line-height: 1.375rem;
     --text-base: 1rem;
     --text-base--line-height: 1.5rem;
     --text-title: 1rem;
