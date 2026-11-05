@@ -378,9 +378,10 @@ export function DataTable<T>({
     /** Every card's height, one for all so the grid draws only what is in view. */
     cardHeight?: string
     /**
-     * Below this width of its own box, in pixels, the table shows each row as a card: the first
-     * column its title and every other a labeled line, as ListTable does. `false` keeps the table,
-     * which then scrolls sideways.
+     * Below this width of its own box, in pixels, and once the box is narrower than `minWidth` too,
+     * the table shows each row as a card: the first column its title and every other a labeled
+     * line, as ListTable does. A table whose columns fit stays a table, so a small panel on a wide
+     * screen keeps its rows. `false` keeps the table, which then scrolls sideways.
      */
     stackBelow?: number | false
     /** The narrowest the columns go before the table scrolls sideways. */
@@ -424,6 +425,8 @@ export function DataTable<T>({
     const scroller = useRef<HTMLDivElement>(null)
     const probe = useRef<HTMLDivElement>(null)
     const cardProbe = useRef<HTMLDivElement>(null)
+    const widthProbe = useRef<HTMLDivElement>(null)
+    const [columnsWidth, setColumnsWidth] = useState(768)
     const [rowHeight, setRowHeight] = useState(40)
     const [cardBox, setCardBox] = useState({ width: 192, height: 256 })
     const [view, setView] = useState({ top: 0, height: 800, width: 1200 })
@@ -435,6 +438,7 @@ export function DataTable<T>({
         const update = () => {
             setRowHeight(measure.offsetHeight || 40)
             setCardBox({ width: measureCard.offsetWidth || 192, height: measureCard.offsetHeight || 256 })
+            setColumnsWidth(widthProbe.current?.offsetWidth || 768)
             setView({ top: box.scrollTop, height: box.clientHeight, width: box.clientWidth })
         }
         update()
@@ -447,7 +451,8 @@ export function DataTable<T>({
     const [shownView, setShownView] = useHeld(viewValue, defaultView, onViewChange)
     const chosenGrid = shownView === 'grid' && card !== undefined
     // A narrow box stacks the rows as cards, one to a line, each as tall as its columns need.
-    const stacked = !chosenGrid && stackBelow !== false && view.width > 0 && view.width < stackBelow
+    // Only when the columns no longer fit: a box narrower than both `stackBelow` and the columns' `minWidth`.
+    const stacked = !chosenGrid && stackBelow !== false && view.width > 0 && view.width < Math.min(stackBelow, columnsWidth)
     const gridView = chosenGrid || stacked
     const cardPixels = stacked ? STACK_PAD * 2 + 24 + Math.max(0, shown.length - 1) * STACK_LINE + 2 : cardBox.height
     // The grid is drawn a line of cards at a time; the table's line is one row.
@@ -699,7 +704,7 @@ export function DataTable<T>({
     }
 
     return (
-        <div className={cn('flex min-h-0 flex-col overflow-hidden rounded-surface border border-border-strong bg-card', className)}>
+        <div className={cn('flex min-h-0 min-w-0 flex-col overflow-hidden rounded-surface border border-border-strong bg-card', className)}>
             <div className="flex h-(--density-panel-head) shrink-0 items-center gap-2 border-b border-border px-(--density-panel-pad) text-sm">
                 {selection.size > 0 ? (
                     // The selection's actions scroll sideways when the bar is too narrow for them.
@@ -843,6 +848,7 @@ export function DataTable<T>({
                 <div aria-hidden className="pointer-events-none invisible absolute size-0 overflow-hidden">
                     <div ref={probe} className="h-(--density-row) w-px" />
                     <div ref={cardProbe} style={{ width: cardWidth, height: cardHeight }} />
+                    <div ref={widthProbe} style={{ width: minWidth }} />
                 </div>
                 {!gridView && (
                     <div

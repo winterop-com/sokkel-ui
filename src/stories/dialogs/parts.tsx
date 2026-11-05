@@ -9,6 +9,7 @@ import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { cn } from '../../lib/cn'
 import { TidevannMark } from '../fixtures/TidevannMark'
+import { TopBar } from '../../components/TopBar'
 
 interface Run {
     id: number
@@ -52,18 +53,22 @@ const RUN_COLUMNS: Column<Run>[] = [
 export function Behind({ action, onAction, children }: { action?: string; onAction?: () => void; children?: ReactNode }) {
     return (
         <div className="flex h-svh flex-col bg-background text-foreground">
-            <header className="flex h-12 shrink-0 items-center gap-2 border-b border-border px-4">
-                <TidevannMark className="size-5 text-primary" />
-                <span className="font-medium">Tidevann</span>
-                <span className="text-faint">/</span>
-                <span className="text-muted-foreground">harbor</span>
-                <span className="text-faint">/</span>
-                <span className="font-mono text-xs">import-orders</span>
-                {action !== undefined && (
-                    <Button size="sm" variant="outline" className="ml-auto" onClick={onAction}>
-                        {action}
-                    </Button>
-                )}
+            <header className="flex h-12 shrink-0 items-center gap-3 border-b border-border px-4">
+                <TidevannMark className="size-5 shrink-0 text-primary" />
+                <TopBar
+                    trail={[
+                        { label: 'Tidevann', href: '#' },
+                        { label: 'harbor', href: '#' },
+                        { label: 'import-orders', code: true },
+                    ]}
+                    actions={
+                        action === undefined ? undefined : (
+                            <Button size="sm" variant="outline" onClick={onAction}>
+                                {action}
+                            </Button>
+                        )
+                    }
+                />
             </header>
             {children ?? (
                 <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-auto p-6">

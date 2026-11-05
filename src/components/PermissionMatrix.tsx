@@ -91,7 +91,7 @@ export function PermissionMatrix({
     const words = { ...WORDS, ...given }
     const stuck = 'sticky left-0 z-10 bg-card'
     return (
-        <div className={cn('overflow-hidden rounded-surface border border-border-strong bg-card', className)}>
+        <div className={cn('min-w-0 overflow-hidden rounded-surface border border-border-strong bg-card', className)}>
             <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-sm">
                     <thead>
