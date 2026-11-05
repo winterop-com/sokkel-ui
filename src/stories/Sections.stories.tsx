@@ -2,9 +2,14 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { BookOpen, CalendarClock, Library, Maximize2, Play, Server, Webhook, Workflow } from 'lucide-react'
 import type { ReactNode } from 'react'
 
+import { DescriptionList } from '../components/DescriptionList'
+import { ListTable, type Column } from '../components/ListTable'
+import { PageHeader } from '../components/PageHeader'
 import { Rail, type RailGroup } from '../components/Rail'
 import { Section, Surface } from '../components/Section'
 import { Page, Shell } from '../components/Shell'
+import { StatusChip, type Status } from '../components/StatusChip'
+import { Button } from '../components/ui/button'
 import { TidevannMark } from './fixtures/TidevannMark'
 
 /**
@@ -41,20 +46,29 @@ const GROUPS: RailGroup[] = [
     },
 ]
 
-const RUNS = [
-    ['01a1a5c6', 'succeeded', '2 min ago', '1.4s'],
-    ['01a1a5c2', 'failed', '6 min ago', '0.3s'],
-    ['01a1a5b1', 'succeeded', '12 min ago', '8.2s'],
-] as const
-
-const TONE: Record<string, string> = {
-    succeeded: 'bg-status-succeeded/15 text-status-succeeded-ink',
-    failed: 'bg-status-failed/15 text-status-failed-ink',
+interface Run {
+    id: string
+    status: Status
+    at: string
+    took: string
 }
+
+const RUNS: Run[] = [
+    { id: '01a1a5c6', status: 'succeeded', at: '2 min ago', took: '1.4s' },
+    { id: '01a1a5c2', status: 'failed', at: '6 min ago', took: '0.3s' },
+    { id: '01a1a5b1', status: 'succeeded', at: '12 min ago', took: '8.2s' },
+]
+
+const COLUMNS: Column<Run>[] = [
+    { id: 'id', header: 'Run', width: '7rem', cell: (run) => <span className="font-mono text-xs text-muted-foreground">{run.id}</span> },
+    { id: 'status', header: 'Status', width: '8rem', cell: (run) => <StatusChip status={run.status} /> },
+    { id: 'at', header: 'Started', width: 'minmax(0,1fr)', cell: (run) => <span className="text-xs text-muted-foreground">{run.at}</span> },
+    { id: 'took', header: 'Took', width: '4rem', align: 'end', cell: (run) => <span className="font-mono text-xs">{run.took}</span> },
+]
 
 function Graph() {
     return (
-        <div className="relative h-44 bg-[radial-gradient(var(--color-border)_1px,transparent_1px)] [background-size:16px_16px]">
+        <div className="relative h-44">
             <div className="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-10">
                 {['fetch', 'validate', 'upload'].map((step, at) => (
                     <div key={step} className="flex items-center gap-10">
@@ -70,47 +84,26 @@ function Graph() {
     )
 }
 
-function RunsList({ framed }: { framed: boolean }) {
-    return (
-        <div className={framed ? undefined : '-mx-1'}>
-            {RUNS.map(([id, status, at, took]) => (
-                <div
-                    key={id}
-                    className="grid h-(--density-row) grid-cols-[7rem_8rem_1fr_4rem] items-center gap-3 border-b border-border px-(--density-panel-pad) text-sm last:border-b-0"
-                >
-                    <span className="font-mono text-xs text-muted-foreground">{id}</span>
-                    <span>
-                        <span className={`rounded-chip px-1.5 py-0.5 text-xs ${TONE[status]}`}>{status}</span>
-                    </span>
-                    <span className="text-xs text-muted-foreground">{at}</span>
-                    <span className="text-right font-mono text-xs">{took}</span>
-                </div>
-            ))}
-        </div>
-    )
+function RunsList() {
+    return <ListTable columns={COLUMNS} rows={RUNS} rowKey={(run) => run.id} />
 }
 
 function Facts() {
     return (
-        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
-            <dt className="text-muted-foreground">Schedule</dt>
-            <dd>every day at 02:00 (UTC)</dd>
-            <dt className="text-muted-foreground">Webhook</dt>
-            <dd className="font-mono text-xs">orders-inbox</dd>
-            <dt className="text-muted-foreground">Services</dt>
-            <dd className="font-mono text-xs">api, worker</dd>
-        </dl>
+        <DescriptionList
+            items={[
+                { term: 'Schedule', value: 'every day at 02:00 (UTC)' },
+                { term: 'Webhook', value: 'orders-inbox', code: true },
+                { term: 'Services', value: 'api, worker', code: true },
+            ]}
+        />
     )
 }
 
 const tool = (
-    <button
-        type="button"
-        aria-label="Open the graph in a window"
-        className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary"
-    >
-        <Maximize2 className="size-3.5" aria-hidden />
-    </button>
+    <Button variant="ghost" size="icon-sm" aria-label="Open the graph in a window">
+        <Maximize2 aria-hidden />
+    </Button>
 )
 
 function Overview({ layout }: { layout: 'flat' | 'boxed' | 'hybrid' }) {
@@ -121,8 +114,8 @@ function Overview({ layout }: { layout: 'flat' | 'boxed' | 'hybrid' }) {
                     <Graph />
                 </Section>
                 <div className="grid gap-(--density-page-gap) lg:grid-cols-[2fr_1fr]">
-                    <Section variant="boxed" title="Recent runs" meta="3" flush>
-                        <RunsList framed />
+                    <Section variant="boxed" title="Recent runs" meta="3">
+                        <RunsList />
                     </Section>
                     <Section variant="boxed" title="Details">
                         <Facts />
@@ -136,7 +129,7 @@ function Overview({ layout }: { layout: 'flat' | 'boxed' | 'hybrid' }) {
                 </Section>
                 <div className="grid gap-(--density-page-gap) lg:grid-cols-[2fr_1fr]">
                     <Section title="Recent runs" meta="3">
-                        <RunsList framed={false} />
+                        <RunsList />
                     </Section>
                     <Section title="Details">
                         <Facts />
@@ -152,9 +145,7 @@ function Overview({ layout }: { layout: 'flat' | 'boxed' | 'hybrid' }) {
                 </Section>
                 <div className="grid gap-(--density-page-gap) lg:grid-cols-[2fr_1fr]">
                     <Section title="Recent runs" meta="3">
-                        <Surface>
-                            <RunsList framed />
-                        </Surface>
+                        <RunsList />
                     </Section>
                     <Section title="Details">
                         <Facts />
@@ -173,23 +164,16 @@ function Overview({ layout }: { layout: 'flat' | 'boxed' | 'hybrid' }) {
             }
         >
             <Page>
-                <div className="flex items-end justify-between gap-4">
-                    <div>
-                        <h1 className="text-page font-medium tracking-tight">Import orders</h1>
-                        <p className="font-mono text-xs text-muted-foreground">import-orders</p>
-                    </div>
-                    <div className="flex gap-2">
-                        <button type="button" className="h-(--density-control) rounded-control border border-input px-3 text-sm">
-                            Edit
-                        </button>
-                        <button
-                            type="button"
-                            className="h-(--density-control) rounded-control bg-primary px-3 text-sm font-medium text-primary-foreground"
-                        >
-                            Run
-                        </button>
-                    </div>
-                </div>
+                <PageHeader
+                    title="Import orders"
+                    code="import-orders"
+                    actions={
+                        <>
+                            <Button variant="outline">Edit</Button>
+                            <Button>Run</Button>
+                        </>
+                    }
+                />
                 {sections}
             </Page>
         </Shell>

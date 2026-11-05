@@ -469,7 +469,7 @@ const albumActions = (): DataAction[] => [
 function AlbumCard({ album }: { album: Album }) {
     return (
         <div className="flex h-full flex-col gap-2 rounded-surface border border-border bg-card p-2 group-hover/card:bg-muted">
-            <Artwork cover={album.cover} className="min-h-0 w-full flex-1 rounded-[calc(var(--radius)-2px)]" />
+            <Artwork cover={album.cover} className="min-h-0 w-full flex-1 rounded-mini" />
             <div className="min-w-0 px-0.5">
                 <div className="truncate text-sm font-medium">{album.title}</div>
                 <div className="truncate text-xs text-muted-foreground">

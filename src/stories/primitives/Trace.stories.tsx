@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { CheckIcon, DatabaseIcon, FileTextIcon, SearchIcon, TriangleAlertIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 
+import { DescriptionList } from '../../components/DescriptionList'
 import {
     Trace,
     TraceCollapsible,
@@ -135,16 +136,14 @@ export const ToolCalls: StoryObj = {
                             </TraceLine>
                         </TraceCollapsibleTrigger>
                         <TraceCollapsibleContent>
-                            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-xs">
-                                <dt>started</dt>
-                                <dd className="font-mono">2026-11-04 14:02</dd>
-                                <dt>state</dt>
-                                <dd className="font-mono">failed</dd>
-                                <dt>step</dt>
-                                <dd className="font-mono">validate</dd>
-                                <dt>took</dt>
-                                <dd className="font-mono">0.3s</dd>
-                            </dl>
+                            <DescriptionList
+                                items={[
+                                    { term: 'started', value: '2026-11-04 14:02', code: true },
+                                    { term: 'state', value: 'failed', code: true },
+                                    { term: 'step', value: 'validate', code: true },
+                                    { term: 'took', value: '0.3s', code: true },
+                                ]}
+                            />
                         </TraceCollapsibleContent>
                     </TraceCollapsible>
                     <TraceCollapsible defaultOpen>

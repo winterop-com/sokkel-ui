@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { LayoutGrid, List, Rows3 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
+import { ListTable, type Column } from '../../components/ListTable'
 import { StatusChip, type Status } from '../../components/StatusChip'
 import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group'
 
@@ -99,11 +100,36 @@ export const States: StoryObj = {
     ),
 }
 
-const RUNS = [
+interface Run {
+    id: string
+    state: Status
+    at: string
+    took: string
+}
+
+const RUNS: Run[] = [
     { id: '01a1a5c6', state: 'succeeded', at: '2026-11-04 14:02', took: '1.2s' },
     { id: '01a1a5c2', state: 'failed', at: '2026-11-04 13:58', took: '0.3s' },
     { id: '01a1a5c0', state: 'running', at: '2026-11-04 13:55', took: '' },
     { id: '01a1a5b1', state: 'succeeded', at: '2026-11-04 13:50', took: '8.2s' },
+]
+
+const COLUMNS: Column<Run>[] = [
+    { id: 'id', header: 'Run', width: '6rem', cell: (run) => <span className="font-mono text-xs">{run.id}</span> },
+    { id: 'state', header: 'State', width: '6.5rem', cell: (run) => <StatusChip status={run.state} /> },
+    {
+        id: 'at',
+        header: 'Started',
+        width: 'minmax(0,1fr)',
+        cell: (run) => <span className="text-muted-foreground tabular-nums">{run.at}</span>,
+    },
+    {
+        id: 'took',
+        header: 'Took',
+        width: '3rem',
+        align: 'end',
+        cell: (run) => <span className="text-muted-foreground tabular-nums">{run.took === '' ? '-' : run.took}</span>,
+    },
 ]
 
 function RunFilter() {
@@ -120,19 +146,7 @@ function RunFilter() {
                         <ToggleGroupItem value="running">Running</ToggleGroupItem>
                     </ToggleGroup>
                 </div>
-                <ul className="divide-y divide-border rounded-lg border border-border">
-                    {shown.map((run) => (
-                        <li key={run.id} className="grid grid-cols-[6rem_6.5rem_minmax(0,1fr)_3rem] items-center gap-3 px-3 py-2 text-sm">
-                            <span className="font-mono text-xs">{run.id}</span>
-                            <span>
-                                <StatusChip status={run.state as Status} />
-                            </span>
-                            <span className="truncate text-muted-foreground tabular-nums">{run.at}</span>
-                            <span className="text-right text-muted-foreground tabular-nums">{run.took === '' ? '-' : run.took}</span>
-                        </li>
-                    ))}
-                    {shown.length === 0 && <li className="px-3 py-4 text-center text-sm text-muted-foreground">No runs match.</li>}
-                </ul>
+                <ListTable columns={COLUMNS} rows={shown} rowKey={(run) => run.id} empty="No runs match." />
             </div>
         </Ground>
     )
