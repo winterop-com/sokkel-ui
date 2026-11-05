@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Slash } from 'lucide-react'
 
+import { PageHeader } from '../../components/PageHeader'
 import {
     Breadcrumb,
     BreadcrumbEllipsis,
@@ -106,9 +107,7 @@ export const RunPath: StoryObj = {
                         </BreadcrumbItem>
                     </BreadcrumbList>
                 </Breadcrumb>
-                <h1 className="text-lg font-medium">
-                    Run <span className="font-mono">01a1a5c2</span>
-                </h1>
+                <PageHeader title="Run 01a1a5c2" />
                 <p className="text-sm text-muted-foreground">Failed at step validate, 2026-11-04 14:02, after 0.3s.</p>
             </div>
         </Ground>

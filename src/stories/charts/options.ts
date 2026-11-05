@@ -191,8 +191,15 @@ export function gauge(name: string, value: number, steps: readonly [number, stri
                     splitLine: { show: false },
                     axisLabel: { show: false },
                     anchor: { show: false },
-                    title: { show: true, offsetCenter: [0, '42%'], fontSize: 11, color: look.muted },
-                    detail: { valueAnimation: false, offsetCenter: [0, '0%'], fontSize: 26, fontWeight: 600, color, formatter: '{value}%' },
+                    title: { show: true, offsetCenter: [0, '42%'], fontSize: look.size.label, color: look.muted },
+                    detail: {
+                        valueAnimation: false,
+                        offsetCenter: [0, '0%'],
+                        fontSize: look.size.stat,
+                        fontWeight: 600,
+                        color,
+                        formatter: '{value}%',
+                    },
                     data: [{ value, name }],
                 },
             ],
@@ -213,8 +220,8 @@ export function donut(series: readonly StorySeries[]) {
                 left: 'center',
                 top: 'center',
                 itemGap: 2,
-                textStyle: { fontSize: 22, fontWeight: 600, color: look.foreground },
-                subtextStyle: { fontSize: 11, color: look.muted },
+                textStyle: { fontSize: look.size.stat, fontWeight: 600, color: look.foreground },
+                subtextStyle: { fontSize: look.size.label, color: look.muted },
             },
             series: [
                 {

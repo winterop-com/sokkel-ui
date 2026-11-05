@@ -21,7 +21,7 @@
         color-scheme: dark;
     }
     body {
-        @apply bg-background font-sans text-base text-foreground antialiased;
+        @apply bg-background font-sans text-sm text-foreground antialiased;
     }
 }
 

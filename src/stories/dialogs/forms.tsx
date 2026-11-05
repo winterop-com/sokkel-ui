@@ -166,7 +166,7 @@ export function NestedConfirm() {
                             <GripVertical className="size-4 text-faint" aria-hidden />
                             <span className="w-5 font-mono text-xs text-faint tabular-nums">{at + 1}</span>
                             <span className="flex min-w-0 flex-1 flex-col">
-                                <span className="font-mono text-[0.8125rem]">{step.code}</span>
+                                <span className="font-mono text-xs">{step.code}</span>
                                 <span className="truncate font-mono text-xs text-muted-foreground">{step.run}</span>
                             </span>
                             <Button
@@ -233,7 +233,7 @@ export function DetailsSheet() {
                 <SheetContent className={cn('gap-0 data-[side=right]:max-sm:w-full data-[side=right]:sm:max-w-md', NESTED)}>
                     <SheetHeader className="border-b border-border pr-12">
                         <SheetTitle>Import orders</SheetTitle>
-                        <SheetDescription className="font-mono text-[0.8125rem]">import-orders</SheetDescription>
+                        <SheetDescription className="font-mono text-xs">import-orders</SheetDescription>
                     </SheetHeader>
                     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
                         <div className="flex flex-1 flex-col gap-4 p-4">

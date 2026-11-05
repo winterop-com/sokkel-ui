@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import type { ReactNode } from 'react'
 
+import { PageHeader } from '../../components/PageHeader'
 import { StatusChip, type Status } from '../../components/StatusChip'
 import {
     Sidebar,
@@ -211,10 +212,7 @@ function Frame({
                     <span className="font-mono text-sm">import-orders</span>
                 </header>
                 <div className="flex max-w-[1100px] flex-col gap-4 p-6">
-                    <div>
-                        <h1 className="text-lg font-medium">Import orders</h1>
-                        <p className="font-mono text-xs text-muted-foreground">import-orders</p>
-                    </div>
+                    <PageHeader title="Import orders" code="import-orders" />
                     <div className="overflow-x-auto rounded-lg border border-border">
                         <table className="w-full text-sm">
                             <thead className="text-left text-xs text-muted-foreground">

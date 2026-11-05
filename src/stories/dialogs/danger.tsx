@@ -146,7 +146,7 @@ export function TransferOwnership({ step: first = 1 }: { step?: 0 | 1 }) {
                                 <RadioGroupItem value={person.username} />
                                 <PersonAvatar name={person.username} />
                                 <span className="flex min-w-0 flex-1 flex-col">
-                                    <span className="font-mono text-[0.8125rem]">{person.username}</span>
+                                    <span className="font-mono text-xs">{person.username}</span>
                                     <span className="truncate text-xs text-muted-foreground">{person.email}</span>
                                 </span>
                                 <span className="text-xs text-muted-foreground">{person.role}</span>

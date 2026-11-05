@@ -16,6 +16,11 @@ through `--typeface-sans` and `--typeface-mono`, with mono's x-height at `--mono
 and `--mono-x-height-small: 0.503`, the same share of Geist's x-height as the default's of Plex's.
 Both pairs were picked from the typeface research once mono was sized to its sans.
 
+Text is 15px (`text-sm`) on the page and in the components alike, with inputs at 16px on a phone so
+a focused field does not zoom. Every size comes from a token: `text-xs`, `text-sm`, `text-title`,
+`text-page` and `text-stat` in the interface, and `--chart-text-size`, `--chart-text-size-small`
+and `--chart-stat-size` for the text ECharts draws.
+
 ## Primitives
 
 The shadcn `base-nova` set on Base UI, restyled to the tokens: accordion, alert, alert-dialog,

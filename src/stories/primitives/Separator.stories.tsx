@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
+import { PageHeader } from '../../components/PageHeader'
 import { Separator } from '../../components/ui/separator'
 
 const meta: Meta = { title: 'Primitives/Display/Separator' }
@@ -44,10 +45,7 @@ export const JobHeader: StoryObj = {
     render: () => (
         <Ground>
             <div className="flex max-w-xl flex-col gap-3">
-                <div>
-                    <h1 className="text-lg font-medium">Nightly export</h1>
-                    <p className="font-mono text-xs text-muted-foreground">nightly-export</p>
-                </div>
+                <PageHeader title="Nightly export" code="nightly-export" />
                 <Separator />
                 <div className="flex h-5 flex-wrap items-center gap-3 text-xs text-muted-foreground">
                     <span>3 steps</span>

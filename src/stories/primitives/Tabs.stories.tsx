@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Files, Play, Settings } from 'lucide-react'
 
+import { PageHeader } from '../../components/PageHeader'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs'
 
 const meta: Meta = { title: 'Primitives/Navigation/Tabs' }
@@ -104,10 +105,7 @@ export const JobPage: StoryObj = {
     render: () => (
         <Ground>
             <div className="flex flex-col gap-4">
-                <div>
-                    <h1 className="text-lg font-medium">Nightly export</h1>
-                    <p className="font-mono text-xs text-muted-foreground">nightly-export</p>
-                </div>
+                <PageHeader title="Nightly export" code="nightly-export" />
                 <Tabs defaultValue="files">
                     <TabsList variant="line">
                         <TabsTrigger value="overview">Overview</TabsTrigger>

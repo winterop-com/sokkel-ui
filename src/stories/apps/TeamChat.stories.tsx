@@ -27,6 +27,7 @@ import { ChannelList, type ChannelSection } from '../../components/ChannelList'
 import { ChatDayDivider, ChatMessage, ChatNewDivider, ChatTyping, type ChatFile, type ChatReaction } from '../../components/ChatMessage'
 import { Markdown } from '../../components/Markdown'
 import { MessageComposer } from '../../components/MessageComposer'
+import { PersonAvatar } from '../../components/PersonAvatar'
 import { Shell } from '../../components/Shell'
 import { SidePanel } from '../../components/SidePanel'
 import { TopBar } from '../../components/TopBar'
@@ -212,7 +213,7 @@ function ChannelHeader({
     return (
         <div className="shrink-0 border-b border-border">
             <div className="flex h-shell-top items-center gap-3 px-(--density-chat-inset)">
-                <h1 className="flex min-w-0 items-center gap-1 text-base font-semibold">
+                <h1 className="flex min-w-0 items-center gap-1 text-title font-semibold">
                     {kind === 'channel' && <Hash className="size-4 shrink-0 text-muted-foreground" aria-hidden />}
                     <span className="truncate">{title}</span>
                 </h1>
@@ -225,9 +226,7 @@ function ChannelHeader({
                         >
                             <span className="flex -space-x-1">
                                 {(['grace', 'linus', 'margaret'] as const).map((who) => (
-                                    <span key={who} className="flex size-4.5 overflow-hidden rounded-sm text-[8px] ring-2 ring-background">
-                                        <Face who={who} />
-                                    </span>
+                                    <PersonAvatar key={who} name={who} size="xs" className="ring-2 ring-background" />
                                 ))}
                             </span>
                             <span className="tabular-nums">{members}</span>
@@ -403,7 +402,7 @@ function Direct() {
             <ChannelHeader title="grace" kind="direct" />
             <div className="min-h-0 flex-1 overflow-y-auto py-3">
                 <div className="flex items-center gap-3 px-5 pb-4">
-                    <span className="flex size-16 overflow-hidden rounded-xl text-lg">
+                    <span className="flex size-16 overflow-hidden rounded-xl text-title">
                         <Face who="grace" />
                     </span>
                     <div>
@@ -449,7 +448,7 @@ function NewChannelPage() {
                     <span className="flex size-12 items-center justify-center rounded-xl bg-primary/15 text-primary-ink">
                         <Hash className="size-6" aria-hidden />
                     </span>
-                    <h2 className="text-xl font-semibold">juniper-launch</h2>
+                    <h2 className="text-page font-semibold">juniper-launch</h2>
                     <p className="text-sm text-muted-foreground">ada created this channel today. It is the start of #juniper-launch.</p>
                     <div className="flex gap-2">
                         <Button variant="outline" size="sm">

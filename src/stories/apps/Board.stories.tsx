@@ -436,7 +436,7 @@ function ItemPanel({ item, onToggle }: { item: Item; onToggle: (index: number) =
         <>
             <div className="flex flex-col gap-2 border-b border-border px-4 py-3">
                 <span className="font-mono text-xs text-muted-foreground">{item.code}</span>
-                <h2 className="text-base leading-6 font-semibold">{item.title}</h2>
+                <h2 className="text-title font-semibold">{item.title}</h2>
                 <div className="flex flex-wrap items-center gap-1.5">
                     <span className="inline-flex items-center gap-1.5 rounded-chip bg-secondary px-1.5 py-0.5 text-xs">
                         {column?.icon}

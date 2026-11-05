@@ -21,6 +21,8 @@ export interface ChartLook {
     grid: string
     card: string
     popover: string
+    /** Text sizes in pixels, read from the size tokens: axis and legend labels, axis names, titles and tooltips, and a figure in a chart's middle. */
+    size: { label: number; small: number; body: number; stat: number }
     /** The categorical colors in order. */
     series: string[]
     token: (name: string) => string
@@ -74,6 +76,13 @@ export function readLook(key = readKey()): ChartLook {
     const style = getComputedStyle(document.documentElement)
     const token = (name: string) => hex(`var(--${name})`)
     const mix = (css: string, percent: number, base = 'var(--card)') => hex(`color-mix(in oklab, ${css} ${percent}%, ${base})`)
+    const rem = Number.parseFloat(style.fontSize) || 16
+    const pixels = (name: string, fallback: number) => {
+        const value = style.getPropertyValue(`--${name}`).trim()
+        const number = Number.parseFloat(value)
+        if (Number.isNaN(number)) return fallback
+        return value.endsWith('rem') ? number * rem : number
+    }
     return {
         key,
         dark: document.documentElement.classList.contains('dark'),
@@ -86,6 +95,12 @@ export function readLook(key = readKey()): ChartLook {
         grid: mix('var(--border)', 65),
         card: token('card'),
         popover: token('popover'),
+        size: {
+            label: pixels('chart-text-size', 11),
+            small: pixels('chart-text-size-small', 10),
+            body: pixels('text-xs', 13),
+            stat: pixels('chart-stat-size', 24),
+        },
         series: SERIES_ORDER.map(token),
         token,
         mix,
