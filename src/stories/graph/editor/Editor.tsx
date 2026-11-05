@@ -7,9 +7,12 @@ import { BlockPicker } from '../../../components/graph/BlockPicker'
 import { GraphOverlay, GraphNotice } from '../../../components/graph/GraphOverlay'
 import { GraphToolbar, GraphToolbarButton } from '../../../components/graph/GraphToolbar'
 import { PipelineGraph } from '../../../components/graph/PipelineGraph'
+import { ISSUE_EDGE } from '../../../components/IssueMark'
+import { Problem } from '../../../components/Problem'
 import { SchemaForm, useSchemaForm } from '../../../components/schema/SchemaForm'
 import type { JsonSchema } from '../../../components/schema/read'
 import { Input } from '../../../components/ui/input'
+import { cn } from '../../../lib/cn'
 import { blockOf, BLOCKS, GROUPS, type BlockSpec } from './blocks'
 import { usePipelineEditor, type Notice, type Picker, type PipelineDoc, type PipelineEditorState } from './use-editor'
 
@@ -128,8 +131,8 @@ function CodeField({ editor, code }: { editor: PipelineEditorState; code: string
             <Input
                 id={id}
                 value={draft}
-                className="font-mono"
-                aria-invalid={problem !== null}
+                className={cn('font-mono', problem !== null && ISSUE_EDGE.critical)}
+                aria-invalid={problem !== null || undefined}
                 aria-describedby={describedBy(id, { help: true, error: problem })}
                 onChange={(event) => setDraft(event.target.value)}
                 onBlur={() => editor.rename(code, draft)}
@@ -156,7 +159,7 @@ export function StepPanel({ editor }: { editor: PipelineEditorState }) {
     if (code === null || step === undefined || block === undefined)
         return <p className="p-4 text-sm text-muted-foreground">Choose a step to edit its settings.</p>
     const Icon = block.icon ?? Box
-    const issues = editor.issues.get(code) ?? []
+    const inflow = (editor.issues.get(code) ?? []).find((issue) => issue.text === 'Nothing flows in')
     const key = `${code}:${String(editor.history.revision)}`
     return (
         <div className="flex flex-col gap-4 p-4">
@@ -170,11 +173,8 @@ export function StepPanel({ editor }: { editor: PipelineEditorState }) {
                     {block.description !== undefined && <p className="mt-1 text-xs text-muted-foreground">{block.description}</p>}
                 </div>
             </div>
-            {issues.some((issue) => issue.text === 'Nothing flows in') && (
-                <p className="flex items-start gap-1.5 text-xs text-critical-ink">
-                    <CircleAlert className="mt-px size-3.5 shrink-0" aria-hidden />
-                    Nothing flows in: drag from a step's output to this step's input.
-                </p>
+            {inflow !== undefined && (
+                <Problem title={inflow.text} detail={`${inflow.detail ?? ''} Drag from its output to this step's input.`.trim()} />
             )}
             <CodeField key={key} editor={editor} code={code} />
             <Field id={`step-name-${code}`} label="Name" help="A title for people; the code stays the key.">

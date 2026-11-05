@@ -3,7 +3,7 @@ import { useState } from 'react'
 
 import { ConfirmDialog, DialogShell, NESTED } from '../../components/DialogShell'
 import { Field } from '../../components/Field'
-import type { Issue } from '../../components/IssueMark'
+import { IssueCount, type Issue } from '../../components/IssueMark'
 import { SaveBar } from '../../components/SaveBar'
 import type { JsonSchema } from '../../components/schema/read'
 import { SchemaForm, SchemaIssueCount, useSchemaForm } from '../../components/schema/SchemaForm'
@@ -94,6 +94,7 @@ export function UnsavedEdit() {
             setOpen(false)
         },
     })
+    const [issueOpen, setIssueOpen] = useState(false)
     const timeoutIssues: Issue[] = /^\d+$/.test(draft.timeout)
         ? []
         : [{ tone: 'critical', text: 'Enter whole seconds', detail: 'As in 900.' }]
@@ -103,7 +104,12 @@ export function UnsavedEdit() {
                 open={open}
                 onOpenChange={guard.onOpenChange}
                 title="Edit import-orders"
-                footer={dirty ? 'Unsaved changes' : undefined}
+                footer={
+                    <span className="flex items-center gap-3">
+                        <IssueCount critical={timeoutIssues.length} onPick={() => setIssueOpen(true)} />
+                        {dirty && 'Unsaved changes'}
+                    </span>
+                }
                 confirm={{
                     label: 'Save',
                     why: !dirty ? 'Nothing has changed.' : timeoutIssues.length > 0 ? 'Fix the timeout first.' : undefined,
@@ -130,6 +136,8 @@ export function UnsavedEdit() {
                     value={draft.timeout}
                     onChange={(timeout) => setDraft({ ...draft, timeout })}
                     issues={timeoutIssues}
+                    issueOpen={issueOpen}
+                    onIssueOpenChange={setIssueOpen}
                 />
                 <UnsavedChangesDialog guard={guard} />
             </DialogShell>
@@ -230,7 +238,7 @@ export function DetailsSheet() {
     return (
         <Behind action="Details" onAction={() => setOpen(true)}>
             <Sheet open={open} onOpenChange={guard.onOpenChange}>
-                <SheetContent className={cn('gap-0 data-[side=right]:max-sm:w-full data-[side=right]:sm:max-w-md', NESTED)}>
+                <SheetContent className={cn('gap-0', NESTED)}>
                     <SheetHeader className="border-b border-border pr-12">
                         <SheetTitle>Import orders</SheetTitle>
                         <SheetDescription className="font-mono text-xs">import-orders</SheetDescription>
@@ -293,7 +301,6 @@ export function DetailsSheet() {
                                     setSaved(draft)
                                 })
                             }}
-                            className="[--density-page-inset:1rem]"
                         />
                     </div>
                     <UnsavedChangesDialog guard={guard} />
@@ -310,6 +317,7 @@ export function Duplicate() {
     const [open, setOpen] = useState(true)
     const [code, setCode] = useState('sync-inventory')
     const [carry, setCarry] = useState({ steps: true, schedule: false, alerts: true, secrets: true })
+    const [issueOpen, setIssueOpen] = useState(false)
     const issues: Issue[] =
         code === ''
             ? []
@@ -338,13 +346,24 @@ export function Duplicate() {
                 onOpenChange={setOpen}
                 title="Duplicate nightly-export"
                 description="The copy starts with no runs."
+                footer={<IssueCount critical={issues.length} onPick={() => setIssueOpen(true)} />}
                 confirm={{
                     label: 'Duplicate',
                     onConfirm: () => setOpen(false),
                     why: code === '' ? 'Give the copy a code.' : issues.length > 0 ? 'Fix the code first.' : undefined,
                 }}
             >
-                <TextField id="copy-code" label="Code" required mono value={code} onChange={setCode} issues={issues} />
+                <TextField
+                    id="copy-code"
+                    label="Code"
+                    required
+                    mono
+                    value={code}
+                    onChange={setCode}
+                    issues={issues}
+                    issueOpen={issueOpen}
+                    onIssueOpenChange={setIssueOpen}
+                />
                 <fieldset className="flex flex-col gap-1.5">
                     <legend className="mb-1.5 text-sm font-medium">Copy</legend>
                     {items.map((item) => (

@@ -6,7 +6,8 @@ import { CronField } from '../../components/CronField'
 import { DescriptionList } from '../../components/DescriptionList'
 import { DialogShell } from '../../components/DialogShell'
 import { Field } from '../../components/Field'
-import type { Issue } from '../../components/IssueMark'
+import { IssueCount, IssueMark, type Issue } from '../../components/IssueMark'
+import { ListTable, type Column } from '../../components/ListTable'
 import { PersonAvatar } from '../../components/PersonAvatar'
 import { Segmented } from '../../components/Segmented'
 import { StepIndicator, WizardDialog } from '../../components/StepIndicator'
@@ -17,6 +18,7 @@ import { NativeSelect, NativeSelectOption } from '../../components/ui/native-sel
 import { Progress } from '../../components/ui/progress'
 import { DropZone } from '../../components/UploadTray'
 import { cn } from '../../lib/cn'
+import { describeCron } from '../../lib/cron'
 import { Behind, TextField } from './parts'
 
 /** Counts from 0 to 1 while `running`, then calls `onDone`; a stand-in for a server's progress. */
@@ -73,13 +75,16 @@ export function NewJobWizard() {
         source === 'http' && url !== '' && !/^https:\/\/\S+$/.test(url)
             ? [{ tone: 'critical', text: 'Enter a full address', detail: 'Starting with https://.' }]
             : []
+    const [issueOpen, setIssueOpen] = useState(false)
+    const cronValid = describeCron(cron) !== null
     const why = [
         code === '' ? 'Give the job a code.' : codeIssues.length > 0 ? 'Fix the code first.' : undefined,
         source === 'http' && (url === '' || urlIssues.length > 0) ? 'Enter the address to fetch.' : undefined,
-        cron.trim().split(/\s+/).length !== 5 ? 'Fix the schedule first.' : undefined,
+        cronValid ? undefined : 'Fix the schedule first.',
         undefined,
         undefined,
     ][step]
+    const stepIssues = [codeIssues.length, urlIssues.length, cronValid ? 0 : 1, 0, 0][step]
     return (
         <Behind
             action="New job"
@@ -94,8 +99,20 @@ export function NewJobWizard() {
                 title="New job in harbor"
                 steps={WIZARD_STEPS}
                 current={step}
-                onCurrentChange={setStep}
+                onCurrentChange={(next) => {
+                    setIssueOpen(false)
+                    setStep(next)
+                }}
                 why={why}
+                footer={
+                    <IssueCount
+                        critical={stepIssues}
+                        onPick={() => {
+                            if (step === 2) document.getElementById('wizard-cron')?.focus()
+                            else setIssueOpen(true)
+                        }}
+                    />
+                }
                 finish={{
                     label: 'Create job',
                     busy,
@@ -111,7 +128,17 @@ export function NewJobWizard() {
             >
                 {step === 0 && (
                     <>
-                        <TextField id="wizard-code" label="Code" required mono value={code} onChange={setCode} issues={codeIssues} />
+                        <TextField
+                            id="wizard-code"
+                            label="Code"
+                            required
+                            mono
+                            value={code}
+                            onChange={setCode}
+                            issues={codeIssues}
+                            issueOpen={issueOpen}
+                            onIssueOpenChange={setIssueOpen}
+                        />
                         <TextField id="wizard-name" label="Name" value={name} onChange={setName} />
                     </>
                 )}
@@ -136,7 +163,17 @@ export function NewJobWizard() {
                             ))}
                         </fieldset>
                         {source === 'http' ? (
-                            <TextField id="wizard-url" label="Address" required mono value={url} onChange={setUrl} issues={urlIssues} />
+                            <TextField
+                                id="wizard-url"
+                                label="Address"
+                                required
+                                mono
+                                value={url}
+                                onChange={setUrl}
+                                issues={urlIssues}
+                                issueOpen={issueOpen}
+                                onIssueOpenChange={setIssueOpen}
+                            />
                         ) : (
                             <Field id="wizard-where" label={source === 'file' ? 'Folder' : 'Connection'} required>
                                 <NativeSelect id="wizard-where" className="w-full">
@@ -150,7 +187,9 @@ export function NewJobWizard() {
                         )}
                     </>
                 )}
-                {step === 2 && <CronField value={cron} onChange={setCron} from={new Date('2026-11-05T10:17:00Z')} count={3} />}
+                {step === 2 && (
+                    <CronField id="wizard-cron" value={cron} onChange={setCron} from={new Date('2026-11-05T10:17:00Z')} count={3} />
+                )}
                 {step === 3 && (
                     <>
                         <SwitchField
@@ -214,6 +253,24 @@ const FAILED = [
     { row: 977, column: 'placed_at', value: '31/10/2026', why: 'Not a date; write it as 2026-10-31' },
 ]
 
+const FAILED_COLUMNS: Column<(typeof FAILED)[number]>[] = [
+    {
+        id: 'row',
+        header: 'Row',
+        width: '4rem',
+        align: 'end',
+        cell: (row) => <span className="font-mono text-xs tabular-nums">{row.row}</span>,
+    },
+    { id: 'column', header: 'Column', width: '9rem', cell: (row) => <span className="font-mono text-xs">{row.column}</span> },
+    {
+        id: 'value',
+        header: 'Value',
+        width: '9rem',
+        cell: (row) => <span className="font-mono text-xs text-critical-ink">{row.value}</span>,
+    },
+    { id: 'why', header: 'Why', width: 'minmax(0,1fr)', cell: (row) => <span className="text-muted-foreground">{row.why}</span> },
+]
+
 type ImportStage = 'file' | 'map' | 'running' | 'done'
 
 /** An import: a dropped file, its columns mapped to fields with a preview, the run, and what failed. Opens on the mapping. */
@@ -226,6 +283,37 @@ export function ImportOrders({ stage: first = 'map' }: { stage?: ImportStage }) 
     const used = Object.values(map)
     const missing = FIELDS.filter((field) => field.required && !used.includes(field.value))
     const twice = FIELDS.filter((field) => field.value !== 'skip' && used.filter((one) => one === field.value).length > 1)
+    const [openAt, setOpenAt] = useState<string | null>(null)
+    /** A column's issues: a field it shares with another column, and each required field no column gives, on the columns free to give it. */
+    const columnIssues = (column: string): Issue[] => {
+        const chosen = map[column]
+        const clash = twice.find((field) => field.value === chosen)
+        return [
+            ...(clash === undefined
+                ? []
+                : [
+                      {
+                          tone: 'critical' as const,
+                          text: `${clash.label} comes from two columns`,
+                          detail: 'Each field takes one column; choose another field for one of them.',
+                      },
+                  ]),
+            ...(chosen === 'skip' || clash !== undefined
+                ? missing.map((field) => ({
+                      tone: 'critical' as const,
+                      text: `No column gives ${field.label.toLowerCase()}`,
+                      detail: 'It is required on every order.',
+                      actions: [
+                          {
+                              label: `Map this column to ${field.label.toLowerCase()}`,
+                              onClick: () => setMap({ ...map, [column]: field.value }),
+                          },
+                      ],
+                  }))
+                : []),
+        ]
+    }
+    const firstMarked = COLUMNS.find((one) => columnIssues(one.column).length > 0)?.column
     const index = { file: 0, map: 1, running: 2, done: 2 }[stage]
     const close = (next: boolean) => {
         setOpen(next)
@@ -254,17 +342,19 @@ export function ImportOrders({ stage: first = 'map' }: { stage?: ImportStage }) 
                 back={stage === 'map' ? () => setStage('file') : undefined}
                 words={stage === 'done' ? { cancel: 'Close' } : undefined}
                 footer={
-                    stage === 'map'
-                        ? '1,204 rows'
-                        : stage === 'done' && (
-                              <button
-                                  type="button"
-                                  className="flex items-center gap-1.5 underline underline-offset-3 hover:text-foreground"
-                              >
-                                  <Download className="size-3.5" aria-hidden />
-                                  Failed rows as CSV
-                              </button>
-                          )
+                    stage === 'map' ? (
+                        <span className="flex items-center gap-3">
+                            <IssueCount critical={twice.length + missing.length} onPick={() => setOpenAt(firstMarked ?? null)} />
+                            1,204 rows
+                        </span>
+                    ) : (
+                        stage === 'done' && (
+                            <button type="button" className="flex items-center gap-1.5 underline underline-offset-3 hover:text-foreground">
+                                <Download className="size-3.5" aria-hidden />
+                                Failed rows as CSV
+                            </button>
+                        )
+                    )
                 }
                 confirm={
                     stage === 'file'
@@ -322,6 +412,7 @@ export function ImportOrders({ stage: first = 'map' }: { stage?: ImportStage }) 
                             <tbody className="divide-y divide-border">
                                 {COLUMNS.map((one) => {
                                     const skipped = map[one.column] === 'skip'
+                                    const issues = columnIssues(one.column)
                                     return (
                                         <tr key={one.column}>
                                             <td className="px-3 py-2 font-mono text-xs">{one.column}</td>
@@ -329,19 +420,27 @@ export function ImportOrders({ stage: first = 'map' }: { stage?: ImportStage }) 
                                                 <ArrowRight className="size-3.5 text-faint" />
                                             </td>
                                             <td className="px-3 py-1.5">
-                                                <NativeSelect
-                                                    size="sm"
-                                                    aria-label={`Field for ${one.column}`}
-                                                    className="w-44"
-                                                    value={map[one.column]}
-                                                    onChange={(event) => setMap({ ...map, [one.column]: event.target.value })}
-                                                >
-                                                    {FIELDS.map((field) => (
-                                                        <NativeSelectOption key={field.value} value={field.value}>
-                                                            {field.label}
-                                                        </NativeSelectOption>
-                                                    ))}
-                                                </NativeSelect>
+                                                <div className="relative w-fit pr-8">
+                                                    <NativeSelect
+                                                        size="sm"
+                                                        aria-label={`Field for ${one.column}`}
+                                                        aria-invalid={issues.length > 0 || undefined}
+                                                        className="w-44"
+                                                        value={map[one.column]}
+                                                        onChange={(event) => setMap({ ...map, [one.column]: event.target.value })}
+                                                    >
+                                                        {FIELDS.map((field) => (
+                                                            <NativeSelectOption key={field.value} value={field.value}>
+                                                                {field.label}
+                                                            </NativeSelectOption>
+                                                        ))}
+                                                    </NativeSelect>
+                                                    <IssueMark
+                                                        issues={issues}
+                                                        open={openAt === one.column}
+                                                        onOpenChange={(next) => setOpenAt(next ? one.column : null)}
+                                                    />
+                                                </div>
                                             </td>
                                             <td
                                                 className={cn(
@@ -391,28 +490,7 @@ export function ImportOrders({ stage: first = 'map' }: { stage?: ImportStage }) 
                         </div>
                         <div className="flex flex-col gap-1.5">
                             <span className="text-xs font-medium text-critical-ink">Rows not imported</span>
-                            <div className="overflow-x-auto rounded-control border border-border">
-                                <table className="w-full min-w-[36rem] text-sm">
-                                    <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
-                                        <tr>
-                                            <th className="px-3 py-2 text-right font-medium">Row</th>
-                                            <th className="px-3 py-2 font-medium">Column</th>
-                                            <th className="px-3 py-2 font-medium">Value</th>
-                                            <th className="px-3 py-2 font-medium">Why</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-border">
-                                        {FAILED.map((row) => (
-                                            <tr key={row.row}>
-                                                <td className="px-3 py-2 text-right font-mono text-xs tabular-nums">{row.row}</td>
-                                                <td className="px-3 py-2 font-mono text-xs">{row.column}</td>
-                                                <td className="px-3 py-2 font-mono text-xs text-critical-ink">{row.value}</td>
-                                                <td className="px-3 py-2 text-muted-foreground">{row.why}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                            <ListTable columns={FAILED_COLUMNS} rows={FAILED} rowKey={(row) => String(row.row)} />
                         </div>
                     </>
                 )}
@@ -439,6 +517,7 @@ export function ExportRuns({ stage: first = 'form' }: { stage?: ExportStage }) {
     const [include, setInclude] = useState({ runs: true, steps: true, logs: false, inputs: false })
     const progress = useProgress(stage === 'running', 2500, () => setStage('ready'))
     const rangeIssues: Issue[] = from > to ? [{ tone: 'critical', text: 'The end is before the start' }] : []
+    const [issueOpen, setIssueOpen] = useState(false)
     const name = `harbor-runs-${from}-${to}.${format}`
     const close = (next: boolean) => {
         setOpen(next)
@@ -458,6 +537,7 @@ export function ExportRuns({ stage: first = 'form' }: { stage?: ExportStage }) {
                 title={stage === 'ready' ? 'Your export is ready' : 'Export runs from harbor'}
                 description={stage === 'ready' ? 'The file keeps for 24 hours; after that, export again.' : undefined}
                 words={stage === 'ready' ? { cancel: 'Close' } : undefined}
+                footer={stage === 'form' ? <IssueCount critical={rangeIssues.length} onPick={() => setIssueOpen(true)} /> : undefined}
                 confirm={
                     stage === 'form'
                         ? {
@@ -489,6 +569,8 @@ export function ExportRuns({ stage: first = 'form' }: { stage?: ExportStage }) {
                                 value={to}
                                 onChange={setTo}
                                 issues={rangeIssues}
+                                issueOpen={issueOpen}
+                                onIssueOpenChange={setIssueOpen}
                                 placeholder="2026-10-31"
                             />
                         </div>
@@ -675,7 +757,7 @@ export function Share() {
                                 aria-label="Who the link opens for"
                                 value={link}
                                 onChange={(event) => setLink(event.target.value as 'invited' | 'workspace')}
-                                className="w-fit [&_select]:border-transparent [&_select]:bg-transparent [&_select]:pl-0 [&_select]:font-medium"
+                                className="w-fit"
                             >
                                 <NativeSelectOption value="invited">Only people invited</NativeSelectOption>
                                 <NativeSelectOption value="workspace">Anyone in Tidevann</NativeSelectOption>
