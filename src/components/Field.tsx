@@ -81,10 +81,10 @@ export function Field({
             ) : (
                 <div
                     className={cn(
-                        'relative min-w-0 [&>*]:pr-9',
+                        'relative min-w-0 [&>:first-child]:pr-9',
                         tone === 'critical'
-                            ? '[&>*]:border-critical/80 [&>*]:focus-visible:border-critical [&>*]:focus-visible:ring-critical/25'
-                            : '[&>*]:border-warning/80 [&>*]:focus-visible:border-warning [&>*]:focus-visible:ring-warning/25',
+                            ? '[&>:first-child]:border-critical/80 [&>:first-child]:focus-visible:border-critical [&>:first-child]:focus-visible:ring-critical/25'
+                            : '[&>:first-child]:border-warning/80 [&>:first-child]:focus-visible:border-warning [&>:first-child]:focus-visible:ring-warning/25',
                     )}
                 >
                     {children}
