@@ -6,8 +6,8 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.4.0** is the latest release (2026-11-05). 0.2.0 was the first published version, 0.3.0 the
-  second.
+- **0.5.0** is the latest release (2026-11-06), the first under the new name. 0.2.0 was the first
+  published version.
 - The library was renamed from winterop-ui to sokkel-ui after 0.4.0: the repository is
   `winterop-com/sokkel-ui`, the package `@winterop-com/sokkel-ui`, the Storybook
   https://winterop-com.github.io/sokkel-ui/. 0.2.0 to 0.4.0 are republished under the new name, and
@@ -15,10 +15,29 @@ to `plan.md` when it ships.
 - No app uses it yet. Until one does, a PR merges as soon as the local gates pass and main's CI
   catches the rest; a release still waits for green.
 
-## 0.5.0
+## 0.6.0
 
-The first release under the new name.
+Every example on shared components. An audit of the stories found parts the examples build by
+hand; each becomes a library component or an option on one, and every example takes it, so a change
+reaches them all. Done in waves, one PR each.
 
+- **Use what exists** (about 45 places): label and control pairs as `Field`, titled boxes as
+  `Section`, the uppercase panel heads as `PanelSection`, search and filters in `DataTable`'s
+  `toolbar`, `TopBar`, `StatusLine`, `Tabs` with arrow keys, `AvatarGroup`, `Toggle`, `TrackList`,
+  `MediaCard`, `KpiRow`, `Stat`, `Empty`, `Attachment`, `ItemCard` selection, `Item`, a real
+  `ContextMenu` for the graph editor's menu, `SettingRow`, `Composer`, `Dot`, `DialogShell`,
+  `SwitchField`, `PageHeader`, `ChatDayDivider`, a collapsed `Rail` with counts, and the inspector
+  head.
+- **New parts** (widest reuse first): `IconButton` (a label and a tooltip in one, about 30 places);
+  `PageHeader` description and meta; a `FilterChip` that owns its menu; `PersonRow`; `TextField`,
+  or `Field` setting the issue edge on its control; an app trail with the mark outside `Shell`;
+  `GroupLabel`, which five components also copy; `CheckboxList`; `CheckboxField`; `ChoiceList`;
+  `SelectionBar`, shared with `DataTable`; a page `Toolbar`; `SubNav`; `PaneHeader`; `SliderField`;
+  `ClampText`; `Comment`; `MetaLine`; `ProgressField`; `CopyField`; `DueText`; `FormBar`;
+  `InlineField`; `ChipBar`; `AttachmentList`; `StarButton`; a value-showing menu button;
+  `IssueList`, shared with `IssueCount`; a folding mail letter; `Section` description;
+  `DescriptionList` icons; a `DropZone` picker; `NowPlaying`; a sortable list; a streaming caret
+  for `Markdown`; and a `bare` `Input` and `Textarea`.
 - **Dark contrast for every theme.** 0.4.0 lifted secondary text, borders, inputs, cards and
   popovers in the default theme's dark scheme (and amber, which shares it). Paper, contrast, tokyo,
   vinyl, cassette and neon get the same lift, each from its own colors, with their baselines
@@ -28,6 +47,15 @@ The first release under the new name.
 
 ## Next
 
+- **Install only what you use.** Every dependency is a regular one today, so installing the package
+  installs every engine: mermaid (122 MB), ECharts (61 MB), maplibre (30 MB), elk, shiki, CodeMirror
+  and ajv, for an app that may draw only forms. The bundle already takes only what an app imports
+  (236 modules, imported by path), so make the heavy engines optional peer dependencies: an app
+  installs one when it uses its part, and each component's docs say which. Same package, same paths.
+- **A size budget in CI.** Build a few typical apps (forms only, a dashboard, a map page), measure
+  each bundle, and fail when one grows past its budget or pulls in an engine it does not use.
+  Splitting into packages (core, charts, maps, graph, editor) is the step after, only if optional
+  peers and the budget are not enough.
 - **A real example app.** `examples/` holds a small Vite app built from the Tidevann stories (the
   workspace shell, runs, the data table, settings) that installs the package as an app would and
   builds in CI, so a break in the published package fails a check rather than an app.
