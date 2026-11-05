@@ -66,6 +66,9 @@ for (const story of stories) {
     test(story.id, async ({ page }, info) => {
         test.setTimeout(3 * 60_000)
         await routeTiles(page, info.config.updateSnapshots === 'all' || info.config.updateSnapshots === 'changed')
+        // A story that throws is broken however its screenshot looks, and is never approved as a baseline.
+        const thrown: string[] = []
+        page.on('pageerror', (error) => thrown.push(error.message))
         for (const [name, size] of Object.entries(VIEWPORTS)) {
             await page.setViewportSize(size)
             for (const mode of MODES) {
@@ -88,6 +91,7 @@ for (const story of stories) {
                         )
                         .catch(() => undefined)
                     await page.waitForTimeout(300)
+                    expect(thrown, 'errors thrown by the story').toEqual([])
                     await expect(page).toHaveScreenshot(`${story.id}--${name}-${mode}.png`)
                 })
             }

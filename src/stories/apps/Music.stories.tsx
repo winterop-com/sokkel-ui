@@ -464,7 +464,6 @@ function MusicApp({ view }: { view: View }) {
                             ]}
                             active={tab}
                             onActiveChange={setTab}
-                            onClose={() => undefined}
                         />
                     ) : undefined
                 }

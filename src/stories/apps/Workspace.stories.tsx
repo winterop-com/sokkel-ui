@@ -154,7 +154,8 @@ function Workspace({ dock = false }: { dock?: boolean }) {
     const [collapsed, setCollapsed] = useState(false)
     const [dark, setDark] = useState(true)
     const [query, setQuery] = useState('')
-    const [chosen, setChosen] = useState<Run | null>(RUNS[1])
+    const [chosen, setChosen] = useState<Run>(RUNS[1])
+    const [panelOpen, setPanelOpen] = useState<boolean | undefined>(undefined)
     const rows = RUNS.filter((run) => run.job.includes(query.trim()))
     return (
         <TooltipProvider>
@@ -192,19 +193,18 @@ function Workspace({ dock = false }: { dock?: boolean }) {
                         <StatusItem>1.4.0</StatusItem>
                     </StatusLine>
                 }
+                panelOpen={panelOpen}
+                onPanelOpenChange={setPanelOpen}
                 panel={
-                    chosen !== null ? (
-                        <SidePanel
-                            tabs={[
-                                { id: 'details', label: 'Details', content: <Details run={chosen} /> },
-                                { id: 'log', label: 'Log', content: <LogView lines={LOG} wrap numbered={false} className="m-3" /> },
-                            ]}
-                            active="details"
-                            onClose={() => setChosen(null)}
-                            size={panel}
-                            onSizeChange={setPanel}
-                        />
-                    ) : undefined
+                    <SidePanel
+                        tabs={[
+                            { id: 'details', label: 'Details', content: <Details run={chosen} /> },
+                            { id: 'log', label: 'Log', content: <LogView lines={LOG} wrap numbered={false} className="m-3" /> },
+                        ]}
+                        active="details"
+                        size={panel}
+                        onSizeChange={setPanel}
+                    />
                 }
             >
                 <div className="flex h-full min-h-0 flex-col">
@@ -230,8 +230,11 @@ function Workspace({ dock = false }: { dock?: boolean }) {
                                 columns={COLUMNS}
                                 rows={rows}
                                 rowKey={(run) => run.id}
-                                selected={(run) => run.id === chosen?.id}
-                                onSelect={setChosen}
+                                selected={(run) => run.id === chosen.id}
+                                onSelect={(run) => {
+                                    setChosen(run)
+                                    setPanelOpen(true)
+                                }}
                                 foot={`${rows.length} of 248`}
                             />
                         </Page>

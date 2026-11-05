@@ -10,10 +10,11 @@ import {
     TooltipComponent,
     VisualMapComponent,
 } from 'echarts/components'
-import { init, use } from 'echarts/core'
+import { init as start, use } from 'echarts/core'
 import { CanvasRenderer, SVGRenderer } from 'echarts/renderers'
 
-use([
+/** The chart types, components and renderers this library draws with, registered on first use. */
+const PARTS = [
     LineChart,
     BarChart,
     HeatmapChart,
@@ -31,6 +32,18 @@ use([
     VisualMapComponent,
     CanvasRenderer,
     SVGRenderer,
-])
+]
 
-export { init }
+let registered = false
+
+/**
+ * ECharts' `init`, with the parts this library draws with registered first. Registering inside the
+ * call keeps it from being dropped by a bundler that treats this module as free of side effects.
+ */
+export function init(...args: Parameters<typeof start>): ReturnType<typeof start> {
+    if (!registered) {
+        use(PARTS)
+        registered = true
+    }
+    return start(...args)
+}
