@@ -31,14 +31,17 @@ const TYPEFACES: Record<string, { sans: string; mono: string }> = {
 
 /** The scheme, theme, density, corners and typeface a story is drawn in, set on the document as an app sets them. */
 const withLook: Decorator = (Story, context) => {
-    const { theme, look, density, corners, typeface } = context.globals as {
+    const { theme, look, density, corners, typeface, motion } = context.globals as {
         theme?: string
         look?: string
         density?: string
         corners?: string
         typeface?: string
+        motion?: string
     }
     const root = document.documentElement
+    if (motion === undefined || motion === 'system') root.removeAttribute('data-motion')
+    else root.setAttribute('data-motion', motion)
     root.classList.toggle('dark', theme !== 'light')
     if (look === undefined || look === 'default') root.removeAttribute('data-theme')
     else root.setAttribute('data-theme', look)
@@ -135,8 +138,21 @@ const preview: Preview = {
                 dynamicTitle: true,
             },
         },
+        motion: {
+            description: 'Motion: panels sliding, dialogs zooming, popups fading',
+            toolbar: {
+                title: 'Motion',
+                icon: 'transfer',
+                items: [
+                    { value: 'system', title: 'As the system asks' },
+                    { value: 'on', title: 'Motion on' },
+                    { value: 'off', title: 'Motion off' },
+                ],
+                dynamicTitle: true,
+            },
+        },
     },
-    initialGlobals: { theme: 'dark', look: 'default', density: 'regular', corners: 'theme', typeface: 'theme' },
+    initialGlobals: { theme: 'dark', look: 'default', density: 'regular', corners: 'theme', typeface: 'theme', motion: 'system' },
     decorators: [withLook],
 }
 
