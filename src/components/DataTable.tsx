@@ -100,6 +100,9 @@ export interface DataTableWords {
     selected: (count: number) => string
     clear: string
     selectAll: string
+    /** The bar's offer, once a page is selected, to select every row on every page. */
+    selectEvery: (count: number) => string
+    allSelected: (count: number) => string
     selectRow: string
     expand: string
     collapse: string
@@ -127,6 +130,8 @@ const WORDS: DataTableWords = {
     selected: (count) => `${count.toLocaleString('en-US')} selected`,
     clear: 'Clear',
     selectAll: 'Select all rows',
+    selectEvery: (count) => `Select all ${count.toLocaleString('en-US')}`,
+    allSelected: (count) => `All ${count.toLocaleString('en-US')} selected`,
     selectRow: 'Select row',
     expand: 'Expand',
     collapse: 'Collapse',
@@ -283,6 +288,7 @@ export function DataTable<T>({
     hasMore = false,
     loading = false,
     onLoadMore,
+    onSelectAllPages,
     card,
     view: viewValue,
     defaultView = 'table',
@@ -350,6 +356,11 @@ export function DataTable<T>({
     /** Rows are on their way: placeholder rows show at the end, or fill the table when it has none yet. */
     loading?: boolean
     onLoadMore?: () => void
+    /**
+     * With server pages, the app selects every row on every page itself, as the table holds only the
+     * page shown; given this, the bar offers it once the page shown is selected.
+     */
+    onSelectAllPages?: () => void
     /**
      * A row drawn as a card, for the grid view; given one, the bar offers table and grid. Cards keep
      * the table's selection, menus, sort, pages and loading; a tree's rows show as they are open.
@@ -480,6 +491,24 @@ export function DataTable<T>({
     }
     const clear = () => setSelection(new Set())
     const allChosen = allKeys.length > 0 && selection.size >= allKeys.length && allKeys.every((key) => selection.has(key))
+    // With pages, the head's box selects the page shown, and the bar then offers every row.
+    const headKeys = paging === undefined ? allKeys : flat.map((entry) => entry.key)
+    const headChosen = headKeys.length > 0 && headKeys.every((key) => selection.has(key))
+    const chooseHead = () => {
+        const next = new Set(selection)
+        for (const key of headKeys) {
+            if (headChosen) next.delete(key)
+            else next.add(key)
+        }
+        setSelection(next)
+    }
+    const everyCount = paging === 'server' ? (total ?? pageCount) : allKeys.length
+    const offerEvery =
+        paging !== undefined &&
+        headChosen &&
+        !allChosen &&
+        (paging === 'client' || onSelectAllPages !== undefined) &&
+        everyCount > selection.size
 
     const openBranch = (key: string, open: boolean) => {
         const next = new Set(expanded)
@@ -635,14 +664,25 @@ export function DataTable<T>({
             <div className="flex h-(--density-panel-head) shrink-0 items-center gap-2 border-b border-border px-(--density-panel-pad) text-sm">
                 {selection.size > 0 ? (
                     <div className="flex min-w-0 items-center gap-2">
-                        <span className="font-medium tabular-nums">{words.selected(selection.size)}</span>
+                        <span className="font-medium tabular-nums">
+                            {paging === 'client' && allChosen ? words.allSelected(allKeys.length) : words.selected(selection.size)}
+                        </span>
+                        {offerEvery && (
+                            <Button
+                                variant="link"
+                                size="xs"
+                                onClick={() => (paging === 'client' ? setSelection(new Set(allKeys)) : onSelectAllPages?.())}
+                            >
+                                {words.selectEvery(everyCount)}
+                            </Button>
+                        )}
                         <Button variant="ghost" size="xs" onClick={clear}>
                             {words.clear}
                         </Button>
                         {bulkActions?.(selection, clear)}
                     </div>
                 ) : (
-                    <div className="flex min-w-0 items-center gap-2">{toolbar}</div>
+                    <div className="flex min-w-0 flex-1 items-center gap-2">{toolbar}</div>
                 )}
                 <span className="ml-auto shrink-0 font-mono text-xs text-muted-foreground tabular-nums">
                     {hasMore && total === undefined
@@ -775,9 +815,9 @@ export function DataTable<T>({
                             <span role="columnheader" className={cn(pinned, 'left-0 flex h-full items-center justify-center')}>
                                 <Checkbox
                                     aria-label={words.selectAll}
-                                    checked={allChosen}
-                                    indeterminate={!allChosen && selection.size > 0}
-                                    onCheckedChange={() => setSelection(allChosen ? new Set() : new Set(allKeys))}
+                                    checked={headChosen}
+                                    indeterminate={!headChosen && selection.size > 0}
+                                    onCheckedChange={chooseHead}
                                 />
                             </span>
                         )}
