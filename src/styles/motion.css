@@ -1,0 +1,25 @@
+/*
+ * Motion: panels sliding, dialogs zooming, popups fading. It is on unless the system asks for
+ * reduced motion; an app sets `data-motion="off"` on the root element to turn it off, or
+ * `data-motion="on"` to keep it whatever the system says. Spinners keep turning and the fades at a
+ * scrolling edge keep following the scroll, since both say something rather than decorate.
+ */
+@media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion='on']) :where(*:not(.animate-spin, [class*='scroll-fade'])),
+    :root:not([data-motion='on']) :where(*:not(.animate-spin, [class*='scroll-fade']))::before,
+    :root:not([data-motion='on']) :where(*:not(.animate-spin, [class*='scroll-fade']))::after {
+        transition-duration: 0s !important;
+        transition-delay: 0s !important;
+        animation-duration: 0s !important;
+        animation-delay: 0s !important;
+    }
+}
+
+:root[data-motion='off'] :where(*:not(.animate-spin, [class*='scroll-fade'])),
+:root[data-motion='off'] :where(*:not(.animate-spin, [class*='scroll-fade']))::before,
+:root[data-motion='off'] :where(*:not(.animate-spin, [class*='scroll-fade']))::after {
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+}

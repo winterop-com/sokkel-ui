@@ -14,13 +14,15 @@ export interface ThemeOption {
     swatch?: boolean
 }
 
-/** Everything the picker sets: the named theme, the scheme, the density, the corners and the typeface. */
+/** Everything the picker sets: the named theme, the scheme, the density, the corners, the typeface and the motion. */
 export interface ThemeSettings {
     theme: string
     scheme: 'dark' | 'light'
     density: string
     corners: string
     typeface: string
+    /** Whether things slide and fade: as the system asks, always, or never. The row shows only when set. */
+    motion?: 'system' | 'on' | 'off'
 }
 
 export interface ThemePickerWords {
@@ -33,6 +35,10 @@ export interface ThemePickerWords {
     compact: string
     corners: string
     typeface: string
+    motion: string
+    motionSystem: string
+    motionOn: string
+    motionOff: string
 }
 
 const WORDS: ThemePickerWords = {
@@ -45,11 +51,15 @@ const WORDS: ThemePickerWords = {
     compact: 'Compact',
     corners: 'Corners',
     typeface: 'Typeface',
+    motion: 'Motion',
+    motionSystem: 'System',
+    motionOn: 'On',
+    motionOff: 'Off',
 }
 
 /**
  * The appearance controls an app's settings show: the named theme, dark or light, the density,
- * the corners and the typeface. It holds no state and applies nothing; `onChange` answers with the
+ * the corners, the typeface and the motion. It holds no state and applies nothing; `onChange` answers with the
  * whole settings, and the app sets them where it keeps its look.
  *
  * The theme and scheme are always offered. Density offers regular and compact unless given its
@@ -120,6 +130,21 @@ export function ThemePicker({
             {typefaces !== undefined && typefaces.length > 0 && (
                 <Row label={words.typeface}>
                     <Choice label={words.typeface} value={value.typeface} options={typefaces} onChoose={(next) => set('typeface', next)} />
+                </Row>
+            )}
+            {value.motion !== undefined && (
+                <Row label={words.motion}>
+                    <Segmented
+                        label={words.motion}
+                        value={value.motion}
+                        options={[
+                            { value: 'system', label: words.motionSystem },
+                            { value: 'on', label: words.motionOn },
+                            { value: 'off', label: words.motionOff },
+                        ]}
+                        fill
+                        onChoose={(next) => set('motion', next)}
+                    />
                 </Row>
             )}
         </div>
