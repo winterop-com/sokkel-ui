@@ -2,13 +2,12 @@ import type { Decorator, Preview } from '@storybook/react-vite'
 
 import '../src/styles/index.css'
 import './candidates.css'
-// Candidate typefaces, loaded for the font comparison stories only.
-import '@fontsource-variable/inter'
+// Geist and Geist Mono, the typeface a theme may choose instead of the default Plex, for the toolbar.
 import '@fontsource-variable/geist'
 import '@fontsource-variable/geist-mono'
-import '@fontsource-variable/jetbrains-mono'
 
 import tokens from '../tokens/tokens.json'
+import { FACES } from '../src/stories/themes/themes'
 import candidates from './candidates.json'
 
 const title = (name: string) => name.charAt(0).toUpperCase() + name.slice(1)
@@ -18,20 +17,6 @@ const THEMES = [
     ...Object.keys(tokens.themes).map((name) => ({ value: name, title: title(name) })),
     ...candidates.map((entry) => ({ value: entry.value, title: `${entry.title} (candidate)`, right: entry.app })),
 ]
-
-/** Typefaces a theme may choose, sans and mono together, to try on every story. */
-const TYPEFACES: Record<string, { sans: string; mono: string }> = {
-    inter: { sans: "'Inter Variable', system-ui, sans-serif", mono: "'JetBrains Mono Variable', ui-monospace, monospace" },
-    geist: { sans: "'Geist Variable', system-ui, sans-serif", mono: "'Geist Mono Variable', ui-monospace, monospace" },
-    'plex-jetbrains': {
-        sans: "'IBM Plex Sans Variable', system-ui, sans-serif",
-        mono: "'JetBrains Mono Variable', ui-monospace, monospace",
-    },
-    system: {
-        sans: "system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif",
-        mono: "ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace",
-    },
-}
 
 /** The scheme, theme, density, corners and typeface a story is drawn in, set on the document as an app sets them. */
 const withLook: Decorator = (Story, context) => {
@@ -52,13 +37,16 @@ const withLook: Decorator = (Story, context) => {
     root.setAttribute('data-density', density ?? 'regular')
     if (corners === undefined || corners === 'theme') root.style.removeProperty('--radius')
     else root.style.setProperty('--radius', corners)
-    const face = typeface === undefined ? undefined : TYPEFACES[typeface]
-    if (face === undefined) {
-        root.style.removeProperty('--typeface-sans')
-        root.style.removeProperty('--typeface-mono')
-    } else {
-        root.style.setProperty('--typeface-sans', face.sans)
-        root.style.setProperty('--typeface-mono', face.mono)
+    const face = typeface === undefined ? undefined : FACES[typeface]
+    const faceProps: [string, string | undefined][] = [
+        ['--typeface-sans', face?.sans],
+        ['--typeface-mono', face?.mono],
+        ['--mono-x-height', face?.monoX],
+        ['--mono-x-height-small', face?.monoXSmall],
+    ]
+    for (const [name, value] of faceProps) {
+        if (value === undefined) root.style.removeProperty(name)
+        else root.style.setProperty(name, value)
     }
     return <Story />
 }
@@ -152,11 +140,8 @@ const preview: Preview = {
                 title: 'Typeface',
                 icon: 'markup',
                 items: [
-                    { value: 'theme', title: "Theme's typeface" },
-                    { value: 'inter', title: 'Inter and JetBrains Mono' },
-                    { value: 'geist', title: 'Geist and Geist Mono' },
-                    { value: 'plex-jetbrains', title: 'Plex Sans and JetBrains Mono' },
-                    { value: 'system', title: 'System (SF Pro, Segoe UI, Roboto)' },
+                    { value: 'theme', title: "Theme's typeface (Plex)" },
+                    ...Object.entries(FACES).map(([value, face]) => ({ value, title: face.label })),
                 ],
                 dynamicTitle: true,
             },

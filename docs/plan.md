@@ -9,6 +9,13 @@ with real-shaped data, held to screenshot baselines in both schemes at desktop a
 blocks a git dependency's install scripts). The library is published as `@winterop-com/sokkel-ui` to
 GitHub Packages by the tag workflow, and apps pin that version.
 
+## Typefaces
+
+Plex Sans and Plex Mono are the default. Geist and Geist Mono are the one alternative a theme sets,
+through `--typeface-sans` and `--typeface-mono`, with mono's x-height at `--mono-x-height: 0.462`
+and `--mono-x-height-small: 0.503`, the same share of Geist's x-height as the default's of Plex's.
+Both pairs were picked from the typeface research once mono was sized to its sans.
+
 ## Primitives
 
 The shadcn `base-nova` set on Base UI, restyled to the tokens: accordion, alert, alert-dialog,
