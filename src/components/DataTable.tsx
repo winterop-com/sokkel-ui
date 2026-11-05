@@ -233,6 +233,9 @@ const CHECK = '2.5rem'
 const OVERSCAN = 8
 /** The space between cards, and around them, in pixels. */
 const GAP = 16
+/** A stacked card's padding and the height of each of its lines, in pixels. */
+const STACK_PAD = 12
+const STACK_LINE = 20
 
 /**
  * A table for many rows: sorting, selection with a bulk bar, a column menu, child rows, and the
@@ -295,6 +298,7 @@ export function DataTable<T>({
     onViewChange,
     cardWidth = '12rem',
     cardHeight = '16rem',
+    stackBelow = 576,
     minWidth = '48rem',
     words: ownWords,
     className,
@@ -373,6 +377,12 @@ export function DataTable<T>({
     cardWidth?: string
     /** Every card's height, one for all so the grid draws only what is in view. */
     cardHeight?: string
+    /**
+     * Below this width of its own box, in pixels, the table shows each row as a card: the first
+     * column its title and every other a labeled line, as ListTable does. `false` keeps the table,
+     * which then scrolls sideways.
+     */
+    stackBelow?: number | false
     /** The narrowest the columns go before the table scrolls sideways. */
     minWidth?: string
     words?: Partial<DataTableWords>
@@ -435,10 +445,14 @@ export function DataTable<T>({
         return () => observer.disconnect()
     }, [])
     const [shownView, setShownView] = useHeld(viewValue, defaultView, onViewChange)
-    const gridView = shownView === 'grid' && card !== undefined
+    const chosenGrid = shownView === 'grid' && card !== undefined
+    // A narrow box stacks the rows as cards, one to a line, each as tall as its columns need.
+    const stacked = !chosenGrid && stackBelow !== false && view.width > 0 && view.width < stackBelow
+    const gridView = chosenGrid || stacked
+    const cardPixels = stacked ? STACK_PAD * 2 + STACK_LINE + Math.max(0, shown.length - 1) * STACK_LINE + 4 : cardBox.height
     // The grid is drawn a line of cards at a time; the table's line is one row.
-    const perLine = gridView ? Math.max(1, Math.floor((view.width - 2 * GAP + GAP) / (cardBox.width + GAP))) : 1
-    const lineHeight = gridView ? cardBox.height + GAP : rowHeight
+    const perLine = stacked ? 1 : gridView ? Math.max(1, Math.floor((view.width - 2 * GAP + GAP) / (cardBox.width + GAP))) : 1
+    const lineHeight = gridView ? cardPixels + GAP : rowHeight
     const lines = Math.ceil(flat.length / perLine)
     const over = gridView ? 2 : OVERSCAN
     useLayoutEffect(() => {
@@ -589,6 +603,30 @@ export function DataTable<T>({
     const pinned = 'sticky z-[1] bg-inherit shadow-[1px_0_0_var(--border)]'
     const pinnedEnd = 'sticky z-[1] bg-inherit shadow-[-1px_0_0_var(--border)]'
 
+    /** A row stacked as a card on a narrow box: its first column as the title, every other a labeled line. */
+    const stackCard = (row: T) => {
+        const [title, ...rest] = shown
+        return (
+            <div className="flex h-full flex-col justify-center rounded-surface border border-border bg-card px-3 group-hover/card:bg-muted">
+                <div
+                    className={cn(
+                        'flex h-5 min-w-0 items-center text-sm font-medium',
+                        selectable && 'pl-7',
+                        rowActions !== undefined && 'pr-8',
+                    )}
+                >
+                    <span className="min-w-0 truncate">{title?.cell(row)}</span>
+                </div>
+                {rest.map((column) => (
+                    <div key={column.id} className="flex h-5 min-w-0 items-center gap-2 text-xs">
+                        <span className="w-24 shrink-0 truncate text-muted-foreground">{column.header}</span>
+                        <span className="min-w-0 truncate">{column.cell(row)}</span>
+                    </div>
+                ))}
+            </div>
+        )
+    }
+
     /** A row as a card: the app's card, with the selection box and the menu laid over its top corners. */
     const cardFor = (entry: FlatRow<T>) => {
         const chosen = selection.has(entry.key)
@@ -607,9 +645,9 @@ export function DataTable<T>({
                     chosen ? 'ring-2 ring-primary' : isOpened && 'ring-2 ring-ring/60',
                     'group-focus-visible/table:data-active:ring-2 group-focus-visible/table:data-active:ring-ring',
                 )}
-                style={{ height: cardBox.height }}
+                style={{ height: cardPixels }}
             >
-                {card?.(entry.row)}
+                {stacked ? stackCard(entry.row) : card?.(entry.row)}
                 {selectable && (
                     <span
                         onClick={(event) => event.stopPropagation()}
@@ -730,7 +768,7 @@ export function DataTable<T>({
                         </DropdownMenuContent>
                     </DropdownMenu>
                 )}
-                {card !== undefined && (
+                {card !== undefined && !stacked && (
                     <div className="flex items-center gap-0.5 rounded-md bg-muted p-0.5">
                         {(['table', 'grid'] as const).map((one) => (
                             <Button
@@ -873,7 +911,7 @@ export function DataTable<T>({
                                         <Skeleton
                                             key={`loading-${String(index)}`}
                                             className="rounded-surface"
-                                            style={{ height: cardBox.height }}
+                                            style={{ height: cardPixels }}
                                         />
                                     ),
                                 )}

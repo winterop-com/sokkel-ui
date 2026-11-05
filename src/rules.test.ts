@@ -72,6 +72,26 @@ const RULES: Rule[] = [
     },
 ]
 
+/** A component file: a `.tsx` under src/components that exports a component. */
+const COMPONENTS = ALL.filter((path) => path.includes('/src/components/') && path.endsWith('.tsx')).filter((path) =>
+    /export (function|const) [A-Z]/.test(readFileSync(path, 'utf8')),
+)
+
+describe('the stories', () => {
+    it('show every component, itself or through the component it is a part of', () => {
+        const stories = files(join(ROOT, 'src/stories'))
+            .map((path) => readFileSync(path, 'utf8'))
+            .join('\n')
+        const unseen = COMPONENTS.filter((path) => {
+            const module = relative(join(ROOT, 'src'), path).replace(/\.tsx$/, '')
+            if (stories.includes(`/${module}'`)) return false
+            const name = module.split('/').pop() ?? module
+            return !COMPONENTS.some((other) => other !== path && readFileSync(other, 'utf8').includes(`/${name}'`))
+        }).map((path) => relative(ROOT, path))
+        expect(unseen, unseen.join('\n')).toEqual([])
+    })
+})
+
 describe('the library rules', () => {
     for (const rule of RULES) {
         it(`has no ${rule.name}`, () => {

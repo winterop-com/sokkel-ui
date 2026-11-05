@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { Board, type BoardMove } from '../../components/board/Board'
 import { BoardCard } from '../../components/board/BoardCard'
 import { BoardColumn } from '../../components/board/BoardColumn'
+import { PeopleFilter } from '../../components/PeopleFilter'
 import { Button } from '../../components/ui/button'
 import { DropdownMenuItem } from '../../components/ui/dropdown-menu'
 
@@ -139,3 +140,20 @@ function ColumnsDemo() {
  * "In progress" past its limit of two, its count turned to a warning.
  */
 export const Columns: StoryObj = { name: 'Columns', render: () => <ColumnsDemo /> }
+
+function PeopleDemo() {
+    const [chosen, setChosen] = useState<string[]>(['grace'])
+    return (
+        <div className="p-6">
+            <PeopleFilter
+                people={[{ name: 'ada' }, { name: 'grace' }, { name: 'linus' }, { name: 'margaret' }]}
+                chosen={chosen}
+                onChange={setChosen}
+                words={{ label: 'Assignees' }}
+            />
+        </div>
+    )
+}
+
+/** The people on a board as avatars that filter it: grace is on, so the others fade until hovered. */
+export const People: StoryObj = { name: 'People filter', render: () => <PeopleDemo /> }
