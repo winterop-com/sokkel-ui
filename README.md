@@ -23,7 +23,8 @@ The Storybook is published at **https://winterop-com.github.io/winterop-ui/**.
 - **Frame:** Shell, Rail, TopBar, NavBar, SidePanel, Dock, StatusLine, CommandPalette and
   AccountMenu. The rail, side panel and dock resize when given a size.
 - **Content:** Section, PageHeader, ListTable, DescriptionList, Stat, Timeline, Tree and
-  TreeSelect, Field, Segmented, CodeEditor, LogView, JsonTree and DiffView.
+  TreeSelect, Field, Segmented, CodeEditor, LogView, JsonTree, DiffView and TableOfContents.
+- **Files:** FileList, FileGrid and FileTile, FilePreview, UploadTray and DropZone.
 - **Chat:** Markdown, Code, MermaidDiagram, ToolCalls, ConfirmCard, Composer and audio
   waveforms.
 - **Maps:** MapView on maplibre, with boundary, point and grid layers, legends, popups,

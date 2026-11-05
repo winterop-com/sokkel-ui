@@ -1,0 +1,489 @@
+import type { Meta, StoryObj } from '@storybook/react-vite'
+import { BookOpen, FolderTree, History as HistoryIcon, LayoutDashboard, Pencil, Play, Plus, Settings } from 'lucide-react'
+import { useRef, useState } from 'react'
+
+import { AccountMenu } from '../../components/AccountMenu'
+import { CodeEditor } from '../../components/CodeEditor'
+import { DiffView } from '../../components/DiffView'
+import { Markdown, markdownHeadings } from '../../components/Markdown'
+import { Rail, type RailGroup } from '../../components/Rail'
+import { SearchField } from '../../components/SearchField'
+import { Shell } from '../../components/Shell'
+import { StatusItem, StatusLine } from '../../components/StatusLine'
+import { TableOfContents, useActiveHeading } from '../../components/TableOfContents'
+import { ThemeToggle } from '../../components/ThemeToggle'
+import { TopBar } from '../../components/TopBar'
+import { Tree, type TreeNode } from '../../components/Tree'
+import { Avatar, AvatarFallback } from '../../components/ui/avatar'
+import { Button } from '../../components/ui/button'
+import { NativeSelect, NativeSelectOption } from '../../components/ui/native-select'
+import { TooltipProvider } from '../../components/ui/tooltip'
+import { cn } from '../../lib/cn'
+import { TidevannMark } from '../fixtures/TidevannMark'
+
+/**
+ * An internal wiki in the library's frame: the page tree with its search beside the page, the
+ * page as rendered markdown with an on-this-page list that follows the reader, an edit mode with
+ * the source beside a live preview, and the page's history with the change between two versions.
+ */
+const GROUPS: RailGroup[] = [
+    {
+        id: 'work',
+        entries: [
+            { id: 'overview', label: 'Overview', icon: LayoutDashboard, href: '#' },
+            { id: 'runs', label: 'Runs', icon: Play, href: '#' },
+            { id: 'files', label: 'Files', icon: FolderTree, href: '#' },
+            { id: 'docs', label: 'Docs', icon: BookOpen, href: '#', active: true },
+        ],
+    },
+    { id: 'system', title: 'System', entries: [{ id: 'settings', label: 'Settings', icon: Settings, href: '#' }] },
+]
+
+const PAGES: TreeNode[] = [
+    {
+        id: 'start',
+        label: 'Getting started',
+        children: [
+            { id: 'welcome', label: 'Welcome' },
+            { id: 'access', label: 'Accounts and access' },
+            { id: 'glossary', label: 'Glossary' },
+        ],
+    },
+    {
+        id: 'runbooks',
+        label: 'Runbooks',
+        meta: '4',
+        children: [
+            { id: 'nightly-export', label: 'Nightly export' },
+            { id: 'sync-inventory', label: 'Sync inventory' },
+            { id: 'rebuild-index', label: 'Rebuild index' },
+            { id: 'send-digest', label: 'Send digest' },
+        ],
+    },
+    {
+        id: 'projects',
+        label: 'Projects',
+        children: [
+            { id: 'harbor', label: 'harbor', children: [{ id: 'harbor-layout', label: 'Folder layout' }] },
+            { id: 'juniper', label: 'juniper' },
+            { id: 'larkspur', label: 'larkspur' },
+        ],
+    },
+    {
+        id: 'services',
+        label: 'Services',
+        children: [
+            { id: 'api', label: 'api' },
+            { id: 'worker', label: 'worker' },
+            { id: 'scheduler', label: 'scheduler' },
+        ],
+    },
+]
+
+const FENCE = '```'
+
+const INTRO = `Nightly export copies every order of the day into a CSV in **harbor**, for the monthly review and the dashboards that read it. It runs at 02:00 every night on the worker service.`
+
+const SOURCE_NOTE = `> [!NOTE]
+> The export reads from \`api.example.org\` with the service account \`export-bot\`; it never writes back.`
+
+const HOW = `## How it runs
+
+${FENCE}mermaid
+flowchart LR
+  fetch --> transform --> validate --> upload --> notify
+  validate -- rejected rows --> rejected[(rejected/)]
+${FENCE}
+
+Each step hands its rows to the next. A step that fails stops the run, and the steps after it are skipped.`
+
+const STEPS = `### Steps
+
+| Step | What it does | Typical time |
+| --- | --- | --- |
+| fetch | Reads the day's orders from the api | 0.9 s |
+| transform | Converts currencies to EUR and drops test orders | 1.3 s |
+| validate | Checks every row against the orders schema | 1.9 s |
+| upload | Writes the CSV to files.example.org | 0.6 s |
+| notify | Posts the summary to the review channel | 0.1 s |`
+
+const CONFIG = (retries: number) => `### Configuration
+
+${FENCE}yaml
+job: nightly-export
+schedule: "0 2 * * *"
+retries: ${retries}
+steps:
+  - fetch: { url: "https://api.example.org/orders", since: 24h }
+  - transform: { currency: EUR }
+  - validate: { schema: orders.json }
+  - upload: { host: files.example.org, path: /harbor/exports }
+${FENCE}`
+
+const FAILS = `## When it fails
+
+> [!WARNING]
+> Do not rerun a failed export before the rejected rows are moved out of \`rejected/\`; a rerun appends to the same file.
+
+1. Open the failed run and read the log of the validate step.
+2. Fix the rows at the source, or ask ada to mark them as test orders.
+3. Move \`rejected/\` aside and start the run again.`
+
+const RETRIES = `### Retries and back-off
+
+The scheduler retries a failed run three times, waiting 5, 15 and 45 minutes. After the third failure it pages whoever is on call.
+
+> [!TIP]
+> \`tidevann runs retry nightly-export --from validate\` starts again at the step that failed and keeps the rows already fetched.`
+
+const WHO = (owner: string) => `## Who to ask
+
+- **${owner}** owns the job and its schedule.
+- **linus** looks after the worker service.
+- **margaret** reads the review and asks for changes to the columns.`
+
+const page = (...parts: string[]) => parts.join('\n\n') + '\n'
+
+/** A version of the page: who saved it, when, what they said, and the text it saved. */
+interface Version {
+    number: number
+    by: string
+    at: string
+    note: string
+    text: string
+}
+
+const VERSIONS: Version[] = [
+    {
+        number: 6,
+        by: 'grace',
+        at: 'Nov 3, 2026, 16:40',
+        note: 'Retry from the failed step',
+        text: page(INTRO, SOURCE_NOTE, HOW, STEPS, CONFIG(3), FAILS, RETRIES, WHO('grace')),
+    },
+    {
+        number: 5,
+        by: 'linus',
+        at: 'Oct 28, 2026, 10:12',
+        note: 'Three retries instead of two',
+        text: page(INTRO, SOURCE_NOTE, HOW, STEPS, CONFIG(3), FAILS, RETRIES.replace(/\n\n> \[!TIP\][\s\S]*$/, ''), WHO('grace')),
+    },
+    {
+        number: 4,
+        by: 'ada',
+        at: 'Oct 21, 2026, 09:03',
+        note: 'Draw the steps as a diagram',
+        text: page(
+            INTRO,
+            SOURCE_NOTE,
+            HOW,
+            STEPS,
+            CONFIG(2),
+            FAILS,
+            'The scheduler retries a failed run twice, waiting 5 and 15 minutes.',
+            WHO('grace'),
+        ),
+    },
+    {
+        number: 3,
+        by: 'grace',
+        at: 'Oct 14, 2026, 14:27',
+        note: 'Hand the job over to grace',
+        text: page(
+            INTRO,
+            SOURCE_NOTE,
+            '## How it runs\n\nfetch, transform, validate, upload and notify run in that order. A step that fails stops the run.',
+            STEPS,
+            CONFIG(2),
+            FAILS,
+            'The scheduler retries a failed run twice, waiting 5 and 15 minutes.',
+            WHO('grace'),
+        ),
+    },
+    {
+        number: 2,
+        by: 'margaret',
+        at: 'Oct 2, 2026, 11:50',
+        note: 'What to do when it fails',
+        text: page(
+            INTRO,
+            '## How it runs\n\nfetch, transform, validate, upload and notify run in that order. A step that fails stops the run.',
+            STEPS,
+            CONFIG(2),
+            FAILS,
+            WHO('ada'),
+        ),
+    },
+    {
+        number: 1,
+        by: 'ada',
+        at: 'Sep 30, 2026, 17:05',
+        note: 'First version',
+        text: page(INTRO, '## How it runs\n\nfetch, transform, validate, upload and notify run in that order.', STEPS, WHO('ada')),
+    },
+]
+
+const CURRENT = VERSIONS[0]
+
+function Person({ name, size = 'sm' }: { name: string; size?: 'sm' | 'default' }) {
+    return (
+        <Avatar size={size}>
+            <AvatarFallback className="bg-primary/15 font-medium text-primary-ink uppercase">{name.slice(0, 1)}</AvatarFallback>
+        </Avatar>
+    )
+}
+
+function Reading({ content }: { content: string }) {
+    const article = useRef<HTMLDivElement>(null)
+    const headings = markdownHeadings(content)
+    const active = useActiveHeading(
+        article,
+        headings.map((heading) => heading.id),
+    )
+    return (
+        <div className="flex gap-10">
+            <article ref={article} className="max-w-3xl min-w-0 flex-1">
+                <Markdown content={content} anchors className="text-[0.9375rem] [&_h2]:mt-8 [&_h2]:text-lg [&_h3]:mt-6" />
+            </article>
+            <TableOfContents entries={headings} active={active} className="sticky top-0 hidden w-52 shrink-0 self-start xl:flex" />
+        </div>
+    )
+}
+
+function Editing({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+    return (
+        <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-2">
+            <section className="flex min-h-[24rem] min-w-0 flex-col overflow-hidden rounded-surface border border-border-strong bg-card lg:min-h-0">
+                <h2 className="flex h-(--density-panel-head) shrink-0 items-center border-b border-border-strong bg-panel-ground px-3 text-xs font-medium text-muted-foreground">
+                    Markdown
+                </h2>
+                <div className="min-h-0 flex-1 overflow-auto">
+                    <CodeEditor value={value} onChange={onChange} wrap label="The page as markdown" />
+                </div>
+            </section>
+            <section className="flex min-h-[24rem] min-w-0 flex-col overflow-hidden rounded-surface border border-border-strong bg-card lg:min-h-0">
+                <h2 className="flex h-(--density-panel-head) shrink-0 items-center border-b border-border-strong bg-panel-ground px-3 text-xs font-medium text-muted-foreground">
+                    Preview
+                </h2>
+                <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+                    <Markdown content={value} />
+                </div>
+            </section>
+        </div>
+    )
+}
+
+function Versions({ chosen, onChoose }: { chosen: number; onChoose: (number: number) => void }) {
+    return (
+        <ol className="flex flex-col overflow-hidden rounded-surface border border-border-strong bg-card">
+            {VERSIONS.map((version) => (
+                <li key={version.number} className="border-b border-border last:border-b-0">
+                    <button
+                        type="button"
+                        aria-current={version.number === chosen || undefined}
+                        onClick={() => onChoose(version.number)}
+                        className={cn(
+                            'flex w-full items-start gap-3 px-3 py-2.5 text-left outline-none hover:bg-secondary/60 focus-visible:bg-secondary',
+                            version.number === chosen && 'bg-secondary',
+                        )}
+                    >
+                        <Person name={version.by} />
+                        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                            <span className="flex items-baseline gap-2">
+                                <span className="truncate text-sm font-medium">{version.note}</span>
+                                {version.number === CURRENT.number && (
+                                    <span className="shrink-0 rounded-sm bg-primary/15 px-1.5 text-[0.6875rem] font-medium text-primary-ink">
+                                        Current
+                                    </span>
+                                )}
+                            </span>
+                            <span className="truncate text-xs text-muted-foreground">
+                                Version {version.number}, {version.by}, {version.at}
+                            </span>
+                        </span>
+                    </button>
+                </li>
+            ))}
+        </ol>
+    )
+}
+
+function Compare({ chosen, against, onAgainst }: { chosen: number; against: number; onAgainst: (number: number) => void }) {
+    const after = VERSIONS.find((version) => version.number === chosen) ?? CURRENT
+    const before = VERSIONS.find((version) => version.number === against)
+    const earlier = VERSIONS.filter((version) => version.number < chosen)
+    return (
+        <section className="flex min-w-0 flex-1 flex-col gap-3">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                <h2 className="min-w-0 flex-1 truncate text-sm font-medium">
+                    Version {after.number}, {after.note}
+                </h2>
+                {earlier.length > 0 && (
+                    <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                        Compared with
+                        <NativeSelect size="sm" value={String(against)} onChange={(event) => onAgainst(Number(event.target.value))}>
+                            {earlier.map((version) => (
+                                <NativeSelectOption key={version.number} value={String(version.number)}>
+                                    Version {version.number}
+                                </NativeSelectOption>
+                            ))}
+                        </NativeSelect>
+                    </label>
+                )}
+            </div>
+            <DiffView before={before?.text ?? ''} after={after.text} title="nightly-export.md" size="sm" />
+        </section>
+    )
+}
+
+function DocsApp({ mode: initialMode = 'read' }: { mode?: 'read' | 'edit' | 'history' }) {
+    const [dark, setDark] = useState(true)
+    const [collapsed, setCollapsed] = useState(false)
+    const [rail, setRail] = useState(232)
+    const [query, setQuery] = useState('')
+    const [pageId, setPageId] = useState('nightly-export')
+    const [mode, setMode] = useState(initialMode)
+    const [draft, setDraft] = useState(
+        CURRENT.text.replace(
+            'After the third failure it pages whoever is on call.',
+            'After the third failure it pages whoever is on call, and the run shows as failed on the overview.',
+        ),
+    )
+    const [chosen, setChosen] = useState(4)
+    const [against, setAgainst] = useState(3)
+
+    return (
+        <TooltipProvider>
+            <Shell
+                rail={
+                    <Rail
+                        mark={<TidevannMark />}
+                        name="Tidevann"
+                        groups={GROUPS}
+                        collapsed={collapsed}
+                        onCollapsedChange={setCollapsed}
+                        width={rail}
+                        onWidthChange={setRail}
+                        foot={<AccountMenu name="grace" where="tidevann.example.org" collapsed={collapsed} onSignOut={() => undefined} />}
+                    />
+                }
+                top={
+                    <TopBar
+                        trail={[
+                            { label: 'Docs', href: '#' },
+                            { label: 'Runbooks', href: '#' },
+                            { label: 'Nightly export', href: mode === 'read' ? undefined : '#' },
+                            ...(mode === 'edit' ? [{ label: 'Edit' }] : mode === 'history' ? [{ label: 'History' }] : []),
+                        ]}
+                        onSearch={() => undefined}
+                        actions={<ThemeToggle dark={dark} onToggle={() => setDark(!dark)} />}
+                    />
+                }
+                foot={
+                    <StatusLine note={mode === 'edit' ? 'Draft not saved' : 'Saved'} tone={mode === 'edit' ? 'warn' : undefined}>
+                        <StatusItem label="pages">38</StatusItem>
+                    </StatusLine>
+                }
+            >
+                <div className="flex h-full min-h-0">
+                    <aside className="hidden w-60 shrink-0 flex-col gap-3 overflow-y-auto border-r border-border-strong bg-sidebar px-2 py-3 lg:flex">
+                        <div className="flex items-center gap-1 px-1">
+                            <SearchField value={query} onChange={setQuery} placeholder="Search pages" className="min-w-0 flex-1" />
+                            <Button variant="ghost" size="icon-sm" aria-label="New page" title="New page">
+                                <Plus aria-hidden />
+                            </Button>
+                        </div>
+                        <Tree
+                            label="Pages"
+                            nodes={PAGES}
+                            query={query}
+                            selected={[pageId]}
+                            onSelect={(ids) => setPageId(ids[0])}
+                            defaultOpen={['runbooks', 'projects']}
+                        />
+                    </aside>
+                    <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
+                        <div
+                            className={cn(
+                                'flex w-full flex-col gap-5 px-(--density-page-inset) pt-(--density-page-top) pb-10',
+                                mode === 'edit' && 'min-h-0 flex-1 pb-(--density-page-inset)',
+                                mode === 'read' && 'max-w-[68rem]',
+                            )}
+                        >
+                            <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                <div className="flex min-w-0 flex-col gap-2">
+                                    <h1 className="text-page font-semibold tracking-tight">Nightly export</h1>
+                                    <p className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
+                                        <Person name={CURRENT.by} />
+                                        <span className="truncate">
+                                            Last edited by <span className="font-medium text-foreground">{CURRENT.by}</span> on {CURRENT.at}
+                                        </span>
+                                    </p>
+                                </div>
+                                <div className="flex shrink-0 items-center gap-1.5">
+                                    {mode === 'edit' ? (
+                                        <>
+                                            <Button variant="ghost" size="sm" onClick={() => setMode('read')}>
+                                                Cancel
+                                            </Button>
+                                            <Button size="sm" onClick={() => setMode('read')}>
+                                                Save
+                                            </Button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Button
+                                                variant={mode === 'history' ? 'secondary' : 'ghost'}
+                                                size="sm"
+                                                aria-pressed={mode === 'history'}
+                                                onClick={() => setMode(mode === 'history' ? 'read' : 'history')}
+                                            >
+                                                <HistoryIcon aria-hidden />
+                                                History
+                                            </Button>
+                                            <Button variant="outline" size="sm" onClick={() => setMode('edit')}>
+                                                <Pencil aria-hidden />
+                                                Edit
+                                            </Button>
+                                        </>
+                                    )}
+                                </div>
+                            </header>
+                            {mode === 'read' && <Reading content={CURRENT.text} />}
+                            {mode === 'edit' && <Editing value={draft} onChange={setDraft} />}
+                            {mode === 'history' && (
+                                <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
+                                    <div className="flex w-full shrink-0 flex-col gap-2 lg:w-80">
+                                        <h2 className="text-xs font-medium tracking-wide text-faint uppercase">
+                                            {VERSIONS.length} versions
+                                        </h2>
+                                        <Versions
+                                            chosen={chosen}
+                                            onChoose={(number) => {
+                                                setChosen(number)
+                                                setAgainst(number - 1)
+                                            }}
+                                        />
+                                    </div>
+                                    <Compare chosen={chosen} against={against} onAgainst={setAgainst} />
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </Shell>
+        </TooltipProvider>
+    )
+}
+
+const meta: Meta = { title: 'Apps/Docs' }
+export default meta
+
+/** A runbook as a reader sees it, the list of its headings beside it marking where the reader is. */
+export const Page: StoryObj = { render: () => <DocsApp /> }
+
+/** The same page being edited: its markdown beside the preview, which follows every keystroke. */
+export const Editing_: StoryObj = { name: 'Editing', render: () => <DocsApp mode="edit" /> }
+
+/** The page's versions, newest first, and what version 4 changed against the one before it. */
+export const History: StoryObj = { render: () => <DocsApp mode="history" /> }
