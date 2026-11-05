@@ -23,6 +23,10 @@ const THEMES = [
 const TYPEFACES: Record<string, { sans: string; mono: string }> = {
     inter: { sans: "'Inter Variable', system-ui, sans-serif", mono: "'JetBrains Mono Variable', ui-monospace, monospace" },
     geist: { sans: "'Geist Variable', system-ui, sans-serif", mono: "'Geist Mono Variable', ui-monospace, monospace" },
+    'plex-jetbrains': {
+        sans: "'IBM Plex Sans Variable', system-ui, sans-serif",
+        mono: "'JetBrains Mono Variable', ui-monospace, monospace",
+    },
     system: {
         sans: "system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif",
         mono: "ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace",
@@ -151,6 +155,7 @@ const preview: Preview = {
                     { value: 'theme', title: "Theme's typeface" },
                     { value: 'inter', title: 'Inter and JetBrains Mono' },
                     { value: 'geist', title: 'Geist and Geist Mono' },
+                    { value: 'plex-jetbrains', title: 'Plex Sans and JetBrains Mono' },
                     { value: 'system', title: 'System (SF Pro, Segoe UI, Roboto)' },
                 ],
                 dynamicTitle: true,
