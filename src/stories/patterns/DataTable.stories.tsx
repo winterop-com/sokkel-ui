@@ -1,11 +1,24 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { CopyIcon, EllipsisVerticalIcon, ExternalLinkIcon, MenuIcon, RotateCcwIcon, XIcon } from 'lucide-react'
+import {
+    CopyIcon,
+    EllipsisVerticalIcon,
+    ExternalLinkIcon,
+    ListPlusIcon,
+    MenuIcon,
+    PlayIcon,
+    RotateCcwIcon,
+    Trash2Icon,
+    UserIcon,
+    XIcon,
+} from 'lucide-react'
 import { useCallback, useMemo, useRef, useState } from 'react'
 
 import { type DataAction, type DataColumn, DataTable, type DataSort, sortRows } from '../../components/DataTable'
 import { SearchField } from '../../components/SearchField'
 import { StatusChip } from '../../components/StatusChip'
 import { Button } from '../../components/ui/button'
+import { type Album, makeAlbums } from '../fixtures/albums'
+import { Artwork } from '../fixtures/Artwork'
 import { makeRuns, makeRunTree, startedAt, type TableRun, took, type TreeRow } from '../fixtures/tableRuns'
 
 /**
@@ -388,6 +401,101 @@ export const LargeTree: StoryObj = {
     name: 'Large tree',
     render: () => <RunTree count={50_000} open={['harbor', 'harbor/nightly-export', 'juniper']} />,
 }
+
+const ALBUM_COLUMNS: DataColumn<Album>[] = [
+    {
+        id: 'title',
+        header: 'Title',
+        width: 'minmax(12rem,1fr)',
+        cell: (album) => <span className="font-medium">{album.title}</span>,
+        sortValue: (album) => album.title,
+    },
+    { id: 'artist', header: 'Artist', width: '10rem', cell: (album) => album.artist, sortValue: (album) => album.artist },
+    { id: 'year', header: 'Year', width: '5rem', align: 'end', cell: (album) => album.year, sortValue: (album) => album.year },
+    { id: 'tracks', header: 'Tracks', width: '5rem', align: 'end', cell: (album) => album.tracks, sortValue: (album) => album.tracks },
+    {
+        id: 'length',
+        header: 'Length',
+        width: '6rem',
+        align: 'end',
+        cell: (album) => took(album.length),
+        sortValue: (album) => album.length,
+    },
+    {
+        id: 'plays',
+        header: 'Plays',
+        width: '7rem',
+        align: 'end',
+        cell: (album) => album.plays.toLocaleString('en-US'),
+        sortValue: (album) => album.plays,
+    },
+]
+
+const albumActions = (): DataAction[] => [
+    { id: 'play', label: 'Play', icon: <PlayIcon />, onSelect: () => undefined },
+    { id: 'queue', label: 'Add to queue', icon: <ListPlusIcon />, onSelect: () => undefined },
+    { id: 'artist', label: 'Go to artist', icon: <UserIcon />, onSelect: () => undefined },
+    { id: 'line', separator: true },
+    { id: 'remove', label: 'Remove from library', icon: <Trash2Icon />, destructive: true, onSelect: () => undefined },
+]
+
+/** An album as a card: its cover filling the top, its title, artist and year under it. */
+function AlbumCard({ album }: { album: Album }) {
+    return (
+        <div className="flex h-full flex-col gap-2 rounded-surface border border-border bg-card p-2 group-hover/card:bg-muted">
+            <Artwork cover={album.cover} className="min-h-0 w-full flex-1 rounded-[calc(var(--radius)-2px)]" />
+            <div className="min-w-0 px-0.5">
+                <div className="truncate text-sm font-medium">{album.title}</div>
+                <div className="truncate text-xs text-muted-foreground">
+                    {album.artist} · {album.year}
+                </div>
+            </div>
+        </div>
+    )
+}
+
+/** A library of `count` albums as cards, switchable to the table, with search, selection and menus. */
+function Albums({ count }: { count: number }) {
+    const all = makeAlbums(count)
+    const [query, setQuery] = useState('')
+    const rows = useMemo(() => {
+        const wanted = query.trim().toLowerCase()
+        return wanted === ''
+            ? all
+            : all.filter((album) => album.title.toLowerCase().includes(wanted) || album.artist.toLowerCase().includes(wanted))
+    }, [all, query])
+    return (
+        <div className="flex h-svh flex-col bg-background p-4 text-foreground">
+            <DataTable
+                className="flex-1"
+                columns={ALBUM_COLUMNS}
+                rows={rows}
+                rowKey={(album) => album.id}
+                card={(album) => <AlbumCard album={album} />}
+                defaultView="grid"
+                cardWidth="9rem"
+                cardHeight="13.5rem"
+                selectable
+                rowActions={albumActions}
+                actionButton="hover"
+                bulkActions={(_, clear) => (
+                    <Button variant="outline" size="xs" onClick={clear}>
+                        <ListPlusIcon />
+                        Add to queue
+                    </Button>
+                )}
+                toolbar={<SearchField value={query} onChange={setQuery} placeholder="Search albums" className="w-56" />}
+                minWidth="40rem"
+            />
+        </div>
+    )
+}
+
+/** 2,400 albums as cards: the grid fits as many to a line as the width allows, and the switch in the bar shows the same rows as a table. */
+export const AlbumGrid: StoryObj = { name: 'Albums', render: () => <Albums count={2_400} /> }
+
+/** Fifty thousand albums as cards; only the lines in view are drawn, and the sort menu orders them all. */
+export const LargeAlbumGrid: StoryObj = { name: '50k albums', render: () => <Albums count={50_000} /> }
 
 /** A search that matches nothing. */
 export const Empty: StoryObj = {

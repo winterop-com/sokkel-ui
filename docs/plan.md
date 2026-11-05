@@ -29,7 +29,8 @@ TreeSelect, AsyncSelect, CapabilityPicker.
 DataTable is the table for many rows: only the rows in view are drawn, at the density's one row
 height, so 50k rows sort, scroll and select at once. It sorts from its heads, selects with a bulk
 bar, hides columns, pins its first column and its row menu, opens child rows, and moves by the
-keyboard. Paging, progressive loading and an album view of cards come next, on the same rows.
+keyboard. It pages in the browser or from a server, loads more as its end comes near, and shows
+the same rows as a grid of cards (an album view) that keeps the selection, menus and sort.
 
 ## Graphs
 

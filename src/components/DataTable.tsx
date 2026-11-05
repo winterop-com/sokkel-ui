@@ -1,5 +1,6 @@
 import {
     ArrowDownIcon,
+    ArrowUpDownIcon,
     ArrowUpIcon,
     ChevronLeftIcon,
     ChevronRightIcon,
@@ -7,6 +8,8 @@ import {
     ChevronsRightIcon,
     Columns3Icon,
     EllipsisIcon,
+    LayoutGridIcon,
+    TableIcon,
 } from 'lucide-react'
 import {
     type KeyboardEvent,
@@ -31,6 +34,8 @@ import {
     DropdownMenuGroup,
     DropdownMenuItem,
     DropdownMenuLabel,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from './ui/dropdown-menu'
@@ -75,6 +80,12 @@ export interface DataSort {
 export interface DataTableWords {
     columns: string
     actions: string
+    tableView: string
+    gridView: string
+    sort: string
+    unsorted: string
+    ascending: string
+    descending: string
     rows: (count: number) => string
     /** The bar's count while more rows may still load. */
     loaded: (count: number) => string
@@ -98,6 +109,12 @@ export interface DataTableWords {
 const WORDS: DataTableWords = {
     columns: 'Columns',
     actions: 'Actions',
+    tableView: 'Table',
+    gridView: 'Grid',
+    sort: 'Sort',
+    unsorted: 'As given',
+    ascending: 'Ascending',
+    descending: 'Descending',
     rows: (count) => `${count.toLocaleString('en-US')} ${count === 1 ? 'row' : 'rows'}`,
     loaded: (count) => `${count.toLocaleString('en-US')} loaded`,
     range: (from, to, total) => `${from.toLocaleString('en-US')}–${to.toLocaleString('en-US')} of ${total.toLocaleString('en-US')}`,
@@ -209,6 +226,8 @@ const EMPTY: ReadonlySet<string> = new Set()
 const CHECK = '2.5rem'
 /** Rows drawn above and below the visible ones, so a quick scroll does not show blank space. */
 const OVERSCAN = 8
+/** The space between cards, and around them, in pixels. */
+const GAP = 16
 
 /**
  * A table for many rows: sorting, selection with a bulk bar, a column menu, child rows, and the
@@ -264,6 +283,12 @@ export function DataTable<T>({
     hasMore = false,
     loading = false,
     onLoadMore,
+    card,
+    view: viewValue,
+    defaultView = 'table',
+    onViewChange,
+    cardWidth = '12rem',
+    cardHeight = '16rem',
     minWidth = '48rem',
     words: ownWords,
     className,
@@ -325,6 +350,18 @@ export function DataTable<T>({
     /** Rows are on their way: placeholder rows show at the end, or fill the table when it has none yet. */
     loading?: boolean
     onLoadMore?: () => void
+    /**
+     * A row drawn as a card, for the grid view; given one, the bar offers table and grid. Cards keep
+     * the table's selection, menus, sort, pages and loading; a tree's rows show as they are open.
+     */
+    card?: (row: T) => ReactNode
+    view?: 'table' | 'grid'
+    defaultView?: 'table' | 'grid'
+    onViewChange?: (view: 'table' | 'grid') => void
+    /** The narrowest a card goes; cards share out any width left on their line. */
+    cardWidth?: string
+    /** Every card's height, one for all so the grid draws only what is in view. */
+    cardHeight?: string
     /** The narrowest the columns go before the table scrolls sideways. */
     minWidth?: string
     words?: Partial<DataTableWords>
@@ -365,34 +402,48 @@ export function DataTable<T>({
     // Only the rows in view are drawn: the row height is measured from the density's token.
     const scroller = useRef<HTMLDivElement>(null)
     const probe = useRef<HTMLDivElement>(null)
+    const cardProbe = useRef<HTMLDivElement>(null)
     const [rowHeight, setRowHeight] = useState(40)
-    const [view, setView] = useState({ top: 0, height: 800 })
+    const [cardBox, setCardBox] = useState({ width: 192, height: 256 })
+    const [view, setView] = useState({ top: 0, height: 800, width: 1200 })
     useLayoutEffect(() => {
         const box = scroller.current
         const measure = probe.current
-        if (box === null || measure === null) return
+        const measureCard = cardProbe.current
+        if (box === null || measure === null || measureCard === null) return
         const update = () => {
             setRowHeight(measure.offsetHeight || 40)
-            setView({ top: box.scrollTop, height: box.clientHeight })
+            setCardBox({ width: measureCard.offsetWidth || 192, height: measureCard.offsetHeight || 256 })
+            setView({ top: box.scrollTop, height: box.clientHeight, width: box.clientWidth })
         }
         update()
         const observer = new ResizeObserver(update)
         observer.observe(box)
         observer.observe(measure)
+        observer.observe(measureCard)
         return () => observer.disconnect()
     }, [])
+    const [shownView, setShownView] = useHeld(viewValue, defaultView, onViewChange)
+    const gridView = shownView === 'grid' && card !== undefined
+    // The grid is drawn a line of cards at a time; the table's line is one row.
+    const perLine = gridView ? Math.max(1, Math.floor((view.width - 2 * GAP + GAP) / (cardBox.width + GAP))) : 1
+    const lineHeight = gridView ? cardBox.height + GAP : rowHeight
+    const lines = Math.ceil(flat.length / perLine)
+    const over = gridView ? 2 : OVERSCAN
     useLayoutEffect(() => {
         if (scroller.current !== null) scroller.current.scrollTop = 0
-    }, [current, pageSize])
+    }, [current, pageSize, shownView])
 
     // Nearing the end of what has loaded asks for more, and so does a first load too short to fill the view.
-    const nearEnd = view.top + view.height >= flat.length * rowHeight - rowHeight * OVERSCAN
+    const nearEnd = view.top + view.height >= lines * lineHeight - lineHeight * over
     useEffect(() => {
         if (hasMore && !loading && nearEnd) onLoadMore?.()
     }, [hasMore, loading, nearEnd, onLoadMore])
 
-    const first = Math.max(0, Math.floor(view.top / rowHeight) - OVERSCAN)
-    const last = Math.min(flat.length, Math.ceil((view.top + view.height) / rowHeight) + OVERSCAN)
+    const firstLine = Math.max(0, Math.floor(view.top / lineHeight) - over)
+    const lastLine = Math.min(lines, Math.ceil((view.top + view.height) / lineHeight) + over)
+    const first = firstLine * perLine
+    const last = Math.min(flat.length, lastLine * perLine)
 
     const [active, setActive] = useState<string | undefined>(undefined)
     const anchor = useRef<string | undefined>(undefined)
@@ -451,18 +502,18 @@ export function DataTable<T>({
         setActive(entry.key)
         const box = scroller.current
         if (box === null) return
-        const at = flat.indexOf(entry) * rowHeight
-        const head = rowHeight
+        const at = Math.floor(flat.indexOf(entry) / perLine) * lineHeight
+        const head = gridView ? 0 : rowHeight
         if (at < box.scrollTop) box.scrollTop = at
-        else if (at + rowHeight > box.scrollTop + box.clientHeight - head) box.scrollTop = at + rowHeight - box.clientHeight + head
+        else if (at + lineHeight > box.scrollTop + box.clientHeight - head) box.scrollTop = at + lineHeight - box.clientHeight + head
     }
     const activeIndex = active === undefined ? -1 : flat.findIndex((entry) => entry.key === active)
     const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-        const page = Math.max(1, Math.floor(view.height / rowHeight) - 1)
+        const page = Math.max(1, Math.floor(view.height / lineHeight) - 1) * perLine
         const entry = flat[activeIndex]
         const moves: Record<string, () => void> = {
-            ArrowDown: () => moveTo(activeIndex + 1),
-            ArrowUp: () => moveTo(Math.max(0, activeIndex - 1)),
+            ArrowDown: () => moveTo(activeIndex + perLine),
+            ArrowUp: () => moveTo(Math.max(0, activeIndex - perLine)),
             PageDown: () => moveTo(activeIndex + page),
             PageUp: () => moveTo(Math.max(0, activeIndex - page)),
             Home: () => moveTo(0),
@@ -474,9 +525,11 @@ export function DataTable<T>({
                 if (entry !== undefined) onOpen?.(entry.row)
             },
             ArrowRight: () => {
-                if (entry?.branch === true && !entry.open) openBranch(entry.key, true)
+                if (gridView) moveTo(activeIndex + 1)
+                else if (entry?.branch === true && !entry.open) openBranch(entry.key, true)
             },
             ArrowLeft: () => {
+                if (gridView) return moveTo(Math.max(0, activeIndex - 1))
                 if (entry === undefined) return
                 if (entry.open) openBranch(entry.key, false)
                 else if (entry.parent !== undefined) moveTo(flat.findIndex((one) => one.key === entry.parent))
@@ -503,8 +556,79 @@ export function DataTable<T>({
     }
 
     const hideable = columns.filter((column, index) => index > 0 && column.hideable !== false)
+    const sortable = manualSort && onSortChange === undefined ? [] : columns.filter((column) => column.sortValue !== undefined)
     const pinned = 'sticky z-[1] bg-inherit shadow-[1px_0_0_var(--border)]'
     const pinnedEnd = 'sticky z-[1] bg-inherit shadow-[-1px_0_0_var(--border)]'
+
+    /** A row as a card: the app's card, with the selection box and the menu laid over its top corners. */
+    const cardFor = (entry: FlatRow<T>) => {
+        const chosen = selection.has(entry.key)
+        const isOpened = opened?.(entry.row) === true
+        const actions = rowActions?.(entry.row)
+        const body = (
+            <div
+                key={entry.key}
+                role="row"
+                aria-selected={selectable ? chosen : undefined}
+                data-active={entry.key === active || undefined}
+                onClick={(event) => press(entry, event)}
+                className={cn(
+                    'group/card relative min-w-0 overflow-hidden rounded-surface',
+                    onOpen !== undefined && 'cursor-pointer',
+                    chosen ? 'ring-2 ring-primary' : isOpened && 'ring-2 ring-ring/60',
+                    'group-focus-visible/table:data-active:ring-2 group-focus-visible/table:data-active:ring-ring',
+                )}
+                style={{ height: cardBox.height }}
+            >
+                {card?.(entry.row)}
+                {selectable && (
+                    <span
+                        onClick={(event) => event.stopPropagation()}
+                        className={cn(
+                            'absolute top-2 left-2 flex rounded-md bg-background/85 p-1 opacity-0 group-hover/card:opacity-100',
+                            (chosen || selection.size > 0) && 'opacity-100',
+                        )}
+                    >
+                        <Checkbox
+                            aria-label={words.selectRow}
+                            tabIndex={-1}
+                            checked={chosen}
+                            onCheckedChange={() => toggle(entry, false)}
+                        />
+                    </span>
+                )}
+                {actions !== undefined && actionButton !== 'none' && (
+                    <span
+                        className={cn(
+                            'absolute top-2 right-2',
+                            actionButton === 'hover' && 'opacity-0 group-hover/card:opacity-100 has-data-popup-open:opacity-100',
+                        )}
+                    >
+                        <DropdownMenu>
+                            <DropdownMenuTrigger
+                                render={<Button variant="secondary" size="icon-xs" tabIndex={-1} aria-label={words.actions} />}
+                                onClick={(event) => event.stopPropagation()}
+                            >
+                                {actionIcon}
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                                <MenuItems actions={actions} kind="dropdown" />
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </span>
+                )}
+            </div>
+        )
+        if (actions === undefined) return body
+        return (
+            <ContextMenu key={entry.key} onOpenChange={(open) => open && setActive(entry.key)}>
+                <ContextMenuTrigger render={body} />
+                <ContextMenuContent className="w-48">
+                    <MenuItems actions={actions} kind="context" />
+                </ContextMenuContent>
+            </ContextMenu>
+        )
+    }
 
     return (
         <div className={cn('flex min-h-0 flex-col overflow-hidden rounded-surface border border-border-strong bg-card', className)}>
@@ -525,7 +649,68 @@ export function DataTable<T>({
                         ? words.loaded(allCount(rows, childRows))
                         : words.rows(total ?? allCount(rows, childRows))}
                 </span>
-                {hideable.length > 0 && (
+                {gridView && sortable.length > 0 && (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger render={<Button variant="ghost" size="sm" />}>
+                            {sort === null ? <ArrowUpDownIcon /> : sort.direction === 'asc' ? <ArrowUpIcon /> : <ArrowDownIcon />}
+                            {sortColumn?.header ?? words.sort}
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuGroup>
+                                <DropdownMenuLabel>{words.sort}</DropdownMenuLabel>
+                                <DropdownMenuRadioGroup
+                                    value={sort?.column ?? ''}
+                                    onValueChange={(value: string) => {
+                                        if (paging !== undefined) setPage(0)
+                                        setSort(value === '' ? null : { column: value, direction: sort?.direction ?? 'asc' })
+                                    }}
+                                >
+                                    <DropdownMenuRadioItem value="">{words.unsorted}</DropdownMenuRadioItem>
+                                    {sortable.map((column) => (
+                                        <DropdownMenuRadioItem key={column.id} value={column.id}>
+                                            {column.header}
+                                        </DropdownMenuRadioItem>
+                                    ))}
+                                </DropdownMenuRadioGroup>
+                            </DropdownMenuGroup>
+                            {sort !== null && (
+                                <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuRadioGroup
+                                        value={sort.direction}
+                                        onValueChange={(value: string) =>
+                                            setSort({ column: sort.column, direction: value === 'desc' ? 'desc' : 'asc' })
+                                        }
+                                    >
+                                        <DropdownMenuRadioItem value="asc">{words.ascending}</DropdownMenuRadioItem>
+                                        <DropdownMenuRadioItem value="desc">{words.descending}</DropdownMenuRadioItem>
+                                    </DropdownMenuRadioGroup>
+                                </>
+                            )}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                )}
+                {card !== undefined && (
+                    <div className="flex items-center gap-0.5 rounded-md bg-muted p-0.5">
+                        {(['table', 'grid'] as const).map((one) => (
+                            <Button
+                                key={one}
+                                variant="ghost"
+                                size="icon-xs"
+                                aria-label={one === 'table' ? words.tableView : words.gridView}
+                                aria-pressed={shownView === one}
+                                onClick={() => setShownView(one)}
+                                className={cn(
+                                    'text-muted-foreground',
+                                    shownView === one && 'bg-background text-foreground shadow-xs hover:bg-background',
+                                )}
+                            >
+                                {one === 'table' ? <TableIcon /> : <LayoutGridIcon />}
+                            </Button>
+                        ))}
+                    </div>
+                )}
+                {!gridView && hideable.length > 0 && (
                     <DropdownMenu>
                         <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" aria-label={words.columns} />}>
                             <Columns3Icon />
@@ -563,67 +748,99 @@ export function DataTable<T>({
                     if (active === undefined && flat.length > 0)
                         setActive(flat[Math.min(first + OVERSCAN, flat.length - 1)]?.key ?? flat[0].key)
                 }}
-                onScroll={(event) => setView({ top: event.currentTarget.scrollTop, height: event.currentTarget.clientHeight })}
+                onScroll={(event) =>
+                    setView({
+                        top: event.currentTarget.scrollTop,
+                        height: event.currentTarget.clientHeight,
+                        width: event.currentTarget.clientWidth,
+                    })
+                }
                 className="group/table relative min-h-0 flex-1 overflow-auto outline-none"
             >
                 <div ref={probe} aria-hidden className="pointer-events-none invisible absolute h-(--density-row) w-px" />
                 <div
-                    role="row"
-                    aria-rowindex={1}
-                    className="sticky top-0 z-[2] grid h-(--density-row) items-center border-b border-border-strong bg-panel-ground text-[length:var(--table-head-size)] font-[number:var(--table-head-weight)] tracking-[var(--table-head-tracking)] text-muted-foreground [text-transform:var(--table-head-transform)]"
-                    style={grid}
-                >
-                    {selectable && (
-                        <span role="columnheader" className={cn(pinned, 'left-0 flex h-full items-center justify-center')}>
-                            <Checkbox
-                                aria-label={words.selectAll}
-                                checked={allChosen}
-                                indeterminate={!allChosen && selection.size > 0}
-                                onCheckedChange={() => setSelection(allChosen ? new Set() : new Set(allKeys))}
-                            />
-                        </span>
-                    )}
-                    {shown.map((column, index) => {
-                        const sorted = sort?.column === column.id ? sort.direction : undefined
-                        return (
-                            <span
-                                key={column.id}
-                                role="columnheader"
-                                aria-sort={sorted === 'asc' ? 'ascending' : sorted === 'desc' ? 'descending' : undefined}
-                                className={cn(
-                                    'flex h-full min-w-0 items-center px-3',
-                                    column.align === 'end' && 'justify-end',
-                                    index === 0 && cn(pinned, selectable ? 'left-(--check)' : 'left-0'),
-                                )}
-                                style={index === 0 ? ({ '--check': CHECK } as React.CSSProperties) : undefined}
-                            >
-                                {column.sortValue === undefined ? (
-                                    <span className="truncate">{column.header}</span>
-                                ) : (
-                                    <button
-                                        type="button"
-                                        tabIndex={-1}
-                                        onClick={() => nextSort(column)}
-                                        className={cn(
-                                            'flex min-w-0 items-center gap-1 rounded-sm outline-none hover:text-foreground',
-                                            column.align === 'end' && 'flex-row-reverse',
-                                            sorted !== undefined && 'text-foreground',
-                                        )}
-                                    >
-                                        <span className="truncate">{column.header}</span>
-                                        {sorted === 'asc' && <ArrowUpIcon className="size-3.5 shrink-0" />}
-                                        {sorted === 'desc' && <ArrowDownIcon className="size-3.5 shrink-0" />}
-                                    </button>
-                                )}
+                    ref={cardProbe}
+                    aria-hidden
+                    className="pointer-events-none invisible absolute"
+                    style={{ width: cardWidth, height: cardHeight }}
+                />
+                {!gridView && (
+                    <div
+                        role="row"
+                        aria-rowindex={1}
+                        className="sticky top-0 z-[2] grid h-(--density-row) items-center border-b border-border-strong bg-panel-ground text-[length:var(--table-head-size)] font-[number:var(--table-head-weight)] tracking-[var(--table-head-tracking)] text-muted-foreground [text-transform:var(--table-head-transform)]"
+                        style={grid}
+                    >
+                        {selectable && (
+                            <span role="columnheader" className={cn(pinned, 'left-0 flex h-full items-center justify-center')}>
+                                <Checkbox
+                                    aria-label={words.selectAll}
+                                    checked={allChosen}
+                                    indeterminate={!allChosen && selection.size > 0}
+                                    onCheckedChange={() => setSelection(allChosen ? new Set() : new Set(allKeys))}
+                                />
                             </span>
-                        )
-                    })}
-                    {endWidth !== undefined && (
-                        <span role="columnheader" aria-label={words.actions} className={cn(pinnedEnd, 'right-0 h-full')} />
-                    )}
-                </div>
+                        )}
+                        {shown.map((column, index) => {
+                            const sorted = sort?.column === column.id ? sort.direction : undefined
+                            return (
+                                <span
+                                    key={column.id}
+                                    role="columnheader"
+                                    aria-sort={sorted === 'asc' ? 'ascending' : sorted === 'desc' ? 'descending' : undefined}
+                                    className={cn(
+                                        'flex h-full min-w-0 items-center px-3',
+                                        column.align === 'end' && 'justify-end',
+                                        index === 0 && cn(pinned, selectable ? 'left-(--check)' : 'left-0'),
+                                    )}
+                                    style={index === 0 ? ({ '--check': CHECK } as React.CSSProperties) : undefined}
+                                >
+                                    {column.sortValue === undefined ? (
+                                        <span className="truncate">{column.header}</span>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            tabIndex={-1}
+                                            onClick={() => nextSort(column)}
+                                            className={cn(
+                                                'flex min-w-0 items-center gap-1 rounded-sm outline-none hover:text-foreground',
+                                                column.align === 'end' && 'flex-row-reverse',
+                                                sorted !== undefined && 'text-foreground',
+                                            )}
+                                        >
+                                            <span className="truncate">{column.header}</span>
+                                            {sorted === 'asc' && <ArrowUpIcon className="size-3.5 shrink-0" />}
+                                            {sorted === 'desc' && <ArrowDownIcon className="size-3.5 shrink-0" />}
+                                        </button>
+                                    )}
+                                </span>
+                            )
+                        })}
+                        {endWidth !== undefined && (
+                            <span role="columnheader" aria-label={words.actions} className={cn(pinnedEnd, 'right-0 h-full')} />
+                        )}
+                    </div>
+                )}
                 {flat.length === 0 && !loading ? (
                     <p className="px-(--density-panel-pad) py-3 text-sm text-muted-foreground">{words.empty}</p>
+                ) : gridView ? (
+                    <div className="px-4 pt-4" style={{ minHeight: lines * lineHeight + GAP }}>
+                        <div style={{ height: firstLine * lineHeight }} />
+                        <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${String(perLine)}, minmax(0, 1fr))` }}>
+                            {flat.slice(first, last).map((entry) => cardFor(entry))}
+                            {loading &&
+                                Array.from(
+                                    { length: flat.length === 0 ? perLine * Math.max(1, Math.ceil(view.height / lineHeight)) : perLine },
+                                    (_, index) => (
+                                        <Skeleton
+                                            key={`loading-${String(index)}`}
+                                            className="rounded-surface"
+                                            style={{ height: cardBox.height }}
+                                        />
+                                    ),
+                                )}
+                        </div>
+                    </div>
                 ) : (
                     <div style={{ height: flat.length * rowHeight, minWidth }} className="relative">
                         <div style={{ height: first * rowHeight }} />
@@ -759,21 +976,7 @@ export function DataTable<T>({
                                                         {actionIcon}
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end" className="w-48">
-                                                        {actions.map((action) =>
-                                                            'separator' in action ? (
-                                                                <DropdownMenuSeparator key={action.id} />
-                                                            ) : (
-                                                                <DropdownMenuItem
-                                                                    key={action.id}
-                                                                    variant={action.destructive === true ? 'destructive' : 'default'}
-                                                                    disabled={action.disabled}
-                                                                    onClick={action.onSelect}
-                                                                >
-                                                                    {action.icon}
-                                                                    {action.label}
-                                                                </DropdownMenuItem>
-                                                            ),
-                                                        )}
+                                                        <MenuItems actions={actions} kind="dropdown" />
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
                                             )}
@@ -786,21 +989,7 @@ export function DataTable<T>({
                                 <ContextMenu key={entry.key} onOpenChange={(open) => open && setActive(entry.key)}>
                                     <ContextMenuTrigger render={row} />
                                     <ContextMenuContent className="w-48">
-                                        {actions.map((action) =>
-                                            'separator' in action ? (
-                                                <ContextMenuSeparator key={action.id} />
-                                            ) : (
-                                                <ContextMenuItem
-                                                    key={action.id}
-                                                    variant={action.destructive === true ? 'destructive' : 'default'}
-                                                    disabled={action.disabled}
-                                                    onClick={action.onSelect}
-                                                >
-                                                    {action.icon}
-                                                    {action.label}
-                                                </ContextMenuItem>
-                                            ),
-                                        )}
+                                        <MenuItems actions={actions} kind="context" />
                                     </ContextMenuContent>
                                 </ContextMenu>
                             )
@@ -808,6 +997,7 @@ export function DataTable<T>({
                     </div>
                 )}
                 {loading &&
+                    !gridView &&
                     Array.from({ length: flat.length === 0 ? Math.max(3, Math.ceil(view.height / rowHeight)) : 3 }, (_, index) => (
                         <div
                             key={`loading-${String(index)}`}
@@ -909,4 +1099,25 @@ function allCount<T>(rows: readonly T[], childRows?: (row: T) => readonly T[] | 
     }
     walk(rows)
     return count
+}
+
+/** A row's actions as the items of its button menu or its right-click menu. */
+function MenuItems({ actions, kind }: { actions: DataAction[]; kind: 'dropdown' | 'context' }) {
+    const Item = kind === 'dropdown' ? DropdownMenuItem : ContextMenuItem
+    const Separator = kind === 'dropdown' ? DropdownMenuSeparator : ContextMenuSeparator
+    return actions.map((action) =>
+        'separator' in action ? (
+            <Separator key={action.id} />
+        ) : (
+            <Item
+                key={action.id}
+                variant={action.destructive === true ? 'destructive' : 'default'}
+                disabled={action.disabled}
+                onClick={action.onSelect}
+            >
+                {action.icon}
+                {action.label}
+            </Item>
+        ),
+    )
 }
