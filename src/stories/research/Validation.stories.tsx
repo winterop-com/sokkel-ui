@@ -258,9 +258,9 @@ function OptionB({ after = false }: { after?: boolean }) {
     const blocking = errors.length > 0
     const Icon = ICON[blocking ? 'critical' : 'warning']
     const status = form.busy ? (
-        <span className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Loader2 className="size-3.5 animate-spin" aria-hidden />
-            Checking {host(form.values.endpoint) ?? 'the endpoint'}…
+        <span className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
+            <Loader2 className="size-3.5 shrink-0 animate-spin" aria-hidden />
+            <span className="truncate">Checking {host(form.values.endpoint) ?? 'the endpoint'}…</span>
         </span>
     ) : form.submitted && notes.length > 0 ? (
         <Popover open={open} onOpenChange={setOpen}>
@@ -683,6 +683,132 @@ const NOTES_E: [string, ReactNode][] = [
     ['Against', 'A line under every field costs height, and leaving the endpoint costs a request each time.'],
 ]
 
+/* ------------------------------------------------------------------------------------------------
+ * F. Nothing moves: a line kept under every field, the fix offered on it, and the count beside the
+ * verb. D's words and B's count, in a dialog whose height never changes.
+ * --------------------------------------------------------------------------------------------- */
+
+function FieldF({ form, k }: { form: JobForm; k: Key }) {
+    const error = form.error(k)
+    const warn = form.warn(k)
+    const id = form.id(k)
+    const note = error ?? warn
+    const spin = k === 'endpoint' && form.checking
+    const good = note === null && k === 'endpoint' && form.answered !== null
+    const tone: Tone | null = note?.tone ?? (good ? 'good' : null)
+    const Icon = tone === null ? null : ICON[tone]
+    // The endpoint runs the dialog's width; the other fields share a row and say their message short.
+    const said = note === null ? null : k === 'endpoint' ? note.text : note.short
+    const text = said ?? (good ? `${form.answered} answered in 84 ms` : '')
+    const full = note === null ? text : [note.text, note.detail].filter(Boolean).join('. ')
+    const fix = note?.fix
+    return (
+        <div className="flex min-w-0 flex-col gap-1.5">
+            <LabelRow form={form} k={k} />
+            <div className="relative">
+                <Input
+                    {...form.field(k)}
+                    aria-invalid={error !== null || undefined}
+                    aria-describedby={note === null ? undefined : `${id}-line`}
+                    className={cn(
+                        SPEC[k].mono === true && 'font-mono',
+                        spin && 'pr-8',
+                        note !== null && INPUT_TONE[note.tone === 'warning' ? 'warning' : 'critical'],
+                    )}
+                />
+                <StatusMark tone={null} spin={spin} />
+            </div>
+            <p id={`${id}-line`} className={cn('flex h-4.5 min-w-0 items-center gap-1.5 text-xs leading-4.5', INK[tone ?? 'quiet'])}>
+                {Icon !== null && <Icon className="size-3.5 shrink-0" aria-hidden />}
+                <span className={cn('min-w-0 truncate', tone === 'critical' && 'font-medium')} title={full}>
+                    {note !== null && <span className="sr-only">{PREFIX[note.tone]}</span>}
+                    <span aria-hidden={note !== null || undefined}>{text}</span>
+                    {note !== null && <span className="sr-only">{full}</span>}
+                </span>
+                {fix !== undefined && (
+                    <button
+                        type="button"
+                        onClick={() => {
+                            form.set(k, fix)
+                            form.focus(k)
+                        }}
+                        className="ml-auto shrink-0 rounded-sm text-foreground underline decoration-border-strong underline-offset-3 outline-none hover:decoration-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+                    >
+                        Use <span className={cn(SPEC[k].mono === true && 'font-mono')}>{fix}</span>
+                    </button>
+                )}
+                {note?.server === true && (
+                    <button
+                        type="button"
+                        onClick={form.recheck}
+                        className="ml-auto flex shrink-0 items-center gap-1 rounded-sm text-foreground underline decoration-border-strong underline-offset-3 outline-none hover:decoration-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+                    >
+                        <RotateCw className="size-3" aria-hidden />
+                        Check again
+                    </button>
+                )}
+            </p>
+        </div>
+    )
+}
+
+function OptionF({ after = false }: { after?: boolean }) {
+    const form = useJobForm({ prefix: after ? 'f-after' : 'f', timing: 'blur', after })
+    if (form.created) return <Created form={form} />
+    const errors = form.errors()
+    const warnings = form.warnings()
+    const blocking = errors.length > 0
+    const first = (blocking ? errors : warnings)[0]
+    const Icon = ICON[blocking ? 'critical' : 'warning']
+    const status = form.busy ? (
+        <span className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
+            <Loader2 className="size-3.5 shrink-0 animate-spin" aria-hidden />
+            <span className="truncate">Checking {host(form.values.endpoint) ?? 'the endpoint'}…</span>
+        </span>
+    ) : form.submitted && first !== undefined ? (
+        <button
+            type="button"
+            onClick={() => form.focus(first.key)}
+            className={cn(
+                'flex items-center gap-1.5 rounded-sm text-xs font-medium outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50',
+                INK[blocking ? 'critical' : 'warning'],
+            )}
+        >
+            <Icon className="size-3.5" aria-hidden />
+            {blocking ? `${errors.length} to fix` : `${warnings.length} to look at`}
+        </button>
+    ) : null
+    return (
+        <JobDialog
+            form={form}
+            onSubmit={async () => {
+                const failing = await form.submit()
+                if (failing[0] !== undefined) form.focus(failing[0])
+            }}
+            status={status}
+            live={form.checking ? `Checking ${host(form.values.endpoint) ?? 'the endpoint'}` : undefined}
+        >
+            <Fields render={(k) => <FieldF key={k} form={form} k={k} />} />
+        </JobDialog>
+    )
+}
+
+const NOTES_F: [string, ReactNode][] = [
+    [
+        'Where',
+        'Every field keeps one line under it, empty until there is something to say. The message fills it, cut short with the rest on hover, and a known fix sits at its end. The footer counts what stops Create; pressing the count goes to the first.',
+    ],
+    ['When', 'On leaving a field and on Create, as in D. A message goes as soon as its field is put right.'],
+    ['Server', 'The refusal lands on the endpoint’s line with Check again at its end.'],
+    ['Warning', 'The same line in the warning color, with the value that avoids it.'],
+    [
+        'Screen reader',
+        'Create moves focus to the first field with a problem. The line is the input’s description, with the detail in full.',
+    ],
+    ['For', 'The dialog is the same height before Create, after it and while the server is asked: nothing jumps.'],
+    ['Against', 'Each field costs a line of height even when all is well, and a long message is cut to one line.'],
+]
+
 /* ------------------------------------------------------------------------------------------------ */
 
 interface Option {
@@ -728,6 +854,13 @@ const OPTIONS: Option[] = [
         source: 'After Stripe Checkout and Vercel’s interface guidelines',
         notes: NOTES_E,
         Form: OptionE,
+    },
+    {
+        letter: 'F',
+        title: 'Nothing moves',
+        source: 'D’s message and fix, and B’s count beside the verb, on a line each field keeps',
+        notes: NOTES_F,
+        Form: OptionF,
     },
 ]
 
@@ -790,4 +923,6 @@ export const DMessageWithFix: Story = { name: 'D. Message with the fix', render:
 export const DMessageWithFixAfterSubmit: Story = { name: 'D. Message with the fix, after Create', render: () => <Page letter="D" after /> }
 export const ECheckedAsYouGo: Story = { name: 'E. Checked as you go', render: () => <Page letter="E" /> }
 export const ECheckedAsYouGoAfterSubmit: Story = { name: 'E. Checked as you go, after Create', render: () => <Page letter="E" after /> }
+export const FNothingMoves: Story = { name: 'F. Nothing moves', render: () => <Page letter="F" /> }
+export const FNothingMovesAfterSubmit: Story = { name: 'F. Nothing moves, after Create', render: () => <Page letter="F" after /> }
 export const CompareAfterSubmit: Story = { name: 'All options, after Create', render: () => <Compare /> }
