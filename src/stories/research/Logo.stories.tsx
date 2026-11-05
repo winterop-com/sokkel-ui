@@ -2,10 +2,12 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
 
 /**
- * Marks for the library, to pick from. "Sokkel" is a plinth: the base something stands on. Each mark
- * is drawn in `currentColor` on a 32-unit grid, so a theme recolors it; it is shown as plain ink and
- * on the primary tile, at favicon, sidebar and large sizes, and in a sidebar head. Nothing here is
- * used by the library until one is picked.
+ * The library's mark, to pick from. "Sokkel" is a plinth: the base something stands on. The layered
+ * plinth was chosen, three widening layers for patterns, primitives and tokens; these variants draw
+ * the bottom layer, where the library sits, stronger than the layers apps build above it. Each is
+ * drawn in `currentColor` on a 32-unit grid, so a theme recolors it, and shown as plain ink and on
+ * the primary tile at favicon, sidebar and large sizes, and in a sidebar head. Stepped was picked;
+ * it is the Storybook's brand and favicon.
  */
 const meta: Meta = { title: 'Research/Logo', tags: ['no-screenshot'] }
 export default meta
@@ -19,33 +21,44 @@ interface Mark {
 
 const MARKS: Mark[] = [
     {
-        id: 'layered-plinth',
-        name: 'Layered plinth',
-        idea: 'Three widening layers, tokens, primitives and patterns, stacked into a base.',
+        id: 'solid',
+        name: 'Solid',
+        idea: 'The plinth as first drawn: three layers, all in full ink.',
         paths: <path d="M10 6h12v4H10zM6 14h20v4H6zM2 22h28v4H2z" />,
     },
     {
-        id: 'block-s',
-        name: 'Block S',
-        idea: 'A squared S joined from blocks into one compact shape.',
-        paths: <path d="M6 4h22v6H12v4h14v14H4v-6h16v-4H6z" />,
-    },
-    {
-        id: 'raised-form',
-        name: 'Raised form',
-        idea: 'A round form resting on a stepped pedestal: what apps build, on what the library gives.',
+        id: 'base-in-ink',
+        name: 'Base in ink',
+        idea: 'Only the bottom layer in full ink; the two above it faded alike.',
         paths: (
             <>
-                <circle cx="16" cy="8" r="5" />
-                <path d="M6 16h20v4h-6v4h10v4H2v-4h10v-4H6z" />
+                <path d="M10 6h12v4H10zM6 14h20v4H6z" fillOpacity={0.35} />
+                <path d="M2 22h28v4H2z" />
             </>
         ),
     },
     {
-        id: 'token-foundation',
-        name: 'Token base',
-        idea: 'Four square tokens above one continuous base.',
-        paths: <path d="M6 4h8v8H6zM18 4h8v8h-8zM6 16h8v8H6zM18 16h8v8h-8zM2 26h28v4H2z" />,
+        id: 'stepped',
+        name: 'Stepped',
+        idea: 'Each layer stronger than the one above it, the bottom layer strongest.',
+        paths: (
+            <>
+                <path d="M10 6h12v4H10z" fillOpacity={0.3} />
+                <path d="M6 14h20v4H6z" fillOpacity={0.6} />
+                <path d="M2 22h28v4H2z" />
+            </>
+        ),
+    },
+    {
+        id: 'heavy-base',
+        name: 'Heavy base',
+        idea: 'The bottom layer in full ink and half again as thick; the two above it faded.',
+        paths: (
+            <>
+                <path d="M10 6h12v4H10zM6 13h20v4H6z" fillOpacity={0.35} />
+                <path d="M2 20h28v6H2z" />
+            </>
+        ),
     },
 ]
 
@@ -57,7 +70,7 @@ function Glyph({ mark, className }: { mark: Mark; className: string }) {
     )
 }
 
-/** The mark white on the primary color, as an app's brand tile draws it. */
+/** The mark on the primary color, as a brand tile draws it. */
 function Tile({ mark, size, glyph }: { mark: Mark; size: string; glyph: string }) {
     return (
         <span className={`flex shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground ${size}`}>
@@ -111,7 +124,7 @@ function MarkCard({ mark, index }: { mark: Mark; index: number }) {
     )
 }
 
-/** Every mark side by side, plain and on the tile, at 16, 32 and 64 pixels, and in a sidebar head. */
+/** Every variant side by side, plain and on the tile, at 16, 32 and 64 pixels, and in a sidebar head. */
 export const Marks: StoryObj = {
     render: () => (
         <div className="min-h-svh bg-background p-6 text-foreground">
