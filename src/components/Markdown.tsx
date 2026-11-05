@@ -1,3 +1,4 @@
+import { CircleAlert, Info, Lightbulb, MessageSquareWarning, TriangleAlert, type LucideIcon } from 'lucide-react'
 import { memo, useMemo, type ReactNode } from 'react'
 import ReactMarkdown, { type Components, type Options } from 'react-markdown'
 import rehypeRaw from 'rehype-raw'
@@ -27,6 +28,94 @@ function fence(children: ReactNode): { language: string; value: string } {
     return { language: /language-([\w-]+)/.exec(className)?.[1] ?? 'text', value: text(children).replace(/\n$/, '') }
 }
 
+/** The id a heading is given under `anchors`: its text lowercased, spaces as dashes, punctuation dropped. */
+export function headingId(text: string): string {
+    return text
+        .toLowerCase()
+        .trim()
+        .replace(/[^\p{L}\p{N}\s-]/gu, '')
+        .replace(/\s+/g, '-')
+}
+
+/** One heading of a markdown text: its level, its text, and the id `anchors` gives it. */
+export interface MarkdownHeading {
+    id: string
+    label: string
+    level: number
+}
+
+/** The headings of a markdown text at the given levels, outside fenced code, in order. */
+export function markdownHeadings(content: string, levels: readonly number[] = [2, 3]): MarkdownHeading[] {
+    const out: MarkdownHeading[] = []
+    let fenced = false
+    for (const line of content.split('\n')) {
+        if (/^\s*(```|~~~)/.test(line)) fenced = !fenced
+        if (fenced) continue
+        const match = /^(#{1,6})\s+(.+?)\s*#*\s*$/.exec(line)
+        if (match === null || !levels.includes(match[1].length)) continue
+        const label = match[2]
+            .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+            .replace(/[`*_~]/g, '')
+            .trim()
+        out.push({ id: headingId(label), label, level: match[1].length })
+    }
+    return out
+}
+
+/** The kinds of callout a quote becomes when its first line is `[!NOTE]`, `[!TIP]` and so on. */
+export type CalloutKind = 'note' | 'tip' | 'important' | 'warning' | 'caution'
+
+export type MarkdownWords = Record<CalloutKind, string>
+
+const WORDS: MarkdownWords = { note: 'Note', tip: 'Tip', important: 'Important', warning: 'Warning', caution: 'Caution' }
+
+const CALLOUTS: Record<CalloutKind, { icon: LucideIcon; frame: string; ink: string }> = {
+    note: { icon: Info, frame: 'border-info/45 bg-info/8', ink: 'text-info-ink' },
+    tip: { icon: Lightbulb, frame: 'border-good/45 bg-good/8', ink: 'text-good-ink' },
+    important: { icon: MessageSquareWarning, frame: 'border-kind-violet/45 bg-kind-violet/8', ink: 'text-kind-violet-ink' },
+    warning: { icon: TriangleAlert, frame: 'border-warning/50 bg-warning/8', ink: 'text-warning-ink' },
+    caution: { icon: CircleAlert, frame: 'border-critical/45 bg-critical/8', ink: 'text-critical-ink' },
+}
+
+/** The slice of a hast node the plugin below reads and writes. */
+interface HastNode {
+    type: string
+    tagName?: string
+    value?: string
+    properties?: Record<string, unknown>
+    children?: HastNode[]
+}
+
+function hastText(node: HastNode): string {
+    if (node.type === 'text') return node.value ?? ''
+    return (node.children ?? []).map(hastText).join('')
+}
+
+/** Marks `[!KIND]` quotes as callouts with the marker removed, and gives headings ids when `anchors` is set. */
+function rehypeDocument(anchors: boolean) {
+    return () => (tree: HastNode) => {
+        const visit = (node: HastNode) => {
+            if (anchors && node.tagName !== undefined && /^h[1-6]$/.test(node.tagName)) {
+                node.properties = { ...node.properties, id: headingId(hastText(node)) }
+            }
+            if (node.tagName === 'blockquote') {
+                const first = node.children?.find((child) => child.type === 'element')
+                const text = first?.tagName === 'p' ? first.children?.[0] : undefined
+                const marker = text?.type === 'text' ? /^\[!(note|tip|important|warning|caution)\][ \t]*\n?/i.exec(text.value ?? '') : null
+                if (first !== undefined && text !== undefined && marker !== null) {
+                    text.value = (text.value ?? '').slice(marker[0].length)
+                    if (text.value === '' && first.children?.length === 1) {
+                        node.children = node.children?.filter((child) => child !== first)
+                    }
+                    node.properties = { ...node.properties, dataCallout: marker[1].toLowerCase() }
+                }
+            }
+            for (const child of node.children ?? []) visit(child)
+        }
+        visit(tree)
+    }
+}
+
 const PROSE = cn(
     'min-w-0 text-sm leading-relaxed break-words text-foreground',
     '[&>*:first-child]:mt-0 [&>*:last-child]:mb-0',
@@ -42,27 +131,64 @@ const PROSE = cn(
     '[&_td]:border [&_td]:border-border [&_td]:px-2.5 [&_td]:py-1',
     '[&_:not(pre)>code]:rounded-sm [&_:not(pre)>code]:bg-muted [&_:not(pre)>code]:px-1 [&_:not(pre)>code]:font-mono [&_:not(pre)>code]:text-[0.9em]',
     '[&_.mermaid-block]:my-3 [&_[data-slot=code-block]]:my-3',
+    '[&_[id]]:scroll-mt-4',
 )
 
 /**
  * GitHub-flavored markdown, as an assistant or a description writes it: fenced code highlighted
- * with a copy button, mermaid fences drawn as diagrams, links opening in a new tab. Raw HTML is
- * dropped unless `allowHtml` is set, and then it is sanitized. While `streaming`, a mermaid fence
- * shows its source until the message completes.
+ * with a copy button, mermaid fences drawn as diagrams, links opening in a new tab, and a quote
+ * whose first line is `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]` or `[!CAUTION]` drawn as
+ * a callout. Raw HTML is dropped unless `allowHtml` is set, and then it is sanitized. While
+ * `streaming`, a mermaid fence shows its source until the message completes.
+ *
+ * `anchors` gives each heading the id `headingId` makes of its text, for a table of contents to
+ * link to; `markdownHeadings` lists the same ids from the source.
  */
 export const Markdown = memo(function Markdown({
     content,
     streaming = false,
     allowHtml = false,
+    anchors = false,
     className,
+    words: given,
 }: {
     content: string
     streaming?: boolean
     allowHtml?: boolean
+    /** Gives every heading an id made from its text. */
+    anchors?: boolean
     className?: string
+    words?: Partial<MarkdownWords>
 }) {
+    const note = given?.note
+    const tip = given?.tip
+    const important = given?.important
+    const warning = given?.warning
+    const caution = given?.caution
     const components = useMemo<Components>(
         () => ({
+            blockquote: ({ children, node: _node, ...props }) => {
+                const kind = (props as Record<string, unknown>)['data-callout'] as CalloutKind | undefined
+                const callout = kind === undefined ? undefined : CALLOUTS[kind]
+                if (kind === undefined || callout === undefined) return <blockquote {...props}>{children}</blockquote>
+                const label = { note, tip, important, warning, caution }[kind] ?? WORDS[kind]
+                const Icon = callout.icon
+                return (
+                    <div
+                        data-callout={kind}
+                        className={cn(
+                            'my-3 flex gap-2.5 rounded-surface border px-3 py-2.5 [&_p]:my-1 [&>div>*:last-child]:mb-0',
+                            callout.frame,
+                        )}
+                    >
+                        <Icon aria-hidden className={cn('mt-0.5 size-4 shrink-0', callout.ink)} />
+                        <div className="min-w-0 flex-1">
+                            <p className={cn('!mt-0 font-medium', callout.ink)}>{label}</p>
+                            {children}
+                        </div>
+                    </div>
+                )
+            },
             a: ({ children, node: _node, ...props }) => (
                 <a {...props} target="_blank" rel="noreferrer noopener">
                     {children}
@@ -80,9 +206,12 @@ export const Markdown = memo(function Markdown({
                 return <Code value={value} language={language} size="sm" />
             },
         }),
-        [streaming],
+        [streaming, note, tip, important, warning, caution],
     )
-    const rehype: Options['rehypePlugins'] = allowHtml ? [rehypeRaw, rehypeSanitize] : []
+    const rehype: Options['rehypePlugins'] = useMemo(
+        () => [...(allowHtml ? [rehypeRaw, rehypeSanitize] : []), rehypeDocument(anchors)],
+        [allowHtml, anchors],
+    )
     return (
         <div className={cn(PROSE, className)}>
             <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={rehype} components={components}>
