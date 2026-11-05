@@ -11,6 +11,11 @@ GitHub Packages by the tag workflow, and apps pin that version. The heavy engine
 and elk, Mermaid, CodeMirror) and the Geist fonts are optional peer dependencies: an app installs
 one only when it uses its part, and the README lists which part needs which.
 
+`examples/` consumes the package as an app does: `examples/web` is a small Tidevann app that
+installs it from the repository root and imports only its public entry points, and the Electron and
+Tauri shells in `examples/electron` and `examples/tauri` load that app's build. The examples
+workflow builds all three, so a break in the package fails a check rather than an app.
+
 ## Typefaces
 
 Plex Sans and Plex Mono are the default. Geist and Geist Mono are the one alternative a theme sets,
