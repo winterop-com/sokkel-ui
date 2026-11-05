@@ -1,5 +1,24 @@
-import { ArrowDownIcon, ArrowUpIcon, ChevronRightIcon, Columns3Icon, EllipsisIcon } from 'lucide-react'
-import { type KeyboardEvent, type MouseEvent, type ReactNode, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import {
+    ArrowDownIcon,
+    ArrowUpIcon,
+    ChevronLeftIcon,
+    ChevronRightIcon,
+    ChevronsLeftIcon,
+    ChevronsRightIcon,
+    Columns3Icon,
+    EllipsisIcon,
+} from 'lucide-react'
+import {
+    type KeyboardEvent,
+    type MouseEvent,
+    type ReactNode,
+    useCallback,
+    useEffect,
+    useLayoutEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react'
 
 import { cn } from '../lib/cn'
 import { Button } from './ui/button'
@@ -15,6 +34,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from './ui/dropdown-menu'
+import { NativeSelect, NativeSelectOption } from './ui/native-select'
+import { Skeleton } from './ui/skeleton'
 
 /** One column: its name, how wide it is, how a row draws its cell, and how it sorts. */
 export interface DataColumn<T> {
@@ -55,6 +76,16 @@ export interface DataTableWords {
     columns: string
     actions: string
     rows: (count: number) => string
+    /** The bar's count while more rows may still load. */
+    loaded: (count: number) => string
+    /** The pager's account of the rows shown: `1–50 of 10,000`. */
+    range: (from: number, to: number, total: number) => string
+    page: (page: number, pages: number) => string
+    perPage: string
+    firstPage: string
+    previousPage: string
+    nextPage: string
+    lastPage: string
     selected: (count: number) => string
     clear: string
     selectAll: string
@@ -68,6 +99,14 @@ const WORDS: DataTableWords = {
     columns: 'Columns',
     actions: 'Actions',
     rows: (count) => `${count.toLocaleString('en-US')} ${count === 1 ? 'row' : 'rows'}`,
+    loaded: (count) => `${count.toLocaleString('en-US')} loaded`,
+    range: (from, to, total) => `${from.toLocaleString('en-US')}–${to.toLocaleString('en-US')} of ${total.toLocaleString('en-US')}`,
+    page: (page, pages) => `Page ${page.toLocaleString('en-US')} of ${pages.toLocaleString('en-US')}`,
+    perPage: 'Rows per page',
+    firstPage: 'First page',
+    previousPage: 'Previous page',
+    nextPage: 'Next page',
+    lastPage: 'Last page',
     selected: (count) => `${count.toLocaleString('en-US')} selected`,
     clear: 'Clear',
     selectAll: 'Select all rows',
@@ -214,6 +253,17 @@ export function DataTable<T>({
     actionIcon = <EllipsisIcon />,
     toolbar,
     total,
+    paging,
+    page: pageValue,
+    defaultPage = 0,
+    onPageChange,
+    pageSize: pageSizeValue,
+    defaultPageSize = 50,
+    onPageSizeChange,
+    pageSizes = [25, 50, 100],
+    hasMore = false,
+    loading = false,
+    onLoadMore,
     minWidth = '48rem',
     words: ownWords,
     className,
@@ -255,6 +305,26 @@ export function DataTable<T>({
     toolbar?: ReactNode
     /** The count the bar shows, when the rows given are not all there are. */
     total?: number
+    /**
+     * Rows a page at a time, with a pager at the foot. `client`: the table sorts every row and shows
+     * one page of them. `server`: the rows given are the page, `total` counts them all, and the app
+     * sorts (with `manualSort`) and fetches the page it hears.
+     */
+    paging?: 'client' | 'server'
+    /** The page shown, counted from 0. */
+    page?: number
+    defaultPage?: number
+    onPageChange?: (page: number) => void
+    pageSize?: number
+    defaultPageSize?: number
+    onPageSizeChange?: (size: number) => void
+    /** The sizes the pager offers. */
+    pageSizes?: number[]
+    /** More rows exist than are given; nearing the end asks for them with `onLoadMore`. */
+    hasMore?: boolean
+    /** Rows are on their way: placeholder rows show at the end, or fill the table when it has none yet. */
+    loading?: boolean
+    onLoadMore?: () => void
     /** The narrowest the columns go before the table scrolls sideways. */
     minWidth?: string
     words?: Partial<DataTableWords>
@@ -275,7 +345,18 @@ export function DataTable<T>({
                 : sortRows(level, sortColumn.sortValue, sort.direction),
         [manualSort, sort, sortColumn],
     )
-    const flat = useMemo(() => flattenRows({ rows, rowKey, childRows, expanded, order }), [rows, rowKey, childRows, expanded, order])
+    const all = useMemo(() => flattenRows({ rows, rowKey, childRows, expanded, order }), [rows, rowKey, childRows, expanded, order])
+
+    // A page of the rows, or all of them; everything below draws and moves through `flat`.
+    const [page, setPage] = useHeld(pageValue, defaultPage, onPageChange)
+    const [pageSize, setPageSize] = useHeld(pageSizeValue, defaultPageSize, onPageSizeChange)
+    const pageCount = paging === 'server' ? (total ?? all.length) : all.length
+    const pages = paging === undefined ? 1 : Math.max(1, Math.ceil(pageCount / pageSize))
+    const current = Math.min(page, pages - 1)
+    const flat = useMemo(
+        () => (paging === 'client' ? all.slice(current * pageSize, (current + 1) * pageSize) : all),
+        [paging, all, current, pageSize],
+    )
     const allKeys = useMemo(
         () => (selectable ? rows.flatMap((row) => branchKeys(row, rowKey, childRows)) : []),
         [selectable, rows, rowKey, childRows],
@@ -300,6 +381,16 @@ export function DataTable<T>({
         observer.observe(measure)
         return () => observer.disconnect()
     }, [])
+    useLayoutEffect(() => {
+        if (scroller.current !== null) scroller.current.scrollTop = 0
+    }, [current, pageSize])
+
+    // Nearing the end of what has loaded asks for more, and so does a first load too short to fill the view.
+    const nearEnd = view.top + view.height >= flat.length * rowHeight - rowHeight * OVERSCAN
+    useEffect(() => {
+        if (hasMore && !loading && nearEnd) onLoadMore?.()
+    }, [hasMore, loading, nearEnd, onLoadMore])
+
     const first = Math.max(0, Math.floor(view.top / rowHeight) - OVERSCAN)
     const last = Math.min(flat.length, Math.ceil((view.top + view.height) / rowHeight) + OVERSCAN)
 
@@ -347,6 +438,7 @@ export function DataTable<T>({
     }
 
     const nextSort = (column: DataColumn<T>) => {
+        if (paging !== undefined) setPage(0)
         if (sort?.column !== column.id) setSort({ column: column.id, direction: 'asc' })
         else if (sort.direction === 'asc') setSort({ column: column.id, direction: 'desc' })
         else setSort(null)
@@ -429,7 +521,9 @@ export function DataTable<T>({
                     <div className="flex min-w-0 items-center gap-2">{toolbar}</div>
                 )}
                 <span className="ml-auto shrink-0 font-mono text-xs text-muted-foreground tabular-nums">
-                    {words.rows(total ?? allCount(rows, childRows))}
+                    {hasMore && total === undefined
+                        ? words.loaded(allCount(rows, childRows))
+                        : words.rows(total ?? allCount(rows, childRows))}
                 </span>
                 {hideable.length > 0 && (
                     <DropdownMenu>
@@ -528,7 +622,7 @@ export function DataTable<T>({
                         <span role="columnheader" aria-label={words.actions} className={cn(pinnedEnd, 'right-0 h-full')} />
                     )}
                 </div>
-                {flat.length === 0 ? (
+                {flat.length === 0 && !loading ? (
                     <p className="px-(--density-panel-pad) py-3 text-sm text-muted-foreground">{words.empty}</p>
                 ) : (
                     <div style={{ height: flat.length * rowHeight, minWidth }} className="relative">
@@ -713,7 +807,91 @@ export function DataTable<T>({
                         })}
                     </div>
                 )}
+                {loading &&
+                    Array.from({ length: flat.length === 0 ? Math.max(3, Math.ceil(view.height / rowHeight)) : 3 }, (_, index) => (
+                        <div
+                            key={`loading-${String(index)}`}
+                            aria-hidden
+                            className="grid h-(--density-row) items-center border-b border-border"
+                            style={grid}
+                        >
+                            {selectable && <span />}
+                            {shown.map((column) => (
+                                <span key={column.id} className={cn('flex px-3', column.align === 'end' && 'justify-end')}>
+                                    <Skeleton className="h-3 w-3/5" />
+                                </span>
+                            ))}
+                            {endWidth !== undefined && <span />}
+                        </div>
+                    ))}
             </div>
+            {paging !== undefined && (
+                <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 border-t border-border px-(--density-panel-pad) py-1.5 text-xs text-muted-foreground">
+                    <span className="font-mono tabular-nums">
+                        {words.range(
+                            pageCount === 0 ? 0 : current * pageSize + 1,
+                            Math.min(pageCount, (current + 1) * pageSize),
+                            pageCount,
+                        )}
+                    </span>
+                    <label className="flex items-center gap-2">
+                        {words.perPage}
+                        <NativeSelect
+                            size="sm"
+                            value={String(pageSize)}
+                            onChange={(event) => {
+                                setPage(0)
+                                setPageSize(Number(event.target.value))
+                            }}
+                        >
+                            {pageSizes.map((size) => (
+                                <NativeSelectOption key={size} value={size}>
+                                    {size}
+                                </NativeSelectOption>
+                            ))}
+                        </NativeSelect>
+                    </label>
+                    <div className="ml-auto flex items-center gap-1">
+                        <span className="mr-2 tabular-nums">{words.page(current + 1, pages)}</span>
+                        <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label={words.firstPage}
+                            disabled={current === 0}
+                            onClick={() => setPage(0)}
+                        >
+                            <ChevronsLeftIcon />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label={words.previousPage}
+                            disabled={current === 0}
+                            onClick={() => setPage(current - 1)}
+                        >
+                            <ChevronLeftIcon />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label={words.nextPage}
+                            disabled={current >= pages - 1}
+                            onClick={() => setPage(current + 1)}
+                        >
+                            <ChevronRightIcon />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label={words.lastPage}
+                            disabled={current >= pages - 1}
+                            onClick={() => setPage(pages - 1)}
+                        >
+                            <ChevronsRightIcon />
+                        </Button>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
