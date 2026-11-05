@@ -1,19 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import {
-    AtSign,
     Bell,
-    Bold,
     Bookmark,
     Check,
     ChevronDown,
-    Code,
     Ellipsis,
     Eye,
     Hash,
     House,
-    Italic,
-    Link,
-    List,
     MessageSquare,
     PenSquare,
     Pin,
@@ -28,8 +22,8 @@ import { useState, type ReactNode } from 'react'
 
 import { ChannelList, type ChannelSection } from '../../components/ChannelList'
 import { ChatDayDivider, ChatMessage, ChatNewDivider, ChatTyping, type ChatFile, type ChatReaction } from '../../components/ChatMessage'
-import { Composer } from '../../components/Composer'
 import { Markdown } from '../../components/Markdown'
+import { MessageComposer } from '../../components/MessageComposer'
 import { Shell } from '../../components/Shell'
 import { SidePanel } from '../../components/SidePanel'
 import { TopBar } from '../../components/TopBar'
@@ -240,25 +234,6 @@ function ChannelHeader({
     )
 }
 
-function Tools() {
-    const tool = (icon: ReactNode, label: string) => (
-        <Button key={label} type="button" variant="ghost" size="icon-sm" aria-label={label} title={label}>
-            {icon}
-        </Button>
-    )
-    return (
-        <div className="flex items-center gap-0.5 text-muted-foreground">
-            {tool(<Bold aria-hidden />, 'Bold')}
-            {tool(<Italic aria-hidden />, 'Italic')}
-            {tool(<Code aria-hidden />, 'Code')}
-            {tool(<Link aria-hidden />, 'Link')}
-            {tool(<List aria-hidden />, 'List')}
-            <span className="mx-1 h-4 w-px bg-border" aria-hidden />
-            {tool(<AtSign aria-hidden />, 'Mention someone')}
-        </div>
-    )
-}
-
 function Conversation({ onThread, threadOpen }: { onThread: () => void; threadOpen: boolean }) {
     const [mine, setMine] = useState<Record<string, boolean>>({ check: true })
     const flip = (id: string) => setMine((current) => ({ ...current, [id]: current[id] !== true }))
@@ -325,19 +300,15 @@ function Conversation({ onThread, threadOpen }: { onThread: () => void; threadOp
             </div>
             <ChatTyping>linus is typing</ChatTyping>
             <div className="shrink-0 px-5 pb-4">
-                <Composer
+                <MessageComposer
                     value={draft}
                     onChange={setDraft}
                     onSend={() => setDraft('')}
-                    tools={<Tools />}
-                    words={{
-                        placeholder: 'Message #harbor-ops',
-                        send: 'Send',
-                        stop: 'Stop',
-                        attach: 'Attach files',
-                        remove: 'Remove',
-                        drop: 'Drop files to attach them',
-                    }}
+                    onAttach={() => undefined}
+                    onEmoji={() => undefined}
+                    onMention={() => undefined}
+                    onSendLater={() => undefined}
+                    words={{ placeholder: 'Message #harbor-ops' }}
                 />
             </div>
         </div>
@@ -346,6 +317,7 @@ function Conversation({ onThread, threadOpen }: { onThread: () => void; threadOp
 
 function Thread() {
     const [draft, setDraft] = useState('')
+    const [also, setAlso] = useState(false)
     return (
         <div className="flex h-full min-h-0 flex-col">
             <div className="min-h-0 flex-1 overflow-y-auto py-3">
@@ -365,21 +337,26 @@ function Thread() {
                 <ChatMessage author="linus" avatar={<Face who="linus" />} time="09:40" continued>
                     <Markdown content="PR is up: harbor#412." />
                 </ChatMessage>
-            </div>
-            <div className="shrink-0 px-4 pb-4">
-                <Composer
-                    value={draft}
-                    onChange={setDraft}
-                    onSend={() => setDraft('')}
-                    words={{
-                        placeholder: 'Reply',
-                        send: 'Send',
-                        stop: 'Stop',
-                        attach: 'Attach files',
-                        remove: 'Remove',
-                        drop: 'Drop files to attach them',
-                    }}
-                />
+                <div className="px-4 pt-3">
+                    <MessageComposer
+                        value={draft}
+                        onChange={setDraft}
+                        onSend={() => setDraft('')}
+                        onAttach={() => undefined}
+                        onEmoji={() => undefined}
+                        onMention={() => undefined}
+                        onSendLater={() => undefined}
+                        alsoSendTo={
+                            <>
+                                <Hash className="size-3" aria-hidden />
+                                harbor-ops
+                            </>
+                        }
+                        alsoSend={also}
+                        onAlsoSendChange={setAlso}
+                        words={{ placeholder: 'Reply' }}
+                    />
+                </div>
             </div>
         </div>
     )
@@ -413,19 +390,15 @@ function Direct() {
                 </ChatMessage>
             </div>
             <div className="shrink-0 px-5 pb-4">
-                <Composer
+                <MessageComposer
                     value={draft}
                     onChange={setDraft}
                     onSend={() => setDraft('')}
-                    tools={<Tools />}
-                    words={{
-                        placeholder: 'Message grace',
-                        send: 'Send',
-                        stop: 'Stop',
-                        attach: 'Attach files',
-                        remove: 'Remove',
-                        drop: 'Drop files to attach them',
-                    }}
+                    onAttach={() => undefined}
+                    onEmoji={() => undefined}
+                    onMention={() => undefined}
+                    onSendLater={() => undefined}
+                    words={{ placeholder: 'Message grace' }}
                 />
             </div>
         </div>
@@ -457,19 +430,15 @@ function NewChannelPage() {
                 </div>
             </div>
             <div className="shrink-0 px-5 pb-4">
-                <Composer
+                <MessageComposer
                     value={draft}
                     onChange={setDraft}
                     onSend={() => setDraft('')}
-                    tools={<Tools />}
-                    words={{
-                        placeholder: 'Message #juniper-launch',
-                        send: 'Send',
-                        stop: 'Stop',
-                        attach: 'Attach files',
-                        remove: 'Remove',
-                        drop: 'Drop files to attach them',
-                    }}
+                    onAttach={() => undefined}
+                    onEmoji={() => undefined}
+                    onMention={() => undefined}
+                    onSendLater={() => undefined}
+                    words={{ placeholder: 'Message #juniper-launch' }}
                 />
             </div>
         </div>
