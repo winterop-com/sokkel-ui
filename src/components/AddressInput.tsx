@@ -133,7 +133,7 @@ export function AddressInput({
                             key={`${entry.address}-${index}`}
                             title={bad ? `${entry.address}: ${words.invalid}` : entry.address}
                             className={cn(
-                                'inline-flex h-6 max-w-full min-w-0 items-center gap-1 rounded-full pr-0.5 pl-2 text-xs',
+                                'inline-flex h-6 max-w-full min-w-0 items-center gap-1 rounded-control pr-0.5 pl-2 text-xs',
                                 bad
                                     ? 'bg-destructive/10 text-destructive ring-1 ring-destructive/40'
                                     : 'bg-secondary text-secondary-foreground',
@@ -144,7 +144,7 @@ export function AddressInput({
                                 type="button"
                                 tabIndex={-1}
                                 aria-label={words.remove(shown)}
-                                className="flex size-5 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
+                                className="flex size-5 shrink-0 items-center justify-center rounded-mini text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
                                 onClick={(event) => {
                                     event.stopPropagation()
                                     onChange(value.filter((_, at) => at !== index))

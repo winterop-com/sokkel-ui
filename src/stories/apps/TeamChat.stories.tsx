@@ -35,6 +35,7 @@ import { Button } from '../../components/ui/button'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { cn } from '../../lib/cn'
 import { TidevannMark } from '../fixtures/TidevannMark'
+import { Count } from '../../components/Count'
 
 /**
  * A team chat in the library's frame: a strip of places on the far left, the channels and direct
@@ -111,11 +112,7 @@ function Strip() {
             )}
         >
             {icon}
-            {count !== undefined && (
-                <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-critical px-1 text-[10px] font-semibold text-white">
-                    {count}
-                </span>
-            )}
+            {count !== undefined && <Count value={count} className="absolute -top-1 -right-1" />}
         </button>
     )
     return (

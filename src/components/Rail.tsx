@@ -4,6 +4,7 @@ import { useRef, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { ResizeHandle } from './ResizeHandle'
+import { Count } from './Count'
 
 /** One place the rail leads to. */
 export interface RailEntry {
@@ -12,6 +13,10 @@ export interface RailEntry {
     icon: LucideIcon
     href: string
     active?: boolean
+    /** How many wait there, such as unread messages: at the row's end, or over the icon when the rail is collapsed. */
+    count?: number
+    /** A color drawn as a dot in place of the icon, for a label or a tag: a CSS color such as a token. */
+    dot?: string
 }
 
 /** A titled group of entries; a group with no title stands at the top. */
@@ -161,6 +166,15 @@ function RailLink({
     renderLink: (entry: RailEntry, children: ReactNode, className: string) => ReactNode
 }) {
     const Icon = entry.icon
+    const mark =
+        entry.dot === undefined ? (
+            <Icon className="size-4 shrink-0" aria-hidden />
+        ) : (
+            <span className="flex size-4 shrink-0 items-center justify-center" aria-hidden>
+                <span className="size-2.5 rounded-full" style={{ background: entry.dot }} />
+            </span>
+        )
+    const counted = entry.count !== undefined && entry.count > 0
     if (collapsed) {
         return (
             <Tooltip.Root>
@@ -169,9 +183,12 @@ function RailLink({
                         <span {...props} className="mx-auto">
                             {renderLink(
                                 entry,
-                                <Icon className="size-4" aria-hidden />,
+                                <>
+                                    {mark}
+                                    {counted && <Count value={entry.count ?? 0} className="absolute -top-1 -right-1" />}
+                                </>,
                                 cn(
-                                    'flex h-(--density-row) w-9 items-center justify-center rounded-md',
+                                    'relative flex h-(--density-row) w-9 items-center justify-center rounded-md',
                                     entry.active
                                         ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                                         : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
@@ -193,8 +210,9 @@ function RailLink({
     return renderLink(
         entry,
         <>
-            <Icon className="size-4 shrink-0" aria-hidden />
+            {mark}
             <span className="truncate">{entry.label}</span>
+            {counted && <span className="ml-auto text-xs font-semibold text-foreground tabular-nums">{entry.count}</span>}
         </>,
         cn(
             'flex h-(--density-row) items-center gap-3 rounded-l-sm rounded-r-md border-l-2 pr-3 pl-2.5 text-sm',
