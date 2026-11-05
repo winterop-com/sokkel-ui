@@ -39,7 +39,7 @@ empty ground, each reported to the app, which owns the graph. Views select only 
 
 ## Validation
 
-Picked from the research in Research/Validation: option F. A field with a problem gets a colored
+Option F, picked from the validation research. A field with a problem gets a colored
 edge and a mark at the end of its input; pressing the mark opens what is wrong, what to do, and a
 fix when one is plain. The dialog footer counts what stops the submit, beside the verb, and pressing
 the count opens the first. Nothing is inserted between fields, so a form never changes height.

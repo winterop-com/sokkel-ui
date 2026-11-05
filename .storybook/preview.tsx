@@ -61,6 +61,12 @@ const preview: Preview = {
         layout: 'fullscreen',
         backgrounds: { disable: true },
         controls: { disable: true },
+        // The foundations and themes first, then the pieces from smallest to whole apps, and research last.
+        options: {
+            storySort: {
+                order: ['Foundations', 'Themes', 'Primitives', 'Patterns', 'Charts', 'Maps', 'Graphs', 'Media', 'Apps', 'Research'],
+            },
+        },
         viewport: {
             options: {
                 w360: { name: '360 px', styles: { width: '360px', height: '780px' }, type: 'mobile' },
