@@ -21,17 +21,15 @@ export const CORNERS: ThemeOption[] = [
     { value: '10px', label: '10px' },
 ]
 
-/** The typefaces the toolbar offers, sans and mono together. */
-const FACES: Record<string, { label: string; sans: string; mono: string }> = {
-    inter: {
-        label: 'Inter and JetBrains Mono',
-        sans: "'Inter Variable', system-ui, sans-serif",
-        mono: "'JetBrains Mono Variable', ui-monospace, monospace",
-    },
+/** The typefaces the toolbar offers, sans and mono together, with mono's x-heights where they differ from the default's. */
+export const FACES: Record<string, { label: string; sans: string; mono: string; monoX?: string; monoXSmall?: string }> = {
     geist: {
         label: 'Geist and Geist Mono',
         sans: "'Geist Variable', system-ui, sans-serif",
         mono: "'Geist Mono Variable', ui-monospace, monospace",
+        // Mono at the default's share of Geist's x-height (0.530), as 0.45 and 0.49 are of Plex Sans's 0.516.
+        monoX: '0.462',
+        monoXSmall: '0.503',
     },
     system: {
         label: 'System',
@@ -88,12 +86,15 @@ export function applyToDocument(settings: ThemeSettings): () => void {
     if (settings.corners === 'theme') root.style.removeProperty('--radius')
     else root.style.setProperty('--radius', settings.corners)
     const face = FACES[settings.typeface]
-    if (face === undefined) {
-        root.style.removeProperty('--typeface-sans')
-        root.style.removeProperty('--typeface-mono')
-    } else {
-        root.style.setProperty('--typeface-sans', face.sans)
-        root.style.setProperty('--typeface-mono', face.mono)
+    const faceProps: [string, string | undefined][] = [
+        ['--typeface-sans', face?.sans],
+        ['--typeface-mono', face?.mono],
+        ['--mono-x-height', face?.monoX],
+        ['--mono-x-height-small', face?.monoXSmall],
+    ]
+    for (const [name, value] of faceProps) {
+        if (value === undefined) root.style.removeProperty(name)
+        else root.style.setProperty(name, value)
     }
     return () => {
         for (const [name, value] of before) {
