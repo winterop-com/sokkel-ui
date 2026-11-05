@@ -77,7 +77,7 @@ and ask before acting.
 - No tags and no releases unless the owner asks for one. A release is a PR that moves the version
   in `package.json`; once it is merged, the tag `vX.Y.Z` on that commit runs
   `.github/workflows/release.yaml`, which checks the tag against the version, runs the gates, builds,
-  and publishes `@winterop-com/ui` to GitHub Packages. Then a GitHub release with the notes.
+  and publishes `@winterop-com/sokkel-ui` to GitHub Packages. Then a GitHub release with the notes.
 - Ask before any outward or hard-to-undo action: publishing, changing repository settings,
   rewriting history, force-pushing, deleting.
 - Agents working in parallel each write scratch files in a folder of their own, and never touch
