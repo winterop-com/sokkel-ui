@@ -99,8 +99,8 @@ export function ChatMessage({
     return (
         <article
             className={cn(
-                'group/chat relative grid grid-cols-[2.25rem_minmax(0,1fr)] gap-x-2.5 px-5 hover:bg-muted/40',
-                continued ? 'py-0.5' : 'pt-2 pb-1',
+                'group/chat relative grid grid-cols-[2.25rem_minmax(0,1fr)] gap-x-2.5 px-(--density-chat-inset) hover:bg-muted/40',
+                continued ? 'py-(--density-chat-follow)' : 'pt-(--density-chat-gap) pb-1',
                 highlighted && 'bg-warning/10 hover:bg-warning/15',
                 className,
             )}
@@ -228,8 +228,8 @@ export function ChatMessage({
 /** The date between a day's messages and the next day's, as a rule with the date on it. */
 export function ChatDayDivider({ children }: { children: ReactNode }) {
     return (
-        <div role="separator" className="relative my-2 flex items-center justify-center px-5">
-            <span className="absolute inset-x-5 top-1/2 h-px bg-border" aria-hidden />
+        <div role="separator" className="relative my-(--density-chat-gap) flex items-center justify-center px-(--density-chat-inset)">
+            <span className="absolute inset-x-(--density-chat-inset) top-1/2 h-px bg-border" aria-hidden />
             <span className="relative rounded-full border border-border bg-background px-3 py-0.5 text-xs font-medium">{children}</span>
         </div>
     )
@@ -238,8 +238,8 @@ export function ChatDayDivider({ children }: { children: ReactNode }) {
 /** Where the messages not read yet begin. */
 export function ChatNewDivider({ label = 'New' }: { label?: string }) {
     return (
-        <div role="separator" aria-label={label} className="relative my-1 flex items-center justify-end px-5">
-            <span className="absolute inset-x-5 top-1/2 h-px bg-critical/60" aria-hidden />
+        <div role="separator" aria-label={label} className="relative my-1 flex items-center justify-end px-(--density-chat-inset)">
+            <span className="absolute inset-x-(--density-chat-inset) top-1/2 h-px bg-critical/60" aria-hidden />
             <span className="relative bg-background pl-2 text-[11px] font-semibold tracking-wide text-critical-ink uppercase">{label}</span>
         </div>
     )
@@ -248,7 +248,7 @@ export function ChatNewDivider({ label = 'New' }: { label?: string }) {
 /** Who is writing now, under the conversation. */
 export function ChatTyping({ children }: { children: ReactNode }) {
     return (
-        <p aria-live="polite" className="flex h-5 items-center gap-1.5 px-5 text-xs text-muted-foreground">
+        <p aria-live="polite" className="flex h-5 items-center gap-1.5 px-(--density-chat-inset) text-xs text-muted-foreground">
             <span className="flex gap-0.5" aria-hidden>
                 {[0, 1, 2].map((dot) => (
                     <span key={dot} className="size-1 rounded-full bg-muted-foreground" />

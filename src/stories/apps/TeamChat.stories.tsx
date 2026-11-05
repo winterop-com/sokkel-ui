@@ -5,14 +5,17 @@ import {
     Check,
     ChevronDown,
     Ellipsis,
+    FileText,
     Eye,
     Hash,
     House,
     MessageSquare,
+    MessagesSquare,
     PenSquare,
     Pin,
     Rocket,
     Search,
+    SendHorizontal,
     SmilePlus,
     ThumbsUp,
     UserPlus,
@@ -149,6 +152,12 @@ function Sidebar({ active, onSelect, unread }: { active: string; onSelect: (id: 
                         </Button>
                     </div>
                 }
+                places={[
+                    { id: 'threads', label: 'Threads', icon: <MessagesSquare aria-hidden />, count: 2 },
+                    { id: 'activity', label: 'Activity', icon: <Bell aria-hidden /> },
+                    { id: 'saved', label: 'Saved', icon: <Bookmark aria-hidden /> },
+                    { id: 'drafts', label: 'Drafts and sent', icon: <SendHorizontal aria-hidden /> },
+                ]}
             />
         </div>
     )
@@ -201,34 +210,59 @@ function ChannelHeader({
     kind?: 'channel' | 'direct'
 }) {
     return (
-        <div className="flex h-shell-top shrink-0 items-center gap-3 border-b border-border px-5">
-            <h1 className="flex min-w-0 items-center gap-1 text-[15px] font-semibold">
-                {kind === 'channel' && <Hash className="size-4 shrink-0 text-muted-foreground" aria-hidden />}
-                <span className="truncate">{title}</span>
-            </h1>
-            {topic !== undefined && <p className="hidden min-w-0 truncate text-sm text-muted-foreground md:block">{topic}</p>}
-            <div className="ml-auto flex shrink-0 items-center gap-1">
-                {members !== undefined && (
+        <div className="shrink-0 border-b border-border">
+            <div className="flex h-shell-top items-center gap-3 px-(--density-chat-inset)">
+                <h1 className="flex min-w-0 items-center gap-1 text-base font-semibold">
+                    {kind === 'channel' && <Hash className="size-4 shrink-0 text-muted-foreground" aria-hidden />}
+                    <span className="truncate">{title}</span>
+                </h1>
+                {topic !== undefined && <p className="hidden min-w-0 truncate text-sm text-muted-foreground md:block">{topic}</p>}
+                <div className="ml-auto flex shrink-0 items-center gap-1">
+                    {members !== undefined && (
+                        <button
+                            type="button"
+                            className="flex h-7 items-center gap-1.5 rounded-md border border-border px-2 text-xs hover:bg-secondary"
+                        >
+                            <span className="flex -space-x-1">
+                                {(['grace', 'linus', 'margaret'] as const).map((who) => (
+                                    <span key={who} className="flex size-4.5 overflow-hidden rounded-sm text-[8px] ring-2 ring-background">
+                                        <Face who={who} />
+                                    </span>
+                                ))}
+                            </span>
+                            <span className="tabular-nums">{members}</span>
+                        </button>
+                    )}
+                    <Button variant="ghost" size="icon" aria-label="Pinned messages" title="Pinned messages">
+                        <Pin aria-hidden />
+                    </Button>
+                    <Button variant="ghost" size="icon" aria-label="Search this channel" title="Search this channel">
+                        <Search aria-hidden />
+                    </Button>
+                </div>
+            </div>
+            <div role="tablist" className="flex items-center gap-1 px-(--density-chat-inset)">
+                {[
+                    { id: 'messages', label: 'Messages', icon: MessageSquare },
+                    { id: 'files', label: 'Files', icon: FileText },
+                    { id: 'pins', label: 'Pins', icon: Pin },
+                ].map((tab, index) => (
                     <button
+                        key={tab.id}
                         type="button"
-                        className="flex h-7 items-center gap-1.5 rounded-md border border-border px-2 text-xs hover:bg-secondary"
+                        role="tab"
+                        aria-selected={index === 0}
+                        className={cn(
+                            '-mb-px flex h-8 items-center gap-1.5 border-b-2 px-2 text-sm',
+                            index === 0
+                                ? 'border-primary font-medium text-foreground'
+                                : 'border-transparent text-muted-foreground hover:text-foreground',
+                        )}
                     >
-                        <span className="flex -space-x-1">
-                            {(['grace', 'linus', 'margaret'] as const).map((who) => (
-                                <span key={who} className="flex size-4.5 overflow-hidden rounded-sm text-[8px] ring-2 ring-background">
-                                    <Face who={who} />
-                                </span>
-                            ))}
-                        </span>
-                        <span className="tabular-nums">{members}</span>
+                        <tab.icon className="size-3.5" aria-hidden />
+                        {tab.label}
                     </button>
-                )}
-                <Button variant="ghost" size="icon" aria-label="Pinned messages" title="Pinned messages">
-                    <Pin aria-hidden />
-                </Button>
-                <Button variant="ghost" size="icon" aria-label="Search this channel" title="Search this channel">
-                    <Search aria-hidden />
-                </Button>
+                ))}
             </div>
         </div>
     )
@@ -299,7 +333,7 @@ function Conversation({ onThread, threadOpen }: { onThread: () => void; threadOp
                 </div>
             </div>
             <ChatTyping>linus is typing</ChatTyping>
-            <div className="shrink-0 px-5 pb-4">
+            <div className="shrink-0 px-(--density-chat-inset) pb-4">
                 <MessageComposer
                     value={draft}
                     onChange={setDraft}
@@ -389,7 +423,7 @@ function Direct() {
                     <Markdown content="The migration in step 3. **@ada** it renames a column the larkspur dashboards read." />
                 </ChatMessage>
             </div>
-            <div className="shrink-0 px-5 pb-4">
+            <div className="shrink-0 px-(--density-chat-inset) pb-4">
                 <MessageComposer
                     value={draft}
                     onChange={setDraft}
@@ -429,7 +463,7 @@ function NewChannelPage() {
                     </div>
                 </div>
             </div>
-            <div className="shrink-0 px-5 pb-4">
+            <div className="shrink-0 px-(--density-chat-inset) pb-4">
                 <MessageComposer
                     value={draft}
                     onChange={setDraft}
