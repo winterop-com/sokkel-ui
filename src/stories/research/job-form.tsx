@@ -469,7 +469,9 @@ export function JobDialog({
                 {top}
                 {children}
                 <footer className="-mx-4 -mb-4 flex min-h-15 items-center justify-end gap-2 border-t bg-muted/50 px-4 py-3 sm:rounded-b-xl">
-                    {status !== undefined && status !== null && <div className="mr-auto flex min-w-0 items-center overflow-hidden sm:mr-0">{status}</div>}
+                    {status !== undefined && status !== null && (
+                        <div className="mr-auto flex min-w-0 items-center overflow-hidden sm:mr-0">{status}</div>
+                    )}
                     <Button type="button" variant="ghost" onClick={form.reset}>
                         Cancel
                     </Button>
