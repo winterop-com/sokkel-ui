@@ -227,7 +227,7 @@ export function FileList({
                 <div
                     role="row"
                     className={cn(
-                        'sticky top-0 z-10 grid h-(--density-panel-head) items-center gap-3 border-b border-border-strong bg-panel-ground px-(--density-panel-pad) text-[length:var(--table-head-size)] font-medium tracking-[var(--table-head-tracking)] text-muted-foreground [text-transform:var(--table-head-transform)]',
+                        'sticky top-0 z-10 grid h-(--density-panel-head) items-center gap-3 border-b border-border-strong bg-panel-ground px-(--density-panel-pad) text-[length:var(--table-head-size)] font-[number:var(--table-head-weight)] tracking-[var(--table-head-tracking)] text-muted-foreground [text-transform:var(--table-head-transform)]',
                         template,
                     )}
                 >
