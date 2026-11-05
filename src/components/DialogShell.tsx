@@ -35,9 +35,12 @@ const WORDS: DialogShellWords = { cancel: 'Cancel', back: 'Back' }
 export const NESTED =
     'data-nested-dialog-open:after:pointer-events-none data-nested-dialog-open:after:absolute data-nested-dialog-open:after:inset-0 data-nested-dialog-open:after:rounded-[inherit] data-nested-dialog-open:after:bg-black/40'
 
-/** What the dialog focuses first when it opens: the first control in its body, ahead of the header. */
-const FOCUSABLE =
-    'input:not([disabled]):not([type=hidden]), textarea:not([disabled]), select:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+/** What the dialog focuses first when it opens: the first field in its body, ahead of the header. */
+const FIELD = [
+    'input:not([disabled]):not([type=hidden]):not([type=file]):not([aria-hidden=true]):not([tabindex="-1"])',
+    'textarea:not([disabled])',
+    'select:not([disabled])',
+].join(', ')
 
 /**
  * Every dialog's frame: a title (and an optional line under it), the body that scrolls when it
@@ -45,7 +48,7 @@ const FOCUSABLE =
  *
  * On a phone the dialog is a full-screen sheet with its footer held to the bottom, so the verbs
  * are always in reach. A shut confirm stays focusable and carries its reason as a tooltip rather
- * than going dead. Opening focuses the first control in the body. While the confirm is busy, Cancel, Back, Escape and the backdrop do nothing.
+ * than going dead. Opening focuses the first field in the body. While the confirm is busy, Cancel, Back, Escape and the backdrop do nothing.
  */
 export function DialogShell({
     open,
@@ -98,7 +101,7 @@ export function DialogShell({
         >
             <DialogContent
                 showCloseButton={confirm === undefined && dismissible}
-                initialFocus={() => body.current?.querySelector<HTMLElement>(FOCUSABLE) ?? true}
+                initialFocus={() => body.current?.querySelector<HTMLElement>(FIELD) ?? true}
                 aria-busy={busy || undefined}
                 className={cn(
                     'flex max-h-[calc(100svh-4rem)] flex-col gap-4',

@@ -62,7 +62,7 @@ export function NewJobWizard() {
     const [code, setCode] = useState('sync-inventory')
     const [name, setName] = useState('Sync inventory')
     const [source, setSource] = useState<(typeof SOURCES)[number]['value']>('http')
-    const [url, setUrl] = useState('https://api.example.org/v1/inventory')
+    const [url, setUrl] = useState('https://api.example.org/stock')
     const [cron, setCron] = useState('0 */4 * * *')
     const [onFail, setOnFail] = useState(true)
     const [onSucceed, setOnSucceed] = useState(false)
