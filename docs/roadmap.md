@@ -21,6 +21,12 @@ Every example on shared components. An audit of the stories found parts the exam
 hand; each becomes a library component or an option on one, and every example takes it, so a change
 reaches them all. Done in waves, one PR each.
 
+- **Layout components first.** The stories arrange components with raw flex and grid (about 840
+  and 130 uses in 139 files), and that glue is where layout bugs get patched one story at a time.
+  Layout components (a stack, a row, columns, a split with an aside, a page body) whose cells always
+  shrink, wrap or scroll correctly carry it instead; every story moves onto them, and
+  `src/rules.test.ts` then rejects raw layout in a story, so a layout fix lands once.
+
 - **Use what exists** (about 45 places): label and control pairs as `Field`, titled boxes as
   `Section`, the uppercase panel heads as `PanelSection`, search and filters in `DataTable`'s
   `toolbar`, `TopBar`, `StatusLine`, `Tabs` with arrow keys, `AvatarGroup`, `Toggle`, `TrackList`,
