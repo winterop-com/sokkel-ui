@@ -10,8 +10,8 @@ to `plan.md` when it ships.
   second.
 - The library was renamed from winterop-ui to sokkel-ui after 0.4.0: the repository is
   `winterop-com/sokkel-ui`, the package `@winterop-com/sokkel-ui`, the Storybook
-  https://winterop-com.github.io/sokkel-ui/. 0.2.0 to 0.4.0 were published as `@winterop-com/ui`
-  and are republished under the new name; the old package is then deleted.
+  https://winterop-com.github.io/sokkel-ui/. 0.2.0 to 0.4.0 are republished under the new name, and
+  the old `@winterop-com/ui` package is deleted.
 - No app uses it yet. Until one does, a PR merges as soon as the local gates pass and main's CI
   catches the rest; a release still waits for green.
 
