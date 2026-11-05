@@ -47,7 +47,7 @@
         "tokens": "bun scripts/build-tokens.ts",
         "storybook": "storybook dev -p 6106 --no-open",
         "build-storybook": "storybook build -o storybook-static",
-        "typecheck": "tsc --noEmit",
+        "typecheck": "bun check",
         "test": "vitest run",
         "test:visual": "bun run build-storybook && playwright test",
         "test:visual:update": "bun run build-storybook && playwright test --update-snapshots",
