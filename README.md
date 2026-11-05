@@ -1,12 +1,7 @@
 # sokkel-ui
 
 [![CI](https://github.com/winterop-com/sokkel-ui/actions/workflows/ci.yaml/badge.svg)](https://github.com/winterop-com/sokkel-ui/actions/workflows/ci.yaml)
-[![Storybook](https://github.com/winterop-com/sokkel-ui/actions/workflows/pages.yaml/badge.svg)](https://winterop-com.github.io/sokkel-ui/)
 [![Browse the Storybook](https://img.shields.io/badge/storybook-browse-ff4785?logo=storybook&logoColor=white)](https://winterop-com.github.io/sokkel-ui/)
-![React 19](https://img.shields.io/badge/react-19-61dafb?logo=react&logoColor=white)
-![Base UI](https://img.shields.io/badge/base%20ui-1.9-000000)
-![Tailwind CSS 4](https://img.shields.io/badge/tailwind%20css-4-38bdf8?logo=tailwindcss&logoColor=white)
-![TypeScript 7](https://img.shields.io/badge/typescript-7-3178c6?logo=typescript&logoColor=white)
 ![License: proprietary](https://img.shields.io/badge/license-proprietary-lightgrey)
 
 A shared React component library: one set of tokens and themes, Base UI primitives, the patterns
