@@ -5,7 +5,8 @@ import { cn } from '../lib/cn'
 /**
  * A titled part of a page.
  *
- * `boxed`, the default, is a bordered surface whose head is a bar of its own. `flat` is a heading
+ * `boxed`, the default, is a bordered surface whose head is a bar of its own, its title set like a table's
+ * column heads but in the text color, so every box's head reads alike. `flat` is a heading
  * over a rule with the content on the page's own ground, for the rare page that wants it. Either takes actions at the right end of its
  * heading, and a count or a fact beside the title.
  */
@@ -33,7 +34,7 @@ export function Section({
         return (
             <section className={cn('overflow-hidden rounded-surface border border-border-strong bg-card', className)}>
                 <header className="flex h-(--density-panel-head) items-center gap-2 border-b border-border-strong bg-panel-ground px-(--density-panel-pad)">
-                    <h2 className="truncate text-sm font-medium">{title}</h2>
+                    <h2 className="truncate text-[length:var(--table-head-size)] font-[number:var(--table-head-weight)]">{title}</h2>
                     {meta !== undefined && <span className="font-mono text-xs text-muted-foreground">{meta}</span>}
                     {actions !== undefined && <div className="ml-auto flex items-center gap-1">{actions}</div>}
                 </header>

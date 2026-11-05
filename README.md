@@ -69,7 +69,8 @@ bun add @winterop-com/ui@0.3.0
 ```
 
 An app that brings its own Tailwind imports `@winterop-com/ui/tokens.css` (the tokens, themes and
-density levels); one that does not imports `@winterop-com/ui/styles.css` (Tailwind, the fonts, the
+density levels), with `motion.css` (the motion setting) and `typography.css` (mono sized to the text
+around it); one that does not imports `@winterop-com/ui/styles.css` (Tailwind, the fonts, the
 tokens and base styles). Components import by path, such as `@winterop-com/ui/DialogShell` or
 `@winterop-com/ui/primitives/button`.
 

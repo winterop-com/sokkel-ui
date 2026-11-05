@@ -22,6 +22,7 @@
         "./styles.css": "./src/styles/index.css",
         "./tokens.css": "./src/styles/tokens.css",
         "./motion.css": "./src/styles/motion.css",
+        "./typography.css": "./src/styles/typography.css",
         "./tokens.json": "./tokens/tokens.json",
         "./primitives/*": {
             "types": "./dist/components/ui/*.d.ts",
