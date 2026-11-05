@@ -114,7 +114,10 @@ export function PermissionMatrix({
     const [picked, setPicked] = useState(roles[0]?.id ?? '')
     const shown = one ? roles.filter((role) => role.id === picked).slice(0, 1) : roles
     return (
-        <div ref={box} className={cn('min-w-0 overflow-hidden rounded-surface border border-border-strong bg-card', className)}>
+        <div
+            ref={box}
+            className={cn('min-w-0 overflow-hidden rounded-surface border border-border-strong bg-card [contain:inline-size]', className)}
+        >
             {one && (
                 <div className="flex items-center gap-2 border-b border-border px-(--density-panel-pad) py-2">
                     <span className={TABLE_HEAD_TEXT}>{words.role}</span>

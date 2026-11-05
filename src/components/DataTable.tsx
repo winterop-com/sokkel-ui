@@ -705,7 +705,13 @@ export function DataTable<T>({
     }
 
     return (
-        <div className={cn('flex min-h-0 min-w-0 flex-col overflow-hidden rounded-surface border border-border-strong bg-card', className)}>
+        // Contained, so the table takes its width from its container and never widens a grid, a flex row or the page.
+        <div
+            className={cn(
+                'flex min-h-0 min-w-0 flex-col overflow-hidden rounded-surface border border-border-strong bg-card [contain:inline-size]',
+                className,
+            )}
+        >
             <div className="flex h-(--density-panel-head) shrink-0 items-center gap-2 border-b border-border px-(--density-panel-pad) text-sm">
                 {selection.size > 0 ? (
                     // The selection's actions scroll sideways when the bar is too narrow for them.
