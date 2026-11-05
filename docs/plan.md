@@ -38,26 +38,20 @@ current state). A canvas given `editing`, and PipelineGraph with it, becomes an 
 to connect, Delete to remove, boxes to drag, a menu on right-click and a connection dropped on
 empty ground, each reported to the app, which owns the graph. Views select only by default.
 
-## Still to build
+## Validation
 
-- SchemaForm: a form generated from a JSON Schema, built from Field and the inputs, validated
-  against the schema.
+Picked from the research in Research/Validation: option F. A field with a problem gets a colored
+edge and a mark at the end of its input; pressing the mark opens what is wrong, what to do, and a
+fix when one is plain. The dialog footer counts what stops the submit, beside the verb, and pressing
+the count opens the first. Nothing is inserted between fields, so a form never changes height.
+Issues show once a field is left with a value, or once the form is submitted, and go the moment the
+value is put right. A server's refusal lands on its field until that field is changed.
 
-## Validation and notification
+`IssueMark` and `IssueCount` carry it for any form; SchemaForm is built on them, and checks values
+with ajv against JSON Schema 2020-12.
 
-Research before building. The owner's words: a red label under an input box is "basically the
-worst we can do". To study:
-
-- how good form libraries and apps say a value is wrong: inline, at the field, as a summary at the
-  form's head that links to each field, or as a status in the dialog footer beside the verb;
-- when a message appears: on blur, on submit, or as a value is typed;
-- how a refusal from the server lands back on the field it concerns;
-- what announces it to a screen reader;
-- how notification differs from validation: toasts, banners, the status strip, and an inbox for
-  events a person missed.
-
-The result is a set of rendered options for the owner to pick from, then Field, DialogShell and the
-toasts built to the pick.
+Still to study: how notification differs from validation (toasts, banners, the status strip, and an
+inbox for events a person missed), then the toasts built to the pick.
 
 ## Later
 
@@ -65,6 +59,5 @@ toasts built to the pick.
 - Publish to a registry when apps adopt the library (see Distribution).
 - Pick the themes to keep from the candidates in Storybook and fold them into `tokens/tokens.json`;
   name each for how it looks.
-- Validation and notification, after the research above.
 - One engine per job, never two: ECharts draws every chart, maplibre every map, React Flow every
   interactive graph, Mermaid every diagram written as text. Sparklines are plain SVG.
