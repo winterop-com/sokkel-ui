@@ -6,6 +6,7 @@ import { cn } from '../lib/cn'
 import { ResizeHandle } from './ResizeHandle'
 import { Count } from './Count'
 import { Dot } from './Dot'
+import { GroupLabel } from './GroupLabel'
 
 /** One place the rail leads to. */
 export interface RailEntry {
@@ -132,7 +133,7 @@ export function Rail({
                                         </span>
                                     </div>
                                 ) : (
-                                    <p className="px-2 pt-4 pb-1.5 text-xs font-medium tracking-wide text-faint uppercase">{group.title}</p>
+                                    <GroupLabel className="px-2 pt-4 pb-1.5">{group.title}</GroupLabel>
                                 ))}
                             {group.entries.map((entry) => (
                                 <RailLink key={entry.id} entry={entry} collapsed={collapsed} renderLink={renderLink} />

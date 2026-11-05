@@ -4,6 +4,7 @@ import { useId, useState, type KeyboardEvent } from 'react'
 import { cn } from '../../lib/cn'
 import { BlockRow } from './BlockPalette'
 import { groupBlocks, type BlockGroup, type PipelineBlock } from './blocks'
+import { GroupLabel } from '../GroupLabel'
 
 /** The words a block picker says. */
 export interface BlockPickerWords {
@@ -107,7 +108,7 @@ export function BlockPicker({
                 )}
                 {listed.map(({ group, blocks: inGroup }) => (
                     <div key={group.id} role="group" aria-label={group.label}>
-                        <p className="px-2 pt-1.5 pb-0.5 text-xs font-medium tracking-wide text-faint uppercase">{group.label}</p>
+                        <GroupLabel className="px-2 pt-1.5 pb-0.5">{group.label}</GroupLabel>
                         {inGroup.map((block) => {
                             index += 1
                             const mine = index

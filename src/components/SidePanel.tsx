@@ -2,6 +2,7 @@ import { useRef, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { ResizeHandle } from './ResizeHandle'
+import { GroupLabel } from './GroupLabel'
 
 /** One tab of a side panel. */
 export interface SidePanelTab {
@@ -104,7 +105,7 @@ export function SidePanel({
 export function PanelSection({ title, children }: { title: string; children: ReactNode }) {
     return (
         <section className="flex flex-col gap-2 border-b border-border px-4 py-3 last:border-b-0">
-            <h3 className="text-xs font-medium tracking-wide text-faint uppercase">{title}</h3>
+            <GroupLabel as="h3">{title}</GroupLabel>
             {children}
         </section>
     )

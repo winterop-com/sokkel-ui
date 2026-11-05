@@ -4,6 +4,7 @@ import { useState, type DragEvent } from 'react'
 import { cn } from '../../lib/cn'
 import { SearchField } from '../SearchField'
 import { GRAPH_DRAG_TYPE, groupBlocks, type BlockGroup, type PipelineBlock } from './blocks'
+import { GroupLabel } from '../GroupLabel'
 
 /** The words a palette says. */
 export interface BlockPaletteWords {
@@ -100,7 +101,9 @@ export function BlockPalette({
                 {listed.length === 0 && <p className="px-2 py-6 text-center text-sm text-muted-foreground">{words.none}</p>}
                 {listed.map(({ group, blocks: inGroup }) => (
                     <section key={group.id} aria-label={group.label} className="pb-1.5">
-                        <h3 className="px-2 pt-2 pb-1 text-xs font-medium tracking-wide text-faint uppercase">{group.label}</h3>
+                        <GroupLabel as="h3" className="px-2 pt-2 pb-1">
+                            {group.label}
+                        </GroupLabel>
                         <ul className="flex flex-col">
                             {inGroup.map((block) => (
                                 <li key={block.kind}>

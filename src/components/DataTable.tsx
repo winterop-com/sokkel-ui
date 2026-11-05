@@ -41,6 +41,7 @@ import {
 } from './ui/dropdown-menu'
 import { NativeSelect, NativeSelectOption } from './ui/native-select'
 import { Skeleton } from './ui/skeleton'
+import { TABLE_HEAD_TEXT } from '../lib/table'
 
 /** One column: its name, how wide it is, how a row draws its cell, and how it sorts. */
 export interface DataColumn<T> {
@@ -854,7 +855,10 @@ export function DataTable<T>({
                     <div
                         role="row"
                         aria-rowindex={1}
-                        className="sticky top-0 z-[2] grid h-(--density-row) items-center border-b border-border-strong bg-panel-ground text-[length:var(--table-head-size)] font-[number:var(--table-head-weight)] tracking-[var(--table-head-tracking)] text-muted-foreground [text-transform:var(--table-head-transform)]"
+                        className={cn(
+                            'sticky top-0 z-[2] grid h-(--density-row) items-center border-b border-border-strong bg-panel-ground',
+                            TABLE_HEAD_TEXT,
+                        )}
                         style={grid}
                     >
                         {selectable && (
