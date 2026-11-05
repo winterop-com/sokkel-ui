@@ -1,18 +1,23 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import {
+    Ban,
     Download,
     Gauge,
     KeyRound,
     LayoutDashboard,
     ListChecks,
-    MoreHorizontal,
+    Pencil,
     Play,
     Plus,
+    RotateCcw,
     ScrollText,
+    Send,
     ShieldCheck,
+    Trash2,
     TriangleAlert,
     UserPlus,
     Users,
+    X,
 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
@@ -24,6 +29,7 @@ import { BarGauge } from '../../components/dashboard/BarGauge'
 import type { PanelSeries } from '../../components/dashboard/series'
 import type { Threshold } from '../../components/dashboard/thresholds'
 import { TimeSeriesPanel } from '../../components/dashboard/TimeSeriesPanel'
+import { DataTable, type DataAction, type DataColumn } from '../../components/DataTable'
 import { DescriptionList } from '../../components/DescriptionList'
 import { ConfirmDialog, DialogShell } from '../../components/DialogShell'
 import { DiffView } from '../../components/DiffView'
@@ -43,20 +49,9 @@ import { PanelSection, SidePanel } from '../../components/SidePanel'
 import { StatusChip, type Status } from '../../components/StatusChip'
 import { TopBar, type Crumb } from '../../components/TopBar'
 import { Avatar, AvatarFallback, AvatarGroup } from '../../components/ui/avatar'
+import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
 import { Checkbox } from '../../components/ui/checkbox'
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuSeparator,
-    DropdownMenuSub,
-    DropdownMenuSubContent,
-    DropdownMenuSubTrigger,
-    DropdownMenuTrigger,
-} from '../../components/ui/dropdown-menu'
 import { Input } from '../../components/ui/input'
 import { RadioGroup, RadioGroupItem } from '../../components/ui/radio-group'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
@@ -94,16 +89,34 @@ interface Member {
     email: string
     role: Role
     active: string
+    /** Minutes since they were last active, for sorting; never active sorts last. */
+    idle: number
     state: MemberState
 }
 
 const MEMBERS: Member[] = [
-    { username: 'ada', name: 'Ada Berg', email: 'ada@example.org', role: 'owner', active: 'now', state: 'active' },
-    { username: 'grace', name: 'Grace Holm', email: 'grace@example.org', role: 'admin', active: '12 min ago', state: 'active' },
-    { username: 'linus', name: 'Linus Dahl', email: 'linus@example.org', role: 'editor', active: '2 h ago', state: 'active' },
-    { username: 'margaret', name: 'Margaret Lund', email: 'margaret@example.org', role: 'operator', active: 'yesterday', state: 'active' },
-    { username: 'ops', name: 'Operations', email: 'ops@example.org', role: 'viewer', active: 'Oct 12', state: 'suspended' },
-    { username: '', name: 'data@example.org', email: 'data@example.org', role: 'editor', active: '-', state: 'invited' },
+    { username: 'ada', name: 'Ada Berg', email: 'ada@example.org', role: 'owner', active: 'now', idle: 0, state: 'active' },
+    { username: 'grace', name: 'Grace Holm', email: 'grace@example.org', role: 'admin', active: '12 min ago', idle: 12, state: 'active' },
+    { username: 'linus', name: 'Linus Dahl', email: 'linus@example.org', role: 'editor', active: '2 h ago', idle: 120, state: 'active' },
+    {
+        username: 'margaret',
+        name: 'Margaret Lund',
+        email: 'margaret@example.org',
+        role: 'operator',
+        active: 'yesterday',
+        idle: 1_500,
+        state: 'active',
+    },
+    { username: 'ops', name: 'Operations', email: 'ops@example.org', role: 'viewer', active: 'Oct 12', idle: 33_000, state: 'suspended' },
+    {
+        username: '',
+        name: 'data@example.org',
+        email: 'data@example.org',
+        role: 'editor',
+        active: '-',
+        idle: Number.MAX_SAFE_INTEGER,
+        state: 'invited',
+    },
 ]
 
 interface Invite {
@@ -112,11 +125,13 @@ interface Invite {
     by: string
     sent: string
     expires: string
+    /** Days until the invite expires. */
+    left: number
 }
 
 const INVITES: Invite[] = [
-    { email: 'data@example.org', role: 'editor', by: 'grace', sent: 'Nov 2', expires: 'in 5 days' },
-    { email: 'oncall@example.org', role: 'viewer', by: 'ada', sent: 'Oct 30', expires: 'tomorrow' },
+    { email: 'data@example.org', role: 'editor', by: 'grace', sent: 'Nov 2', expires: 'in 5 days', left: 5 },
+    { email: 'oncall@example.org', role: 'viewer', by: 'ada', sent: 'Oct 30', expires: 'tomorrow', left: 1 },
 ]
 
 function groups(view: View): RailGroup[] {
@@ -158,85 +173,140 @@ function Person({ who, size = 'sm' }: { who: string; size?: 'sm' | 'default' }) 
 
 /* Members */
 
-function MemberMenu({ member, onRemove }: { member: Member; onRemove: (member: Member) => void }) {
-    const [role, setRole] = useState<string>(member.role)
+const memberColumns: DataColumn<Member>[] = [
+    {
+        id: 'name',
+        header: 'Name',
+        width: 'minmax(10rem,1.2fr)',
+        cell: (member) => (
+            <span className="flex min-w-0 items-center gap-2.5">
+                <Person who={member.username || member.email} />
+                <span className="truncate">{member.name}</span>
+            </span>
+        ),
+        sortValue: (member) => member.name,
+    },
+    {
+        id: 'username',
+        header: 'Username',
+        width: '7rem',
+        cell: (member) =>
+            member.username === '' ? (
+                <span className="text-faint">-</span>
+            ) : (
+                <span className="font-mono text-muted-foreground">{member.username}</span>
+            ),
+        sortValue: (member) => member.username,
+    },
+    { id: 'email', header: 'Email', width: 'minmax(10rem,1fr)', cell: (member) => member.email, sortValue: (member) => member.email },
+    {
+        id: 'role',
+        header: 'Role',
+        width: '6rem',
+        cell: (member) => ROLE_LABEL[member.role],
+        sortValue: (member) => ROLE_IDS.indexOf(member.role),
+    },
+    {
+        id: 'active',
+        header: 'Last active',
+        width: '7rem',
+        cell: (member) => <span className="text-muted-foreground tabular-nums">{member.active}</span>,
+        sortValue: (member) => member.idle,
+    },
+    {
+        id: 'state',
+        header: 'Status',
+        width: '6.5rem',
+        cell: (member) => <StatusChip status={MEMBER_STATE[member.state]} label={member.state} />,
+        sortValue: (member) => member.state,
+    },
+]
+
+const inviteColumns: DataColumn<Invite>[] = [
+    {
+        id: 'email',
+        header: 'Address',
+        width: 'minmax(12rem,1.4fr)',
+        cell: (invite) => (
+            <span className="flex min-w-0 items-center gap-2.5">
+                <Person who={invite.email} />
+                <span className="truncate">{invite.email}</span>
+            </span>
+        ),
+        sortValue: (invite) => invite.email,
+    },
+    {
+        id: 'role',
+        header: 'Role',
+        width: '6rem',
+        cell: (invite) => ROLE_LABEL[invite.role],
+        sortValue: (invite) => ROLE_IDS.indexOf(invite.role),
+    },
+    {
+        id: 'by',
+        header: 'Invited by',
+        width: '7rem',
+        cell: (invite) => <span className="font-mono text-muted-foreground">{invite.by}</span>,
+        sortValue: (invite) => invite.by,
+    },
+    {
+        id: 'sent',
+        header: 'Sent',
+        width: '6rem',
+        cell: (invite) => <span className="text-muted-foreground tabular-nums">{invite.sent}</span>,
+        sortValue: (invite) => -invite.left,
+    },
+    {
+        id: 'expires',
+        header: 'Expires',
+        width: '7rem',
+        cell: (invite) => (
+            <span className={cn('tabular-nums', invite.left <= 1 ? 'text-warning-ink' : 'text-muted-foreground')}>{invite.expires}</span>
+        ),
+        sortValue: (invite) => invite.left,
+    },
+]
+
+/** The roles a person can be given, each with what it may do; the owner is never given. */
+function RoleChoice({ id, label, value, onChange }: { id: string; label: string; value: Role; onChange: (role: Role) => void }) {
     return (
-        <DropdownMenu>
-            <DropdownMenuTrigger
-                aria-label={`Actions for ${member.username || member.email}`}
-                className="flex size-7 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-secondary hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid"
-            >
-                <MoreHorizontal className="size-4" aria-hidden />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
-                <DropdownMenuSub>
-                    <DropdownMenuSubTrigger>Change role</DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent className="w-36">
-                        <DropdownMenuRadioGroup value={role} onValueChange={setRole}>
-                            {ROLE_IDS.map((id) => (
-                                <DropdownMenuRadioItem key={id} value={id}>
-                                    {ROLE_LABEL[id]}
-                                </DropdownMenuRadioItem>
-                            ))}
-                        </DropdownMenuRadioGroup>
-                    </DropdownMenuSubContent>
-                </DropdownMenuSub>
-                <DropdownMenuItem>{member.state === 'suspended' ? 'Reactivate' : 'Suspend'}</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem variant="destructive" onClick={() => onRemove(member)}>
-                    Remove
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex flex-col gap-1.5">
+            <span id={id} className="text-sm font-medium">
+                {label}
+            </span>
+            <RadioGroup aria-labelledby={id} value={value} onValueChange={(next) => onChange(next as Role)} className="gap-0">
+                {ROLE_IDS.filter((role) => role !== 'owner').map((role) => (
+                    <label
+                        key={role}
+                        className={cn(
+                            'flex cursor-pointer items-start gap-3 rounded-control px-2 py-2 hover:bg-secondary/60',
+                            value === role && 'bg-secondary',
+                        )}
+                    >
+                        <RadioGroupItem value={role} className="mt-0.5" />
+                        <span className="flex min-w-0 flex-col">
+                            <span className="text-sm font-medium">{ROLE_LABEL[role]}</span>
+                            <span className="text-xs text-muted-foreground">{ROLE_ABOUT[role]}</span>
+                        </span>
+                    </label>
+                ))}
+            </RadioGroup>
+        </div>
     )
 }
 
-function memberColumns(onRemove: (member: Member) => void): Column<Member>[] {
-    return [
-        {
-            id: 'name',
-            header: 'Name',
-            width: 'minmax(10rem,1.2fr)',
-            cell: (member) => (
-                <span className="flex min-w-0 items-center gap-2.5">
-                    <Person who={member.username || member.email} />
-                    <span className="truncate">{member.name}</span>
-                </span>
-            ),
-        },
-        {
-            id: 'username',
-            header: 'Username',
-            width: '7rem',
-            cell: (member) =>
-                member.username === '' ? (
-                    <span className="text-faint">-</span>
-                ) : (
-                    <span className="font-mono text-muted-foreground">{member.username}</span>
-                ),
-        },
-        { id: 'email', header: 'Email', width: 'minmax(0,1fr)', cell: (member) => <span className="truncate">{member.email}</span> },
-        { id: 'role', header: 'Role', width: '6rem', cell: (member) => ROLE_LABEL[member.role] },
-        {
-            id: 'active',
-            header: 'Last active',
-            width: '6.5rem',
-            cell: (member) => <span className="text-muted-foreground tabular-nums">{member.active}</span>,
-        },
-        {
-            id: 'state',
-            header: 'Status',
-            width: '6rem',
-            cell: (member) => <StatusChip status={MEMBER_STATE[member.state]} label={member.state} />,
-        },
-        {
-            id: 'actions',
-            header: <span className="sr-only">Actions</span>,
-            width: '2rem',
-            align: 'end',
-            cell: (member) => <MemberMenu member={member} onRemove={onRemove} />,
-        },
-    ]
+function RoleDialog({ member, onOpenChange }: { member: Member | null; onOpenChange: (open: boolean) => void }) {
+    const [role, setRole] = useState<Role>(member?.role ?? 'editor')
+    return (
+        <DialogShell
+            open={member !== null}
+            onOpenChange={onOpenChange}
+            title={`Change the role of ${member?.username || (member?.email ?? '')}`}
+            confirm={{ label: 'Change role', onConfirm: () => onOpenChange(false) }}
+        >
+            <RoleChoice id="member-role" label="Role" value={role} onChange={setRole} />
+        </DialogShell>
+    )
 }
 
 function InviteDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
@@ -274,28 +344,7 @@ function InviteDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (op
                 />
                 <p className="text-xs text-muted-foreground">Separate them with commas, or paste a list.</p>
             </div>
-            <div className="flex flex-col gap-1.5">
-                <span id="invite-role" className="text-sm font-medium">
-                    Role
-                </span>
-                <RadioGroup aria-labelledby="invite-role" value={role} onValueChange={(next) => setRole(next as Role)} className="gap-0">
-                    {ROLE_IDS.filter((id) => id !== 'owner').map((id) => (
-                        <label
-                            key={id}
-                            className={cn(
-                                'flex cursor-pointer items-start gap-3 rounded-control px-2 py-2 hover:bg-secondary/60',
-                                role === id && 'bg-secondary',
-                            )}
-                        >
-                            <RadioGroupItem value={id} className="mt-0.5" />
-                            <span className="flex min-w-0 flex-col">
-                                <span className="text-sm font-medium">{ROLE_LABEL[id]}</span>
-                                <span className="text-xs text-muted-foreground">{ROLE_ABOUT[id]}</span>
-                            </span>
-                        </label>
-                    ))}
-                </RadioGroup>
-            </div>
+            <RoleChoice id="invite-role" label="Role" value={role} onChange={setRole} />
         </DialogShell>
     )
 }
@@ -305,6 +354,7 @@ function MembersPage({ inviting = false }: { inviting?: boolean }) {
     const [role, setRole] = useState<string>('all')
     const [invite, setInvite] = useState(inviting)
     const [removing, setRemoving] = useState<Member | null>(null)
+    const [changing, setChanging] = useState<Member | null>(null)
     const q = query.trim().toLowerCase()
     const rows = MEMBERS.filter(
         (member) =>
@@ -338,43 +388,45 @@ function MembersPage({ inviting = false }: { inviting?: boolean }) {
                     </SelectContent>
                 </Select>
             </div>
-            <ListTable
-                columns={memberColumns(setRemoving)}
+            <DataTable
+                columns={memberColumns}
                 rows={rows}
                 rowKey={(member) => member.email}
-                empty="No member matches."
-                foot={`${String(rows.length)} of ${String(MEMBERS.length)}`}
+                rowActions={(member) => [
+                    { id: 'role', label: 'Change role', icon: <ShieldCheck />, onSelect: () => setChanging(member) },
+                    {
+                        id: 'suspend',
+                        label: member.state === 'suspended' ? 'Reactivate' : 'Suspend',
+                        icon: member.state === 'suspended' ? <RotateCcw /> : <Ban />,
+                        onSelect: () => undefined,
+                    },
+                    { id: 'line', separator: true },
+                    { id: 'remove', label: 'Remove', icon: <Trash2 />, destructive: true, onSelect: () => setRemoving(member) },
+                ]}
+                minWidth="44rem"
+                words={{ empty: 'No member matches.' }}
             />
-            <Section title="Pending invites" meta={String(INVITES.length)} flush>
-                <ul className="divide-y divide-border">
-                    {INVITES.map((invite) => (
-                        <li
-                            key={invite.email}
-                            className="flex flex-wrap items-center gap-x-3 gap-y-1 px-(--density-panel-pad) py-2.5 text-sm"
-                        >
-                            <Person who={invite.email} />
-                            <span className="flex min-w-0 flex-1 flex-col">
-                                <span className="truncate">{invite.email}</span>
-                                <span className="truncate text-xs text-muted-foreground">
-                                    {ROLE_LABEL[invite.role]}, invited by <span className="font-mono">{invite.by}</span> on {invite.sent}
-                                    <span className={cn(invite.expires === 'tomorrow' && 'text-warning-ink')}>
-                                        , expires {invite.expires}
-                                    </span>
-                                </span>
-                            </span>
-                            <span className="ml-auto flex shrink-0 items-center gap-1">
-                                <Button size="sm" variant="outline">
-                                    Resend
-                                </Button>
-                                <Button size="sm" variant="ghost" className="text-critical-ink">
-                                    Revoke
-                                </Button>
-                            </span>
-                        </li>
-                    ))}
-                </ul>
+            <Section title="Pending invites" variant="flat">
+                <DataTable
+                    columns={inviteColumns}
+                    rows={INVITES}
+                    rowKey={(invite) => invite.email}
+                    rowActions={() => [
+                        { id: 'resend', label: 'Resend', icon: <Send />, onSelect: () => undefined },
+                        { id: 'line', separator: true },
+                        { id: 'revoke', label: 'Revoke', icon: <X />, destructive: true, onSelect: () => undefined },
+                    ]}
+                    minWidth="40rem"
+                />
             </Section>
             <InviteDialog open={invite} onOpenChange={setInvite} />
+            <RoleDialog
+                key={changing?.email ?? 'none'}
+                member={changing}
+                onOpenChange={(open) => {
+                    if (!open) setChanging(null)
+                }}
+            />
             <ConfirmDialog
                 open={removing !== null}
                 onOpenChange={(open) => {
@@ -473,6 +525,35 @@ const ROLES: MatrixRole[] = ROLE_IDS.map((id) => {
     }
 })
 
+const HOLDER_COLUMNS: Column<Role>[] = [
+    { id: 'role', header: 'Role', width: '8rem', cell: (id) => <span className="font-medium">{ROLE_LABEL[id]}</span> },
+    {
+        id: 'kind',
+        header: 'Kind',
+        width: '6rem',
+        cell: (id) => <span className="text-muted-foreground">{id === 'operator' ? 'custom' : 'built in'}</span>,
+    },
+    {
+        id: 'members',
+        header: 'Members',
+        width: 'minmax(0,1fr)',
+        cell: (id) => (
+            <span className="flex min-w-0 items-center gap-3">
+                <AvatarGroup className="shrink-0">
+                    {holders(id).map((person) => (
+                        <Person key={person.email} who={person.username} />
+                    ))}
+                </AvatarGroup>
+                <span className="min-w-0 truncate font-mono text-xs text-muted-foreground">
+                    {holders(id)
+                        .map((person) => person.username)
+                        .join(', ')}
+                </span>
+            </span>
+        ),
+    },
+]
+
 function RolesPage() {
     const [grants, setGrants] = useState<Grants>(EDITED)
     const [saved, setSaved] = useState<Grants>(SAVED)
@@ -496,28 +577,8 @@ function RolesPage() {
                     }
                 />
                 <PermissionMatrix roles={ROLES} groups={PERMISSIONS} value={grants} saved={saved} onChange={toggle} />
-                <Section title="Who holds each role" flush>
-                    <ul className="divide-y divide-border">
-                        {ROLE_IDS.map((id) => {
-                            const people = holders(id)
-                            return (
-                                <li key={id} className="flex items-center gap-3 px-(--density-panel-pad) py-2.5 text-sm">
-                                    <span className="flex w-28 shrink-0 flex-col sm:w-40">
-                                        <span className="font-medium">{ROLE_LABEL[id]}</span>
-                                        <span className="text-xs text-muted-foreground">{id === 'operator' ? 'custom' : 'built in'}</span>
-                                    </span>
-                                    <AvatarGroup className="shrink-0">
-                                        {people.map((person) => (
-                                            <Person key={person.email} who={person.username} />
-                                        ))}
-                                    </AvatarGroup>
-                                    <span className="min-w-0 truncate font-mono text-xs text-muted-foreground">
-                                        {people.map((person) => person.username).join(', ')}
-                                    </span>
-                                </li>
-                            )
-                        })}
-                    </ul>
+                <Section title="Who holds each role" variant="flat">
+                    <ListTable columns={HOLDER_COLUMNS} rows={[...ROLE_IDS]} rowKey={(id) => id} hover={false} />
                 </Section>
             </Page>
             <SaveBar count={changes} onSave={() => setSaved(grants)} onDiscard={() => setGrants(saved)} />
@@ -536,6 +597,10 @@ interface Token {
     used: string
     expires: string
     tone: ExpiryTone
+    /** Days since it was made, minutes since it was used, and days until it expires, for sorting. */
+    age: number
+    idle: number
+    left: number
 }
 
 const TOKENS: Token[] = [
@@ -546,8 +611,21 @@ const TOKENS: Token[] = [
         used: '14 min ago',
         expires: 'Nov 7, in 3 days',
         tone: 'soon',
+        age: 90,
+        idle: 14,
+        left: 3,
     },
-    { name: 'metrics-export', scopes: ['runs:read'], created: 'Jun 2, ada', used: '2 h ago', expires: 'Dec 31', tone: 'normal' },
+    {
+        name: 'metrics-export',
+        scopes: ['runs:read'],
+        created: 'Jun 2, ada',
+        used: '2 h ago',
+        expires: 'Dec 31',
+        tone: 'normal',
+        age: 155,
+        idle: 120,
+        left: 57,
+    },
     {
         name: 'backup-sync',
         scopes: ['secrets:read', 'projects:read', 'runs:read'],
@@ -555,8 +633,21 @@ const TOKENS: Token[] = [
         used: 'Oct 2',
         expires: 'never',
         tone: 'normal',
+        age: 235,
+        idle: 46_000,
+        left: Number.MAX_SAFE_INTEGER,
     },
-    { name: 'old-webhook', scopes: ['runs:start'], created: 'Feb 1, grace', used: 'Feb 20', expires: 'Oct 30, expired', tone: 'expired' },
+    {
+        name: 'old-webhook',
+        scopes: ['runs:start'],
+        created: 'Feb 1, grace',
+        used: 'Feb 20',
+        expires: 'Oct 30, expired',
+        tone: 'expired',
+        age: 276,
+        idle: 365_000,
+        left: -5,
+    },
 ]
 
 const NEW_TOKEN: Token = {
@@ -566,10 +657,17 @@ const NEW_TOKEN: Token = {
     used: 'never',
     expires: 'Feb 2, 2027',
     tone: 'normal',
+    age: 0,
+    idle: Number.MAX_SAFE_INTEGER,
+    left: 90,
 }
 
 function Scope({ scope }: { scope: string }) {
-    return <span className="inline-flex rounded-chip bg-muted px-1.5 py-0.5 font-mono text-xs whitespace-nowrap">{scope}</span>
+    return (
+        <Badge variant="secondary" className="font-mono">
+            {scope}
+        </Badge>
+    )
 }
 
 function Expiry({ token }: { token: Token }) {
@@ -582,12 +680,18 @@ function Expiry({ token }: { token: Token }) {
     )
 }
 
-const TOKEN_COLUMNS: Column<Token>[] = [
-    { id: 'name', header: 'Name', width: 'minmax(8rem,0.8fr)', cell: (token) => <span className="truncate font-mono">{token.name}</span> },
+const TOKEN_COLUMNS: DataColumn<Token>[] = [
+    {
+        id: 'name',
+        header: 'Name',
+        width: 'minmax(8rem,0.8fr)',
+        cell: (token) => <span className="font-mono">{token.name}</span>,
+        sortValue: (token) => token.name,
+    },
     {
         id: 'scopes',
         header: 'Scopes',
-        width: 'minmax(0,1.4fr)',
+        width: 'minmax(10rem,1.4fr)',
         cell: (token) => (
             <span className="flex min-w-0 gap-1 overflow-hidden">
                 {token.scopes.map((scope) => (
@@ -595,31 +699,29 @@ const TOKEN_COLUMNS: Column<Token>[] = [
                 ))}
             </span>
         ),
+        sortValue: (token) => token.scopes.length,
     },
     {
         id: 'created',
         header: 'Created',
         width: '7.5rem',
         cell: (token) => <span className="text-muted-foreground tabular-nums">{token.created}</span>,
+        sortValue: (token) => token.age,
     },
     {
         id: 'used',
         header: 'Last used',
         width: '6.5rem',
         cell: (token) => <span className="text-muted-foreground tabular-nums">{token.used}</span>,
+        sortValue: (token) => token.idle,
     },
-    { id: 'expires', header: 'Expires', width: '9rem', cell: (token) => <Expiry token={token} /> },
-    {
-        id: 'actions',
-        header: <span className="sr-only">Actions</span>,
-        width: '4.5rem',
-        align: 'end',
-        cell: () => (
-            <Button size="xs" variant="ghost" className="text-critical-ink">
-                Revoke
-            </Button>
-        ),
-    },
+    { id: 'expires', header: 'Expires', width: '9rem', cell: (token) => <Expiry token={token} />, sortValue: (token) => token.left },
+]
+
+const tokenActions = (): DataAction[] => [
+    { id: 'rename', label: 'Rename', icon: <Pencil />, onSelect: () => undefined },
+    { id: 'line', separator: true },
+    { id: 'revoke', label: 'Revoke', icon: <X />, destructive: true, onSelect: () => undefined },
 ]
 
 const SCOPES = [
@@ -652,6 +754,11 @@ function TokenDialog({
     const [name, setName] = useState('release-bot')
     const [scopes, setScopes] = useState<string[]>(['runs:read', 'runs:start'])
     const [expires, setExpires] = useState<Expires>('90')
+    const [issueOpen, setIssueOpen] = useState<'name' | 'scopes' | null>(null)
+    const nameError = name.trim() === '' ? 'Give the token a name.' : null
+    const scopesError = scopes.length === 0 ? 'Choose at least one scope.' : null
+    const first = nameError !== null ? 'name' : scopesError !== null ? 'scopes' : null
+    const holdOpen = (which: 'name' | 'scopes') => (next: boolean) => setIssueOpen(next ? which : null)
     if (shown)
         return (
             <DialogShell
@@ -677,15 +784,32 @@ function TokenDialog({
             confirm={{
                 label: 'Create token',
                 onConfirm: onCreate,
-                why: name.trim() === '' ? 'Give the token a name.' : scopes.length === 0 ? 'Choose at least one scope.' : undefined,
+                why: nameError ?? scopesError ?? undefined,
             }}
+            footer={
+                <IssueCount critical={(nameError === null ? 0 : 1) + (scopesError === null ? 0 : 1)} onPick={() => setIssueOpen(first)} />
+            }
         >
-            <Field id="token-name" label="Name" hint="what uses it">
+            <Field
+                id="token-name"
+                label="Name"
+                hint="what uses it"
+                required
+                error={nameError}
+                issueOpen={issueOpen === 'name'}
+                onIssueOpenChange={holdOpen('name')}
+            >
                 <Input id="token-name" className="font-mono" value={name} onChange={(event) => setName(event.target.value)} />
             </Field>
-            <div className="flex flex-col gap-1.5">
-                <span className="text-sm font-medium">Scopes</span>
-                <div className="flex flex-col">
+            <Field
+                id="token-scopes"
+                label="Scopes"
+                required
+                error={scopesError}
+                issueOpen={issueOpen === 'scopes'}
+                onIssueOpenChange={holdOpen('scopes')}
+            >
+                <div id="token-scopes" role="group" aria-label="Scopes" className="flex flex-col">
                     {SCOPES.map((scope) => (
                         <label
                             key={scope.id}
@@ -702,7 +826,7 @@ function TokenDialog({
                         </label>
                     ))}
                 </div>
-            </div>
+            </Field>
             <div className="flex flex-col gap-1.5">
                 <span className="text-sm font-medium">Expires after</span>
                 <Segmented
@@ -746,7 +870,7 @@ function TokensPage({ opening }: { opening?: 'form' | 'shown' }) {
                     </Button>
                 }
             />
-            <ListTable columns={TOKEN_COLUMNS} rows={rows} rowKey={(token) => token.name} foot={`${String(rows.length)} tokens`} />
+            <DataTable columns={TOKEN_COLUMNS} rows={rows} rowKey={(token) => token.name} rowActions={tokenActions} minWidth="44rem" />
             <p className="text-xs text-muted-foreground">
                 A token is shown once, when it is made. One that is lost is revoked and made again.
             </p>
@@ -764,7 +888,7 @@ interface AuditEvent {
     day: string
     at: string
     who: string
-    did: ReactNode
+    did: string
     action: string
     object: string
     ip: string
@@ -909,11 +1033,62 @@ function EventDetail({ event }: { event: AuditEvent }) {
     )
 }
 
+/** Events in the order they happened, from the number in their id. */
+const happened = (event: AuditEvent) => Number(event.id.slice(1))
+
+const EVENT_COLUMNS: DataColumn<AuditEvent>[] = [
+    {
+        id: 'when',
+        header: 'When',
+        width: '9.5rem',
+        cell: (event) => (
+            <span className="font-mono text-xs text-muted-foreground tabular-nums">
+                {event.day.split(', ')[1]}, {event.at}
+            </span>
+        ),
+        sortValue: happened,
+    },
+    {
+        id: 'who',
+        header: 'Actor',
+        width: '8rem',
+        cell: (event) => (
+            <span className="flex min-w-0 items-center gap-2">
+                <Person who={event.who} />
+                <span className="truncate font-medium">{event.who}</span>
+            </span>
+        ),
+        sortValue: (event) => event.who,
+    },
+    {
+        id: 'did',
+        header: 'Event',
+        width: 'minmax(14rem,1.6fr)',
+        cell: (event) => <span className={TONE_INK[event.tone ?? 'neutral']}>{event.did}</span>,
+        sortValue: (event) => event.did,
+    },
+    {
+        id: 'action',
+        header: 'Action',
+        width: 'minmax(9rem,1fr)',
+        cell: (event) => <span className="font-mono text-xs text-muted-foreground">{event.action}</span>,
+        sortValue: (event) => event.action,
+    },
+    {
+        id: 'ip',
+        header: 'From',
+        width: '7rem',
+        align: 'end',
+        cell: (event) => <span className="font-mono text-xs text-muted-foreground tabular-nums">{event.ip}</span>,
+        sortValue: (event) => event.ip,
+        hideable: true,
+    },
+]
+
 function AuditPage({ chosen, onChoose }: { chosen: AuditEvent; onChoose: (event: AuditEvent) => void }) {
     const [query, setQuery] = useState('')
     const q = query.trim().toLowerCase()
     const shown = EVENTS.filter((event) => `${event.who} ${event.action} ${event.object} ${event.ip}`.toLowerCase().includes(q))
-    const days = [...new Set(shown.map((event) => event.day))]
     return (
         <Page>
             <PageHeader
@@ -933,49 +1108,17 @@ function AuditPage({ chosen, onChoose }: { chosen: AuditEvent; onChoose: (event:
                 <FilterChip facet="Action" />
                 <FilterChip facet="Project" />
             </div>
-            {days.length === 0 && <p className="text-sm text-muted-foreground">No event matches.</p>}
-            {days.map((day) => (
-                <section key={day} className="flex flex-col gap-2">
-                    <h2 className="text-xs font-medium tracking-wide text-faint uppercase">{day}</h2>
-                    <ol className="overflow-hidden rounded-surface border border-border-strong bg-card">
-                        {shown
-                            .filter((event) => event.day === day)
-                            .map((event) => {
-                                const active = event.id === chosen.id
-                                return (
-                                    <li key={event.id} className="border-b border-border last:border-b-0">
-                                        <button
-                                            type="button"
-                                            aria-current={active || undefined}
-                                            className={cn(
-                                                'flex w-full items-center gap-3 px-(--density-panel-pad) py-2 text-left text-sm outline-none hover:bg-secondary/60 focus-visible:bg-secondary',
-                                                active && 'bg-secondary',
-                                            )}
-                                            onClick={() => onChoose(event)}
-                                        >
-                                            <span className="w-16 shrink-0 font-mono text-xs text-muted-foreground tabular-nums">
-                                                {event.at}
-                                            </span>
-                                            <Person who={event.who} />
-                                            <span className="flex min-w-0 flex-1 flex-col gap-0.5 md:flex-row md:items-baseline md:gap-3">
-                                                <span className="min-w-0 truncate">
-                                                    <span className="font-medium">{event.who}</span>{' '}
-                                                    <span className={TONE_INK[event.tone ?? 'neutral']}>{event.did}</span>
-                                                </span>
-                                                <span className="min-w-0 truncate font-mono text-xs text-muted-foreground md:ml-auto">
-                                                    {event.action}
-                                                </span>
-                                            </span>
-                                            <span className="hidden w-24 shrink-0 text-right font-mono text-xs text-muted-foreground tabular-nums lg:inline">
-                                                {event.ip}
-                                            </span>
-                                        </button>
-                                    </li>
-                                )
-                            })}
-                    </ol>
-                </section>
-            ))}
+            <DataTable
+                columns={EVENT_COLUMNS}
+                rows={shown}
+                rowKey={(event) => event.id}
+                onOpen={onChoose}
+                opened={(event) => event.id === chosen.id}
+                total={1_284}
+                defaultHiddenColumns={new Set(['ip'])}
+                minWidth="36rem"
+                words={{ empty: 'No event matches.' }}
+            />
         </Page>
     )
 }
@@ -1172,7 +1315,7 @@ export const Tokens: StoryObj = {
     ),
 }
 
-/** The audit log grouped by day, the first event open in the side panel with its before and after. */
+/** The audit log as a table that sorts from its heads, the first event open in the side panel with its before and after. */
 export const AuditLog: StoryObj = {
     render: () => <AuditApp />,
 }

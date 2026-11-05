@@ -266,7 +266,7 @@ const TRAILS: Record<'home' | 'watch', Crumb[]> = {
 function Topics() {
     const [topic, setTopic] = useState('All')
     return (
-        <div className="-mx-1 flex [scrollbar-width:none] gap-2 overflow-x-auto px-1">
+        <div className="-mx-1 flex gap-2 overflow-x-auto px-1">
             {TOPICS.map((name) => (
                 <Button
                     key={name}

@@ -15,10 +15,10 @@ import {
 import { useState } from 'react'
 
 import { AccountMenu } from '../../components/AccountMenu'
+import { DataTable, type DataColumn } from '../../components/DataTable'
 import { DescriptionList } from '../../components/DescriptionList'
 import { Dock } from '../../components/Dock'
 import { FilterChip } from '../../components/FilterChip'
-import { ListTable, type Column } from '../../components/ListTable'
 import { LogView, type LogLine } from '../../components/LogView'
 import { PageHeader } from '../../components/PageHeader'
 import { Rail, type RailGroup } from '../../components/Rail'
@@ -76,30 +76,70 @@ interface Run {
     by: string
     started: string
     duration: string
+    /** Minutes since it started and seconds it took, for sorting; a run not yet started has neither. */
+    ago: number
+    seconds: number
 }
 
 const RUNS: Run[] = [
-    { id: 'r1', job: 'import-orders', state: 'running', by: 'schedule', started: '14:02', duration: '1m 12s' },
-    { id: 'r2', job: 'nightly-export', state: 'failed', by: 'schedule', started: '02:00', duration: '4.2s' },
-    { id: 'r3', job: 'rebuild-index', state: 'succeeded', by: 'ada', started: '01:40', duration: '6m 03s' },
-    { id: 'r4', job: 'send-digest', state: 'succeeded', by: 'schedule', started: '01:00', duration: '12.8s' },
-    { id: 'r5', job: 'sync-inventory', state: 'queued', by: 'grace', started: '-', duration: '-' },
-    { id: 'r6', job: 'sync-inventory', state: 'cancelled', by: 'linus', started: 'yesterday', duration: '38s' },
-    { id: 'r7', job: 'import-orders', state: 'succeeded', by: 'schedule', started: 'yesterday', duration: '1m 04s' },
-    { id: 'r8', job: 'nightly-export', state: 'succeeded', by: 'schedule', started: 'yesterday', duration: '3.9s' },
+    { id: 'r1', job: 'import-orders', state: 'running', by: 'schedule', started: '14:02', duration: '1m 12s', ago: 1, seconds: 72 },
+    { id: 'r2', job: 'nightly-export', state: 'failed', by: 'schedule', started: '02:00', duration: '4.2s', ago: 723, seconds: 4.2 },
+    { id: 'r3', job: 'rebuild-index', state: 'succeeded', by: 'ada', started: '01:40', duration: '6m 03s', ago: 743, seconds: 363 },
+    { id: 'r4', job: 'send-digest', state: 'succeeded', by: 'schedule', started: '01:00', duration: '12.8s', ago: 783, seconds: 12.8 },
+    { id: 'r5', job: 'sync-inventory', state: 'queued', by: 'grace', started: '-', duration: '-', ago: 0, seconds: 0 },
+    { id: 'r6', job: 'sync-inventory', state: 'cancelled', by: 'linus', started: 'yesterday', duration: '38s', ago: 1_500, seconds: 38 },
+    {
+        id: 'r7',
+        job: 'import-orders',
+        state: 'succeeded',
+        by: 'schedule',
+        started: 'yesterday',
+        duration: '1m 04s',
+        ago: 1_560,
+        seconds: 64,
+    },
+    {
+        id: 'r8',
+        job: 'nightly-export',
+        state: 'succeeded',
+        by: 'schedule',
+        started: 'yesterday',
+        duration: '3.9s',
+        ago: 2_160,
+        seconds: 3.9,
+    },
 ]
 
-const COLUMNS: Column<Run>[] = [
-    { id: 'job', header: 'Job', width: 'minmax(0,1fr)', cell: (run) => <span className="truncate font-mono">{run.job}</span> },
-    { id: 'state', header: 'State', width: '7.5rem', cell: (run) => <StatusChip status={run.state} /> },
-    { id: 'by', header: 'Started by', width: '7rem', cell: (run) => <span className="text-muted-foreground">{run.by}</span> },
-    { id: 'started', header: 'Started', width: '6.5rem', cell: (run) => <span className="tabular-nums">{run.started}</span> },
+const COLUMNS: DataColumn<Run>[] = [
+    {
+        id: 'job',
+        header: 'Job',
+        width: 'minmax(10rem,1fr)',
+        cell: (run) => <span className="font-mono">{run.job}</span>,
+        sortValue: (run) => run.job,
+    },
+    { id: 'state', header: 'State', width: '7.5rem', cell: (run) => <StatusChip status={run.state} />, sortValue: (run) => run.state },
+    {
+        id: 'by',
+        header: 'Started by',
+        width: '7rem',
+        cell: (run) => <span className="text-muted-foreground">{run.by}</span>,
+        sortValue: (run) => run.by,
+    },
+    {
+        id: 'started',
+        header: 'Started',
+        width: '6.5rem',
+        cell: (run) => <span className="tabular-nums">{run.started}</span>,
+        sortValue: (run) => -run.ago,
+    },
     {
         id: 'duration',
         header: 'Duration',
         width: '6rem',
         align: 'end',
         cell: (run) => <span className="tabular-nums">{run.duration}</span>,
+        sortValue: (run) => run.seconds,
     },
 ]
 
@@ -226,16 +266,17 @@ function Workspace({ dock = false }: { dock?: boolean }) {
                                 <FilterChip facet="Job" />
                                 <FilterChip facet="Started by" />
                             </div>
-                            <ListTable
+                            <DataTable
                                 columns={COLUMNS}
                                 rows={rows}
                                 rowKey={(run) => run.id}
-                                selected={(run) => run.id === chosen.id}
-                                onSelect={(run) => {
+                                onOpen={(run) => {
                                     setChosen(run)
                                     setPanelOpen(true)
                                 }}
-                                foot={`${rows.length} of 248`}
+                                opened={(run) => run.id === chosen.id}
+                                total={248}
+                                minWidth="36rem"
                             />
                         </Page>
                     </div>
