@@ -23,8 +23,13 @@ toggle-group, tooltip, trace.
 ## Patterns
 
 Shell, Rail, Page, PageHeader, Section, Surface, Field, CodeField, SwitchField, SearchField,
-FilterChip, ListTable, StatusChip, AccountMenu, SidePanel, DialogShell, ConfirmDialog,
+FilterChip, ListTable, DataTable, StatusChip, AccountMenu, SidePanel, DialogShell, ConfirmDialog,
 TreeSelect, AsyncSelect, CapabilityPicker.
+
+DataTable is the table for many rows: only the rows in view are drawn, at the density's one row
+height, so 50k rows sort, scroll and select at once. It sorts from its heads, selects with a bulk
+bar, hides columns, pins its first column and its row menu, opens child rows, and moves by the
+keyboard. Paging, progressive loading and an album view of cards come next, on the same rows.
 
 ## Graphs
 
