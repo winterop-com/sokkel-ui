@@ -2,20 +2,47 @@ import { PageHeader } from '../../components/PageHeader'
 import type { ReactNode } from 'react'
 
 import { Field } from '../../components/Field'
-import { ISSUE_EDGE, IssueMark, worst, type Issue } from '../../components/IssueMark'
+import { ISSUE_EDGE, worst, type Issue } from '../../components/IssueMark'
+import { ListTable, type Column } from '../../components/ListTable'
 import { StatusChip, type Status } from '../../components/StatusChip'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { cn } from '../../lib/cn'
 import { TidevannMark } from '../fixtures/TidevannMark'
 
-const RUNS: { id: number; job: string; status: Status; at: string; took: string }[] = [
+interface Run {
+    id: number
+    job: string
+    status: Status
+    at: string
+    took: string
+}
+
+const RUNS: Run[] = [
     { id: 4812, job: 'import-orders', status: 'succeeded', at: '2026-11-05 02:00', took: '1m 12s' },
     { id: 4811, job: 'import-orders', status: 'failed', at: '2026-11-04 02:00', took: '0m 41s' },
     { id: 4810, job: 'import-orders', status: 'succeeded', at: '2026-11-03 02:00', took: '1m 09s' },
     { id: 4809, job: 'import-orders', status: 'succeeded', at: '2026-11-02 02:00', took: '1m 15s' },
     { id: 4808, job: 'import-orders', status: 'cancelled', at: '2026-11-01 02:00', took: '0m 03s' },
     { id: 4807, job: 'import-orders', status: 'succeeded', at: '2026-10-31 02:00', took: '1m 11s' },
+]
+
+const RUN_COLUMNS: Column<Run>[] = [
+    { id: 'run', header: 'Run', width: '6rem', cell: (run) => <span className="font-mono text-xs">#{run.id}</span> },
+    { id: 'state', header: 'State', width: '8rem', cell: (run) => <StatusChip status={run.status} /> },
+    {
+        id: 'started',
+        header: 'Started',
+        width: 'minmax(0,1fr)',
+        cell: (run) => <span className="font-mono text-xs text-muted-foreground">{run.at}</span>,
+    },
+    {
+        id: 'took',
+        header: 'Took',
+        width: '5rem',
+        align: 'end',
+        cell: (run) => <span className="font-mono text-xs text-muted-foreground">{run.took}</span>,
+    },
 ]
 
 /**
@@ -46,41 +73,25 @@ export function Behind({ action, onAction, children }: { action?: string; onActi
                             Loads the monthly orders file into the warehouse, every night at 02:00 UTC.
                         </p>
                     </div>
-                    <table className="w-full max-w-3xl text-sm">
-                        <thead className="text-left text-xs text-muted-foreground">
-                            <tr className="border-b border-border">
-                                <th className="py-2 font-medium">Run</th>
-                                <th className="py-2 font-medium">State</th>
-                                <th className="py-2 font-medium">Started</th>
-                                <th className="py-2 text-right font-medium">Took</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {RUNS.map((run) => (
-                                <tr key={run.id} className="border-b border-border">
-                                    <td className="py-2 font-mono text-xs">#{run.id}</td>
-                                    <td className="py-2">
-                                        <StatusChip status={run.status} />
-                                    </td>
-                                    <td className="py-2 font-mono text-xs text-muted-foreground">{run.at}</td>
-                                    <td className="py-2 text-right font-mono text-xs text-muted-foreground">{run.took}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                    <ListTable columns={RUN_COLUMNS} rows={RUNS} rowKey={(run) => String(run.id)} className="max-w-3xl" />
                 </main>
             )}
         </div>
     )
 }
 
-/** A labeled input whose issues show as the mark inside it, so the dialog keeps its height. */
+/**
+ * A labeled input in the library's `Field`, which draws its issues as the mark at the input's end,
+ * so the dialog keeps its height. `issueOpen` lets the footer's count open the mark.
+ */
 export function TextField({
     id,
     label,
     value,
     onChange,
     issues = [],
+    issueOpen,
+    onIssueOpenChange,
     hint,
     required,
     mono = false,
@@ -88,12 +99,15 @@ export function TextField({
     placeholder,
     autoFocus,
     onEnter,
+    onBlur,
 }: {
     id: string
     label: string
     value: string
     onChange: (value: string) => void
     issues?: readonly Issue[]
+    issueOpen?: boolean
+    onIssueOpenChange?: (open: boolean) => void
     hint?: string
     required?: boolean
     mono?: boolean
@@ -101,28 +115,35 @@ export function TextField({
     placeholder?: string
     autoFocus?: boolean
     onEnter?: () => void
+    onBlur?: () => void
 }) {
     const tone = worst(issues)
     return (
-        <Field id={id} label={label} hint={hint} required={required}>
-            <div className="relative">
-                <Input
-                    id={id}
-                    type={type}
-                    value={value}
-                    placeholder={placeholder}
-                    autoFocus={autoFocus}
-                    spellCheck={mono ? false : undefined}
-                    autoComplete="off"
-                    aria-invalid={tone === 'critical' || undefined}
-                    onChange={(event) => onChange(event.target.value)}
-                    onKeyDown={(event) => {
-                        if (event.key === 'Enter' && onEnter !== undefined) onEnter()
-                    }}
-                    className={cn(mono && 'font-mono', tone !== null && cn('pr-9', ISSUE_EDGE[tone]))}
-                />
-                <IssueMark issues={issues} />
-            </div>
+        <Field
+            id={id}
+            label={label}
+            hint={hint}
+            required={required}
+            issues={issues}
+            issueOpen={issueOpen}
+            onIssueOpenChange={onIssueOpenChange}
+        >
+            <Input
+                id={id}
+                type={type}
+                value={value}
+                placeholder={placeholder}
+                autoFocus={autoFocus}
+                spellCheck={mono ? false : undefined}
+                autoComplete="off"
+                aria-invalid={tone === 'critical' || undefined}
+                onChange={(event) => onChange(event.target.value)}
+                onBlur={onBlur}
+                onKeyDown={(event) => {
+                    if (event.key === 'Enter' && onEnter !== undefined) onEnter()
+                }}
+                className={cn(mono && 'font-mono', tone !== null && ISSUE_EDGE[tone])}
+            />
         </Field>
     )
 }
