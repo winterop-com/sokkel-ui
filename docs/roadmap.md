@@ -55,6 +55,13 @@ The first release under the new name.
 - **Tauri on Chromium (discovery).** Tauri runs on each platform's own webview: WebKit on
   macOS and Linux. Once Tauri supports an embedded Chromium runtime, add that build beside the
   system-webview shell, so the library is checked in both.
+- **An interactive terminal.** `Terminal` shows commands and their output; a shell needs a real
+  terminal: keystrokes and paste sent to the app (which carries them to a remote shell over its own
+  connection), full emulation for programs that move the cursor or take the whole screen (an
+  editor, `top`), the size reported as it changes, a scrollback, selection and copy. That needs a
+  terminal emulator as its engine; pick one, likely xterm.js, and move the read-only `Terminal` onto
+  the same engine so there is one per job. The library draws it and hands the bytes over; the
+  connection stays the app's.
 - **A Nerd Font for terminals (discovery).** Try JetBrains Mono NL patched as a Nerd Font for
   `Terminal` and `LogView` only, through their own `--typeface-mono`: the prompt icons it carries,
   its size and a subset of only the icons used, and its license (SIL OFL, listed in
