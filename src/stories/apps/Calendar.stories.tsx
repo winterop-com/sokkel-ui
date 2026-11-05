@@ -36,6 +36,8 @@ import { useIsMobile } from '../../hooks/use-mobile'
 import { cn } from '../../lib/cn'
 import { KIND_FILL, type KindColor } from '../../lib/kind'
 import { TidevannMark } from '../fixtures/TidevannMark'
+import { DayStrip } from '../../components/calendar/DayStrip'
+import { Dot } from '../../components/Dot'
 
 /**
  * A schedule of job runs and team events in the library's frame: the week with its hours, all-day
@@ -294,7 +296,7 @@ function CalendarToggles({ shown, onChange }: { shown: CalendarId[]; onChange: (
                                 onChange(next ? [...shown, calendar.id] : shown.filter((other) => other !== calendar.id))
                             }
                         />
-                        <span aria-hidden className={cn('size-2.5 shrink-0 rounded-full', KIND_FILL[calendar.color])} />
+                        <Dot kind={calendar.color} />
                         <span className={cn('flex-1 truncate', !on && 'text-muted-foreground')}>{calendar.name}</span>
                     </label>
                 )
@@ -398,34 +400,13 @@ function CalendarApp({ view: initialView = 'week', open = null }: { view?: View;
                         {phone ? (
                             <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
                                 {view === 'week' ? (
-                                    <div className="grid shrink-0 grid-cols-7 border-b border-border px-2 py-2">
-                                        {week.map((day) => {
-                                            const chosen = isSameDay(day, anchor)
-                                            const today = isSameDay(day, NOW)
-                                            return (
-                                                <button
-                                                    key={day.toISOString()}
-                                                    type="button"
-                                                    aria-pressed={chosen}
-                                                    className="flex flex-col items-center gap-1 rounded-md py-1 text-xs"
-                                                    onClick={() => go(day)}
-                                                >
-                                                    <span className={cn('text-muted-foreground', today && 'text-primary-ink')}>
-                                                        {format(day, 'EEEEE')}
-                                                    </span>
-                                                    <span
-                                                        className={cn(
-                                                            'flex size-8 items-center justify-center rounded-full text-sm tabular-nums',
-                                                            chosen && 'bg-primary font-medium text-primary-foreground',
-                                                            today && !chosen && 'font-medium text-primary-ink',
-                                                        )}
-                                                    >
-                                                        {format(day, 'd')}
-                                                    </span>
-                                                </button>
-                                            )
-                                        })}
-                                    </div>
+                                    <DayStrip
+                                        days={week}
+                                        chosen={anchor}
+                                        today={NOW}
+                                        onChoose={go}
+                                        className="shrink-0 border-b border-border px-2 py-2"
+                                    />
                                 ) : (
                                     <MonthGrid
                                         month={anchor}

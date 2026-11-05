@@ -122,6 +122,7 @@ export function WizardDialog({
     why,
     width = 'lg',
     footer,
+    count,
     children,
     words: given,
 }: {
@@ -138,6 +139,8 @@ export function WizardDialog({
     why?: string
     width?: 'sm' | 'md' | 'lg' | 'xl'
     footer?: ReactNode
+    /** The current step's `IssueCount`, beside the verbs. */
+    count?: ReactNode
     /** The current step's body. */
     children?: ReactNode
     words?: Partial<WizardDialogWords>
@@ -167,6 +170,7 @@ export function WizardDialog({
                     : { label: words.next, onConfirm: () => onCurrentChange(current + 1), why }
             }
             footer={footer}
+            count={count}
             words={{ cancel: words.cancel, back: words.back }}
         >
             {children}

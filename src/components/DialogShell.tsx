@@ -62,6 +62,7 @@ export function DialogShell({
     actions,
     dismissible = true,
     footer,
+    count,
     children,
     className,
     words: given,
@@ -82,6 +83,8 @@ export function DialogShell({
     dismissible?: boolean
     /** Something at the footer's left: a note, a secondary link. */
     footer?: ReactNode
+    /** The form's `IssueCount`, set just before the verbs it stops. */
+    count?: ReactNode
     children?: ReactNode
     className?: string
     words?: Partial<DialogShellWords>
@@ -124,6 +127,7 @@ export function DialogShell({
                 {confirm !== undefined && (
                     <DialogFooter className="mt-auto items-center">
                         {footer !== undefined && <div className="mr-auto min-w-0 text-xs text-muted-foreground">{footer}</div>}
+                        {count}
                         {dismissible && (
                             <DialogClose render={<Button variant="ghost" />} disabled={busy}>
                                 {words.cancel}

@@ -5,6 +5,7 @@ import { useRef, type ReactNode } from 'react'
 import { cn } from '../lib/cn'
 import { ResizeHandle } from './ResizeHandle'
 import { Count } from './Count'
+import { Dot } from './Dot'
 
 /** One place the rail leads to. */
 export interface RailEntry {
@@ -171,7 +172,7 @@ function RailLink({
             <Icon className="size-4 shrink-0" aria-hidden />
         ) : (
             <span className="flex size-4 shrink-0 items-center justify-center" aria-hidden>
-                <span className="size-2.5 rounded-full" style={{ background: entry.dot }} />
+                <Dot color={entry.dot} />
             </span>
         )
     const counted = entry.count !== undefined && entry.count > 0

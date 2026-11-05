@@ -1,4 +1,4 @@
-import { ArrowRight, Check, CircleAlert, CircleCheck, Download, FileSpreadsheet, Globe, Link2, Lock, Users } from 'lucide-react'
+import { Check, CircleAlert, CircleCheck, Download, FileSpreadsheet, Globe, Link2, Lock, Users } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 import { AddressInput, type Address } from '../../components/AddressInput'
@@ -20,6 +20,7 @@ import { DropZone } from '../../components/UploadTray'
 import { cn } from '../../lib/cn'
 import { describeCron } from '../../lib/cron'
 import { Behind, TextField } from './parts'
+import { ItemMedia } from '../../components/ui/item'
 
 /** Counts from 0 to 1 while `running`, then calls `onDone`; a stand-in for a server's progress. */
 function useProgress(running: boolean, ms: number, onDone: () => void) {
@@ -105,13 +106,26 @@ export function NewJobWizard() {
                     setStep(next)
                 }}
                 why={why}
-                footer={
+                count={
                     <IssueCount
                         critical={stepIssues}
-                        onPick={() => {
-                            if (step === 2) setCronOpen(true)
-                            else setIssueOpen(true)
-                        }}
+                        list={
+                            [
+                                codeIssues.map((issue) => ({ label: 'Code', issue, onGo: () => setIssueOpen(true) })),
+                                urlIssues.map((issue) => ({ label: 'Address', issue, onGo: () => setIssueOpen(true) })),
+                                cronValid
+                                    ? []
+                                    : [
+                                          {
+                                              label: 'Schedule',
+                                              issue: { tone: 'critical' as const, text: 'Not a schedule this field can read' },
+                                              onGo: () => setCronOpen(true),
+                                          },
+                                      ],
+                                [],
+                                [],
+                            ][step]
+                        }
                     />
                 }
                 finish={{
@@ -322,7 +336,6 @@ export function ImportOrders({ stage: first = 'map' }: { stage?: ImportStage }) 
                 : []),
         ]
     }
-    const firstMarked = COLUMNS.find((one) => columnIssues(one.column).length > 0)?.column
     const index = { file: 0, map: 1, running: 2, done: 2 }[stage]
     const close = (next: boolean) => {
         setOpen(next)
@@ -350,20 +363,28 @@ export function ImportOrders({ stage: first = 'map' }: { stage?: ImportStage }) 
                 }
                 back={stage === 'map' ? () => setStage('file') : undefined}
                 words={stage === 'done' ? { cancel: 'Close' } : undefined}
-                footer={
+                count={
                     stage === 'map' ? (
-                        <span className="flex items-center gap-3">
-                            <IssueCount critical={twice.length + missing.length} onPick={() => setOpenAt(firstMarked ?? null)} />
-                            1,204 rows
-                        </span>
-                    ) : (
-                        stage === 'done' && (
-                            <button type="button" className="flex items-center gap-1.5 underline underline-offset-3 hover:text-foreground">
-                                <Download className="size-3.5" aria-hidden />
-                                Failed rows as CSV
-                            </button>
-                        )
-                    )
+                        <IssueCount
+                            critical={twice.length + missing.length}
+                            list={COLUMNS.flatMap((one) =>
+                                columnIssues(one.column).map((issue) => ({ label: one.column, issue, onGo: () => setOpenAt(one.column) })),
+                            )}
+                        />
+                    ) : undefined
+                }
+                footer={
+                    stage === 'map'
+                        ? '1,204 rows'
+                        : stage === 'done' && (
+                              <button
+                                  type="button"
+                                  className="flex items-center gap-1.5 underline underline-offset-3 hover:text-foreground"
+                              >
+                                  <Download className="size-3.5" aria-hidden />
+                                  Failed rows as CSV
+                              </button>
+                          )
                 }
                 confirm={
                     stage === 'file'
@@ -408,63 +429,65 @@ export function ImportOrders({ stage: first = 'map' }: { stage?: ImportStage }) 
                     </DropZone>
                 )}
                 {stage === 'map' && (
-                    <div className="overflow-x-auto rounded-control border border-border">
-                        <table className="w-full min-w-[40rem] text-sm">
-                            <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
-                                <tr>
-                                    <th className="px-3 py-2 font-medium">Column in the file</th>
-                                    <th className="w-6" aria-hidden />
-                                    <th className="px-3 py-2 font-medium">Field</th>
-                                    <th className="px-3 py-2 font-medium">First rows</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border">
-                                {COLUMNS.map((one) => {
-                                    const skipped = map[one.column] === 'skip'
+                    <ListTable
+                        columns={[
+                            {
+                                id: 'column',
+                                header: 'Column in the file',
+                                width: '10rem',
+                                cell: (one) => <span className="font-mono text-xs">{one.column}</span>,
+                            },
+                            {
+                                id: 'field',
+                                header: 'Field',
+                                width: '14rem',
+                                cell: (one) => {
                                     const issues = columnIssues(one.column)
                                     return (
-                                        <tr key={one.column}>
-                                            <td className="px-3 py-2 font-mono text-xs">{one.column}</td>
-                                            <td aria-hidden>
-                                                <ArrowRight className="size-3.5 text-faint" />
-                                            </td>
-                                            <td className="px-3 py-1.5">
-                                                <div className="relative w-fit pr-8">
-                                                    <NativeSelect
-                                                        size="sm"
-                                                        aria-label={`Field for ${one.column}`}
-                                                        aria-invalid={issues.length > 0 || undefined}
-                                                        className="w-44"
-                                                        value={map[one.column]}
-                                                        onChange={(event) => setMap({ ...map, [one.column]: event.target.value })}
-                                                    >
-                                                        {FIELDS.map((field) => (
-                                                            <NativeSelectOption key={field.value} value={field.value}>
-                                                                {field.label}
-                                                            </NativeSelectOption>
-                                                        ))}
-                                                    </NativeSelect>
-                                                    <IssueMark
-                                                        issues={issues}
-                                                        open={openAt === one.column}
-                                                        onOpenChange={(next) => setOpenAt(next ? one.column : null)}
-                                                    />
-                                                </div>
-                                            </td>
-                                            <td
-                                                className={cn(
-                                                    'px-3 py-2 font-mono text-xs',
-                                                    skipped ? 'text-faint line-through' : 'text-muted-foreground',
-                                                )}
+                                        <span className="relative flex w-fit pr-8">
+                                            <NativeSelect
+                                                size="sm"
+                                                aria-label={`Field for ${one.column}`}
+                                                aria-invalid={issues.length > 0 || undefined}
+                                                className="w-44"
+                                                value={map[one.column]}
+                                                onChange={(event) => setMap({ ...map, [one.column]: event.target.value })}
                                             >
-                                                {one.sample.join(', ')}
-                                            </td>
-                                        </tr>
+                                                {FIELDS.map((field) => (
+                                                    <NativeSelectOption key={field.value} value={field.value}>
+                                                        {field.label}
+                                                    </NativeSelectOption>
+                                                ))}
+                                            </NativeSelect>
+                                            <IssueMark
+                                                issues={issues}
+                                                open={openAt === one.column}
+                                                onOpenChange={(next) => setOpenAt(next ? one.column : null)}
+                                            />
+                                        </span>
                                     )
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
+                                },
+                            },
+                            {
+                                id: 'sample',
+                                header: 'First rows',
+                                width: 'minmax(0,1fr)',
+                                cell: (one) => (
+                                    <span
+                                        className={cn(
+                                            'font-mono text-xs',
+                                            map[one.column] === 'skip' ? 'text-faint line-through' : 'text-muted-foreground',
+                                        )}
+                                    >
+                                        {one.sample.join(', ')}
+                                    </span>
+                                ),
+                            },
+                        ]}
+                        rows={COLUMNS}
+                        rowKey={(one) => one.column}
+                        hover={false}
+                    />
                 )}
                 {stage === 'running' && (
                     <div className="flex h-56 flex-col justify-center gap-3">
@@ -546,7 +569,14 @@ export function ExportRuns({ stage: first = 'form' }: { stage?: ExportStage }) {
                 title={stage === 'ready' ? 'Your export is ready' : 'Export runs from harbor'}
                 description={stage === 'ready' ? 'The file keeps for 24 hours; after that, export again.' : undefined}
                 words={stage === 'ready' ? { cancel: 'Close' } : undefined}
-                footer={stage === 'form' ? <IssueCount critical={rangeIssues.length} onPick={() => setIssueOpen(true)} /> : undefined}
+                count={
+                    stage === 'form' ? (
+                        <IssueCount
+                            critical={rangeIssues.length}
+                            list={rangeIssues.map((issue) => ({ label: 'To', issue, onGo: () => setIssueOpen(true) }))}
+                        />
+                    ) : undefined
+                }
                 confirm={
                     stage === 'form'
                         ? {
@@ -757,9 +787,7 @@ export function Share() {
                 <div className="flex flex-col gap-1.5">
                     <span className="text-sm font-medium">Link access</span>
                     <div className="flex items-center gap-3 rounded-control border border-border px-3 py-2.5">
-                        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                            {link === 'invited' ? <Lock className="size-4" aria-hidden /> : <Users className="size-4" aria-hidden />}
-                        </span>
+                        <ItemMedia variant="icon">{link === 'invited' ? <Lock aria-hidden /> : <Users aria-hidden />}</ItemMedia>
                         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                             <NativeSelect
                                 size="sm"

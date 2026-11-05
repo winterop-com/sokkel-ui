@@ -43,6 +43,7 @@ import {
     SidebarSeparator,
     SidebarTrigger,
 } from '../../components/ui/sidebar'
+import { PersonAvatar } from '../../components/PersonAvatar'
 
 /**
  * The app's side navigation and the frame around it. On a desktop it sits fixed at the edge and
@@ -157,9 +158,7 @@ function Account() {
             </SidebarMenuItem>
             <SidebarMenuItem>
                 <SidebarMenuButton size="lg" tooltip="ada">
-                    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-xs font-medium">
-                        AL
-                    </span>
+                    <PersonAvatar name="ada" initials="AL" size="md" />
                     <span className="flex min-w-0 flex-col leading-tight">
                         <span className="truncate font-medium">Ada Lovelace</span>
                         <span className="truncate font-mono text-xs text-muted-foreground">ada</span>
@@ -310,7 +309,7 @@ export const Variants: StoryObj = {
                                     </SidebarMenuItem>
                                     {[0, 1, 2].map((at) => (
                                         <SidebarMenuItem key={at}>
-                                            <SidebarMenuSkeleton showIcon className="[&_[data-sidebar=menu-skeleton-text]]:max-w-[70%]" />
+                                            <SidebarMenuSkeleton showIcon />
                                         </SidebarMenuItem>
                                     ))}
                                 </SidebarMenu>

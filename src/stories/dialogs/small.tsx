@@ -157,7 +157,12 @@ export function Created() {
                     onOpenChange={close}
                     width="sm"
                     title="New job"
-                    footer={<IssueCount critical={issues.length} onPick={() => setIssueOpen(true)} />}
+                    count={
+                        <IssueCount
+                            critical={issues.length}
+                            list={issues.map((issue) => ({ label: 'Code', issue, onGo: () => setIssueOpen(true) }))}
+                        />
+                    }
                     confirm={{
                         label: 'Create',
                         onConfirm: () => {
@@ -263,9 +268,14 @@ export function SessionExpired() {
                 dismissible={false}
                 title="Your session has ended"
                 description="Sign in again to carry on. What you typed on the page is kept."
+                count={
+                    <IssueCount
+                        critical={issues.length}
+                        list={issues.map((issue) => ({ label: 'Password', issue, onGo: () => setIssueOpen(true) }))}
+                    />
+                }
                 footer={
                     <span className="flex items-center gap-3">
-                        <IssueCount critical={issues.length} onPick={() => setIssueOpen(true)} />
                         <a href="#sign-out" className="underline underline-offset-3 hover:text-foreground">
                             Sign out instead
                         </a>
@@ -489,7 +499,18 @@ export function Schedule() {
                 onOpenChange={setOpen}
                 title="Schedule for import-orders"
                 description="A run that is still going when the next is due makes the next one wait."
-                footer={<IssueCount critical={valid ? 0 : 1} onPick={() => setCronOpen(true)} />}
+                count={
+                    <IssueCount
+                        critical={valid ? 0 : 1}
+                        list={[
+                            {
+                                label: 'Schedule',
+                                issue: { tone: 'critical', text: 'Not a schedule this field can read' },
+                                onGo: () => setCronOpen(true),
+                            },
+                        ]}
+                    />
+                }
                 confirm={{ label: 'Save schedule', onConfirm: () => setOpen(false), why: valid ? undefined : 'Fix the expression first.' }}
             >
                 <CronField

@@ -21,7 +21,8 @@ function files(dir: string): string[] {
 }
 
 const ALL = files(join(ROOT, 'src'))
-const STORIES = ALL.filter((path) => path.includes('/src/stories/'))
+/** The research stories draw options to pick from, rejected looks included, so only the rules for every file hold there. */
+const STORIES = ALL.filter((path) => path.includes('/src/stories/') && !path.includes('/src/stories/research/'))
 
 interface Rule {
     name: string
@@ -58,7 +59,12 @@ const RULES: Rule[] = [
         in: STORIES,
         except: { 'src/stories/primitives/Table.stories.tsx': "the Table primitive's own stories" },
     },
-    { name: 'a pill shape in a story instead of a component', pattern: /rounded-(full|4xl|3xl)/, in: STORIES },
+    {
+        name: 'a pill shape in a story instead of a component',
+        pattern: /rounded-(full|4xl|3xl)/,
+        in: STORIES,
+        except: { 'src/stories/primitives/Skeleton.stories.tsx': "the Skeleton primitive's own stories show its round shapes" },
+    },
     {
         name: 'a message under a field instead of the issue mark',
         pattern: /<p\b[^>]*text-(destructive|critical-ink|critical)\b|<FieldError\b/,

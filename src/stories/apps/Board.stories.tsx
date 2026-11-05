@@ -49,6 +49,8 @@ import { TooltipProvider } from '../../components/ui/tooltip'
 import { cn } from '../../lib/cn'
 import type { KindColor } from '../../lib/kind'
 import { TidevannMark } from '../fixtures/TidevannMark'
+import { Progress } from '../../components/ui/progress'
+import { PeopleFilter } from '../../components/PeopleFilter'
 
 /**
  * A board of work items in the library's frame: columns from the backlog to done, each with its
@@ -403,32 +405,6 @@ function LabelFilter({ chosen, onChange }: { chosen: string[]; onChange: (labels
     )
 }
 
-function PeopleFilter({ chosen, onChange }: { chosen: Person[]; onChange: (people: Person[]) => void }) {
-    return (
-        <div role="group" aria-label="Assignees" className="flex items-center -space-x-1">
-            {PEOPLE.map((person) => {
-                const on = chosen.includes(person)
-                return (
-                    <button
-                        key={person}
-                        type="button"
-                        aria-pressed={on}
-                        title={on ? `Stop showing only ${person}'s items` : `Show ${person}'s items`}
-                        className={cn(
-                            'relative rounded-full ring-2 ring-background transition-[opacity,box-shadow] outline-none hover:z-10 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid',
-                            on && 'z-10 ring-primary',
-                            chosen.length > 0 && !on && 'opacity-50 hover:opacity-100',
-                        )}
-                        onClick={() => onChange(on ? chosen.filter((other) => other !== person) : [...chosen, person])}
-                    >
-                        <PersonAvatar name={person} size="md" />
-                    </button>
-                )
-            })}
-        </div>
-    )
-}
-
 function ItemPanel({ item, onToggle }: { item: Item; onToggle: (index: number) => void }) {
     const column = COLUMNS.find((entry) => entry.id === item.column)
     const done = item.checklist.filter((step) => step.done).length
@@ -481,9 +457,7 @@ function ItemPanel({ item, onToggle }: { item: Item; onToggle: (index: number) =
             </PanelSection>
             {item.checklist.length > 0 && (
                 <PanelSection title={`Checklist ${done}/${item.checklist.length}`}>
-                    <div className="h-1 overflow-hidden rounded-full bg-secondary">
-                        <div className="h-full bg-good" style={{ width: `${(done / item.checklist.length) * 100}%` }} />
-                    </div>
+                    <Progress value={(done / item.checklist.length) * 100} aria-label="Checklist done" />
                     <ul className="-mx-1 flex flex-col">
                         {item.checklist.map((step, index) => (
                             <li key={step.text}>
@@ -643,7 +617,12 @@ function BoardApp({
                                 placeholder="Search items"
                                 className="w-full sm:w-56"
                             />
-                            <PeopleFilter chosen={filters.people} onChange={(people) => setFilters({ ...filters, people })} />
+                            <PeopleFilter
+                                people={PEOPLE.map((name) => ({ name }))}
+                                chosen={filters.people}
+                                onChange={(people) => setFilters({ ...filters, people: people as Person[] })}
+                                words={{ label: 'Assignees' }}
+                            />
                             <LabelFilter chosen={filters.labels} onChange={(labels) => setFilters({ ...filters, labels })} />
                             <div className="flex-1" />
                             <span className="flex items-center gap-2 text-xs text-muted-foreground">

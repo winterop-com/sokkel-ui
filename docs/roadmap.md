@@ -38,6 +38,12 @@ The first release under the new name.
   typed, grouped by kind (videos, people, jobs) with thumbnails and previews, moved through by the
   keyboard, and a results page with facets and counts. A data table's bar, the top bar and the
   command palette take it, each with the room it is given.
+- **A second validation round.** The issue mark and the count beside the verb are in every form,
+  but the count still reads weak and its list is a first answer to where the issues show. Render
+  the options side by side (the count's look and place, the list at the count against a summary
+  at the top, how a long form leads from one issue to the next, warnings beside errors, a page
+  form's bar against a dialog's footer) and pick, then fold the pick into `IssueCount`, `Field`
+  and `SchemaForm` so every form takes it at once.
 - **Counts on rail entries.** A rail entry carries an unread count, so an app's own navigation
   strip, such as the team chat's, is the library's `Rail` with no hand-drawn badge.
 - **A Nerd Font for terminals (discovery).** Try JetBrains Mono NL patched as a Nerd Font for

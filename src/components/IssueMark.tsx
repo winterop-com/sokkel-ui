@@ -1,5 +1,5 @@
 import { CircleAlert, TriangleAlert } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { Popover, PopoverContent, PopoverDescription, PopoverTitle, PopoverTrigger } from './ui/popover'
@@ -137,36 +137,79 @@ const COUNT_WORDS: IssueCountWords = {
     toLookAt: (count) => `${String(count)} to look at`,
 }
 
+/** One issue in a form's list: the field it belongs to, what it says, and how to go to it. */
+export interface IssueEntry {
+    label: string
+    issue: Issue
+    /** Takes the person to the field and opens its mark. */
+    onGo: () => void
+}
+
+const EDGE = {
+    critical: 'border-critical/40 bg-critical/8 hover:bg-critical/12 data-popup-open:bg-critical/12',
+    warning: 'border-warning/45 bg-warning/8 hover:bg-warning/12 data-popup-open:bg-warning/12',
+} as const
+
 /**
- * How many issues stop the submit, said beside the verb in a dialog's footer, or how many
- * warnings when nothing stops it. Pressing it goes to the first. Nothing renders at zero.
+ * How many issues stop the submit, as a control beside the verb, or how many warnings when nothing
+ * stops it. Pressing it opens the issues right there, each naming its field, and choosing one
+ * goes to that field and opens its mark. Nothing renders at zero. A dialog takes it in its `count` slot, beside its verbs.
  */
 export function IssueCount({
     critical,
     warning = 0,
-    onPick,
+    list,
     words: given,
 }: {
     critical: number
     warning?: number
-    onPick: () => void
+    list: readonly IssueEntry[]
     words?: Partial<IssueCountWords>
 }) {
     const words = { ...COUNT_WORDS, ...given }
+    const [open, setOpen] = useState(false)
     const tone = critical > 0 ? 'critical' : warning > 0 ? 'warning' : null
     if (tone === null) return null
     const Icon = ICON[tone]
-    return (
-        <button
-            type="button"
-            onClick={onPick}
-            className={cn(
-                'flex min-w-0 items-center gap-1.5 rounded-sm text-xs font-medium outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50',
-                INK[tone],
-            )}
-        >
+    const face = cn(
+        'flex h-7 min-w-0 items-center gap-1.5 rounded-control border px-2 text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+        INK[tone],
+        EDGE[tone],
+    )
+    const said = (
+        <>
             <Icon className="size-3.5 shrink-0" aria-hidden />
             <span className="truncate">{tone === 'critical' ? words.toFix(critical) : words.toLookAt(warning)}</span>
-        </button>
+        </>
+    )
+    if (list.length === 0) {
+        return <span className={face}>{said}</span>
+    }
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger render={<button type="button" className={face} />}>{said}</PopoverTrigger>
+            <PopoverContent side="top" align="start" sideOffset={6} className="w-[min(22rem,calc(100vw-2rem))] gap-1 p-1.5">
+                {list.map((entry, index) => {
+                    const Mark = ICON[entry.issue.tone]
+                    return (
+                        <button
+                            key={index}
+                            type="button"
+                            onClick={() => {
+                                setOpen(false)
+                                entry.onGo()
+                            }}
+                            className="flex items-start gap-2 rounded-md px-2 py-1.5 text-left outline-none hover:bg-muted focus-visible:bg-muted"
+                        >
+                            <Mark className={cn('mt-0.5 size-4 shrink-0', INK[entry.issue.tone])} aria-hidden />
+                            <span className="flex min-w-0 flex-col">
+                                <span className="text-xs text-muted-foreground">{entry.label}</span>
+                                <span className="text-sm leading-5">{entry.issue.text}</span>
+                            </span>
+                        </button>
+                    )
+                })}
+            </PopoverContent>
+        </Popover>
     )
 }

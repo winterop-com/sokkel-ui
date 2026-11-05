@@ -164,7 +164,7 @@ function Column({ shape }: { shape: Shape }) {
                     <span
                         style={s}
                         className={cn(
-                            'absolute -top-1 -right-1 flex items-center justify-center bg-critical text-xs leading-none font-semibold text-white tabular-nums',
+                            'absolute -top-1 -right-1 flex items-center justify-center bg-critical text-xs leading-none font-semibold text-critical-foreground tabular-nums',
                             shape.count,
                         )}
                     >
@@ -176,7 +176,7 @@ function Column({ shape }: { shape: Shape }) {
                     <span
                         style={s}
                         className={cn(
-                            'absolute -top-1 -right-1 flex items-center justify-center bg-critical text-xs leading-none font-semibold text-white tabular-nums',
+                            'absolute -top-1 -right-1 flex items-center justify-center bg-critical text-xs leading-none font-semibold text-critical-foreground tabular-nums',
                             shape.count,
                         )}
                     >

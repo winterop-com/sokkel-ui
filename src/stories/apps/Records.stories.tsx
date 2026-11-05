@@ -55,6 +55,7 @@ import { TooltipProvider } from '../../components/ui/tooltip'
 import { cn } from '../../lib/cn'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { NUMBER, regionName, regions } from '../map/data'
+import { Dot } from '../../components/Dot'
 
 /**
  * A records app for structured data capture in the library's frame: a list of site visits with
@@ -561,7 +562,17 @@ function VisitForm() {
                 <div className="flex items-center gap-2 px-(--density-page-inset) py-2.5">
                     <span className="hidden text-xs text-muted-foreground sm:inline">Draft saved at 09:52</span>
                     <div className="ml-auto flex items-center gap-2">
-                        <IssueCount critical={2} onPick={() => setIssueOpen('time')} />
+                        <IssueCount
+                            critical={2}
+                            list={[
+                                {
+                                    label: 'Reading taken at',
+                                    issue: { tone: 'critical', text: timeError },
+                                    onGo: () => setIssueOpen('time'),
+                                },
+                                { label: 'Water level', issue: { tone: 'critical', text: levelError }, onGo: () => setIssueOpen('level') },
+                            ]}
+                        />
                         <Button size="sm" variant="ghost">
                             Cancel
                         </Button>
@@ -583,7 +594,7 @@ function OutlineMark({ state }: { state: 'done' | 'error' | 'open' }) {
     if (state === 'error') return <CircleAlert className="size-4 text-critical-ink" aria-label="Needs attention" />
     return (
         <span className="flex size-4 shrink-0 items-center justify-center" aria-label="Not started">
-            <span className="size-2.5 rounded-full border border-border-strong" />
+            <Dot outline />
         </span>
     )
 }

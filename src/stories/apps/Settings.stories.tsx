@@ -15,6 +15,7 @@ import { Slider } from '../../components/ui/slider'
 import { Switch } from '../../components/ui/switch'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { TidevannMark } from '../fixtures/TidevannMark'
+import { PersonAvatar } from '../../components/PersonAvatar'
 
 /** A number setting on a slider, its value written beside it. */
 function SliderSetting({
@@ -373,9 +374,7 @@ function SettingsApp({ opening }: { opening?: Opening }) {
                                 <Settings2 aria-hidden />
                             </Button>
                             <ThemeToggle dark={dark} onToggle={() => setDark(!dark)} />
-                            <span className="ml-1 flex size-7 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-                                G
-                            </span>
+                            <PersonAvatar name="grace" size="md" className="ml-1" />
                         </>
                     }
                 />

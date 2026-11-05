@@ -70,7 +70,7 @@ function NewJob({
                 onOpenChange={() => undefined}
                 title="New job"
                 description="Calls the endpoint on its schedule, in the larkspur project."
-                footer={<SchemaIssueCount form={form} />}
+                count={<SchemaIssueCount form={form} />}
                 confirm={{ label: created ? 'Created' : 'Create', onConfirm: () => setCreated(form.submit()) }}
             >
                 <SchemaForm form={form} />
@@ -174,7 +174,7 @@ function NewPipeline() {
                 onOpenChange={() => undefined}
                 width="lg"
                 title="New pipeline"
-                footer={<SchemaIssueCount form={form} />}
+                count={<SchemaIssueCount form={form} />}
                 confirm={{ label: 'Create', onConfirm: () => form.submit() }}
             >
                 <SchemaForm form={form} />
@@ -199,7 +199,7 @@ function Unchecked() {
                 open
                 onOpenChange={() => undefined}
                 title="New job"
-                footer={<SchemaIssueCount form={form} />}
+                count={<SchemaIssueCount form={form} />}
                 confirm={{ label: 'Create', onConfirm: () => form.submit() }}
             >
                 <SchemaForm form={form} />

@@ -330,7 +330,28 @@ function InviteDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (op
                 onConfirm: () => onOpenChange(false),
                 why,
             }}
-            footer={<IssueCount critical={bad} onPick={() => setIssueOpen(true)} />}
+            count={
+                <IssueCount
+                    critical={bad}
+                    list={
+                        bad === 0
+                            ? []
+                            : [
+                                  {
+                                      label: 'Email addresses',
+                                      issue: {
+                                          tone: 'critical',
+                                          text:
+                                              bad === 1
+                                                  ? '1 address is not an email address'
+                                                  : `${String(bad)} addresses are not email addresses`,
+                                      },
+                                      onGo: () => setIssueOpen(true),
+                                  },
+                              ]
+                    }
+                />
+            }
         >
             <div className="flex flex-col gap-1.5">
                 <span className="text-sm font-medium">Email addresses</span>
@@ -757,7 +778,6 @@ function TokenDialog({
     const [issueOpen, setIssueOpen] = useState<'name' | 'scopes' | null>(null)
     const nameError = name.trim() === '' ? 'Give the token a name.' : null
     const scopesError = scopes.length === 0 ? 'Choose at least one scope.' : null
-    const first = nameError !== null ? 'name' : scopesError !== null ? 'scopes' : null
     const holdOpen = (which: 'name' | 'scopes') => (next: boolean) => setIssueOpen(next ? which : null)
     if (shown)
         return (
@@ -786,8 +806,24 @@ function TokenDialog({
                 onConfirm: onCreate,
                 why: nameError ?? scopesError ?? undefined,
             }}
-            footer={
-                <IssueCount critical={(nameError === null ? 0 : 1) + (scopesError === null ? 0 : 1)} onPick={() => setIssueOpen(first)} />
+            count={
+                <IssueCount
+                    critical={(nameError === null ? 0 : 1) + (scopesError === null ? 0 : 1)}
+                    list={[
+                        ...(nameError === null
+                            ? []
+                            : [{ label: 'Name', issue: { tone: 'critical' as const, text: nameError }, onGo: () => setIssueOpen('name') }]),
+                        ...(scopesError === null
+                            ? []
+                            : [
+                                  {
+                                      label: 'Scopes',
+                                      issue: { tone: 'critical' as const, text: scopesError },
+                                      onGo: () => setIssueOpen('scopes'),
+                                  },
+                              ]),
+                    ]}
+                />
             }
         >
             <Field

@@ -271,7 +271,7 @@ function AlbumPage() {
         <Page className="@container">
             <div className="flex flex-col gap-8 @4xl:flex-row @4xl:items-start">
                 <div className="flex flex-col gap-5 sm:flex-row sm:items-end @4xl:sticky @4xl:top-0 @4xl:w-60 @4xl:shrink-0 @4xl:flex-col @4xl:items-stretch">
-                    <span className="block size-40 shrink-0 overflow-hidden rounded-surface shadow-xs ring-1 ring-border sm:size-48 @4xl:aspect-square @4xl:size-auto @4xl:w-full [&>svg]:block [&>svg]:size-full">
+                    <span className="block size-40 shrink-0 overflow-hidden rounded-surface shadow-xs ring-1 ring-border sm:size-48 @4xl:aspect-square @4xl:size-auto @4xl:w-full">
                         <Artwork cover={PLAYING.cover} />
                     </span>
                     <div className="flex min-w-0 flex-col gap-3">
@@ -327,7 +327,7 @@ function QueueBody({ history = false }: { history?: boolean }) {
         <>
             <PanelSection title="Now playing">
                 <div className="flex min-w-0 items-center gap-3">
-                    <span className="block size-14 shrink-0 overflow-hidden rounded-mini ring-1 ring-border [&>svg]:block [&>svg]:size-full">
+                    <span className="block size-14 shrink-0 overflow-hidden rounded-mini ring-1 ring-border">
                         <Artwork cover={PLAYING.cover} />
                     </span>
                     <div className="min-w-0">

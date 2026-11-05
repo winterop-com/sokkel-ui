@@ -64,7 +64,7 @@ export function CreateJob() {
                 onOpenChange={setOpen}
                 title="New job"
                 description="Calls the endpoint on its schedule, in the juniper project."
-                footer={<SchemaIssueCount form={form} />}
+                count={<SchemaIssueCount form={form} />}
                 confirm={{
                     label: 'Create',
                     onConfirm: () => {
@@ -104,11 +104,12 @@ export function UnsavedEdit() {
                 open={open}
                 onOpenChange={guard.onOpenChange}
                 title="Edit import-orders"
-                footer={
-                    <span className="flex items-center gap-3">
-                        <IssueCount critical={timeoutIssues.length} onPick={() => setIssueOpen(true)} />
-                        {dirty && 'Unsaved changes'}
-                    </span>
+                footer={dirty ? 'Unsaved changes' : undefined}
+                count={
+                    <IssueCount
+                        critical={timeoutIssues.length}
+                        list={timeoutIssues.map((issue) => ({ label: 'Timeout', issue, onGo: () => setIssueOpen(true) }))}
+                    />
                 }
                 confirm={{
                     label: 'Save',
@@ -347,7 +348,12 @@ export function Duplicate() {
                 onOpenChange={setOpen}
                 title="Duplicate nightly-export"
                 description="The copy starts with no runs."
-                footer={<IssueCount critical={issues.length} onPick={() => setIssueOpen(true)} />}
+                count={
+                    <IssueCount
+                        critical={issues.length}
+                        list={issues.map((issue) => ({ label: 'Code', issue, onGo: () => setIssueOpen(true) }))}
+                    />
+                }
                 confirm={{
                     label: 'Duplicate',
                     onConfirm: () => setOpen(false),

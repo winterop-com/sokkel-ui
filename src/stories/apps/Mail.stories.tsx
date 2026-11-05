@@ -49,6 +49,8 @@ import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTi
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { cn } from '../../lib/cn'
 import { TidevannMark } from '../fixtures/TidevannMark'
+import { Dot } from '../../components/Dot'
+import { Badge } from '../../components/ui/badge'
 
 /**
  * A mail client in the library's frame: the mailboxes and labels in the rail, the message list
@@ -430,10 +432,10 @@ function Reading({ mail, onBack }: { mail: Conversation; onBack: () => void }) {
                         <h1 className="text-page leading-snug font-semibold tracking-tight">{mail.subject}</h1>
                         <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
                             {(mail.labels ?? []).map((id) => (
-                                <span key={id} className="inline-flex h-5 items-center gap-1 rounded-full border border-border px-1.5">
-                                    <span className="size-1.5 rounded-full" style={{ background: LABELS[id].color }} />
+                                <Badge key={id} variant="outline">
+                                    <Dot color={LABELS[id].color} size="sm" />
                                     {LABELS[id].label}
-                                </span>
+                                </Badge>
                             ))}
                             <span>{thread.length === 1 ? '1 message' : `${thread.length} messages`}</span>
                         </div>
