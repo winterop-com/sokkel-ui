@@ -43,7 +43,7 @@ function Frame({ settings, label, onDrawn }: { settings: ThemeSettings; label: s
             href={`./?path=/story/themes-kitchen-sink--kitchen-sink&globals=${globals}`}
             target="_top"
             aria-label={label}
-            className="group relative block h-[31rem] overflow-hidden rounded-surface border border-border-strong outline-none hover:border-ring focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring"
+            className="group relative block h-[33rem] overflow-hidden rounded-surface border border-border-strong outline-none hover:border-ring focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring"
         >
             <iframe
                 ref={frame}
