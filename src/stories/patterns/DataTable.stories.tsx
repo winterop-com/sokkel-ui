@@ -138,7 +138,7 @@ function Runs({
                 rowActions={runActions}
                 onOpen={(run) => setOpened(run.id)}
                 opened={(run) => run.id === opened}
-                toolbar={<SearchField value={query} onChange={setQuery} placeholder="Search runs" className="w-56" />}
+                toolbar={<SearchField value={query} onChange={setQuery} placeholder="Search runs" className="w-full max-w-md" />}
             />
         </div>
     )
@@ -166,6 +166,32 @@ export const Pages: StoryObj = {
                 rows={makeRuns(10_000)}
                 rowKey={(run) => run.id}
                 selectable
+                bulkActions={bulk}
+                rowActions={runActions}
+                paging="client"
+            />
+        </div>
+    ),
+}
+
+/** The first page selected from the head's box: the bar offers every one of the ten thousand as a second step. */
+export const PageSelected: StoryObj = {
+    name: 'Page selected',
+    render: () => (
+        <div className="flex h-svh flex-col bg-background p-4 text-foreground">
+            <DataTable
+                className="flex-1"
+                columns={COLUMNS}
+                rows={makeRuns(10_000)}
+                rowKey={(run) => run.id}
+                selectable
+                defaultSelection={
+                    new Set(
+                        makeRuns(10_000)
+                            .slice(0, 50)
+                            .map((run) => run.id),
+                    )
+                }
                 bulkActions={bulk}
                 rowActions={runActions}
                 paging="client"
@@ -484,7 +510,7 @@ function Albums({ count }: { count: number }) {
                         Add to queue
                     </Button>
                 )}
-                toolbar={<SearchField value={query} onChange={setQuery} placeholder="Search albums" className="w-56" />}
+                toolbar={<SearchField value={query} onChange={setQuery} placeholder="Search albums" className="w-full max-w-md" />}
                 minWidth="40rem"
             />
         </div>
