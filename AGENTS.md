@@ -37,8 +37,13 @@ and ask before acting.
   handler.
 - One engine per job: ECharts draws every chart, maplibre every map, React Flow every interactive
   graph, Mermaid every diagram written as text, and sparklines are plain SVG. Never add a second.
-- An example never builds its own version of a part. When a story needs something no component
-  has, the library gets the component or an option on one, and every example uses it.
+- Fix the component, never the example. When a story looks or behaves wrong, the fix goes into
+  the component that draws it (or a new component, or an option on one), so it reaches every
+  example and every app at once. A class added to a story to patch a component's size, spacing,
+  overflow or shape is a patch in the wrong place: it fixes one example and leaves the bug for the
+  next. Components must hold up in any container they are given.
+- An example never builds its own version of a part, layout included. When a story needs something
+  no component has, the library gets the component or an option on one, and every example uses it.
   `src/rules.test.ts` fails a hand-set size or color anywhere, and in a story a selector reaching
   into a component, a raw table, a pill shape, a message under a field, or a component no story
   shows.
