@@ -185,6 +185,7 @@ export function ActivityMenu({
             <PopoverContent
                 align="end"
                 sideOffset={8}
+                initialFocus={false}
                 className="flex max-h-[min(32rem,calc(100svh-6rem))] w-[min(24rem,calc(100vw-2rem))] gap-0 p-0"
             >
                 <ActivityList items={items} onRead={onRead} onReadAll={onReadAll} words={words} className="w-full" />
