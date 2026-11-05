@@ -1,67 +1,87 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { useState } from 'react'
 
-import { ConfirmDialog, DialogShell } from '../components/DialogShell'
-import { CodeField } from '../components/CodeField'
-import { Field } from '../components/Field'
-import { SwitchField } from '../components/SwitchField'
-import { Input } from '../components/ui/input'
-import { Textarea } from '../components/ui/textarea'
+import * as danger from './dialogs/danger'
+import * as flows from './dialogs/flows'
+import * as forms from './dialogs/forms'
+import * as small from './dialogs/small'
 
 /**
- * The dialog shell open over a page: a form that creates something, with a shut Create that says
- * why; and a confirm whose title is the question. On a phone both are full-screen sheets.
+ * A dialog for each thing an app asks a person to do in one: confirm, rename, create, delete,
+ * move, pick, schedule, share, import and export, each open over a page of the harbor project
+ * and working when pressed. On a phone each is a full-screen sheet with its verbs at the bottom.
+ * A field's problem is a mark inside it and a count beside the verb, so no dialog changes height.
  */
-function CreateJob() {
-    const [open, setOpen] = useState(true)
-    const [code, setCode] = useState('')
-    return (
-        <div className="h-svh bg-background">
-            <DialogShell
-                open={open}
-                onOpenChange={setOpen}
-                title="New job"
-                description="The steps are written on the job's own page."
-                confirm={{
-                    label: 'Create',
-                    onConfirm: () => setOpen(false),
-                    why: code === '' ? 'Give the job a code.' : undefined,
-                }}
-            >
-                <CodeField id="code" value={code} onChange={setCode} />
-                <Field id="name" label="Name">
-                    <Input id="name" defaultValue="Import orders" />
-                </Field>
-                <Field id="description" label="Description">
-                    <Textarea id="description" defaultValue="Loads the monthly orders file into the warehouse." />
-                </Field>
-                <SwitchField
-                    id="strict"
-                    label="Stop at the first failure"
-                    explain="A step that fails ends the run, and the steps after it are skipped."
-                />
-            </DialogShell>
-        </div>
-    )
-}
-
-function ConfirmDelete() {
-    const [open, setOpen] = useState(true)
-    return (
-        <div className="h-svh bg-background">
-            <ConfirmDialog
-                open={open}
-                onOpenChange={setOpen}
-                question="Delete import-orders?"
-                detail="Its runs stay in the history; the job stops running."
-                confirm={{ label: 'Delete', destructive: true, onConfirm: () => setOpen(false) }}
-            />
-        </div>
-    )
-}
-
 const meta: Meta = { title: 'Patterns/Dialogs' }
 export default meta
 
-export const Create: StoryObj = { render: () => <CreateJob /> }
-export const Confirm: StoryObj = { render: () => <ConfirmDelete /> }
+/** A question with one answer, and no body. */
+export const Confirm: StoryObj = { render: () => <danger.ConfirmDelete /> }
+
+/** One field, prefilled; Rename is shut while the name is unchanged, and Enter renames. */
+export const Rename: StoryObj = { name: 'Rename', render: () => <small.Rename /> }
+
+/** Delete stays shut until the pipeline's code is typed exactly; the input checks when it matches. */
+export const TypeToConfirm: StoryObj = { name: 'Type to confirm', render: () => <danger.TypeToDelete /> }
+
+/** A delete that says what goes with it, a row per kind with its count. */
+export const DeleteCascade: StoryObj = { name: 'Delete cascade', render: () => <danger.DeleteWithConsequences /> }
+
+/** The confirm is working: its verb spins, and Cancel, Escape and the backdrop do nothing until it is done. */
+export const Busy: StoryObj = { name: 'Busy', render: () => <small.Busy /> }
+
+/** The server refused: its words in the dialog with the raw answer folded away, and Retry. */
+export const ServerRefusal: StoryObj = { name: 'Server refusal', render: () => <small.Refused /> }
+
+/** Done, with the two ways on: open what was made, or make another. */
+export const Success: StoryObj = { render: () => <small.Created /> }
+
+/** A form from a JSON Schema after Create: the marks in the fields, and the count beside the verb. */
+export const Create: StoryObj = { render: () => <forms.CreateJob /> }
+
+/** A copy under a new code, with a choice of what comes along; the code is taken, and the mark offers a free one. */
+export const Duplicate: StoryObj = { name: 'Duplicate', render: () => <forms.Duplicate /> }
+
+/** Cancel pressed on a changed form: discard, or keep editing with the changes. */
+export const UnsavedChanges: StoryObj = { name: 'Unsaved changes', render: () => <forms.UnsavedEdit /> }
+
+/** An editing dialog with a confirm opened on top of it for one of its rows. */
+export const Nested: StoryObj = { render: () => <forms.NestedConfirm /> }
+
+/** Moving jobs to a folder picked from a tree of projects and folders. */
+export const MoveTo: StoryObj = { name: 'Move to', render: () => <small.MoveTo /> }
+
+/** One block picked from a long catalog by search and by what it can do. */
+export const PickOne: StoryObj = { name: 'Pick one', render: () => <small.PickOne /> }
+
+/** A cron expression with presets, read back in words, and the next five runs. */
+export const Schedule: StoryObj = { name: 'Schedule', render: () => <small.Schedule /> }
+
+/** The same change made to many jobs, every field starting at Leave as is. */
+export const BulkEdit: StoryObj = { name: 'Bulk edit', render: () => <forms.BulkEdit /> }
+
+/** Who has the project and how, invites by address as chips, link access, and Copy link. */
+export const Share: StoryObj = { name: 'Share', render: () => <flows.Share /> }
+
+/** Two steps for handing a project over: choose the new owner, then confirm what moves to them. */
+export const TransferOwnership: StoryObj = { name: 'Transfer ownership', render: () => <danger.TransferOwnership /> }
+
+/** Format, dates and parts, then progress, then a file to download. */
+export const Export: StoryObj = { render: () => <flows.ExportRuns /> }
+
+/** A dropped CSV with its columns mapped to fields and a preview, then progress and the rows that failed. */
+export const Import: StoryObj = { render: () => <flows.ImportOrders /> }
+
+/** The import's last step: what went in, and each failed row with why. */
+export const ImportResult: StoryObj = { name: 'Import result', render: () => <flows.ImportOrders stage="done" /> }
+
+/** A new job in five steps with Back and Next, ending on a review. */
+export const Wizard: StoryObj = { render: () => <flows.NewJobWizard /> }
+
+/** Release notes longer than the window: the body scrolls under a footer that stays. */
+export const LongContent: StoryObj = { name: 'Long content', render: () => <small.ReleaseNotes /> }
+
+/** A side sheet for editing details in place, with the save bar at its foot. */
+export const SideSheet: StoryObj = { name: 'Side sheet', render: () => <forms.DetailsSheet /> }
+
+/** The session ended under a half-written comment: sign in again without leaving, or losing, the page. */
+export const SessionExpired: StoryObj = { name: 'Session expired', render: () => <small.SessionExpired /> }

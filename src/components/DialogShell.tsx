@@ -1,7 +1,8 @@
-import type { ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
 
 import { Button } from './ui/button'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog'
+import { Spinner } from './ui/spinner'
 import { cn } from '../lib/cn'
 
 const WIDTHS = {
@@ -17,10 +18,26 @@ export interface DialogConfirm {
     onConfirm: () => void
     /** Why it cannot be pressed now; the button stays focusable and says so on hover. */
     why?: string
+    /** Working: the verb spins, and nothing closes the dialog until it is done. */
     busy?: boolean
     busyLabel?: string
     destructive?: boolean
 }
+
+export interface DialogShellWords {
+    cancel: string
+    back: string
+}
+
+const WORDS: DialogShellWords = { cancel: 'Cancel', back: 'Back' }
+
+/** Dims a dialog while another is open on top of it. */
+export const NESTED =
+    'data-nested-dialog-open:after:pointer-events-none data-nested-dialog-open:after:absolute data-nested-dialog-open:after:inset-0 data-nested-dialog-open:after:rounded-[inherit] data-nested-dialog-open:after:bg-black/40'
+
+/** What the dialog focuses first when it opens: the first control in its body, ahead of the header. */
+const FOCUSABLE =
+    'input:not([disabled]):not([type=hidden]), textarea:not([disabled]), select:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 /**
  * Every dialog's frame: a title (and an optional line under it), the body that scrolls when it
@@ -28,7 +45,7 @@ export interface DialogConfirm {
  *
  * On a phone the dialog is a full-screen sheet with its footer held to the bottom, so the verbs
  * are always in reach. A shut confirm stays focusable and carries its reason as a tooltip rather
- * than going dead.
+ * than going dead. Opening focuses the first control in the body. While the confirm is busy, Cancel, Back, Escape and the backdrop do nothing.
  */
 export function DialogShell({
     open,
@@ -36,50 +53,98 @@ export function DialogShell({
     width = 'md',
     title,
     description,
+    header,
     confirm,
+    back,
+    actions,
+    dismissible = true,
     footer,
     children,
-    words = { cancel: 'Cancel' },
+    className,
+    words: given,
 }: {
     open: boolean
     onOpenChange: (open: boolean) => void
     width?: keyof typeof WIDTHS
     title: ReactNode
     description?: ReactNode
+    /** Held under the title, outside the scrolling body: a step indicator, a tab bar. */
+    header?: ReactNode
     confirm?: DialogConfirm
+    /** Draws Back before the confirm, for a dialog of steps. */
+    back?: () => void
+    /** More buttons, between Cancel and the confirm: a second way to finish. */
+    actions?: ReactNode
+    /** When false there is no Cancel, and Escape and the backdrop leave the dialog open. */
+    dismissible?: boolean
     /** Something at the footer's left: a note, a secondary link. */
     footer?: ReactNode
     children?: ReactNode
-    words?: { cancel: string }
+    className?: string
+    words?: Partial<DialogShellWords>
 }) {
-    const shut = confirm?.why !== undefined || confirm?.busy === true
+    const words = { ...WORDS, ...given }
+    const busy = confirm?.busy === true
+    const shut = confirm?.why !== undefined || busy
+    const held = busy || !dismissible
+    const body = useRef<HTMLDivElement>(null)
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog
+            open={open}
+            onOpenChange={(next) => {
+                if (!next && held) return
+                onOpenChange(next)
+            }}
+        >
             <DialogContent
-                showCloseButton={confirm === undefined}
+                showCloseButton={confirm === undefined && dismissible}
+                initialFocus={() => body.current?.querySelector<HTMLElement>(FOCUSABLE) ?? true}
+                aria-busy={busy || undefined}
                 className={cn(
                     'flex max-h-[calc(100svh-4rem)] flex-col gap-4',
                     WIDTHS[width],
+                    NESTED,
                     'max-sm:top-0 max-sm:left-0 max-sm:h-svh max-sm:max-h-none max-sm:w-screen max-sm:max-w-none max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-none',
+                    className,
                 )}
             >
-                <DialogHeader className={confirm === undefined ? 'pr-8' : undefined}>
+                <DialogHeader className={confirm === undefined && dismissible ? 'pr-8' : undefined}>
                     <DialogTitle className="text-base leading-6 font-medium">{title}</DialogTitle>
                     {description !== undefined && <DialogDescription>{description}</DialogDescription>}
                 </DialogHeader>
-                {children !== undefined && <div className="-mx-4 min-h-0 flex-1 space-y-4 overflow-y-auto px-4">{children}</div>}
+                {header}
+                {children !== undefined && (
+                    <div ref={body} className="-mx-4 min-h-0 flex-1 space-y-4 overflow-y-auto px-4">
+                        {children}
+                    </div>
+                )}
                 {confirm !== undefined && (
                     <DialogFooter className="mt-auto items-center">
                         {footer !== undefined && <div className="mr-auto min-w-0 text-xs text-muted-foreground">{footer}</div>}
-                        <DialogClose render={<Button variant="ghost" />}>{words.cancel}</DialogClose>
+                        {dismissible && (
+                            <DialogClose render={<Button variant="ghost" />} disabled={busy}>
+                                {words.cancel}
+                            </DialogClose>
+                        )}
+                        {back !== undefined && (
+                            <Button variant="outline" disabled={busy} onClick={back}>
+                                {words.back}
+                            </Button>
+                        )}
+                        {actions}
                         <Button
                             variant={confirm.destructive === true ? 'destructive' : 'default'}
                             aria-disabled={shut || undefined}
                             title={confirm.why}
-                            className={cn(shut && 'cursor-not-allowed opacity-50')}
+                            className={cn(
+                                shut && 'cursor-not-allowed',
+                                confirm.why !== undefined && 'opacity-50',
+                                busy && 'cursor-progress',
+                            )}
                             onClick={shut ? undefined : confirm.onConfirm}
                         >
-                            {confirm.busy === true ? (confirm.busyLabel ?? confirm.label) : confirm.label}
+                            {busy && <Spinner aria-hidden role={undefined} aria-label={undefined} />}
+                            {busy ? (confirm.busyLabel ?? confirm.label) : confirm.label}
                         </Button>
                     </DialogFooter>
                 )}
@@ -90,7 +155,7 @@ export function DialogShell({
 
 /**
  * A question with one answer to confirm: the title is the question ("Delete import-orders?"),
- * there is no body, and a destructive answer is drawn as one.
+ * there is no body unless one is given, and a destructive answer is drawn as one.
  */
 export function ConfirmDialog({
     open,
@@ -98,6 +163,8 @@ export function ConfirmDialog({
     question,
     detail,
     confirm,
+    children,
+    words,
 }: {
     open: boolean
     onOpenChange: (open: boolean) => void
@@ -105,6 +172,21 @@ export function ConfirmDialog({
     /** One line on what the answer does, where the question does not say it. */
     detail?: ReactNode
     confirm: DialogConfirm
+    /** What the answer touches, when one line cannot say it: a list of what goes with it. */
+    children?: ReactNode
+    words?: Partial<DialogShellWords>
 }) {
-    return <DialogShell open={open} onOpenChange={onOpenChange} width="sm" title={question} description={detail} confirm={confirm} />
+    return (
+        <DialogShell
+            open={open}
+            onOpenChange={onOpenChange}
+            width="sm"
+            title={question}
+            description={detail}
+            confirm={confirm}
+            words={words}
+        >
+            {children}
+        </DialogShell>
+    )
 }
