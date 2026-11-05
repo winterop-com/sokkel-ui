@@ -13,7 +13,7 @@ import { TidevannMark } from '../fixtures/TidevannMark'
  * The same small piece of Tidevann every gallery tile shows a theme with: a heading, buttons, a
  * field, the run states, a short table and a bar chart. It fits a narrow tile and grows with it.
  */
-const meta: Meta = { title: 'Themes/Sample' }
+const meta: Meta = { title: 'Themes/Gallery tile' }
 export default meta
 
 const ROWS: { job: string; state: Status; took: string }[] = [
@@ -107,4 +107,4 @@ function ThemeSample() {
 }
 
 /** The sample in the toolbar's look. */
-export const Sample: StoryObj = { render: () => <ThemeSample /> }
+export const GalleryTile: StoryObj = { name: 'Gallery tile', render: () => <ThemeSample /> }

@@ -86,6 +86,8 @@ for (const story of stories) {
                     await page.locator('#storybook-root > *').first().waitFor()
                     await mapsSettled(page)
                     await graphsSettled(page)
+                    // A page still drawing its parts, such as the theme gallery's frames, says so with data-settling.
+                    await page.waitForFunction(() => document.querySelector('[data-settling]') === null, null, { timeout: 90_000 })
                     await videosSettled(page)
                     await page.evaluate(() => document.fonts.ready)
                     // A popup fading in, or anything else still moving, would be caught mid-way. Endless ones such as
