@@ -29,33 +29,48 @@ export interface MapLayerListWords {
 
 const WORDS: MapLayerListWords = { show: 'Show layer', hide: 'Hide layer', opacity: 'Opacity', basemap: 'Basemap' }
 
-function LayerControls({
+function VisibleToggle({
+    name,
+    visible,
+    onVisibleChange,
+    said,
+}: {
+    name: string
+    visible: boolean
+    onVisibleChange: (visible: boolean) => void
+    said: MapLayerListWords
+}) {
+    return (
+        <Button
+            variant="ghost"
+            size="icon-xs"
+            aria-label={`${visible ? said.hide : said.show}: ${name}`}
+            aria-pressed={visible}
+            title={visible ? said.hide : said.show}
+            className="-mt-0.5 -mr-1 shrink-0 text-muted-foreground"
+            onClick={() => onVisibleChange(!visible)}
+        >
+            {visible ? <Eye /> : <EyeOff />}
+        </Button>
+    )
+}
+
+function OpacityControl({
     name,
     visible,
     opacity,
-    onVisibleChange,
     onOpacityChange,
     said,
 }: {
     name: string
     visible: boolean
     opacity: number
-    onVisibleChange: (visible: boolean) => void
     onOpacityChange: (opacity: number) => void
     said: MapLayerListWords
 }) {
     return (
-        <div className="flex items-center gap-2 pt-1">
-            <Button
-                variant="ghost"
-                size="icon-xs"
-                aria-label={`${visible ? said.hide : said.show}: ${name}`}
-                aria-pressed={visible}
-                className="text-muted-foreground"
-                onClick={() => onVisibleChange(!visible)}
-            >
-                {visible ? <Eye /> : <EyeOff />}
-            </Button>
+        <div className="mt-2.5 flex items-center gap-3 border-t border-border pt-2.5">
+            <span className="shrink-0 text-xs text-muted-foreground">{said.opacity}</span>
             <Slider
                 aria-label={`${said.opacity}: ${name}`}
                 min={0}
@@ -66,14 +81,26 @@ function LayerControls({
                 className="flex-1"
                 onValueChange={(next) => onOpacityChange((Array.isArray(next) ? next[0] : next) / 100)}
             />
-            <span className="w-9 text-right text-[11px] text-muted-foreground tabular-nums">{Math.round(opacity * 100)}%</span>
+            <span className="w-9 text-right text-xs text-muted-foreground tabular-nums">{Math.round(opacity * 100)}%</span>
+        </div>
+    )
+}
+
+function Head({ title, description, toggle }: { title: string; description?: string; toggle: ReactNode }) {
+    return (
+        <div className="flex items-start gap-2">
+            <div className="min-w-0 flex-1">
+                <h3 className="text-sm leading-snug font-medium">{title}</h3>
+                {description !== undefined && <p className="text-xs leading-snug text-muted-foreground">{description}</p>}
+            </div>
+            {toggle}
         </div>
     )
 }
 
 /**
- * The map's layers as a panel of cards, topmost first: each with its name, its legend, a button
- * that shows or hides it and a slider for its opacity. A basemap card comes last, with the basemap
+ * The map's layers as a panel of cards, topmost first: each with its name and a button that shows
+ * or hides it, its legend on an inset ground, and its opacity under a rule. A basemap card comes last, with the basemap
  * previews and the same two controls for the basemap.
  */
 export function MapLayerList({
@@ -111,14 +138,25 @@ export function MapLayerList({
                         !layer.visible && 'opacity-75',
                     )}
                 >
-                    <h3 className="text-sm leading-snug font-medium">{layer.name}</h3>
-                    {layer.description !== undefined && <p className="text-xs leading-snug text-muted-foreground">{layer.description}</p>}
-                    {layer.legend !== undefined && layer.visible && <div className="mt-2">{layer.legend}</div>}
-                    <LayerControls
+                    <Head
+                        title={layer.name}
+                        description={layer.description}
+                        toggle={
+                            <VisibleToggle
+                                name={layer.name}
+                                visible={layer.visible}
+                                onVisibleChange={(visible) => onVisibleChange(layer.id, visible)}
+                                said={said}
+                            />
+                        }
+                    />
+                    {layer.legend !== undefined && layer.visible && (
+                        <div className="mt-2.5 rounded-md bg-muted/50 px-2.5 py-2">{layer.legend}</div>
+                    )}
+                    <OpacityControl
                         name={layer.name}
                         visible={layer.visible}
                         opacity={layer.opacity}
-                        onVisibleChange={(visible) => onVisibleChange(layer.id, visible)}
                         onOpacityChange={(opacity) => onOpacityChange(layer.id, opacity)}
                         said={said}
                     />
@@ -129,7 +167,17 @@ export function MapLayerList({
                     aria-label={said.basemap}
                     className="rounded-lg bg-card px-3 py-2.5 text-card-foreground ring-1 ring-foreground/10"
                 >
-                    <h3 className="text-sm leading-snug font-medium">{said.basemap}</h3>
+                    <Head
+                        title={said.basemap}
+                        toggle={
+                            <VisibleToggle
+                                name={said.basemap}
+                                visible={basemap.visible}
+                                onVisibleChange={basemap.onVisibleChange}
+                                said={said}
+                            />
+                        }
+                    />
                     <BasemapGallery
                         basemaps={basemap.basemaps}
                         value={basemap.value}
@@ -137,11 +185,10 @@ export function MapLayerList({
                         label={said.basemap}
                         className="-mx-1 mt-2"
                     />
-                    <LayerControls
+                    <OpacityControl
                         name={said.basemap}
                         visible={basemap.visible}
                         opacity={basemap.opacity}
-                        onVisibleChange={basemap.onVisibleChange}
                         onOpacityChange={basemap.onOpacityChange}
                         said={said}
                     />
