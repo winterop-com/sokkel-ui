@@ -79,6 +79,21 @@ for (const story of stories) {
                     await graphsSettled(page)
                     await videosSettled(page)
                     await page.evaluate(() => document.fonts.ready)
+                    // A popup fading in, or anything else still moving, would be caught mid-way. Endless ones such as
+                    // spinners, and those driven by scrolling rather than time, are left running.
+                    await page.waitForFunction(
+                        () =>
+                            document
+                                .getAnimations()
+                                .every(
+                                    (animation) =>
+                                        animation.playState !== 'running' ||
+                                        animation.timeline !== document.timeline ||
+                                        animation.effect?.getTiming().iterations === Infinity,
+                                ),
+                        null,
+                        { timeout: 10_000 },
+                    )
                     // Highlighting lands after the first paint; a block marked plain is never highlighted.
                     await page
                         .waitForFunction(
