@@ -37,6 +37,11 @@ and ask before acting.
   handler.
 - One engine per job: ECharts draws every chart, maplibre every map, React Flow every interactive
   graph, Mermaid every diagram written as text, and sparklines are plain SVG. Never add a second.
+- An example never builds its own version of a part. When a story needs something no component
+  has, the library gets the component or an option on one, and every example uses it.
+  `src/rules.test.ts` fails a hand-set size or color anywhere, and in a story a selector reaching
+  into a component, a raw table, a pill shape, a message under a field, or a component no story
+  shows.
 - Words a component says are props with English defaults, so an app can translate them.
 - Comments say what the thing does, or the constraint the code cannot show. Rationale goes in the
   commit message.
@@ -55,10 +60,11 @@ and ask before acting.
   tiles.
 - Look at every new or changed story in dark and light, at desktop and phone width, before
   committing it.
-- Desktop is the main target; phones and tablets must still work. A story is written once, at
-  full width, and the viewport toolbar shows it at the widths layouts are checked at: 360, 390
-  and 430 for phones, 768 and 1024 for tablets, 1280, 1440 and 1920. No story exists only to
-  show a narrower width.
+- Desktop is the main target; phones, foldables and tablets must still work. A story is written
+  once, at full width, and the viewport toolbar shows it at the widths layouts are checked at: 344
+  and 690 for a foldable folded and open, 360, 390 and 430 for phones, 768 and 1024 for tablets,
+  1280, 1440 and 1920. `e2e/layout.spec.ts` fails a story whose page scrolls sideways at any of the
+  narrow ones. No story exists only to show a narrower width.
 - A story uses the room the component would have in an app. One that fills its container there (a
   terminal, code, an editor, a log, a table, a schema, a graph, a chart, a video, a track list)
   fills the canvas, and the height too when it scrolls. One with a natural width (an input, a menu,

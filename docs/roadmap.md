@@ -52,7 +52,7 @@ The first release under the new name.
   and `SchemaForm` so every form takes it at once.
 - **Counts on rail entries.** A rail entry carries an unread count, so an app's own navigation
   strip, such as the team chat's, is the library's `Rail` with no hand-drawn badge.
-- **Tauri on Chromium (discovery).** Tauri runs on each platform's own webview, Safari's engine on
+- **Tauri on Chromium (discovery).** Tauri runs on each platform's own webview: WebKit on
   macOS and Linux. Once Tauri supports an embedded Chromium runtime, add that build beside the
   system-webview shell, so the library is checked in both.
 - **A Nerd Font for terminals (discovery).** Try JetBrains Mono NL patched as a Nerd Font for
