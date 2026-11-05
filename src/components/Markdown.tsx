@@ -129,7 +129,7 @@ const PROSE = cn(
     '[&_table]:my-2 [&_table]:block [&_table]:border-collapse [&_table]:overflow-x-auto',
     '[&_th]:border [&_th]:border-border [&_th]:bg-muted [&_th]:px-2.5 [&_th]:py-1 [&_th]:text-left [&_th]:font-medium',
     '[&_td]:border [&_td]:border-border [&_td]:px-2.5 [&_td]:py-1',
-    '[&_:not(pre)>code]:rounded-sm [&_:not(pre)>code]:bg-muted [&_:not(pre)>code]:px-1 [&_:not(pre)>code]:font-mono [&_:not(pre)>code]:text-[0.9em]',
+    '[&_:not(pre)>code]:rounded-sm [&_:not(pre)>code]:bg-muted [&_:not(pre)>code]:px-1 [&_:not(pre)>code]:font-mono',
     '[&_.mermaid-block]:my-3 [&_[data-slot=code-block]]:my-3',
     '[&_[id]]:scroll-mt-4',
 )
@@ -203,7 +203,7 @@ export const Markdown = memo(function Markdown({
                         </div>
                     )
                 }
-                return <Code value={value} language={language} size="sm" />
+                return <Code value={value} language={language} />
             },
         }),
         [streaming, note, tip, important, warning, caution],

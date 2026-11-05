@@ -15,7 +15,7 @@ export function ProseText({ text, className }: { text: string; className?: strin
                 const code = index % 2 === 1 && (closed || index < parts.length - 1)
                 if (code) {
                     return (
-                        <code key={index} className="rounded-sm bg-muted px-1 font-mono text-[0.9em]">
+                        <code key={index} className="rounded-sm bg-muted px-1 font-mono">
                             {part}
                         </code>
                     )
