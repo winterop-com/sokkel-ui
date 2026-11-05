@@ -55,11 +55,22 @@ The screenshots are Linux renders taken in the Playwright image, as CI checks th
 
 ## Using it
 
-An app that brings its own Tailwind imports `@winterop/ui/tokens.css` (the tokens, themes and
-density levels); one that does not imports `@winterop/ui/styles.css` (Tailwind, the fonts, the
-tokens and base styles). Components import by path, such as `@winterop/ui/DialogShell` or
-`@winterop/ui/primitives/button`. The package is not published yet; apps will install it from a
-registry by version.
+The package is `@winterop-com/ui` on GitHub Packages. An app points the scope at that registry in
+its `.npmrc`, with a token that can read packages, and pins a version:
+
+```
+@winterop-com:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+```
+
+```
+bun add @winterop-com/ui@0.2.0
+```
+
+An app that brings its own Tailwind imports `@winterop-com/ui/tokens.css` (the tokens, themes and
+density levels); one that does not imports `@winterop-com/ui/styles.css` (Tailwind, the fonts, the
+tokens and base styles). Components import by path, such as `@winterop-com/ui/DialogShell` or
+`@winterop-com/ui/primitives/button`.
 
 ## License
 
