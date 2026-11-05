@@ -56,7 +56,7 @@ function Editors() {
     const [query, setQuery] = useState('')
     return (
         <Ground>
-            <Field id="definition" label="Definition" hint="Line 9 fails the check: on_invalid must be warn or skip.">
+            <Field id="definition" label="Definition" error="Line 9 fails the check: on_invalid must be warn or skip.">
                 <CodeEditor
                     label="Definition"
                     language="yaml"

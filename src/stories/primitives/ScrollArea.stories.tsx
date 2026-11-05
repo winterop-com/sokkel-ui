@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
 
+import { ListTable, type Column } from '../../components/ListTable'
 import { StatusChip, type Status } from '../../components/StatusChip'
 import { ScrollArea, ScrollBar } from '../../components/ui/scroll-area'
 
@@ -25,6 +26,15 @@ const RUNS = Array.from({ length: 24 }, (_, at) => ({
     at: `2026-11-04 ${String(23 - at).padStart(2, '0')}:02`,
     took: `${(1 + ((at * 7) % 10) / 10).toFixed(1)}s`,
 }))
+
+type Run = (typeof RUNS)[number]
+
+const COLUMNS: Column<Run>[] = [
+    { id: 'id', header: 'Run', width: '6rem', cell: (run) => <span className="font-mono">{run.id}</span> },
+    { id: 'status', header: 'Status', width: '7rem', cell: (run) => <StatusChip status={run.status} /> },
+    { id: 'at', header: 'Started', width: 'minmax(0,1fr)', cell: (run) => <span className="tabular-nums">{run.at}</span> },
+    { id: 'took', header: 'Took', width: '4rem', align: 'end', cell: (run) => <span className="tabular-nums">{run.took}</span> },
+]
 
 const ACTIONS = ['http.get', 'rows.check', 'rows.map', 'rows.filter', 'csv.read', 'json.parse', 'parquet.write', 'bucket.put', 'chat.post']
 
@@ -75,24 +85,10 @@ export const Variants: StoryObj = {
 export const RunHistory: StoryObj = {
     render: () => (
         <Ground>
-            <div className="flex max-w-xl flex-col gap-2">
+            <div className="flex max-w-2xl flex-col gap-2">
                 <h2 className="text-sm font-medium">Runs of import-orders today</h2>
-                <ScrollArea className="h-80 rounded-lg border border-border">
-                    <table className="w-full min-w-[28rem] text-sm">
-                        <tbody>
-                            {RUNS.map((run) => (
-                                <tr key={run.id} className="border-b border-border last:border-0">
-                                    <td className="px-3 py-2 font-mono">{run.id}</td>
-                                    <td className="px-3 py-2">
-                                        <StatusChip status={run.status} />
-                                    </td>
-                                    <td className="px-3 py-2 tabular-nums">{run.at}</td>
-                                    <td className="px-3 py-2 text-right tabular-nums">{run.took}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                    <ScrollBar orientation="horizontal" />
+                <ScrollArea className="h-80">
+                    <ListTable columns={COLUMNS} rows={RUNS} rowKey={(run) => run.id} />
                 </ScrollArea>
             </div>
         </Ground>

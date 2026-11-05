@@ -1,10 +1,10 @@
 import { BookOpen, CalendarClock, Library, Play, RotateCcw, Server, ScrollText, Webhook, Workflow } from 'lucide-react'
 import { useState } from 'react'
 
+import { DataTable, type DataColumn } from '../components/DataTable'
 import { DescriptionList } from '../components/DescriptionList'
 import { FilterChip } from '../components/FilterChip'
 import { Inspector, InspectorSection } from '../components/Inspector'
-import { ListTable, type Column } from '../components/ListTable'
 import { PageHeader } from '../components/PageHeader'
 import { Problem } from '../components/Problem'
 import { Rail, type RailGroup } from '../components/Rail'
@@ -70,22 +70,39 @@ const GROUPS: RailGroup[] = [
     },
 ]
 
-const COLUMNS: Column<Run>[] = [
-    { id: 'job', header: 'Job', width: 'minmax(0,1fr)', cell: (run) => <span className="truncate">{run.job}</span> },
-    { id: 'status', header: 'Status', width: '10rem', cell: (run) => <StatusChip status={run.status} /> },
+/** How long a run took in seconds, for sorting; a run still going sorts last. */
+const seconds = (run: Run) => (run.took === '-' ? Number.POSITIVE_INFINITY : Number.parseFloat(run.took))
+
+const COLUMNS: DataColumn<Run>[] = [
+    {
+        id: 'job',
+        header: 'Job',
+        width: 'minmax(0,1fr)',
+        cell: (run) => <span className="truncate">{run.job}</span>,
+        sortValue: (run) => run.job,
+    },
+    { id: 'status', header: 'Status', width: '10rem', cell: (run) => <StatusChip status={run.status} />, sortValue: (run) => run.status },
     {
         id: 'step',
         header: 'Step',
         width: '6rem',
         cell: (run) => <span className="truncate font-mono text-xs text-muted-foreground">{run.step ?? '-'}</span>,
+        sortValue: (run) => run.step ?? '',
     },
-    { id: 'started', header: 'Started', width: '6.5rem', cell: (run) => <span className="text-xs text-muted-foreground">{run.at}</span> },
+    {
+        id: 'started',
+        header: 'Started',
+        width: '6.5rem',
+        cell: (run) => <span className="text-xs text-muted-foreground">{run.at}</span>,
+        sortValue: (run) => Number.parseInt(run.at, 10),
+    },
     {
         id: 'took',
         header: 'Took',
         width: '4.5rem',
         align: 'end',
         cell: (run) => <span className="font-mono text-xs tabular-nums">{run.took}</span>,
+        sortValue: seconds,
     },
 ]
 
@@ -107,13 +124,14 @@ export function RunsPage() {
                         <FilterChip facet="Job" />
                     </div>
                     <div className="flex min-h-0 flex-1 items-start gap-(--density-inspector-gap)">
-                        <ListTable
+                        <DataTable
                             columns={COLUMNS}
                             rows={RUNS}
                             rowKey={(run) => run.id}
-                            selected={(run) => run.id === chosen.id}
-                            onSelect={setChosen}
-                            className="min-w-0 flex-1"
+                            opened={(run) => run.id === chosen.id}
+                            onOpen={setChosen}
+                            minWidth="32rem"
+                            className="max-h-full min-w-0 flex-1"
                         />
                         <Inspector
                             title={chosen.job}

@@ -1,13 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState, type ReactNode } from 'react'
 
+import { Field as IssueField } from '../../components/Field'
 import { Button } from '../../components/ui/button'
 import { Checkbox } from '../../components/ui/checkbox'
 import {
     Field,
     FieldContent,
     FieldDescription,
-    FieldError,
     FieldGroup,
     FieldLabel,
     FieldLegend,
@@ -123,23 +123,31 @@ export const Variants: StoryObj = {
     ),
 }
 
+/**
+ * An invalid value is drawn by the library's Field with `error` or `issues`: the issue mark at the
+ * control's end, so nothing is inserted under it. A disabled field keeps its description.
+ */
 export const States: StoryObj = {
     render: () => (
         <Ground>
             <div className="flex flex-wrap gap-8">
                 <Labeled label="invalid">
-                    <Field data-invalid="true">
-                        <FieldLabel htmlFor="s-code">Code</FieldLabel>
+                    <IssueField id="s-code" label="Code" error="Use lowercase letters, digits and dashes." className="w-full">
                         <Input id="s-code" aria-invalid defaultValue="Import Orders" />
-                        <FieldError>Use lowercase letters, digits and dashes.</FieldError>
-                    </Field>
+                    </IssueField>
                 </Labeled>
                 <Labeled label="several errors">
-                    <Field data-invalid="true">
-                        <FieldLabel htmlFor="s-url">Base URL</FieldLabel>
+                    <IssueField
+                        id="s-url"
+                        label="Base URL"
+                        issues={[
+                            { tone: 'critical', text: 'Start with https://.' },
+                            { tone: 'critical', text: 'Name a full host.' },
+                        ]}
+                        className="w-full"
+                    >
                         <Input id="s-url" aria-invalid defaultValue="api.example" />
-                        <FieldError errors={[{ message: 'Start with https://.' }, { message: 'Name a full host.' }]} />
-                    </Field>
+                    </IssueField>
                 </Labeled>
                 <Labeled label="disabled">
                     <Field data-disabled="true">
@@ -171,21 +179,21 @@ function ServiceFormDemo() {
                     <FieldLegend>New service</FieldLegend>
                     <FieldDescription>Jobs reach an outside system through a service.</FieldDescription>
                     <FieldGroup>
-                        <Field data-invalid={!codeOk}>
-                            <FieldLabel htmlFor="c-code">Code</FieldLabel>
+                        <IssueField
+                            id="c-code"
+                            label="Code"
+                            help="What jobs name this service by."
+                            error={codeOk ? null : 'Use lowercase letters, digits and dashes.'}
+                        >
                             <Input
                                 id="c-code"
                                 className="font-mono"
                                 value={code}
                                 aria-invalid={!codeOk}
+                                aria-describedby="c-code-help"
                                 onChange={(event) => setCode(event.target.value)}
                             />
-                            {codeOk ? (
-                                <FieldDescription>What jobs name this service by.</FieldDescription>
-                            ) : (
-                                <FieldError>Use lowercase letters, digits and dashes.</FieldError>
-                            )}
-                        </Field>
+                        </IssueField>
                         <Field>
                             <FieldLabel htmlFor="c-name">Name</FieldLabel>
                             <Input id="c-name" defaultValue="Orders API" />

@@ -4,10 +4,12 @@ import { useMemo, useState } from 'react'
 
 import { AccountMenu } from '../components/AccountMenu'
 import { CodeField } from '../components/CodeField'
+import { DataTable, type DataColumn } from '../components/DataTable'
+import { DescriptionList } from '../components/DescriptionList'
 import { Field } from '../components/Field'
 import { FilterChip } from '../components/FilterChip'
-import { ListTable, type Column } from '../components/ListTable'
 import { PageHeader } from '../components/PageHeader'
+import { Problem } from '../components/Problem'
 import { Rail, type RailGroup } from '../components/Rail'
 import { SearchField } from '../components/SearchField'
 import { PanelSection, SidePanel } from '../components/SidePanel'
@@ -77,8 +79,17 @@ const GROUPS: RailGroup[] = [
 
 const Status = ({ status }: { status: string }) => <StatusChip status={status as RunStatus} />
 
-const COLUMNS: Column<Run>[] = [
-    { id: 'run', header: 'Run', width: '6rem', cell: (run) => <span className="font-mono text-xs text-muted-foreground">{run.id}</span> },
+/** How long a run took in seconds, for sorting; a run still going sorts last. */
+const seconds = (run: Run) => (run.took === '-' ? Number.POSITIVE_INFINITY : Number.parseFloat(run.took))
+
+const COLUMNS: DataColumn<Run>[] = [
+    {
+        id: 'run',
+        header: 'Run',
+        width: '6rem',
+        cell: (run) => <span className="font-mono text-xs text-muted-foreground">{run.id}</span>,
+        sortValue: (run) => run.id,
+    },
     {
         id: 'job',
         header: 'Job',
@@ -89,10 +100,24 @@ const COLUMNS: Column<Run>[] = [
                 {run.step !== null && <span className="text-faint"> at {run.step}</span>}
             </>
         ),
+        sortValue: (run) => run.job,
     },
-    { id: 'status', header: 'Status', width: '10rem', cell: (run) => <Status status={run.status} /> },
-    { id: 'started', header: 'Started', width: '7rem', cell: (run) => <span className="text-xs text-muted-foreground">{run.at}</span> },
-    { id: 'took', header: 'Took', width: '4rem', align: 'end', cell: (run) => <span className="font-mono text-xs">{run.took}</span> },
+    { id: 'status', header: 'Status', width: '10rem', cell: (run) => <Status status={run.status} />, sortValue: (run) => run.status },
+    {
+        id: 'started',
+        header: 'Started',
+        width: '7rem',
+        cell: (run) => <span className="text-xs text-muted-foreground">{run.at}</span>,
+        sortValue: (run) => Number.parseInt(run.at, 10),
+    },
+    {
+        id: 'took',
+        header: 'Took',
+        width: '4rem',
+        align: 'end',
+        cell: (run) => <span className="font-mono text-xs">{run.took}</span>,
+        sortValue: seconds,
+    },
 ]
 
 function Frame({
@@ -185,22 +210,22 @@ function RunsListPage() {
                                         )}
                                     </p>
                                     {open.status === 'failed' && (
-                                        <p className="rounded-control border border-critical/35 bg-critical/10 px-2.5 py-2 text-sm text-critical-ink">
-                                            at $.amount: &apos;n/a&apos; is not of type &apos;number&apos;
-                                        </p>
+                                        <Problem
+                                            title="Invalid amount"
+                                            detail="An `amount` is `n/a`. Amounts are written like `12.50`."
+                                            technical="at $.amount: 'n/a' is not of type 'number'"
+                                        />
                                     )}
                                 </PanelSection>
                                 <PanelSection title="Facts">
-                                    <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
-                                        <dt className="text-muted-foreground">Job</dt>
-                                        <dd>{open.job}</dd>
-                                        <dt className="text-muted-foreground">Started</dt>
-                                        <dd>{open.at}</dd>
-                                        <dt className="text-muted-foreground">Took</dt>
-                                        <dd className="font-mono">{open.took}</dd>
-                                        <dt className="text-muted-foreground">Run</dt>
-                                        <dd className="font-mono">{open.id}</dd>
-                                    </dl>
+                                    <DescriptionList
+                                        items={[
+                                            { term: 'Job', value: open.job },
+                                            { term: 'Started', value: open.at },
+                                            { term: 'Took', value: open.took, code: true },
+                                            { term: 'Run', value: open.id, code: true },
+                                        ]}
+                                    />
                                 </PanelSection>
                             </>
                         ),
@@ -242,17 +267,17 @@ function RunsListPage() {
                     <FilterChip facet="Job" />
                     <FilterChip facet="Started by" />
                 </div>
-                <ListTable
+                <DataTable
                     columns={COLUMNS}
                     rows={rows}
                     rowKey={(run) => run.id}
-                    selected={(run) => run.id === chosen}
-                    onSelect={(run) => {
+                    opened={(run) => run.id === chosen}
+                    onOpen={(run) => {
                         setChosen(run.id)
                         setPanelOpen(true)
                     }}
-                    empty="No run matches."
-                    foot={`${rows.length} of ${RUNS.length} loaded`}
+                    minWidth="32rem"
+                    words={{ empty: 'No run matches.' }}
                 />
             </Page>
         </Frame>

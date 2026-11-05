@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
+import { ListTable, type Column } from '../../components/ListTable'
 import { LoadingBar, LoadingOverlay, PageProgress } from '../../components/Loaders'
-import { Section } from '../../components/Section'
 import { StatusChip, type Status } from '../../components/StatusChip'
 import { Button } from '../../components/ui/button'
 
@@ -37,27 +37,34 @@ function Bars() {
     )
 }
 
-const RUNS: { id: string; job: string; state: Status; took: string }[] = [
+interface Run {
+    id: string
+    job: string
+    state: Status
+    took: string
+}
+
+const RUNS: Run[] = [
     { id: 'r1', job: 'import-orders', state: 'running', took: '1m 12s' },
     { id: 'r2', job: 'nightly-export', state: 'failed', took: '4.2s' },
     { id: 'r3', job: 'rebuild-index', state: 'succeeded', took: '6m 03s' },
     { id: 'r4', job: 'send-digest', state: 'succeeded', took: '12.8s' },
 ]
 
-function Rows() {
-    return (
-        <ul className="divide-y divide-border">
-            {RUNS.map((run) => (
-                <li key={run.id} className="grid grid-cols-[minmax(0,1fr)_7rem_4rem] items-center gap-3 px-3 py-2 text-sm">
-                    <span className="truncate font-mono">{run.job}</span>
-                    <span>
-                        <StatusChip status={run.state} />
-                    </span>
-                    <span className="text-right text-muted-foreground tabular-nums">{run.took}</span>
-                </li>
-            ))}
-        </ul>
-    )
+const COLUMNS: Column<Run>[] = [
+    { id: 'job', header: 'Job', width: 'minmax(0,1fr)', cell: (run) => <span className="truncate font-mono">{run.job}</span> },
+    { id: 'state', header: 'State', width: '7rem', cell: (run) => <StatusChip status={run.state} /> },
+    {
+        id: 'took',
+        header: 'Took',
+        width: '4rem',
+        align: 'end',
+        cell: (run) => <span className="text-muted-foreground tabular-nums">{run.took}</span>,
+    },
+]
+
+function Rows({ foot }: { foot?: string }) {
+    return <ListTable columns={COLUMNS} rows={RUNS} rowKey={(run) => run.id} foot={foot} />
 }
 
 function PageLoad() {
@@ -68,9 +75,7 @@ function PageLoad() {
                 <PageProgress loading delay={0} value={60} />
             </header>
             <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-6">
-                <Section title="Runs" flush>
-                    <Rows />
-                </Section>
+                <Rows />
             </div>
         </div>
     )
@@ -96,9 +101,7 @@ function ElementReload({ interactive = false }: { interactive?: boolean }) {
                 </div>
             )}
             <LoadingOverlay loading={loading} delay={interactive ? 300 : 0} className="rounded-surface">
-                <Section title="Runs" meta="248 today" flush>
-                    <Rows />
-                </Section>
+                <Rows foot="4 of 248 today" />
             </LoadingOverlay>
         </Ground>
     )

@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Filter, Info } from 'lucide-react'
 
+import { Field } from '../../components/Field'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
-import { Label } from '../../components/ui/label'
 import { Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger } from '../../components/ui/popover'
 
 const meta: Meta = { title: 'Primitives/Overlays/Popover' }
@@ -57,15 +57,12 @@ function FilterRuns() {
                         <PopoverTitle>Filter runs</PopoverTitle>
                         <PopoverDescription>Show runs of import-orders that match.</PopoverDescription>
                     </PopoverHeader>
-                    <div className="grid gap-2">
-                        <Label htmlFor="since">Since</Label>
+                    <Field id="since" label="Since">
                         <Input id="since" defaultValue="2026-11-01 00:00" />
-                    </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="state">State</Label>
-                        <Input id="state" defaultValue="failed" aria-invalid />
-                        <p className="text-xs text-destructive">Pick a state: succeeded, failed or running.</p>
-                    </div>
+                    </Field>
+                    <Field id="state" label="State" error="Pick a state: succeeded, failed or running.">
+                        <Input id="state" defaultValue="done" aria-invalid />
+                    </Field>
                     <div className="flex justify-end gap-2">
                         <Button variant="ghost" size="sm">
                             Clear
