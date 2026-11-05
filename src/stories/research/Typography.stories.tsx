@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { useState } from 'react'
+import { type RefObject, useRef, useState } from 'react'
 
 import { Segmented } from '../../components/Segmented'
 
@@ -28,6 +28,8 @@ const MONO_SHARE_SMALL = 0.49 / 0.516
 interface Option {
     id: string
     label: string
+    /** The label in the pair menu, where four must fit in half the width. */
+    short: string
     what: string
     sans: string
     mono: string
@@ -49,6 +51,7 @@ const OPTIONS: Option[] = [
     {
         id: 'plex',
         label: 'Plex Sans and Plex Mono',
+        short: 'Plex',
         what: 'The default today: one family, x-height 0.516 for both.',
         sans: PLEX_SANS,
         mono: PLEX_MONO,
@@ -57,6 +60,7 @@ const OPTIONS: Option[] = [
     {
         id: 'geist',
         label: 'Geist and Geist Mono',
+        short: 'Geist',
         what: 'A family matched like Plex, x-height 0.530 for both; tighter and rounder.',
         sans: "'Geist Variable', system-ui, sans-serif",
         mono: "'Geist Mono Variable', ui-monospace, monospace",
@@ -65,6 +69,7 @@ const OPTIONS: Option[] = [
     {
         id: 'inter',
         label: 'Inter and JetBrains Mono',
+        short: 'Inter + JetBrains',
         what: 'x-heights 0.546 and 0.550, so mono needs almost no correction; the largest-looking pair.',
         sans: "'Inter Variable', system-ui, sans-serif",
         mono: JETBRAINS_MONO,
@@ -73,6 +78,7 @@ const OPTIONS: Option[] = [
     {
         id: 'plex-jetbrains',
         label: 'Plex Sans and JetBrains Mono',
+        short: 'Plex + JetBrains',
         what: 'Today’s sans with a taller, narrower mono: 0.516 beside 0.550.',
         sans: PLEX_SANS,
         mono: JETBRAINS_MONO,
@@ -87,9 +93,25 @@ const schemeOf = (globals: Record<string, unknown>): Scheme => (globals.theme ==
 const SINK = 'iframe.html?id=themes-kitchen-sink--kitchen-sink&viewMode=story&globals=motion:off'
 
 /** The kitchen sink in a frame, with the option's typefaces laid on once it has loaded. */
-function Frame({ option, scheme, scale = 1, height = 900 }: { option: Option; scheme: Scheme; scale?: number; height?: number }) {
+function Frame({
+    option,
+    scheme,
+    scale = 1,
+    height = 900,
+    bare = false,
+}: {
+    option: Option
+    scheme: Scheme
+    scale?: number
+    height?: number
+    /** Without its own border, inside a pane that has one. */
+    bare?: boolean
+}) {
     return (
-        <div className="overflow-hidden rounded-lg border border-border-strong" style={{ width: 1440 * scale, height: height * scale }}>
+        <div
+            className={bare ? 'overflow-hidden' : 'overflow-hidden rounded-lg border border-border-strong'}
+            style={{ width: 1440 * scale, height: height * scale }}
+        >
             <iframe
                 title={option.label}
                 src={`${SINK};theme:${scheme}`}
@@ -196,18 +218,58 @@ function SpecimenGrid() {
     )
 }
 
-/** Every pair over the kitchen sink at a glance, two to a row. */
-function SideBySide({ scheme }: { scheme: Scheme }) {
+/** The height the kitchen sink is drawn at in a pane, so its own page never scrolls and the pane does. */
+const PANE_HEIGHT = 2000
+
+/** One half of the comparison: a pair to choose, and the kitchen sink at real size in it. */
+function Pane({
+    chosen,
+    onChoose,
+    scheme,
+    pane,
+    onScroll,
+}: {
+    chosen: string
+    onChoose: (id: string) => void
+    scheme: Scheme
+    pane: RefObject<HTMLDivElement | null>
+    onScroll: () => void
+}) {
+    const option = OPTIONS.find((one) => one.id === chosen) ?? OPTIONS[0]
     return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(41rem,1fr))] gap-x-8 gap-y-8">
-                {OPTIONS.map((option, index) => (
-                    <figure key={option.id} className="flex flex-col gap-2.5">
-                        <Caption option={option} index={index} />
-                        <Frame option={option} scheme={scheme} scale={0.45} />
-                    </figure>
-                ))}
+        <div className="flex min-h-0 min-w-0 flex-col gap-2.5">
+            <Segmented
+                label="Typeface"
+                value={chosen}
+                onChoose={onChoose}
+                options={OPTIONS.map((one) => ({ value: one.id, label: one.short }))}
+            />
+            <Caption option={option} index={OPTIONS.indexOf(option)} />
+            <div ref={pane} onScroll={onScroll} className="min-h-0 flex-1 overflow-auto rounded-lg border border-border-strong">
+                <Frame key={`${option.id}-${scheme}`} option={option} scheme={scheme} height={PANE_HEIGHT} bare />
             </div>
+        </div>
+    )
+}
+
+/** Two pairs over the kitchen sink at real size, side by side; scrolling one pane scrolls the other to the same spot. */
+function SideBySide({ scheme }: { scheme: Scheme }) {
+    const [left, setLeft] = useState('plex')
+    const [right, setRight] = useState('geist')
+    const leftPane = useRef<HTMLDivElement>(null)
+    const rightPane = useRef<HTMLDivElement>(null)
+    const follow = (from: typeof leftPane, to: typeof leftPane) => () => {
+        const source = from.current
+        const target = to.current
+        if (source === null || target === null) return
+        // Only a change moves the other pane, so the two never echo each other.
+        if (target.scrollTop !== source.scrollTop) target.scrollTop = source.scrollTop
+        if (target.scrollLeft !== source.scrollLeft) target.scrollLeft = source.scrollLeft
+    }
+    return (
+        <div className="grid h-svh grid-cols-2 gap-4 bg-background p-4 text-foreground">
+            <Pane chosen={left} onChoose={setLeft} scheme={scheme} pane={leftPane} onScroll={follow(leftPane, rightPane)} />
+            <Pane chosen={right} onChoose={setRight} scheme={scheme} pane={rightPane} onScroll={follow(rightPane, leftPane)} />
         </div>
     )
 }
@@ -236,7 +298,7 @@ function OneAtATime({ scheme }: { scheme: Scheme }) {
 /** Each pair as text at real size: a heading, prose with inline code, a table, a block of code. */
 export const Specimens: StoryObj = { name: 'Specimens', render: () => <SpecimenGrid /> }
 
-/** Every pair over the kitchen sink, in the toolbar's scheme. */
+/** Two pairs over the kitchen sink at real size, scrolled together, in the toolbar's scheme. */
 export const Compare: StoryObj = { name: 'Side by side', render: (_, { globals }) => <SideBySide scheme={schemeOf(globals)} /> }
 
 /** One pair over the kitchen sink at full size. */
