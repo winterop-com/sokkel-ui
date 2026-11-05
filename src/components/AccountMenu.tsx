@@ -42,7 +42,7 @@ export function AccountMenu({
         <Menu.Root>
             <Menu.Trigger
                 aria-label={words.account}
-                className="flex h-full w-full items-center gap-2.5 px-3 text-sm hover:bg-secondary data-[popup-open]:bg-secondary"
+                className="flex h-full w-full items-center gap-2.5 pr-3 pl-4 text-sm hover:bg-secondary data-[popup-open]:bg-secondary"
             >
                 {avatar('size-6')}
                 {!collapsed && (
