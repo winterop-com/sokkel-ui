@@ -1,5 +1,8 @@
-import { BaseEdge, EdgeLabelRenderer, getSmoothStepPath, Position, type Edge, type EdgeProps } from '@xyflow/react'
+import { BaseEdge, EdgeLabelRenderer, getSmoothStepPath, Position, useReactFlow, type Edge, type EdgeProps } from '@xyflow/react'
+import { Plus } from 'lucide-react'
+import { useContext } from 'react'
 
+import { GraphEditingContext } from './context'
 import { midpointOf, routedPath, type GraphPoint } from './layout'
 
 /** What a graph edge carries: elk's route once it has one, and how the edge is drawn. */
@@ -60,10 +63,14 @@ function loopOf(sx: number, sy: number, tx: number, ty: number, down: boolean): 
 
 /**
  * One edge, along the route elk gave it, or a stepped line between the two handles until elk has
- * answered. A label sits where elk made room for it, or at the middle of the line.
+ * answered. A label sits where elk made room for it, or at the middle of the line. On a canvas
+ * whose editing takes `onInsert`, an unlabeled edge shows an add button at its middle while it is
+ * hovered or chosen.
  */
 export function GraphEdge({
     id,
+    source,
+    target,
     data,
     selected,
     sourceX,
@@ -90,6 +97,12 @@ export function GraphEdge({
     const from = loop?.from ?? (routed ? (points[points.length - 2] as GraphPoint) : behind(tip, targetPosition))
     const labelAt = loop?.labelAt ?? data?.labelAt ?? (routed ? midpointOf(points) : undefined) ?? { x: middleX, y: middleY }
     const tone = data?.tone ?? 'plain'
+    const context = useContext(GraphEditingContext)
+    const flow = useReactFlow()
+    const onInsert =
+        data?.label === undefined && data?.loop !== true && (selected === true || context?.hovered === id)
+            ? context?.editing.onInsert
+            : undefined
     const stroke = selected === true ? 'var(--foreground)' : tone === 'strong' ? 'var(--muted-foreground)' : 'var(--xy-edge-stroke)'
     return (
         <>
@@ -111,6 +124,28 @@ export function GraphEdge({
                     >
                         {data.label}
                     </span>
+                </EdgeLabelRenderer>
+            )}
+            {onInsert !== undefined && context !== null && (
+                <EdgeLabelRenderer>
+                    <button
+                        type="button"
+                        data-slot="graph-insert"
+                        aria-label={context.words.insert}
+                        title={context.words.insert}
+                        onPointerEnter={() => context.hover(id)}
+                        onPointerLeave={() => context.hover(null)}
+                        onClick={(event) => {
+                            event.stopPropagation()
+                            context.hover(null)
+                            const at = flow.screenToFlowPosition({ x: event.clientX, y: event.clientY })
+                            onInsert({ id, source, target }, { clientX: event.clientX, clientY: event.clientY, ...at })
+                        }}
+                        className="nodrag nopan pointer-events-auto absolute flex size-4 items-center justify-center rounded-full border border-border-strong bg-card text-muted-foreground outline-none group-data-graph-connecting/graph:hidden hover:border-ring hover:bg-ring hover:text-background focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                        style={{ transform: `translate(-50%, -50%) translate(${String(labelAt.x)}px, ${String(labelAt.y)}px)` }}
+                    >
+                        <Plus className="size-2.5" aria-hidden />
+                    </button>
                 </EdgeLabelRenderer>
             )}
         </>

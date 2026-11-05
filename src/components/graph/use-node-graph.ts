@@ -45,7 +45,8 @@ export function useNodeGraph(
         positions,
     }: {
         direction?: GraphDirection
-        selected?: string | null
+        /** The chosen node, or every chosen node. */
+        selected?: string | readonly string[] | null
         /** Where nodes were moved to, by id, over where the layout put them. */
         positions?: Readonly<Record<string, { x: number; y: number }>>
     } = {},
@@ -87,6 +88,7 @@ export function useNodeGraph(
 
     const nodes = useMemo<Node[]>(() => {
         const byId = new Map(items.map((item) => [item.id, item]))
+        const chosen = new Set(selected === null ? [] : typeof selected === 'string' ? [selected] : selected)
         return placed.nodes.flatMap((node) => {
             const item = byId.get(node.id)
             if (item === undefined) return []
@@ -98,11 +100,11 @@ export function useNodeGraph(
                     width: node.width,
                     height: node.height,
                     measured: { width: node.width, height: node.height },
-                    selected: node.id === selected,
+                    selected: chosen.has(node.id),
                     selectable: item.selectable ?? true,
                     focusable: item.selectable ?? true,
                     className:
-                        'rounded-node outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring',
+                        'group/node rounded-node outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring',
                     data: item.data,
                 },
             ]

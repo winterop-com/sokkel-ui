@@ -36,6 +36,10 @@ of datasets and jobs) and StateMachine (labeled transitions, initial and final m
 current state). A canvas given `editing`, and PipelineGraph with it, becomes an editor: ports
 to connect, Delete to remove, boxes to drag, a menu on right-click and a connection dropped on
 empty ground, each reported to the app, which owns the graph. Views select only by default.
+An editor also refuses a connection with the reason said on the canvas, adds a step from the add
+button at a node's output or an edge's middle, takes blocks dragged in from a palette, and chooses
+several nodes with Shift. BlockPalette, BlockPicker, GraphOverlay, GraphNotice, GraphToolbar and
+useGraphHistory are its parts; the Pipeline editor stories show each way of building a pipeline.
 
 ## Validation
 
