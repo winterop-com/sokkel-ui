@@ -1,4 +1,3 @@
-import { PanelRightClose } from 'lucide-react'
 import { useRef, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
@@ -13,8 +12,8 @@ export interface SidePanelTab {
 
 /**
  * The right-hand panel beside a page: a header bar the height of the shell's top bar, with the
- * panel's tabs (or its title when it has one tab) and the close control at its right edge, then
- * the content scrolling under it.
+ * panel's tabs (or its title when it has one tab), then the content scrolling under it. The shell's
+ * toggle at the end of its top bar shows and hides the panel; the panel has no close of its own.
  *
  * The header lines up with the shell's top bar, so the panel reads as a column of the shell, not
  * as a card dropped beside the page. Given `size` and `onSizeChange`, its left edge drags to
@@ -24,7 +23,6 @@ export function SidePanel({
     tabs,
     active,
     onActiveChange,
-    onClose,
     width = '22rem',
     size,
     onSizeChange,
@@ -32,12 +30,11 @@ export function SidePanel({
     maxSize = 640,
     defaultSize = 352,
     className,
-    words = { close: 'Close the side panel', resize: 'Resize the side panel' },
+    words = { resize: 'Resize the side panel' },
 }: {
     tabs: SidePanelTab[]
     active?: string
     onActiveChange?: (id: string) => void
-    onClose?: () => void
     /** A CSS width, when the panel is not resizable. */
     width?: string
     /** The width in pixels; with `onSizeChange` the left edge drags to resize it. */
@@ -48,7 +45,7 @@ export function SidePanel({
     /** The width a double click on the edge returns to. */
     defaultSize?: number
     className?: string
-    words?: { close: string; resize: string }
+    words?: { resize: string }
 }) {
     const current = tabs.find((tab) => tab.id === active) ?? tabs[0]
     const panel = useRef<HTMLElement>(null)
@@ -95,17 +92,6 @@ export function SidePanel({
                                 </button>
                             ))}
                         </div>
-                    )}
-                    {onClose !== undefined && (
-                        <button
-                            type="button"
-                            aria-label={words.close}
-                            title={words.close}
-                            className="ml-auto flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground"
-                            onClick={onClose}
-                        >
-                            <PanelRightClose className="size-4" aria-hidden />
-                        </button>
                     )}
                 </div>
                 <div className="min-h-0 flex-1 overflow-y-auto">{current?.content}</div>

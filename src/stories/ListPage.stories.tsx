@@ -99,11 +99,15 @@ function Frame({
     children,
     active = 'runs',
     panel,
+    panelOpen,
+    onPanelOpenChange,
     foot,
 }: {
     children: React.ReactNode
     active?: string
     panel?: React.ReactNode
+    panelOpen?: boolean
+    onPanelOpenChange?: (open: boolean) => void
     foot?: React.ReactNode
 }) {
     const [collapsed, setCollapsed] = useState(false)
@@ -133,6 +137,8 @@ function Frame({
                 />
             }
             panel={panel}
+            panelOpen={panelOpen}
+            onPanelOpenChange={onPanelOpenChange}
             foot={foot}
             top={
                 <>
@@ -150,6 +156,7 @@ function RunsListPage() {
     const [query, setQuery] = useState('')
     const [status, setStatus] = useState<string | undefined>('failed')
     const [chosen, setChosen] = useState<string>('01a1a5c2')
+    const [panelOpen, setPanelOpen] = useState<boolean | undefined>(undefined)
     const rows = useMemo(
         () => RUNS.filter((run) => (status === undefined || run.status === status) && run.job.includes(query.trim())),
         [query, status],
@@ -161,7 +168,6 @@ function RunsListPage() {
             <SidePanel
                 active={tab}
                 onActiveChange={setTab}
-                onClose={() => setChosen('')}
                 tabs={[
                     {
                         id: 'run',
@@ -214,6 +220,8 @@ function RunsListPage() {
     return (
         <Frame
             panel={panel}
+            panelOpen={panelOpen}
+            onPanelOpenChange={setPanelOpen}
             foot={
                 <>
                     <span>{rows.length} shown</span>
@@ -239,7 +247,10 @@ function RunsListPage() {
                     rows={rows}
                     rowKey={(run) => run.id}
                     selected={(run) => run.id === chosen}
-                    onSelect={(run) => setChosen(run.id)}
+                    onSelect={(run) => {
+                        setChosen(run.id)
+                        setPanelOpen(true)
+                    }}
                     empty="No run matches."
                     foot={`${rows.length} of ${RUNS.length} loaded`}
                 />
