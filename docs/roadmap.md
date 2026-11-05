@@ -19,15 +19,6 @@ to `plan.md` when it ships.
 
 The first release under the new name.
 
-- **Typefaces.** Plex Sans and Plex Mono stay the default; try the alternatives in
-  Research/Typography, laid over the kitchen sink, and pick:
-    - Geist and Geist Mono, a family matched like Plex (x-height 0.530 for both);
-    - Inter and JetBrains Mono (0.546 and 0.550), which need almost no mono correction;
-    - Plex Sans with JetBrains Mono.
-
-    A theme can already set its own faces through `--typeface-sans` and `--typeface-mono`; a pick
-    changes the default only.
-
 - **Body size.** The base layer sets the body at 16px (`text-base`) while most components set 15px
   (`text-sm`). Settle on one, keeping 16px inputs on phones so a focused field does not zoom.
 - **Dark contrast for every theme.** 0.4.0 lifted secondary text, borders, inputs, cards and
@@ -49,8 +40,8 @@ The first release under the new name.
   typed, grouped by kind (videos, people, jobs) with thumbnails and previews, moved through by the
   keyboard, and a results page with facets and counts. A data table's bar, the top bar and the
   command palette take it, each with the room it is given.
-- **Mono size grid.** A story that sets mono text at every size beside its sans neighbor, to check
-  the `font-size-adjust` rule; it belongs with the typeface round.
+- **Mono size grid.** A story that sets mono text at every size beside its sans neighbor, in Plex
+  and in Geist, to check the `font-size-adjust` rule.
 
 ## Later
 
