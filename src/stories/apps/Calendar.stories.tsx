@@ -30,6 +30,7 @@ import { StatusChip, type Status } from '../../components/StatusChip'
 import { ThemeToggle } from '../../components/ThemeToggle'
 import { TopBar } from '../../components/TopBar'
 import { Button } from '../../components/ui/button'
+import { Checkbox } from '../../components/ui/checkbox'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { useIsMobile } from '../../hooks/use-mobile'
 import { cn } from '../../lib/cn'
@@ -283,29 +284,19 @@ function CalendarToggles({ shown, onChange }: { shown: CalendarId[]; onChange: (
             {CALENDARS.map((calendar) => {
                 const on = shown.includes(calendar.id)
                 return (
-                    <button
+                    <label
                         key={calendar.id}
-                        type="button"
-                        role="checkbox"
-                        aria-checked={on}
-                        className="flex h-8 items-center gap-2.5 rounded-md px-1.5 text-left text-sm hover:bg-secondary"
-                        onClick={() => onChange(on ? shown.filter((other) => other !== calendar.id) : [...shown, calendar.id])}
+                        className="flex h-8 cursor-pointer items-center gap-2.5 rounded-md px-1.5 text-sm hover:bg-secondary"
                     >
-                        <span
-                            aria-hidden
-                            className={cn(
-                                'flex size-4 shrink-0 items-center justify-center rounded-[4px] border-2',
-                                on ? cn('border-transparent', KIND_FILL[calendar.color]) : 'border-border-strong',
-                            )}
-                        >
-                            {on && (
-                                <svg viewBox="0 0 12 12" className="size-3 text-white" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M2.5 6.2 5 8.5l4.5-5" />
-                                </svg>
-                            )}
-                        </span>
+                        <Checkbox
+                            checked={on}
+                            onCheckedChange={(next) =>
+                                onChange(next ? [...shown, calendar.id] : shown.filter((other) => other !== calendar.id))
+                            }
+                        />
+                        <span aria-hidden className={cn('size-2.5 shrink-0 rounded-full', KIND_FILL[calendar.color])} />
                         <span className={cn('flex-1 truncate', !on && 'text-muted-foreground')}>{calendar.name}</span>
-                    </button>
+                    </label>
                 )
             })}
         </section>

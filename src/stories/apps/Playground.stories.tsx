@@ -18,11 +18,11 @@ import { useState, type ReactNode } from 'react'
 
 import { AccountMenu } from '../../components/AccountMenu'
 import { CodeEditor } from '../../components/CodeEditor'
+import { DataTable, type DataColumn } from '../../components/DataTable'
 import { DescriptionList } from '../../components/DescriptionList'
 import { Field } from '../../components/Field'
 import { FilterChip } from '../../components/FilterChip'
 import { Inspector, InspectorSection } from '../../components/Inspector'
-import { ListTable, type Column } from '../../components/ListTable'
 import { Markdown } from '../../components/Markdown'
 import { PageHeader } from '../../components/PageHeader'
 import { Rail, type RailGroup } from '../../components/Rail'
@@ -216,19 +216,45 @@ const RUNS: Run[] = [
     },
 ]
 
-const COLUMNS: Column<Run>[] = [
-    { id: 'prompt', header: 'Prompt', width: 'minmax(0,1fr)', cell: (run) => <span className="truncate font-mono">{run.prompt}</span> },
-    { id: 'model', header: 'Model', width: '7.5rem', cell: (run) => <span className="font-mono text-muted-foreground">{run.model}</span> },
-    { id: 'state', header: 'State', width: '6.5rem', cell: (run) => <StatusChip status={run.state} /> },
+const COLUMNS: DataColumn<Run>[] = [
+    {
+        id: 'prompt',
+        header: 'Prompt',
+        width: 'minmax(9rem,1fr)',
+        cell: (run) => <span className="font-mono">{run.prompt}</span>,
+        sortValue: (run) => run.prompt,
+    },
+    {
+        id: 'model',
+        header: 'Model',
+        width: '7.5rem',
+        cell: (run) => <span className="font-mono text-muted-foreground">{run.model}</span>,
+        sortValue: (run) => run.model,
+    },
+    { id: 'state', header: 'State', width: '6.5rem', cell: (run) => <StatusChip status={run.state} />, sortValue: (run) => run.state },
     {
         id: 'tokens',
         header: 'Tokens',
         width: '5rem',
         align: 'end',
         cell: (run) => <span className="tabular-nums">{run.tokens.toLocaleString('en-US')}</span>,
+        sortValue: (run) => run.tokens,
     },
-    { id: 'latency', header: 'Latency', width: '5.5rem', align: 'end', cell: (run) => <span className="tabular-nums">{run.latency}</span> },
-    { id: 'when', header: 'When', width: '6rem', cell: (run) => <span className="text-muted-foreground tabular-nums">{run.when}</span> },
+    {
+        id: 'latency',
+        header: 'Latency',
+        width: '5.5rem',
+        align: 'end',
+        cell: (run) => <span className="tabular-nums">{run.latency}</span>,
+        sortValue: (run) => Number.parseFloat(run.latency),
+    },
+    {
+        id: 'when',
+        header: 'When',
+        width: '6rem',
+        cell: (run) => <span className="text-muted-foreground tabular-nums">{run.when}</span>,
+        sortValue: (run) => run.id,
+    },
 ]
 
 function groups(view: View): RailGroup[] {
@@ -530,13 +556,14 @@ function HistoryPage() {
                 <FilterChip facet="By" />
             </div>
             <div className="flex min-h-0 flex-1 items-start gap-(--density-inspector-gap)">
-                <ListTable
+                <DataTable
                     columns={COLUMNS}
                     rows={rows}
                     rowKey={(run) => run.id}
-                    selected={(run) => run.id === chosen.id}
-                    onSelect={setChosen}
-                    foot={`${String(rows.length)} of 1,284`}
+                    onOpen={setChosen}
+                    opened={(run) => run.id === chosen.id}
+                    total={1_284}
+                    minWidth="40rem"
                     className="min-w-0 flex-1"
                 />
                 <div className="hidden self-stretch xl:flex">

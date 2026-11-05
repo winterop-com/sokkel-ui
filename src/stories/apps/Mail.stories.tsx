@@ -21,7 +21,7 @@ import {
     X,
     type LucideIcon,
 } from 'lucide-react'
-import { useState, type CSSProperties, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 
 import { AccountMenu } from '../../components/AccountMenu'
 import { AddressInput, type Address } from '../../components/AddressInput'
@@ -728,43 +728,43 @@ function rail(
     onBox: (box: Box) => void,
 ): { groups: RailGroup[]; renderLink: (entry: RailEntry, children: ReactNode, className: string) => ReactNode } {
     const unread = MAIL.filter((mail) => mail.box === 'inbox' && mail.unread === true).length
-    const counts: Partial<Record<string, number>> = { inbox: unread }
     const groups: RailGroup[] = [
         {
             id: 'boxes',
-            entries: BOXES.map((entry) => ({ id: entry.id, label: entry.label, icon: entry.icon, href: '#', active: entry.id === box })),
+            entries: BOXES.map((entry) => ({
+                id: entry.id,
+                label: entry.label,
+                icon: entry.icon,
+                href: '#',
+                active: entry.id === box,
+                count: entry.id === 'inbox' ? unread : undefined,
+            })),
         },
         {
             id: 'labels',
             title: 'Labels',
-            entries: Object.values(LABELS).map((label) => ({ id: `label-${label.id}`, label: label.label, icon: Circle, href: '#' })),
+            entries: Object.values(LABELS).map((label) => ({
+                id: `label-${label.id}`,
+                label: label.label,
+                icon: Circle,
+                href: '#',
+                dot: label.color,
+            })),
         },
     ]
-    const renderLink = (entry: RailEntry, children: ReactNode, className: string) => {
-        const label = entry.id.startsWith('label-') ? LABELS[entry.id.slice(6)] : undefined
-        const count = counts[entry.id]
-        return (
-            <a
-                href={entry.href}
-                aria-current={entry.active ? 'page' : undefined}
-                className={cn(
-                    className,
-                    label !== undefined &&
-                        '[&>svg:first-child]:scale-[0.6] [&>svg:first-child]:fill-(--dot) [&>svg:first-child]:text-(--dot)',
-                )}
-                style={label !== undefined ? ({ '--dot': label.color } as CSSProperties) : undefined}
-                onClick={(event) => {
-                    event.preventDefault()
-                    if (label === undefined) onBox(entry.id as Box)
-                }}
-            >
-                {children}
-                {count !== undefined && count > 0 && (
-                    <span className="ml-auto text-xs font-semibold text-foreground tabular-nums">{count}</span>
-                )}
-            </a>
-        )
-    }
+    const renderLink = (entry: RailEntry, children: ReactNode, className: string) => (
+        <a
+            href={entry.href}
+            aria-current={entry.active ? 'page' : undefined}
+            className={className}
+            onClick={(event) => {
+                event.preventDefault()
+                if (!entry.id.startsWith('label-')) onBox(entry.id as Box)
+            }}
+        >
+            {children}
+        </a>
+    )
     return { groups, renderLink }
 }
 
