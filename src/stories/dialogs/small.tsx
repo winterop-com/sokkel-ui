@@ -1,3 +1,4 @@
+import { PageHeader } from '../../components/PageHeader'
 import { CircleCheck, Database, FileText, Filter, Globe, Mail, RotateCw, ShieldCheck, Table2, Upload, Webhook } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
@@ -217,7 +218,7 @@ export function SessionExpired() {
     return (
         <Behind>
             <main className="flex flex-1 flex-col gap-4 p-6">
-                <h1 className="text-lg font-medium">Comment on run #4811</h1>
+                <PageHeader title="Comment on run #4811" />
                 <Textarea value={draft} onChange={(event) => setDraft(event.target.value)} rows={5} className="max-w-2xl" />
                 <div>
                     <Button size="sm">Post comment</Button>
@@ -246,7 +247,7 @@ export function SessionExpired() {
                 <div className="flex items-center gap-3 rounded-control border border-border px-3 py-2">
                     <PersonAvatar name="ada" />
                     <span className="flex flex-col">
-                        <span className="font-mono text-[0.8125rem]">ada</span>
+                        <span className="font-mono text-xs">ada</span>
                         <span className="text-xs text-muted-foreground">ada@example.org</span>
                     </span>
                 </div>
@@ -314,7 +315,7 @@ export function MoveTo() {
                 confirm={{ label: 'Move 3 jobs', onConfirm: () => setOpen(false), why }}
             >
                 <Field id="move-from" label="From">
-                    <p id="move-from" className="font-mono text-[0.8125rem] text-muted-foreground">
+                    <p id="move-from" className="font-mono text-xs text-muted-foreground">
                         {from}
                     </p>
                 </Field>
@@ -503,7 +504,7 @@ export function ReleaseNotes() {
                 words={{ cancel: 'Later' }}
                 confirm={{ label: 'Got it', onConfirm: () => setOpen(false) }}
             >
-                <Markdown content={NOTES} className="[&_h2]:mt-6 [&_h2]:text-base" />
+                <Markdown content={NOTES} />
             </DialogShell>
         </Behind>
     )

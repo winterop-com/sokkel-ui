@@ -15,6 +15,7 @@ import { ThemeToggle } from '../../components/ThemeToggle'
 import { TopBar } from '../../components/TopBar'
 import { Tree, type TreeNode } from '../../components/Tree'
 import { Avatar, AvatarFallback } from '../../components/ui/avatar'
+import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
 import { NativeSelect, NativeSelectOption } from '../../components/ui/native-select'
 import { TooltipProvider } from '../../components/ui/tooltip'
@@ -243,7 +244,7 @@ function Reading({ content }: { content: string }) {
     return (
         <div className="flex gap-10">
             <article ref={article} className="max-w-3xl min-w-0 flex-1">
-                <Markdown content={content} anchors className="text-[0.9375rem] [&_h2]:mt-8 [&_h2]:text-lg [&_h3]:mt-6" />
+                <Markdown content={content} anchors />
             </article>
             <TableOfContents entries={headings} active={active} className="sticky top-0 hidden w-52 shrink-0 self-start xl:flex" />
         </div>
@@ -291,11 +292,7 @@ function Versions({ chosen, onChoose }: { chosen: number; onChoose: (number: num
                         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                             <span className="flex items-baseline gap-2">
                                 <span className="truncate text-sm font-medium">{version.note}</span>
-                                {version.number === CURRENT.number && (
-                                    <span className="shrink-0 rounded-sm bg-primary/15 px-1.5 text-[0.6875rem] font-medium text-primary-ink">
-                                        Current
-                                    </span>
-                                )}
+                                {version.number === CURRENT.number && <Badge variant="secondary">Current</Badge>}
                             </span>
                             <span className="truncate text-xs text-muted-foreground">
                                 Version {version.number}, {version.by}, {version.at}

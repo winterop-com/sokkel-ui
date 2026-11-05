@@ -227,7 +227,7 @@ function Detail({ event }: { event: Entry }) {
             <div className="flex items-start gap-2.5">
                 <span className={cn('mt-1.5 size-2.5 shrink-0 rounded-sm', KIND_FILL[event.color ?? 'blue'])} aria-hidden />
                 <div className="flex min-w-0 flex-col gap-0.5">
-                    <h3 className={cn('text-base leading-6 font-semibold', event.job !== undefined && 'font-mono')}>{event.title}</h3>
+                    <h3 className={cn('text-title font-semibold', event.job !== undefined && 'font-mono')}>{event.title}</h3>
                     <span className="text-sm text-muted-foreground">{when}</span>
                 </div>
             </div>
@@ -391,7 +391,7 @@ function CalendarApp({ view: initialView = 'week', open = null }: { view?: View;
                                     <ChevronRight aria-hidden />
                                 </Button>
                             </div>
-                            <h1 className="min-w-0 flex-1 truncate text-base font-semibold">
+                            <h1 className="min-w-0 flex-1 truncate text-title font-semibold">
                                 {phone ? format(anchor, view === 'week' ? 'EEE d MMM' : 'MMM yyyy') : title}
                             </h1>
                             <Segmented

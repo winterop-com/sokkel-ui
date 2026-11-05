@@ -1,3 +1,4 @@
+import { PageHeader } from '../../components/PageHeader'
 import type { ReactNode } from 'react'
 
 import { Field } from '../../components/Field'
@@ -30,7 +31,7 @@ export function Behind({ action, onAction, children }: { action?: string; onActi
                 <span className="text-faint">/</span>
                 <span className="text-muted-foreground">harbor</span>
                 <span className="text-faint">/</span>
-                <span className="font-mono text-[0.8125rem]">import-orders</span>
+                <span className="font-mono text-xs">import-orders</span>
                 {action !== undefined && (
                     <Button size="sm" variant="outline" className="ml-auto" onClick={onAction}>
                         {action}
@@ -40,7 +41,7 @@ export function Behind({ action, onAction, children }: { action?: string; onActi
             {children ?? (
                 <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-auto p-6">
                     <div className="flex flex-col gap-1">
-                        <h1 className="text-lg font-medium">Import orders</h1>
+                        <PageHeader title="Import orders" />
                         <p className="text-sm text-muted-foreground">
                             Loads the monthly orders file into the warehouse, every night at 02:00 UTC.
                         </p>
@@ -57,12 +58,12 @@ export function Behind({ action, onAction, children }: { action?: string; onActi
                         <tbody>
                             {RUNS.map((run) => (
                                 <tr key={run.id} className="border-b border-border">
-                                    <td className="py-2 font-mono text-[0.8125rem]">#{run.id}</td>
+                                    <td className="py-2 font-mono text-xs">#{run.id}</td>
                                     <td className="py-2">
                                         <StatusChip status={run.status} />
                                     </td>
-                                    <td className="py-2 font-mono text-[0.8125rem] text-muted-foreground">{run.at}</td>
-                                    <td className="py-2 text-right font-mono text-[0.8125rem] text-muted-foreground">{run.took}</td>
+                                    <td className="py-2 font-mono text-xs text-muted-foreground">{run.at}</td>
+                                    <td className="py-2 text-right font-mono text-xs text-muted-foreground">{run.took}</td>
                                 </tr>
                             ))}
                         </tbody>

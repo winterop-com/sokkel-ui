@@ -2,12 +2,12 @@ import type { ChartLook } from './look'
 
 /** An ECharts theme drawn from the library's tokens: the series colors, the typeface, quiet axes and grid. */
 export function chartTheme(look: ChartLook): Record<string, unknown> {
-    const text = { fontFamily: look.font, color: look.muted, fontSize: 11 }
+    const text = { fontFamily: look.font, color: look.muted, fontSize: look.size.label }
     const axis = {
         axisLine: { show: true, lineStyle: { color: look.border } },
         axisTick: { show: false },
-        axisLabel: { color: look.muted, fontFamily: look.font, fontSize: 11 },
-        nameTextStyle: { color: look.muted, fontFamily: look.font, fontSize: 10 },
+        axisLabel: { color: look.muted, fontFamily: look.font, fontSize: look.size.label },
+        nameTextStyle: { color: look.muted, fontFamily: look.font, fontSize: look.size.small },
         splitLine: { show: true, lineStyle: { color: look.grid, width: 1 } },
         splitArea: { show: false },
     }
@@ -22,8 +22,8 @@ export function chartTheme(look: ChartLook): Record<string, unknown> {
         title: {
             left: 12,
             top: 10,
-            textStyle: { color: look.foreground, fontFamily: look.font, fontSize: 13, fontWeight: 500 },
-            subtextStyle: { color: look.muted, fontFamily: look.font, fontSize: 11 },
+            textStyle: { color: look.foreground, fontFamily: look.font, fontSize: look.size.body, fontWeight: 500 },
+            subtextStyle: { color: look.muted, fontFamily: look.font, fontSize: look.size.label },
         },
         legend: {
             icon: 'roundRect',
@@ -39,7 +39,7 @@ export function chartTheme(look: ChartLook): Record<string, unknown> {
             borderColor: look.border,
             borderWidth: 1,
             padding: [6, 10],
-            textStyle: { color: look.foreground, fontFamily: look.font, fontSize: 12 },
+            textStyle: { color: look.foreground, fontFamily: look.font, fontSize: look.size.body },
             extraCssText: 'box-shadow: var(--elevation-pop); border-radius: calc(var(--radius) * 0.8);',
             axisPointer: {
                 lineStyle: { color: look.muted, type: 'dashed', width: 1 },

@@ -109,7 +109,7 @@ function Gallery({ start = 'library', query: initial = '' }: { start?: 'library'
                                     )}
                                 >
                                     <Icon style={{ width: Number(size), height: Number(size) }} aria-hidden />
-                                    <span className="w-full truncate text-center font-mono text-[11px] text-muted-foreground">
+                                    <span className="w-full truncate text-center font-mono text-xs text-muted-foreground">
                                         {copied === name ? 'Copied' : name}
                                     </span>
                                 </button>
