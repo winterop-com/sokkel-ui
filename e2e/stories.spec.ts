@@ -66,6 +66,15 @@ for (const story of stories) {
     test(story.id, async ({ page }, info) => {
         test.setTimeout(3 * 60_000)
         await routeTiles(page, info.config.updateSnapshots === 'all' || info.config.updateSnapshots === 'changed')
+        // Dialogs and popups open at once: a popup placed while its dialog was still zooming in sits a fraction of a
+        // pixel off, which moves its text's anti-aliasing from run to run.
+        await page.addInitScript(() => {
+            const still = document.createElement('style')
+            still.textContent =
+                '*, *::before, *::after { transition-duration: 0s !important; transition-delay: 0s !important; }' +
+                '[data-open], [data-closed], [data-starting-style], [data-ending-style] { animation-duration: 0s !important; animation-delay: 0s !important; }'
+            document.addEventListener('DOMContentLoaded', () => document.head.append(still))
+        })
         // A story that throws is broken however its screenshot looks, and is never approved as a baseline.
         const thrown: string[] = []
         page.on('pageerror', (error) => thrown.push(error.message))
@@ -105,9 +114,6 @@ for (const story of stories) {
                             { timeout: 5000 },
                         )
                         .catch(() => undefined)
-                    // A popup placed while its dialog was still zooming in sits a fraction of a pixel off, which moves its
-                    // text's anti-aliasing from run to run. A resize has every open popup measure itself again.
-                    await page.evaluate(() => window.dispatchEvent(new Event('resize')))
                     await page.waitForTimeout(300)
                     expect(thrown, 'errors thrown by the story').toEqual([])
                     await expect(page).toHaveScreenshot(`${story.id}--${name}-${mode}.png`)
