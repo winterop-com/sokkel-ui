@@ -67,7 +67,19 @@ const preview: Preview = {
         // The foundations and themes first, then the pieces from smallest to whole apps, and research last.
         options: {
             storySort: {
-                order: ['Foundations', 'Themes', 'Primitives', 'Patterns', 'Charts', 'Maps', 'Graphs', 'Media', 'Apps', 'Research'],
+                order: [
+                    'Foundations',
+                    'Themes',
+                    ['All themes', 'Kitchen sink', 'Theme picker', 'Gallery tile'],
+                    'Primitives',
+                    'Patterns',
+                    'Charts',
+                    'Maps',
+                    'Graphs',
+                    'Media',
+                    'Apps',
+                    'Research',
+                ],
             },
         },
         viewport: {
