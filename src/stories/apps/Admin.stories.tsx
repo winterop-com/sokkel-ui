@@ -17,7 +17,7 @@ import {
 import { useState, type ReactNode } from 'react'
 
 import { AccountMenu } from '../../components/AccountMenu'
-import { ChipInput } from '../../components/ChipInput'
+import { AddressInput, isAddress, type Address } from '../../components/AddressInput'
 import { DashboardGrid, KpiRow, SPAN } from '../../components/dashboard/DashboardGrid'
 import { BarGauge } from '../../components/dashboard/BarGauge'
 import type { PanelSeries } from '../../components/dashboard/series'
@@ -26,7 +26,7 @@ import { TimeSeriesPanel } from '../../components/dashboard/TimeSeriesPanel'
 import { DescriptionList } from '../../components/DescriptionList'
 import { ConfirmDialog, DialogShell } from '../../components/DialogShell'
 import { DiffView } from '../../components/DiffView'
-import { Field, describedBy } from '../../components/Field'
+import { Field } from '../../components/Field'
 import { FilterChip } from '../../components/FilterChip'
 import { ListTable, type Column } from '../../components/ListTable'
 import { PageHeader } from '../../components/PageHeader'
@@ -238,12 +238,14 @@ function memberColumns(onRemove: (member: Member) => void): Column<Member>[] {
     ]
 }
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
 function InviteDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
-    const [emails, setEmails] = useState<string[]>(['data@example.org', 'support@example.org', 'margaret@example'])
+    const [emails, setEmails] = useState<Address[]>([
+        { address: 'data@example.org' },
+        { address: 'support@example.org' },
+        { address: 'margaret@example' },
+    ])
     const [role, setRole] = useState<Role>('editor')
-    const bad = emails.filter((email) => !EMAIL.test(email)).length
+    const bad = emails.filter((email) => !isAddress(email.address)).length
     const why = emails.length === 0 ? 'Add at least one address.' : bad > 0 ? 'Fix or remove the addresses that are not valid.' : undefined
     return (
         <DialogShell
@@ -257,16 +259,17 @@ function InviteDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (op
                 why,
             }}
         >
-            <Field id="invite-emails" label="Email addresses" help="Separate them with commas or spaces, or paste a list.">
-                <ChipInput
-                    id="invite-emails"
-                    values={emails}
-                    onChange={setEmails}
-                    validate={(email) => EMAIL.test(email)}
-                    placeholder="name@example.org"
-                    describedBy={describedBy('invite-emails', { help: true })}
-                />
-            </Field>
+            <div className="flex flex-col gap-1.5">
+                <span className="text-sm font-medium">Email addresses</span>
+                <AddressInput value={emails} onChange={setEmails} autoFocus words={{ placeholder: 'Email addresses' }} />
+                <p className={cn('text-xs', bad > 0 ? 'text-critical-ink' : 'text-muted-foreground')}>
+                    {bad === 0
+                        ? 'Separate them with commas, or paste a list.'
+                        : bad === 1
+                          ? '1 address is not valid.'
+                          : `${String(bad)} addresses are not valid.`}
+                </p>
+            </div>
             <div className="flex flex-col gap-1.5">
                 <span id="invite-role" className="text-sm font-medium">
                     Role

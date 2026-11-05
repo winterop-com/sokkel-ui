@@ -1,14 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState, type ReactNode } from 'react'
 
-import { ChipInput } from '../../components/ChipInput'
-import { Field, describedBy } from '../../components/Field'
 import { PermissionMatrix, type Grants, type MatrixGroup, type MatrixRole } from '../../components/PermissionMatrix'
 import { SaveBar } from '../../components/SaveBar'
 import { SecretReveal } from '../../components/SecretReveal'
 import { TooltipProvider } from '../../components/ui/tooltip'
 
-/** The parts of an app's access screens: addresses as chips, a secret shown once, unsaved edits, and roles against permissions. */
+/** The parts of an app's access screens: a secret shown once, unsaved edits, and roles against permissions. */
 function Ground({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
     return (
         <TooltipProvider>
@@ -16,40 +14,6 @@ function Ground({ children, wide = false }: { children: ReactNode; wide?: boolea
                 <div className={wide ? 'flex flex-col gap-6' : 'flex max-w-lg flex-col gap-6'}>{children}</div>
             </div>
         </TooltipProvider>
-    )
-}
-
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
-function Chips() {
-    const [emails, setEmails] = useState(['ada@example.org', 'grace@example.org'])
-    const [hosts, setHosts] = useState(['api.example.org', 'worker-1.example.org', 'scheduler'])
-    const [empty, setEmpty] = useState<string[]>([])
-    return (
-        <Ground>
-            <Field id="emails" label="Email addresses" help="Separate them with commas or spaces, or paste a list.">
-                <ChipInput
-                    id="emails"
-                    values={emails}
-                    onChange={setEmails}
-                    validate={(value) => EMAIL.test(value)}
-                    describedBy={describedBy('emails', { help: true })}
-                />
-            </Field>
-            <Field id="hosts" label="Allowed hosts" hint="one refused">
-                <ChipInput
-                    id="hosts"
-                    values={hosts}
-                    onChange={setHosts}
-                    validate={(value) => value.includes('.')}
-                    mono
-                    words={{ invalid: () => 'A host needs a domain: scheduler.example.org' }}
-                />
-            </Field>
-            <Field id="cc" label="Copy to">
-                <ChipInput id="cc" values={empty} onChange={setEmpty} placeholder="name@example.org" />
-            </Field>
-        </Ground>
     )
 }
 
@@ -122,9 +86,6 @@ function Saving() {
 
 const meta: Meta = { title: 'Patterns/Access' }
 export default meta
-
-/** Addresses as chips, one field refusing an entry, and an empty one with its placeholder. */
-export const ChipField: StoryObj = { name: 'Chip input', render: () => <Chips /> }
 
 /** A token shown once, with its copy button and the warning that it will not be shown again. */
 export const Secret: StoryObj = {

@@ -1,6 +1,5 @@
 import { describe, expect, test } from 'vitest'
 
-import { splitEntries } from './ChipInput'
 import { countChanges, type MatrixGroup, type MatrixRole } from './PermissionMatrix'
 
 const ROLES: MatrixRole[] = [
@@ -31,15 +30,5 @@ describe('changes to a permission matrix', () => {
 
     test('ignores permissions the matrix does not show', () => {
         expect(countChanges({ operator: ['billing:read'] }, {}, ROLES, GROUPS)).toBe(0)
-    })
-})
-
-describe('entries typed into a chip field', () => {
-    test('splits at commas, semicolons, spaces and line breaks, dropping the empty ones', () => {
-        expect(splitEntries('ada@example.org, grace@example.org;\nlinus@example.org  ,')).toEqual([
-            'ada@example.org',
-            'grace@example.org',
-            'linus@example.org',
-        ])
     })
 })
