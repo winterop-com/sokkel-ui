@@ -22,13 +22,15 @@ const WORDS: MediaCardWords = {
  * One album, film or episode in a grid: the cover first, then its title and a line under it. The
  * whole card opens it; a play button rises over the cover on hover and on focus. A square cover is
  * an album, a wide one a video, which can carry its length on the frame and how much of it was
- * watched along the foot of the frame.
+ * watched along the foot of the frame. `layout="row"` sets the cover beside the words, as a list of
+ * what plays next does, with the title on up to two lines.
  */
 export function MediaCard({
     title,
     subtitle,
     cover,
     shape = 'square',
+    layout = 'stack',
     href,
     onSelect,
     onPlay,
@@ -45,6 +47,8 @@ export function MediaCard({
     /** The artwork, which fills the frame. */
     cover: ReactNode
     shape?: 'square' | 'wide'
+    /** The cover above the words, or beside them at `coverWidth`. */
+    layout?: 'stack' | 'row'
     href?: string
     onSelect?: () => void
     /** Plays it without opening it; the button shows only when this is given. */
@@ -64,7 +68,13 @@ export function MediaCard({
     const interactive = href !== undefined || onSelect !== undefined
     const watched = progress === undefined ? undefined : Math.round(Math.min(1, Math.max(0, progress)) * 100)
     return (
-        <article className={cn('group/media relative flex min-w-0 flex-col gap-2.5', className)}>
+        <article
+            className={cn(
+                'group/media relative flex min-w-0',
+                layout === 'row' ? 'flex-row items-start gap-3' : 'flex-col gap-2.5',
+                className,
+            )}
+        >
             {interactive && (
                 <Cover
                     {...(href !== undefined ? { href } : { type: 'button' as const, onClick: onSelect })}
@@ -77,6 +87,7 @@ export function MediaCard({
                 className={cn(
                     'pointer-events-none relative overflow-hidden rounded-surface bg-muted ring-1 ring-border transition-shadow [&>svg]:block [&>svg]:size-full',
                     shape === 'square' ? 'aspect-square' : 'aspect-video',
+                    layout === 'row' && 'w-40 shrink-0',
                     interactive && 'group-hover/media:shadow-pop',
                 )}
             >
@@ -121,12 +132,21 @@ export function MediaCard({
                     </span>
                 )}
             </div>
-            <div className="pointer-events-none flex min-w-0 items-start gap-1">
-                <div className="flex h-[2.75rem] min-w-0 flex-1 flex-col">
-                    <h3 className={cn('truncate text-sm leading-5 font-medium', playing && 'text-primary-ink')} title={title}>
+            <div className={cn('pointer-events-none flex min-w-0 items-start gap-1', layout === 'row' && 'flex-1')}>
+                <div className={cn('flex min-w-0 flex-1 flex-col', layout === 'stack' && 'h-[2.75rem]')}>
+                    <h3
+                        className={cn(
+                            'text-sm leading-5 font-medium',
+                            layout === 'row' ? 'line-clamp-2' : 'truncate',
+                            playing && 'text-primary-ink',
+                        )}
+                        title={title}
+                    >
                         {title}
                     </h3>
-                    {subtitle !== undefined && <p className="truncate text-xs leading-5 text-muted-foreground">{subtitle}</p>}
+                    {subtitle !== undefined && (
+                        <p className={cn('text-xs leading-5 text-muted-foreground', layout === 'stack' && 'truncate')}>{subtitle}</p>
+                    )}
                 </div>
                 {menu !== undefined && (
                     <div className="pointer-events-auto relative z-10 -mr-1.5">

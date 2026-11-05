@@ -93,6 +93,41 @@ export const Videos: StoryObj = {
     ),
 }
 
+/** Videos in a row each, the cover beside a title of up to two lines, as a list of what plays next. */
+export const Rows: StoryObj = {
+    name: 'Rows',
+    render: () => (
+        <Ground>
+            <div className="flex max-w-md flex-col gap-3">
+                {EPISODES.map((episode, index) => (
+                    <MediaCard
+                        key={episode.title}
+                        layout="row"
+                        shape="wide"
+                        title={
+                            index === 1
+                                ? 'Fishing Villages of the Northern Coast, from the First Boat Out to the Last One Home'
+                                : episode.title
+                        }
+                        subtitle={
+                            <>
+                                Coastline
+                                <br />
+                                Episode {index + 1} · 2.4k views
+                            </>
+                        }
+                        cover={<Artwork cover={episode.cover} wide />}
+                        badge={formatTime(episode.length)}
+                        progress={episode.watched}
+                        href="#"
+                        menu={<DropdownMenuItem>Save</DropdownMenuItem>}
+                    />
+                ))}
+            </div>
+        </Ground>
+    ),
+}
+
 export const Compact: StoryObj = {
     name: 'Narrow covers',
     render: () => (

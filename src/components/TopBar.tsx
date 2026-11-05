@@ -48,7 +48,7 @@ export function TopBar({
                             const face = cn('truncate', crumb.code === true && 'font-mono')
                             return (
                                 <Fragment key={`${crumb.label}-${index}`}>
-                                    <li className={cn('min-w-0', !last && 'hidden md:flex')}>
+                                    <li className={cn('flex min-w-0', !last && 'max-md:hidden')}>
                                         {last || crumb.href === undefined ? (
                                             <span
                                                 aria-current={last ? 'page' : undefined}
