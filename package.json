@@ -7,9 +7,6 @@
         "type": "git",
         "url": "git+ssh://git@github.com/winterop-com/winterop-ui.git"
     },
-    "publishConfig": {
-        "registry": "https://npm.pkg.github.com"
-    },
     "files": [
         "LICENSE",
         "THIRD_PARTY_NOTICES.md",
@@ -41,6 +38,9 @@
             "types": "./dist/components/*.d.ts",
             "import": "./dist/components/*.js"
         }
+    },
+    "publishConfig": {
+        "registry": "https://npm.pkg.github.com"
     },
     "scripts": {
         "tokens": "bun scripts/build-tokens.ts",
