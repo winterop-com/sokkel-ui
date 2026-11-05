@@ -39,11 +39,16 @@ function seriesOf(option: EChartsCoreOption): Series[] {
     return (Array.isArray(series) ? series : [series]) as Series[]
 }
 
-/** The option as drawn: ECharts' own legend hidden behind ours, series hidden by name, animation off when asked. */
+/** The option as drawn: ECharts' own legend hidden behind ours, series hidden by name, animation off when asked, the tooltip on the page body. */
 function compose(option: EChartsCoreOption, hidden: ReadonlySet<string>, animate: boolean): EChartsCoreOption {
     const legend = (Array.isArray(option.legend) ? option.legend[0] : option.legend) as Record<string, unknown> | undefined
+    // The tooltip lives on the page body, so a panel's clipping or the chart above it never covers it.
+    const onBody = (tooltip: unknown) => ({ appendTo: 'body', ...(tooltip as Record<string, unknown>) })
+    const tooltip =
+        option.tooltip === undefined ? undefined : Array.isArray(option.tooltip) ? option.tooltip.map(onBody) : onBody(option.tooltip)
     return {
         ...option,
+        ...(tooltip === undefined ? {} : { tooltip }),
         animation: animate && option.animation !== false,
         legend: { show: false, ...legend, selected: Object.fromEntries([...hidden].map((name) => [name, false])) },
     }
