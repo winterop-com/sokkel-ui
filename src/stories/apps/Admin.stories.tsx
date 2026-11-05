@@ -17,6 +17,7 @@ import {
 import { useState, type ReactNode } from 'react'
 
 import { AccountMenu } from '../../components/AccountMenu'
+import { IssueCount } from '../../components/IssueMark'
 import { AddressInput, isAddress, type Address } from '../../components/AddressInput'
 import { DashboardGrid, KpiRow, SPAN } from '../../components/dashboard/DashboardGrid'
 import { BarGauge } from '../../components/dashboard/BarGauge'
@@ -245,6 +246,7 @@ function InviteDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (op
         { address: 'margaret@example' },
     ])
     const [role, setRole] = useState<Role>('editor')
+    const [issueOpen, setIssueOpen] = useState(false)
     const bad = emails.filter((email) => !isAddress(email.address)).length
     const why = emails.length === 0 ? 'Add at least one address.' : bad > 0 ? 'Fix or remove the addresses that are not valid.' : undefined
     return (
@@ -258,17 +260,19 @@ function InviteDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (op
                 onConfirm: () => onOpenChange(false),
                 why,
             }}
+            footer={<IssueCount critical={bad} onPick={() => setIssueOpen(true)} />}
         >
             <div className="flex flex-col gap-1.5">
                 <span className="text-sm font-medium">Email addresses</span>
-                <AddressInput value={emails} onChange={setEmails} autoFocus words={{ placeholder: 'Email addresses' }} />
-                <p className={cn('text-xs', bad > 0 ? 'text-critical-ink' : 'text-muted-foreground')}>
-                    {bad === 0
-                        ? 'Separate them with commas, or paste a list.'
-                        : bad === 1
-                          ? '1 address is not valid.'
-                          : `${String(bad)} addresses are not valid.`}
-                </p>
+                <AddressInput
+                    value={emails}
+                    onChange={setEmails}
+                    autoFocus
+                    issueOpen={issueOpen}
+                    onIssueOpenChange={setIssueOpen}
+                    words={{ placeholder: 'Email addresses' }}
+                />
+                <p className="text-xs text-muted-foreground">Separate them with commas, or paste a list.</p>
             </div>
             <div className="flex flex-col gap-1.5">
                 <span id="invite-role" className="text-sm font-medium">
