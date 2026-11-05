@@ -66,6 +66,7 @@ export function NewJobWizard() {
     const [source, setSource] = useState<(typeof SOURCES)[number]['value']>('http')
     const [url, setUrl] = useState('https://api.example.org/stock')
     const [cron, setCron] = useState('0 */4 * * *')
+    const [cronOpen, setCronOpen] = useState(false)
     const [onFail, setOnFail] = useState(true)
     const [onSucceed, setOnSucceed] = useState(false)
     const [busy, setBusy] = useState(false)
@@ -108,7 +109,7 @@ export function NewJobWizard() {
                     <IssueCount
                         critical={stepIssues}
                         onPick={() => {
-                            if (step === 2) document.getElementById('wizard-cron')?.focus()
+                            if (step === 2) setCronOpen(true)
                             else setIssueOpen(true)
                         }}
                     />
@@ -188,7 +189,15 @@ export function NewJobWizard() {
                     </>
                 )}
                 {step === 2 && (
-                    <CronField id="wizard-cron" value={cron} onChange={setCron} from={new Date('2026-11-05T10:17:00Z')} count={3} />
+                    <CronField
+                        id="wizard-cron"
+                        value={cron}
+                        onChange={setCron}
+                        from={new Date('2026-11-05T10:17:00Z')}
+                        count={3}
+                        issueOpen={cronOpen}
+                        onIssueOpenChange={setCronOpen}
+                    />
                 )}
                 {step === 3 && (
                     <>

@@ -238,7 +238,7 @@ export function DetailsSheet() {
     return (
         <Behind action="Details" onAction={() => setOpen(true)}>
             <Sheet open={open} onOpenChange={guard.onOpenChange}>
-                <SheetContent className={cn('gap-0', NESTED)}>
+                <SheetContent size="md" className={cn('gap-0', NESTED)}>
                     <SheetHeader className="border-b border-border pr-12">
                         <SheetTitle>Import orders</SheetTitle>
                         <SheetDescription className="font-mono text-xs">import-orders</SheetDescription>
@@ -291,6 +291,7 @@ export function DetailsSheet() {
                             />
                         </div>
                         <SaveBar
+                            inset="panel"
                             count={count}
                             busy={busy}
                             onDiscard={() => setDraft(saved)}

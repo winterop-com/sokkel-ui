@@ -480,6 +480,7 @@ const PRESETS = [
 export function Schedule() {
     const [open, setOpen] = useState(true)
     const [cron, setCron] = useState('30 2 * * 1-5')
+    const [cronOpen, setCronOpen] = useState(false)
     const valid = describeCron(cron) !== null
     return (
         <Behind action="Edit schedule" onAction={() => setOpen(true)}>
@@ -488,10 +489,18 @@ export function Schedule() {
                 onOpenChange={setOpen}
                 title="Schedule for import-orders"
                 description="A run that is still going when the next is due makes the next one wait."
-                footer={<IssueCount critical={valid ? 0 : 1} onPick={() => document.getElementById('schedule-cron')?.focus()} />}
+                footer={<IssueCount critical={valid ? 0 : 1} onPick={() => setCronOpen(true)} />}
                 confirm={{ label: 'Save schedule', onConfirm: () => setOpen(false), why: valid ? undefined : 'Fix the expression first.' }}
             >
-                <CronField id="schedule-cron" value={cron} onChange={setCron} from={new Date('2026-11-05T10:17:00Z')} presets={PRESETS} />
+                <CronField
+                    id="schedule-cron"
+                    value={cron}
+                    onChange={setCron}
+                    from={new Date('2026-11-05T10:17:00Z')}
+                    presets={PRESETS}
+                    issueOpen={cronOpen}
+                    onIssueOpenChange={setCronOpen}
+                />
             </DialogShell>
         </Behind>
     )

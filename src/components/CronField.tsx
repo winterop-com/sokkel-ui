@@ -47,6 +47,8 @@ export function CronField({
     presets,
     describe = describeCron,
     format = formatRun,
+    issueOpen,
+    onIssueOpenChange,
     className,
     words: said,
 }: {
@@ -61,6 +63,9 @@ export function CronField({
     describe?: (expression: string) => string | null
     /** Draws a run's time. */
     format?: (date: Date) => string
+    /** Whether the issue mark's message is open, for a form's count to open it. */
+    issueOpen?: boolean
+    onIssueOpenChange?: (open: boolean) => void
     className?: string
     words?: Partial<CronFieldWords>
 }) {
@@ -90,7 +95,7 @@ export function CronField({
                         aria-invalid={reading === null || undefined}
                         className={cn('font-mono', reading === null && cn('pr-9', ISSUE_EDGE.critical))}
                     />
-                    <IssueMark issues={issues} />
+                    <IssueMark issues={issues} open={issueOpen} onOpenChange={onIssueOpenChange} />
                 </div>
                 {presets !== undefined && presets.length > 0 && (
                     <div className="flex flex-wrap gap-1.5">
