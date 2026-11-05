@@ -16,7 +16,8 @@ export interface Column<T> {
  * A listing in its box, its column headers as the box's head bar.
  *
  * The head bar stays put while the rows scroll under it. A row is selectable with a click, Enter
- * or Space, and the selected one is marked for assistive technology as well as drawn. With no
+ * or Space, and the selected one is marked for assistive technology as well as drawn. A row the
+ * pointer is over is tinted, more strongly when it can be selected; `hover={false}` turns that off. With no
  * rows it says so in one line; the foot counts the rows loaded, never a total it does not know.
  *
  * When the listing's own box is narrower than its columns need, it becomes cards: the first
@@ -33,6 +34,7 @@ export function ListTable<T>({
     foot,
     maxHeight,
     headerCase = 'theme',
+    hover = true,
     className,
 }: {
     columns: Column<T>[]
@@ -48,6 +50,8 @@ export function ListTable<T>({
     maxHeight?: string
     /** How the column names are written: as the theme says (uppercase by default), or set here. */
     headerCase?: 'theme' | 'upper' | 'sentence'
+    /** Tints the row under the pointer. */
+    hover?: boolean
     className?: string
 }) {
     const template = columns.map((column) => column.width).join(' ')
@@ -81,7 +85,8 @@ export function ListTable<T>({
                             {...press(row)}
                             className={cn(
                                 'flex flex-col gap-1 px-(--density-panel-pad) py-2.5 text-sm',
-                                onSelect !== undefined && 'cursor-pointer outline-none hover:bg-secondary/60 focus-visible:bg-secondary',
+                                onSelect !== undefined && 'cursor-pointer outline-none focus-visible:bg-secondary',
+                                hover && (onSelect !== undefined ? 'hover:bg-secondary/60' : 'hover:bg-muted/50'),
                                 selected?.(row) === true && 'bg-secondary',
                             )}
                         >
@@ -131,8 +136,8 @@ export function ListTable<T>({
                                 aria-selected={onSelect === undefined ? undefined : chosen}
                                 className={cn(
                                     'grid h-(--density-row) items-center gap-3 border-b border-border px-(--density-panel-pad) text-sm last:border-b-0',
-                                    onSelect !== undefined &&
-                                        'cursor-pointer outline-none hover:bg-secondary/60 focus-visible:bg-secondary',
+                                    onSelect !== undefined && 'cursor-pointer outline-none focus-visible:bg-secondary',
+                                    hover && (onSelect !== undefined ? 'hover:bg-secondary/60' : 'hover:bg-muted/50'),
                                     chosen && 'bg-secondary',
                                 )}
                                 style={{ gridTemplateColumns: template }}
