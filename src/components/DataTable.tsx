@@ -653,7 +653,7 @@ export function DataTable<T>({
                         onClick={(event) => event.stopPropagation()}
                         className={cn(
                             'absolute top-2 left-2 flex rounded-md bg-background/85 p-1 opacity-0 group-hover/card:opacity-100',
-                            (chosen || selection.size > 0) && 'opacity-100',
+                            (chosen || selection.size > 0 || stacked) && 'opacity-100',
                         )}
                     >
                         <Checkbox
@@ -668,7 +668,9 @@ export function DataTable<T>({
                     <span
                         className={cn(
                             'absolute top-2 right-2',
-                            actionButton === 'hover' && 'opacity-0 group-hover/card:opacity-100 has-data-popup-open:opacity-100',
+                            actionButton === 'hover' &&
+                                !stacked &&
+                                'opacity-0 group-hover/card:opacity-100 has-data-popup-open:opacity-100',
                         )}
                     >
                         <DropdownMenu>
