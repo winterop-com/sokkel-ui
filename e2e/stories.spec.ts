@@ -105,6 +105,9 @@ for (const story of stories) {
                             { timeout: 5000 },
                         )
                         .catch(() => undefined)
+                    // A popup placed while its dialog was still zooming in sits a fraction of a pixel off, which moves its
+                    // text's anti-aliasing from run to run. A resize has every open popup measure itself again.
+                    await page.evaluate(() => window.dispatchEvent(new Event('resize')))
                     await page.waitForTimeout(300)
                     expect(thrown, 'errors thrown by the story').toEqual([])
                     await expect(page).toHaveScreenshot(`${story.id}--${name}-${mode}.png`)
