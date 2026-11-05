@@ -57,9 +57,4 @@ For what happens outside a form, the activity list was picked from the notificat
 happened while a person was away, newest first, unread drawn stronger, each item with its own way to
 act. `ActivityList`, `ActivityButton` and `ActivityMenu` carry it (Patterns/Activity).
 
-## Later
-
-- Pick the themes to keep from the candidates in Storybook and fold them into `tokens/tokens.json`;
-  name each for how it looks.
-- One engine per job, never two: ECharts draws every chart, maplibre every map, React Flow every
-  interactive graph, Mermaid every diagram written as text. Sparklines are plain SVG.
+What comes next is in `docs/roadmap.md`.
