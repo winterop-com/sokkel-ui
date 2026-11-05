@@ -66,6 +66,15 @@ for (const story of stories) {
     test(story.id, async ({ page }, info) => {
         test.setTimeout(3 * 60_000)
         await routeTiles(page, info.config.updateSnapshots === 'all' || info.config.updateSnapshots === 'changed')
+        // Dialogs and popups open at once: a popup placed while its dialog was still zooming in sits a fraction of a
+        // pixel off, which moves its text's anti-aliasing from run to run.
+        await page.addInitScript(() => {
+            const still = document.createElement('style')
+            still.textContent =
+                '*, *::before, *::after { transition-duration: 0s !important; transition-delay: 0s !important; }' +
+                '[data-open], [data-closed], [data-starting-style], [data-ending-style] { animation-duration: 0s !important; animation-delay: 0s !important; }'
+            document.addEventListener('DOMContentLoaded', () => document.head.append(still))
+        })
         // A story that throws is broken however its screenshot looks, and is never approved as a baseline.
         const thrown: string[] = []
         page.on('pageerror', (error) => thrown.push(error.message))
@@ -79,6 +88,21 @@ for (const story of stories) {
                     await graphsSettled(page)
                     await videosSettled(page)
                     await page.evaluate(() => document.fonts.ready)
+                    // A popup fading in, or anything else still moving, would be caught mid-way. Endless ones such as
+                    // spinners, and those driven by scrolling rather than time, are left running.
+                    await page.waitForFunction(
+                        () =>
+                            document
+                                .getAnimations()
+                                .every(
+                                    (animation) =>
+                                        animation.playState !== 'running' ||
+                                        animation.timeline !== document.timeline ||
+                                        animation.effect?.getTiming().iterations === Infinity,
+                                ),
+                        null,
+                        { timeout: 10_000 },
+                    )
                     // Highlighting lands after the first paint; a block marked plain is never highlighted.
                     await page
                         .waitForFunction(
