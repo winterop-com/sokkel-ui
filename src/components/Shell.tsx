@@ -19,7 +19,8 @@ import { cn } from '../lib/cn'
  * A panel is shown or hidden by a toggle held in the window's top-right corner: at the end of the top bar while the
  * panel is closed, in the corner of the panel's header while it is open. From the `lg` breakpoint it is
  * the right column; below it, an open panel slides over the content from the right and a press
- * outside it closes it. Left to itself it starts open on a wide window and closed on a narrow one;
+ * outside it closes it. The panel eases in and out either way, as far as the document's motion allows.
+ * Left to itself it starts open on a wide window and closed on a narrow one;
  * `panelOpen` with `onPanelOpenChange` holds it from outside, which is how a panel's own close
  * button closes it.
  */
@@ -129,16 +130,42 @@ export function Shell({
                         </footer>
                     )}
                 </div>
-                {panel !== undefined && open && wide && <div className="flex">{panel}</div>}
-                {panel !== undefined && open && !wide && (
-                    <div className="fixed inset-0 z-40">
+                {panel !== undefined && wide && (
+                    // The column eases between none and the panel's own width; the panel inside keeps its width throughout.
+                    <div
+                        inert={!open}
+                        aria-hidden={!open || undefined}
+                        className={cn(
+                            'grid min-h-0 transition-[grid-template-columns] duration-200 ease-out',
+                            open ? 'grid-cols-[1fr]' : 'grid-cols-[0fr]',
+                        )}
+                    >
+                        <div className="flex min-w-0 overflow-hidden">
+                            <div className="flex w-max">{panel}</div>
+                        </div>
+                    </div>
+                )}
+                {panel !== undefined && !wide && (
+                    <div
+                        inert={!open}
+                        aria-hidden={!open || undefined}
+                        className={cn('fixed inset-0 z-40', !open && 'pointer-events-none')}
+                    >
                         <button
                             type="button"
                             aria-label={words.hidePanel}
-                            className="absolute inset-0 bg-scrim"
+                            tabIndex={open ? undefined : -1}
+                            className={cn('absolute inset-0 bg-scrim transition-opacity duration-200', open ? 'opacity-100' : 'opacity-0')}
                             onClick={() => setOpen(false)}
                         />
-                        <div className="absolute inset-y-0 right-0 flex max-w-[calc(100vw-3rem)] shadow-pop [&>*]:max-w-full">{panel}</div>
+                        <div
+                            className={cn(
+                                'absolute inset-y-0 right-0 flex max-w-[calc(100vw-3rem)] shadow-pop transition-transform duration-200 ease-out [&>*]:max-w-full',
+                                open ? 'translate-x-0' : 'translate-x-full shadow-none',
+                            )}
+                        >
+                            {panel}
+                        </div>
                     </div>
                 )}
             </div>

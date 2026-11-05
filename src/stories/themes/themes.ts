@@ -54,6 +54,7 @@ export function fromGlobals(globals: Record<string, unknown>): ThemeSettings {
         density: read('density', 'regular'),
         corners: read('corners', 'theme'),
         typeface: read('typeface', 'theme'),
+        motion: (['on', 'off'] as const).find((one) => one === globals.motion) ?? 'system',
     }
 }
 
@@ -65,10 +66,11 @@ export function toGlobals(settings: ThemeSettings): string {
         `density:${settings.density}`,
         `corners:${settings.corners}`,
         `typeface:${settings.typeface}`,
+        `motion:${settings.motion ?? 'system'}`,
     ].join(';')
 }
 
-const ATTRIBUTES = ['class', 'data-theme', 'data-density', 'style'] as const
+const ATTRIBUTES = ['class', 'data-theme', 'data-density', 'data-motion', 'style'] as const
 
 /**
  * Sets the settings on the document as the toolbar does, and answers with a function that puts the
@@ -81,6 +83,8 @@ export function applyToDocument(settings: ThemeSettings): () => void {
     if (settings.theme === 'default') root.removeAttribute('data-theme')
     else root.setAttribute('data-theme', settings.theme)
     root.setAttribute('data-density', settings.density)
+    if (settings.motion === undefined || settings.motion === 'system') root.removeAttribute('data-motion')
+    else root.setAttribute('data-motion', settings.motion)
     if (settings.corners === 'theme') root.style.removeProperty('--radius')
     else root.style.setProperty('--radius', settings.corners)
     const face = FACES[settings.typeface]
