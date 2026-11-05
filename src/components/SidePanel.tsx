@@ -13,7 +13,7 @@ export interface SidePanelTab {
 /**
  * The right-hand panel beside a page: a header bar the height of the shell's top bar, with the
  * panel's tabs (or its title when it has one tab), then the content scrolling under it. The shell's
- * toggle at the end of its top bar shows and hides the panel; the panel has no close of its own.
+ * toggle in the header's right corner shows and hides the panel; the panel has no close of its own.
  *
  * The header lines up with the shell's top bar, so the panel reads as a column of the shell, not
  * as a card dropped beside the page. Given `size` and `onSizeChange`, its left edge drags to
@@ -69,7 +69,7 @@ export function SidePanel({
                 className={cn('flex h-full shrink-0 flex-col border-l border-border-strong bg-sidebar', className)}
                 style={{ width: resizable ? size : width }}
             >
-                <div className="flex h-shell-top shrink-0 items-center gap-1 border-b border-border-strong px-2">
+                <div className="flex h-shell-top shrink-0 items-center gap-1 border-b border-border-strong pr-12 pl-2">
                     {tabs.length === 1 ? (
                         <h2 className="truncate px-1.5 text-sm font-medium">{current?.label}</h2>
                     ) : (
