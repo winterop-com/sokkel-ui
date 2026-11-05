@@ -16,7 +16,8 @@ import { cn } from '../lib/cn'
  * Below the `md` breakpoint the rail leaves the frame: a menu button at the start of the top bar
  * opens it as a drawer over the content, and a press outside it or on a link closes it.
  *
- * A panel is shown or hidden by a toggle at the end of the top bar. From the `lg` breakpoint it is
+ * A panel is shown or hidden by a toggle held in the window's top-right corner: at the end of the top bar while the
+ * panel is closed, in the corner of the panel's header while it is open. From the `lg` breakpoint it is
  * the right column; below it, an open panel slides over the content from the right and a press
  * outside it closes it. Left to itself it starts open on a wide window and closed on a narrow one;
  * `panelOpen` with `onPanelOpenChange` holds it from outside, which is how a panel's own close
@@ -65,7 +66,22 @@ export function Shell({
         if (panelOpen === undefined) setOwnOpen(null)
     }
     return (
-        <div className="flex h-svh min-h-0 flex-col bg-background text-foreground">
+        <div className="relative flex h-svh min-h-0 flex-col bg-background text-foreground">
+            {panel !== undefined && (
+                <button
+                    type="button"
+                    aria-label={open ? words.hidePanel : words.showPanel}
+                    aria-pressed={open}
+                    title={open ? words.hidePanel : words.showPanel}
+                    className={cn(
+                        'absolute top-[calc((var(--spacing-shell-top)-2rem)/2)] right-2 z-50 flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-secondary hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid',
+                        open && 'text-foreground',
+                    )}
+                    onClick={() => setOpen(!open)}
+                >
+                    <PanelRight className="size-4" aria-hidden />
+                </button>
+            )}
             <div className="flex min-h-0 flex-1">
                 <div className="hidden md:flex">{rail}</div>
                 {drawer && (
@@ -88,7 +104,12 @@ export function Shell({
                 )}
                 <div className="flex min-w-0 flex-1 flex-col">
                     {top !== undefined && (
-                        <header className="flex h-shell-top shrink-0 items-center gap-2 border-b border-border-strong bg-sidebar px-3">
+                        <header
+                            className={cn(
+                                'flex h-shell-top shrink-0 items-center gap-2 border-b border-border-strong bg-sidebar px-3',
+                                panel !== undefined && !(open && wide) && 'pr-12',
+                            )}
+                        >
                             <button
                                 type="button"
                                 aria-label={words.menu}
@@ -99,21 +120,6 @@ export function Shell({
                                 <Menu className="size-4" aria-hidden />
                             </button>
                             {top}
-                            {panel !== undefined && (
-                                <button
-                                    type="button"
-                                    aria-label={open ? words.hidePanel : words.showPanel}
-                                    aria-pressed={open}
-                                    title={open ? words.hidePanel : words.showPanel}
-                                    className={cn(
-                                        'flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-secondary hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid',
-                                        open && 'text-foreground',
-                                    )}
-                                    onClick={() => setOpen(!open)}
-                                >
-                                    <PanelRight className="size-4" aria-hidden />
-                                </button>
-                            )}
                         </header>
                     )}
                     <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>
