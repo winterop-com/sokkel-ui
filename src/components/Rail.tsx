@@ -80,7 +80,7 @@ export function Rail({
                 style={sized ? { width } : undefined}
                 className={cn(
                     'flex h-full shrink-0 flex-col border-r border-border-strong bg-sidebar text-sidebar-foreground transition-[width] duration-200',
-                    collapsed ? 'w-14' : !sized && 'w-60',
+                    collapsed ? 'w-[calc(3.5rem+1px)]' : !sized && 'w-60',
                 )}
             >
                 <div className="flex h-shell-top shrink-0 items-center gap-2 px-3">
@@ -97,7 +97,7 @@ export function Rail({
                         </button>
                     ) : (
                         <>
-                            <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
+                            <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
                                 {mark}
                             </span>
                             <span className="truncate text-base font-semibold tracking-tight">{name}</span>
@@ -120,7 +120,11 @@ export function Rail({
                         <nav key={group.id} aria-label={group.title ?? name} className="flex flex-col gap-1 px-2">
                             {group.title !== undefined &&
                                 (collapsed ? (
-                                    <div className="mx-2 mt-3 mb-1 border-t border-border-strong" aria-hidden />
+                                    <div className="flex items-center px-2 pt-4 pb-1.5" aria-hidden>
+                                        <span className="flex h-(--text-xs--line-height) w-full items-center">
+                                            <span className="h-px w-full bg-border-strong" />
+                                        </span>
+                                    </div>
                                 ) : (
                                     <p className="px-2 pt-4 pb-1.5 text-xs font-medium tracking-wide text-faint uppercase">{group.title}</p>
                                 ))}
@@ -167,7 +171,7 @@ function RailLink({
                                 entry,
                                 <Icon className="size-4" aria-hidden />,
                                 cn(
-                                    'flex size-9 items-center justify-center rounded-md',
+                                    'flex h-(--density-row) w-9 items-center justify-center rounded-md',
                                     entry.active
                                         ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                                         : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
@@ -193,7 +197,7 @@ function RailLink({
             <span className="truncate">{entry.label}</span>
         </>,
         cn(
-            'flex h-(--density-row) items-center gap-3 rounded-l-sm rounded-r-md border-l-2 px-3 text-sm',
+            'flex h-(--density-row) items-center gap-3 rounded-l-sm rounded-r-md border-l-2 pr-3 pl-2.5 text-sm',
             entry.active
                 ? 'border-sidebar-primary bg-sidebar-accent font-medium text-sidebar-accent-foreground'
                 : 'border-transparent text-muted-foreground hover:bg-secondary hover:text-foreground',
