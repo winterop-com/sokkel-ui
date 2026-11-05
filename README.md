@@ -73,6 +73,18 @@ around it); one that does not imports `@winterop-com/sokkel-ui/styles.css` (Tail
 tokens and base styles). Components import by path, such as `@winterop-com/sokkel-ui/DialogShell` or
 `@winterop-com/sokkel-ui/primitives/button`.
 
+The heavy engines are optional peer dependencies, so an app installs only those of the parts it
+uses:
+
+| The app uses                                 | It also installs                                                                                                                                                 |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Charts and dashboard panels                  | `echarts`                                                                                                                                                        |
+| Maps                                         | `maplibre-gl`                                                                                                                                                    |
+| Graphs (`@winterop-com/sokkel-ui/graph/...`) | `@xyflow/react` and `elkjs`                                                                                                                                      |
+| `MermaidDiagram`                             | `mermaid`                                                                                                                                                        |
+| `CodeEditor`                                 | `@codemirror/commands`, `@codemirror/lang-json`, `@codemirror/lang-yaml`, `@codemirror/language`, `@codemirror/state`, `@codemirror/view` and `@lezer/highlight` |
+| Geist as a theme's typeface                  | `@fontsource-variable/geist` and `@fontsource-variable/geist-mono`                                                                                               |
+
 ## License
 
 Proprietary: published for reference only, all rights reserved. See `LICENSE`, and

@@ -47,11 +47,6 @@ reaches them all. Done in waves, one PR each.
 
 ## Next
 
-- **Install only what you use.** Every dependency is a regular one today, so installing the package
-  installs every engine: mermaid (122 MB), ECharts (61 MB), maplibre (30 MB), elk, shiki, CodeMirror
-  and ajv, for an app that may draw only forms. The bundle already takes only what an app imports
-  (236 modules, imported by path), so make the heavy engines optional peer dependencies: an app
-  installs one when it uses its part, and each component's docs say which. Same package, same paths.
 - **A size budget in CI.** Build a few typical apps (forms only, a dashboard, a map page), measure
   each bundle, and fail when one grows past its budget or pulls in an engine it does not use.
   Splitting into packages (core, charts, maps, graph, editor) is the step after, only if optional
