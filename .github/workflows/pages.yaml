@@ -40,6 +40,7 @@ jobs:
                   if [ "$EVENT" = workflow_run ] && [ "$head" != "$BUILT" ]; then
                       echo "main is at $head, past $BUILT; not publishing"
                       echo "stale=true" >> "$GITHUB_OUTPUT"
+                      echo "Not published: main has moved past $BUILT to $head, whose own run publishes it." >> "$GITHUB_STEP_SUMMARY"
                   fi
             - if: steps.latest.outputs.stale != 'true'
               uses: oven-sh/setup-bun@v2
