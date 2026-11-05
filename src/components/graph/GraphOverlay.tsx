@@ -169,7 +169,7 @@ export function GraphNotice({
 }) {
     const Icon = tone === 'critical' ? CircleAlert : Info
     return (
-        <Panel position="bottom-center" className="m-3! max-w-[calc(100%-1.5rem)]">
+        <Panel position="bottom-center" className="m-3! w-max max-w-[calc(100%-1.5rem)]">
             <div
                 role="status"
                 data-slot="graph-notice"

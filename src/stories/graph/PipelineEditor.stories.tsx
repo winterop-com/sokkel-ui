@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import { BROKEN_DOC, EMPTY_DOC, NIGHTLY_DOC, SCATTERED_DOC, UNCONNECTED_DOC, WITHOUT_DEDUPE } from './editor/documents'
 import { PipelineEditorStory } from './editor/Editor'
-import { EditorPage } from './editor/EditorPage'
+import { EditorPage as FullEditor } from './editor/EditorPage'
 
 const meta: Meta = { title: 'Graphs/Pipeline editor' }
 export default meta
@@ -127,4 +127,4 @@ export const AutoLayout: Story = {
 }
 
 /** The whole editor in the shell, as an app ships it, with Save and Run in the page's header. */
-export const EditorPageStory: Story = { name: 'Editor page', render: () => <EditorPage /> }
+export const EditorPage: Story = { name: 'Editor page', render: () => <FullEditor /> }

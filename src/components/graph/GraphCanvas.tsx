@@ -529,7 +529,7 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
                             </ViewControls>
                         </ReactFlow>
                         {empty && (
-                            <p className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
+                            <p className="pointer-events-none absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-muted-foreground">
                                 {said.empty}
                             </p>
                         )}
