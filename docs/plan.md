@@ -6,7 +6,7 @@ with real-shaped data, held to screenshot baselines in both schemes at desktop a
 ## Distribution
 
 `dist/` is built, not committed, so an install from a git URL gets no compiled code (bun also
-blocks a git dependency's install scripts). The library is published as `@winterop-com/ui` to
+blocks a git dependency's install scripts). The library is published as `@winterop-com/sokkel-ui` to
 GitHub Packages by the tag workflow, and apps pin that version.
 
 ## Primitives
@@ -59,7 +59,6 @@ act. `ActivityList`, `ActivityButton` and `ActivityMenu` carry it (Patterns/Acti
 
 ## Later
 
-- Find a better name for the library than `winterop-ui`, then rename the repository and the package.
 - Pick the themes to keep from the candidates in Storybook and fold them into `tokens/tokens.json`;
   name each for how it looks.
 - One engine per job, never two: ECharts draws every chart, maplibre every map, React Flow every
