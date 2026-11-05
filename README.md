@@ -1,3 +1,5 @@
+<img src="docs/assets/mark.svg" width="64" height="64" alt="">
+
 # sokkel-ui
 
 [![CI](https://github.com/winterop-com/sokkel-ui/actions/workflows/ci.yaml/badge.svg)](https://github.com/winterop-com/sokkel-ui/actions/workflows/ci.yaml)
