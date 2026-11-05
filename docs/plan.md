@@ -53,8 +53,9 @@ value is put right. A server's refusal lands on its field until that field is ch
 `IssueMark` and `IssueCount` carry it for any form; SchemaForm is built on them, and checks values
 with ajv against JSON Schema 2020-12.
 
-Still to study: how notification differs from validation (toasts, banners, the status strip, and an
-inbox for events a person missed), then the toasts built to the pick.
+For what happens outside a form, the activity list was picked from the notification research: what
+happened while a person was away, newest first, unread drawn stronger, each item with its own way to
+act. `ActivityList`, `ActivityButton` and `ActivityMenu` carry it (Patterns/Activity).
 
 ## Later
 
