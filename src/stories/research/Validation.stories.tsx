@@ -258,9 +258,9 @@ function OptionB({ after = false }: { after?: boolean }) {
     const blocking = errors.length > 0
     const Icon = ICON[blocking ? 'critical' : 'warning']
     const status = form.busy ? (
-        <span className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Loader2 className="size-3.5 animate-spin" aria-hidden />
-            Checking {host(form.values.endpoint) ?? 'the endpoint'}…
+        <span className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
+            <Loader2 className="size-3.5 shrink-0 animate-spin" aria-hidden />
+            <span className="truncate">Checking {host(form.values.endpoint) ?? 'the endpoint'}…</span>
         </span>
     ) : form.submitted && notes.length > 0 ? (
         <Popover open={open} onOpenChange={setOpen}>
@@ -683,6 +683,168 @@ const NOTES_E: [string, ReactNode][] = [
     ['Against', 'A line under every field costs height, and leaving the endpoint costs a request each time.'],
 ]
 
+/* ------------------------------------------------------------------------------------------------
+ * F. A mark in the input that opens its message: C's mark, pressed rather than hovered, with D's fix
+ * in the popup and B's count beside the verb. The dialog never changes height.
+ * --------------------------------------------------------------------------------------------- */
+
+const LINK_BUTTON =
+    'flex shrink-0 items-center gap-1 rounded-sm text-xs text-foreground underline decoration-border-strong underline-offset-3 outline-none hover:decoration-foreground focus-visible:ring-2 focus-visible:ring-ring/50'
+
+function FieldF({ form, k, open, onOpenChange }: { form: JobForm; k: Key; open: boolean; onOpenChange: (open: boolean) => void }) {
+    const error = form.error(k)
+    const note = error ?? form.warn(k)
+    const id = form.id(k)
+    const spin = k === 'endpoint' && form.checking
+    const Icon = note === null ? null : ICON[note.tone]
+    return (
+        <div className="flex min-w-0 flex-col gap-1.5">
+            <LabelRow form={form} k={k} />
+            <div className="relative">
+                <Input
+                    {...form.field(k)}
+                    aria-invalid={error !== null || undefined}
+                    aria-describedby={note === null ? undefined : `${id}-note`}
+                    className={cn(
+                        SPEC[k].mono === true && 'font-mono',
+                        (note !== null || spin) && 'pr-9',
+                        note !== null && INPUT_TONE[note.tone === 'warning' ? 'warning' : 'critical'],
+                    )}
+                />
+                {spin && <StatusMark tone={null} spin />}
+                {!spin && note !== null && Icon !== null && (
+                    <Popover open={open} onOpenChange={onOpenChange}>
+                        <PopoverTrigger
+                            render={
+                                <button
+                                    type="button"
+                                    aria-label={`${PREFIX[note.tone]}${note.text}`}
+                                    className={cn(
+                                        'absolute inset-y-0 right-1 my-auto flex size-7 items-center justify-center rounded-md outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/50 data-popup-open:bg-muted',
+                                        INK[note.tone],
+                                    )}
+                                />
+                            }
+                        >
+                            <Icon className="size-4" aria-hidden />
+                        </PopoverTrigger>
+                        <PopoverContent
+                            side="bottom"
+                            align="end"
+                            sideOffset={6}
+                            initialFocus={false}
+                            finalFocus={false}
+                            className="w-[min(20rem,calc(100vw-2rem))] gap-2 p-3"
+                        >
+                            <div className="flex items-start gap-2">
+                                <Icon className={cn('mt-0.5 size-4 shrink-0', INK[note.tone])} aria-hidden />
+                                <div className="flex min-w-0 flex-col gap-0.5">
+                                    <PopoverTitle className="text-sm leading-5 font-medium">{note.text}</PopoverTitle>
+                                    {note.detail !== undefined && (
+                                        <PopoverDescription className="text-xs">{note.detail}</PopoverDescription>
+                                    )}
+                                </div>
+                            </div>
+                            {(note.fix !== undefined || note.server === true) && (
+                                <div className="flex gap-3 pl-6">
+                                    {note.fix !== undefined && (
+                                        <button
+                                            type="button"
+                                            className={LINK_BUTTON}
+                                            onClick={() => {
+                                                if (note.fix === undefined) return
+                                                form.set(k, note.fix)
+                                                onOpenChange(false)
+                                                form.focus(k)
+                                            }}
+                                        >
+                                            Use <span className={cn(SPEC[k].mono === true && 'font-mono')}>{note.fix}</span>
+                                        </button>
+                                    )}
+                                    {note.server === true && (
+                                        <button
+                                            type="button"
+                                            className={LINK_BUTTON}
+                                            onClick={() => {
+                                                onOpenChange(false)
+                                                form.recheck()
+                                            }}
+                                        >
+                                            <RotateCw className="size-3" aria-hidden />
+                                            Check again
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                        </PopoverContent>
+                    </Popover>
+                )}
+            </div>
+            {note !== null && <Spoken id={`${id}-note`} note={note} />}
+        </div>
+    )
+}
+
+function OptionF({ after = false }: { after?: boolean }) {
+    const form = useJobForm({ prefix: after ? 'f-after' : 'f', timing: 'blur', after })
+    const errors = form.errors()
+    const warnings = form.warnings()
+    const [shown, setShown] = useState<Key | null>(after ? (errors[0]?.key ?? null) : null)
+    if (form.created) return <Created form={form} />
+    const blocking = errors.length > 0
+    const first = (blocking ? errors : warnings)[0]
+    const Icon = ICON[blocking ? 'critical' : 'warning']
+    const status = form.busy ? (
+        <span className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
+            <Loader2 className="size-3.5 shrink-0 animate-spin" aria-hidden />
+            <span className="truncate">Checking {host(form.values.endpoint) ?? 'the endpoint'}…</span>
+        </span>
+    ) : form.submitted && first !== undefined ? (
+        <button
+            type="button"
+            onClick={() => setShown(first.key)}
+            className={cn(
+                'flex items-center gap-1.5 rounded-sm text-xs font-medium outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50',
+                INK[blocking ? 'critical' : 'warning'],
+            )}
+        >
+            <Icon className="size-3.5" aria-hidden />
+            {blocking ? `${errors.length} to fix` : `${warnings.length} to look at`}
+        </button>
+    ) : null
+    return (
+        <JobDialog
+            form={form}
+            onSubmit={async () => {
+                const failing = await form.submit()
+                if (failing[0] !== undefined) form.focus(failing[0])
+            }}
+            status={status}
+            live={form.checking ? `Checking ${host(form.values.endpoint) ?? 'the endpoint'}` : undefined}
+        >
+            <Fields
+                render={(k) => <FieldF key={k} form={form} k={k} open={shown === k} onOpenChange={(open) => setShown(open ? k : null)} />}
+            />
+        </JobDialog>
+    )
+}
+
+const NOTES_F: [string, ReactNode][] = [
+    [
+        'Where',
+        'A field with a problem gets a colored edge and a mark at the end of its input. Pressing the mark opens the message, with the fix when one is known. The footer counts what stops Create; pressing the count opens the first.',
+    ],
+    ['When', 'On leaving a field and on Create. The mark goes as soon as the field is put right.'],
+    ['Server', 'The refusal marks the endpoint; its popup says what happened, with Check again.'],
+    ['Warning', 'A warning mark and edge, with the value that avoids it in the popup.'],
+    [
+        'Screen reader',
+        'Create moves focus to the first field with a problem. The mark is a button named by its message, and the input names it too.',
+    ],
+    ['For', 'The dialog is the same height before Create, after it and while the server is asked: nothing jumps.'],
+    ['Against', 'The message takes a press to read, and a glance at the form says where the problems are but not what they are.'],
+]
+
 /* ------------------------------------------------------------------------------------------------ */
 
 interface Option {
@@ -728,6 +890,13 @@ const OPTIONS: Option[] = [
         source: 'After Stripe Checkout and Vercel’s interface guidelines',
         notes: NOTES_E,
         Form: OptionE,
+    },
+    {
+        letter: 'F',
+        title: 'Mark in the input, message on press',
+        source: 'C’s mark, pressed rather than hovered, with D’s fix and B’s count',
+        notes: NOTES_F,
+        Form: OptionF,
     },
 ]
 
@@ -790,4 +959,9 @@ export const DMessageWithFix: Story = { name: 'D. Message with the fix', render:
 export const DMessageWithFixAfterSubmit: Story = { name: 'D. Message with the fix, after Create', render: () => <Page letter="D" after /> }
 export const ECheckedAsYouGo: Story = { name: 'E. Checked as you go', render: () => <Page letter="E" /> }
 export const ECheckedAsYouGoAfterSubmit: Story = { name: 'E. Checked as you go, after Create', render: () => <Page letter="E" after /> }
+export const FMarkMessageOnPress: Story = { name: 'F. Mark, message on press', render: () => <Page letter="F" /> }
+export const FMarkMessageOnPressAfterSubmit: Story = {
+    name: 'F. Mark, message on press, after Create',
+    render: () => <Page letter="F" after />,
+}
 export const CompareAfterSubmit: Story = { name: 'All options, after Create', render: () => <Compare /> }

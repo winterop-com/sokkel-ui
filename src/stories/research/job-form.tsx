@@ -153,7 +153,7 @@ export function problem(key: Key, values: Values): Note | null {
             if (value === '') return say('Enter a code', 'Enter a code')
             if (!/^[a-z]/.test(value)) {
                 const better = suggestCode(value)
-                return say('Code must start with a letter', 'Must start with a letter', {
+                return say('Code must start with a letter', 'Start with a letter', {
                     detail: `As in ${better}.`,
                     fix: better,
                 })
@@ -468,8 +468,10 @@ export function JobDialog({
                 </header>
                 {top}
                 {children}
-                <footer className="-mx-4 -mb-4 flex min-h-15 flex-wrap items-center justify-end gap-2 border-t bg-muted/50 px-4 py-3 sm:rounded-b-xl">
-                    {status !== undefined && status !== null && <div className="mr-auto flex min-w-0 items-center sm:mr-0">{status}</div>}
+                <footer className="-mx-4 -mb-4 flex min-h-15 items-center justify-end gap-2 border-t bg-muted/50 px-4 py-3 sm:rounded-b-xl">
+                    {status !== undefined && status !== null && (
+                        <div className="mr-auto flex min-w-0 items-center overflow-hidden sm:mr-0">{status}</div>
+                    )}
                     <Button type="button" variant="ghost" onClick={form.reset}>
                         Cancel
                     </Button>
@@ -531,7 +533,9 @@ export function OptionPage({
                         <p className="text-sm text-muted-foreground">{source}</p>
                     </div>
                 </header>
-                <div className="flex min-w-0 justify-center lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:justify-end">{children}</div>
+                <div className="flex min-w-0 items-start justify-center lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:justify-end">
+                    {children}
+                </div>
                 <dl className="grid min-w-0 content-start gap-x-4 gap-y-2.5 px-4 text-sm sm:grid-cols-[8rem_minmax(0,1fr)] sm:px-0 lg:col-start-1 lg:row-start-2">
                     {notes.map(([term, said]) => (
                         <div key={term} className="contents">
