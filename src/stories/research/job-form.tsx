@@ -533,7 +533,9 @@ export function OptionPage({
                         <p className="text-sm text-muted-foreground">{source}</p>
                     </div>
                 </header>
-                <div className="flex min-w-0 justify-center lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:justify-end">{children}</div>
+                <div className="flex min-w-0 items-start justify-center lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:justify-end">
+                    {children}
+                </div>
                 <dl className="grid min-w-0 content-start gap-x-4 gap-y-2.5 px-4 text-sm sm:grid-cols-[8rem_minmax(0,1fr)] sm:px-0 lg:col-start-1 lg:row-start-2">
                     {notes.map(([term, said]) => (
                         <div key={term} className="contents">

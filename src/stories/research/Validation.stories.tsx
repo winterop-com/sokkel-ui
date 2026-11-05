@@ -684,24 +684,19 @@ const NOTES_E: [string, ReactNode][] = [
 ]
 
 /* ------------------------------------------------------------------------------------------------
- * F. Nothing moves: a line kept under every field, the fix offered on it, and the count beside the
- * verb. D's words and B's count, in a dialog whose height never changes.
+ * F. A mark in the input that opens its message: C's mark, pressed rather than hovered, with D's fix
+ * in the popup and B's count beside the verb. The dialog never changes height.
  * --------------------------------------------------------------------------------------------- */
 
-function FieldF({ form, k }: { form: JobForm; k: Key }) {
+const LINK_BUTTON =
+    'flex shrink-0 items-center gap-1 rounded-sm text-xs text-foreground underline decoration-border-strong underline-offset-3 outline-none hover:decoration-foreground focus-visible:ring-2 focus-visible:ring-ring/50'
+
+function FieldF({ form, k, open, onOpenChange }: { form: JobForm; k: Key; open: boolean; onOpenChange: (open: boolean) => void }) {
     const error = form.error(k)
-    const warn = form.warn(k)
+    const note = error ?? form.warn(k)
     const id = form.id(k)
-    const note = error ?? warn
     const spin = k === 'endpoint' && form.checking
-    const good = note === null && k === 'endpoint' && form.answered !== null
-    const tone: Tone | null = note?.tone ?? (good ? 'good' : null)
-    const Icon = tone === null ? null : ICON[tone]
-    // The endpoint runs the dialog's width; the other fields share a row and say their message short.
-    const said = note === null ? null : k === 'endpoint' ? note.text : note.short
-    const text = said ?? (good ? `${form.answered} answered in 84 ms` : '')
-    const full = note === null ? text : [note.text, note.detail].filter(Boolean).join('. ')
-    const fix = note?.fix
+    const Icon = note === null ? null : ICON[note.tone]
     return (
         <div className="flex min-w-0 flex-col gap-1.5">
             <LabelRow form={form} k={k} />
@@ -709,54 +704,93 @@ function FieldF({ form, k }: { form: JobForm; k: Key }) {
                 <Input
                     {...form.field(k)}
                     aria-invalid={error !== null || undefined}
-                    aria-describedby={note === null ? undefined : `${id}-line`}
+                    aria-describedby={note === null ? undefined : `${id}-note`}
                     className={cn(
                         SPEC[k].mono === true && 'font-mono',
-                        spin && 'pr-8',
+                        (note !== null || spin) && 'pr-9',
                         note !== null && INPUT_TONE[note.tone === 'warning' ? 'warning' : 'critical'],
                     )}
                 />
-                <StatusMark tone={null} spin={spin} />
+                {spin && <StatusMark tone={null} spin />}
+                {!spin && note !== null && Icon !== null && (
+                    <Popover open={open} onOpenChange={onOpenChange}>
+                        <PopoverTrigger
+                            render={
+                                <button
+                                    type="button"
+                                    aria-label={`${PREFIX[note.tone]}${note.text}`}
+                                    className={cn(
+                                        'absolute inset-y-0 right-1 my-auto flex size-7 items-center justify-center rounded-md outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/50 data-popup-open:bg-muted',
+                                        INK[note.tone],
+                                    )}
+                                />
+                            }
+                        >
+                            <Icon className="size-4" aria-hidden />
+                        </PopoverTrigger>
+                        <PopoverContent
+                            side="bottom"
+                            align="end"
+                            sideOffset={6}
+                            initialFocus={false}
+                            finalFocus={false}
+                            className="w-[min(20rem,calc(100vw-2rem))] gap-2 p-3"
+                        >
+                            <div className="flex items-start gap-2">
+                                <Icon className={cn('mt-0.5 size-4 shrink-0', INK[note.tone])} aria-hidden />
+                                <div className="flex min-w-0 flex-col gap-0.5">
+                                    <PopoverTitle className="text-sm leading-5 font-medium">{note.text}</PopoverTitle>
+                                    {note.detail !== undefined && (
+                                        <PopoverDescription className="text-xs">{note.detail}</PopoverDescription>
+                                    )}
+                                </div>
+                            </div>
+                            {(note.fix !== undefined || note.server === true) && (
+                                <div className="flex gap-3 pl-6">
+                                    {note.fix !== undefined && (
+                                        <button
+                                            type="button"
+                                            className={LINK_BUTTON}
+                                            onClick={() => {
+                                                if (note.fix === undefined) return
+                                                form.set(k, note.fix)
+                                                onOpenChange(false)
+                                                form.focus(k)
+                                            }}
+                                        >
+                                            Use <span className={cn(SPEC[k].mono === true && 'font-mono')}>{note.fix}</span>
+                                        </button>
+                                    )}
+                                    {note.server === true && (
+                                        <button
+                                            type="button"
+                                            className={LINK_BUTTON}
+                                            onClick={() => {
+                                                onOpenChange(false)
+                                                form.recheck()
+                                            }}
+                                        >
+                                            <RotateCw className="size-3" aria-hidden />
+                                            Check again
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                        </PopoverContent>
+                    </Popover>
+                )}
             </div>
-            <p id={`${id}-line`} className={cn('flex h-4.5 min-w-0 items-center gap-1.5 text-xs leading-4.5', INK[tone ?? 'quiet'])}>
-                {Icon !== null && <Icon className="size-3.5 shrink-0" aria-hidden />}
-                <span className={cn('min-w-0 truncate', tone === 'critical' && 'font-medium')} title={full}>
-                    {note !== null && <span className="sr-only">{PREFIX[note.tone]}</span>}
-                    <span aria-hidden={note !== null || undefined}>{text}</span>
-                    {note !== null && <span className="sr-only">{full}</span>}
-                </span>
-                {fix !== undefined && (
-                    <button
-                        type="button"
-                        onClick={() => {
-                            form.set(k, fix)
-                            form.focus(k)
-                        }}
-                        className="ml-auto shrink-0 rounded-sm text-foreground underline decoration-border-strong underline-offset-3 outline-none hover:decoration-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
-                    >
-                        Use <span className={cn(SPEC[k].mono === true && 'font-mono')}>{fix}</span>
-                    </button>
-                )}
-                {note?.server === true && (
-                    <button
-                        type="button"
-                        onClick={form.recheck}
-                        className="ml-auto flex shrink-0 items-center gap-1 rounded-sm text-foreground underline decoration-border-strong underline-offset-3 outline-none hover:decoration-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
-                    >
-                        <RotateCw className="size-3" aria-hidden />
-                        Check again
-                    </button>
-                )}
-            </p>
+            {note !== null && <Spoken id={`${id}-note`} note={note} />}
         </div>
     )
 }
 
 function OptionF({ after = false }: { after?: boolean }) {
     const form = useJobForm({ prefix: after ? 'f-after' : 'f', timing: 'blur', after })
-    if (form.created) return <Created form={form} />
     const errors = form.errors()
     const warnings = form.warnings()
+    const [shown, setShown] = useState<Key | null>(after ? (errors[0]?.key ?? null) : null)
+    if (form.created) return <Created form={form} />
     const blocking = errors.length > 0
     const first = (blocking ? errors : warnings)[0]
     const Icon = ICON[blocking ? 'critical' : 'warning']
@@ -768,7 +802,7 @@ function OptionF({ after = false }: { after?: boolean }) {
     ) : form.submitted && first !== undefined ? (
         <button
             type="button"
-            onClick={() => form.focus(first.key)}
+            onClick={() => setShown(first.key)}
             className={cn(
                 'flex items-center gap-1.5 rounded-sm text-xs font-medium outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50',
                 INK[blocking ? 'critical' : 'warning'],
@@ -788,7 +822,9 @@ function OptionF({ after = false }: { after?: boolean }) {
             status={status}
             live={form.checking ? `Checking ${host(form.values.endpoint) ?? 'the endpoint'}` : undefined}
         >
-            <Fields render={(k) => <FieldF key={k} form={form} k={k} />} />
+            <Fields
+                render={(k) => <FieldF key={k} form={form} k={k} open={shown === k} onOpenChange={(open) => setShown(open ? k : null)} />}
+            />
         </JobDialog>
     )
 }
@@ -796,17 +832,17 @@ function OptionF({ after = false }: { after?: boolean }) {
 const NOTES_F: [string, ReactNode][] = [
     [
         'Where',
-        'Every field keeps one line under it, empty until there is something to say. The message fills it, cut short with the rest on hover, and a known fix sits at its end. The footer counts what stops Create; pressing the count goes to the first.',
+        'A field with a problem gets a colored edge and a mark at the end of its input. Pressing the mark opens the message, with the fix when one is known. The footer counts what stops Create; pressing the count opens the first.',
     ],
-    ['When', 'On leaving a field and on Create, as in D. A message goes as soon as its field is put right.'],
-    ['Server', 'The refusal lands on the endpoint’s line with Check again at its end.'],
-    ['Warning', 'The same line in the warning color, with the value that avoids it.'],
+    ['When', 'On leaving a field and on Create. The mark goes as soon as the field is put right.'],
+    ['Server', 'The refusal marks the endpoint; its popup says what happened, with Check again.'],
+    ['Warning', 'A warning mark and edge, with the value that avoids it in the popup.'],
     [
         'Screen reader',
-        'Create moves focus to the first field with a problem. The line is the input’s description, with the detail in full.',
+        'Create moves focus to the first field with a problem. The mark is a button named by its message, and the input names it too.',
     ],
     ['For', 'The dialog is the same height before Create, after it and while the server is asked: nothing jumps.'],
-    ['Against', 'Each field costs a line of height even when all is well, and a long message is cut to one line.'],
+    ['Against', 'The message takes a press to read, and a glance at the form says where the problems are but not what they are.'],
 ]
 
 /* ------------------------------------------------------------------------------------------------ */
@@ -857,8 +893,8 @@ const OPTIONS: Option[] = [
     },
     {
         letter: 'F',
-        title: 'Nothing moves',
-        source: 'D’s message and fix, and B’s count beside the verb, on a line each field keeps',
+        title: 'Mark in the input, message on press',
+        source: 'C’s mark, pressed rather than hovered, with D’s fix and B’s count',
         notes: NOTES_F,
         Form: OptionF,
     },
@@ -923,6 +959,9 @@ export const DMessageWithFix: Story = { name: 'D. Message with the fix', render:
 export const DMessageWithFixAfterSubmit: Story = { name: 'D. Message with the fix, after Create', render: () => <Page letter="D" after /> }
 export const ECheckedAsYouGo: Story = { name: 'E. Checked as you go', render: () => <Page letter="E" /> }
 export const ECheckedAsYouGoAfterSubmit: Story = { name: 'E. Checked as you go, after Create', render: () => <Page letter="E" after /> }
-export const FNothingMoves: Story = { name: 'F. Nothing moves', render: () => <Page letter="F" /> }
-export const FNothingMovesAfterSubmit: Story = { name: 'F. Nothing moves, after Create', render: () => <Page letter="F" after /> }
+export const FMarkMessageOnPress: Story = { name: 'F. Mark, message on press', render: () => <Page letter="F" /> }
+export const FMarkMessageOnPressAfterSubmit: Story = {
+    name: 'F. Mark, message on press, after Create',
+    render: () => <Page letter="F" after />,
+}
 export const CompareAfterSubmit: Story = { name: 'All options, after Create', render: () => <Compare /> }
