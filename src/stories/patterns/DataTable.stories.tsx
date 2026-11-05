@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { CopyIcon, EllipsisVerticalIcon, ExternalLinkIcon, MenuIcon, RotateCcwIcon, XIcon } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 
-import { type DataAction, type DataColumn, DataTable, type DataSort } from '../../components/DataTable'
+import { type DataAction, type DataColumn, DataTable, type DataSort, sortRows } from '../../components/DataTable'
 import { SearchField } from '../../components/SearchField'
 import { StatusChip } from '../../components/StatusChip'
 import { Button } from '../../components/ui/button'
@@ -142,6 +142,104 @@ export const TenThousand: StoryObj = { name: '10k rows', render: () => <Runs cou
 
 /** Fifty thousand runs, sorted from a column head as quickly as the hundred. */
 export const FiftyThousand: StoryObj = { name: '50k rows', render: () => <Runs count={50_000} /> }
+
+/** Ten thousand runs fifty to a page: the table sorts them all and shows a page, with the pager at its foot. */
+export const Pages: StoryObj = {
+    render: () => (
+        <div className="flex h-svh flex-col bg-background p-4 text-foreground">
+            <DataTable
+                className="flex-1"
+                columns={COLUMNS}
+                rows={makeRuns(10_000)}
+                rowKey={(run) => run.id}
+                selectable
+                bulkActions={bulk}
+                rowActions={runActions}
+                paging="client"
+            />
+        </div>
+    ),
+}
+
+/** Pages as a server gives them: the app sorts and slices, as a server would, and the table shows the page it hears of. */
+function ServerPages() {
+    const all = makeRuns(50_000)
+    const [sort, setSort] = useState<DataSort | null>(null)
+    const [page, setPage] = useState(0)
+    const [size, setSize] = useState(50)
+    const rows = useMemo(() => {
+        const column = COLUMNS.find((one) => one.id === sort?.column)
+        const sorted = sort === null || column?.sortValue === undefined ? all : sortRows(all, column.sortValue, sort.direction)
+        return sorted.slice(page * size, (page + 1) * size)
+    }, [all, sort, page, size])
+    return (
+        <div className="flex h-svh flex-col bg-background p-4 text-foreground">
+            <DataTable
+                className="flex-1"
+                columns={COLUMNS}
+                rows={rows}
+                rowKey={(run) => run.id}
+                rowActions={runActions}
+                paging="server"
+                total={all.length}
+                manualSort
+                sort={sort}
+                onSortChange={setSort}
+                page={page}
+                onPageChange={setPage}
+                pageSize={size}
+                onPageSizeChange={setSize}
+            />
+        </div>
+    )
+}
+
+/** Fifty thousand runs a page at a time from a server: only the page shown is ever handed to the table. */
+export const ServerPaging: StoryObj = { name: 'Server pages', render: () => <ServerPages /> }
+
+/** Runs arriving as they are scrolled to: 200 at first, 200 more each time the end comes near. */
+function LoadMore() {
+    const all = makeRuns(50_000)
+    const [count, setCount] = useState(200)
+    const [loading, setLoading] = useState(false)
+    const timer = useRef<number | undefined>(undefined)
+    const more = useCallback(() => {
+        setLoading(true)
+        window.clearTimeout(timer.current)
+        timer.current = window.setTimeout(() => {
+            setCount((now) => Math.min(all.length, now + 200))
+            setLoading(false)
+        }, 600)
+    }, [all.length])
+    return (
+        <div className="flex h-svh flex-col bg-background p-4 text-foreground">
+            <DataTable
+                className="flex-1"
+                columns={COLUMNS}
+                rows={all.slice(0, count)}
+                rowKey={(run) => run.id}
+                selectable
+                bulkActions={bulk}
+                rowActions={runActions}
+                hasMore={count < all.length}
+                loading={loading}
+                onLoadMore={more}
+            />
+        </div>
+    )
+}
+
+/** Progressive loading: the bar counts what has loaded, and placeholder rows stand in while more arrive. */
+export const LoadsMore: StoryObj = { name: 'Load more', render: () => <LoadMore /> }
+
+/** The first rows still on their way: placeholder rows fill the table. */
+export const Loading: StoryObj = {
+    render: () => (
+        <div className="flex h-svh flex-col bg-background p-4 text-foreground">
+            <DataTable className="flex-1" columns={COLUMNS} rows={[]} rowKey={(run) => run.id} selectable loading />
+        </div>
+    ),
+}
 
 /** Runs sorted by duration, longest first: the arrow in the head says which way. */
 export const Sorted: StoryObj = { render: () => <Runs count={500} defaultSort={{ column: 'duration', direction: 'desc' }} /> }
