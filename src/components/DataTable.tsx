@@ -797,13 +797,11 @@ export function DataTable<T>({
                 }
                 className="group/table relative min-h-0 flex-1 overflow-auto outline-none"
             >
-                <div ref={probe} aria-hidden className="pointer-events-none invisible absolute h-(--density-row) w-px" />
-                <div
-                    ref={cardProbe}
-                    aria-hidden
-                    className="pointer-events-none invisible absolute"
-                    style={{ width: cardWidth, height: cardHeight }}
-                />
+                {/* Measures the row and card sizes without adding to what scrolls. */}
+                <div aria-hidden className="pointer-events-none invisible absolute size-0 overflow-hidden">
+                    <div ref={probe} className="h-(--density-row) w-px" />
+                    <div ref={cardProbe} style={{ width: cardWidth, height: cardHeight }} />
+                </div>
                 {!gridView && (
                     <div
                         role="row"
