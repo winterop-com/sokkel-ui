@@ -24,6 +24,14 @@ export interface ChannelEntry {
     href?: string
 }
 
+/** A place above the sections, such as threads or saved messages, with a count of what is new there. */
+export interface ChannelPlace {
+    id: string
+    label: string
+    icon: ReactNode
+    count?: number
+}
+
 export interface ChannelSection {
     id: string
     title: string
@@ -56,9 +64,11 @@ const DOT: Record<Presence, string> = {
  * The places to talk, in sections that fold: channels with `#` (a lock for a private one), and
  * conversations with a person's picture and whether they are around. An entry with unread messages
  * is bold, one that names you carries a count, a muted one is quieter. The chosen entry is filled.
+ * `places` come first, above the sections: threads, activity, saved messages.
  */
 export function ChannelList({
     sections,
+    places,
     active,
     onSelect,
     header,
@@ -66,6 +76,7 @@ export function ChannelList({
     words: given,
 }: {
     sections: readonly ChannelSection[]
+    places?: readonly ChannelPlace[]
     active?: string
     onSelect?: (id: string) => void
     /** What sits above the sections: the workspace name, a new-message button. */
@@ -79,6 +90,29 @@ export function ChannelList({
         <nav className={cn('flex min-h-0 flex-col bg-sidebar text-sidebar-foreground', className)}>
             {header}
             <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2">
+                {places !== undefined && places.length > 0 && (
+                    <ul className="mb-3 flex flex-col gap-px border-b border-border pb-3">
+                        {places.map((place) => (
+                            <li key={place.id}>
+                                <button
+                                    type="button"
+                                    aria-current={place.id === active ? 'page' : undefined}
+                                    onClick={() => onSelect?.(place.id)}
+                                    className={cn(
+                                        'flex h-(--density-channel-row) w-full items-center gap-2 rounded-md px-2 text-left text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50 [&_svg]:size-4',
+                                        place.id === active
+                                            ? 'bg-primary text-primary-foreground'
+                                            : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
+                                    )}
+                                >
+                                    <span className="flex size-5 shrink-0 items-center justify-center">{place.icon}</span>
+                                    <span className="min-w-0 flex-1 truncate">{place.label}</span>
+                                    {(place.count ?? 0) > 0 && <span className="text-xs font-medium tabular-nums">{place.count}</span>}
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                )}
                 {sections.map((section) => {
                     const open = !folded.has(section.id)
                     const shown = open
@@ -178,7 +212,7 @@ function Entry({
         </>
     )
     const className = cn(
-        'flex h-7 w-full items-center gap-2 rounded-md px-2 text-left text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+        'flex h-(--density-channel-row) w-full items-center gap-2 rounded-md px-2 text-left text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
         active ? 'bg-primary text-primary-foreground [&_*]:text-primary-foreground' : 'hover:bg-secondary',
         !active && entry.muted === true && 'opacity-60',
         !active && !loud && 'text-muted-foreground',

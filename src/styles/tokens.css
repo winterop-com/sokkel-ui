@@ -2837,6 +2837,10 @@ html.dark[data-theme='neon'] {
     --density-section-gap: 1rem;
     --density-inspector-pad: 1.25rem;
     --density-inspector-gap: 1.5rem;
+    --density-chat-gap: 0.875rem;
+    --density-chat-follow: 0.25rem;
+    --density-chat-inset: 1.5rem;
+    --density-channel-row: 2rem;
 }
 
 html[data-density='regular'] {
@@ -2850,6 +2854,10 @@ html[data-density='regular'] {
     --density-section-gap: 1rem;
     --density-inspector-pad: 1.25rem;
     --density-inspector-gap: 1.5rem;
+    --density-chat-gap: 0.875rem;
+    --density-chat-follow: 0.25rem;
+    --density-chat-inset: 1.5rem;
+    --density-channel-row: 2rem;
 }
 
 html[data-density='compact'] {
@@ -2863,4 +2871,8 @@ html[data-density='compact'] {
     --density-section-gap: 0.75rem;
     --density-inspector-pad: 0.75rem;
     --density-inspector-gap: 1rem;
+    --density-chat-gap: 0.375rem;
+    --density-chat-follow: 0.0625rem;
+    --density-chat-inset: 1rem;
+    --density-channel-row: 1.625rem;
 }
