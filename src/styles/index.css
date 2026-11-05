@@ -22,6 +22,18 @@
     body {
         @apply bg-background font-sans text-base text-foreground antialiased;
     }
+    /* Mono is as tall as the sans but wider, so it is set to a smaller x-height to sit level with the text around it. */
+    :where(.font-mono, code, kbd, samp, pre) {
+        font-size-adjust: var(--mono-x-height);
+    }
+    /* Small text keeps more of its size, so mono beside it stays readable. */
+    :where(.text-xs:where(.font-mono, code), .text-xs :where(.font-mono, code)) {
+        font-size-adjust: var(--mono-x-height-small);
+    }
+    /* A graph is zoomed as a whole and sets its own small sizes. */
+    :where([data-graph-view]) :where(.font-mono, code) {
+        font-size-adjust: none;
+    }
 }
 
 /* The delayed spinner fading in once its wait is over. */

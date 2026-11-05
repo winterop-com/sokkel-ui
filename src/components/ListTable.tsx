@@ -108,7 +108,7 @@ export function ListTable<T>({
                 <div
                     role="row"
                     className={cn(
-                        'sticky top-0 z-10 grid h-(--density-panel-head) items-center gap-3 border-b border-border-strong bg-panel-ground px-(--density-panel-pad) font-medium text-muted-foreground',
+                        'sticky top-0 z-10 grid h-(--density-panel-head) items-center gap-3 border-b border-border-strong bg-panel-ground px-(--density-panel-pad) font-[number:var(--table-head-weight)] text-muted-foreground',
                         headerCase === 'upper'
                             ? 'text-[length:var(--table-head-size)] tracking-[var(--table-head-tracking)] uppercase'
                             : headerCase === 'sentence'

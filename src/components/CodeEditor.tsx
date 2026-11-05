@@ -46,7 +46,7 @@ const HIGHLIGHT = HighlightStyle.define([
 
 /** The chrome in the theme's tokens, so a change of theme or scheme repaints it without a rebuild. */
 const THEME = EditorView.theme({
-    '&': { backgroundColor: 'transparent', color: 'var(--foreground)', fontSize: '0.8125rem', height: '100%' },
+    '&': { backgroundColor: 'transparent', color: 'var(--foreground)', fontSize: '0.9375rem', height: '100%' },
     '&.cm-focused': { outline: 'none' },
     '.cm-scroller': { fontFamily: 'var(--font-mono)', lineHeight: '1.6' },
     '.cm-content': { padding: '0.5rem 0', caretColor: 'var(--foreground)' },
