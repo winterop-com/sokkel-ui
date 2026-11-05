@@ -1,0 +1,41 @@
+import type { ComponentType } from 'react'
+
+/** A kind of step a pipeline can be built from, as a palette or a picker offers it. */
+export interface PipelineBlock {
+    /** The block's key, drawn in the code face: the kind a step made from it carries. */
+    kind: string
+    /** A human title; without one, the kind is the title. */
+    name?: string
+    description?: string
+    /** The id of the group it is listed under. */
+    group: string
+    icon?: ComponentType<{ className?: string }>
+}
+
+/** A heading blocks are listed under, in the order given. */
+export interface BlockGroup {
+    id: string
+    label: string
+}
+
+/** The type a dragged block's kind travels under, from a palette to a canvas. */
+export const GRAPH_DRAG_TYPE = 'application/x-graph-item'
+
+/** Whether a block matches what was typed: every word found in its kind, name or description. */
+export function blockMatches(block: PipelineBlock, query: string): boolean {
+    const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean)
+    if (words.length === 0) return true
+    const text = [block.kind, block.name ?? '', block.description ?? ''].join(' ').toLowerCase()
+    return words.every((word) => text.includes(word))
+}
+
+/** The blocks that match a query, under their groups in the groups' order; a group with none is left out. */
+export function groupBlocks(
+    blocks: readonly PipelineBlock[],
+    groups: readonly BlockGroup[],
+    query = '',
+): { group: BlockGroup; blocks: PipelineBlock[] }[] {
+    return groups
+        .map((group) => ({ group, blocks: blocks.filter((block) => block.group === group.id && blockMatches(block, query)) }))
+        .filter((entry) => entry.blocks.length > 0)
+}
