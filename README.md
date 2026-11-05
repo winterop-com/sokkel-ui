@@ -54,6 +54,10 @@ Every story is held to its approved screenshot in dark and light, at desktop and
 The screenshots are Linux renders taken in the Playwright image, as CI checks them:
 `bun run test:visual:linux` compares and `bun run test:visual:linux:update` takes new ones.
 
+## Roadmap
+
+`docs/roadmap.md`: where the library stands, the next release, and what is decided but not built.
+
 ## Using it
 
 The package is `@winterop-com/sokkel-ui` on GitHub Packages. An app points the scope at that registry in

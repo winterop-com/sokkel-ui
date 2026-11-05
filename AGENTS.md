@@ -1,5 +1,8 @@
 # Rules for agents
 
+`docs/plan.md` says what the library holds and why; `docs/roadmap.md` says what comes next. Read
+both before starting work.
+
 These rules hold for every agent and every change. When a request seems to conflict with one, stop
 and ask before acting.
 
@@ -32,6 +35,8 @@ and ask before acting.
   theme can change it.
 - A panel's resizing is opt-in: it appears only when the panel is given a size and a size
   handler.
+- One engine per job: ECharts draws every chart, maplibre every map, React Flow every interactive
+  graph, Mermaid every diagram written as text, and sparklines are plain SVG. Never add a second.
 - Words a component says are props with English defaults, so an app can translate them.
 - Comments say what the thing does, or the constraint the code cannot show. Rationale goes in the
   commit message.
