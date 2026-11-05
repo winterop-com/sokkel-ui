@@ -1,16 +1,21 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
+import { Progress } from '../../components/ui/progress'
+import { cn } from '../../lib/cn'
+import { Skeleton } from '../../components/ui/skeleton'
+
 import type { ThemeOption, ThemeSettings } from '../../components/ThemePicker'
 import { fromGlobals, THEMES, toGlobals } from './themes'
 
 /**
  * Every theme the toolbar offers, side by side: each tile is the same small sample of Tidevann in
  * that theme, dark and light. A theme answers on the whole document, so each half of a tile is its
- * own frame of the Sample story with the theme in its globals; the density, corners and typeface
- * follow the toolbar. Pressing a half opens the kitchen sink in that theme and scheme.
+ * own frame of the Gallery tile story with the theme in its globals; the density, corners and typeface
+ * follow the toolbar. Pressing a half opens the kitchen sink in that theme and scheme. Each half
+ * shows a placeholder until its theme has drawn, and a bar under the title counts them.
  */
-const meta: Meta = { title: 'Themes/Gallery' }
+const meta: Meta = { title: 'Themes/All themes' }
 export default meta
 
 const SCHEMES = ['dark', 'light'] as const
@@ -26,6 +31,7 @@ function drawn(frame: HTMLIFrameElement): boolean {
 
 function Frame({ settings, label, onDrawn }: { settings: ThemeSettings; label: string; onDrawn: () => void }) {
     const frame = useRef<HTMLIFrameElement>(null)
+    const [ready, setReady] = useState(false)
     useEffect(() => {
         let done = false
         const timer = window.setInterval(() => {
@@ -33,7 +39,12 @@ function Frame({ settings, label, onDrawn }: { settings: ThemeSettings; label: s
             done = true
             window.clearInterval(timer)
             // Two frames more, so the chart's first paint has landed.
-            requestAnimationFrame(() => requestAnimationFrame(onDrawn))
+            requestAnimationFrame(() =>
+                requestAnimationFrame(() => {
+                    setReady(true)
+                    onDrawn()
+                }),
+            )
         }, 100)
         return () => window.clearInterval(timer)
     }, [onDrawn])
@@ -49,9 +60,18 @@ function Frame({ settings, label, onDrawn }: { settings: ThemeSettings; label: s
                 ref={frame}
                 title={label}
                 tabIndex={-1}
-                src={`iframe.html?id=themes-sample--sample&viewMode=story&globals=${globals}`}
-                className="pointer-events-none size-full border-0"
+                src={`iframe.html?id=themes-gallery-tile--gallery-tile&viewMode=story&globals=${globals}`}
+                className={cn('pointer-events-none size-full border-0', !ready && 'invisible')}
             />
+            {!ready && (
+                <div aria-hidden className="absolute inset-0 flex flex-col gap-3 bg-card p-4">
+                    <Skeleton className="h-5 w-2/5" />
+                    <Skeleton className="h-8 w-3/5" />
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-40 w-full" />
+                    <Skeleton className="h-24 w-full" />
+                </div>
+            )}
         </a>
     )
 }
@@ -87,21 +107,24 @@ function Grid({ base }: { base: ThemeSettings }) {
         const timer = window.setTimeout(() => setPatience(true), PATIENCE)
         return () => window.clearTimeout(timer)
     }, [])
-    const shown = count >= total || patience
+    const done = count >= total || patience
     return (
-        // Hidden until every frame has drawn, so the gallery appears at once rather than tile by tile.
-        <div className="relative min-h-svh bg-background p-4 text-foreground md:p-6" style={{ visibility: shown ? 'visible' : 'hidden' }}>
-            {!shown && (
-                <p className="absolute top-6 left-6 text-sm text-muted-foreground" style={{ visibility: 'visible' }}>
-                    Drawing {total - count} of {total} samples
-                </p>
-            )}
+        // Settling while frames draw; the screenshot suite waits for it to end.
+        <div className="relative min-h-svh bg-background p-4 text-foreground md:p-6" data-settling={done ? undefined : ''}>
             <div className="mx-auto flex max-w-[1800px] flex-col gap-6">
                 <div className="flex flex-col gap-1">
                     <h1 className="text-page font-medium tracking-tight">Themes</h1>
                     <p className="text-sm text-muted-foreground">
                         {THEMES.length} themes, dark and light. Press a sample to open the kitchen sink in it.
                     </p>
+                    {!done && (
+                        <div className="mt-2 flex max-w-md items-center gap-3 text-xs text-muted-foreground">
+                            <Progress value={Math.round((count / total) * 100)} className="flex-1" aria-label="Drawing the themes" />
+                            <span className="shrink-0 tabular-nums">
+                                {count} of {total} drawn
+                            </span>
+                        </div>
+                    )}
                 </div>
                 <div className="grid gap-x-6 gap-y-8 lg:grid-cols-2">
                     {THEMES.map((theme) => (
@@ -113,7 +136,7 @@ function Grid({ base }: { base: ThemeSettings }) {
     )
 }
 
-function AllThemes({ globals }: { globals: Record<string, unknown> }) {
+function Gallery({ globals }: { globals: Record<string, unknown> }) {
     const base = fromGlobals(globals)
     const { density, corners, typeface } = base
     // The frames load again when the toolbar's density, corners or typeface change.
@@ -121,7 +144,7 @@ function AllThemes({ globals }: { globals: Record<string, unknown> }) {
 }
 
 /** Every theme in both schemes. */
-export const Gallery: StoryObj = {
-    name: 'Gallery',
-    render: (_args, context) => <AllThemes globals={context.globals} />,
+export const AllThemes: StoryObj = {
+    name: 'All themes',
+    render: (_args, context) => <Gallery globals={context.globals} />,
 }
