@@ -11,8 +11,13 @@ type Options = Parameters<Manager['add']>[0] & { id: string }
 
 function Shown({ manager, toasts }: { manager: Manager; toasts: Options[] }) {
     useEffect(() => {
-        for (const options of toasts) manager.add({ timeout: 0, ...options })
+        // A toast measures its height when it is added, so it waits for the typeface it is drawn in.
+        let live = true
+        void document.fonts.ready.then(() => {
+            if (live) for (const options of toasts) manager.add({ timeout: 0, ...options })
+        })
         return () => {
+            live = false
             for (const { id } of toasts) manager.close(id)
         }
     }, [manager, toasts])
