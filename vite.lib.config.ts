@@ -32,6 +32,8 @@ export default defineConfig({
                 ...entries('components/dashboard'),
                 ...entries('components/schema'),
                 ...entries('components/chart'),
+                ...entries('components/board'),
+                ...entries('components/calendar'),
                 ...entries('hooks'),
                 ...entries('lib'),
             },
