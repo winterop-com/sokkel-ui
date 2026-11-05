@@ -65,7 +65,7 @@ its `.npmrc`, with a token that can read packages, and pins a version:
 ```
 
 ```
-bun add @winterop-com/ui@0.3.0
+bun add @winterop-com/ui@0.4.0
 ```
 
 An app that brings its own Tailwind imports `@winterop-com/ui/tokens.css` (the tokens, themes and
