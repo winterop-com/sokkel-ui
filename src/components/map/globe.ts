@@ -20,10 +20,12 @@ export function globeSky(horizon: string, fog: string): SkySpecification {
 export const FLAT_SKY: SkySpecification = { 'atmosphere-blend': 0 }
 
 /** Deep space, the same in both schemes. */
-const SPACE_COLOR = '#05080f'
+const SPACE_COLOR = 'var(--globe-space)'
 
-/** Starlight; each star's brightness is its opacity. */
-const STAR_COLOR = '#dbe7ff'
+/** Starlight, read from its token because a star tile is an image that cannot see the page's variables; each star's brightness is its opacity. */
+function starColor(): string {
+    return getComputedStyle(document.documentElement).getPropertyValue('--globe-star').trim() || 'white'
+}
 
 /** The seed every star is placed from, so every mount draws the same sky. */
 const SEED = 0x5eed5
@@ -53,7 +55,7 @@ function seeded(seed: number): () => number {
 }
 
 /** One layer's tile as an SVG data url; most stars are specks and a few are bright. */
-function starTile(layer: StarLayer): string {
+function starTile(layer: StarLayer, color: string): string {
     const random = seeded(SEED ^ layer.tileSize)
     let circles = ''
     for (let index = 0; index < layer.starCount; index += 1) {
@@ -62,7 +64,7 @@ function starTile(layer: StarLayer): string {
         const y = Math.round(random() * layer.tileSize * 10) / 10
         const radius = Math.round((layer.radius[0] + (layer.radius[1] - layer.radius[0]) * skew) * 100) / 100
         const opacity = Math.round((layer.opacity[0] + (layer.opacity[1] - layer.opacity[0]) * random()) * 100) / 100
-        circles += `<circle cx="${x}" cy="${y}" r="${radius}" fill="${STAR_COLOR}" fill-opacity="${opacity}"/>`
+        circles += `<circle cx="${x}" cy="${y}" r="${radius}" fill="${color}" fill-opacity="${opacity}"/>`
     }
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${layer.tileSize}" height="${layer.tileSize}">${circles}</svg>`
     return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`
@@ -72,6 +74,6 @@ let paint: { backgroundColor: string; backgroundImage: string } | null = null
 
 /** The starfield as CSS: deep space with every star layer tiled over it. */
 export function starfieldStyle(): { backgroundColor: string; backgroundImage: string } {
-    paint ??= { backgroundColor: SPACE_COLOR, backgroundImage: STAR_LAYERS.map(starTile).join(', ') }
+    paint ??= { backgroundColor: SPACE_COLOR, backgroundImage: STAR_LAYERS.map((layer) => starTile(layer, starColor())).join(', ') }
     return paint
 }

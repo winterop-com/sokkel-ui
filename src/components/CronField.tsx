@@ -120,7 +120,7 @@ export function CronField({
                 <span className="text-xs font-medium text-muted-foreground">{words.next(count)}</span>
                 <ol className="flex flex-col divide-y divide-border rounded-control border border-border">
                     {Array.from({ length: count }, (_, index) => (
-                        <li key={index} className="flex h-8 items-center gap-3 px-3 font-mono text-[0.8125rem] tabular-nums">
+                        <li key={index} className="flex h-8 items-center gap-3 px-3 font-mono text-xs tabular-nums">
                             <span className="w-4 text-right text-faint">{index + 1}</span>
                             <span className={runs[index] === undefined ? 'text-faint' : undefined}>
                                 {runs[index] === undefined ? '—' : format(runs[index])}

@@ -33,7 +33,7 @@ const WORDS: DialogShellWords = { cancel: 'Cancel', back: 'Back' }
 
 /** Dims a dialog while another is open on top of it. */
 export const NESTED =
-    'data-nested-dialog-open:after:pointer-events-none data-nested-dialog-open:after:absolute data-nested-dialog-open:after:inset-0 data-nested-dialog-open:after:rounded-[inherit] data-nested-dialog-open:after:bg-black/40'
+    'data-nested-dialog-open:after:pointer-events-none data-nested-dialog-open:after:absolute data-nested-dialog-open:after:inset-0 data-nested-dialog-open:after:rounded-[inherit] data-nested-dialog-open:after:bg-shade/40'
 
 /** What the dialog focuses first when it opens: the first field in its body, ahead of the header. */
 const FIELD = [

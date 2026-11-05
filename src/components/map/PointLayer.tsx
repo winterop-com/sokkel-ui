@@ -204,7 +204,7 @@ export function PointLayer({
             <span
                 key={label.id}
                 aria-hidden
-                className="absolute -translate-x-1/2 -translate-y-1/2 text-[11px] leading-none font-medium text-card tabular-nums"
+                className="absolute -translate-x-1/2 -translate-y-1/2 text-2xs leading-none font-medium text-card tabular-nums"
                 style={{ left: label.x, top: label.y }}
             >
                 {COMPACT.format(label.count)}

@@ -182,7 +182,7 @@ function Entry({
     const mark =
         entry.kind === 'direct' ? (
             <span className="relative flex size-5 shrink-0 items-center justify-center">
-                <span className="flex size-5 items-center justify-center overflow-hidden rounded-md bg-muted text-[10px] font-medium">
+                <span className="flex size-5 items-center justify-center overflow-hidden rounded-md bg-muted text-2xs font-medium">
                     {entry.avatar}
                 </span>
                 {entry.presence !== undefined && (

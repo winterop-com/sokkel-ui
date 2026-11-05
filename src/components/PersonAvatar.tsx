@@ -2,7 +2,7 @@ import { cn } from '../lib/cn'
 import { KIND_WASH, kindOf, type KindColor } from '../lib/kind'
 
 const SIZE = {
-    xs: 'size-5 text-[0.625rem]',
+    xs: 'size-5 text-2xs',
     sm: 'size-6 text-xs',
     md: 'size-8 text-sm',
 } as const

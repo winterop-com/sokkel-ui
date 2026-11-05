@@ -180,7 +180,7 @@ export function CapabilityPicker({
                                         <span
                                             key={id}
                                             className={cn(
-                                                'rounded-mini border px-1 text-[0.6875rem] leading-4',
+                                                'rounded-mini border px-1 text-2xs leading-4',
                                                 chosen.has(id)
                                                     ? 'border-primary/40 text-foreground'
                                                     : 'border-border text-muted-foreground',

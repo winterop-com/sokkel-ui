@@ -47,7 +47,7 @@ export function StepIndicator({
                         <>
                             <span
                                 className={cn(
-                                    'flex size-5 shrink-0 items-center justify-center rounded-full font-mono text-[0.6875rem] leading-none tabular-nums',
+                                    'flex size-5 shrink-0 items-center justify-center rounded-full font-mono text-2xs leading-none tabular-nums',
                                     here && 'bg-primary text-primary-foreground',
                                     done && 'bg-primary/15 text-foreground',
                                     !here && !done && 'border border-border-strong text-muted-foreground',
@@ -58,7 +58,7 @@ export function StepIndicator({
                             </span>
                             <span
                                 className={cn(
-                                    'truncate text-[0.8125rem]',
+                                    'truncate text-xs',
                                     here ? 'font-medium text-foreground' : 'text-muted-foreground max-sm:hidden',
                                 )}
                             >

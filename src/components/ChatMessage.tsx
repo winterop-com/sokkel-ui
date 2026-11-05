@@ -109,7 +109,7 @@ export function ChatMessage({
                 {continued ? (
                     <time
                         title={timeTitle}
-                        className="pt-0.5 text-[11px] leading-5 text-faint tabular-nums opacity-0 group-hover/chat:opacity-100"
+                        className="pt-0.5 text-2xs leading-5 text-faint tabular-nums opacity-0 group-hover/chat:opacity-100"
                     >
                         {time}
                     </time>
@@ -205,7 +205,7 @@ export function ChatMessage({
                             {thread.people.slice(0, 3).map((person, index) => (
                                 <span
                                     key={index}
-                                    className="flex size-5 items-center justify-center overflow-hidden rounded-md bg-muted text-[9px] font-medium ring-2 ring-background"
+                                    className="flex size-5 items-center justify-center overflow-hidden rounded-md bg-muted text-2xs font-medium ring-2 ring-background"
                                 >
                                     {person}
                                 </span>
@@ -240,7 +240,7 @@ export function ChatNewDivider({ label = 'New' }: { label?: string }) {
     return (
         <div role="separator" aria-label={label} className="relative my-1 flex items-center justify-end px-(--density-chat-inset)">
             <span className="absolute inset-x-(--density-chat-inset) top-1/2 h-px bg-critical/60" aria-hidden />
-            <span className="relative bg-background pl-2 text-[11px] font-semibold tracking-wide text-critical-ink uppercase">{label}</span>
+            <span className="relative bg-background pl-2 text-2xs font-semibold tracking-wide text-critical-ink uppercase">{label}</span>
         </div>
     )
 }

@@ -62,7 +62,7 @@ export function TypedConfirmDialog({
             {children}
             <div className="flex flex-col gap-1.5">
                 <label htmlFor={id} className="text-sm">
-                    {words.prompt(<span className="rounded-sm bg-muted px-1 py-0.5 font-mono text-[0.8125rem] select-all">{code}</span>)}
+                    {words.prompt(<span className="rounded-sm bg-muted px-1 py-0.5 font-mono text-xs select-all">{code}</span>)}
                 </label>
                 <div className="relative">
                     <Input
