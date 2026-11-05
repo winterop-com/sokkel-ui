@@ -427,7 +427,7 @@ function Reading({ mail, onBack }: { mail: Conversation; onBack: () => void }) {
             <div className="min-h-0 flex-1 overflow-y-auto">
                 <header className="flex items-start gap-3 border-b border-border px-4 pt-5 pb-4 md:px-6">
                     <div className="flex min-w-0 flex-1 flex-col gap-2">
-                        <h1 className="text-lg leading-snug font-semibold tracking-tight">{mail.subject}</h1>
+                        <h1 className="text-page leading-snug font-semibold tracking-tight">{mail.subject}</h1>
                         <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
                             {(mail.labels ?? []).map((id) => (
                                 <span key={id} className="inline-flex h-5 items-center gap-1 rounded-full border border-border px-1.5">

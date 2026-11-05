@@ -324,7 +324,7 @@ export function ImportOrders({ stage: first = 'map' }: { stage?: ImportStage }) 
                                     const skipped = map[one.column] === 'skip'
                                     return (
                                         <tr key={one.column}>
-                                            <td className="px-3 py-2 font-mono text-[0.8125rem]">{one.column}</td>
+                                            <td className="px-3 py-2 font-mono text-xs">{one.column}</td>
                                             <td aria-hidden>
                                                 <ArrowRight className="size-3.5 text-faint" />
                                             </td>
@@ -385,7 +385,7 @@ export function ImportOrders({ stage: first = 'map' }: { stage?: ImportStage }) 
                                         {stat.icon}
                                         {stat.label}
                                     </span>
-                                    <span className="font-mono text-lg tabular-nums">{stat.value}</span>
+                                    <span className="font-mono text-title tabular-nums">{stat.value}</span>
                                 </div>
                             ))}
                         </div>
@@ -404,9 +404,9 @@ export function ImportOrders({ stage: first = 'map' }: { stage?: ImportStage }) 
                                     <tbody className="divide-y divide-border">
                                         {FAILED.map((row) => (
                                             <tr key={row.row}>
-                                                <td className="px-3 py-2 text-right font-mono text-[0.8125rem] tabular-nums">{row.row}</td>
-                                                <td className="px-3 py-2 font-mono text-[0.8125rem]">{row.column}</td>
-                                                <td className="px-3 py-2 font-mono text-[0.8125rem] text-critical-ink">{row.value}</td>
+                                                <td className="px-3 py-2 text-right font-mono text-xs tabular-nums">{row.row}</td>
+                                                <td className="px-3 py-2 font-mono text-xs">{row.column}</td>
+                                                <td className="px-3 py-2 font-mono text-xs text-critical-ink">{row.value}</td>
                                                 <td className="px-3 py-2 text-muted-foreground">{row.why}</td>
                                             </tr>
                                         ))}
@@ -526,7 +526,7 @@ export function ExportRuns({ stage: first = 'form' }: { stage?: ExportStage }) {
                     <div className="flex items-center gap-3 rounded-control border border-border px-3 py-3">
                         <FileSpreadsheet className="size-8 shrink-0 text-muted-foreground" aria-hidden />
                         <span className="flex min-w-0 flex-1 flex-col">
-                            <span className="truncate font-mono text-[0.8125rem]">{name}</span>
+                            <span className="truncate font-mono text-xs">{name}</span>
                             <span className="text-xs text-muted-foreground">2.4 MB, 2,472 rows</span>
                         </span>
                         <CircleCheck className="size-5 shrink-0 text-good" aria-hidden />
@@ -625,7 +625,7 @@ export function Share() {
                             <li key={member.email} className="flex items-center gap-3 py-1.5">
                                 <PersonAvatar name={member.username} />
                                 <span className="flex min-w-0 flex-1 flex-col">
-                                    <span className="font-mono text-[0.8125rem]">
+                                    <span className="font-mono text-xs">
                                         {member.username}
                                         {member.username === 'ada' && (
                                             <span className="ml-1.5 font-sans text-xs text-muted-foreground">(you)</span>
