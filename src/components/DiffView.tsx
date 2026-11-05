@@ -77,7 +77,7 @@ export function DiffView({
                         key={index}
                         variant={line.kind === 'same' ? 'default' : line.kind}
                         className={cn(
-                            'pl-7 after:start-3',
+                            'pl-7 group-data-[size=sm]/code-block:pl-7 after:start-3',
                             line.kind === 'added' && 'bg-good/12 after:text-good',
                             line.kind === 'removed' && 'bg-critical/12',
                         )}
