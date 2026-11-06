@@ -7,6 +7,7 @@ import { Markdown } from '../../components/Markdown'
 import { MermaidDiagram } from '../../components/MermaidDiagram'
 import { ToolCalls, type ToolCallEntry } from '../../components/ToolCall'
 import { TooltipProvider } from '../../components/ui/tooltip'
+import { Stack } from '../../components/Layout'
 
 /**
  * The pieces an assistant's answer is made of: markdown with code and diagrams, the tools it
@@ -15,9 +16,9 @@ import { TooltipProvider } from '../../components/ui/tooltip'
 function Ground({ children }: { children: React.ReactNode }) {
     return (
         <TooltipProvider>
-            <div className="min-h-svh bg-background p-6 text-foreground">
-                <div className="mx-auto flex max-w-3xl flex-col gap-6">{children}</div>
-            </div>
+            <Stack gap="xl" className="mx-auto max-w-3xl">
+                {children}
+            </Stack>
         </TooltipProvider>
     )
 }
@@ -128,7 +129,7 @@ steps:
     )
 }
 
-const meta: Meta = { title: 'Patterns/Chat' }
+const meta: Meta = { title: 'Patterns/Chat', parameters: { frame: 'padded' } }
 export default meta
 
 export const MarkdownAnswer: StoryObj = { name: 'Markdown', render: () => <Answer /> }

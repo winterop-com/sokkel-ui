@@ -13,7 +13,7 @@ import type { Path } from '../../components/schema/validate'
  * pressing the mark says what is wrong and offers the fix when one is plain. The footer counts
  * what stops Create. Nothing is inserted between the fields, so the dialog never changes height.
  */
-const meta: Meta = { title: 'Patterns/Schema form' }
+const meta: Meta = { title: 'Patterns/Schema form', parameters: { frame: 'padded' } }
 export default meta
 
 const JOB: JsonSchema = {
@@ -64,18 +64,16 @@ function NewJob({
     const form = useSchemaForm(JOB, { initial, issues, defaultSubmitted: submitted, defaultOpen: open })
     const [created, setCreated] = useState(false)
     return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <DialogShell
-                open
-                onOpenChange={() => undefined}
-                title="New job"
-                description="Calls the endpoint on its schedule, in the larkspur project."
-                count={<SchemaIssueCount form={form} />}
-                confirm={{ label: created ? 'Created' : 'Create', onConfirm: () => setCreated(form.submit()) }}
-            >
-                <SchemaForm form={form} />
-            </DialogShell>
-        </div>
+        <DialogShell
+            open
+            onOpenChange={() => undefined}
+            title="New job"
+            description="Calls the endpoint on its schedule, in the larkspur project."
+            count={<SchemaIssueCount form={form} />}
+            confirm={{ label: created ? 'Created' : 'Create', onConfirm: () => setCreated(form.submit()) }}
+        >
+            <SchemaForm form={form} />
+        </DialogShell>
     )
 }
 
@@ -168,18 +166,16 @@ function NewPipeline() {
         defaultSubmitted: true,
     })
     return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <DialogShell
-                open
-                onOpenChange={() => undefined}
-                width="lg"
-                title="New pipeline"
-                count={<SchemaIssueCount form={form} />}
-                confirm={{ label: 'Create', onConfirm: () => form.submit() }}
-            >
-                <SchemaForm form={form} />
-            </DialogShell>
-        </div>
+        <DialogShell
+            open
+            onOpenChange={() => undefined}
+            width="lg"
+            title="New pipeline"
+            count={<SchemaIssueCount form={form} />}
+            confirm={{ label: 'Create', onConfirm: () => form.submit() }}
+        >
+            <SchemaForm form={form} />
+        </DialogShell>
     )
 }
 
@@ -194,17 +190,15 @@ const BROKEN: JsonSchema = {
 function Unchecked() {
     const form = useSchemaForm(BROKEN)
     return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <DialogShell
-                open
-                onOpenChange={() => undefined}
-                title="New job"
-                count={<SchemaIssueCount form={form} />}
-                confirm={{ label: 'Create', onConfirm: () => form.submit() }}
-            >
-                <SchemaForm form={form} />
-            </DialogShell>
-        </div>
+        <DialogShell
+            open
+            onOpenChange={() => undefined}
+            title="New job"
+            count={<SchemaIssueCount form={form} />}
+            confirm={{ label: 'Create', onConfirm: () => form.submit() }}
+        >
+            <SchemaForm form={form} />
+        </DialogShell>
     )
 }
 

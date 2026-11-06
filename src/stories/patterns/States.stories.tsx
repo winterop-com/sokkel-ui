@@ -6,13 +6,14 @@ import { PageState } from '../../components/PageState'
 import { ProseText } from '../../components/ProseText'
 import { Unfoldable } from '../../components/Unfoldable'
 import { Button } from '../../components/ui/button'
+import { Stack } from '../../components/Layout'
 
 /** The states a read lands in, and the small text pieces that carry a server's words. */
 function Ground({ children }: { children: React.ReactNode }) {
     return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="flex max-w-3xl flex-col gap-4">{children}</div>
-        </div>
+        <Stack gap="lg" className="max-w-3xl">
+            {children}
+        </Stack>
     )
 }
 
@@ -46,13 +47,13 @@ function ReadStates() {
                 loading={false}
                 empty
                 emptyRender={
-                    <div className="flex flex-col items-start gap-3 rounded-surface border border-dashed border-border-strong px-4 py-6">
+                    <Stack align="start" className="rounded-surface border border-dashed border-border-strong px-4 py-6">
                         <p className="text-sm">No services.</p>
                         <Button size="sm">
                             <Plus aria-hidden />
                             New
                         </Button>
-                    </div>
+                    </Stack>
                 }
             >
                 {null}
@@ -102,7 +103,7 @@ function Prose() {
     )
 }
 
-const meta: Meta = { title: 'Patterns/States' }
+const meta: Meta = { title: 'Patterns/States', parameters: { frame: 'padded' } }
 export default meta
 
 export const Read: StoryObj = { name: 'Page state', render: () => <ReadStates /> }

@@ -6,6 +6,7 @@ import { FilePreview } from '../../components/FilePreview'
 import { Section } from '../../components/Section'
 import { DropZone, UploadTray, type Upload } from '../../components/UploadTray'
 import { CHART, HARBOR_DUSK, LIGHTHOUSE, PINES } from '../fixtures/photos'
+import { Columns, Row, Stack } from '../../components/Layout'
 
 /** A folder's files as rows and as tiles, a file's contents by kind, and uploads on their way. */
 const FILES: FileEntry[] = [
@@ -102,7 +103,7 @@ function Rows() {
     const [sort, setSort] = useState<FileSort>({ key: 'modified', direction: 'desc' })
     const [selected, setSelected] = useState<string[]>(['orders', 'summary'])
     return (
-        <div className="flex h-svh flex-col p-6">
+        <Stack gap="none" className="h-svh p-6">
             <FileList
                 entries={sortFiles(FILES, sort)}
                 sort={sort}
@@ -113,7 +114,7 @@ function Rows() {
                 onOpen={() => undefined}
                 className="min-h-0"
             />
-        </div>
+        </Stack>
     )
 }
 
@@ -164,7 +165,7 @@ steps:
 
 function Previews() {
     return (
-        <div className="grid gap-6 p-6 lg:grid-cols-2">
+        <Columns className="p-6">
             <Section title="Image">
                 <FilePreview name="harbor-at-dusk.png" kind="image" src={HARBOR_DUSK} />
             </Section>
@@ -180,7 +181,7 @@ function Previews() {
             <Section title="No preview">
                 <FilePreview name="exports-2026-10.zip" kind="archive" />
             </Section>
-        </div>
+        </Columns>
     )
 }
 
@@ -193,7 +194,7 @@ const UPLOADS: Upload[] = [
 
 function Trays() {
     return (
-        <div className="flex flex-wrap items-start gap-6 p-6">
+        <Row gap="xl" align="start" wrap className="p-6">
             <UploadTray uploads={UPLOADS} onRetry={() => undefined} onCancel={() => undefined} />
             <UploadTray
                 uploads={UPLOADS.filter((upload) => upload.state !== 'uploading')}
@@ -201,7 +202,7 @@ function Trays() {
                 onClose={() => undefined}
             />
             <UploadTray uploads={UPLOADS} defaultOpen={false} onCancel={() => undefined} />
-        </div>
+        </Row>
     )
 }
 

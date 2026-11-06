@@ -8,6 +8,7 @@ import { BoardColumn } from '../../components/board/BoardColumn'
 import { PeopleFilter } from '../../components/PeopleFilter'
 import { Button } from '../../components/ui/button'
 import { DropdownMenuItem } from '../../components/ui/dropdown-menu'
+import { Row, Stack } from '../../components/Layout'
 
 /** The parts of a board: its cards, and its columns with their counts and limits. */
 const meta: Meta = { title: 'Patterns/Board' }
@@ -23,7 +24,7 @@ const day = (date: number) => new Date(2026, 10, date)
 export const Cards: StoryObj = {
     name: 'Cards',
     render: () => (
-        <div className="flex w-72 flex-col gap-2 p-6">
+        <Stack gap="sm" className="w-72 p-6">
             <BoardCard id="a" title="Rename the scheduler's queue metrics" />
             <BoardCard
                 id="b"
@@ -76,7 +77,7 @@ export const Cards: StoryObj = {
                 selected
                 onSelect={() => undefined}
             />
-        </div>
+        </Stack>
     ),
 }
 
@@ -105,7 +106,7 @@ function ColumnsDemo() {
     ]
     return (
         <Board onMove={onMove} className="h-svh p-6">
-            <div className="flex h-full w-max gap-3">
+            <Row gap="md" align="stretch" className="h-full w-max">
                 {columns.map((column) => {
                     const here = cards.filter((item) => item.column === column.id)
                     return (
@@ -130,7 +131,7 @@ function ColumnsDemo() {
                         </BoardColumn>
                     )
                 })}
-            </div>
+            </Row>
         </Board>
     )
 }

@@ -7,14 +7,11 @@ import { LogView, type LogLine } from '../../components/LogView'
 import { Section } from '../../components/Section'
 import { Sparkline, Stat } from '../../components/Stat'
 import { Timeline } from '../../components/Timeline'
+import { Stack } from '../../components/Layout'
 
 /** The ways a record's facts are shown: terms and values, numbers, events, logs, JSON and diffs. */
 function Ground({ children }: { children: React.ReactNode }) {
-    return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="flex flex-col gap-6">{children}</div>
-        </div>
-    )
+    return <Stack gap="xl">{children}</Stack>
 }
 
 function Facts() {
@@ -210,7 +207,7 @@ steps:
     )
 }
 
-const meta: Meta = { title: 'Patterns/Data' }
+const meta: Meta = { title: 'Patterns/Data', parameters: { frame: 'padded' } }
 export default meta
 
 export const Description: StoryObj = { name: 'Description list', render: () => <Facts /> }

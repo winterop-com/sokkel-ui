@@ -3,6 +3,7 @@ import { useRef } from 'react'
 
 import { Markdown, markdownHeadings } from '../../components/Markdown'
 import { TableOfContents, useActiveHeading } from '../../components/TableOfContents'
+import { Row } from '../../components/Layout'
 
 /** The parts of a long page: callouts in markdown, and the list of its headings that follows the reader. */
 const CALLOUTS = `> [!NOTE]
@@ -54,12 +55,12 @@ function Contents() {
     )
     return (
         <div className="h-svh overflow-y-auto">
-            <div className="flex gap-10 p-6">
+            <Row gap="3xl" align="stretch" className="p-6">
                 <article ref={article} className="max-w-2xl min-w-0 flex-1">
                     <Markdown content={PAGE} anchors />
                 </article>
                 <TableOfContents entries={headings} active={active} className="sticky top-6 hidden w-52 shrink-0 self-start md:flex" />
-            </div>
+            </Row>
         </div>
     )
 }
