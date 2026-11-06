@@ -36,6 +36,7 @@ import {
     WORKERS,
 } from '../fixtures/runs'
 import { TidevannMark } from '../fixtures/TidevannMark'
+import { Row, Stack } from '../../components/Layout'
 
 /**
  * Tidevann's job runs as a monitoring dashboard: variables across the top with the range and
@@ -148,13 +149,13 @@ function Head() {
     const [range, setRange] = useState<TimeRangeValue>({ preset: '24h' })
     const [interval, setInterval] = useState(30)
     return (
-        <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2 text-sm">
+        <Stack gap="sm">
+            <Row className="text-sm">
                 <TidevannMark className="size-4 text-primary" />
                 <span className="font-medium">Tidevann</span>
                 <span className="text-muted-foreground">/</span>
                 <h1 className="font-medium">Job runs</h1>
-            </div>
+            </Row>
             <VariablesBar
                 variables={[
                     { kind: 'select', id: 'project', label: 'project', value: project, options: PROJECTS, onChange: setProject },
@@ -179,7 +180,7 @@ function Head() {
                     </>
                 }
             />
-        </div>
+        </Stack>
     )
 }
 
@@ -188,7 +189,7 @@ function Dashboard({ loading = false, empty = false }: { loading?: boolean; empt
     return (
         <TooltipProvider>
             <div className="min-h-svh bg-background p-3 text-foreground md:p-4">
-                <div className="mx-auto flex max-w-[1600px] flex-col gap-3">
+                <Stack className="mx-auto max-w-[1600px]">
                     <Head />
                     <DashboardRow title="Overview" count={8}>
                         <StatPanel
@@ -418,7 +419,7 @@ function Dashboard({ loading = false, empty = false }: { loading?: boolean; empt
                             />
                         </DashboardPanel>
                     </DashboardRow>
-                </div>
+                </Stack>
             </div>
         </TooltipProvider>
     )
@@ -427,9 +428,9 @@ function Dashboard({ loading = false, empty = false }: { loading?: boolean; empt
 function Picker() {
     const [range, setRange] = useState<TimeRangeValue>({ preset: '24h' })
     return (
-        <div className="flex min-h-svh justify-end bg-background p-6 text-foreground">
+        <Row gap="none" align="stretch" justify="end" className="min-h-svh bg-background p-6 text-foreground">
             <TimeRangePicker value={range} onChange={setRange} defaultMonth={new Date(2026, 9, 1)} today={new Date(2026, 9, 20)} open />
-        </div>
+        </Row>
     )
 }
 
@@ -439,10 +440,10 @@ export const Overview: StoryObj = { render: () => <Dashboard /> }
 export const LoadingAndEmpty: StoryObj = {
     name: 'Loading and empty',
     render: () => (
-        <div className="flex flex-col">
+        <Stack gap="none">
             <Dashboard loading />
             <Dashboard empty />
-        </div>
+        </Stack>
     ),
 }
 

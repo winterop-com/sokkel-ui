@@ -34,6 +34,7 @@ import {
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { HARBOR_DUSK } from '../fixtures/photos'
 import { TidevannMark } from '../fixtures/TidevannMark'
+import { Stack } from '../../components/Layout'
 
 /**
  * An assistant app in the library's frame: conversations in the rail, the exchange in a reading
@@ -129,7 +130,11 @@ function Question({ children }: { children: ReactNode }) {
 }
 
 function Thread({ children }: { children: ReactNode }) {
-    return <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6">{children}</div>
+    return (
+        <Stack gap="xl" className="mx-auto w-full max-w-3xl px-4 py-6">
+            {children}
+        </Stack>
+    )
 }
 
 /** The reply's mark, name and the handlers every answer offers. */
@@ -391,7 +396,7 @@ function Long() {
                     <MessageScrollerContent className="mx-auto w-full max-w-3xl px-4 py-6">
                         {TURNS.map((turn) => (
                             <MessageScrollerItem key={turn.id} messageId={turn.id}>
-                                <div className="flex flex-col gap-6">
+                                <Stack gap="xl">
                                     <Question>{turn.ask}</Question>
                                     <AssistantReply
                                         {...SPEAKER}
@@ -400,7 +405,7 @@ function Long() {
                                         content={turn.answer}
                                         onFeedback={() => undefined}
                                     />
-                                </div>
+                                </Stack>
                             </MessageScrollerItem>
                         ))}
                     </MessageScrollerContent>
@@ -458,7 +463,7 @@ function ChatApp({
                     />
                 }
             >
-                <div className="flex h-full min-h-0 flex-col">
+                <Stack gap="none" className="h-full min-h-0">
                     {scroll ? (
                         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">{children}</div>
                     ) : (
@@ -476,7 +481,7 @@ function ChatApp({
                             onRemove={(id) => setFiles(files.filter((file) => file.id !== id))}
                         />
                     </div>
-                </div>
+                </Stack>
             </Shell>
         </TooltipProvider>
     )

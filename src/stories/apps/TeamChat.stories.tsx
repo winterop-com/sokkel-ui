@@ -40,6 +40,7 @@ import { Button } from '../../components/ui/button'
 import { DropdownMenuItem, DropdownMenuSeparator } from '../../components/ui/dropdown-menu'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { TidevannMark } from '../fixtures/TidevannMark'
+import { Row } from '../../components/Layout'
 
 /**
  * A team chat in the library's frame: a strip of places on the far left, the channels and direct
@@ -136,7 +137,7 @@ function Sidebar({ active, onSelect }: { active: string; onSelect: (id: string) 
     const [query, setQuery] = useState('')
     const [size, setSize] = useState(256)
     return (
-        <div className="flex h-full">
+        <Row gap="none" align="stretch" className="h-full">
             <Rail variant="strip" mark={<TidevannMark className="size-5" />} name="Tidevann" groups={STRIP} foot={STRIP_FOOT} />
             <ChannelList
                 className="border-r border-border-strong"
@@ -165,7 +166,7 @@ function Sidebar({ active, onSelect }: { active: string; onSelect: (id: string) 
                     { id: 'drafts', label: 'Drafts and sent', icon: <SendHorizontal aria-hidden /> },
                 ]}
             />
-        </div>
+        </Row>
     )
 }
 

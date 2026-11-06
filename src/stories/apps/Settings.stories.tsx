@@ -16,6 +16,7 @@ import { Switch } from '../../components/ui/switch'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { PersonAvatar } from '../../components/PersonAvatar'
+import { Columns, Row, Stack } from '../../components/Layout'
 
 /** A number setting on a slider, its value written beside it. */
 function SliderSetting({
@@ -36,7 +37,7 @@ function SliderSetting({
     onChange: (value: number) => void
 }) {
     return (
-        <div className="flex w-56 items-center gap-3">
+        <Row gap="md" className="w-56">
             <Slider
                 aria-label={label}
                 value={[value]}
@@ -48,7 +49,7 @@ function SliderSetting({
             <span className="w-16 shrink-0 text-right font-mono text-xs text-muted-foreground tabular-nums">
                 {value} {unit}
             </span>
-        </div>
+        </Row>
     )
 }
 
@@ -355,7 +356,7 @@ function SettingsApp({ opening }: { opening?: Opening }) {
     const [density, setDensity] = useState<'regular' | 'compact'>('regular')
     return (
         <TooltipProvider>
-            <div className="flex h-svh flex-col bg-background text-foreground">
+            <Stack gap="none" className="h-svh bg-background text-foreground">
                 <NavBar
                     mark={<TidevannMark />}
                     name="Tidevann"
@@ -379,11 +380,11 @@ function SettingsApp({ opening }: { opening?: Opening }) {
                     }
                 />
                 <main className="min-h-0 flex-1 overflow-y-auto">
-                    <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-6">
+                    <Stack gap="xl" className="mx-auto max-w-3xl px-4 py-6">
                         <h1 className="text-page font-semibold">Settings</h1>
                         <Section title="Appearance">
-                            <div className="flex flex-col gap-4">
-                                <div className="flex w-full max-w-80 flex-col gap-1.5">
+                            <Stack gap="lg">
+                                <Stack gap="xs" className="w-full max-w-80">
                                     <span className="text-sm font-medium">Scheme</span>
                                     <Segmented
                                         fill
@@ -396,8 +397,8 @@ function SettingsApp({ opening }: { opening?: Opening }) {
                                             { value: 'dark', label: 'Dark' },
                                         ]}
                                     />
-                                </div>
-                                <div className="flex w-full max-w-80 flex-col gap-1.5">
+                                </Stack>
+                                <Stack gap="xs" className="w-full max-w-80">
                                     <span className="text-sm font-medium">Density</span>
                                     <Segmented
                                         fill
@@ -409,18 +410,18 @@ function SettingsApp({ opening }: { opening?: Opening }) {
                                             { value: 'compact', label: 'Compact' },
                                         ]}
                                     />
-                                </div>
-                            </div>
+                                </Stack>
+                            </Stack>
                         </Section>
                         <Section title="Workspace" actions={<Button size="sm">Save</Button>}>
-                            <div className="grid gap-4 md:grid-cols-2">
+                            <Columns gap="lg">
                                 <Field id="name" label="Name">
                                     <Input id="name" defaultValue="Tidevann" />
                                 </Field>
                                 <Field id="url" label="Address" hint="base_url" keyHint>
                                     <Input id="url" className="font-mono" defaultValue="https://tidevann.example.org" />
                                 </Field>
-                                <div className="flex w-full flex-col gap-1.5">
+                                <Stack gap="xs" className="w-full">
                                     <span className="text-sm font-medium">Schedule clock</span>
                                     <Segmented
                                         fill
@@ -432,11 +433,11 @@ function SettingsApp({ opening }: { opening?: Opening }) {
                                             { value: 'local', label: 'Server time' },
                                         ]}
                                     />
-                                </div>
-                            </div>
+                                </Stack>
+                            </Columns>
                         </Section>
                         <Section title="Notifications">
-                            <div className="flex flex-col gap-3">
+                            <Stack>
                                 <SwitchField
                                     id="failures"
                                     label="Email me when a job fails"
@@ -448,9 +449,9 @@ function SettingsApp({ opening }: { opening?: Opening }) {
                                     label="Weekly digest"
                                     explain="A summary of the week's runs every Monday morning."
                                 />
-                            </div>
+                            </Stack>
                         </Section>
-                    </div>
+                    </Stack>
                 </main>
                 <SettingsDialog
                     open={preferencesOpen}
@@ -462,7 +463,7 @@ function SettingsApp({ opening }: { opening?: Opening }) {
                     onSearchChange={setSearch}
                     phoneStart={opening?.phoneStart}
                 />
-            </div>
+            </Stack>
         </TooltipProvider>
     )
 }

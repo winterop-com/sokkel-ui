@@ -39,7 +39,7 @@ const refuse = () => Promise.reject(new Error('503'))
 
 function DatasetRow({ dataset }: { dataset: Dataset }) {
     return (
-        <Row as="span" align="baseline">
+        <Row as="span" align="baseline" className="min-w-0">
             <span className="truncate">{dataset.name}</span>
             <span className="truncate font-mono text-xs text-muted-foreground">{dataset.code}</span>
             <span className="ml-auto shrink-0 text-xs text-faint tabular-nums">{dataset.rows}</span>
