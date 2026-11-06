@@ -43,10 +43,11 @@ export function SaveBar({
     const words = { ...WORDS, ...given }
     if (count === 0) return null
     return (
+        // As tall as the shell's foot strip, so its top line meets the rail's foot beside it.
         <div className={cn('sticky bottom-0 z-20 border-t border-border-strong bg-sidebar', className)}>
             <div
                 className={cn(
-                    'flex items-center gap-2 py-2.5',
+                    'flex min-h-[calc(var(--spacing-shell-foot)-1px)] items-center gap-2 py-1',
                     inset === 'page' ? 'px-(--density-page-inset)' : 'px-(--density-panel-pad)',
                 )}
             >
