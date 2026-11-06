@@ -7,6 +7,7 @@ import { EChart } from '../chart/EChart'
 import type { ChartLook } from '../chart/look'
 import { SPAN, type PanelSpan } from './DashboardGrid'
 import { axes, axisWriter, legendItems, seriesToken, valueWriter, type PanelSeries } from './series'
+import { formatValue } from './thresholds'
 
 /** The option for a bar chart, built from the look. */
 export function barOption({
@@ -25,17 +26,27 @@ export function barOption({
     unit?: string
     decimals?: number
     format?: (value: number) => string
-    stacked?: boolean
+    /** Stacks the series; `percent` stacks each category's share of its total, to 100%. */
+    stacked?: boolean | 'percent'
     horizontal?: boolean
     gap?: 'tight' | 'normal'
     labelEvery?: number
 }) {
-    const write = valueWriter(unit, decimals, format)
+    const percent = stacked === 'percent'
+    const write = percent ? (value: number) => `${formatValue(value, decimals ?? 1)}%` : valueWriter(unit, decimals, format)
+    const totals = percent ? x.map((_, index) => series.reduce((sum, entry) => sum + (entry.values[index] ?? 0), 0)) : []
+    const share = (values: readonly (number | null)[]) =>
+        values.map((value, index) => (value === null || totals[index] === 0 ? null : (value / totals[index]) * 100))
     return (look: ChartLook) => {
-        const shared = axes(look, x, unit, labelEvery)
+        const shared = percent
+            ? (() => {
+                  const base = axes(look, x, '%', labelEvery)
+                  return { ...base, yAxis: { ...base.yAxis, min: 0, max: 100, interval: 25 } }
+              })()
+            : axes(look, x, unit, labelEvery)
         const category = { ...shared.xAxis, axisLine: { show: true, lineStyle: { color: look.border } } }
         const value = horizontal
-            ? { ...shared.yAxis, type: 'value', axisLabel: { formatter: axisWriter(unit), hideOverlap: true } }
+            ? { ...shared.yAxis, type: 'value', axisLabel: { formatter: axisWriter(percent ? '%' : unit), hideOverlap: true } }
             : shared.yAxis
         return {
             tooltip: {
@@ -46,17 +57,21 @@ export function barOption({
             xAxis: horizontal ? value : category,
             yAxis: horizontal ? { ...category, inverse: true, splitLine: { show: false } } : value,
             series: series.map((entry, index) => {
-                const top = !stacked || index === series.length - 1
+                const top = stacked === false || index === series.length - 1
                 const radius = top ? (horizontal ? [0, 2, 2, 0] : [2, 2, 0, 0]) : 0
                 return {
                     name: entry.name,
                     type: 'bar',
-                    data: entry.values,
+                    data: percent ? share(entry.values) : entry.values,
                     color: look.token(seriesToken(entry, index)),
-                    stack: entry.stack ?? (stacked ? 'total' : undefined),
+                    stack: entry.stack ?? (stacked !== false ? 'total' : undefined),
                     barCategoryGap: gap === 'tight' ? '6%' : '28%',
                     barMaxWidth: gap === 'tight' ? 400 : 32,
-                    itemStyle: { borderRadius: radius, borderColor: stacked ? look.card : undefined, borderWidth: stacked ? 1 : 0 },
+                    itemStyle: {
+                        borderRadius: radius,
+                        borderColor: stacked !== false ? look.card : undefined,
+                        borderWidth: stacked !== false ? 1 : 0,
+                    },
                 }
             }),
         }
@@ -65,7 +80,7 @@ export function barOption({
 
 /**
  * A dashboard panel of bars: one or more series per category, side by side or stacked, upright or
- * lying down. A tight gap draws a histogram's tall touching bars. Keep `series` and `x` stable
+ * lying down, or as each category's share of its total. A tight gap draws a histogram's tall touching bars. Keep `series` and `x` stable
  * between renders.
  */
 export function BarPanel({
@@ -102,7 +117,8 @@ export function BarPanel({
     unit?: string
     decimals?: number
     format?: (value: number) => string
-    stacked?: boolean
+    /** Stacks the series; `percent` stacks each category's share of its total, to 100%. */
+    stacked?: boolean | 'percent'
     horizontal?: boolean
     gap?: 'tight' | 'normal'
     labelEvery?: number
@@ -121,7 +137,10 @@ export function BarPanel({
         [x, series, unit, decimals, format, stacked, horizontal, gap, labelEvery],
     )
     const items = useMemo(() => legendItems(series), [series])
-    const write = useMemo(() => valueWriter(unit, decimals, format), [unit, decimals, format])
+    const write = useMemo(
+        () => (stacked === 'percent' ? undefined : valueWriter(unit, decimals, format)),
+        [stacked, unit, decimals, format],
+    )
     return (
         <ChartFrame
             title={title}

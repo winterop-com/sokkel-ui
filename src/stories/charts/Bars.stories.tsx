@@ -2,15 +2,32 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import { ChartFrame } from '../../components/chart/ChartFrame'
 import { EChart } from '../../components/chart/EChart'
+import { BarPanel } from '../../components/dashboard/BarPanel'
+import type { PanelSeries } from '../../components/dashboard/series'
+import { JOB_STATES, MONTHS, PROJECT_MONTHLY, SHARE_JOBS } from '../fixtures/scores'
 import { Ground, legendOf } from './Ground'
 import { BY_STATE_SERIES, histogram, stackedBars } from './options'
 
-/** Bar charts on EChart: runs per hour stacked by state, and runs per duration bucket. */
+/** Bar charts on EChart: runs per hour stacked by state, each job's runs as shares of 100%, and runs per duration bucket. */
 const meta: Meta = { title: 'Charts/Bars' }
 export default meta
 
 const STACKED = stackedBars(BY_STATE_SERIES)
 const HISTOGRAM = histogram()
+
+const STATE_TOKENS = { succeeded: 'status-succeeded', failed: 'status-failed', cancelled: 'status-cancelled', skipped: 'status-skipped' }
+const stateSeries = (source: Record<keyof typeof STATE_TOKENS, readonly number[]>): PanelSeries[] =>
+    (Object.keys(STATE_TOKENS) as (keyof typeof STATE_TOKENS)[]).map((state) => ({
+        name: state[0].toUpperCase() + state.slice(1),
+        values: source[state],
+        color: STATE_TOKENS[state],
+    }))
+const JOB_SHARES = stateSeries(JOB_STATES)
+const PROJECT_SHARES: PanelSeries[] = [
+    { name: 'harbor', values: PROJECT_MONTHLY.harbor, color: 'chart-2' },
+    { name: 'juniper', values: PROJECT_MONTHLY.juniper, color: 'chart-3' },
+    { name: 'larkspur', values: PROJECT_MONTHLY.larkspur, color: 'chart-4' },
+]
 
 /** Runs per hour, stacked by state in the run states' colors. */
 export const Stacked: StoryObj = {
@@ -19,6 +36,33 @@ export const Stacked: StoryObj = {
             <ChartFrame title="Runs by state" subtitle="per hour" legend={legendOf(BY_STATE_SERIES)} file="runs-by-state">
                 {(state) => <EChart option={STACKED} label="Runs per hour, stacked by state" {...state} />}
             </ChartFrame>
+        </Ground>
+    ),
+}
+
+/** Each month's runs as shares of 100% by project, so the months compare whatever their volume. */
+export const Percent: StoryObj = {
+    render: () => (
+        <Ground title="Runs, first half" columns={1}>
+            <BarPanel title="Runs by project" subtitle="share per month" x={MONTHS} series={PROJECT_SHARES} stacked="percent" span="full" />
+        </Ground>
+    ),
+}
+
+/** This week's runs per job as shares of 100%, lying down so the job names read in full. */
+export const PercentLying: StoryObj = {
+    name: 'Percent lying',
+    render: () => (
+        <Ground title="Runs by job, this week" columns={1}>
+            <BarPanel
+                title="How runs ended"
+                subtitle="share per job"
+                x={SHARE_JOBS}
+                series={JOB_SHARES}
+                stacked="percent"
+                horizontal
+                span="full"
+            />
         </Ground>
     ),
 }
