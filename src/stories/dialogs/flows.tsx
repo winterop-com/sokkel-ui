@@ -7,7 +7,7 @@ import { DescriptionList } from '../../components/DescriptionList'
 import { DialogShell } from '../../components/DialogShell'
 import { Field } from '../../components/Field'
 import { IssueCount, IssueMark, type Issue } from '../../components/IssueMark'
-import { ListTable, type Column } from '../../components/ListTable'
+import { type DataColumn, DataTable } from '../../components/DataTable'
 import { PersonAvatar } from '../../components/PersonAvatar'
 import { Segmented } from '../../components/Segmented'
 import { StepIndicator, WizardDialog } from '../../components/StepIndicator'
@@ -276,7 +276,7 @@ const FAILED = [
     { row: 977, column: 'placed_at', value: '31/10/2026', why: 'Not a date; write it as 2026-10-31' },
 ]
 
-const FAILED_COLUMNS: Column<(typeof FAILED)[number]>[] = [
+const FAILED_COLUMNS: DataColumn<(typeof FAILED)[number]>[] = [
     {
         id: 'row',
         header: 'Row',
@@ -429,7 +429,8 @@ export function ImportOrders({ stage: first = 'map' }: { stage?: ImportStage }) 
                     </DropZone>
                 )}
                 {stage === 'map' && (
-                    <ListTable
+                    <DataTable
+                        variant="list"
                         columns={[
                             {
                                 id: 'column',
@@ -522,7 +523,7 @@ export function ImportOrders({ stage: first = 'map' }: { stage?: ImportStage }) 
                         </div>
                         <div className="flex flex-col gap-1.5">
                             <span className="text-xs font-medium text-critical-ink">Rows not imported</span>
-                            <ListTable columns={FAILED_COLUMNS} rows={FAILED} rowKey={(row) => String(row.row)} />
+                            <DataTable variant="list" columns={FAILED_COLUMNS} rows={FAILED} rowKey={(row) => String(row.row)} />
                         </div>
                     </>
                 )}

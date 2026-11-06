@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { LayoutGrid, List, Rows3 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
-import { ListTable, type Column } from '../../components/ListTable'
+import { type DataColumn, DataTable } from '../../components/DataTable'
 import { StatusChip, type Status } from '../../components/StatusChip'
 import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group'
 
@@ -114,7 +114,7 @@ const RUNS: Run[] = [
     { id: '01a1a5b1', state: 'succeeded', at: '2026-11-04 13:50', took: '8.2s' },
 ]
 
-const COLUMNS: Column<Run>[] = [
+const COLUMNS: DataColumn<Run>[] = [
     { id: 'id', header: 'Run', width: '6rem', cell: (run) => <span className="font-mono text-xs">{run.id}</span> },
     { id: 'state', header: 'State', width: '6.5rem', cell: (run) => <StatusChip status={run.state} /> },
     {
@@ -146,7 +146,7 @@ function RunFilter() {
                         <ToggleGroupItem value="running">Running</ToggleGroupItem>
                     </ToggleGroup>
                 </div>
-                <ListTable columns={COLUMNS} rows={shown} rowKey={(run) => run.id} empty="No runs match." />
+                <DataTable variant="list" columns={COLUMNS} rows={shown} rowKey={(run) => run.id} words={{ empty: 'No runs match.' }} />
             </div>
         </Ground>
     )

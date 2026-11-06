@@ -54,7 +54,7 @@ const RULES: Rule[] = [
     { name: 'a selector reaching into a component from a story', pattern: /\[&[_>]/, in: STORIES },
     { name: 'an arbitrary value in a story', pattern: /\b(rounded|text|leading|tracking|font)-\[/, in: STORIES },
     {
-        name: 'a raw table in a story instead of ListTable or DataTable',
+        name: 'a raw table in a story instead of DataTable',
         pattern: /<table\b/,
         in: STORIES,
         except: { 'src/stories/primitives/Table.stories.tsx': "the Table primitive's own stories" },

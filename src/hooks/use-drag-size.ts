@@ -5,7 +5,8 @@ import { useCallback, useRef, useState, type PointerEvent as ReactPointerEvent, 
  * document, so the pointer may leave the handle mid-drag; the element's own style follows every
  * move with its transition held off, and `set` hears the size once a frame and once more on
  * release. `size` reads the size the drag starts from. `grows` is 1 for an edge dragged away from the origin, such as a left panel's right
- * edge, and -1 for one dragged toward it.
+ * edge, and -1 for one dragged toward it. With `follow` off the element's style is left alone, for a
+ * size that takes effect elsewhere, such as a grid's column.
  */
 export function useDragSize(
     axis: 'x' | 'y',
@@ -14,6 +15,7 @@ export function useDragSize(
     set: (size: number) => void,
     clamp: (size: number) => number,
     element: RefObject<HTMLElement | null>,
+    follow = true,
 ) {
     const [dragging, setDragging] = useState(false)
     const start = useRef({ at: 0, size: 0 })
@@ -27,29 +29,29 @@ export function useDragSize(
             setDragging(true)
             let latest = start.current.size
             let frame: number | null = null
-            const follow = (move: PointerEvent) => {
+            const track = (move: PointerEvent) => {
                 latest = clamp(start.current.size + grows * (along(move) - start.current.at))
-                if (element.current !== null) element.current.style[axis === 'x' ? 'width' : 'height'] = `${latest}px`
+                if (follow && element.current !== null) element.current.style[axis === 'x' ? 'width' : 'height'] = `${latest}px`
                 frame ??= requestAnimationFrame(() => {
                     frame = null
                     set(latest)
                 })
             }
             const release = () => {
-                document.removeEventListener('pointermove', follow)
+                document.removeEventListener('pointermove', track)
                 document.removeEventListener('pointerup', release)
                 if (frame !== null) cancelAnimationFrame(frame)
                 document.body.style.removeProperty('cursor')
-                element.current?.style.removeProperty('transition')
+                if (follow) element.current?.style.removeProperty('transition')
                 setDragging(false)
                 set(latest)
             }
             document.body.style.cursor = axis === 'x' ? 'col-resize' : 'row-resize'
-            element.current?.style.setProperty('transition', 'none')
-            document.addEventListener('pointermove', follow)
+            if (follow) element.current?.style.setProperty('transition', 'none')
+            document.addEventListener('pointermove', track)
             document.addEventListener('pointerup', release)
         },
-        [axis, size, grows, set, clamp, element],
+        [axis, size, grows, set, clamp, element, follow],
     )
 
     return { dragging, begin }

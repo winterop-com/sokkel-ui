@@ -35,7 +35,6 @@ import { ConfirmDialog, DialogShell } from '../../components/DialogShell'
 import { DiffView } from '../../components/DiffView'
 import { Field } from '../../components/Field'
 import { FilterChip } from '../../components/FilterChip'
-import { ListTable, type Column } from '../../components/ListTable'
 import { PageHeader } from '../../components/PageHeader'
 import { countChanges, PermissionMatrix, type Grants, type MatrixGroup, type MatrixRole } from '../../components/PermissionMatrix'
 import { Rail, type RailGroup } from '../../components/Rail'
@@ -546,7 +545,7 @@ const ROLES: MatrixRole[] = ROLE_IDS.map((id) => {
     }
 })
 
-const HOLDER_COLUMNS: Column<Role>[] = [
+const HOLDER_COLUMNS: DataColumn<Role>[] = [
     { id: 'role', header: 'Role', width: '8rem', cell: (id) => <span className="font-medium">{ROLE_LABEL[id]}</span> },
     {
         id: 'kind',
@@ -599,7 +598,7 @@ function RolesPage() {
                 />
                 <PermissionMatrix roles={ROLES} groups={PERMISSIONS} value={grants} saved={saved} onChange={toggle} />
                 <Section title="Who holds each role" variant="flat">
-                    <ListTable columns={HOLDER_COLUMNS} rows={[...ROLE_IDS]} rowKey={(id) => id} hover={false} />
+                    <DataTable variant="list" columns={HOLDER_COLUMNS} rows={[...ROLE_IDS]} rowKey={(id) => id} hover={false} />
                 </Section>
             </Page>
             <SaveBar count={changes} onSave={() => setSaved(grants)} onDiscard={() => setGrants(saved)} />

@@ -17,9 +17,10 @@ import {
 import { useState } from 'react'
 
 import { AccountMenu } from '../../components/AccountMenu'
+import { type DataColumn, DataTable, findInTree } from '../../components/DataTable'
 import { DescriptionList } from '../../components/DescriptionList'
 import { ConfirmDialog, DialogShell } from '../../components/DialogShell'
-import { FileGrid, FileList, formatSize, sortFiles, type FileEntry, type FileSort } from '../../components/FileList'
+import { FileGrid, FileList, FileTypeIcon, formatSize, sortFiles, type FileEntry, type FileSort } from '../../components/FileList'
 import { FilePreview } from '../../components/FilePreview'
 import { PageHeader } from '../../components/PageHeader'
 import { Rail, type RailGroup } from '../../components/Rail'
@@ -286,6 +287,74 @@ const UPLOADS: Upload[] = [
     { id: 'u5', name: 'inventory-dump.json', size: 212_000_000, state: 'failed', error: 'Larger than the 100 MB a file may be' },
 ]
 
+/** A folder or file in the project's tree: the folders from the folder tree, each with the files stored in it. */
+interface StoreRow {
+    id: string
+    entry: FileEntry
+    children?: StoreRow[]
+}
+
+function storeTree(nodes: readonly TreeNode[], store: Record<string, StoredFile[]>): StoreRow[] {
+    return nodes.map((node) => ({
+        id: node.id,
+        entry: { id: node.id, name: node.label, kind: 'folder', modified: '' },
+        children: [
+            ...storeTree(node.children ?? [], store),
+            ...(store[node.id] ?? []).map((file) => ({ id: `${node.id}/${file.id}`, entry: file })),
+        ],
+    }))
+}
+
+const storeChildren = (row: StoreRow) => row.children
+
+/** The project's tree cut down to the names holding `text`. */
+function findInStore(text: string, store: Record<string, StoredFile[]>) {
+    const wanted = text.trim().toLowerCase()
+    return findInTree({
+        rows: storeTree(FOLDERS, store),
+        rowKey: (row) => row.id,
+        childRows: storeChildren,
+        match: wanted === '' ? undefined : (row) => row.entry.name.toLowerCase().includes(wanted),
+    })
+}
+
+const STORE_COLUMNS: DataColumn<StoreRow>[] = [
+    {
+        id: 'name',
+        header: 'Name',
+        width: 'minmax(16rem,1fr)',
+        cell: (row) => (
+            <span className="flex min-w-0 items-center gap-2">
+                <FileTypeIcon kind={row.entry.kind} className="size-4 shrink-0" />
+                <span className="truncate">{row.entry.name}</span>
+            </span>
+        ),
+        sortValue: (row) => `${row.entry.kind === 'folder' ? 0 : 1}${row.entry.name}`,
+    },
+    {
+        id: 'size',
+        header: 'Size',
+        width: '6rem',
+        align: 'end',
+        cell: (row) => (row.entry.size === undefined ? null : formatSize(row.entry.size)),
+        sortValue: (row) => row.entry.size ?? -1,
+    },
+    {
+        id: 'modified',
+        header: 'Modified',
+        width: '8rem',
+        cell: (row) => (row.entry.modified === '' ? null : <span className="text-muted-foreground">{row.entry.modified}</span>),
+        sortValue: (row) => row.entry.modifiedAt ?? row.entry.modified,
+    },
+    {
+        id: 'owner',
+        header: 'Owner',
+        width: '6rem',
+        cell: (row) => (row.entry.owner === undefined ? null : <span className="text-muted-foreground">{row.entry.owner}</span>),
+        sortValue: (row) => row.entry.owner ?? '',
+    },
+]
+
 const PATHS: Record<string, string[]> = {
     'harbor/shared/review': ['harbor', 'shared', 'review'],
     'harbor/shared/archive': ['harbor', 'shared', 'archive'],
@@ -332,7 +401,7 @@ function FilesApp({
     dropping = false,
     uploads: initialUploads = [],
 }: {
-    view?: 'list' | 'grid'
+    view?: 'list' | 'grid' | 'tree'
     folder?: string
     chosen?: string
     selected?: string[]
@@ -343,6 +412,7 @@ function FilesApp({
     const [dark, setDark] = useState(true)
     const [collapsed, setCollapsed] = useState(false)
     const [view, setView] = useState(initialView)
+    const [treeOpen, setTreeOpen] = useState<ReadonlySet<string>>(new Set(['harbor', 'harbor/shared', 'harbor/shared/review']))
     const [folder, setFolder] = useState(initialFolder)
     const [sort, setSort] = useState<FileSort>({ key: 'name', direction: 'asc' })
     const [query, setQuery] = useState('')
@@ -365,6 +435,7 @@ function FilesApp({
     const path = PATHS[folder] ?? folder.split('/')
     const total = files.reduce((sum, each) => sum + (each.size ?? 0), 0)
     const single = selected.length === 1 ? files.find((each) => each.id === selected[0]) : undefined
+    const found = findInStore(query, store)
 
     const open = (entry: FileEntry) => {
         if (entry.kind === 'folder') return
@@ -540,8 +611,12 @@ function FilesApp({
                                         ) : (
                                             <SearchField
                                                 value={query}
-                                                onChange={setQuery}
-                                                placeholder="Filter this folder"
+                                                onChange={(text) => {
+                                                    setQuery(text)
+                                                    if (view === 'tree')
+                                                        setTreeOpen(new Set([...treeOpen, ...findInStore(text, store).open]))
+                                                }}
+                                                placeholder={view === 'tree' ? 'Find' : 'Filter this folder'}
                                                 className="w-64 max-sm:flex-1"
                                             />
                                         )}
@@ -551,6 +626,7 @@ function FilesApp({
                                             options={[
                                                 { value: 'list', label: 'List' },
                                                 { value: 'grid', label: 'Grid' },
+                                                { value: 'tree', label: 'Tree' },
                                             ]}
                                             onChoose={setView}
                                             className="ml-auto"
@@ -559,6 +635,20 @@ function FilesApp({
                                 )}
                                 {files.length === 0 ? (
                                     empty
+                                ) : view === 'tree' ? (
+                                    <DataTable
+                                        variant="list"
+                                        columns={STORE_COLUMNS}
+                                        rows={found.rows}
+                                        rowKey={(row) => row.id}
+                                        childRows={found.childRows}
+                                        expanded={treeOpen}
+                                        onExpandedChange={setTreeOpen}
+                                        defaultSort={{ column: 'name', direction: 'asc' }}
+                                        onOpen={(row) => (row.entry.kind === 'folder' ? undefined : open(row.entry))}
+                                        opened={(row) => panelOpen && row.entry.id === chosen}
+                                        words={{ empty: 'Nothing matches.' }}
+                                    />
                                 ) : view === 'list' ? (
                                     <FileList
                                         entries={shown}
@@ -637,6 +727,9 @@ export const List: StoryObj = { render: () => <FilesApp /> }
 
 /** The same folder as tiles: pictures for the images, icons for everything else. */
 export const Grid: StoryObj = { render: () => <FilesApp view="grid" /> }
+
+/** The whole project as a tree: every folder in its folder, opened down to the review folder's files. */
+export const TreeView: StoryObj = { name: 'Folder tree', render: () => <FilesApp view="tree" /> }
 
 /** A file chosen from the listing, previewed in the side panel with its facts. */
 export const Preview: StoryObj = { name: 'Preview', render: () => <FilesApp chosen="orders-04" /> }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { branchKeys, flattenRows, rangeKeys, sortRows } from './DataTable'
+import { branchKeys, findInTree, flattenRows, rangeKeys, sortRows, treeBranchKeys } from './DataTable'
 
 interface Node {
     id: string
@@ -47,6 +47,43 @@ describe('flattenRows', () => {
         expect(flat.map((entry) => `${entry.key}:${String(entry.depth)}`)).toEqual(['a:0', 'b:0', 'b1:1', 'b2:1', 'c:0'])
         expect(flat.find((entry) => entry.key === 'a')).toMatchObject({ branch: true, open: false })
         expect(flat.find((entry) => entry.key === 'b1')?.parent).toBe('b')
+    })
+})
+
+describe('flattenRows with children not known yet', () => {
+    it('draws a row that has children as a branch, waiting while it is open', () => {
+        const rows: Node[] = [
+            { id: 'x', size: 0 },
+            { id: 'y', size: 0 },
+        ]
+        const flat = flattenRows({
+            rows,
+            rowKey: key,
+            childRows: () => undefined,
+            hasChildren: (node) => node.id === 'x',
+            expanded: new Set(['x']),
+            order: (level) => level,
+        })
+        expect(flat.map((entry) => [entry.key, entry.branch, entry.waiting])).toEqual([
+            ['x', true, true],
+            ['y', false, false],
+        ])
+    })
+})
+
+describe('treeBranchKeys and findInTree', () => {
+    it('gives every row with children, at any depth', () => {
+        expect([...treeBranchKeys(tree, key, kids)].sort()).toEqual(['a', 'b'])
+    })
+
+    it('keeps the matches, their branches and the way to them, and opens the way', () => {
+        const found = findInTree({ rows: tree, rowKey: key, childRows: kids, match: (node) => node.id === 'b1' })
+        expect(found.rows.map(key)).toEqual(['b'])
+        expect(found.childRows(tree[0])?.map(key)).toEqual(['b1'])
+        expect([...found.open]).toEqual(['b'])
+        const whole = findInTree({ rows: tree, rowKey: key, childRows: kids, match: (node) => node.id === 'a' })
+        expect(whole.childRows(tree[1])?.map(key)).toEqual(['a1'])
+        expect(findInTree({ rows: tree, rowKey: key, childRows: kids, match: undefined }).rows).toBe(tree)
     })
 })
 

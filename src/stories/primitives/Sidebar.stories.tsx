@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { ListTable, type Column } from '../../components/ListTable'
+import { type DataColumn, DataTable } from '../../components/DataTable'
 import { PageHeader } from '../../components/PageHeader'
 import { StatusChip, type Status } from '../../components/StatusChip'
 import {
@@ -186,7 +186,7 @@ const RUNS: Run[] = [
     { id: '01a1a5b1', status: 'running', at: '2026-11-04 15:04', took: '-' },
 ]
 
-const COLUMNS: Column<Run>[] = [
+const COLUMNS: DataColumn<Run>[] = [
     { id: 'run', header: 'Run', width: '6rem', cell: (run) => <span className="font-mono">{run.id}</span> },
     { id: 'state', header: 'State', width: '7rem', cell: (run) => <StatusChip status={run.status} /> },
     { id: 'started', header: 'Started', width: 'minmax(0,1fr)', cell: (run) => <span className="tabular-nums">{run.at}</span> },
@@ -227,7 +227,7 @@ function Frame({
                 </header>
                 <div className="flex max-w-[1100px] flex-col gap-4 p-6">
                     <PageHeader title="Import orders" code="import-orders" />
-                    <ListTable columns={COLUMNS} rows={RUNS} rowKey={(run) => run.id} />
+                    <DataTable variant="list" columns={COLUMNS} rows={RUNS} rowKey={(run) => run.id} />
                 </div>
             </SidebarInset>
         </SidebarProvider>

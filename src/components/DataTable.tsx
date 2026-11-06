@@ -24,6 +24,7 @@ import {
 } from 'react'
 
 import { cn } from '../lib/cn'
+import { ResizeHandle } from './ResizeHandle'
 import { Button } from './ui/button'
 import { Checkbox } from './ui/checkbox'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from './ui/context-menu'
@@ -41,6 +42,7 @@ import {
 } from './ui/dropdown-menu'
 import { NativeSelect, NativeSelectOption } from './ui/native-select'
 import { Skeleton } from './ui/skeleton'
+import { Spinner } from './ui/spinner'
 import { TABLE_HEAD_TEXT } from '../lib/table'
 
 /** One column: its name, how wide it is, how a row draws its cell, and how it sorts. */
@@ -56,6 +58,10 @@ export interface DataColumn<T> {
     sortValue?: (row: T) => string | number
     /** Whether the column menu may hide it. The first column never hides. */
     hideable?: boolean
+    /** Whether its head's right edge resizes it, when the table's columns resize. */
+    resizable?: boolean
+    /** The narrowest a drag takes it, in pixels. */
+    minSize?: number
 }
 
 /** One thing a row's menu offers, or a line between groups of them. */
@@ -107,6 +113,10 @@ export interface DataTableWords {
     selectRow: string
     expand: string
     collapse: string
+    /** A branch's control while its children load. */
+    loadingChildren: string
+    /** A column's resize handle. */
+    resize: (column: string) => string
     empty: string
 }
 
@@ -136,6 +146,8 @@ const WORDS: DataTableWords = {
     selectRow: 'Select row',
     expand: 'Expand',
     collapse: 'Collapse',
+    loadingChildren: 'Loading',
+    resize: (column) => `Resize ${column}`,
     empty: 'Nothing here.',
 }
 
@@ -147,6 +159,8 @@ export interface FlatRow<T> {
     parent: string | undefined
     branch: boolean
     open: boolean
+    /** Open, with children that are not known yet. */
+    waiting: boolean
 }
 
 const collator = new Intl.Collator('en', { numeric: true, sensitivity: 'base' })
@@ -170,12 +184,15 @@ export function flattenRows<T>({
     rows,
     rowKey,
     childRows,
+    hasChildren,
     expanded,
     order,
 }: {
     rows: readonly T[]
     rowKey: (row: T) => string
     childRows?: (row: T) => readonly T[] | undefined
+    /** Whether a row whose children are not known yet has any. */
+    hasChildren?: (row: T) => boolean
     expanded: ReadonlySet<string>
     order: (rows: readonly T[]) => readonly T[]
 }): FlatRow<T>[] {
@@ -184,10 +201,10 @@ export function flattenRows<T>({
         for (const row of order(level)) {
             const key = rowKey(row)
             const children = childRows?.(row)
-            const branch = children !== undefined && children.length > 0
+            const branch = children === undefined ? hasChildren?.(row) === true : children.length > 0
             const open = branch && expanded.has(key)
-            flat.push({ row, key, depth, parent, branch, open })
-            if (open) walk(children, depth + 1, key)
+            flat.push({ row, key, depth, parent, branch, open, waiting: open && children === undefined })
+            if (open && children !== undefined) walk(children, depth + 1, key)
         }
     }
     walk(rows, 0, undefined)
@@ -203,6 +220,74 @@ export function branchKeys<T>(row: T, rowKey: (row: T) => string, childRows?: (r
     }
     walk(row)
     return keys
+}
+
+/** The key of every row with children, at any depth: what opening every branch opens. */
+export function treeBranchKeys<T>(
+    rows: readonly T[],
+    rowKey: (row: T) => string,
+    childRows: (row: T) => readonly T[] | undefined,
+): Set<string> {
+    const keys = new Set<string>()
+    const walk = (level: readonly T[]) => {
+        for (const row of level) {
+            const children = childRows(row)
+            if (children === undefined || children.length === 0) continue
+            keys.add(rowKey(row))
+            walk(children)
+        }
+    }
+    walk(rows)
+    return keys
+}
+
+/**
+ * A tree cut down to what matches: every matching row, its whole branch, and the rows on the way
+ * to it. `childRows` gives the cut tree's children and `open` the branches that lead to a match,
+ * so passing both to the table shows every match. With nothing to match, the tree is given back.
+ */
+export function findInTree<T>({
+    rows,
+    rowKey,
+    childRows,
+    match,
+}: {
+    rows: readonly T[]
+    rowKey: (row: T) => string
+    childRows: (row: T) => readonly T[] | undefined
+    /** Whether a row matches; undefined matches nothing and leaves the tree as it is. */
+    match: ((row: T) => boolean) | undefined
+}): { rows: readonly T[]; childRows: (row: T) => readonly T[] | undefined; open: Set<string> } {
+    if (match === undefined) return { rows, childRows, open: new Set() }
+    const keep = new Set<string>()
+    const whole = new Set<string>()
+    const open = new Set<string>()
+    // A row inside a match keeps all its children; a match deeper down still opens the way to it.
+    const walk = (row: T, inside: boolean): boolean => {
+        const key = rowKey(row)
+        const hit = match(row)
+        if (inside || hit) whole.add(key)
+        let found = false
+        for (const child of childRows(row) ?? []) found = walk(child, inside || hit) || found
+        if (found) open.add(key)
+        if (hit || found) keep.add(key)
+        return hit || found
+    }
+    for (const row of rows) walk(row, false)
+    return {
+        rows: rows.filter((row) => keep.has(rowKey(row))),
+        childRows: (row) => {
+            const children = childRows(row)
+            return children === undefined || whole.has(rowKey(row)) ? children : children.filter((child) => keep.has(rowKey(child)))
+        },
+        open,
+    }
+}
+
+/** The least width of a grid track: its own length, a `minmax` floor, or nothing for a fraction or `auto`. */
+function trackMin(width: string): string {
+    const floor = /^minmax\(\s*([^,]+?)\s*,/.exec(width)?.[1] ?? width
+    return /^\d*\.?\d+(px|rem|em|ch)$/.test(floor) ? floor : '0px'
 }
 
 /** The keys of the drawn rows from one key to another, either way round. */
@@ -229,6 +314,8 @@ function useHeld<V>(value: V | undefined, initial: V, onChange?: (value: V) => v
 }
 
 const EMPTY: ReadonlySet<string> = new Set()
+const NO_WIDTHS: Readonly<Record<string, number>> = {}
+const NO_CHILDREN: ReadonlyMap<string, readonly unknown[]> = new Map()
 const CHECK = '2.5rem'
 /** Rows drawn above and below the visible ones, so a quick scroll does not show blank space. */
 const OVERSCAN = 8
@@ -239,26 +326,42 @@ const STACK_PAD = 8
 const STACK_LINE = 20
 
 /**
- * A table for many rows: sorting, selection with a bulk bar, a column menu, child rows, and the
- * keyboard. Only the rows in view are drawn, so fifty thousand scroll as smoothly as fifty.
+ * A table for rows of any number: sorting, selection with a bulk bar, a column menu, child rows,
+ * column widths, and the keyboard. Only the rows in view are drawn, so fifty thousand scroll as
+ * smoothly as fifty.
  *
- * Rows are one line at the density's row height. The head stays put while the rows scroll, and
- * the first column stays put while they scroll sideways. A column with a `sortValue` sorts from
+ * Rows are one line at the density's row height; `rowHeight="auto"` lets a row grow to its
+ * tallest cell, and then every row is drawn, so it suits listings of a few hundred rows. The head
+ * stays put while the rows scroll, and the first column stays put while they scroll sideways.
+ * Each column head's right edge resizes its column, as a panel's edge does: drag it, move it with
+ * the arrows, or double-click it or press Enter to put it back. A column sized as a fraction
+ * becomes pixels once dragged. `resizable={false}`, or `resizable: false` on a column, turns it
+ * off; phones and stacked cards have no handles. A column with a `sortValue` sorts from
  * its head: up, down, then as the rows came. With `selectable`, each row gets a box; Shift picks
  * a range and Ctrl or Command a single row from anywhere on the row, and once anything is
  * selected the bar above says how many and holds `bulkActions`. With `childRows`, a row with
  * children opens and closes, children sort among themselves, and choosing a row chooses its
- * whole branch. Arrow keys move through the rows, Space selects, Enter opens, and Right and Left
- * open and close a branch.
+ * whole branch. With `hasChildren` and `loadChildren`, a branch's children load when it first
+ * opens, a spinner in its control until they come. Arrow keys move through the rows, Space
+ * selects, Enter opens, and Right and Left open and close a branch.
  *
- * Sort, selection, open branches and hidden columns are each held by the table unless the app
- * passes the value and hears the change.
+ * Without `selectable`, a plain click, Enter or Space picks a row with `onOpen`, and the row
+ * `opened` names is drawn and marked selected, for a list beside its detail. `variant="list"` is
+ * the look of a short listing: no bar above the head (until rows are selected), the column names
+ * as the box's head, the columns set apart by a gap rather than padded, and, once the box is
+ * narrow, a plain divided list of rows each as tall as its lines; a `foot` line says what the bar
+ * would have.
+ *
+ * Sort, selection, open branches, hidden columns and column widths are each held by the table
+ * unless the app passes the value and hears the change.
  */
 export function DataTable<T>({
     columns,
     rows,
     rowKey,
     childRows,
+    hasChildren,
+    loadChildren,
     expanded: expandedValue,
     defaultExpanded = EMPTY,
     onExpandedChange,
@@ -300,7 +403,15 @@ export function DataTable<T>({
     cardWidth = '12rem',
     cardHeight = '16rem',
     stackBelow = 576,
-    minWidth = '48rem',
+    minWidth: ownMinWidth,
+    rowHeight: rowSizing = 'fixed',
+    resizable = true,
+    columnWidths: widthsValue,
+    defaultColumnWidths = NO_WIDTHS,
+    onColumnWidthsChange,
+    variant = 'table',
+    foot,
+    hover = true,
     words: ownWords,
     className,
 }: {
@@ -309,6 +420,13 @@ export function DataTable<T>({
     rowKey: (row: T) => string
     /** A row's children; a row with any is drawn with a control to open it. */
     childRows?: (row: T) => readonly T[] | undefined
+    /** Whether a row has children not loaded yet; such a row opens, and `loadChildren` brings them. */
+    hasChildren?: (row: T) => boolean
+    /**
+     * A branch's children, fetched when it first opens while `childRows` does not give them. The
+     * table keeps them; a load that fails closes the branch again.
+     */
+    loadChildren?: (row: T) => Promise<readonly T[]>
     expanded?: ReadonlySet<string>
     defaultExpanded?: ReadonlySet<string>
     onExpandedChange?: (expanded: ReadonlySet<string>) => void
@@ -381,12 +499,30 @@ export function DataTable<T>({
     /**
      * Below this width of its own box, in pixels, and once the box is narrower than `minWidth` too,
      * the table shows each row as a card: the first column its title and every other a labeled
-     * line, as ListTable does. A table whose columns fit stays a table, so a small panel on a wide
+     * line. A table whose columns fit stays a table, so a small panel on a wide
      * screen keeps its rows. `false` keeps the table, which then scrolls sideways.
      */
     stackBelow?: number | false
-    /** The narrowest the columns go before the table scrolls sideways. */
+    /**
+     * The narrowest the columns go before the table scrolls sideways, and never narrower than the
+     * columns' own least widths. `auto`: just the columns' least widths, and the table stacks below
+     * `stackBelow` alone, for a short listing in a narrow place. `48rem` for a table, `auto` for a list.
+     */
     minWidth?: string
+    /** `auto` lets a row grow to fit its tallest cell; every row is then drawn, not only those in view. */
+    rowHeight?: 'fixed' | 'auto'
+    /** Whether the column heads' edges resize the columns. */
+    resizable?: boolean
+    /** Widths in pixels by column id; a column without one keeps its own `width`. */
+    columnWidths?: Readonly<Record<string, number>>
+    defaultColumnWidths?: Readonly<Record<string, number>>
+    onColumnWidthsChange?: (widths: Readonly<Record<string, number>>) => void
+    /** `list`: a short listing's look, with no bar above the head while nothing is selected. */
+    variant?: 'table' | 'list'
+    /** A line at the foot, such as how many rows are loaded. */
+    foot?: ReactNode
+    /** Tints the row under the pointer. */
+    hover?: boolean
     words?: Partial<DataTableWords>
     className?: string
 }) {
@@ -395,6 +531,17 @@ export function DataTable<T>({
     const [selection, setSelection] = useHeld(selectionValue, defaultSelection, onSelectionChange)
     const [expanded, setExpanded] = useHeld(expandedValue, defaultExpanded, onExpandedChange)
     const [hidden, setHidden] = useHeld(hiddenValue, defaultHiddenColumns, onHiddenColumnsChange)
+    const [widths, setWidths] = useHeld(widthsValue, defaultColumnWidths, onColumnWidthsChange)
+    const auto = rowSizing === 'auto'
+    const list = variant === 'list'
+    const minWidth = ownMinWidth ?? (list ? 'auto' : '48rem')
+
+    // Children loaded on demand, kept by the table unless `childRows` gives them.
+    const [loaded, setLoaded] = useState(NO_CHILDREN as ReadonlyMap<string, readonly T[]>)
+    const fetching = useRef(new Set<string>())
+    const kids = useCallback((row: T) => childRows?.(row) ?? loaded.get(rowKey(row)), [childRows, loaded, rowKey])
+    const tree = childRows !== undefined || loadChildren !== undefined
+    const treeKids = tree ? kids : undefined
 
     const shown = columns.filter((column, index) => index === 0 || !hidden.has(column.id))
     const sortColumn = sort === null ? undefined : columns.find((column) => column.id === sort.column)
@@ -405,7 +552,43 @@ export function DataTable<T>({
                 : sortRows(level, sortColumn.sortValue, sort.direction),
         [manualSort, sort, sortColumn],
     )
-    const all = useMemo(() => flattenRows({ rows, rowKey, childRows, expanded, order }), [rows, rowKey, childRows, expanded, order])
+    const all = useMemo(
+        () =>
+            flattenRows({
+                rows,
+                rowKey,
+                childRows: treeKids,
+                hasChildren: loadChildren === undefined ? undefined : hasChildren,
+                expanded,
+                order,
+            }),
+        [rows, rowKey, treeKids, hasChildren, loadChildren, expanded, order],
+    )
+    const latestExpanded = useRef({ expanded, setExpanded })
+    useEffect(() => {
+        latestExpanded.current = { expanded, setExpanded }
+    })
+    // An open branch whose children are not known asks for them once; a failed load closes it.
+    useEffect(() => {
+        if (loadChildren === undefined) return
+        for (const entry of all) {
+            if (!entry.waiting || fetching.current.has(entry.key)) continue
+            fetching.current.add(entry.key)
+            loadChildren(entry.row).then(
+                (children) => {
+                    fetching.current.delete(entry.key)
+                    setLoaded((before) => new Map(before).set(entry.key, children))
+                },
+                () => {
+                    fetching.current.delete(entry.key)
+                    const { expanded: now, setExpanded: set } = latestExpanded.current
+                    const next = new Set(now)
+                    next.delete(entry.key)
+                    set(next)
+                },
+            )
+        }
+    }, [all, loadChildren])
 
     // A page of the rows, or all of them; everything below draws and moves through `flat`.
     const [page, setPage] = useHeld(pageValue, defaultPage, onPageChange)
@@ -418,8 +601,8 @@ export function DataTable<T>({
         [paging, all, current, pageSize],
     )
     const allKeys = useMemo(
-        () => (selectable ? rows.flatMap((row) => branchKeys(row, rowKey, childRows)) : []),
-        [selectable, rows, rowKey, childRows],
+        () => (selectable ? rows.flatMap((row) => branchKeys(row, rowKey, treeKids)) : []),
+        [selectable, rows, rowKey, treeKids],
     )
 
     // Only the rows in view are drawn: the row height is measured from the density's token.
@@ -430,7 +613,7 @@ export function DataTable<T>({
     const [columnsWidth, setColumnsWidth] = useState(768)
     const [rowHeight, setRowHeight] = useState(40)
     const [cardBox, setCardBox] = useState({ width: 192, height: 256 })
-    const [view, setView] = useState({ top: 0, height: 800, width: 1200 })
+    const [view, setView] = useState({ top: 0, height: 800, width: 1200, full: 0 })
     useLayoutEffect(() => {
         const box = scroller.current
         const measure = probe.current
@@ -440,7 +623,7 @@ export function DataTable<T>({
             setRowHeight(measure.offsetHeight || 40)
             setCardBox({ width: measureCard.offsetWidth || 192, height: measureCard.offsetHeight || 256 })
             setColumnsWidth(widthProbe.current?.offsetWidth || 768)
-            setView({ top: box.scrollTop, height: box.clientHeight, width: box.clientWidth })
+            setView({ top: box.scrollTop, height: box.clientHeight, width: box.clientWidth, full: box.scrollHeight })
         }
         update()
         const observer = new ResizeObserver(update)
@@ -453,7 +636,11 @@ export function DataTable<T>({
     const chosenGrid = shownView === 'grid' && card !== undefined
     // A narrow box stacks the rows as cards, one to a line, each as tall as its columns need.
     // Only when the columns no longer fit: a box narrower than both `stackBelow` and the columns' `minWidth`.
-    const stacked = !chosenGrid && stackBelow !== false && view.width > 0 && view.width < Math.min(stackBelow, columnsWidth)
+    const stacked =
+        !chosenGrid &&
+        stackBelow !== false &&
+        view.width > 0 &&
+        view.width < (minWidth === 'auto' ? stackBelow : Math.min(stackBelow, columnsWidth))
     const gridView = chosenGrid || stacked
     const cardPixels = stacked ? STACK_PAD * 2 + 24 + Math.max(0, shown.length - 1) * STACK_LINE + 2 : cardBox.height
     // The grid is drawn a line of cards at a time; the table's line is one row.
@@ -466,13 +653,17 @@ export function DataTable<T>({
     }, [current, pageSize, shownView])
 
     // Nearing the end of what has loaded asks for more, and so does a first load too short to fill the view.
-    const nearEnd = view.top + view.height >= lines * lineHeight - lineHeight * over
+    const nearEnd = view.top + view.height >= (auto && !gridView ? view.full : lines * lineHeight) - lineHeight * over
     useEffect(() => {
         if (hasMore && !loading && nearEnd) onLoadMore?.()
     }, [hasMore, loading, nearEnd, onLoadMore])
 
-    const firstLine = Math.max(0, Math.floor(view.top / lineHeight) - over)
-    const lastLine = Math.min(lines, Math.ceil((view.top + view.height) / lineHeight) + over)
+    // Rows that grow are all drawn, as their heights are not known before they are.
+    // A narrow list is a plain list of rows as tall as their lines.
+    const listed = list && stacked
+    const every = (auto && !gridView) || listed
+    const firstLine = every ? 0 : Math.max(0, Math.floor(view.top / lineHeight) - over)
+    const lastLine = every ? lines : Math.min(lines, Math.ceil((view.top + view.height) / lineHeight) + over)
     const first = firstLine * perLine
     const last = Math.min(flat.length, lastLine * perLine)
 
@@ -488,8 +679,23 @@ export function DataTable<T>({
         rowActions === undefined || (actionButton === 'none' && inlineSlots === 0)
             ? undefined
             : `${String((actionButton === 'none' ? 0.5 : 2.5) + inlineSlots * 1.75)}rem`
-    const template = [selectable ? CHECK : undefined, ...shown.map((column) => column.width), endWidth].filter(Boolean).join(' ')
-    const grid = { gridTemplateColumns: template, minWidth }
+    const track = (column: DataColumn<T>) => (widths[column.id] === undefined ? column.width : `${String(widths[column.id])}px`)
+    const template = [selectable ? CHECK : undefined, ...shown.map(track), endWidth].filter(Boolean).join(' ')
+    // The rows are never narrower than their columns' least widths, so a widened column scrolls the table sideways.
+    const least = [selectable ? CHECK : undefined, ...shown.map((column) => trackMin(track(column))), endWidth].filter(Boolean)
+    if (list) least.push('2 * var(--density-panel-pad)', `${String(0.75 * (least.length - 1))}rem`)
+    const rowMin = minWidth === 'auto' ? `calc(${least.join(' + ')})` : `max(${minWidth}, calc(${least.join(' + ')}))`
+    const grid = { gridTemplateColumns: template, minWidth: rowMin }
+    const canResize = resizable && !gridView
+    const heads = useRef(new Map<string, { current: HTMLElement | null }>())
+    const headRef = (id: string) => {
+        let ref = heads.current.get(id)
+        if (ref === undefined) {
+            ref = { current: null }
+            heads.current.set(id, ref)
+        }
+        return ref
+    }
 
     const toggle = (entry: FlatRow<T>, range: boolean) => {
         const next = new Set(selection)
@@ -501,7 +707,7 @@ export function DataTable<T>({
             }
         } else {
             const on = !selection.has(entry.key)
-            for (const key of branchKeys(entry.row, rowKey, childRows)) {
+            for (const key of branchKeys(entry.row, rowKey, treeKids)) {
                 if (on) next.add(key)
                 else next.delete(key)
             }
@@ -551,6 +757,10 @@ export function DataTable<T>({
         setActive(entry.key)
         const box = scroller.current
         if (box === null) return
+        if (every) {
+            box.querySelector(`[data-row="${CSS.escape(entry.key)}"]`)?.scrollIntoView({ block: 'nearest' })
+            return
+        }
         const at = Math.floor(flat.indexOf(entry) / perLine) * lineHeight
         const head = gridView ? 0 : rowHeight
         if (at < box.scrollTop) box.scrollTop = at
@@ -568,7 +778,9 @@ export function DataTable<T>({
             Home: () => moveTo(0),
             End: () => moveTo(flat.length - 1),
             ' ': () => {
-                if (selectable && entry !== undefined) toggle(entry, event.shiftKey)
+                if (entry === undefined) return
+                if (selectable) toggle(entry, event.shiftKey)
+                else onOpen?.(entry.row)
             },
             Enter: () => {
                 if (entry !== undefined) onOpen?.(entry.row)
@@ -601,13 +813,43 @@ export function DataTable<T>({
     const branchState = (entry: FlatRow<T>): 'all' | 'some' | 'none' => {
         if (selection.has(entry.key)) return 'all'
         if (!entry.branch || selection.size === 0) return 'none'
-        return branchKeys(entry.row, rowKey, childRows).some((key) => selection.has(key)) ? 'some' : 'none'
+        return branchKeys(entry.row, rowKey, treeKids).some((key) => selection.has(key)) ? 'some' : 'none'
     }
 
     const hideable = columns.filter((column, index) => index > 0 && column.hideable !== false)
     const sortable = manualSort && onSortChange === undefined ? [] : columns.filter((column) => column.sortValue !== undefined)
-    const pinned = 'sticky z-[1] bg-inherit shadow-[1px_0_0_var(--border)]'
-    const pinnedEnd = 'sticky z-[1] bg-inherit shadow-[-1px_0_0_var(--border)]'
+    // A list pins nothing and sets its columns apart with a gap; a table pins its first and last columns and pads its cells.
+    const pinned = list ? '' : 'sticky z-[1] bg-inherit shadow-[1px_0_0_var(--border)]'
+    const pinnedEnd = list ? '' : 'sticky z-[1] bg-inherit shadow-[-1px_0_0_var(--border)]'
+    const pad = list ? '' : 'px-3'
+    const spaced = list && 'gap-3 px-(--density-panel-pad)'
+
+    /** A tree row's indent and its control: open or close, or a spinner while its children load. */
+    const treeControl = (entry: FlatRow<T>) => (
+        <span className="flex shrink-0 items-center" style={{ paddingLeft: `${String(entry.depth * 1.25)}rem` }}>
+            {entry.waiting ? (
+                <span className="mr-1 flex size-5 items-center justify-center text-muted-foreground">
+                    <Spinner className="size-3.5" aria-label={words.loadingChildren} />
+                </span>
+            ) : entry.branch ? (
+                <button
+                    type="button"
+                    tabIndex={-1}
+                    aria-label={entry.open ? words.collapse : words.expand}
+                    onClick={(event) => {
+                        event.stopPropagation()
+                        setActive(entry.key)
+                        openBranch(entry.key, !entry.open)
+                    }}
+                    className="mr-1 flex size-5 items-center justify-center rounded-sm text-muted-foreground hover:bg-accent hover:text-foreground"
+                >
+                    <ChevronRightIcon className={cn('size-3.5 transition-transform', entry.open && 'rotate-90')} />
+                </button>
+            ) : (
+                <span className="mr-1 size-5" />
+            )}
+        </span>
+    )
 
     /** A row as a card: the app's card, with the selection box and the menu laid over its top corners. */
     const cardFor = (entry: FlatRow<T>) => {
@@ -643,6 +885,7 @@ export function DataTable<T>({
                             {box}
                         </span>
                     )}
+                    {tree && treeControl(entry)}
                     <span className="min-w-0 flex-1 truncate text-sm font-medium">{title?.cell(entry.row)}</span>
                     {menu}
                 </div>
@@ -658,7 +901,7 @@ export function DataTable<T>({
             <div
                 key={entry.key}
                 role="row"
-                aria-selected={selectable ? chosen : undefined}
+                aria-selected={selectable ? chosen : opened === undefined ? undefined : isOpened}
                 data-active={entry.key === active || undefined}
                 onClick={(event) => press(entry, event)}
                 className={cn(
@@ -713,125 +956,127 @@ export function DataTable<T>({
                 className,
             )}
         >
-            <div className="flex h-(--density-panel-head) shrink-0 items-center gap-2 border-b border-border px-(--density-panel-pad) text-sm">
-                {selection.size > 0 ? (
-                    // The selection's actions scroll sideways when the bar is too narrow for them.
-                    <div className="flex min-w-0 flex-1 [scrollbar-width:none] items-center gap-2 overflow-x-auto">
-                        <span className="shrink-0 font-medium whitespace-nowrap tabular-nums">
-                            {paging === 'client' && allChosen ? words.allSelected(allKeys.length) : words.selected(selection.size)}
-                        </span>
-                        {offerEvery && (
-                            <Button
-                                variant="link"
-                                size="xs"
-                                onClick={() => (paging === 'client' ? setSelection(new Set(allKeys)) : onSelectAllPages?.())}
-                            >
-                                {words.selectEvery(everyCount)}
-                            </Button>
-                        )}
-                        <Button variant="ghost" size="xs" onClick={clear}>
-                            {words.clear}
-                        </Button>
-                        {bulkActions?.(selection, clear)}
-                    </div>
-                ) : (
-                    <div className="flex min-w-0 flex-1 items-center gap-2">{toolbar}</div>
-                )}
-                {selection.size === 0 && (
-                    <span className="ml-auto shrink-0 font-mono text-xs text-muted-foreground tabular-nums">
-                        {hasMore && total === undefined
-                            ? words.loaded(allCount(rows, childRows))
-                            : words.rows(total ?? allCount(rows, childRows))}
-                    </span>
-                )}
-                {gridView && selection.size === 0 && sortable.length > 0 && (
-                    <DropdownMenu>
-                        <DropdownMenuTrigger render={<Button variant="ghost" size="sm" />}>
-                            {sort === null ? <ArrowUpDownIcon /> : sort.direction === 'asc' ? <ArrowUpIcon /> : <ArrowDownIcon />}
-                            {sortColumn?.header ?? words.sort}
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
-                            <DropdownMenuGroup>
-                                <DropdownMenuLabel>{words.sort}</DropdownMenuLabel>
-                                <DropdownMenuRadioGroup
-                                    value={sort?.column ?? ''}
-                                    onValueChange={(value: string) => {
-                                        if (paging !== undefined) setPage(0)
-                                        setSort(value === '' ? null : { column: value, direction: sort?.direction ?? 'asc' })
-                                    }}
+            {(!list || selection.size > 0) && (
+                <div className="flex h-(--density-panel-head) shrink-0 items-center gap-2 border-b border-border px-(--density-panel-pad) text-sm">
+                    {selection.size > 0 ? (
+                        // The selection's actions scroll sideways when the bar is too narrow for them.
+                        <div className="flex min-w-0 flex-1 [scrollbar-width:none] items-center gap-2 overflow-x-auto">
+                            <span className="shrink-0 font-medium whitespace-nowrap tabular-nums">
+                                {paging === 'client' && allChosen ? words.allSelected(allKeys.length) : words.selected(selection.size)}
+                            </span>
+                            {offerEvery && (
+                                <Button
+                                    variant="link"
+                                    size="xs"
+                                    onClick={() => (paging === 'client' ? setSelection(new Set(allKeys)) : onSelectAllPages?.())}
                                 >
-                                    <DropdownMenuRadioItem value="">{words.unsorted}</DropdownMenuRadioItem>
-                                    {sortable.map((column) => (
-                                        <DropdownMenuRadioItem key={column.id} value={column.id}>
-                                            {column.header}
-                                        </DropdownMenuRadioItem>
-                                    ))}
-                                </DropdownMenuRadioGroup>
-                            </DropdownMenuGroup>
-                            {sort !== null && (
-                                <>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuRadioGroup
-                                        value={sort.direction}
-                                        onValueChange={(value: string) =>
-                                            setSort({ column: sort.column, direction: value === 'desc' ? 'desc' : 'asc' })
-                                        }
-                                    >
-                                        <DropdownMenuRadioItem value="asc">{words.ascending}</DropdownMenuRadioItem>
-                                        <DropdownMenuRadioItem value="desc">{words.descending}</DropdownMenuRadioItem>
-                                    </DropdownMenuRadioGroup>
-                                </>
+                                    {words.selectEvery(everyCount)}
+                                </Button>
                             )}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                )}
-                {card !== undefined && !stacked && (
-                    <div className="flex items-center gap-0.5 rounded-md bg-muted p-0.5">
-                        {(['table', 'grid'] as const).map((one) => (
-                            <Button
-                                key={one}
-                                variant="ghost"
-                                size="icon-xs"
-                                aria-label={one === 'table' ? words.tableView : words.gridView}
-                                aria-pressed={shownView === one}
-                                onClick={() => setShownView(one)}
-                                className={cn(
-                                    'text-muted-foreground',
-                                    shownView === one && 'bg-background text-foreground shadow-xs hover:bg-background',
-                                )}
-                            >
-                                {one === 'table' ? <TableIcon /> : <LayoutGridIcon />}
+                            <Button variant="ghost" size="xs" onClick={clear}>
+                                {words.clear}
                             </Button>
-                        ))}
-                    </div>
-                )}
-                {!gridView && hideable.length > 0 && (
-                    <DropdownMenu>
-                        <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" aria-label={words.columns} />}>
-                            <Columns3Icon />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
-                            <DropdownMenuGroup>
-                                <DropdownMenuLabel>{words.columns}</DropdownMenuLabel>
-                                {hideable.map((column) => (
-                                    <DropdownMenuCheckboxItem
-                                        key={column.id}
-                                        checked={!hidden.has(column.id)}
-                                        onCheckedChange={(on) => {
-                                            const next = new Set(hidden)
-                                            if (on) next.delete(column.id)
-                                            else next.add(column.id)
-                                            setHidden(next)
+                            {bulkActions?.(selection, clear)}
+                        </div>
+                    ) : (
+                        <div className="flex min-w-0 flex-1 items-center gap-2">{toolbar}</div>
+                    )}
+                    {selection.size === 0 && (
+                        <span className="ml-auto shrink-0 font-mono text-xs text-muted-foreground tabular-nums">
+                            {hasMore && total === undefined
+                                ? words.loaded(allCount(rows, treeKids))
+                                : words.rows(total ?? allCount(rows, treeKids))}
+                        </span>
+                    )}
+                    {gridView && selection.size === 0 && sortable.length > 0 && (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger render={<Button variant="ghost" size="sm" />}>
+                                {sort === null ? <ArrowUpDownIcon /> : sort.direction === 'asc' ? <ArrowUpIcon /> : <ArrowDownIcon />}
+                                {sortColumn?.header ?? words.sort}
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                                <DropdownMenuGroup>
+                                    <DropdownMenuLabel>{words.sort}</DropdownMenuLabel>
+                                    <DropdownMenuRadioGroup
+                                        value={sort?.column ?? ''}
+                                        onValueChange={(value: string) => {
+                                            if (paging !== undefined) setPage(0)
+                                            setSort(value === '' ? null : { column: value, direction: sort?.direction ?? 'asc' })
                                         }}
                                     >
-                                        {column.header}
-                                    </DropdownMenuCheckboxItem>
-                                ))}
-                            </DropdownMenuGroup>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                )}
-            </div>
+                                        <DropdownMenuRadioItem value="">{words.unsorted}</DropdownMenuRadioItem>
+                                        {sortable.map((column) => (
+                                            <DropdownMenuRadioItem key={column.id} value={column.id}>
+                                                {column.header}
+                                            </DropdownMenuRadioItem>
+                                        ))}
+                                    </DropdownMenuRadioGroup>
+                                </DropdownMenuGroup>
+                                {sort !== null && (
+                                    <>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuRadioGroup
+                                            value={sort.direction}
+                                            onValueChange={(value: string) =>
+                                                setSort({ column: sort.column, direction: value === 'desc' ? 'desc' : 'asc' })
+                                            }
+                                        >
+                                            <DropdownMenuRadioItem value="asc">{words.ascending}</DropdownMenuRadioItem>
+                                            <DropdownMenuRadioItem value="desc">{words.descending}</DropdownMenuRadioItem>
+                                        </DropdownMenuRadioGroup>
+                                    </>
+                                )}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
+                    {card !== undefined && !stacked && (
+                        <div className="flex items-center gap-0.5 rounded-md bg-muted p-0.5">
+                            {(['table', 'grid'] as const).map((one) => (
+                                <Button
+                                    key={one}
+                                    variant="ghost"
+                                    size="icon-xs"
+                                    aria-label={one === 'table' ? words.tableView : words.gridView}
+                                    aria-pressed={shownView === one}
+                                    onClick={() => setShownView(one)}
+                                    className={cn(
+                                        'text-muted-foreground',
+                                        shownView === one && 'bg-background text-foreground shadow-xs hover:bg-background',
+                                    )}
+                                >
+                                    {one === 'table' ? <TableIcon /> : <LayoutGridIcon />}
+                                </Button>
+                            ))}
+                        </div>
+                    )}
+                    {!gridView && hideable.length > 0 && (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" aria-label={words.columns} />}>
+                                <Columns3Icon />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                                <DropdownMenuGroup>
+                                    <DropdownMenuLabel>{words.columns}</DropdownMenuLabel>
+                                    {hideable.map((column) => (
+                                        <DropdownMenuCheckboxItem
+                                            key={column.id}
+                                            checked={!hidden.has(column.id)}
+                                            onCheckedChange={(on) => {
+                                                const next = new Set(hidden)
+                                                if (on) next.delete(column.id)
+                                                else next.add(column.id)
+                                                setHidden(next)
+                                            }}
+                                        >
+                                            {column.header}
+                                        </DropdownMenuCheckboxItem>
+                                    ))}
+                                </DropdownMenuGroup>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
+                </div>
+            )}
             <div
                 ref={scroller}
                 role="grid"
@@ -848,6 +1093,7 @@ export function DataTable<T>({
                         top: event.currentTarget.scrollTop,
                         height: event.currentTarget.clientHeight,
                         width: event.currentTarget.clientWidth,
+                        full: event.currentTarget.scrollHeight,
                     })
                 }
                 className="group/table relative min-h-0 flex-1 overflow-auto outline-none"
@@ -856,14 +1102,16 @@ export function DataTable<T>({
                 <div aria-hidden className="pointer-events-none invisible absolute size-0 overflow-hidden">
                     <div ref={probe} className="h-(--density-row) w-px" />
                     <div ref={cardProbe} style={{ width: cardWidth, height: cardHeight }} />
-                    <div ref={widthProbe} style={{ width: minWidth }} />
+                    <div ref={widthProbe} style={{ width: rowMin }} />
                 </div>
                 {!gridView && (
                     <div
                         role="row"
                         aria-rowindex={1}
                         className={cn(
-                            'sticky top-0 z-[2] grid h-(--density-row) items-center border-b border-border-strong bg-panel-ground',
+                            'sticky top-0 z-[2] grid items-center border-b border-border-strong bg-panel-ground',
+                            list ? 'h-(--density-panel-head)' : 'h-(--density-row)',
+                            spaced,
                             TABLE_HEAD_TEXT,
                         )}
                         style={grid}
@@ -880,13 +1128,18 @@ export function DataTable<T>({
                         )}
                         {shown.map((column, index) => {
                             const sorted = sort?.column === column.id ? sort.direction : undefined
+                            const head = headRef(column.id)
                             return (
                                 <span
                                     key={column.id}
+                                    ref={(element) => {
+                                        head.current = element
+                                    }}
                                     role="columnheader"
                                     aria-sort={sorted === 'asc' ? 'ascending' : sorted === 'desc' ? 'descending' : undefined}
                                     className={cn(
-                                        'flex h-full min-w-0 items-center px-3',
+                                        'relative flex h-full min-w-0 items-center',
+                                        pad,
                                         column.align === 'end' && 'justify-end',
                                         index === 0 && cn(pinned, selectable ? 'left-(--check)' : 'left-0'),
                                     )}
@@ -910,6 +1163,26 @@ export function DataTable<T>({
                                             {sorted === 'desc' && <ArrowDownIcon className="size-3.5 shrink-0" />}
                                         </button>
                                     )}
+                                    {canResize && column.resizable !== false && (
+                                        // The handle's keys move the column, not the active row.
+                                        <span className="contents" onKeyDown={(event) => event.stopPropagation()}>
+                                            <ResizeHandle
+                                                target={head}
+                                                follow={false}
+                                                size={widths[column.id]}
+                                                onSize={(size) => setWidths({ ...widths, [column.id]: size })}
+                                                onReset={() => {
+                                                    const next = { ...widths }
+                                                    delete next[column.id]
+                                                    setWidths(next)
+                                                }}
+                                                min={column.minSize ?? 64}
+                                                max={2000}
+                                                label={words.resize(column.header)}
+                                                className="absolute inset-y-0 right-0 mx-0 pointer-coarse:hidden"
+                                            />
+                                        </span>
+                                    )}
                                 </span>
                             )
                         })}
@@ -920,6 +1193,55 @@ export function DataTable<T>({
                 )}
                 {flat.length === 0 && !loading ? (
                     <p className="px-(--density-panel-pad) py-3 text-sm text-muted-foreground">{words.empty}</p>
+                ) : listed ? (
+                    <ul className="divide-y divide-border">
+                        {flat.map((entry) => {
+                            const isOpened = opened?.(entry.row) === true
+                            const [title, ...rest] = shown
+                            return (
+                                <li
+                                    key={entry.key}
+                                    role="row"
+                                    aria-selected={opened === undefined ? undefined : isOpened}
+                                    aria-expanded={entry.branch ? entry.open : undefined}
+                                    aria-level={tree ? entry.depth + 1 : undefined}
+                                    data-row={entry.key}
+                                    data-active={entry.key === active || undefined}
+                                    onClick={(event) => press(entry, event)}
+                                    className={cn(
+                                        'flex flex-col gap-1 px-(--density-panel-pad) py-2.5 text-sm',
+                                        hover && 'hover:bg-muted',
+                                        onOpen !== undefined && 'cursor-pointer',
+                                        isOpened && 'bg-secondary hover:bg-secondary',
+                                        'group-focus-visible/table:data-active:shadow-[inset_2px_0_0_var(--ring)]',
+                                    )}
+                                >
+                                    {title !== undefined && (
+                                        <div role="gridcell" className="flex min-w-0 items-center font-medium">
+                                            {tree && treeControl(entry)}
+                                            <span className="min-w-0 truncate">{title.cell(entry.row)}</span>
+                                        </div>
+                                    )}
+                                    {rest.map((column) => {
+                                        // A line with nothing to say is left out, and a tree's lines sit under its name.
+                                        const value = column.cell(entry.row)
+                                        if (value === null || value === undefined || value === false || value === '') return null
+                                        return (
+                                            <div
+                                                key={column.id}
+                                                role="gridcell"
+                                                className="flex min-w-0 items-baseline gap-2 text-xs"
+                                                style={tree ? { paddingLeft: `${String(entry.depth * 1.25 + 1.5)}rem` } : undefined}
+                                            >
+                                                <span className="w-20 shrink-0 text-muted-foreground">{column.header}</span>
+                                                <span className="min-w-0 truncate">{value}</span>
+                                            </div>
+                                        )
+                                    })}
+                                </li>
+                            )
+                        })}
+                    </ul>
                 ) : gridView ? (
                     <div className="px-4 pt-4" style={{ minHeight: lines * lineHeight + GAP }}>
                         <div style={{ height: firstLine * lineHeight }} />
@@ -939,8 +1261,8 @@ export function DataTable<T>({
                         </div>
                     </div>
                 ) : (
-                    <div style={{ height: flat.length * rowHeight, minWidth }} className="relative">
-                        <div style={{ height: first * rowHeight }} />
+                    <div style={every ? { minWidth: rowMin } : { height: flat.length * rowHeight, minWidth: rowMin }} className="relative">
+                        {!every && <div style={{ height: first * rowHeight }} />}
                         {flat.slice(first, last).map((entry, offset) => {
                             const chosen = selection.has(entry.key)
                             const isOpened = opened?.(entry.row) === true
@@ -951,13 +1273,19 @@ export function DataTable<T>({
                                     key={entry.key}
                                     role="row"
                                     aria-rowindex={first + offset + 2}
-                                    aria-selected={selectable ? chosen : undefined}
+                                    aria-selected={selectable ? chosen : opened === undefined ? undefined : isOpened}
                                     aria-expanded={entry.branch ? entry.open : undefined}
-                                    aria-level={childRows === undefined ? undefined : entry.depth + 1}
+                                    aria-level={tree ? entry.depth + 1 : undefined}
+                                    aria-busy={entry.waiting || undefined}
+                                    data-row={entry.key}
                                     data-active={entry.key === active || undefined}
                                     onClick={(event) => press(entry, event)}
                                     className={cn(
-                                        'group/row grid h-(--density-row) cursor-default items-center border-b border-border bg-card text-sm hover:bg-muted',
+                                        'group/row grid cursor-default items-center border-b border-border bg-card text-sm',
+                                        spaced,
+                                        list && first + offset === flat.length - 1 && 'border-b-0',
+                                        every ? 'min-h-(--density-row) scroll-mt-(--density-row)' : 'h-(--density-row)',
+                                        hover && 'hover:bg-muted',
                                         onOpen !== undefined && 'cursor-pointer',
                                         (chosen || isOpened) && 'bg-secondary hover:bg-secondary',
                                         'group-focus-visible/table:data-active:shadow-[inset_2px_0_0_var(--ring)]',
@@ -984,39 +1312,22 @@ export function DataTable<T>({
                                             key={column.id}
                                             role="gridcell"
                                             className={cn(
-                                                'flex h-full min-w-0 items-center px-3',
+                                                'flex h-full min-w-0 items-center',
+                                                pad,
+                                                every && 'py-2',
                                                 column.align === 'end' && 'justify-end tabular-nums',
                                                 index === 0 && cn(pinned, selectable ? 'left-(--check)' : 'left-0'),
                                             )}
                                             style={index === 0 ? ({ '--check': CHECK } as React.CSSProperties) : undefined}
                                         >
-                                            {index === 0 && childRows !== undefined && (
-                                                <span
-                                                    className="flex shrink-0 items-center"
-                                                    style={{ paddingLeft: `${String(entry.depth * 1.25)}rem` }}
-                                                >
-                                                    {entry.branch ? (
-                                                        <button
-                                                            type="button"
-                                                            tabIndex={-1}
-                                                            aria-label={entry.open ? words.collapse : words.expand}
-                                                            onClick={(event) => {
-                                                                event.stopPropagation()
-                                                                setActive(entry.key)
-                                                                openBranch(entry.key, !entry.open)
-                                                            }}
-                                                            className="mr-1 flex size-5 items-center justify-center rounded-sm text-muted-foreground hover:bg-accent hover:text-foreground"
-                                                        >
-                                                            <ChevronRightIcon
-                                                                className={cn('size-3.5 transition-transform', entry.open && 'rotate-90')}
-                                                            />
-                                                        </button>
-                                                    ) : (
-                                                        <span className="mr-1 size-5" />
-                                                    )}
-                                                </span>
-                                            )}
-                                            <span className={cn('min-w-0 truncate', column.align === 'end' && 'text-right')}>
+                                            {index === 0 && tree && treeControl(entry)}
+                                            <span
+                                                className={cn(
+                                                    'min-w-0',
+                                                    every ? 'break-words' : 'truncate',
+                                                    column.align === 'end' && 'text-right',
+                                                )}
+                                            >
                                                 {column.cell(entry.row)}
                                             </span>
                                         </span>
@@ -1099,12 +1410,12 @@ export function DataTable<T>({
                         <div
                             key={`loading-${String(index)}`}
                             aria-hidden
-                            className="grid h-(--density-row) items-center border-b border-border"
+                            className={cn('grid h-(--density-row) items-center border-b border-border', spaced)}
                             style={grid}
                         >
                             {selectable && <span />}
                             {shown.map((column) => (
-                                <span key={column.id} className={cn('flex px-3', column.align === 'end' && 'justify-end')}>
+                                <span key={column.id} className={cn('flex', pad, column.align === 'end' && 'justify-end')}>
                                     <Skeleton className="h-3 w-3/5" />
                                 </span>
                             ))}
@@ -1112,6 +1423,11 @@ export function DataTable<T>({
                         </div>
                     ))}
             </div>
+            {foot !== undefined && (
+                <div className="shrink-0 border-t border-border-strong px-(--density-panel-pad) py-1.5 font-mono text-xs text-muted-foreground">
+                    {foot}
+                </div>
+            )}
             {paging !== undefined && (
                 <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 border-t border-border px-(--density-panel-pad) py-1.5 text-xs text-muted-foreground">
                     <span className="font-mono tabular-nums">

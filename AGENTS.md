@@ -36,6 +36,8 @@ and ask before acting.
 - A panel resizes by default, holding its own size from `defaultSize`; `size` with a size handler
   holds it from outside, and `resizable={false}` turns it off. No example holds a size only to
   turn resizing on.
+- One table: DataTable draws every listing and table, short or long, flat or a tree. Its columns
+  resize by default, as panels do; `resizable={false}` turns that off.
 - One engine per job: ECharts draws every chart, maplibre every map, React Flow every interactive
   graph, Mermaid every diagram written as text, and sparklines are plain SVG. Never add a second.
 - Fix the component, never the example. When a story looks or behaves wrong, the fix goes into
