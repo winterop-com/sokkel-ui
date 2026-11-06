@@ -271,9 +271,29 @@ function groups(view: View): RailGroup[] {
             id: 'library',
             title: 'Library',
             entries: [
-                { id: 'prompts', label: 'Prompts', icon: BookText, href: '#' },
+                {
+                    id: 'prompts',
+                    label: 'Prompts',
+                    icon: BookText,
+                    href: '#',
+                    entries: [
+                        { id: 'failure-note', label: 'failure-note', href: '#' },
+                        { id: 'digest-summary', label: 'digest-summary', href: '#' },
+                        { id: 'order-tags', label: 'order-tags', href: '#' },
+                        { id: 'index-report', label: 'index-report', href: '#' },
+                    ],
+                },
                 { id: 'datasets', label: 'Datasets', icon: Database, href: '#' },
-                { id: 'evaluations', label: 'Evaluations', icon: ListChecks, href: '#' },
+                {
+                    id: 'evaluations',
+                    label: 'Evaluations',
+                    icon: ListChecks,
+                    entries: [
+                        { id: 'suites', label: 'Suites', href: '#' },
+                        { id: 'scorers', label: 'Scorers', href: '#' },
+                        { id: 'reports', label: 'Reports', href: '#', count: 2 },
+                    ],
+                },
             ],
         },
         {
@@ -638,6 +658,7 @@ function PlaygroundApp({ view, children }: { view: View; children: ReactNode }) 
                         mark={<TidevannMark />}
                         name="Tidevann"
                         groups={groups(view)}
+                        defaultOpen={['prompts']}
                         collapsed={collapsed}
                         onCollapsedChange={setCollapsed}
                         foot={<AccountMenu name="ada" where="tidevann.example.org" collapsed={collapsed} onSettings={() => undefined} />}
