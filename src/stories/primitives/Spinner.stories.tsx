@@ -3,74 +3,55 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
 import { Spinner } from '../../components/ui/spinner'
+import { Row } from '../../components/Layout'
+import { Specimen } from '../fixtures/Specimen'
 
-const meta: Meta = { title: 'Primitives/Display/Spinner' }
+const meta: Meta = { title: 'Primitives/Display/Spinner', parameters: { frame: 'column' } }
 export default meta
-
-function Ground({ children }: { children: React.ReactNode }) {
-    return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="mx-auto flex max-w-[1100px] flex-col gap-8">{children}</div>
-        </div>
-    )
-}
-
-function Labeled({ label, children }: { label: string; children: React.ReactNode }) {
-    return (
-        <div className="flex flex-col items-start gap-2">
-            {children}
-            <p className="text-xs text-muted-foreground">{label}</p>
-        </div>
-    )
-}
 
 export const Variants: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="flex flex-wrap items-end gap-6">
-                <Labeled label="size-3">
-                    <Spinner className="size-3" />
-                </Labeled>
-                <Labeled label="default (size-4)">
-                    <Spinner />
-                </Labeled>
-                <Labeled label="size-6">
-                    <Spinner className="size-6" />
-                </Labeled>
-                <Labeled label="muted">
-                    <Spinner className="text-muted-foreground" />
-                </Labeled>
-                <Labeled label="running ink">
-                    <Spinner className="text-status-running-ink" />
-                </Labeled>
-            </div>
-        </Ground>
+        <Row gap="xl" align="end" wrap>
+            <Specimen below label="size-3">
+                <Spinner className="size-3" />
+            </Specimen>
+            <Specimen below label="default (size-4)">
+                <Spinner />
+            </Specimen>
+            <Specimen below label="size-6">
+                <Spinner className="size-6" />
+            </Specimen>
+            <Specimen below label="muted">
+                <Spinner className="text-muted-foreground" />
+            </Specimen>
+            <Specimen below label="running ink">
+                <Spinner className="text-status-running-ink" />
+            </Specimen>
+        </Row>
     ),
 }
 
 export const InContext: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="flex flex-wrap items-center gap-4">
-                <Labeled label="in a disabled button">
-                    <Button disabled>
-                        <Spinner data-icon="inline-start" />
-                        Running
-                    </Button>
-                </Labeled>
-                <Labeled label="in a badge">
-                    <Badge className="bg-status-running/15 text-status-running-ink">
-                        <Spinner data-icon="inline-start" />
-                        running
-                    </Badge>
-                </Labeled>
-                <Labeled label="beside text">
-                    <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Spinner />
-                        Running <span className="font-mono">sync-inventory</span>
-                    </p>
-                </Labeled>
-            </div>
-        </Ground>
+        <Row gap="lg" wrap>
+            <Specimen below label="in a disabled button">
+                <Button disabled>
+                    <Spinner data-icon="inline-start" />
+                    Running
+                </Button>
+            </Specimen>
+            <Specimen below label="in a badge">
+                <Badge className="bg-status-running/15 text-status-running-ink">
+                    <Spinner data-icon="inline-start" />
+                    running
+                </Badge>
+            </Specimen>
+            <Specimen below label="beside text">
+                <Row as="p" className="text-sm text-muted-foreground">
+                    <Spinner />
+                    Running <span className="font-mono">sync-inventory</span>
+                </Row>
+            </Specimen>
+        </Row>
     ),
 }

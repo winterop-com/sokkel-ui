@@ -4,16 +4,9 @@ import { useState, type ReactNode } from 'react'
 
 import { Button } from '../../components/ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../../components/ui/collapsible'
+import { Stack } from '../../components/Layout'
 
 /** A region a trigger shows and hides. It carries no styling of its own; the story draws it. */
-function Ground({ children }: { children: ReactNode }) {
-    return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="mx-auto flex max-w-[1100px] flex-col gap-8">{children}</div>
-        </div>
-    )
-}
-
 function Caption({ children }: { children: ReactNode }) {
     return <p className="text-xs text-muted-foreground">{children}</p>
 }
@@ -33,25 +26,25 @@ function Step({ open, disabled }: { open?: boolean; disabled?: boolean }) {
     )
 }
 
-const meta: Meta = { title: 'Primitives/Layout/Collapsible' }
+const meta: Meta = { title: 'Primitives/Layout/Collapsible', parameters: { frame: 'column' } }
 export default meta
 
 export const States: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="flex flex-col gap-2">
+        <>
+            <Stack gap="sm">
                 <Caption>closed</Caption>
                 <Step />
-            </div>
-            <div className="flex flex-col gap-2">
+            </Stack>
+            <Stack gap="sm">
                 <Caption>open</Caption>
                 <Step open />
-            </div>
-            <div className="flex flex-col gap-2">
+            </Stack>
+            <Stack gap="sm">
                 <Caption>disabled</Caption>
                 <Step disabled />
-            </div>
-        </Ground>
+            </Stack>
+        </>
     ),
 }
 
@@ -64,7 +57,7 @@ const STEPS = [
 function JobSteps() {
     const [open, setOpen] = useState<string | null>('validate')
     return (
-        <div className="flex w-full max-w-xl flex-col divide-y divide-border rounded-lg border border-border">
+        <Stack gap="none" className="w-full max-w-xl divide-y divide-border rounded-lg border border-border">
             {STEPS.map((step) => (
                 <Collapsible key={step.code} open={open === step.code} onOpenChange={(next) => setOpen(next ? step.code : null)}>
                     <CollapsibleTrigger render={<Button variant="ghost" className="group w-full justify-start rounded-none" />}>
@@ -76,19 +69,17 @@ function JobSteps() {
                     <CollapsibleContent className="px-3 py-2 font-mono text-xs text-muted-foreground">{step.with}</CollapsibleContent>
                 </Collapsible>
             ))}
-        </div>
+        </Stack>
     )
 }
 
 export const Steps: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="flex flex-col gap-2">
-                <h2 className="text-sm font-medium">
-                    Steps of <span className="font-mono">import-orders</span>
-                </h2>
-                <JobSteps />
-            </div>
-        </Ground>
+        <Stack gap="sm">
+            <h2 className="text-sm font-medium">
+                Steps of <span className="font-mono">import-orders</span>
+            </h2>
+            <JobSteps />
+        </Stack>
     ),
 }

@@ -44,6 +44,7 @@ import {
     SidebarTrigger,
 } from '../../components/ui/sidebar'
 import { PersonAvatar } from '../../components/PersonAvatar'
+import { Row, Stack } from '../../components/Layout'
 
 /**
  * The app's side navigation and the frame around it. On a desktop it sits fixed at the edge and
@@ -95,10 +96,10 @@ function Workspace() {
                     <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
                         <Workflow />
                     </span>
-                    <span className="flex min-w-0 flex-col leading-tight">
+                    <Stack as="span" gap="none" className="leading-tight">
                         <span className="truncate font-medium">Tidevann</span>
                         <span className="truncate font-mono text-xs text-muted-foreground">api.example.org</span>
-                    </span>
+                    </Stack>
                     <ChevronsUpDownIcon className="ml-auto" />
                 </SidebarMenuButton>
             </SidebarMenuItem>
@@ -159,10 +160,10 @@ function Account() {
             <SidebarMenuItem>
                 <SidebarMenuButton size="lg" tooltip="ada">
                     <PersonAvatar name="ada" initials="AL" size="md" />
-                    <span className="flex min-w-0 flex-col leading-tight">
+                    <Stack as="span" gap="none" className="leading-tight">
                         <span className="truncate font-medium">Ada Lovelace</span>
                         <span className="truncate font-mono text-xs text-muted-foreground">ada</span>
-                    </span>
+                    </Stack>
                 </SidebarMenuButton>
                 <SidebarMenuAction aria-label="Account menu">
                     <MoreHorizontalIcon />
@@ -219,16 +220,16 @@ function Frame({
                 <SidebarRail />
             </Sidebar>
             <SidebarInset>
-                <header className="flex h-12 items-center gap-2 border-b border-border px-4">
+                <Row as="header" className="h-12 border-b border-border px-4">
                     <SidebarTrigger />
                     <span className="text-sm text-muted-foreground">Jobs</span>
                     <span className="text-sm text-muted-foreground">/</span>
                     <span className="font-mono text-sm">import-orders</span>
-                </header>
-                <div className="flex max-w-[1100px] flex-col gap-4 p-6">
+                </Row>
+                <Stack gap="lg" className="max-w-[1100px] p-6">
                     <PageHeader title="Import orders" code="import-orders" />
                     <DataTable variant="list" columns={COLUMNS} rows={RUNS} rowKey={(run) => run.id} />
-                </div>
+                </Stack>
             </SidebarInset>
         </SidebarProvider>
     )
@@ -245,79 +246,77 @@ function Static({ children }: { children: ReactNode }) {
     )
 }
 
-const meta: Meta = { title: 'Primitives/Layout/Sidebar' }
+const meta: Meta = { title: 'Primitives/Layout/Sidebar', parameters: { frame: 'padded' } }
 export default meta
 
-export const AppFrame: StoryObj = { render: () => <Frame /> }
+export const AppFrame: StoryObj = { parameters: { frame: 'none' }, render: () => <Frame /> }
 
-export const Floating: StoryObj = { render: () => <Frame variant="floating" /> }
+export const Floating: StoryObj = { parameters: { frame: 'none' }, render: () => <Frame variant="floating" /> }
 
-export const Inset: StoryObj = { render: () => <Frame variant="inset" /> }
+export const Inset: StoryObj = { parameters: { frame: 'none' }, render: () => <Frame variant="inset" /> }
 
-export const CollapsedToIcons: StoryObj = { render: () => <Frame collapsible="icon" defaultOpen={false} /> }
+export const CollapsedToIcons: StoryObj = { parameters: { frame: 'none' }, render: () => <Frame collapsible="icon" defaultOpen={false} /> }
 
 export const Variants: StoryObj = {
     render: () => (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="mx-auto flex max-w-[1100px] flex-wrap items-start gap-6">
-                <div className="flex flex-col gap-2">
-                    <Caption>menu button sizes and variants</Caption>
-                    <Static>
-                        <SidebarContent>
-                            <SidebarGroup>
-                                <SidebarMenu>
-                                    {(
-                                        [
-                                            ['default', 'default'],
-                                            ['default', 'sm'],
-                                            ['default', 'lg'],
-                                            ['outline', 'default'],
-                                        ] as const
-                                    ).map(([variant, size]) => (
-                                        <SidebarMenuItem key={`${variant}-${size}`}>
-                                            <SidebarMenuButton variant={variant} size={size}>
-                                                <Workflow />
-                                                <span>
-                                                    {variant}, {size}
-                                                </span>
-                                            </SidebarMenuButton>
-                                        </SidebarMenuItem>
-                                    ))}
-                                    <SidebarMenuItem>
-                                        <SidebarMenuButton isActive>
+        <Row gap="xl" align="start" wrap className="mx-auto max-w-[1100px]">
+            <Stack gap="sm">
+                <Caption>menu button sizes and variants</Caption>
+                <Static>
+                    <SidebarContent>
+                        <SidebarGroup>
+                            <SidebarMenu>
+                                {(
+                                    [
+                                        ['default', 'default'],
+                                        ['default', 'sm'],
+                                        ['default', 'lg'],
+                                        ['outline', 'default'],
+                                    ] as const
+                                ).map(([variant, size]) => (
+                                    <SidebarMenuItem key={`${variant}-${size}`}>
+                                        <SidebarMenuButton variant={variant} size={size}>
                                             <Workflow />
-                                            <span>active</span>
+                                            <span>
+                                                {variant}, {size}
+                                            </span>
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>
-                                </SidebarMenu>
-                            </SidebarGroup>
-                        </SidebarContent>
-                    </Static>
-                </div>
-                <div className="flex flex-col gap-2">
-                    <Caption>states: disabled and loading</Caption>
-                    <Static>
-                        <SidebarContent>
-                            <SidebarGroup>
-                                <SidebarGroupLabel>Services</SidebarGroupLabel>
-                                <SidebarMenu>
-                                    <SidebarMenuItem>
-                                        <SidebarMenuButton disabled>
-                                            <Server />
-                                            <span>scheduler</span>
-                                        </SidebarMenuButton>
+                                ))}
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton isActive>
+                                        <Workflow />
+                                        <span>active</span>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            </SidebarMenu>
+                        </SidebarGroup>
+                    </SidebarContent>
+                </Static>
+            </Stack>
+            <Stack gap="sm">
+                <Caption>states: disabled and loading</Caption>
+                <Static>
+                    <SidebarContent>
+                        <SidebarGroup>
+                            <SidebarGroupLabel>Services</SidebarGroupLabel>
+                            <SidebarMenu>
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton disabled>
+                                        <Server />
+                                        <span>scheduler</span>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                                {[0, 1, 2].map((at) => (
+                                    <SidebarMenuItem key={at}>
+                                        <SidebarMenuSkeleton showIcon />
                                     </SidebarMenuItem>
-                                    {[0, 1, 2].map((at) => (
-                                        <SidebarMenuItem key={at}>
-                                            <SidebarMenuSkeleton showIcon />
-                                        </SidebarMenuItem>
-                                    ))}
-                                </SidebarMenu>
-                            </SidebarGroup>
-                        </SidebarContent>
-                    </Static>
-                </div>
-            </div>
-        </div>
+                                ))}
+                            </SidebarMenu>
+                        </SidebarGroup>
+                    </SidebarContent>
+                </Static>
+            </Stack>
+        </Row>
     ),
 }

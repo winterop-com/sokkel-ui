@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import type { ReactNode } from 'react'
+import { Row, Stack } from '../../components/Layout'
+import { Specimen } from '../fixtures/Specimen'
 
 import {
     Combobox,
@@ -17,23 +18,6 @@ import {
     ComboboxValue,
     useComboboxAnchor,
 } from '../../components/ui/combobox'
-
-function Ground({ children }: { children: ReactNode }) {
-    return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="mx-auto flex max-w-[1100px] flex-col gap-8">{children}</div>
-        </div>
-    )
-}
-
-function Labeled({ label, children }: { label: string; children: ReactNode }) {
-    return (
-        <div className="flex w-full max-w-xs flex-col items-start gap-2">
-            <p className="text-xs text-muted-foreground">{label}</p>
-            {children}
-        </div>
-    )
-}
 
 const JOBS = ['import-orders', 'nightly-export', 'sync-inventory', 'rebuild-index', 'send-digest', 'archive-logs']
 
@@ -106,62 +90,54 @@ function TagChips() {
     )
 }
 
-const meta: Meta = { title: 'Primitives/Inputs/Combobox' }
+const meta: Meta = { title: 'Primitives/Inputs/Combobox', parameters: { frame: 'column' } }
 export default meta
 
 export const Variants: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="flex flex-wrap gap-6">
-                <Labeled label="empty">
-                    <JobCombobox />
-                </Labeled>
-                <Labeled label="picked">
-                    <JobCombobox defaultValue="import-orders" />
-                </Labeled>
-                <Labeled label="with clear">
-                    <JobCombobox defaultValue="import-orders" showClear />
-                </Labeled>
-                <Labeled label="chips, multiple">
-                    <TagChips />
-                </Labeled>
-            </div>
-        </Ground>
+        <Row gap="xl" align="stretch" wrap>
+            <Specimen className="w-full max-w-xs" label="empty">
+                <JobCombobox />
+            </Specimen>
+            <Specimen className="w-full max-w-xs" label="picked">
+                <JobCombobox defaultValue="import-orders" />
+            </Specimen>
+            <Specimen className="w-full max-w-xs" label="with clear">
+                <JobCombobox defaultValue="import-orders" showClear />
+            </Specimen>
+            <Specimen className="w-full max-w-xs" label="chips, multiple">
+                <TagChips />
+            </Specimen>
+        </Row>
     ),
 }
 
 export const States: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="flex flex-wrap gap-6">
-                <Labeled label="disabled">
-                    <JobCombobox disabled defaultValue="import-orders" />
-                </Labeled>
-                <Labeled label="invalid">
-                    <JobCombobox invalid placeholder="Pick a job" />
-                </Labeled>
-            </div>
-        </Ground>
+        <Row gap="xl" align="stretch" wrap>
+            <Specimen className="w-full max-w-xs" label="disabled">
+                <JobCombobox disabled defaultValue="import-orders" />
+            </Specimen>
+            <Specimen className="w-full max-w-xs" label="invalid">
+                <JobCombobox invalid placeholder="Pick a job" />
+            </Specimen>
+        </Row>
     ),
 }
 
 export const Open: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="h-80 max-w-xs">
-                <JobCombobox defaultOpen defaultValue="import-orders" />
-            </div>
-        </Ground>
+        <div className="h-80 max-w-xs">
+            <JobCombobox defaultOpen defaultValue="import-orders" />
+        </div>
     ),
 }
 
 export const OpenNoMatch: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="h-40 max-w-xs">
-                <JobCombobox defaultOpen defaultInputValue="payroll" />
-            </div>
-        </Ground>
+        <div className="h-40 max-w-xs">
+            <JobCombobox defaultOpen defaultInputValue="payroll" />
+        </div>
     ),
 }
 
@@ -173,29 +149,27 @@ const ACTIONS = [
 
 export const AddStep: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="flex h-[28rem] max-w-sm flex-col gap-2">
-                <p className="text-sm font-medium">Add a step to import-orders</p>
-                <Combobox items={ACTIONS} defaultOpen>
-                    <ComboboxInput placeholder="Search actions" aria-label="Action" className="w-full" />
-                    <ComboboxContent>
-                        <ComboboxEmpty>No action matches.</ComboboxEmpty>
-                        <ComboboxList>
-                            {(group: (typeof ACTIONS)[number], index: number) => (
-                                <ComboboxGroup key={group.group} items={group.items}>
-                                    {index > 0 && <ComboboxSeparator />}
-                                    <ComboboxLabel>{group.group}</ComboboxLabel>
-                                    {group.items.map((item) => (
-                                        <ComboboxItem key={item} value={item}>
-                                            <span className="font-mono">{item}</span>
-                                        </ComboboxItem>
-                                    ))}
-                                </ComboboxGroup>
-                            )}
-                        </ComboboxList>
-                    </ComboboxContent>
-                </Combobox>
-            </div>
-        </Ground>
+        <Stack gap="sm" className="h-[28rem] max-w-sm">
+            <p className="text-sm font-medium">Add a step to import-orders</p>
+            <Combobox items={ACTIONS} defaultOpen>
+                <ComboboxInput placeholder="Search actions" aria-label="Action" className="w-full" />
+                <ComboboxContent>
+                    <ComboboxEmpty>No action matches.</ComboboxEmpty>
+                    <ComboboxList>
+                        {(group: (typeof ACTIONS)[number], index: number) => (
+                            <ComboboxGroup key={group.group} items={group.items}>
+                                {index > 0 && <ComboboxSeparator />}
+                                <ComboboxLabel>{group.group}</ComboboxLabel>
+                                {group.items.map((item) => (
+                                    <ComboboxItem key={item} value={item}>
+                                        <span className="font-mono">{item}</span>
+                                    </ComboboxItem>
+                                ))}
+                            </ComboboxGroup>
+                        )}
+                    </ComboboxList>
+                </ComboboxContent>
+            </Combobox>
+        </Stack>
     ),
 }

@@ -82,11 +82,11 @@ export const Rows: StoryObj = {
     ),
 }
 
-/** Four stats in columns: four across on a wide page, two on a tablet or a phone. */
+/** Four stats in columns: four across on a wide page, fewer as the room narrows, two on a phone. */
 export const FourColumns: StoryObj = {
     name: 'Columns',
     render: () => (
-        <Columns count={4} gap="lg">
+        <Columns count={4} min="sm" gap="lg">
             <Stat label="Runs today" value="128" change="+12%" good />
             <Stat label="Failed" value="3" change="+2" good={false} />
             <Stat label="Median duration" value="4.2" unit="min" />
@@ -133,7 +133,7 @@ export const JobPage: StoryObj = {
                             </Button>
                         }
                     />
-                    <Columns count={4} gap="lg">
+                    <Columns count={4} min="sm" gap="lg">
                         <Stat label="Runs today" value="128" change="+12%" good />
                         <Stat label="Failed" value="3" change="+2" good={false} />
                         <Stat label="Median duration" value="4.2" unit="min" />

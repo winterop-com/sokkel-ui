@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { Button } from '../../components/ui/button'
 import { BarVisualizer } from '../../components/ui/bar-visualizer'
 import { AudioScrubber, StaticWaveform, Waveform } from '../../components/ui/waveform'
+import { Row, Stack } from '../../components/Layout'
 
 /**
  * Audio shown as bars: a recording's waveform, a scrubber over a voice note, and the level bars a
@@ -13,9 +14,9 @@ import { AudioScrubber, StaticWaveform, Waveform } from '../../components/ui/wav
  */
 function Ground({ children }: { children: React.ReactNode }) {
     return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="mx-auto flex max-w-3xl flex-col gap-6">{children}</div>
-        </div>
+        <Stack gap="xl" className="mx-auto max-w-3xl">
+            {children}
+        </Stack>
     )
 }
 
@@ -40,13 +41,13 @@ function VoiceNote() {
     const [time, setTime] = useState(14)
     return (
         <Ground>
-            <div className="flex items-center gap-3 rounded-surface border border-border-strong bg-card p-3">
+            <Row gap="md" className="rounded-surface border border-border-strong bg-card p-3">
                 <Button size="icon-sm" variant="secondary" aria-label="Pause">
                     <Pause aria-hidden />
                 </Button>
                 <AudioScrubber data={LEVELS} currentTime={time} duration={42} onSeek={setTime} height={36} className="min-w-0 flex-1" />
                 <span className="font-mono text-xs text-muted-foreground tabular-nums">0:{String(time).padStart(2, '0')} / 0:42</span>
-            </div>
+            </Row>
         </Ground>
     )
 }
@@ -54,16 +55,16 @@ function VoiceNote() {
 function Listening() {
     return (
         <Ground>
-            <div className="flex items-center gap-3 rounded-surface border border-border-strong bg-card p-3">
+            <Row gap="md" className="rounded-surface border border-border-strong bg-card p-3">
                 <Mic className="size-4 text-destructive" aria-hidden />
                 <BarVisualizer barCount={32} minHeight={12} centerAlign className="h-10 flex-1 bg-transparent p-0" />
                 <span className="text-sm text-muted-foreground">Listening</span>
-            </div>
+            </Row>
         </Ground>
     )
 }
 
-const meta: Meta = { title: 'Primitives/Media/Audio' }
+const meta: Meta = { title: 'Primitives/Media/Audio', parameters: { frame: 'padded' } }
 export default meta
 
 export const Waveforms_: StoryObj = { name: 'Waveforms', render: () => <Waveforms /> }

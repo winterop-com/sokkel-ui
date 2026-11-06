@@ -4,22 +4,21 @@ import { Pause, Play, RotateCcw } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import { Kbd } from '../../components/ui/kbd'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../components/ui/tooltip'
+import { Row } from '../../components/Layout'
 
-const meta: Meta = { title: 'Primitives/Overlays/Tooltip' }
+const meta: Meta = { title: 'Primitives/Overlays/Tooltip', parameters: { frame: 'padded' } }
 export default meta
 
 function Closed() {
     return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger render={<Button variant="outline" size="icon" aria-label="Run" />}>
-                        <Play />
-                    </TooltipTrigger>
-                    <TooltipContent>Run import-orders now</TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
-        </div>
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger render={<Button variant="outline" size="icon" aria-label="Run" />}>
+                    <Play />
+                </TooltipTrigger>
+                <TooltipContent>Run import-orders now</TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
     )
 }
 
@@ -42,7 +41,7 @@ function Toolbar() {
     return (
         <div className="min-h-svh bg-background p-6 pt-16 text-foreground">
             <TooltipProvider>
-                <div className="flex flex-wrap gap-2">
+                <Row align="stretch" wrap>
                     <Tooltip>
                         <TooltipTrigger render={<Button variant="outline" size="icon" aria-label="Run" />}>
                             <Play />
@@ -64,12 +63,12 @@ function Toolbar() {
                         </TooltipTrigger>
                         <TooltipContent>Retry the failed run</TooltipContent>
                     </Tooltip>
-                </div>
+                </Row>
             </TooltipProvider>
         </div>
     )
 }
 
 export const Trigger: StoryObj = { render: () => <Closed /> }
-export const Opened: StoryObj = { render: () => <Open /> }
-export const WithShortcut: StoryObj = { render: () => <Toolbar /> }
+export const Opened: StoryObj = { parameters: { frame: 'none' }, render: () => <Open /> }
+export const WithShortcut: StoryObj = { parameters: { frame: 'none' }, render: () => <Toolbar /> }

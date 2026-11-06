@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Slash } from 'lucide-react'
 
 import { PageHeader } from '../../components/PageHeader'
+import { Stack } from '../../components/Layout'
 import {
     Breadcrumb,
     BreadcrumbEllipsis,
@@ -12,16 +13,8 @@ import {
     BreadcrumbSeparator,
 } from '../../components/ui/breadcrumb'
 
-const meta: Meta = { title: 'Primitives/Navigation/Breadcrumb' }
+const meta: Meta = { title: 'Primitives/Navigation/Breadcrumb', parameters: { frame: 'column' } }
 export default meta
-
-function Ground({ children }: { children: React.ReactNode }) {
-    return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="mx-auto flex max-w-[1100px] flex-col gap-8">{children}</div>
-        </div>
-    )
-}
 
 function Caption({ children }: { children: React.ReactNode }) {
     return <p className="text-xs text-muted-foreground">{children}</p>
@@ -29,8 +22,8 @@ function Caption({ children }: { children: React.ReactNode }) {
 
 export const Variants: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="flex flex-col gap-2">
+        <>
+            <Stack gap="sm">
                 <Caption>default separator</Caption>
                 <Breadcrumb>
                     <BreadcrumbList>
@@ -43,8 +36,8 @@ export const Variants: StoryObj = {
                         </BreadcrumbItem>
                     </BreadcrumbList>
                 </Breadcrumb>
-            </div>
-            <div className="flex flex-col gap-2">
+            </Stack>
+            <Stack gap="sm">
                 <Caption>custom separator</Caption>
                 <Breadcrumb>
                     <BreadcrumbList>
@@ -59,8 +52,8 @@ export const Variants: StoryObj = {
                         </BreadcrumbItem>
                     </BreadcrumbList>
                 </Breadcrumb>
-            </div>
-            <div className="flex flex-col gap-2">
+            </Stack>
+            <Stack gap="sm">
                 <Caption>collapsed with an ellipsis</Caption>
                 <Breadcrumb>
                     <BreadcrumbList>
@@ -77,39 +70,37 @@ export const Variants: StoryObj = {
                         </BreadcrumbItem>
                     </BreadcrumbList>
                 </Breadcrumb>
-            </div>
-        </Ground>
+            </Stack>
+        </>
     ),
 }
 
 export const RunPath: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="flex flex-col gap-3">
-                <Breadcrumb>
-                    <BreadcrumbList>
-                        <BreadcrumbItem>
-                            <BreadcrumbLink href="#">Projects</BreadcrumbLink>
-                        </BreadcrumbItem>
-                        <BreadcrumbSeparator />
-                        <BreadcrumbItem>
-                            <BreadcrumbLink href="#">Larkspur</BreadcrumbLink>
-                        </BreadcrumbItem>
-                        <BreadcrumbSeparator />
-                        <BreadcrumbItem>
-                            <BreadcrumbLink href="#" className="font-mono">
-                                nightly-export
-                            </BreadcrumbLink>
-                        </BreadcrumbItem>
-                        <BreadcrumbSeparator />
-                        <BreadcrumbItem>
-                            <BreadcrumbPage className="font-mono">01a1a5c2</BreadcrumbPage>
-                        </BreadcrumbItem>
-                    </BreadcrumbList>
-                </Breadcrumb>
-                <PageHeader title="Run 01a1a5c2" />
-                <p className="text-sm text-muted-foreground">Failed at step validate, 2026-11-04 14:02, after 0.3s.</p>
-            </div>
-        </Ground>
+        <Stack>
+            <Breadcrumb>
+                <BreadcrumbList>
+                    <BreadcrumbItem>
+                        <BreadcrumbLink href="#">Projects</BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                        <BreadcrumbLink href="#">Larkspur</BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                        <BreadcrumbLink href="#" className="font-mono">
+                            nightly-export
+                        </BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                        <BreadcrumbPage className="font-mono">01a1a5c2</BreadcrumbPage>
+                    </BreadcrumbItem>
+                </BreadcrumbList>
+            </Breadcrumb>
+            <PageHeader title="Run 01a1a5c2" />
+            <p className="text-sm text-muted-foreground">Failed at step validate, 2026-11-04 14:02, after 0.3s.</p>
+        </Stack>
     ),
 }
