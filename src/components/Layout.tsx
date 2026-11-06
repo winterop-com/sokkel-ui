@@ -61,7 +61,7 @@ export function Stack({
     ...props
 }: Base & { align?: keyof typeof ALIGN }) {
     return (
-        <Tag {...props} className={cn('flex min-w-0 flex-col *:min-w-0', GAP[gap], ALIGN[align], className)}>
+        <Tag {...props} className={cn('flex min-w-0 flex-col [:where(&>*)]:min-w-0', GAP[gap], ALIGN[align], className)}>
             {children}
         </Tag>
     )
@@ -83,7 +83,7 @@ export function Row({
     ...props
 }: Base & { align?: keyof typeof ALIGN; justify?: keyof typeof JUSTIFY; wrap?: boolean }) {
     return (
-        <Tag {...props} className={cn('flex min-w-0 *:min-w-0', wrap && 'flex-wrap', GAP[gap], ALIGN[align], JUSTIFY[justify], className)}>
+        <Tag {...props} className={cn('flex min-w-0 [:where(&>*)]:min-w-0', wrap && 'flex-wrap', GAP[gap], ALIGN[align], JUSTIFY[justify], className)}>
             {children}
         </Tag>
     )
@@ -111,7 +111,7 @@ export function Columns({
 }: Base & { count?: keyof typeof COLUMNS; align?: 'start' | 'stretch' }) {
     return (
         <div className="@container min-w-0">
-            <Tag className={cn('grid grid-cols-1 *:min-w-0', COLUMNS[count], GAP[gap], align === 'start' && 'items-start', className)}>
+            <Tag className={cn('grid grid-cols-1 [:where(&>*)]:min-w-0', COLUMNS[count], GAP[gap], align === 'start' && 'items-start', className)}>
                 {children}
             </Tag>
         </div>
@@ -153,7 +153,7 @@ export function Split({
         <div className="@container min-w-0">
             <div
                 className={cn(
-                    'grid grid-cols-1 items-start *:min-w-0',
+                    'grid grid-cols-1 items-start [:where(&>*)]:min-w-0',
                     side === 'end' ? ASIDE[width] : ASIDE_START[width],
                     GAP[gap],
                     className,

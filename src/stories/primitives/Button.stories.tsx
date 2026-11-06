@@ -20,7 +20,7 @@ export const Playground: StoryObj<{
     icon: boolean
     disabled: boolean
 }> = {
-    parameters: { controls: { disable: false } },
+    parameters: { frame: 'padded', controls: { disable: false } },
     args: { label: 'Run now', variant: 'default', size: 'default', icon: true, disabled: false },
     argTypes: {
         variant: { control: 'select', options: ['default', 'outline', 'secondary', 'ghost', 'destructive', 'link'] },
