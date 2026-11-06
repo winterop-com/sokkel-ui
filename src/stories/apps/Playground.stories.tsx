@@ -543,7 +543,6 @@ function ComparePage() {
 function HistoryPage() {
     const [query, setQuery] = useState('')
     const [chosen, setChosen] = useState<Run>(RUNS[2])
-    const [width, setWidth] = useState(360)
     const rows = RUNS.filter((run) => run.prompt.includes(query.trim()))
     return (
         <Page className="h-full">
@@ -570,8 +569,6 @@ function HistoryPage() {
                     <Inspector
                         title={<span className="font-mono">{chosen.prompt}</span>}
                         code={chosen.id}
-                        size={width}
-                        onSizeChange={setWidth}
                         status={
                             <>
                                 <StatusChip status={chosen.state} />

@@ -425,7 +425,6 @@ function NewChannelPage() {
 function TeamChat({ start = 'harbor-ops', thread = false }: { start?: string; thread?: boolean }) {
     const [active, setActive] = useState(start)
     const [panel, setPanel] = useState(thread)
-    const [panelSize, setPanelSize] = useState(384)
     const body =
         active === 'dm-grace' ? (
             <Direct />
@@ -445,8 +444,6 @@ function TeamChat({ start = 'harbor-ops', thread = false }: { start?: string; th
                     active === 'harbor-ops' ? (
                         <SidePanel
                             tabs={[{ id: 'thread', label: 'Thread in #harbor-ops', content: <Thread /> }]}
-                            size={panelSize}
-                            onSizeChange={setPanelSize}
                             defaultSize={384}
                             words={{ resize: 'Resize the thread' }}
                         />
