@@ -7,6 +7,7 @@ import { formatTime } from '../../components/media/time'
 import { Button } from '../../components/ui/button'
 import { cn } from '../../lib/cn'
 import { Artwork, type Cover } from '../fixtures/Artwork'
+import { Row, Stack } from '../../components/Layout'
 
 interface Track {
     title: string
@@ -46,8 +47,8 @@ function Player({ startPlaying, queue = false }: { startPlaying: boolean; queue?
         setPosition(0)
     }
     return (
-        <div className="flex min-h-svh justify-center bg-background text-foreground">
-            <div className="flex min-h-svh w-full flex-col">
+        <Row gap="none" align="stretch" justify="center" className="min-h-svh bg-background text-foreground">
+            <Stack gap="none" className="min-h-svh w-full">
                 <div className="flex flex-1 flex-col justify-end p-4">
                     {queueOpen && (
                         <section className="ml-auto w-full max-w-sm rounded-surface border border-border-strong bg-popover text-popover-foreground shadow-md">
@@ -127,8 +128,8 @@ function Player({ startPlaying, queue = false }: { startPlaying: boolean; queue?
                         </Button>
                     }
                 />
-            </div>
-        </div>
+            </Stack>
+        </Row>
     )
 }
 

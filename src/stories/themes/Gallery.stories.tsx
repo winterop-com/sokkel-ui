@@ -7,6 +7,7 @@ import { Skeleton } from '../../components/ui/skeleton'
 
 import type { ThemeOption, ThemeSettings } from '../../components/ThemePicker'
 import { fromGlobals, THEMES, toGlobals } from './themes'
+import { Columns, Row, Stack } from '../../components/Layout'
 
 /**
  * Every theme the toolbar offers, side by side: each tile is the same small sample of Tidevann in
@@ -65,13 +66,13 @@ function Frame({ settings, label, onDrawn }: { settings: ThemeSettings; label: s
                 className={cn('pointer-events-none size-full border-0', !ready && 'invisible')}
             />
             {!ready && (
-                <div aria-hidden className="absolute inset-0 flex flex-col gap-3 bg-card p-4">
+                <Stack aria-hidden className="absolute inset-0 bg-card p-4">
                     <Skeleton className="h-5 w-2/5" />
                     <Skeleton className="h-8 w-3/5" />
                     <Skeleton className="h-8 w-full" />
                     <Skeleton className="h-40 w-full" />
                     <Skeleton className="h-24 w-full" />
-                </div>
+                </Stack>
             )}
         </a>
     )
@@ -79,13 +80,13 @@ function Frame({ settings, label, onDrawn }: { settings: ThemeSettings; label: s
 
 function Tile({ theme, base, onDrawn }: { theme: ThemeOption; base: ThemeSettings; onDrawn: () => void }) {
     return (
-        <section className="flex min-w-0 flex-col gap-2">
-            <header className="flex items-baseline gap-2">
+        <Stack as="section" gap="sm">
+            <Row as="header" align="baseline">
                 <h2 className="text-sm font-medium">{theme.label}</h2>
                 <span className="font-mono text-xs text-muted-foreground">{theme.value}</span>
                 {theme.note !== undefined && <span className="ml-auto truncate text-xs text-muted-foreground">{theme.note}</span>}
-            </header>
-            <div className="grid gap-2 sm:grid-cols-2">
+            </Row>
+            <Columns gap="sm">
                 {SCHEMES.map((scheme) => (
                     <Frame
                         key={scheme}
@@ -94,8 +95,8 @@ function Tile({ theme, base, onDrawn }: { theme: ThemeOption; base: ThemeSetting
                         onDrawn={onDrawn}
                     />
                 ))}
-            </div>
-        </section>
+            </Columns>
+        </Stack>
     )
 }
 
@@ -112,27 +113,27 @@ function Grid({ base }: { base: ThemeSettings }) {
     return (
         // Settling while frames draw; the screenshot suite waits for it to end.
         <div className="relative min-h-svh bg-background p-4 text-foreground md:p-6" data-settling={done ? undefined : ''}>
-            <div className="mx-auto flex max-w-[1800px] flex-col gap-6">
-                <div className="flex flex-col gap-1">
+            <Stack gap="xl" className="mx-auto max-w-[1800px]">
+                <Stack gap="2xs">
                     <h1 className="text-page font-medium tracking-tight">Themes</h1>
                     <p className="text-sm text-muted-foreground">
                         {THEMES.length} themes, dark and light. Press a sample to open the kitchen sink in it.
                     </p>
                     {!done && (
-                        <div className="mt-2 flex max-w-md items-center gap-3 text-xs text-muted-foreground">
+                        <Row gap="md" className="mt-2 max-w-md text-xs text-muted-foreground">
                             <Progress value={Math.round((count / total) * 100)} className="flex-1" aria-label="Drawing the themes" />
                             <span className="shrink-0 tabular-nums">
                                 {count} of {total} drawn
                             </span>
-                        </div>
+                        </Row>
                     )}
-                </div>
+                </Stack>
                 <div className="grid gap-x-6 gap-y-8 lg:grid-cols-2">
                     {THEMES.map((theme) => (
                         <Tile key={theme.value} theme={theme} base={base} onDrawn={onDrawn} />
                     ))}
                 </div>
-            </div>
+            </Stack>
         </div>
     )
 }
