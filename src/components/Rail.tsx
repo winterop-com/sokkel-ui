@@ -242,7 +242,7 @@ function StripLink({ entry, renderLink, unread }: { entry: RailEntry; renderLink
             >
                 {entry.dot === undefined ? <Icon className="size-5 shrink-0" aria-hidden /> : <Dot color={entry.dot} />}
                 {counted ? (
-                    <Count value={entry.count ?? 0} size="sm" className="absolute -top-1.5 -right-2 ring-2 ring-sidebar" />
+                    <Count value={entry.count ?? 0} size="sm" shape="round" className="absolute -top-1 -right-1.5 ring-2 ring-sidebar" />
                 ) : (
                     entry.unread === true && <UnreadDot label={unread} className="absolute top-0.5 right-0.5" />
                 )}
@@ -288,7 +288,14 @@ function RailLink({
                                 entry,
                                 <>
                                     {mark}
-                                    {counted && <Count value={entry.count ?? 0} className="absolute -top-1 -right-1" />}
+                                    {counted && (
+                                        <Count
+                                            value={entry.count ?? 0}
+                                            size="sm"
+                                            shape="round"
+                                            className="absolute -top-1 -right-1.5 ring-2 ring-sidebar"
+                                        />
+                                    )}
                                     {dotted && <UnreadDot label={unread} className="absolute top-1 right-1" />}
                                 </>,
                                 cn(

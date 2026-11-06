@@ -9,7 +9,7 @@ import { Button } from '../../components/ui/button'
 const meta: Meta = { title: 'Patterns/Marks' }
 export default meta
 
-/** Counts alone, over an icon, and past their limit. */
+/** Counts alone, over an icon, past their limit, and small and round as a strip of icons shows them. */
 export const Counts: StoryObj = {
     render: () => (
         <div className="flex flex-wrap items-center gap-6 p-6">
@@ -23,6 +23,12 @@ export const Counts: StoryObj = {
             <Button variant="ghost" size="icon-lg" aria-label="Inbox, 128 unread" className="relative">
                 <Inbox aria-hidden />
                 <Count value={128} className="absolute -top-1 -right-1" />
+            </Button>
+            <Count value={3} size="sm" shape="round" />
+            <Count value={42} size="sm" shape="round" />
+            <Button variant="ghost" size="icon-lg" aria-label="Messages, 1 unread" className="relative">
+                <Inbox aria-hidden />
+                <Count value={1} size="sm" shape="round" className="absolute -top-0.5 -right-0.5" />
             </Button>
         </div>
     ),
