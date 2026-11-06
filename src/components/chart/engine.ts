@@ -1,4 +1,4 @@
-import { BarChart, GaugeChart, HeatmapChart, LineChart, PieChart, ScatterChart } from 'echarts/charts'
+import { BarChart, GaugeChart, HeatmapChart, LineChart, PieChart, RadarChart, ScatterChart } from 'echarts/charts'
 import {
     AriaComponent,
     DataZoomComponent,
@@ -6,6 +6,7 @@ import {
     LegendComponent,
     MarkAreaComponent,
     MarkLineComponent,
+    RadarComponent,
     TitleComponent,
     TooltipComponent,
     VisualMapComponent,
@@ -20,6 +21,7 @@ const PARTS = [
     HeatmapChart,
     GaugeChart,
     PieChart,
+    RadarChart,
     ScatterChart,
     AriaComponent,
     DataZoomComponent,
@@ -27,6 +29,7 @@ const PARTS = [
     LegendComponent,
     MarkAreaComponent,
     MarkLineComponent,
+    RadarComponent,
     TitleComponent,
     TooltipComponent,
     VisualMapComponent,
