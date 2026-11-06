@@ -53,6 +53,10 @@ reaches them all. Done in waves, one PR each.
 
 ## Next
 
+- **Ship only the library.** The package publishes `src/stories` with `src`, and `styles.css`
+  scans all of `src`, so an app's CSS carries classes only the stories use (398 kB in the example
+  app). Publish without the stories, scan only the components, and say in the README that
+  `styles.css` needs `tailwindcss`, which the examples found an app must install itself.
 - **A size budget in CI.** Build a few typical apps (forms only, a dashboard, a map page), measure
   each bundle, and fail when one grows past its budget or pulls in an engine it does not use.
   Splitting into packages (core, charts, maps, graph, editor) is the step after, only if optional
