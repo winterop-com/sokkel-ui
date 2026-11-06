@@ -3033,7 +3033,7 @@ html.dark[data-theme='neon'] {
     --density-chat-gap: 0.875rem;
     --density-chat-follow: 0.25rem;
     --density-chat-inset: 1.5rem;
-    --density-channel-row: 2rem;
+    --density-channel-row: 1.75rem;
 }
 
 html[data-density='regular'] {
@@ -3050,7 +3050,7 @@ html[data-density='regular'] {
     --density-chat-gap: 0.875rem;
     --density-chat-follow: 0.25rem;
     --density-chat-inset: 1.5rem;
-    --density-channel-row: 2rem;
+    --density-channel-row: 1.75rem;
 }
 
 html[data-density='compact'] {
@@ -3067,5 +3067,5 @@ html[data-density='compact'] {
     --density-chat-gap: 0.375rem;
     --density-chat-follow: 0.0625rem;
     --density-chat-inset: 1rem;
-    --density-channel-row: 1.625rem;
+    --density-channel-row: 1.5rem;
 }

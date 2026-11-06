@@ -1,11 +1,16 @@
-import { FileText, SmilePlus } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { ChevronRight, Ellipsis, FileText, MessageSquareText, SmilePlus } from 'lucide-react'
+import { isValidElement, useState, type CSSProperties, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { PersonAvatar } from './PersonAvatar'
+import { Button } from './ui/button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from './ui/dropdown-menu'
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 
 /** A reaction to a message: what it is, how many gave it, and whether you are one of them. */
 export interface ChatReaction {
     id: string
+    /** An emoji, or an icon. */
     icon: ReactNode
     /** What the reaction means, said on hover and to a screen reader. */
     label: string
@@ -13,11 +18,17 @@ export interface ChatReaction {
     mine?: boolean
 }
 
+/** A person by name, drawn as their initials on their color, or as their picture when it is given. */
+export interface ChatPerson {
+    name: string
+    image?: string
+}
+
 /** The replies under a message, folded into one line. */
 export interface ChatThread {
     count: number
-    /** The pictures of the people who replied, most recent first. */
-    people: readonly ReactNode[]
+    /** The people who replied, most recent first, as pictures or as people; the first three are shown. */
+    people: readonly (ReactNode | ChatPerson)[]
     /** When the last reply came, as the app says it. */
     last: string
 }
@@ -35,24 +46,75 @@ export interface ChatFile {
 
 export interface ChatMessageWords {
     edited: string
+    /** The edit time on hover, from `editedAt`. */
+    editedAt: (when: string) => string
     react: string
+    reply: string
+    more: string
     replies: (count: number) => string
     lastReply: (when: string) => string
+    /** Takes the last reply's place while the thread line is hovered. */
+    viewThread: string
 }
 
 const WORDS: ChatMessageWords = {
     edited: '(edited)',
+    editedAt: (when) => `Edited ${when}`,
     react: 'Add a reaction',
+    reply: 'Reply in thread',
+    more: 'More actions',
     replies: (count) => `${String(count)} ${count === 1 ? 'reply' : 'replies'}`,
     lastReply: (when) => `Last reply ${when}`,
+    viewThread: 'View thread',
+}
+
+/** The link glyph drawn before every link in a body, as a mask so it takes the link's color. */
+const LINK_ICON = `url("data:image/svg+xml,${encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
+)}")`
+
+const BODY = cn(
+    'min-w-0 text-sm leading-relaxed wrap-break-word',
+    '[&_a]:text-primary-ink [&_a]:underline [&_a]:underline-offset-2',
+    "[&_a]:before:mr-0.5 [&_a]:before:inline-block [&_a]:before:size-3.5 [&_a]:before:bg-current [&_a]:before:align-[-0.125em] [&_a]:before:content-['']",
+    '[&_a]:before:[mask:var(--chat-link-icon)_center/contain_no-repeat]',
+)
+
+/** Lets the "(edited)" mark follow the last line of a body made of blocks, as markdown is. */
+const INLINE_END = '[&>div:nth-last-child(2)]:inline [&>div:nth-last-child(2)>p:last-child]:inline [&>p:nth-last-child(2)]:inline'
+
+/** Tells a person given by name from a picture given as a node. */
+export function isChatPerson(who: ReactNode | ChatPerson): who is ChatPerson {
+    return typeof who === 'object' && who !== null && !isValidElement(who) && 'name' in who && typeof who.name === 'string'
+}
+
+/** A person filling the square they are given: a picture as given, or a person as their initials on their color. */
+export function ChatFace({ who, className }: { who: ReactNode | ChatPerson; className?: string }) {
+    if (!isChatPerson(who)) return who
+    return <PersonAvatar name={who.name} image={who.image} size="md" className={cn('size-full rounded-none', className)} />
+}
+
+/** One of the hover bar's icon buttons, its name in a tooltip. */
+function BarButton({ label, onClick, children }: { label: string; onClick?: () => void; children: ReactNode }) {
+    return (
+        <Tooltip>
+            <TooltipTrigger render={<Button variant="ghost" size="icon-xs" aria-label={label} onClick={onClick} />}>
+                {children}
+            </TooltipTrigger>
+            <TooltipContent>{label}</TooltipContent>
+        </Tooltip>
+    )
 }
 
 /**
- * One message in a conversation, laid out as a team chat does: the author's picture, name and
- * time, then the body. A message that follows its author's last one closely is `continued`: no
- * picture and no name, its time shown in the gutter on hover. Under the body come the files, the
- * reactions (pressing one adds or takes back yours) and the thread line that opens the replies.
- * The actions float at the top right on hover.
+ * One message in a conversation, laid out as a team chat does: the author's square picture, the
+ * name and time on one line, the body right under it. A message that follows its author's last
+ * one closely is `continued`: no picture and no name, its time shown in the gutter on hover, so
+ * each message of a run still reads as its own. Under the body come the files, the reactions
+ * (pressing one adds or takes back yours, the button at the end adds a new one) and the thread
+ * line that opens the replies. Links in the body carry a link glyph; an edited message says so
+ * after its last line. The actions float at the top right on hover: react, reply in thread and a
+ * menu, each given by its handler or items.
  */
 export function ChatMessage({
     author,
@@ -61,19 +123,24 @@ export function ChatMessage({
     timeTitle,
     continued = false,
     edited = false,
+    editedAt,
     highlighted = false,
+    active = false,
     files,
     reactions,
     onReact,
     onAddReaction,
     thread,
     onOpenThread,
+    onReply,
+    menu,
     actions,
     children,
     className,
     words: given,
 }: {
     author: string
+    /** The author's picture; their initials on their color when none is given. */
     avatar?: ReactNode
     /** The time as the conversation shows it: `09:42`. */
     time: string
@@ -81,26 +148,41 @@ export function ChatMessage({
     timeTitle?: string
     continued?: boolean
     edited?: boolean
+    /** When the message was last edited, as the app says it: `today at 09:44`. Marks it edited. */
+    editedAt?: string
     /** Drawn as the message a link or a search landed on. */
     highlighted?: boolean
+    /** Held in its hover look, as while a picker opened from it is showing. */
+    active?: boolean
     files?: readonly ChatFile[]
     reactions?: readonly ChatReaction[]
     onReact?: (id: string) => void
+    /** Offers the add-reaction button after the reactions and in the hover bar. */
     onAddReaction?: () => void
     thread?: ChatThread
     onOpenThread?: () => void
-    /** The hover toolbar's buttons. */
+    /** Offers reply in thread in the hover bar. */
+    onReply?: () => void
+    /** Dropdown menu items behind the hover bar's more button. */
+    menu?: ReactNode
+    /** More buttons for the hover bar, before its more button. */
     actions?: ReactNode
     children: ReactNode
     className?: string
     words?: Partial<ChatMessageWords>
 }) {
     const words = { ...WORDS, ...given }
+    const [menuOpen, setMenuOpen] = useState(false)
+    const lit = active || menuOpen
+    const isEdited = edited || editedAt !== undefined
+    const hasBar = onAddReaction !== undefined || onReply !== undefined || menu !== undefined || actions !== undefined
     return (
         <article
+            data-active={lit || undefined}
             className={cn(
                 'group/chat relative grid grid-cols-[2.25rem_minmax(0,1fr)] gap-x-2.5 px-(--density-chat-inset) hover:bg-muted/40',
-                continued ? 'py-(--density-chat-follow)' : 'pt-(--density-chat-gap) pb-1',
+                continued ? 'py-(--density-chat-follow)' : 'pt-(--density-chat-gap) pb-(--density-chat-follow)',
+                lit && 'bg-muted/40',
                 highlighted && 'bg-warning/10 hover:bg-warning/15',
                 className,
             )}
@@ -109,17 +191,20 @@ export function ChatMessage({
                 {continued ? (
                     <time
                         title={timeTitle}
-                        className="pt-0.5 text-2xs leading-5 text-faint tabular-nums opacity-0 group-hover/chat:opacity-100"
+                        className={cn(
+                            'pt-0.5 text-2xs leading-5 whitespace-nowrap text-muted-foreground tabular-nums opacity-0 group-focus-within/chat:opacity-100 group-hover/chat:opacity-100',
+                            lit && 'opacity-100',
+                        )}
                     >
                         {time}
                     </time>
                 ) : (
-                    <span className="mt-0.5 flex size-9 items-center justify-center overflow-hidden rounded-lg bg-muted text-xs font-medium">
-                        {avatar}
+                    <span className="mt-1 flex size-9 items-center justify-center overflow-hidden rounded-lg bg-muted text-sm font-semibold">
+                        <ChatFace who={avatar ?? { name: author }} className="text-sm font-semibold" />
                     </span>
                 )}
             </div>
-            <div className="flex min-w-0 flex-col gap-1">
+            <div className="flex min-w-0 flex-col">
                 {!continued && (
                     <header className="flex min-w-0 items-baseline gap-2">
                         <span className="truncate text-sm font-semibold">{author}</span>
@@ -128,12 +213,19 @@ export function ChatMessage({
                         </time>
                     </header>
                 )}
-                <div className="min-w-0 text-sm leading-6 wrap-break-word">
+                <div className={cn(BODY, isEdited && INLINE_END)} style={{ '--chat-link-icon': LINK_ICON } as CSSProperties}>
                     {children}
-                    {edited && <span className="ml-1 text-xs text-faint">{words.edited}</span>}
+                    {isEdited && (
+                        <span
+                            title={editedAt === undefined ? undefined : words.editedAt(editedAt)}
+                            className="ml-1 text-xs text-muted-foreground"
+                        >
+                            {words.edited}
+                        </span>
+                    )}
                 </div>
                 {files !== undefined && files.length > 0 && (
-                    <div className="flex flex-wrap gap-2 pt-1">
+                    <div className="mt-1.5 flex flex-wrap gap-2">
                         {files.map((file) =>
                             file.kind === 'image' && file.url !== undefined ? (
                                 <img
@@ -162,7 +254,7 @@ export function ChatMessage({
                     </div>
                 )}
                 {reactions !== undefined && reactions.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-1 pt-0.5">
+                    <div className="mt-1.5 flex flex-wrap items-center gap-1">
                         {reactions.map((reaction) => (
                             <button
                                 key={reaction.id}
@@ -172,26 +264,32 @@ export function ChatMessage({
                                 aria-label={`${reaction.label}, ${String(reaction.count)}`}
                                 onClick={() => onReact?.(reaction.id)}
                                 className={cn(
-                                    'flex h-6 items-center gap-1 rounded-control border px-2 text-xs tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-ring/50 [&_svg]:size-3.5',
+                                    'flex h-6 items-center gap-1 rounded-control border px-1.5 text-sm leading-none outline-none focus-visible:ring-2 focus-visible:ring-ring/50 [&_svg]:size-3.5',
                                     reaction.mine === true
-                                        ? 'border-primary/50 bg-primary/12 text-primary-ink'
-                                        : 'border-border bg-muted/50 text-muted-foreground hover:border-border-strong',
+                                        ? 'border-primary/60 bg-primary/12 text-primary-ink'
+                                        : 'border-transparent bg-muted text-muted-foreground hover:border-border-strong',
                                 )}
                             >
                                 {reaction.icon}
-                                {reaction.count}
+                                <span className="text-xs font-medium tabular-nums">{reaction.count}</span>
                             </button>
                         ))}
                         {onAddReaction !== undefined && (
-                            <button
-                                type="button"
-                                aria-label={words.react}
-                                title={words.react}
-                                onClick={onAddReaction}
-                                className="flex h-6 items-center rounded-control border border-transparent px-1.5 text-muted-foreground opacity-0 outline-none group-hover/chat:opacity-100 hover:border-border focus-visible:opacity-100"
-                            >
-                                <SmilePlus className="size-3.5" aria-hidden />
-                            </button>
+                            <Tooltip>
+                                <TooltipTrigger
+                                    render={
+                                        <button
+                                            type="button"
+                                            aria-label={words.react}
+                                            onClick={onAddReaction}
+                                            className="flex h-6 items-center rounded-control border border-transparent bg-muted px-1.5 text-muted-foreground outline-none hover:border-border-strong hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+                                        />
+                                    }
+                                >
+                                    <SmilePlus className="size-3.5" aria-hidden />
+                                </TooltipTrigger>
+                                <TooltipContent>{words.react}</TooltipContent>
+                            </Tooltip>
                         )}
                     </div>
                 )}
@@ -199,48 +297,111 @@ export function ChatMessage({
                     <button
                         type="button"
                         onClick={onOpenThread}
-                        className="-ml-1 flex w-fit max-w-full items-center gap-2 rounded-md border border-transparent px-1 py-0.5 text-xs outline-none hover:border-border hover:bg-card focus-visible:ring-2 focus-visible:ring-ring/50"
+                        className="group/thread mt-1 -ml-1 flex w-fit max-w-full items-center gap-2 rounded-md border border-transparent py-0.5 pr-1 pl-1 text-xs outline-none hover:border-border hover:bg-background focus-visible:ring-2 focus-visible:ring-ring/50 sm:w-full sm:max-w-md"
                     >
-                        <span className="flex -space-x-1">
+                        <span className="flex shrink-0 gap-0.5">
                             {thread.people.slice(0, 3).map((person, index) => (
                                 <span
                                     key={index}
-                                    className="flex size-5 items-center justify-center overflow-hidden rounded-md bg-muted text-2xs font-medium ring-2 ring-background"
+                                    className="flex size-5 items-center justify-center overflow-hidden rounded-md bg-muted text-2xs font-semibold"
                                 >
-                                    {person}
+                                    <ChatFace who={person} className="text-2xs font-semibold" />
                                 </span>
                             ))}
                         </span>
-                        <span className="font-semibold text-primary-ink">{words.replies(thread.count)}</span>
-                        <span className="truncate text-muted-foreground">{words.lastReply(thread.last)}</span>
+                        <span className="shrink-0 font-semibold text-primary-ink group-hover/thread:underline">
+                            {words.replies(thread.count)}
+                        </span>
+                        <span className="min-w-0 truncate text-muted-foreground group-hover/thread:hidden group-focus-visible/thread:hidden">
+                            {words.lastReply(thread.last)}
+                        </span>
+                        <span className="hidden min-w-0 truncate text-muted-foreground group-hover/thread:inline group-focus-visible/thread:inline">
+                            {words.viewThread}
+                        </span>
+                        <ChevronRight
+                            className="ml-auto hidden size-3.5 shrink-0 text-muted-foreground group-hover/thread:block group-focus-visible/thread:block"
+                            aria-hidden
+                        />
                     </button>
                 )}
             </div>
-            {actions !== undefined && (
-                <div className="absolute -top-3 right-4 hidden items-center rounded-md border border-border bg-popover p-0.5 shadow-pop group-focus-within/chat:flex group-hover/chat:flex [&_button]:size-7">
+            {hasBar && (
+                <div
+                    className={cn(
+                        'absolute -top-3.5 right-(--density-chat-inset) z-20 hidden items-center gap-px rounded-md border border-border bg-popover p-0.5 text-muted-foreground shadow-pop group-focus-within/chat:flex group-hover/chat:flex [&_button]:size-6',
+                        lit && 'flex',
+                    )}
+                >
+                    {onAddReaction !== undefined && (
+                        <BarButton label={words.react} onClick={onAddReaction}>
+                            <SmilePlus className="size-4" aria-hidden />
+                        </BarButton>
+                    )}
+                    {onReply !== undefined && (
+                        <BarButton label={words.reply} onClick={onReply}>
+                            <MessageSquareText className="size-4" aria-hidden />
+                        </BarButton>
+                    )}
                     {actions}
+                    {menu !== undefined && (
+                        <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+                            <Tooltip>
+                                <TooltipTrigger
+                                    render={
+                                        <DropdownMenuTrigger render={<Button variant="ghost" size="icon-xs" aria-label={words.more} />} />
+                                    }
+                                >
+                                    <Ellipsis className="size-4" aria-hidden />
+                                </TooltipTrigger>
+                                <TooltipContent>{words.more}</TooltipContent>
+                            </Tooltip>
+                            <DropdownMenuContent align="end" className="w-48">
+                                {menu}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
                 </div>
             )}
         </article>
     )
 }
 
-/** The date between a day's messages and the next day's, as a rule with the date on it. */
-export function ChatDayDivider({ children }: { children: ReactNode }) {
+/**
+ * The date between a day's messages and the previous day's: a pill on a rule. In a `ChatDay` the
+ * pill is sticky, so the day in view stays named at the top of the list and leaves with its last
+ * message. A `sticky` divider outside one stays stuck to the end of the list, under the later ones.
+ */
+export function ChatDayDivider({ children, sticky = false }: { children: ReactNode; sticky?: boolean }) {
     return (
-        <div role="separator" className="relative my-(--density-chat-gap) flex items-center justify-center px-(--density-chat-inset)">
-            <span className="absolute inset-x-(--density-chat-inset) top-1/2 h-px bg-border" aria-hidden />
-            <span className="relative rounded-chip border border-border bg-background px-2 py-0.5 text-xs font-medium">{children}</span>
-        </div>
+        <>
+            <div aria-hidden className="relative mt-2 h-0">
+                <span className="absolute inset-x-(--density-chat-inset) top-4 h-px bg-border" />
+            </div>
+            <div role="separator" className={cn('pointer-events-none z-10 flex h-8 items-center justify-center', sticky && 'sticky top-0')}>
+                <span className="flex h-6 items-center rounded-control border border-border bg-background px-3 text-xs font-semibold whitespace-nowrap shadow-surface">
+                    {children}
+                </span>
+            </div>
+        </>
     )
 }
 
-/** Where the messages not read yet begin. */
+/** One day of a conversation: its date divider, then its messages; the date stays in view while the day scrolls by. */
+export function ChatDay({ label, children, className }: { label: ReactNode; children: ReactNode; className?: string }) {
+    return (
+        <section className={cn('relative', className)}>
+            <ChatDayDivider sticky>{label}</ChatDayDivider>
+            {children}
+        </section>
+    )
+}
+
+/** Where the messages not read yet begin: a rule in the critical color, with the word at its end. */
 export function ChatNewDivider({ label = 'New' }: { label?: string }) {
     return (
-        <div role="separator" aria-label={label} className="relative my-1 flex items-center justify-end px-(--density-chat-inset)">
-            <span className="absolute inset-x-(--density-chat-inset) top-1/2 h-px bg-critical/60" aria-hidden />
-            <span className="relative bg-background pl-2 text-2xs font-semibold tracking-wide text-critical-ink uppercase">{label}</span>
+        <div role="separator" aria-label={label} className="relative flex h-4 items-center justify-end px-(--density-chat-inset)">
+            <span className="absolute inset-x-(--density-chat-inset) top-1/2 h-px bg-critical/70" aria-hidden />
+            <span className="relative bg-background pl-1.5 text-2xs font-semibold text-critical-ink">{label}</span>
         </div>
     )
 }
