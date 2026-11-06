@@ -1,0 +1,46 @@
+name: examples
+
+# The examples build against the library, so a change to either can break them: they run when the
+# examples change, every night against main, and by hand.
+on:
+    pull_request:
+        paths: ['examples/**', '.github/workflows/examples.yaml']
+    push:
+        branches: [main]
+        paths: ['examples/**', '.github/workflows/examples.yaml']
+    schedule:
+        - cron: '0 3 * * *'
+    workflow_dispatch:
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        env:
+            # The Electron shell only bundles its main file here; it never starts Electron.
+            ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+        steps:
+            - uses: actions/checkout@v5
+            - uses: oven-sh/setup-bun@v2
+            - run: bun install --frozen-lockfile
+            - run: bun run build
+            - name: Web example
+              working-directory: examples/web
+              run: |
+                  bun install --frozen-lockfile
+                  bun run build
+            - name: Electron shell
+              working-directory: examples/electron
+              run: |
+                  bun install --frozen-lockfile
+                  bun run build:main
+            - name: Tauri system libraries
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+            - uses: dtolnay/rust-toolchain@stable
+            - uses: Swatinem/rust-cache@v2
+              with:
+                  workspaces: examples/tauri/src-tauri
+            - name: Tauri shell
+              working-directory: examples/tauri/src-tauri
+              run: cargo check --locked

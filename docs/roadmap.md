@@ -53,16 +53,14 @@ reaches them all. Done in waves, one PR each.
 
 ## Next
 
+- **Ship only the library.** The package publishes `src/stories` with `src`, and `styles.css`
+  scans all of `src`, so an app's CSS carries classes only the stories use (398 kB in the example
+  app). Publish without the stories, scan only the components, and say in the README that
+  `styles.css` needs `tailwindcss`, which the examples found an app must install itself.
 - **A size budget in CI.** Build a few typical apps (forms only, a dashboard, a map page), measure
   each bundle, and fail when one grows past its budget or pulls in an engine it does not use.
   Splitting into packages (core, charts, maps, graph, editor) is the step after, only if optional
   peers and the budget are not enough.
-- **A real example app.** `examples/` holds a small Vite app built from the Tidevann stories (the
-  workspace shell, runs, the data table, settings) that installs the package as an app would and
-  builds in CI, so a break in the published package fails a check rather than an app.
-- **Desktop shells.** Thin Electron and Tauri shells around that example app, each building in
-  CI, to prove the library in Chromium and in the system webviews, Safari's engine on macOS
-  included.
 - **Adoption.** Apps adopt the library one pattern per PR, each pinning a published version. The
   app adds a check in the same PR that refuses its own hand-rolled version of that pattern, so it
   cannot come back. A part an app needs to differ becomes an option here, never a local edit.
