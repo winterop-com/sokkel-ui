@@ -10,6 +10,7 @@ import { Input } from '../../components/ui/input'
 import { cn } from '../../lib/cn'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { TopBar } from '../../components/TopBar'
+import { Stack } from '../../components/Layout'
 
 interface Run {
     id: number
@@ -52,7 +53,7 @@ const RUN_COLUMNS: DataColumn<Run>[] = [
  */
 export function Behind({ action, onAction, children }: { action?: string; onAction?: () => void; children?: ReactNode }) {
     return (
-        <div className="flex h-svh flex-col bg-background text-foreground">
+        <Stack gap="none" className="h-svh bg-background text-foreground">
             <header className="flex h-12 shrink-0 items-center gap-3 border-b border-border px-4">
                 <TidevannMark className="size-5 shrink-0 text-primary" />
                 <TopBar
@@ -72,16 +73,16 @@ export function Behind({ action, onAction, children }: { action?: string; onActi
             </header>
             {children ?? (
                 <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-auto p-6">
-                    <div className="flex flex-col gap-1">
+                    <Stack gap="2xs">
                         <PageHeader title="Import orders" />
                         <p className="text-sm text-muted-foreground">
                             Loads the monthly orders file into the warehouse, every night at 02:00 UTC.
                         </p>
-                    </div>
+                    </Stack>
                     <DataTable variant="list" columns={RUN_COLUMNS} rows={RUNS} rowKey={(run) => String(run.id)} className="max-w-3xl" />
                 </main>
             )}
-        </div>
+        </Stack>
     )
 }
 

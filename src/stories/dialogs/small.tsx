@@ -17,6 +17,7 @@ import { Button } from '../../components/ui/button'
 import { Textarea } from '../../components/ui/textarea'
 import { describeCron } from '../../lib/cron'
 import { Behind, TextField, wait } from './parts'
+import { Row, Stack } from '../../components/Layout'
 
 export function Rename() {
     const [open, setOpen] = useState(true)
@@ -195,10 +196,10 @@ export function Created() {
                 open={open}
                 onOpenChange={close}
                 title={
-                    <span className="flex items-center gap-2">
+                    <Row as="span">
                         <CircleCheck className="size-5 text-good" aria-hidden />
                         Job created
-                    </span>
+                    </Row>
                 }
                 description="It is paused until its first schedule is saved, so nothing runs yet."
                 words={{ cancel: 'Close' }}
@@ -275,11 +276,11 @@ export function SessionExpired() {
                     />
                 }
                 footer={
-                    <span className="flex items-center gap-3">
+                    <Row as="span" gap="md">
                         <a href="#sign-out" className="underline underline-offset-3 hover:text-foreground">
                             Sign out instead
                         </a>
-                    </span>
+                    </Row>
                 }
                 confirm={{
                     label: 'Sign in',
@@ -289,13 +290,13 @@ export function SessionExpired() {
                     why: password === '' ? 'Enter your password.' : undefined,
                 }}
             >
-                <div className="flex items-center gap-3 rounded-control border border-border px-3 py-2">
+                <Row gap="md" className="rounded-control border border-border px-3 py-2">
                     <PersonAvatar name="ada" />
-                    <span className="flex flex-col">
+                    <Stack as="span" gap="none">
                         <span className="font-mono text-xs">ada</span>
                         <span className="text-xs text-muted-foreground">ada@example.org</span>
-                    </span>
-                </div>
+                    </Stack>
+                </Row>
                 <TextField
                     id="password"
                     label="Password"
