@@ -3,6 +3,7 @@ import { PanelLeftClose, PanelLeftOpen, type LucideIcon } from 'lucide-react'
 import { useRef, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { usePanelSize } from '../hooks/use-panel-size'
 import { ResizeHandle } from './ResizeHandle'
 import { Count } from './Count'
 import { Dot } from './Dot'
@@ -44,6 +45,11 @@ export interface RailGroup {
  * edge. The mark, when given, is the workspace's tile at the top, and `foot` stacks its items at
  * the bottom, such as an add button and the account's avatar. A strip neither collapses nor resizes.
  *
+ * Expanded, its right edge drags to resize it, and a double click on the edge puts it back. Left
+ * to itself it holds its own width, starting at `defaultWidth`; `width` with `onWidthChange` holds
+ * it from outside, and `resizable={false}` keeps it fixed. In the shell's drawer on a narrow window
+ * the edge is not drawn.
+ *
  * `renderLink` draws an entry's link, so an app passes its router's link; by default it is an
  * anchor.
  */
@@ -62,6 +68,7 @@ export function Rail({
     ),
     width,
     onWidthChange,
+    resizable = true,
     minWidth = 200,
     maxWidth = 360,
     defaultWidth = 240,
@@ -79,29 +86,38 @@ export function Rail({
     /** What stands in the rail's foot cell, normally the account control; in a strip, the items stacked at its foot. */
     foot?: ReactNode
     renderLink?: (entry: RailEntry, children: ReactNode, className: string) => ReactNode
-    /** The expanded width in pixels; with `onWidthChange` the rail's edge drags to resize it. */
+    /** The expanded width in pixels, held from outside with `onWidthChange`. */
     width?: number
     onWidthChange?: (width: number) => void
+    /** Whether the expanded rail's edge drags to resize it. */
+    resizable?: boolean
     minWidth?: number
     maxWidth?: number
-    /** The width a double click on the edge returns to. */
+    /** The expanded width the rail starts at and a double click on the edge returns to. */
     defaultWidth?: number
     /** `unread` names the dot of an entry with something new and no count. */
     labels?: { collapse: string; expand: string; resize: string; unread?: string }
 }) {
     const aside = useRef<HTMLElement>(null)
     const unread = labels.unread ?? 'Unread'
+    const held = usePanelSize({
+        size: width,
+        onSizeChange: onWidthChange,
+        rest: defaultWidth,
+        fallback: defaultWidth,
+        min: minWidth,
+        max: maxWidth,
+    })
     if (variant === 'strip') return <Strip mark={mark} name={name} groups={groups} foot={foot} renderLink={renderLink} unread={unread} />
-    const sized = width !== undefined && !collapsed
     return (
         <>
             <aside
                 ref={aside}
                 data-collapsed={collapsed || undefined}
-                style={sized ? { width } : undefined}
+                style={collapsed ? undefined : { width: held.style }}
                 className={cn(
                     'flex h-full shrink-0 flex-col border-r border-border-strong bg-sidebar text-sidebar-foreground transition-[width] duration-200',
-                    collapsed ? 'w-[calc(3.5rem+1px)]' : !sized && 'w-60',
+                    collapsed && 'w-[calc(3.5rem+1px)]',
                 )}
             >
                 <div className="flex h-shell-top shrink-0 items-center gap-2 px-3">
@@ -162,14 +178,14 @@ export function Rail({
                 </div>
                 {foot !== undefined && <div className="flex h-shell-foot shrink-0 items-stretch border-t border-border-strong">{foot}</div>}
             </aside>
-            {sized && onWidthChange !== undefined && (
+            {!collapsed && resizable && held.changeable && (
                 <ResizeHandle
                     target={aside}
-                    size={width}
-                    onSize={onWidthChange}
+                    size={held.size}
+                    onSize={held.set}
+                    onReset={held.reset}
                     min={minWidth}
                     max={maxWidth}
-                    reset={defaultWidth}
                     label={labels.resize}
                 />
             )}

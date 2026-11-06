@@ -5,6 +5,7 @@ import { cn } from '../lib/cn'
 import type { KindColor } from '../lib/kind'
 import { Count } from './Count'
 import { PersonAvatar, PresenceDot, type Presence } from './PersonAvatar'
+import { usePanelSize } from '../hooks/use-panel-size'
 import { ResizeHandle } from './ResizeHandle'
 import { SearchField } from './SearchField'
 
@@ -91,8 +92,11 @@ const HOVER = 'hover:bg-secondary hover:[--avatar-ring:var(--color-secondary)]'
  * typed, folded sections included. A folded section still shows its open entry and those that name
  * you.
  *
- * Given `size` and `onSizeChange`, its right edge drags to resize it, as `SidePanel`'s left edge
- * does; otherwise the caller sets its width.
+ * Its right edge drags to resize it, as `SidePanel`'s left edge does, and a double click on the
+ * edge puts it back. Left to itself it holds its own width, starting at `defaultSize` when given and
+ * otherwise at the width the caller's class sets; `size` with `onSizeChange` holds it from outside,
+ * and `resizable={false}` keeps it fixed. In the shell's drawer on a narrow window the edge is not
+ * drawn.
  */
 export function ChannelList({
     sections,
@@ -110,9 +114,10 @@ export function ChannelList({
     onFoldedChange,
     size,
     onSizeChange,
+    resizable = true,
     minSize = 200,
     maxSize = 480,
-    defaultSize = 256,
+    defaultSize,
     className,
     words: given,
 }: {
@@ -136,18 +141,20 @@ export function ChannelList({
     /** The sections folded at first, when the list holds the folds itself. */
     defaultFolded?: readonly string[]
     onFoldedChange?: (folded: string[]) => void
-    /** The width in pixels; with `onSizeChange` the right edge drags to resize it. */
+    /** The width in pixels, held from outside with `onSizeChange`. */
     size?: number
     onSizeChange?: (size: number) => void
+    /** Whether the right edge drags to resize the list. */
+    resizable?: boolean
     minSize?: number
     maxSize?: number
-    /** The width a double click on the edge returns to. */
+    /** The width in pixels the list starts at and a double click on the edge returns to; without it, the width the class sets, and 256 for a held size. */
     defaultSize?: number
     className?: string
     words?: Partial<ChannelListWords>
 }) {
     const list = useRef<HTMLElement>(null)
-    const resizable = size !== undefined && onSizeChange !== undefined
+    const held = usePanelSize({ size, onSizeChange, rest: defaultSize, fallback: 256, min: minSize, max: maxSize })
     const words = { ...WORDS, ...given }
     const [ownFolded, setOwnFolded] = useState<readonly string[]>(defaultFolded)
     const [ownQuery, setOwnQuery] = useState('')
@@ -183,7 +190,7 @@ export function ChannelList({
                     'flex min-h-0 shrink-0 flex-col bg-sidebar text-sidebar-foreground [--avatar-ring:var(--color-sidebar)]',
                     className,
                 )}
-                style={resizable ? { width: size } : undefined}
+                style={held.style === undefined ? undefined : { width: held.style }}
             >
                 {(title !== undefined || actions !== undefined) && (
                     <div className="flex h-shell-top shrink-0 items-center gap-2 border-b border-border-strong pr-2 pl-3">
@@ -281,14 +288,14 @@ export function ChannelList({
                     ))}
                 </div>
             </nav>
-            {resizable && (
+            {resizable && held.changeable && (
                 <ResizeHandle
                     target={list}
-                    size={size}
-                    onSize={onSizeChange}
+                    size={held.size}
+                    onSize={held.set}
+                    onReset={held.reset}
                     min={minSize}
                     max={maxSize}
-                    reset={defaultSize}
                     label={words.resize}
                 />
             )}

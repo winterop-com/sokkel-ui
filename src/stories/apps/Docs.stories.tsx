@@ -336,7 +336,6 @@ function Compare({ chosen, against, onAgainst }: { chosen: number; against: numb
 function DocsApp({ mode: initialMode = 'read' }: { mode?: 'read' | 'edit' | 'history' }) {
     const [dark, setDark] = useState(true)
     const [collapsed, setCollapsed] = useState(false)
-    const [rail, setRail] = useState(232)
     const [query, setQuery] = useState('')
     const [pageId, setPageId] = useState('nightly-export')
     const [mode, setMode] = useState(initialMode)
@@ -359,8 +358,7 @@ function DocsApp({ mode: initialMode = 'read' }: { mode?: 'read' | 'edit' | 'his
                         groups={GROUPS}
                         collapsed={collapsed}
                         onCollapsedChange={setCollapsed}
-                        width={rail}
-                        onWidthChange={setRail}
+                        defaultWidth={232}
                         foot={<AccountMenu name="grace" where="tidevann.example.org" collapsed={collapsed} onSignOut={() => undefined} />}
                     />
                 }

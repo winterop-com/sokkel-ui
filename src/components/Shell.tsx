@@ -14,7 +14,8 @@ import { cn } from '../lib/cn'
  * whole app rather than one screen, such as a player.
  *
  * Below the `md` breakpoint the rail leaves the frame: a menu button at the start of the top bar
- * opens it as a drawer over the content, and a press outside it or on a link closes it.
+ * opens it as a drawer over the content, and a press outside it or on a link closes it. The drawer
+ * and the panel's sheet are marked `data-overlay`, so the panels' resize edges are not drawn there.
  *
  * A panel is shown or hidden by a toggle held in the window's top-right corner: at the end of the top bar while the
  * panel is closed, in the corner of the panel's header while it is open. From the `lg` breakpoint it is
@@ -94,6 +95,7 @@ export function Shell({
                             onClick={() => setDrawer(false)}
                         />
                         <div
+                            data-overlay
                             className="absolute inset-y-0 left-0 flex shadow-pop"
                             onClick={(event) => {
                                 if ((event.target as HTMLElement).closest('a')) setDrawer(false)
@@ -159,6 +161,7 @@ export function Shell({
                             onClick={() => setOpen(false)}
                         />
                         <div
+                            data-overlay
                             className={cn(
                                 'absolute inset-y-0 right-0 flex max-w-[calc(100vw-3rem)] shadow-pop transition-transform duration-200 ease-out [&>*]:max-w-full',
                                 open ? 'translate-x-0' : 'translate-x-full shadow-none',

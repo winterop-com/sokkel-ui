@@ -1294,18 +1294,10 @@ function AdminApp({ view, panel, children }: { view: View; panel?: ReactNode; ch
 
 function AuditApp() {
     const [chosen, setChosen] = useState<AuditEvent>(EVENTS[0])
-    const [width, setWidth] = useState(400)
     return (
         <AdminApp
             view="audit"
-            panel={
-                <SidePanel
-                    tabs={[{ id: 'event', label: 'Event', content: <EventDetail event={chosen} /> }]}
-                    size={width}
-                    onSizeChange={setWidth}
-                    defaultSize={400}
-                />
-            }
+            panel={<SidePanel tabs={[{ id: 'event', label: 'Event', content: <EventDetail event={chosen} /> }]} defaultSize={400} />}
         >
             <AuditPage chosen={chosen} onChoose={setChosen} />
         </AdminApp>

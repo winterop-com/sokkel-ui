@@ -33,8 +33,9 @@ and ask before acting.
   it; `src/styles/tokens.css` is generated and never edited by hand.
 - Every corner derives from `--radius`. Every color, typeface and size comes from a token, so a
   theme can change it.
-- A panel's resizing is opt-in: it appears only when the panel is given a size and a size
-  handler.
+- A panel resizes by default, holding its own size from `defaultSize`; `size` with a size handler
+  holds it from outside, and `resizable={false}` turns it off. No example holds a size only to
+  turn resizing on.
 - One engine per job: ECharts draws every chart, maplibre every map, React Flow every interactive
   graph, Mermaid every diagram written as text, and sparklines are plain SVG. Never add a second.
 - Fix the component, never the example. When a story looks or behaves wrong, the fix goes into
