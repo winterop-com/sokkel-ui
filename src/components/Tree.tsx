@@ -38,6 +38,19 @@ export function treeMatches(nodes: readonly TreeNode[], query: string): Set<stri
     return keep
 }
 
+/** The ids of every node with a chosen node somewhere under it. */
+export function treeHolding(nodes: readonly TreeNode[], chosen: ReadonlySet<string>): Set<string> {
+    const out = new Set<string>()
+    const visit = (node: TreeNode): boolean => {
+        let below = false
+        for (const child of node.children ?? []) below = visit(child) || below
+        if (below) out.add(node.id)
+        return below || chosen.has(node.id)
+    }
+    for (const node of nodes) visit(node)
+    return out
+}
+
 /** The rows a reader sees: the open nodes' children in order, or every match and its ancestors while searching. */
 export function visibleRows(nodes: readonly TreeNode[], open: ReadonlySet<string>, matches: ReadonlySet<string> | null): Row[] {
     const rows: Row[] = []
@@ -98,6 +111,10 @@ export function Tree({
     const [focus, setFocus] = useState<string | null>(null)
     const list = useRef<HTMLUListElement>(null)
     const chosen = new Set(selected)
+    const holding = useMemo(
+        () => (selection === 'multiple' ? treeHolding(nodes, new Set(selected)) : new Set<string>()),
+        [nodes, selected, selection],
+    )
     const current = rows.find((row) => row.node.id === focus) ?? rows[0]
 
     const toggle = (id: string, to?: boolean) =>
@@ -180,7 +197,13 @@ export function Tree({
                             <span className="size-5 shrink-0" aria-hidden />
                         )}
                         {selection === 'multiple' && (
-                            <Checkbox checked={isChosen} tabIndex={-1} aria-hidden className="pointer-events-none" />
+                            <Checkbox
+                                checked={isChosen}
+                                indeterminate={!isChosen && holding.has(row.node.id)}
+                                tabIndex={-1}
+                                aria-hidden
+                                className="pointer-events-none"
+                            />
                         )}
                         <span className="min-w-0 flex-1 truncate">
                             <Marked text={row.node.label} query={query.trim()} />

@@ -12,12 +12,11 @@ const PLACES: TreeNode[] = [
     {
         id: 'europe',
         label: 'Europe',
-        meta: '3',
         children: [
             {
                 id: 'norway',
                 label: 'Norway',
-                meta: '4',
+                meta: 'NO',
                 children: [
                     { id: 'oslo', label: 'Oslo' },
                     { id: 'bergen', label: 'Bergen' },
@@ -28,38 +27,48 @@ const PLACES: TreeNode[] = [
             {
                 id: 'portugal',
                 label: 'Portugal',
-                meta: '2',
+                meta: 'PT',
                 children: [
                     { id: 'lisbon', label: 'Lisbon' },
                     { id: 'porto', label: 'Porto' },
                 ],
             },
-            { id: 'iceland', label: 'Iceland', meta: '0', children: [] },
+            { id: 'iceland', label: 'Iceland', meta: 'IS', children: [] },
         ],
     },
     {
         id: 'africa',
         label: 'Africa',
-        meta: '2',
         children: [
             {
                 id: 'kenya',
                 label: 'Kenya',
-                meta: '3',
+                meta: 'KE',
                 children: [
                     { id: 'nairobi', label: 'Nairobi' },
                     { id: 'mombasa', label: 'Mombasa' },
                     { id: 'kisumu', label: 'Kisumu' },
                 ],
             },
-            { id: 'ghana', label: 'Ghana', meta: '1', children: [{ id: 'accra', label: 'Accra' }] },
+            {
+                id: 'ghana',
+                label: 'Ghana',
+                meta: 'GH',
+                children: [{ id: 'accra', label: 'Accra' }],
+            },
         ],
     },
     {
         id: 'asia',
         label: 'Asia',
-        meta: '1',
-        children: [{ id: 'vietnam', label: 'Vietnam', meta: '1', children: [{ id: 'hanoi', label: 'Hanoi' }] }],
+        children: [
+            {
+                id: 'vietnam',
+                label: 'Vietnam',
+                meta: 'VN',
+                children: [{ id: 'hanoi', label: 'Hanoi' }],
+            },
+        ],
     },
 ]
 
@@ -102,9 +111,9 @@ function Trees() {
     )
 }
 
-function Picker({ open }: { open?: boolean }) {
+function Picker({ open }: { open?: 'one' | 'several' }) {
     const [value, setValue] = useState<string[]>(['trondheim'])
-    const [several, setSeveral] = useState<string[]>([])
+    const [several, setSeveral] = useState<string[]>(['norway', 'lisbon', 'porto'])
     return (
         <div className="min-h-svh bg-background p-6 text-foreground">
             <div className="mx-auto flex max-w-md flex-col gap-4">
@@ -112,11 +121,25 @@ function Picker({ open }: { open?: boolean }) {
                     <Input id="name" defaultValue="Harbor office" />
                 </Field>
                 <Field id="city" label="City" required>
-                    <TreeSelect id="city" nodes={PLACES} value={value} onChange={setValue} defaultOpen={['europe', 'norway']} open={open} />
+                    <TreeSelect
+                        id="city"
+                        nodes={PLACES}
+                        value={value}
+                        onChange={setValue}
+                        defaultOpen={['europe', 'norway']}
+                        open={open === 'one' || undefined}
+                    />
                 </Field>
-                {open !== true && (
+                {open !== 'one' && (
                     <Field id="cover" label="Also serves">
-                        <TreeSelect id="cover" nodes={PLACES} value={several} onChange={setSeveral} multiple />
+                        <TreeSelect
+                            id="cover"
+                            nodes={PLACES}
+                            value={several}
+                            onChange={setSeveral}
+                            multiple
+                            open={open === 'several' || undefined}
+                        />
                     </Field>
                 )}
             </div>
@@ -128,5 +151,16 @@ const meta: Meta = { title: 'Patterns/Tree' }
 export default meta
 
 export const Trees_: StoryObj = { name: 'Tree', render: () => <Trees /> }
-export const Select: StoryObj = { name: 'Tree select', render: () => <Picker /> }
-export const SelectOpen: StoryObj = { name: 'Tree select, open', render: () => <Picker open /> }
+export const Select: StoryObj = {
+    name: 'Tree select',
+    render: () => <Picker />,
+}
+export const SelectOpen: StoryObj = {
+    name: 'Tree select, open',
+    render: () => <Picker open="one" />,
+}
+/** Several chosen, open: the branches to Norway, Lisbon and Porto unfolded, and Europe and Portugal dashed for holding some. */
+export const SeveralOpen: StoryObj = {
+    name: 'Several, open',
+    render: () => <Picker open="several" />,
+}
