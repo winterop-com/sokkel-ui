@@ -6,6 +6,25 @@ on:
     pull_request:
 
 jobs:
+    # Whether anything a story draws changed; a change to docs, Markdown or the Makefile alone skips
+    # the screenshot and layout jobs. Pushes to main always run them.
+    changes:
+        runs-on: ubuntu-latest
+        outputs:
+            drawn: ${{ github.event_name == 'push' || steps.filter.outputs.drawn == 'true' }}
+        steps:
+            - uses: actions/checkout@v5
+            - id: filter
+              uses: dorny/paths-filter@v3
+              with:
+                  predicate-quantifier: every
+                  filters: |
+                      drawn:
+                          - '**'
+                          - '!docs/**'
+                          - '!**/*.md'
+                          - '!Makefile'
+
     check:
         runs-on: ubuntu-latest
         steps:
@@ -20,8 +39,15 @@ jobs:
             - run: bun run build
             - run: bun run build-storybook
 
+    # Every story against its screenshot, split across four machines so a PR waits for one quarter.
     visual:
+        needs: changes
+        if: needs.changes.outputs.drawn == 'true'
         runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix:
+                shard: [1, 2, 3, 4]
         container:
             image: mcr.microsoft.com/playwright:v1.64.1-noble
             options: --ipc=host
@@ -32,10 +58,31 @@ jobs:
             - run: npm install -g bun
             - run: bun install --frozen-lockfile
             - run: bun run build-storybook
-            - run: bunx playwright test
+            - run: bunx playwright test e2e/stories.spec.ts --shard=${{ matrix.shard }}/4
             - if: failure()
               uses: actions/upload-artifact@v4
               with:
-                  name: screenshot-diffs
+                  name: screenshot-diffs-${{ matrix.shard }}
                   path: test-results/
                   retention-days: 7
+
+    # Every story at the narrow widths, failing on sideways scrolling, beside the screenshots.
+    layout:
+        needs: changes
+        if: needs.changes.outputs.drawn == 'true'
+        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix:
+                shard: [1, 2]
+        container:
+            image: mcr.microsoft.com/playwright:v1.64.1-noble
+            options: --ipc=host
+        env:
+            CI: '1'
+        steps:
+            - uses: actions/checkout@v5
+            - run: npm install -g bun
+            - run: bun install --frozen-lockfile
+            - run: bun run build-storybook
+            - run: bunx playwright test e2e/layout.spec.ts --shard=${{ matrix.shard }}/2
