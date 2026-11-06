@@ -202,7 +202,7 @@ export function Rail({
                                     type="button"
                                     aria-label={labels.collapse}
                                     title={labels.collapse}
-                                    className="ml-auto flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-foreground/8 hover:text-foreground"
+                                    className="ml-auto flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-foreground/8 hover:text-foreground dark:hover:bg-foreground/12"
                                     onClick={() => onCollapsedChange(true)}
                                 >
                                     <PanelLeftClose className="size-4" aria-hidden />
@@ -308,8 +308,8 @@ function rowClass(state: 'active' | 'holding' | 'idle', inset: 'none' | 'icon' |
         state === 'active'
             ? 'border-sidebar-primary bg-sidebar-accent font-medium text-sidebar-accent-foreground'
             : state === 'holding'
-              ? 'border-transparent font-medium text-foreground hover:bg-foreground/8'
-              : 'border-transparent text-muted-foreground hover:bg-foreground/8 hover:text-foreground',
+              ? 'border-transparent font-medium text-foreground hover:bg-foreground/8 dark:hover:bg-foreground/12'
+              : 'border-transparent text-muted-foreground hover:bg-foreground/8 hover:text-foreground dark:hover:bg-foreground/12',
     )
 }
 
@@ -386,7 +386,7 @@ function RailParent({
                         aria-label={entry.label}
                         aria-expanded={open}
                         aria-controls={id}
-                        className="absolute inset-y-0 right-1 my-auto flex size-7 items-center justify-center rounded-md hover:bg-foreground/8"
+                        className="absolute inset-y-0 right-1 my-auto flex size-7 items-center justify-center rounded-md hover:bg-foreground/8 dark:hover:bg-foreground/12"
                         onClick={toggle}
                     >
                         {chevron}
@@ -496,7 +496,7 @@ function RailFlyout({
                                     'relative mx-auto flex h-(--density-row) w-9 items-center justify-center rounded-md',
                                     active
                                         ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                                        : 'text-muted-foreground hover:bg-foreground/8 hover:text-foreground data-popup-open:bg-foreground/8',
+                                        : 'text-muted-foreground hover:bg-foreground/8 hover:text-foreground data-popup-open:bg-foreground/8 dark:hover:bg-foreground/12 dark:data-popup-open:bg-foreground/12',
                                 )}
                             />
                         }
@@ -607,7 +607,7 @@ function StripFace({ entry, active, unread }: { entry: RailEntry; active: boolea
                     'relative flex size-9 items-center justify-center rounded-md transition-colors',
                     active
                         ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                        : 'group-hover/entry:bg-foreground/8 group-data-popup-open/entry:bg-foreground/8',
+                        : 'group-hover/entry:bg-foreground/8 group-data-popup-open/entry:bg-foreground/8 dark:group-hover/entry:bg-foreground/12 dark:group-data-popup-open/entry:bg-foreground/12',
                 )}
             >
                 {entry.dot === undefined ? <EntryMark entry={entry} initial className="size-5" /> : <Dot color={entry.dot} />}
@@ -664,7 +664,7 @@ function RailLink({
                                     'relative flex h-(--density-row) w-9 items-center justify-center rounded-md',
                                     entry.active
                                         ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                                        : 'text-muted-foreground hover:bg-foreground/8 hover:text-foreground',
+                                        : 'text-muted-foreground hover:bg-foreground/8 hover:text-foreground dark:hover:bg-foreground/12',
                                 ),
                             )}
                         </span>

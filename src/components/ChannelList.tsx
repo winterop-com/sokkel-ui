@@ -79,7 +79,7 @@ const ROW =
 
 /** The open row's wash, with the avatar ring following the ground under it. */
 const OPEN = 'bg-accent font-medium text-accent-foreground [--avatar-ring:var(--color-accent)]'
-const HOVER = 'hover:bg-foreground/8'
+const HOVER = 'hover:bg-foreground/8 dark:hover:bg-foreground/12'
 
 /**
  * The places to talk, in sections that fold, each section with an icon of its own: channels with
@@ -271,7 +271,7 @@ export function ChannelList({
                                         aria-label={words.add(section.title)}
                                         title={words.add(section.title)}
                                         onClick={section.onAdd}
-                                        className="flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground opacity-0 outline-none group-hover/section:opacity-100 hover:bg-foreground/8 hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/50"
+                                        className="flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground opacity-0 outline-none group-hover/section:opacity-100 hover:bg-foreground/8 hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/50 dark:hover:bg-foreground/12"
                                     >
                                         <Plus className="size-3.5" aria-hidden />
                                     </button>
