@@ -3,7 +3,7 @@ import { BookOpen, CalendarClock, Library, Maximize2, Play, Server, Webhook, Wor
 import type { ReactNode } from 'react'
 
 import { DescriptionList } from '../components/DescriptionList'
-import { ListTable, type Column } from '../components/ListTable'
+import { type DataColumn, DataTable } from '../components/DataTable'
 import { PageHeader } from '../components/PageHeader'
 import { Rail, type RailGroup } from '../components/Rail'
 import { Section, Surface } from '../components/Section'
@@ -59,7 +59,7 @@ const RUNS: Run[] = [
     { id: '01a1a5b1', status: 'succeeded', at: '12 min ago', took: '8.2s' },
 ]
 
-const COLUMNS: Column<Run>[] = [
+const COLUMNS: DataColumn<Run>[] = [
     { id: 'id', header: 'Run', width: '7rem', cell: (run) => <span className="font-mono text-xs text-muted-foreground">{run.id}</span> },
     { id: 'status', header: 'Status', width: '8rem', cell: (run) => <StatusChip status={run.status} /> },
     { id: 'at', header: 'Started', width: 'minmax(0,1fr)', cell: (run) => <span className="text-xs text-muted-foreground">{run.at}</span> },
@@ -85,7 +85,7 @@ function Graph() {
 }
 
 function RunsList() {
-    return <ListTable columns={COLUMNS} rows={RUNS} rowKey={(run) => run.id} />
+    return <DataTable variant="list" columns={COLUMNS} rows={RUNS} rowKey={(run) => run.id} />
 }
 
 function Facts() {

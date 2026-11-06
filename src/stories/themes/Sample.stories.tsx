@@ -3,7 +3,7 @@ import { useState } from 'react'
 
 import type { ChartLook } from '../../components/chart/look'
 import { EChart } from '../../components/chart/EChart'
-import { ListTable, type Column } from '../../components/ListTable'
+import { type DataColumn, DataTable } from '../../components/DataTable'
 import { SearchField } from '../../components/SearchField'
 import { StatusChip, type Status } from '../../components/StatusChip'
 import { Button } from '../../components/ui/button'
@@ -28,7 +28,7 @@ const ROWS: Row[] = [
     { job: 'import-orders', state: 'running', took: '1m 12s' },
 ]
 
-const COLUMNS: Column<Row>[] = [
+const COLUMNS: DataColumn<Row>[] = [
     { id: 'job', header: 'Job', width: 'minmax(0,1fr)', cell: (row) => <span className="font-mono text-xs">{row.job}</span> },
     { id: 'state', header: 'State', width: '7.5rem', cell: (row) => <StatusChip status={row.state} /> },
     { id: 'took', header: 'Took', width: '5rem', align: 'end', cell: (row) => <span className="tabular-nums">{row.took}</span> },
@@ -83,7 +83,7 @@ function ThemeSample() {
                     <StatusChip status="queued" />
                     <StatusChip status="cancelled" />
                 </div>
-                <ListTable columns={COLUMNS} rows={ROWS} rowKey={(row) => row.job} />
+                <DataTable variant="list" columns={COLUMNS} rows={ROWS} rowKey={(row) => row.job} />
                 <div className="h-24 rounded-surface border border-border-strong bg-card p-2">
                     <EChart option={BARS} label="Runs and failures by hour" />
                 </div>

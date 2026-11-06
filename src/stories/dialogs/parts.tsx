@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 
 import { Field } from '../../components/Field'
 import { ISSUE_EDGE, worst, type Issue } from '../../components/IssueMark'
-import { ListTable, type Column } from '../../components/ListTable'
+import { type DataColumn, DataTable } from '../../components/DataTable'
 import { StatusChip, type Status } from '../../components/StatusChip'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
@@ -28,7 +28,7 @@ const RUNS: Run[] = [
     { id: 4807, job: 'import-orders', status: 'succeeded', at: '2026-10-31 02:00', took: '1m 11s' },
 ]
 
-const RUN_COLUMNS: Column<Run>[] = [
+const RUN_COLUMNS: DataColumn<Run>[] = [
     { id: 'run', header: 'Run', width: '6rem', cell: (run) => <span className="font-mono text-xs">#{run.id}</span> },
     { id: 'state', header: 'State', width: '8rem', cell: (run) => <StatusChip status={run.status} /> },
     {
@@ -78,7 +78,7 @@ export function Behind({ action, onAction, children }: { action?: string; onActi
                             Loads the monthly orders file into the warehouse, every night at 02:00 UTC.
                         </p>
                     </div>
-                    <ListTable columns={RUN_COLUMNS} rows={RUNS} rowKey={(run) => String(run.id)} className="max-w-3xl" />
+                    <DataTable variant="list" columns={RUN_COLUMNS} rows={RUNS} rowKey={(run) => String(run.id)} className="max-w-3xl" />
                 </main>
             )}
         </div>

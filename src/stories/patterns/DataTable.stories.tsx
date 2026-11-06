@@ -13,12 +13,22 @@ import {
 } from 'lucide-react'
 import { useCallback, useMemo, useRef, useState } from 'react'
 
-import { type DataAction, type DataColumn, DataTable, type DataSort, sortRows } from '../../components/DataTable'
+import {
+    type DataAction,
+    type DataColumn,
+    DataTable,
+    type DataSort,
+    findInTree,
+    sortRows,
+    treeBranchKeys,
+} from '../../components/DataTable'
+import { FileTypeIcon, formatSize } from '../../components/FileList'
 import { SearchField } from '../../components/SearchField'
 import { StatusChip } from '../../components/StatusChip'
 import { Button } from '../../components/ui/button'
 import { type Album, makeAlbums } from '../fixtures/albums'
 import { Artwork } from '../fixtures/Artwork'
+import { folderContents, type FolderRow, makeFolderTree, projectFolders } from '../fixtures/folders'
 import { makeRuns, makeRunTree, startedAt, type TableRun, took, type TreeRow } from '../fixtures/tableRuns'
 
 /**
@@ -26,8 +36,9 @@ import { makeRuns, makeRunTree, startedAt, type TableRun, took, type TreeRow } f
  * the 100. Each column head sorts; the boxes select, Shift picks a range, and the bar above then
  * offers what to do with the selection. The menu at a row's end, or a right-click on the row,
  * offers what to do with that row. The column menu at the bar's end hides columns; the first stays
- * put while the rest scroll sideways. A tree's rows open to their children, and choosing a project
- * chooses every run in it.
+ * put while the rest scroll sideways, and every column head's right edge resizes its column. A
+ * tree's rows open to their children, at any depth or loaded as a branch opens, and choosing a
+ * project chooses every run in it. A short listing drops the bar above its head.
  */
 const meta: Meta = { title: 'Patterns/Data table' }
 export default meta
@@ -142,6 +153,122 @@ function Runs({
             />
         </div>
     )
+}
+
+interface ListRun {
+    id: string
+    job: string
+    state: 'succeeded' | 'failed' | 'running' | 'queued'
+    by: string
+    took: string
+    note: string
+}
+
+const LIST_RUNS: ListRun[] = [
+    {
+        id: 'r1',
+        job: 'import-orders',
+        state: 'running',
+        by: 'schedule',
+        took: '1m 12s',
+        note: 'Reading the third of four files from the orders bucket.',
+    },
+    {
+        id: 'r2',
+        job: 'nightly-export',
+        state: 'failed',
+        by: 'schedule',
+        took: '4.2s',
+        note: 'The upload step was refused: the bucket on files.example.org asked for a fresh token, and the run stopped before it wrote anything, so the export can be retried as it is.',
+    },
+    { id: 'r3', job: 'rebuild-index', state: 'succeeded', by: 'ada', took: '6m 03s', note: 'Rebuilt 1,204,880 entries.' },
+    { id: 'r4', job: 'send-digest', state: 'succeeded', by: 'schedule', took: '12.8s', note: 'Sent to 48 people.' },
+    { id: 'r5', job: 'sync-inventory', state: 'queued', by: 'grace', took: '-', note: 'Waiting for a worker.' },
+]
+
+const LIST_COLUMNS: DataColumn<ListRun>[] = [
+    { id: 'job', header: 'Job', width: 'minmax(0,1fr)', cell: (run) => <span className="font-mono">{run.job}</span> },
+    { id: 'state', header: 'State', width: '8rem', cell: (run) => <StatusChip status={run.state} /> },
+    { id: 'by', header: 'Started by', width: '8rem', cell: (run) => <span className="text-muted-foreground">{run.by}</span> },
+    { id: 'took', header: 'Took', width: '6rem', align: 'end', cell: (run) => <span className="tabular-nums">{run.took}</span> },
+]
+
+function Ground({ children }: { children: React.ReactNode }) {
+    return <div className="min-h-svh bg-background p-6 text-foreground">{children}</div>
+}
+
+/** A short listing: no bar above the head, the column names as the box's head, and a foot that counts the rows loaded. */
+export const ShortList: StoryObj = {
+    name: 'Short list',
+    render: () => (
+        <Ground>
+            <DataTable
+                variant="list"
+                columns={LIST_COLUMNS}
+                rows={LIST_RUNS}
+                rowKey={(run) => run.id}
+                foot={`${String(LIST_RUNS.length)} of 248`}
+            />
+        </Ground>
+    ),
+}
+
+function Picking() {
+    const [chosen, setChosen] = useState('r2')
+    return (
+        <DataTable
+            variant="list"
+            columns={LIST_COLUMNS}
+            rows={LIST_RUNS}
+            rowKey={(one) => one.id}
+            onOpen={(one) => setChosen(one.id)}
+            opened={(one) => one.id === chosen}
+            foot={`${String(LIST_RUNS.length)} of 248`}
+        />
+    )
+}
+
+/** A list that picks the row its detail shows: a click, Enter or Space picks it, and it is filled and marked selected. No boxes. */
+export const Pick: StoryObj = {
+    render: () => (
+        <Ground>
+            <Picking />
+        </Ground>
+    ),
+}
+
+/** The tint under the pointer turned off, for a listing that should stay still. */
+export const NoHover: StoryObj = {
+    name: 'No hover',
+    render: () => (
+        <Ground>
+            <DataTable variant="list" columns={LIST_COLUMNS} rows={LIST_RUNS} rowKey={(run) => run.id} hover={false} />
+        </Ground>
+    ),
+}
+
+/** Rows that grow to fit a cell longer than one line, here each run's note. */
+export const TallRows: StoryObj = {
+    name: 'Tall rows',
+    render: () => (
+        <Ground>
+            <DataTable
+                variant="list"
+                rowHeight="auto"
+                columns={[
+                    ...LIST_COLUMNS.slice(0, 2),
+                    {
+                        id: 'note',
+                        header: 'Note',
+                        width: 'minmax(12rem,2fr)',
+                        cell: (run) => <span className="text-muted-foreground">{run.note}</span>,
+                    },
+                ]}
+                rows={LIST_RUNS}
+                rowKey={(run) => run.id}
+            />
+        </Ground>
+    ),
 }
 
 /** A hundred runs: the whole table at a size that needs no scrolling to see its parts. */
@@ -426,6 +553,213 @@ export const Tree: StoryObj = { render: () => <RunTree count={300} open={['harbo
 export const LargeTree: StoryObj = {
     name: 'Large tree',
     render: () => <RunTree count={50_000} open={['harbor', 'harbor/nightly-export', 'juniper']} />,
+}
+
+const FOLDER_COLUMNS: DataColumn<FolderRow>[] = [
+    {
+        id: 'name',
+        header: 'Name',
+        width: 'minmax(18rem,1fr)',
+        cell: (row) => (
+            <span className="flex min-w-0 items-center gap-2">
+                <FileTypeIcon kind={row.kind} className="size-4 shrink-0" />
+                <span className="truncate font-mono">{row.name}</span>
+            </span>
+        ),
+        sortValue: (row) => `${row.kind === 'folder' ? 0 : 1}${row.name}`,
+    },
+    {
+        id: 'size',
+        header: 'Size',
+        width: '6rem',
+        align: 'end',
+        cell: (row) => (row.size === undefined ? '' : formatSize(row.size)),
+        sortValue: (row) => row.size ?? -1,
+    },
+    { id: 'modified', header: 'Modified', width: '8rem', cell: (row) => row.modified, sortValue: (row) => row.modified },
+    {
+        id: 'owner',
+        header: 'Owner',
+        width: '7rem',
+        cell: (row) => <span className="text-muted-foreground">{row.owner}</span>,
+        sortValue: (row) => row.owner,
+    },
+]
+
+const folderChildren = (row: FolderRow) => row.children
+const DEEP = makeFolderTree(8)
+/** The way down to one folder eight deep. */
+const DEEP_PATH = (() => {
+    const path: string[] = []
+    let level: readonly FolderRow[] = DEEP
+    while (level.length > 0) {
+        const folder = level.find((one) => one.kind === 'folder' && (one.children?.length ?? 0) > 0)
+        if (folder === undefined) break
+        path.push(folder.id)
+        level = folder.children ?? []
+    }
+    return path
+})()
+
+function Frame({ children }: { children: React.ReactNode }) {
+    return <div className="flex h-svh flex-col bg-background p-4 text-foreground">{children}</div>
+}
+
+/** Folders in folders, eight deep, open along the way to the deepest. */
+export const DeepTree: StoryObj = {
+    name: 'Deep tree',
+    render: () => (
+        <Frame>
+            <DataTable
+                className="flex-1"
+                columns={FOLDER_COLUMNS}
+                rows={DEEP}
+                rowKey={(row) => row.id}
+                childRows={folderChildren}
+                defaultExpanded={new Set(DEEP_PATH)}
+                minWidth="40rem"
+            />
+        </Frame>
+    ),
+}
+
+function OpenAllTree() {
+    const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set(['harbor']))
+    const every = useMemo(() => treeBranchKeys(DEEP, (row) => row.id, folderChildren), [])
+    return (
+        <Frame>
+            <DataTable
+                className="flex-1"
+                columns={FOLDER_COLUMNS}
+                rows={DEEP}
+                rowKey={(row) => row.id}
+                childRows={folderChildren}
+                expanded={expanded}
+                onExpandedChange={setExpanded}
+                minWidth="40rem"
+                toolbar={
+                    <>
+                        <Button variant="outline" size="xs" onClick={() => setExpanded(every)}>
+                            Open all
+                        </Button>
+                        <Button variant="outline" size="xs" onClick={() => setExpanded(new Set())}>
+                            Close all
+                        </Button>
+                    </>
+                }
+            />
+        </Frame>
+    )
+}
+
+/** Every branch opened or closed at once from the bar, the open branches held by the app. */
+export const OpenAll: StoryObj = { name: 'Open all', render: () => <OpenAllTree /> }
+
+/** The deep tree cut down to the names holding `text`. */
+function findFolders(text: string) {
+    const wanted = text.trim().toLowerCase()
+    return findInTree({
+        rows: DEEP,
+        rowKey: (row) => row.id,
+        childRows: folderChildren,
+        match: wanted === '' ? undefined : (row) => row.name.toLowerCase().includes(wanted),
+    })
+}
+
+function FindInTree({ initial }: { initial: string }) {
+    const [query, setQuery] = useState(initial)
+    const found = useMemo(() => findFolders(query), [query])
+    const [expanded, setExpanded] = useState<ReadonlySet<string>>(found.open)
+    return (
+        <Frame>
+            <DataTable
+                className="flex-1"
+                columns={FOLDER_COLUMNS}
+                rows={found.rows}
+                rowKey={(row) => row.id}
+                childRows={found.childRows}
+                expanded={expanded}
+                onExpandedChange={setExpanded}
+                minWidth="40rem"
+                words={{ empty: 'Nothing matches.' }}
+                toolbar={
+                    <SearchField
+                        value={query}
+                        onChange={(text) => {
+                            setQuery(text)
+                            setExpanded(findFolders(text).open)
+                        }}
+                        placeholder="Find"
+                        className="w-full max-w-md"
+                    />
+                }
+            />
+        </Frame>
+    )
+}
+
+/** A find in the tree: only the branches with a match stay, opened down to every match. */
+export const TreeFind: StoryObj = { name: 'Tree find', render: () => <FindInTree initial="summary" /> }
+
+function OnDemandTree() {
+    const load = useCallback(
+        (row: FolderRow) =>
+            new Promise<readonly FolderRow[]>((resolve) => {
+                setTimeout(() => resolve(folderContents(row, 12)), 900)
+            }),
+        [],
+    )
+    return (
+        <Frame>
+            <DataTable
+                className="flex-1"
+                columns={FOLDER_COLUMNS}
+                rows={projectFolders()}
+                rowKey={(row) => row.id}
+                hasChildren={(row) => row.kind === 'folder'}
+                loadChildren={load}
+                minWidth="40rem"
+            />
+        </Frame>
+    )
+}
+
+/** Folders whose contents load as each one first opens, a spinner in its control while they come. */
+export const OnDemand: StoryObj = { name: 'On demand', render: () => <OnDemandTree /> }
+
+const folderActions = (row: FolderRow): DataAction[] =>
+    row.kind === 'folder'
+        ? [
+              { id: 'open', label: 'Open', icon: <ExternalLinkIcon />, onSelect: () => undefined },
+              { id: 'new', label: 'New folder', icon: <ListPlusIcon />, onSelect: () => undefined },
+              { id: 'copy', label: 'Copy path', icon: <CopyIcon />, onSelect: () => undefined },
+              { id: 'line', separator: true },
+              { id: 'delete', label: 'Delete', icon: <Trash2Icon />, destructive: true, onSelect: () => undefined },
+          ]
+        : [
+              { id: 'open', label: 'Open', icon: <ExternalLinkIcon />, onSelect: () => undefined },
+              { id: 'copy', label: 'Copy path', icon: <CopyIcon />, onSelect: () => undefined },
+              { id: 'line', separator: true },
+              { id: 'delete', label: 'Delete', icon: <Trash2Icon />, destructive: true, onSelect: () => undefined },
+          ]
+
+/** A tree whose rows have menus, from the button at each row's end or a right-click, folders and files offering different things. */
+export const TreeMenus: StoryObj = {
+    name: 'Tree menus',
+    render: () => (
+        <Frame>
+            <DataTable
+                className="flex-1"
+                columns={FOLDER_COLUMNS}
+                rows={DEEP}
+                rowKey={(row) => row.id}
+                childRows={folderChildren}
+                defaultExpanded={new Set(DEEP_PATH.slice(0, 3))}
+                rowActions={folderActions}
+                minWidth="40rem"
+            />
+        </Frame>
+    ),
 }
 
 const ALBUM_COLUMNS: DataColumn<Album>[] = [

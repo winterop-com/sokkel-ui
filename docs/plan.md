@@ -42,14 +42,18 @@ toggle-group, tooltip, trace.
 ## Patterns
 
 Shell, Rail, Page, PageHeader, Section, Surface, Field, CodeField, SwitchField, SearchField,
-FilterChip, ListTable, DataTable, StatusChip, AccountMenu, SidePanel, DialogShell, ConfirmDialog,
+FilterChip, DataTable, StatusChip, AccountMenu, SidePanel, DialogShell, ConfirmDialog,
 TreeSelect, AsyncSelect, CapabilityPicker.
 
-DataTable is the table for many rows: only the rows in view are drawn, at the density's one row
-height, so 50k rows sort, scroll and select at once. It sorts from its heads, selects with a bulk
-bar, hides columns, pins its first column and its row menu, opens child rows, and moves by the
-keyboard. It pages in the browser or from a server, loads more as its end comes near, and shows
-the same rows as a grid of cards (an album view) that keeps the selection, menus and sort.
+DataTable is the one table, for five rows or fifty thousand: only the rows in view are drawn, at
+the density's one row height, so 50k rows sort, scroll and select at once; rows that grow to fit
+their cells are an option for short listings. It sorts from its heads, selects with a bulk bar or
+picks one row for a list beside its detail, hides columns, resizes them from their heads' edges as
+panels resize, pins its first column and its row menu, opens child rows of any depth (loaded when
+a branch first opens, if the app wants), and moves by the keyboard. It pages in the browser or
+from a server, loads more as its end comes near, and shows the same rows as a grid of cards (an
+album view) that keeps the selection, menus and sort. A short listing drops the bar above its
+head and may carry a foot line.
 
 A team chat is built from Rail's `strip` (labeled icons with counts or an unread dot at the
 icon's corner), ChannelList, ChannelHeader, Conversation and ThreadView (the columns of a
