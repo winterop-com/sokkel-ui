@@ -5,38 +5,41 @@ import {
     Check,
     ChevronDown,
     Ellipsis,
-    FileText,
     Eye,
+    FileText,
+    Files,
     Hash,
     House,
     MessageSquare,
     MessagesSquare,
     PenSquare,
     Pin,
+    Plus,
     Rocket,
     Search,
     SendHorizontal,
-    SmilePlus,
+    Star,
     ThumbsUp,
     UserPlus,
     Users,
 } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import { useState } from 'react'
 
+import { ChannelHeader, type ChannelHeaderAction, type ChannelHeaderTab } from '../../components/ChannelHeader'
 import { ChannelList, type ChannelSection } from '../../components/ChannelList'
-import { ChatDayDivider, ChatMessage, ChatNewDivider, ChatTyping, type ChatFile, type ChatReaction } from '../../components/ChatMessage'
+import { ChatDay, ChatMessage, ChatNewDivider, type ChatFile, type ChatPerson, type ChatReaction } from '../../components/ChatMessage'
+import { Conversation, ConversationStart, ThreadView } from '../../components/Conversation'
 import { Markdown } from '../../components/Markdown'
-import { MessageComposer } from '../../components/MessageComposer'
+import { MessageComposer, type MessageSchedule } from '../../components/MessageComposer'
 import { PersonAvatar } from '../../components/PersonAvatar'
+import { Rail, type RailGroup } from '../../components/Rail'
 import { Shell } from '../../components/Shell'
 import { SidePanel } from '../../components/SidePanel'
 import { TopBar } from '../../components/TopBar'
 import { Button } from '../../components/ui/button'
+import { DropdownMenuItem, DropdownMenuSeparator } from '../../components/ui/dropdown-menu'
 import { TooltipProvider } from '../../components/ui/tooltip'
-import { cn } from '../../lib/cn'
-import { KIND_WASH, type KindColor } from '../../lib/kind'
 import { TidevannMark } from '../fixtures/TidevannMark'
-import { Count } from '../../components/Count'
 
 /**
  * A team chat in the library's frame: a strip of places on the far left, the channels and direct
@@ -45,112 +48,116 @@ import { Count } from '../../components/Count'
 const meta: Meta = { title: 'Apps/Team chat' }
 export default meta
 
-type Person = 'ada' | 'grace' | 'linus' | 'margaret'
+const noop = () => undefined
 
-const PEOPLE: Record<Person, { name: string; initials: string; color: KindColor }> = {
-    ada: { name: 'ada', initials: 'AL', color: 'blue' },
-    grace: { name: 'grace', initials: 'GH', color: 'violet' },
-    linus: { name: 'linus', initials: 'LT', color: 'green' },
-    margaret: { name: 'margaret', initials: 'MH', color: 'pink' },
-}
+const GRACE: ChatPerson = { name: 'grace' }
+const LINUS: ChatPerson = { name: 'linus' }
+const MARGARET: ChatPerson = { name: 'margaret' }
+const ADA: ChatPerson = { name: 'ada' }
 
-/** A person's initials on a wash of their color, filling the square the chat components give an avatar. */
-function Face({ who }: { who: Person }) {
-    const person = PEOPLE[who]
-    return (
-        <span className={cn('flex size-full items-center justify-center font-semibold', KIND_WASH[person.color])}>{person.initials}</span>
-    )
-}
+/** The places on the far left: home, direct messages, activity and files. */
+const STRIP: RailGroup[] = [
+    {
+        id: 'places',
+        entries: [
+            { id: 'home', label: 'Home', icon: House, href: '#', active: true },
+            { id: 'dms', label: 'DMs', icon: MessagesSquare, href: '#', count: 1 },
+            { id: 'activity', label: 'Activity', icon: Bell, href: '#', count: 3 },
+            { id: 'files', label: 'Files', icon: Files, href: '#', unread: true },
+            { id: 'more', label: 'More', icon: Ellipsis, href: '#' },
+        ],
+    },
+]
 
-function sections(unread: boolean): ChannelSection[] {
-    return [
+const STRIP_FOOT = (
+    <>
+        <Button variant="secondary" size="icon-lg" aria-label="Create" title="Create">
+            <Plus aria-hidden />
+        </Button>
+        <Button variant="ghost" size="icon-lg" aria-label="Account" title="ada">
+            <PersonAvatar name="ada" size="lg" shape="square" presence="active" />
+        </Button>
+    </>
+)
+
+/** The sections, with the open conversation read. */
+function sections(active: string): ChannelSection[] {
+    const all: ChannelSection[] = [
+        {
+            id: 'starred',
+            title: 'Starred',
+            icon: <Star aria-hidden />,
+            entries: [
+                { id: 'larkspur', label: 'larkspur', kind: 'channel', unread: true, mentions: 2 },
+                { id: 'dm-margaret', label: 'margaret', kind: 'direct', person: { name: 'margaret' }, presence: 'offline' },
+            ],
+        },
         {
             id: 'channels',
             title: 'Channels',
-            onAdd: () => undefined,
+            icon: <Hash aria-hidden />,
+            onAdd: noop,
             entries: [
-                { id: 'harbor-ops', label: 'harbor-ops', kind: 'channel', unread },
+                { id: 'harbor-ops', label: 'harbor-ops', kind: 'channel', unread: true },
                 { id: 'juniper-launch', label: 'juniper-launch', kind: 'channel' },
-                { id: 'larkspur', label: 'larkspur', kind: 'channel', unread: true, mentions: 2 },
                 { id: 'deploys', label: 'deploys', kind: 'channel', unread: true, muted: true },
                 { id: 'on-call', label: 'on-call', kind: 'private' },
+                { id: 'incident-review', label: 'incident-review', kind: 'private', unread: true },
                 { id: 'random', label: 'random', kind: 'channel' },
             ],
         },
         {
             id: 'direct',
             title: 'Direct messages',
-            onAdd: () => undefined,
+            icon: <MessagesSquare aria-hidden />,
+            onAdd: noop,
             entries: [
                 {
                     id: 'dm-grace',
                     label: 'grace',
                     kind: 'direct',
-                    avatar: <Face who="grace" />,
+                    person: { name: 'grace' },
                     presence: 'active',
                     unread: true,
                     mentions: 1,
                 },
-                { id: 'dm-linus', label: 'linus', kind: 'direct', avatar: <Face who="linus" />, presence: 'away' },
-                { id: 'dm-margaret', label: 'margaret', kind: 'direct', avatar: <Face who="margaret" />, presence: 'offline' },
+                { id: 'dm-linus', label: 'linus', kind: 'direct', person: { name: 'linus' }, presence: 'away' },
+                { id: 'dm-scheduler', label: 'scheduler', kind: 'direct', person: { name: 'scheduler', initials: 'S', color: 'teal' } },
             ],
         },
     ]
+    return all.map((section) => ({
+        ...section,
+        entries: section.entries.map((entry) => (entry.id === active ? { ...entry, unread: false, mentions: undefined } : entry)),
+    }))
 }
 
-/** The places on the far left: the workspace, then home, messages and activity. */
-function Strip() {
-    const place = (icon: ReactNode, label: string, on = false, count?: number) => (
-        <Button
-            variant="ghost"
-            size="icon-lg"
-            aria-label={label}
-            title={label}
-            aria-current={on ? 'page' : undefined}
-            className={cn('relative text-muted-foreground', on && 'bg-secondary text-foreground')}
-        >
-            {icon}
-            {count !== undefined && <Count value={count} className="absolute -top-1 -right-1" />}
-        </Button>
-    )
-    return (
-        <div className="flex w-14 shrink-0 flex-col items-center gap-2 border-r border-border-strong bg-sidebar py-3">
-            <span className="mb-2 flex size-9 items-center justify-center rounded-lg bg-primary/15">
-                <TidevannMark />
-            </span>
-            {place(<House />, 'Home', true)}
-            {place(<MessageSquare />, 'Direct messages', false, 1)}
-            {place(<Bell />, 'Activity', false, 3)}
-        </div>
-    )
-}
-
-function Sidebar({ active, onSelect, unread }: { active: string; onSelect: (id: string) => void; unread: boolean }) {
+function Sidebar({ active, onSelect }: { active: string; onSelect: (id: string) => void }) {
+    const [query, setQuery] = useState('')
     return (
         <div className="flex h-full">
-            <Strip />
+            <Rail variant="strip" mark={<TidevannMark className="size-5" />} name="Tidevann" groups={STRIP} foot={STRIP_FOOT} />
             <ChannelList
                 className="w-64 border-r border-border-strong"
-                sections={sections(unread)}
+                sections={sections(active)}
                 active={active}
                 onSelect={onSelect}
-                header={
-                    <div className="flex h-shell-top shrink-0 items-center gap-2 border-b border-border-strong px-3">
-                        <button
-                            type="button"
-                            className="flex min-w-0 items-center gap-1 rounded-md px-1 text-sm font-semibold hover:bg-secondary"
-                        >
-                            <span className="truncate">Tidevann</span>
-                            <ChevronDown className="size-3.5 shrink-0" aria-hidden />
-                        </button>
-                        <Button variant="ghost" size="icon" className="ml-auto" aria-label="New message" title="New message">
-                            <PenSquare aria-hidden />
-                        </Button>
-                    </div>
+                title={
+                    <Button variant="ghost" size="sm" className="-ml-2 font-semibold">
+                        Tidevann
+                        <ChevronDown aria-hidden />
+                    </Button>
                 }
+                actions={
+                    <Button variant="ghost" size="icon" aria-label="New message" title="New message">
+                        <PenSquare aria-hidden />
+                    </Button>
+                }
+                find
+                query={query}
+                onQueryChange={setQuery}
                 places={[
-                    { id: 'threads', label: 'Threads', icon: <MessagesSquare aria-hidden />, count: 2 },
-                    { id: 'activity', label: 'Activity', icon: <Bell aria-hidden /> },
+                    { id: 'threads', label: 'Threads', icon: <MessageSquare aria-hidden />, count: 2 },
                     { id: 'saved', label: 'Saved', icon: <Bookmark aria-hidden /> },
                     { id: 'drafts', label: 'Drafts and sent', icon: <SendHorizontal aria-hidden /> },
                 ]}
@@ -159,22 +166,67 @@ function Sidebar({ active, onSelect, unread }: { active: string; onSelect: (id: 
     )
 }
 
-const ACTIONS = (
+const MENU = (
     <>
-        <Button variant="ghost" size="icon" aria-label="Add a reaction" title="Add a reaction">
-            <SmilePlus aria-hidden />
-        </Button>
-        <Button variant="ghost" size="icon" aria-label="Reply in thread" title="Reply in thread">
-            <MessageSquare aria-hidden />
-        </Button>
-        <Button variant="ghost" size="icon" aria-label="Save for later" title="Save for later">
-            <Bookmark aria-hidden />
-        </Button>
-        <Button variant="ghost" size="icon" aria-label="More actions" title="More actions">
-            <Ellipsis aria-hidden />
-        </Button>
+        <DropdownMenuItem>Copy link</DropdownMenuItem>
+        <DropdownMenuItem>Mark unread</DropdownMenuItem>
+        <DropdownMenuItem>Remind me about this</DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem>Edit message</DropdownMenuItem>
+        <DropdownMenuItem variant="destructive">Delete message</DropdownMenuItem>
     </>
 )
+
+/** What every message offers on hover: react, reply in thread, and the menu. */
+const BAR = { onAddReaction: noop, onReply: noop, menu: MENU }
+
+const ACTIONS: ChannelHeaderAction[] = [
+    { id: 'pins', label: 'Pinned messages', icon: <Pin aria-hidden /> },
+    { id: 'search', label: 'Search in the channel', icon: <Search aria-hidden /> },
+]
+
+const TABS: ChannelHeaderTab[] = [
+    { id: 'messages', label: 'Messages', icon: <MessageSquare aria-hidden /> },
+    { id: 'files', label: 'Files', icon: <FileText aria-hidden /> },
+    { id: 'pins', label: 'Pins', icon: <Pin aria-hidden /> },
+]
+
+const SCHEDULE: MessageSchedule[] = [
+    { id: 'hour', label: 'In an hour', detail: '10:41' },
+    { id: 'tomorrow', label: 'Tomorrow morning', detail: 'Sat 09:00' },
+    { id: 'monday', label: 'Next Monday', detail: 'Mon 09:00' },
+]
+
+/** A composer that holds its own draft; in a thread it offers to send the reply to the channel too. */
+function Composer({ placeholder, thread = false }: { placeholder: string; thread?: boolean }) {
+    const [draft, setDraft] = useState('')
+    const [also, setAlso] = useState(false)
+    return (
+        <MessageComposer
+            value={draft}
+            onChange={setDraft}
+            onSend={() => setDraft('')}
+            onAttach={noop}
+            onEmoji={noop}
+            onMention={noop}
+            onSendLater={noop}
+            schedule={SCHEDULE}
+            onSchedule={noop}
+            defaultFormatting={!thread}
+            alsoSendTo={
+                thread ? (
+                    <>
+                        <Hash className="size-3" aria-hidden />
+                        harbor-ops
+                    </>
+                ) : undefined
+            }
+            alsoSend={also}
+            onAlsoSendChange={setAlso}
+            words={{ placeholder }}
+        />
+    )
+}
 
 const QUEUE_PICTURE = `data:image/svg+xml;utf8,${encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" width="480" height="200" viewBox="0 0 480 200"><rect width="480" height="200" fill="#0f1724"/><g stroke="#1f2a3a">${[40, 80, 120, 160].map((y) => `<line x1="0" x2="480" y1="${String(y)}" y2="${String(y)}"/>`).join('')}</g><polyline fill="none" stroke="#38bdf8" stroke-width="3" points="0,150 40,140 80,146 120,120 160,128 200,90 240,40 280,52 320,110 360,130 400,124 440,138 480,132"/><text x="16" y="28" fill="#94a3b8" font-family="sans-serif" font-size="14">queue depth, 06:00 to 10:00</text></svg>`,
@@ -183,269 +235,173 @@ const QUEUE_PICTURE = `data:image/svg+xml;utf8,${encodeURIComponent(
 const CSV: ChatFile = { id: 'f1', name: 'orders-failed.csv', kind: 'file', detail: 'CSV, 4 KB' }
 const CHART: ChatFile = { id: 'f2', name: 'queue-depth.svg', kind: 'image', url: QUEUE_PICTURE }
 
-function reactions(set: Record<string, boolean>, base: { id: string; icon: ReactNode; label: string; count: number }[]): ChatReaction[] {
-    return base.map((reaction) => ({
-        ...reaction,
-        mine: set[reaction.id] === true,
-        count: reaction.count + (set[reaction.id] === true ? 1 : 0),
-    }))
+/** Reactions with the reader's own taken from `mine`, so pressing one adds or takes it back. */
+function useReactions(start: Record<string, boolean>) {
+    const [mine, setMine] = useState(start)
+    const flip = (id: string) => setMine((current) => ({ ...current, [id]: current[id] !== true }))
+    const of = (base: Omit<ChatReaction, 'mine'>[]): ChatReaction[] =>
+        base.map((reaction) => ({
+            ...reaction,
+            mine: mine[reaction.id] === true,
+            count: reaction.count + (mine[reaction.id] === true ? 1 : 0),
+        }))
+    return { of, flip }
 }
 
 const ERROR =
     '```\nvalidate: 37 rows failed\n  row 112  A-20431  amount: "n/a" is not a number\n  row 340  A-20659  amount: "12,50" is not a number\n```'
 
-function ChannelHeader({
-    title,
-    topic,
-    members,
-    kind = 'channel',
-}: {
-    title: string
-    topic?: string
-    members?: number
-    kind?: 'channel' | 'direct'
-}) {
-    return (
-        <div className="shrink-0 border-b border-border">
-            <div className="flex h-shell-top items-center gap-3 px-(--density-chat-inset)">
-                <h1 className="flex min-w-0 items-center gap-1 text-title font-semibold">
-                    {kind === 'channel' && <Hash className="size-4 shrink-0 text-muted-foreground" aria-hidden />}
-                    <span className="truncate">{title}</span>
-                </h1>
-                {topic !== undefined && <p className="hidden min-w-0 truncate text-sm text-muted-foreground md:block">{topic}</p>}
-                <div className="ml-auto flex shrink-0 items-center gap-1">
-                    {members !== undefined && (
-                        <button
-                            type="button"
-                            className="flex h-7 items-center gap-1.5 rounded-md border border-border px-2 text-xs hover:bg-secondary"
-                        >
-                            <span className="flex -space-x-1">
-                                {(['grace', 'linus', 'margaret'] as const).map((who) => (
-                                    <PersonAvatar key={who} name={who} size="xs" className="ring-2 ring-background" />
-                                ))}
-                            </span>
-                            <span className="tabular-nums">{members}</span>
-                        </button>
-                    )}
-                    <Button variant="ghost" size="icon" aria-label="Pinned messages" title="Pinned messages">
-                        <Pin aria-hidden />
-                    </Button>
-                    <Button variant="ghost" size="icon" aria-label="Search" title="Search">
-                        <Search aria-hidden />
-                    </Button>
-                </div>
-            </div>
-            <div role="tablist" className="flex items-center gap-1 px-(--density-chat-inset)">
-                {[
-                    { id: 'messages', label: 'Messages', icon: MessageSquare },
-                    { id: 'files', label: 'Files', icon: FileText },
-                    { id: 'pins', label: 'Pins', icon: Pin },
-                ].map((tab, index) => (
-                    <button
-                        key={tab.id}
-                        type="button"
-                        role="tab"
-                        aria-selected={index === 0}
-                        className={cn(
-                            '-mb-px flex h-8 items-center gap-1.5 border-b-2 px-2 text-sm',
-                            index === 0
-                                ? 'border-primary font-medium text-foreground'
-                                : 'border-transparent text-muted-foreground hover:text-foreground',
-                        )}
-                    >
-                        <tab.icon className="size-3.5" aria-hidden />
-                        {tab.label}
-                    </button>
-                ))}
-            </div>
-        </div>
-    )
-}
+const STARTER = 'Morning. `nightly-export` failed at **validate** again: 37 rows carry an amount that is not a number.'
 
-function Conversation({ onThread, threadOpen }: { onThread: () => void; threadOpen: boolean }) {
-    const [mine, setMine] = useState<Record<string, boolean>>({ check: true })
-    const flip = (id: string) => setMine((current) => ({ ...current, [id]: current[id] !== true }))
-    const [draft, setDraft] = useState('')
+function ChannelPage({ onThread, threadOpen }: { onThread: () => void; threadOpen: boolean }) {
+    const { of, flip } = useReactions({ check: true })
+    const [tab, setTab] = useState('messages')
     return (
-        <div className="flex h-full min-h-0 flex-col">
-            <ChannelHeader title="harbor-ops" topic="Deploys, runs and incidents for harbor. On call this week: grace." members={12} />
-            <div className="flex min-h-0 flex-1 flex-col-reverse overflow-y-auto">
-                <div className="py-3">
-                    <ChatDayDivider>Yesterday</ChatDayDivider>
-                    <ChatMessage
-                        author="grace"
-                        avatar={<Face who="grace" />}
-                        time="16:02"
-                        actions={ACTIONS}
-                        reactions={reactions(mine, [
-                            { id: 'check', icon: <Check aria-hidden />, label: 'Done', count: 2 },
-                            { id: 'rocket', icon: <Rocket aria-hidden />, label: 'Shipped', count: 2 },
-                        ])}
-                        onReact={flip}
-                        onAddReaction={() => undefined}
-                    >
-                        <Markdown content="The deploy of **harbor-api 1.4.0** is done. The rollout took 6 minutes and no run was interrupted." />
-                    </ChatMessage>
-                    <ChatMessage author="linus" avatar={<Face who="linus" />} time="16:05" actions={ACTIONS}>
-                        <Markdown content="Nice. `nightly-export` still writes to the old bucket; I'll move it tomorrow." />
-                    </ChatMessage>
-                    <ChatDayDivider>Today</ChatDayDivider>
-                    <ChatMessage
-                        author="ada"
-                        avatar={<Face who="ada" />}
-                        time="09:12"
-                        actions={ACTIONS}
-                        highlighted={threadOpen}
-                        thread={{ count: 3, people: [<Face key="g" who="grace" />, <Face key="l" who="linus" />], last: 'today at 09:40' }}
-                        onOpenThread={onThread}
-                        reactions={reactions(mine, [{ id: 'eye', icon: <Eye aria-hidden />, label: 'Looking', count: 2 }])}
-                        onReact={flip}
-                    >
-                        <Markdown content="Morning. `nightly-export` failed at **validate** again: 37 rows carry an amount that is not a number." />
-                    </ChatMessage>
-                    <ChatMessage author="ada" avatar={<Face who="ada" />} time="09:13" continued actions={ACTIONS}>
-                        <Markdown content={ERROR} />
-                    </ChatMessage>
-                    <ChatNewDivider />
-                    <ChatMessage author="margaret" avatar={<Face who="margaret" />} time="09:41" files={[CSV]} actions={ACTIONS}>
-                        <Markdown content="Here are the rows that failed, from the run's output." />
-                    </ChatMessage>
-                    <ChatMessage author="margaret" avatar={<Face who="margaret" />} time="09:41" continued edited actions={ACTIONS}>
-                        <Markdown content="**@ada** is `12,50` a decimal comma? Then the locale fixes most of them." />
-                    </ChatMessage>
-                    <ChatMessage
-                        author="grace"
-                        avatar={<Face who="grace" />}
-                        time="09:44"
-                        files={[CHART]}
-                        actions={ACTIONS}
-                        reactions={reactions(mine, [{ id: 'thumbs', icon: <ThumbsUp aria-hidden />, label: 'Agree', count: 1 }])}
-                        onReact={flip}
-                    >
-                        <Markdown content="The queue backed up while it retried. It drained by 08:10." />
-                    </ChatMessage>
-                </div>
-            </div>
-            <ChatTyping>linus is typing</ChatTyping>
-            <div className="shrink-0 px-(--density-chat-inset) pb-4">
-                <MessageComposer
-                    value={draft}
-                    onChange={setDraft}
-                    onSend={() => setDraft('')}
-                    onAttach={() => undefined}
-                    onEmoji={() => undefined}
-                    onMention={() => undefined}
-                    onSendLater={() => undefined}
-                    words={{ placeholder: 'Message #harbor-ops' }}
+        <Conversation
+            header={
+                <ChannelHeader
+                    name="harbor-ops"
+                    topic="Deploys, runs and incidents for harbor. On call this week: grace."
+                    onDetails={noop}
+                    members={[GRACE, LINUS, MARGARET]}
+                    memberCount={12}
+                    onMembers={noop}
+                    actions={ACTIONS}
+                    tabs={TABS}
+                    tab={tab}
+                    onTabChange={setTab}
                 />
-            </div>
-        </div>
+            }
+            typing="linus is typing"
+            composer={<Composer placeholder="Message #harbor-ops" />}
+        >
+            <ChatDay label="Yesterday">
+                <ChatMessage
+                    author="grace"
+                    time="16:02"
+                    {...BAR}
+                    reactions={of([
+                        { id: 'check', icon: <Check aria-hidden />, label: 'Done', count: 2 },
+                        { id: 'rocket', icon: <Rocket aria-hidden />, label: 'Shipped', count: 2 },
+                    ])}
+                    onReact={flip}
+                >
+                    <Markdown content="The deploy of **harbor-api 1.4.0** is done. The rollout took 6 minutes and no run was interrupted." />
+                </ChatMessage>
+                <ChatMessage author="linus" time="16:05" {...BAR}>
+                    <Markdown content="Nice. `nightly-export` still writes to the old bucket; I will move it tomorrow." />
+                </ChatMessage>
+                <ChatMessage author="linus" time="16:06" continued editedAt="yesterday at 16:09" {...BAR}>
+                    <Markdown content="It needs a new key for the bucket first: [the request](https://tickets.example.org/harbor/88)." />
+                </ChatMessage>
+            </ChatDay>
+            <ChatDay label="Today">
+                <ChatMessage
+                    author="ada"
+                    time="09:12"
+                    {...BAR}
+                    onReply={onThread}
+                    highlighted={threadOpen}
+                    thread={{ count: 4, people: [LINUS, GRACE], last: 'today at 09:40' }}
+                    onOpenThread={onThread}
+                    reactions={of([{ id: 'eye', icon: <Eye aria-hidden />, label: 'Looking', count: 2 }])}
+                    onReact={flip}
+                >
+                    <Markdown content={STARTER} />
+                </ChatMessage>
+                <ChatMessage author="ada" time="09:13" continued {...BAR}>
+                    <Markdown content={ERROR} />
+                </ChatMessage>
+                <ChatNewDivider />
+                <ChatMessage author="margaret" time="09:41" files={[CSV]} {...BAR}>
+                    <Markdown content="Here are the rows that failed, from the run's output." />
+                </ChatMessage>
+                <ChatMessage author="margaret" time="09:42" continued editedAt="today at 09:44" {...BAR}>
+                    <Markdown content="**@ada** is `12,50` a decimal comma? Then the locale fixes most of them." />
+                </ChatMessage>
+                <ChatMessage
+                    author="grace"
+                    time="09:44"
+                    files={[CHART]}
+                    {...BAR}
+                    reactions={of([{ id: 'thumbs', icon: <ThumbsUp aria-hidden />, label: 'Agree', count: 1 }])}
+                    onReact={flip}
+                >
+                    <Markdown content="The queue backed up while it retried. It drained by 08:10." />
+                </ChatMessage>
+            </ChatDay>
+        </Conversation>
     )
 }
 
+/** The thread under ada's message: her message, then the replies, one run per author. */
 function Thread() {
-    const [draft, setDraft] = useState('')
-    const [also, setAlso] = useState(false)
     return (
-        <div className="flex h-full min-h-0 flex-col">
-            <div className="min-h-0 flex-1 overflow-y-auto py-3">
-                <ChatMessage author="ada" avatar={<Face who="ada" />} time="09:12">
-                    <Markdown content="Morning. `nightly-export` failed at **validate** again: 37 rows carry an amount that is not a number." />
+        <ThreadView
+            parent={
+                <ChatMessage author="ada" time="09:12" {...BAR}>
+                    <Markdown content={STARTER} />
                 </ChatMessage>
-                <div className="my-2 flex items-center gap-3 px-5 text-xs text-muted-foreground">
-                    <span>3 replies</span>
-                    <span className="h-px flex-1 bg-border" aria-hidden />
-                </div>
-                <ChatMessage author="grace" avatar={<Face who="grace" />} time="09:20">
-                    <Markdown content="Same file as last week? The export from juniper changed its number format on Monday." />
-                </ChatMessage>
-                <ChatMessage author="linus" avatar={<Face who="linus" />} time="09:31">
-                    <Markdown content="Yes, juniper switched to `nb-NO`. I can parse with the locale in `validate`." />
-                </ChatMessage>
-                <ChatMessage author="linus" avatar={<Face who="linus" />} time="09:40" continued>
-                    <Markdown content="PR is up: harbor#412." />
-                </ChatMessage>
-                <div className="px-4 pt-3">
-                    <MessageComposer
-                        value={draft}
-                        onChange={setDraft}
-                        onSend={() => setDraft('')}
-                        onAttach={() => undefined}
-                        onEmoji={() => undefined}
-                        onMention={() => undefined}
-                        onSendLater={() => undefined}
-                        alsoSendTo={
-                            <>
-                                <Hash className="size-3" aria-hidden />
-                                harbor-ops
-                            </>
-                        }
-                        alsoSend={also}
-                        onAlsoSendChange={setAlso}
-                        words={{ placeholder: 'Reply' }}
-                    />
-                </div>
-            </div>
-        </div>
+            }
+            composer={<Composer placeholder="Reply" thread />}
+        >
+            <ChatMessage author="grace" time="09:20" {...BAR}>
+                <Markdown content="Same file as last week? The export from juniper changed its number format on Monday." />
+            </ChatMessage>
+            <ChatMessage author="linus" time="09:31" editedAt="today at 09:33" {...BAR}>
+                <Markdown content="Yes, juniper switched to `nb-NO`. I can parse with the locale in `transform`." />
+            </ChatMessage>
+            <ChatMessage author="linus" time="09:32" continued {...BAR}>
+                <Markdown content="Then `validate` can stay strict for the empty amounts." />
+            </ChatMessage>
+            <ChatMessage author="linus" time="09:40" continued {...BAR}>
+                <Markdown content="The change is up: [harbor#412](https://code.example.org/harbor/412)." />
+            </ChatMessage>
+        </ThreadView>
     )
 }
 
 function Direct() {
-    const [draft, setDraft] = useState('')
     return (
-        <div className="flex h-full min-h-0 flex-col">
-            <ChannelHeader title="grace" kind="direct" />
-            <div className="min-h-0 flex-1 overflow-y-auto py-3">
-                <div className="flex items-center gap-3 px-5 pb-4">
-                    <span className="flex size-16 overflow-hidden rounded-xl text-title">
-                        <Face who="grace" />
-                    </span>
-                    <div>
-                        <p className="font-semibold">grace</p>
-                        <p className="text-sm text-muted-foreground">Platform, on call this week. Active.</p>
-                    </div>
-                </div>
-                <ChatDayDivider>Today</ChatDayDivider>
-                <ChatMessage author="grace" avatar={<Face who="grace" />} time="08:55" actions={ACTIONS}>
-                    <Markdown content="Could you take the juniper release review at 14:00? I'm stuck in the incident review." />
+        <Conversation
+            header={<ChannelHeader name="grace" kind="direct" presence="active" onDetails={noop} actions={ACTIONS.slice(1)} />}
+            composer={<Composer placeholder="Message grace" />}
+        >
+            <ConversationStart picture={<PersonAvatar name="grace" size="xl" shape="square" />} title="grace">
+                Platform, on call this week. This is the start of your conversation with grace.
+            </ConversationStart>
+            <ChatDay label="Today">
+                <ChatMessage author="grace" time="08:55" {...BAR}>
+                    <Markdown content="Could you take the juniper release review at 14:00? I am stuck in the incident review." />
                 </ChatMessage>
-                <ChatMessage author="ada" avatar={<Face who="ada" />} time="09:02" actions={ACTIONS}>
+                <ChatMessage author="ada" time="09:02" {...BAR}>
                     <Markdown content="Sure. Anything I should look at first?" />
                 </ChatMessage>
                 <ChatNewDivider />
-                <ChatMessage author="grace" avatar={<Face who="grace" />} time="09:05" actions={ACTIONS}>
+                <ChatMessage author="grace" time="09:05" editedAt="today at 09:06" {...BAR}>
                     <Markdown content="The migration in step 3. **@ada** it renames a column the larkspur dashboards read." />
                 </ChatMessage>
-            </div>
-            <div className="shrink-0 px-(--density-chat-inset) pb-4">
-                <MessageComposer
-                    value={draft}
-                    onChange={setDraft}
-                    onSend={() => setDraft('')}
-                    onAttach={() => undefined}
-                    onEmoji={() => undefined}
-                    onMention={() => undefined}
-                    onSendLater={() => undefined}
-                    words={{ placeholder: 'Message grace' }}
-                />
-            </div>
-        </div>
+                <ChatMessage author="grace" time="09:06" continued {...BAR}>
+                    <Markdown content="The notes are in [the release checklist](https://docs.example.org/juniper/release)." />
+                </ChatMessage>
+            </ChatDay>
+        </Conversation>
     )
 }
 
 function NewChannelPage() {
-    const [draft, setDraft] = useState('')
     return (
-        <div className="flex h-full min-h-0 flex-col">
-            <ChannelHeader title="juniper-launch" members={1} />
-            <div className="flex min-h-0 flex-1 flex-col justify-end overflow-y-auto px-5 py-6">
-                <div className="flex max-w-lg flex-col items-start gap-3">
-                    <span className="flex size-12 items-center justify-center rounded-xl bg-primary/15 text-primary-ink">
-                        <Hash className="size-6" aria-hidden />
-                    </span>
-                    <h2 className="text-page font-semibold">juniper-launch</h2>
-                    <p className="text-sm text-muted-foreground">ada created this channel today. It is the start of #juniper-launch.</p>
-                    <div className="flex gap-2">
+        <Conversation
+            header={
+                <ChannelHeader name="juniper-launch" onDetails={noop} members={[ADA]} memberCount={1} onMembers={noop} actions={ACTIONS} />
+            }
+            composer={<Composer placeholder="Message #juniper-launch" />}
+        >
+            <ConversationStart
+                icon={<Hash aria-hidden />}
+                title="juniper-launch"
+                actions={
+                    <>
                         <Button variant="outline" size="sm">
                             <UserPlus aria-hidden />
                             Add people
@@ -454,22 +410,12 @@ function NewChannelPage() {
                             <Users aria-hidden />
                             Set a topic
                         </Button>
-                    </div>
-                </div>
-            </div>
-            <div className="shrink-0 px-(--density-chat-inset) pb-4">
-                <MessageComposer
-                    value={draft}
-                    onChange={setDraft}
-                    onSend={() => setDraft('')}
-                    onAttach={() => undefined}
-                    onEmoji={() => undefined}
-                    onMention={() => undefined}
-                    onSendLater={() => undefined}
-                    words={{ placeholder: 'Message #juniper-launch' }}
-                />
-            </div>
-        </div>
+                    </>
+                }
+            >
+                ada created this channel today. It is the start of #juniper-launch.
+            </ConversationStart>
+        </Conversation>
     )
 }
 
@@ -482,13 +428,13 @@ function TeamChat({ start = 'harbor-ops', thread = false }: { start?: string; th
         ) : active === 'juniper-launch' ? (
             <NewChannelPage />
         ) : (
-            <Conversation threadOpen={panel} onThread={() => setPanel(true)} />
+            <ChannelPage threadOpen={panel} onThread={() => setPanel(true)} />
         )
     return (
         <TooltipProvider>
             <Shell
-                rail={<Sidebar active={active} onSelect={setActive} unread={active !== 'harbor-ops'} />}
-                top={<TopBar onSearch={() => undefined} words={{ search: 'Search Tidevann', trail: 'Where you are' }} />}
+                rail={<Sidebar active={active} onSelect={setActive} />}
+                top={<TopBar onSearch={noop} words={{ search: 'Search Tidevann', trail: 'Where you are' }} />}
                 panelOpen={panel}
                 onPanelOpenChange={setPanel}
                 panel={
@@ -503,13 +449,13 @@ function TeamChat({ start = 'harbor-ops', thread = false }: { start?: string; th
     )
 }
 
-/** A channel with days, the line where unread messages begin, reactions, a thread, code, a file and a picture, and someone typing. */
+/** A channel with days, the line where unread messages begin, reactions, a thread, edits, code, a file and a picture, and someone typing. */
 export const Channel: StoryObj = { render: () => <TeamChat /> }
 
-/** The thread under ada's message open in the side panel, with its own reply box. */
+/** The thread under ada's message open in the side panel: the replies right under it, one run per author, and its own reply box. */
 export const ThreadOpen: StoryObj = { name: 'Thread open', render: () => <TeamChat thread /> }
 
-/** A conversation with one person, their picture and status at the top. */
+/** A conversation with one person, their picture at the top and whether they are around in the header. */
 export const DirectMessage: StoryObj = { name: 'Direct message', render: () => <TeamChat start="dm-grace" /> }
 
 /** A channel just created: nothing said yet, and the ways to get it started. */

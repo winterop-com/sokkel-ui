@@ -77,8 +77,6 @@ reaches them all. Done in waves, one PR each.
   at the top, how a long form leads from one issue to the next, warnings beside errors, a page
   form's bar against a dialog's footer) and pick, then fold the pick into `IssueCount`, `Field`
   and `SchemaForm` so every form takes it at once.
-- **Counts on rail entries.** A rail entry carries an unread count, so an app's own navigation
-  strip, such as the team chat's, is the library's `Rail` with no hand-drawn badge.
 - **Tauri on Chromium (discovery).** Tauri runs on each platform's own webview: WebKit on
   macOS and Linux. Once Tauri supports an embedded Chromium runtime, add that build beside the
   system-webview shell, so the library is checked in both.
