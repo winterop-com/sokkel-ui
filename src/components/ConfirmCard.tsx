@@ -50,6 +50,21 @@ const FRAME: Record<ConfirmAppearance, { pending: string; settled: string }> = {
     section: { pending: 'gap-3 border-t border-border pt-4', settled: 'gap-3 border-t border-border pt-4' },
 }
 
+/** What a held action says and does, as `ConfirmCard` takes it. */
+export interface ConfirmCardProps {
+    /** What approving does, said plainly: "Delete the job import-orders". */
+    action: ReactNode
+    tool: string
+    args?: unknown
+    state: ConfirmState
+    onApprove?: () => void
+    onDeny?: () => void
+    appearance?: ConfirmAppearance
+    /** Folds the call away behind a control that opens it in full. */
+    details?: boolean
+    words?: ConfirmWords
+}
+
 /**
  * An action an assistant holds until a person answers: what it will do in a sentence, the call in
  * the code face, and Approve and Deny. Once answered it keeps its place and states the outcome.
@@ -68,19 +83,7 @@ export function ConfirmCard({
     appearance = 'warning',
     details = false,
     words: given = WORDS,
-}: {
-    /** What approving does, said plainly: "Delete the job import-orders". */
-    action: ReactNode
-    tool: string
-    args?: unknown
-    state: ConfirmState
-    onApprove?: () => void
-    onDeny?: () => void
-    appearance?: ConfirmAppearance
-    /** Folds the call away behind a control that opens it in full. */
-    details?: boolean
-    words?: ConfirmWords
-}) {
+}: ConfirmCardProps) {
     const words = { ...WORDS, ...given }
     const pending = state === 'pending'
     const outcome = state === 'approved' ? words.approved : state === 'denied' ? words.denied : words.expired

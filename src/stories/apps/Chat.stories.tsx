@@ -1,29 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import {
-    Bell,
-    ChevronDown,
-    ChevronLeft,
-    ChevronRight,
-    Copy,
-    FileSpreadsheet,
-    Folder,
-    MessageSquare,
-    PenSquare,
-    RotateCcw,
-    Search,
-    Square,
-    ThumbsUp,
-} from 'lucide-react'
+import { Bell, ChevronDown, FileSpreadsheet, Folder, MessageSquare, PenSquare, Search } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
 import { AccountMenu } from '../../components/AccountMenu'
+import { AssistantReply, type AssistantReplyLayout } from '../../components/AssistantReply'
 import { Composer, type ComposerAttachment } from '../../components/Composer'
-import { ConfirmCard, type ConfirmState } from '../../components/ConfirmCard'
-import { Markdown } from '../../components/Markdown'
-import { Problem } from '../../components/Problem'
+import type { ConfirmState } from '../../components/ConfirmCard'
 import { Rail, type RailGroup } from '../../components/Rail'
 import { Shell } from '../../components/Shell'
-import { ToolCalls, type ToolCallEntry } from '../../components/ToolCall'
+import type { ToolCallEntry } from '../../components/ToolCall'
 import { TopBar } from '../../components/TopBar'
 import {
     Attachment,
@@ -37,8 +22,7 @@ import { Bubble, BubbleContent } from '../../components/ui/bubble'
 import { Button } from '../../components/ui/button'
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '../../components/ui/empty'
 import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from '../../components/ui/item'
-import { Marker, MarkerContent, MarkerIcon } from '../../components/ui/marker'
-import { Message, MessageContent, MessageFooter } from '../../components/ui/message'
+import { Message, MessageContent } from '../../components/ui/message'
 import {
     MessageScroller,
     MessageScrollerButton,
@@ -53,8 +37,9 @@ import { TidevannMark } from '../fixtures/TidevannMark'
 
 /**
  * An assistant app in the library's frame: conversations in the rail, the exchange in a reading
- * column with markdown, tool calls and a held action, and the composer pinned under it. The stories
- * after the first conversation show the states an answer passes through.
+ * column, and the composer pinned under it. Each answer is an AssistantReply: the tools it called
+ * folded behind one line, the answer in markdown, a held change and the reply's actions. The
+ * stories after the first conversation show the states an answer passes through.
  */
 const GROUPS: RailGroup[] = [
     {
@@ -105,6 +90,7 @@ const CALLS: ToolCallEntry[] = [
     {
         id: '1',
         name: 'runs.get',
+        label: 'Run failed at validate',
         args: { job: 'nightly-export', run: 'latest' },
         result: { state: 'failed', step: 'validate' },
         status: 'done',
@@ -113,6 +99,7 @@ const CALLS: ToolCallEntry[] = [
     {
         id: '2',
         name: 'runs.log',
+        label: '37 rows rejected',
         args: { run: 'run_01JCF8Q2', step: 'validate' },
         result: '37 rows rejected',
         status: 'done',
@@ -121,6 +108,7 @@ const CALLS: ToolCallEntry[] = [
     {
         id: '3',
         name: 'files.sample',
+        label: '2 rows sampled',
         args: { file: 'orders-2026-10.csv', rows: [112, 340] },
         result: { rows: 2 },
         status: 'done',
@@ -140,73 +128,38 @@ function Question({ children }: { children: ReactNode }) {
     )
 }
 
-/** Copy, Good answer and Try again under a finished answer, with the work it took and, when it was asked again, which version shows. */
-function Actions({ facts, version }: { facts?: string; version?: { at: number; of: number; onChange: (at: number) => void } }) {
-    return (
-        <MessageFooter className="gap-1 px-0">
-            {version !== undefined && (
-                <>
-                    <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        aria-label="Previous version"
-                        disabled={version.at === 1}
-                        onClick={() => version.onChange(version.at - 1)}
-                    >
-                        <ChevronLeft aria-hidden />
-                    </Button>
-                    <span className="font-normal tabular-nums">
-                        {version.at} of {version.of}
-                    </span>
-                    <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        aria-label="Next version"
-                        disabled={version.at === version.of}
-                        onClick={() => version.onChange(version.at + 1)}
-                    >
-                        <ChevronRight aria-hidden />
-                    </Button>
-                </>
-            )}
-            <Button variant="ghost" size="icon-xs" aria-label="Copy">
-                <Copy aria-hidden />
-            </Button>
-            <Button variant="ghost" size="icon-xs" aria-label="Good answer">
-                <ThumbsUp aria-hidden />
-            </Button>
-            <Button variant="ghost" size="icon-xs" aria-label="Try again">
-                <RotateCcw aria-hidden />
-            </Button>
-            {facts !== undefined && <span className="ml-2 font-normal text-faint tabular-nums">{facts}</span>}
-        </MessageFooter>
-    )
-}
-
 function Thread({ children }: { children: ReactNode }) {
     return <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6">{children}</div>
 }
 
-function Exchange() {
+/** The reply's mark, name and the handlers every answer offers. */
+const SPEAKER = { mark: <TidevannMark />, name: 'Tidevann', onRetry: () => undefined }
+
+function Exchange({ layout }: { layout?: AssistantReplyLayout }) {
     const [state, setState] = useState<ConfirmState>('pending')
+    const [feedback, setFeedback] = useState<'good' | 'bad'>()
     return (
         <Thread>
             <Question>Why did nightly-export fail last night?</Question>
-            <Message>
-                <MessageContent>
-                    <ToolCalls calls={CALLS} />
-                    <Markdown content={ANSWER} />
-                    <ConfirmCard
-                        action="Add the locale-aware parse to nightly-export and save it"
-                        tool="jobs.update"
-                        args={{ job: 'nightly-export', step: 'transform', set: { amount: 'parse_decimal' } }}
-                        state={state}
-                        onApprove={() => setState('approved')}
-                        onDeny={() => setState('denied')}
-                    />
-                    <Actions facts="3 tools, 4.1s" />
-                </MessageContent>
-            </Message>
+            <AssistantReply
+                {...SPEAKER}
+                layout={layout}
+                time="09:42"
+                calls={CALLS}
+                summary={layout === 'steps' ? 'Run, log, and sample checked · 3 tools' : 'Investigation complete · 3 tools'}
+                content={ANSWER}
+                held={{
+                    action: 'Add the locale-aware parse to nightly-export and save it',
+                    tool: 'jobs.update',
+                    args: { job: 'nightly-export', step: 'transform', set: { amount: 'parse_decimal' } },
+                    state,
+                    onApprove: () => setState('approved'),
+                    onDeny: () => setState('denied'),
+                }}
+                feedback={feedback}
+                onFeedback={setFeedback}
+                facts="3 tools, 4.1s"
+            />
         </Thread>
     )
 }
@@ -249,64 +202,70 @@ const PARTIAL = `The run failed at **\`validate\`**: 37 rows of \`orders-2026-10
 
 The second sample, \`12,50\`, is a decimal comma. Parsing amounts with`
 
-/** The answer while it is written: the tools have run and the text grows, with Stop in place of Send. */
+/** The calls while the answer is written: the first two done, the sample still running. */
+const RUNNING: ToolCallEntry[] = CALLS.map((call, index) =>
+    index < 2 ? call : { ...call, label: 'Sampling rejected rows', status: 'running', result: undefined, duration: undefined },
+)
+
+/** The answer while it is written: a tool still runs and the text grows, with Stop in place of Send. */
 function StreamingThread() {
     return (
         <Thread>
             <Question>Why did nightly-export fail last night?</Question>
-            <Message>
-                <MessageContent>
-                    <ToolCalls calls={CALLS} />
-                    <Markdown content={PARTIAL} streaming caret />
-                </MessageContent>
-            </Message>
+            <AssistantReply
+                {...SPEAKER}
+                time="09:42"
+                calls={RUNNING}
+                summary="Investigating · sampling the rejected rows"
+                content={PARTIAL}
+                state="streaming"
+            />
         </Thread>
     )
 }
 
 /** An answer stopped part way: what was written stays, marked as stopped, and can be asked again. */
 function StoppedThread() {
+    const [feedback, setFeedback] = useState<'good' | 'bad'>()
     return (
         <Thread>
             <Question>Why did nightly-export fail last night?</Question>
-            <Message>
-                <MessageContent>
-                    <ToolCalls calls={CALLS} />
-                    <Markdown content={PARTIAL} />
-                    <Marker>
-                        <MarkerIcon>
-                            <Square aria-hidden />
-                        </MarkerIcon>
-                        <MarkerContent>Stopped</MarkerContent>
-                    </Marker>
-                    <Actions />
-                </MessageContent>
-            </Message>
+            <AssistantReply
+                {...SPEAKER}
+                time="09:42"
+                calls={CALLS}
+                summary="Investigation complete · 3 tools"
+                content={PARTIAL}
+                state="stopped"
+                feedback={feedback}
+                onFeedback={setFeedback}
+            />
         </Thread>
     )
 }
+
+/** The calls of an answer that failed: the log could not be read. */
+const BROKEN: ToolCallEntry[] = [
+    CALLS[0],
+    { ...CALLS[1], label: 'Could not read validation log', status: 'error', result: 'log store timed out after 30s' },
+]
 
 /** An answer that could not be finished: what went wrong in a sentence, the raw error folded away, and Try again. */
 function FailedThread() {
     return (
         <Thread>
             <Question>Why did nightly-export fail last night?</Question>
-            <Message>
-                <MessageContent>
-                    <ToolCalls calls={[CALLS[0]]} />
-                    <Problem
-                        title="The answer could not be finished"
-                        detail="The model stopped answering after 30 seconds. Nothing was changed."
-                        technical="upstream closed the stream: 504 gateway timeout (request req_01JCF9A1)"
-                        actions={
-                            <Button variant="outline" size="sm">
-                                <RotateCcw aria-hidden />
-                                Try again
-                            </Button>
-                        }
-                    />
-                </MessageContent>
-            </Message>
+            <AssistantReply
+                {...SPEAKER}
+                time="09:42"
+                calls={BROKEN}
+                summary="Investigation incomplete · 1 tool failed"
+                state="failed"
+                problem={{
+                    detail: 'The model stopped answering after 30 seconds. Nothing was changed.',
+                    technical: 'upstream closed the stream: 504 gateway timeout (request req_01JCF9A1)',
+                }}
+            />
         </Thread>
     )
 }
@@ -344,12 +303,7 @@ function Attached() {
                     </Bubble>
                 </MessageContent>
             </Message>
-            <Message>
-                <MessageContent>
-                    <Markdown content={SENT_REPLY} />
-                    <Actions />
-                </MessageContent>
-            </Message>
+            <AssistantReply {...SPEAKER} time="10:05" content={SENT_REPLY} onFeedback={() => undefined} />
         </Thread>
     )
 }
@@ -368,38 +322,51 @@ function VersionsThread() {
     return (
         <Thread>
             <Question>Why did nightly-export fail last night?</Question>
-            <Message>
-                <MessageContent>
-                    <Markdown content={VERSIONS[at - 1]} />
-                    <Actions version={{ at, of: VERSIONS.length, onChange: setAt }} />
-                </MessageContent>
-            </Message>
+            <AssistantReply
+                {...SPEAKER}
+                time="09:44"
+                content={VERSIONS[at - 1]}
+                versions={{ at, of: VERSIONS.length, onChange: setAt }}
+                onFeedback={() => undefined}
+            />
         </Thread>
     )
 }
 
-const TURNS: { id: string; ask: string; answer: string; calls?: ToolCallEntry[] }[] = [
+const TURNS: { id: string; time: string; ask: string; answer: string; calls?: ToolCallEntry[] }[] = [
     {
         id: 't1',
+        time: '09:12',
         ask: 'Which jobs failed this week?',
         answer: 'Two: **nightly-export** failed on Tuesday and Wednesday, and **sync-inventory** once on Monday. Everything else succeeded.',
         calls: [
-            { id: 'l1', name: 'runs.list', args: { state: 'failed', since: '7d' }, result: { runs: 3 }, status: 'done', duration: '0.3s' },
+            {
+                id: 'l1',
+                name: 'runs.list',
+                label: '3 failed runs',
+                args: { state: 'failed', since: '7d' },
+                result: { runs: 3 },
+                status: 'done',
+                duration: '0.3s',
+            },
         ],
     },
     {
         id: 't2',
+        time: '09:14',
         ask: 'What happened to sync-inventory on Monday?',
         answer: 'The `upload` step timed out after 10 minutes while the worker was restarting. The retry an hour later succeeded, so nothing is missing.',
     },
     {
         id: 't3',
+        time: '09:20',
         ask: 'And nightly-export?',
         answer: ANSWER,
         calls: CALLS,
     },
     {
         id: 't4',
+        time: '09:31',
         ask: 'How long does the run usually take?',
         answer: `Over the last 30 runs:
 
@@ -409,6 +376,7 @@ const TURNS: { id: string; ask: string; answer: string; calls?: ToolCallEntry[] 
     },
     {
         id: 't5',
+        time: '09:33',
         ask: 'Will the locale parse slow it down?',
         answer: 'Barely. Parsing with a locale costs about the same as the plain parse, and the run spends most of its time in `fetch` and `upload`.',
     },
@@ -425,13 +393,13 @@ function Long() {
                             <MessageScrollerItem key={turn.id} messageId={turn.id}>
                                 <div className="flex flex-col gap-6">
                                     <Question>{turn.ask}</Question>
-                                    <Message>
-                                        <MessageContent>
-                                            {turn.calls !== undefined && <ToolCalls calls={turn.calls} />}
-                                            <Markdown content={turn.answer} />
-                                            <Actions />
-                                        </MessageContent>
-                                    </Message>
+                                    <AssistantReply
+                                        {...SPEAKER}
+                                        time={turn.time}
+                                        calls={turn.calls}
+                                        content={turn.answer}
+                                        onFeedback={() => undefined}
+                                    />
                                 </div>
                             </MessageScrollerItem>
                         ))}
@@ -527,11 +495,20 @@ export const NewChat: StoryObj = {
     ),
 }
 
-/** A question answered with tool calls, markdown and a held change. */
+/** A question answered in a reply card: tool calls, markdown and a held change. */
 export const Conversation: StoryObj = {
     render: () => (
         <ChatApp>
             <Exchange />
+        </ChatApp>
+    ),
+}
+
+/** The same answer on the steps layout: what was checked, what was found, and the change to approve next. */
+export const Steps: StoryObj = {
+    render: () => (
+        <ChatApp>
+            <Exchange layout="steps" />
         </ChatApp>
     ),
 }

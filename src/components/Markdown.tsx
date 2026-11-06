@@ -135,17 +135,16 @@ const PROSE = cn(
 )
 
 /** How code inside a sentence is drawn. */
-export type InlineCode = 'chip' | 'plain' | 'rule' | 'wash'
+export type InlineCode = 'chip' | 'plain' | 'wash'
 
 /**
- * `chip` fills each value; `plain` sets it in the code face alone; `rule` underlines it with the
- * border color; `wash` gives it a faint fill with no padding to speak of. Every look but `chip`
- * drops the fill in a table, whose cells already set the values apart.
+ * `chip` fills each value; `plain` sets it in the code face alone; `wash` gives it a faint fill
+ * with no padding to speak of and drops the fill in a table, whose cells already set the values
+ * apart.
  */
 const INLINE_CODE: Record<InlineCode, string> = {
     chip: '[&_:not(pre)>code]:rounded-sm [&_:not(pre)>code]:bg-muted [&_:not(pre)>code]:px-1',
     plain: '[&_td]:tabular-nums',
-    rule: '[&_:not(pre)>code]:border-b [&_:not(pre)>code]:border-border [&_td_code]:border-b-0',
     wash: '[&_:not(pre)>code]:rounded-sm [&_:not(pre)>code]:bg-secondary [&_:not(pre)>code]:px-0.5 [&_td_code]:bg-transparent [&_td_code]:px-0',
 }
 
