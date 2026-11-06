@@ -2,7 +2,7 @@ import { ChevronsUpDown, Search, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 import { cn } from '../lib/cn'
-import { Tree, type TreeNode } from './Tree'
+import { Tree, treeHolding, type TreeNode } from './Tree'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 
 /** Every node by id, with the labels of its ancestors, for the trigger to name a choice by its path. */
@@ -37,7 +37,8 @@ const WORDS: TreeSelectWords = {
 /**
  * A field that picks from a hierarchy: the trigger reads like a select and names the choice with
  * its path, and the popover holds a search over a tree. `multiple` chooses several with checkboxes
- * and keeps the popover open.
+ * and keeps the popover open; the trigger then lists the choices by name with their count at its
+ * end. The tree opens on the branches that lead to a choice, and a parent holding some shows a dash.
  */
 export function TreeSelect({
     id,
@@ -69,6 +70,9 @@ export function TreeSelect({
     const byId = useMemo(() => index(nodes), [nodes])
     const first = value.length > 0 ? byId.get(value[0]) : undefined
     const summary = value.length === 1 && first !== undefined ? first : null
+    const names = value.map((each) => byId.get(each)?.node.label ?? each)
+    // The tree reads this when the popover mounts it: the branches that lead to a choice start unfolded.
+    const unfolded = [...new Set([...defaultOpen, ...treeHolding(nodes, new Set(value))])]
 
     return (
         <Popover open={openProp ?? open} onOpenChange={setOpen}>
@@ -91,9 +95,16 @@ export function TreeSelect({
                             )}
                         </>
                     ) : (
-                        <span>{words.selected(value.length)}</span>
+                        <span className="truncate" title={names.join(', ')}>
+                            {names.join(', ')}
+                        </span>
                     )}
                 </span>
+                {value.length > 1 && (
+                    <span className="shrink-0 text-xs text-muted-foreground tabular-nums" aria-label={words.selected(value.length)}>
+                        {value.length}
+                    </span>
+                )}
                 <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" aria-hidden />
             </PopoverTrigger>
             <PopoverContent align="start" className="flex w-(--anchor-width) min-w-72 flex-col gap-0 p-0">
@@ -122,7 +133,7 @@ export function TreeSelect({
                         label={words.search}
                         nodes={nodes}
                         query={query}
-                        defaultOpen={defaultOpen}
+                        defaultOpen={unfolded}
                         selection={multiple ? 'multiple' : 'single'}
                         selected={value}
                         onSelect={(ids) => {
