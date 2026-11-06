@@ -1,61 +1,43 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Command, CornerDownLeft } from 'lucide-react'
-import type { ReactNode } from 'react'
 
 import { Kbd, KbdGroup } from '../../components/ui/kbd'
+import { Row, Stack } from '../../components/Layout'
+import { Specimen } from '../fixtures/Specimen'
 
-function Ground({ children }: { children: ReactNode }) {
-    return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="mx-auto flex max-w-[1100px] flex-col gap-8">{children}</div>
-        </div>
-    )
-}
-
-function Labeled({ label, children }: { label: string; children: ReactNode }) {
-    return (
-        <div className="flex flex-col items-start gap-2">
-            <p className="text-xs text-muted-foreground">{label}</p>
-            {children}
-        </div>
-    )
-}
-
-const meta: Meta = { title: 'Primitives/Actions/Kbd' }
+const meta: Meta = { title: 'Primitives/Actions/Kbd', parameters: { frame: 'column' } }
 export default meta
 
 export const Variants: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="flex flex-wrap items-end gap-6">
-                <Labeled label="single key">
+        <Row gap="xl" align="end" wrap>
+            <Specimen label="single key">
+                <Kbd>K</Kbd>
+            </Specimen>
+            <Specimen label="word">
+                <Kbd>Esc</Kbd>
+            </Specimen>
+            <Specimen label="icon">
+                <Kbd>
+                    <Command />
+                </Kbd>
+            </Specimen>
+            <Specimen label="group">
+                <KbdGroup>
+                    <Kbd>Ctrl</Kbd>
                     <Kbd>K</Kbd>
-                </Labeled>
-                <Labeled label="word">
-                    <Kbd>Esc</Kbd>
-                </Labeled>
-                <Labeled label="icon">
+                </KbdGroup>
+            </Specimen>
+            <Specimen label="group with plus">
+                <KbdGroup>
+                    <Kbd>Shift</Kbd>
+                    <span className="text-xs text-muted-foreground">+</span>
                     <Kbd>
-                        <Command />
+                        <CornerDownLeft />
                     </Kbd>
-                </Labeled>
-                <Labeled label="group">
-                    <KbdGroup>
-                        <Kbd>Ctrl</Kbd>
-                        <Kbd>K</Kbd>
-                    </KbdGroup>
-                </Labeled>
-                <Labeled label="group with plus">
-                    <KbdGroup>
-                        <Kbd>Shift</Kbd>
-                        <span className="text-xs text-muted-foreground">+</span>
-                        <Kbd>
-                            <CornerDownLeft />
-                        </Kbd>
-                    </KbdGroup>
-                </Labeled>
-            </div>
-        </Ground>
+                </KbdGroup>
+            </Specimen>
+        </Row>
     ),
 }
 
@@ -69,22 +51,20 @@ const SHORTCUTS = [
 
 export const Shortcuts: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="flex max-w-md flex-col gap-3">
-                <p className="text-sm font-medium">Keyboard shortcuts</p>
-                <ul className="divide-y divide-border rounded-lg border border-border">
-                    {SHORTCUTS.map((shortcut) => (
-                        <li key={shortcut.does} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
-                            <span>{shortcut.does}</span>
-                            <KbdGroup>
-                                {shortcut.keys.map((key) => (
-                                    <Kbd key={key}>{key}</Kbd>
-                                ))}
-                            </KbdGroup>
-                        </li>
-                    ))}
-                </ul>
-            </div>
-        </Ground>
+        <Stack className="max-w-md">
+            <p className="text-sm font-medium">Keyboard shortcuts</p>
+            <ul className="divide-y divide-border rounded-lg border border-border">
+                {SHORTCUTS.map((shortcut) => (
+                    <Row key={shortcut.does} as="li" gap="md" justify="between" className="px-3 py-2 text-sm">
+                        <span>{shortcut.does}</span>
+                        <KbdGroup>
+                            {shortcut.keys.map((key) => (
+                                <Kbd key={key}>{key}</Kbd>
+                            ))}
+                        </KbdGroup>
+                    </Row>
+                ))}
+            </ul>
+        </Stack>
     ),
 }

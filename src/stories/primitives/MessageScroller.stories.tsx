@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 
 import { Bubble, BubbleContent } from '../../components/ui/bubble'
 import { Message, MessageAvatar, MessageContent, MessageFooter } from '../../components/ui/message'
+import { Row, Stack } from '../../components/Layout'
 import {
     MessageScroller,
     MessageScrollerButton,
@@ -17,14 +18,6 @@ import {
  * The scrolling column a conversation lives in. It opens at the end, and a button appears to
  * return there once the reader scrolls back.
  */
-function Ground({ children }: { children: ReactNode }) {
-    return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="mx-auto flex max-w-[1100px] flex-col gap-8">{children}</div>
-        </div>
-    )
-}
-
 function Caption({ children }: { children: ReactNode }) {
     return <p className="text-xs text-muted-foreground">{children}</p>
 }
@@ -100,39 +93,35 @@ function Column({ turns, position }: { turns: typeof TURNS; position: 'start' | 
     )
 }
 
-const meta: Meta = { title: 'Primitives/Chat/MessageScroller' }
+const meta: Meta = { title: 'Primitives/Chat/MessageScroller', parameters: { frame: 'column' } }
 export default meta
 
 export const Variants: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="flex flex-wrap gap-6">
-                <div className="flex w-full max-w-xl flex-col gap-2">
-                    <Caption>opens at the end</Caption>
-                    <Column turns={TURNS} position="end" />
-                </div>
-                <div className="flex w-full max-w-xl flex-col gap-2">
-                    <Caption>opens at the start</Caption>
-                    <Column turns={TURNS} position="start" />
-                </div>
-            </div>
-        </Ground>
+        <Row gap="xl" align="stretch" wrap>
+            <Stack gap="sm" className="w-full max-w-xl">
+                <Caption>opens at the end</Caption>
+                <Column turns={TURNS} position="end" />
+            </Stack>
+            <Stack gap="sm" className="w-full max-w-xl">
+                <Caption>opens at the start</Caption>
+                <Column turns={TURNS} position="start" />
+            </Stack>
+        </Row>
     ),
 }
 
 export const States: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="flex flex-wrap gap-6">
-                <div className="flex w-full max-w-xl flex-col gap-2">
-                    <Caption>empty</Caption>
-                    <Column turns={[]} position="end" />
-                </div>
-                <div className="flex w-full max-w-xl flex-col gap-2">
-                    <Caption>short, nothing to scroll</Caption>
-                    <Column turns={TURNS.slice(0, 2)} position="end" />
-                </div>
-            </div>
-        </Ground>
+        <Row gap="xl" align="stretch" wrap>
+            <Stack gap="sm" className="w-full max-w-xl">
+                <Caption>empty</Caption>
+                <Column turns={[]} position="end" />
+            </Stack>
+            <Stack gap="sm" className="w-full max-w-xl">
+                <Caption>short, nothing to scroll</Caption>
+                <Column turns={TURNS.slice(0, 2)} position="end" />
+            </Stack>
+        </Row>
     ),
 }

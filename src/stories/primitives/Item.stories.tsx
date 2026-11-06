@@ -3,6 +3,7 @@ import { ChevronRight, FileText, ListChecks } from 'lucide-react'
 
 import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
+import { Stack } from '../../components/Layout'
 import {
     Item,
     ItemActions,
@@ -16,16 +17,8 @@ import {
     ItemTitle,
 } from '../../components/ui/item'
 
-const meta: Meta = { title: 'Primitives/Display/Item' }
+const meta: Meta = { title: 'Primitives/Display/Item', parameters: { frame: 'column' } }
 export default meta
-
-function Ground({ children }: { children: React.ReactNode }) {
-    return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="mx-auto flex max-w-[1100px] flex-col gap-8">{children}</div>
-        </div>
-    )
-}
 
 function Caption({ children }: { children: React.ReactNode }) {
     return <p className="text-xs text-muted-foreground">{children}</p>
@@ -33,73 +26,69 @@ function Caption({ children }: { children: React.ReactNode }) {
 
 export const Variants: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="flex max-w-xl flex-col gap-6">
-                {(['default', 'outline', 'muted'] as const).map((variant) => (
-                    <div key={variant} className="flex flex-col gap-2">
-                        <Caption>variant: {variant}</Caption>
-                        <Item variant={variant}>
-                            <ItemMedia variant="icon">
-                                <ListChecks />
-                            </ItemMedia>
-                            <ItemContent>
-                                <ItemTitle>Nightly export</ItemTitle>
-                                <ItemDescription>Exports the day's orders every night at 02:00.</ItemDescription>
-                            </ItemContent>
-                            <ItemActions>
-                                <Button variant="outline" size="sm">
-                                    Open
-                                </Button>
-                            </ItemActions>
-                        </Item>
-                    </div>
-                ))}
-                {(['default', 'sm', 'xs'] as const).map((size) => (
-                    <div key={size} className="flex flex-col gap-2">
-                        <Caption>size: {size}</Caption>
-                        <Item variant="outline" size={size}>
-                            <ItemContent>
-                                <ItemTitle>
-                                    <span className="font-mono">nightly-export</span>
-                                </ItemTitle>
-                                <ItemDescription>Last run succeeded at 2026-11-04 14:02.</ItemDescription>
-                            </ItemContent>
-                        </Item>
-                    </div>
-                ))}
-            </div>
-        </Ground>
+        <Stack gap="xl" className="max-w-xl">
+            {(['default', 'outline', 'muted'] as const).map((variant) => (
+                <Stack key={variant} gap="sm">
+                    <Caption>variant: {variant}</Caption>
+                    <Item variant={variant}>
+                        <ItemMedia variant="icon">
+                            <ListChecks />
+                        </ItemMedia>
+                        <ItemContent>
+                            <ItemTitle>Nightly export</ItemTitle>
+                            <ItemDescription>Exports the day's orders every night at 02:00.</ItemDescription>
+                        </ItemContent>
+                        <ItemActions>
+                            <Button variant="outline" size="sm">
+                                Open
+                            </Button>
+                        </ItemActions>
+                    </Item>
+                </Stack>
+            ))}
+            {(['default', 'sm', 'xs'] as const).map((size) => (
+                <Stack key={size} gap="sm">
+                    <Caption>size: {size}</Caption>
+                    <Item variant="outline" size={size}>
+                        <ItemContent>
+                            <ItemTitle>
+                                <span className="font-mono">nightly-export</span>
+                            </ItemTitle>
+                            <ItemDescription>Last run succeeded at 2026-11-04 14:02.</ItemDescription>
+                        </ItemContent>
+                    </Item>
+                </Stack>
+            ))}
+        </Stack>
     ),
 }
 
 export const WithHeaderAndFooter: StoryObj = {
     name: 'Header and footer',
     render: () => (
-        <Ground>
-            <div className="flex max-w-xl flex-col gap-2">
-                <Caption>header and footer, as a link</Caption>
-                <Item variant="outline" render={<a href="#" />}>
-                    <ItemHeader>
-                        <span className="font-mono text-xs text-muted-foreground">file</span>
-                        <Badge variant="outline">csv</Badge>
-                    </ItemHeader>
-                    <ItemMedia variant="icon">
-                        <FileText />
-                    </ItemMedia>
-                    <ItemContent>
-                        <ItemTitle>October orders</ItemTitle>
-                        <ItemDescription>Every order placed in October, one row each.</ItemDescription>
-                    </ItemContent>
-                    <ItemActions>
-                        <ChevronRight className="size-4 text-muted-foreground" />
-                    </ItemActions>
-                    <ItemFooter>
-                        <span className="font-mono text-xs text-muted-foreground">orders-2026-10.csv</span>
-                        <span className="text-xs text-muted-foreground tabular-nums">2.4 MB</span>
-                    </ItemFooter>
-                </Item>
-            </div>
-        </Ground>
+        <Stack gap="sm" className="max-w-xl">
+            <Caption>header and footer, as a link</Caption>
+            <Item variant="outline" render={<a href="#" />}>
+                <ItemHeader>
+                    <span className="font-mono text-xs text-muted-foreground">file</span>
+                    <Badge variant="outline">csv</Badge>
+                </ItemHeader>
+                <ItemMedia variant="icon">
+                    <FileText />
+                </ItemMedia>
+                <ItemContent>
+                    <ItemTitle>October orders</ItemTitle>
+                    <ItemDescription>Every order placed in October, one row each.</ItemDescription>
+                </ItemContent>
+                <ItemActions>
+                    <ChevronRight className="size-4 text-muted-foreground" />
+                </ItemActions>
+                <ItemFooter>
+                    <span className="font-mono text-xs text-muted-foreground">orders-2026-10.csv</span>
+                    <span className="text-xs text-muted-foreground tabular-nums">2.4 MB</span>
+                </ItemFooter>
+            </Item>
+        </Stack>
     ),
 }
 
@@ -119,27 +108,25 @@ const TONE: Record<string, string> = {
 
 export const JobList: StoryObj = {
     render: () => (
-        <Ground>
-            <ItemGroup className="max-w-2xl gap-0">
-                {JOBS.map((job, at) => (
-                    <div key={job.code} role="listitem">
-                        {at > 0 && <ItemSeparator className="my-0" />}
-                        <Item render={<a href="#" />}>
-                            <ItemMedia variant="icon">
-                                <ListChecks />
-                            </ItemMedia>
-                            <ItemContent>
-                                <ItemTitle>{job.name ?? <span className="font-mono">{job.code}</span>}</ItemTitle>
-                                {job.name !== undefined && <ItemDescription className="font-mono text-xs">{job.code}</ItemDescription>}
-                            </ItemContent>
-                            <ItemActions>
-                                <Badge className={TONE[job.last]}>{job.last}</Badge>
-                                <span className="hidden text-xs text-muted-foreground tabular-nums sm:inline">{job.when}</span>
-                            </ItemActions>
-                        </Item>
-                    </div>
-                ))}
-            </ItemGroup>
-        </Ground>
+        <ItemGroup className="max-w-2xl gap-0">
+            {JOBS.map((job, at) => (
+                <div key={job.code} role="listitem">
+                    {at > 0 && <ItemSeparator className="my-0" />}
+                    <Item render={<a href="#" />}>
+                        <ItemMedia variant="icon">
+                            <ListChecks />
+                        </ItemMedia>
+                        <ItemContent>
+                            <ItemTitle>{job.name ?? <span className="font-mono">{job.code}</span>}</ItemTitle>
+                            {job.name !== undefined && <ItemDescription className="font-mono text-xs">{job.code}</ItemDescription>}
+                        </ItemContent>
+                        <ItemActions>
+                            <Badge className={TONE[job.last]}>{job.last}</Badge>
+                            <span className="hidden text-xs text-muted-foreground tabular-nums sm:inline">{job.when}</span>
+                        </ItemActions>
+                    </Item>
+                </div>
+            ))}
+        </ItemGroup>
     ),
 }

@@ -3,15 +3,16 @@ import { CircleAlert, Info, RefreshCw } from 'lucide-react'
 
 import { Alert, AlertAction, AlertDescription, AlertTitle } from '../../components/ui/alert'
 import { Button } from '../../components/ui/button'
+import { Stack } from '../../components/Layout'
 
-const meta: Meta = { title: 'Primitives/Display/Alert' }
+const meta: Meta = { title: 'Primitives/Display/Alert', parameters: { frame: 'padded' } }
 export default meta
 
 function Ground({ children }: { children: React.ReactNode }) {
     return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="mx-auto flex max-w-[1100px] flex-col gap-6">{children}</div>
-        </div>
+        <Stack gap="xl" className="mx-auto max-w-[1100px]">
+            {children}
+        </Stack>
     )
 }
 
@@ -22,28 +23,28 @@ function Caption({ children }: { children: React.ReactNode }) {
 export const Variants: StoryObj = {
     render: () => (
         <Ground>
-            <div className="flex max-w-xl flex-col gap-2">
+            <Stack gap="sm" className="max-w-xl">
                 <Caption>default</Caption>
                 <Alert>
                     <Info />
                     <AlertTitle>The harbor project moves to a new region tonight</AlertTitle>
                     <AlertDescription>Jobs keep running; expect a short pause at 02:00.</AlertDescription>
                 </Alert>
-            </div>
-            <div className="flex max-w-xl flex-col gap-2">
+            </Stack>
+            <Stack gap="sm" className="max-w-xl">
                 <Caption>destructive</Caption>
                 <Alert variant="destructive">
                     <CircleAlert />
                     <AlertTitle>The upload was refused</AlertTitle>
                     <AlertDescription>orders-2026-10.csv is larger than the 50 MB limit.</AlertDescription>
                 </Alert>
-            </div>
-            <div className="flex max-w-xl flex-col gap-2">
+            </Stack>
+            <Stack gap="sm" className="max-w-xl">
                 <Caption>title only, no icon</Caption>
                 <Alert>
                     <AlertTitle>Runs are paused for nightly-export.</AlertTitle>
                 </Alert>
-            </div>
+            </Stack>
         </Ground>
     ),
 }
@@ -51,7 +52,7 @@ export const Variants: StoryObj = {
 export const WithAction: StoryObj = {
     render: () => (
         <Ground>
-            <div className="flex max-w-xl flex-col gap-2">
+            <Stack gap="sm" className="max-w-xl">
                 <Caption>with an action</Caption>
                 <Alert variant="destructive">
                     <CircleAlert />
@@ -66,7 +67,7 @@ export const WithAction: StoryObj = {
                         </Button>
                     </AlertAction>
                 </Alert>
-            </div>
+            </Stack>
         </Ground>
     ),
 }

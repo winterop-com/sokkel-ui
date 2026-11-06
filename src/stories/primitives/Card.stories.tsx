@@ -5,17 +5,10 @@ import { Avatar, AvatarFallback, AvatarGroup } from '../../components/ui/avatar'
 import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../components/ui/card'
+import { Columns, Row, Stack } from '../../components/Layout'
 
-const meta: Meta = { title: 'Primitives/Display/Card' }
+const meta: Meta = { title: 'Primitives/Display/Card', parameters: { frame: 'column' } }
 export default meta
-
-function Ground({ children }: { children: React.ReactNode }) {
-    return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="mx-auto flex max-w-[1100px] flex-col gap-8">{children}</div>
-        </div>
-    )
-}
 
 function Caption({ children }: { children: React.ReactNode }) {
     return <p className="text-xs text-muted-foreground">{children}</p>
@@ -23,10 +16,10 @@ function Caption({ children }: { children: React.ReactNode }) {
 
 export const Variants: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="grid gap-6 sm:grid-cols-2">
+        <>
+            <Columns>
                 {(['default', 'sm'] as const).map((size) => (
-                    <div key={size} className="flex flex-col gap-2">
+                    <Stack key={size} gap="sm">
                         <Caption>{size}</Caption>
                         <Card size={size}>
                             <CardHeader>
@@ -48,11 +41,11 @@ export const Variants: StoryObj = {
                                 <Button size="sm">Run now</Button>
                             </CardFooter>
                         </Card>
-                    </div>
+                    </Stack>
                 ))}
-            </div>
-            <div className="grid gap-6 sm:grid-cols-2">
-                <div className="flex flex-col gap-2">
+            </Columns>
+            <Columns>
+                <Stack gap="sm">
                     <Caption>header and content only</Caption>
                     <Card>
                         <CardHeader>
@@ -60,8 +53,8 @@ export const Variants: StoryObj = {
                         </CardHeader>
                         <CardContent>Twelve files, the newest orders-2026-10.csv.</CardContent>
                     </Card>
-                </div>
-                <div className="flex flex-col gap-2">
+                </Stack>
+                <Stack gap="sm">
                     <Caption>header with a bottom border</Caption>
                     <Card>
                         <CardHeader className="border-b">
@@ -70,9 +63,9 @@ export const Variants: StoryObj = {
                         </CardHeader>
                         <CardContent>Every night at 02:00, and on demand.</CardContent>
                     </Card>
-                </div>
-            </div>
-        </Ground>
+                </Stack>
+            </Columns>
+        </>
     ),
 }
 
@@ -114,39 +107,37 @@ const TONE: Record<string, string> = {
 
 export const Projects: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {PROJECTS.map((project) => (
-                    <Card key={project.code} size="sm">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <FolderKanban className="size-4 text-muted-foreground" />
-                                {project.name ?? <span className="font-mono">{project.code}</span>}
-                            </CardTitle>
-                            {project.name !== undefined && <CardDescription className="font-mono text-xs">{project.code}</CardDescription>}
-                            <CardAction>
-                                <AvatarGroup>
-                                    {project.people.map((initials) => (
-                                        <Avatar key={initials} size="sm">
-                                            <AvatarFallback>{initials}</AvatarFallback>
-                                        </Avatar>
-                                    ))}
-                                </AvatarGroup>
-                            </CardAction>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-muted-foreground">{project.description}</p>
-                        </CardContent>
-                        <CardFooter className="flex-wrap justify-between gap-2 text-xs">
-                            <span className="flex items-center gap-2">
-                                <Badge className={TONE[project.last]}>{project.last}</Badge>
-                                <span className="text-muted-foreground tabular-nums">{project.jobs} jobs</span>
-                            </span>
-                            <span className="text-muted-foreground tabular-nums">{project.when}</span>
-                        </CardFooter>
-                    </Card>
-                ))}
-            </div>
-        </Ground>
+        <Columns count={3} gap="lg">
+            {PROJECTS.map((project) => (
+                <Card key={project.code} size="sm">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <FolderKanban className="size-4 text-muted-foreground" />
+                            {project.name ?? <span className="font-mono">{project.code}</span>}
+                        </CardTitle>
+                        {project.name !== undefined && <CardDescription className="font-mono text-xs">{project.code}</CardDescription>}
+                        <CardAction>
+                            <AvatarGroup>
+                                {project.people.map((initials) => (
+                                    <Avatar key={initials} size="sm">
+                                        <AvatarFallback>{initials}</AvatarFallback>
+                                    </Avatar>
+                                ))}
+                            </AvatarGroup>
+                        </CardAction>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-muted-foreground">{project.description}</p>
+                    </CardContent>
+                    <CardFooter className="flex-wrap justify-between gap-2 text-xs">
+                        <Row as="span">
+                            <Badge className={TONE[project.last]}>{project.last}</Badge>
+                            <span className="text-muted-foreground tabular-nums">{project.jobs} jobs</span>
+                        </Row>
+                        <span className="text-muted-foreground tabular-nums">{project.when}</span>
+                    </CardFooter>
+                </Card>
+            ))}
+        </Columns>
     ),
 }

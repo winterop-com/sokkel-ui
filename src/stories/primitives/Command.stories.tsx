@@ -14,7 +14,7 @@ import {
     CommandShortcut,
 } from '../../components/ui/command'
 
-const meta: Meta = { title: 'Primitives/Menus/Command' }
+const meta: Meta = { title: 'Primitives/Menus/Command', parameters: { frame: 'padded' } }
 export default meta
 
 function Palette({ search = '' }: { search?: string }) {
@@ -70,32 +70,26 @@ function Palette({ search = '' }: { search?: string }) {
 
 export const Inline: StoryObj = {
     render: () => (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <Command className="max-w-md rounded-xl border">
-                <Palette />
-            </Command>
-        </div>
+        <Command className="max-w-md rounded-xl border">
+            <Palette />
+        </Command>
     ),
 }
 
 export const Empty: StoryObj = {
     render: () => (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <Command className="max-w-md rounded-xl border">
-                <Palette search="payroll" />
-            </Command>
-        </div>
+        <Command className="max-w-md rounded-xl border">
+            <Palette search="payroll" />
+        </Command>
     ),
 }
 
 export const InDialog: StoryObj = {
     render: () => (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <CommandDialog defaultOpen title="Go to" description="Search jobs, services and webhooks.">
-                <Command>
-                    <Palette />
-                </Command>
-            </CommandDialog>
-        </div>
+        <CommandDialog defaultOpen title="Go to" description="Search jobs, services and webhooks.">
+            <Command>
+                <Palette />
+            </Command>
+        </CommandDialog>
     ),
 }

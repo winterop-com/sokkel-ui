@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 
 import { Toaster, createToastManager } from '../../components/ui/toast'
 
-const meta: Meta = { title: 'Primitives/Feedback/Toast' }
+const meta: Meta = { title: 'Primitives/Feedback/Toast', parameters: { frame: 'padded' } }
 export default meta
 
 type Manager = ReturnType<typeof createToastManager>
@@ -23,9 +23,7 @@ function Shown({ manager, toasts }: { manager: Manager; toasts: Options[] }) {
     }, [manager, toasts])
     return (
         <Toaster toastManager={manager}>
-            <div className="min-h-svh bg-background p-6 text-foreground">
-                <p className="text-sm text-muted-foreground">Toasts appear in the bottom corner.</p>
-            </div>
+            <p className="text-sm text-muted-foreground">Toasts appear in the bottom corner.</p>
         </Toaster>
     )
 }

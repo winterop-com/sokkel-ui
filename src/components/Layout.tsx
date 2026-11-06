@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { HTMLAttributes, ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 
@@ -8,6 +8,7 @@ import { cn } from '../lib/cn'
  */
 export const GAP = {
     none: 'gap-0',
+    '3xs': 'gap-0.5',
     '2xs': 'gap-1',
     xs: 'gap-1.5',
     sm: 'gap-2',
@@ -15,6 +16,7 @@ export const GAP = {
     lg: 'gap-4',
     xl: 'gap-6',
     '2xl': 'gap-8',
+    '3xl': 'gap-10',
     page: 'gap-(--density-page-gap)',
 } as const
 
@@ -36,9 +38,10 @@ const JUSTIFY = {
 } as const
 
 /** The element a layout draws as, for the document's outline. */
-type As = 'div' | 'section' | 'ul' | 'ol' | 'li' | 'nav' | 'header' | 'footer' | 'form' | 'main' | 'aside'
+type As = 'div' | 'span' | 'p' | 'label' | 'section' | 'ul' | 'ol' | 'li' | 'dl' | 'nav' | 'header' | 'footer' | 'form' | 'main' | 'aside'
 
-interface Base {
+/** A layout passes the element's own attributes through: an id, `dir`, a role, data attributes, a form's submit. */
+interface Base extends Omit<HTMLAttributes<HTMLElement>, 'children' | 'className'> {
     children?: ReactNode
     gap?: Gap
     as?: As
@@ -49,8 +52,19 @@ interface Base {
  * Cells one under the other. Each cell may shrink below its content's width, so a long line
  * truncates or wraps inside it instead of pushing the stack wider than its container.
  */
-export function Stack({ children, gap = 'md', align = 'stretch', as: Tag = 'div', className }: Base & { align?: keyof typeof ALIGN }) {
-    return <Tag className={cn('flex min-w-0 flex-col *:min-w-0', GAP[gap], ALIGN[align], className)}>{children}</Tag>
+export function Stack({
+    children,
+    gap = 'md',
+    align = 'stretch',
+    as: Tag = 'div',
+    className,
+    ...props
+}: Base & { align?: keyof typeof ALIGN }) {
+    return (
+        <Tag {...props} className={cn('flex min-w-0 flex-col *:min-w-0', GAP[gap], ALIGN[align], className)}>
+            {children}
+        </Tag>
+    )
 }
 
 /**
@@ -66,9 +80,10 @@ export function Row({
     wrap = false,
     as: Tag = 'div',
     className,
+    ...props
 }: Base & { align?: keyof typeof ALIGN; justify?: keyof typeof JUSTIFY; wrap?: boolean }) {
     return (
-        <Tag className={cn('flex min-w-0 *:min-w-0', wrap && 'flex-wrap', GAP[gap], ALIGN[align], JUSTIFY[justify], className)}>
+        <Tag {...props} className={cn('flex min-w-0 *:min-w-0', wrap && 'flex-wrap', GAP[gap], ALIGN[align], JUSTIFY[justify], className)}>
             {children}
         </Tag>
     )

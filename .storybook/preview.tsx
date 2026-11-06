@@ -53,15 +53,22 @@ const withLook: Decorator = (Story, context) => {
 
 /**
  * The ground a story stands on. `frame: 'padded'` draws the page's background at the window's full
- * height with room around the story, for a part with a natural width; without it the story fills
- * the canvas itself, as an app's shell does.
+ * height with room around the story, for a part with a natural width; `frame: 'column'` also
+ * centers the story in a column with room between its parts, for a sheet of variants. Without
+ * either the story fills the canvas itself, as an app's shell does.
  */
 const withFrame: Decorator = (Story, context) => {
-    const frame = context.parameters.frame as 'padded' | undefined
-    if (frame !== 'padded') return <Story />
+    const frame = context.parameters.frame as 'padded' | 'column' | undefined
+    if (frame !== 'padded' && frame !== 'column') return <Story />
     return (
         <div className="min-h-svh bg-background p-6 text-foreground">
-            <Story />
+            {frame === 'column' ? (
+                <div className="mx-auto flex max-w-[1100px] flex-col gap-8">
+                    <Story />
+                </div>
+            ) : (
+                <Story />
+            )}
         </div>
     )
 }

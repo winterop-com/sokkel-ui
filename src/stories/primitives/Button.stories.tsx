@@ -1,31 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Loader2, MoreHorizontal, Play, Plus, RotateCcw, Trash2 } from 'lucide-react'
-import type { ReactNode } from 'react'
 
 import { Button } from '../../components/ui/button'
-
-function Ground({ children }: { children: ReactNode }) {
-    return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="mx-auto flex max-w-[1100px] flex-col gap-8">{children}</div>
-        </div>
-    )
-}
-
-function Labeled({ label, children }: { label: string; children: ReactNode }) {
-    return (
-        <div className="flex flex-col items-start gap-2">
-            <p className="text-xs text-muted-foreground">{label}</p>
-            {children}
-        </div>
-    )
-}
+import { Row, Stack } from '../../components/Layout'
+import { Specimen } from '../fixtures/Specimen'
 
 const VARIANTS = ['default', 'outline', 'secondary', 'ghost', 'destructive', 'link'] as const
 const SIZES = ['xs', 'sm', 'default', 'lg'] as const
 const ICON_SIZES = ['icon-xs', 'icon-sm', 'icon', 'icon-lg'] as const
 
-const meta: Meta = { title: 'Primitives/Actions/Button' }
+const meta: Meta = { title: 'Primitives/Actions/Button', parameters: { frame: 'column' } }
 export default meta
 
 /** Every prop of a button, to try live. */
@@ -43,117 +27,111 @@ export const Playground: StoryObj<{
         size: { control: 'inline-radio', options: ['xs', 'sm', 'default', 'lg'] },
     },
     render: (args) => (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <Button variant={args.variant} size={args.size} disabled={args.disabled}>
-                {args.icon && <Play aria-hidden />}
-                {args.label}
-            </Button>
-        </div>
+        <Button variant={args.variant} size={args.size} disabled={args.disabled}>
+            {args.icon && <Play aria-hidden />}
+            {args.label}
+        </Button>
     ),
 }
 
 export const Variants: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="flex flex-wrap gap-3">
+        <>
+            <Row gap="md" align="stretch" wrap>
                 {VARIANTS.map((variant) => (
-                    <Labeled key={variant} label={variant}>
+                    <Specimen key={variant} label={variant}>
                         <Button variant={variant}>Run now</Button>
-                    </Labeled>
+                    </Specimen>
                 ))}
-            </div>
-            <div className="flex flex-wrap items-end gap-3">
+            </Row>
+            <Row gap="md" align="end" wrap>
                 {SIZES.map((size) => (
-                    <Labeled key={size} label={size}>
+                    <Specimen key={size} label={size}>
                         <Button size={size}>Run now</Button>
-                    </Labeled>
+                    </Specimen>
                 ))}
-            </div>
-            <div className="flex flex-wrap items-end gap-3">
+            </Row>
+            <Row gap="md" align="end" wrap>
                 {ICON_SIZES.map((size) => (
-                    <Labeled key={size} label={size}>
+                    <Specimen key={size} label={size}>
                         <Button size={size} variant="outline" aria-label="More actions">
                             <MoreHorizontal />
                         </Button>
-                    </Labeled>
+                    </Specimen>
                 ))}
-            </div>
-            <div className="flex flex-wrap gap-3">
-                <Labeled label="icon inline-start">
+            </Row>
+            <Row gap="md" align="stretch" wrap>
+                <Specimen label="icon inline-start">
                     <Button>
                         <Play data-icon="inline-start" />
                         Run now
                     </Button>
-                </Labeled>
-                <Labeled label="icon inline-end">
+                </Specimen>
+                <Specimen label="icon inline-end">
                     <Button variant="outline">
                         New job
                         <Plus data-icon="inline-end" />
                     </Button>
-                </Labeled>
-            </div>
-        </Ground>
+                </Specimen>
+            </Row>
+        </>
     ),
 }
 
 export const States: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="flex flex-wrap gap-3">
-                <Labeled label="disabled">
-                    <Button disabled>Run now</Button>
-                </Labeled>
-                <Labeled label="disabled outline">
-                    <Button variant="outline" disabled>
-                        Retry
-                    </Button>
-                </Labeled>
-                <Labeled label="invalid">
-                    <Button variant="outline" aria-invalid>
-                        Apply
-                    </Button>
-                </Labeled>
-                <Labeled label="loading">
-                    <Button disabled>
-                        <Loader2 data-icon="inline-start" className="animate-spin" />
-                        Starting run
-                    </Button>
-                </Labeled>
-            </div>
-        </Ground>
+        <Row gap="md" align="stretch" wrap>
+            <Specimen label="disabled">
+                <Button disabled>Run now</Button>
+            </Specimen>
+            <Specimen label="disabled outline">
+                <Button variant="outline" disabled>
+                    Retry
+                </Button>
+            </Specimen>
+            <Specimen label="invalid">
+                <Button variant="outline" aria-invalid>
+                    Apply
+                </Button>
+            </Specimen>
+            <Specimen label="loading">
+                <Button disabled>
+                    <Loader2 data-icon="inline-start" className="animate-spin" />
+                    Starting run
+                </Button>
+            </Specimen>
+        </Row>
     ),
 }
 
 export const RunActions: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="flex flex-col gap-4 rounded-lg border border-border p-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex flex-col gap-1">
-                        <p className="text-sm font-medium">Import orders</p>
-                        <p className="font-mono text-xs text-muted-foreground">import-orders</p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                        <Button variant="ghost" size="sm">
-                            <RotateCcw data-icon="inline-start" />
-                            Retry failed
-                        </Button>
-                        <Button variant="outline" size="sm">
-                            Edit
-                        </Button>
-                        <Button size="sm">
-                            <Play data-icon="inline-start" />
-                            Run now
-                        </Button>
-                        <Button variant="destructive" size="icon-sm" aria-label="Delete job">
-                            <Trash2 />
-                        </Button>
-                    </div>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                    Last run failed at 2026-11-04 14:02 after 0.3s. The fetch step could not reach api.example.org.
-                </p>
-            </div>
-        </Ground>
+        <Stack gap="lg" className="rounded-lg border border-border p-4">
+            <Row gap="md" justify="between" wrap>
+                <Stack gap="2xs">
+                    <p className="text-sm font-medium">Import orders</p>
+                    <p className="font-mono text-xs text-muted-foreground">import-orders</p>
+                </Stack>
+                <Row align="stretch" wrap>
+                    <Button variant="ghost" size="sm">
+                        <RotateCcw data-icon="inline-start" />
+                        Retry failed
+                    </Button>
+                    <Button variant="outline" size="sm">
+                        Edit
+                    </Button>
+                    <Button size="sm">
+                        <Play data-icon="inline-start" />
+                        Run now
+                    </Button>
+                    <Button variant="destructive" size="icon-sm" aria-label="Delete job">
+                        <Trash2 />
+                    </Button>
+                </Row>
+            </Row>
+            <p className="text-sm text-muted-foreground">
+                Last run failed at 2026-11-04 14:02 after 0.3s. The fetch step could not reach api.example.org.
+            </p>
+        </Stack>
     ),
 }

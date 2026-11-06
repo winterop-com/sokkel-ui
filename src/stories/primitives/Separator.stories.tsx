@@ -2,17 +2,10 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import { PageHeader } from '../../components/PageHeader'
 import { Separator } from '../../components/ui/separator'
+import { Row, Stack } from '../../components/Layout'
 
-const meta: Meta = { title: 'Primitives/Display/Separator' }
+const meta: Meta = { title: 'Primitives/Display/Separator', parameters: { frame: 'column' } }
 export default meta
-
-function Ground({ children }: { children: React.ReactNode }) {
-    return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="mx-auto flex max-w-[1100px] flex-col gap-8">{children}</div>
-        </div>
-    )
-}
 
 function Caption({ children }: { children: React.ReactNode }) {
     return <p className="text-xs text-muted-foreground">{children}</p>
@@ -20,41 +13,39 @@ function Caption({ children }: { children: React.ReactNode }) {
 
 export const Variants: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="flex max-w-md flex-col gap-2">
+        <>
+            <Stack gap="sm" className="max-w-md">
                 <Caption>horizontal</Caption>
                 <p className="text-sm">Settings</p>
                 <Separator />
                 <p className="text-sm">Output</p>
-            </div>
-            <div className="flex flex-col gap-2">
+            </Stack>
+            <Stack gap="sm">
                 <Caption>vertical</Caption>
-                <div className="flex h-5 items-center gap-3 text-sm">
+                <Row gap="md" className="h-5 text-sm">
                     <span>Runs</span>
                     <Separator orientation="vertical" />
                     <span>Files</span>
                     <Separator orientation="vertical" />
                     <span>Settings</span>
-                </div>
-            </div>
-        </Ground>
+                </Row>
+            </Stack>
+        </>
     ),
 }
 
 export const JobHeader: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="flex max-w-xl flex-col gap-3">
-                <PageHeader title="Nightly export" code="nightly-export" />
-                <Separator />
-                <div className="flex h-5 flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                    <span>3 steps</span>
-                    <Separator orientation="vertical" />
-                    <span>every night at 02:00</span>
-                    <Separator orientation="vertical" />
-                    <span className="tabular-nums">last run 2026-11-04 14:02</span>
-                </div>
-            </div>
-        </Ground>
+        <Stack className="max-w-xl">
+            <PageHeader title="Nightly export" code="nightly-export" />
+            <Separator />
+            <Row gap="md" wrap className="h-5 text-xs text-muted-foreground">
+                <span>3 steps</span>
+                <Separator orientation="vertical" />
+                <span>every night at 02:00</span>
+                <Separator orientation="vertical" />
+                <span className="tabular-nums">last run 2026-11-04 14:02</span>
+            </Row>
+        </Stack>
     ),
 }

@@ -1,73 +1,53 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import type { ReactNode } from 'react'
 
 import { Checkbox } from '../../components/ui/checkbox'
 import { Input } from '../../components/ui/input'
 import { Label } from '../../components/ui/label'
+import { Row, Stack } from '../../components/Layout'
+import { Specimen } from '../fixtures/Specimen'
 
-function Ground({ children }: { children: ReactNode }) {
-    return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="mx-auto flex max-w-[1100px] flex-col gap-8">{children}</div>
-        </div>
-    )
-}
-
-function Labeled({ label, children }: { label: string; children: ReactNode }) {
-    return (
-        <div className="flex w-full max-w-xs flex-col items-start gap-2">
-            <p className="text-xs text-muted-foreground">{label}</p>
-            {children}
-        </div>
-    )
-}
-
-const meta: Meta = { title: 'Primitives/Inputs/Label' }
+const meta: Meta = { title: 'Primitives/Inputs/Label', parameters: { frame: 'column' } }
 export default meta
 
 export const Variants: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="flex flex-wrap gap-6">
-                <Labeled label="over an input">
-                    <div className="flex w-full flex-col gap-2">
-                        <Label htmlFor="label-code">Code</Label>
-                        <Input id="label-code" defaultValue="import-orders" />
-                    </div>
-                </Labeled>
-                <Labeled label="beside a checkbox">
-                    <div className="flex items-center gap-2">
-                        <Checkbox id="label-notify" defaultChecked />
-                        <Label htmlFor="label-notify">Notify on failure</Label>
-                    </div>
-                </Labeled>
-                <Labeled label="with a hint">
-                    <Label>
-                        Timeout <span className="font-normal text-muted-foreground">(optional)</span>
-                    </Label>
-                </Labeled>
-            </div>
-        </Ground>
+        <Row gap="xl" align="stretch" wrap>
+            <Specimen className="w-full max-w-xs" label="over an input">
+                <Stack gap="sm" className="w-full">
+                    <Label htmlFor="label-code">Code</Label>
+                    <Input id="label-code" defaultValue="import-orders" />
+                </Stack>
+            </Specimen>
+            <Specimen className="w-full max-w-xs" label="beside a checkbox">
+                <Row>
+                    <Checkbox id="label-notify" defaultChecked />
+                    <Label htmlFor="label-notify">Notify on failure</Label>
+                </Row>
+            </Specimen>
+            <Specimen className="w-full max-w-xs" label="with a hint">
+                <Label>
+                    Timeout <span className="font-normal text-muted-foreground">(optional)</span>
+                </Label>
+            </Specimen>
+        </Row>
     ),
 }
 
 export const States: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="flex flex-wrap gap-6">
-                <Labeled label="peer disabled">
-                    <div className="flex items-center gap-2">
-                        <Checkbox id="label-disabled" disabled />
-                        <Label htmlFor="label-disabled">Notify on failure</Label>
-                    </div>
-                </Labeled>
-                <Labeled label="group disabled">
-                    <div className="group flex flex-col gap-2" data-disabled="true">
-                        <Label htmlFor="label-group">Base URL</Label>
-                        <Input id="label-group" disabled defaultValue="https://api.example.org" />
-                    </div>
-                </Labeled>
-            </div>
-        </Ground>
+        <Row gap="xl" align="stretch" wrap>
+            <Specimen className="w-full max-w-xs" label="peer disabled">
+                <Row>
+                    <Checkbox id="label-disabled" disabled />
+                    <Label htmlFor="label-disabled">Notify on failure</Label>
+                </Row>
+            </Specimen>
+            <Specimen className="w-full max-w-xs" label="group disabled">
+                <Stack data-disabled="true" gap="sm" className="group">
+                    <Label htmlFor="label-group">Base URL</Label>
+                    <Input id="label-group" disabled defaultValue="https://api.example.org" />
+                </Stack>
+            </Specimen>
+        </Row>
     ),
 }

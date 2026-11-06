@@ -3,16 +3,9 @@ import type { ReactNode } from 'react'
 
 import { StatusChip, type Status } from '../../components/StatusChip'
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '../../components/ui/carousel'
+import { Row, Stack } from '../../components/Layout'
 
 /** A row of slides that scrolls one or several at a time, with buttons either side. */
-function Ground({ children }: { children: ReactNode }) {
-    return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="mx-auto flex max-w-[1100px] flex-col gap-8">{children}</div>
-        </div>
-    )
-}
-
 function Caption({ children }: { children: ReactNode }) {
     return <p className="text-xs text-muted-foreground">{children}</p>
 }
@@ -27,28 +20,28 @@ const JOBS: { code: string; name: string; status: Status; at: string; took: stri
 
 function JobCard({ job }: { job: (typeof JOBS)[number] }) {
     return (
-        <div className="flex h-full flex-col gap-2 rounded-lg border border-border bg-card p-4 text-card-foreground">
-            <div className="flex items-start justify-between gap-2">
+        <Stack gap="sm" className="h-full rounded-lg border border-border bg-card p-4 text-card-foreground">
+            <Row align="start" justify="between">
                 <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{job.name}</p>
                     <p className="truncate font-mono text-xs text-muted-foreground">{job.code}</p>
                 </div>
                 <StatusChip status={job.status} />
-            </div>
+            </Row>
             <p className="mt-auto text-xs text-muted-foreground tabular-nums">
                 {job.at}, {job.took}
             </p>
-        </div>
+        </Stack>
     )
 }
 
-const meta: Meta = { title: 'Primitives/Layout/Carousel' }
+const meta: Meta = { title: 'Primitives/Layout/Carousel', parameters: { frame: 'column' } }
 export default meta
 
 export const Variants: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="flex flex-col gap-2 px-12">
+        <>
+            <Stack gap="sm" className="px-12">
                 <Caption>horizontal, one slide at a time</Caption>
                 <Carousel className="w-full max-w-sm">
                     <CarouselContent>
@@ -61,8 +54,8 @@ export const Variants: StoryObj = {
                     <CarouselPrevious />
                     <CarouselNext />
                 </Carousel>
-            </div>
-            <div className="flex flex-col gap-2 px-12">
+            </Stack>
+            <Stack gap="sm" className="px-12">
                 <Caption>vertical</Caption>
                 <Carousel orientation="vertical" opts={{ align: 'start' }} className="my-12 w-full max-w-sm">
                     <CarouselContent className="h-48">
@@ -75,28 +68,26 @@ export const Variants: StoryObj = {
                     <CarouselPrevious />
                     <CarouselNext />
                 </Carousel>
-            </div>
-        </Ground>
+            </Stack>
+        </>
     ),
 }
 
 export const RecentJobs: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="flex flex-col gap-3 px-12">
-                <h2 className="text-sm font-medium">Recently run</h2>
-                <Carousel opts={{ align: 'start' }} className="w-full">
-                    <CarouselContent>
-                        {JOBS.map((job) => (
-                            <CarouselItem key={job.code} className="sm:basis-1/2 lg:basis-1/3">
-                                <JobCard job={job} />
-                            </CarouselItem>
-                        ))}
-                    </CarouselContent>
-                    <CarouselPrevious />
-                    <CarouselNext />
-                </Carousel>
-            </div>
-        </Ground>
+        <Stack className="px-12">
+            <h2 className="text-sm font-medium">Recently run</h2>
+            <Carousel opts={{ align: 'start' }} className="w-full">
+                <CarouselContent>
+                    {JOBS.map((job) => (
+                        <CarouselItem key={job.code} className="sm:basis-1/2 lg:basis-1/3">
+                            <JobCard job={job} />
+                        </CarouselItem>
+                    ))}
+                </CarouselContent>
+                <CarouselPrevious />
+                <CarouselNext />
+            </Carousel>
+        </Stack>
     ),
 }
