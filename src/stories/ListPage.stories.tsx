@@ -21,6 +21,7 @@ import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Textarea } from '../components/ui/textarea'
 import { TidevannMark } from './fixtures/TidevannMark'
+import { Columns, Row } from '../components/Layout'
 
 /**
  * The Runs page built from the library alone, with real-shaped data and working controls: the
@@ -256,7 +257,7 @@ function RunsListPage() {
         >
             <Page>
                 <PageHeader title="Runs" count={`${RUNS.length} loaded`} actions={<Button>Run a job</Button>} />
-                <div className="flex flex-wrap items-center gap-2">
+                <Row wrap>
                     <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-64" />
                     <FilterChip
                         facet="Status"
@@ -266,7 +267,7 @@ function RunsListPage() {
                     />
                     <FilterChip facet="Job" />
                     <FilterChip facet="Started by" />
-                </div>
+                </Row>
                 <DataTable
                     columns={COLUMNS}
                     rows={rows}
@@ -291,7 +292,7 @@ function ServiceForm() {
             <Page>
                 <PageHeader title="New service" />
                 <Section title="Service">
-                    <div className="@container grid gap-4 lg:grid-cols-2">
+                    <Columns gap="lg" className="@container">
                         <CodeField id="code" value={code} onChange={setCode} />
                         <Field id="base-url" label="Base URL" hint="base_url" keyHint help="Where the service answers, without /v1.">
                             <Input
@@ -316,7 +317,7 @@ function ServiceForm() {
                             <Button variant="ghost">Cancel</Button>
                             <Button>Create</Button>
                         </div>
-                    </div>
+                    </Columns>
                 </Section>
             </Page>
         </Frame>

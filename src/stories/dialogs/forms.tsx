@@ -16,6 +16,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 import { Textarea } from '../../components/ui/textarea'
 import { cn } from '../../lib/cn'
 import { Behind, TextField, wait } from './parts'
+import { Row, Stack } from '../../components/Layout'
 
 const JOB: JsonSchema = {
     type: 'object',
@@ -169,9 +170,9 @@ export function NestedConfirm() {
                 description="Each step hands its rows to the next."
                 confirm={{ label: 'Save steps', onConfirm: () => setOpen(false) }}
             >
-                <ol className="flex flex-col divide-y divide-border rounded-control border border-border">
+                <Stack as="ol" gap="none" className="divide-y divide-border rounded-control border border-border">
                     {steps.map((step, at) => (
-                        <li key={step.code} className="flex items-center gap-2 py-1.5 pr-1.5 pl-2">
+                        <Row key={step.code} as="li" className="py-1.5 pr-1.5 pl-2">
                             <GripVertical className="size-4 text-faint" aria-hidden />
                             <span className="w-5 font-mono text-xs text-faint tabular-nums">{at + 1}</span>
                             <span className="flex min-w-0 flex-1 flex-col">
@@ -186,9 +187,9 @@ export function NestedConfirm() {
                             >
                                 <Trash2 />
                             </Button>
-                        </li>
+                        </Row>
                     ))}
-                </ol>
+                </Stack>
                 <ConfirmDialog
                     open={removing !== null}
                     onOpenChange={(next) => {
@@ -383,10 +384,10 @@ export function Duplicate() {
                                 onCheckedChange={(checked) => setCarry({ ...carry, [item.key]: checked })}
                                 className="mt-0.5"
                             />
-                            <span className="flex flex-col">
+                            <Stack as="span" gap="none">
                                 <span className="text-sm leading-5">{item.label}</span>
                                 <span className="text-xs text-muted-foreground">{item.detail}</span>
-                            </span>
+                            </Stack>
                         </label>
                     ))}
                 </fieldset>

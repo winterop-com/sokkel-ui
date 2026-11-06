@@ -5,12 +5,13 @@ import { useMemo, useState } from 'react'
 import { SearchField } from '../components/SearchField'
 import { Segmented } from '../components/Segmented'
 import { cn } from '../lib/cn'
+import { Row, Stack } from '../components/Layout'
 
 /**
  * The one icon set: Lucide, from `lucide-react`. Every icon in the library and its stories comes
  * from it. Press an icon to copy its import.
  */
-const meta: Meta = { title: 'Foundations/Icons' }
+const meta: Meta = { title: 'Foundations/Icons', parameters: { frame: 'padded' } }
 export default meta
 
 const SOURCES = import.meta.glob('../components/**/*.tsx', { query: '?raw', import: 'default', eager: true }) as Record<string, string>
@@ -69,15 +70,15 @@ function Gallery({ start = 'library', query: initial = '' }: { start?: 'library'
         window.setTimeout(() => setCopied((current) => (current === name ? null : current)), 1200)
     }
     return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <header className="mb-4 flex flex-col gap-1">
+        <>
+            <Stack as="header" gap="2xs" className="mb-4">
                 <h1 className="text-page font-medium">Icons</h1>
                 <p className="text-sm text-muted-foreground">
                     Lucide, from <span className="font-mono">lucide-react</span>. {USED.length} are used in the library, of{' '}
                     {EVERY.length.toLocaleString('en-US')}.
                 </p>
-            </header>
-            <div className="mb-4 flex flex-wrap items-center gap-3">
+            </Stack>
+            <Row gap="md" wrap className="mb-4">
                 <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-72" />
                 <Segmented
                     label="Which icons"
@@ -90,7 +91,7 @@ function Gallery({ start = 'library', query: initial = '' }: { start?: 'library'
                 />
                 <Segmented label="Size" value={size} onChoose={setSize} options={SIZES} />
                 <span className="ml-auto text-sm text-muted-foreground tabular-nums">{shown.length.toLocaleString('en-US')} shown</span>
-            </div>
+            </Row>
             {shown.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No icon matches.</p>
             ) : (
@@ -118,7 +119,7 @@ function Gallery({ start = 'library', query: initial = '' }: { start?: 'library'
                     })}
                 </ul>
             )}
-        </div>
+        </>
     )
 }
 
