@@ -11,9 +11,50 @@ export interface StatWords {
     noData: string
     info: string
     loading: string
+    /** Written before the target's value. */
+    target?: string
 }
 
-const WORDS: StatWords = { noData: 'No data', info: 'About this panel', loading: 'Loading' }
+const WORDS: StatWords = { noData: 'No data', info: 'About this panel', loading: 'Loading', target: 'Target' }
+
+/** How far a reading has come toward its target: a track with the reading filled in and a tick at the target. */
+function TargetMeter({
+    value,
+    target,
+    range,
+    written,
+    label,
+    filled,
+}: {
+    value: number
+    target: number
+    range?: readonly [number, number]
+    written: string
+    label: string
+    filled: boolean
+}) {
+    const low = range?.[0] ?? 0
+    const high = range?.[1] ?? Math.max(value, target)
+    const at = (reading: number) => Math.min(100, Math.max(0, ((reading - low) / (high - low || 1)) * 100))
+    const reach = at(value)
+    const mark = at(target)
+    return (
+        <div className="mt-2 mb-3 flex w-full max-w-48 flex-col gap-1">
+            <div className="relative h-1.5 rounded-mini bg-current/15">
+                <span className="absolute inset-y-0 left-0 rounded-mini bg-current" style={{ width: `${reach}%` }} />
+                <span
+                    aria-hidden
+                    className={cn('absolute -inset-y-1 w-0.5 -translate-x-1/2 rounded-mini', filled ? 'bg-on-fill' : 'bg-foreground')}
+                    style={{ left: `${mark}%` }}
+                />
+            </div>
+            <p className={cn('flex justify-center gap-1 text-xs', filled ? 'text-on-fill/85' : 'text-muted-foreground')}>
+                <span>{label}</span>
+                <span className="font-mono tabular-nums">{written}</span>
+            </p>
+        </div>
+    )
+}
 
 /** An area under a line of values, stretched to its box, for the trend behind a stat's value. */
 function SparkArea({ values, className }: { values: readonly number[]; className?: string }) {
@@ -55,7 +96,8 @@ function SparkArea({ values, className }: { values: readonly number[]; className
  * One reading as a dashboard tile: a small title, the value written large, and optionally a trend
  * drawn faintly behind it and a change against an earlier period. `thresholds` pick the reading's
  * color, which inks the value (`colorMode="value"`) or fills the tile (`colorMode="background"`).
- * A null value says there is no data, in neutral ink and without its trend.
+ * `target` draws a meter under the value toward it. A null value says there is no data, in
+ * neutral ink and without its trend.
  */
 export function StatPanel({
     title,
@@ -69,6 +111,8 @@ export function StatPanel({
     sparkline,
     delta,
     good,
+    target,
+    targetRange,
     note,
     info,
     span = 'sixth',
@@ -93,6 +137,10 @@ export function StatPanel({
     delta?: string
     /** Whether the change is an improvement; leaves it neutral when omitted. */
     good?: boolean
+    /** The value the reading aims for, drawn as a meter under it with the target written out. */
+    target?: number
+    /** The target meter's ends; from 0 to the larger of the reading and the target when omitted. */
+    targetRange?: readonly [number, number]
     note?: ReactNode
     info?: ReactNode
     span?: PanelSpan
@@ -111,6 +159,7 @@ export function StatPanel({
             style={style}
             className={cn(
                 'relative isolate flex min-h-28 min-w-0 flex-col overflow-hidden rounded-surface border',
+                target !== undefined && value !== null && 'min-h-36',
                 filled
                     ? 'border-transparent bg-[linear-gradient(135deg,color-mix(in_oklab,var(--tone)_92%,var(--on-fill)),var(--tone)_70%)] text-on-fill dark:bg-[linear-gradient(135deg,color-mix(in_oklab,var(--tone)_80%,var(--background)),color-mix(in_oklab,var(--tone)_62%,var(--background)))]'
                     : 'border-border bg-card text-card-foreground',
@@ -121,7 +170,11 @@ export function StatPanel({
             {sparkline !== undefined && value !== null && (
                 <SparkArea
                     values={sparkline}
-                    className={cn('-z-10', filled ? 'text-on-fill' : inked ? 'text-(--tone)' : 'text-muted-foreground')}
+                    className={cn(
+                        '-z-10',
+                        target !== undefined && 'h-1/4',
+                        filled ? 'text-on-fill' : inked ? 'text-(--tone)' : 'text-muted-foreground',
+                    )}
                 />
             )}
             <header className="flex h-7 shrink-0 items-center gap-1 px-2.5 pt-1">
@@ -175,6 +228,16 @@ export function StatPanel({
                     </p>
                     {note !== undefined && (
                         <p className={cn('truncate text-xs', filled ? 'text-on-fill/85' : 'text-muted-foreground')}>{note}</p>
+                    )}
+                    {target !== undefined && value !== null && (
+                        <TargetMeter
+                            value={value}
+                            target={target}
+                            range={targetRange}
+                            written={`${format !== undefined ? format(target) : formatValue(target, decimals)}${typeof unit === 'string' ? unit : ''}`}
+                            label={words.target ?? 'Target'}
+                            filled={filled}
+                        />
                     )}
                 </div>
             </LoadingOverlay>
