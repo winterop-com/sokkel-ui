@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Play, RotateCcw } from 'lucide-react'
-import type { ReactNode } from 'react'
 
 import { DescriptionList } from '../../components/DescriptionList'
 import { Columns, Fill, Row, Split, Stack } from '../../components/Layout'
@@ -17,7 +16,7 @@ import { Button } from '../../components/ui/button'
  * and `Fill` the cell that takes the room left. Their cells always shrink, so a long label
  * truncates or wraps inside its cell instead of widening the page.
  */
-const meta: Meta = { title: 'Patterns/Layout' }
+const meta: Meta = { title: 'Patterns/Layout', parameters: { frame: 'padded' } }
 export default meta
 
 const RUNS: { job: string; status: Status; when: string }[] = [
@@ -33,10 +32,6 @@ const FACTS = [
     { term: 'Owner', value: 'grace' },
     { term: 'Schedule', value: 'Every night at 02:00' },
 ]
-
-function Ground({ children }: { children: ReactNode }) {
-    return <div className="min-h-svh bg-background p-6 text-foreground">{children}</div>
-}
 
 function RunLine({ job, status, when }: { job: string; status: Status; when: string }) {
     return (
@@ -54,13 +49,11 @@ function RunLine({ job, status, when }: { job: string; status: Status; when: str
 export const StackOfRows: StoryObj = {
     name: 'Stack',
     render: () => (
-        <Ground>
-            <Stack gap="sm">
-                {RUNS.map((run) => (
-                    <RunLine key={run.job} {...run} />
-                ))}
-            </Stack>
-        </Ground>
+        <Stack gap="sm">
+            {RUNS.map((run) => (
+                <RunLine key={run.job} {...run} />
+            ))}
+        </Stack>
     ),
 }
 
@@ -68,26 +61,24 @@ export const StackOfRows: StoryObj = {
 export const Rows: StoryObj = {
     name: 'Row',
     render: () => (
-        <Ground>
-            <Stack gap="xl">
-                <Row justify="between">
-                    <span className="text-sm font-medium">nightly-export</span>
-                    <Row>
-                        <Button variant="outline" size="sm">
-                            <RotateCcw /> Retry
-                        </Button>
-                        <Button size="sm">
-                            <Play /> Run
-                        </Button>
-                    </Row>
+        <Stack gap="xl">
+            <Row justify="between">
+                <span className="text-sm font-medium">nightly-export</span>
+                <Row>
+                    <Button variant="outline" size="sm">
+                        <RotateCcw /> Retry
+                    </Button>
+                    <Button size="sm">
+                        <Play /> Run
+                    </Button>
                 </Row>
-                <Row wrap>
-                    {[...RUNS, ...RUNS].map((run, at) => (
-                        <StatusChip key={`${run.job}-${String(at)}`} status={run.status} />
-                    ))}
-                </Row>
-            </Stack>
-        </Ground>
+            </Row>
+            <Row wrap>
+                {[...RUNS, ...RUNS].map((run, at) => (
+                    <StatusChip key={`${run.job}-${String(at)}`} status={run.status} />
+                ))}
+            </Row>
+        </Stack>
     ),
 }
 
@@ -95,14 +86,12 @@ export const Rows: StoryObj = {
 export const FourColumns: StoryObj = {
     name: 'Columns',
     render: () => (
-        <Ground>
-            <Columns count={4} gap="lg">
-                <Stat label="Runs today" value="128" change="+12%" good />
-                <Stat label="Failed" value="3" change="+2" good={false} />
-                <Stat label="Median duration" value="4.2" unit="min" />
-                <Stat label="Queued" value="7" />
-            </Columns>
-        </Ground>
+        <Columns count={4} gap="lg">
+            <Stat label="Runs today" value="128" change="+12%" good />
+            <Stat label="Failed" value="3" change="+2" good={false} />
+            <Stat label="Median duration" value="4.2" unit="min" />
+            <Stat label="Queued" value="7" />
+        </Columns>
     ),
 }
 
@@ -110,29 +99,28 @@ export const FourColumns: StoryObj = {
 export const MainAndAside: StoryObj = {
     name: 'Split',
     render: () => (
-        <Ground>
-            <Split
-                aside={
-                    <Section title="Details">
-                        <DescriptionList items={FACTS} />
-                    </Section>
-                }
-            >
-                <Section title="Recent runs">
-                    <Stack gap="sm">
-                        {RUNS.map((run) => (
-                            <RunLine key={run.job} {...run} />
-                        ))}
-                    </Stack>
+        <Split
+            aside={
+                <Section title="Details">
+                    <DescriptionList items={FACTS} />
                 </Section>
-            </Split>
-        </Ground>
+            }
+        >
+            <Section title="Recent runs">
+                <Stack gap="sm">
+                    {RUNS.map((run) => (
+                        <RunLine key={run.job} {...run} />
+                    ))}
+                </Stack>
+            </Section>
+        </Split>
     ),
 }
 
 /** A job's page from these parts: the header, the stats in columns, and the runs split with the details, the runs filling the height and scrolling. */
 export const JobPage: StoryObj = {
     name: 'Page',
+    parameters: { frame: 'none' },
     render: () => (
         <Stack gap="none" className="h-svh bg-background text-foreground">
             <Fill scroll>
