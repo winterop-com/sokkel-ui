@@ -6,8 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.6.0** is the latest release (2026-11-06): the team chat and AI chat parts, more charts,
-  resizable panels and columns, and `DataTable` as the one table. 0.5.0 was the first release under
+- **0.6.1** is the latest release (2026-11-06): rail entries that fold their own entries, and a
+  rail of text alone. 0.6.0 brought the team chat and AI chat parts, more charts, resizable panels
+  and columns, and `DataTable` as the one table. 0.5.0 was the first release under
   the new name; 0.2.0 was the first published version.
 - The library was renamed from winterop-ui to sokkel-ui after 0.4.0: the repository is
   `winterop-com/sokkel-ui`, the package `@winterop-com/sokkel-ui`, the Storybook
