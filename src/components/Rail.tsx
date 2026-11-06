@@ -148,7 +148,7 @@ export function Rail({
                                     type="button"
                                     aria-label={labels.collapse}
                                     title={labels.collapse}
-                                    className="ml-auto flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground"
+                                    className="ml-auto flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-foreground/8 hover:text-foreground"
                                     onClick={() => onCollapsedChange(true)}
                                 >
                                     <PanelLeftClose className="size-4" aria-hidden />
@@ -253,7 +253,7 @@ function StripLink({ entry, renderLink, unread }: { entry: RailEntry; renderLink
             <span
                 className={cn(
                     'relative flex size-9 items-center justify-center rounded-md transition-colors',
-                    entry.active ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'group-hover/entry:bg-secondary',
+                    entry.active ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'group-hover/entry:bg-foreground/8',
                 )}
             >
                 {entry.dot === undefined ? <Icon className="size-5 shrink-0" aria-hidden /> : <Dot color={entry.dot} />}
@@ -318,7 +318,7 @@ function RailLink({
                                     'relative flex h-(--density-row) w-9 items-center justify-center rounded-md',
                                     entry.active
                                         ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                                        : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
+                                        : 'text-muted-foreground hover:bg-foreground/8 hover:text-foreground',
                                 ),
                             )}
                         </span>
@@ -346,7 +346,7 @@ function RailLink({
             'flex h-(--density-row) items-center gap-3 rounded-l-sm rounded-r-md border-l-2 pr-3 pl-2.5 text-sm',
             entry.active
                 ? 'border-sidebar-primary bg-sidebar-accent font-medium text-sidebar-accent-foreground'
-                : 'border-transparent text-muted-foreground hover:bg-secondary hover:text-foreground',
+                : 'border-transparent text-muted-foreground hover:bg-foreground/8 hover:text-foreground',
         ),
     )
 }
