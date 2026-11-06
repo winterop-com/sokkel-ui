@@ -19,6 +19,7 @@ export function ResizeHandle({
     onReset,
     axis = 'x',
     grows = 1,
+    follow = true,
     label,
     className,
 }: {
@@ -36,6 +37,8 @@ export function ResizeHandle({
     axis?: 'x' | 'y'
     /** 1 when dragging away from the origin grows the panel (a left panel's right edge), -1 otherwise. */
     grows?: 1 | -1
+    /** Whether the drag sets the target's own width or height as it moves; off when the size takes effect elsewhere, such as a grid's column. */
+    follow?: boolean
     label: string
     className?: string
 }) {
@@ -45,7 +48,7 @@ export function ResizeHandle({
         const element = target.current
         return element === null ? min : axis === 'x' ? element.offsetWidth : element.offsetHeight
     }
-    const { dragging, begin } = useDragSize(axis, now, grows, onSize, clamp, target)
+    const { dragging, begin } = useDragSize(axis, now, grows, onSize, clamp, target, follow)
     const step = (by: number) => onSize(clamp(now() + by))
     const restore = () => {
         if (onReset !== undefined) onReset()

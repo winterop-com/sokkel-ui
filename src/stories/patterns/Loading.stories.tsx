@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { ListTable, type Column } from '../../components/ListTable'
+import { type DataColumn, DataTable } from '../../components/DataTable'
 import { LoadingBar, LoadingOverlay, PageProgress } from '../../components/Loaders'
 import { StatusChip, type Status } from '../../components/StatusChip'
 import { Button } from '../../components/ui/button'
@@ -51,7 +51,7 @@ const RUNS: Run[] = [
     { id: 'r4', job: 'send-digest', state: 'succeeded', took: '12.8s' },
 ]
 
-const COLUMNS: Column<Run>[] = [
+const COLUMNS: DataColumn<Run>[] = [
     { id: 'job', header: 'Job', width: 'minmax(0,1fr)', cell: (run) => <span className="truncate font-mono">{run.job}</span> },
     { id: 'state', header: 'State', width: '7rem', cell: (run) => <StatusChip status={run.state} /> },
     {
@@ -64,7 +64,7 @@ const COLUMNS: Column<Run>[] = [
 ]
 
 function Rows({ foot }: { foot?: string }) {
-    return <ListTable columns={COLUMNS} rows={RUNS} rowKey={(run) => run.id} foot={foot} />
+    return <DataTable variant="list" columns={COLUMNS} rows={RUNS} rowKey={(run) => run.id} foot={foot} />
 }
 
 function PageLoad() {

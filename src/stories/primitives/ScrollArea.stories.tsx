@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
 
-import { ListTable, type Column } from '../../components/ListTable'
+import { type DataColumn, DataTable } from '../../components/DataTable'
 import { StatusChip, type Status } from '../../components/StatusChip'
 import { ScrollArea, ScrollBar } from '../../components/ui/scroll-area'
 
@@ -29,7 +29,7 @@ const RUNS = Array.from({ length: 24 }, (_, at) => ({
 
 type Run = (typeof RUNS)[number]
 
-const COLUMNS: Column<Run>[] = [
+const COLUMNS: DataColumn<Run>[] = [
     { id: 'id', header: 'Run', width: '6rem', cell: (run) => <span className="font-mono">{run.id}</span> },
     { id: 'status', header: 'Status', width: '7rem', cell: (run) => <StatusChip status={run.status} /> },
     { id: 'at', header: 'Started', width: 'minmax(0,1fr)', cell: (run) => <span className="tabular-nums">{run.at}</span> },
@@ -88,7 +88,7 @@ export const RunHistory: StoryObj = {
             <div className="flex max-w-2xl flex-col gap-2">
                 <h2 className="text-sm font-medium">Runs of import-orders today</h2>
                 <ScrollArea className="h-80">
-                    <ListTable columns={COLUMNS} rows={RUNS} rowKey={(run) => run.id} />
+                    <DataTable variant="list" columns={COLUMNS} rows={RUNS} rowKey={(run) => run.id} />
                 </ScrollArea>
             </div>
         </Ground>
