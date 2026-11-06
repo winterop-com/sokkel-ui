@@ -11,6 +11,8 @@ export interface TimelineEvent {
     /** When it happened, already written for a reader: `14:02:11`, `3 min ago`. */
     at?: ReactNode
     detail?: ReactNode
+    /** What sits under the event at full size and ink, such as an answer or a card. */
+    content?: ReactNode
     tone?: TimelineTone
     /** An icon in place of the dot. */
     icon?: ReactNode
@@ -58,6 +60,7 @@ export function Timeline({ events, className }: { events: readonly TimelineEvent
                                 )}
                             </div>
                             {event.detail !== undefined && <div className="text-xs text-muted-foreground">{event.detail}</div>}
+                            {event.content !== undefined && <div className="mt-1.5 min-w-0">{event.content}</div>}
                         </div>
                     </li>
                 )

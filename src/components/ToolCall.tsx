@@ -1,4 +1,5 @@
-import { CircleAlert, Wrench } from 'lucide-react'
+import { CircleAlert, ListChecks, Wrench } from 'lucide-react'
+import type { ReactNode } from 'react'
 
 import { Code } from './Code'
 import { Spinner } from './ui/spinner'
@@ -50,64 +51,80 @@ export interface ToolCallEntry {
     status: ToolCallStatus
     /** How long it took, already written for a reader: `1.2s`. */
     duration?: string
+    /**
+     * What the call did, said for a reader: "Read latest run", or what it found: "37 rows rejected".
+     * A labeled call reads as that sentence in the text face; its name and payload wait inside it.
+     */
+    label?: string
 }
 
 function Line({ call }: { call: ToolCallEntry }) {
     const status = call.status === 'done' ? undefined : call.status
+    const labeled = call.label !== undefined
     return (
-        <TraceLine status={status} className="font-mono text-xs">
+        <TraceLine status={status} className={labeled ? undefined : 'font-mono text-xs'}>
             <TraceIcon>
                 {call.status === 'running' ? (
-                    <Spinner className="size-3.5" />
+                    <Spinner className={labeled ? 'size-4' : 'size-3.5'} />
                 ) : call.status === 'error' ? (
-                    <CircleAlert className="size-3.5" />
+                    <CircleAlert className={labeled ? 'size-4' : 'size-3.5'} />
                 ) : (
-                    <Wrench className="size-3.5" />
+                    <Wrench className={labeled ? 'size-4' : 'size-3.5'} />
                 )}
             </TraceIcon>
             <TraceTitle>
-                <span className="text-foreground">{call.name}</span>
-                <span>({digest(call.args)})</span>
+                {labeled ? (
+                    <span className="text-foreground">{call.label}</span>
+                ) : (
+                    <>
+                        <span className="text-foreground">{call.name}</span>
+                        <span>({digest(call.args)})</span>
+                    </>
+                )}
             </TraceTitle>
             {call.duration !== undefined && <TraceDescription>{call.duration}</TraceDescription>}
         </TraceLine>
     )
 }
 
-/**
- * The tools an assistant called, one line each: the name, its arguments in one line, and how long
- * it took. A call that has finished opens into its arguments and its result in full.
- */
-export function ToolCalls({
-    calls,
-    words = { args: 'Arguments', result: 'Result' },
-}: {
-    calls: readonly ToolCallEntry[]
-    words?: { args: string; result: string }
-}) {
+function Detail({ call, words }: { call: ToolCallEntry; words: ToolCallsWords }) {
+    return (
+        <div className="flex flex-col gap-2">
+            {call.label !== undefined && (
+                <p className="font-mono text-xs text-muted-foreground">
+                    <span className="text-foreground">{call.name}</span>({digest(call.args)})
+                </p>
+            )}
+            {call.args !== undefined && <Code title={words.args} size="sm" language="json" value={JSON.stringify(call.args, null, 2)} />}
+            {call.result !== undefined && (
+                <Code
+                    title={words.result}
+                    size="sm"
+                    language="json"
+                    variant={call.status === 'error' ? 'destructive' : 'default'}
+                    value={typeof call.result === 'string' ? call.result : JSON.stringify(call.result, null, 2)}
+                />
+            )}
+        </div>
+    )
+}
+
+export interface ToolCallsWords {
+    args: string
+    result: string
+}
+
+function Calls({ calls, words, openFailed }: { calls: readonly ToolCallEntry[]; words: ToolCallsWords; openFailed: boolean }) {
     return (
         <Trace>
             {calls.map((call) =>
                 call.status === 'done' || call.status === 'error' ? (
-                    <TraceCollapsible key={call.id}>
+                    <TraceCollapsible key={call.id} defaultOpen={openFailed && call.status === 'error'}>
                         <TraceCollapsibleTrigger>
                             <Line call={call} />
                         </TraceCollapsibleTrigger>
                         <TraceCollapsibleContent>
-                            <div className="flex flex-col gap-2">
-                                {call.args !== undefined && (
-                                    <Code title={words.args} size="sm" language="json" value={JSON.stringify(call.args, null, 2)} />
-                                )}
-                                {call.result !== undefined && (
-                                    <Code
-                                        title={words.result}
-                                        size="sm"
-                                        language="json"
-                                        variant={call.status === 'error' ? 'destructive' : 'default'}
-                                        value={typeof call.result === 'string' ? call.result : JSON.stringify(call.result, null, 2)}
-                                    />
-                                )}
-                            </div>
+                            <Detail call={call} words={words} />
                         </TraceCollapsibleContent>
                     </TraceCollapsible>
                 ) : (
@@ -116,6 +133,47 @@ export function ToolCalls({
                     </div>
                 ),
             )}
+        </Trace>
+    )
+}
+
+/**
+ * The tools an assistant called, one line each: the name, its arguments in one line, and how long
+ * it took. A call that has finished opens into its arguments and its result in full.
+ *
+ * Given a `summary`, the calls fold behind that one quiet line, which opens into them: "Checked the
+ * run, log, and sample · 3 tools". The line takes a spinner while a call runs and the destructive
+ * ink once one has failed; then it starts open, with the failed call open inside it.
+ */
+export function ToolCalls({
+    calls,
+    summary,
+    defaultOpen,
+    words = { args: 'Arguments', result: 'Result' },
+}: {
+    calls: readonly ToolCallEntry[]
+    /** One line that stands for every call and opens into them, written from the calls' state. */
+    summary?: ReactNode
+    /** Whether the folded calls start open; by default only when one has failed. */
+    defaultOpen?: boolean
+    words?: ToolCallsWords
+}) {
+    if (summary === undefined) return <Calls calls={calls} words={words} openFailed={false} />
+    const running = calls.some((call) => call.status === 'running' || call.status === 'pending')
+    const failed = calls.some((call) => call.status === 'error')
+    return (
+        <Trace>
+            <TraceCollapsible defaultOpen={defaultOpen ?? failed}>
+                <TraceCollapsibleTrigger>
+                    <TraceLine status={failed ? 'error' : running ? 'running' : undefined}>
+                        <TraceIcon>{failed ? <CircleAlert /> : running ? <Spinner /> : <ListChecks />}</TraceIcon>
+                        <TraceTitle className="whitespace-normal">{summary}</TraceTitle>
+                    </TraceLine>
+                </TraceCollapsibleTrigger>
+                <TraceCollapsibleContent>
+                    <Calls calls={calls} words={words} openFailed={failed} />
+                </TraceCollapsibleContent>
+            </TraceCollapsible>
         </Trace>
     )
 }
