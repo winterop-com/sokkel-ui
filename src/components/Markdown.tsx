@@ -129,9 +129,30 @@ const PROSE = cn(
     '[&_table]:my-2 [&_table]:block [&_table]:border-collapse [&_table]:overflow-x-auto',
     '[&_th]:border [&_th]:border-border [&_th]:bg-muted [&_th]:px-2.5 [&_th]:py-1 [&_th]:text-left [&_th]:font-medium',
     '[&_td]:border [&_td]:border-border [&_td]:px-2.5 [&_td]:py-1',
-    '[&_:not(pre)>code]:rounded-sm [&_:not(pre)>code]:bg-muted [&_:not(pre)>code]:px-1 [&_:not(pre)>code]:font-mono',
+    '[&_:not(pre)>code]:font-mono',
     '[&_.mermaid-block]:my-3 [&_[data-slot=code-block]]:my-3',
     '[&_[id]]:scroll-mt-4',
+)
+
+/** How code inside a sentence is drawn. */
+export type InlineCode = 'chip' | 'plain' | 'rule' | 'wash'
+
+/**
+ * `chip` fills each value; `plain` sets it in the code face alone; `rule` underlines it with the
+ * border color; `wash` gives it a faint fill with no padding to speak of. Every look but `chip`
+ * drops the fill in a table, whose cells already set the values apart.
+ */
+const INLINE_CODE: Record<InlineCode, string> = {
+    chip: '[&_:not(pre)>code]:rounded-sm [&_:not(pre)>code]:bg-muted [&_:not(pre)>code]:px-1',
+    plain: '[&_td]:tabular-nums',
+    rule: '[&_:not(pre)>code]:border-b [&_:not(pre)>code]:border-border [&_td_code]:border-b-0',
+    wash: '[&_:not(pre)>code]:rounded-sm [&_:not(pre)>code]:bg-secondary [&_:not(pre)>code]:px-0.5 [&_td_code]:bg-transparent [&_td_code]:px-0',
+}
+
+/** A text caret after the last paragraph or list item, where the next words will land. */
+const CARET = cn(
+    '[&>:is(ol,ul):last-child>li:last-child]:after:ml-0.5 [&>:is(ol,ul):last-child>li:last-child]:after:inline-block [&>:is(ol,ul):last-child>li:last-child]:after:h-4 [&>:is(ol,ul):last-child>li:last-child]:after:w-1.5 [&>:is(ol,ul):last-child>li:last-child]:after:translate-y-0.5 [&>:is(ol,ul):last-child>li:last-child]:after:animate-pulse [&>:is(ol,ul):last-child>li:last-child]:after:bg-foreground motion-reduce:[&>:is(ol,ul):last-child>li:last-child]:after:animate-none',
+    '[&>p:last-child]:after:ml-0.5 [&>p:last-child]:after:inline-block [&>p:last-child]:after:h-4 [&>p:last-child]:after:w-1.5 [&>p:last-child]:after:translate-y-0.5 [&>p:last-child]:after:animate-pulse [&>p:last-child]:after:bg-foreground motion-reduce:[&>p:last-child]:after:animate-none',
 )
 
 /**
@@ -143,12 +164,17 @@ const PROSE = cn(
  *
  * `anchors` gives each heading the id `headingId` makes of its text, for a table of contents to
  * link to; `markdownHeadings` lists the same ids from the source.
+ *
+ * `inlineCode` picks how code inside a sentence is drawn, and `caret` marks where a streaming
+ * answer's next words will land.
  */
 export const Markdown = memo(function Markdown({
     content,
     streaming = false,
     allowHtml = false,
     anchors = false,
+    inlineCode = 'chip',
+    caret = false,
     className,
     words: given,
 }: {
@@ -157,6 +183,10 @@ export const Markdown = memo(function Markdown({
     allowHtml?: boolean
     /** Gives every heading an id made from its text. */
     anchors?: boolean
+    /** How code inside a sentence is drawn: filled chips by default. */
+    inlineCode?: InlineCode
+    /** A caret after the last words while `streaming`. */
+    caret?: boolean
     className?: string
     words?: Partial<MarkdownWords>
 }) {
@@ -213,7 +243,7 @@ export const Markdown = memo(function Markdown({
         [allowHtml, anchors],
     )
     return (
-        <div className={cn(PROSE, className)}>
+        <div className={cn(PROSE, INLINE_CODE[inlineCode], caret && streaming && CARET, className)}>
             <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={rehype} components={components}>
                 {content}
             </ReactMarkdown>
