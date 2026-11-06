@@ -11,11 +11,7 @@ import { Artwork } from '../fixtures/Artwork'
  * cards to choose one from, and cards with artwork on top.
  */
 function Ground({ children }: { children: React.ReactNode }) {
-    return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(min(18rem,100%),1fr))] gap-4">{children}</div>
-        </div>
-    )
+    return <div className="grid grid-cols-[repeat(auto-fill,minmax(min(18rem,100%),1fr))] gap-4">{children}</div>
 }
 
 const MENU = (
@@ -148,7 +144,7 @@ function Media() {
     )
 }
 
-const meta: Meta = { title: 'Patterns/Cards' }
+const meta: Meta = { title: 'Patterns/Cards', parameters: { frame: 'padded' } }
 export default meta
 
 export const Plain_: StoryObj = { name: 'Plain', render: () => <Plain /> }

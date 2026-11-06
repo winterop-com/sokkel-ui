@@ -20,6 +20,7 @@ import { PersonAvatar } from '../../components/PersonAvatar'
 import { Rail } from '../../components/Rail'
 import { Button } from '../../components/ui/button'
 import { TidevannMark } from '../fixtures/TidevannMark'
+import { Row } from '../../components/Layout'
 
 /**
  * The places to talk in a team chat, in sections that fold: channels, private channels behind a
@@ -32,7 +33,11 @@ export default meta
 
 /** The list as a team chat holds it: a column of its own width at the full height of the window. */
 function Frame({ children }: { children: ReactNode }) {
-    return <div className="flex h-svh bg-background">{children}</div>
+    return (
+        <Row gap="none" align="stretch" className="h-svh bg-background">
+            {children}
+        </Row>
+    )
 }
 
 const COLUMN = 'w-64 border-r border-border-strong'

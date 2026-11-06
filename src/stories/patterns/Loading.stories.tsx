@@ -5,6 +5,7 @@ import { type DataColumn, DataTable } from '../../components/DataTable'
 import { LoadingBar, LoadingOverlay, PageProgress } from '../../components/Loaders'
 import { StatusChip, type Status } from '../../components/StatusChip'
 import { Button } from '../../components/ui/button'
+import { Row, Stack } from '../../components/Layout'
 
 /**
  * Waits that take a while: a bar with known or unknown progress, the bar along the top of a page
@@ -13,9 +14,9 @@ import { Button } from '../../components/ui/button'
  */
 function Ground({ children }: { children: React.ReactNode }) {
     return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="mx-auto flex max-w-3xl flex-col gap-6">{children}</div>
-        </div>
+        <Stack gap="xl" className="mx-auto max-w-3xl">
+            {children}
+        </Stack>
     )
 }
 
@@ -69,15 +70,15 @@ function Rows({ foot }: { foot?: string }) {
 
 function PageLoad() {
     return (
-        <div className="flex min-h-svh flex-col bg-background text-foreground">
+        <Stack gap="none" className="min-h-svh bg-background text-foreground">
             <header className="relative flex h-shell-top shrink-0 items-center border-b border-border-strong bg-sidebar px-4 text-sm font-medium">
                 Runs
                 <PageProgress loading delay={0} value={60} />
             </header>
-            <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-6">
+            <Stack gap="xl" className="mx-auto w-full max-w-3xl p-6">
                 <Rows />
-            </div>
-        </div>
+            </Stack>
+        </Stack>
     )
 }
 
@@ -86,7 +87,7 @@ function ElementReload({ interactive = false }: { interactive?: boolean }) {
     return (
         <Ground>
             {interactive && (
-                <div className="flex items-center gap-3">
+                <Row gap="md">
                     <Button
                         size="sm"
                         variant="outline"
@@ -98,7 +99,7 @@ function ElementReload({ interactive = false }: { interactive?: boolean }) {
                         Refresh
                     </Button>
                     <Caption>The bar appears only if the refresh takes longer than 300ms.</Caption>
-                </div>
+                </Row>
             )}
             <LoadingOverlay loading={loading} delay={interactive ? 300 : 0} className="rounded-surface">
                 <Rows foot="4 of 248 today" />
@@ -107,10 +108,10 @@ function ElementReload({ interactive = false }: { interactive?: boolean }) {
     )
 }
 
-const meta: Meta = { title: 'Patterns/Loading' }
+const meta: Meta = { title: 'Patterns/Loading', parameters: { frame: 'padded' } }
 export default meta
 
 export const Bars_: StoryObj = { name: 'Bars', render: () => <Bars /> }
-export const Page: StoryObj = { name: 'Page load', render: () => <PageLoad /> }
+export const Page: StoryObj = { parameters: { frame: 'none' }, name: 'Page load', render: () => <PageLoad /> }
 export const Element: StoryObj = { name: 'Element reload', render: () => <ElementReload /> }
 export const Try: StoryObj = { name: 'Try it', render: () => <ElementReload interactive /> }

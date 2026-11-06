@@ -8,7 +8,7 @@ import { CapabilityPicker, type Capability, type PickerItem } from '../../compon
  * Picking one block for a pipeline step from a catalog, by searching and by what each block can
  * do: read, write, reach the network, use a secret, stream.
  */
-const meta: Meta = { title: 'Patterns/Capability picker' }
+const meta: Meta = { title: 'Patterns/Capability picker', parameters: { frame: 'padded' } }
 export default meta
 
 const CAPABILITIES: Capability[] = [
@@ -97,10 +97,8 @@ const BLOCKS: PickerItem[] = [
 
 function Ground({ children }: { children: ReactNode }) {
     return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="flex h-[32rem] max-w-xl flex-col overflow-hidden rounded-surface border border-border-strong shadow-pop">
-                {children}
-            </div>
+        <div className="flex h-[32rem] max-w-xl flex-col overflow-hidden rounded-surface border border-border-strong shadow-pop">
+            {children}
         </div>
     )
 }

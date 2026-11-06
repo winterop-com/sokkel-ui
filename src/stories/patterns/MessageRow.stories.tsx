@@ -8,11 +8,7 @@ const HARBOR: MessageLabel = { id: 'harbor', label: 'harbor', color: 'var(--colo
 const JUNIPER: MessageLabel = { id: 'juniper', label: 'juniper', color: 'var(--color-kind-green)' }
 
 function Column({ children }: { children: React.ReactNode }) {
-    return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="mx-auto w-full max-w-md overflow-hidden rounded-surface border border-border-strong bg-card">{children}</div>
-        </div>
-    )
+    return <div className="mx-auto w-full max-w-md overflow-hidden rounded-surface border border-border-strong bg-card">{children}</div>
 }
 
 function Rows({ highlight }: { highlight?: string }) {
@@ -75,7 +71,7 @@ function Rows({ highlight }: { highlight?: string }) {
     )
 }
 
-const meta: Meta = { title: 'Patterns/Message row' }
+const meta: Meta = { title: 'Patterns/Message row', parameters: { frame: 'padded' } }
 export default meta
 
 /** One read row with no controls, as a list that cannot select or star draws it. */

@@ -4,19 +4,20 @@ import { useState } from 'react'
 import { CopyButton } from '../../components/CopyButton'
 import { Segmented, type SegmentedVariant } from '../../components/Segmented'
 import { TooltipProvider } from '../../components/ui/tooltip'
+import { Row, Stack } from '../../components/Layout'
 
 /** The small controls a settings row or a code line carries: a segmented choice and a copy button. */
 function Ground({ children }: { children: React.ReactNode }) {
     return (
         <TooltipProvider>
-            <div className="min-h-svh bg-background p-6 text-foreground">
-                <div className="flex max-w-5xl flex-col gap-6">{children}</div>
-            </div>
+            <Stack gap="xl" className="max-w-5xl">
+                {children}
+            </Stack>
         </TooltipProvider>
     )
 }
 
-function Row({
+function ControlRow({
     label,
     hint,
     fill,
@@ -31,23 +32,23 @@ function Row({
 }) {
     if (stacked) {
         return (
-            <div className="flex w-full max-w-80 flex-col gap-1.5">
-                <span className="flex flex-col">
+            <Stack gap="xs" className="w-full max-w-80">
+                <Stack as="span" gap="none">
                     <span className="text-sm font-medium whitespace-nowrap">{label}</span>
                     {hint !== undefined && <span className="font-mono text-xs text-faint">{hint}</span>}
-                </span>
+                </Stack>
                 {children}
-            </div>
+            </Stack>
         )
     }
     return (
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
-            <div className="flex flex-col">
+        <Row gap="md" justify="between" wrap className="border-b border-border pb-4">
+            <Stack gap="none">
                 <span className="text-sm font-medium">{label}</span>
                 {hint !== undefined && <span className="font-mono text-xs text-faint">{hint}</span>}
-            </div>
+            </Stack>
             {fill ? <div className="w-full sm:w-56">{children}</div> : children}
-        </div>
+        </Row>
     )
 }
 
@@ -56,8 +57,8 @@ function Settings({ fill, variant, stacked = false }: { fill: boolean; variant: 
     const [clock, setClock] = useState<'utc' | 'local'>('utc')
     const [density, setDensity] = useState<'regular' | 'compact'>('regular')
     return (
-        <div className="flex flex-col gap-4">
-            <Row stacked={stacked} fill={fill} label="Appearance">
+        <Stack gap="lg">
+            <ControlRow stacked={stacked} fill={fill} label="Appearance">
                 <Segmented
                     fill={fill}
                     variant={variant}
@@ -70,8 +71,8 @@ function Settings({ fill, variant, stacked = false }: { fill: boolean; variant: 
                         { value: 'dark', label: 'Dark' },
                     ]}
                 />
-            </Row>
-            <Row stacked={stacked} fill={fill} label="Schedule clock" hint="schedule.timezone">
+            </ControlRow>
+            <ControlRow stacked={stacked} fill={fill} label="Schedule clock" hint="schedule.timezone">
                 <Segmented
                     fill={fill}
                     variant={variant}
@@ -83,8 +84,8 @@ function Settings({ fill, variant, stacked = false }: { fill: boolean; variant: 
                         { value: 'local', label: 'Server time' },
                     ]}
                 />
-            </Row>
-            <Row stacked={stacked} fill={fill} label="Density" hint="disabled">
+            </ControlRow>
+            <ControlRow stacked={stacked} fill={fill} label="Density" hint="disabled">
                 <Segmented
                     fill={fill}
                     variant={variant}
@@ -97,8 +98,8 @@ function Settings({ fill, variant, stacked = false }: { fill: boolean; variant: 
                         { value: 'compact', label: 'Compact' },
                     ]}
                 />
-            </Row>
-        </div>
+            </ControlRow>
+        </Stack>
     )
 }
 
@@ -118,7 +119,7 @@ function SegmentedOptions() {
         <Ground>
             <div className="grid gap-x-10 gap-y-8 lg:grid-cols-2">
                 {VARIANTS.map((entry, index) => (
-                    <section key={entry.variant} className="flex flex-col gap-3">
+                    <Stack key={entry.variant} as="section">
                         <div>
                             <h3 className="text-sm font-medium">
                                 {String.fromCharCode(65 + index)}. {entry.name}
@@ -126,7 +127,7 @@ function SegmentedOptions() {
                             <p className="text-xs text-muted-foreground">{entry.from}</p>
                         </div>
                         <Settings fill={false} variant={entry.variant} />
-                    </section>
+                    </Stack>
                 ))}
             </div>
         </Ground>
@@ -139,12 +140,12 @@ function SegmentedStacked() {
             <p className="text-xs text-muted-foreground">Labels above, each control the column's width, up to 320px.</p>
             <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
                 {VARIANTS.map((entry, index) => (
-                    <section key={entry.variant} className="flex flex-col gap-3">
+                    <Stack key={entry.variant} as="section">
                         <h3 className="text-sm font-medium">
                             {String.fromCharCode(65 + index)}. {entry.name}
                         </h3>
                         <Settings fill stacked variant={entry.variant} />
-                    </section>
+                    </Stack>
                 ))}
             </div>
         </Ground>
@@ -163,7 +164,7 @@ function SegmentedInForm() {
     const [on, setOn] = useState<'success' | 'failure' | 'always'>('failure')
     return (
         <Ground>
-            <div className="flex flex-col gap-2">
+            <Stack gap="sm">
                 <span className="text-sm font-medium">Notify on</span>
                 <Segmented
                     size="md"
@@ -176,7 +177,7 @@ function SegmentedInForm() {
                         { value: 'always', label: 'Every run' },
                     ]}
                 />
-            </div>
+            </Stack>
         </Ground>
     )
 }
@@ -198,16 +199,16 @@ function CopyLines() {
                     </div>
                 ))}
             </div>
-            <div className="flex items-center gap-3">
+            <Row gap="md">
                 <CopyButton value="xs" size="icon-xs" />
                 <CopyButton value="sm" size="icon-sm" />
                 <CopyButton value="md" size="icon" />
-            </div>
+            </Row>
         </Ground>
     )
 }
 
-const meta: Meta = { title: 'Patterns/Controls' }
+const meta: Meta = { title: 'Patterns/Controls', parameters: { frame: 'padded' } }
 export default meta
 
 /** Every prop of a segmented control, to try live. */
@@ -228,19 +229,17 @@ export const Playground: StoryObj<{ variant: SegmentedVariant; size: 'sm' | 'md'
             { value: 'year', label: 'Year' },
         ]
         return (
-            <div className="min-h-svh bg-background p-6 text-foreground">
-                <div className="w-full max-w-80">
-                    <Segmented
-                        label="Period"
-                        value="day"
-                        onChoose={() => undefined}
-                        options={all.slice(0, args.options)}
-                        variant={args.variant}
-                        size={args.size}
-                        fill={args.fill}
-                        disabled={args.disabled}
-                    />
-                </div>
+            <div className="w-full max-w-80">
+                <Segmented
+                    label="Period"
+                    value="day"
+                    onChoose={() => undefined}
+                    options={all.slice(0, args.options)}
+                    variant={args.variant}
+                    size={args.size}
+                    fill={args.fill}
+                    disabled={args.disabled}
+                />
             </div>
         )
     },

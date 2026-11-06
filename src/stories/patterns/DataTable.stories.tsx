@@ -30,6 +30,7 @@ import { type Album, makeAlbums } from '../fixtures/albums'
 import { Artwork } from '../fixtures/Artwork'
 import { folderContents, type FolderRow, makeFolderTree, projectFolders } from '../fixtures/folders'
 import { makeRuns, makeRunTree, startedAt, type TableRun, took, type TreeRow } from '../fixtures/tableRuns'
+import { Row, Stack } from '../../components/Layout'
 
 /**
  * A table for many rows. Only the rows in view are drawn, so the 10k and 50k tables scroll like
@@ -40,7 +41,7 @@ import { makeRuns, makeRunTree, startedAt, type TableRun, took, type TreeRow } f
  * tree's rows open to their children, at any depth or loaded as a branch opens, and choosing a
  * project chooses every run in it. A short listing drops the bar above its head.
  */
-const meta: Meta = { title: 'Patterns/Data table' }
+const meta: Meta = { title: 'Patterns/Data table', parameters: { frame: 'padded' } }
 export default meta
 
 const COLUMNS: DataColumn<TableRun>[] = [
@@ -136,7 +137,7 @@ function Runs({
             : all.filter((run) => run.id.includes(wanted) || run.job.includes(wanted) || run.project.includes(wanted))
     }, [all, query])
     return (
-        <div className="flex h-svh flex-col bg-background p-4 text-foreground">
+        <Stack gap="none" className="h-svh bg-background p-4 text-foreground">
             <DataTable
                 className="flex-1"
                 columns={COLUMNS}
@@ -151,7 +152,7 @@ function Runs({
                 opened={(run) => run.id === opened}
                 toolbar={<SearchField value={query} onChange={setQuery} placeholder="Search" className="w-full max-w-md" />}
             />
-        </div>
+        </Stack>
     )
 }
 
@@ -193,23 +194,17 @@ const LIST_COLUMNS: DataColumn<ListRun>[] = [
     { id: 'took', header: 'Took', width: '6rem', align: 'end', cell: (run) => <span className="tabular-nums">{run.took}</span> },
 ]
 
-function Ground({ children }: { children: React.ReactNode }) {
-    return <div className="min-h-svh bg-background p-6 text-foreground">{children}</div>
-}
-
 /** A short listing: no bar above the head, the column names as the box's head, and a foot that counts the rows loaded. */
 export const ShortList: StoryObj = {
     name: 'Short list',
     render: () => (
-        <Ground>
-            <DataTable
-                variant="list"
-                columns={LIST_COLUMNS}
-                rows={LIST_RUNS}
-                rowKey={(run) => run.id}
-                foot={`${String(LIST_RUNS.length)} of 248`}
-            />
-        </Ground>
+        <DataTable
+            variant="list"
+            columns={LIST_COLUMNS}
+            rows={LIST_RUNS}
+            rowKey={(run) => run.id}
+            foot={`${String(LIST_RUNS.length)} of 248`}
+        />
     ),
 }
 
@@ -230,63 +225,54 @@ function Picking() {
 
 /** A list that picks the row its detail shows: a click, Enter or Space picks it, and it is filled and marked selected. No boxes. */
 export const Pick: StoryObj = {
-    render: () => (
-        <Ground>
-            <Picking />
-        </Ground>
-    ),
+    render: () => <Picking />,
 }
 
 /** The tint under the pointer turned off, for a listing that should stay still. */
 export const NoHover: StoryObj = {
     name: 'No hover',
-    render: () => (
-        <Ground>
-            <DataTable variant="list" columns={LIST_COLUMNS} rows={LIST_RUNS} rowKey={(run) => run.id} hover={false} />
-        </Ground>
-    ),
+    render: () => <DataTable variant="list" columns={LIST_COLUMNS} rows={LIST_RUNS} rowKey={(run) => run.id} hover={false} />,
 }
 
 /** Rows that grow to fit a cell longer than one line, here each run's note. */
 export const TallRows: StoryObj = {
     name: 'Tall rows',
     render: () => (
-        <Ground>
-            <DataTable
-                variant="list"
-                rowHeight="auto"
-                columns={[
-                    ...LIST_COLUMNS.slice(0, 2),
-                    {
-                        id: 'note',
-                        header: 'Note',
-                        width: 'minmax(12rem,2fr)',
-                        cell: (run) => <span className="text-muted-foreground">{run.note}</span>,
-                    },
-                ]}
-                rows={LIST_RUNS}
-                rowKey={(run) => run.id}
-            />
-        </Ground>
+        <DataTable
+            variant="list"
+            rowHeight="auto"
+            columns={[
+                ...LIST_COLUMNS.slice(0, 2),
+                {
+                    id: 'note',
+                    header: 'Note',
+                    width: 'minmax(12rem,2fr)',
+                    cell: (run) => <span className="text-muted-foreground">{run.note}</span>,
+                },
+            ]}
+            rows={LIST_RUNS}
+            rowKey={(run) => run.id}
+        />
     ),
 }
 
 /** A hundred runs: the whole table at a size that needs no scrolling to see its parts. */
-export const Hundred: StoryObj = { name: '100 rows', render: () => <Runs count={100} /> }
+export const Hundred: StoryObj = { parameters: { frame: 'none' }, name: '100 rows', render: () => <Runs count={100} /> }
 
 /** Five hundred runs. */
-export const FiveHundred: StoryObj = { name: '500 rows', render: () => <Runs count={500} /> }
+export const FiveHundred: StoryObj = { parameters: { frame: 'none' }, name: '500 rows', render: () => <Runs count={500} /> }
 
 /** Ten thousand runs; only the rows in view are drawn. */
-export const TenThousand: StoryObj = { name: '10k rows', render: () => <Runs count={10_000} /> }
+export const TenThousand: StoryObj = { parameters: { frame: 'none' }, name: '10k rows', render: () => <Runs count={10_000} /> }
 
 /** Fifty thousand runs, sorted from a column head as quickly as the hundred. */
-export const FiftyThousand: StoryObj = { name: '50k rows', render: () => <Runs count={50_000} /> }
+export const FiftyThousand: StoryObj = { parameters: { frame: 'none' }, name: '50k rows', render: () => <Runs count={50_000} /> }
 
 /** Ten thousand runs fifty to a page: the table sorts them all and shows a page, with the pager at its foot. */
 export const Pages: StoryObj = {
+    parameters: { frame: 'none' },
     render: () => (
-        <div className="flex h-svh flex-col bg-background p-4 text-foreground">
+        <Stack gap="none" className="h-svh bg-background p-4 text-foreground">
             <DataTable
                 className="flex-1"
                 columns={COLUMNS}
@@ -297,15 +283,16 @@ export const Pages: StoryObj = {
                 rowActions={runActions}
                 paging="client"
             />
-        </div>
+        </Stack>
     ),
 }
 
 /** The first page selected from the head's box: the bar offers every one of the ten thousand as a second step. */
 export const PageSelected: StoryObj = {
+    parameters: { frame: 'none' },
     name: 'Page selected',
     render: () => (
-        <div className="flex h-svh flex-col bg-background p-4 text-foreground">
+        <Stack gap="none" className="h-svh bg-background p-4 text-foreground">
             <DataTable
                 className="flex-1"
                 columns={COLUMNS}
@@ -323,7 +310,7 @@ export const PageSelected: StoryObj = {
                 rowActions={runActions}
                 paging="client"
             />
-        </div>
+        </Stack>
     ),
 }
 
@@ -339,7 +326,7 @@ function ServerPages() {
         return sorted.slice(page * size, (page + 1) * size)
     }, [all, sort, page, size])
     return (
-        <div className="flex h-svh flex-col bg-background p-4 text-foreground">
+        <Stack gap="none" className="h-svh bg-background p-4 text-foreground">
             <DataTable
                 className="flex-1"
                 columns={COLUMNS}
@@ -356,12 +343,12 @@ function ServerPages() {
                 pageSize={size}
                 onPageSizeChange={setSize}
             />
-        </div>
+        </Stack>
     )
 }
 
 /** Fifty thousand runs a page at a time from a server: only the page shown is ever handed to the table. */
-export const ServerPaging: StoryObj = { name: 'Server pages', render: () => <ServerPages /> }
+export const ServerPaging: StoryObj = { parameters: { frame: 'none' }, name: 'Server pages', render: () => <ServerPages /> }
 
 /** Runs arriving as they are scrolled to: 200 at first, 200 more each time the end comes near. */
 function LoadMore() {
@@ -378,7 +365,7 @@ function LoadMore() {
         }, 600)
     }, [all.length])
     return (
-        <div className="flex h-svh flex-col bg-background p-4 text-foreground">
+        <Stack gap="none" className="h-svh bg-background p-4 text-foreground">
             <DataTable
                 className="flex-1"
                 columns={COLUMNS}
@@ -391,27 +378,32 @@ function LoadMore() {
                 loading={loading}
                 onLoadMore={more}
             />
-        </div>
+        </Stack>
     )
 }
 
 /** Progressive loading: the bar counts what has loaded, and placeholder rows stand in while more arrive. */
-export const LoadsMore: StoryObj = { name: 'Load more', render: () => <LoadMore /> }
+export const LoadsMore: StoryObj = { parameters: { frame: 'none' }, name: 'Load more', render: () => <LoadMore /> }
 
 /** The first rows still on their way: placeholder rows fill the table. */
 export const Loading: StoryObj = {
+    parameters: { frame: 'none' },
     render: () => (
-        <div className="flex h-svh flex-col bg-background p-4 text-foreground">
+        <Stack gap="none" className="h-svh bg-background p-4 text-foreground">
             <DataTable className="flex-1" columns={COLUMNS} rows={[]} rowKey={(run) => run.id} selectable loading />
-        </div>
+        </Stack>
     ),
 }
 
 /** Runs sorted by duration, longest first: the arrow in the head says which way. */
-export const Sorted: StoryObj = { render: () => <Runs count={500} defaultSort={{ column: 'duration', direction: 'desc' }} /> }
+export const Sorted: StoryObj = {
+    parameters: { frame: 'none' },
+    render: () => <Runs count={500} defaultSort={{ column: 'duration', direction: 'desc' }} />,
+}
 
 /** Three runs selected: the bar says how many and offers to retry or cancel them, or to clear. */
 export const Selection: StoryObj = {
+    parameters: { frame: 'none' },
     render: () => <Runs count={500} defaultSelection={new Set(['run_8f3a01', 'run_8f3a02', 'run_8f3a04'])} />,
 }
 
@@ -442,11 +434,12 @@ const MENUS: { title: string; what: string; props: Partial<Parameters<typeof Dat
 
 /** Four ways to reach a row's actions, side by side; every one also opens on a right-click. */
 export const RowMenus: StoryObj = {
+    parameters: { frame: 'none' },
     name: 'Row menus',
     render: () => (
         <div className="grid h-svh grid-rows-4 gap-4 bg-background p-4 text-foreground lg:grid-cols-2 lg:grid-rows-2">
             {MENUS.map((menu) => (
-                <section key={menu.title} className="flex min-h-0 flex-col gap-2">
+                <Stack key={menu.title} as="section" gap="sm" className="min-h-0">
                     <div className="text-sm">
                         <span className="font-medium">{menu.title}</span>
                         <span className="ml-2 text-xs text-muted-foreground">{menu.what}</span>
@@ -459,7 +452,7 @@ export const RowMenus: StoryObj = {
                         minWidth="36rem"
                         {...menu.props}
                     />
-                </section>
+                </Stack>
             ))}
         </div>
     ),
@@ -530,7 +523,7 @@ const TREE_COLUMNS: DataColumn<TreeRow>[] = [
 function RunTree({ count, open }: { count: number; open: string[] }) {
     const rows = makeRunTree(count)
     return (
-        <div className="flex h-svh flex-col bg-background p-4 text-foreground">
+        <Stack gap="none" className="h-svh bg-background p-4 text-foreground">
             <DataTable
                 className="flex-1"
                 columns={TREE_COLUMNS}
@@ -542,15 +535,19 @@ function RunTree({ count, open }: { count: number; open: string[] }) {
                 bulkActions={bulk}
                 minWidth="44rem"
             />
-        </div>
+        </Stack>
     )
 }
 
 /** Three hundred runs under their projects and jobs, one project and one job open. */
-export const Tree: StoryObj = { render: () => <RunTree count={300} open={['harbor', 'harbor/nightly-export']} /> }
+export const Tree: StoryObj = {
+    parameters: { frame: 'none' },
+    render: () => <RunTree count={300} open={['harbor', 'harbor/nightly-export']} />,
+}
 
 /** Fifty thousand runs under their projects and jobs, with a job of over three thousand runs open. */
 export const LargeTree: StoryObj = {
+    parameters: { frame: 'none' },
     name: 'Large tree',
     render: () => <RunTree count={50_000} open={['harbor', 'harbor/nightly-export', 'juniper']} />,
 }
@@ -561,10 +558,10 @@ const FOLDER_COLUMNS: DataColumn<FolderRow>[] = [
         header: 'Name',
         width: 'minmax(18rem,1fr)',
         cell: (row) => (
-            <span className="flex min-w-0 items-center gap-2">
+            <Row as="span">
                 <FileTypeIcon kind={row.kind} className="size-4 shrink-0" />
                 <span className="truncate font-mono">{row.name}</span>
-            </span>
+            </Row>
         ),
         sortValue: (row) => `${row.kind === 'folder' ? 0 : 1}${row.name}`,
     },
@@ -602,11 +599,16 @@ const DEEP_PATH = (() => {
 })()
 
 function Frame({ children }: { children: React.ReactNode }) {
-    return <div className="flex h-svh flex-col bg-background p-4 text-foreground">{children}</div>
+    return (
+        <Stack gap="none" className="h-svh bg-background p-4 text-foreground">
+            {children}
+        </Stack>
+    )
 }
 
 /** Folders in folders, eight deep, open along the way to the deepest. */
 export const DeepTree: StoryObj = {
+    parameters: { frame: 'none' },
     name: 'Deep tree',
     render: () => (
         <Frame>
@@ -653,7 +655,7 @@ function OpenAllTree() {
 }
 
 /** Every branch opened or closed at once from the bar, the open branches held by the app. */
-export const OpenAll: StoryObj = { name: 'Open all', render: () => <OpenAllTree /> }
+export const OpenAll: StoryObj = { parameters: { frame: 'none' }, name: 'Open all', render: () => <OpenAllTree /> }
 
 /** The deep tree cut down to the names holding `text`. */
 function findFolders(text: string) {
@@ -699,7 +701,7 @@ function FindInTree({ initial }: { initial: string }) {
 }
 
 /** A find in the tree: only the branches with a match stay, opened down to every match. */
-export const TreeFind: StoryObj = { name: 'Tree find', render: () => <FindInTree initial="summary" /> }
+export const TreeFind: StoryObj = { parameters: { frame: 'none' }, name: 'Tree find', render: () => <FindInTree initial="summary" /> }
 
 function OnDemandTree() {
     const load = useCallback(
@@ -725,7 +727,7 @@ function OnDemandTree() {
 }
 
 /** Folders whose contents load as each one first opens, a spinner in its control while they come. */
-export const OnDemand: StoryObj = { name: 'On demand', render: () => <OnDemandTree /> }
+export const OnDemand: StoryObj = { parameters: { frame: 'none' }, name: 'On demand', render: () => <OnDemandTree /> }
 
 const folderActions = (row: FolderRow): DataAction[] =>
     row.kind === 'folder'
@@ -745,6 +747,7 @@ const folderActions = (row: FolderRow): DataAction[] =>
 
 /** A tree whose rows have menus, from the button at each row's end or a right-click, folders and files offering different things. */
 export const TreeMenus: StoryObj = {
+    parameters: { frame: 'none' },
     name: 'Tree menus',
     render: () => (
         <Frame>
@@ -825,7 +828,7 @@ function Albums({ count }: { count: number }) {
             : all.filter((album) => album.title.toLowerCase().includes(wanted) || album.artist.toLowerCase().includes(wanted))
     }, [all, query])
     return (
-        <div className="flex h-svh flex-col bg-background p-4 text-foreground">
+        <Stack gap="none" className="h-svh bg-background p-4 text-foreground">
             <DataTable
                 className="flex-1"
                 columns={ALBUM_COLUMNS}
@@ -847,20 +850,21 @@ function Albums({ count }: { count: number }) {
                 toolbar={<SearchField value={query} onChange={setQuery} placeholder="Search" className="w-full max-w-md" />}
                 minWidth="40rem"
             />
-        </div>
+        </Stack>
     )
 }
 
 /** 2,400 albums as cards: the grid fits as many to a line as the width allows, and the switch in the bar shows the same rows as a table. */
-export const AlbumGrid: StoryObj = { name: 'Albums', render: () => <Albums count={2_400} /> }
+export const AlbumGrid: StoryObj = { parameters: { frame: 'none' }, name: 'Albums', render: () => <Albums count={2_400} /> }
 
 /** Fifty thousand albums as cards; only the lines in view are drawn, and the sort menu orders them all. */
-export const LargeAlbumGrid: StoryObj = { name: '50k albums', render: () => <Albums count={50_000} /> }
+export const LargeAlbumGrid: StoryObj = { parameters: { frame: 'none' }, name: '50k albums', render: () => <Albums count={50_000} /> }
 
 /** A search that matches nothing. */
 export const Empty: StoryObj = {
+    parameters: { frame: 'none' },
     render: () => (
-        <div className="flex h-svh flex-col bg-background p-4 text-foreground">
+        <Stack gap="none" className="h-svh bg-background p-4 text-foreground">
             <DataTable
                 className="flex-1"
                 columns={COLUMNS}
@@ -869,6 +873,6 @@ export const Empty: StoryObj = {
                 selectable
                 words={{ empty: 'No runs match the search.' }}
             />
-        </div>
+        </Stack>
     ),
 }

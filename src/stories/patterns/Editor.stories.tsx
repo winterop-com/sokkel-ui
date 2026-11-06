@@ -5,14 +5,11 @@ import { CodeEditor } from '../../components/CodeEditor'
 import { Field } from '../../components/Field'
 import { SourceSheet } from '../../components/SourceSheet'
 import { Button } from '../../components/ui/button'
+import { Columns, Row, Stack } from '../../components/Layout'
 
 /** Editing code in a form or a pane, and a record's source one press away. */
 function Ground({ children }: { children: React.ReactNode }) {
-    return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="flex flex-col gap-6">{children}</div>
-        </div>
-    )
+    return <Stack gap="xl">{children}</Stack>
 }
 
 const JOB = `code: nightly-export
@@ -66,7 +63,7 @@ function Editors() {
                     className="h-72"
                 />
             </Field>
-            <div className="grid gap-6 md:grid-cols-2">
+            <Columns>
                 <Field id="record" label="Stored record" hint="Read only.">
                     <CodeEditor label="Stored record" language="json" value={JSON.stringify(RECORD, null, 2)} readOnly className="h-64" />
                 </Field>
@@ -80,7 +77,7 @@ function Editors() {
                         className="h-24"
                     />
                 </Field>
-            </div>
+            </Columns>
         </Ground>
     )
 }
@@ -89,12 +86,12 @@ function Source({ open: initial }: { open: boolean }) {
     const [open, setOpen] = useState(initial)
     return (
         <Ground>
-            <div className="flex items-center gap-3">
+            <Row gap="md">
                 <span className="font-mono text-sm">nightly-export</span>
                 <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
                     View source
                 </Button>
-            </div>
+            </Row>
             <SourceSheet
                 open={open}
                 onOpenChange={setOpen}
@@ -106,7 +103,7 @@ function Source({ open: initial }: { open: boolean }) {
     )
 }
 
-const meta: Meta = { title: 'Patterns/Editor' }
+const meta: Meta = { title: 'Patterns/Editor', parameters: { frame: 'padded' } }
 export default meta
 
 export const Editors_: StoryObj = { name: 'Code editor', render: () => <Editors /> }

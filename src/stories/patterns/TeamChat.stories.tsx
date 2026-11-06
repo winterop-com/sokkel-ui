@@ -11,6 +11,7 @@ import { PersonAvatar } from '../../components/PersonAvatar'
 import { Button } from '../../components/ui/button'
 import { DropdownMenuItem, DropdownMenuSeparator } from '../../components/ui/dropdown-menu'
 import { TooltipProvider } from '../../components/ui/tooltip'
+import { Row, Stack } from '../../components/Layout'
 
 /**
  * The message half of a team chat: messages laid out densely with the author's square picture,
@@ -334,7 +335,7 @@ const MEMBERS = [GRACE, LINUS, MARGARET, ADA]
 export const Header: StoryObj = {
     render: () => (
         <Ground>
-            <div className="flex flex-col gap-8">
+            <Stack gap="2xl">
                 <ChannelHeader
                     name="harbor-ops"
                     topic="Deploys, runs and incidents for harbor. On call this week: grace."
@@ -356,7 +357,7 @@ export const Header: StoryObj = {
                     actions={ACTIONS}
                 />
                 <ChannelHeader name="grace" kind="direct" presence="active" onDetails={noop} actions={ACTIONS.slice(1)} />
-            </div>
+            </Stack>
         </Ground>
     ),
 }
@@ -368,7 +369,7 @@ export const Header: StoryObj = {
 export const Start: StoryObj = {
     render: () => (
         <Ground>
-            <div className="flex flex-col gap-8">
+            <Stack gap="2xl">
                 <ConversationStart picture={<PersonAvatar name="grace" size="xl" shape="square" />} title="grace">
                     Platform, on call this week. This is the start of your conversation with grace.
                 </ConversationStart>
@@ -384,7 +385,7 @@ export const Start: StoryObj = {
                 >
                     ada created this channel today. It is the start of #juniper-launch.
                 </ConversationStart>
-            </div>
+            </Stack>
         </Ground>
     ),
 }
@@ -425,7 +426,7 @@ function Reply({ placeholder, thread = false }: { placeholder: string; thread?: 
 export const Thread: StoryObj = {
     render: () => (
         <TooltipProvider>
-            <div className="flex h-svh justify-end bg-background text-foreground">
+            <Row gap="none" align="stretch" justify="end" className="h-svh bg-background text-foreground">
                 <ThreadView
                     className="w-full max-w-sm border-l border-border-strong bg-sidebar"
                     parent={
@@ -448,7 +449,7 @@ export const Thread: StoryObj = {
                         <Markdown content="The change is up: [harbor#412](https://code.example.org/harbor/412)." />
                     </ChatMessage>
                 </ThreadView>
-            </div>
+            </Row>
         </TooltipProvider>
     ),
 }

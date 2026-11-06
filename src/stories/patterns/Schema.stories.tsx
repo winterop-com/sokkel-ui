@@ -6,17 +6,14 @@ import { StatusChip } from '../../components/StatusChip'
 import { DropdownMenuItem } from '../../components/ui/dropdown-menu'
 import type { JsonSchema } from '../../components/schema/read'
 import { Section } from '../../components/Section'
+import { Stack } from '../../components/Layout'
 
 /**
  * JSON Schemas read as field lists: a job's settings with defaults and rules, and an order with
  * nested objects, a list of line items and a shared definition.
  */
 function Ground({ children }: { children: React.ReactNode }) {
-    return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="flex flex-col gap-6">{children}</div>
-        </div>
-    )
+    return <Stack gap="xl">{children}</Stack>
 }
 
 const JOB: JsonSchema = {
@@ -77,7 +74,7 @@ const ORDER: JsonSchema = {
     },
 }
 
-const meta: Meta = { title: 'Patterns/Schema' }
+const meta: Meta = { title: 'Patterns/Schema', parameters: { frame: 'padded' } }
 export default meta
 
 export const Flat: StoryObj = {

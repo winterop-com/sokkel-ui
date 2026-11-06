@@ -6,6 +6,7 @@ import type { ConfirmState } from '../../components/ConfirmCard'
 import type { ToolCallEntry } from '../../components/ToolCall'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { TidevannMark } from '../fixtures/TidevannMark'
+import { Stack } from '../../components/Layout'
 
 /**
  * The assistant's side of a turn: who speaks, the tools it called folded behind one line, the
@@ -16,7 +17,9 @@ function Ground({ children }: { children: ReactNode }) {
     return (
         <TooltipProvider>
             <div className="min-h-svh bg-background p-4 text-foreground md:p-6">
-                <div className="mx-auto flex max-w-3xl flex-col gap-10">{children}</div>
+                <Stack gap="3xl" className="mx-auto max-w-3xl">
+                    {children}
+                </Stack>
             </div>
         </TooltipProvider>
     )

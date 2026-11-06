@@ -5,14 +5,15 @@ import { ImageLightbox } from '../../components/ImageLightbox'
 import { ShortcutsDialog } from '../../components/ShortcutsDialog'
 import { ThemeToggle } from '../../components/ThemeToggle'
 import { TooltipProvider } from '../../components/ui/tooltip'
+import { Row, Stack } from '../../components/Layout'
 
 /** The app-level controls: the scheme switch, the shortcuts dialog, an image that opens full screen. */
 function Ground({ children }: { children: React.ReactNode }) {
     return (
         <TooltipProvider>
-            <div className="min-h-svh bg-background p-6 text-foreground">
-                <div className="mx-auto flex max-w-3xl flex-col gap-6">{children}</div>
-            </div>
+            <Stack gap="xl" className="mx-auto max-w-3xl">
+                {children}
+            </Stack>
         </TooltipProvider>
     )
 }
@@ -27,12 +28,12 @@ function Toggle() {
     const [dark, setDark] = useState(true)
     return (
         <Ground>
-            <div className="flex h-shell-top items-center gap-2 rounded-surface border border-border-strong bg-sidebar px-3">
+            <Row className="h-shell-top rounded-surface border border-border-strong bg-sidebar px-3">
                 <span className="text-sm font-medium">Tidevann</span>
                 <span className="font-mono text-xs text-muted-foreground">1.4.0</span>
                 <div className="flex-1" />
                 <ThemeToggle dark={dark} onToggle={() => setDark(!dark)} />
-            </div>
+            </Row>
         </Ground>
     )
 }
@@ -83,7 +84,7 @@ function Lightbox({ open }: { open: boolean }) {
     )
 }
 
-const meta: Meta = { title: 'Patterns/App controls' }
+const meta: Meta = { title: 'Patterns/App controls', parameters: { frame: 'padded' } }
 export default meta
 
 export const Theme: StoryObj = { name: 'Theme toggle', render: () => <Toggle /> }
