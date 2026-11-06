@@ -35,7 +35,7 @@ import { TooltipProvider } from '../../components/ui/tooltip'
 import { TidevannMark } from '../fixtures/TidevannMark'
 
 /**
- * A whole app in the library's frame: the rail, the top bar with the trail and search, a list page
+ * A whole app in the library's frame: the rail with Projects unfolded to its projects, the top bar with the trail and search, a list page
  * with filters, the side panel on the chosen row, the foot strip, and a log dock. The rail and the
  * side panel are resizable here; resizing is opt-in on every panel.
  */
@@ -53,7 +53,17 @@ const GROUPS: RailGroup[] = [
         id: 'workspace',
         title: 'Workspace',
         entries: [
-            { id: 'projects', label: 'Projects', icon: FolderGit2, href: '#' },
+            {
+                id: 'projects',
+                label: 'Projects',
+                icon: FolderGit2,
+                href: '#',
+                entries: [
+                    { id: 'harbor', label: 'harbor', href: '#' },
+                    { id: 'juniper', label: 'juniper', href: '#' },
+                    { id: 'larkspur', label: 'larkspur', href: '#' },
+                ],
+            },
             { id: 'services', label: 'Services', icon: Boxes, href: '#' },
             { id: 'secrets', label: 'Secrets', icon: KeyRound, href: '#' },
             { id: 'people', label: 'People', icon: Users, href: '#' },
@@ -205,6 +215,7 @@ function Workspace({ dock = false }: { dock?: boolean }) {
                         mark={<TidevannMark />}
                         name="Tidevann"
                         groups={GROUPS}
+                        defaultOpen={['projects']}
                         collapsed={collapsed}
                         onCollapsedChange={setCollapsed}
                         width={rail}
