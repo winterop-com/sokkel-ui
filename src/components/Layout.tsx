@@ -83,7 +83,10 @@ export function Row({
     ...props
 }: Base & { align?: keyof typeof ALIGN; justify?: keyof typeof JUSTIFY; wrap?: boolean }) {
     return (
-        <Tag {...props} className={cn('flex min-w-0 [:where(&>*)]:min-w-0', wrap && 'flex-wrap', GAP[gap], ALIGN[align], JUSTIFY[justify], className)}>
+        <Tag
+            {...props}
+            className={cn('flex min-w-0 [:where(&>*)]:min-w-0', wrap && 'flex-wrap', GAP[gap], ALIGN[align], JUSTIFY[justify], className)}
+        >
             {children}
         </Tag>
     )
@@ -111,7 +114,15 @@ export function Columns({
 }: Base & { count?: keyof typeof COLUMNS; align?: 'start' | 'stretch' }) {
     return (
         <div className="@container min-w-0">
-            <Tag className={cn('grid grid-cols-1 [:where(&>*)]:min-w-0', COLUMNS[count], GAP[gap], align === 'start' && 'items-start', className)}>
+            <Tag
+                className={cn(
+                    'grid grid-cols-1 [:where(&>*)]:min-w-0',
+                    COLUMNS[count],
+                    GAP[gap],
+                    align === 'start' && 'items-start',
+                    className,
+                )}
+            >
                 {children}
             </Tag>
         </div>
