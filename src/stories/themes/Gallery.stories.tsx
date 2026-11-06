@@ -15,7 +15,8 @@ import { fromGlobals, THEMES, toGlobals } from './themes'
  * follow the toolbar. Pressing a half opens the kitchen sink in that theme and scheme. Each half
  * shows a placeholder until its theme has drawn, and a bar under the title counts them.
  */
-const meta: Meta = { title: 'Themes/All themes' }
+// Drawing every theme in its frames takes a while; the screenshot suite gives a story tagged slow more time.
+const meta: Meta = { title: 'Themes/All themes', tags: ['slow'] }
 export default meta
 
 const SCHEMES = ['dark', 'light'] as const
