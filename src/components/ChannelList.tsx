@@ -1,11 +1,14 @@
 import { ChevronDown, Hash, Lock, Plus } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import type { KindColor } from '../lib/kind'
 import { Count } from './Count'
+import { PersonAvatar, PresenceDot, type Presence } from './PersonAvatar'
+import { ResizeHandle } from './ResizeHandle'
+import { SearchField } from './SearchField'
 
-/** Whether a person is around: here, away, or not signed in. */
-export type Presence = 'active' | 'away' | 'offline'
+export type { Presence } from './PersonAvatar'
 
 /** One place to talk: a channel, or a conversation with people. */
 export interface ChannelEntry {
@@ -13,14 +16,17 @@ export interface ChannelEntry {
     /** A channel's name without the `#`, or the people a conversation is with. */
     label: string
     kind: 'channel' | 'private' | 'direct'
-    /** For `direct`: the other person's initials or picture, and whether they are around. */
+    /** For `direct`: the person, drawn as a small round avatar of their initials; their name is the label unless given. */
+    person?: { name?: string; initials?: string; color?: KindColor; image?: string }
+    /** For `direct`: a picture or initials of the app's own, drawn in a small square in place of the avatar from `person`. */
     avatar?: ReactNode
+    /** For `direct`: whether the other person is around, a dot at the avatar's corner. */
     presence?: Presence
-    /** Has messages not read yet. */
+    /** Has messages not read yet: drawn in the foreground weight. */
     unread?: boolean
     /** Messages that name you or are sent to you only. */
     mentions?: number
-    /** Muted: never bold, and drawn quieter. */
+    /** Muted: never bold, and drawn faint. */
     muted?: boolean
     href?: string
 }
@@ -36,6 +42,8 @@ export interface ChannelPlace {
 export interface ChannelSection {
     id: string
     title: string
+    /** Drawn before the title, such as a star for the starred; the fold's chevron takes its place while the head is pointed at or the section is folded. */
+    icon?: ReactNode
     entries: readonly ChannelEntry[]
     /** Offers an add button at the end of the section, as for a new channel or message. */
     onAdd?: () => void
@@ -46,6 +54,12 @@ export interface ChannelListWords {
     collapse: (section: string) => string
     mentions: (count: number) => string
     presence: Record<Presence, string>
+    /** The find field's placeholder and name. */
+    find: string
+    clear: string
+    /** Said when nothing matches what is typed in the find field. */
+    nothing: string
+    resize: string
 }
 
 const WORDS: ChannelListWords = {
@@ -53,26 +67,52 @@ const WORDS: ChannelListWords = {
     collapse: (section) => `Show or hide ${section}`,
     mentions: (count) => `${String(count)} mention${count === 1 ? '' : 's'}`,
     presence: { active: 'Active', away: 'Away', offline: 'Offline' },
+    find: 'Find a conversation',
+    clear: 'Clear the search',
+    nothing: 'No conversation matches.',
+    resize: 'Resize the conversation list',
 }
 
-const DOT: Record<Presence, string> = {
-    active: 'bg-good',
-    away: 'border-2 border-muted-foreground bg-transparent',
-    offline: 'border-2 border-faint bg-transparent',
-}
+const ROW =
+    'flex h-(--density-channel-row) w-full items-center gap-2 rounded-md px-2 text-left text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50'
+
+/** The open row's wash, with the avatar ring following the ground under it. */
+const OPEN = 'bg-accent font-medium text-accent-foreground [--avatar-ring:var(--color-accent)]'
+const HOVER = 'hover:bg-secondary hover:[--avatar-ring:var(--color-secondary)]'
 
 /**
- * The places to talk, in sections that fold: channels with `#` (a lock for a private one), and
- * conversations with a person's picture and whether they are around. An entry with unread messages
- * is bold, one that names you carries a count, a muted one is quieter. The chosen entry is filled.
+ * The places to talk, in sections that fold, each section with an icon of its own: channels with
+ * `#` (a lock for a private one), and conversations with a small round picture of the person and a
+ * dot for whether they are around. An entry with unread messages is in the foreground weight, one
+ * that names you carries a count, a muted one is faint. The open entry is on a subtle wash.
  * `places` come first, above the sections: threads, activity, saved messages.
+ *
+ * With `find`, a field at the top narrows every section to the entries whose name holds what is
+ * typed, folded sections included. A folded section still shows its open entry and those that name
+ * you.
+ *
+ * Given `size` and `onSizeChange`, its right edge drags to resize it, as `SidePanel`'s left edge
+ * does; otherwise the caller sets its width.
  */
 export function ChannelList({
     sections,
     places,
     active,
     onSelect,
+    title,
+    actions,
     header,
+    find = false,
+    query: heldQuery,
+    onQueryChange,
+    folded: heldFolded,
+    defaultFolded = [],
+    onFoldedChange,
+    size,
+    onSizeChange,
+    minSize = 200,
+    maxSize = 480,
+    defaultSize = 256,
     className,
     words: given,
 }: {
@@ -80,64 +120,142 @@ export function ChannelList({
     places?: readonly ChannelPlace[]
     active?: string
     onSelect?: (id: string) => void
-    /** What sits above the sections: the workspace name, a new-message button. */
+    /** The workspace's name, or a menu that switches it, in a head the shell's top bar lines up with. */
+    title?: ReactNode
+    /** Buttons at the end of the head, such as a new message. */
+    actions?: ReactNode
+    /** What sits above the sections, under the head: anything an app draws of its own. */
     header?: ReactNode
+    /** Shows the find field under the header. */
+    find?: boolean
+    /** What the find field holds, when held from outside with `onQueryChange`. */
+    query?: string
+    onQueryChange?: (query: string) => void
+    /** The ids of the folded sections, when held from outside with `onFoldedChange`. */
+    folded?: readonly string[]
+    /** The sections folded at first, when the list holds the folds itself. */
+    defaultFolded?: readonly string[]
+    onFoldedChange?: (folded: string[]) => void
+    /** The width in pixels; with `onSizeChange` the right edge drags to resize it. */
+    size?: number
+    onSizeChange?: (size: number) => void
+    minSize?: number
+    maxSize?: number
+    /** The width a double click on the edge returns to. */
+    defaultSize?: number
     className?: string
     words?: Partial<ChannelListWords>
 }) {
+    const list = useRef<HTMLElement>(null)
+    const resizable = size !== undefined && onSizeChange !== undefined
     const words = { ...WORDS, ...given }
-    const [folded, setFolded] = useState<ReadonlySet<string>>(new Set())
+    const [ownFolded, setOwnFolded] = useState<readonly string[]>(defaultFolded)
+    const [ownQuery, setOwnQuery] = useState('')
+    const folds = heldFolded ?? ownFolded
+    const query = heldQuery ?? ownQuery
+    const needle = query.trim().toLowerCase()
+    const setQuery = (next: string) => {
+        if (heldQuery === undefined) setOwnQuery(next)
+        onQueryChange?.(next)
+    }
+    const toggle = (id: string) => {
+        const next = folds.includes(id) ? folds.filter((other) => other !== id) : [...folds, id]
+        if (heldFolded === undefined) setOwnFolded(next)
+        onFoldedChange?.(next)
+    }
+    const shownSections = sections
+        .map((section) => {
+            const open = !folds.includes(section.id)
+            const entries =
+                needle !== ''
+                    ? section.entries.filter((entry) => entry.label.toLowerCase().includes(needle))
+                    : open
+                      ? section.entries
+                      : section.entries.filter((entry) => entry.id === active || (entry.mentions ?? 0) > 0)
+            return { section, open: open || needle !== '', entries }
+        })
+        .filter(({ entries }) => needle === '' || entries.length > 0)
     return (
-        <nav className={cn('flex min-h-0 flex-col bg-sidebar text-sidebar-foreground', className)}>
-            {header}
-            <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2">
-                {places !== undefined && places.length > 0 && (
-                    <ul className="mb-3 flex flex-col gap-px border-b border-border pb-3">
-                        {places.map((place) => (
-                            <li key={place.id}>
-                                <button
-                                    type="button"
-                                    aria-current={place.id === active ? 'page' : undefined}
-                                    onClick={() => onSelect?.(place.id)}
-                                    className={cn(
-                                        'flex h-(--density-channel-row) w-full items-center gap-2 rounded-md px-2 text-left text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50 [&_svg]:size-4',
-                                        place.id === active
-                                            ? 'bg-primary text-primary-foreground'
-                                            : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
-                                    )}
-                                >
-                                    <span className="flex size-5 shrink-0 items-center justify-center">{place.icon}</span>
-                                    <span className="min-w-0 flex-1 truncate">{place.label}</span>
-                                    {(place.count ?? 0) > 0 && <span className="text-xs font-medium tabular-nums">{place.count}</span>}
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
+        <>
+            <nav
+                ref={list}
+                className={cn(
+                    'flex min-h-0 shrink-0 flex-col bg-sidebar text-sidebar-foreground [--avatar-ring:var(--color-sidebar)]',
+                    className,
                 )}
-                {sections.map((section) => {
-                    const open = !folded.has(section.id)
-                    const shown = open
-                        ? section.entries
-                        : section.entries.filter((entry) => entry.id === active || (entry.mentions ?? 0) > 0)
-                    return (
-                        <section key={section.id} className="mb-3">
-                            <div className="group/section flex h-7 items-center gap-1 px-1">
+                style={resizable ? { width: size } : undefined}
+            >
+                {(title !== undefined || actions !== undefined) && (
+                    <div className="flex h-shell-top shrink-0 items-center gap-2 border-b border-border-strong pr-2 pl-3">
+                        <div className="min-w-0 flex-1 truncate text-sm font-semibold">{title}</div>
+                        {actions !== undefined && <div className="flex shrink-0 items-center gap-1">{actions}</div>}
+                    </div>
+                )}
+                {header}
+                {find && (
+                    <div className="shrink-0 px-2 pt-2">
+                        <SearchField
+                            value={query}
+                            onChange={setQuery}
+                            placeholder={words.find}
+                            shortcut={false}
+                            words={{ clear: words.clear }}
+                        />
+                    </div>
+                )}
+                <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2">
+                    {needle === '' && places !== undefined && places.length > 0 && (
+                        <ul className="mb-2 flex flex-col gap-px border-b border-border pb-2">
+                            {places.map((place) => (
+                                <li key={place.id}>
+                                    <button
+                                        type="button"
+                                        aria-current={place.id === active ? 'page' : undefined}
+                                        onClick={() => onSelect?.(place.id)}
+                                        className={cn(
+                                            ROW,
+                                            '[&_svg]:size-4',
+                                            place.id === active ? OPEN : cn(HOVER, 'text-muted-foreground hover:text-foreground'),
+                                        )}
+                                    >
+                                        <span className="flex size-5 shrink-0 items-center justify-center">{place.icon}</span>
+                                        <span className="min-w-0 flex-1 truncate">{place.label}</span>
+                                        {(place.count ?? 0) > 0 && <span className="text-xs font-medium tabular-nums">{place.count}</span>}
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                    {needle !== '' && shownSections.length === 0 && (
+                        <p className="px-2 py-1.5 text-sm text-muted-foreground">{words.nothing}</p>
+                    )}
+                    {shownSections.map(({ section, open, entries }) => (
+                        <section key={section.id} className="mb-2">
+                            <div className="group/section flex items-center gap-1">
                                 <button
                                     type="button"
                                     aria-expanded={open}
                                     aria-label={words.collapse(section.title)}
-                                    onClick={() => {
-                                        const next = new Set(folded)
-                                        if (open) next.add(section.id)
-                                        else next.delete(section.id)
-                                        setFolded(next)
-                                    }}
-                                    className="flex min-w-0 flex-1 items-center gap-1 rounded-sm text-xs font-medium text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+                                    onClick={() => toggle(section.id)}
+                                    className={cn(ROW, 'min-w-0 flex-1 font-medium text-muted-foreground hover:text-foreground')}
                                 >
-                                    <ChevronDown
-                                        className={cn('size-3.5 shrink-0 transition-transform', !open && '-rotate-90')}
-                                        aria-hidden
-                                    />
+                                    <span className="flex size-5 shrink-0 items-center justify-center [&_svg]:size-4">
+                                        {section.icon !== undefined && open && (
+                                            <span className="flex group-focus-within/section:hidden group-hover/section:hidden" aria-hidden>
+                                                {section.icon}
+                                            </span>
+                                        )}
+                                        <ChevronDown
+                                            className={cn(
+                                                'shrink-0 transition-transform',
+                                                !open && '-rotate-90',
+                                                section.icon !== undefined &&
+                                                    open &&
+                                                    'hidden group-focus-within/section:block group-hover/section:block',
+                                            )}
+                                            aria-hidden
+                                        />
+                                    </span>
                                     <span className="truncate">{section.title}</span>
                                 </button>
                                 {section.onAdd !== undefined && (
@@ -146,24 +264,62 @@ export function ChannelList({
                                         aria-label={words.add(section.title)}
                                         title={words.add(section.title)}
                                         onClick={section.onAdd}
-                                        className="flex size-6 items-center justify-center rounded-md text-muted-foreground opacity-0 outline-none group-hover/section:opacity-100 hover:bg-secondary hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/50"
+                                        className="flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground opacity-0 outline-none group-hover/section:opacity-100 hover:bg-secondary hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/50"
                                     >
                                         <Plus className="size-3.5" aria-hidden />
                                     </button>
                                 )}
                             </div>
                             <ul className="flex flex-col gap-px">
-                                {shown.map((entry) => (
+                                {entries.map((entry) => (
                                     <li key={entry.id}>
                                         <Entry entry={entry} active={entry.id === active} onSelect={onSelect} words={words} />
                                     </li>
                                 ))}
                             </ul>
                         </section>
-                    )
-                })}
-            </div>
-        </nav>
+                    ))}
+                </div>
+            </nav>
+            {resizable && (
+                <ResizeHandle
+                    target={list}
+                    size={size}
+                    onSize={onSizeChange}
+                    min={minSize}
+                    max={maxSize}
+                    reset={defaultSize}
+                    label={words.resize}
+                />
+            )}
+        </>
+    )
+}
+
+function Mark({ entry, words }: { entry: ChannelEntry; words: ChannelListWords }) {
+    if (entry.kind === 'private') return <Lock className="size-3.5 shrink-0" aria-hidden />
+    if (entry.kind === 'channel') return <Hash className="size-3.5 shrink-0" aria-hidden />
+    if (entry.avatar === undefined)
+        return (
+            <PersonAvatar
+                name={entry.person?.name ?? entry.label}
+                initials={entry.person?.initials}
+                color={entry.person?.color}
+                image={entry.person?.image}
+                size="xs"
+                presence={entry.presence}
+                words={{ presence: words.presence }}
+            />
+        )
+    return (
+        <span className="relative flex size-5 shrink-0 items-center justify-center">
+            <span className="flex size-5 items-center justify-center overflow-hidden rounded-md bg-muted text-2xs font-medium">
+                {entry.avatar}
+            </span>
+            {entry.presence !== undefined && (
+                <PresenceDot presence={entry.presence} label={words.presence[entry.presence]} className="absolute -right-0.5 -bottom-0.5" />
+            )}
+        </span>
     )
 }
 
@@ -178,38 +334,21 @@ function Entry({
     onSelect?: (id: string) => void
     words: ChannelListWords
 }) {
-    const loud = entry.unread === true && entry.muted !== true
-    const mark =
-        entry.kind === 'direct' ? (
-            <span className="relative flex size-5 shrink-0 items-center justify-center">
-                <span className="flex size-5 items-center justify-center overflow-hidden rounded-md bg-muted text-2xs font-medium">
-                    {entry.avatar}
-                </span>
-                {entry.presence !== undefined && (
-                    <span
-                        role="img"
-                        aria-label={words.presence[entry.presence]}
-                        className={cn('absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full ring-2 ring-sidebar', DOT[entry.presence])}
-                    />
-                )}
-            </span>
-        ) : entry.kind === 'private' ? (
-            <Lock className="size-3.5 shrink-0" aria-hidden />
-        ) : (
-            <Hash className="size-3.5 shrink-0" aria-hidden />
-        )
+    const muted = entry.muted === true
+    const loud = entry.unread === true && !muted
     const body = (
         <>
-            <span className={cn('flex size-5 shrink-0 items-center justify-center', !active && 'text-muted-foreground')}>{mark}</span>
-            <span className={cn('min-w-0 flex-1 truncate', loud && 'font-semibold text-foreground')}>{entry.label}</span>
+            <span className="flex size-5 shrink-0 items-center justify-center">
+                <Mark entry={entry} words={words} />
+            </span>
+            <span className="min-w-0 flex-1 truncate">{entry.label}</span>
             {(entry.mentions ?? 0) > 0 && <Count value={entry.mentions ?? 0} label={words.mentions(entry.mentions ?? 0)} />}
         </>
     )
     const className = cn(
-        'flex h-(--density-channel-row) w-full items-center gap-2 rounded-md px-2 text-left text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
-        active ? 'bg-primary text-primary-foreground [&_*]:text-primary-foreground' : 'hover:bg-secondary',
-        !active && entry.muted === true && 'opacity-60',
-        !active && !loud && 'text-muted-foreground',
+        ROW,
+        active ? OPEN : HOVER,
+        !active && (muted ? 'text-faint/70' : loud ? 'font-semibold text-foreground' : 'text-muted-foreground'),
     )
     if (entry.href !== undefined)
         return (

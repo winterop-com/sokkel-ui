@@ -51,6 +51,11 @@ bar, hides columns, pins its first column and its row menu, opens child rows, an
 keyboard. It pages in the browser or from a server, loads more as its end comes near, and shows
 the same rows as a grid of cards (an album view) that keeps the selection, menus and sort.
 
+A team chat is built from Rail's `strip` (labeled icons with counts or an unread dot at the
+icon's corner), ChannelList, ChannelHeader, Conversation and ThreadView (the columns of a
+conversation and of a thread), ConversationStart, ChatMessage with ChatDay, and MessageComposer.
+An app's own navigation strip is the library's `Rail`, with no hand-drawn badge.
+
 ## Graphs
 
 Their own entry under `graph/`, so an app that draws no graph loads neither React Flow nor elk.

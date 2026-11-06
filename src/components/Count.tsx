@@ -1,15 +1,39 @@
 import { cn } from '../lib/cn'
 
+const SIZE = {
+    sm: 'h-4 min-w-4 text-2xs',
+    md: 'h-5 min-w-5 text-xs',
+} as const
+
 /**
  * A count of what is waiting, such as unread messages, on the critical color. Above `max` it
- * says `99+`. Placed over an icon, the caller positions it.
+ * says `99+`. Placed over an icon, the caller positions it. `sm` is the small count a narrow strip
+ * hangs at an icon's corner; `round` is the round badge a count over an icon reads as, growing into
+ * a capsule past one digit.
  */
-export function Count({ value, max = 99, label, className }: { value: number; max?: number; label?: string; className?: string }) {
+export function Count({
+    value,
+    max = 99,
+    label,
+    size = 'md',
+    shape = 'square',
+    className,
+}: {
+    value: number
+    max?: number
+    label?: string
+    size?: keyof typeof SIZE
+    shape?: 'square' | 'round'
+    className?: string
+}) {
     return (
         <span
             aria-label={label}
             className={cn(
-                'flex h-5 min-w-5 items-center justify-center rounded-mini bg-critical px-1 text-xs leading-none font-semibold text-critical-foreground tabular-nums',
+                'flex items-center justify-center bg-critical px-1 font-semibold text-critical-foreground tabular-nums',
+                SIZE[size],
+                shape === 'round' ? 'rounded-full' : 'rounded-mini',
+                'leading-none',
                 className,
             )}
         >
