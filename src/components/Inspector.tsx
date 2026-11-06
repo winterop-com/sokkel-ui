@@ -3,14 +3,18 @@ import { useRef, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { CopyButton } from './CopyButton'
+import { usePanelSize } from '../hooks/use-panel-size'
 import { ResizeHandle } from './ResizeHandle'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from './ui/dropdown-menu'
 
 /**
  * The panel beside a list that shows the chosen row: a header naming the thing (its name, then its
  * code in the code face with a copy button), the thing's actions, then titled sections. It starts
- * level with the list's top and runs to the bottom of the content. Given `size` and
- * `onSizeChange`, its left edge drags to resize it.
+ * level with the list's top and runs to the bottom of the content.
+ *
+ * Its left edge drags to resize it, and a double click on the edge puts it back. Left to itself it
+ * holds its own width, starting at `defaultSize`; `size` with `onSizeChange` holds it from outside,
+ * and `resizable={false}` keeps it fixed.
  */
 export function Inspector({
     title,
@@ -21,6 +25,7 @@ export function Inspector({
     onClose,
     size,
     onSizeChange,
+    resizable = true,
     minSize = 320,
     maxSize = 480,
     defaultSize = 360,
@@ -38,36 +43,40 @@ export function Inspector({
     /** Dropdown menu items behind the header's more button. */
     menu?: ReactNode
     onClose?: () => void
+    /** The width in pixels, held from outside with `onSizeChange`. */
     size?: number
     onSizeChange?: (size: number) => void
+    /** Whether the left edge drags to resize the panel. */
+    resizable?: boolean
     minSize?: number
     maxSize?: number
+    /** The width the panel starts at and a double click on the edge returns to. */
     defaultSize?: number
     className?: string
     words?: { menu: string; close: string; resize: string; copy: string; copied: string }
     children: ReactNode
 }) {
     const panel = useRef<HTMLElement>(null)
-    const resizable = size !== undefined && onSizeChange !== undefined
+    const held = usePanelSize({ size, onSizeChange, rest: defaultSize, fallback: defaultSize, min: minSize, max: maxSize })
     const tool =
         'flex size-7 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-secondary hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-ring'
     return (
         <div className="flex shrink-0 self-stretch">
-            {resizable && (
+            {resizable && held.changeable && (
                 <ResizeHandle
                     target={panel}
-                    size={size}
-                    onSize={onSizeChange}
+                    size={held.size}
+                    onSize={held.set}
+                    onReset={held.reset}
                     min={minSize}
                     max={maxSize}
-                    reset={defaultSize}
                     grows={-1}
                     label={words.resize}
                 />
             )}
             <aside
                 ref={panel}
-                style={{ width: resizable ? size : defaultSize }}
+                style={{ width: held.style }}
                 className={cn('flex min-h-0 flex-col overflow-hidden rounded-surface border border-border-strong bg-card', className)}
             >
                 <header className="flex flex-col gap-3 border-b border-border p-(--density-inspector-pad)">

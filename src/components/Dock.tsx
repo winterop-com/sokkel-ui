@@ -2,25 +2,30 @@ import { ChevronDown, ChevronUp } from 'lucide-react'
 import { useRef, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { usePanelSize } from '../hooks/use-panel-size'
 import { ResizeHandle } from './ResizeHandle'
 
 /**
  * A panel along the bottom of the content, for a log, a terminal or a result: a head bar with the
  * title, tools and a fold control, and its content scrolling under it. Folded, only the head bar
- * shows. Given `size` and `onSizeChange`, its top edge drags to resize it; otherwise it keeps
- * `height`.
+ * shows.
+ *
+ * While open, its top edge drags to resize it, and a double click on the edge puts it back. Left
+ * to itself it holds its own height, starting at `defaultSize`, or at `height` when that is given
+ * alone; `size` with `onSizeChange` holds it from outside, and `resizable={false}` keeps it fixed.
  */
 export function Dock({
     title,
     tools,
     open = true,
     onOpenChange,
-    height = '16rem',
+    height,
     size,
     onSizeChange,
+    resizable = true,
     minSize = 120,
     maxSize = 640,
-    defaultSize = 256,
+    defaultSize,
     className,
     words = { fold: 'Fold the panel', unfold: 'Unfold the panel', resize: 'Resize the panel' },
     children,
@@ -29,30 +34,40 @@ export function Dock({
     tools?: ReactNode
     open?: boolean
     onOpenChange?: (open: boolean) => void
-    /** A CSS height, when the dock is not resizable. */
+    /** A CSS height the dock starts at and returns to, when `defaultSize` is not given. */
     height?: string
-    /** The height in pixels; with `onSizeChange` the top edge drags to resize it. */
+    /** The height in pixels, held from outside with `onSizeChange`. */
     size?: number
     onSizeChange?: (size: number) => void
+    /** Whether the top edge drags to resize the dock. */
+    resizable?: boolean
     minSize?: number
     maxSize?: number
+    /** The height in pixels the dock starts at and a double click on the edge returns to: 256 unless `height` is given. */
     defaultSize?: number
     className?: string
     words?: { fold: string; unfold: string; resize: string }
     children: ReactNode
 }) {
     const dock = useRef<HTMLElement>(null)
-    const resizable = open && size !== undefined && onSizeChange !== undefined
+    const held = usePanelSize({
+        size,
+        onSizeChange,
+        rest: defaultSize ?? height ?? 256,
+        fallback: 256,
+        min: minSize,
+        max: maxSize,
+    })
     return (
         <>
-            {resizable && (
+            {open && resizable && held.changeable && (
                 <ResizeHandle
                     target={dock}
-                    size={size}
-                    onSize={onSizeChange}
+                    size={held.size}
+                    onSize={held.set}
+                    onReset={held.reset}
                     min={minSize}
                     max={maxSize}
-                    reset={defaultSize}
                     axis="y"
                     grows={-1}
                     label={words.resize}
@@ -61,7 +76,7 @@ export function Dock({
             <section
                 ref={dock}
                 className={cn('flex shrink-0 flex-col border-t border-border-strong bg-sidebar', className)}
-                style={open ? { height: resizable ? size : height } : undefined}
+                style={open ? { height: held.style } : undefined}
             >
                 <div className="flex h-9 shrink-0 items-center gap-2 border-b border-border px-3">
                     <h2 className="min-w-0 flex-1 truncate text-xs font-medium tracking-wide text-muted-foreground uppercase">{title}</h2>

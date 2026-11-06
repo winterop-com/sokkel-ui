@@ -294,7 +294,6 @@ function Measurements({ visit }: { visit: Visit }) {
 function Records() {
     const [query, setQuery] = useState('')
     const [chosen, setChosen] = useState<Visit>(VISITS[0])
-    const [width, setWidth] = useState(360)
     const rows = VISITS.filter((visit) => `${visit.code} ${visit.site}`.toLowerCase().includes(query.trim().toLowerCase()))
     return (
         <Page className="h-full">
@@ -336,8 +335,6 @@ function Records() {
                     <Inspector
                         title={chosen.site}
                         code={chosen.code}
-                        size={width}
-                        onSizeChange={setWidth}
                         status={
                             <>
                                 <StateChip state={chosen.state} />

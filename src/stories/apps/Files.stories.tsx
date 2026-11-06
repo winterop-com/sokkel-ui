@@ -342,7 +342,6 @@ function FilesApp({
 }) {
     const [dark, setDark] = useState(true)
     const [collapsed, setCollapsed] = useState(false)
-    const [rail, setRail] = useState(232)
     const [view, setView] = useState(initialView)
     const [folder, setFolder] = useState(initialFolder)
     const [sort, setSort] = useState<FileSort>({ key: 'name', direction: 'asc' })
@@ -413,8 +412,7 @@ function FilesApp({
                         groups={GROUPS}
                         collapsed={collapsed}
                         onCollapsedChange={setCollapsed}
-                        width={rail}
-                        onWidthChange={setRail}
+                        defaultWidth={232}
                         foot={<AccountMenu name="grace" where="tidevann.example.org" collapsed={collapsed} onSignOut={() => undefined} />}
                     />
                 }
