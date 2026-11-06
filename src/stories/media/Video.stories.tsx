@@ -3,18 +3,19 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { VideoPlayer } from '../../components/media/VideoPlayer'
 import captions from './fixtures/captions.vtt?url'
 import clip from './fixtures/clip.webm?url'
+import { Stack } from '../../components/Layout'
 
 /** A player in the middle of a plain page. The clip is a local, silent gradient. */
 function Ground({ children }: { children: React.ReactNode }) {
     return (
         <div className="min-h-svh bg-background p-4 text-foreground sm:p-8">
-            <div className="flex flex-col gap-3">
+            <Stack>
                 {children}
                 <div>
                     <p className="text-sm font-medium">Coastline, morning to evening</p>
                     <p className="text-xs text-muted-foreground">Margaret &middot; 1:36</p>
                 </div>
-            </div>
+            </Stack>
         </div>
     )
 }

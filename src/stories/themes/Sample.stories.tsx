@@ -8,6 +8,7 @@ import { SearchField } from '../../components/SearchField'
 import { StatusChip, type Status } from '../../components/StatusChip'
 import { Button } from '../../components/ui/button'
 import { TidevannMark } from '../fixtures/TidevannMark'
+import { Row, Stack } from '../../components/Layout'
 
 /**
  * The same small piece of Tidevann every gallery tile shows a theme with: a heading, buttons, a
@@ -53,8 +54,8 @@ function ThemeSample() {
     const [query, setQuery] = useState('')
     return (
         <div className="min-h-svh bg-background p-3 text-foreground">
-            <div className="mx-auto flex w-full max-w-2xl flex-col gap-3">
-                <div className="flex items-center gap-2">
+            <Stack className="mx-auto w-full max-w-2xl">
+                <Row>
                     <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
                         <TidevannMark />
                     </span>
@@ -62,8 +63,8 @@ function ThemeSample() {
                         <h1 className="truncate text-sm font-semibold">Tidevann</h1>
                         <p className="truncate text-xs text-muted-foreground">harbor, 248 runs today</p>
                     </div>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
+                </Row>
+                <Row gap="xs" align="stretch" wrap>
                     <Button size="sm">Run</Button>
                     <Button size="sm" variant="secondary">
                         Pause
@@ -74,20 +75,20 @@ function ThemeSample() {
                     <Button size="sm" variant="destructive">
                         Stop
                     </Button>
-                </div>
+                </Row>
                 <SearchField value={query} onChange={setQuery} placeholder="Search" shortcut={false} />
-                <div className="flex flex-wrap gap-1">
+                <Row gap="2xs" align="stretch" wrap>
                     <StatusChip status="succeeded" />
                     <StatusChip status="failed" />
                     <StatusChip status="running" />
                     <StatusChip status="queued" />
                     <StatusChip status="cancelled" />
-                </div>
+                </Row>
                 <DataTable variant="list" columns={COLUMNS} rows={ROWS} rowKey={(row) => row.job} />
                 <div className="h-24 rounded-surface border border-border-strong bg-card p-2">
                     <EChart option={BARS} label="Runs and failures by hour" />
                 </div>
-            </div>
+            </Stack>
         </div>
     )
 }

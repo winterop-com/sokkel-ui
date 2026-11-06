@@ -7,6 +7,7 @@ import type { GraphDirection } from '../../components/graph/layout'
 import { Editor } from './Editing'
 import { Stage } from './Frame'
 import { LARGE, NIGHTLY_EXPORT, SHORT } from './data'
+import { Stack } from '../../components/Layout'
 
 function Pipeline({ steps, title, meta, direction }: { steps: PipelineStep[]; title: string; meta: string; direction?: GraphDirection }) {
     const [selected, setSelected] = useState<string | null>(null)
@@ -21,7 +22,7 @@ function Fitted() {
     const [selected, setSelected] = useState<string | null>('transform')
     return (
         <div className="min-h-svh bg-background p-4 text-foreground md:p-6">
-            <div className="flex flex-col gap-4">
+            <Stack gap="lg">
                 <Section title="Steps" meta="7">
                     <PipelineGraph
                         steps={NIGHTLY_EXPORT}
@@ -34,7 +35,7 @@ function Fitted() {
                 <p className="text-sm text-muted-foreground">
                     The graph is as tall as its drawing. The wheel scrolls the page past it; hold ctrl or cmd, or pinch, to zoom it.
                 </p>
-            </div>
+            </Stack>
         </div>
     )
 }
