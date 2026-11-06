@@ -19,7 +19,7 @@ import { AccountMenu } from '../../components/AccountMenu'
 import { Banner, type BannerTone } from '../../components/Banner'
 import { EChart } from '../../components/chart/EChart'
 import { Code } from '../../components/Code'
-import { ListTable, type Column } from '../../components/ListTable'
+import { DataTable, type DataColumn } from '../../components/DataTable'
 import { PageHeader } from '../../components/PageHeader'
 import { Rail, type RailGroup } from '../../components/Rail'
 import { Segmented } from '../../components/Segmented'
@@ -104,17 +104,42 @@ const RUNS: Run[] = [
     { id: 'r6', job: 'sync-inventory', state: 'cancelled', by: 'linus', started: 'yesterday', duration: '38s' },
 ]
 
-const COLUMNS: Column<Run>[] = [
-    { id: 'job', header: 'Job', width: 'minmax(0,1fr)', cell: (run) => <span className="truncate font-mono">{run.job}</span> },
-    { id: 'state', header: 'State', width: '7.5rem', cell: (run) => <StatusChip status={run.state} /> },
-    { id: 'by', header: 'Started by', width: '7rem', cell: (run) => <span className="text-muted-foreground">{run.by}</span> },
-    { id: 'started', header: 'Started', width: '6rem', cell: (run) => <span className="tabular-nums">{run.started}</span> },
+/** A duration such as `1m 12s` in seconds, for sorting; a run not started sorts last. */
+const seconds = (duration: string) =>
+    duration === '-'
+        ? Number.POSITIVE_INFINITY
+        : duration.split(' ').reduce((sum, part) => sum + Number.parseFloat(part) * (part.endsWith('m') ? 60 : 1), 0)
+
+const COLUMNS: DataColumn<Run>[] = [
+    {
+        id: 'job',
+        header: 'Job',
+        width: 'minmax(0,1fr)',
+        cell: (run) => <span className="truncate font-mono">{run.job}</span>,
+        sortValue: (run) => run.job,
+    },
+    { id: 'state', header: 'State', width: '7.5rem', cell: (run) => <StatusChip status={run.state} />, sortValue: (run) => run.state },
+    {
+        id: 'by',
+        header: 'Started by',
+        width: '7rem',
+        cell: (run) => <span className="text-muted-foreground">{run.by}</span>,
+        sortValue: (run) => run.by,
+    },
+    {
+        id: 'started',
+        header: 'Started',
+        width: '6rem',
+        cell: (run) => <span className="tabular-nums">{run.started}</span>,
+        sortValue: (run) => run.started,
+    },
     {
         id: 'duration',
         header: 'Duration',
         width: '5.5rem',
         align: 'end',
         cell: (run) => <span className="tabular-nums">{run.duration}</span>,
+        sortValue: (run) => seconds(run.duration),
     },
 ]
 
@@ -387,7 +412,7 @@ function Banners() {
                 </Button>
             }
         >
-            <div className="flex flex-col overflow-hidden rounded-control border border-border [&>*:last-child]:border-b-0">
+            <div className="flex flex-col">
                 {BANNERS.filter((banner) => shown.includes(banner.tone)).map((banner) => (
                     <Banner key={banner.tone} tone={banner.tone} onDismiss={() => setShown(shown.filter((tone) => tone !== banner.tone))}>
                         {banner.text}
@@ -514,14 +539,14 @@ function App({ globals }: { globals: Record<string, unknown> }) {
                                 <Play aria-hidden />
                             </IconAction>
                         </div>
-                        <ListTable
+                        <DataTable
                             columns={COLUMNS}
                             rows={rows}
                             rowKey={(run) => run.id}
-                            selected={(run) => run.id === chosen}
-                            onSelect={(run) => setChosen(run.id)}
-                            empty="No runs in this view."
-                            foot={`${rows.length} of ${RUNS.length}`}
+                            opened={(run) => run.id === chosen}
+                            onOpen={(run) => setChosen(run.id)}
+                            minWidth="32rem"
+                            words={{ empty: 'No runs in this view.' }}
                         />
                     </div>
                     <div className="grid gap-(--density-page-gap) xl:grid-cols-2">

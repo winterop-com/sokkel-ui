@@ -47,6 +47,8 @@ export function CronField({
     presets,
     describe = describeCron,
     format = formatRun,
+    issueOpen,
+    onIssueOpenChange,
     className,
     words: said,
 }: {
@@ -61,6 +63,9 @@ export function CronField({
     describe?: (expression: string) => string | null
     /** Draws a run's time. */
     format?: (date: Date) => string
+    /** Whether the issue mark's message is open, for a form's count to open it. */
+    issueOpen?: boolean
+    onIssueOpenChange?: (open: boolean) => void
     className?: string
     words?: Partial<CronFieldWords>
 }) {
@@ -90,7 +95,7 @@ export function CronField({
                         aria-invalid={reading === null || undefined}
                         className={cn('font-mono', reading === null && cn('pr-9', ISSUE_EDGE.critical))}
                     />
-                    <IssueMark issues={issues} />
+                    <IssueMark issues={issues} open={issueOpen} onOpenChange={onIssueOpenChange} />
                 </div>
                 {presets !== undefined && presets.length > 0 && (
                     <div className="flex flex-wrap gap-1.5">
@@ -115,7 +120,7 @@ export function CronField({
                 <span className="text-xs font-medium text-muted-foreground">{words.next(count)}</span>
                 <ol className="flex flex-col divide-y divide-border rounded-control border border-border">
                     {Array.from({ length: count }, (_, index) => (
-                        <li key={index} className="flex h-8 items-center gap-3 px-3 font-mono text-[0.8125rem] tabular-nums">
+                        <li key={index} className="flex h-8 items-center gap-3 px-3 font-mono text-xs tabular-nums">
                             <span className="w-4 text-right text-faint">{index + 1}</span>
                             <span className={runs[index] === undefined ? 'text-faint' : undefined}>
                                 {runs[index] === undefined ? '—' : format(runs[index])}

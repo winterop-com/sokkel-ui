@@ -72,10 +72,10 @@ export function gaugeOption({
                     radius: '88%',
                     axisLine: { lineStyle: { width: 14, color: [[1, look.grid]] } },
                     progress: { show: true, width: 14, itemStyle: { color: tone } },
-                    title: { show: label !== undefined, offsetCenter: [0, '46%'], fontSize: 11, color: look.muted },
+                    title: { show: label !== undefined, offsetCenter: [0, '46%'], fontSize: look.size.label, color: look.muted },
                     detail: {
                         offsetCenter: [0, '2%'],
-                        fontSize: 24,
+                        fontSize: look.size.stat,
                         fontWeight: 600,
                         fontFamily: look.font,
                         color: tone,

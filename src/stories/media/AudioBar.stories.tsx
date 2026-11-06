@@ -6,39 +6,29 @@ import { MediaBar, type RepeatMode } from '../../components/media/MediaBar'
 import { formatTime } from '../../components/media/time'
 import { Button } from '../../components/ui/button'
 import { cn } from '../../lib/cn'
+import { Artwork, type Cover } from '../fixtures/Artwork'
 
 interface Track {
     title: string
     artist: string
     album: string
     duration: number
-    hues: [string, string]
+    cover: Cover
 }
 
 const QUEUE: Track[] = [
-    { title: 'Northern Coast', artist: 'Ada', album: 'Larkspur', duration: 245, hues: ['var(--kind-blue)', 'var(--kind-teal)'] },
-    { title: 'Valley Road', artist: 'Ada', album: 'Larkspur', duration: 198, hues: ['var(--kind-green)', 'var(--kind-jade)'] },
-    { title: 'Harbor at Dusk', artist: 'Grace', album: 'Juniper', duration: 312, hues: ['var(--kind-violet)', 'var(--kind-pink)'] },
-    { title: 'Mountain Pass', artist: 'Linus', album: 'Juniper', duration: 227, hues: ['var(--kind-teal)', 'var(--kind-blue)'] },
-    { title: 'Desert Morning', artist: 'Margaret', album: 'Larkspur', duration: 263, hues: ['var(--kind-pink)', 'var(--kind-violet)'] },
+    { title: 'Northern Coast', artist: 'Ada', album: 'Larkspur', duration: 245, cover: { motif: 'sun', from: 'blue', to: 'teal' } },
+    { title: 'Valley Road', artist: 'Ada', album: 'Larkspur', duration: 198, cover: { motif: 'peaks', from: 'green', to: 'jade' } },
+    { title: 'Harbor at Dusk', artist: 'Grace', album: 'Juniper', duration: 312, cover: { motif: 'wave', from: 'violet', to: 'pink' } },
+    { title: 'Mountain Pass', artist: 'Linus', album: 'Juniper', duration: 227, cover: { motif: 'rings', from: 'teal', to: 'blue' } },
+    {
+        title: 'Desert Morning',
+        artist: 'Margaret',
+        album: 'Larkspur',
+        duration: 263,
+        cover: { motif: 'bands', from: 'pink', to: 'violet' },
+    },
 ]
-
-/** A square cover drawn as a two-color gradient with a sun. */
-function Artwork({ hues, id }: { hues: [string, string]; id: string }) {
-    return (
-        <svg viewBox="0 0 48 48" aria-hidden>
-            <defs>
-                <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0" stopColor={hues[0]} />
-                    <stop offset="1" stopColor={hues[1]} />
-                </linearGradient>
-            </defs>
-            <rect width="48" height="48" fill={`url(#${id})`} />
-            <circle cx="33" cy="16" r="7" fill="var(--background)" opacity="0.55" />
-            <path d="M0 36 L14 26 L24 32 L36 22 L48 30 L48 48 L0 48 Z" fill="var(--foreground)" opacity="0.18" />
-        </svg>
-    )
-}
 
 /** A bar at the foot of an empty screen, wired to state so its controls answer. */
 function Player({ startPlaying, queue = false }: { startPlaying: boolean; queue?: boolean }) {
@@ -74,8 +64,8 @@ function Player({ startPlaying, queue = false }: { startPlaying: boolean; queue?
                                             aria-current={at === index || undefined}
                                             className="flex w-full items-center gap-3 rounded-control px-2 py-1.5 text-left hover:bg-muted aria-current:bg-accent"
                                         >
-                                            <span className="size-8 shrink-0 overflow-hidden rounded-mini [&>svg]:block [&>svg]:size-full">
-                                                <Artwork hues={entry.hues} id={`queue-${String(at)}`} />
+                                            <span className="size-8 shrink-0 overflow-hidden rounded-mini">
+                                                <Artwork cover={entry.cover} />
                                             </span>
                                             <span className="min-w-0 flex-1">
                                                 <span
@@ -101,7 +91,7 @@ function Player({ startPlaying, queue = false }: { startPlaying: boolean; queue?
                 <MediaBar
                     title={track.title}
                     subtitle={`${track.artist} · ${track.album}`}
-                    artwork={<Artwork hues={track.hues} id="now-playing" />}
+                    artwork={<Artwork cover={track.cover} />}
                     playing={playing}
                     onPlayingChange={setPlaying}
                     position={position}

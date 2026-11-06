@@ -1,6 +1,7 @@
 import { useEffect, useState, type RefObject } from 'react'
 
 import { cn } from '../lib/cn'
+import { GroupLabel } from './GroupLabel'
 
 /** One entry of a table of contents: the heading's id, its text, and its level. */
 export interface ContentsEntry {
@@ -77,7 +78,7 @@ export function TableOfContents({
     const top = Math.min(...entries.map((entry) => entry.level))
     return (
         <nav aria-label={words.title} className={cn('flex flex-col gap-2 text-sm', className)}>
-            <h2 className="text-xs font-medium tracking-wide text-faint uppercase">{words.title}</h2>
+            <GroupLabel as="h2">{words.title}</GroupLabel>
             <ol className="flex flex-col border-l border-border">
                 {entries.map((entry) => {
                     const on = entry.id === active

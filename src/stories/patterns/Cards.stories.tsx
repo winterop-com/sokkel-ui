@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { ItemCard } from '../../components/ItemCard'
 import { StatusChip } from '../../components/StatusChip'
 import { DropdownMenuItem } from '../../components/ui/dropdown-menu'
+import { Artwork } from '../fixtures/Artwork'
 
 /**
  * The card for one thing, in its four uses: plain content, a card that leads somewhere, a set of
@@ -23,21 +24,6 @@ const MENU = (
         <DropdownMenuItem>Archive</DropdownMenuItem>
     </>
 )
-
-function Art({ from, to }: { from: string; to: string }) {
-    return (
-        <svg viewBox="0 0 160 90" preserveAspectRatio="none" aria-hidden>
-            <defs>
-                <linearGradient id={`g-${from}-${to}`} x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0" stopColor={from} />
-                    <stop offset="1" stopColor={to} />
-                </linearGradient>
-            </defs>
-            <rect width="160" height="90" fill={`url(#g-${from}-${to})`} />
-            <path d="M0 64 Q40 48 80 62 T160 58 V90 H0Z" fill="white" fillOpacity="0.18" />
-        </svg>
-    )
-}
 
 function Plain() {
     return (
@@ -132,7 +118,7 @@ function Media() {
                 title="Northern Coast"
                 code="album-0412"
                 href="#"
-                media={<Art from="#2f74a8" to="#5fb3b3" />}
+                media={<Artwork cover={{ motif: 'wave', from: 'blue', to: 'teal' }} wide />}
                 facts={[
                     { label: 'Tracks', value: '11' },
                     { label: 'Length', value: '46 min' },
@@ -142,7 +128,7 @@ function Media() {
                 title="Valley Road"
                 code="album-0388"
                 href="#"
-                media={<Art from="#4f9d69" to="#c9b458" />}
+                media={<Artwork cover={{ motif: 'peaks', from: 'green', to: 'amber' }} wide />}
                 facts={[
                     { label: 'Tracks', value: '9' },
                     { label: 'Length', value: '38 min' },
@@ -152,7 +138,7 @@ function Media() {
                 title="Desert Morning"
                 code="album-0371"
                 href="#"
-                media={<Art from="#c0587e" to="#7c5cc4" />}
+                media={<Artwork cover={{ motif: 'sun', from: 'pink', to: 'violet' }} wide />}
                 facts={[
                     { label: 'Tracks', value: '12' },
                     { label: 'Length', value: '51 min' },

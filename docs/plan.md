@@ -7,7 +7,9 @@ with real-shaped data, held to screenshot baselines in both schemes at desktop a
 
 `dist/` is built, not committed, so an install from a git URL gets no compiled code (bun also
 blocks a git dependency's install scripts). The library is published as `@winterop-com/sokkel-ui` to
-GitHub Packages by the tag workflow, and apps pin that version.
+GitHub Packages by the tag workflow, and apps pin that version. The heavy engines (ECharts, maplibre, React Flow
+and elk, Mermaid, CodeMirror) and the Geist fonts are optional peer dependencies: an app installs
+one only when it uses its part, and the README lists which part needs which.
 
 ## Typefaces
 

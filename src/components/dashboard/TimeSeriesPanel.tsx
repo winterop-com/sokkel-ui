@@ -93,7 +93,7 @@ export function timeSeriesOption({
                                           formatter: () => write(line.value ?? 0),
                                           color: look.token(line.color),
                                           fontFamily: look.font,
-                                          fontSize: 10,
+                                          fontSize: look.size.small,
                                       },
                                   })),
                               }

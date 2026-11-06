@@ -115,7 +115,7 @@ function Picker({ query, chosen }: { query?: string; chosen?: string[] }) {
                 onChoose={setPicked}
                 defaultQuery={query}
                 defaultCapabilities={chosen}
-                words={{ search: 'Search blocks' }}
+                words={{ search: 'Search' }}
                 className="flex-1"
             />
             {picked !== null && <p className="border-t border-border px-3 py-2 font-mono text-xs text-muted-foreground">{picked}</p>}

@@ -78,7 +78,7 @@ function Gallery({ start = 'library', query: initial = '' }: { start?: 'library'
                 </p>
             </header>
             <div className="mb-4 flex flex-wrap items-center gap-3">
-                <SearchField value={query} onChange={setQuery} placeholder="Search icons" className="w-72" />
+                <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-72" />
                 <Segmented
                     label="Which icons"
                     value={set}

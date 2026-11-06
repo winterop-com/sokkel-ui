@@ -659,7 +659,7 @@ export function MapView({
                 </div>
             ))}
             {credits.length > 0 && (
-                <p className="absolute right-0 bottom-0 max-w-full truncate rounded-tl-sm bg-card/85 px-1.5 py-0.5 text-[10px] leading-snug text-muted-foreground">
+                <p className="absolute right-0 bottom-0 max-w-full truncate rounded-tl-sm bg-card/85 px-1.5 py-0.5 text-2xs leading-snug text-muted-foreground">
                     {credits.map((credit, index) => (
                         <Fragment key={credit.label}>
                             {index > 0 && ' '}

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Plus } from 'lucide-react'
 
+import { DescriptionList } from '../../components/DescriptionList'
 import { PageState } from '../../components/PageState'
 import { ProseText } from '../../components/ProseText'
 import { Unfoldable } from '../../components/Unfoldable'
@@ -49,7 +50,7 @@ function ReadStates() {
                         <p className="text-sm">No services.</p>
                         <Button size="sm">
                             <Plus aria-hidden />
-                            New service
+                            New
                         </Button>
                     </div>
                 }
@@ -64,14 +65,13 @@ function Unfolding() {
     return (
         <Ground>
             <Unfoldable heading="Inputs" aside="3 bindings" defaultOpen>
-                <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
-                    <dt className="text-muted-foreground">source</dt>
-                    <dd className="font-mono">orders-2026-10.csv</dd>
-                    <dt className="text-muted-foreground">month</dt>
-                    <dd className="font-mono">2026-10</dd>
-                    <dt className="text-muted-foreground">project</dt>
-                    <dd className="font-mono">larkspur</dd>
-                </dl>
+                <DescriptionList
+                    items={[
+                        { term: 'source', value: 'orders-2026-10.csv', code: true },
+                        { term: 'month', value: '2026-10', code: true },
+                        { term: 'project', value: 'larkspur', code: true },
+                    ]}
+                />
             </Unfoldable>
             <Unfoldable heading="Outputs" aside="1 table">
                 <p className="text-sm">orders.parquet</p>

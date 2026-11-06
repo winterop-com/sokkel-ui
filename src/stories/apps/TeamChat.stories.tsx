@@ -34,7 +34,9 @@ import { TopBar } from '../../components/TopBar'
 import { Button } from '../../components/ui/button'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { cn } from '../../lib/cn'
+import { KIND_WASH, type KindColor } from '../../lib/kind'
 import { TidevannMark } from '../fixtures/TidevannMark'
+import { Count } from '../../components/Count'
 
 /**
  * A team chat in the library's frame: a strip of places on the far left, the channels and direct
@@ -45,19 +47,18 @@ export default meta
 
 type Person = 'ada' | 'grace' | 'linus' | 'margaret'
 
-const PEOPLE: Record<Person, { name: string; initials: string; tone: string }> = {
-    ada: { name: 'ada', initials: 'AL', tone: 'var(--color-chart-1)' },
-    grace: { name: 'grace', initials: 'GH', tone: 'var(--color-chart-2)' },
-    linus: { name: 'linus', initials: 'LT', tone: 'var(--color-chart-3)' },
-    margaret: { name: 'margaret', initials: 'MH', tone: 'var(--color-chart-4)' },
+const PEOPLE: Record<Person, { name: string; initials: string; color: KindColor }> = {
+    ada: { name: 'ada', initials: 'AL', color: 'blue' },
+    grace: { name: 'grace', initials: 'GH', color: 'violet' },
+    linus: { name: 'linus', initials: 'LT', color: 'green' },
+    margaret: { name: 'margaret', initials: 'MH', color: 'pink' },
 }
 
+/** A person's initials on a wash of their color, filling the square the chat components give an avatar. */
 function Face({ who }: { who: Person }) {
     const person = PEOPLE[who]
     return (
-        <span className="flex size-full items-center justify-center font-semibold text-white" style={{ background: person.tone }}>
-            {person.initials}
-        </span>
+        <span className={cn('flex size-full items-center justify-center font-semibold', KIND_WASH[person.color])}>{person.initials}</span>
     )
 }
 
@@ -100,23 +101,17 @@ function sections(unread: boolean): ChannelSection[] {
 /** The places on the far left: the workspace, then home, messages and activity. */
 function Strip() {
     const place = (icon: ReactNode, label: string, on = false, count?: number) => (
-        <button
-            type="button"
+        <Button
+            variant="ghost"
+            size="icon-lg"
             aria-label={label}
             title={label}
             aria-current={on ? 'page' : undefined}
-            className={cn(
-                'relative flex size-9 items-center justify-center rounded-lg text-muted-foreground outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 [&_svg]:size-4.5',
-                on && 'bg-secondary text-foreground',
-            )}
+            className={cn('relative text-muted-foreground', on && 'bg-secondary text-foreground')}
         >
             {icon}
-            {count !== undefined && (
-                <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-critical px-1 text-[10px] font-semibold text-white">
-                    {count}
-                </span>
-            )}
-        </button>
+            {count !== undefined && <Count value={count} className="absolute -top-1 -right-1" />}
+        </Button>
     )
     return (
         <div className="flex w-14 shrink-0 flex-col items-center gap-2 border-r border-border-strong bg-sidebar py-3">
@@ -235,7 +230,7 @@ function ChannelHeader({
                     <Button variant="ghost" size="icon" aria-label="Pinned messages" title="Pinned messages">
                         <Pin aria-hidden />
                     </Button>
-                    <Button variant="ghost" size="icon" aria-label="Search this channel" title="Search this channel">
+                    <Button variant="ghost" size="icon" aria-label="Search" title="Search">
                         <Search aria-hidden />
                     </Button>
                 </div>

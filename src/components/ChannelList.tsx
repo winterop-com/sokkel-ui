@@ -2,6 +2,7 @@ import { ChevronDown, Hash, Lock, Plus } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { Count } from './Count'
 
 /** Whether a person is around: here, away, or not signed in. */
 export type Presence = 'active' | 'away' | 'offline'
@@ -181,7 +182,7 @@ function Entry({
     const mark =
         entry.kind === 'direct' ? (
             <span className="relative flex size-5 shrink-0 items-center justify-center">
-                <span className="flex size-5 items-center justify-center overflow-hidden rounded-md bg-muted text-[10px] font-medium">
+                <span className="flex size-5 items-center justify-center overflow-hidden rounded-md bg-muted text-2xs font-medium">
                     {entry.avatar}
                 </span>
                 {entry.presence !== undefined && (
@@ -201,14 +202,7 @@ function Entry({
         <>
             <span className={cn('flex size-5 shrink-0 items-center justify-center', !active && 'text-muted-foreground')}>{mark}</span>
             <span className={cn('min-w-0 flex-1 truncate', loud && 'font-semibold text-foreground')}>{entry.label}</span>
-            {(entry.mentions ?? 0) > 0 && (
-                <span
-                    aria-label={words.mentions(entry.mentions ?? 0)}
-                    className="flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-critical px-1 text-[11px] leading-none font-semibold text-white tabular-nums"
-                >
-                    {entry.mentions}
-                </span>
-            )}
+            {(entry.mentions ?? 0) > 0 && <Count value={entry.mentions ?? 0} label={words.mentions(entry.mentions ?? 0)} />}
         </>
     )
     const className = cn(

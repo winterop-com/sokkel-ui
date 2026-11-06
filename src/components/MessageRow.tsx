@@ -151,7 +151,7 @@ export function MessageRow({
                     {labels.map((label) => (
                         <span
                             key={label.id}
-                            className="inline-flex h-5 shrink-0 items-center gap-1 rounded-full border border-border px-1.5 text-xs text-muted-foreground"
+                            className="inline-flex h-5 shrink-0 items-center gap-1 rounded-chip border border-border px-1.5 text-xs text-muted-foreground"
                         >
                             <span
                                 className="size-1.5 rounded-full bg-faint"

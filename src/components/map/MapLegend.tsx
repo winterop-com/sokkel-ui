@@ -93,7 +93,7 @@ export function MapLegend({
                             <span key={index} className="flex-1" style={{ background: color }} />
                         ))}
                     </div>
-                    <div aria-hidden className="relative mt-1 h-4 text-[11px] text-muted-foreground tabular-nums">
+                    <div aria-hidden className="relative mt-1 h-4 text-2xs text-muted-foreground tabular-nums">
                         {scale.breaks.map((value, index) => (
                             <span
                                 key={value}
@@ -105,7 +105,7 @@ export function MapLegend({
                         ))}
                     </div>
                     {captions !== undefined && (
-                        <div className="flex justify-between text-[11px] text-muted-foreground">
+                        <div className="flex justify-between text-2xs text-muted-foreground">
                             <span>{captions[0]}</span>
                             <span>{captions[1]}</span>
                         </div>

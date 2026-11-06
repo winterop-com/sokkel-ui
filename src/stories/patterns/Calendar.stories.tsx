@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
 import { DayAgenda as DayAgendaPart } from '../../components/calendar/DayAgenda'
+import { DayStrip as DayStripPart } from '../../components/calendar/DayStrip'
 import { weekOf, type CalendarEvent } from '../../components/calendar/events'
 import { MiniMonth as MiniMonthPart } from '../../components/calendar/MiniMonth'
 import { MonthGrid as MonthGridPart } from '../../components/calendar/MonthGrid'
@@ -52,6 +53,18 @@ function Mini() {
 
 /** A month for a sidebar: today in the accent, the week in view washed, and dots on days with events. */
 export const MiniMonth: StoryObj = { name: 'Mini month', render: () => <Mini /> }
+
+function Strip() {
+    const [chosen, setChosen] = useState(at(5, 0))
+    return (
+        <div className="max-w-md p-6">
+            <DayStripPart days={weekOf(chosen)} chosen={chosen} today={NOW} onChoose={setChosen} />
+        </div>
+    )
+}
+
+/** A week of days to choose from, as a phone shows above its agenda: today in the accent, the chosen day filled. */
+export const DayStrip: StoryObj = { name: 'Day strip', render: () => <Strip /> }
 
 /** A day's events as a list, with the line at now between the past and the rest. */
 export const DayAgenda: StoryObj = {

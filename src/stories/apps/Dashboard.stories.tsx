@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
 import { CheckList } from '../../components/CheckList'
+import { DataTable, type DataColumn } from '../../components/DataTable'
 import { BarGauge } from '../../components/dashboard/BarGauge'
 import { BarPanel } from '../../components/dashboard/BarPanel'
 import { DashboardPanel } from '../../components/dashboard/DashboardGrid'
@@ -87,13 +88,49 @@ const PROJECTS = ['harbor', 'juniper', 'larkspur'].map((value) => ({ value, labe
 const JOB_OPTIONS = [{ value: 'all', label: 'All' }, ...JOBS.map((value) => ({ value, label: value }))]
 const WORKER_OPTIONS = [{ value: 'all', label: 'All' }, ...WORKERS.map((value) => ({ value, label: value }))]
 
-const RUN_LIST: { job: string; state: Status; took: string; at: string }[] = [
-    { job: 'import-orders', state: 'running', took: '1m 12s', at: '23:58' },
-    { job: 'nightly-export', state: 'failed', took: '4.2s', at: '23:45' },
-    { job: 'rebuild-index', state: 'succeeded', took: '6m 03s', at: '23:40' },
-    { job: 'send-digest', state: 'succeeded', took: '12.8s', at: '23:30' },
-    { job: 'sync-inventory', state: 'queued', took: '-', at: '23:30' },
-    { job: 'import-orders', state: 'cancelled', took: '38.0s', at: '23:15' },
+interface LatestRun {
+    job: string
+    state: Status
+    took: string
+    /** How long it took, for sorting; a run not yet started sorts first. */
+    seconds: number
+    at: string
+}
+
+const RUN_LIST: LatestRun[] = [
+    { job: 'import-orders', state: 'running', took: '1m 12s', seconds: 72, at: '23:58' },
+    { job: 'nightly-export', state: 'failed', took: '4.2s', seconds: 4.2, at: '23:45' },
+    { job: 'rebuild-index', state: 'succeeded', took: '6m 03s', seconds: 363, at: '23:40' },
+    { job: 'send-digest', state: 'succeeded', took: '12.8s', seconds: 12.8, at: '23:30' },
+    { job: 'sync-inventory', state: 'queued', took: '-', seconds: 0, at: '23:30' },
+    { job: 'import-orders', state: 'cancelled', took: '38.0s', seconds: 38, at: '23:15' },
+]
+
+const RUN_COLUMNS: DataColumn<LatestRun>[] = [
+    {
+        id: 'job',
+        header: 'Job',
+        width: 'minmax(7rem,1fr)',
+        cell: (run) => <span className="font-mono">{run.job}</span>,
+        sortValue: (run) => run.job,
+    },
+    { id: 'state', header: 'State', width: '7rem', cell: (run) => <StatusChip status={run.state} />, sortValue: (run) => run.state },
+    {
+        id: 'took',
+        header: 'Took',
+        width: '5.5rem',
+        align: 'end',
+        cell: (run) => <span className="text-muted-foreground tabular-nums">{run.took}</span>,
+        sortValue: (run) => run.seconds,
+    },
+    {
+        id: 'at',
+        header: 'At',
+        width: '4.5rem',
+        align: 'end',
+        cell: (run) => <span className="text-faint tabular-nums">{run.at}</span>,
+        sortValue: (run) => run.at,
+    },
 ]
 
 const MENU = (
@@ -360,30 +397,15 @@ function Dashboard({ loading = false, empty = false }: { loading?: boolean; empt
                                 ]}
                             />
                         </DashboardPanel>
-                        <DashboardPanel
-                            title="Latest runs"
-                            span="third"
-                            flush
-                            menu={MENU}
-                            footer="6 of 3,526 today"
-                            loading={loading}
-                            empty={empty}
-                        >
-                            <ul className="divide-y divide-border">
-                                {RUN_LIST.map((run) => (
-                                    <li
-                                        key={run.job + run.at}
-                                        className="grid grid-cols-[minmax(0,1fr)_6.5rem_3.5rem_3rem] items-center gap-2 px-3 py-1.5 text-xs"
-                                    >
-                                        <span className="truncate font-mono">{run.job}</span>
-                                        <span>
-                                            <StatusChip status={run.state} />
-                                        </span>
-                                        <span className="text-right text-muted-foreground tabular-nums">{run.took}</span>
-                                        <span className="text-right text-faint tabular-nums">{run.at}</span>
-                                    </li>
-                                ))}
-                            </ul>
+                        <DashboardPanel title="Latest runs" span="third" flush menu={MENU} loading={loading} empty={empty}>
+                            <DataTable
+                                columns={RUN_COLUMNS}
+                                rows={RUN_LIST}
+                                rowKey={(run) => run.job + run.at}
+                                total={3_526}
+                                minWidth="24rem"
+                                className="flex-1 rounded-none border-0"
+                            />
                         </DashboardPanel>
                         <DashboardPanel title="Activity" span="third" loading={loading} empty={empty}>
                             <Timeline

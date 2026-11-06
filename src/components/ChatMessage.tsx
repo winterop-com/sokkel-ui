@@ -109,7 +109,7 @@ export function ChatMessage({
                 {continued ? (
                     <time
                         title={timeTitle}
-                        className="pt-0.5 text-[11px] leading-5 text-faint tabular-nums opacity-0 group-hover/chat:opacity-100"
+                        className="pt-0.5 text-2xs leading-5 text-faint tabular-nums opacity-0 group-hover/chat:opacity-100"
                     >
                         {time}
                     </time>
@@ -172,7 +172,7 @@ export function ChatMessage({
                                 aria-label={`${reaction.label}, ${String(reaction.count)}`}
                                 onClick={() => onReact?.(reaction.id)}
                                 className={cn(
-                                    'flex h-6 items-center gap-1 rounded-full border px-2 text-xs tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-ring/50 [&_svg]:size-3.5',
+                                    'flex h-6 items-center gap-1 rounded-control border px-2 text-xs tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-ring/50 [&_svg]:size-3.5',
                                     reaction.mine === true
                                         ? 'border-primary/50 bg-primary/12 text-primary-ink'
                                         : 'border-border bg-muted/50 text-muted-foreground hover:border-border-strong',
@@ -188,7 +188,7 @@ export function ChatMessage({
                                 aria-label={words.react}
                                 title={words.react}
                                 onClick={onAddReaction}
-                                className="flex h-6 items-center rounded-full border border-transparent px-1.5 text-muted-foreground opacity-0 outline-none group-hover/chat:opacity-100 hover:border-border focus-visible:opacity-100"
+                                className="flex h-6 items-center rounded-control border border-transparent px-1.5 text-muted-foreground opacity-0 outline-none group-hover/chat:opacity-100 hover:border-border focus-visible:opacity-100"
                             >
                                 <SmilePlus className="size-3.5" aria-hidden />
                             </button>
@@ -205,7 +205,7 @@ export function ChatMessage({
                             {thread.people.slice(0, 3).map((person, index) => (
                                 <span
                                     key={index}
-                                    className="flex size-5 items-center justify-center overflow-hidden rounded-md bg-muted text-[9px] font-medium ring-2 ring-background"
+                                    className="flex size-5 items-center justify-center overflow-hidden rounded-md bg-muted text-2xs font-medium ring-2 ring-background"
                                 >
                                     {person}
                                 </span>
@@ -230,7 +230,7 @@ export function ChatDayDivider({ children }: { children: ReactNode }) {
     return (
         <div role="separator" className="relative my-(--density-chat-gap) flex items-center justify-center px-(--density-chat-inset)">
             <span className="absolute inset-x-(--density-chat-inset) top-1/2 h-px bg-border" aria-hidden />
-            <span className="relative rounded-full border border-border bg-background px-3 py-0.5 text-xs font-medium">{children}</span>
+            <span className="relative rounded-chip border border-border bg-background px-2 py-0.5 text-xs font-medium">{children}</span>
         </div>
     )
 }
@@ -240,7 +240,7 @@ export function ChatNewDivider({ label = 'New' }: { label?: string }) {
     return (
         <div role="separator" aria-label={label} className="relative my-1 flex items-center justify-end px-(--density-chat-inset)">
             <span className="absolute inset-x-(--density-chat-inset) top-1/2 h-px bg-critical/60" aria-hidden />
-            <span className="relative bg-background pl-2 text-[11px] font-semibold tracking-wide text-critical-ink uppercase">{label}</span>
+            <span className="relative bg-background pl-2 text-2xs font-semibold tracking-wide text-critical-ink uppercase">{label}</span>
         </div>
     )
 }
