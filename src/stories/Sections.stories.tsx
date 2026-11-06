@@ -11,6 +11,7 @@ import { Page, Shell } from '../components/Shell'
 import { StatusChip, type Status } from '../components/StatusChip'
 import { Button } from '../components/ui/button'
 import { TidevannMark } from './fixtures/TidevannMark'
+import { Row } from '../components/Layout'
 
 /**
  * A job's overview page in the three ways a page can be divided, drawn with the shell and
@@ -69,17 +70,17 @@ const COLUMNS: DataColumn<Run>[] = [
 function Graph() {
     return (
         <div className="relative h-44">
-            <div className="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-10">
+            <Row gap="3xl" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
                 {['fetch', 'validate', 'upload'].map((step, at) => (
-                    <div key={step} className="flex items-center gap-10">
+                    <Row key={step} gap="3xl">
                         <div className="rounded-node border border-node-line bg-node px-3 py-1.5 font-mono text-xs">
                             <p className="font-medium">{step}</p>
                             <p className="text-faint">{['http.get', 'rows.check', 'bucket.put'][at]}</p>
                         </div>
                         {at < 2 && <div className="h-px w-8 bg-border-strong" />}
-                    </div>
+                    </Row>
                 ))}
-            </div>
+            </Row>
         </div>
     )
 }

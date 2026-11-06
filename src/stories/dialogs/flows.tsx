@@ -21,6 +21,7 @@ import { cn } from '../../lib/cn'
 import { describeCron } from '../../lib/cron'
 import { Behind, TextField } from './parts'
 import { ItemMedia } from '../../components/ui/item'
+import { Row, Stack } from '../../components/Layout'
 
 /** Counts from 0 to 1 while `running`, then calls `onDone`; a stand-in for a server's progress. */
 function useProgress(running: boolean, ms: number, onDone: () => void) {
@@ -169,10 +170,10 @@ export function NewJobWizard() {
                                     onClick={() => setSource(one.value)}
                                     className="flex flex-col gap-1 rounded-control border border-border p-3 text-left outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50 aria-pressed:border-primary/60 aria-pressed:bg-primary/6"
                                 >
-                                    <span className="flex items-center justify-between gap-2 text-sm font-medium">
+                                    <Row as="span" justify="between" className="text-sm font-medium">
                                         {one.label}
                                         {source === one.value && <Check className="size-4 text-primary-ink" aria-hidden />}
-                                    </span>
+                                    </Row>
                                     <span className="text-xs text-muted-foreground">{one.detail}</span>
                                 </button>
                             ))}
@@ -445,7 +446,7 @@ export function ImportOrders({ stage: first = 'map' }: { stage?: ImportStage }) 
                                 cell: (one) => {
                                     const issues = columnIssues(one.column)
                                     return (
-                                        <span className="relative flex w-fit pr-8">
+                                        <Row as="span" gap="none" align="stretch" className="relative w-fit pr-8">
                                             <NativeSelect
                                                 size="sm"
                                                 aria-label={`Field for ${one.column}`}
@@ -465,7 +466,7 @@ export function ImportOrders({ stage: first = 'map' }: { stage?: ImportStage }) 
                                                 open={openAt === one.column}
                                                 onOpenChange={(next) => setOpenAt(next ? one.column : null)}
                                             />
-                                        </span>
+                                        </Row>
                                     )
                                 },
                             },
@@ -492,12 +493,12 @@ export function ImportOrders({ stage: first = 'map' }: { stage?: ImportStage }) 
                 )}
                 {stage === 'running' && (
                     <div className="flex h-56 flex-col justify-center gap-3">
-                        <div className="flex items-baseline justify-between text-sm">
+                        <Row gap="none" align="baseline" justify="between" className="text-sm">
                             <span>Importing rows</span>
                             <span className="font-mono text-muted-foreground tabular-nums">
                                 {Math.round(progress * 1204).toLocaleString('en')} of 1,204
                             </span>
-                        </div>
+                        </Row>
                         <Progress value={progress * 100} aria-label="Imported" />
                         <p className="text-xs text-muted-foreground">
                             You can close this; the import carries on and the job page shows how it went.
@@ -512,19 +513,19 @@ export function ImportOrders({ stage: first = 'map' }: { stage?: ImportStage }) 
                                 { label: 'Failed', value: '3', icon: <CircleAlert className="size-4 text-critical" aria-hidden /> },
                                 { label: 'Took', value: '0m 48s', icon: null },
                             ].map((stat) => (
-                                <div key={stat.label} className="flex flex-col gap-1 rounded-control border border-border px-3 py-2">
-                                    <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                <Stack key={stat.label} gap="2xs" className="rounded-control border border-border px-3 py-2">
+                                    <Row as="span" gap="xs" className="text-xs text-muted-foreground">
                                         {stat.icon}
                                         {stat.label}
-                                    </span>
+                                    </Row>
                                     <span className="font-mono text-title tabular-nums">{stat.value}</span>
-                                </div>
+                                </Stack>
                             ))}
                         </div>
-                        <div className="flex flex-col gap-1.5">
+                        <Stack gap="xs">
                             <span className="text-xs font-medium text-critical-ink">Rows not imported</span>
                             <DataTable variant="list" columns={FAILED_COLUMNS} rows={FAILED} rowKey={(row) => String(row.row)} />
-                        </div>
+                        </Stack>
                     </>
                 )}
             </DialogShell>
@@ -626,10 +627,10 @@ export function ExportRuns({ stage: first = 'form' }: { stage?: ExportStage }) {
                                         onCheckedChange={(checked) => setInclude({ ...include, [part.key]: checked })}
                                         className="mt-0.5"
                                     />
-                                    <span className="flex flex-col">
+                                    <Stack as="span" gap="none">
                                         <span className="text-sm leading-5">{part.label}</span>
                                         <span className="text-xs text-muted-foreground">{part.detail}</span>
-                                    </span>
+                                    </Stack>
                                 </label>
                             ))}
                         </fieldset>
@@ -637,22 +638,22 @@ export function ExportRuns({ stage: first = 'form' }: { stage?: ExportStage }) {
                 )}
                 {stage === 'running' && (
                     <div className="flex h-40 flex-col justify-center gap-3">
-                        <div className="flex items-baseline justify-between text-sm">
+                        <Row gap="none" align="baseline" justify="between" className="text-sm">
                             <span>Writing {name}</span>
                             <span className="font-mono text-muted-foreground tabular-nums">{Math.round(progress * 100)}%</span>
-                        </div>
+                        </Row>
                         <Progress value={progress * 100} aria-label="Exported" />
                     </div>
                 )}
                 {stage === 'ready' && (
-                    <div className="flex items-center gap-3 rounded-control border border-border px-3 py-3">
+                    <Row gap="md" className="rounded-control border border-border px-3 py-3">
                         <FileSpreadsheet className="size-8 shrink-0 text-muted-foreground" aria-hidden />
                         <span className="flex min-w-0 flex-1 flex-col">
                             <span className="truncate font-mono text-xs">{name}</span>
                             <span className="text-xs text-muted-foreground">2.4 MB, 2,472 rows</span>
                         </span>
                         <CircleCheck className="size-5 shrink-0 text-good" aria-hidden />
-                    </div>
+                    </Row>
                 )}
             </DialogShell>
         </Behind>
@@ -707,7 +708,7 @@ export function Share() {
                 }
                 confirm={{ label: 'Done', onConfirm: () => setOpen(false) }}
             >
-                <div className="flex flex-col gap-1.5">
+                <Stack gap="xs">
                     <span className="text-sm font-medium">Invite</span>
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
                         <AddressInput
@@ -716,7 +717,7 @@ export function Share() {
                             className="min-w-0 flex-1"
                             words={{ placeholder: 'Add people by email' }}
                         />
-                        <div className="flex gap-2">
+                        <Row align="stretch">
                             <NativeSelect
                                 size="default"
                                 aria-label="Role for the invited"
@@ -737,14 +738,14 @@ export function Share() {
                             >
                                 Invite
                             </Button>
-                        </div>
+                        </Row>
                     </div>
-                </div>
-                <div className="flex flex-col gap-1.5">
+                </Stack>
+                <Stack gap="xs">
                     <span className="text-sm font-medium">People with access</span>
-                    <ul className="flex flex-col">
+                    <Stack as="ul" gap="none">
                         {members.map((member) => (
-                            <li key={member.email} className="flex items-center gap-3 py-1.5">
+                            <Row key={member.email} as="li" gap="md" className="py-1.5">
                                 <PersonAvatar name={member.username} />
                                 <span className="flex min-w-0 flex-1 flex-col">
                                     <span className="font-mono text-xs">
@@ -781,13 +782,13 @@ export function Share() {
                                         <NativeSelectOption value="remove">Remove</NativeSelectOption>
                                     </NativeSelect>
                                 )}
-                            </li>
+                            </Row>
                         ))}
-                    </ul>
-                </div>
-                <div className="flex flex-col gap-1.5">
+                    </Stack>
+                </Stack>
+                <Stack gap="xs">
                     <span className="text-sm font-medium">Link access</span>
-                    <div className="flex items-center gap-3 rounded-control border border-border px-3 py-2.5">
+                    <Row gap="md" className="rounded-control border border-border px-3 py-2.5">
                         <ItemMedia variant="icon">{link === 'invited' ? <Lock aria-hidden /> : <Users aria-hidden />}</ItemMedia>
                         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                             <NativeSelect
@@ -810,8 +811,8 @@ export function Share() {
                             className={cn('size-4 shrink-0', link === 'workspace' ? 'text-muted-foreground' : 'text-transparent')}
                             aria-hidden
                         />
-                    </div>
-                </div>
+                    </Row>
+                </Stack>
             </DialogShell>
         </Behind>
     )

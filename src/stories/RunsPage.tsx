@@ -16,6 +16,7 @@ import { Button } from '../components/ui/button'
 import { DropdownMenuItem } from '../components/ui/dropdown-menu'
 import { TooltipProvider } from '../components/ui/tooltip'
 import { TidevannMark } from './fixtures/TidevannMark'
+import { Row } from '../components/Layout'
 
 /**
  * A list page built from the library's parts, as an app builds one: the rail and top bar, a page
@@ -118,11 +119,11 @@ export function RunsPage() {
             >
                 <Page className="h-full">
                     <PageHeader title="Runs" count="8 today" actions={<Button size="sm">Run a job</Button>} />
-                    <div className="flex flex-wrap items-center gap-2">
+                    <Row wrap>
                         <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-64" />
                         <FilterChip facet="Status" />
                         <FilterChip facet="Job" />
-                    </div>
+                    </Row>
                     <div className="flex min-h-0 flex-1 items-start gap-(--density-inspector-gap)">
                         <DataTable
                             columns={COLUMNS}
