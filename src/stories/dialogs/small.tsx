@@ -7,7 +7,7 @@ import { CronField } from '../../components/CronField'
 import { DescriptionList } from '../../components/DescriptionList'
 import { DialogShell } from '../../components/DialogShell'
 import { Field } from '../../components/Field'
-import type { Issue } from '../../components/IssueMark'
+import { IssueCount, type Issue } from '../../components/IssueMark'
 import { Markdown } from '../../components/Markdown'
 import { PersonAvatar } from '../../components/PersonAvatar'
 import { Problem } from '../../components/Problem'
@@ -15,6 +15,7 @@ import type { TreeNode } from '../../components/Tree'
 import { TreeSelect } from '../../components/TreeSelect'
 import { Button } from '../../components/ui/button'
 import { Textarea } from '../../components/ui/textarea'
+import { describeCron } from '../../lib/cron'
 import { Behind, TextField, wait } from './parts'
 
 export function Rename() {
@@ -137,10 +138,17 @@ export function Created() {
     const [open, setOpen] = useState(true)
     const [made, setMade] = useState(true)
     const [code, setCode] = useState('sync-inventory')
+    const [submitted, setSubmitted] = useState(false)
+    const [left, setLeft] = useState(false)
+    const [issueOpen, setIssueOpen] = useState(false)
     const close = (next: boolean) => {
         setOpen(next)
         if (!next) setMade(true)
     }
+    const issues: Issue[] =
+        code === '' && (submitted || left)
+            ? [{ tone: 'critical', text: 'Give the job a code', detail: 'Lowercase, as in sync-inventory.' }]
+            : []
     if (!made)
         return (
             <Behind action="New job" onAction={() => setOpen(true)}>
@@ -149,9 +157,35 @@ export function Created() {
                     onOpenChange={close}
                     width="sm"
                     title="New job"
-                    confirm={{ label: 'Create', onConfirm: () => setMade(true), why: code === '' ? 'Give the job a code.' : undefined }}
+                    count={
+                        <IssueCount
+                            critical={issues.length}
+                            list={issues.map((issue) => ({ label: 'Code', issue, onGo: () => setIssueOpen(true) }))}
+                        />
+                    }
+                    confirm={{
+                        label: 'Create',
+                        onConfirm: () => {
+                            setSubmitted(true)
+                            if (code !== '') setMade(true)
+                        },
+                    }}
                 >
-                    <TextField id="new-code" label="Code" required mono value={code} onChange={setCode} autoFocus />
+                    <TextField
+                        id="new-code"
+                        label="Code"
+                        required
+                        mono
+                        value={code}
+                        onChange={setCode}
+                        onBlur={() => {
+                            if (code !== '') setLeft(true)
+                        }}
+                        issues={issues}
+                        issueOpen={issueOpen}
+                        onIssueOpenChange={setIssueOpen}
+                        autoFocus
+                    />
                 </DialogShell>
             </Behind>
         )
@@ -173,6 +207,8 @@ export function Created() {
                         variant="outline"
                         onClick={() => {
                             setCode('')
+                            setSubmitted(false)
+                            setLeft(false)
                             setMade(false)
                         }}
                     >
@@ -200,6 +236,7 @@ export function SessionExpired() {
     const [password, setPassword] = useState('')
     const [wrong, setWrong] = useState(false)
     const [busy, setBusy] = useState(false)
+    const [issueOpen, setIssueOpen] = useState(false)
     const [draft, setDraft] = useState(
         'Orders from the larkspur site arrive a day late since the October change. Moving the run to 04:00 UTC gives the upload time to land.',
     )
@@ -231,10 +268,18 @@ export function SessionExpired() {
                 dismissible={false}
                 title="Your session has ended"
                 description="Sign in again to carry on. What you typed on the page is kept."
+                count={
+                    <IssueCount
+                        critical={issues.length}
+                        list={issues.map((issue) => ({ label: 'Password', issue, onGo: () => setIssueOpen(true) }))}
+                    />
+                }
                 footer={
-                    <a href="#sign-out" className="underline underline-offset-3 hover:text-foreground">
-                        Sign out instead
-                    </a>
+                    <span className="flex items-center gap-3">
+                        <a href="#sign-out" className="underline underline-offset-3 hover:text-foreground">
+                            Sign out instead
+                        </a>
+                    </span>
                 }
                 confirm={{
                     label: 'Sign in',
@@ -261,6 +306,8 @@ export function SessionExpired() {
                         setWrong(false)
                     }}
                     issues={issues}
+                    issueOpen={issueOpen}
+                    onIssueOpenChange={setIssueOpen}
                     onEnter={() => {
                         if (password !== '') signIn()
                     }}
@@ -443,7 +490,8 @@ const PRESETS = [
 export function Schedule() {
     const [open, setOpen] = useState(true)
     const [cron, setCron] = useState('30 2 * * 1-5')
-    const valid = /^(\S+\s+){4}\S+$/.test(cron.trim())
+    const [cronOpen, setCronOpen] = useState(false)
+    const valid = describeCron(cron) !== null
     return (
         <Behind action="Edit schedule" onAction={() => setOpen(true)}>
             <DialogShell
@@ -451,9 +499,29 @@ export function Schedule() {
                 onOpenChange={setOpen}
                 title="Schedule for import-orders"
                 description="A run that is still going when the next is due makes the next one wait."
+                count={
+                    <IssueCount
+                        critical={valid ? 0 : 1}
+                        list={[
+                            {
+                                label: 'Schedule',
+                                issue: { tone: 'critical', text: 'Not a schedule this field can read' },
+                                onGo: () => setCronOpen(true),
+                            },
+                        ]}
+                    />
+                }
                 confirm={{ label: 'Save schedule', onConfirm: () => setOpen(false), why: valid ? undefined : 'Fix the expression first.' }}
             >
-                <CronField value={cron} onChange={setCron} from={new Date('2026-11-05T10:17:00Z')} presets={PRESETS} />
+                <CronField
+                    id="schedule-cron"
+                    value={cron}
+                    onChange={setCron}
+                    from={new Date('2026-11-05T10:17:00Z')}
+                    presets={PRESETS}
+                    issueOpen={cronOpen}
+                    onIssueOpenChange={setCronOpen}
+                />
             </DialogShell>
         </Behind>
     )

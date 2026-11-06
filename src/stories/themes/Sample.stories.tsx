@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { Search } from 'lucide-react'
+import { useState } from 'react'
 
 import type { ChartLook } from '../../components/chart/look'
 import { EChart } from '../../components/chart/EChart'
+import { ListTable, type Column } from '../../components/ListTable'
+import { SearchField } from '../../components/SearchField'
 import { StatusChip, type Status } from '../../components/StatusChip'
 import { Button } from '../../components/ui/button'
-import { Input } from '../../components/ui/input'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table'
 import { TidevannMark } from '../fixtures/TidevannMark'
 
 /**
@@ -16,10 +16,22 @@ import { TidevannMark } from '../fixtures/TidevannMark'
 const meta: Meta = { title: 'Themes/Gallery tile' }
 export default meta
 
-const ROWS: { job: string; state: Status; took: string }[] = [
+interface Row {
+    job: string
+    state: Status
+    took: string
+}
+
+const ROWS: Row[] = [
     { job: 'nightly-export', state: 'failed', took: '4.2s' },
     { job: 'rebuild-index', state: 'succeeded', took: '6m 03s' },
     { job: 'import-orders', state: 'running', took: '1m 12s' },
+]
+
+const COLUMNS: Column<Row>[] = [
+    { id: 'job', header: 'Job', width: 'minmax(0,1fr)', cell: (row) => <span className="font-mono text-xs">{row.job}</span> },
+    { id: 'state', header: 'State', width: '7.5rem', cell: (row) => <StatusChip status={row.state} /> },
+    { id: 'took', header: 'Took', width: '5rem', align: 'end', cell: (row) => <span className="tabular-nums">{row.took}</span> },
 ]
 
 const HOURS = ['00', '02', '04', '06', '08', '10', '12', '14', '16', '18', '20', '22']
@@ -38,9 +50,10 @@ const BARS = (look: ChartLook) => ({
 
 /** The tile's content, in whatever theme the document wears. */
 function ThemeSample() {
+    const [query, setQuery] = useState('')
     return (
         <div className="min-h-svh bg-background p-3 text-foreground">
-            <div className="mx-auto flex w-full max-w-xl flex-col gap-3">
+            <div className="mx-auto flex w-full max-w-2xl flex-col gap-3">
                 <div className="flex items-center gap-2">
                     <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
                         <TidevannMark />
@@ -62,13 +75,7 @@ function ThemeSample() {
                         Stop
                     </Button>
                 </div>
-                <div className="relative">
-                    <Search
-                        aria-hidden
-                        className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground"
-                    />
-                    <Input aria-label="Search runs" placeholder="Search runs" className="pl-8" />
-                </div>
+                <SearchField value={query} onChange={setQuery} placeholder="Search" shortcut={false} />
                 <div className="flex flex-wrap gap-1">
                     <StatusChip status="succeeded" />
                     <StatusChip status="failed" />
@@ -76,28 +83,7 @@ function ThemeSample() {
                     <StatusChip status="queued" />
                     <StatusChip status="cancelled" />
                 </div>
-                <div className="overflow-hidden rounded-surface border border-border-strong bg-card">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Job</TableHead>
-                                <TableHead>State</TableHead>
-                                <TableHead className="text-right">Took</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {ROWS.map((row) => (
-                                <TableRow key={row.job}>
-                                    <TableCell className="font-mono text-xs">{row.job}</TableCell>
-                                    <TableCell>
-                                        <StatusChip status={row.state} />
-                                    </TableCell>
-                                    <TableCell className="text-right tabular-nums">{row.took}</TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </div>
+                <ListTable columns={COLUMNS} rows={ROWS} rowKey={(row) => row.job} />
                 <div className="h-24 rounded-surface border border-border-strong bg-card p-2">
                     <EChart option={BARS} label="Runs and failures by hour" />
                 </div>

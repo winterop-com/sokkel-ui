@@ -76,9 +76,11 @@ const preview: Preview = {
         },
         viewport: {
             options: {
+                w344: { name: '344 px, foldable folded', styles: { width: '344px', height: '882px' }, type: 'mobile' },
                 w360: { name: '360 px', styles: { width: '360px', height: '780px' }, type: 'mobile' },
                 w390: { name: '390 px', styles: { width: '390px', height: '844px' }, type: 'mobile' },
                 w430: { name: '430 px', styles: { width: '430px', height: '932px' }, type: 'mobile' },
+                w690: { name: '690 px, foldable open', styles: { width: '690px', height: '840px' }, type: 'tablet' },
                 w768: { name: '768 px', styles: { width: '768px', height: '1024px' }, type: 'tablet' },
                 w1024: { name: '1024 px', styles: { width: '1024px', height: '768px' }, type: 'tablet' },
                 w1280: { name: '1280 px', styles: { width: '1280px', height: '800px' }, type: 'desktop' },

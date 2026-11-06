@@ -37,7 +37,22 @@ and ask before acting.
   handler.
 - One engine per job: ECharts draws every chart, maplibre every map, React Flow every interactive
   graph, Mermaid every diagram written as text, and sparklines are plain SVG. Never add a second.
+- Fix the component, never the example. When a story looks or behaves wrong, the fix goes into
+  the component that draws it (or a new component, or an option on one), so it reaches every
+  example and every app at once. A class added to a story to patch a component's size, spacing,
+  overflow or shape is a patch in the wrong place: it fixes one example and leaves the bug for the
+  next. Components must hold up in any container they are given.
+- An example never builds its own version of a part, layout included. When a story needs something
+  no component has, the library gets the component or an option on one, and every example uses it.
+  `src/rules.test.ts` fails a hand-set size or color anywhere, and in a story a selector reaching
+  into a component, a raw table, a pill shape, a message under a field, or a component no story
+  shows.
 - Words a component says are props with English defaults, so an app can translate them.
+- Words follow their context. An action or a search in a page or section drops the noun the page
+  already names: on Roles the button is "New" and the field "Search", not "New role" and "Search
+  roles". The noun stays where nothing around it names the thing: a dialog's title, global
+  navigation and the command palette, an icon-only button's label, and an action among siblings
+  that make different things ("New folder" beside "Upload files").
 - Comments say what the thing does, or the constraint the code cannot show. Rationale goes in the
   commit message.
 - American English everywhere: color, behavior, center. No emojis anywhere.
@@ -55,16 +70,18 @@ and ask before acting.
   tiles.
 - Look at every new or changed story in dark and light, at desktop and phone width, before
   committing it.
-- Desktop is the main target; phones and tablets must still work. A story is written once, at
-  full width, and the viewport toolbar shows it at the widths layouts are checked at: 360, 390
-  and 430 for phones, 768 and 1024 for tablets, 1280, 1440 and 1920. No story exists only to
-  show a narrower width.
+- Desktop is the main target; phones, foldables and tablets must still work. A story is written
+  once, at full width, and the viewport toolbar shows it at the widths layouts are checked at: 344
+  and 690 for a foldable folded and open, 360, 390 and 430 for phones, 768 and 1024 for tablets,
+  1280, 1440 and 1920. `e2e/layout.spec.ts` fails a story whose page scrolls sideways at any of the
+  narrow ones. No story exists only to show a narrower width.
 - A story uses the room the component would have in an app. One that fills its container there (a
   terminal, code, an editor, a log, a table, a schema, a graph, a chart, a video, a track list)
   fills the canvas, and the height too when it scrolls. One with a natural width (an input, a menu,
   a button, a card, a dialog) keeps that width.
 - Screenshot baselines are Linux renders, taken in the Playwright image as CI takes them:
-  `bun run test:visual:linux:update`. Never commit baselines taken on a Mac. A change that alters
+  `bun run test:visual:linux:update`, or on GitHub with `make screenshots-ci`, which retakes them
+  for the current branch and commits them there. Never commit baselines taken on a Mac. A change that alters
   a story's look carries its retaken baselines in the same PR.
 
 ## Design

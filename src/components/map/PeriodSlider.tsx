@@ -95,7 +95,7 @@ export function PeriodSlider({
                     disabled={periods.length < 2}
                     onValueChange={(next) => step(Array.isArray(next) ? next[0] : next)}
                 />
-                <div aria-hidden className="flex justify-between text-[11px] leading-none text-muted-foreground">
+                <div aria-hidden className="flex justify-between text-2xs leading-none text-muted-foreground">
                     <span>{periods[0]?.label}</span>
                     <span>{periods[last]?.label}</span>
                 </div>

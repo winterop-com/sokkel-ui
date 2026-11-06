@@ -30,11 +30,14 @@ import { StatusChip, type Status } from '../../components/StatusChip'
 import { ThemeToggle } from '../../components/ThemeToggle'
 import { TopBar } from '../../components/TopBar'
 import { Button } from '../../components/ui/button'
+import { Checkbox } from '../../components/ui/checkbox'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { useIsMobile } from '../../hooks/use-mobile'
 import { cn } from '../../lib/cn'
 import { KIND_FILL, type KindColor } from '../../lib/kind'
 import { TidevannMark } from '../fixtures/TidevannMark'
+import { DayStrip } from '../../components/calendar/DayStrip'
+import { Dot } from '../../components/Dot'
 
 /**
  * A schedule of job runs and team events in the library's frame: the week with its hours, all-day
@@ -283,29 +286,19 @@ function CalendarToggles({ shown, onChange }: { shown: CalendarId[]; onChange: (
             {CALENDARS.map((calendar) => {
                 const on = shown.includes(calendar.id)
                 return (
-                    <button
+                    <label
                         key={calendar.id}
-                        type="button"
-                        role="checkbox"
-                        aria-checked={on}
-                        className="flex h-8 items-center gap-2.5 rounded-md px-1.5 text-left text-sm hover:bg-secondary"
-                        onClick={() => onChange(on ? shown.filter((other) => other !== calendar.id) : [...shown, calendar.id])}
+                        className="flex h-8 cursor-pointer items-center gap-2.5 rounded-md px-1.5 text-sm hover:bg-secondary"
                     >
-                        <span
-                            aria-hidden
-                            className={cn(
-                                'flex size-4 shrink-0 items-center justify-center rounded-[4px] border-2',
-                                on ? cn('border-transparent', KIND_FILL[calendar.color]) : 'border-border-strong',
-                            )}
-                        >
-                            {on && (
-                                <svg viewBox="0 0 12 12" className="size-3 text-white" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M2.5 6.2 5 8.5l4.5-5" />
-                                </svg>
-                            )}
-                        </span>
+                        <Checkbox
+                            checked={on}
+                            onCheckedChange={(next) =>
+                                onChange(next ? [...shown, calendar.id] : shown.filter((other) => other !== calendar.id))
+                            }
+                        />
+                        <Dot kind={calendar.color} />
                         <span className={cn('flex-1 truncate', !on && 'text-muted-foreground')}>{calendar.name}</span>
-                    </button>
+                    </label>
                 )
             })}
         </section>
@@ -407,34 +400,13 @@ function CalendarApp({ view: initialView = 'week', open = null }: { view?: View;
                         {phone ? (
                             <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
                                 {view === 'week' ? (
-                                    <div className="grid shrink-0 grid-cols-7 border-b border-border px-2 py-2">
-                                        {week.map((day) => {
-                                            const chosen = isSameDay(day, anchor)
-                                            const today = isSameDay(day, NOW)
-                                            return (
-                                                <button
-                                                    key={day.toISOString()}
-                                                    type="button"
-                                                    aria-pressed={chosen}
-                                                    className="flex flex-col items-center gap-1 rounded-md py-1 text-xs"
-                                                    onClick={() => go(day)}
-                                                >
-                                                    <span className={cn('text-muted-foreground', today && 'text-primary-ink')}>
-                                                        {format(day, 'EEEEE')}
-                                                    </span>
-                                                    <span
-                                                        className={cn(
-                                                            'flex size-8 items-center justify-center rounded-full text-sm tabular-nums',
-                                                            chosen && 'bg-primary font-medium text-primary-foreground',
-                                                            today && !chosen && 'font-medium text-primary-ink',
-                                                        )}
-                                                    >
-                                                        {format(day, 'd')}
-                                                    </span>
-                                                </button>
-                                            )
-                                        })}
-                                    </div>
+                                    <DayStrip
+                                        days={week}
+                                        chosen={anchor}
+                                        today={NOW}
+                                        onChoose={go}
+                                        className="shrink-0 border-b border-border px-2 py-2"
+                                    />
                                 ) : (
                                     <MonthGrid
                                         month={anchor}

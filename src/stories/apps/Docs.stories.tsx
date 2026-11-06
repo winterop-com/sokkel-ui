@@ -385,7 +385,7 @@ function DocsApp({ mode: initialMode = 'read' }: { mode?: 'read' | 'edit' | 'his
                 <div className="flex h-full min-h-0">
                     <aside className="hidden w-60 shrink-0 flex-col gap-3 overflow-y-auto border-r border-border-strong bg-sidebar px-2 py-3 lg:flex">
                         <div className="flex items-center gap-1 px-1">
-                            <SearchField value={query} onChange={setQuery} placeholder="Search pages" className="min-w-0 flex-1" />
+                            <SearchField value={query} onChange={setQuery} placeholder="Search" className="min-w-0 flex-1" />
                             <Button variant="ghost" size="icon-sm" aria-label="New page" title="New page">
                                 <Plus aria-hidden />
                             </Button>

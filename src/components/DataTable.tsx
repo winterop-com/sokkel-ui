@@ -41,6 +41,7 @@ import {
 } from './ui/dropdown-menu'
 import { NativeSelect, NativeSelectOption } from './ui/native-select'
 import { Skeleton } from './ui/skeleton'
+import { TABLE_HEAD_TEXT } from '../lib/table'
 
 /** One column: its name, how wide it is, how a row draws its cell, and how it sorts. */
 export interface DataColumn<T> {
@@ -233,6 +234,9 @@ const CHECK = '2.5rem'
 const OVERSCAN = 8
 /** The space between cards, and around them, in pixels. */
 const GAP = 16
+/** A stacked card's padding and the height of each of its lines, in pixels. */
+const STACK_PAD = 8
+const STACK_LINE = 20
 
 /**
  * A table for many rows: sorting, selection with a bulk bar, a column menu, child rows, and the
@@ -295,6 +299,7 @@ export function DataTable<T>({
     onViewChange,
     cardWidth = '12rem',
     cardHeight = '16rem',
+    stackBelow = 576,
     minWidth = '48rem',
     words: ownWords,
     className,
@@ -373,6 +378,13 @@ export function DataTable<T>({
     cardWidth?: string
     /** Every card's height, one for all so the grid draws only what is in view. */
     cardHeight?: string
+    /**
+     * Below this width of its own box, in pixels, and once the box is narrower than `minWidth` too,
+     * the table shows each row as a card: the first column its title and every other a labeled
+     * line, as ListTable does. A table whose columns fit stays a table, so a small panel on a wide
+     * screen keeps its rows. `false` keeps the table, which then scrolls sideways.
+     */
+    stackBelow?: number | false
     /** The narrowest the columns go before the table scrolls sideways. */
     minWidth?: string
     words?: Partial<DataTableWords>
@@ -414,6 +426,8 @@ export function DataTable<T>({
     const scroller = useRef<HTMLDivElement>(null)
     const probe = useRef<HTMLDivElement>(null)
     const cardProbe = useRef<HTMLDivElement>(null)
+    const widthProbe = useRef<HTMLDivElement>(null)
+    const [columnsWidth, setColumnsWidth] = useState(768)
     const [rowHeight, setRowHeight] = useState(40)
     const [cardBox, setCardBox] = useState({ width: 192, height: 256 })
     const [view, setView] = useState({ top: 0, height: 800, width: 1200 })
@@ -425,6 +439,7 @@ export function DataTable<T>({
         const update = () => {
             setRowHeight(measure.offsetHeight || 40)
             setCardBox({ width: measureCard.offsetWidth || 192, height: measureCard.offsetHeight || 256 })
+            setColumnsWidth(widthProbe.current?.offsetWidth || 768)
             setView({ top: box.scrollTop, height: box.clientHeight, width: box.clientWidth })
         }
         update()
@@ -435,10 +450,15 @@ export function DataTable<T>({
         return () => observer.disconnect()
     }, [])
     const [shownView, setShownView] = useHeld(viewValue, defaultView, onViewChange)
-    const gridView = shownView === 'grid' && card !== undefined
+    const chosenGrid = shownView === 'grid' && card !== undefined
+    // A narrow box stacks the rows as cards, one to a line, each as tall as its columns need.
+    // Only when the columns no longer fit: a box narrower than both `stackBelow` and the columns' `minWidth`.
+    const stacked = !chosenGrid && stackBelow !== false && view.width > 0 && view.width < Math.min(stackBelow, columnsWidth)
+    const gridView = chosenGrid || stacked
+    const cardPixels = stacked ? STACK_PAD * 2 + 24 + Math.max(0, shown.length - 1) * STACK_LINE + 2 : cardBox.height
     // The grid is drawn a line of cards at a time; the table's line is one row.
-    const perLine = gridView ? Math.max(1, Math.floor((view.width - 2 * GAP + GAP) / (cardBox.width + GAP))) : 1
-    const lineHeight = gridView ? cardBox.height + GAP : rowHeight
+    const perLine = stacked ? 1 : gridView ? Math.max(1, Math.floor((view.width - 2 * GAP + GAP) / (cardBox.width + GAP))) : 1
+    const lineHeight = gridView ? cardPixels + GAP : rowHeight
     const lines = Math.ceil(flat.length / perLine)
     const over = gridView ? 2 : OVERSCAN
     useLayoutEffect(() => {
@@ -594,6 +614,46 @@ export function DataTable<T>({
         const chosen = selection.has(entry.key)
         const isOpened = opened?.(entry.row) === true
         const actions = rowActions?.(entry.row)
+        const box = selectable ? (
+            <Checkbox aria-label={words.selectRow} tabIndex={-1} checked={chosen} onCheckedChange={() => toggle(entry, false)} />
+        ) : null
+        const menu =
+            actions === undefined || actionButton === 'none' ? null : (
+                <DropdownMenu>
+                    <DropdownMenuTrigger
+                        render={
+                            <Button variant={stacked ? 'ghost' : 'secondary'} size="icon-xs" tabIndex={-1} aria-label={words.actions} />
+                        }
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        {actionIcon}
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                        <MenuItems actions={actions} kind="dropdown" />
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            )
+        const [title, ...rest] = shown
+        // Stacked, the box, the title and the menu share the first line, and every line starts at the box's edge.
+        const stackedCard = (
+            <div className="flex h-full flex-col rounded-surface border border-border bg-card px-3 py-2 group-hover/card:bg-muted">
+                <div className="flex h-6 min-w-0 items-center gap-2">
+                    {box !== null && (
+                        <span className="flex" onClick={(event) => event.stopPropagation()}>
+                            {box}
+                        </span>
+                    )}
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium">{title?.cell(entry.row)}</span>
+                    {menu}
+                </div>
+                {rest.map((column) => (
+                    <div key={column.id} className="flex h-5 min-w-0 items-center gap-2 text-xs">
+                        <span className="w-24 shrink-0 truncate text-muted-foreground">{column.header}</span>
+                        <span className="min-w-0 truncate">{column.cell(entry.row)}</span>
+                    </div>
+                ))}
+            </div>
+        )
         const body = (
             <div
                 key={entry.key}
@@ -607,10 +667,10 @@ export function DataTable<T>({
                     chosen ? 'ring-2 ring-primary' : isOpened && 'ring-2 ring-ring/60',
                     'group-focus-visible/table:data-active:ring-2 group-focus-visible/table:data-active:ring-ring',
                 )}
-                style={{ height: cardBox.height }}
+                style={{ height: cardPixels }}
             >
-                {card?.(entry.row)}
-                {selectable && (
+                {stacked ? stackedCard : card?.(entry.row)}
+                {!stacked && box !== null && (
                     <span
                         onClick={(event) => event.stopPropagation()}
                         className={cn(
@@ -618,32 +678,17 @@ export function DataTable<T>({
                             (chosen || selection.size > 0) && 'opacity-100',
                         )}
                     >
-                        <Checkbox
-                            aria-label={words.selectRow}
-                            tabIndex={-1}
-                            checked={chosen}
-                            onCheckedChange={() => toggle(entry, false)}
-                        />
+                        {box}
                     </span>
                 )}
-                {actions !== undefined && actionButton !== 'none' && (
+                {!stacked && menu !== null && (
                     <span
                         className={cn(
                             'absolute top-2 right-2',
                             actionButton === 'hover' && 'opacity-0 group-hover/card:opacity-100 has-data-popup-open:opacity-100',
                         )}
                     >
-                        <DropdownMenu>
-                            <DropdownMenuTrigger
-                                render={<Button variant="secondary" size="icon-xs" tabIndex={-1} aria-label={words.actions} />}
-                                onClick={(event) => event.stopPropagation()}
-                            >
-                                {actionIcon}
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48">
-                                <MenuItems actions={actions} kind="dropdown" />
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        {menu}
                     </span>
                 )}
             </div>
@@ -660,11 +705,19 @@ export function DataTable<T>({
     }
 
     return (
-        <div className={cn('flex min-h-0 flex-col overflow-hidden rounded-surface border border-border-strong bg-card', className)}>
+        // Contained, so the table takes its width from its container and never widens a grid, a flex row or the page;
+        // at least 15rem, so a container that sizes itself to its content still gets a readable table.
+        <div
+            className={cn(
+                'flex min-h-0 min-w-60 flex-col overflow-hidden rounded-surface border border-border-strong bg-card [contain:inline-size]',
+                className,
+            )}
+        >
             <div className="flex h-(--density-panel-head) shrink-0 items-center gap-2 border-b border-border px-(--density-panel-pad) text-sm">
                 {selection.size > 0 ? (
-                    <div className="flex min-w-0 items-center gap-2">
-                        <span className="font-medium tabular-nums">
+                    // The selection's actions scroll sideways when the bar is too narrow for them.
+                    <div className="flex min-w-0 flex-1 [scrollbar-width:none] items-center gap-2 overflow-x-auto">
+                        <span className="shrink-0 font-medium whitespace-nowrap tabular-nums">
                             {paging === 'client' && allChosen ? words.allSelected(allKeys.length) : words.selected(selection.size)}
                         </span>
                         {offerEvery && (
@@ -684,12 +737,14 @@ export function DataTable<T>({
                 ) : (
                     <div className="flex min-w-0 flex-1 items-center gap-2">{toolbar}</div>
                 )}
-                <span className="ml-auto shrink-0 font-mono text-xs text-muted-foreground tabular-nums">
-                    {hasMore && total === undefined
-                        ? words.loaded(allCount(rows, childRows))
-                        : words.rows(total ?? allCount(rows, childRows))}
-                </span>
-                {gridView && sortable.length > 0 && (
+                {selection.size === 0 && (
+                    <span className="ml-auto shrink-0 font-mono text-xs text-muted-foreground tabular-nums">
+                        {hasMore && total === undefined
+                            ? words.loaded(allCount(rows, childRows))
+                            : words.rows(total ?? allCount(rows, childRows))}
+                    </span>
+                )}
+                {gridView && selection.size === 0 && sortable.length > 0 && (
                     <DropdownMenu>
                         <DropdownMenuTrigger render={<Button variant="ghost" size="sm" />}>
                             {sort === null ? <ArrowUpDownIcon /> : sort.direction === 'asc' ? <ArrowUpIcon /> : <ArrowDownIcon />}
@@ -730,7 +785,7 @@ export function DataTable<T>({
                         </DropdownMenuContent>
                     </DropdownMenu>
                 )}
-                {card !== undefined && (
+                {card !== undefined && !stacked && (
                     <div className="flex items-center gap-0.5 rounded-md bg-muted p-0.5">
                         {(['table', 'grid'] as const).map((one) => (
                             <Button
@@ -797,18 +852,20 @@ export function DataTable<T>({
                 }
                 className="group/table relative min-h-0 flex-1 overflow-auto outline-none"
             >
-                <div ref={probe} aria-hidden className="pointer-events-none invisible absolute h-(--density-row) w-px" />
-                <div
-                    ref={cardProbe}
-                    aria-hidden
-                    className="pointer-events-none invisible absolute"
-                    style={{ width: cardWidth, height: cardHeight }}
-                />
+                {/* Measures the row and card sizes without adding to what scrolls. */}
+                <div aria-hidden className="pointer-events-none invisible absolute size-0 overflow-hidden">
+                    <div ref={probe} className="h-(--density-row) w-px" />
+                    <div ref={cardProbe} style={{ width: cardWidth, height: cardHeight }} />
+                    <div ref={widthProbe} style={{ width: minWidth }} />
+                </div>
                 {!gridView && (
                     <div
                         role="row"
                         aria-rowindex={1}
-                        className="sticky top-0 z-[2] grid h-(--density-row) items-center border-b border-border-strong bg-panel-ground text-[length:var(--table-head-size)] font-[number:var(--table-head-weight)] tracking-[var(--table-head-tracking)] text-muted-foreground [text-transform:var(--table-head-transform)]"
+                        className={cn(
+                            'sticky top-0 z-[2] grid h-(--density-row) items-center border-b border-border-strong bg-panel-ground',
+                            TABLE_HEAD_TEXT,
+                        )}
                         style={grid}
                     >
                         {selectable && (
@@ -875,7 +932,7 @@ export function DataTable<T>({
                                         <Skeleton
                                             key={`loading-${String(index)}`}
                                             className="rounded-surface"
-                                            style={{ height: cardBox.height }}
+                                            style={{ height: cardPixels }}
                                         />
                                     ),
                                 )}

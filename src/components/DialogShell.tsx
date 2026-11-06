@@ -33,7 +33,7 @@ const WORDS: DialogShellWords = { cancel: 'Cancel', back: 'Back' }
 
 /** Dims a dialog while another is open on top of it. */
 export const NESTED =
-    'data-nested-dialog-open:after:pointer-events-none data-nested-dialog-open:after:absolute data-nested-dialog-open:after:inset-0 data-nested-dialog-open:after:rounded-[inherit] data-nested-dialog-open:after:bg-black/40'
+    'data-nested-dialog-open:after:pointer-events-none data-nested-dialog-open:after:absolute data-nested-dialog-open:after:inset-0 data-nested-dialog-open:after:rounded-[inherit] data-nested-dialog-open:after:bg-shade/40'
 
 /** What the dialog focuses first when it opens: the first field in its body, ahead of the header. */
 const FIELD = [
@@ -62,6 +62,7 @@ export function DialogShell({
     actions,
     dismissible = true,
     footer,
+    count,
     children,
     className,
     words: given,
@@ -82,6 +83,8 @@ export function DialogShell({
     dismissible?: boolean
     /** Something at the footer's left: a note, a secondary link. */
     footer?: ReactNode
+    /** The form's `IssueCount`, set just before the verbs it stops. */
+    count?: ReactNode
     children?: ReactNode
     className?: string
     words?: Partial<DialogShellWords>
@@ -124,6 +127,7 @@ export function DialogShell({
                 {confirm !== undefined && (
                     <DialogFooter className="mt-auto items-center">
                         {footer !== undefined && <div className="mr-auto min-w-0 text-xs text-muted-foreground">{footer}</div>}
+                        {count}
                         {dismissible && (
                             <DialogClose render={<Button variant="ghost" />} disabled={busy}>
                                 {words.cancel}

@@ -9,7 +9,7 @@ import { cn } from '../../lib/cn'
  * come from a design round and take every corner from the radius tokens, so a theme's `--radius`
  * still decides how round they are. Each column shows the same parts: badges, removable address
  * chips with one that is not an address, toggle chips, a count over an icon, and status chips.
- * Nothing here changes the library until one is picked.
+ * Stepped was picked and is what the library draws now; Today shows the pills it replaced.
  */
 const meta: Meta = { title: 'Research/Tags', tags: ['no-screenshot'] }
 export default meta
@@ -68,7 +68,7 @@ const SHAPES: Shape[] = [
     {
         id: 'stepped',
         name: 'Stepped',
-        why: 'Labels crisp, things you act on as round as a field: chips and toggles take the control radius. Recommended in the design round.',
+        why: 'Labels crisp, things you act on as round as a field: chips and toggles take the control radius. Picked.',
         badge: 'rounded-chip h-5 px-1.5',
         chip: 'rounded-control h-6 pl-2 pr-0.5',
         remove: 'rounded-mini size-5',
@@ -164,7 +164,7 @@ function Column({ shape }: { shape: Shape }) {
                     <span
                         style={s}
                         className={cn(
-                            'absolute -top-1 -right-1 flex items-center justify-center bg-critical text-xs leading-none font-semibold text-white tabular-nums',
+                            'absolute -top-1 -right-1 flex items-center justify-center bg-critical text-xs leading-none font-semibold text-critical-foreground tabular-nums',
                             shape.count,
                         )}
                     >
@@ -176,7 +176,7 @@ function Column({ shape }: { shape: Shape }) {
                     <span
                         style={s}
                         className={cn(
-                            'absolute -top-1 -right-1 flex items-center justify-center bg-critical text-xs leading-none font-semibold text-white tabular-nums',
+                            'absolute -top-1 -right-1 flex items-center justify-center bg-critical text-xs leading-none font-semibold text-critical-foreground tabular-nums',
                             shape.count,
                         )}
                     >

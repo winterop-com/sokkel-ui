@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { cn } from '../../lib/cn'
+import { TABLE_HEAD_TEXT } from '../../lib/table'
 
 function Table({ className, ...props }: React.ComponentProps<'table'>) {
     return (
@@ -40,10 +41,7 @@ function TableHead({ className, ...props }: React.ComponentProps<'th'>) {
     return (
         <th
             data-slot="table-head"
-            className={cn(
-                'h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&:has([role=checkbox])]:pr-0',
-                className,
-            )}
+            className={cn('h-10 px-2 text-left align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0', TABLE_HEAD_TEXT, className)}
             {...props}
         />
     )

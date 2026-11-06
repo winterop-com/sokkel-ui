@@ -1,5 +1,7 @@
 import { useId } from 'react'
 
+import { cn } from '../../lib/cn'
+
 /** The shapes a cover is drawn with. */
 export type Motif = 'sun' | 'rings' | 'bands' | 'dots' | 'wave' | 'peaks'
 
@@ -33,7 +35,12 @@ export function Artwork({ cover, wide = false, className }: { cover: Cover; wide
     const width = wide ? 160 : 100
     const fill = `url(#${id})`
     return (
-        <svg viewBox={`0 0 ${String(width)} 100`} preserveAspectRatio="xMidYMid slice" aria-hidden className={className}>
+        <svg
+            viewBox={`0 0 ${String(width)} 100`}
+            preserveAspectRatio="xMidYMid slice"
+            aria-hidden
+            className={cn('block size-full', className)}
+        >
             <defs>
                 <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
                     <stop offset="0" stopColor={HUES[cover.from]} />

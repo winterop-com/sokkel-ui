@@ -4,14 +4,14 @@ import { useId, useMemo, useState, type ReactNode } from 'react'
 import { cn } from '../../lib/cn'
 import { Banner } from '../Banner'
 import { Field } from '../Field'
-import { ISSUE_EDGE, IssueCount, IssueMark, worst, type Issue, type IssueAction } from '../IssueMark'
+import { ISSUE_EDGE, IssueCount, IssueMark, worst, type Issue, type IssueAction, type IssueEntry } from '../IssueMark'
 import { SwitchField } from '../SwitchField'
 import { Button } from '../ui/button'
 import { Checkbox } from '../ui/checkbox'
 import { Input } from '../ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
 import { Textarea } from '../ui/textarea'
-import { literal, type JsonSchema } from './read'
+import { childSchema, literal, resolve, type JsonSchema } from './read'
 import { fieldSchema, given, pointer, types, validate, valueAt, type Path, type SchemaIssue } from './validate'
 
 /** What a server said about a value it refused, at the path it concerns. */
@@ -159,6 +159,8 @@ export interface SchemaFormState {
     submit: () => boolean
     /** Focuses the first field with an issue and opens what it says. */
     goToFirst: () => void
+    /** Every shown issue with its field's title, in the order the fields are drawn, for the count's list. */
+    list: IssueEntry[]
     open: string | null
     setOpen: (at: string | null) => void
     /** The id of a field's control. */
@@ -276,6 +278,17 @@ export function useSchemaForm(
         return places.filter((at) => test(pending(at))).sort((a, b) => rank(a) - rank(b))[0]
     }
     const critical = (issues: Issue[]) => issues.some((issue) => issue.tone === 'critical')
+    /** A field's title from its schema, or its key when the schema gives none. */
+    const titleAt = (at: string): string => {
+        let node: JsonSchema | undefined = schema
+        const keys = parsePointer(at)
+        for (const key of keys) {
+            const here: JsonSchema = resolve(node ?? {}, schema)
+            node = typeof key === 'number' ? (childSchema(here, schema) ?? undefined) : here.properties?.[key]
+        }
+        const found = node === undefined ? undefined : resolve(node, schema).title
+        return found ?? String(keys[keys.length - 1] ?? '')
+    }
 
     return {
         schema,
@@ -298,6 +311,16 @@ export function useSchemaForm(
             focus(blocking)
             return false
         },
+        list: places
+            .flatMap((at) => shownAt(at).map((issue) => ({ at, issue })))
+            .map(({ at, issue }) => ({
+                label: titleAt(at),
+                issue,
+                onGo: () => {
+                    focus(at)
+                    setOpen(at)
+                },
+            })),
         goToFirst: () => {
             const at = first(count.critical > 0 ? critical : (issues) => issues.length > 0)
             if (at === undefined) return
@@ -750,5 +773,5 @@ export function SchemaForm({ form, className }: { form: SchemaFormState; classNa
 
 /** How many things stop the submit, for the footer beside the verb; pressing it opens the first. */
 export function SchemaIssueCount({ form }: { form: SchemaFormState }) {
-    return <IssueCount critical={form.count.critical} warning={form.count.warning} onPick={form.goToFirst} />
+    return <IssueCount critical={form.count.critical} warning={form.count.warning} list={form.list} />
 }

@@ -97,7 +97,7 @@ export function MediaCard({
                 {badge !== undefined && (
                     <span
                         className={cn(
-                            'absolute right-1.5 rounded-mini bg-black/70 px-1.5 py-0.5 font-mono text-xs leading-4 text-white tabular-nums',
+                            'absolute right-1.5 rounded-mini bg-shade/70 px-1.5 py-0.5 font-mono text-xs leading-4 text-on-shade tabular-nums',
                             watched !== undefined && watched > 0 ? 'bottom-2.5' : 'bottom-1.5',
                         )}
                     >
@@ -129,7 +129,7 @@ export function MediaCard({
                     </button>
                 )}
                 {watched !== undefined && watched > 0 && (
-                    <span className="absolute inset-x-0 bottom-0 h-1 bg-black/40" role="img" aria-label={words.watched(watched)}>
+                    <span className="absolute inset-x-0 bottom-0 h-1 bg-shade/40" role="img" aria-label={words.watched(watched)}>
                         <span className="block h-full bg-primary" style={{ width: `${String(watched)}%` }} />
                     </span>
                 )}

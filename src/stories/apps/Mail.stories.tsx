@@ -21,7 +21,7 @@ import {
     X,
     type LucideIcon,
 } from 'lucide-react'
-import { useState, type CSSProperties, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 
 import { AccountMenu } from '../../components/AccountMenu'
 import { AddressInput, type Address } from '../../components/AddressInput'
@@ -49,6 +49,8 @@ import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTi
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { cn } from '../../lib/cn'
 import { TidevannMark } from '../fixtures/TidevannMark'
+import { Dot } from '../../components/Dot'
+import { Badge } from '../../components/ui/badge'
 
 /**
  * A mail client in the library's frame: the mailboxes and labels in the rail, the message list
@@ -430,10 +432,10 @@ function Reading({ mail, onBack }: { mail: Conversation; onBack: () => void }) {
                         <h1 className="text-page leading-snug font-semibold tracking-tight">{mail.subject}</h1>
                         <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
                             {(mail.labels ?? []).map((id) => (
-                                <span key={id} className="inline-flex h-5 items-center gap-1 rounded-full border border-border px-1.5">
-                                    <span className="size-1.5 rounded-full" style={{ background: LABELS[id].color }} />
+                                <Badge key={id} variant="outline">
+                                    <Dot color={LABELS[id].color} size="sm" />
                                     {LABELS[id].label}
-                                </span>
+                                </Badge>
                             ))}
                             <span>{thread.length === 1 ? '1 message' : `${thread.length} messages`}</span>
                         </div>
@@ -568,7 +570,7 @@ function List({
     return (
         <div className="flex h-full min-h-0 flex-col">
             <div className="flex shrink-0 flex-col gap-2 border-b border-border px-3 pt-3 pb-2">
-                <SearchField value={query} onChange={onQuery} placeholder="Search mail" />
+                <SearchField value={query} onChange={onQuery} placeholder="Search" />
                 <div className="flex min-h-8 items-center gap-2 pl-0.5">
                     <Checkbox
                         checked={all}
@@ -728,43 +730,43 @@ function rail(
     onBox: (box: Box) => void,
 ): { groups: RailGroup[]; renderLink: (entry: RailEntry, children: ReactNode, className: string) => ReactNode } {
     const unread = MAIL.filter((mail) => mail.box === 'inbox' && mail.unread === true).length
-    const counts: Partial<Record<string, number>> = { inbox: unread }
     const groups: RailGroup[] = [
         {
             id: 'boxes',
-            entries: BOXES.map((entry) => ({ id: entry.id, label: entry.label, icon: entry.icon, href: '#', active: entry.id === box })),
+            entries: BOXES.map((entry) => ({
+                id: entry.id,
+                label: entry.label,
+                icon: entry.icon,
+                href: '#',
+                active: entry.id === box,
+                count: entry.id === 'inbox' ? unread : undefined,
+            })),
         },
         {
             id: 'labels',
             title: 'Labels',
-            entries: Object.values(LABELS).map((label) => ({ id: `label-${label.id}`, label: label.label, icon: Circle, href: '#' })),
+            entries: Object.values(LABELS).map((label) => ({
+                id: `label-${label.id}`,
+                label: label.label,
+                icon: Circle,
+                href: '#',
+                dot: label.color,
+            })),
         },
     ]
-    const renderLink = (entry: RailEntry, children: ReactNode, className: string) => {
-        const label = entry.id.startsWith('label-') ? LABELS[entry.id.slice(6)] : undefined
-        const count = counts[entry.id]
-        return (
-            <a
-                href={entry.href}
-                aria-current={entry.active ? 'page' : undefined}
-                className={cn(
-                    className,
-                    label !== undefined &&
-                        '[&>svg:first-child]:scale-[0.6] [&>svg:first-child]:fill-(--dot) [&>svg:first-child]:text-(--dot)',
-                )}
-                style={label !== undefined ? ({ '--dot': label.color } as CSSProperties) : undefined}
-                onClick={(event) => {
-                    event.preventDefault()
-                    if (label === undefined) onBox(entry.id as Box)
-                }}
-            >
-                {children}
-                {count !== undefined && count > 0 && (
-                    <span className="ml-auto text-xs font-semibold text-foreground tabular-nums">{count}</span>
-                )}
-            </a>
-        )
-    }
+    const renderLink = (entry: RailEntry, children: ReactNode, className: string) => (
+        <a
+            href={entry.href}
+            aria-current={entry.active ? 'page' : undefined}
+            className={className}
+            onClick={(event) => {
+                event.preventDefault()
+                if (!entry.id.startsWith('label-')) onBox(entry.id as Box)
+            }}
+        >
+            {children}
+        </a>
+    )
     return { groups, renderLink }
 }
 

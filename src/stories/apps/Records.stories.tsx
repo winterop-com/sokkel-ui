@@ -15,12 +15,12 @@ import {
 import { useState, type ReactNode } from 'react'
 
 import { AccountMenu } from '../../components/AccountMenu'
-import { Banner } from '../../components/Banner'
 import { DescriptionList } from '../../components/DescriptionList'
-import { Field, describedBy } from '../../components/Field'
+import { DataTable, type DataColumn } from '../../components/DataTable'
+import { Field } from '../../components/Field'
 import { FilterChip } from '../../components/FilterChip'
 import { Inspector, InspectorSection } from '../../components/Inspector'
-import { ListTable, type Column } from '../../components/ListTable'
+import { IssueCount } from '../../components/IssueMark'
 import { BoundaryLayer } from '../../components/map/BoundaryLayer'
 import { MapLegend } from '../../components/map/MapLegend'
 import { MapOverlay, MapView } from '../../components/map/MapView'
@@ -29,7 +29,7 @@ import { colorOf, sequentialScale } from '../../components/map/scale'
 import { PageHeader } from '../../components/PageHeader'
 import { Rail, type RailGroup } from '../../components/Rail'
 import { SearchField } from '../../components/SearchField'
-import { Section, Surface } from '../../components/Section'
+import { Section } from '../../components/Section'
 import { Segmented } from '../../components/Segmented'
 import { Page, Shell } from '../../components/Shell'
 import { StatusChip, type Status } from '../../components/StatusChip'
@@ -55,6 +55,7 @@ import { TooltipProvider } from '../../components/ui/tooltip'
 import { cn } from '../../lib/cn'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { NUMBER, regionName, regions } from '../map/data'
+import { Dot } from '../../components/Dot'
 
 /**
  * A records app for structured data capture in the library's frame: a list of site visits with
@@ -208,13 +209,43 @@ const VISITS: Visit[] = [
     },
 ]
 
-const COLUMNS: Column<Visit>[] = [
-    { id: 'code', header: 'Visit', width: '6.5rem', cell: (visit) => <span className="font-mono">{visit.code}</span> },
-    { id: 'site', header: 'Site', width: 'minmax(0,1fr)', cell: (visit) => <span className="truncate">{visit.site}</span> },
-    { id: 'region', header: 'Region', width: '7.5rem', cell: (visit) => <span className="text-muted-foreground">{visit.region}</span> },
-    { id: 'visited', header: 'Visited', width: '7.5rem', cell: (visit) => <span className="tabular-nums">{visit.visited}</span> },
-    { id: 'by', header: 'By', width: '5.5rem', cell: (visit) => <span className="text-muted-foreground">{visit.by}</span> },
-    { id: 'state', header: 'State', width: '6.5rem', cell: (visit) => <StateChip state={visit.state} /> },
+const COLUMNS: DataColumn<Visit>[] = [
+    {
+        id: 'code',
+        header: 'Visit',
+        width: '6.5rem',
+        cell: (visit) => <span className="font-mono">{visit.code}</span>,
+        sortValue: (visit) => visit.code,
+    },
+    { id: 'site', header: 'Site', width: 'minmax(10rem,1fr)', cell: (visit) => visit.site, sortValue: (visit) => visit.site },
+    {
+        id: 'region',
+        header: 'Region',
+        width: '7.5rem',
+        cell: (visit) => <span className="text-muted-foreground">{visit.region}</span>,
+        sortValue: (visit) => visit.region,
+    },
+    {
+        id: 'visited',
+        header: 'Visited',
+        width: '7.5rem',
+        cell: (visit) => <span className="tabular-nums">{visit.visited}</span>,
+        sortValue: (visit) => visit.code,
+    },
+    {
+        id: 'by',
+        header: 'By',
+        width: '5.5rem',
+        cell: (visit) => <span className="text-muted-foreground">{visit.by}</span>,
+        sortValue: (visit) => visit.by,
+    },
+    {
+        id: 'state',
+        header: 'State',
+        width: '6.5rem',
+        cell: (visit) => <StateChip state={visit.state} />,
+        sortValue: (visit) => visit.state,
+    },
 ]
 
 function groups(view: View): RailGroup[] {
@@ -278,26 +309,27 @@ function Records() {
                         </Button>
                         <Button size="sm">
                             <Plus aria-hidden />
-                            New visit
+                            New
                         </Button>
                     </>
                 }
             />
             <div className="flex flex-wrap items-center gap-2">
-                <SearchField value={query} onChange={setQuery} placeholder="Search visits" className="w-full sm:w-64" />
+                <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-full sm:w-64" />
                 <FilterChip facet="Period" value="Nov 2026" onClear={() => undefined} />
                 <FilterChip facet="State" />
                 <FilterChip facet="Region" />
                 <FilterChip facet="Collected by" />
             </div>
             <div className="flex min-h-0 flex-1 items-start gap-(--density-inspector-gap)">
-                <ListTable
+                <DataTable
                     columns={COLUMNS}
                     rows={rows}
                     rowKey={(visit) => visit.code}
-                    selected={(visit) => visit.code === chosen.code}
-                    onSelect={setChosen}
-                    foot={`${String(rows.length)} of 248`}
+                    onOpen={setChosen}
+                    opened={(visit) => visit.code === chosen.code}
+                    total={248}
+                    minWidth="40rem"
                     className="min-w-0 flex-1"
                 />
                 <div className="hidden self-stretch xl:flex">
@@ -376,6 +408,8 @@ const CHECKS = [
 function VisitForm() {
     const levelError = 'Water level must be between 0 and 10 m; 14.2 is outside it.'
     const timeError = 'Say when the reading was taken.'
+    const [issueOpen, setIssueOpen] = useState<'time' | 'level' | null>(null)
+    const holdOpen = (which: 'time' | 'level') => (open: boolean) => setIssueOpen(open ? which : null)
     return (
         <div className="flex min-h-full flex-col">
             <Page className="flex-1">
@@ -385,7 +419,6 @@ function VisitForm() {
                         className="flex max-w-4xl min-w-0 flex-1 flex-col gap-(--density-page-gap)"
                         onSubmit={(event) => event.preventDefault()}
                     >
-                        <Banner tone="critical">2 fields need attention before this visit can be submitted.</Banner>
                         <Section title="Where and when">
                             <div className="grid gap-4 md:grid-cols-2">
                                 <Field id="site" label="Site" required>
@@ -406,27 +439,31 @@ function VisitForm() {
                                 <Field id="date" label="Visit date" required>
                                     <Input id="date" type="date" defaultValue="2026-11-04" />
                                 </Field>
-                                <Field id="time" label="Reading taken at" hint="24-hour" required error={timeError}>
-                                    <Input
-                                        id="time"
-                                        placeholder="09:40"
-                                        aria-invalid
-                                        aria-describedby={describedBy('time', { error: timeError })}
-                                    />
+                                <Field
+                                    id="time"
+                                    label="Reading taken at"
+                                    hint="24-hour"
+                                    required
+                                    error={timeError}
+                                    issueOpen={issueOpen === 'time'}
+                                    onIssueOpenChange={holdOpen('time')}
+                                >
+                                    <Input id="time" placeholder="09:40" />
                                 </Field>
                             </div>
                         </Section>
                         <Section title="Measurements" meta="4 of 5">
                             <div className="grid gap-4 md:grid-cols-2">
-                                <Field id="level" label="Water level" hint="m" required error={levelError}>
-                                    <Input
-                                        id="level"
-                                        inputMode="decimal"
-                                        defaultValue="14.2"
-                                        aria-invalid
-                                        aria-describedby={describedBy('level', { error: levelError })}
-                                        className="tabular-nums"
-                                    />
+                                <Field
+                                    id="level"
+                                    label="Water level"
+                                    hint="m"
+                                    required
+                                    error={levelError}
+                                    issueOpen={issueOpen === 'level'}
+                                    onIssueOpenChange={holdOpen('level')}
+                                >
+                                    <Input id="level" inputMode="decimal" defaultValue="14.2" className="tabular-nums" />
                                 </Field>
                                 <Field id="temperature" label="Water temperature" hint="°C">
                                     <Input id="temperature" inputMode="decimal" defaultValue="26.1" className="tabular-nums" />
@@ -525,6 +562,17 @@ function VisitForm() {
                 <div className="flex items-center gap-2 px-(--density-page-inset) py-2.5">
                     <span className="hidden text-xs text-muted-foreground sm:inline">Draft saved at 09:52</span>
                     <div className="ml-auto flex items-center gap-2">
+                        <IssueCount
+                            critical={2}
+                            list={[
+                                {
+                                    label: 'Reading taken at',
+                                    issue: { tone: 'critical', text: timeError },
+                                    onGo: () => setIssueOpen('time'),
+                                },
+                                { label: 'Water level', issue: { tone: 'critical', text: levelError }, onGo: () => setIssueOpen('level') },
+                            ]}
+                        />
                         <Button size="sm" variant="ghost">
                             Cancel
                         </Button>
@@ -544,7 +592,11 @@ function VisitForm() {
 function OutlineMark({ state }: { state: 'done' | 'error' | 'open' }) {
     if (state === 'done') return <CheckCircle2 className="size-4 text-good-ink" aria-label="Complete" />
     if (state === 'error') return <CircleAlert className="size-4 text-critical-ink" aria-label="Needs attention" />
-    return <span className="mx-[3px] size-2.5 rounded-full border border-border-strong" aria-label="Not started" />
+    return (
+        <span className="flex size-4 shrink-0 items-center justify-center" aria-label="Not started">
+            <Dot outline />
+        </span>
+    )
 }
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((label, index) => ({
@@ -567,13 +619,38 @@ const VISITS_BY: Record<string, Record<string, number>> = Object.fromEntries(
 
 const visitScale = sequentialScale({ breaks: [10, 20, 30, 40], hue: 'var(--chart-2)' })
 
+/** The regions with the color each has on the map and its count, for a month's counts. */
+function regionColumns(counts: Record<string, number>): DataColumn<string>[] {
+    return [
+        {
+            id: 'region',
+            header: 'Region',
+            width: 'minmax(8rem,1fr)',
+            cell: (id) => (
+                <span className="flex min-w-0 items-center gap-2.5">
+                    <span className="size-2.5 shrink-0 rounded-mini" style={{ background: colorOf(visitScale, counts[id]) ?? undefined }} />
+                    <span className="truncate">{regionName[id]}</span>
+                </span>
+            ),
+            sortValue: (id) => regionName[id],
+        },
+        {
+            id: 'visits',
+            header: 'Visits',
+            width: '6rem',
+            align: 'end',
+            cell: (id) => <span className="font-mono text-xs text-muted-foreground tabular-nums">{counts[id]}</span>,
+            sortValue: (id) => counts[id],
+        },
+    ]
+}
+
 function RegionsMap() {
     const [month, setMonth] = useState('2026-10')
     const [measure, setMeasure] = useState<'visits' | 'returned'>('visits')
     const counts = VISITS_BY[month]
     const label = `${MONTHS.find((one) => one.id === month)?.label ?? ''} 2026`
-    const ranked = [...REGION_IDS].sort((a, b) => counts[b] - counts[a])
-    const total = ranked.reduce((sum, id) => sum + counts[id], 0)
+    const total = REGION_IDS.reduce((sum, id) => sum + counts[id], 0)
     return (
         <Page className="h-full">
             <PageHeader
@@ -606,26 +683,15 @@ function RegionsMap() {
                     </MapView>
                     <PeriodSlider label="Month" periods={MONTHS} value={month} onValueChange={setMonth} />
                 </div>
-                <Surface className="flex shrink-0 flex-col xl:w-72">
-                    <div className="flex h-(--density-panel-head) items-center border-b border-border-strong bg-panel-ground px-(--density-panel-pad) text-sm font-medium">
-                        Regions
-                    </div>
-                    <ol className="min-h-0 flex-1 overflow-y-auto">
-                        {ranked.map((id) => (
-                            <li
-                                key={id}
-                                className="flex h-9 items-center gap-2.5 border-b border-border px-(--density-panel-pad) text-sm last:border-b-0"
-                            >
-                                <span
-                                    className="size-2.5 shrink-0 rounded-mini"
-                                    style={{ background: colorOf(visitScale, counts[id]) ?? undefined }}
-                                />
-                                <span className="min-w-0 flex-1 truncate">{regionName[id]}</span>
-                                <span className="font-mono text-xs text-muted-foreground tabular-nums">{counts[id]}</span>
-                            </li>
-                        ))}
-                    </ol>
-                </Surface>
+                <DataTable
+                    columns={regionColumns(counts)}
+                    rows={REGION_IDS}
+                    rowKey={(id) => id}
+                    defaultSort={{ column: 'visits', direction: 'desc' }}
+                    toolbar={<span className="font-medium">Regions</span>}
+                    minWidth="14rem"
+                    className="shrink-0 xl:w-72"
+                />
             </div>
         </Page>
     )

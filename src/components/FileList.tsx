@@ -15,6 +15,7 @@ import type { KeyboardEvent, ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { Checkbox } from './ui/checkbox'
+import { TABLE_HEAD_TEXT } from '../lib/table'
 
 /** What a file is, which picks its icon and how it previews. */
 export type FileKind = 'folder' | 'image' | 'table' | 'json' | 'text' | 'code' | 'pdf' | 'archive' | 'other'
@@ -227,7 +228,10 @@ export function FileList({
                 <div
                     role="row"
                     className={cn(
-                        'sticky top-0 z-10 grid h-(--density-panel-head) items-center gap-3 border-b border-border-strong bg-panel-ground px-(--density-panel-pad) text-[length:var(--table-head-size)] font-[number:var(--table-head-weight)] tracking-[var(--table-head-tracking)] text-muted-foreground [text-transform:var(--table-head-transform)]',
+                        cn(
+                            'sticky top-0 z-10 grid h-(--density-panel-head) items-center gap-3 border-b border-border-strong bg-panel-ground px-(--density-panel-pad)',
+                            TABLE_HEAD_TEXT,
+                        ),
                         template,
                     )}
                 >

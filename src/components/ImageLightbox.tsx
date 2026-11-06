@@ -28,7 +28,7 @@ export function ImageLightbox({
                 <img src={src} alt={alt} className={cn('rounded-md', className)} />
             </Dialog.Trigger>
             <Dialog.Portal>
-                <Dialog.Backdrop className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm" />
+                <Dialog.Backdrop className="fixed inset-0 z-50 bg-shade/80 backdrop-blur-sm" />
                 <Dialog.Popup aria-label={alt} className="fixed inset-0 z-50 flex items-center justify-center p-6 outline-none">
                     <Dialog.Close
                         aria-label={words.close}

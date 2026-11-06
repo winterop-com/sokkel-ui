@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import type { ReactNode } from 'react'
 
+import { ListTable, type Column } from '../../components/ListTable'
 import { PageHeader } from '../../components/PageHeader'
 import { StatusChip, type Status } from '../../components/StatusChip'
 import {
@@ -42,6 +43,7 @@ import {
     SidebarSeparator,
     SidebarTrigger,
 } from '../../components/ui/sidebar'
+import { PersonAvatar } from '../../components/PersonAvatar'
 
 /**
  * The app's side navigation and the frame around it. On a desktop it sits fixed at the edge and
@@ -156,9 +158,7 @@ function Account() {
             </SidebarMenuItem>
             <SidebarMenuItem>
                 <SidebarMenuButton size="lg" tooltip="ada">
-                    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-xs font-medium">
-                        AL
-                    </span>
+                    <PersonAvatar name="ada" initials="AL" size="md" />
                     <span className="flex min-w-0 flex-col leading-tight">
                         <span className="truncate font-medium">Ada Lovelace</span>
                         <span className="truncate font-mono text-xs text-muted-foreground">ada</span>
@@ -172,11 +172,25 @@ function Account() {
     )
 }
 
-const RUNS: [string, Status, string, string][] = [
-    ['01a1a5c6', 'succeeded', '2026-11-04 15:02', '1.2s'],
-    ['01a1a5c2', 'failed', '2026-11-04 14:02', '0.3s'],
-    ['01a1a5b9', 'succeeded', '2026-11-04 13:02', '1.4s'],
-    ['01a1a5b1', 'running', '2026-11-04 15:04', '-'],
+interface Run {
+    id: string
+    status: Status
+    at: string
+    took: string
+}
+
+const RUNS: Run[] = [
+    { id: '01a1a5c6', status: 'succeeded', at: '2026-11-04 15:02', took: '1.2s' },
+    { id: '01a1a5c2', status: 'failed', at: '2026-11-04 14:02', took: '0.3s' },
+    { id: '01a1a5b9', status: 'succeeded', at: '2026-11-04 13:02', took: '1.4s' },
+    { id: '01a1a5b1', status: 'running', at: '2026-11-04 15:04', took: '-' },
+]
+
+const COLUMNS: Column<Run>[] = [
+    { id: 'run', header: 'Run', width: '6rem', cell: (run) => <span className="font-mono">{run.id}</span> },
+    { id: 'state', header: 'State', width: '7rem', cell: (run) => <StatusChip status={run.status} /> },
+    { id: 'started', header: 'Started', width: 'minmax(0,1fr)', cell: (run) => <span className="tabular-nums">{run.at}</span> },
+    { id: 'took', header: 'Took', width: '4rem', align: 'end', cell: (run) => <span className="tabular-nums">{run.took}</span> },
 ]
 
 function Frame({
@@ -213,30 +227,7 @@ function Frame({
                 </header>
                 <div className="flex max-w-[1100px] flex-col gap-4 p-6">
                     <PageHeader title="Import orders" code="import-orders" />
-                    <div className="overflow-x-auto rounded-lg border border-border">
-                        <table className="w-full text-sm">
-                            <thead className="text-left text-xs text-muted-foreground">
-                                <tr className="border-b border-border">
-                                    <th className="px-3 py-2 font-medium">Run</th>
-                                    <th className="px-3 py-2 font-medium">State</th>
-                                    <th className="px-3 py-2 font-medium">Started</th>
-                                    <th className="px-3 py-2 text-right font-medium">Took</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {RUNS.map(([id, status, at, took]) => (
-                                    <tr key={id} className="border-b border-border last:border-0">
-                                        <td className="px-3 py-2 font-mono">{id}</td>
-                                        <td className="px-3 py-2">
-                                            <StatusChip status={status} />
-                                        </td>
-                                        <td className="px-3 py-2 whitespace-nowrap tabular-nums">{at}</td>
-                                        <td className="px-3 py-2 text-right tabular-nums">{took}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                    <ListTable columns={COLUMNS} rows={RUNS} rowKey={(run) => run.id} />
                 </div>
             </SidebarInset>
         </SidebarProvider>
@@ -318,7 +309,7 @@ export const Variants: StoryObj = {
                                     </SidebarMenuItem>
                                     {[0, 1, 2].map((at) => (
                                         <SidebarMenuItem key={at}>
-                                            <SidebarMenuSkeleton showIcon className="[&_[data-sidebar=menu-skeleton-text]]:max-w-[70%]" />
+                                            <SidebarMenuSkeleton showIcon />
                                         </SidebarMenuItem>
                                     ))}
                                 </SidebarMenu>

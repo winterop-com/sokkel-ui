@@ -2,9 +2,10 @@ import { addDays, endOfMonth, isSameDay, isSameMonth, startOfMonth } from 'date-
 import type { ReactNode } from 'react'
 
 import { cn } from '../../lib/cn'
-import { KIND_FILL, KIND_WASH } from '../../lib/kind'
+import { KIND_WASH } from '../../lib/kind'
 import { EventPopover, useOpenEvent } from './EventPopover'
 import { CALENDAR_WORDS, eventsOn, weekOf, type CalendarEvent, type CalendarWords } from './events'
+import { Dot } from '../Dot'
 
 /** The days a month view shows: whole weeks from the one holding the 1st to the one holding the last day. */
 export function monthDays(month: Date, weekStartsOn: 0 | 1 = 1): Date[] {
@@ -127,7 +128,7 @@ export function MonthGrid<E extends CalendarEvent>({
                                     >
                                         {event.allDay !== true && (
                                             <>
-                                                <span className={cn('size-1.5 shrink-0 rounded-full', KIND_FILL[event.color ?? 'blue'])} />
+                                                <Dot kind={event.color ?? 'blue'} size="sm" />
                                                 <span className="shrink-0 text-muted-foreground tabular-nums">
                                                     {words.time(event.start)}
                                                 </span>
@@ -149,7 +150,7 @@ export function MonthGrid<E extends CalendarEvent>({
                             {all.length > 0 && (
                                 <div className="pointer-events-none relative flex flex-wrap justify-center gap-0.5 md:hidden">
                                     {all.slice(0, 4).map((event) => (
-                                        <span key={event.id} className={cn('size-1.5 rounded-full', KIND_FILL[event.color ?? 'blue'])} />
+                                        <Dot key={event.id} kind={event.color ?? 'blue'} size="sm" />
                                     ))}
                                 </div>
                             )}

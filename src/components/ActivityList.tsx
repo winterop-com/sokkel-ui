@@ -4,6 +4,7 @@ import { Fragment, type ReactNode } from 'react'
 import { cn } from '../lib/cn'
 import { Button } from './ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
+import { Count } from './Count'
 
 /** One thing that happened: what, when, how it reads, and the one way to act on it. */
 export interface ActivityItem {
@@ -151,11 +152,7 @@ export function ActivityButton({
             {...props}
         >
             <Bell aria-hidden />
-            {unread > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-critical px-1 text-[10px] leading-none font-semibold text-white tabular-nums">
-                    {unread}
-                </span>
-            )}
+            {unread > 0 && <Count value={unread} className="absolute -top-1 -right-1" />}
         </Button>
     )
 }

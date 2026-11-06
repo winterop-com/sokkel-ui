@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Files, Play, Settings } from 'lucide-react'
 
+import { FileList, type FileEntry } from '../../components/FileList'
 import { PageHeader } from '../../components/PageHeader'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs'
 
@@ -96,10 +97,10 @@ export const States: StoryObj = {
     ),
 }
 
-const FILES = [
-    ['orders-2026-10.csv', '2.4 MB'],
-    ['orders-2026-09.csv', '2.2 MB'],
-] as const
+const FILES: FileEntry[] = [
+    { id: 'orders-2026-10', name: 'orders-2026-10.csv', kind: 'table', size: 2_400_000, modified: 'Nov 1, 02:04', owner: 'scheduler' },
+    { id: 'orders-2026-09', name: 'orders-2026-09.csv', kind: 'table', size: 2_200_000, modified: 'Oct 1, 02:03', owner: 'scheduler' },
+]
 
 export const JobPage: StoryObj = {
     render: () => (
@@ -114,14 +115,7 @@ export const JobPage: StoryObj = {
                         <TabsTrigger value="settings">Settings</TabsTrigger>
                     </TabsList>
                     <TabsContent value="files" className="pt-3">
-                        <ul className="flex flex-col divide-y rounded-lg border">
-                            {FILES.map(([file, size]) => (
-                                <li key={file} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5">
-                                    <span className="font-mono">{file}</span>
-                                    <span className="text-xs text-muted-foreground tabular-nums">{size}</span>
-                                </li>
-                            ))}
-                        </ul>
+                        <FileList entries={FILES} />
                     </TabsContent>
                 </Tabs>
             </div>
