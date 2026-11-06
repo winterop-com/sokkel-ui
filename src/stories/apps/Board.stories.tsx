@@ -606,7 +606,7 @@ function BoardApp({
                             actions={
                                 <Button size="sm">
                                     <Plus aria-hidden />
-                                    New item
+                                    New
                                 </Button>
                             }
                         />
@@ -614,7 +614,7 @@ function BoardApp({
                             <SearchField
                                 value={filters.query}
                                 onChange={(query) => setFilters({ ...filters, query })}
-                                placeholder="Search items"
+                                placeholder="Search"
                                 className="w-full sm:w-56"
                             />
                             <PeopleFilter

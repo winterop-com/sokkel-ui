@@ -257,7 +257,7 @@ function RunsListPage() {
             <Page>
                 <PageHeader title="Runs" count={`${RUNS.length} loaded`} actions={<Button>Run a job</Button>} />
                 <div className="flex flex-wrap items-center gap-2">
-                    <SearchField value={query} onChange={setQuery} placeholder="Search runs" className="w-64" />
+                    <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-64" />
                     <FilterChip
                         facet="Status"
                         value={status}

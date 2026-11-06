@@ -75,7 +75,7 @@ function ThemeSample() {
                         Stop
                     </Button>
                 </div>
-                <SearchField value={query} onChange={setQuery} placeholder="Search runs" shortcut={false} />
+                <SearchField value={query} onChange={setQuery} placeholder="Search" shortcut={false} />
                 <div className="flex flex-wrap gap-1">
                     <StatusChip status="succeeded" />
                     <StatusChip status="failed" />

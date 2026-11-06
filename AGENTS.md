@@ -48,6 +48,11 @@ and ask before acting.
   into a component, a raw table, a pill shape, a message under a field, or a component no story
   shows.
 - Words a component says are props with English defaults, so an app can translate them.
+- Words follow their context. An action or a search in a page or section drops the noun the page
+  already names: on Roles the button is "New" and the field "Search", not "New role" and "Search
+  roles". The noun stays where nothing around it names the thing: a dialog's title, global
+  navigation and the command palette, an icon-only button's label, and an action among siblings
+  that make different things ("New folder" beside "Upload files").
 - Comments say what the thing does, or the constraint the code cannot show. Rationale goes in the
   commit message.
 - American English everywhere: color, behavior, center. No emojis anywhere.

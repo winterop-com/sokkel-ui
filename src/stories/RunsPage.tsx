@@ -119,7 +119,7 @@ export function RunsPage() {
                 <Page className="h-full">
                     <PageHeader title="Runs" count="8 today" actions={<Button size="sm">Run a job</Button>} />
                     <div className="flex flex-wrap items-center gap-2">
-                        <SearchField value={query} onChange={setQuery} placeholder="Search runs" className="w-64" />
+                        <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-64" />
                         <FilterChip facet="Status" />
                         <FilterChip facet="Job" />
                     </div>

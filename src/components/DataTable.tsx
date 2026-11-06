@@ -705,10 +705,11 @@ export function DataTable<T>({
     }
 
     return (
-        // Contained, so the table takes its width from its container and never widens a grid, a flex row or the page.
+        // Contained, so the table takes its width from its container and never widens a grid, a flex row or the page;
+        // at least 15rem, so a container that sizes itself to its content still gets a readable table.
         <div
             className={cn(
-                'flex min-h-0 min-w-0 flex-col overflow-hidden rounded-surface border border-border-strong bg-card [contain:inline-size]',
+                'flex min-h-0 min-w-60 flex-col overflow-hidden rounded-surface border border-border-strong bg-card [contain:inline-size]',
                 className,
             )}
         >

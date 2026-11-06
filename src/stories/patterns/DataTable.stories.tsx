@@ -138,7 +138,7 @@ function Runs({
                 rowActions={runActions}
                 onOpen={(run) => setOpened(run.id)}
                 opened={(run) => run.id === opened}
-                toolbar={<SearchField value={query} onChange={setQuery} placeholder="Search runs" className="w-full max-w-md" />}
+                toolbar={<SearchField value={query} onChange={setQuery} placeholder="Search" className="w-full max-w-md" />}
             />
         </div>
     )
@@ -510,7 +510,7 @@ function Albums({ count }: { count: number }) {
                         Add to queue
                     </Button>
                 )}
-                toolbar={<SearchField value={query} onChange={setQuery} placeholder="Search albums" className="w-full max-w-md" />}
+                toolbar={<SearchField value={query} onChange={setQuery} placeholder="Search" className="w-full max-w-md" />}
                 minWidth="40rem"
             />
         </div>

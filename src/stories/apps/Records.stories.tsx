@@ -309,13 +309,13 @@ function Records() {
                         </Button>
                         <Button size="sm">
                             <Plus aria-hidden />
-                            New visit
+                            New
                         </Button>
                     </>
                 }
             />
             <div className="flex flex-wrap items-center gap-2">
-                <SearchField value={query} onChange={setQuery} placeholder="Search visits" className="w-full sm:w-64" />
+                <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-full sm:w-64" />
                 <FilterChip facet="Period" value="Nov 2026" onClear={() => undefined} />
                 <FilterChip facet="State" />
                 <FilterChip facet="Region" />

@@ -570,7 +570,7 @@ function List({
     return (
         <div className="flex h-full min-h-0 flex-col">
             <div className="flex shrink-0 flex-col gap-2 border-b border-border px-3 pt-3 pb-2">
-                <SearchField value={query} onChange={onQuery} placeholder="Search mail" />
+                <SearchField value={query} onChange={onQuery} placeholder="Search" />
                 <div className="flex min-h-8 items-center gap-2 pl-0.5">
                     <Checkbox
                         checked={all}

@@ -395,7 +395,7 @@ function MembersPage({ inviting = false }: { inviting?: boolean }) {
                 }
             />
             <div className="flex flex-wrap items-center gap-2">
-                <SearchField value={query} onChange={setQuery} placeholder="Search members" className="w-full sm:w-64" />
+                <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-full sm:w-64" />
                 <Select items={roleItems} value={role} onValueChange={(next) => setRole(String(next))}>
                     <SelectTrigger className="w-36" aria-label="Role">
                         <SelectValue />
@@ -593,7 +593,7 @@ function RolesPage() {
                     actions={
                         <Button size="sm" variant="outline">
                             <Plus aria-hidden />
-                            New role
+                            New
                         </Button>
                     }
                 />
@@ -902,7 +902,7 @@ function TokensPage({ opening }: { opening?: 'form' | 'shown' }) {
                         }}
                     >
                         <Plus aria-hidden />
-                        New token
+                        New
                     </Button>
                 }
             />
@@ -1138,7 +1138,7 @@ function AuditPage({ chosen, onChoose }: { chosen: AuditEvent; onChoose: (event:
                 }
             />
             <div className="flex flex-wrap items-center gap-2">
-                <SearchField value={query} onChange={setQuery} placeholder="Search events" className="w-full sm:w-64" />
+                <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-full sm:w-64" />
                 <FilterChip facet="Period" value="Last 7 days" onClear={() => undefined} />
                 <FilterChip facet="Actor" />
                 <FilterChip facet="Action" />

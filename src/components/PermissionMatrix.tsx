@@ -116,7 +116,7 @@ export function PermissionMatrix({
     return (
         <div
             ref={box}
-            className={cn('min-w-0 overflow-hidden rounded-surface border border-border-strong bg-card [contain:inline-size]', className)}
+            className={cn('min-w-60 overflow-hidden rounded-surface border border-border-strong bg-card [contain:inline-size]', className)}
         >
             {one && (
                 <div className="flex items-center gap-2 border-b border-border px-(--density-panel-pad) py-2">

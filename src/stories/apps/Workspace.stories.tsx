@@ -256,12 +256,12 @@ function Workspace({ dock = false }: { dock?: boolean }) {
                                 actions={
                                     <Button size="sm">
                                         <Plus aria-hidden />
-                                        New run
+                                        New
                                     </Button>
                                 }
                             />
                             <div className="flex flex-wrap items-center gap-2">
-                                <SearchField value={query} onChange={setQuery} placeholder="Search runs" className="w-64" />
+                                <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-64" />
                                 <FilterChip facet="State" value="failed, running" onClear={() => undefined} />
                                 <FilterChip facet="Job" />
                                 <FilterChip facet="Started by" />

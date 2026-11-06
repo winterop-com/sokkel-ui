@@ -83,7 +83,7 @@ function Picker({
                     defaultQuery={query}
                     minQuery={minQuery}
                     debounce={0}
-                    words={{ placeholder: 'Choose a dataset', search: 'Search datasets' }}
+                    words={{ placeholder: 'Choose a dataset', search: 'Search' }}
                 />
             </Field>
         </Ground>

@@ -50,7 +50,7 @@ function ReadStates() {
                         <p className="text-sm">No services.</p>
                         <Button size="sm">
                             <Plus aria-hidden />
-                            New service
+                            New
                         </Button>
                     </div>
                 }

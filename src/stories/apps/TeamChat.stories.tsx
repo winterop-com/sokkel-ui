@@ -230,7 +230,7 @@ function ChannelHeader({
                     <Button variant="ghost" size="icon" aria-label="Pinned messages" title="Pinned messages">
                         <Pin aria-hidden />
                     </Button>
-                    <Button variant="ghost" size="icon" aria-label="Search this channel" title="Search this channel">
+                    <Button variant="ghost" size="icon" aria-label="Search" title="Search">
                         <Search aria-hidden />
                     </Button>
                 </div>
