@@ -1,9 +1,16 @@
 name: examples
 
+# The examples build against the library, so a change to either can break them: they run when the
+# examples change, every night against main, and by hand.
 on:
+    pull_request:
+        paths: ['examples/**', '.github/workflows/examples.yaml']
     push:
         branches: [main]
-    pull_request:
+        paths: ['examples/**', '.github/workflows/examples.yaml']
+    schedule:
+        - cron: '0 3 * * *'
+    workflow_dispatch:
 
 jobs:
     build:
