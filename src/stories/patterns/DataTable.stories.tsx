@@ -558,7 +558,7 @@ const FOLDER_COLUMNS: DataColumn<FolderRow>[] = [
         header: 'Name',
         width: 'minmax(18rem,1fr)',
         cell: (row) => (
-            <Row as="span">
+            <Row as="span" className="min-w-0">
                 <FileTypeIcon kind={row.kind} className="size-4 shrink-0" />
                 <span className="truncate font-mono">{row.name}</span>
             </Row>

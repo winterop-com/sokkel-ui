@@ -39,6 +39,7 @@ import { Input } from '../../components/ui/input'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { CHART, FIELD, HARBOR_DUSK, LIGHTHOUSE, PINES } from '../fixtures/photos'
+import { Row } from '../../components/Layout'
 
 /**
  * A file browser for a project's stored data in the library's frame: the folder tree beside the
@@ -324,10 +325,10 @@ const STORE_COLUMNS: DataColumn<StoreRow>[] = [
         header: 'Name',
         width: 'minmax(16rem,1fr)',
         cell: (row) => (
-            <span className="flex min-w-0 items-center gap-2">
+            <Row as="span" className="min-w-0">
                 <FileTypeIcon kind={row.entry.kind} className="size-4 shrink-0" />
                 <span className="truncate">{row.entry.name}</span>
-            </span>
+            </Row>
         ),
         sortValue: (row) => `${row.entry.kind === 'folder' ? 0 : 1}${row.entry.name}`,
     },
@@ -378,7 +379,7 @@ function Details({ file, folder }: { file: StoredFile; folder: string }) {
                     ]}
                 />
             </PanelSection>
-            <div className="flex gap-2 px-4 py-3">
+            <Row align="stretch" className="px-4 py-3">
                 <Button variant="outline" size="sm">
                     <Download aria-hidden />
                     Download
@@ -387,7 +388,7 @@ function Details({ file, folder }: { file: StoredFile; folder: string }) {
                     <Pencil aria-hidden />
                     Rename
                 </Button>
-            </div>
+            </Row>
         </>
     )
 }
@@ -517,7 +518,7 @@ function FilesApp({
                     )
                 }
             >
-                <div className="flex h-full min-h-0">
+                <Row gap="none" align="stretch" className="h-full min-h-0">
                     <aside className="hidden w-56 shrink-0 flex-col gap-2 overflow-y-auto border-r border-border-strong bg-sidebar px-2 py-3 lg:flex">
                         <h2 className="px-2 text-xs font-medium tracking-wide text-faint uppercase">Folders</h2>
                         <Tree
@@ -564,7 +565,7 @@ function FilesApp({
                                     }
                                 />
                                 {files.length > 0 && (
-                                    <div className="flex min-h-8 flex-wrap items-center gap-2">
+                                    <Row wrap className="min-h-8">
                                         {selected.length > 0 ? (
                                             <div
                                                 role="toolbar"
@@ -631,7 +632,7 @@ function FilesApp({
                                             onChoose={setView}
                                             className="ml-auto"
                                         />
-                                    </div>
+                                    </Row>
                                 )}
                                 {files.length === 0 ? (
                                     empty
@@ -684,7 +685,7 @@ function FilesApp({
                             />
                         )}
                     </DropZone>
-                </div>
+                </Row>
             </Shell>
             <ConfirmDialog
                 open={deleting}

@@ -38,6 +38,7 @@ import { KIND_FILL, type KindColor } from '../../lib/kind'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { DayStrip } from '../../components/calendar/DayStrip'
 import { Dot } from '../../components/Dot'
+import { Row, Stack } from '../../components/Layout'
 
 /**
  * A schedule of job runs and team events in the library's frame: the week with its hours, all-day
@@ -229,12 +230,12 @@ function Detail({ event }: { event: Entry }) {
         <>
             <div className="flex items-start gap-2.5">
                 <span className={cn('mt-1.5 size-2.5 shrink-0 rounded-sm', KIND_FILL[event.color ?? 'blue'])} aria-hidden />
-                <div className="flex min-w-0 flex-col gap-0.5">
+                <Stack gap="3xs">
                     <h3 className={cn('text-title font-semibold', event.job !== undefined && 'font-mono')}>{event.title}</h3>
                     <span className="text-sm text-muted-foreground">{when}</span>
-                </div>
+                </Stack>
             </div>
-            <ul className="flex flex-col gap-1.5 text-sm">
+            <Stack as="ul" gap="xs" className="text-sm">
                 <li className="flex items-center gap-2.5">
                     <CalendarDays className="size-4 shrink-0 text-faint" aria-hidden />
                     {calendar?.name}
@@ -254,17 +255,17 @@ function Detail({ event }: { event: Entry }) {
                 {event.people !== undefined && (
                     <li className="flex items-center gap-2.5">
                         <Users className="size-4 shrink-0 text-faint" aria-hidden />
-                        <span className="flex items-center gap-1">
+                        <Row as="span" gap="2xs">
                             {event.people.map((person) => (
                                 <PersonAvatar key={person} name={person} size="xs" />
                             ))}
-                        </span>
+                        </Row>
                         <span className="truncate text-muted-foreground">{event.people.join(', ')}</span>
                     </li>
                 )}
-            </ul>
+            </Stack>
             {event.notes !== undefined && <p className="text-sm leading-5 text-pretty">{event.notes}</p>}
-            <div className="flex justify-end gap-2 border-t border-border pt-3">
+            <Row align="stretch" justify="end" className="border-t border-border pt-3">
                 {event.job !== undefined ? (
                     <Button size="sm" variant="outline">
                         Open run
@@ -274,14 +275,14 @@ function Detail({ event }: { event: Entry }) {
                         Edit
                     </Button>
                 )}
-            </div>
+            </Row>
         </>
     )
 }
 
 function CalendarToggles({ shown, onChange }: { shown: CalendarId[]; onChange: (shown: CalendarId[]) => void }) {
     return (
-        <section className="flex flex-col gap-1">
+        <Stack as="section" gap="2xs">
             <h3 className="px-1.5 pb-1 text-xs font-medium tracking-wide text-faint uppercase">Calendars</h3>
             {CALENDARS.map((calendar) => {
                 const on = shown.includes(calendar.id)
@@ -301,7 +302,7 @@ function CalendarToggles({ shown, onChange }: { shown: CalendarId[]; onChange: (
                     </label>
                 )
             })}
-        </section>
+        </Stack>
     )
 }
 
@@ -352,7 +353,7 @@ function CalendarApp({ view: initialView = 'week', open = null }: { view?: View;
                     />
                 }
             >
-                <div className="flex h-full min-h-0">
+                <Row gap="none" align="stretch" className="h-full min-h-0">
                     <aside className="hidden w-60 shrink-0 flex-col gap-6 overflow-y-auto border-r border-border px-3 py-4 xl:flex">
                         <Button size="sm" className="self-start">
                             <Plus aria-hidden />
@@ -376,14 +377,14 @@ function CalendarApp({ view: initialView = 'week', open = null }: { view?: View;
                             <Button size="sm" variant="outline" onClick={() => go(NOW)}>
                                 Today
                             </Button>
-                            <div className="flex items-center">
+                            <Row gap="none">
                                 <Button size="icon-sm" variant="ghost" aria-label={`Previous ${view}`} onClick={() => step(-1)}>
                                     <ChevronLeft aria-hidden />
                                 </Button>
                                 <Button size="icon-sm" variant="ghost" aria-label={`Next ${view}`} onClick={() => step(1)}>
                                     <ChevronRight aria-hidden />
                                 </Button>
-                            </div>
+                            </Row>
                             <h1 className="min-w-0 flex-1 truncate text-title font-semibold">
                                 {phone ? format(anchor, view === 'week' ? 'EEE d MMM' : 'MMM yyyy') : title}
                             </h1>
@@ -453,7 +454,7 @@ function CalendarApp({ view: initialView = 'week', open = null }: { view?: View;
                             />
                         )}
                     </div>
-                </div>
+                </Row>
             </Shell>
         </TooltipProvider>
     )

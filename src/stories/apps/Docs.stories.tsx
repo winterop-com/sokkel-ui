@@ -21,6 +21,7 @@ import { NativeSelect, NativeSelectOption } from '../../components/ui/native-sel
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { cn } from '../../lib/cn'
 import { TidevannMark } from '../fixtures/TidevannMark'
+import { Columns, Row, Stack } from '../../components/Layout'
 
 /**
  * An internal wiki in the library's frame: the page tree with its search beside the page, the
@@ -242,18 +243,18 @@ function Reading({ content }: { content: string }) {
         headings.map((heading) => heading.id),
     )
     return (
-        <div className="flex gap-10">
+        <Row gap="3xl" align="stretch">
             <article ref={article} className="max-w-3xl min-w-0 flex-1">
                 <Markdown content={content} anchors />
             </article>
             <TableOfContents entries={headings} active={active} className="sticky top-0 hidden w-52 shrink-0 self-start xl:flex" />
-        </div>
+        </Row>
     )
 }
 
 function Editing({ value, onChange }: { value: string; onChange: (value: string) => void }) {
     return (
-        <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-2">
+        <Columns gap="lg" className="min-h-0 flex-1">
             <section className="flex min-h-[24rem] min-w-0 flex-col overflow-hidden rounded-surface border border-border-strong bg-card lg:min-h-0">
                 <h2 className="flex h-(--density-panel-head) shrink-0 items-center border-b border-border-strong bg-panel-ground px-3 text-xs font-medium text-muted-foreground">
                     Markdown
@@ -270,7 +271,7 @@ function Editing({ value, onChange }: { value: string; onChange: (value: string)
                     <Markdown content={value} />
                 </div>
             </section>
-        </div>
+        </Columns>
     )
 }
 
@@ -290,10 +291,10 @@ function Versions({ chosen, onChoose }: { chosen: number; onChoose: (number: num
                     >
                         <Person name={version.by} />
                         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                            <span className="flex items-baseline gap-2">
+                            <Row as="span" align="baseline">
                                 <span className="truncate text-sm font-medium">{version.note}</span>
                                 {version.number === CURRENT.number && <Badge variant="secondary">Current</Badge>}
-                            </span>
+                            </Row>
                             <span className="truncate text-xs text-muted-foreground">
                                 Version {version.number}, {version.by}, {version.at}
                             </span>
@@ -311,12 +312,12 @@ function Compare({ chosen, against, onAgainst }: { chosen: number; against: numb
     const earlier = VERSIONS.filter((version) => version.number < chosen)
     return (
         <section className="flex min-w-0 flex-1 flex-col gap-3">
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <Row gap="none" wrap className="gap-x-3 gap-y-2">
                 <h2 className="min-w-0 flex-1 truncate text-sm font-medium">
                     Version {after.number}, {after.note}
                 </h2>
                 {earlier.length > 0 && (
-                    <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Row as="label" className="text-xs text-muted-foreground">
                         Compared with
                         <NativeSelect size="sm" value={String(against)} onChange={(event) => onAgainst(Number(event.target.value))}>
                             {earlier.map((version) => (
@@ -325,9 +326,9 @@ function Compare({ chosen, against, onAgainst }: { chosen: number; against: numb
                                 </NativeSelectOption>
                             ))}
                         </NativeSelect>
-                    </label>
+                    </Row>
                 )}
-            </div>
+            </Row>
             <DiffView before={before?.text ?? ''} after={after.text} title="nightly-export.md" size="sm" />
         </section>
     )
@@ -380,14 +381,14 @@ function DocsApp({ mode: initialMode = 'read' }: { mode?: 'read' | 'edit' | 'his
                     </StatusLine>
                 }
             >
-                <div className="flex h-full min-h-0">
+                <Row gap="none" align="stretch" className="h-full min-h-0">
                     <aside className="hidden w-60 shrink-0 flex-col gap-3 overflow-y-auto border-r border-border-strong bg-sidebar px-2 py-3 lg:flex">
-                        <div className="flex items-center gap-1 px-1">
+                        <Row gap="2xs" className="px-1">
                             <SearchField value={query} onChange={setQuery} placeholder="Search" className="min-w-0 flex-1" />
                             <Button variant="ghost" size="icon-sm" aria-label="New page" title="New page">
                                 <Plus aria-hidden />
                             </Button>
-                        </div>
+                        </Row>
                         <Tree
                             label="Pages"
                             nodes={PAGES}
@@ -406,15 +407,15 @@ function DocsApp({ mode: initialMode = 'read' }: { mode?: 'read' | 'edit' | 'his
                             )}
                         >
                             <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                                <div className="flex min-w-0 flex-col gap-2">
+                                <Stack gap="sm">
                                     <h1 className="text-page font-semibold tracking-tight">Nightly export</h1>
-                                    <p className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
+                                    <Row as="p" className="min-w-0 text-xs text-muted-foreground">
                                         <Person name={CURRENT.by} />
                                         <span className="truncate">
                                             Last edited by <span className="font-medium text-foreground">{CURRENT.by}</span> on {CURRENT.at}
                                         </span>
-                                    </p>
-                                </div>
+                                    </Row>
+                                </Stack>
                                 <div className="flex shrink-0 items-center gap-1.5">
                                     {mode === 'edit' ? (
                                         <>
@@ -465,7 +466,7 @@ function DocsApp({ mode: initialMode = 'read' }: { mode?: 'read' | 'edit' | 'his
                             )}
                         </div>
                     </div>
-                </div>
+                </Row>
             </Shell>
         </TooltipProvider>
     )

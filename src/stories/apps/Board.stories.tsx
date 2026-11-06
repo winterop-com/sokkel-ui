@@ -51,6 +51,7 @@ import type { KindColor } from '../../lib/kind'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { Progress } from '../../components/ui/progress'
 import { PeopleFilter } from '../../components/PeopleFilter'
+import { Row, Stack } from '../../components/Layout'
 
 /**
  * A board of work items in the library's frame: columns from the backlog to done, each with its
@@ -410,10 +411,10 @@ function ItemPanel({ item, onToggle }: { item: Item; onToggle: (index: number) =
     const done = item.checklist.filter((step) => step.done).length
     return (
         <>
-            <div className="flex flex-col gap-2 border-b border-border px-4 py-3">
+            <Stack gap="sm" className="border-b border-border px-4 py-3">
                 <span className="font-mono text-xs text-muted-foreground">{item.code}</span>
                 <h2 className="text-title font-semibold">{item.title}</h2>
-                <div className="flex flex-wrap items-center gap-1.5">
+                <Row gap="xs" wrap>
                     <span className="inline-flex items-center gap-1.5 rounded-chip bg-secondary px-1.5 py-0.5 text-xs">
                         {column?.icon}
                         {column?.title}
@@ -421,8 +422,8 @@ function ItemPanel({ item, onToggle }: { item: Item; onToggle: (index: number) =
                     {item.labels.map((label) => (
                         <BoardLabel key={label} name={label} color={LABELS[label]} />
                     ))}
-                </div>
-            </div>
+                </Row>
+            </Stack>
             <PanelSection title="Description">
                 <p className="text-sm leading-6 text-pretty">{item.description}</p>
             </PanelSection>
@@ -458,7 +459,7 @@ function ItemPanel({ item, onToggle }: { item: Item; onToggle: (index: number) =
             {item.checklist.length > 0 && (
                 <PanelSection title={`Checklist ${done}/${item.checklist.length}`}>
                     <Progress value={(done / item.checklist.length) * 100} aria-label="Checklist done" />
-                    <ul className="-mx-1 flex flex-col">
+                    <Stack as="ul" gap="none" className="-mx-1">
                         {item.checklist.map((step, index) => (
                             <li key={step.text}>
                                 <label className="flex min-h-8 items-center gap-2.5 rounded-md px-1 text-sm hover:bg-secondary/60">
@@ -467,7 +468,7 @@ function ItemPanel({ item, onToggle }: { item: Item; onToggle: (index: number) =
                                 </label>
                             </li>
                         ))}
-                    </ul>
+                    </Stack>
                 </PanelSection>
             )}
             <PanelSection title="Activity">
@@ -598,7 +599,7 @@ function BoardApp({
                     )
                 }
             >
-                <div className="flex h-full min-h-0 flex-col">
+                <Stack gap="none" className="h-full min-h-0">
                     <div className="flex shrink-0 flex-col gap-3 px-(--density-page-inset) pt-(--density-page-top) pb-3">
                         <PageHeader
                             title="Board"
@@ -610,7 +611,7 @@ function BoardApp({
                                 </Button>
                             }
                         />
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                        <Row gap="none" wrap className="gap-x-3 gap-y-2">
                             <SearchField
                                 value={filters.query}
                                 onChange={(query) => setFilters({ ...filters, query })}
@@ -625,7 +626,7 @@ function BoardApp({
                             />
                             <LabelFilter chosen={filters.labels} onChange={(labels) => setFilters({ ...filters, labels })} />
                             <div className="flex-1" />
-                            <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Row as="span" className="text-xs text-muted-foreground">
                                 Swimlanes
                                 <Segmented
                                     label="Swimlanes"
@@ -636,8 +637,8 @@ function BoardApp({
                                     ]}
                                     onChoose={(value) => setLanes(value === 'project')}
                                 />
-                            </span>
-                        </div>
+                            </Row>
+                        </Row>
                     </div>
                     <BoardArea
                         onMove={onMove}
@@ -645,7 +646,7 @@ function BoardApp({
                         className="flex-1 snap-x snap-mandatory px-(--density-page-inset) pb-4 md:snap-none"
                     >
                         {!lanes ? (
-                            <div className="flex h-full w-max gap-3">
+                            <Row gap="md" align="stretch" className="h-full w-max">
                                 {COLUMNS.map((column) => {
                                     const cards = shown.filter((item) => item.column === column.id)
                                     return (
@@ -663,9 +664,9 @@ function BoardApp({
                                         </BoardColumn>
                                     )
                                 })}
-                            </div>
+                            </Row>
                         ) : (
-                            <div className="flex w-max flex-col gap-1">
+                            <Stack gap="2xs" className="w-max">
                                 <div
                                     className="sticky top-0 z-20 grid gap-3 bg-background"
                                     style={{ gridTemplateColumns: `repeat(${COLUMNS.length}, var(--board-column))` }}
@@ -703,10 +704,10 @@ function BoardApp({
                                         ))}
                                     </BoardLane>
                                 ))}
-                            </div>
+                            </Stack>
                         )}
                     </BoardArea>
-                </div>
+                </Stack>
             </Shell>
         </TooltipProvider>
     )

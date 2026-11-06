@@ -51,6 +51,7 @@ import { cn } from '../../lib/cn'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { Dot } from '../../components/Dot'
 import { Badge } from '../../components/ui/badge'
+import { Row, Stack } from '../../components/Layout'
 
 /**
  * A mail client in the library's frame: the mailboxes and labels in the rail, the message list
@@ -332,14 +333,14 @@ function Letterhead({ letter, open, onToggle }: { letter: Letter; open: boolean;
                 <AvatarFallback>{initial(letter.from)}</AvatarFallback>
             </Avatar>
             <span className="flex min-w-0 flex-1 flex-col">
-                <span className="flex min-w-0 items-baseline gap-2">
+                <Row as="span" align="baseline" className="min-w-0">
                     <span className="truncate text-sm font-medium">{letter.from.name}</span>
                     {open && <span className="truncate text-xs text-muted-foreground max-sm:hidden">{letter.from.address}</span>}
                     <span className="ml-auto flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground tabular-nums">
                         {letter.files !== undefined && <Paperclip className="size-3.5" aria-label="Has attachments" />}
                         {letter.time}
                     </span>
-                </span>
+                </Row>
                 <span className="truncate text-sm text-muted-foreground">
                     {open ? `to ${letter.to.map((person) => (person === PEOPLE.ada ? 'me' : person.name)).join(', ')}` : letter.body}
                 </span>
@@ -356,7 +357,7 @@ function LetterView({ letter, open, last, onToggle }: { letter: Letter; open: bo
                 <div className="mt-3 flex flex-col gap-4 sm:pl-11">
                     <Markdown content={letter.body} />
                     {letter.files !== undefined && (
-                        <div className="flex flex-wrap gap-2">
+                        <Row align="stretch" wrap>
                             {letter.files.map((file) => {
                                 const Icon = file.icon
                                 return (
@@ -371,10 +372,10 @@ function LetterView({ letter, open, last, onToggle }: { letter: Letter; open: bo
                                     </Attachment>
                                 )
                             })}
-                        </div>
+                        </Row>
                     )}
                     {last && (
-                        <div className="flex flex-wrap gap-2">
+                        <Row align="stretch" wrap>
                             <Button variant="outline" size="sm">
                                 <Reply aria-hidden />
                                 Reply
@@ -387,7 +388,7 @@ function LetterView({ letter, open, last, onToggle }: { letter: Letter; open: bo
                                 <Forward aria-hidden />
                                 Forward
                             </Button>
-                        </div>
+                        </Row>
                     )}
                 </div>
             )}
@@ -408,7 +409,7 @@ function Reading({ mail, onBack }: { mail: Conversation; onBack: () => void }) {
     const [reply, setReply] = useState('')
     const thread = mail.id === 't1' ? THREAD : [{ id: 'only', from: mail.from, to: [PEOPLE.ada], time: mail.time, body: mail.snippet }]
     return (
-        <div className="flex h-full min-h-0 flex-col">
+        <Stack gap="none" className="h-full min-h-0">
             <div className="flex h-11 shrink-0 items-center gap-1 border-b border-border px-2 md:px-4">
                 <Button variant="ghost" size="sm" className="-ml-1 lg:hidden" onClick={onBack}>
                     <ArrowLeft aria-hidden />
@@ -430,7 +431,7 @@ function Reading({ mail, onBack }: { mail: Conversation; onBack: () => void }) {
                 <header className="flex items-start gap-3 border-b border-border px-4 pt-5 pb-4 md:px-6">
                     <div className="flex min-w-0 flex-1 flex-col gap-2">
                         <h1 className="text-page leading-snug font-semibold tracking-tight">{mail.subject}</h1>
-                        <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                        <Row gap="xs" wrap className="text-xs text-muted-foreground">
                             {(mail.labels ?? []).map((id) => (
                                 <Badge key={id} variant="outline">
                                     <Dot color={LABELS[id].color} size="sm" />
@@ -438,7 +439,7 @@ function Reading({ mail, onBack }: { mail: Conversation; onBack: () => void }) {
                                 </Badge>
                             ))}
                             <span>{thread.length === 1 ? '1 message' : `${thread.length} messages`}</span>
-                        </div>
+                        </Row>
                     </div>
                     <button
                         type="button"
@@ -491,7 +492,7 @@ function Reading({ mail, onBack }: { mail: Conversation; onBack: () => void }) {
                     />
                 </div>
             </div>
-        </div>
+        </Stack>
     )
 }
 
@@ -568,10 +569,10 @@ function List({
     const some = checked.length > 0
     const searching = query.trim() !== ''
     return (
-        <div className="flex h-full min-h-0 flex-col">
+        <Stack gap="none" className="h-full min-h-0">
             <div className="flex shrink-0 flex-col gap-2 border-b border-border px-3 pt-3 pb-2">
                 <SearchField value={query} onChange={onQuery} placeholder="Search" />
-                <div className="flex min-h-8 items-center gap-2 pl-0.5">
+                <Row className="min-h-8 pl-0.5">
                     <Checkbox
                         checked={all}
                         indeterminate={some && !all}
@@ -582,13 +583,13 @@ function List({
                     {some ? (
                         <>
                             <span className="ml-1 text-sm font-medium tabular-nums">{checked.length} selected</span>
-                            <div className="ml-auto flex items-center gap-0.5">
+                            <Row gap="3xs" className="ml-auto">
                                 <IconAction label="Archive" icon={Archive} />
                                 <IconAction label="Delete" icon={Trash2} />
                                 <IconAction label="Mark as read" icon={MailOpen} />
                                 <IconAction label="Label" icon={Tag} />
                                 <IconAction label="Clear the selection" icon={X} onClick={() => onChecked([])} />
-                            </div>
+                            </Row>
                         </>
                     ) : (
                         <>
@@ -607,7 +608,7 @@ function List({
                             </span>
                         </>
                     )}
-                </div>
+                </Row>
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto">
                 {rows.length === 0 ? (
@@ -652,7 +653,7 @@ function List({
                     ))
                 )}
             </div>
-        </div>
+        </Stack>
     )
 }
 
@@ -682,17 +683,17 @@ function ComposeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
             }
             words={{ cancel: 'Discard' }}
         >
-            <div className="flex flex-col">
+            <Stack gap="none">
                 <AddressInput label="To" bare value={to} onChange={setTo} className="border-b border-border" />
                 <AddressInput label="Cc" bare value={cc} onChange={setCc} className="border-b border-border" />
-                <label className="flex h-(--density-control) min-h-9 items-center border-b border-border text-sm">
+                <Row as="label" gap="none" className="h-(--density-control) min-h-9 border-b border-border text-sm">
                     <span className="shrink-0 pr-1.5 pl-1 text-muted-foreground">Subject</span>
                     <input
                         value={subject}
                         onChange={(event) => setSubject(event.target.value)}
                         className="h-full min-w-0 flex-1 bg-transparent px-1 outline-none"
                     />
-                </label>
+                </Row>
                 <textarea
                     value={body}
                     onChange={(event) => setBody(event.target.value)}
@@ -700,7 +701,7 @@ function ComposeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
                     className="min-h-56 resize-none bg-transparent px-1 py-3 text-sm leading-relaxed outline-none"
                 />
                 {files.length > 0 && (
-                    <div className="flex flex-wrap gap-2 pb-1">
+                    <Row align="stretch" wrap className="pb-1">
                         {files.map((file) => (
                             <Attachment key={file.name} size="sm">
                                 <AttachmentMedia>
@@ -718,9 +719,9 @@ function ComposeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
                                 </AttachmentAction>
                             </Attachment>
                         ))}
-                    </div>
+                    </Row>
                 )}
-            </div>
+            </Stack>
         </DialogShell>
     )
 }
@@ -821,7 +822,7 @@ function MailApp({
                     />
                 }
             >
-                <div className="flex h-full min-h-0">
+                <Row gap="none" align="stretch" className="h-full min-h-0">
                     <section
                         aria-label="Messages"
                         className={cn(
@@ -846,7 +847,7 @@ function MailApp({
                             <Nothing checked={checked.length} onClear={() => setChecked([])} />
                         )}
                     </section>
-                </div>
+                </Row>
             </Shell>
             <ComposeDialog open={compose} onOpenChange={setCompose} />
         </TooltipProvider>

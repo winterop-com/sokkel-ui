@@ -56,6 +56,7 @@ import { cn } from '../../lib/cn'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { NUMBER, regionName, regions } from '../map/data'
 import { Dot } from '../../components/Dot'
+import { Columns, Row, Stack } from '../../components/Layout'
 
 /**
  * A records app for structured data capture in the library's frame: a list of site visits with
@@ -313,13 +314,13 @@ function Records() {
                     </>
                 }
             />
-            <div className="flex flex-wrap items-center gap-2">
+            <Row wrap>
                 <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-full sm:w-64" />
                 <FilterChip facet="Period" value="Nov 2026" onClear={() => undefined} />
                 <FilterChip facet="State" />
                 <FilterChip facet="Region" />
                 <FilterChip facet="Collected by" />
-            </div>
+            </Row>
             <div className="flex min-h-0 flex-1 items-start gap-(--density-inspector-gap)">
                 <DataTable
                     columns={COLUMNS}
@@ -408,16 +409,16 @@ function VisitForm() {
     const [issueOpen, setIssueOpen] = useState<'time' | 'level' | null>(null)
     const holdOpen = (which: 'time' | 'level') => (open: boolean) => setIssueOpen(open ? which : null)
     return (
-        <div className="flex min-h-full flex-col">
+        <Stack gap="none" className="min-h-full">
             <Page className="flex-1">
                 <PageHeader title="New visit" code="VIS-2049" />
-                <div className="flex items-start gap-8">
+                <Row gap="2xl" align="start">
                     <form
                         className="flex max-w-4xl min-w-0 flex-1 flex-col gap-(--density-page-gap)"
                         onSubmit={(event) => event.preventDefault()}
                     >
                         <Section title="Where and when">
-                            <div className="grid gap-4 md:grid-cols-2">
+                            <Columns gap="lg">
                                 <Field id="site" label="Site" required>
                                     <NativeSelect id="site" defaultValue="riverside" className="w-full">
                                         <NativeSelectOption value="riverside">Riverside station, Bo</NativeSelectOption>
@@ -447,10 +448,10 @@ function VisitForm() {
                                 >
                                     <Input id="time" placeholder="09:40" />
                                 </Field>
-                            </div>
+                            </Columns>
                         </Section>
                         <Section title="Measurements" meta="4 of 5">
-                            <div className="grid gap-4 md:grid-cols-2">
+                            <Columns gap="lg">
                                 <Field
                                     id="level"
                                     label="Water level"
@@ -480,7 +481,7 @@ function VisitForm() {
                                 <Field id="rain" label="Rainfall, last 24 hours" hint="mm">
                                     <Input id="rain" inputMode="decimal" placeholder="0.0" className="tabular-nums" />
                                 </Field>
-                            </div>
+                            </Columns>
                         </Section>
                         <Section title="Site check" meta="3 questions">
                             <Questionnaire shortcuts="letters" items={CHECKS} defaultItem="weather" className="max-w-xl">
@@ -553,12 +554,12 @@ function VisitForm() {
                             </a>
                         ))}
                     </nav>
-                </div>
+                </Row>
             </Page>
             <div className="sticky bottom-0 border-t border-border-strong bg-sidebar">
-                <div className="flex items-center gap-2 px-(--density-page-inset) py-2.5">
+                <Row className="px-(--density-page-inset) py-2.5">
                     <span className="hidden text-xs text-muted-foreground sm:inline">Draft saved at 09:52</span>
-                    <div className="ml-auto flex items-center gap-2">
+                    <Row className="ml-auto">
                         <IssueCount
                             critical={2}
                             list={[
@@ -579,10 +580,10 @@ function VisitForm() {
                         <Button size="sm" disabled>
                             Submit
                         </Button>
-                    </div>
-                </div>
+                    </Row>
+                </Row>
             </div>
-        </div>
+        </Stack>
     )
 }
 

@@ -45,6 +45,7 @@ import { Artwork, type Cover } from '../fixtures/Artwork'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import captions from '../media/fixtures/captions.vtt?url'
 import clip from '../media/fixtures/clip.webm?url'
+import { Row, Stack } from '../../components/Layout'
 
 /**
  * A video site in the library's frame: a home grid of videos under topic chips, and a watch page
@@ -329,14 +330,14 @@ function CommentItem({ comment, reply = false }: { comment: Comment; reply?: boo
     const [open, setOpen] = useState(false)
     const channel = CHANNELS[comment.by]
     return (
-        <li className="flex gap-3">
+        <Row as="li" gap="md" align="stretch">
             <PersonAvatar name={comment.by} color={channel.color} size={reply ? 'sm' : 'md'} />
             <div className="flex min-w-0 flex-1 flex-col gap-1">
                 {comment.pinned === true && (
-                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Row as="span" gap="2xs" className="text-xs text-muted-foreground">
                         <Pin className="size-3" aria-hidden />
                         Pinned by {WATCHING.channel}
-                    </span>
+                    </Row>
                 )}
                 <p className="text-xs">
                     <span className="font-medium">{comment.by}</span>
@@ -346,7 +347,7 @@ function CommentItem({ comment, reply = false }: { comment: Comment; reply?: boo
                     <span className="ml-1.5 text-muted-foreground">{comment.ago}</span>
                 </p>
                 <p className="text-sm leading-relaxed">{comment.text}</p>
-                <div className="-ml-2 flex items-center gap-1 text-xs text-muted-foreground">
+                <Row gap="2xs" className="-ml-2 text-xs text-muted-foreground">
                     <Button variant="ghost" size="xs" aria-label="Like">
                         <ThumbsUp aria-hidden />
                         {comment.likes}
@@ -357,7 +358,7 @@ function CommentItem({ comment, reply = false }: { comment: Comment; reply?: boo
                     <Button variant="ghost" size="xs">
                         Reply
                     </Button>
-                </div>
+                </Row>
                 {comment.replies !== undefined && (
                     <>
                         <Button
@@ -370,11 +371,11 @@ function CommentItem({ comment, reply = false }: { comment: Comment; reply?: boo
                             {open ? 'Hide replies' : `${String(comment.replies.length)} replies`}
                         </Button>
                         {open && (
-                            <ul className="mt-2 flex flex-col gap-4">
+                            <Stack as="ul" gap="lg" className="mt-2">
                                 {comment.replies.map((one) => (
                                     <CommentItem key={one.id} comment={one} reply />
                                 ))}
-                            </ul>
+                            </Stack>
                         )}
                     </>
                 )}
@@ -392,7 +393,7 @@ function CommentItem({ comment, reply = false }: { comment: Comment; reply?: boo
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
-        </li>
+        </Row>
     )
 }
 
@@ -401,7 +402,7 @@ function Comments() {
     const [draft, setDraft] = useState('')
     return (
         <section className="flex flex-col gap-5">
-            <div className="flex items-center gap-4">
+            <Row gap="lg">
                 <h2 className="text-title font-semibold">1,204 comments</h2>
                 <DropdownMenu>
                     <DropdownMenuTrigger render={<Button variant="ghost" size="sm" />}>
@@ -415,8 +416,8 @@ function Comments() {
                         </DropdownMenuRadioGroup>
                     </DropdownMenuContent>
                 </DropdownMenu>
-            </div>
-            <div className="flex gap-3">
+            </Row>
+            <Row gap="md" align="stretch">
                 <PersonAvatar name="ada" color={CHANNELS.ada.color} size="md" />
                 <div className="flex min-w-0 flex-1 flex-col gap-2">
                     <Input
@@ -426,22 +427,22 @@ function Comments() {
                         aria-label="Add a comment"
                     />
                     {draft !== '' && (
-                        <div className="flex justify-end gap-2">
+                        <Row align="stretch" justify="end">
                             <Button variant="ghost" size="sm" onClick={() => setDraft('')}>
                                 Cancel
                             </Button>
                             <Button size="sm" onClick={() => setDraft('')}>
                                 Comment
                             </Button>
-                        </div>
+                        </Row>
                     )}
                 </div>
-            </div>
-            <ul className="flex flex-col gap-6">
+            </Row>
+            <Stack as="ul" gap="xl">
                 {COMMENTS.map((comment) => (
                     <CommentItem key={comment.id} comment={comment} />
                 ))}
-            </ul>
+            </Stack>
         </section>
     )
 }
@@ -461,8 +462,8 @@ function WatchPage() {
                         tracks={[{ src: captions, label: 'English', lang: 'en', default: true }]}
                     />
                     <h1 className="text-title font-semibold">{WATCHING.title}</h1>
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div className="flex min-w-0 items-center gap-3">
+                    <Row gap="md" justify="between" wrap>
+                        <Row gap="md" className="min-w-0">
                             <PersonAvatar name={WATCHING.channel} color={channel.color} size="md" />
                             <div className="min-w-0">
                                 <p className="truncate text-sm font-medium">{WATCHING.channel}</p>
@@ -471,8 +472,8 @@ function WatchPage() {
                             <Button size="sm" variant={following ? 'secondary' : 'default'} onClick={() => setFollowing(!following)}>
                                 {following ? 'Following' : 'Follow'}
                             </Button>
-                        </div>
-                        <div className="flex items-center gap-2">
+                        </Row>
+                        <Row>
                             <ButtonGroup>
                                 <Button variant="outline" size="sm" aria-label="Like">
                                     <ThumbsUp aria-hidden />
@@ -505,9 +506,9 @@ function WatchPage() {
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
-                        </div>
-                    </div>
-                    <div className="flex flex-col gap-1 rounded-surface bg-muted p-3 text-sm">
+                        </Row>
+                    </Row>
+                    <Stack gap="2xs" className="rounded-surface bg-muted p-3 text-sm">
                         <p className="font-medium">
                             {WATCHING.views} · {WATCHING.ago}
                         </p>
@@ -519,12 +520,12 @@ function WatchPage() {
                         <button type="button" className="self-start text-sm font-medium" onClick={() => setMore(!more)}>
                             {more ? 'Show less' : 'Show more'}
                         </button>
-                    </div>
+                    </Stack>
                     <Comments />
                 </div>
                 <aside className="flex shrink-0 flex-col gap-3 xl:w-96">
                     <Topics />
-                    <div className="flex flex-col gap-3">
+                    <Stack>
                         {NEXT.map((video) => (
                             <MediaCard
                                 key={video.id}
@@ -545,7 +546,7 @@ function WatchPage() {
                                 menu={videoMenu}
                             />
                         ))}
-                    </div>
+                    </Stack>
                 </aside>
             </div>
         </Page>
