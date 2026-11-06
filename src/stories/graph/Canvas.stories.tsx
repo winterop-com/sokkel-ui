@@ -6,6 +6,7 @@ import { GraphNodeBox, graphNodeSize, type GraphNodeData } from '../../component
 import { measureByCharacters } from '../../components/graph/measure'
 import { useNodeGraph, type GraphItem, type GraphLink } from '../../components/graph/use-node-graph'
 import { Stage } from './Frame'
+import { Row } from '../../components/Layout'
 
 /** Every way a node box is drawn: named or not, with a kind, a status, a duration, progress, and chosen. */
 const BOXES: { data: GraphNodeData; selected?: boolean; width: number }[] = [
@@ -24,13 +25,13 @@ const BOXES: { data: GraphNodeData; selected?: boolean; width: number }[] = [
 
 function Boxes() {
     return (
-        <div className="flex min-h-svh flex-wrap content-start gap-6 bg-canvas p-6">
+        <Row gap="xl" align="stretch" wrap className="min-h-svh content-start bg-canvas p-6">
             {BOXES.map((box, index) => (
                 <div key={index} style={{ width: box.width, height: graphNodeSize(box.data, measureByCharacters).height }}>
                     <GraphNodeBox data={box.data} selected={box.selected} />
                 </div>
             ))}
-        </div>
+        </Row>
     )
 }
 

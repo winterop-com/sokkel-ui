@@ -142,14 +142,10 @@ function Rainfall() {
 /** The period slider on its own, partway through a year of months. */
 function Slider() {
     const [month, setMonth] = useState('2025-04')
-    return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <PeriodSlider label="Rainfall month" periods={MONTHS} value={month} onValueChange={setMonth} className="max-w-xl" />
-        </div>
-    )
+    return <PeriodSlider label="Rainfall month" periods={MONTHS} value={month} onValueChange={setMonth} className="max-w-xl" />
 }
 
-const meta: Meta = { title: 'Maps/Layers' }
+const meta: Meta = { title: 'Maps/Layers', parameters: { frame: 'padded' } }
 export default meta
 
 /**
@@ -157,7 +153,7 @@ export default meta
  * hidden and faded from the panel, the basemap chosen there too, the month chosen below the map,
  * and the rainfall read where the map is clicked.
  */
-export const LayerPanel: StoryObj = { name: 'Layer panel', render: () => <Rainfall /> }
+export const LayerPanel: StoryObj = { parameters: { frame: 'none' }, name: 'Layer panel', render: () => <Rainfall /> }
 
 /** Steps through the months, with buttons for the month before and after and a play button. */
 export const Period: StoryObj = { name: 'Period slider', render: () => <Slider /> }

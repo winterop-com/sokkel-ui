@@ -54,6 +54,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../
 import { lines, TWO } from '../charts/options'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { applyToDocument, CORNERS, fromGlobals, THEMES, toGlobals, TYPEFACES } from './themes'
+import { Columns, Row, Stack } from '../../components/Layout'
 
 /**
  * A small Tidevann app that uses a bit of everything, to judge a theme on: the shell, buttons,
@@ -183,10 +184,10 @@ function Section({
     return (
         <Card size="sm">
             <CardHeader className="flex flex-row items-start justify-between gap-3">
-                <div className="flex min-w-0 flex-col gap-1">
+                <Stack gap="2xs">
                     <CardTitle>{title}</CardTitle>
                     {description !== undefined && <CardDescription>{description}</CardDescription>}
-                </div>
+                </Stack>
                 {action}
             </CardHeader>
             <CardContent>{children}</CardContent>
@@ -220,8 +221,8 @@ function NewRun() {
                     <DialogTitle>New run</DialogTitle>
                     <DialogDescription>Starts the job now, outside its schedule, in project harbor.</DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4">
-                    <div className="grid gap-2">
+                <Stack gap="lg">
+                    <Stack gap="sm">
                         <Label>Job</Label>
                         <Select items={JOBS} value={job} onValueChange={(next) => next !== null && setJob(next)}>
                             <SelectTrigger className="w-full" aria-label="Job">
@@ -235,16 +236,16 @@ function NewRun() {
                                 ))}
                             </SelectContent>
                         </Select>
-                    </div>
-                    <div className="grid gap-2">
+                    </Stack>
+                    <Stack gap="sm">
                         <Label htmlFor="run-reason">Reason</Label>
                         <Input id="run-reason" placeholder="Why it runs now" />
-                    </div>
+                    </Stack>
                     <Label className="flex items-center gap-2 font-normal">
                         <Checkbox checked={notify} onCheckedChange={setNotify} />
                         Tell ada when it finishes
                     </Label>
-                </div>
+                </Stack>
                 <DialogFooter>
                     <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
                     <Button
@@ -275,12 +276,12 @@ function Share() {
                     <PopoverTitle>Share harbor</PopoverTitle>
                     <PopoverDescription>Anyone in the workspace with the link can see this overview.</PopoverDescription>
                 </PopoverHeader>
-                <div className="flex gap-2">
+                <Row align="stretch">
                     <Input readOnly value="https://tidevann.example.org/harbor" aria-label="Link" className="font-mono text-xs" />
                     <Button size="sm" onClick={() => toast('Link copied', { description: 'https://tidevann.example.org/harbor' })}>
                         Copy
                     </Button>
-                </div>
+                </Row>
             </PopoverContent>
         </Popover>
     )
@@ -289,8 +290,8 @@ function Share() {
 function Controls() {
     return (
         <Section title="Controls" description="Every button variant, badges and the run states.">
-            <div className="flex flex-col gap-4">
-                <div className="flex flex-wrap items-center gap-2">
+            <Stack gap="lg">
+                <Row wrap>
                     <Button size="sm" onClick={() => toast('Default pressed')}>
                         Default
                     </Button>
@@ -312,19 +313,19 @@ function Controls() {
                     <Button size="sm" disabled>
                         Disabled
                     </Button>
-                </div>
-                <div className="flex flex-wrap items-center gap-1.5">
+                </Row>
+                <Row gap="xs" wrap>
                     <Badge>default</Badge>
                     <Badge variant="secondary">secondary</Badge>
                     <Badge variant="outline">outline</Badge>
                     <Badge variant="destructive">destructive</Badge>
-                </div>
-                <div className="flex flex-wrap items-center gap-1.5">
+                </Row>
+                <Row gap="xs" wrap>
                     {STATES.map((state) => (
                         <StatusChip key={state} status={state} />
                     ))}
-                </div>
-            </div>
+                </Row>
+            </Stack>
         </Section>
     )
 }
@@ -336,13 +337,13 @@ function Schedule() {
     const [retry, setRetry] = useState(true)
     return (
         <Section title="Schedule" description="When nightly-export runs.">
-            <div className="flex flex-col gap-4">
-                <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="grid gap-2">
+            <Stack gap="lg">
+                <Columns min="sm" gap="md">
+                    <Stack gap="sm">
                         <Label htmlFor="schedule-name">Name</Label>
                         <Input id="schedule-name" defaultValue="Nightly export" />
-                    </div>
-                    <div className="grid gap-2">
+                    </Stack>
+                    <Stack gap="sm">
                         <Label>Project</Label>
                         <Select items={PROJECTS} value={project} onValueChange={(next) => next !== null && setProject(next)}>
                             <SelectTrigger className="w-full" aria-label="Project">
@@ -356,8 +357,8 @@ function Schedule() {
                                 ))}
                             </SelectContent>
                         </Select>
-                    </div>
-                </div>
+                    </Stack>
+                </Columns>
                 <Segmented
                     label="How often"
                     value={every}
@@ -368,7 +369,7 @@ function Schedule() {
                     ]}
                     onChoose={setEvery}
                 />
-                <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+                <Row gap="none" wrap className="gap-x-6 gap-y-3">
                     <Label className="flex items-center gap-2 font-normal">
                         <Checkbox checked={retry} onCheckedChange={setRetry} />
                         Retry once on failure
@@ -377,8 +378,8 @@ function Schedule() {
                         <Switch checked={paused} onCheckedChange={setPaused} />
                         Paused
                     </Label>
-                </div>
-                <div className="flex justify-end">
+                </Row>
+                <Row gap="none" align="stretch" justify="end">
                     <Button
                         size="sm"
                         onClick={() =>
@@ -389,8 +390,8 @@ function Schedule() {
                     >
                         Save
                     </Button>
-                </div>
-            </div>
+                </Row>
+            </Stack>
         </Section>
     )
 }
@@ -412,14 +413,14 @@ function Banners() {
                 </Button>
             }
         >
-            <div className="flex flex-col">
+            <Stack gap="none">
                 {BANNERS.filter((banner) => shown.includes(banner.tone)).map((banner) => (
                     <Banner key={banner.tone} tone={banner.tone} onDismiss={() => setShown(shown.filter((tone) => tone !== banner.tone))}>
                         {banner.text}
                     </Banner>
                 ))}
                 {shown.length === 0 && <p className="px-3 py-2 text-sm text-muted-foreground">Every banner is dismissed.</p>}
-            </div>
+            </Stack>
         </Section>
     )
 }
@@ -523,8 +524,8 @@ function App({ globals }: { globals: Record<string, unknown> }) {
                         </Section>
                         <Controls />
                     </div>
-                    <div className="flex flex-col gap-3">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
+                    <Stack>
+                        <Row justify="between" wrap>
                             <Tabs value={view} onValueChange={(next) => setView(next as View)}>
                                 <TabsList>
                                     <TabsTrigger value="all">All</TabsTrigger>
@@ -538,7 +539,7 @@ function App({ globals }: { globals: Record<string, unknown> }) {
                             >
                                 <Play aria-hidden />
                             </IconAction>
-                        </div>
+                        </Row>
                         <DataTable
                             columns={COLUMNS}
                             rows={rows}
@@ -548,7 +549,7 @@ function App({ globals }: { globals: Record<string, unknown> }) {
                             minWidth="32rem"
                             words={{ empty: 'No runs in this view.' }}
                         />
-                    </div>
+                    </Stack>
                     <div className="grid gap-(--density-page-gap) xl:grid-cols-2">
                         <Schedule />
                         <Section title="Config" description="The job as it is stored.">
