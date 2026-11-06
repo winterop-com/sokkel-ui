@@ -51,6 +51,21 @@ const withLook: Decorator = (Story, context) => {
     return <Story />
 }
 
+/**
+ * The ground a story stands on. `frame: 'padded'` draws the page's background at the window's full
+ * height with room around the story, for a part with a natural width; without it the story fills
+ * the canvas itself, as an app's shell does.
+ */
+const withFrame: Decorator = (Story, context) => {
+    const frame = context.parameters.frame as 'padded' | undefined
+    if (frame !== 'padded') return <Story />
+    return (
+        <div className="min-h-svh bg-background p-6 text-foreground">
+            <Story />
+        </div>
+    )
+}
+
 const preview: Preview = {
     parameters: {
         layout: 'fullscreen',
@@ -163,7 +178,7 @@ const preview: Preview = {
         },
     },
     initialGlobals: { theme: 'dark', look: 'default', density: 'regular', corners: 'theme', typeface: 'theme', motion: 'system' },
-    decorators: [withLook],
+    decorators: [withFrame, withLook],
 }
 
 export default preview
