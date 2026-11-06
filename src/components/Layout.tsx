@@ -49,8 +49,8 @@ interface Base extends Omit<HTMLAttributes<HTMLElement>, 'children' | 'className
 }
 
 /**
- * Cells one under the other. Each cell may shrink below its content's width, so a long line
- * truncates or wraps inside it instead of pushing the stack wider than its container.
+ * Cells one under the other, each as wide as the stack. The stack itself may shrink below its
+ * content's width, so in a row or a grid it gives way instead of pushing its container wider.
  */
 export function Stack({
     children,
@@ -61,7 +61,7 @@ export function Stack({
     ...props
 }: Base & { align?: keyof typeof ALIGN }) {
     return (
-        <Tag {...props} className={cn('flex min-w-0 flex-col [:where(&>*)]:min-w-0', GAP[gap], ALIGN[align], className)}>
+        <Tag {...props} className={cn('flex min-w-0 flex-col', GAP[gap], ALIGN[align], className)}>
             {children}
         </Tag>
     )
@@ -69,7 +69,8 @@ export function Stack({
 
 /**
  * Cells side by side, centered on one line. `wrap` lets them flow onto more lines when the row runs
- * out of room; without it, each cell may shrink so the row never grows wider than its container.
+ * out of room. Without it, a cell that truncates gives way first while icons, avatars and buttons
+ * keep their width. A row that must give way inside another row sets `min-w-0`.
  * `justify="between"` sends the first cell to the start and the last to the end.
  */
 export function Row({
@@ -83,10 +84,7 @@ export function Row({
     ...props
 }: Base & { align?: keyof typeof ALIGN; justify?: keyof typeof JUSTIFY; wrap?: boolean }) {
     return (
-        <Tag
-            {...props}
-            className={cn('flex min-w-0 [:where(&>*)]:min-w-0', wrap && 'flex-wrap', GAP[gap], ALIGN[align], JUSTIFY[justify], className)}
-        >
+        <Tag {...props} className={cn('flex', wrap && 'flex-wrap', GAP[gap], ALIGN[align], JUSTIFY[justify], className)}>
             {children}
         </Tag>
     )

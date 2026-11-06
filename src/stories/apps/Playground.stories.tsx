@@ -41,6 +41,7 @@ import { Slider } from '../../components/ui/slider'
 import { Textarea } from '../../components/ui/textarea'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { TidevannMark } from '../fixtures/TidevannMark'
+import { Row, Stack } from '../../components/Layout'
 
 /**
  * A model playground in the library's frame: a prompt in the editor with its variables and the
@@ -334,13 +335,13 @@ function Tuning({
 }) {
     const [current, setCurrent] = useState(value)
     return (
-        <div className="flex flex-col gap-2">
-            <div className="flex items-baseline justify-between gap-2">
+        <Stack gap="sm">
+            <Row align="baseline" justify="between">
                 <label htmlFor={id} className="text-sm font-medium">
                     {label}
                 </label>
                 <span className="font-mono text-xs text-muted-foreground tabular-nums">{current.toFixed(1)}</span>
-            </div>
+            </Row>
             <Slider
                 id={id}
                 aria-label={label}
@@ -351,7 +352,7 @@ function Tuning({
                 onValueChange={(next) => setCurrent(Array.isArray(next) ? next[0] : next)}
             />
             <p className="text-xs text-muted-foreground">{help}</p>
-        </div>
+        </Stack>
     )
 }
 
@@ -391,14 +392,14 @@ function Parameters() {
                 </div>
             </PanelSection>
             <PanelSection title="Length">
-                <div className="flex flex-col gap-4">
+                <Stack gap="lg">
                     <Field id="max-tokens" label="Max tokens" hint="up to 8,192">
                         <Input id="max-tokens" type="number" defaultValue={1024} className="tabular-nums" />
                     </Field>
                     <Field id="stop" label="Stop sequences" hint="comma separated">
                         <Input id="stop" placeholder="###, END" className="font-mono" />
                     </Field>
-                </div>
+                </Stack>
             </PanelSection>
             <PanelSection title="System prompt">
                 <Textarea aria-label="System prompt" rows={5} defaultValue={SYSTEM} className="text-sm" />
@@ -422,7 +423,7 @@ function Usage({
     live?: boolean
 }) {
     return (
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-xs text-muted-foreground tabular-nums">
+        <Row gap="none" wrap className="gap-x-4 gap-y-1 font-mono text-xs text-muted-foreground tabular-nums">
             <span>
                 <span className="text-foreground">{tokens}</span> tokens{live ? ' so far' : ''}
             </span>
@@ -431,7 +432,7 @@ function Usage({
             </span>
             <span>first token {first}</span>
             {rate !== undefined && <span>{rate}</span>}
-        </div>
+        </Row>
     )
 }
 
@@ -485,12 +486,12 @@ function PromptPage() {
                     </>
                 }
             >
-                <div className="flex flex-col gap-4">
+                <Stack gap="lg">
                     <Markdown content={answer.text} />
                     <div className="border-t border-border pt-3">
                         <Usage tokens={answer.tokens} latency={answer.latency} first={answer.first} rate={answer.rate} />
                     </div>
-                </div>
+                </Stack>
             </Section>
         </Page>
     )
@@ -537,7 +538,7 @@ function ComparePage() {
                         flush
                         className="grid grid-rows-[auto_1fr]"
                     >
-                        <div className="flex h-full min-h-72 flex-col">
+                        <Stack gap="none" className="h-full min-h-72">
                             <div className="flex-1 p-(--density-panel-pad)">
                                 <Markdown content={answer.text} streaming={answer.state === 'running'} />
                                 {answer.state === 'running' && (
@@ -552,7 +553,7 @@ function ComparePage() {
                                     live={answer.state === 'running'}
                                 />
                             </div>
-                        </div>
+                        </Stack>
                     </Section>
                 ))}
             </div>
@@ -567,13 +568,13 @@ function HistoryPage() {
     return (
         <Page className="h-full">
             <PageHeader title="History" count="1,284 runs" />
-            <div className="flex flex-wrap items-center gap-2">
+            <Row wrap>
                 <SearchField value={query} onChange={setQuery} placeholder="Search prompts" className="w-full sm:w-64" />
                 <FilterChip facet="Model" />
                 <FilterChip facet="State" />
                 <FilterChip facet="Project" value="larkspur" onClear={() => undefined} />
                 <FilterChip facet="By" />
-            </div>
+            </Row>
             <div className="flex min-h-0 flex-1 items-start gap-(--density-inspector-gap)">
                 <DataTable
                     columns={COLUMNS}

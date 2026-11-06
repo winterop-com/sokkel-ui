@@ -22,6 +22,7 @@ import { Artwork, type Cover } from '../fixtures/Artwork'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import captions from '../media/fixtures/captions.vtt?url'
 import clip from '../media/fixtures/clip.webm?url'
+import { Row, Stack } from '../../components/Layout'
 
 /**
  * A music and video library player in the library's frame: the rail of library views and
@@ -240,7 +241,7 @@ function LibraryPage() {
     return (
         <Page>
             <PageHeader title="Albums" count={`${String(ALBUMS.length)} albums`} />
-            <div className="flex flex-wrap items-center gap-2">
+            <Row wrap>
                 <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-full sm:w-64" />
                 <div className="flex flex-1 flex-wrap items-center justify-between gap-2 sm:justify-end">
                     <Segmented
@@ -259,7 +260,7 @@ function LibraryPage() {
                         Shuffle all
                     </Button>
                 </div>
-            </div>
+            </Row>
             <AlbumGrid albums={ALBUMS} />
         </Page>
     )
@@ -274,7 +275,7 @@ function AlbumPage() {
                     <span className="block size-40 shrink-0 overflow-hidden rounded-surface shadow-xs ring-1 ring-border sm:size-48 @4xl:aspect-square @4xl:size-auto @4xl:w-full">
                         <Artwork cover={PLAYING.cover} />
                     </span>
-                    <div className="flex min-w-0 flex-col gap-3">
+                    <Stack>
                         <div className="min-w-0">
                             <p className="text-xs font-medium tracking-wide text-faint uppercase">Album</p>
                             <h1 className="truncate text-page font-semibold tracking-tight">{PLAYING.title}</h1>
@@ -283,7 +284,7 @@ function AlbumPage() {
                                 tracks, {Math.round(total / 60)} min
                             </p>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <Row>
                             <Button size="sm">
                                 <Play className="fill-current" aria-hidden />
                                 Play
@@ -298,15 +299,15 @@ function AlbumPage() {
                             <Button size="icon-sm" variant="ghost" aria-label="More" className="text-muted-foreground">
                                 <MoreHorizontal aria-hidden />
                             </Button>
-                        </div>
-                    </div>
+                        </Row>
+                    </Stack>
                 </div>
                 <div className="flex min-w-0 flex-1 flex-col gap-8">
                     <TrackList tracks={ALBUM_TRACKS} current={`t${String(CURRENT + 1)}`} playing onPlay={() => undefined} />
-                    <section className="flex flex-col gap-3">
+                    <Stack as="section">
                         <h2 className="text-sm font-medium">More by {PLAYING.artist}</h2>
                         <AlbumGrid albums={ALBUMS.filter((album) => album.artist === PLAYING.artist && album.id !== PLAYING.id)} />
-                    </section>
+                    </Stack>
                 </div>
             </div>
         </Page>
@@ -326,7 +327,7 @@ function QueueBody({ history = false }: { history?: boolean }) {
     return (
         <>
             <PanelSection title="Now playing">
-                <div className="flex min-w-0 items-center gap-3">
+                <Row gap="md" className="min-w-0">
                     <span className="block size-14 shrink-0 overflow-hidden rounded-mini ring-1 ring-border">
                         <Artwork cover={PLAYING.cover} />
                     </span>
@@ -339,7 +340,7 @@ function QueueBody({ history = false }: { history?: boolean }) {
                             {formatTime(POSITION)} of {formatTime(TRACKS[CURRENT].duration)}
                         </p>
                     </div>
-                </div>
+                </Row>
             </PanelSection>
             <PanelSection title={`Up next, ${String(NEXT_UP.length)} tracks, ${String(Math.round(next / 60))} min`}>
                 <TrackList tracks={NEXT_UP} variant="plain" onPlay={() => undefined} className="-mx-2" />
@@ -369,7 +370,7 @@ function Watch() {
                                 {FILM.series}, episode 1 · {FILM.by} · {FILM.year} · {formatTime(FILM.length)}
                             </p>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <Row>
                             <Button size="sm" variant="outline">
                                 <Heart aria-hidden />
                                 Favorite
@@ -377,7 +378,7 @@ function Watch() {
                             <Button size="icon-sm" variant="ghost" aria-label="More" className="text-muted-foreground">
                                 <MoreHorizontal aria-hidden />
                             </Button>
-                        </div>
+                        </Row>
                     </div>
                     <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
                         The first hour of a day on a northern coast, filmed from one headland as the light comes up over the water and the

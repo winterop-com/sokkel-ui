@@ -57,6 +57,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { cn } from '../../lib/cn'
 import { TidevannMark } from '../fixtures/TidevannMark'
+import { Row, Stack } from '../../components/Layout'
 
 /**
  * Tidevann's administration side: the members with their roles and pending invites, the roles
@@ -269,7 +270,7 @@ const inviteColumns: DataColumn<Invite>[] = [
 /** The roles a person can be given, each with what it may do; the owner is never given. */
 function RoleChoice({ id, label, value, onChange }: { id: string; label: string; value: Role; onChange: (role: Role) => void }) {
     return (
-        <div className="flex flex-col gap-1.5">
+        <Stack gap="xs">
             <span id={id} className="text-sm font-medium">
                 {label}
             </span>
@@ -283,14 +284,14 @@ function RoleChoice({ id, label, value, onChange }: { id: string; label: string;
                         )}
                     >
                         <RadioGroupItem value={role} className="mt-0.5" />
-                        <span className="flex min-w-0 flex-col">
+                        <Stack as="span" gap="none">
                             <span className="text-sm font-medium">{ROLE_LABEL[role]}</span>
                             <span className="text-xs text-muted-foreground">{ROLE_ABOUT[role]}</span>
-                        </span>
+                        </Stack>
                     </label>
                 ))}
             </RadioGroup>
-        </div>
+        </Stack>
     )
 }
 
@@ -352,7 +353,7 @@ function InviteDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (op
                 />
             }
         >
-            <div className="flex flex-col gap-1.5">
+            <Stack gap="xs">
                 <span className="text-sm font-medium">Email addresses</span>
                 <AddressInput
                     value={emails}
@@ -363,7 +364,7 @@ function InviteDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (op
                     words={{ placeholder: 'Email addresses' }}
                 />
                 <p className="text-xs text-muted-foreground">Separate them with commas, or paste a list.</p>
-            </div>
+            </Stack>
             <RoleChoice id="invite-role" label="Role" value={role} onChange={setRole} />
         </DialogShell>
     )
@@ -393,7 +394,7 @@ function MembersPage({ inviting = false }: { inviting?: boolean }) {
                     </Button>
                 }
             />
-            <div className="flex flex-wrap items-center gap-2">
+            <Row wrap>
                 <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-full sm:w-64" />
                 <Select items={roleItems} value={role} onValueChange={(next) => setRole(String(next))}>
                     <SelectTrigger className="w-36" aria-label="Role">
@@ -407,7 +408,7 @@ function MembersPage({ inviting = false }: { inviting?: boolean }) {
                         ))}
                     </SelectContent>
                 </Select>
-            </div>
+            </Row>
             <DataTable
                 columns={memberColumns}
                 rows={rows}
@@ -558,7 +559,7 @@ const HOLDER_COLUMNS: DataColumn<Role>[] = [
         header: 'Members',
         width: 'minmax(0,1fr)',
         cell: (id) => (
-            <span className="flex min-w-0 items-center gap-3">
+            <Row as="span" gap="md" className="min-w-0">
                 <AvatarGroup className="shrink-0">
                     {holders(id).map((person) => (
                         <Person key={person.email} who={person.username} />
@@ -569,7 +570,7 @@ const HOLDER_COLUMNS: DataColumn<Role>[] = [
                         .map((person) => person.username)
                         .join(', ')}
                 </span>
-            </span>
+            </Row>
         ),
     },
 ]
@@ -584,7 +585,7 @@ function RolesPage() {
             [role]: granted ? [...(grants[role] ?? []), permission] : (grants[role] ?? []).filter((id) => id !== permission),
         })
     return (
-        <div className="flex min-h-full flex-col">
+        <Stack gap="none" className="min-h-full">
             <Page className="flex-1">
                 <PageHeader
                     title="Roles"
@@ -602,7 +603,7 @@ function RolesPage() {
                 </Section>
             </Page>
             <SaveBar count={changes} onSave={() => setSaved(grants)} onDiscard={() => setGrants(saved)} />
-        </div>
+        </Stack>
     )
 }
 
@@ -844,7 +845,7 @@ function TokenDialog({
                 issueOpen={issueOpen === 'scopes'}
                 onIssueOpenChange={holdOpen('scopes')}
             >
-                <div id="token-scopes" role="group" aria-label="Scopes" className="flex flex-col">
+                <Stack id="token-scopes" role="group" aria-label="Scopes" gap="none">
                     {SCOPES.map((scope) => (
                         <label
                             key={scope.id}
@@ -860,9 +861,9 @@ function TokenDialog({
                             <span className="min-w-0 truncate text-xs text-muted-foreground">{scope.about}</span>
                         </label>
                     ))}
-                </div>
+                </Stack>
             </Field>
-            <div className="flex flex-col gap-1.5">
+            <Stack gap="xs">
                 <span className="text-sm font-medium">Expires after</span>
                 <Segmented
                     label="Expires after"
@@ -878,7 +879,7 @@ function TokenDialog({
                     ]}
                 />
                 <p className={cn('text-xs', expires === 'never' ? 'text-warning-ink' : 'text-muted-foreground')}>{EXPIRES_ON[expires]}</p>
-            </div>
+            </Stack>
         </DialogShell>
     )
 }
@@ -1088,10 +1089,10 @@ const EVENT_COLUMNS: DataColumn<AuditEvent>[] = [
         header: 'Actor',
         width: '8rem',
         cell: (event) => (
-            <span className="flex min-w-0 items-center gap-2">
+            <Row as="span" className="min-w-0">
                 <Person who={event.who} />
                 <span className="truncate font-medium">{event.who}</span>
-            </span>
+            </Row>
         ),
         sortValue: (event) => event.who,
     },
@@ -1136,13 +1137,13 @@ function AuditPage({ chosen, onChoose }: { chosen: AuditEvent; onChoose: (event:
                     </Button>
                 }
             />
-            <div className="flex flex-wrap items-center gap-2">
+            <Row wrap>
                 <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-full sm:w-64" />
                 <FilterChip facet="Period" value="Last 7 days" onClear={() => undefined} />
                 <FilterChip facet="Actor" />
                 <FilterChip facet="Action" />
                 <FilterChip facet="Project" />
-            </div>
+            </Row>
             <DataTable
                 columns={EVENT_COLUMNS}
                 rows={shown}

@@ -33,6 +33,7 @@ import { TopBar } from '../../components/TopBar'
 import { Button } from '../../components/ui/button'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { TidevannMark } from '../fixtures/TidevannMark'
+import { Row, Stack } from '../../components/Layout'
 
 /**
  * A whole app in the library's frame: the rail with Projects unfolded to its projects, the top bar with the trail and search, a list page
@@ -258,7 +259,7 @@ function Workspace({ dock = false }: { dock?: boolean }) {
                     />
                 }
             >
-                <div className="flex h-full min-h-0 flex-col">
+                <Stack gap="none" className="h-full min-h-0">
                     <div className="min-h-0 flex-1 overflow-y-auto">
                         <Page>
                             <PageHeader
@@ -271,12 +272,12 @@ function Workspace({ dock = false }: { dock?: boolean }) {
                                     </Button>
                                 }
                             />
-                            <div className="flex flex-wrap items-center gap-2">
+                            <Row wrap>
                                 <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-64" />
                                 <FilterChip facet="State" value="failed, running" onClear={() => undefined} />
                                 <FilterChip facet="Job" />
                                 <FilterChip facet="Started by" />
-                            </div>
+                            </Row>
                             <DataTable
                                 columns={COLUMNS}
                                 rows={rows}
@@ -302,7 +303,7 @@ function Workspace({ dock = false }: { dock?: boolean }) {
                             <LogView lines={LOG} className="rounded-none" />
                         </Dock>
                     )}
-                </div>
+                </Stack>
             </Shell>
         </TooltipProvider>
     )
