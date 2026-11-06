@@ -3,13 +3,14 @@ import { useState, type ReactNode } from 'react'
 
 import { AsyncSelect } from '../../components/AsyncSelect'
 import { Field } from '../../components/Field'
+import { Row } from '../../components/Layout'
 
 /**
  * A select whose options come from a search, for lists too long to send whole: datasets on a
  * server, people in a directory. Each story answers from a fixed list, so it renders the same
  * every time.
  */
-const meta: Meta = { title: 'Patterns/Async select' }
+const meta: Meta = { title: 'Patterns/Async select', parameters: { frame: 'padded' } }
 export default meta
 
 interface Dataset {
@@ -36,22 +37,18 @@ function answer(query: string): Promise<Dataset[]> {
 const never = () => new Promise<Dataset[]>(() => undefined)
 const refuse = () => Promise.reject(new Error('503'))
 
-function Row({ dataset }: { dataset: Dataset }) {
+function DatasetRow({ dataset }: { dataset: Dataset }) {
     return (
-        <span className="flex min-w-0 items-baseline gap-2">
+        <Row as="span" align="baseline">
             <span className="truncate">{dataset.name}</span>
             <span className="truncate font-mono text-xs text-muted-foreground">{dataset.code}</span>
             <span className="ml-auto shrink-0 text-xs text-faint tabular-nums">{dataset.rows}</span>
-        </span>
+        </Row>
     )
 }
 
 function Ground({ children }: { children: ReactNode }) {
-    return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="max-w-sm">{children}</div>
-        </div>
-    )
+    return <div className="max-w-sm">{children}</div>
 }
 
 function Picker({
@@ -78,7 +75,7 @@ function Picker({
                     load={load}
                     itemKey={(dataset) => dataset.code}
                     itemLabel={(dataset) => dataset.name}
-                    renderItem={(dataset) => <Row dataset={dataset} />}
+                    renderItem={(dataset) => <DatasetRow dataset={dataset} />}
                     defaultOpen={open}
                     defaultQuery={query}
                     minQuery={minQuery}

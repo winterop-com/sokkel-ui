@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 
 import { Terminal, type TerminalEntry } from '../../components/terminal/Terminal'
 import { TooltipProvider } from '../../components/ui/tooltip'
+import { Stack } from '../../components/Layout'
 
 /**
  * A terminal: commands and what they wrote, escape codes drawn as colors, and output that streams
@@ -11,7 +12,9 @@ import { TooltipProvider } from '../../components/ui/tooltip'
 function Ground({ children }: { children: React.ReactNode }) {
     return (
         <TooltipProvider>
-            <div className="flex h-svh flex-col bg-background p-6 text-foreground">{children}</div>
+            <Stack gap="none" className="h-svh bg-background p-6 text-foreground">
+                {children}
+            </Stack>
         </TooltipProvider>
     )
 }

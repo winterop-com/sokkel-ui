@@ -4,12 +4,15 @@ import { useState } from 'react'
 
 import { Composer, type ComposerAttachment } from '../../components/Composer'
 import { Button } from '../../components/ui/button'
+import { Stack } from '../../components/Layout'
 
 /** The message composer: empty, with a draft and attachments, while an answer streams, and shut. */
 function Ground({ children }: { children: React.ReactNode }) {
     return (
         <div className="flex min-h-svh flex-col justify-end bg-background p-6 text-foreground">
-            <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">{children}</div>
+            <Stack gap="xl" className="mx-auto w-full max-w-3xl">
+                {children}
+            </Stack>
         </div>
     )
 }

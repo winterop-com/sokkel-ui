@@ -6,6 +6,7 @@ import { Section } from '../../components/Section'
 import { Tree, type TreeNode } from '../../components/Tree'
 import { TreeSelect } from '../../components/TreeSelect'
 import { Input } from '../../components/ui/input'
+import { Stack } from '../../components/Layout'
 
 /** A hierarchy to open a level at a time, and the field that picks from one. */
 const PLACES: TreeNode[] = [
@@ -73,11 +74,7 @@ const PLACES: TreeNode[] = [
 ]
 
 function Ground({ children }: { children: React.ReactNode }) {
-    return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="mx-auto grid max-w-5xl items-start gap-6 md:grid-cols-3">{children}</div>
-        </div>
-    )
+    return <div className="mx-auto grid max-w-5xl items-start gap-6 md:grid-cols-3">{children}</div>
 }
 
 function Trees() {
@@ -115,39 +112,37 @@ function Picker({ open }: { open?: 'one' | 'several' }) {
     const [value, setValue] = useState<string[]>(['trondheim'])
     const [several, setSeveral] = useState<string[]>(['norway', 'lisbon', 'porto'])
     return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="mx-auto flex max-w-md flex-col gap-4">
-                <Field id="name" label="Office name">
-                    <Input id="name" defaultValue="Harbor office" />
-                </Field>
-                <Field id="city" label="City" required>
+        <Stack gap="lg" className="mx-auto max-w-md">
+            <Field id="name" label="Office name">
+                <Input id="name" defaultValue="Harbor office" />
+            </Field>
+            <Field id="city" label="City" required>
+                <TreeSelect
+                    id="city"
+                    nodes={PLACES}
+                    value={value}
+                    onChange={setValue}
+                    defaultOpen={['europe', 'norway']}
+                    open={open === 'one' || undefined}
+                />
+            </Field>
+            {open !== 'one' && (
+                <Field id="cover" label="Also serves">
                     <TreeSelect
-                        id="city"
+                        id="cover"
                         nodes={PLACES}
-                        value={value}
-                        onChange={setValue}
-                        defaultOpen={['europe', 'norway']}
-                        open={open === 'one' || undefined}
+                        value={several}
+                        onChange={setSeveral}
+                        multiple
+                        open={open === 'several' || undefined}
                     />
                 </Field>
-                {open !== 'one' && (
-                    <Field id="cover" label="Also serves">
-                        <TreeSelect
-                            id="cover"
-                            nodes={PLACES}
-                            value={several}
-                            onChange={setSeveral}
-                            multiple
-                            open={open === 'several' || undefined}
-                        />
-                    </Field>
-                )}
-            </div>
-        </div>
+            )}
+        </Stack>
     )
 }
 
-const meta: Meta = { title: 'Patterns/Tree' }
+const meta: Meta = { title: 'Patterns/Tree', parameters: { frame: 'padded' } }
 export default meta
 
 export const Trees_: StoryObj = { name: 'Tree', render: () => <Trees /> }

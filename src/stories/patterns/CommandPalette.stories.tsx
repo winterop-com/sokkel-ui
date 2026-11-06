@@ -5,6 +5,7 @@ import { useCallback, useState } from 'react'
 import { CommandPalette, usePaletteShortcut, type PaletteGroup } from '../../components/CommandPalette'
 import { Button } from '../../components/ui/button'
 import { Kbd } from '../../components/ui/kbd'
+import { Stack } from '../../components/Layout'
 
 /** The palette open over an app, with places, actions and recent records. */
 const GROUPS: PaletteGroup[] = [
@@ -57,12 +58,12 @@ function Palette({ initial, groups = GROUPS, query }: { initial: boolean; groups
     const show = useCallback(() => setOpen(true), [])
     usePaletteShortcut(show)
     return (
-        <div className="flex min-h-svh flex-col items-center gap-3 bg-background p-6 text-foreground">
+        <Stack align="center" className="min-h-svh bg-background p-6 text-foreground">
             <Button variant="outline" size="sm" onClick={show}>
                 Open the palette <Kbd>⌘K</Kbd>
             </Button>
             <CommandPalette open={open} onOpenChange={setOpen} groups={groups} defaultQuery={query} />
-        </div>
+        </Stack>
     )
 }
 

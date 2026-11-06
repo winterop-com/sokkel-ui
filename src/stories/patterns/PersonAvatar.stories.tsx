@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import { PersonAvatar, type Presence } from '../../components/PersonAvatar'
+import { Row, Stack } from '../../components/Layout'
 
 /** A person as their initials on a wash of the color their name picks, round or a rounded square, with a dot for whether they are around. */
 const meta: Meta = { title: 'Patterns/Person avatar' }
@@ -20,16 +21,16 @@ const PRESENCE: { name: string; presence: Presence }[] = [
 /** The six sizes, each person in the color their name picks, and one with a color given. The two smallest show one initial, since two do not fit. */
 export const Sizes: StoryObj = {
     render: () => (
-        <div className="flex flex-col gap-4 p-6">
+        <Stack gap="lg" className="p-6">
             {SIZES.map((size) => (
-                <div key={size} className="flex flex-wrap items-center gap-2">
+                <Row key={size} wrap>
                     {PEOPLE.map((name) => (
                         <PersonAvatar key={name} name={name} size={size} />
                     ))}
                     <PersonAvatar name="scheduler" initials="S" color="teal" size={size} />
-                </div>
+                </Row>
             ))}
-        </div>
+        </Stack>
     ),
 }
 
@@ -37,32 +38,32 @@ export const Sizes: StoryObj = {
 export const Presences: StoryObj = {
     name: 'Presence',
     render: () => (
-        <div className="flex flex-col gap-4 p-6">
+        <Stack gap="lg" className="p-6">
             {SIZES.map((size) => (
-                <div key={size} className="flex items-center gap-3">
+                <Row key={size} gap="md">
                     {PRESENCE.map((person) => (
                         <PersonAvatar key={person.name} name={person.name} size={size} presence={person.presence} />
                     ))}
-                </div>
+                </Row>
             ))}
-        </div>
+        </Stack>
     ),
 }
 
 /** The rounded square a message list's authors wear, at every size, the largest also with the dot. */
 export const Square: StoryObj = {
     render: () => (
-        <div className="flex flex-col gap-4 p-6">
-            <div className="flex items-center gap-2">
+        <Stack gap="lg" className="p-6">
+            <Row>
                 {SIZES.map((size) => (
                     <PersonAvatar key={size} name="Grace Hopper" size={size} shape="square" />
                 ))}
-            </div>
-            <div className="flex items-center gap-3">
+            </Row>
+            <Row gap="md">
                 {PRESENCE.map((person) => (
                     <PersonAvatar key={person.name} name={person.name} size="lg" shape="square" presence={person.presence} />
                 ))}
-            </div>
-        </div>
+            </Row>
+        </Stack>
     ),
 }

@@ -1,15 +1,20 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import { StatusItem, StatusLine } from '../../components/StatusLine'
+import { Row, Stack } from '../../components/Layout'
 
 /** The foot strip's contents in each tone, at the strip's own height. */
 function Strip({ children }: { children: React.ReactNode }) {
-    return <div className="flex h-shell-foot items-center border-t border-border-strong bg-sidebar px-3">{children}</div>
+    return (
+        <Row gap="none" className="h-shell-foot border-t border-border-strong bg-sidebar px-3">
+            {children}
+        </Row>
+    )
 }
 
 function Lines() {
     return (
-        <div className="flex min-h-svh flex-col gap-6 bg-background p-6 text-foreground">
+        <Stack gap="xl" className="min-h-svh bg-background p-6 text-foreground">
             <Strip>
                 <StatusLine note="import-orders is running" tone="live" live>
                     <StatusItem label="run" code>
@@ -41,7 +46,7 @@ function Lines() {
                     <StatusItem>1.4.0</StatusItem>
                 </StatusLine>
             </Strip>
-        </div>
+        </Stack>
     )
 }
 

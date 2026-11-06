@@ -6,6 +6,7 @@ import { ActivityList, ActivityMenu, type ActivityItem } from '../../components/
 import { ThemeToggle } from '../../components/ThemeToggle'
 import { TopBar } from '../../components/TopBar'
 import { TooltipProvider } from '../../components/ui/tooltip'
+import { Row, Stack } from '../../components/Layout'
 
 /**
  * What happened while the person was away, or needs following up. The bell in the top bar counts
@@ -88,7 +89,7 @@ function InTopBar({ start = ITEMS }: { start?: ActivityItem[] }) {
     const [dark, setDark] = useState(true)
     return (
         <TooltipProvider>
-            <div className="flex min-h-svh flex-col bg-background text-foreground">
+            <Stack gap="none" className="min-h-svh bg-background text-foreground">
                 <header className="flex h-shell-top shrink-0 items-center gap-2 border-b border-border-strong bg-sidebar px-3">
                     <TopBar
                         trail={[{ label: 'Tidevann', href: '#' }, { label: 'Runs' }]}
@@ -101,7 +102,7 @@ function InTopBar({ start = ITEMS }: { start?: ActivityItem[] }) {
                         }
                     />
                 </header>
-            </div>
+            </Stack>
         </TooltipProvider>
     )
 }
@@ -112,11 +113,11 @@ export const TopBarMenu: StoryObj = { name: 'From the top bar', render: () => <I
 function InPanel() {
     const activity = useItems(ITEMS)
     return (
-        <div className="flex min-h-svh justify-end bg-background text-foreground">
-            <aside className="flex h-svh w-[24rem] max-w-full flex-col border-l border-border-strong bg-sidebar">
+        <Row gap="none" align="stretch" justify="end" className="min-h-svh bg-background text-foreground">
+            <Stack as="aside" gap="none" className="h-svh w-[24rem] max-w-full border-l border-border-strong bg-sidebar">
                 <ActivityList {...activity} className="h-full" />
-            </aside>
-        </div>
+            </Stack>
+        </Row>
     )
 }
 

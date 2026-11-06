@@ -24,6 +24,7 @@ import { Rail, type RailEntry, type RailGroup } from '../../components/Rail'
 import { Button } from '../../components/ui/button'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { TidevannMark } from '../fixtures/TidevannMark'
+import { Row } from '../../components/Layout'
 
 /**
  * The app's navigation down the left of the window. As a strip it is the narrow column a team chat
@@ -38,7 +39,9 @@ export default meta
 function Frame({ children }: { children: ReactNode }) {
     return (
         <TooltipProvider>
-            <div className="flex h-svh bg-background">{children}</div>
+            <Row gap="none" align="stretch" className="h-svh bg-background">
+                {children}
+            </Row>
         </TooltipProvider>
     )
 }
