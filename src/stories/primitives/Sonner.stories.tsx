@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 
 import { Toaster } from '../../components/ui/sonner'
 
-const meta: Meta = { title: 'Primitives/Feedback/Sonner' }
+const meta: Meta = { title: 'Primitives/Feedback/Sonner', parameters: { frame: 'padded' } }
 export default meta
 
 type Shown = { id: string; show: (id: string) => void }
@@ -17,10 +17,10 @@ function Toasts({ toasts, expand }: { toasts: Shown[]; expand?: boolean }) {
         }
     }, [toasts])
     return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
+        <>
             <p className="text-sm text-muted-foreground">Toasts appear in the bottom corner.</p>
             <Toaster expand={expand} />
-        </div>
+        </>
     )
 }
 

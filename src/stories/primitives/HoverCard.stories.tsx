@@ -3,8 +3,9 @@ import { Server } from 'lucide-react'
 
 import { StatusChip } from '../../components/StatusChip'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '../../components/ui/hover-card'
+import { Row, Stack } from '../../components/Layout'
 
-const meta: Meta = { title: 'Primitives/Overlays/HoverCard' }
+const meta: Meta = { title: 'Primitives/Overlays/HoverCard', parameters: { frame: 'padded' } }
 export default meta
 
 function ServiceLink({ open }: { open?: boolean }) {
@@ -16,18 +17,18 @@ function ServiceLink({ open }: { open?: boolean }) {
                     api
                 </HoverCardTrigger>
                 <HoverCardContent align="start">
-                    <div className="flex flex-col gap-2">
-                        <div className="flex items-center gap-2">
+                    <Stack gap="sm">
+                        <Row>
                             <Server className="size-4 text-muted-foreground" />
                             <span className="font-medium">Orders API</span>
-                        </div>
+                        </Row>
                         <span className="font-mono text-xs text-muted-foreground">api</span>
                         <p className="text-muted-foreground">A service used by 3 jobs.</p>
-                        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+                        <Row justify="between" wrap className="text-xs text-muted-foreground">
                             <span>Checked 2026-11-04 14:02</span>
                             <StatusChip status="succeeded" />
-                        </div>
-                    </div>
+                        </Row>
+                    </Stack>
                 </HoverCardContent>
             </HoverCard>{' '}
             once a night.
@@ -36,17 +37,9 @@ function ServiceLink({ open }: { open?: boolean }) {
 }
 
 export const Trigger: StoryObj = {
-    render: () => (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <ServiceLink />
-        </div>
-    ),
+    render: () => <ServiceLink />,
 }
 
 export const Opened: StoryObj = {
-    render: () => (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <ServiceLink open />
-        </div>
-    ),
+    render: () => <ServiceLink open />,
 }

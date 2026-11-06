@@ -1,27 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { LayoutGrid, List, Rows3 } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import { useState } from 'react'
 
 import { type DataColumn, DataTable } from '../../components/DataTable'
 import { StatusChip, type Status } from '../../components/StatusChip'
 import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group'
-
-function Ground({ children }: { children: ReactNode }) {
-    return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="mx-auto flex max-w-[1100px] flex-col gap-8">{children}</div>
-        </div>
-    )
-}
-
-function Labeled({ label, children }: { label: string; children: ReactNode }) {
-    return (
-        <div className="flex flex-col items-start gap-2">
-            <p className="text-xs text-muted-foreground">{label}</p>
-            {children}
-        </div>
-    )
-}
+import { Row, Stack } from '../../components/Layout'
+import { Specimen } from '../fixtures/Specimen'
 
 function Views(props: React.ComponentProps<typeof ToggleGroup>) {
     return (
@@ -39,64 +24,60 @@ function Views(props: React.ComponentProps<typeof ToggleGroup>) {
     )
 }
 
-const meta: Meta = { title: 'Primitives/Actions/ToggleGroup' }
+const meta: Meta = { title: 'Primitives/Actions/ToggleGroup', parameters: { frame: 'column' } }
 export default meta
 
 export const Variants: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="flex flex-wrap items-start gap-6">
-                <Labeled label="default">
-                    <Views />
-                </Labeled>
-                <Labeled label="outline">
-                    <Views variant="outline" />
-                </Labeled>
-                <Labeled label="outline spacing 0">
-                    <Views variant="outline" spacing={0} />
-                </Labeled>
-                <Labeled label="sm">
-                    <Views variant="outline" size="sm" />
-                </Labeled>
-                <Labeled label="lg">
-                    <Views variant="outline" size="lg" />
-                </Labeled>
-                <Labeled label="vertical">
-                    <Views variant="outline" orientation="vertical" spacing={0} />
-                </Labeled>
-                <Labeled label="multiple">
-                    <ToggleGroup variant="outline" multiple defaultValue={['succeeded', 'failed']}>
-                        <ToggleGroupItem value="succeeded">Succeeded</ToggleGroupItem>
-                        <ToggleGroupItem value="failed">Failed</ToggleGroupItem>
-                        <ToggleGroupItem value="running">Running</ToggleGroupItem>
-                    </ToggleGroup>
-                </Labeled>
-            </div>
-        </Ground>
+        <Row gap="xl" align="start" wrap>
+            <Specimen label="default">
+                <Views />
+            </Specimen>
+            <Specimen label="outline">
+                <Views variant="outline" />
+            </Specimen>
+            <Specimen label="outline spacing 0">
+                <Views variant="outline" spacing={0} />
+            </Specimen>
+            <Specimen label="sm">
+                <Views variant="outline" size="sm" />
+            </Specimen>
+            <Specimen label="lg">
+                <Views variant="outline" size="lg" />
+            </Specimen>
+            <Specimen label="vertical">
+                <Views variant="outline" orientation="vertical" spacing={0} />
+            </Specimen>
+            <Specimen label="multiple">
+                <ToggleGroup variant="outline" multiple defaultValue={['succeeded', 'failed']}>
+                    <ToggleGroupItem value="succeeded">Succeeded</ToggleGroupItem>
+                    <ToggleGroupItem value="failed">Failed</ToggleGroupItem>
+                    <ToggleGroupItem value="running">Running</ToggleGroupItem>
+                </ToggleGroup>
+            </Specimen>
+        </Row>
     ),
 }
 
 export const States: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="flex flex-wrap gap-6">
-                <Labeled label="disabled group">
-                    <Views variant="outline" disabled />
-                </Labeled>
-                <Labeled label="one item disabled">
-                    <ToggleGroup variant="outline" defaultValue={['day']}>
-                        <ToggleGroupItem value="day">Day</ToggleGroupItem>
-                        <ToggleGroupItem value="week">Week</ToggleGroupItem>
-                        <ToggleGroupItem value="month" disabled>
-                            Month
-                        </ToggleGroupItem>
-                    </ToggleGroup>
-                </Labeled>
-                <Labeled label="nothing pressed">
-                    <Views variant="outline" defaultValue={[]} />
-                </Labeled>
-            </div>
-        </Ground>
+        <Row gap="xl" align="stretch" wrap>
+            <Specimen label="disabled group">
+                <Views variant="outline" disabled />
+            </Specimen>
+            <Specimen label="one item disabled">
+                <ToggleGroup variant="outline" defaultValue={['day']}>
+                    <ToggleGroupItem value="day">Day</ToggleGroupItem>
+                    <ToggleGroupItem value="week">Week</ToggleGroupItem>
+                    <ToggleGroupItem value="month" disabled>
+                        Month
+                    </ToggleGroupItem>
+                </ToggleGroup>
+            </Specimen>
+            <Specimen label="nothing pressed">
+                <Views variant="outline" defaultValue={[]} />
+            </Specimen>
+        </Row>
     ),
 }
 
@@ -136,19 +117,17 @@ function RunFilter() {
     const [states, setStates] = useState<string[]>(['succeeded', 'failed', 'running'])
     const shown = RUNS.filter((run) => states.includes(run.state))
     return (
-        <Ground>
-            <div className="flex flex-col gap-3">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                    <p className="text-sm font-medium">Runs of import-orders</p>
-                    <ToggleGroup variant="outline" size="sm" spacing={0} multiple value={states} onValueChange={setStates}>
-                        <ToggleGroupItem value="succeeded">Succeeded</ToggleGroupItem>
-                        <ToggleGroupItem value="failed">Failed</ToggleGroupItem>
-                        <ToggleGroupItem value="running">Running</ToggleGroupItem>
-                    </ToggleGroup>
-                </div>
-                <DataTable variant="list" columns={COLUMNS} rows={shown} rowKey={(run) => run.id} words={{ empty: 'No runs match.' }} />
-            </div>
-        </Ground>
+        <Stack>
+            <Row gap="md" justify="between" wrap>
+                <p className="text-sm font-medium">Runs of import-orders</p>
+                <ToggleGroup variant="outline" size="sm" spacing={0} multiple value={states} onValueChange={setStates}>
+                    <ToggleGroupItem value="succeeded">Succeeded</ToggleGroupItem>
+                    <ToggleGroupItem value="failed">Failed</ToggleGroupItem>
+                    <ToggleGroupItem value="running">Running</ToggleGroupItem>
+                </ToggleGroup>
+            </Row>
+            <DataTable variant="list" columns={COLUMNS} rows={shown} rowKey={(run) => run.id} words={{ empty: 'No runs match.' }} />
+        </Stack>
     )
 }
 

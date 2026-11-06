@@ -4,17 +4,10 @@ import { Files, Play, Settings } from 'lucide-react'
 import { FileList, type FileEntry } from '../../components/FileList'
 import { PageHeader } from '../../components/PageHeader'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs'
+import { Row, Stack } from '../../components/Layout'
 
-const meta: Meta = { title: 'Primitives/Navigation/Tabs' }
+const meta: Meta = { title: 'Primitives/Navigation/Tabs', parameters: { frame: 'column' } }
 export default meta
-
-function Ground({ children }: { children: React.ReactNode }) {
-    return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="mx-auto flex max-w-[1100px] flex-col gap-8">{children}</div>
-        </div>
-    )
-}
 
 function Caption({ children }: { children: React.ReactNode }) {
     return <p className="text-xs text-muted-foreground">{children}</p>
@@ -43,57 +36,55 @@ function Sample({ variant, orientation }: { variant: 'default' | 'line'; orienta
 
 export const Variants: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="flex flex-wrap gap-10">
-                <div className="flex flex-col gap-2">
+        <>
+            <Row gap="3xl" align="stretch" wrap>
+                <Stack gap="sm">
                     <Caption>default, horizontal</Caption>
                     <Sample variant="default" orientation="horizontal" />
-                </div>
-                <div className="flex flex-col gap-2">
+                </Stack>
+                <Stack gap="sm">
                     <Caption>line, horizontal</Caption>
                     <Sample variant="line" orientation="horizontal" />
-                </div>
-            </div>
-            <div className="flex flex-wrap gap-10">
-                <div className="flex flex-col gap-2">
+                </Stack>
+            </Row>
+            <Row gap="3xl" align="stretch" wrap>
+                <Stack gap="sm">
                     <Caption>default, vertical</Caption>
                     <Sample variant="default" orientation="vertical" />
-                </div>
-                <div className="flex flex-col gap-2">
+                </Stack>
+                <Stack gap="sm">
                     <Caption>line, vertical</Caption>
                     <Sample variant="line" orientation="vertical" />
-                </div>
-            </div>
-        </Ground>
+                </Stack>
+            </Row>
+        </>
     ),
 }
 
 export const States: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="flex flex-col gap-2">
-                <Caption>one tab disabled, icons</Caption>
-                <Tabs defaultValue="runs">
-                    <TabsList>
-                        <TabsTrigger value="runs">
-                            <Play data-icon="inline-start" />
-                            Runs
-                        </TabsTrigger>
-                        <TabsTrigger value="files" disabled>
-                            <Files data-icon="inline-start" />
-                            Files
-                        </TabsTrigger>
-                        <TabsTrigger value="settings">
-                            <Settings data-icon="inline-start" />
-                            Settings
-                        </TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="runs" className="text-muted-foreground">
-                        Files is disabled until the job has written one.
-                    </TabsContent>
-                </Tabs>
-            </div>
-        </Ground>
+        <Stack gap="sm">
+            <Caption>one tab disabled, icons</Caption>
+            <Tabs defaultValue="runs">
+                <TabsList>
+                    <TabsTrigger value="runs">
+                        <Play data-icon="inline-start" />
+                        Runs
+                    </TabsTrigger>
+                    <TabsTrigger value="files" disabled>
+                        <Files data-icon="inline-start" />
+                        Files
+                    </TabsTrigger>
+                    <TabsTrigger value="settings">
+                        <Settings data-icon="inline-start" />
+                        Settings
+                    </TabsTrigger>
+                </TabsList>
+                <TabsContent value="runs" className="text-muted-foreground">
+                    Files is disabled until the job has written one.
+                </TabsContent>
+            </Tabs>
+        </Stack>
     ),
 }
 
@@ -104,21 +95,19 @@ const FILES: FileEntry[] = [
 
 export const JobPage: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="flex flex-col gap-4">
-                <PageHeader title="Nightly export" code="nightly-export" />
-                <Tabs defaultValue="files">
-                    <TabsList variant="line">
-                        <TabsTrigger value="overview">Overview</TabsTrigger>
-                        <TabsTrigger value="runs">Runs</TabsTrigger>
-                        <TabsTrigger value="files">Files</TabsTrigger>
-                        <TabsTrigger value="settings">Settings</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="files" className="pt-3">
-                        <FileList entries={FILES} />
-                    </TabsContent>
-                </Tabs>
-            </div>
-        </Ground>
+        <Stack gap="lg">
+            <PageHeader title="Nightly export" code="nightly-export" />
+            <Tabs defaultValue="files">
+                <TabsList variant="line">
+                    <TabsTrigger value="overview">Overview</TabsTrigger>
+                    <TabsTrigger value="runs">Runs</TabsTrigger>
+                    <TabsTrigger value="files">Files</TabsTrigger>
+                    <TabsTrigger value="settings">Settings</TabsTrigger>
+                </TabsList>
+                <TabsContent value="files" className="pt-3">
+                    <FileList entries={FILES} />
+                </TabsContent>
+            </Tabs>
+        </Stack>
     ),
 }

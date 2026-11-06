@@ -18,19 +18,12 @@ import {
     TraceTitle,
 } from '../../components/ui/trace'
 import { useHighlightedCode } from '../../hooks/use-highlighted-code'
+import { Stack } from '../../components/Layout'
 
 /**
  * A message row: an avatar, a header, the content and a footer, aligned to the start for the
  * assistant and to the end for the person. The conversation composes every chat primitive.
  */
-function Ground({ children }: { children: ReactNode }) {
-    return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="mx-auto flex max-w-[1100px] flex-col gap-8">{children}</div>
-        </div>
-    )
-}
-
 function Caption({ children }: { children: ReactNode }) {
     return <p className="text-xs text-muted-foreground">{children}</p>
 }
@@ -87,7 +80,7 @@ function FailingStep() {
 
 function ConversationView() {
     return (
-        <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
+        <Stack gap="xl" className="mx-auto w-full max-w-2xl">
             <Marker variant="separator">
                 <MarkerContent>2026-11-04</MarkerContent>
             </Marker>
@@ -151,113 +144,105 @@ function ConversationView() {
                     </Bubble>
                 </MessageContent>
             </Message>
-        </div>
+        </Stack>
     )
 }
 
-const meta: Meta = { title: 'Primitives/Chat/Message' }
+const meta: Meta = { title: 'Primitives/Chat/Message', parameters: { frame: 'column' } }
 export default meta
 
 export const Variants: StoryObj = {
     render: () => (
-        <Ground>
-            <MessageGroup className="max-w-2xl gap-6">
-                <div className="flex flex-col gap-2">
-                    <Caption>align start, with avatar and header</Caption>
-                    <Message>
-                        <Assistant />
-                        <MessageContent>
-                            <MessageHeader>Assistant</MessageHeader>
-                            <Bubble variant="muted">
-                                <BubbleContent>The last run of nightly-export succeeded in 1.2s.</BubbleContent>
-                            </Bubble>
-                        </MessageContent>
-                    </Message>
-                </div>
-                <div className="flex flex-col gap-2">
-                    <Caption>align end, with footer</Caption>
+        <MessageGroup className="max-w-2xl gap-6">
+            <Stack gap="sm">
+                <Caption>align start, with avatar and header</Caption>
+                <Message>
+                    <Assistant />
+                    <MessageContent>
+                        <MessageHeader>Assistant</MessageHeader>
+                        <Bubble variant="muted">
+                            <BubbleContent>The last run of nightly-export succeeded in 1.2s.</BubbleContent>
+                        </Bubble>
+                    </MessageContent>
+                </Message>
+            </Stack>
+            <Stack gap="sm">
+                <Caption>align end, with footer</Caption>
+                <Message align="end">
+                    <Person />
+                    <MessageContent>
+                        <Bubble align="end">
+                            <BubbleContent>Show me the runs that failed today.</BubbleContent>
+                        </Bubble>
+                        <MessageFooter>2026-11-04 14:05</MessageFooter>
+                    </MessageContent>
+                </Message>
+            </Stack>
+            <Stack gap="sm">
+                <Caption>no avatar</Caption>
+                <Message>
+                    <MessageContent>
+                        <Bubble variant="outline">
+                            <BubbleContent>Two runs failed: import-orders at 14:02 and sync-inventory at 09:41.</BubbleContent>
+                        </Bubble>
+                    </MessageContent>
+                </Message>
+            </Stack>
+            <Stack gap="sm">
+                <Caption>group of consecutive messages</Caption>
+                <MessageGroup>
                     <Message align="end">
-                        <Person />
                         <MessageContent>
                             <Bubble align="end">
-                                <BubbleContent>Show me the runs that failed today.</BubbleContent>
+                                <BubbleContent>Pause the schedule on import-orders.</BubbleContent>
                             </Bubble>
-                            <MessageFooter>2026-11-04 14:05</MessageFooter>
                         </MessageContent>
                     </Message>
-                </div>
-                <div className="flex flex-col gap-2">
-                    <Caption>no avatar</Caption>
-                    <Message>
+                    <Message align="end">
                         <MessageContent>
-                            <Bubble variant="outline">
-                                <BubbleContent>Two runs failed: import-orders at 14:02 and sync-inventory at 09:41.</BubbleContent>
+                            <Bubble align="end">
+                                <BubbleContent>Only until tomorrow morning.</BubbleContent>
                             </Bubble>
                         </MessageContent>
                     </Message>
-                </div>
-                <div className="flex flex-col gap-2">
-                    <Caption>group of consecutive messages</Caption>
-                    <MessageGroup>
-                        <Message align="end">
-                            <MessageContent>
-                                <Bubble align="end">
-                                    <BubbleContent>Pause the schedule on import-orders.</BubbleContent>
-                                </Bubble>
-                            </MessageContent>
-                        </Message>
-                        <Message align="end">
-                            <MessageContent>
-                                <Bubble align="end">
-                                    <BubbleContent>Only until tomorrow morning.</BubbleContent>
-                                </Bubble>
-                            </MessageContent>
-                        </Message>
-                    </MessageGroup>
-                </div>
-            </MessageGroup>
-        </Ground>
+                </MessageGroup>
+            </Stack>
+        </MessageGroup>
     ),
 }
 
 export const States: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="flex max-w-2xl flex-col gap-6">
-                <div className="flex flex-col gap-2">
-                    <Caption>working, a tool call running</Caption>
-                    <Message>
-                        <Assistant />
-                        <MessageContent>
-                            <Trace>
-                                <TraceLine status="running">
-                                    <TraceTitle>Reading runs of import-orders</TraceTitle>
-                                </TraceLine>
-                            </Trace>
-                        </MessageContent>
-                    </Message>
-                </div>
-                <div className="flex flex-col gap-2">
-                    <Caption>error</Caption>
-                    <Message>
-                        <Assistant />
-                        <MessageContent>
-                            <Bubble variant="destructive">
-                                <BubbleContent>The service api refused the request. Check its API token.</BubbleContent>
-                            </Bubble>
-                            <MessageFooter>2026-11-04 14:06</MessageFooter>
-                        </MessageContent>
-                    </Message>
-                </div>
-            </div>
-        </Ground>
+        <Stack gap="xl" className="max-w-2xl">
+            <Stack gap="sm">
+                <Caption>working, a tool call running</Caption>
+                <Message>
+                    <Assistant />
+                    <MessageContent>
+                        <Trace>
+                            <TraceLine status="running">
+                                <TraceTitle>Reading runs of import-orders</TraceTitle>
+                            </TraceLine>
+                        </Trace>
+                    </MessageContent>
+                </Message>
+            </Stack>
+            <Stack gap="sm">
+                <Caption>error</Caption>
+                <Message>
+                    <Assistant />
+                    <MessageContent>
+                        <Bubble variant="destructive">
+                            <BubbleContent>The service api refused the request. Check its API token.</BubbleContent>
+                        </Bubble>
+                        <MessageFooter>2026-11-04 14:06</MessageFooter>
+                    </MessageContent>
+                </Message>
+            </Stack>
+        </Stack>
     ),
 }
 
 export const Conversation: StoryObj = {
-    render: () => (
-        <Ground>
-            <ConversationView />
-        </Ground>
-    ),
+    render: () => <ConversationView />,
 }

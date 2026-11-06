@@ -4,19 +4,12 @@ import type { ReactNode } from 'react'
 import { Button } from '../../components/ui/button'
 import { DirectionProvider, useDirection } from '../../components/ui/direction'
 import { Slider } from '../../components/ui/slider'
+import { Row, Stack } from '../../components/Layout'
 
 /**
  * The text direction Base UI components read for keyboard and layout. The provider sets it;
  * the `dir` attribute on the element still decides how the browser lays text out.
  */
-function Ground({ children }: { children: ReactNode }) {
-    return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="mx-auto flex max-w-[1100px] flex-col gap-8">{children}</div>
-        </div>
-    )
-}
-
 function Caption({ children }: { children: ReactNode }) {
     return <p className="text-xs text-muted-foreground">{children}</p>
 }
@@ -33,57 +26,53 @@ function Reads() {
 function Sample({ dir }: { dir: 'ltr' | 'rtl' }) {
     return (
         <DirectionProvider direction={dir}>
-            <div dir={dir} className="flex w-full max-w-sm flex-col gap-4 rounded-lg border border-border p-4">
+            <Stack dir={dir} gap="lg" className="w-full max-w-sm rounded-lg border border-border p-4">
                 <Reads />
-                <div className="flex flex-col gap-2">
+                <Stack gap="sm">
                     <p className="text-xs text-muted-foreground">Retry limit</p>
                     <Slider defaultValue={[3]} min={0} max={10} />
-                </div>
-                <div className="flex flex-wrap gap-2">
+                </Stack>
+                <Row align="stretch" wrap>
                     <Button variant="outline">Cancel</Button>
                     <Button>Run import-orders</Button>
-                </div>
-            </div>
+                </Row>
+            </Stack>
         </DirectionProvider>
     )
 }
 
-const meta: Meta = { title: 'Primitives/Layout/Direction' }
+const meta: Meta = { title: 'Primitives/Layout/Direction', parameters: { frame: 'column' } }
 export default meta
 
 export const Variants: StoryObj = {
     render: () => (
-        <Ground>
-            <div className="flex flex-wrap items-start gap-6">
-                <div className="flex w-full max-w-sm flex-col gap-2">
-                    <Caption>ltr</Caption>
-                    <Sample dir="ltr" />
-                </div>
-                <div className="flex w-full max-w-sm flex-col gap-2">
-                    <Caption>rtl</Caption>
-                    <Sample dir="rtl" />
-                </div>
-            </div>
-        </Ground>
+        <Row gap="xl" align="start" wrap>
+            <Stack gap="sm" className="w-full max-w-sm">
+                <Caption>ltr</Caption>
+                <Sample dir="ltr" />
+            </Stack>
+            <Stack gap="sm" className="w-full max-w-sm">
+                <Caption>rtl</Caption>
+                <Sample dir="rtl" />
+            </Stack>
+        </Row>
     ),
 }
 
 export const NestedLtrIsland: StoryObj = {
     render: () => (
-        <Ground>
-            <DirectionProvider direction="rtl">
-                <div dir="rtl" className="flex w-full max-w-md flex-col gap-3 rounded-lg border border-border p-4">
-                    <Caption>rtl page</Caption>
-                    <Reads />
-                    <DirectionProvider direction="ltr">
-                        <div dir="ltr" className="flex flex-col gap-2 rounded-md bg-muted p-3">
-                            <Caption>ltr island for code</Caption>
-                            <Reads />
-                            <p className="font-mono text-xs">expression: .orders[].amount | length &gt; 0</p>
-                        </div>
-                    </DirectionProvider>
-                </div>
-            </DirectionProvider>
-        </Ground>
+        <DirectionProvider direction="rtl">
+            <Stack dir="rtl" className="w-full max-w-md rounded-lg border border-border p-4">
+                <Caption>rtl page</Caption>
+                <Reads />
+                <DirectionProvider direction="ltr">
+                    <Stack dir="ltr" gap="sm" className="rounded-md bg-muted p-3">
+                        <Caption>ltr island for code</Caption>
+                        <Reads />
+                        <p className="font-mono text-xs">expression: .orders[].amount | length &gt; 0</p>
+                    </Stack>
+                </DirectionProvider>
+            </Stack>
+        </DirectionProvider>
     ),
 }

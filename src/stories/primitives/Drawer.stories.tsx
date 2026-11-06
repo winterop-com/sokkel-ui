@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import { Button } from '../../components/ui/button'
+import { Row, Stack } from '../../components/Layout'
 import {
     Drawer,
     DrawerClose,
@@ -12,23 +13,21 @@ import {
     DrawerTrigger,
 } from '../../components/ui/drawer'
 
-const meta: Meta = { title: 'Primitives/Overlays/Drawer' }
+const meta: Meta = { title: 'Primitives/Overlays/Drawer', parameters: { frame: 'padded' } }
 export default meta
 
 function Closed() {
     return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <div className="flex flex-wrap gap-3">
-                <Drawer>
-                    <DrawerTrigger render={<Button variant="outline" />}>Schedule details</DrawerTrigger>
-                    <DrawerContent>
-                        <DrawerHeader>
-                            <DrawerTitle>every-night</DrawerTitle>
-                        </DrawerHeader>
-                    </DrawerContent>
-                </Drawer>
-            </div>
-        </div>
+        <Row gap="md" align="stretch" wrap>
+            <Drawer>
+                <DrawerTrigger render={<Button variant="outline" />}>Schedule details</DrawerTrigger>
+                <DrawerContent>
+                    <DrawerHeader>
+                        <DrawerTitle>every-night</DrawerTitle>
+                    </DrawerHeader>
+                </DrawerContent>
+            </Drawer>
+        </Row>
     )
 }
 
@@ -41,47 +40,43 @@ const FACTS: [string, string][] = [
 
 function ScheduleDetail() {
     return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <Drawer defaultOpen showSwipeHandle>
-                <DrawerContent>
-                    <DrawerHeader>
-                        <DrawerTitle>every-night</DrawerTitle>
-                        <DrawerDescription>A schedule that starts nightly-export once a day.</DrawerDescription>
-                    </DrawerHeader>
-                    <dl className="grid gap-2 p-4 text-sm">
-                        {FACTS.map(([term, value]) => (
-                            <div key={term} className="flex flex-wrap justify-between gap-2">
-                                <dt className="text-muted-foreground">{term}</dt>
-                                <dd className="font-mono text-xs">{value}</dd>
-                            </div>
-                        ))}
-                    </dl>
-                    <DrawerFooter>
-                        <Button>Run now</Button>
-                        <DrawerClose render={<Button variant="outline" />}>Close</DrawerClose>
-                    </DrawerFooter>
-                </DrawerContent>
-            </Drawer>
-        </div>
+        <Drawer defaultOpen showSwipeHandle>
+            <DrawerContent>
+                <DrawerHeader>
+                    <DrawerTitle>every-night</DrawerTitle>
+                    <DrawerDescription>A schedule that starts nightly-export once a day.</DrawerDescription>
+                </DrawerHeader>
+                <Stack as="dl" gap="sm" className="p-4 text-sm">
+                    {FACTS.map(([term, value]) => (
+                        <Row key={term} align="stretch" justify="between" wrap>
+                            <dt className="text-muted-foreground">{term}</dt>
+                            <dd className="font-mono text-xs">{value}</dd>
+                        </Row>
+                    ))}
+                </Stack>
+                <DrawerFooter>
+                    <Button>Run now</Button>
+                    <DrawerClose render={<Button variant="outline" />}>Close</DrawerClose>
+                </DrawerFooter>
+            </DrawerContent>
+        </Drawer>
     )
 }
 
 function Right() {
     return (
-        <div className="min-h-svh bg-background p-6 text-foreground">
-            <Drawer defaultOpen swipeDirection="right">
-                <DrawerContent>
-                    <DrawerHeader>
-                        <DrawerTitle>api</DrawerTitle>
-                        <DrawerDescription>A service used by 3 jobs.</DrawerDescription>
-                    </DrawerHeader>
-                    <div className="p-4 text-sm text-muted-foreground">Last checked 2026-11-04 14:02. The server answered in 0.4s.</div>
-                    <DrawerFooter>
-                        <DrawerClose render={<Button variant="outline" />}>Close</DrawerClose>
-                    </DrawerFooter>
-                </DrawerContent>
-            </Drawer>
-        </div>
+        <Drawer defaultOpen swipeDirection="right">
+            <DrawerContent>
+                <DrawerHeader>
+                    <DrawerTitle>api</DrawerTitle>
+                    <DrawerDescription>A service used by 3 jobs.</DrawerDescription>
+                </DrawerHeader>
+                <div className="p-4 text-sm text-muted-foreground">Last checked 2026-11-04 14:02. The server answered in 0.4s.</div>
+                <DrawerFooter>
+                    <DrawerClose render={<Button variant="outline" />}>Close</DrawerClose>
+                </DrawerFooter>
+            </DrawerContent>
+        </Drawer>
     )
 }
 

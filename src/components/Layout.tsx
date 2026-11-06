@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { HTMLAttributes, ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 
@@ -8,6 +8,7 @@ import { cn } from '../lib/cn'
  */
 export const GAP = {
     none: 'gap-0',
+    '3xs': 'gap-0.5',
     '2xs': 'gap-1',
     xs: 'gap-1.5',
     sm: 'gap-2',
@@ -15,6 +16,7 @@ export const GAP = {
     lg: 'gap-4',
     xl: 'gap-6',
     '2xl': 'gap-8',
+    '3xl': 'gap-10',
     page: 'gap-(--density-page-gap)',
 } as const
 
@@ -36,9 +38,10 @@ const JUSTIFY = {
 } as const
 
 /** The element a layout draws as, for the document's outline. */
-type As = 'div' | 'section' | 'ul' | 'ol' | 'li' | 'nav' | 'header' | 'footer' | 'form' | 'main' | 'aside'
+type As = 'div' | 'span' | 'p' | 'label' | 'section' | 'ul' | 'ol' | 'li' | 'dl' | 'nav' | 'header' | 'footer' | 'form' | 'main' | 'aside'
 
-interface Base {
+/** A layout passes the element's own attributes through: an id, `dir`, a role, data attributes, a form's submit. */
+interface Base extends Omit<HTMLAttributes<HTMLElement>, 'children' | 'className'> {
     children?: ReactNode
     gap?: Gap
     as?: As
@@ -49,8 +52,19 @@ interface Base {
  * Cells one under the other. Each cell may shrink below its content's width, so a long line
  * truncates or wraps inside it instead of pushing the stack wider than its container.
  */
-export function Stack({ children, gap = 'md', align = 'stretch', as: Tag = 'div', className }: Base & { align?: keyof typeof ALIGN }) {
-    return <Tag className={cn('flex min-w-0 flex-col *:min-w-0', GAP[gap], ALIGN[align], className)}>{children}</Tag>
+export function Stack({
+    children,
+    gap = 'md',
+    align = 'stretch',
+    as: Tag = 'div',
+    className,
+    ...props
+}: Base & { align?: keyof typeof ALIGN }) {
+    return (
+        <Tag {...props} className={cn('flex min-w-0 flex-col [:where(&>*)]:min-w-0', GAP[gap], ALIGN[align], className)}>
+            {children}
+        </Tag>
+    )
 }
 
 /**
@@ -66,40 +80,62 @@ export function Row({
     wrap = false,
     as: Tag = 'div',
     className,
+    ...props
 }: Base & { align?: keyof typeof ALIGN; justify?: keyof typeof JUSTIFY; wrap?: boolean }) {
     return (
-        <Tag className={cn('flex min-w-0 *:min-w-0', wrap && 'flex-wrap', GAP[gap], ALIGN[align], JUSTIFY[justify], className)}>
+        <Tag
+            {...props}
+            className={cn('flex min-w-0 [:where(&>*)]:min-w-0', wrap && 'flex-wrap', GAP[gap], ALIGN[align], JUSTIFY[justify], className)}
+        >
             {children}
         </Tag>
     )
 }
 
-/** How many columns at each width of the container, up to `count`; four short cells already pair up on a phone. */
-const COLUMNS = {
-    2: '@lg:grid-cols-2',
-    3: '@lg:grid-cols-2 @4xl:grid-cols-3',
-    4: '@2xs:grid-cols-2 @4xl:grid-cols-4',
-} as const
+/** The narrowest a column may get before the grid drops one: short fields, cards, wide panels. */
+const MIN = { sm: '10rem', md: '14rem', lg: '18rem' } as const
+
+/** Each gap as a length, for the grid to subtract from its width when it divides it into columns. */
+const GAP_LENGTH: Record<Gap, string> = {
+    none: '0px',
+    '3xs': 'calc(var(--spacing) * 0.5)',
+    '2xs': 'calc(var(--spacing) * 1)',
+    xs: 'calc(var(--spacing) * 1.5)',
+    sm: 'calc(var(--spacing) * 2)',
+    md: 'calc(var(--spacing) * 3)',
+    lg: 'calc(var(--spacing) * 4)',
+    xl: 'calc(var(--spacing) * 6)',
+    '2xl': 'calc(var(--spacing) * 8)',
+    '3xl': 'calc(var(--spacing) * 10)',
+    page: 'var(--density-page-gap)',
+}
 
 /**
- * Cells in a grid of equal columns that drops to fewer as its container narrows, down to one. The
- * columns follow the container's width, not the window's, so a grid in a side panel stacks while
- * the same grid on a page spreads out.
+ * Cells in a grid of equal columns: up to `count` side by side, and fewer as the room narrows,
+ * so no column gets narrower than `min`, down to one. The columns follow the room the grid is
+ * given, not the window, so a grid in a side panel stacks while the same grid on a page spreads
+ * out.
  */
 export function Columns({
     children,
     count = 2,
+    min = 'md',
     gap = 'xl',
     align = 'stretch',
     as: Tag = 'div',
     className,
-}: Base & { count?: keyof typeof COLUMNS; align?: 'start' | 'stretch' }) {
+    style,
+    ...props
+}: Base & { count?: 2 | 3 | 4; min?: keyof typeof MIN; align?: 'start' | 'stretch' }) {
+    const track = `minmax(max(min(${MIN[min]}, 100%), calc((100% - ${String(count - 1)} * ${GAP_LENGTH[gap]}) / ${String(count)})), 1fr)`
     return (
-        <div className="@container min-w-0">
-            <Tag className={cn('grid grid-cols-1 *:min-w-0', COLUMNS[count], GAP[gap], align === 'start' && 'items-start', className)}>
-                {children}
-            </Tag>
-        </div>
+        <Tag
+            {...props}
+            style={{ gridTemplateColumns: `repeat(auto-fill, ${track})`, ...style }}
+            className={cn('grid min-w-0 [:where(&>*)]:min-w-0', GAP[gap], align === 'start' && 'items-start', className)}
+        >
+            {children}
+        </Tag>
     )
 }
 
@@ -138,7 +174,7 @@ export function Split({
         <div className="@container min-w-0">
             <div
                 className={cn(
-                    'grid grid-cols-1 items-start *:min-w-0',
+                    'grid grid-cols-1 items-start [:where(&>*)]:min-w-0',
                     side === 'end' ? ASIDE[width] : ASIDE_START[width],
                     GAP[gap],
                     className,
