@@ -1,10 +1,11 @@
 import { ChevronDown, Hash, Lock, Plus } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import type { KindColor } from '../lib/kind'
 import { Count } from './Count'
 import { PersonAvatar, PresenceDot, type Presence } from './PersonAvatar'
+import { ResizeHandle } from './ResizeHandle'
 import { SearchField } from './SearchField'
 
 export type { Presence } from './PersonAvatar'
@@ -58,6 +59,7 @@ export interface ChannelListWords {
     clear: string
     /** Said when nothing matches what is typed in the find field. */
     nothing: string
+    resize: string
 }
 
 const WORDS: ChannelListWords = {
@@ -68,6 +70,7 @@ const WORDS: ChannelListWords = {
     find: 'Find a conversation',
     clear: 'Clear the search',
     nothing: 'No conversation matches.',
+    resize: 'Resize the conversation list',
 }
 
 const ROW =
@@ -87,6 +90,9 @@ const HOVER = 'hover:bg-secondary hover:[--avatar-ring:var(--color-secondary)]'
  * With `find`, a field at the top narrows every section to the entries whose name holds what is
  * typed, folded sections included. A folded section still shows its open entry and those that name
  * you.
+ *
+ * Given `size` and `onSizeChange`, its right edge drags to resize it, as `SidePanel`'s left edge
+ * does; otherwise the caller sets its width.
  */
 export function ChannelList({
     sections,
@@ -102,6 +108,11 @@ export function ChannelList({
     folded: heldFolded,
     defaultFolded = [],
     onFoldedChange,
+    size,
+    onSizeChange,
+    minSize = 200,
+    maxSize = 480,
+    defaultSize = 256,
     className,
     words: given,
 }: {
@@ -125,9 +136,18 @@ export function ChannelList({
     /** The sections folded at first, when the list holds the folds itself. */
     defaultFolded?: readonly string[]
     onFoldedChange?: (folded: string[]) => void
+    /** The width in pixels; with `onSizeChange` the right edge drags to resize it. */
+    size?: number
+    onSizeChange?: (size: number) => void
+    minSize?: number
+    maxSize?: number
+    /** The width a double click on the edge returns to. */
+    defaultSize?: number
     className?: string
     words?: Partial<ChannelListWords>
 }) {
+    const list = useRef<HTMLElement>(null)
+    const resizable = size !== undefined && onSizeChange !== undefined
     const words = { ...WORDS, ...given }
     const [ownFolded, setOwnFolded] = useState<readonly string[]>(defaultFolded)
     const [ownQuery, setOwnQuery] = useState('')
@@ -156,103 +176,123 @@ export function ChannelList({
         })
         .filter(({ entries }) => needle === '' || entries.length > 0)
     return (
-        <nav className={cn('flex min-h-0 flex-col bg-sidebar text-sidebar-foreground [--avatar-ring:var(--color-sidebar)]', className)}>
-            {(title !== undefined || actions !== undefined) && (
-                <div className="flex h-shell-top shrink-0 items-center gap-2 border-b border-border-strong pr-2 pl-3">
-                    <div className="min-w-0 flex-1 truncate text-sm font-semibold">{title}</div>
-                    {actions !== undefined && <div className="flex shrink-0 items-center gap-1">{actions}</div>}
-                </div>
-            )}
-            {header}
-            {find && (
-                <div className="shrink-0 px-2 pt-2">
-                    <SearchField
-                        value={query}
-                        onChange={setQuery}
-                        placeholder={words.find}
-                        shortcut={false}
-                        words={{ clear: words.clear }}
-                    />
-                </div>
-            )}
-            <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2">
-                {needle === '' && places !== undefined && places.length > 0 && (
-                    <ul className="mb-2 flex flex-col gap-px border-b border-border pb-2">
-                        {places.map((place) => (
-                            <li key={place.id}>
-                                <button
-                                    type="button"
-                                    aria-current={place.id === active ? 'page' : undefined}
-                                    onClick={() => onSelect?.(place.id)}
-                                    className={cn(
-                                        ROW,
-                                        '[&_svg]:size-4',
-                                        place.id === active ? OPEN : cn(HOVER, 'text-muted-foreground hover:text-foreground'),
-                                    )}
-                                >
-                                    <span className="flex size-5 shrink-0 items-center justify-center">{place.icon}</span>
-                                    <span className="min-w-0 flex-1 truncate">{place.label}</span>
-                                    {(place.count ?? 0) > 0 && <span className="text-xs font-medium tabular-nums">{place.count}</span>}
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
+        <>
+            <nav
+                ref={list}
+                className={cn(
+                    'flex min-h-0 shrink-0 flex-col bg-sidebar text-sidebar-foreground [--avatar-ring:var(--color-sidebar)]',
+                    className,
                 )}
-                {needle !== '' && shownSections.length === 0 && (
-                    <p className="px-2 py-1.5 text-sm text-muted-foreground">{words.nothing}</p>
+                style={resizable ? { width: size } : undefined}
+            >
+                {(title !== undefined || actions !== undefined) && (
+                    <div className="flex h-shell-top shrink-0 items-center gap-2 border-b border-border-strong pr-2 pl-3">
+                        <div className="min-w-0 flex-1 truncate text-sm font-semibold">{title}</div>
+                        {actions !== undefined && <div className="flex shrink-0 items-center gap-1">{actions}</div>}
+                    </div>
                 )}
-                {shownSections.map(({ section, open, entries }) => (
-                    <section key={section.id} className="mb-2">
-                        <div className="group/section flex items-center gap-1">
-                            <button
-                                type="button"
-                                aria-expanded={open}
-                                aria-label={words.collapse(section.title)}
-                                onClick={() => toggle(section.id)}
-                                className={cn(ROW, 'min-w-0 flex-1 font-medium text-muted-foreground hover:text-foreground')}
-                            >
-                                <span className="flex size-5 shrink-0 items-center justify-center [&_svg]:size-4">
-                                    {section.icon !== undefined && open && (
-                                        <span className="flex group-focus-within/section:hidden group-hover/section:hidden" aria-hidden>
-                                            {section.icon}
-                                        </span>
-                                    )}
-                                    <ChevronDown
+                {header}
+                {find && (
+                    <div className="shrink-0 px-2 pt-2">
+                        <SearchField
+                            value={query}
+                            onChange={setQuery}
+                            placeholder={words.find}
+                            shortcut={false}
+                            words={{ clear: words.clear }}
+                        />
+                    </div>
+                )}
+                <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2">
+                    {needle === '' && places !== undefined && places.length > 0 && (
+                        <ul className="mb-2 flex flex-col gap-px border-b border-border pb-2">
+                            {places.map((place) => (
+                                <li key={place.id}>
+                                    <button
+                                        type="button"
+                                        aria-current={place.id === active ? 'page' : undefined}
+                                        onClick={() => onSelect?.(place.id)}
                                         className={cn(
-                                            'shrink-0 transition-transform',
-                                            !open && '-rotate-90',
-                                            section.icon !== undefined &&
-                                                open &&
-                                                'hidden group-focus-within/section:block group-hover/section:block',
+                                            ROW,
+                                            '[&_svg]:size-4',
+                                            place.id === active ? OPEN : cn(HOVER, 'text-muted-foreground hover:text-foreground'),
                                         )}
-                                        aria-hidden
-                                    />
-                                </span>
-                                <span className="truncate">{section.title}</span>
-                            </button>
-                            {section.onAdd !== undefined && (
-                                <button
-                                    type="button"
-                                    aria-label={words.add(section.title)}
-                                    title={words.add(section.title)}
-                                    onClick={section.onAdd}
-                                    className="flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground opacity-0 outline-none group-hover/section:opacity-100 hover:bg-secondary hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/50"
-                                >
-                                    <Plus className="size-3.5" aria-hidden />
-                                </button>
-                            )}
-                        </div>
-                        <ul className="flex flex-col gap-px">
-                            {entries.map((entry) => (
-                                <li key={entry.id}>
-                                    <Entry entry={entry} active={entry.id === active} onSelect={onSelect} words={words} />
+                                    >
+                                        <span className="flex size-5 shrink-0 items-center justify-center">{place.icon}</span>
+                                        <span className="min-w-0 flex-1 truncate">{place.label}</span>
+                                        {(place.count ?? 0) > 0 && <span className="text-xs font-medium tabular-nums">{place.count}</span>}
+                                    </button>
                                 </li>
                             ))}
                         </ul>
-                    </section>
-                ))}
-            </div>
-        </nav>
+                    )}
+                    {needle !== '' && shownSections.length === 0 && (
+                        <p className="px-2 py-1.5 text-sm text-muted-foreground">{words.nothing}</p>
+                    )}
+                    {shownSections.map(({ section, open, entries }) => (
+                        <section key={section.id} className="mb-2">
+                            <div className="group/section flex items-center gap-1">
+                                <button
+                                    type="button"
+                                    aria-expanded={open}
+                                    aria-label={words.collapse(section.title)}
+                                    onClick={() => toggle(section.id)}
+                                    className={cn(ROW, 'min-w-0 flex-1 font-medium text-muted-foreground hover:text-foreground')}
+                                >
+                                    <span className="flex size-5 shrink-0 items-center justify-center [&_svg]:size-4">
+                                        {section.icon !== undefined && open && (
+                                            <span className="flex group-focus-within/section:hidden group-hover/section:hidden" aria-hidden>
+                                                {section.icon}
+                                            </span>
+                                        )}
+                                        <ChevronDown
+                                            className={cn(
+                                                'shrink-0 transition-transform',
+                                                !open && '-rotate-90',
+                                                section.icon !== undefined &&
+                                                    open &&
+                                                    'hidden group-focus-within/section:block group-hover/section:block',
+                                            )}
+                                            aria-hidden
+                                        />
+                                    </span>
+                                    <span className="truncate">{section.title}</span>
+                                </button>
+                                {section.onAdd !== undefined && (
+                                    <button
+                                        type="button"
+                                        aria-label={words.add(section.title)}
+                                        title={words.add(section.title)}
+                                        onClick={section.onAdd}
+                                        className="flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground opacity-0 outline-none group-hover/section:opacity-100 hover:bg-secondary hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/50"
+                                    >
+                                        <Plus className="size-3.5" aria-hidden />
+                                    </button>
+                                )}
+                            </div>
+                            <ul className="flex flex-col gap-px">
+                                {entries.map((entry) => (
+                                    <li key={entry.id}>
+                                        <Entry entry={entry} active={entry.id === active} onSelect={onSelect} words={words} />
+                                    </li>
+                                ))}
+                            </ul>
+                        </section>
+                    ))}
+                </div>
+            </nav>
+            {resizable && (
+                <ResizeHandle
+                    target={list}
+                    size={size}
+                    onSize={onSizeChange}
+                    min={minSize}
+                    max={maxSize}
+                    reset={defaultSize}
+                    label={words.resize}
+                />
+            )}
+        </>
     )
 }
 

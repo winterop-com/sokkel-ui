@@ -134,11 +134,14 @@ function sections(active: string): ChannelSection[] {
 
 function Sidebar({ active, onSelect }: { active: string; onSelect: (id: string) => void }) {
     const [query, setQuery] = useState('')
+    const [size, setSize] = useState(256)
     return (
         <div className="flex h-full">
             <Rail variant="strip" mark={<TidevannMark className="size-5" />} name="Tidevann" groups={STRIP} foot={STRIP_FOOT} />
             <ChannelList
-                className="w-64 border-r border-border-strong"
+                className="border-r border-border-strong"
+                size={size}
+                onSizeChange={setSize}
                 sections={sections(active)}
                 active={active}
                 onSelect={onSelect}
@@ -422,6 +425,7 @@ function NewChannelPage() {
 function TeamChat({ start = 'harbor-ops', thread = false }: { start?: string; thread?: boolean }) {
     const [active, setActive] = useState(start)
     const [panel, setPanel] = useState(thread)
+    const [panelSize, setPanelSize] = useState(384)
     const body =
         active === 'dm-grace' ? (
             <Direct />
@@ -439,7 +443,13 @@ function TeamChat({ start = 'harbor-ops', thread = false }: { start?: string; th
                 onPanelOpenChange={setPanel}
                 panel={
                     active === 'harbor-ops' ? (
-                        <SidePanel tabs={[{ id: 'thread', label: 'Thread in #harbor-ops', content: <Thread /> }]} width="24rem" />
+                        <SidePanel
+                            tabs={[{ id: 'thread', label: 'Thread in #harbor-ops', content: <Thread /> }]}
+                            size={panelSize}
+                            onSizeChange={setPanelSize}
+                            defaultSize={384}
+                            words={{ resize: 'Resize the thread' }}
+                        />
                     ) : undefined
                 }
             >
