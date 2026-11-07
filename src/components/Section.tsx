@@ -16,6 +16,7 @@ export function Section({
     actions,
     variant = 'boxed',
     flush = false,
+    fill = false,
     children,
     className,
 }: {
@@ -27,18 +28,26 @@ export function Section({
     variant?: 'flat' | 'boxed'
     /** Content that fills the box to its edges, such as a list or a graph, takes no padding. */
     flush?: boolean
+    /** The box takes the height its container gives it and its body scrolls within it, as an editor or a preview pane wants. */
+    fill?: boolean
     children: ReactNode
     className?: string
 }) {
     if (variant === 'boxed') {
         return (
-            <section className={cn('overflow-hidden rounded-surface border border-border-strong bg-card', className)}>
-                <header className="flex h-(--density-panel-head) items-center gap-2 border-b border-border-strong bg-panel-ground px-(--density-panel-pad)">
+            <section
+                className={cn(
+                    'overflow-hidden rounded-surface border border-border-strong bg-card',
+                    fill && 'flex min-h-0 min-w-0 flex-col',
+                    className,
+                )}
+            >
+                <header className="flex h-(--density-panel-head) shrink-0 items-center gap-2 border-b border-border-strong bg-panel-ground px-(--density-panel-pad)">
                     <h2 className="truncate text-[length:var(--table-head-size)] font-[number:var(--table-head-weight)]">{title}</h2>
                     {meta !== undefined && <span className="font-mono text-xs text-muted-foreground">{meta}</span>}
                     {actions !== undefined && <div className="ml-auto flex items-center gap-1">{actions}</div>}
                 </header>
-                <div className={flush ? undefined : 'p-(--density-panel-pad)'}>{children}</div>
+                <div className={cn(!flush && 'p-(--density-panel-pad)', fill && 'min-h-0 flex-1 overflow-auto')}>{children}</div>
             </section>
         )
     }
