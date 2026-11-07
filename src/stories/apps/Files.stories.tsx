@@ -1,4 +1,3 @@
-import { IconButton } from '../../components/IconButton'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import {
     BookOpen,
@@ -13,7 +12,6 @@ import {
     Settings,
     Trash2,
     Upload as UploadIcon,
-    X,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -27,6 +25,7 @@ import { PageHeader } from '../../components/PageHeader'
 import { Rail, type RailGroup } from '../../components/Rail'
 import { SearchField } from '../../components/SearchField'
 import { Segmented } from '../../components/Segmented'
+import { SelectionBar } from '../../components/SelectionBar'
 import { Page, Shell } from '../../components/Shell'
 import { PanelSection, SidePanel } from '../../components/SidePanel'
 import { StatusItem, StatusLine } from '../../components/StatusLine'
@@ -41,7 +40,8 @@ import { TooltipProvider } from '../../components/ui/tooltip'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { CHART, FIELD, HARBOR_DUSK, LIGHTHOUSE, PINES } from '../fixtures/photos'
 import { Row } from '../../components/Layout'
-import { GroupLabel } from '../../components/GroupLabel'
+import { SubNav } from '../../components/SubNav'
+import { Toolbar } from '../../components/Toolbar'
 
 /**
  * A file browser for a project's stored data in the library's frame: the folder tree beside the
@@ -521,10 +521,7 @@ function FilesApp({
                 }
             >
                 <Row gap="none" align="stretch" className="h-full min-h-0">
-                    <aside className="hidden w-56 shrink-0 flex-col gap-2 overflow-y-auto border-r border-border-strong bg-sidebar px-2 py-3 lg:flex">
-                        <GroupLabel as="h2" className="px-2">
-                            Folders
-                        </GroupLabel>
+                    <SubNav title="Folders">
                         <Tree
                             label="Folders"
                             nodes={FOLDERS}
@@ -532,7 +529,7 @@ function FilesApp({
                             onSelect={(ids) => goTo(ids[0])}
                             defaultOpen={['harbor', 'harbor/shared']}
                         />
-                    </aside>
+                    </SubNav>
                     <DropZone
                         open={dropping || undefined}
                         className="flex min-w-0 flex-1 flex-col"
@@ -569,17 +566,35 @@ function FilesApp({
                                     }
                                 />
                                 {files.length > 0 && (
-                                    <Row wrap className="min-h-8">
-                                        {selected.length > 0 ? (
-                                            <div
-                                                role="toolbar"
-                                                aria-label="Selection"
-                                                className="flex min-w-0 flex-1 flex-wrap items-center gap-1 rounded-control border border-primary/40 bg-primary/8 py-0.5 pr-1 pl-1"
-                                            >
-                                                <IconButton label="Clear the selection" onClick={() => setSelected([])}>
-                                                    <X aria-hidden />
-                                                </IconButton>
-                                                <span className="mr-2 text-sm font-medium tabular-nums">{selected.length} selected</span>
+                                    <Toolbar
+                                        search={
+                                            selected.length > 0 ? undefined : (
+                                                <SearchField
+                                                    value={query}
+                                                    onChange={(text) => {
+                                                        setQuery(text)
+                                                        if (view === 'tree')
+                                                            setTreeOpen(new Set([...treeOpen, ...findInStore(text, store).open]))
+                                                    }}
+                                                    placeholder={view === 'tree' ? 'Find' : 'Filter this folder'}
+                                                />
+                                            )
+                                        }
+                                        end={
+                                            <Segmented
+                                                label="View"
+                                                value={view}
+                                                options={[
+                                                    { value: 'list', label: 'List' },
+                                                    { value: 'grid', label: 'Grid' },
+                                                    { value: 'tree', label: 'Tree' },
+                                                ]}
+                                                onChoose={setView}
+                                            />
+                                        }
+                                    >
+                                        {selected.length > 0 && (
+                                            <SelectionBar count={selected.length} onClear={() => setSelected([])} framed>
                                                 <Button variant="ghost" size="sm">
                                                     <Download aria-hidden />
                                                     Download
@@ -606,31 +621,9 @@ function FilesApp({
                                                     <Trash2 aria-hidden />
                                                     Delete
                                                 </Button>
-                                            </div>
-                                        ) : (
-                                            <SearchField
-                                                value={query}
-                                                onChange={(text) => {
-                                                    setQuery(text)
-                                                    if (view === 'tree')
-                                                        setTreeOpen(new Set([...treeOpen, ...findInStore(text, store).open]))
-                                                }}
-                                                placeholder={view === 'tree' ? 'Find' : 'Filter this folder'}
-                                                className="w-64 max-sm:flex-1"
-                                            />
+                                            </SelectionBar>
                                         )}
-                                        <Segmented
-                                            label="View"
-                                            value={view}
-                                            options={[
-                                                { value: 'list', label: 'List' },
-                                                { value: 'grid', label: 'Grid' },
-                                                { value: 'tree', label: 'Tree' },
-                                            ]}
-                                            onChoose={setView}
-                                            className="ml-auto"
-                                        />
-                                    </Row>
+                                    </Toolbar>
                                 )}
                                 {files.length === 0 ? (
                                     empty

@@ -29,7 +29,9 @@ import { Rail, type RailGroup } from '../../components/Rail'
 import { Segmented } from '../../components/Segmented'
 import { Shell } from '../../components/Shell'
 import { StatusChip, type Status } from '../../components/StatusChip'
+import { SubNav } from '../../components/SubNav'
 import { ThemeToggle } from '../../components/ThemeToggle'
+import { Toolbar, ToolbarTitle } from '../../components/Toolbar'
 import { TopBar } from '../../components/TopBar'
 import { Button } from '../../components/ui/button'
 import { TooltipProvider } from '../../components/ui/tooltip'
@@ -358,26 +360,43 @@ function CalendarApp({ view: initialView = 'week', open = null }: { view?: View;
                 }
             >
                 <Row gap="none" align="stretch" className="h-full min-h-0">
-                    <aside className="hidden w-60 shrink-0 flex-col gap-6 overflow-y-auto border-r border-border px-3 py-4 xl:flex">
-                        <Button size="sm" className="self-start">
-                            <Plus aria-hidden />
-                            New event
-                        </Button>
-                        <MiniMonth
-                            month={mini}
-                            onMonthChange={setMini}
-                            selected={anchor}
-                            onSelect={go}
-                            now={NOW}
-                            range={view === 'week' ? { start: week[0], end: week[6] } : undefined}
-                            marked={EVENTS.filter((event) => event.calendar !== 'runs' && shown.includes(event.calendar)).map(
-                                (event) => event.start,
-                            )}
-                        />
-                        <CalendarToggles shown={shown} onChange={setShown} />
-                    </aside>
+                    <SubNav label="Calendars" from="xl">
+                        <Stack gap="xl">
+                            <Row>
+                                <Button size="sm">
+                                    <Plus aria-hidden />
+                                    New event
+                                </Button>
+                            </Row>
+                            <MiniMonth
+                                month={mini}
+                                onMonthChange={setMini}
+                                selected={anchor}
+                                onSelect={go}
+                                now={NOW}
+                                range={view === 'week' ? { start: week[0], end: week[6] } : undefined}
+                                marked={EVENTS.filter((event) => event.calendar !== 'runs' && shown.includes(event.calendar)).map(
+                                    (event) => event.start,
+                                )}
+                            />
+                            <CalendarToggles shown={shown} onChange={setShown} />
+                        </Stack>
+                    </SubNav>
                     <div className="flex min-w-0 flex-1 flex-col">
-                        <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-border px-4 py-2.5">
+                        <Toolbar
+                            variant="pane"
+                            end={
+                                <Segmented
+                                    label="View"
+                                    value={view}
+                                    options={[
+                                        { value: 'week', label: phone ? 'Day' : 'Week' },
+                                        { value: 'month', label: 'Month' },
+                                    ]}
+                                    onChoose={setView}
+                                />
+                            }
+                        >
                             <Button size="sm" variant="outline" onClick={() => go(NOW)}>
                                 Today
                             </Button>
@@ -389,19 +408,10 @@ function CalendarApp({ view: initialView = 'week', open = null }: { view?: View;
                                     <ChevronRight aria-hidden />
                                 </IconButton>
                             </Row>
-                            <h1 className="min-w-0 flex-1 truncate text-title font-semibold">
+                            <ToolbarTitle as="h1">
                                 {phone ? format(anchor, view === 'week' ? 'EEE d MMM' : 'MMM yyyy') : title}
-                            </h1>
-                            <Segmented
-                                label="View"
-                                value={view}
-                                options={[
-                                    { value: 'week', label: phone ? 'Day' : 'Week' },
-                                    { value: 'month', label: 'Month' },
-                                ]}
-                                onChoose={setView}
-                            />
-                        </div>
+                            </ToolbarTitle>
+                        </Toolbar>
                         {phone ? (
                             <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
                                 {view === 'week' ? (

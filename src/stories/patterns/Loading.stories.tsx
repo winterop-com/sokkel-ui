@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
+import { AppBar } from '../../components/AppBar'
 import { type DataColumn, DataTable } from '../../components/DataTable'
 import { LoadingBar, LoadingOverlay, PageProgress } from '../../components/Loaders'
 import { StatusChip, type Status } from '../../components/StatusChip'
@@ -71,10 +72,9 @@ function Rows({ foot }: { foot?: string }) {
 function PageLoad() {
     return (
         <Stack gap="none" className="min-h-svh bg-background text-foreground">
-            <header className="relative flex h-shell-top shrink-0 items-center border-b border-border-strong bg-sidebar px-4 text-sm font-medium">
-                Runs
+            <AppBar trail={[{ label: 'Runs' }]}>
                 <PageProgress loading delay={0} value={60} />
-            </header>
+            </AppBar>
             <Stack gap="xl" className="mx-auto w-full max-w-3xl p-6">
                 <Rows />
             </Stack>

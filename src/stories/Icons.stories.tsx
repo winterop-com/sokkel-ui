@@ -7,7 +7,7 @@ import { useMemo, useState } from 'react'
 import { SearchField } from '../components/SearchField'
 import { Segmented } from '../components/Segmented'
 import { cn } from '../lib/cn'
-import { Row } from '../components/Layout'
+import { Toolbar } from '../components/Toolbar'
 
 /**
  * The one icon set: Lucide, from `lucide-react`. Every icon in the library and its stories comes
@@ -84,8 +84,11 @@ function Gallery({ start = 'library', query: initial = '' }: { start?: 'library'
                     }
                 />
             </div>
-            <Row gap="md" wrap className="mb-4">
-                <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-72" />
+            <Toolbar
+                className="mb-4"
+                search={<SearchField value={query} onChange={setQuery} placeholder="Search" />}
+                end={<span className="text-sm text-muted-foreground tabular-nums">{shown.length.toLocaleString('en-US')} shown</span>}
+            >
                 <Segmented
                     label="Which icons"
                     value={set}
@@ -96,8 +99,7 @@ function Gallery({ start = 'library', query: initial = '' }: { start?: 'library'
                     ]}
                 />
                 <Segmented label="Size" value={size} onChoose={setSize} options={SIZES} />
-                <span className="ml-auto text-sm text-muted-foreground tabular-nums">{shown.length.toLocaleString('en-US')} shown</span>
-            </Row>
+            </Toolbar>
             {shown.length === 0 ? (
                 <Empty>
                     <EmptyHeader>

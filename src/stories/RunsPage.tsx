@@ -15,6 +15,7 @@ import { TopBar } from '../components/TopBar'
 import { Button } from '../components/ui/button'
 import { DropdownMenuItem } from '../components/ui/dropdown-menu'
 import { TooltipProvider } from '../components/ui/tooltip'
+import { JOB_OPTIONS, STATUS_OPTIONS } from './fixtures/filters'
 import { TidevannMark } from './fixtures/TidevannMark'
 
 /**
@@ -110,6 +111,14 @@ export function RunsPage() {
     const [chosen, setChosen] = useState<Run>(RUNS[1])
     const [width, setWidth] = useState(360)
     const [query, setQuery] = useState('')
+    const [status, setStatus] = useState<string[]>([])
+    const [jobs, setJobs] = useState<string[]>([])
+    const rows = RUNS.filter(
+        (run) =>
+            (status.length === 0 || status.includes(run.status)) &&
+            (jobs.length === 0 || jobs.includes(run.job)) &&
+            run.job.includes(query.trim()),
+    )
     return (
         <TooltipProvider>
             <Shell
@@ -128,12 +137,12 @@ export function RunsPage() {
                                         placeholder="Search"
                                         className="w-full max-w-64 min-w-40"
                                     />
-                                    <FilterChip facet="Status" />
-                                    <FilterChip facet="Job" />
+                                    <FilterChip facet="Status" options={STATUS_OPTIONS} selected={status} onSelectedChange={setStatus} />
+                                    <FilterChip facet="Job" options={JOB_OPTIONS} multiple selected={jobs} onSelectedChange={setJobs} />
                                 </>
                             }
                             columns={COLUMNS}
-                            rows={RUNS}
+                            rows={rows}
                             rowKey={(run) => run.id}
                             opened={(run) => run.id === chosen.id}
                             onOpen={setChosen}

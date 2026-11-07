@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { PaneHeader } from './PaneHeader'
 
 /**
  * A titled part of a page.
@@ -42,22 +43,14 @@ export function Section({
                     className,
                 )}
             >
-                <header className="flex h-(--density-panel-head) shrink-0 items-center gap-2 border-b border-border-strong bg-panel-ground px-(--density-panel-pad)">
-                    <h2 className="truncate text-[length:var(--table-head-size)] font-[number:var(--table-head-weight)]">{title}</h2>
-                    {meta !== undefined && <span className="font-mono text-xs text-muted-foreground">{meta}</span>}
-                    {actions !== undefined && <div className="ml-auto flex items-center gap-1">{actions}</div>}
-                </header>
+                <PaneHeader variant="panel" title={title} meta={meta} actions={actions} />
                 <div className={cn(!flush && 'p-(--density-panel-pad)', fill && 'min-h-0 flex-1 overflow-auto')}>{children}</div>
             </section>
         )
     }
     return (
         <section className={cn('flex flex-col gap-(--density-section-gap)', className)}>
-            <header className="flex h-(--density-panel-head) items-center gap-2 border-b border-border">
-                <h2 className="truncate text-sm font-medium">{title}</h2>
-                {meta !== undefined && <span className="font-mono text-xs text-muted-foreground">{meta}</span>}
-                {actions !== undefined && <div className="ml-auto flex items-center gap-1">{actions}</div>}
-            </header>
+            <PaneHeader title={title} meta={meta} actions={actions} inset={false} />
             <div>{children}</div>
         </section>
     )

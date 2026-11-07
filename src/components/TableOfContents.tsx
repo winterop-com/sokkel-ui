@@ -1,13 +1,14 @@
-import { useEffect, useState, type RefObject } from 'react'
+import { useEffect, useState, type ReactNode, type RefObject } from 'react'
 
 import { cn } from '../lib/cn'
 import { GroupLabel } from './GroupLabel'
 
-/** One entry of a table of contents: the heading's id, its text, and its level. */
+/** One entry of a table of contents: the heading's id, its text, its level, and a mark before it such as its state. */
 export interface ContentsEntry {
     id: string
     label: string
     level: number
+    icon?: ReactNode
 }
 
 /** The nearest ancestor that scrolls, or null when the window does. */
@@ -56,8 +57,8 @@ export function useActiveHeading(container: RefObject<HTMLElement | null>, ids: 
 }
 
 /**
- * An "on this page" list beside a long page: its headings, the deeper ones indented, the one the
- * reader is in marked with a bar. A press scrolls its heading into view; `onJump` replaces that.
+ * An "on this page" list beside a long page or form: its headings, the deeper ones indented, the
+ * one the reader is in marked with a bar, each with an optional mark such as a part's state. A press scrolls its heading into view; `onJump` replaces that.
  * `useActiveHeading` says which entry is current as the page scrolls.
  */
 export function TableOfContents({
@@ -94,13 +95,16 @@ export function TableOfContents({
                                 }}
                                 style={{ paddingLeft: `calc(${entry.level - top} * 0.75rem + 0.75rem)` }}
                                 className={cn(
-                                    '-ml-px block truncate border-l-2 py-1 pr-2 leading-snug outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                                    '-ml-px flex items-center gap-2 border-l-2 py-1 pr-2 leading-snug outline-none focus-visible:ring-2 focus-visible:ring-ring',
                                     on
                                         ? 'border-primary font-medium text-foreground'
                                         : 'border-transparent text-muted-foreground hover:border-border-strong hover:text-foreground',
                                 )}
                             >
-                                {entry.label}
+                                {entry.icon !== undefined && (
+                                    <span className="flex size-4 shrink-0 items-center justify-center">{entry.icon}</span>
+                                )}
+                                <span className="min-w-0 truncate">{entry.label}</span>
                             </a>
                         </li>
                     )

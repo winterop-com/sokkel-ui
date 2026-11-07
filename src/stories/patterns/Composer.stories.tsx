@@ -1,10 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 
 import { Composer, type ComposerAttachment } from '../../components/Composer'
-import { Button } from '../../components/ui/button'
 import { Stack } from '../../components/Layout'
+import { ModelPicker } from '../fixtures/models'
 
 /** The message composer: empty, with a draft and attachments, while an answer streams, and shut. */
 function Ground({ children }: { children: React.ReactNode }) {
@@ -20,15 +19,6 @@ function Ground({ children }: { children: React.ReactNode }) {
 const PREVIEW = `data:image/svg+xml;utf8,${encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" width="112" height="112"><rect width="112" height="112" fill="#dbe4f0"/><path d="M0 84 L30 54 L52 74 L78 40 L112 76 L112 112 L0 112Z" fill="#7a93b8"/><circle cx="82" cy="26" r="10" fill="#f2c14e"/></svg>',
 )}`
-
-function ModelPicker() {
-    return (
-        <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground">
-            fast model
-            <ChevronDown aria-hidden />
-        </Button>
-    )
-}
 
 function Live({
     initial,

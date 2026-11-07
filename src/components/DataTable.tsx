@@ -26,6 +26,7 @@ import {
 
 import { cn } from '../lib/cn'
 import { ResizeHandle } from './ResizeHandle'
+import { SelectionBar } from './SelectionBar'
 import { Button } from './ui/button'
 import { Checkbox } from './ui/checkbox'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from './ui/context-menu'
@@ -107,6 +108,8 @@ export interface DataTableWords {
     lastPage: string
     selected: (count: number) => string
     clear: string
+    /** The selection bar's accessible name. */
+    selection: string
     selectAll: string
     /** The bar's offer, once a page is selected, to select every row on every page. */
     selectEvery: (count: number) => string
@@ -141,6 +144,7 @@ const WORDS: DataTableWords = {
     lastPage: 'Last page',
     selected: (count) => `${count.toLocaleString('en-US')} selected`,
     clear: 'Clear',
+    selection: 'Selection',
     selectAll: 'Select all rows',
     selectEvery: (count) => `Select all ${count.toLocaleString('en-US')}`,
     allSelected: (count) => `All ${count.toLocaleString('en-US')} selected`,
@@ -960,25 +964,29 @@ export function DataTable<T>({
             {(!list || selection.size > 0) && (
                 <div className="flex min-h-(--density-panel-head) shrink-0 items-center gap-2 border-b border-border px-(--density-panel-pad) text-sm">
                     {selection.size > 0 ? (
-                        // The selection's actions scroll sideways when the bar is too narrow for them.
-                        <div className="flex min-w-0 flex-1 [scrollbar-width:none] items-center gap-2 overflow-x-auto">
-                            <span className="shrink-0 font-medium whitespace-nowrap tabular-nums">
-                                {paging === 'client' && allChosen ? words.allSelected(allKeys.length) : words.selected(selection.size)}
-                            </span>
-                            {offerEvery && (
-                                <Button
-                                    variant="link"
-                                    size="xs"
-                                    onClick={() => (paging === 'client' ? setSelection(new Set(allKeys)) : onSelectAllPages?.())}
-                                >
-                                    {words.selectEvery(everyCount)}
-                                </Button>
-                            )}
-                            <Button variant="ghost" size="xs" onClick={clear}>
-                                {words.clear}
-                            </Button>
+                        <SelectionBar
+                            count={selection.size}
+                            onClear={clear}
+                            offer={
+                                offerEvery && (
+                                    <Button
+                                        variant="link"
+                                        size="xs"
+                                        onClick={() => (paging === 'client' ? setSelection(new Set(allKeys)) : onSelectAllPages?.())}
+                                    >
+                                        {words.selectEvery(everyCount)}
+                                    </Button>
+                                )
+                            }
+                            words={{
+                                selected: (count) =>
+                                    paging === 'client' && allChosen ? words.allSelected(allKeys.length) : words.selected(count),
+                                clear: words.clear,
+                                label: words.selection,
+                            }}
+                        >
                             {bulkActions?.(selection, clear)}
-                        </div>
+                        </SelectionBar>
                     ) : (
                         // The tools wrap onto more lines when the bar is too narrow for them, so none is hidden.
                         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 py-0.5">{toolbar}</div>

@@ -30,7 +30,8 @@ import {
     WORKERS,
 } from '../fixtures/runs'
 import { TidevannMark } from '../fixtures/TidevannMark'
-import { Row, Stack } from '../../components/Layout'
+import { TopBar } from '../../components/TopBar'
+import { Stack } from '../../components/Layout'
 
 /**
  * The panels a monitoring dashboard is made of: stat tiles colored by thresholds, gauges, bar
@@ -45,11 +46,7 @@ function Ground({ title, children }: { title: string; children: ReactNode }) {
         <TooltipProvider>
             <div className="min-h-svh bg-background p-3 text-foreground md:p-4">
                 <Stack gap="sm">
-                    <Row as="header" className="text-sm">
-                        <TidevannMark className="size-4 text-primary" />
-                        <span className="font-medium">Tidevann</span>
-                        <span className="text-muted-foreground">{title}</span>
-                    </Row>
+                    <TopBar mark={<TidevannMark />} trail={[{ label: 'Tidevann', href: '#' }, { label: title }]} />
                     {children}
                 </Stack>
             </div>

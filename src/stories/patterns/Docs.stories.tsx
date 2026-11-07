@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import { CheckCircle2, CircleAlert } from 'lucide-react'
 import { useRef } from 'react'
 
+import { Dot } from '../../components/Dot'
 import { Markdown, markdownHeadings } from '../../components/Markdown'
 import { TableOfContents, useActiveHeading } from '../../components/TableOfContents'
 import { Row } from '../../components/Layout'
@@ -65,6 +67,34 @@ function Contents() {
     )
 }
 
+/** A form's parts beside it, each with a mark for its state: complete, needing attention, not started. */
+function FormOutline() {
+    return (
+        <TableOfContents
+            entries={[
+                {
+                    id: 'where',
+                    label: 'Where and when',
+                    level: 1,
+                    icon: <CheckCircle2 className="size-4 text-good-ink" aria-label="Complete" />,
+                },
+                {
+                    id: 'measurements',
+                    label: 'Measurements',
+                    level: 1,
+                    icon: <CircleAlert className="size-4 text-critical-ink" aria-label="Needs attention" />,
+                },
+                { id: 'conditions', label: 'Site check', level: 1, icon: <Dot outline /> },
+                { id: 'notes', label: 'Notes', level: 1, icon: <Dot outline /> },
+            ]}
+            active="measurements"
+            onJump={() => undefined}
+            words={{ title: 'On this form' }}
+            className="w-52"
+        />
+    )
+}
+
 const meta: Meta = { title: 'Patterns/Docs' }
 export default meta
 
@@ -73,3 +103,6 @@ export const Callout: StoryObj = { name: 'Callouts', render: () => <Callouts /> 
 
 /** A long page with its headings beside it; scrolling moves the mark to the heading in view. */
 export const Contents_: StoryObj = { name: 'Table of contents', render: () => <Contents /> }
+
+/** The same list for a form, each part with a mark for its state. */
+export const Outline: StoryObj = { name: 'Form outline', parameters: { frame: 'padded' }, render: () => <FormOutline /> }

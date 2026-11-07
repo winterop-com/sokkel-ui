@@ -24,22 +24,18 @@ import { useState } from 'react'
 import { AccountMenu } from '../../components/AccountMenu'
 import { MediaCard, MediaGrid } from '../../components/media/MediaCard'
 import { formatTime } from '../../components/media/time'
+import { MetaLine } from '../../components/MetaLine'
 import { VideoPlayer } from '../../components/media/VideoPlayer'
 import { PersonAvatar } from '../../components/PersonAvatar'
 import { Rail, type RailGroup } from '../../components/Rail'
 import { Page, Shell } from '../../components/Shell'
+import { Toolbar, ToolbarTitle } from '../../components/Toolbar'
 import { TopBar, type Crumb } from '../../components/TopBar'
 import { Button } from '../../components/ui/button'
 import { ButtonGroup } from '../../components/ui/button-group'
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuTrigger,
-} from '../../components/ui/dropdown-menu'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../../components/ui/dropdown-menu'
 import { Input } from '../../components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import type { KindColor } from '../../lib/kind'
 import { Artwork, type Cover } from '../fixtures/Artwork'
@@ -312,7 +308,7 @@ function HomePage() {
                             key={video.id}
                             shape="wide"
                             title={video.title}
-                            subtitle={`${video.channel} · ${video.views} · ${video.ago}`}
+                            subtitle={<MetaLine inline items={[video.channel, video.views, video.ago]} />}
                             cover={<Artwork cover={video.cover} wide />}
                             badge={formatTime(video.length)}
                             progress={video.watched}
@@ -398,26 +394,35 @@ function CommentItem({ comment, reply = false }: { comment: Comment; reply?: boo
     )
 }
 
+const ORDERS = [
+    { value: 'top', label: 'Top comments' },
+    { value: 'new', label: 'Newest first' },
+]
+
 function Comments() {
     const [order, setOrder] = useState('top')
     const [draft, setDraft] = useState('')
     return (
         <section className="flex flex-col gap-5">
-            <Row gap="lg">
-                <h2 className="text-title font-semibold">1,204 comments</h2>
-                <DropdownMenu>
-                    <DropdownMenuTrigger render={<Button variant="ghost" size="sm" />}>
-                        <SlidersHorizontal aria-hidden />
-                        Sort by
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-40">
-                        <DropdownMenuRadioGroup value={order} onValueChange={(value: string) => setOrder(value)}>
-                            <DropdownMenuRadioItem value="top">Top comments</DropdownMenuRadioItem>
-                            <DropdownMenuRadioItem value="new">Newest first</DropdownMenuRadioItem>
-                        </DropdownMenuRadioGroup>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </Row>
+            <Toolbar
+                end={
+                    <Select items={ORDERS} value={order} onValueChange={(value) => setOrder(value ?? 'top')}>
+                        <SelectTrigger variant="quiet" size="sm" aria-label="Sort by">
+                            <SlidersHorizontal aria-hidden />
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent align="end">
+                            {ORDERS.map((entry) => (
+                                <SelectItem key={entry.value} value={entry.value}>
+                                    {entry.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                }
+            >
+                <ToolbarTitle>1,204 comments</ToolbarTitle>
+            </Toolbar>
             <Row gap="md" align="stretch">
                 <PersonAvatar name="ada" color={CHANNELS.ada.color} size="md" />
                 <div className="flex min-w-0 flex-1 flex-col gap-2">
@@ -510,9 +515,7 @@ function WatchPage() {
                         </Row>
                     </Row>
                     <Stack gap="2xs" className="rounded-surface bg-muted p-3 text-sm">
-                        <p className="font-medium">
-                            {WATCHING.views} · {WATCHING.ago}
-                        </p>
+                        <MetaLine size="sm" tone="strong" items={[WATCHING.views, WATCHING.ago]} />
                         <p className={more ? 'leading-relaxed' : 'line-clamp-2 leading-relaxed'}>
                             Four mornings on one headland of the northern coast, cut into one: the first light on the water, the harbor
                             waking up, and the boats leaving one by one. Filmed from the same spot each day, with nothing added but the
@@ -537,7 +540,7 @@ function WatchPage() {
                                     <>
                                         {video.channel}
                                         <br />
-                                        {video.views} · {video.ago}
+                                        <MetaLine inline items={[video.views, video.ago]} />
                                     </>
                                 }
                                 cover={<Artwork cover={video.cover} wide />}

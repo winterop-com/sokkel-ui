@@ -87,6 +87,36 @@ export const States: StoryObj = {
     ),
 }
 
+const ORDERS = [
+    { value: 'newest', label: 'Newest first' },
+    { value: 'oldest', label: 'Oldest first' },
+    { value: 'slowest', label: 'Slowest first' },
+]
+
+/** The quiet trigger: a ghost button that shows the chosen value, for a value picked in a bar or beside a heading. */
+export const Quiet: StoryObj = {
+    render: () => (
+        <Row gap="xl" align="end" wrap>
+            {(['default', 'sm'] as const).map((size) => (
+                <Specimen key={size} label={size}>
+                    <Select items={ORDERS} defaultValue="newest">
+                        <SelectTrigger variant="quiet" size={size} aria-label="Order">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {ORDERS.map((order) => (
+                                <SelectItem key={order.value} value={order.value}>
+                                    {order.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </Specimen>
+            ))}
+        </Row>
+    ),
+}
+
 export const Open: StoryObj = {
     render: () => (
         <div className="h-80 pt-16">
