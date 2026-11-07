@@ -6,7 +6,7 @@ import { extendTailwindMerge } from 'tailwind-merge'
  * for a color and dropped beside `text-muted-foreground`.
  */
 const merge = extendTailwindMerge({
-    extend: { classGroups: { 'font-size': [{ text: ['title', 'page', 'stat', 'graph-small', 'graph-title'] }] } },
+    extend: { classGroups: { 'font-size': [{ text: ['title', 'page', 'stat', 'display', 'graph-small', 'graph-title'] }] } },
 })
 
 /** Join class names, later ones winning over earlier ones that set the same thing. */
