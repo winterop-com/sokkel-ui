@@ -5,7 +5,6 @@ import {
     Clapperboard,
     Disc3,
     Download,
-    Heart,
     ListEnd,
     ListMusic,
     ListPlus,
@@ -14,14 +13,17 @@ import {
     Music2,
     Play,
     Shuffle,
+    Star,
     Tv,
     type LucideIcon,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { toast } from 'sonner'
 
 import { AccountMenu } from '../../components/AccountMenu'
 import { MediaBar, type RepeatMode } from '../../components/media/MediaBar'
 import { MediaCard, MediaGrid } from '../../components/media/MediaCard'
+import { SoundVisualizer } from '../../components/media/SoundVisualizer'
 import { formatTime } from '../../components/media/time'
 import { MetaLine } from '../../components/MetaLine'
 import { TrackList, type Track } from '../../components/media/TrackList'
@@ -38,12 +40,14 @@ import { Toolbar } from '../../components/Toolbar'
 import { TopBar, type Crumb } from '../../components/TopBar'
 import { Button } from '../../components/ui/button'
 import { DropdownMenuItem } from '../../components/ui/dropdown-menu'
+import { Toaster } from '../../components/ui/sonner'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { Artwork, type Cover } from '../fixtures/Artwork'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import captions from '../media/fixtures/captions.vtt?url'
 import clip from '../media/fixtures/clip.webm?url'
 import { waveformOf } from '../media/fixtures/waveform'
+import { FRAME } from '../media/fixtures/sound'
 import { Row, Stack } from '../../components/Layout'
 import { GroupLabel } from '../../components/GroupLabel'
 
@@ -177,7 +181,7 @@ function groups(view: View): RailGroup[] {
                 entry('albums', 'Albums', Disc3, view !== 'video' && view !== 'series'),
                 entry('artists', 'Artists', MicVocal),
                 entry('tracks', 'Tracks', Music2),
-                entry('favorites', 'Favorites', Heart),
+                entry('favorites', 'Favorites', Star),
             ],
         },
         {
@@ -432,10 +436,7 @@ function Watch() {
                             <MetaLine size="sm" items={[`${FILM.series}, episode 1`, FILM.by, FILM.year, formatTime(FILM.length)]} />
                         </div>
                         <Row>
-                            <Button size="sm" variant="outline">
-                                <Heart aria-hidden />
-                                Favorite
-                            </Button>
+                            <StarButton variant="outline" />
                             <IconButton label="More">
                                 <MoreHorizontal aria-hidden />
                             </IconButton>
@@ -460,8 +461,27 @@ function Watch() {
 /** The playing track's loudness, drawn as the large player's scrubber. */
 const WAVEFORM = waveformOf(4)
 
-/** The player bar, resizable from its top edge, starting at `size` pixels tall. */
+/**
+ * The player bar, resizable from its top edge, starting at `size` pixels tall. Made tall, a sound
+ * visualizer rises behind the title; here it draws a still frame, as the story plays no audio. V
+ * shows and hides it, and a toast says which.
+ */
 function Player({ queueOpen, size }: { queueOpen: boolean; size?: number }) {
+    const [visualizer, setVisualizer] = useState(true)
+    // The key handler's own copy of whether it shows, so a press toggles and toasts exactly once.
+    const shown = useRef(true)
+    useEffect(() => {
+        const toggle = (event: KeyboardEvent) => {
+            const target = event.target as HTMLElement | null
+            if (event.key.toLowerCase() !== 'v' || event.metaKey || event.ctrlKey || event.altKey) return
+            if (target !== null && target.closest('input, textarea, select, [contenteditable="true"]') !== null) return
+            shown.current = !shown.current
+            setVisualizer(shown.current)
+            toast(shown.current ? 'Visualizer shown' : 'Visualizer hidden')
+        }
+        window.addEventListener('keydown', toggle)
+        return () => window.removeEventListener('keydown', toggle)
+    }, [])
     const [playing, setPlaying] = useState(true)
     const [position, setPosition] = useState(POSITION)
     const [volume, setVolume] = useState(0.7)
@@ -485,6 +505,7 @@ function Player({ queueOpen, size }: { queueOpen: boolean; size?: number }) {
             onSeek={setPosition}
             buffered={[{ start: 0, end: 180 }]}
             waveform={WAVEFORM}
+            visualizer={visualizer ? <SoundVisualizer frame={FRAME} label="What is playing" /> : undefined}
             defaultSize={size}
             volume={volume}
             onVolumeChange={setVolume}
@@ -562,6 +583,7 @@ function MusicApp({ view, player }: { view: View; player?: number }) {
                     </>
                 )}
             </Shell>
+            <Toaster />
         </TooltipProvider>
     )
 }

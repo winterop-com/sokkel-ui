@@ -137,7 +137,8 @@ export interface MediaBarProps {
  * edge, a line in the accent over the title (the place, the album, the year), the title large with
  * the artist under it, the scrubber drawn as the track's `waveform` with the played part filled,
  * and at the foot shuffle, repeat, previous, play and next, with the volume and any extra controls
- * at the end. A `visualizer` fills the room behind the words and the scrubber.
+ * at the end. A `visualizer` fills the room behind the words and the scrubber, drawn faint so the
+ * words stay clear over it; pass it at full strength.
  *
  * Its top edge drags to resize it, from the one line to the large panel, and a double click on the
  * edge puts it back. Left to itself it holds its own height, starting at `defaultSize`; `size` with
