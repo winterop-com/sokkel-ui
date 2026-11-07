@@ -37,6 +37,6 @@ jobs:
             - name: Pack the packages
               run: for package in core charts maps graph; do (cd "packages/$package" && bun pm pack --destination ../../packed); done
             - name: Publish the packages
-              run: for tarball in packed/winterop-com-sokkel-ui-0*.tgz packed/winterop-com-sokkel-ui-charts-*.tgz packed/winterop-com-sokkel-ui-maps-*.tgz packed/winterop-com-sokkel-ui-graph-*.tgz; do npm publish "$tarball"; done
+              run: for tarball in packed/winterop-com-sokkel-ui-0*.tgz packed/winterop-com-sokkel-ui-charts-*.tgz packed/winterop-com-sokkel-ui-maps-*.tgz packed/winterop-com-sokkel-ui-graph-*.tgz; do npm publish "./$tarball"; done
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
