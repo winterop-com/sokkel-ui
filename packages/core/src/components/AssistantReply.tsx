@@ -133,7 +133,7 @@ export interface AssistantReplySpeech {
  * written it is open, its line says Thinking with a shimmer, and the text grows; once the answer
  * begins it folds away, and a press opens it again.
  */
-function Reasoning({ text, thinking, words }: { text: string; thinking: boolean; words: AssistantReplyWords }) {
+function Reasoning({ text, thinking, math, words }: { text: string; thinking: boolean; math: boolean; words: AssistantReplyWords }) {
     const [open, setOpen] = useState(false)
     return (
         <Trace data-slot="assistant-reasoning">
@@ -147,7 +147,7 @@ function Reasoning({ text, thinking, words }: { text: string; thinking: boolean;
                     </TraceLine>
                 </TraceCollapsibleTrigger>
                 <TraceCollapsibleContent>
-                    <Markdown content={text} streaming={thinking} className="text-muted-foreground" />
+                    <Markdown content={text} streaming={thinking} math={math} className="text-muted-foreground" />
                 </TraceCollapsibleContent>
             </TraceCollapsible>
         </Trace>
@@ -212,6 +212,7 @@ export function AssistantReply({
     reasoning,
     content,
     speech,
+    math = true,
     children,
     state = 'done',
     problem,
@@ -245,6 +246,8 @@ export function AssistantReply({
     content?: string
     /** The answer read aloud, played in one line under it. */
     speech?: AssistantReplySpeech
+    /** Draws the answer's LaTeX math, as `Markdown` does: on by default; off where every `$` is a dollar. */
+    math?: boolean
     /** More under the answer, such as a chart or files it made. */
     children?: ReactNode
     state?: AssistantReplyState
@@ -307,8 +310,8 @@ export function AssistantReply({
                     </TraceLine>
                 </Trace>
             )}
-            {thought && <Reasoning text={reasoning} thinking={streaming && !written} words={words} />}
-            {written && <Markdown content={content} inlineCode={INLINE[layout]} streaming={streaming} caret={streaming} />}
+            {thought && <Reasoning text={reasoning} thinking={streaming && !written} math={math} words={words} />}
+            {written && <Markdown content={content} inlineCode={INLINE[layout]} streaming={streaming} caret={streaming} math={math} />}
             {speech !== undefined && (
                 <AudioPlayer
                     src={speech.src}
