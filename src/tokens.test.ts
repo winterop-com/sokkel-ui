@@ -44,6 +44,33 @@ describe('the tokens', () => {
     }
 })
 
+/** The surfaces the default sets as fixed colors, which every other theme mixes from its own. */
+const SURFACES_OF_THEIR_OWN = ['canvas', 'node', 'node-line', 'critical-wash', 'panel-line', 'panel-ground'] as const
+
+describe('the tinted surfaces', () => {
+    const base = tokens.themes.default
+    const styles = join(__dirname, '..', 'packages', 'core', 'src', 'styles')
+    const fixed = new Set(SURFACES_OF_THEIR_OWN.flatMap((name) => [base.light?.[name], base.dark?.[name]]))
+    for (const theme of Object.keys(tokens.themes).filter((name) => name !== 'default')) {
+        it(`set ${theme}'s own, never the default's`, () => {
+            const css = readFileSync(join(styles, 'themes', `${theme}.css`), 'utf8')
+            const blocks = [...css.matchAll(/^([^\n{]+) \{\n([^}]*)\}/gm)].filter(([, selector]) => selector.startsWith('html'))
+            expect(blocks).toHaveLength(2)
+            const wrong: string[] = []
+            for (const [, selector, body] of blocks) {
+                for (const name of SURFACES_OF_THEIR_OWN) {
+                    const value = new RegExp(`^ +--${name}: (.+);$`, 'm').exec(body)?.[1]
+                    if (value === undefined || fixed.has(value)) wrong.push(`${selector} --${name}: ${value ?? 'unset'}`)
+                }
+            }
+            for (const [, name, value] of css.matchAll(/--([\w-]+): (.+);/g)) {
+                if ((SURFACES_OF_THEIR_OWN as readonly string[]).includes(name) && fixed.has(value)) wrong.push(`--${name}: ${value}`)
+            }
+            expect(wrong, wrong.join('\n')).toEqual([])
+        })
+    }
+})
+
 describe('the theme files', () => {
     const resolve = createRequire(import.meta.url).resolve
     const styles = join(__dirname, '..', 'packages', 'core', 'src', 'styles')
