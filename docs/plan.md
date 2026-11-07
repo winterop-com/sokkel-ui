@@ -57,7 +57,8 @@ Shell, Rail, AppBar, SubNav, Page, PageHeader, PaneHeader, Toolbar, Section, Sur
 components (Stack, Row, Columns, Split, Fill), Field, TextField, InlineField, SliderField,
 CheckboxField, CheckboxList, ChoiceList, CodeField, SwitchField, SearchField, FilterChip, FormBar,
 SelectionBar, DataTable, StatusChip, PersonRow, MetaLine, DueText, AttachmentList, IconButton,
-AccountMenu, SidePanel, DialogShell, ConfirmDialog, TreeSelect, AsyncSelect, CapabilityPicker.
+StarButton, AccountMenu, SidePanel, DialogShell, ConfirmDialog, TreeSelect, AsyncSelect,
+CapabilityPicker.
 Every example arranges and builds its screens from these, never by hand, so a fix in one reaches
 them all.
 
@@ -90,6 +91,21 @@ An editor also refuses a connection with the reason said on the canvas, adds a s
 button at a node's output or an edge's middle, takes blocks dragged in from a palette, and chooses
 several nodes with Shift. BlockPalette, BlockPicker, GraphOverlay, GraphNotice, GraphToolbar and
 useGraphHistory are its parts; the Pipeline editor stories show each way of building a pipeline.
+
+## Media
+
+VideoPlayer, MediaBar, MediaCard and TrackList carry video and music, and the `AudioScrubber`
+primitive draws a recording's waveform under its position. SoundVisualizer is the one live picture
+of sound: it reads a playing media element or a live stream, such as a microphone's, through Web
+Audio and draws it on a canvas as a spectrum, an area, a wave or a ring, filling its box in a color
+token, faint behind text when it is a backdrop. It moves only while the source sounds and the box
+is in view; paused, hidden or unmounted it holds still with no frame loop running, and a still frame
+of levels or samples draws without any audio. Each element is wired to the page's one audio context
+once, on its first play, and is heard through it from then on, so cross-origin media needs CORS; a
+source Web Audio cannot read is never wired and draws at rest. An app that wires its element into
+its own audio graph passes an `AnalyserNode` from it instead, with `playing`, since an element can
+be wired only once. The `bar-visualizer` primitive, a
+voice input's level bars, is drawn by it.
 
 ## Validation
 

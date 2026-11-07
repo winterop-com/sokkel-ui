@@ -1,485 +1,66 @@
 'use client'
 
-import { forwardRef, memo, useEffect, useMemo, useRef, useState, type HTMLAttributes } from 'react'
+import type { HTMLAttributes } from 'react'
 
 import { cn } from '../../lib/cn'
+import { SoundVisualizer, type SoundSource } from '../media/SoundVisualizer'
+import { VOICE_RANGE } from '../media/sound'
 
-export interface AudioAnalyserOptions {
-    fftSize?: number
-    smoothingTimeConstant?: number
-    minDecibels?: number
-    maxDecibels?: number
-}
-
-function createAudioAnalyser(mediaStream: MediaStream, options: AudioAnalyserOptions = {}) {
-    const audioContext = new (
-        window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
-    )()
-    // Local fix: a freshly-created AudioContext can start "suspended", which leaves the
-    // analyser reading zeros (flat bars). Resume it so mic input actually drives the bars.
-    void audioContext.resume()
-    const source = audioContext.createMediaStreamSource(mediaStream)
-    const analyser = audioContext.createAnalyser()
-
-    if (options.fftSize) analyser.fftSize = options.fftSize
-    if (options.smoothingTimeConstant !== undefined) {
-        analyser.smoothingTimeConstant = options.smoothingTimeConstant
-    }
-    if (options.minDecibels !== undefined) analyser.minDecibels = options.minDecibels
-    if (options.maxDecibels !== undefined) analyser.maxDecibels = options.maxDecibels
-
-    source.connect(analyser)
-
-    const cleanup = () => {
-        source.disconnect()
-        audioContext.close()
-    }
-
-    return { analyser, audioContext, cleanup }
-}
-
-/**
- * Hook for tracking the volume of an audio stream using the Web Audio API.
- * @param mediaStream - The MediaStream to analyze
- * @param options - Audio analyser options
- * @returns The current volume level (0-1)
- */
-export function useAudioVolume(
-    mediaStream?: MediaStream | null,
-    options: AudioAnalyserOptions = { fftSize: 32, smoothingTimeConstant: 0 },
-) {
-    const [volume, setVolume] = useState(0)
-    const volumeRef = useRef(0)
-    const frameId = useRef<number | undefined>(undefined)
-
-    // Memoize options to prevent unnecessary re-renders
-    const memoizedOptions = useMemo(
-        () => options,
-        [options.fftSize, options.smoothingTimeConstant, options.minDecibels, options.maxDecibels],
-    )
-
-    useEffect(() => {
-        if (!mediaStream) {
-            setVolume(0)
-            volumeRef.current = 0
-            return
-        }
-
-        const { analyser, cleanup } = createAudioAnalyser(mediaStream, memoizedOptions)
-
-        const bufferLength = analyser.frequencyBinCount
-        const dataArray = new Uint8Array(bufferLength)
-        let lastUpdate = 0
-        const updateInterval = 1000 / 30 // 30 FPS
-
-        const updateVolume = (timestamp: number) => {
-            if (timestamp - lastUpdate >= updateInterval) {
-                analyser.getByteFrequencyData(dataArray)
-                let sum = 0
-                for (let i = 0; i < dataArray.length; i++) {
-                    const a = dataArray[i]
-                    sum += a * a
-                }
-                const newVolume = Math.sqrt(sum / dataArray.length) / 255
-
-                // Only update state if volume changed significantly
-                if (Math.abs(newVolume - volumeRef.current) > 0.01) {
-                    volumeRef.current = newVolume
-                    setVolume(newVolume)
-                }
-                lastUpdate = timestamp
-            }
-            frameId.current = requestAnimationFrame(updateVolume)
-        }
-
-        frameId.current = requestAnimationFrame(updateVolume)
-
-        return () => {
-            cleanup()
-            if (frameId.current) {
-                cancelAnimationFrame(frameId.current)
-            }
-        }
-    }, [mediaStream, memoizedOptions])
-
-    return volume
-}
-
-export interface MultiBandVolumeOptions {
-    bands?: number
-    loPass?: number // Low frequency cutoff
-    hiPass?: number // High frequency cutoff
-    updateInterval?: number // Update interval in ms
-    analyserOptions?: AudioAnalyserOptions
-}
-
-const multibandDefaults: MultiBandVolumeOptions = {
-    bands: 5,
-    loPass: 100,
-    hiPass: 600,
-    updateInterval: 32,
-    analyserOptions: { fftSize: 2048 },
-}
-
-// Normalize an FFT bin's dB value to 0..1. Local change: the upstream version mapped
-// [-100, -10] dB through a sqrt, which lifts the floor so every bar sits at mid-height and
-// barely reacts. A linear map over a realistic mic range (-80..-20 dB) gives real contrast —
-// quiet bands drop toward 0, loud speech pushes toward 1.
-const normalizeDb = (value: number) => {
-    if (value === -Infinity) return 0
-    const minDb = -80
-    const maxDb = -20
-    return (Math.max(minDb, Math.min(maxDb, value)) - minDb) / (maxDb - minDb)
-}
-
-/**
- * Hook for tracking volume across multiple frequency bands
- * @param mediaStream - The MediaStream to analyze
- * @param options - Multiband options
- * @returns Array of volume levels for each frequency band
- */
-export function useMultibandVolume(mediaStream?: MediaStream | null, options: MultiBandVolumeOptions = {}) {
-    const opts = useMemo(
-        () => ({ ...multibandDefaults, ...options }),
-        [
-            options.bands,
-            options.loPass,
-            options.hiPass,
-            options.updateInterval,
-            options.analyserOptions?.fftSize,
-            options.analyserOptions?.smoothingTimeConstant,
-            options.analyserOptions?.minDecibels,
-            options.analyserOptions?.maxDecibels,
-        ],
-    )
-
-    const [frequencyBands, setFrequencyBands] = useState<number[]>(() => Array.from({ length: opts.bands ?? 0 }, () => 0))
-    const bandsRef = useRef<number[]>(Array.from({ length: opts.bands ?? 0 }, () => 0))
-    const frameId = useRef<number | undefined>(undefined)
-
-    useEffect(() => {
-        if (!mediaStream) {
-            const emptyBands: number[] = Array.from({ length: opts.bands ?? 0 }, () => 0)
-            setFrequencyBands(emptyBands)
-            bandsRef.current = emptyBands
-            return
-        }
-
-        const { analyser, cleanup } = createAudioAnalyser(mediaStream, opts.analyserOptions)
-
-        const bufferLength = analyser.frequencyBinCount
-        const dataArray = new Float32Array(bufferLength)
-        const sliceStart = opts.loPass!
-        const sliceEnd = opts.hiPass!
-        const sliceLength = sliceEnd - sliceStart
-        const chunkSize = Math.ceil(sliceLength / opts.bands!)
-
-        let lastUpdate = 0
-        const updateInterval = opts.updateInterval!
-
-        const updateVolume = (timestamp: number) => {
-            if (timestamp - lastUpdate >= updateInterval) {
-                analyser.getFloatFrequencyData(dataArray)
-
-                // Process directly without creating intermediate arrays
-                const chunks: number[] = Array.from({ length: opts.bands! }, () => 0)
-
-                for (let i = 0; i < opts.bands!; i++) {
-                    let sum = 0
-                    let count = 0
-                    const startIdx = sliceStart + i * chunkSize
-                    const endIdx = Math.min(sliceStart + (i + 1) * chunkSize, sliceEnd)
-
-                    for (let j = startIdx; j < endIdx; j++) {
-                        sum += normalizeDb(dataArray[j])
-                        count++
-                    }
-
-                    chunks[i] = count > 0 ? sum / count : 0
-                }
-
-                // Only update state if bands changed significantly
-                let hasChanged = false
-                for (let i = 0; i < chunks.length; i++) {
-                    if (Math.abs(chunks[i] - bandsRef.current[i]) > 0.01) {
-                        hasChanged = true
-                        break
-                    }
-                }
-
-                if (hasChanged) {
-                    bandsRef.current = chunks
-                    setFrequencyBands(chunks)
-                }
-
-                lastUpdate = timestamp
-            }
-
-            frameId.current = requestAnimationFrame(updateVolume)
-        }
-
-        frameId.current = requestAnimationFrame(updateVolume)
-
-        return () => {
-            cleanup()
-            if (frameId.current) {
-                cancelAnimationFrame(frameId.current)
-            }
-        }
-    }, [mediaStream, opts])
-
-    return frequencyBands
-}
-
-type AnimationState = 'connecting' | 'initializing' | 'listening' | 'speaking' | 'thinking' | undefined
-
-export const useBarAnimator = (state: AnimationState, columns: number, interval: number): number[] => {
-    const indexRef = useRef(0)
-    const [currentFrame, setCurrentFrame] = useState<number[]>([])
-    const animationFrameId = useRef<number | null>(null)
-
-    // Memoize sequence generation
-    const sequence = useMemo(() => {
-        if (state === 'thinking' || state === 'listening') {
-            return generateListeningSequenceBar(columns)
-        } else if (state === 'connecting' || state === 'initializing') {
-            return generateConnectingSequenceBar(columns)
-        } else if (state === undefined || state === 'speaking') {
-            return [Array.from({ length: columns }, (_, idx) => idx)]
-        } else {
-            return [[]]
-        }
-    }, [state, columns])
-
-    useEffect(() => {
-        indexRef.current = 0
-        setCurrentFrame(sequence[0] || [])
-    }, [sequence])
-
-    useEffect(() => {
-        let startTime = performance.now()
-
-        const animate = (time: DOMHighResTimeStamp) => {
-            const timeElapsed = time - startTime
-
-            if (timeElapsed >= interval) {
-                indexRef.current = (indexRef.current + 1) % sequence.length
-                setCurrentFrame(sequence[indexRef.current] || [])
-                startTime = time
-            }
-
-            animationFrameId.current = requestAnimationFrame(animate)
-        }
-
-        animationFrameId.current = requestAnimationFrame(animate)
-
-        return () => {
-            if (animationFrameId.current !== null) {
-                cancelAnimationFrame(animationFrameId.current)
-            }
-        }
-    }, [interval, sequence])
-
-    return currentFrame
-}
-
-// Memoize sequence generators
-const generateConnectingSequenceBar = (columns: number): number[][] => {
-    const seq = []
-    for (let x = 0; x < columns; x++) {
-        seq.push([x, columns - 1 - x])
-    }
-    return seq
-}
-
-const generateListeningSequenceBar = (columns: number): number[][] => {
-    const center = Math.floor(columns / 2)
-    const noIndex = -1
-    return [[center], [noIndex]]
-}
-
+/** Where a voice exchange stands: the bars listen while someone speaks or is heard, and rest otherwise. */
 export type AgentState = 'connecting' | 'initializing' | 'listening' | 'speaking' | 'thinking'
 
-export interface BarVisualizerProps extends HTMLAttributes<HTMLDivElement> {
-    /** Voice assistant state */
+export interface BarVisualizerProps extends Omit<HTMLAttributes<HTMLDivElement>, 'children'> {
+    /** Voice assistant state: connecting, initializing and thinking hold the bars at rest in the quiet ink. */
     state?: AgentState
-    /** Number of bars to display */
+    /** Number of bars to display. */
     barCount?: number
-    /** Audio source */
-    mediaStream?: MediaStream | null
-    /** Min/max height as percentage */
+    /** What to listen to: a live stream such as a microphone's, or a media element that plays. */
+    source?: SoundSource | null
+    /** The least and most a bar stands, as a percentage of the height. */
     minHeight?: number
     maxHeight?: number
-    /** Enable demo mode with fake audio data */
-    demo?: boolean
-    /** Align bars from center instead of bottom */
+    /** Stand the bars about the middle instead of on the floor. */
     centerAlign?: boolean
+    /** What the bars are called, for a screen reader. */
+    label?: string
 }
 
-const BarVisualizerComponent = forwardRef<HTMLDivElement, BarVisualizerProps>(
-    (
-        {
-            state,
-            barCount = 15,
-            mediaStream,
-            minHeight = 20,
-            maxHeight = 100,
-            demo = false,
-            centerAlign = false,
-            className,
-            style,
-            ...props
-        },
-        ref,
-    ) => {
-        // Audio processing
-        // Local fix: loPass/hiPass are FFT *bin* indices (fftSize 2048 → ~23 Hz/bin). The
-        // upstream default 100–200 only covers ~2.3–4.7 kHz (sibilance), so it barely reacts to
-        // speech. Widen to bins 2–320 (~50 Hz–7.5 kHz) to include the vocal fundamentals and
-        // vowel formants where most of the energy is, so the bars actually track loudness.
-        const realVolumeBands = useMultibandVolume(mediaStream, {
-            bands: barCount,
-            loPass: 2,
-            hiPass: 320,
-        })
+/** The widest a voice bar is drawn; a row of them is centered in a wider box. */
+const VOICE_BAR = 12
 
-        // Generate fake volume data for demo mode using refs to avoid state updates
-        const fakeVolumeBandsRef = useRef<number[]>(Array.from({ length: barCount }, () => 0.2))
-        const [fakeVolumeBands, setFakeVolumeBands] = useState<number[]>(() => Array.from({ length: barCount }, () => 0.2))
-        const fakeAnimationRef = useRef<number | undefined>(undefined)
+const RESTING: readonly (AgentState | undefined)[] = ['connecting', 'initializing', 'thinking']
 
-        // Animate fake volume bands for speaking and listening states
-        useEffect(() => {
-            if (!demo) return
-
-            if (state !== 'speaking' && state !== 'listening') {
-                const bands = Array.from({ length: barCount }, () => 0.2)
-                fakeVolumeBandsRef.current = bands
-                setFakeVolumeBands(bands)
-                return
-            }
-
-            let lastUpdate = 0
-            const updateInterval = 50
-            const startTime = Date.now() / 1000
-
-            const updateFakeVolume = (timestamp: number) => {
-                if (timestamp - lastUpdate >= updateInterval) {
-                    const time = Date.now() / 1000 - startTime
-                    const newBands: number[] = Array.from({ length: barCount }, () => 0)
-
-                    for (let i = 0; i < barCount; i++) {
-                        const waveOffset = i * 0.5
-                        const baseVolume = Math.sin(time * 2 + waveOffset) * 0.3 + 0.5
-                        const randomNoise = Math.random() * 0.2
-                        newBands[i] = Math.max(0.1, Math.min(1, baseVolume + randomNoise))
-                    }
-
-                    // Only update if values changed significantly
-                    let hasChanged = false
-                    for (let i = 0; i < barCount; i++) {
-                        if (Math.abs(newBands[i] - fakeVolumeBandsRef.current[i]) > 0.05) {
-                            hasChanged = true
-                            break
-                        }
-                    }
-
-                    if (hasChanged) {
-                        fakeVolumeBandsRef.current = newBands
-                        setFakeVolumeBands(newBands)
-                    }
-
-                    lastUpdate = timestamp
-                }
-
-                fakeAnimationRef.current = requestAnimationFrame(updateFakeVolume)
-            }
-
-            fakeAnimationRef.current = requestAnimationFrame(updateFakeVolume)
-
-            return () => {
-                if (fakeAnimationRef.current) {
-                    cancelAnimationFrame(fakeAnimationRef.current)
-                }
-            }
-        }, [demo, state, barCount])
-
-        // Use fake or real volume data based on demo mode
-        const volumeBands = useMemo(() => (demo ? fakeVolumeBands : realVolumeBands), [demo, fakeVolumeBands, realVolumeBands])
-
-        // Animation sequencing
-        const highlightedIndices = useBarAnimator(
-            state,
-            barCount,
-            state === 'connecting' ? 2000 / barCount : state === 'thinking' ? 150 : state === 'listening' ? 500 : 1000,
-        )
-
-        return (
-            <div
-                ref={ref}
-                data-state={state}
-                className={cn(
-                    'relative flex justify-center gap-1.5',
-                    centerAlign ? 'items-center' : 'items-end',
-                    'h-32 w-full overflow-hidden rounded-lg bg-muted p-4',
-                    className,
-                )}
-                style={{
-                    ...style,
-                }}
-                {...props}
-            >
-                {volumeBands.map((volume, index) => {
-                    const heightPct = Math.min(maxHeight, Math.max(minHeight, volume * 100 + 5))
-                    const isHighlighted = highlightedIndices?.includes(index) ?? false
-
-                    return <Bar key={index} heightPct={heightPct} isHighlighted={isHighlighted} state={state} />
-                })}
-            </div>
-        )
-    },
-)
-
-// Memoized Bar component to prevent unnecessary re-renders
-const Bar = memo<{
-    heightPct: number
-    isHighlighted: boolean
-    state?: AgentState
-}>(({ heightPct, isHighlighted, state }) => (
-    <div
-        data-highlighted={isHighlighted}
-        className={cn(
-            'max-w-[12px] min-w-[8px] flex-1 transition-all duration-150',
-            'rounded-full',
-            'bg-border data-[highlighted=true]:bg-primary',
-            state === 'speaking' && 'bg-primary',
-            state === 'thinking' && isHighlighted && 'animate-pulse',
-        )}
-        style={{
-            height: `${heightPct}%`,
-            animationDuration: state === 'thinking' ? '300ms' : undefined,
-        }}
-    />
-))
-
-Bar.displayName = 'Bar'
-
-// Wrap the main component with memo for prop comparison optimization
-const BarVisualizer = memo(BarVisualizerComponent, (prevProps, nextProps) => {
+/**
+ * The level bars a voice input draws while it listens, in a muted well by default. Drawn by
+ * `SoundVisualizer` as a spectrum over a voice's frequencies, so a microphone and a playing element
+ * are read the same way.
+ */
+export function BarVisualizer({
+    state,
+    barCount = 15,
+    source = null,
+    minHeight = 20,
+    maxHeight = 100,
+    centerAlign = false,
+    label = 'Voice level',
+    className,
+    ...props
+}: BarVisualizerProps) {
+    const resting = RESTING.includes(state)
     return (
-        prevProps.state === nextProps.state &&
-        prevProps.barCount === nextProps.barCount &&
-        prevProps.mediaStream === nextProps.mediaStream &&
-        prevProps.minHeight === nextProps.minHeight &&
-        prevProps.maxHeight === nextProps.maxHeight &&
-        prevProps.demo === nextProps.demo &&
-        prevProps.centerAlign === nextProps.centerAlign &&
-        prevProps.className === nextProps.className &&
-        JSON.stringify(prevProps.style) === JSON.stringify(nextProps.style)
+        <div {...props} data-state={state} className={cn('h-32 w-full overflow-hidden rounded-lg bg-muted p-4', className)}>
+            <SoundVisualizer
+                source={resting ? null : source}
+                kind="spectrum"
+                align={centerAlign ? 'center' : 'bottom'}
+                bands={barCount}
+                range={VOICE_RANGE}
+                floor={minHeight / 100}
+                ceiling={maxHeight / 100}
+                barWidth={VOICE_BAR}
+                label={label}
+                color={resting ? 'muted-foreground' : 'primary'}
+            />
+        </div>
     )
-})
-
-BarVisualizerComponent.displayName = 'BarVisualizerComponent'
-BarVisualizer.displayName = 'BarVisualizer'
-
-export { BarVisualizer }
+}

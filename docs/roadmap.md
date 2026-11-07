@@ -24,23 +24,21 @@ to `plan.md` when it ships.
 
 The music parts grow to carry a whole player, before an app builds on them.
 
-- **A fuller music player.** `MediaBar` resizes from a handle on its top edge, from the one-line
-  bar to a large now-playing panel: the cover grows with the height; an eyebrow line in the accent
-  (track 13 of 16, the album, the year) over a large title and the artist; the scrubber drawn as the
-  track's waveform with the played part filled (the `AudioScrubber` primitive, not a plain slider);
-  shuffle, repeat, previous, play and next at the foot and the volume at the end. Behind the title
-  and scrubber rises a sound visualizer: a live picture of what is playing (a spectrum, a wave, a
-  ring), drawn from the player's own audio element, still when paused, with a static frame for
-  stories and a key that shows and hides it with a toast saying so. The `bar-visualizer` primitive
-  reads only a microphone stream today. An app's own visualizer kinds are the starting point; the
-  library goes further, one kind at a time. The player docks between the content and the foot: the
-  rail's foot (the account) stays at the window's bottom edge beside the shell's foot strip, under
-  the player, rather than being pushed up by it, as `Shell`'s `bottom` strip does today.
-- **A fuller album page.** `PageHeader` takes a back button and the trail above the title (Music,
-  then the artist), with the artist and year under it and Download, a favorite star and Add to
-  playlist at the end. Each `TrackList` row carries its actions through `actions`: add to the queue
-  and a favorite star, always in view. The star is now in two places, so a `StarButton` (a pressed
-  favorite with its own words) joins the parts.
+- **A fuller music player: done.** `MediaBar` resizes from its top edge, from the one-line bar to
+  a large now-playing panel: the cover as tall as the bar, a line in the accent (track 13 of 16, the
+  album, the year) over a large title and the artist, the scrubber drawn as the track's waveform
+  with the played part filled, and the transport at the foot with the volume at the end. `Shell`
+  docks it between the content and the foot, with the rail's foot (the account) kept at the
+  window's bottom edge.
+- **A sound visualizer: done.** `SoundVisualizer` draws what plays from an audio or video element,
+  or a live stream such as a microphone's, as a spectrum, an area, a wave or a ring. It holds still
+  when paused or hidden, follows the theme, and draws a still frame for stories; the bar visualizer
+  is drawn by it, so there is one. It rises behind the large player's title, and the music app's V
+  key shows and hides it with a toast. More kinds come one at a time: a two-channel level meter,
+  glow and trails.
+- **A fuller album page: done.** `PageHeader` takes a back button and the trail above the title,
+  each `TrackList` row carries add to queue and a favorite star in view, and `StarButton` is the
+  star in both places.
 
 ## 0.10: example apps
 
