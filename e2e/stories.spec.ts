@@ -105,6 +105,37 @@ async function settled(page: Page): Promise<void> {
             { timeout: 5000 },
         )
         .catch(() => undefined)
+    // A scroller that keeps to its end, such as a conversation's, scrolls there in steps after its
+    // content settles; wait until none is moving and every scroll position holds for a few frames.
+    await page
+        .waitForFunction(() => document.querySelector('[data-autoscrolling], [data-pending-scroll]') === null, null, { timeout: 10_000 })
+        .catch(() => undefined)
+    // A scroller resting at its end may have got there in steps that round differently from run to
+    // run, when its content is a fraction of a pixel tall. Scroll it to its top and straight back to
+    // its end, so every run reaches the end the same way.
+    await page.evaluate(() => {
+        for (const element of document.querySelectorAll('*')) {
+            const end = element.scrollHeight - element.clientHeight
+            if (end <= 0 || element.scrollTop <= 0 || end - element.scrollTop > 2) continue
+            element.scrollTop = 0
+            element.scrollTop = element.scrollHeight
+        }
+    })
+    await page.evaluate(async () => {
+        const positions = () =>
+            [...document.querySelectorAll('*')]
+                .filter((element) => element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth)
+                .map((element) => `${element.scrollTop},${element.scrollLeft}`)
+                .join(' ')
+        let last = positions()
+        let still = 0
+        for (let frame = 0; frame < 120 && still < 5; frame++) {
+            await new Promise((resolve) => requestAnimationFrame(resolve))
+            const now = positions()
+            still = now === last ? still + 1 : 0
+            last = now
+        }
+    })
     await page.waitForTimeout(300)
 }
 
