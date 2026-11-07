@@ -1,3 +1,5 @@
+import { StatusItem, StatusLine } from '../components/StatusLine'
+import { TopBar } from '../components/TopBar'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { BookOpen, CalendarClock, Library, Play, Server, Webhook, Workflow } from 'lucide-react'
 import { useMemo, useState } from 'react'
@@ -167,10 +169,10 @@ function Frame({
             onPanelOpenChange={onPanelOpenChange}
             foot={foot}
             top={
-                <>
-                    <span className="text-sm text-muted-foreground">{active === 'runs' ? 'Runs' : 'Services'}</span>
-                    <span className="ml-auto font-mono text-xs text-muted-foreground">Tidevann 1.4.0</span>
-                </>
+                <TopBar
+                    trail={[{ label: active === 'runs' ? 'Runs' : 'Services' }]}
+                    actions={<span className="font-mono text-xs text-muted-foreground">Tidevann 1.4.0</span>}
+                />
             }
         >
             {children}
@@ -248,12 +250,7 @@ function RunsListPage() {
             panel={panel}
             panelOpen={panelOpen}
             onPanelOpenChange={setPanelOpen}
-            foot={
-                <>
-                    <span>{rows.length} shown</span>
-                    <span className="ml-auto font-mono">{open?.id ?? ''}</span>
-                </>
-            }
+            foot={<StatusLine note={`${rows.length} shown`}>{open && <StatusItem code>{open.id}</StatusItem>}</StatusLine>}
         >
             <Page>
                 <PageHeader title="Runs" count={`${RUNS.length} loaded`} actions={<Button>Run a job</Button>} />
