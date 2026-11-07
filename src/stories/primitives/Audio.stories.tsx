@@ -46,7 +46,9 @@ function VoiceNote() {
                     <Pause aria-hidden />
                 </IconButton>
                 <AudioScrubber data={LEVELS} currentTime={time} duration={42} onSeek={setTime} height={36} className="min-w-0 flex-1" />
-                <span className="font-mono text-xs text-muted-foreground tabular-nums">0:{String(time).padStart(2, '0')} / 0:42</span>
+                <span className="font-mono text-xs text-muted-foreground tabular-nums">
+                    0:{String(Math.round(time)).padStart(2, '0')} / 0:42
+                </span>
             </Row>
         </Ground>
     )

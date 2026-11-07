@@ -36,7 +36,10 @@ const WORDS: TrackListWords = { play: (title) => `Play ${title}`, playing: 'Now 
  * replaced by a speaker while `playing` and by a play glyph while paused. `boxed`, the default,
  * draws the list in its own bordered surface; `plain` leaves it on the ground it is placed on,
  * as a side panel wants. `artwork` sets the picture's shape: square for covers, wide for video
- * frames. `actions` draws controls at each row's end, after the length.
+ * frames. `actions` draws a row's own controls at its end, after the length, such as adding the
+ * track to the queue and a `StarButton`; they stay in view rather than waiting for a hover, so a
+ * starred row shows its star. Pointing at a row's track washes the whole row, its actions
+ * included, so the row reads as the one a press plays.
  */
 export function TrackList({
     tracks,
@@ -54,6 +57,7 @@ export function TrackList({
     current?: string
     playing?: boolean
     onPlay?: (track: Track) => void
+    /** A row's own controls, drawn at its end. */
     actions?: (track: Track) => ReactNode
     variant?: 'boxed' | 'plain'
     artwork?: 'square' | 'wide'
@@ -76,10 +80,10 @@ export function TrackList({
                     <li
                         key={track.id}
                         className={cn(
-                            'group/track flex min-w-0 items-center gap-1 pr-2',
+                            'flex min-w-0 items-center gap-1 pr-2',
                             variant === 'boxed' && 'border-b border-border last:border-b-0',
                             variant === 'plain' && 'rounded-control',
-                            now && 'bg-secondary',
+                            now ? 'bg-secondary' : onPlay !== undefined && 'has-[>button:hover]:bg-hover',
                         )}
                     >
                         <button
@@ -111,7 +115,7 @@ export function TrackList({
                                 {formatTime(track.duration)}
                             </span>
                         </button>
-                        {actions !== undefined && <span className="flex shrink-0 items-center">{actions(track)}</span>}
+                        {actions !== undefined && <span className="flex shrink-0 items-center gap-0.5 pl-1">{actions(track)}</span>}
                     </li>
                 )
             })}

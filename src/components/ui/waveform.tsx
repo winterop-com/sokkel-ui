@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type HTMLAttributes 
 import { cn } from '../../lib/cn'
 
 export type WaveformProps = HTMLAttributes<HTMLDivElement> & {
-    data?: number[]
+    data?: readonly number[]
     barWidth?: number
     barHeight?: number
     barGap?: number
@@ -13,6 +13,8 @@ export type WaveformProps = HTMLAttributes<HTMLDivElement> & {
     barColor?: string
     fadeEdges?: boolean
     fadeWidth?: number
+    /** Whether a quieter bar is drawn fainter as well as shorter. */
+    shade?: boolean
     height?: string | number
     active?: boolean
     onBarClick?: (index: number, value: number) => void
@@ -27,6 +29,7 @@ export const Waveform = ({
     barColor,
     fadeEdges = true,
     fadeWidth = 24,
+    shade = true,
     height = 128,
     onBarClick,
     className,
@@ -64,7 +67,7 @@ export const Waveform = ({
             const rect = canvas.getBoundingClientRect()
             ctx.clearRect(0, 0, rect.width, rect.height)
 
-            const computedBarColor = barColor || getComputedStyle(canvas).getPropertyValue('--foreground') || '#000'
+            const computedBarColor = barColor || getComputedStyle(canvas).color || '#000'
 
             const barCount = Math.floor(rect.width / (barWidth + barGap))
             const centerY = rect.height / 2
@@ -77,7 +80,7 @@ export const Waveform = ({
                 const y = centerY - barHeight / 2
 
                 ctx.fillStyle = computedBarColor
-                ctx.globalAlpha = 0.3 + value * 0.7
+                ctx.globalAlpha = shade ? 0.3 + value * 0.7 : 1
 
                 if (barRadius > 0) {
                     ctx.beginPath()
@@ -109,8 +112,16 @@ export const Waveform = ({
         resizeObserver.observe(container)
         renderWaveform()
 
-        return () => resizeObserver.disconnect()
-    }, [data, barWidth, baseBarHeight, barGap, barRadius, barColor, fadeEdges, fadeWidth])
+        // The bars are painted in the canvas's own text color, so they are painted again when the
+        // document's scheme, theme or token overrides change.
+        const lookObserver = new MutationObserver(renderWaveform)
+        lookObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme', 'style'] })
+
+        return () => {
+            resizeObserver.disconnect()
+            lookObserver.disconnect()
+        }
+    }, [data, barWidth, baseBarHeight, barGap, barRadius, barColor, fadeEdges, fadeWidth, shade])
 
     const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
         if (!onBarClick) return
@@ -311,117 +322,159 @@ export const ScrollingWaveform = ({
     )
 }
 
-export type AudioScrubberProps = WaveformProps & {
+export type AudioScrubberProps = Omit<WaveformProps, 'onBarClick' | 'fadeEdges' | 'fadeWidth' | 'active' | 'shade'> & {
+    /** Seconds from the start. */
     currentTime?: number
+    /** Length in seconds; zero or less turns seeking off. */
     duration?: number
+    /** The time chosen: on a press, when a drag is let go, and on each key. */
     onSeek?: (time: number) => void
+    /** The time under the pointer while it drags, and `null` once the drag ends. */
+    onScrub?: (time: number | null) => void
+    /** A round handle at the playhead, shown while the scrubber is hovered, focused or dragged. */
     showHandle?: boolean
+    /** How far one arrow key moves the time, and how far Page Up, Page Down and a shifted arrow move it, in seconds. */
+    step?: number
+    largeStep?: number
+    /** The scrubber's accessible name. */
+    label?: string
+    /** What a screen reader says for a time. */
+    valueText?: (time: number) => string
+    /** The played bars' color as a CSS color, the accent by default. The rest take `barColor`, or the element's own text color. */
+    playedColor?: string
+    /** Whether a quieter bar is drawn fainter as well as shorter; off, so the played part reads as one fill. */
+    shade?: boolean
 }
 
+/** The levels drawn while a recording's own are not known: an even row, so no shape is made up. */
+const FLAT_LEVELS: readonly number[] = Array.from({ length: 64 }, () => 0.3)
+
+/**
+ * A scrubber drawn as a recording's waveform: the bars already played are filled in the accent and
+ * the rest stay quiet. A press or a drag picks a time; the arrow keys step by `step`, Page Up and
+ * Page Down (or a shifted arrow) by `largeStep`, and Home and End go to either end.
+ *
+ * While the pointer drags, the scrubber draws the dragged time and reports it through `onScrub`;
+ * `onSeek` is called once, when the drag is let go, so a playing source is not asked to seek on
+ * every move. A key is reported through `onSeek` at once.
+ */
 export const AudioScrubber = ({
     data = [],
     currentTime = 0,
     duration = 100,
     onSeek,
+    onScrub,
     showHandle = true,
+    step = 5,
+    largeStep = 30,
+    label = 'Seek',
+    valueText,
     barWidth = 3,
     barHeight,
     barGap = 1,
     barRadius = 1,
     barColor,
+    playedColor,
+    shade = false,
     height = 128,
     className,
+    style,
     ...props
 }: AudioScrubberProps) => {
-    const [isDragging, setIsDragging] = useState(false)
-    const [localProgress, setLocalProgress] = useState(0)
     const containerRef = useRef<HTMLDivElement>(null)
+    const dragging = useRef(false)
+    const [dragged, setDragged] = useState<number | null>(null)
 
-    const waveformData = data.length > 0 ? data : Array.from({ length: 100 }, () => 0.2 + Math.random() * 0.6)
-
-    useEffect(() => {
-        if (!isDragging && duration > 0) {
-            setLocalProgress(currentTime / duration)
-        }
-    }, [currentTime, duration, isDragging])
-
-    const handleScrub = useCallback(
-        (clientX: number) => {
-            const container = containerRef.current
-            if (!container) return
-
-            const rect = container.getBoundingClientRect()
-            const x = Math.max(0, Math.min(clientX - rect.left, rect.width))
-            const progress = x / rect.width
-            const newTime = progress * duration
-
-            setLocalProgress(progress)
-            onSeek?.(newTime)
-        },
-        [duration, onSeek],
-    )
-
-    const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-        e.preventDefault()
-        setIsDragging(true)
-        handleScrub(e.clientX)
-    }
-
-    useEffect(() => {
-        if (!isDragging) return
-
-        const handleMouseMove = (e: MouseEvent) => {
-            handleScrub(e.clientX)
-        }
-
-        const handleMouseUp = () => {
-            setIsDragging(false)
-        }
-
-        document.addEventListener('mousemove', handleMouseMove)
-        document.addEventListener('mouseup', handleMouseUp)
-
-        return () => {
-            document.removeEventListener('mousemove', handleMouseMove)
-            document.removeEventListener('mouseup', handleMouseUp)
-        }
-    }, [isDragging, duration, handleScrub])
-
+    const levels = data.length > 0 ? data : FLAT_LEVELS
+    const seekable = duration > 0
+    const clamp = (time: number) => Math.min(Math.max(0, duration), Math.max(0, Number.isFinite(time) ? time : 0))
+    const time = clamp(dragged ?? currentTime)
+    const played = seekable ? (time / duration) * 100 : 0
     const heightStyle = typeof height === 'number' ? `${height}px` : height
+
+    const timeAt = (clientX: number) => {
+        const rect = containerRef.current?.getBoundingClientRect()
+        if (!rect || rect.width === 0) return 0
+        return (Math.max(0, Math.min(clientX - rect.left, rect.width)) / rect.width) * duration
+    }
+    const drag = (next: number | null) => {
+        dragging.current = next !== null
+        setDragged(next)
+        onScrub?.(next)
+    }
+    const bars = { barWidth, barHeight, barGap, barRadius, shade, fadeEdges: false, height: '100%' }
 
     return (
         <div
-            aria-label="Audio waveform scrubber"
-            aria-valuemax={duration}
-            aria-valuemin={0}
-            aria-valuenow={currentTime}
-            className={cn('relative cursor-pointer select-none', className)}
-            onMouseDown={handleMouseDown}
+            {...props}
             ref={containerRef}
             role="slider"
-            style={{ height: heightStyle }}
-            tabIndex={0}
-            {...props}
+            aria-label={label}
+            aria-orientation="horizontal"
+            aria-valuemin={0}
+            aria-valuemax={Math.max(0, duration)}
+            aria-valuenow={Math.round(time)}
+            aria-valuetext={valueText?.(time)}
+            aria-disabled={!seekable || undefined}
+            tabIndex={seekable ? 0 : -1}
+            data-slot="audio-scrubber"
+            data-dragging={dragged !== null || undefined}
+            className={cn(
+                'group/scrubber relative cursor-pointer touch-none rounded-mini text-faint/50 outline-none select-none focus-visible:ring-3 focus-visible:ring-ring/50 aria-disabled:cursor-default',
+                className,
+            )}
+            style={{ ...style, height: heightStyle }}
+            onPointerDown={(event) => {
+                if (!seekable || event.button !== 0) return
+                event.preventDefault()
+                event.currentTarget.setPointerCapture(event.pointerId)
+                event.currentTarget.focus()
+                drag(timeAt(event.clientX))
+            }}
+            onPointerMove={(event) => {
+                if (dragging.current) drag(timeAt(event.clientX))
+            }}
+            onPointerUp={(event) => {
+                if (!dragging.current) return
+                const chosen = timeAt(event.clientX)
+                drag(null)
+                onSeek?.(chosen)
+            }}
+            onPointerCancel={() => {
+                if (dragging.current) drag(null)
+            }}
+            onKeyDown={(event) => {
+                if (!seekable) return
+                const by = event.shiftKey ? largeStep : step
+                const moves: Record<string, number> = {
+                    ArrowRight: time + by,
+                    ArrowUp: time + by,
+                    ArrowLeft: time - by,
+                    ArrowDown: time - by,
+                    PageUp: time + largeStep,
+                    PageDown: time - largeStep,
+                    Home: 0,
+                    End: duration,
+                }
+                const next = moves[event.key]
+                if (next === undefined) return
+                event.preventDefault()
+                onSeek?.(clamp(next))
+            }}
         >
-            <Waveform
-                barColor={barColor}
-                barGap={barGap}
-                barRadius={barRadius}
-                barWidth={barWidth}
-                barHeight={barHeight}
-                data={waveformData}
-                fadeEdges={false}
-                height={height}
-            />
-
-            <div className="pointer-events-none absolute inset-y-0 left-0 bg-primary/20" style={{ width: `${localProgress * 100}%` }} />
-
-            <div className="pointer-events-none absolute top-0 bottom-0 w-0.5 bg-primary" style={{ left: `${localProgress * 100}%` }} />
-
-            {showHandle && (
-                <div
-                    className="pointer-events-none absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-background bg-primary shadow-lg transition-transform hover:scale-110"
-                    style={{ left: `${localProgress * 100}%` }}
+            <Waveform data={levels} barColor={barColor} {...bars} />
+            <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0 text-primary"
+                style={{ clipPath: `inset(0 ${String(100 - played)}% 0 0)` }}
+            >
+                <Waveform data={levels} barColor={playedColor} {...bars} />
+            </div>
+            {showHandle && seekable && (
+                <span
+                    aria-hidden
+                    className="pointer-events-none absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border border-primary bg-background opacity-0 transition-opacity group-hover/scrubber:opacity-100 group-focus-visible/scrubber:opacity-100 group-data-dragging/scrubber:opacity-100"
+                    style={{ left: `${String(played)}%` }}
                 />
             )}
         </div>

@@ -1,12 +1,29 @@
 import { TransportButton } from '../../components/media/MediaControls'
 import { IconButton } from '../../components/IconButton'
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { Clapperboard, Disc3, Heart, ListMusic, MicVocal, MoreHorizontal, Music2, Play, Shuffle, Tv, type LucideIcon } from 'lucide-react'
-import { useState } from 'react'
+import {
+    Clapperboard,
+    Disc3,
+    Download,
+    ListEnd,
+    ListMusic,
+    ListPlus,
+    MicVocal,
+    MoreHorizontal,
+    Music2,
+    Play,
+    Shuffle,
+    Star,
+    Tv,
+    type LucideIcon,
+} from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { toast } from 'sonner'
 
 import { AccountMenu } from '../../components/AccountMenu'
 import { MediaBar, type RepeatMode } from '../../components/media/MediaBar'
 import { MediaCard, MediaGrid } from '../../components/media/MediaCard'
+import { SoundVisualizer } from '../../components/media/SoundVisualizer'
 import { formatTime } from '../../components/media/time'
 import { MetaLine } from '../../components/MetaLine'
 import { TrackList, type Track } from '../../components/media/TrackList'
@@ -17,15 +34,20 @@ import { SearchField } from '../../components/SearchField'
 import { Segmented } from '../../components/Segmented'
 import { Page, Shell } from '../../components/Shell'
 import { PanelSection, SidePanel } from '../../components/SidePanel'
+import { StarButton } from '../../components/StarButton'
+import { StatusItem, StatusLine } from '../../components/StatusLine'
 import { Toolbar } from '../../components/Toolbar'
 import { TopBar, type Crumb } from '../../components/TopBar'
 import { Button } from '../../components/ui/button'
 import { DropdownMenuItem } from '../../components/ui/dropdown-menu'
+import { Toaster } from '../../components/ui/sonner'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { Artwork, type Cover } from '../fixtures/Artwork'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import captions from '../media/fixtures/captions.vtt?url'
 import clip from '../media/fixtures/clip.webm?url'
+import { waveformOf } from '../media/fixtures/waveform'
+import { FRAME } from '../media/fixtures/sound'
 import { Row, Stack } from '../../components/Layout'
 import { GroupLabel } from '../../components/GroupLabel'
 
@@ -123,6 +145,9 @@ const THEN: Track[] = [
     duration: entry.duration,
 }))
 
+/** The album's tracks that are starred. */
+const STARRED = ['t2', 't4', 't8']
+
 const HISTORY: Track[] = TRACKS.slice(0, CURRENT).map((track, index) => ({
     id: `h${String(index)}`,
     title: track.title,
@@ -156,7 +181,7 @@ function groups(view: View): RailGroup[] {
                 entry('albums', 'Albums', Disc3, view !== 'video' && view !== 'series'),
                 entry('artists', 'Artists', MicVocal),
                 entry('tracks', 'Tracks', Music2),
-                entry('favorites', 'Favorites', Heart),
+                entry('favorites', 'Favorites', Star),
             ],
         },
         {
@@ -179,8 +204,8 @@ function groups(view: View): RailGroup[] {
 
 const TRAILS: Record<View, Crumb[]> = {
     library: [{ label: 'Albums' }],
-    album: [{ label: 'Albums', href: '#' }, { label: PLAYING.title }],
-    queue: [{ label: 'Albums', href: '#' }, { label: PLAYING.title }],
+    album: [],
+    queue: [],
     series: [{ label: 'Series', href: '#' }, { label: FILM.series }],
     video: [{ label: 'Series', href: '#' }, { label: FILM.series, href: '#' }, { label: FILM.title }],
 }
@@ -275,46 +300,79 @@ function LibraryPage() {
 
 function AlbumPage() {
     const total = TRACKS.reduce((sum, track) => sum + track.duration, 0)
+    const [starred, setStarred] = useState(true)
+    const [stars, setStars] = useState<ReadonlySet<string>>(() => new Set(STARRED))
+    const star = (id: string, on: boolean) =>
+        setStars((now) => {
+            const next = new Set(now)
+            if (on) next.add(id)
+            else next.delete(id)
+            return next
+        })
     return (
         <Page className="@container">
-            <Row gap="2xl" align="start" wrap>
-                <Row gap="lg" align="end" wrap className="w-full @4xl:sticky @4xl:top-0 @4xl:w-60 @4xl:shrink-0">
-                    <span className="block size-40 shrink-0 overflow-hidden rounded-surface shadow-xs ring-1 ring-border sm:size-48 @4xl:aspect-square @4xl:size-auto @4xl:w-full">
+            <PageHeader
+                onBack={() => undefined}
+                trail={[
+                    { label: 'Music', href: '#' },
+                    { label: PLAYING.artist, href: '#' },
+                ]}
+                title={PLAYING.title}
+                meta={
+                    <MetaLine
+                        size="sm"
+                        items={[
+                            <span className="font-medium text-foreground">{PLAYING.artist}</span>,
+                            PLAYING.year,
+                            `${String(TRACKS.length)} tracks, ${String(Math.round(total / 60))} min`,
+                        ]}
+                    />
+                }
+                actions={
+                    <>
+                        <Button size="sm" variant="outline">
+                            <Download aria-hidden />
+                            Download
+                        </Button>
+                        <StarButton variant="outline" starred={starred} onStarredChange={setStarred} />
+                        <Button size="sm" variant="outline">
+                            <ListPlus aria-hidden />
+                            Add to playlist
+                        </Button>
+                    </>
+                }
+            />
+            <Row gap="2xl" align="start" stackBelowRoom="2xl">
+                <Row gap="lg" align="end" wrap className="shrink-0 @2xl:sticky @2xl:top-0 @2xl:w-44 @4xl:w-60">
+                    <span className="block size-32 shrink-0 overflow-hidden rounded-surface shadow-xs ring-1 ring-border @2xl:aspect-square @2xl:size-auto @2xl:w-full">
                         <Artwork cover={PLAYING.cover} />
                     </span>
-                    <Stack className="grow basis-60">
-                        <div className="min-w-0">
-                            <GroupLabel>Album</GroupLabel>
-                            <h1 className="truncate text-page font-semibold tracking-tight">{PLAYING.title}</h1>
-                            <MetaLine
-                                size="sm"
-                                items={[
-                                    <span className="font-medium text-foreground">{PLAYING.artist}</span>,
-                                    PLAYING.year,
-                                    `${String(TRACKS.length)} tracks, ${String(Math.round(total / 60))} min`,
-                                ]}
-                            />
-                        </div>
-                        <Row>
-                            <Button size="sm">
-                                <Play className="fill-current" aria-hidden />
-                                Play
-                            </Button>
-                            <Button size="sm" variant="outline">
-                                <Shuffle aria-hidden />
-                                Shuffle
-                            </Button>
-                            <IconButton label="Add to favorites">
-                                <Heart aria-hidden />
-                            </IconButton>
-                            <IconButton label="More">
-                                <MoreHorizontal aria-hidden />
-                            </IconButton>
-                        </Row>
-                    </Stack>
+                    <Row>
+                        <Button size="sm">
+                            <Play className="fill-current" aria-hidden />
+                            Play
+                        </Button>
+                        <Button size="sm" variant="outline">
+                            <Shuffle aria-hidden />
+                            Shuffle
+                        </Button>
+                    </Row>
                 </Row>
                 <Stack gap="2xl" className="flex-1">
-                    <TrackList tracks={ALBUM_TRACKS} current={`t${String(CURRENT + 1)}`} playing onPlay={() => undefined} />
+                    <TrackList
+                        tracks={ALBUM_TRACKS}
+                        current={`t${String(CURRENT + 1)}`}
+                        playing
+                        onPlay={() => undefined}
+                        actions={(track) => (
+                            <>
+                                <IconButton label="Add to queue">
+                                    <ListEnd aria-hidden />
+                                </IconButton>
+                                <StarButton starred={stars.has(track.id)} onStarredChange={(on) => star(track.id, on)} />
+                            </>
+                        )}
+                    />
                     <Stack as="section">
                         <h2 className="text-sm font-medium">More by {PLAYING.artist}</h2>
                         <AlbumGrid albums={ALBUMS.filter((album) => album.artist === PLAYING.artist && album.id !== PLAYING.id)} />
@@ -378,10 +436,7 @@ function Watch() {
                             <MetaLine size="sm" items={[`${FILM.series}, episode 1`, FILM.by, FILM.year, formatTime(FILM.length)]} />
                         </div>
                         <Row>
-                            <Button size="sm" variant="outline">
-                                <Heart aria-hidden />
-                                Favorite
-                            </Button>
+                            <StarButton variant="outline" />
                             <IconButton label="More">
                                 <MoreHorizontal aria-hidden />
                             </IconButton>
@@ -403,7 +458,30 @@ function Watch() {
     )
 }
 
-function Player({ queueOpen }: { queueOpen: boolean }) {
+/** The playing track's loudness, drawn as the large player's scrubber. */
+const WAVEFORM = waveformOf(4)
+
+/**
+ * The player bar, resizable from its top edge, starting at `size` pixels tall. Made tall, a sound
+ * visualizer rises behind the title; here it draws a still frame, as the story plays no audio. V
+ * shows and hides it, and a toast says which.
+ */
+function Player({ queueOpen, size }: { queueOpen: boolean; size?: number }) {
+    const [visualizer, setVisualizer] = useState(true)
+    // The key handler's own copy of whether it shows, so a press toggles and toasts exactly once.
+    const shown = useRef(true)
+    useEffect(() => {
+        const toggle = (event: KeyboardEvent) => {
+            const target = event.target as HTMLElement | null
+            if (event.key.toLowerCase() !== 'v' || event.metaKey || event.ctrlKey || event.altKey) return
+            if (target !== null && target.closest('input, textarea, select, [contenteditable="true"]') !== null) return
+            shown.current = !shown.current
+            setVisualizer(shown.current)
+            toast(shown.current ? 'Visualizer shown' : 'Visualizer hidden')
+        }
+        window.addEventListener('keydown', toggle)
+        return () => window.removeEventListener('keydown', toggle)
+    }, [])
     const [playing, setPlaying] = useState(true)
     const [position, setPosition] = useState(POSITION)
     const [volume, setVolume] = useState(0.7)
@@ -414,7 +492,11 @@ function Player({ queueOpen }: { queueOpen: boolean }) {
     return (
         <MediaBar
             title={track.title}
-            subtitle={<MetaLine inline items={[PLAYING.artist, PLAYING.title]} />}
+            artist={PLAYING.artist}
+            album={PLAYING.title}
+            year={PLAYING.year}
+            trackNumber={CURRENT + 1}
+            trackCount={TRACKS.length}
             artwork={<Artwork cover={PLAYING.cover} />}
             playing={playing}
             onPlayingChange={setPlaying}
@@ -422,6 +504,9 @@ function Player({ queueOpen }: { queueOpen: boolean }) {
             duration={track.duration}
             onSeek={setPosition}
             buffered={[{ start: 0, end: 180 }]}
+            waveform={WAVEFORM}
+            visualizer={visualizer ? <SoundVisualizer frame={FRAME} label="What is playing" /> : undefined}
+            defaultSize={size}
             volume={volume}
             onVolumeChange={setVolume}
             muted={muted}
@@ -441,7 +526,7 @@ function Player({ queueOpen }: { queueOpen: boolean }) {
     )
 }
 
-function MusicApp({ view }: { view: View }) {
+function MusicApp({ view, player }: { view: View; player?: number }) {
     const [collapsed, setCollapsed] = useState(false)
     const [tab, setTab] = useState('queue')
     const queue = view === 'queue'
@@ -471,7 +556,12 @@ function MusicApp({ view }: { view: View }) {
                         />
                     ) : undefined
                 }
-                bottom={view === 'video' || view === 'series' ? undefined : <Player queueOpen={queue} />}
+                foot={
+                    <StatusLine note="Playing on this computer">
+                        <StatusItem label="library">{`${String(ALBUMS.length)} albums`}</StatusItem>
+                    </StatusLine>
+                }
+                bottom={view === 'video' || view === 'series' ? undefined : <Player queueOpen={queue} size={player} />}
             >
                 {view === 'library' && <LibraryPage />}
                 {view === 'album' && <AlbumPage />}
@@ -493,6 +583,7 @@ function MusicApp({ view }: { view: View }) {
                     </>
                 )}
             </Shell>
+            <Toaster />
         </TooltipProvider>
     )
 }
@@ -503,11 +594,23 @@ export default meta
 /** The album grid, its covers drawn, with the playing album marked and the player bar along the foot. */
 export const Library: StoryObj = { name: 'Library', render: () => <MusicApp view="library" /> }
 
-/** One album's tracks, the one playing drawn in the accent with a speaker for its number. */
+/**
+ * One album's page: back and the trail through the music and its artist over the title, the
+ * artist and year under it, and Download, the favorite star and Add to playlist at its end. The
+ * cover stays beside the tracks as they scroll; the one playing is drawn in the accent with a
+ * speaker for its number, and each row carries its own add to the queue and star.
+ */
 export const Album: StoryObj = { name: 'Album', render: () => <MusicApp view="album" /> }
 
 /** The queue in the side panel beside the album, its button pressed in the bar; on a phone the queue is the page. */
 export const Queue: StoryObj = { name: 'Queue', render: () => <MusicApp view="queue" /> }
+
+/**
+ * The player dragged up from its top edge into the large now-playing panel, docked between the
+ * album and the foot: the cover as tall as the panel under the rail, the title large over the
+ * track's waveform, and the account still at the window's bottom edge beside the foot strip.
+ */
+export const NowPlaying: StoryObj = { name: 'Now playing', render: () => <MusicApp view="album" player={300} /> }
 
 /** A series' episodes as wide covers, with their lengths and how far each was watched. */
 export const Series: StoryObj = { name: 'Series', render: () => <MusicApp view="series" /> }

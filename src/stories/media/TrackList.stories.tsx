@@ -1,9 +1,11 @@
 import { IconButton } from '../../components/IconButton'
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { Heart } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { ListEnd } from 'lucide-react'
+import { useState, type ReactNode } from 'react'
 
 import { TrackList, type Track } from '../../components/media/TrackList'
+import { StarButton } from '../../components/StarButton'
+import { TooltipProvider } from '../../components/ui/tooltip'
 import { Artwork, type Cover } from '../fixtures/Artwork'
 
 const COVER: Cover = { motif: 'wave', from: 'blue', to: 'teal' }
@@ -64,8 +66,30 @@ function Ground({ children, width = '' }: { children: ReactNode; width?: string 
     )
 }
 
-const meta: Meta = { title: 'Media/Track list' }
+const meta: Meta = {
+    title: 'Media/Track list',
+    decorators: [
+        (Story) => (
+            <TooltipProvider>
+                <Story />
+            </TooltipProvider>
+        ),
+    ],
+}
 export default meta
+
+/** Which rows are starred, held so a press on a star takes. */
+function useStars(from: readonly string[]) {
+    const [stars, setStars] = useState<ReadonlySet<string>>(() => new Set(from))
+    const star = (id: string, starred: boolean) =>
+        setStars((now) => {
+            const next = new Set(now)
+            if (starred) next.add(id)
+            else next.delete(id)
+            return next
+        })
+    return [stars, star] as const
+}
 
 /** An album's tracks by number, the fourth playing: a speaker for its number and the title in the accent. */
 export const Numbered: StoryObj = {
@@ -85,24 +109,51 @@ export const Paused: StoryObj = {
     ),
 }
 
-/** Tracks from several albums with covers, the album as the meta column and a favorite button on each row. */
+/**
+ * An album's tracks with each row's actions at its end, always in view: add the track to the
+ * queue, and its favorite star, filled on the starred ones.
+ */
+export const Actions: StoryObj = {
+    render: function Render() {
+        const [stars, star] = useStars(['2', '4'])
+        return (
+            <Ground>
+                <TrackList
+                    tracks={ALBUM}
+                    current="4"
+                    playing
+                    onPlay={() => undefined}
+                    actions={(track) => (
+                        <>
+                            <IconButton label="Add to queue">
+                                <ListEnd aria-hidden />
+                            </IconButton>
+                            <StarButton starred={stars.has(track.id)} onStarredChange={(starred) => star(track.id, starred)} />
+                        </>
+                    )}
+                />
+            </Ground>
+        )
+    },
+}
+
+/** Tracks from several albums with covers, the album as the meta column and a favorite star on each row. */
 export const WithArtwork: StoryObj = {
     name: 'With artwork',
-    render: () => (
-        <Ground>
-            <TrackList
-                tracks={MIXED}
-                current="a"
-                playing
-                onPlay={() => undefined}
-                actions={(track) => (
-                    <IconButton label={`Add ${String(track.title)} to favorites`}>
-                        <Heart aria-hidden />
-                    </IconButton>
-                )}
-            />
-        </Ground>
-    ),
+    render: function Render() {
+        const [stars, star] = useStars(['a', 'c'])
+        return (
+            <Ground>
+                <TrackList
+                    tracks={MIXED}
+                    current="a"
+                    playing
+                    onPlay={() => undefined}
+                    actions={(track) => <StarButton starred={stars.has(track.id)} onStarredChange={(starred) => star(track.id, starred)} />}
+                />
+            </Ground>
+        )
+    },
 }
 
 /** Episodes with wide frames on the page's own ground, as a column beside a video. */
