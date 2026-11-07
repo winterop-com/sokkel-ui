@@ -1,3 +1,4 @@
+import { PanelSection } from '../../../components/SidePanel'
 import { Box, CircleAlert, Trash2 } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 
@@ -203,8 +204,7 @@ export function StepPanel({ editor }: { editor: PipelineEditorState }) {
 export function ProblemsPanel({ editor }: { editor: PipelineEditorState }) {
     const listed = editor.doc.steps.filter((step) => editor.issues.has(step.code))
     return (
-        <div className="flex flex-col gap-2 p-4">
-            <GroupLabel as="h3">Problems</GroupLabel>
+        <PanelSection title="Problems">
             {listed.length === 0 && <p className="text-sm text-muted-foreground">Every step is ready to run.</p>}
             <ul className="flex flex-col gap-1">
                 {listed.map((step) => (
@@ -226,7 +226,7 @@ export function ProblemsPanel({ editor }: { editor: PipelineEditorState }) {
                     </li>
                 ))}
             </ul>
-        </div>
+        </PanelSection>
     )
 }
 

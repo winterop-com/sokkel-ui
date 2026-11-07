@@ -1,3 +1,5 @@
+import { Field } from '../../components/Field'
+import { DialogShell } from '../../components/DialogShell'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import {
     Activity,
@@ -33,16 +35,6 @@ import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card'
 import { Checkbox } from '../../components/ui/checkbox'
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '../../components/ui/dialog'
 import { Input } from '../../components/ui/input'
 import { Label } from '../../components/ui/label'
 import { Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger } from '../../components/ui/popover'
@@ -211,21 +203,30 @@ function NewRun() {
     const [job, setJob] = useState('nightly-export')
     const [notify, setNotify] = useState(true)
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger render={<Button size="sm" />}>
+        <>
+            <Button size="sm" onClick={() => setOpen(true)}>
                 <Plus aria-hidden />
                 New run
-            </DialogTrigger>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>New run</DialogTitle>
-                    <DialogDescription>Starts the job now, outside its schedule, in project harbor.</DialogDescription>
-                </DialogHeader>
+            </Button>
+            <DialogShell
+                open={open}
+                onOpenChange={setOpen}
+                title="New run"
+                description="Starts the job now, outside its schedule, in project harbor."
+                confirm={{
+                    label: 'Start run',
+                    onConfirm: () => {
+                        setOpen(false)
+                        toast.success(`${job} queued`, {
+                            description: notify ? 'ada hears when it finishes.' : 'Nobody is told when it finishes.',
+                        })
+                    },
+                }}
+            >
                 <Stack gap="lg">
-                    <Stack gap="sm">
-                        <Label>Job</Label>
+                    <Field id="run-job" label="Job">
                         <Select items={JOBS} value={job} onValueChange={(next) => next !== null && setJob(next)}>
-                            <SelectTrigger className="w-full" aria-label="Job">
+                            <SelectTrigger id="run-job" className="w-full">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -236,31 +237,17 @@ function NewRun() {
                                 ))}
                             </SelectContent>
                         </Select>
-                    </Stack>
-                    <Stack gap="sm">
-                        <Label htmlFor="run-reason">Reason</Label>
+                    </Field>
+                    <Field id="run-reason" label="Reason">
                         <Input id="run-reason" placeholder="Why it runs now" />
-                    </Stack>
+                    </Field>
                     <Label className="flex items-center gap-2 font-normal">
                         <Checkbox checked={notify} onCheckedChange={setNotify} />
                         Tell ada when it finishes
                     </Label>
                 </Stack>
-                <DialogFooter>
-                    <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
-                    <Button
-                        onClick={() => {
-                            setOpen(false)
-                            toast.success(`${job} queued`, {
-                                description: notify ? 'ada hears when it finishes.' : 'Nobody is told when it finishes.',
-                            })
-                        }}
-                    >
-                        Start run
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+            </DialogShell>
+        </>
     )
 }
 
@@ -339,14 +326,12 @@ function Schedule() {
         <Section title="Schedule" description="When nightly-export runs.">
             <Stack gap="lg">
                 <Columns min="sm" gap="md">
-                    <Stack gap="sm">
-                        <Label htmlFor="schedule-name">Name</Label>
+                    <Field id="schedule-name" label="Name">
                         <Input id="schedule-name" defaultValue="Nightly export" />
-                    </Stack>
-                    <Stack gap="sm">
-                        <Label>Project</Label>
+                    </Field>
+                    <Field id="schedule-project" label="Project">
                         <Select items={PROJECTS} value={project} onValueChange={(next) => next !== null && setProject(next)}>
-                            <SelectTrigger className="w-full" aria-label="Project">
+                            <SelectTrigger id="schedule-project" className="w-full">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -357,7 +342,7 @@ function Schedule() {
                                 ))}
                             </SelectContent>
                         </Select>
-                    </Stack>
+                    </Field>
                 </Columns>
                 <Segmented
                     label="How often"
