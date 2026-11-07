@@ -1,4 +1,5 @@
 import { cn } from '../lib/cn'
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 
 /**
  * How a segmented control is drawn:
@@ -24,6 +25,14 @@ const OPTION: Record<SegmentedVariant, string> = {
     solid: '',
 }
 
+/** A small option's least height, so a line of options with its frame is a finger tall, and 1.75rem from `md`. */
+const LINE: Record<SegmentedVariant, string> = {
+    track: 'min-h-[calc(var(--spacing-finger)-4px)] md:min-h-6',
+    tint: 'min-h-finger md:min-h-7',
+    outline: 'min-h-[calc(var(--spacing-finger)-2px)] md:min-h-[calc(1.75rem-2px)]',
+    solid: 'min-h-[calc(var(--spacing-finger)-2px)] md:min-h-[calc(1.75rem-2px)]',
+}
+
 const CHOSEN: Record<SegmentedVariant, string> = {
     track: 'bg-card font-medium text-foreground shadow-[0_1px_2px_rgb(0_0_0/0.10)] ring-1 ring-border-strong dark:bg-input/70 dark:shadow-none dark:ring-input',
     tint: 'bg-primary/15 font-medium text-primary-ink',
@@ -42,17 +51,25 @@ const HOVER: Record<SegmentedVariant, string> = {
 export interface Segment<T extends string> {
     value: T
     label: string
+    /** The option shows but cannot be chosen. It still takes focus, so its `hint` can say why. */
+    disabled?: boolean
+    /** A tooltip on hover and focus, such as why the option is off. */
+    hint?: string
 }
 
 /**
  * A choice from a small fixed set, drawn as one control with every option in view.
  *
  * Every option takes an equal share, as wide as the widest label. `fill` stretches the control to
- * its container, so controls stacked in one column line up on both edges.
+ * its container, so controls stacked in one column line up on both edges. When the room is
+ * narrower than the options, they wrap onto more lines, each line shared out evenly, so the
+ * control never overflows its container.
  *
  * `sm` is a settings row's control. `md` stands beside a form field at its height; below the `md`
  * breakpoint it becomes a grid two cells wide, an odd last option spanning both, each cell a finger
  * tall.
+ *
+ * An option can be off on its own (`disabled`) with a `hint` saying why, shown on hover and focus.
  */
 export function Segmented<T extends string>({
     id,
@@ -87,41 +104,70 @@ export function Segmented<T extends string>({
             className={cn(
                 FRAME[variant],
                 size === 'md'
-                    ? cn('grid w-full grid-cols-2 md:flex md:h-8', !fill && 'md:w-auto')
-                    : cn(
-                          'min-h-finger auto-cols-[minmax(max-content,1fr)] grid-flow-col md:h-7 md:min-h-0',
-                          fill ? 'grid w-full' : 'inline-grid shrink-0',
-                      ),
+                    ? cn('grid w-full grid-cols-2 md:flex md:min-h-8 md:flex-wrap', !fill && 'md:w-auto')
+                    : cn('max-w-full flex-wrap', fill ? 'flex w-full' : 'inline-flex shrink-0'),
                 disabled && 'opacity-50',
                 className,
             )}
         >
             {options.map((option) => {
                 const chosen = option.value === value
-                return (
+                const off = option.disabled === true
+                const button = (
                     <button
                         key={option.value}
                         type="button"
                         aria-pressed={chosen}
+                        aria-disabled={off || undefined}
                         disabled={disabled}
                         className={cn(
                             'transition-colors outline-none focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring',
                             OPTION[variant],
                             size === 'md'
                                 ? cn(
-                                      'min-h-finger px-3 py-1 text-sm last:odd:col-span-2 md:min-h-0 md:py-0 md:whitespace-nowrap',
+                                      'min-h-finger px-3 py-1 text-sm last:odd:col-span-2 md:min-h-7 md:py-0 md:whitespace-nowrap',
                                       fill ? 'md:flex-1 md:basis-0' : 'md:flex-1',
                                   )
-                                : 'px-2.5 text-xs whitespace-nowrap',
-                            chosen ? CHOSEN[variant] : cn('text-muted-foreground', !disabled && HOVER[variant]),
-                            disabled && 'cursor-not-allowed',
+                                : cn('flex-1 px-2.5 text-xs whitespace-nowrap', LINE[variant]),
+                            chosen ? CHOSEN[variant] : cn('text-muted-foreground', !disabled && !off && HOVER[variant]),
+                            off && !chosen && 'text-faint',
+                            (disabled || off) && 'cursor-not-allowed',
                         )}
-                        onClick={() => onChoose(option.value)}
+                        onClick={() => {
+                            if (!off) onChoose(option.value)
+                        }}
                     >
-                        {option.label}
+                        {size === 'md' ? option.label : <Widest options={options} shown={option} />}
                     </button>
+                )
+                if (option.hint === undefined) return button
+                return (
+                    <Tooltip key={option.value}>
+                        <TooltipTrigger render={button} />
+                        <TooltipContent>{option.hint}</TooltipContent>
+                    </Tooltip>
                 )
             })}
         </div>
+    )
+}
+
+/**
+ * An option's label in a box as wide as the widest label: every label is laid in the same cell and
+ * only the option's own is seen, so the options share one width with nothing measured.
+ */
+function Widest<T extends string>({ options, shown }: { options: readonly Segment<T>[]; shown: Segment<T> }) {
+    return (
+        <span className="grid">
+            {options.map((other) => (
+                <span
+                    key={other.value}
+                    aria-hidden={other === shown ? undefined : true}
+                    className={cn('col-start-1 row-start-1', other !== shown && 'invisible')}
+                >
+                    {other.label}
+                </span>
+            ))}
+        </span>
     )
 }

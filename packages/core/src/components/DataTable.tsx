@@ -675,6 +675,12 @@ export function DataTable<T>({
     const [active, setActive] = useState<string | undefined>(undefined)
     const anchor = useRef<string | undefined>(undefined)
 
+    // A row with no actions, or only separators, has no menu at all: no button and no right-click menu.
+    const actionsOf = (row: T): DataAction[] | undefined => {
+        const actions = rowActions?.(row)
+        return actions === undefined || actions.every((action) => 'separator' in action) ? undefined : actions
+    }
+
     // The end column fits the inline actions the first row has, and the menu button unless it is off.
     const inlineSlots =
         rowActions === undefined || rows.length === 0
@@ -860,7 +866,7 @@ export function DataTable<T>({
     const cardFor = (entry: FlatRow<T>) => {
         const chosen = selection.has(entry.key)
         const isOpened = opened?.(entry.row) === true
-        const actions = rowActions?.(entry.row)
+        const actions = actionsOf(entry.row)
         const box = selectable ? (
             <Checkbox aria-label={words.selectRow} tabIndex={-1} checked={chosen} onCheckedChange={() => toggle(entry, false)} />
         ) : null
@@ -1276,7 +1282,7 @@ export function DataTable<T>({
                             const chosen = selection.has(entry.key)
                             const isOpened = opened?.(entry.row) === true
                             const state = selectable ? branchState(entry) : 'none'
-                            const actions = rowActions?.(entry.row)
+                            const actions = actionsOf(entry.row)
                             const row = (
                                 <div
                                     key={entry.key}
@@ -1341,12 +1347,12 @@ export function DataTable<T>({
                                             </span>
                                         </span>
                                     ))}
-                                    {actions !== undefined && endWidth !== undefined && (
+                                    {endWidth !== undefined && (
                                         <span
                                             role="gridcell"
                                             className={cn(pinnedEnd, 'right-0 flex h-full items-center justify-end gap-0.5 pr-1.5')}
                                         >
-                                            {inlineSlots > 0 && (
+                                            {actions !== undefined && inlineSlots > 0 && (
                                                 <span className="flex items-center gap-0.5 opacity-0 group-hover/row:opacity-100 focus-within:opacity-100">
                                                     {actions.map((action) =>
                                                         'separator' in action || action.inline !== true ? null : (
@@ -1371,7 +1377,7 @@ export function DataTable<T>({
                                                     )}
                                                 </span>
                                             )}
-                                            {actionButton !== 'none' && (
+                                            {actions !== undefined && actionButton !== 'none' && (
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger
                                                         render={

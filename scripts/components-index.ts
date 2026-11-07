@@ -70,6 +70,7 @@ const CORE_AREAS: Record<string, string> = {
     UnsavedChanges: 'Forms and inputs',
     // Data: tables, lists, trees and values.
     ActivityList: 'Data display',
+    BarList: 'Data display',
     CheckList: 'Data display',
     ConsequenceList: 'Data display',
     Count: 'Data display',
@@ -77,6 +78,7 @@ const CORE_AREAS: Record<string, string> = {
     DescriptionList: 'Data display',
     Dot: 'Data display',
     DueText: 'Data display',
+    Highlight: 'Data display',
     IssueMark: 'Data display',
     ItemCard: 'Data display',
     JsonTree: 'Data display',
@@ -117,6 +119,7 @@ const CORE_AREAS: Record<string, string> = {
     AttachmentList: 'Files and attachments',
     FileList: 'Files and attachments',
     FilePreview: 'Files and attachments',
+    ImageAnnotations: 'Files and attachments',
     ImageLightbox: 'Files and attachments',
     SourceSheet: 'Files and attachments',
     UploadTray: 'Files and attachments',
