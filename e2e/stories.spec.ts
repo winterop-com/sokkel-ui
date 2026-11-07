@@ -66,20 +66,63 @@ test('the stories are built', () => {
     expect(stories.length, `no stories in ${INDEX}: run bun run build-storybook first`).toBeGreaterThan(0)
 })
 
+/** Waits until the story on the page has drawn and stopped moving, so its screenshot is the same every run. */
+async function settled(page: Page): Promise<void> {
+    await page.locator('#storybook-root > *').first().waitFor()
+    await mapsSettled(page)
+    await graphsSettled(page)
+    // A page still drawing its parts, such as the theme gallery's frames, says so with data-settling.
+    await page.waitForFunction(() => document.querySelector('[data-settling]') === null, null, { timeout: 90_000 })
+    await videosSettled(page)
+    await page.evaluate(() => document.fonts.ready)
+    // A popup fading in, or anything else still moving, would be caught mid-way. Endless ones such as
+    // spinners, and those driven by scrolling rather than time, are left running.
+    await page.waitForFunction(
+        () =>
+            document
+                .getAnimations()
+                .every(
+                    (animation) =>
+                        animation.playState !== 'running' ||
+                        animation.timeline !== document.timeline ||
+                        animation.effect?.getTiming().iterations === Infinity,
+                ),
+        null,
+        { timeout: 10_000 },
+    )
+    // Highlighting lands after the first paint; a block marked plain is never highlighted.
+    await page
+        .waitForFunction(
+            () =>
+                [...document.querySelectorAll('[data-slot=code-block]:not([data-plain]) [data-slot=code-block-code]')].every(
+                    (code) => code.textContent === '' || code.querySelector('span[style]') !== null,
+                ),
+            null,
+            { timeout: 5000 },
+        )
+        .catch(() => undefined)
+    await page.waitForTimeout(300)
+}
+
+/** Turns transitions and opening animations off, so a popup is photographed where it lands. */
+async function still(page: Page): Promise<void> {
+    // Dialogs and popups open at once: a popup placed while its dialog was still zooming in sits a fraction of a
+    // pixel off, which moves its text's anti-aliasing from run to run.
+    await page.addInitScript(() => {
+        const still = document.createElement('style')
+        still.textContent =
+            '*, *::before, *::after { transition-duration: 0s !important; transition-delay: 0s !important; }' +
+            '[data-open], [data-closed], [data-starting-style], [data-ending-style] { animation-duration: 0s !important; animation-delay: 0s !important; }'
+        document.addEventListener('DOMContentLoaded', () => document.head.append(still))
+    })
+}
+
 for (const story of stories) {
     test(story.id, async ({ page }, info) => {
         // A story tagged slow, such as the theme gallery, draws many frames three times over.
         test.setTimeout(story.tags?.includes('slow') ? 8 * 60_000 : 3 * 60_000)
         await routeTiles(page, info.config.updateSnapshots === 'all' || info.config.updateSnapshots === 'changed')
-        // Dialogs and popups open at once: a popup placed while its dialog was still zooming in sits a fraction of a
-        // pixel off, which moves its text's anti-aliasing from run to run.
-        await page.addInitScript(() => {
-            const still = document.createElement('style')
-            still.textContent =
-                '*, *::before, *::after { transition-duration: 0s !important; transition-delay: 0s !important; }' +
-                '[data-open], [data-closed], [data-starting-style], [data-ending-style] { animation-duration: 0s !important; animation-delay: 0s !important; }'
-            document.addEventListener('DOMContentLoaded', () => document.head.append(still))
-        })
+        await still(page)
         // A story that throws is broken however its screenshot looks, and is never approved as a baseline.
         const thrown: string[] = []
         page.on('pageerror', (error) => thrown.push(error.message))
@@ -88,44 +131,30 @@ for (const story of stories) {
             for (const mode of modes) {
                 await test.step(`${name} ${mode}`, async () => {
                     await page.goto(`/iframe.html?id=${story.id}&viewMode=story&globals=theme:${mode}`)
-                    await page.locator('#storybook-root > *').first().waitFor()
-                    await mapsSettled(page)
-                    await graphsSettled(page)
-                    // A page still drawing its parts, such as the theme gallery's frames, says so with data-settling.
-                    await page.waitForFunction(() => document.querySelector('[data-settling]') === null, null, { timeout: 90_000 })
-                    await videosSettled(page)
-                    await page.evaluate(() => document.fonts.ready)
-                    // A popup fading in, or anything else still moving, would be caught mid-way. Endless ones such as
-                    // spinners, and those driven by scrolling rather than time, are left running.
-                    await page.waitForFunction(
-                        () =>
-                            document
-                                .getAnimations()
-                                .every(
-                                    (animation) =>
-                                        animation.playState !== 'running' ||
-                                        animation.timeline !== document.timeline ||
-                                        animation.effect?.getTiming().iterations === Infinity,
-                                ),
-                        null,
-                        { timeout: 10_000 },
-                    )
-                    // Highlighting lands after the first paint; a block marked plain is never highlighted.
-                    await page
-                        .waitForFunction(
-                            () =>
-                                [
-                                    ...document.querySelectorAll('[data-slot=code-block]:not([data-plain]) [data-slot=code-block-code]'),
-                                ].every((code) => code.textContent === '' || code.querySelector('span[style]') !== null),
-                            null,
-                            { timeout: 5000 },
-                        )
-                        .catch(() => undefined)
-                    await page.waitForTimeout(300)
+                    await settled(page)
                     expect(thrown, 'errors thrown by the story').toEqual([])
                     await expect(page).toHaveScreenshot(`${story.id}--${name}-${mode}.png`)
                 })
             }
+        }
+    })
+}
+
+/** The library's themes, read from the tokens, so a new theme is photographed without being listed here. */
+const THEMES = Object.keys((JSON.parse(readFileSync('tokens/tokens.json', 'utf8')) as { themes: Record<string, unknown> }).themes)
+
+// Every theme's kitchen sink in dark and in light. The story suite above draws only the default theme, and its
+// comparison lets a small color shift through; here a theme whose colors move fails.
+for (const theme of THEMES) {
+    test(`theme ${theme}`, async ({ page }) => {
+        await still(page)
+        await page.setViewportSize(VIEWPORTS.desktop.size)
+        for (const mode of VIEWPORTS.desktop.modes) {
+            await test.step(mode, async () => {
+                await page.goto(`/iframe.html?id=themes-kitchen-sink--kitchen-sink&viewMode=story&globals=theme:${mode};look:${theme}`)
+                await settled(page)
+                await expect(page).toHaveScreenshot(`theme-${theme}--${mode}.png`, { threshold: 0.02 })
+            })
         }
     })
 }
