@@ -117,6 +117,7 @@ function BarButton({ label, onClick, children }: { label: string; onClick?: () =
 export function ChatMessage({
     author,
     avatar,
+    image,
     time,
     timeTitle,
     continued = false,
@@ -138,8 +139,10 @@ export function ChatMessage({
     words: given,
 }: {
     author: string
-    /** The author's picture; their initials on their color when none is given. */
+    /** The author's picture as a node; their initials on their color when none is given. */
     avatar?: ReactNode
+    /** The author's picture as an address, drawn over their initials once it has loaded. */
+    image?: string
     /** The time as the conversation shows it: `09:42`. */
     time: string
     /** The full date and time, on hover. */
@@ -198,7 +201,7 @@ export function ChatMessage({
                     </time>
                 ) : (
                     <span className="mt-1 flex size-9 items-center justify-center overflow-hidden rounded-lg bg-muted text-sm font-semibold">
-                        <ChatFace who={avatar ?? { name: author }} className="text-sm font-semibold" />
+                        <ChatFace who={avatar ?? { name: author, image }} className="text-sm font-semibold" />
                     </span>
                 )}
             </div>
