@@ -32,6 +32,7 @@ jobs:
             - uses: oven-sh/setup-bun@v2
             - run: bun install --frozen-lockfile
             - run: bun scripts/build-tokens.ts --check
+            - run: bun run components -- --check
             - run: bun run fmt:check
             - run: bun run lint
             - run: bun run typecheck
