@@ -1,6 +1,8 @@
 name: ci
 
 on:
+    # A run can also be started by hand, as after a screenshot retake, whose own commit starts none.
+    workflow_dispatch:
     push:
         branches: [main]
     pull_request:
@@ -11,7 +13,7 @@ jobs:
     changes:
         runs-on: ubuntu-latest
         outputs:
-            drawn: ${{ github.event_name == 'push' || steps.filter.outputs.drawn == 'true' }}
+            drawn: ${{ github.event_name != 'pull_request' || steps.filter.outputs.drawn == 'true' }}
         steps:
             - uses: actions/checkout@v5
             - id: filter
