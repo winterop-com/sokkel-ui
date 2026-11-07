@@ -1,3 +1,4 @@
+import { Empty, EmptyContent, EmptyHeader, EmptyTitle } from '../../components/ui/empty'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Plus } from 'lucide-react'
 
@@ -47,13 +48,17 @@ function ReadStates() {
                 loading={false}
                 empty
                 emptyRender={
-                    <Stack align="start" className="rounded-surface border border-dashed border-border-strong px-4 py-6">
-                        <p className="text-sm">No services.</p>
-                        <Button size="sm">
-                            <Plus aria-hidden />
-                            New
-                        </Button>
-                    </Stack>
+                    <Empty className="border border-dashed border-border-strong">
+                        <EmptyHeader>
+                            <EmptyTitle>No services</EmptyTitle>
+                        </EmptyHeader>
+                        <EmptyContent>
+                            <Button size="sm">
+                                <Plus aria-hidden />
+                                New
+                            </Button>
+                        </EmptyContent>
+                    </Empty>
                 }
             >
                 {null}

@@ -1,3 +1,4 @@
+import { Empty, EmptyHeader, EmptyTitle } from '../components/ui/empty'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { icons, type LucideIcon } from 'lucide-react'
 import { useMemo, useState } from 'react'
@@ -93,7 +94,11 @@ function Gallery({ start = 'library', query: initial = '' }: { start?: 'library'
                 <span className="ml-auto text-sm text-muted-foreground tabular-nums">{shown.length.toLocaleString('en-US')} shown</span>
             </Row>
             {shown.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No icon matches.</p>
+                <Empty>
+                    <EmptyHeader>
+                        <EmptyTitle>No icon matches</EmptyTitle>
+                    </EmptyHeader>
+                </Empty>
             ) : (
                 <ul className="grid grid-cols-[repeat(auto-fill,minmax(7.5rem,1fr))] gap-2">
                     {shown.map((name) => {
