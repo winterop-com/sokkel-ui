@@ -1,19 +1,25 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import type { Feature } from 'geojson'
 import { useState, type ReactNode } from 'react'
 
 import { BarGauge } from '../../components/dashboard/BarGauge'
 import { BarPanel } from '../../components/dashboard/BarPanel'
 import { ChartPanel } from '../../components/dashboard/ChartPanel'
-import { DashboardGrid } from '../../components/dashboard/DashboardGrid'
+import { DashboardGrid, DashboardPanel } from '../../components/dashboard/DashboardGrid'
 import { DashboardRow } from '../../components/dashboard/DashboardRow'
 import { GaugePanel } from '../../components/dashboard/GaugePanel'
 import { HeatmapPanel } from '../../components/dashboard/HeatmapPanel'
 import type { PanelSeries } from '../../components/dashboard/series'
 import { StatPanel } from '../../components/dashboard/StatPanel'
-import type { Threshold } from '../../components/dashboard/thresholds'
+import { tokenVar, type Threshold } from '../../components/dashboard/thresholds'
 import { RefreshControl, TimeRangePicker, type TimeRangeValue } from '../../components/dashboard/TimeRange'
 import { TimeSeriesPanel } from '../../components/dashboard/TimeSeriesPanel'
 import { VariablesBar } from '../../components/dashboard/VariablesBar'
+import { BoundaryLayer } from '../../components/map/BoundaryLayer'
+import { MapLegend } from '../../components/map/MapLegend'
+import { MapOverlay, MapView } from '../../components/map/MapView'
+import { PointLayer } from '../../components/map/PointLayer'
+import { classCounts, sequentialScale } from '../../components/map/scale'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import {
     BUCKETS,
@@ -32,6 +38,7 @@ import {
 } from '../fixtures/runs'
 import { RUN_ROWS, RUN_STATES, STATE_COLORS } from '../fixtures/runRows'
 import { TidevannMark } from '../fixtures/TidevannMark'
+import { places, regions, sites } from '../map/data'
 import { TopBar } from '../../components/TopBar'
 import { Stack } from '../../components/Layout'
 
@@ -241,6 +248,47 @@ export const ChartPanels: StoryObj = {
                     span="third"
                     bodyClassName="h-[15.75rem]"
                 />
+            </DashboardGrid>
+        </Ground>
+    ),
+}
+
+const CAPACITY: Threshold[] = [{ color: 'critical' }, { value: 100, color: 'warning' }, { value: 300, color: 'good' }]
+const capacityScale = sequentialScale({
+    breaks: [100, 300],
+    colors: CAPACITY.map((step) => tokenVar(step.color)),
+    format: (value) => value.toLocaleString('en-US'),
+})
+const capacityOf = (place: Feature) => sites[String(place.id)]?.capacity
+const capacityTally = classCounts(
+    capacityScale,
+    places.features.map((place) => capacityOf(place)),
+)
+
+/** A map filling a panel: sites as points in the colors of a threshold scale, with the scale's key and the count in each band. */
+export const MapPanel: StoryObj = {
+    name: 'Map panel',
+    render: () => (
+        <Ground title="Map panel">
+            <DashboardGrid>
+                <DashboardPanel title="Sites" subtitle="by capacity" span="full" flush>
+                    <MapView label="Sites by capacity" framed={false} className="h-96">
+                        <BoundaryLayer id="regions" data={regions} interactive={false} />
+                        <PointLayer id="sites" data={places} scale={capacityScale} value={capacityOf} radius={4} />
+                        <MapOverlay corner="bottom-left">
+                            <MapLegend
+                                title="Capacity"
+                                description="People each site holds"
+                                scale={capacityScale}
+                                layout="list"
+                                shape="point"
+                                counts={capacityTally.counts}
+                                noData="Planned"
+                                noDataCount={capacityTally.noData}
+                            />
+                        </MapOverlay>
+                    </MapView>
+                </DashboardPanel>
             </DashboardGrid>
         </Ground>
     ),

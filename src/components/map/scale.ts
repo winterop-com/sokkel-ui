@@ -78,21 +78,28 @@ export function categoricalScale(categories: (Omit<ScaleCategory, 'color'> & { c
     }
 }
 
-/** A sequential scale over ascending breaks, ramped in one hue (a chart token by default). */
+/**
+ * A sequential scale over ascending breaks, ramped in one hue (a chart token by default), or drawn
+ * in `colors`, one per class, such as the good, warning and critical steps of a threshold scale.
+ */
 export function sequentialScale({
     breaks,
     hue = 'var(--chart-2)',
+    colors,
     format = defaultFormat,
 }: {
     breaks: number[]
     hue?: string
+    /** One color per class, one more than the breaks, in place of the ramp. */
+    colors?: string[]
     format?: (value: number) => string
 }): SequentialScale {
     const count = breaks.length + 1
+    if (colors !== undefined && colors.length !== count) throw new Error(`A scale of ${count} classes needs ${count} colors.`)
     return {
         kind: 'sequential',
         breaks,
-        colors: Array.from({ length: count }, (_, index) => ramp(hue, count === 1 ? 1 : index / (count - 1))),
+        colors: colors ?? Array.from({ length: count }, (_, index) => ramp(hue, count === 1 ? 1 : index / (count - 1))),
         format,
     }
 }
