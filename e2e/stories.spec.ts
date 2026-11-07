@@ -71,6 +71,10 @@ async function settled(page: Page): Promise<void> {
     await page.locator('#storybook-root > *').first().waitFor()
     await mapsSettled(page)
     await graphsSettled(page)
+    // A chart type outside the engine's base set loads before its chart draws.
+    await page.waitForFunction(() =>
+        [...document.querySelectorAll('[data-echart]')].every((chart) => chart.hasAttribute('data-echart-settled')),
+    )
     // A page still drawing its parts, such as the theme gallery's frames, says so with data-settling.
     await page.waitForFunction(() => document.querySelector('[data-settling]') === null, null, { timeout: 90_000 })
     await videosSettled(page)
