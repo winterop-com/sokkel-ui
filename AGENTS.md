@@ -84,7 +84,8 @@ and ask before acting.
   a button, a card, a dialog) keeps that width.
 - Screenshot baselines are Linux renders, taken in the Playwright image as CI takes them:
   `bun run test:visual:linux:update`, or on GitHub with `make screenshots-ci`, which retakes them
-  for the current branch and commits them there. Never commit baselines taken on a Mac. A change that alters
+  for the current branch and commits them there. Both recompress what they write with optipng, losslessly,
+  to keep the repository small. Never commit baselines taken on a Mac. A change that alters
   a story's look carries its retaken baselines in the same PR.
 
 ## Design

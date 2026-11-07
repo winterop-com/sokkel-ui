@@ -5,8 +5,9 @@ import { expect, test, type Page } from '@playwright/test'
 import { mapsSettled, routeTiles } from './tiles.ts'
 
 /**
- * Every story, in dark and in light, at a desktop and a phone width, held to the screenshot it
- * was last approved at. One test per story, read from the built `storybook-static/index.json`,
+ * Every story held to the screenshot it was last approved at: at a desktop width in dark and in
+ * light, and at a phone width in dark. A phone shows the layout, which the scheme does not change, so
+ * one scheme there is enough; layout.spec.ts checks every narrow width besides. One test per story, read from the built `storybook-static/index.json`,
  * so the stories run across workers and `-g <story id>` retakes one alone.
  */
 interface Entry {
@@ -49,8 +50,11 @@ async function videosSettled(page: Page): Promise<void> {
     })
 }
 
-const VIEWPORTS = { desktop: { width: 1440, height: 900 }, phone: { width: 390, height: 844 } }
-const MODES = ['dark', 'light'] as const
+/** Each width with the schemes it is held in. */
+const VIEWPORTS = {
+    desktop: { size: { width: 1440, height: 900 }, modes: ['dark', 'light'] },
+    phone: { size: { width: 390, height: 844 }, modes: ['dark'] },
+} as const
 
 const stories: Entry[] = existsSync(INDEX)
     ? Object.values((JSON.parse(readFileSync(INDEX, 'utf8')) as { entries: Record<string, Entry> }).entries).filter(
@@ -64,7 +68,7 @@ test('the stories are built', () => {
 
 for (const story of stories) {
     test(story.id, async ({ page }, info) => {
-        // A story tagged slow, such as the theme gallery, draws many frames four times over.
+        // A story tagged slow, such as the theme gallery, draws many frames three times over.
         test.setTimeout(story.tags?.includes('slow') ? 8 * 60_000 : 3 * 60_000)
         await routeTiles(page, info.config.updateSnapshots === 'all' || info.config.updateSnapshots === 'changed')
         // Dialogs and popups open at once: a popup placed while its dialog was still zooming in sits a fraction of a
@@ -79,9 +83,9 @@ for (const story of stories) {
         // A story that throws is broken however its screenshot looks, and is never approved as a baseline.
         const thrown: string[] = []
         page.on('pageerror', (error) => thrown.push(error.message))
-        for (const [name, size] of Object.entries(VIEWPORTS)) {
+        for (const [name, { size, modes }] of Object.entries(VIEWPORTS)) {
             await page.setViewportSize(size)
-            for (const mode of MODES) {
+            for (const mode of modes) {
                 await test.step(`${name} ${mode}`, async () => {
                     await page.goto(`/iframe.html?id=${story.id}&viewMode=story&globals=theme:${mode}`)
                     await page.locator('#storybook-root > *').first().waitFor()
