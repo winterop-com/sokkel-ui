@@ -27,7 +27,7 @@ export function SourceSheet({
     const text = typeof value === 'string' ? value : JSON.stringify(value, null, 2)
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
-            <SheetContent side="right" className="w-full gap-0 sm:max-w-2xl">
+            <SheetContent side="right" flush className="w-full sm:max-w-2xl">
                 <SheetHeader className="border-b border-border px-4 py-3 pr-12">
                     <SheetTitle className="text-base font-medium">{title}</SheetTitle>
                     {description !== undefined && <SheetDescription>{description}</SheetDescription>}

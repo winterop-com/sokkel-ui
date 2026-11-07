@@ -232,32 +232,32 @@ function Detail({ event }: { event: Entry }) {
         : `${format(event.start, 'EEEE d MMMM')}, ${format(event.start, 'HH:mm')} - ${format(event.end, 'HH:mm')}`
     return (
         <>
-            <div className="flex items-start gap-2.5">
+            <Row align="start">
                 <span className={cn('mt-1.5 size-2.5 shrink-0 rounded-sm', KIND_FILL[event.color ?? 'blue'])} aria-hidden />
                 <Stack gap="3xs">
                     <h3 className={cn('text-title font-semibold', event.job !== undefined && 'font-mono')}>{event.title}</h3>
                     <span className="text-sm text-muted-foreground">{when}</span>
                 </Stack>
-            </div>
+            </Row>
             <Stack as="ul" gap="xs" className="text-sm">
-                <li className="flex items-center gap-2.5">
+                <Row as="li">
                     <CalendarDays className="size-4 shrink-0 text-faint" aria-hidden />
                     {calendar?.name}
-                </li>
+                </Row>
                 {event.state !== undefined && (
-                    <li className="flex items-center gap-2.5">
+                    <Row as="li">
                         <Clock className="size-4 shrink-0 text-faint" aria-hidden />
                         <StatusChip status={event.state} />
-                    </li>
+                    </Row>
                 )}
                 {event.host !== undefined && (
-                    <li className="flex items-center gap-2.5">
+                    <Row as="li">
                         <Server className="size-4 shrink-0 text-faint" aria-hidden />
                         <span className="font-mono text-xs">{event.host}</span>
-                    </li>
+                    </Row>
                 )}
                 {event.people !== undefined && (
-                    <li className="flex items-center gap-2.5">
+                    <Row as="li">
                         <Users className="size-4 shrink-0 text-faint" aria-hidden />
                         <Row as="span" gap="2xs">
                             {event.people.map((person) => (
@@ -265,7 +265,7 @@ function Detail({ event }: { event: Entry }) {
                             ))}
                         </Row>
                         <span className="truncate text-muted-foreground">{event.people.join(', ')}</span>
-                    </li>
+                    </Row>
                 )}
             </Stack>
             {event.notes !== undefined && <p className="text-sm leading-5 text-pretty">{event.notes}</p>}
@@ -296,10 +296,10 @@ function CalendarToggles({ shown, onChange }: { shown: CalendarId[]; onChange: (
                     <CheckboxField
                         key={calendar.id}
                         label={
-                            <span className={cn('flex items-center gap-2.5', !on && 'text-muted-foreground')}>
+                            <Row as="span" className={cn(!on && 'text-muted-foreground')}>
                                 <Dot kind={calendar.color} />
                                 {calendar.name}
-                            </span>
+                            </Row>
                         }
                         checked={on}
                         onCheckedChange={(next) =>
@@ -382,7 +382,7 @@ function CalendarApp({ view: initialView = 'week', open = null }: { view?: View;
                             <CalendarToggles shown={shown} onChange={setShown} />
                         </Stack>
                     </SubNav>
-                    <div className="flex min-w-0 flex-1 flex-col">
+                    <Stack gap="none" className="flex-1">
                         <Toolbar
                             variant="pane"
                             end={
@@ -413,7 +413,7 @@ function CalendarApp({ view: initialView = 'week', open = null }: { view?: View;
                             </ToolbarTitle>
                         </Toolbar>
                         {phone ? (
-                            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+                            <Stack gap="none" className="min-h-0 flex-1 overflow-y-auto">
                                 {view === 'week' ? (
                                     <DayStrip
                                         days={week}
@@ -440,7 +440,7 @@ function CalendarApp({ view: initialView = 'week', open = null }: { view?: View;
                                     openEvent={openEvent}
                                     onOpenEventChange={setOpenEvent}
                                 />
-                            </div>
+                            </Stack>
                         ) : view === 'week' ? (
                             <WeekGrid
                                 days={week}
@@ -467,7 +467,7 @@ function CalendarApp({ view: initialView = 'week', open = null }: { view?: View;
                                 className="flex-1"
                             />
                         )}
-                    </div>
+                    </Stack>
                 </Row>
             </Shell>
         </TooltipProvider>

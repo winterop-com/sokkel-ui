@@ -66,13 +66,13 @@ export function Behind({ action, onAction, children }: { action?: string; onActi
                 }
             />
             {children ?? (
-                <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-auto p-6">
+                <Stack as="main" gap="lg" className="min-h-0 flex-1 overflow-auto p-6">
                     <PageHeader
                         title="Import orders"
                         description="Loads the monthly orders file into the warehouse, every night at 02:00 UTC."
                     />
                     <DataTable variant="list" columns={RUN_COLUMNS} rows={RUNS} rowKey={(run) => String(run.id)} className="max-w-3xl" />
-                </main>
+                </Stack>
             )}
         </Stack>
     )

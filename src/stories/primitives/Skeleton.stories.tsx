@@ -36,12 +36,12 @@ export const LoadingRuns: StoryObj = {
                 <span className="w-14 text-right">Duration</span>
             </Row>
             {[0, 1, 2, 3, 4].map((row) => (
-                <div key={row} className="flex items-center gap-4 border-b px-3 py-3 last:border-0">
+                <Row key={row} gap="lg" className="border-b px-3 py-3 last:border-0">
                     <Skeleton className="h-4 flex-1" />
                     <Skeleton className="h-4 w-20 rounded-full" />
                     <Skeleton className="hidden h-4 w-32 sm:block" />
                     <Skeleton className="h-4 w-14" />
-                </div>
+                </Row>
             ))}
         </Stack>
     ),

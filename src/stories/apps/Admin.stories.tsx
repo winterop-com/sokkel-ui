@@ -191,10 +191,10 @@ const memberColumns: DataColumn<Member>[] = [
         header: 'Name',
         width: 'minmax(10rem,1.2fr)',
         cell: (member) => (
-            <span className="flex min-w-0 items-center gap-2.5">
+            <Row as="span" className="min-w-0">
                 <Person who={member.username || member.email} />
                 <span className="truncate">{member.name}</span>
-            </span>
+            </Row>
         ),
         sortValue: (member) => member.name,
     },
@@ -240,10 +240,10 @@ const inviteColumns: DataColumn<Invite>[] = [
         header: 'Address',
         width: 'minmax(12rem,1.4fr)',
         cell: (invite) => (
-            <span className="flex min-w-0 items-center gap-2.5">
+            <Row as="span" className="min-w-0">
                 <Person who={invite.email} />
                 <span className="truncate">{invite.email}</span>
-            </span>
+            </Row>
         ),
         sortValue: (invite) => invite.email,
     },
@@ -706,11 +706,11 @@ const TOKEN_COLUMNS: DataColumn<Token>[] = [
         header: 'Scopes',
         width: 'minmax(10rem,1.4fr)',
         cell: (token) => (
-            <span className="flex min-w-0 gap-1 overflow-hidden">
+            <Row as="span" gap="2xs" className="min-w-0 overflow-hidden">
                 {token.scopes.map((scope) => (
                     <Scope key={scope} scope={scope} />
                 ))}
-            </span>
+            </Row>
         ),
         sortValue: (token) => token.scopes.length,
     },
@@ -1229,7 +1229,7 @@ function UsagePage() {
                     bodyClassName="h-64"
                     file="runs-per-day"
                 />
-                <div className={cn(SPAN.third, 'flex flex-col gap-(--density-section-gap)')}>
+                <Stack gap="section" className={SPAN.third}>
                     <BarGauge
                         title="Plan used"
                         subtitle="this month"
@@ -1257,7 +1257,7 @@ function UsagePage() {
                         max={8_000}
                         color="chart-3"
                     />
-                </div>
+                </Stack>
             </DashboardGrid>
         </Page>
     )

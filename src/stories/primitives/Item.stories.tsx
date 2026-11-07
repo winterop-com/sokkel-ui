@@ -102,7 +102,7 @@ const JOBS = [
 
 export const JobList: StoryObj = {
     render: () => (
-        <ItemGroup className="max-w-2xl gap-0">
+        <ItemGroup flush className="max-w-2xl">
             {JOBS.map((job, at) => (
                 <div key={job.code} role="listitem">
                     {at > 0 && <ItemSeparator className="my-0" />}

@@ -134,7 +134,7 @@ export const Variants: StoryObj = {
                     </CodeBlockContent>
                 </CodeBlock>
             </Stack>
-            <div className="flex min-w-0 flex-col gap-2 md:col-span-2">
+            <Stack gap="sm" className="md:col-span-2">
                 <Caption>line variants: added, removed, highlighted</Caption>
                 <CodeBlock>
                     <CodeBlockContent lineNumbers startLine={14}>
@@ -144,7 +144,7 @@ export const Variants: StoryObj = {
                         <CodeBlockLine variant="highlighted">{'      message: amount is not a number in orders-2026-10.csv'}</CodeBlockLine>
                     </CodeBlockContent>
                 </CodeBlock>
-            </div>
+            </Stack>
         </Columns>
     ),
 }

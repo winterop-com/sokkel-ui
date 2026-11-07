@@ -2,9 +2,9 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
 import { Checkbox } from '../../components/ui/checkbox'
-import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '../../components/ui/field'
+import { Field, FieldContent, FieldDescription, FieldLabel, FieldLegend, FieldSet } from '../../components/ui/field'
 import { Label } from '../../components/ui/label'
-import { Row } from '../../components/Layout'
+import { Row, Stack } from '../../components/Layout'
 import { Specimen } from '../fixtures/Specimen'
 
 const meta: Meta = { title: 'Primitives/Inputs/Checkbox', parameters: { frame: 'column' } }
@@ -92,7 +92,7 @@ function AlertEvents() {
                 />
                 <FieldLabel htmlFor="ev-all">All events</FieldLabel>
             </Field>
-            <FieldGroup className="gap-3 pl-6">
+            <Stack className="pl-6">
                 {EVENTS.map((event) => (
                     <Field key={event.id} orientation="horizontal">
                         <Checkbox
@@ -108,7 +108,7 @@ function AlertEvents() {
                         </FieldContent>
                     </Field>
                 ))}
-            </FieldGroup>
+            </Stack>
         </FieldSet>
     )
 }

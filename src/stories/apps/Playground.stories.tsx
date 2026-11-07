@@ -43,7 +43,7 @@ import { Textarea } from '../../components/ui/textarea'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { PEOPLE_OPTIONS, PROJECT_OPTIONS, STATUS_OPTIONS } from '../fixtures/filters'
 import { TidevannMark } from '../fixtures/TidevannMark'
-import { Row, Stack } from '../../components/Layout'
+import { Columns, Row, Stack } from '../../components/Layout'
 
 /**
  * A model playground in the library's frame: a prompt in the editor with its variables and the
@@ -366,7 +366,7 @@ function Parameters() {
                 </Field>
             </PanelSection>
             <PanelSection title="Sampling">
-                <div className="flex flex-col gap-5">
+                <Stack gap="lg">
                     <Tuning
                         id="temperature"
                         label="Temperature"
@@ -383,7 +383,7 @@ function Parameters() {
                         step={0.05}
                         help="Only the likeliest tokens up to this share are drawn from."
                     />
-                </div>
+                </Stack>
             </PanelSection>
             <PanelSection title="Length">
                 <Stack gap="lg">
@@ -413,7 +413,7 @@ function Usage({
     live?: boolean
 }) {
     return (
-        <Row gap="none" wrap className="gap-x-4 gap-y-1 font-mono text-xs text-muted-foreground tabular-nums">
+        <Row gap="lg" rowGap="2xs" wrap className="font-mono text-xs text-muted-foreground tabular-nums">
             <span>
                 <span className="text-foreground">{tokens}</span> tokens{live ? ' so far' : ''}
             </span>
@@ -501,27 +501,29 @@ function ComparePage() {
                     </>
                 }
             />
-            <Surface className="flex items-start gap-3 p-(--density-panel-pad)">
-                <div className="min-w-0 flex-1">
-                    <p className="font-mono text-xs text-muted-foreground">failure-note, temperature 0.7, max 1,024 tokens</p>
-                    <p className="mt-1 line-clamp-2 text-sm">
-                        Write a short note to the team about why nightly-export failed last night. Say which step failed, how many rows it
-                        rejected and why, and what we changed so it does not happen again.
-                    </p>
-                </div>
-                <Button size="sm" variant="ghost" className="text-muted-foreground">
-                    <Pencil aria-hidden />
-                    Edit
-                </Button>
+            <Surface className="p-(--density-panel-pad)">
+                <Row gap="md" align="start">
+                    <div className="min-w-0 flex-1">
+                        <p className="font-mono text-xs text-muted-foreground">failure-note, temperature 0.7, max 1,024 tokens</p>
+                        <p className="mt-1 line-clamp-2 text-sm">
+                            Write a short note to the team about why nightly-export failed last night. Say which step failed, how many rows
+                            it rejected and why, and what we changed so it does not happen again.
+                        </p>
+                    </div>
+                    <Button size="sm" variant="ghost" className="text-muted-foreground">
+                        <Pencil aria-hidden />
+                        Edit
+                    </Button>
+                </Row>
             </Surface>
-            <div className="grid gap-(--density-inspector-gap) lg:grid-cols-3">
+            <Columns count={3} gap="inspector">
                 {ANSWERS.map((answer) => (
                     <Section
                         key={answer.model}
                         title={<span className="font-mono">{answer.model}</span>}
                         actions={<StatusChip status={answer.state} label={answer.state === 'running' ? 'streaming' : 'done'} />}
                         flush
-                        className="grid grid-rows-[auto_1fr]"
+                        fill
                     >
                         <Stack gap="none" className="h-full min-h-72">
                             <div className="flex-1 p-(--density-panel-pad)">
@@ -541,7 +543,7 @@ function ComparePage() {
                         </Stack>
                     </Section>
                 ))}
-            </div>
+            </Columns>
         </Page>
     )
 }
@@ -564,7 +566,7 @@ function HistoryPage() {
     return (
         <Page className="h-full">
             <PageHeader title="History" count="1,284 runs" />
-            <div className="flex min-h-0 flex-1 items-start gap-(--density-inspector-gap)">
+            <Row gap="inspector" align="start" className="min-h-0 flex-1">
                 <DataTable
                     toolbar={
                         <>
@@ -589,7 +591,7 @@ function HistoryPage() {
                     minWidth="40rem"
                     className="min-w-0 flex-1"
                 />
-                <div className="hidden self-stretch xl:flex">
+                <Row gap="none" align="stretch" from="xl" className="self-stretch">
                     <Inspector
                         title={<span className="font-mono">{chosen.prompt}</span>}
                         code={chosen.id}
@@ -646,8 +648,8 @@ function HistoryPage() {
                             <Markdown content={ANSWER} className="text-muted-foreground" />
                         </InspectorSection>
                     </Inspector>
-                </div>
-            </div>
+                </Row>
+            </Row>
         </Page>
     )
 }

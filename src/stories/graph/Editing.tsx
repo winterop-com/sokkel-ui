@@ -3,6 +3,8 @@ import { useState } from 'react'
 
 import type { GraphPointer } from '../../components/graph/GraphCanvas'
 import { PipelineGraph, type PipelineStep } from '../../components/graph/PipelineGraph'
+import { Fill, Stack } from '../../components/Layout'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem } from '../../components/ui/dropdown-menu'
 import { Stage } from './Frame'
 import { NIGHTLY_EXPORT } from './data'
 
@@ -10,6 +12,11 @@ import { NIGHTLY_EXPORT } from './data'
 interface Menu {
     step: string
     at: GraphPointer
+}
+
+/** A point on the screen as the box a menu opens beside. */
+function pointAt(at: GraphPointer) {
+    return { getBoundingClientRect: () => DOMRect.fromRect({ x: at.clientX, y: at.clientY, width: 0, height: 0 }) }
 }
 
 /**
@@ -21,6 +28,7 @@ export function Editor() {
     const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>({})
     const [selected, setSelected] = useState<string | null>('validate')
     const [menu, setMenu] = useState<Menu | null>(null)
+    const [menuOpen, setMenuOpen] = useState(false)
     const [said, setSaid] = useState('Drag from a port to connect, select and press Delete to remove, right-click a box for its menu.')
     const [added, setAdded] = useState(0)
     const chosen = steps.find((step) => step.code === selected)
@@ -43,14 +51,14 @@ export function Editor() {
 
     return (
         <Stage title="nightly-export" meta="harbor, editing">
-            <div className="relative flex min-h-0 min-w-0 flex-1">
+            <Fill className="relative">
                 <PipelineGraph
                     steps={steps}
                     positions={positions}
                     selected={selected}
                     onSelect={(code) => {
                         setSelected(code)
-                        setMenu(null)
+                        setMenuOpen(false)
                     }}
                     words={{ label: 'nightly-export' }}
                     editing={{
@@ -80,42 +88,39 @@ export function Editor() {
                         onNodeMenu: (step, at) => {
                             setSelected(step)
                             setMenu({ step, at })
+                            setMenuOpen(true)
                         },
                         onDrop: (source, at) => add(source, { x: at.x, y: at.y - 22 }),
                     }}
                 />
-                {menu !== null && (
-                    <div
-                        role="menu"
-                        className="fixed z-50 flex w-44 flex-col rounded-control border border-border bg-popover p-1 text-sm text-popover-foreground shadow-pop"
-                        style={{ left: menu.at.clientX, top: menu.at.clientY }}
-                    >
-                        <button
-                            type="button"
-                            role="menuitem"
-                            className="rounded-chip px-2 py-1.5 text-left hover:bg-muted"
+                <DropdownMenu
+                    open={menuOpen}
+                    onOpenChange={(open) => {
+                        if (!open) setMenuOpen(false)
+                    }}
+                >
+                    <DropdownMenuContent anchor={menu === null ? undefined : pointAt(menu.at)} side="bottom" align="start" className="w-44">
+                        <DropdownMenuItem
                             onClick={() => {
-                                add(menu.step)
-                                setMenu(null)
+                                if (menu !== null) add(menu.step)
+                                setMenuOpen(false)
                             }}
                         >
                             Add a step after
-                        </button>
-                        <button
-                            type="button"
-                            role="menuitem"
-                            className="rounded-chip px-2 py-1.5 text-left text-destructive hover:bg-muted"
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                            variant="destructive"
                             onClick={() => {
-                                remove(menu.step)
-                                setMenu(null)
+                                if (menu !== null) remove(menu.step)
+                                setMenuOpen(false)
                             }}
                         >
                             Remove step
-                        </button>
-                    </div>
-                )}
-            </div>
-            <aside className="flex shrink-0 flex-col gap-4 rounded-surface border border-border bg-card p-4 md:w-72">
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </Fill>
+            <Stack as="aside" gap="lg" className="shrink-0 rounded-surface border border-border bg-card p-4 md:w-72">
                 <p className="text-sm text-muted-foreground" aria-live="polite">
                     {said}
                 </p>
@@ -134,7 +139,7 @@ export function Editor() {
                         }}
                     />
                 )}
-            </aside>
+            </Stack>
         </Stage>
     )
 }

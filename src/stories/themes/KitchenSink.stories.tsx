@@ -36,7 +36,7 @@ import { ThemeToggle } from '../../components/ThemeToggle'
 import { TopBar } from '../../components/TopBar'
 import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card'
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card'
 import { Input } from '../../components/ui/input'
 import { Label } from '../../components/ui/label'
 import { Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger } from '../../components/ui/popover'
@@ -177,12 +177,10 @@ function Section({
 }) {
     return (
         <Card size="sm">
-            <CardHeader className="flex flex-row items-start justify-between gap-3">
-                <Stack gap="2xs">
-                    <CardTitle>{title}</CardTitle>
-                    {description !== undefined && <CardDescription>{description}</CardDescription>}
-                </Stack>
-                {action}
+            <CardHeader>
+                <CardTitle>{title}</CardTitle>
+                {description !== undefined && <CardDescription>{description}</CardDescription>}
+                {action !== undefined && <CardAction>{action}</CardAction>}
             </CardHeader>
             <CardContent>{children}</CardContent>
         </Card>
@@ -338,9 +336,9 @@ function Schedule() {
                     ]}
                     onChoose={setEvery}
                 />
-                <Row gap="none" wrap className="gap-x-6 gap-y-3">
+                <Row gap="xl" rowGap="md" wrap>
                     <CheckboxField label="Retry once on failure" checked={retry} onCheckedChange={setRetry} />
-                    <Label className="flex items-center gap-2 font-normal">
+                    <Label className="font-normal">
                         <Switch checked={paused} onCheckedChange={setPaused} />
                         Paused
                     </Label>
@@ -474,7 +472,7 @@ function App({ globals }: { globals: Record<string, unknown> }) {
                             </>
                         }
                     />
-                    <div className="grid gap-(--density-page-gap) xl:grid-cols-2">
+                    <Columns count={2} min="lg" gap="page">
                         <Section
                             title="Runs, today"
                             description="Started and failed, every 15 minutes."
@@ -493,7 +491,7 @@ function App({ globals }: { globals: Record<string, unknown> }) {
                             </div>
                         </Section>
                         <Controls />
-                    </div>
+                    </Columns>
                     <Stack>
                         <Row justify="between" wrap>
                             <Tabs value={view} onValueChange={(next) => setView(next as View)}>
@@ -521,12 +519,12 @@ function App({ globals }: { globals: Record<string, unknown> }) {
                             words={{ empty: 'No runs in this view.' }}
                         />
                     </Stack>
-                    <div className="grid gap-(--density-page-gap) xl:grid-cols-2">
+                    <Columns count={2} min="lg" gap="page">
                         <Schedule />
                         <Section title="Config" description="The job as it is stored.">
                             <Code value={CONFIG} language="yaml" title="nightly-export.yaml" size="sm" />
                         </Section>
-                    </div>
+                    </Columns>
                     <Banners />
                 </Page>
             </Shell>

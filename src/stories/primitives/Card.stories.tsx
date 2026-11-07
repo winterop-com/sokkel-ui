@@ -34,11 +34,13 @@ export const Variants: StoryObj = {
                             <CardContent>
                                 <p className="font-mono text-xs text-muted-foreground">nightly-export</p>
                             </CardContent>
-                            <CardFooter className="justify-end gap-2">
-                                <Button variant="outline" size="sm">
-                                    Edit
-                                </Button>
-                                <Button size="sm">Run now</Button>
+                            <CardFooter>
+                                <Row justify="end" className="flex-1">
+                                    <Button variant="outline" size="sm">
+                                        Edit
+                                    </Button>
+                                    <Button size="sm">Run now</Button>
+                                </Row>
                             </CardFooter>
                         </Card>
                     </Stack>
@@ -105,9 +107,11 @@ export const Projects: StoryObj = {
             {PROJECTS.map((project) => (
                 <Card key={project.code} size="sm">
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <FolderKanban className="size-4 text-muted-foreground" />
-                            {project.name ?? <span className="font-mono">{project.code}</span>}
+                        <CardTitle>
+                            <Row>
+                                <FolderKanban className="size-4 text-muted-foreground" />
+                                {project.name ?? <span className="font-mono">{project.code}</span>}
+                            </Row>
                         </CardTitle>
                         {project.name !== undefined && <CardDescription className="font-mono text-xs">{project.code}</CardDescription>}
                         <CardAction>
@@ -123,12 +127,14 @@ export const Projects: StoryObj = {
                     <CardContent>
                         <p className="text-muted-foreground">{project.description}</p>
                     </CardContent>
-                    <CardFooter className="flex-wrap justify-between gap-2 text-xs">
-                        <Row as="span">
-                            <StatusChip status={project.last} />
-                            <span className="text-muted-foreground tabular-nums">{project.jobs} jobs</span>
+                    <CardFooter className="text-xs">
+                        <Row justify="between" wrap className="flex-1">
+                            <Row as="span">
+                                <StatusChip status={project.last} />
+                                <span className="text-muted-foreground tabular-nums">{project.jobs} jobs</span>
+                            </Row>
+                            <span className="text-muted-foreground tabular-nums">{project.when}</span>
                         </Row>
-                        <span className="text-muted-foreground tabular-nums">{project.when}</span>
                     </CardFooter>
                 </Card>
             ))}

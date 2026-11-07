@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 
 import { Bubble, BubbleContent, BubbleGroup, BubbleReactions } from '../../components/ui/bubble'
 import { Message, MessageContent } from '../../components/ui/message'
-import { Stack } from '../../components/Layout'
+import { Row, Stack } from '../../components/Layout'
 
 /** The shaped surface a message's text sits on, in seven tones, either side of the column. */
 function Caption({ children }: { children: ReactNode }) {
@@ -53,10 +53,10 @@ export const States: StoryObj = {
                 <Caption>interactive, rendered as a button</Caption>
                 <Bubble variant="outline">
                     <BubbleContent render={<button type="button" />}>
-                        <span className="inline-flex items-center gap-1.5">
+                        <Row as="span" gap="xs" inline>
                             <RotateCcwIcon className="size-3.5" />
                             Rerun import-orders
-                        </span>
+                        </Row>
                     </BubbleContent>
                 </Bubble>
             </Stack>

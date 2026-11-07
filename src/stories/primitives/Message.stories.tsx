@@ -153,7 +153,7 @@ export default meta
 
 export const Variants: StoryObj = {
     render: () => (
-        <MessageGroup className="max-w-2xl gap-6">
+        <Stack gap="xl" className="max-w-2xl">
             <Stack gap="sm">
                 <Caption>align start, with avatar and header</Caption>
                 <Message>
@@ -207,7 +207,7 @@ export const Variants: StoryObj = {
                     </Message>
                 </MessageGroup>
             </Stack>
-        </MessageGroup>
+        </Stack>
     ),
 }
 

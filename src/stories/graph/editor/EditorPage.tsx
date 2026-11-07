@@ -9,6 +9,7 @@ import { TopBar } from '../../../components/TopBar'
 import { Button } from '../../../components/ui/button'
 import { TooltipProvider } from '../../../components/ui/tooltip'
 import { useIsMobile } from '../../../hooks/use-mobile'
+import { Fill, Row } from '../../../components/Layout'
 import { TidevannMark } from '../../fixtures/TidevannMark'
 import { NIGHTLY_DOC } from './documents'
 import { EditorCanvas, EditorPalette, StepPanel } from './Editor'
@@ -116,12 +117,12 @@ export function EditorPage() {
                             </>
                         }
                     />
-                    <div className="flex min-h-0 flex-1 gap-3 max-md:min-h-[60svh]">
+                    <Row gap="md" align="stretch" className="min-h-0 flex-1 max-md:min-h-[60svh]">
                         {!mobile && <EditorPalette editor={editor} className="w-52 shrink-0" />}
-                        <div className="flex min-h-0 min-w-0 flex-1">
+                        <Fill>
                             <EditorCanvas editor={editor} readOnly={mobile} />
-                        </div>
-                    </div>
+                        </Fill>
+                    </Row>
                 </Page>
             </Shell>
         </TooltipProvider>

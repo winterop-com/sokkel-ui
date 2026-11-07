@@ -66,6 +66,14 @@ const RULES: Rule[] = [
         except: { 'src/stories/primitives/Skeleton.stories.tsx': "the Skeleton primitive's own stories show its round shapes" },
     },
     {
+        name: 'raw layout in a story instead of the layout components',
+        // A container drawn by hand: flex or grid, its direction, wrapping, tracks or gaps. A cell's own
+        // size (flex-1, shrink-0, a width) is not a layout and stays allowed.
+        pattern:
+            /className=\{?(?:cn\((?:[^"'`(),]+,\s*)*)?["'`][^"'`]*(?<![\w-])(?:[\w-]+:)*(?:flex|inline-flex|grid|inline-grid|flex-col(?:-reverse)?|flex-row(?:-reverse)?|flex-wrap|grid-cols-[^\s"'`]+|grid-rows-[^\s"'`]+|gap-[^\s"'`]+|space-[xy]-[^\s"'`]+)(?=[\s"'`])/,
+        in: STORIES,
+    },
+    {
         name: 'a message under a field instead of the issue mark',
         pattern: /<p\b[^>]*text-(destructive|critical-ink|critical)\b|<FieldError\b/,
         in: STORIES,

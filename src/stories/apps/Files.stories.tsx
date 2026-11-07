@@ -532,7 +532,7 @@ function FilesApp({
                     </SubNav>
                     <DropZone
                         open={dropping || undefined}
-                        className="flex min-w-0 flex-1 flex-col"
+                        className="min-w-0 flex-1"
                         onFiles={(dropped) =>
                             setUploads([
                                 ...uploads,
@@ -547,7 +547,7 @@ function FilesApp({
                         }
                         words={{ detail: `The files go into ${path.join('/')}.` }}
                     >
-                        <div className="min-h-0 flex-1 overflow-y-auto">
+                        <div className="h-full overflow-y-auto">
                             <Page>
                                 <PageHeader
                                     title={path[path.length - 1]}

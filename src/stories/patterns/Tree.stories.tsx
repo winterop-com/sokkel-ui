@@ -6,7 +6,7 @@ import { Field } from '../../components/Field'
 import { Section } from '../../components/Section'
 import { Tree, type TreeNode } from '../../components/Tree'
 import { TreeSelect } from '../../components/TreeSelect'
-import { Stack } from '../../components/Layout'
+import { Columns, Stack } from '../../components/Layout'
 
 /** A hierarchy to open a level at a time, and the field that picks from one. */
 const PLACES: TreeNode[] = [
@@ -74,7 +74,11 @@ const PLACES: TreeNode[] = [
 ]
 
 function Ground({ children }: { children: React.ReactNode }) {
-    return <div className="mx-auto grid max-w-5xl items-start gap-6 md:grid-cols-3">{children}</div>
+    return (
+        <Columns count={3} min="md" align="start" className="mx-auto max-w-5xl">
+            {children}
+        </Columns>
+    )
 }
 
 function Trees() {

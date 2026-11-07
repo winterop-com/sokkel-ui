@@ -381,10 +381,10 @@ function ItemPanel({ item, onToggle }: { item: Item; onToggle: (index: number) =
     return (
         <>
             <PaneHeader size="lg" code={item.code} title={item.title}>
-                <span className="inline-flex items-center gap-1.5 rounded-chip bg-secondary px-1.5 py-0.5 text-xs">
+                <Row as="span" inline gap="xs" className="rounded-chip bg-secondary px-1.5 py-0.5 text-xs">
                     {column?.icon}
                     {column?.title}
-                </span>
+                </Row>
                 {item.labels.map((label) => (
                     <BoardLabel key={label} name={label} color={LABELS[label]} />
                 ))}
@@ -401,10 +401,10 @@ function ItemPanel({ item, onToggle }: { item: Item; onToggle: (index: number) =
                             term: 'Assignee',
                             value:
                                 item.assignee === undefined ? undefined : (
-                                    <span className="inline-flex items-center gap-2">
+                                    <Row as="span" inline>
                                         <PersonAvatar name={item.assignee} size="xs" />
                                         {item.assignee}
-                                    </span>
+                                    </Row>
                                 ),
                         },
                         {
@@ -570,7 +570,7 @@ function BoardApp({
                 }
             >
                 <Stack gap="none" className="h-full min-h-0">
-                    <div className="flex shrink-0 flex-col gap-3 px-(--density-page-inset) pt-(--density-page-top) pb-3">
+                    <Stack className="shrink-0 px-(--density-page-inset) pt-(--density-page-top) pb-3">
                         <PageHeader
                             title="Board"
                             count={`${shown.length} of ${items.length} items`}
@@ -619,7 +619,7 @@ function BoardApp({
                                 onSelectedChange={(labels) => setFilters({ ...filters, labels })}
                             />
                         </Toolbar>
-                    </div>
+                    </Stack>
                     <BoardArea
                         onMove={onMove}
                         columnWidth="min(17rem, calc(100vw - 4rem))"
@@ -647,10 +647,7 @@ function BoardApp({
                             </Row>
                         ) : (
                             <Stack gap="2xs" className="w-max">
-                                <div
-                                    className="sticky top-0 z-20 grid gap-3 bg-background"
-                                    style={{ gridTemplateColumns: `repeat(${COLUMNS.length}, var(--board-column))` }}
-                                >
+                                <Row gap="md" className="sticky top-0 z-20 bg-background">
                                     {COLUMNS.map((column) => (
                                         <BoardColumnHead
                                             key={column.id}
@@ -658,10 +655,10 @@ function BoardApp({
                                             icon={column.icon}
                                             count={items.filter((item) => item.column === column.id).length}
                                             limit={column.limit}
-                                            className="border-b border-border px-3"
+                                            className="w-(--board-column) shrink-0 border-b border-border px-3"
                                         />
                                     ))}
-                                </div>
+                                </Row>
                                 {PROJECTS.map((project) => (
                                     <BoardLane
                                         key={project.id}

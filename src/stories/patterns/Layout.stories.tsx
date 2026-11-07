@@ -117,6 +117,46 @@ export const MainAndAside: StoryObj = {
     ),
 }
 
+function JobHead() {
+    return (
+        <Row gap="md" justify="between" stackBelowRoom="lg">
+            <Stack gap="none">
+                <span className="font-mono text-sm">nightly-export</span>
+                <span className="text-xs text-muted-foreground">harbor, every night at 02:00</span>
+            </Stack>
+            <Row gap="sm">
+                <Button size="sm" variant="outline">
+                    <RotateCcw aria-hidden />
+                    Retry
+                </Button>
+                <Button size="sm">
+                    <Play aria-hidden />
+                    Run
+                </Button>
+            </Row>
+        </Row>
+    )
+}
+
+/**
+ * The same head in two rooms: `stackBelowRoom` stacks its parts while the room it sits in is
+ * narrower than 32rem, so it stacks in the side panel and stays on one line on the page beside
+ * it, whatever the window. `stackBelow` and `from` answer to the window instead, for a page's own
+ * structure.
+ */
+export const Rooms: StoryObj = {
+    render: () => (
+        <Row gap="xl" align="start" stackBelow="md">
+            <Stack room className="w-72 shrink-0 rounded-surface border border-border p-4 max-md:w-full">
+                <JobHead />
+            </Stack>
+            <Fill room className="rounded-surface border border-border p-4">
+                <JobHead />
+            </Fill>
+        </Row>
+    ),
+}
+
 /** A job's page from these parts: the header, the stats in columns, and the runs split with the details, the runs filling the height and scrolling. */
 export const JobPage: StoryObj = {
     name: 'Page',

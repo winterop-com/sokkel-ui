@@ -31,7 +31,7 @@ import { cn } from '../../lib/cn'
 import { describeCron } from '../../lib/cron'
 import { Behind } from './parts'
 import { Item, ItemContent, ItemDescription, ItemMedia } from '../../components/ui/item'
-import { Row, Stack } from '../../components/Layout'
+import { Columns, Row, Stack } from '../../components/Layout'
 
 /** Counts from 0 to 1 while `running`, then calls `onDone`; a stand-in for a server's progress. */
 function useProgress(running: boolean, ms: number, onDone: () => void) {
@@ -170,23 +170,27 @@ export function NewJobWizard() {
                 )}
                 {step === 1 && (
                     <>
-                        <fieldset className="grid gap-2 sm:grid-cols-3">
+                        <fieldset>
                             <legend className="mb-1.5 text-sm font-medium">Where the rows come from</legend>
-                            {SOURCES.map((one) => (
-                                <button
-                                    key={one.value}
-                                    type="button"
-                                    aria-pressed={source === one.value}
-                                    onClick={() => setSource(one.value)}
-                                    className="flex flex-col gap-1 rounded-control border border-border p-3 text-left outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50 aria-pressed:border-primary/60 aria-pressed:bg-primary/6"
-                                >
-                                    <Row as="span" justify="between" className="text-sm font-medium">
-                                        {one.label}
-                                        {source === one.value && <Check className="size-4 text-primary-ink" aria-hidden />}
-                                    </Row>
-                                    <span className="text-xs text-muted-foreground">{one.detail}</span>
-                                </button>
-                            ))}
+                            <Row gap="sm" align="stretch" stackBelow="sm">
+                                {SOURCES.map((one) => (
+                                    <button
+                                        key={one.value}
+                                        type="button"
+                                        aria-pressed={source === one.value}
+                                        onClick={() => setSource(one.value)}
+                                        className="min-w-0 flex-1 rounded-control border border-border p-3 text-left outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50 aria-pressed:border-primary/60 aria-pressed:bg-primary/6"
+                                    >
+                                        <Stack as="span" gap="2xs" className="h-full">
+                                            <Row as="span" justify="between" className="text-sm font-medium">
+                                                {one.label}
+                                                {source === one.value && <Check className="size-4 text-primary-ink" aria-hidden />}
+                                            </Row>
+                                            <span className="text-xs text-muted-foreground">{one.detail}</span>
+                                        </Stack>
+                                    </button>
+                                ))}
+                            </Row>
                         </fieldset>
                         {source === 'http' ? (
                             <TextField
@@ -388,12 +392,11 @@ export function ImportOrders({ stage: first = 'map' }: { stage?: ImportStage }) 
                     stage === 'map'
                         ? '1,204 rows'
                         : stage === 'done' && (
-                              <button
-                                  type="button"
-                                  className="flex items-center gap-1.5 underline underline-offset-3 hover:text-foreground"
-                              >
-                                  <Download className="size-3.5" aria-hidden />
-                                  Failed rows as CSV
+                              <button type="button" className="underline underline-offset-3 hover:text-foreground">
+                                  <Row as="span" gap="xs">
+                                      <Download className="size-3.5" aria-hidden />
+                                      Failed rows as CSV
+                                  </Row>
                               </button>
                           )
                 }
@@ -421,7 +424,13 @@ export function ImportOrders({ stage: first = 'map' }: { stage?: ImportStage }) 
                         onFiles={(files) => setFile(files[0].name)}
                         words={{ title: 'Drop the file to use it', detail: 'One CSV file.' }}
                     >
-                        <label className="flex h-56 cursor-pointer flex-col items-center justify-center gap-2 rounded-surface border-2 border-dashed border-border text-center hover:bg-muted/40">
+                        <Stack
+                            as="label"
+                            gap="sm"
+                            align="center"
+                            justify="center"
+                            className="h-56 cursor-pointer rounded-surface border-2 border-dashed border-border text-center hover:bg-muted/40"
+                        >
                             <FileSpreadsheet className="size-8 text-muted-foreground" aria-hidden />
                             <span className="text-sm font-medium">Drop a CSV file here, or choose one</span>
                             <span className="text-xs text-muted-foreground">
@@ -436,7 +445,7 @@ export function ImportOrders({ stage: first = 'map' }: { stage?: ImportStage }) 
                                     if (chosen !== undefined) setFile(chosen.name)
                                 }}
                             />
-                        </label>
+                        </Stack>
                     </DropZone>
                 )}
                 {stage === 'map' && (
@@ -502,7 +511,7 @@ export function ImportOrders({ stage: first = 'map' }: { stage?: ImportStage }) 
                     />
                 )}
                 {stage === 'running' && (
-                    <div className="flex h-56 flex-col justify-center gap-3">
+                    <Stack justify="center" className="h-56">
                         <Progress value={progress * 100}>
                             <ProgressLabel className="font-normal">Importing rows</ProgressLabel>
                             <ProgressValue className="font-mono">
@@ -512,11 +521,11 @@ export function ImportOrders({ stage: first = 'map' }: { stage?: ImportStage }) 
                         <p className="text-xs text-muted-foreground">
                             You can close this; the import carries on and the job page shows how it went.
                         </p>
-                    </div>
+                    </Stack>
                 )}
                 {stage === 'done' && (
                     <>
-                        <div className="grid grid-cols-3 gap-2">
+                        <Columns count={3} min="xs" gap="sm">
                             {[
                                 { label: 'Imported', value: '1,201', icon: <CircleCheck className="size-4 text-good" aria-hidden /> },
                                 { label: 'Failed', value: '3', icon: <CircleAlert className="size-4 text-critical" aria-hidden /> },
@@ -530,7 +539,7 @@ export function ImportOrders({ stage: first = 'map' }: { stage?: ImportStage }) 
                                     <span className="font-mono text-title tabular-nums">{stat.value}</span>
                                 </Stack>
                             ))}
-                        </div>
+                        </Columns>
                         <Stack gap="xs">
                             <span className="text-xs font-medium text-critical-ink">Rows not imported</span>
                             <DataTable variant="list" columns={FAILED_COLUMNS} rows={FAILED} rowKey={(row) => String(row.row)} />
@@ -610,7 +619,7 @@ export function ExportRuns({ stage: first = 'form' }: { stage?: ExportStage }) {
                         <Field id="export-format" label="Format">
                             <Segmented label="Format" value={format} options={FORMATS} onChoose={setFormat} fill />
                         </Field>
-                        <div className="grid grid-cols-2 gap-3">
+                        <Columns count={2} min="xs" gap="md">
                             <TextField id="export-from" label="From" mono value={from} onChange={setFrom} placeholder="2026-10-01" />
                             <TextField
                                 id="export-to"
@@ -623,7 +632,7 @@ export function ExportRuns({ stage: first = 'form' }: { stage?: ExportStage }) {
                                 onIssueOpenChange={setIssueOpen}
                                 placeholder="2026-10-31"
                             />
-                        </div>
+                        </Columns>
                         <CheckboxList label="Include">
                             {parts.map((part) => (
                                 <CheckboxField
@@ -638,12 +647,12 @@ export function ExportRuns({ stage: first = 'form' }: { stage?: ExportStage }) {
                     </>
                 )}
                 {stage === 'running' && (
-                    <div className="flex h-40 flex-col justify-center gap-3">
+                    <Stack justify="center" className="h-40">
                         <Progress value={progress * 100}>
                             <ProgressLabel className="font-normal">Writing {name}</ProgressLabel>
                             <ProgressValue className="font-mono">{() => `${String(Math.round(progress * 100))}%`}</ProgressValue>
                         </Progress>
-                    </div>
+                    </Stack>
                 )}
                 {stage === 'ready' && (
                     <Attachment className="w-full">
@@ -706,7 +715,7 @@ export function Share() {
                 confirm={{ label: 'Done', onConfirm: () => setOpen(false) }}
             >
                 <Field id="invite" label="Invite">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+                    <Row gap="sm" align="start" stackBelow="sm">
                         <AddressInput
                             id="invite"
                             value={invite}
@@ -736,13 +745,13 @@ export function Share() {
                                 Invite
                             </Button>
                         </Row>
-                    </div>
+                    </Row>
                 </Field>
                 <Stack gap="xs">
                     <span className="text-sm font-medium">People with access</span>
                     <Stack as="ul" gap="none">
                         {members.map((member) => (
-                            <li key={member.email} className="flex py-1.5">
+                            <li key={member.email} className="py-1.5">
                                 <PersonRow
                                     name={member.username}
                                     note={member.username === 'ada' ? '(you)' : undefined}

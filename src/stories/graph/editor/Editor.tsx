@@ -16,6 +16,7 @@ import type { JsonSchema } from '../../../components/schema/read'
 import { blockOf, BLOCKS, GROUPS, type BlockSpec } from './blocks'
 import { usePipelineEditor, type Notice, type Picker, type PipelineDoc, type PipelineEditorState } from './use-editor'
 import { GroupLabel } from '../../../components/GroupLabel'
+import { Center, Fill, Row, Stack } from '../../../components/Layout'
 
 /** The canvas of the editor: the pipeline with its toolbar, the open picker, and the last notice. */
 export function EditorCanvas({
@@ -161,17 +162,17 @@ export function StepPanel({ editor }: { editor: PipelineEditorState }) {
     const inflow = (editor.issues.get(code) ?? []).find((issue) => issue.text === 'Nothing flows in')
     const key = `${code}:${String(editor.history.revision)}`
     return (
-        <div className="flex flex-col gap-4 p-4">
-            <div className="flex items-start gap-2.5">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-control border border-border bg-background text-muted-foreground">
+        <Stack gap="lg" className="p-4">
+            <Row gap="sm" align="start">
+                <Center as="span" className="size-8 shrink-0 rounded-control border border-border bg-background text-muted-foreground">
                     <Icon className="size-4" aria-hidden />
-                </span>
+                </Center>
                 <div className="min-w-0">
                     <p className="text-sm font-medium">{block.name ?? block.kind}</p>
                     <p className="font-mono text-xs text-muted-foreground">{block.kind}</p>
                     {block.description !== undefined && <p className="mt-1 text-xs text-muted-foreground">{block.description}</p>}
                 </div>
-            </div>
+            </Row>
             {inflow !== undefined && (
                 <Problem title={inflow.text} detail={`${inflow.detail ?? ''} Drag from its output to this step's input.`.trim()} />
             )}
@@ -184,7 +185,7 @@ export function StepPanel({ editor }: { editor: PipelineEditorState }) {
                 placeholder={code}
                 onChange={(value) => editor.setName(code, value)}
             />
-            <div className="flex flex-col gap-3 border-t border-border pt-4">
+            <Stack className="border-t border-border pt-4">
                 <GroupLabel as="h3">Settings</GroupLabel>
                 <Settings
                     key={key}
@@ -192,8 +193,8 @@ export function StepPanel({ editor }: { editor: PipelineEditorState }) {
                     value={step.settings}
                     onChange={(settings) => editor.setSettings(code, settings)}
                 />
-            </div>
-        </div>
+            </Stack>
+        </Stack>
     )
 }
 
@@ -203,26 +204,28 @@ export function ProblemsPanel({ editor }: { editor: PipelineEditorState }) {
     return (
         <PanelSection title="Problems">
             {listed.length === 0 && <p className="text-sm text-muted-foreground">Every step is ready to run.</p>}
-            <ul className="flex flex-col gap-1">
+            <Stack as="ul" gap="2xs">
                 {listed.map((step) => (
                     <li key={step.code}>
                         <button
                             type="button"
                             onClick={() => editor.setSelection([step.code])}
-                            className="flex w-full flex-col gap-0.5 rounded-control px-2 py-1.5 text-left hover:bg-muted"
+                            className="w-full rounded-control px-2 py-1.5 text-left hover:bg-muted"
                             aria-current={editor.selected === step.code}
                         >
-                            <span className="font-mono text-sm">{step.code}</span>
-                            {(editor.issues.get(step.code) ?? []).map((issue) => (
-                                <span key={issue.text} className="flex items-center gap-1.5 text-xs text-critical-ink">
-                                    <CircleAlert className="size-3.5 shrink-0" aria-hidden />
-                                    {issue.text}
-                                </span>
-                            ))}
+                            <Stack as="span" gap="3xs">
+                                <span className="font-mono text-sm">{step.code}</span>
+                                {(editor.issues.get(step.code) ?? []).map((issue) => (
+                                    <Row as="span" key={issue.text} gap="xs" className="text-xs text-critical-ink">
+                                        <CircleAlert className="size-3.5 shrink-0" aria-hidden />
+                                        {issue.text}
+                                    </Row>
+                                ))}
+                            </Stack>
                         </button>
                     </li>
                 ))}
-            </ul>
+            </Stack>
         </PanelSection>
     )
 }
@@ -242,18 +245,18 @@ function EditorStage({
     children: ReactNode
 }) {
     return (
-        <div className="flex h-svh flex-col gap-3 bg-background p-4 text-foreground max-md:h-auto max-md:min-h-svh md:p-6">
+        <Stack className="h-svh bg-background p-4 text-foreground max-md:h-auto max-md:min-h-svh md:p-6">
             <PageHeader title={title} description={meta} />
-            <div className="flex min-h-0 flex-1 gap-4 max-md:flex-col">
+            <Row gap="lg" align="stretch" stackBelow="md" className="min-h-0 flex-1">
                 {palette}
-                <div className="flex min-h-0 min-w-0 flex-1 max-md:order-first max-md:h-[65svh] max-md:flex-none">{children}</div>
+                <Fill className="max-md:order-first max-md:h-[65svh] max-md:flex-none">{children}</Fill>
                 {aside !== undefined && (
-                    <aside className="flex shrink-0 flex-col overflow-y-auto rounded-surface border border-border bg-card md:w-80">
+                    <Stack as="aside" gap="none" className="shrink-0 overflow-y-auto rounded-surface border border-border bg-card md:w-80">
                         {aside}
-                    </aside>
+                    </Stack>
                 )}
-            </div>
-        </div>
+            </Row>
+        </Stack>
     )
 }
 

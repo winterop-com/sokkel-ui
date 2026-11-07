@@ -4,6 +4,7 @@ import { useState, type ComponentProps } from 'react'
 
 import { MessageComposer, MessageComposerAction, type MessageSchedule } from '../../components/MessageComposer'
 import { TooltipProvider } from '../../components/ui/tooltip'
+import { Stack } from '../../components/Layout'
 
 /**
  * The composer of a team chat: the format bar, Write and Preview, the code block's languages, and
@@ -13,9 +14,9 @@ import { TooltipProvider } from '../../components/ui/tooltip'
 function Channel({ children }: { children: React.ReactNode }) {
     return (
         <TooltipProvider>
-            <div className="flex min-h-svh flex-col justify-end bg-background px-(--density-chat-inset) py-4 text-foreground">
+            <Stack gap="none" justify="end" className="min-h-svh bg-background px-(--density-chat-inset) py-4 text-foreground">
                 {children}
-            </div>
+            </Stack>
         </TooltipProvider>
     )
 }

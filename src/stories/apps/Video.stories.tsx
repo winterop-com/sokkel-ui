@@ -264,7 +264,7 @@ const TRAILS: Record<'home' | 'watch', Crumb[]> = {
 function Topics() {
     const [topic, setTopic] = useState('All')
     return (
-        <div className="-mx-1 flex gap-2 overflow-x-auto px-1">
+        <Row className="-mx-1 overflow-x-auto px-1">
             {TOPICS.map((name) => (
                 <Button
                     key={name}
@@ -276,7 +276,7 @@ function Topics() {
                     {name}
                 </Button>
             ))}
-        </div>
+        </Row>
     )
 }
 
@@ -300,7 +300,7 @@ const videoMenu = (
 function HomePage() {
     return (
         <Page>
-            <div className="flex flex-col gap-5">
+            <Stack gap="lg">
                 <Topics />
                 <MediaGrid shape="wide" label="Videos">
                     {VIDEOS.map((video) => (
@@ -317,7 +317,7 @@ function HomePage() {
                         />
                     ))}
                 </MediaGrid>
-            </div>
+            </Stack>
         </Page>
     )
 }
@@ -329,7 +329,7 @@ function CommentItem({ comment, reply = false }: { comment: Comment; reply?: boo
     return (
         <Row as="li" gap="md" align="stretch">
             <PersonAvatar name={comment.by} color={channel.color} size={reply ? 'sm' : 'md'} />
-            <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <Stack gap="2xs" className="flex-1">
                 {comment.pinned === true && (
                     <Row as="span" gap="2xs" className="text-xs text-muted-foreground">
                         <Pin className="size-3" aria-hidden />
@@ -376,7 +376,7 @@ function CommentItem({ comment, reply = false }: { comment: Comment; reply?: boo
                         )}
                     </>
                 )}
-            </div>
+            </Stack>
             <DropdownMenu>
                 <DropdownMenuTrigger
                     render={<Button variant="ghost" size="icon-sm" aria-label="Comment actions" className="text-muted-foreground" />}
@@ -403,7 +403,7 @@ function Comments() {
     const [order, setOrder] = useState('top')
     const [draft, setDraft] = useState('')
     return (
-        <section className="flex flex-col gap-5">
+        <Stack as="section" gap="lg">
             <Toolbar
                 end={
                     <Select items={ORDERS} value={order} onValueChange={(value) => setOrder(value ?? 'top')}>
@@ -425,7 +425,7 @@ function Comments() {
             </Toolbar>
             <Row gap="md" align="stretch">
                 <PersonAvatar name="ada" color={CHANNELS.ada.color} size="md" />
-                <div className="flex min-w-0 flex-1 flex-col gap-2">
+                <Stack gap="sm" className="flex-1">
                     <Input
                         value={draft}
                         onChange={(event) => setDraft(event.target.value)}
@@ -442,14 +442,14 @@ function Comments() {
                             </Button>
                         </Row>
                     )}
-                </div>
+                </Stack>
             </Row>
             <Stack as="ul" gap="xl">
                 {COMMENTS.map((comment) => (
                     <CommentItem key={comment.id} comment={comment} />
                 ))}
             </Stack>
-        </section>
+        </Stack>
     )
 }
 
@@ -459,8 +459,8 @@ function WatchPage() {
     const channel = CHANNELS[WATCHING.channel]
     return (
         <Page>
-            <div className="flex flex-col gap-6 xl:flex-row xl:items-start">
-                <div className="flex min-w-0 flex-1 flex-col gap-4">
+            <Row gap="xl" align="start" stackBelow="xl">
+                <Stack gap="lg" className="flex-1">
                     <VideoPlayer
                         src={`${clip}#t=24`}
                         preload="auto"
@@ -526,8 +526,8 @@ function WatchPage() {
                         </button>
                     </Stack>
                     <Comments />
-                </div>
-                <aside className="flex shrink-0 flex-col gap-3 xl:w-96">
+                </Stack>
+                <Stack as="aside" className="shrink-0 xl:w-96">
                     <Topics />
                     <Stack>
                         {NEXT.map((video) => (
@@ -551,8 +551,8 @@ function WatchPage() {
                             />
                         ))}
                     </Stack>
-                </aside>
-            </div>
+                </Stack>
+            </Row>
         </Page>
     )
 }

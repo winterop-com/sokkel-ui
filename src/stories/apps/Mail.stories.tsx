@@ -327,23 +327,25 @@ function initial(person: Person): string {
 
 function Letterhead({ letter, open, onToggle }: { letter: Letter; open: boolean; onToggle: () => void }) {
     return (
-        <button type="button" aria-expanded={open} className="flex w-full min-w-0 items-start gap-3 text-left" onClick={onToggle}>
-            <Avatar>
-                <AvatarFallback>{initial(letter.from)}</AvatarFallback>
-            </Avatar>
-            <span className="flex min-w-0 flex-1 flex-col">
-                <Row as="span" align="baseline" className="min-w-0">
-                    <span className="truncate text-sm font-medium">{letter.from.name}</span>
-                    {open && <span className="truncate text-xs text-muted-foreground max-sm:hidden">{letter.from.address}</span>}
-                    <span className="ml-auto flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground tabular-nums">
-                        {letter.files !== undefined && <Paperclip className="size-3.5" aria-label="Has attachments" />}
-                        {letter.time}
+        <button type="button" aria-expanded={open} className="w-full min-w-0 text-left" onClick={onToggle}>
+            <Row as="span" gap="md" align="start">
+                <Avatar>
+                    <AvatarFallback>{initial(letter.from)}</AvatarFallback>
+                </Avatar>
+                <Stack as="span" gap="none" className="flex-1">
+                    <Row as="span" align="baseline" className="min-w-0">
+                        <span className="truncate text-sm font-medium">{letter.from.name}</span>
+                        {open && <span className="truncate text-xs text-muted-foreground max-sm:hidden">{letter.from.address}</span>}
+                        <Row as="span" gap="xs" className="ml-auto shrink-0 text-xs text-muted-foreground tabular-nums">
+                            {letter.files !== undefined && <Paperclip className="size-3.5" aria-label="Has attachments" />}
+                            {letter.time}
+                        </Row>
+                    </Row>
+                    <span className="truncate text-sm text-muted-foreground">
+                        {open ? `to ${letter.to.map((person) => (person === PEOPLE.ada ? 'me' : person.name)).join(', ')}` : letter.body}
                     </span>
-                </Row>
-                <span className="truncate text-sm text-muted-foreground">
-                    {open ? `to ${letter.to.map((person) => (person === PEOPLE.ada ? 'me' : person.name)).join(', ')}` : letter.body}
-                </span>
-            </span>
+                </Stack>
+            </Row>
         </button>
     )
 }
@@ -353,7 +355,7 @@ function LetterView({ letter, open, last, onToggle }: { letter: Letter; open: bo
         <article className={cn('border-b border-border px-4 py-3 md:px-6', open && 'pb-5')}>
             <Letterhead letter={letter} open={open} onToggle={onToggle} />
             {open && (
-                <div className="mt-3 flex flex-col gap-4 sm:pl-11">
+                <Stack gap="lg" className="mt-3 sm:pl-11">
                     <Markdown content={letter.body} />
                     {letter.files !== undefined && (
                         <AttachmentList
@@ -381,7 +383,7 @@ function LetterView({ letter, open, last, onToggle }: { letter: Letter; open: bo
                             </Button>
                         </Row>
                     )}
-                </div>
+                </Stack>
             )}
         </article>
     )
@@ -429,8 +431,8 @@ function Reading({ mail, onBack }: { mail: Conversation; onBack: () => void }) {
                 }
             />
             <div className="min-h-0 flex-1 overflow-y-auto">
-                <header className="flex items-start gap-3 border-b border-border px-4 pt-5 pb-4 md:px-6">
-                    <div className="flex min-w-0 flex-1 flex-col gap-2">
+                <Row as="header" gap="md" align="start" className="border-b border-border px-4 pt-5 pb-4 md:px-6">
+                    <Stack gap="sm" className="flex-1">
                         <h1 className="text-page leading-snug font-semibold tracking-tight">{mail.subject}</h1>
                         <Row gap="xs" wrap className="text-xs text-muted-foreground">
                             {(mail.labels ?? []).map((id) => (
@@ -441,7 +443,7 @@ function Reading({ mail, onBack }: { mail: Conversation; onBack: () => void }) {
                             ))}
                             <span>{thread.length === 1 ? '1 message' : `${thread.length} messages`}</span>
                         </Row>
-                    </div>
+                    </Stack>
                     <button
                         type="button"
                         aria-label={mail.starred === true ? 'Remove the star' : 'Star'}
@@ -449,7 +451,7 @@ function Reading({ mail, onBack }: { mail: Conversation; onBack: () => void }) {
                     >
                         <Star className={cn('size-4', mail.starred === true && 'fill-current')} aria-hidden />
                     </button>
-                </header>
+                </Row>
                 {thread.map((letter, index) => {
                     const last = index === thread.length - 1
                     const shown = last || open.has(letter.id)
@@ -508,18 +510,20 @@ function Nothing({ checked, onClear }: { checked: number; onClear: () => void })
                     <EmptyTitle>{checked} conversations selected</EmptyTitle>
                     <EmptyDescription>Archive them, delete them or give them a label together.</EmptyDescription>
                 </EmptyHeader>
-                <EmptyContent className="flex-row justify-center">
-                    <Button variant="outline" size="sm">
-                        <Archive aria-hidden />
-                        Archive
-                    </Button>
-                    <Button variant="outline" size="sm">
-                        <Trash2 aria-hidden />
-                        Delete
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={onClear}>
-                        Clear
-                    </Button>
+                <EmptyContent>
+                    <Row>
+                        <Button variant="outline" size="sm">
+                            <Archive aria-hidden />
+                            Archive
+                        </Button>
+                        <Button variant="outline" size="sm">
+                            <Trash2 aria-hidden />
+                            Delete
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={onClear}>
+                            Clear
+                        </Button>
+                    </Row>
                 </EmptyContent>
             </Empty>
         )
@@ -813,10 +817,12 @@ function MailApp({
                 }
             >
                 <Row gap="none" align="stretch" className="h-full min-h-0">
-                    <section
+                    <Stack
+                        as="section"
+                        gap="none"
                         aria-label="Messages"
                         className={cn(
-                            'flex min-w-0 flex-1 flex-col lg:w-88 lg:flex-none lg:border-r lg:border-border-strong xl:w-104',
+                            'flex-1 lg:w-88 lg:flex-none lg:border-r lg:border-border-strong xl:w-104',
                             mail !== undefined && 'max-lg:hidden',
                         )}
                     >
@@ -829,7 +835,7 @@ function MailApp({
                             checked={checked}
                             onChecked={setChecked}
                         />
-                    </section>
+                    </Stack>
                     <section aria-label="Reading" className={cn('min-w-0 flex-1', mail === undefined && 'max-lg:hidden')}>
                         {mail !== undefined ? (
                             <Reading key={mail.id} mail={mail} onBack={() => setOpen(null)} />
