@@ -6,10 +6,11 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.6.1** is the latest release (2026-11-06): rail entries that fold their own entries, and a
-  rail of text alone. 0.6.0 brought the team chat and AI chat parts, more charts, resizable panels
-  and columns, and `DataTable` as the one table. 0.5.0 was the first release under
-  the new name; 0.2.0 was the first published version.
+- **0.7.0** is the latest release (2026-11-07): every example on shared components. Layout
+  components and a rule against hand-built layout, about twenty-five new parts, the dark lift for
+  every theme, and hovers that show on any surface. 0.6.0 brought the team chat and AI chat parts,
+  more charts, resizable panels and columns, and `DataTable` as the one table. 0.5.0 was the first
+  release under the new name; 0.2.0 was the first published version.
 - The library was renamed from winterop-ui to sokkel-ui after 0.4.0: the repository is
   `winterop-com/sokkel-ui`, the package `@winterop-com/sokkel-ui`, the Storybook
   https://winterop-com.github.io/sokkel-ui/. 0.2.0 to 0.4.0 are republished under the new name, and
@@ -17,35 +18,15 @@ to `plan.md` when it ships.
 - No app uses it yet. Until one does, a PR merges as soon as the local gates pass and main's CI
   catches the rest; a release still waits for green.
 
-## 0.7.0
-
-Every example on shared components. An audit of the stories found parts the examples build by
-hand; each becomes a library component or an option on one, and every example takes it, so a change
-reaches them all. Done in waves, one PR each.
-
-- **Layout components, use what exists, new parts: done** (#109 to #127). The stories stand on
-  Stack, Row, Columns, Split and Fill; about 45 hand-built places use the component that already
-  drew them; and the parts the stories built in two or more places are library components. Parts
-  built in only one place stay in their story until a second place needs them.
-- **Raw layout rejected: done.** Every story lays out with the layout components, and
-  `src/rules.test.ts` rejects a layout container built by hand in a story, so a layout fix lands once.
-  The graph editor's node menu is the library's menu, opened at the pointer.
-- **Dark contrast for every theme: done.** Paper, tokyo, vinyl, cassette and neon take default's
-  0.4.0 lift in their own colors: secondary and faint text, borders and inputs at least as light as
-  default's, cards a step up and popovers above them. Contrast was already past that lift.
-- **Theme candidates: done.** The fifteen candidates were mostly copies of each other and of the
-  library's own themes, so none was kept; the library keeps its eight. New themes come later, judged
-  as candidates first (`bun scripts/import-candidates.ts`).
-
 ## Next
 
+- **Many more charts, and a charts app.** More chart kinds on ECharts, and an Apps story where the
+  rows of a `DataTable` can be shown as chart views the user picks (bars, lines, a breakdown, a
+  map of where), each view a saved choice of columns, so data is explored rather than only listed.
 - **A sound visualizer.** A live picture of what is playing (bars, a wave, a ring), drawn from the
   player's own audio element and sitting beside `MediaBar`, `TrackList` and the album views, with
   stories in the music app. The `bar-visualizer` primitive reads only a microphone stream today; the
   visualizer reads any playing media, holds still when paused, and has a static frame for stories.
-- **Many more charts, and a charts app.** More chart kinds on ECharts, and an Apps story where the
-  rows of a `DataTable` can be shown as chart views the user picks (bars, lines, a breakdown, a
-  map of where), each view a saved choice of columns, so data is explored rather than only listed.
 - **Ship only the library.** The package publishes `src/stories` with `src`, and `styles.css`
   scans all of `src`, so an app's CSS carries classes only the stories use (398 kB in the example
   app). Publish without the stories, scan only the components, and say in the README that
