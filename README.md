@@ -71,7 +71,7 @@ its `.npmrc`, with a token that can read packages, and pins a version:
 ```
 
 ```
-bun add @winterop-com/sokkel-ui@0.7.1
+bun add @winterop-com/sokkel-ui@0.8.0
 ```
 
 The components are styled with Tailwind classes, so every app runs Tailwind CSS 4.1 or later and
