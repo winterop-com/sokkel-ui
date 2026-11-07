@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 
 import { cn } from '../../lib/cn'
 import { Button } from '../ui/button'
+import { AudioScrubber } from '../ui/waveform'
 import { MediaSlider } from './MediaSlider'
 import { formatRemaining, formatTime, type MediaRange } from './time'
 
@@ -85,7 +86,10 @@ export function TransportButton({
     )
 }
 
-/** The seek slider between the elapsed and the remaining time. */
+/**
+ * The seek slider between the elapsed and the remaining time. Given the track's `waveform`, the
+ * slider is drawn as that waveform with the played part filled, and the same keys move it.
+ */
 export function Position({
     at,
     duration,
@@ -94,6 +98,7 @@ export function Position({
     onSeek,
     onScrub,
     tone = 'surface',
+    waveform,
 }: {
     at: number
     duration: number
@@ -102,7 +107,10 @@ export function Position({
     onSeek: (seconds: number) => void
     onScrub: (value: number | null) => void
     tone?: MediaTone
+    /** The track's levels from start to end, each from 0 to 1. */
+    waveform?: readonly number[]
 }) {
+    const valueText = (value: number) => `${formatTime(value)} / ${formatTime(duration)}`
     return (
         <div
             className={cn(
@@ -111,19 +119,37 @@ export function Position({
             )}
         >
             <span className="w-11 shrink-0 text-right">{formatTime(at)}</span>
-            <MediaSlider
-                tone={tone}
-                value={at}
-                max={duration}
-                label={label}
-                valueText={(value) => `${formatTime(value)} / ${formatTime(duration)}`}
-                buffered={buffered}
-                step={SEEK_STEP}
-                largeStep={SEEK_LARGE_STEP}
-                onChange={onSeek}
-                onScrub={onScrub}
-                className="min-w-0 flex-1"
-            />
+            {waveform === undefined ? (
+                <MediaSlider
+                    tone={tone}
+                    value={at}
+                    max={duration}
+                    label={label}
+                    valueText={valueText}
+                    buffered={buffered}
+                    step={SEEK_STEP}
+                    largeStep={SEEK_LARGE_STEP}
+                    onChange={onSeek}
+                    onScrub={onScrub}
+                    className="min-w-0 flex-1"
+                />
+            ) : (
+                <AudioScrubber
+                    data={waveform}
+                    currentTime={at}
+                    duration={duration}
+                    label={label}
+                    valueText={valueText}
+                    step={SEEK_STEP}
+                    largeStep={SEEK_LARGE_STEP}
+                    onSeek={onSeek}
+                    onScrub={onScrub}
+                    height={40}
+                    barWidth={3}
+                    barGap={2}
+                    className="min-w-0 flex-1 aria-disabled:opacity-50"
+                />
+            )}
             <span className={cn('w-11 shrink-0', tone === 'overlay' && 'text-terminal-muted')}>{formatRemaining(at, duration)}</span>
         </div>
     )

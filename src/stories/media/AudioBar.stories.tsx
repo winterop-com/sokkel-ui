@@ -2,38 +2,68 @@ import { TransportButton } from '../../components/media/MediaControls'
 import { TrackList } from '../../components/media/TrackList'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { ListMusic } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import { MediaBar, type RepeatMode } from '../../components/media/MediaBar'
-import { MetaLine } from '../../components/MetaLine'
 import { Artwork, type Cover } from '../fixtures/Artwork'
 import { Row, Stack } from '../../components/Layout'
 import { PaneHeader } from '../../components/PaneHeader'
+import { waveformOf } from './fixtures/waveform'
 
 interface Track {
     title: string
     artist: string
     album: string
+    year: number
     duration: number
     cover: Cover
 }
 
 const QUEUE: Track[] = [
-    { title: 'Northern Coast', artist: 'Ada', album: 'Larkspur', duration: 245, cover: { motif: 'sun', from: 'blue', to: 'teal' } },
-    { title: 'Valley Road', artist: 'Ada', album: 'Larkspur', duration: 198, cover: { motif: 'peaks', from: 'green', to: 'jade' } },
-    { title: 'Harbor at Dusk', artist: 'Grace', album: 'Juniper', duration: 312, cover: { motif: 'wave', from: 'violet', to: 'pink' } },
-    { title: 'Mountain Pass', artist: 'Linus', album: 'Juniper', duration: 227, cover: { motif: 'rings', from: 'teal', to: 'blue' } },
+    {
+        title: 'Northern Coast',
+        artist: 'Ada',
+        album: 'Larkspur',
+        year: 2024,
+        duration: 245,
+        cover: { motif: 'sun', from: 'blue', to: 'teal' },
+    },
+    {
+        title: 'Valley Road',
+        artist: 'Ada',
+        album: 'Larkspur',
+        year: 2024,
+        duration: 198,
+        cover: { motif: 'peaks', from: 'green', to: 'jade' },
+    },
+    {
+        title: 'Harbor at Dusk',
+        artist: 'Grace',
+        album: 'Juniper',
+        year: 2023,
+        duration: 312,
+        cover: { motif: 'wave', from: 'violet', to: 'pink' },
+    },
+    {
+        title: 'Mountain Pass',
+        artist: 'Linus',
+        album: 'Juniper',
+        year: 2023,
+        duration: 227,
+        cover: { motif: 'rings', from: 'teal', to: 'blue' },
+    },
     {
         title: 'Desert Morning',
         artist: 'Margaret',
         album: 'Larkspur',
+        year: 2024,
         duration: 263,
         cover: { motif: 'bands', from: 'pink', to: 'violet' },
     },
 ]
 
-/** A bar at the foot of an empty screen, wired to state so its controls answer. */
-function Player({ startPlaying, queue = false }: { startPlaying: boolean; queue?: boolean }) {
+/** A bar at the foot of an empty screen, wired to state so its controls answer, starting at `size` pixels tall. */
+function Player({ startPlaying, queue = false, size }: { startPlaying: boolean; queue?: boolean; size?: number }) {
     const [index, setIndex] = useState(0)
     const [playing, setPlaying] = useState(startPlaying)
     const [position, setPosition] = useState(83)
@@ -43,6 +73,7 @@ function Player({ startPlaying, queue = false }: { startPlaying: boolean; queue?
     const [repeat, setRepeat] = useState<RepeatMode>('all')
     const [queueOpen, setQueueOpen] = useState(queue)
     const track = QUEUE[index]
+    const waveform = useMemo(() => waveformOf(index + 1), [index])
     const step = (by: number) => {
         setIndex((index + by + QUEUE.length) % QUEUE.length)
         setPosition(0)
@@ -76,7 +107,11 @@ function Player({ startPlaying, queue = false }: { startPlaying: boolean; queue?
                 </Stack>
                 <MediaBar
                     title={track.title}
-                    subtitle={<MetaLine inline items={[track.artist, track.album]} />}
+                    artist={track.artist}
+                    album={track.album}
+                    year={track.year}
+                    trackNumber={index + 1}
+                    trackCount={QUEUE.length}
                     artwork={<Artwork cover={track.cover} />}
                     playing={playing}
                     onPlayingChange={setPlaying}
@@ -84,6 +119,7 @@ function Player({ startPlaying, queue = false }: { startPlaying: boolean; queue?
                     duration={track.duration}
                     onSeek={setPosition}
                     buffered={[{ start: 0, end: Math.min(track.duration, position + 60) }]}
+                    waveform={waveform}
                     volume={volume}
                     onVolumeChange={setVolume}
                     muted={muted}
@@ -98,6 +134,7 @@ function Player({ startPlaying, queue = false }: { startPlaying: boolean; queue?
                     onShuffleChange={setShuffle}
                     repeat={repeat}
                     onRepeatChange={setRepeat}
+                    defaultSize={size}
                     extra={
                         <TransportButton label="Queue" pressed={queueOpen} onClick={() => setQueueOpen(!queueOpen)}>
                             <ListMusic aria-hidden />
@@ -112,11 +149,18 @@ function Player({ startPlaying, queue = false }: { startPlaying: boolean; queue?
 const meta: Meta = { title: 'Media/Audio bar' }
 export default meta
 
-/** A track playing at a fixed position, with repeat on. */
+/** A track playing at a fixed position, with repeat on, in the one-line bar; its top edge drags it taller. */
 export const Playing: StoryObj = { render: () => <Player startPlaying /> }
 
 /** The same track paused. */
 export const Paused: StoryObj = { render: () => <Player startPlaying={false} /> }
+
+/**
+ * The bar dragged up into the large now-playing panel: the cover as tall as the bar, the place, the
+ * album and the year in the accent over the title and the artist, the track's waveform as the
+ * scrubber with the played part filled, and the transport at the foot with the volume at its end.
+ */
+export const Large: StoryObj = { render: () => <Player startPlaying size={300} /> }
 
 /** The queue opened from the bar's extra slot, with the playing track marked. */
 export const WithQueue: StoryObj = { name: 'With queue', render: () => <Player startPlaying queue /> }

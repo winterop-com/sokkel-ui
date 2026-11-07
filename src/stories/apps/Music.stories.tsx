@@ -33,6 +33,7 @@ import { Segmented } from '../../components/Segmented'
 import { Page, Shell } from '../../components/Shell'
 import { PanelSection, SidePanel } from '../../components/SidePanel'
 import { StarButton } from '../../components/StarButton'
+import { StatusItem, StatusLine } from '../../components/StatusLine'
 import { Toolbar } from '../../components/Toolbar'
 import { TopBar, type Crumb } from '../../components/TopBar'
 import { Button } from '../../components/ui/button'
@@ -42,6 +43,7 @@ import { Artwork, type Cover } from '../fixtures/Artwork'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import captions from '../media/fixtures/captions.vtt?url'
 import clip from '../media/fixtures/clip.webm?url'
+import { waveformOf } from '../media/fixtures/waveform'
 import { Row, Stack } from '../../components/Layout'
 import { GroupLabel } from '../../components/GroupLabel'
 
@@ -455,7 +457,11 @@ function Watch() {
     )
 }
 
-function Player({ queueOpen }: { queueOpen: boolean }) {
+/** The playing track's loudness, drawn as the large player's scrubber. */
+const WAVEFORM = waveformOf(4)
+
+/** The player bar, resizable from its top edge, starting at `size` pixels tall. */
+function Player({ queueOpen, size }: { queueOpen: boolean; size?: number }) {
     const [playing, setPlaying] = useState(true)
     const [position, setPosition] = useState(POSITION)
     const [volume, setVolume] = useState(0.7)
@@ -466,7 +472,11 @@ function Player({ queueOpen }: { queueOpen: boolean }) {
     return (
         <MediaBar
             title={track.title}
-            subtitle={<MetaLine inline items={[PLAYING.artist, PLAYING.title]} />}
+            artist={PLAYING.artist}
+            album={PLAYING.title}
+            year={PLAYING.year}
+            trackNumber={CURRENT + 1}
+            trackCount={TRACKS.length}
             artwork={<Artwork cover={PLAYING.cover} />}
             playing={playing}
             onPlayingChange={setPlaying}
@@ -474,6 +484,8 @@ function Player({ queueOpen }: { queueOpen: boolean }) {
             duration={track.duration}
             onSeek={setPosition}
             buffered={[{ start: 0, end: 180 }]}
+            waveform={WAVEFORM}
+            defaultSize={size}
             volume={volume}
             onVolumeChange={setVolume}
             muted={muted}
@@ -493,7 +505,7 @@ function Player({ queueOpen }: { queueOpen: boolean }) {
     )
 }
 
-function MusicApp({ view }: { view: View }) {
+function MusicApp({ view, player }: { view: View; player?: number }) {
     const [collapsed, setCollapsed] = useState(false)
     const [tab, setTab] = useState('queue')
     const queue = view === 'queue'
@@ -523,7 +535,12 @@ function MusicApp({ view }: { view: View }) {
                         />
                     ) : undefined
                 }
-                bottom={view === 'video' || view === 'series' ? undefined : <Player queueOpen={queue} />}
+                foot={
+                    <StatusLine note="Playing on this computer">
+                        <StatusItem label="library">{`${String(ALBUMS.length)} albums`}</StatusItem>
+                    </StatusLine>
+                }
+                bottom={view === 'video' || view === 'series' ? undefined : <Player queueOpen={queue} size={player} />}
             >
                 {view === 'library' && <LibraryPage />}
                 {view === 'album' && <AlbumPage />}
@@ -565,6 +582,13 @@ export const Album: StoryObj = { name: 'Album', render: () => <MusicApp view="al
 
 /** The queue in the side panel beside the album, its button pressed in the bar; on a phone the queue is the page. */
 export const Queue: StoryObj = { name: 'Queue', render: () => <MusicApp view="queue" /> }
+
+/**
+ * The player dragged up from its top edge into the large now-playing panel, docked between the
+ * album and the foot: the cover as tall as the panel under the rail, the title large over the
+ * track's waveform, and the account still at the window's bottom edge beside the foot strip.
+ */
+export const NowPlaying: StoryObj = { name: 'Now playing', render: () => <MusicApp view="album" player={300} /> }
 
 /** A series' episodes as wide covers, with their lengths and how far each was watched. */
 export const Series: StoryObj = { name: 'Series', render: () => <MusicApp view="series" /> }
