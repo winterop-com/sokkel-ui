@@ -21,7 +21,7 @@ import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Textarea } from '../components/ui/textarea'
 import { TidevannMark } from './fixtures/TidevannMark'
-import { Columns, Row } from '../components/Layout'
+import { Columns } from '../components/Layout'
 
 /**
  * The Runs page built from the library alone, with real-shaped data and working controls: the
@@ -257,18 +257,20 @@ function RunsListPage() {
         >
             <Page>
                 <PageHeader title="Runs" count={`${RUNS.length} loaded`} actions={<Button>Run a job</Button>} />
-                <Row wrap>
-                    <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-64" />
-                    <FilterChip
-                        facet="Status"
-                        value={status}
-                        onOpen={() => setStatus(status === undefined ? 'failed' : status)}
-                        onClear={() => setStatus(undefined)}
-                    />
-                    <FilterChip facet="Job" />
-                    <FilterChip facet="Started by" />
-                </Row>
                 <DataTable
+                    toolbar={
+                        <>
+                            <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-full max-w-64 min-w-40" />
+                            <FilterChip
+                                facet="Status"
+                                value={status}
+                                onOpen={() => setStatus(status === undefined ? 'failed' : status)}
+                                onClear={() => setStatus(undefined)}
+                            />
+                            <FilterChip facet="Job" />
+                            <FilterChip facet="Started by" />
+                        </>
+                    }
                     columns={COLUMNS}
                     rows={rows}
                     rowKey={(run) => run.id}

@@ -394,22 +394,24 @@ function MembersPage({ inviting = false }: { inviting?: boolean }) {
                     </Button>
                 }
             />
-            <Row wrap>
-                <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-full sm:w-64" />
-                <Select items={roleItems} value={role} onValueChange={(next) => setRole(String(next))}>
-                    <SelectTrigger className="w-36" aria-label="Role">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {roleItems.map((item) => (
-                            <SelectItem key={item.value} value={item.value}>
-                                {item.label}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </Row>
             <DataTable
+                toolbar={
+                    <>
+                        <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-full max-w-64 min-w-40" />
+                        <Select items={roleItems} value={role} onValueChange={(next) => setRole(String(next))}>
+                            <SelectTrigger className="w-36" aria-label="Role">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {roleItems.map((item) => (
+                                    <SelectItem key={item.value} value={item.value}>
+                                        {item.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </>
+                }
                 columns={memberColumns}
                 rows={rows}
                 rowKey={(member) => member.email}
@@ -1137,14 +1139,16 @@ function AuditPage({ chosen, onChoose }: { chosen: AuditEvent; onChoose: (event:
                     </Button>
                 }
             />
-            <Row wrap>
-                <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-full sm:w-64" />
-                <FilterChip facet="Period" value="Last 7 days" onClear={() => undefined} />
-                <FilterChip facet="Actor" />
-                <FilterChip facet="Action" />
-                <FilterChip facet="Project" />
-            </Row>
             <DataTable
+                toolbar={
+                    <>
+                        <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-full max-w-64 min-w-40" />
+                        <FilterChip facet="Period" value="Last 7 days" onClear={() => undefined} />
+                        <FilterChip facet="Actor" />
+                        <FilterChip facet="Action" />
+                        <FilterChip facet="Project" />
+                    </>
+                }
                 columns={EVENT_COLUMNS}
                 rows={shown}
                 rowKey={(event) => event.id}
