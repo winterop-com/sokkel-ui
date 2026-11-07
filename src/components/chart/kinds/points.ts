@@ -43,11 +43,17 @@ export const scatter: ChartBuilder = (spec, look) => {
             type: 'scatter',
             name,
             itemStyle: { color: colorOf(spec, look, name, index), opacity: 0.7, borderColor: look.card, borderWidth: 1 },
-            symbolSize:
-                spec.value === undefined ? undefined : (point: [number, number, number]) => 6 + 18 * Math.sqrt((point[2] ?? 0) / biggest),
+            // Points keep the theme's size unless a field sizes them; an option set to undefined would override it.
+            ...(spec.value === undefined
+                ? {}
+                : { symbolSize: (point: [number, number, number]) => 6 + 18 * Math.sqrt((point[2] ?? 0) / biggest) }),
             data: spec.rows
                 .filter((row) => spec.series === undefined || labelOf(row[spec.series]) === name)
-                .map((row) => [numberOf(row[x]), numberOf(row[y]), spec.value === undefined ? undefined : numberOf(row[spec.value])]),
+                .map((row) =>
+                    spec.value === undefined
+                        ? [numberOf(row[x]), numberOf(row[y])]
+                        : [numberOf(row[x]), numberOf(row[y]), numberOf(row[spec.value])],
+                ),
         })),
     }
 }
