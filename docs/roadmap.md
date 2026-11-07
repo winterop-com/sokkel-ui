@@ -35,16 +35,13 @@ reaches them all. Done in waves, one PR each.
   `MediaCard`, `KpiRow`, `Stat`, `Empty`, `Attachment`, `ItemCard` selection, `Item`, a real
   `ContextMenu` for the graph editor's menu, `SettingRow`, `Composer`, `Dot`, `DialogShell`,
   `SwitchField`, `PageHeader`, `ChatDayDivider`, and the inspector head.
-- **New parts** (widest reuse first): `IconButton` (a label and a tooltip in one, about 30 places);
-  `PageHeader` description and meta; a `FilterChip` that owns its menu; `PersonRow`; `TextField`,
-  or `Field` setting the issue edge on its control; an app trail with the mark outside `Shell`;
-  `GroupLabel`, which five components also copy; `CheckboxList`; `CheckboxField`; `ChoiceList`;
-  `SelectionBar`, shared with `DataTable`; a page `Toolbar`; `SubNav`; `PaneHeader`; `SliderField`;
-  `ClampText`; `Comment`; `MetaLine`; `ProgressField`; `CopyField`; `DueText`; `FormBar`;
-  `InlineField`; `ChipBar`; `AttachmentList`; `StarButton`; a value-showing menu button;
-  `IssueList`, shared with `IssueCount`; a folding mail letter; `Section` description;
-  `DescriptionList` icons; a `DropZone` picker; `NowPlaying`; a sortable list; and a `bare` `Input`
-  and `Textarea`.
+- **New parts** (widest reuse first): `IconButton` (a label and a tooltip in one); `TextField`, or
+  `Field` setting the issue edge on its control; a `FilterChip` that owns its menu; `MetaLine`; a page
+  `Toolbar`; `PaneHeader`; an app trail with the mark outside `Shell`; `SubNav`; a value-showing menu
+  button; `SliderField`; `SelectionBar`, shared with `DataTable`; `AttachmentList`; `DueText`; a `bare`
+  `Input` and `Textarea`; `FormBar`; `InlineField`; `PersonRow`; `CheckboxField` and `CheckboxList`;
+  `ChoiceList`; and `PageHeader` description and meta. Parts the stories build in only one place stay
+  in their story until a second place needs them.
 - **Dark contrast for every theme.** 0.4.0 lifted secondary text, borders, inputs, cards and
   popovers in the default theme's dark scheme (and amber, which shares it). Paper, contrast, tokyo,
   vinyl, cassette and neon get the same lift, each from its own colors, with their baselines
