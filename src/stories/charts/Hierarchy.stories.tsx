@@ -17,7 +17,7 @@ const BY_PROJECT_JOB_STATE: ChartSpec = { rows: RUN_ROWS, path: ['project', 'job
 const ROWS_BY_REGION_WORKER: ChartSpec = { rows: RUN_ROWS, path: ['region', 'worker'], y: 'rows' }
 
 /** Runs per project, each project's box split by its jobs, in shades of the project's color. */
-export const Boxes: StoryObj = {
+export const Treemap: StoryObj = {
     render: () => (
         <Ground title="Runs, October" columns={1}>
             <Framed kind="treemap" spec={BY_PROJECT_JOB} title="Runs" subtitle="by project and job" label="Runs by project and job" />
@@ -26,7 +26,8 @@ export const Boxes: StoryObj = {
 }
 
 /** Three levels: each job's runs split by how they ended, in the states' own colors. */
-export const Nested: StoryObj = {
+export const NestedTreemap: StoryObj = {
+    name: 'Nested treemap',
     render: () => (
         <Ground title="Runs, October" columns={1}>
             <Framed
@@ -42,7 +43,7 @@ export const Nested: StoryObj = {
 }
 
 /** The same three levels as rings, projects in the middle and states outside; a click on a slice opens it. */
-export const Rings: StoryObj = {
+export const Sunburst: StoryObj = {
     render: () => (
         <Ground title="Runs, October" columns={1}>
             <Framed

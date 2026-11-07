@@ -67,7 +67,8 @@ export const Groups: StoryObj = {
 }
 
 /** Each job's durations as a box with its outliers, and each worker's queue waits running sideways. */
-export const Spread: StoryObj = {
+export const BoxPlot: StoryObj = {
+    name: 'Box plot',
     render: () => (
         <Ground title="Runs, October">
             <Framed kind="boxplot" spec={DURATION_BY_JOB} title="Duration by job" label="The spread of each job's run durations" />

@@ -117,6 +117,26 @@ describe('the stories', () => {
     })
 })
 
+describe('the chart stories', () => {
+    it('name every chart kind, so a search of the catalog for it finds it', () => {
+        const kinds = [...readFileSync(join(ROOT, 'src/components/chart/kinds/index.ts'), 'utf8').matchAll(/^\s+(\w+): \{ build/gm)].map(
+            (match) => match[1],
+        )
+        expect(kinds.length).toBeGreaterThan(10)
+        // What the sidebar search reads: each section's title and each story's name, written as one word.
+        const names = files(join(ROOT, 'src/stories/charts'))
+            .map((path) => readFileSync(path, 'utf8'))
+            .flatMap((text) => [
+                ...[...text.matchAll(/title: '([^']+)'/g)].map((match) => match[1]),
+                ...[...text.matchAll(/^\s+name: '([^']+)'/gm)].map((match) => match[1]),
+                ...[...text.matchAll(/^export const (\w+): StoryObj/gm)].map((match) => match[1]),
+            ])
+            .map((name) => name.toLowerCase().replaceAll(/[^a-z]/g, ''))
+        const unnamed = kinds.filter((kind) => !names.some((name) => name.includes(kind.toLowerCase())))
+        expect(unnamed, `chart kinds no story or section names: ${unnamed.join(', ')}`).toEqual([])
+    })
+})
+
 describe('the library rules', () => {
     for (const rule of RULES) {
         it(`has no ${rule.name}`, () => {

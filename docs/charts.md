@@ -201,5 +201,6 @@ series in the legend drops its panel.
 4. **Tests.** The kind's spec in `kinds/kinds.test.ts`, so it is drawn and its legend listed, and a
    test for each piece of shaping.
 5. **Stories.** In `src/stories/charts/`, drawn with `Framed` from `Ground.tsx` from the Tidevann
-   fixtures in `src/stories/fixtures/`, from the simplest spec to the fullest. Add the kind to the
-   tables above.
+   fixtures in `src/stories/fixtures/`, from the simplest spec to the fullest. Name a story, or its
+   section, for the kind ("Treemap", "Box plot"), so a search of the catalog for the kind finds it;
+   `src/rules.test.ts` checks every kind. Add the kind to the tables above.
