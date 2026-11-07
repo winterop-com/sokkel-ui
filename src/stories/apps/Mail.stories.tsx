@@ -39,7 +39,7 @@ import { SelectionBar } from '../../components/SelectionBar'
 import { Shell } from '../../components/Shell'
 import { Toolbar } from '../../components/Toolbar'
 import { TopBar } from '../../components/TopBar'
-import { Avatar, AvatarFallback } from '../../components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar'
 import { Button } from '../../components/ui/button'
 import { Checkbox } from '../../components/ui/checkbox'
 import { Input } from '../../components/ui/input'
@@ -47,6 +47,7 @@ import { Textarea } from '../../components/ui/textarea'
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '../../components/ui/empty'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { cn } from '../../lib/cn'
+import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { Dot } from '../../components/Dot'
 import { Badge } from '../../components/ui/badge'
@@ -63,12 +64,13 @@ type Box = 'inbox' | 'starred' | 'sent' | 'drafts' | 'archive' | 'trash'
 interface Person {
     name: string
     address: string
+    picture?: string
 }
 
 const PEOPLE = {
-    ada: { name: 'Ada', address: 'ada@example.org' },
-    grace: { name: 'Grace', address: 'grace@example.org' },
-    linus: { name: 'Linus', address: 'linus@example.org' },
+    ada: { name: 'Ada', address: 'ada@example.org', picture: pictureOf('ada') },
+    grace: { name: 'Grace', address: 'grace@example.org', picture: pictureOf('grace') },
+    linus: { name: 'Linus', address: 'linus@example.org', picture: pictureOf('linus') },
     margaret: { name: 'Margaret', address: 'margaret@example.org' },
     scheduler: { name: 'Tidevann scheduler', address: 'scheduler@tidevann.example.org' },
     digest: { name: 'Tidevann', address: 'digest@tidevann.example.org' },
@@ -330,6 +332,7 @@ function Letterhead({ letter, open, onToggle }: { letter: Letter; open: boolean;
         <button type="button" aria-expanded={open} className="w-full min-w-0 text-left" onClick={onToggle}>
             <Row as="span" gap="md" align="start">
                 <Avatar>
+                    {letter.from.picture !== undefined && <AvatarImage src={letter.from.picture} alt={letter.from.name} />}
                     <AvatarFallback>{initial(letter.from)}</AvatarFallback>
                 </Avatar>
                 <Stack as="span" gap="none" className="flex-1">
@@ -801,7 +804,15 @@ function MailApp({
                         renderLink={renderLink}
                         collapsed={collapsed}
                         onCollapsedChange={setCollapsed}
-                        foot={<AccountMenu name="ada" where="ada@example.org" collapsed={collapsed} onSettings={() => undefined} />}
+                        foot={
+                            <AccountMenu
+                                name="ada"
+                                image={pictureOf('ada')}
+                                where="ada@example.org"
+                                collapsed={collapsed}
+                                onSettings={() => undefined}
+                            />
+                        }
                     />
                 }
                 top={

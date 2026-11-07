@@ -17,6 +17,7 @@ import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { Switch } from '../../components/ui/switch'
 import { TooltipProvider } from '../../components/ui/tooltip'
+import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { PersonAvatar } from '../../components/PersonAvatar'
 import { Columns, Stack } from '../../components/Layout'
@@ -347,7 +348,7 @@ function SettingsApp({ opening }: { opening?: Opening }) {
                                 <Settings2 aria-hidden />
                             </IconButton>
                             <ThemeToggle dark={dark} onToggle={() => setDark(!dark)} />
-                            <PersonAvatar name="grace" size="md" className="ml-1" />
+                            <PersonAvatar name="grace" image={pictureOf('grace')} size="md" className="ml-1" />
                         </>
                     }
                 />

@@ -49,6 +49,7 @@ const RULES: Rule[] = [
         except: {
             'src/components/chart/look.ts': 'the gray a chart falls back to when a canvas cannot resolve a token',
             'src/stories/fixtures/photos.ts': 'pictures drawn as SVG data',
+            'src/stories/fixtures/portraits.ts': 'portraits drawn as SVG data',
         },
     },
     { name: 'a selector reaching into a component from a story', pattern: /\[&[_>]/, in: STORIES },

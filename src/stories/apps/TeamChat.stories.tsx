@@ -46,6 +46,7 @@ import {
     DropdownMenuTrigger,
 } from '../../components/ui/dropdown-menu'
 import { TooltipProvider } from '../../components/ui/tooltip'
+import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { Row } from '../../components/Layout'
 
@@ -58,10 +59,10 @@ export default meta
 
 const noop = () => undefined
 
-const GRACE: ChatPerson = { name: 'grace' }
-const LINUS: ChatPerson = { name: 'linus' }
-const MARGARET: ChatPerson = { name: 'margaret' }
-const ADA: ChatPerson = { name: 'ada' }
+const GRACE: ChatPerson = { name: 'grace', image: pictureOf('grace') }
+const LINUS: ChatPerson = { name: 'linus', image: pictureOf('linus') }
+const MARGARET: ChatPerson = { name: 'margaret', image: pictureOf('margaret') }
+const ADA: ChatPerson = { name: 'ada', image: pictureOf('ada') }
 
 /** The places on the far left: home, direct messages, activity and files. */
 const STRIP: RailGroup[] = [
@@ -83,7 +84,7 @@ const STRIP_FOOT = (
             <Plus aria-hidden />
         </IconButton>
         <IconButton label="Account" size="icon-lg">
-            <PersonAvatar name="ada" size="lg" shape="square" presence="active" />
+            <PersonAvatar name="ada" image={ADA.image} size="lg" shape="square" presence="active" />
         </IconButton>
     </>
 )
@@ -97,7 +98,7 @@ function sections(active: string): ChannelSection[] {
             icon: <Star aria-hidden />,
             entries: [
                 { id: 'larkspur', label: 'larkspur', kind: 'channel', unread: true, mentions: 2 },
-                { id: 'dm-margaret', label: 'margaret', kind: 'direct', person: { name: 'margaret' }, presence: 'offline' },
+                { id: 'dm-margaret', label: 'margaret', kind: 'direct', person: MARGARET, presence: 'offline' },
             ],
         },
         {
@@ -124,12 +125,12 @@ function sections(active: string): ChannelSection[] {
                     id: 'dm-grace',
                     label: 'grace',
                     kind: 'direct',
-                    person: { name: 'grace' },
+                    person: GRACE,
                     presence: 'active',
                     unread: true,
                     mentions: 1,
                 },
-                { id: 'dm-linus', label: 'linus', kind: 'direct', person: { name: 'linus' }, presence: 'away' },
+                { id: 'dm-linus', label: 'linus', kind: 'direct', person: LINUS, presence: 'away' },
                 { id: 'dm-scheduler', label: 'scheduler', kind: 'direct', person: { name: 'scheduler', initials: 'S', color: 'teal' } },
             ],
         },
@@ -297,6 +298,7 @@ function ChannelPage({ onThread, threadOpen }: { onThread: () => void; threadOpe
             <ChatDay label="Yesterday">
                 <ChatMessage
                     author="grace"
+                    image={GRACE.image}
                     time="16:02"
                     {...BAR}
                     reactions={of([
@@ -307,7 +309,7 @@ function ChannelPage({ onThread, threadOpen }: { onThread: () => void; threadOpe
                 >
                     <Markdown content="The deploy of **harbor-api 1.4.0** is done. The rollout took 6 minutes and no run was interrupted." />
                 </ChatMessage>
-                <ChatMessage author="linus" time="16:05" {...BAR}>
+                <ChatMessage author="linus" image={LINUS.image} time="16:05" {...BAR}>
                     <Markdown content="Nice. `nightly-export` still writes to the old bucket; I will move it tomorrow." />
                 </ChatMessage>
                 <ChatMessage author="linus" time="16:06" continued editedAt="yesterday at 16:09" {...BAR}>
@@ -317,6 +319,7 @@ function ChannelPage({ onThread, threadOpen }: { onThread: () => void; threadOpe
             <ChatDay label="Today">
                 <ChatMessage
                     author="ada"
+                    image={ADA.image}
                     time="09:12"
                     {...BAR}
                     onReply={onThread}
@@ -332,7 +335,7 @@ function ChannelPage({ onThread, threadOpen }: { onThread: () => void; threadOpe
                     <Markdown content={ERROR} />
                 </ChatMessage>
                 <ChatNewDivider />
-                <ChatMessage author="margaret" time="09:41" files={[CSV]} {...BAR}>
+                <ChatMessage author="margaret" image={MARGARET.image} time="09:41" files={[CSV]} {...BAR}>
                     <Markdown content="Here are the rows that failed, from the run's output." />
                 </ChatMessage>
                 <ChatMessage author="margaret" time="09:42" continued editedAt="today at 09:44" {...BAR}>
@@ -340,6 +343,7 @@ function ChannelPage({ onThread, threadOpen }: { onThread: () => void; threadOpe
                 </ChatMessage>
                 <ChatMessage
                     author="grace"
+                    image={GRACE.image}
                     time="09:44"
                     files={[CHART]}
                     {...BAR}
@@ -358,16 +362,16 @@ function Thread() {
     return (
         <ThreadView
             parent={
-                <ChatMessage author="ada" time="09:12" {...BAR}>
+                <ChatMessage author="ada" image={ADA.image} time="09:12" {...BAR}>
                     <Markdown content={STARTER} />
                 </ChatMessage>
             }
             composer={<Composer placeholder="Reply" thread />}
         >
-            <ChatMessage author="grace" time="09:20" {...BAR}>
+            <ChatMessage author="grace" image={GRACE.image} time="09:20" {...BAR}>
                 <Markdown content="Same file as last week? The export from juniper changed its number format on Monday." />
             </ChatMessage>
-            <ChatMessage author="linus" time="09:31" editedAt="today at 09:33" {...BAR}>
+            <ChatMessage author="linus" image={LINUS.image} time="09:31" editedAt="today at 09:33" {...BAR}>
                 <Markdown content="Yes, juniper switched to `nb-NO`. I can parse with the locale in `transform`." />
             </ChatMessage>
             <ChatMessage author="linus" time="09:32" continued {...BAR}>
@@ -383,21 +387,30 @@ function Thread() {
 function Direct() {
     return (
         <Conversation
-            header={<ChannelHeader name="grace" kind="direct" presence="active" onDetails={noop} actions={ACTIONS.slice(1)} />}
+            header={
+                <ChannelHeader
+                    name="grace"
+                    kind="direct"
+                    image={GRACE.image}
+                    presence="active"
+                    onDetails={noop}
+                    actions={ACTIONS.slice(1)}
+                />
+            }
             composer={<Composer placeholder="Message grace" />}
         >
-            <ConversationStart picture={<PersonAvatar name="grace" size="xl" shape="square" />} title="grace">
+            <ConversationStart picture={<PersonAvatar name="grace" image={GRACE.image} size="xl" shape="square" />} title="grace">
                 Platform, on call this week. This is the start of your conversation with grace.
             </ConversationStart>
             <ChatDay label="Today">
-                <ChatMessage author="grace" time="08:55" {...BAR}>
+                <ChatMessage author="grace" image={GRACE.image} time="08:55" {...BAR}>
                     <Markdown content="Could you take the juniper release review at 14:00? I am stuck in the incident review." />
                 </ChatMessage>
-                <ChatMessage author="ada" time="09:02" {...BAR}>
+                <ChatMessage author="ada" image={ADA.image} time="09:02" {...BAR}>
                     <Markdown content="Sure. Anything I should look at first?" />
                 </ChatMessage>
                 <ChatNewDivider />
-                <ChatMessage author="grace" time="09:05" editedAt="today at 09:06" {...BAR}>
+                <ChatMessage author="grace" image={GRACE.image} time="09:05" editedAt="today at 09:06" {...BAR}>
                     <Markdown content="The migration in step 3. **@ada** it renames a column the larkspur dashboards read." />
                 </ChatMessage>
                 <ChatMessage author="grace" time="09:06" continued {...BAR}>

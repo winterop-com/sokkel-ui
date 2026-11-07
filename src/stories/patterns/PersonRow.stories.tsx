@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import { Stack } from '../../components/Layout'
+import { pictureOf } from '../fixtures/portraits'
 import { PersonRow } from '../../components/PersonRow'
 import { NativeSelect, NativeSelectOption } from '../../components/ui/native-select'
 
@@ -11,8 +12,8 @@ export default meta
 export const People: StoryObj = {
     render: () => (
         <Stack gap="md" className="max-w-md">
-            <PersonRow name="ada" note="(you)" detail="ada@example.org" aside="Owner" />
-            <PersonRow name="grace" detail="grace@example.org" aside="Admin" />
+            <PersonRow name="ada" note="(you)" image={pictureOf('ada')} detail="ada@example.org" aside="Owner" />
+            <PersonRow name="grace" image={pictureOf('grace')} detail="grace@example.org" aside="Admin" />
             <PersonRow name="margaret" detail="margaret@example.org" />
         </Stack>
     ),
@@ -27,6 +28,7 @@ export const WithControl: StoryObj = {
                 <PersonRow
                     key={name}
                     name={name}
+                    image={pictureOf(name)}
                     detail={`${name}@example.org`}
                     aside={
                         <NativeSelect size="sm" aria-label={`Access for ${name}`} defaultValue="view" className="w-32">

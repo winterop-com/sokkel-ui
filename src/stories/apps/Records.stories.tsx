@@ -53,6 +53,7 @@ import {
 } from '../../components/ui/questionnaire'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { PEOPLE_OPTIONS } from '../fixtures/filters'
+import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { NUMBER, regionName, regions } from '../map/data'
 import { Dot } from '../../components/Dot'
@@ -732,7 +733,15 @@ function RecordsApp({ view, children }: { view: View; children: ReactNode }) {
                         groups={groups(view)}
                         collapsed={collapsed}
                         onCollapsedChange={setCollapsed}
-                        foot={<AccountMenu name="grace" where="tidevann.example.org" collapsed={collapsed} onSettings={() => undefined} />}
+                        foot={
+                            <AccountMenu
+                                name="grace"
+                                image={pictureOf('grace')}
+                                where="tidevann.example.org"
+                                collapsed={collapsed}
+                                onSettings={() => undefined}
+                            />
+                        }
                     />
                 }
                 top={<TopBar trail={TRAILS[view]} onSearch={() => undefined} />}

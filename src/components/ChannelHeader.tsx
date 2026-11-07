@@ -58,6 +58,7 @@ export function ChannelHeader({
     kind = 'channel',
     private: locked = false,
     avatar,
+    image,
     presence,
     onDetails,
     members,
@@ -77,8 +78,10 @@ export function ChannelHeader({
     kind?: 'channel' | 'direct'
     /** A channel only its members see, marked with a lock. */
     private?: boolean
-    /** For `direct`: the person's picture; their initials on their color when none is given. */
+    /** For `direct`: the person's picture as a node; their initials on their color when none is given. */
     avatar?: ReactNode
+    /** For `direct`: the person's picture as an address, drawn over their initials once it has loaded. */
+    image?: string
     /** For `direct`: whether the person is around. */
     presence?: Presence
     /** Makes the name a button that opens the channel's or person's details. */
@@ -102,7 +105,7 @@ export function ChannelHeader({
     const mark =
         kind === 'direct' ? (
             avatar === undefined ? (
-                <PersonAvatar name={name} size="sm" shape="square" presence={presence} words={{ presence: words.presence }} />
+                <PersonAvatar name={name} image={image} size="sm" shape="square" presence={presence} words={{ presence: words.presence }} />
             ) : (
                 <span className="relative flex size-6 shrink-0">
                     <span className="flex size-6 items-center justify-center overflow-hidden rounded-md bg-muted text-2xs font-semibold">

@@ -19,6 +19,7 @@ import { useState, type ReactNode } from 'react'
 import { ChannelList, type ChannelEntry, type ChannelPlace, type ChannelSection } from '../../components/ChannelList'
 import { PersonAvatar } from '../../components/PersonAvatar'
 import { Rail } from '../../components/Rail'
+import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { Row } from '../../components/Layout'
 
@@ -51,17 +52,30 @@ const CHANNELS: ChannelEntry[] = [
 ]
 
 const DIRECT: ChannelEntry[] = [
-    { id: 'dm-ada', label: 'ada (you)', kind: 'direct', person: { name: 'ada', color: 'blue' }, presence: 'active' },
+    {
+        id: 'dm-ada',
+        label: 'ada (you)',
+        kind: 'direct',
+        person: { name: 'ada', color: 'blue', image: pictureOf('ada') },
+        presence: 'active',
+    },
     {
         id: 'dm-grace',
         label: 'grace',
         kind: 'direct',
-        person: { color: 'violet' },
+        person: { color: 'violet', image: pictureOf('grace') },
         presence: 'active',
         unread: true,
         mentions: 1,
     },
-    { id: 'dm-linus', label: 'linus', kind: 'direct', person: { color: 'green' }, presence: 'away', unread: true },
+    {
+        id: 'dm-linus',
+        label: 'linus',
+        kind: 'direct',
+        person: { color: 'green', image: pictureOf('linus') },
+        presence: 'away',
+        unread: true,
+    },
     { id: 'dm-margaret', label: 'margaret', kind: 'direct', person: { color: 'pink' }, presence: 'offline' },
 ]
 
@@ -206,7 +220,7 @@ export const WithStrip: StoryObj = {
                             <Plus aria-hidden />
                         </IconButton>
                         <IconButton label="Account" size="icon-lg">
-                            <PersonAvatar name="ada" color="blue" size="lg" shape="square" presence="active" />
+                            <PersonAvatar name="ada" color="blue" image={pictureOf('ada')} size="lg" shape="square" presence="active" />
                         </IconButton>
                     </>
                 }

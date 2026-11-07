@@ -9,6 +9,7 @@ import { PeopleFilter } from '../../components/PeopleFilter'
 import { Button } from '../../components/ui/button'
 import { DropdownMenuItem } from '../../components/ui/dropdown-menu'
 import { Row, Stack } from '../../components/Layout'
+import { pictureOf } from '../fixtures/portraits'
 
 /** The parts of a board: its cards, and its columns with their counts and limits. */
 const meta: Meta = { title: 'Patterns/Board' }
@@ -40,7 +41,7 @@ export const Cards: StoryObj = {
                 code="HRB-142"
                 title="nightly-export fails when the orders feed is empty"
                 labels={[{ name: 'bug', color: 'pink' }]}
-                assignee={{ name: 'ada' }}
+                assignee={{ name: 'ada', image: pictureOf('ada') }}
                 due={day(3)}
                 now={NOW}
                 comments={7}
@@ -53,7 +54,7 @@ export const Cards: StoryObj = {
                 code="JNP-86"
                 title="Rebuild the search index without downtime"
                 labels={[{ name: 'feature', color: 'blue' }]}
-                assignee={{ name: 'linus' }}
+                assignee={{ name: 'linus', image: pictureOf('linus') }}
                 due={day(5)}
                 now={NOW}
                 checklist={{ done: 2, total: 6 }}
@@ -63,7 +64,7 @@ export const Cards: StoryObj = {
                 code="JNP-84"
                 title="Upgrade the worker base image"
                 labels={[{ name: 'chore', color: 'teal' }]}
-                assignee={{ name: 'grace' }}
+                assignee={{ name: 'grace', image: pictureOf('grace') }}
                 due={day(2)}
                 now={NOW}
                 done
@@ -147,7 +148,7 @@ function PeopleDemo() {
     return (
         <div className="p-6">
             <PeopleFilter
-                people={[{ name: 'ada' }, { name: 'grace' }, { name: 'linus' }, { name: 'margaret' }]}
+                people={['ada', 'grace', 'linus', 'margaret'].map((name) => ({ name, image: pictureOf(name) }))}
                 chosen={chosen}
                 onChange={setChosen}
                 words={{ label: 'Assignees' }}

@@ -33,6 +33,7 @@ import { TopBar } from '../../components/TopBar'
 import { Button } from '../../components/ui/button'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { JOB_OPTIONS, PEOPLE_OPTIONS, STATUS_OPTIONS } from '../fixtures/filters'
+import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { Stack } from '../../components/Layout'
 
@@ -225,6 +226,7 @@ function Workspace({ dock = false }: { dock?: boolean }) {
                         foot={
                             <AccountMenu
                                 name="ada"
+                                image={pictureOf('ada')}
                                 where="tidevann.example.org"
                                 collapsed={collapsed}
                                 onSettings={() => undefined}

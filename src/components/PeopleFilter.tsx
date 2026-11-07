@@ -25,7 +25,8 @@ export function PeopleFilter({
     className,
     words: given,
 }: {
-    people: readonly { name: string; color?: KindColor }[]
+    /** Each person, with their picture when they have one. */
+    people: readonly { name: string; color?: KindColor; image?: string }[]
     chosen: readonly string[]
     onChange: (chosen: string[]) => void
     className?: string
@@ -49,7 +50,7 @@ export function PeopleFilter({
                         )}
                         onClick={() => onChange(on ? chosen.filter((other) => other !== person.name) : [...chosen, person.name])}
                     >
-                        <PersonAvatar name={person.name} color={person.color} size="md" />
+                        <PersonAvatar name={person.name} color={person.color} image={person.image} size="md" />
                     </button>
                 )
             })}

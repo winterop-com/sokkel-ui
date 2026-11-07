@@ -42,6 +42,7 @@ import { NativeSelect, NativeSelectOption } from '../../components/ui/native-sel
 import { Textarea } from '../../components/ui/textarea'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { PEOPLE_OPTIONS, PROJECT_OPTIONS, STATUS_OPTIONS } from '../fixtures/filters'
+import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { Columns, Row, Stack } from '../../components/Layout'
 
@@ -667,7 +668,15 @@ function PlaygroundApp({ view, children }: { view: View; children: ReactNode }) 
                         defaultOpen={['prompts']}
                         collapsed={collapsed}
                         onCollapsedChange={setCollapsed}
-                        foot={<AccountMenu name="ada" where="tidevann.example.org" collapsed={collapsed} onSettings={() => undefined} />}
+                        foot={
+                            <AccountMenu
+                                name="ada"
+                                image={pictureOf('ada')}
+                                where="tidevann.example.org"
+                                collapsed={collapsed}
+                                onSettings={() => undefined}
+                            />
+                        }
                     />
                 }
                 top={<TopBar trail={TRAILS[view]} onSearch={() => undefined} />}

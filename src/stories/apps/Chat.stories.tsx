@@ -27,6 +27,7 @@ import {
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { HARBOR_DUSK } from '../fixtures/photos'
 import { ModelPicker } from '../fixtures/models'
+import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { Columns, Stack } from '../../components/Layout'
 
@@ -425,7 +426,15 @@ function ChatApp({
                         groups={GROUPS}
                         collapsed={collapsed}
                         onCollapsedChange={setCollapsed}
-                        foot={<AccountMenu name="ada" where="tidevann.example.org" collapsed={collapsed} onSettings={() => undefined} />}
+                        foot={
+                            <AccountMenu
+                                name="ada"
+                                image={pictureOf('ada')}
+                                where="tidevann.example.org"
+                                collapsed={collapsed}
+                                onSettings={() => undefined}
+                            />
+                        }
                     />
                 }
                 top={
