@@ -69,69 +69,54 @@ export function PageHeader({
     // Beside a back button the header is two columns: the button level with the title, and every
     // other line in the second column so it starts where the title starts.
     const column = back && 'col-start-2'
-    // The actions go beside the title once the room the header is given is wide enough, so a header
-    // in a side panel stacks as one on a phone does.
     return (
-        <div className="@container">
-            <div className="flex flex-col gap-3 @xl:flex-row @xl:items-end @xl:justify-between">
-                <div className={cn('min-w-0', back && 'grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2')}>
-                    {back && (
-                        <IconButton
-                            label={said.back}
-                            onClick={onBack}
-                            className={cn('col-start-1', trailed ? 'row-start-2' : 'row-start-1')}
-                        >
-                            <ChevronLeft aria-hidden />
-                        </IconButton>
-                    )}
-                    {trailed && (
-                        <nav aria-label={said.trail} className={cn('min-w-0', column)}>
-                            <ol className="flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
-                                {trail.map((crumb, index) => {
-                                    const face = cn('truncate', crumb.code === true && 'font-mono')
-                                    return (
-                                        <li key={`${crumb.label}-${String(index)}`} className="flex min-w-0 items-center gap-1">
-                                            {crumb.href === undefined ? (
-                                                <span className={face}>{crumb.label}</span>
-                                            ) : (
-                                                renderLink(crumb, cn(face, 'transition-colors hover:text-foreground'))
-                                            )}
-                                            <ChevronRight className="size-3 shrink-0 text-faint" aria-hidden />
-                                        </li>
-                                    )
-                                })}
-                            </ol>
-                        </nav>
-                    )}
-                    <div className={cn('flex min-w-0 items-baseline gap-2', column)}>
-                        <h1
-                            className={
-                                showCode || code === undefined
-                                    ? 'truncate text-page font-medium tracking-tight'
-                                    : 'truncate font-mono text-page font-medium tracking-tight'
-                            }
-                        >
-                            {title}
-                        </h1>
-                        {count !== undefined && <span className="shrink-0 text-xs text-muted-foreground tabular-nums">{count}</span>}
-                    </div>
-                    {showCode && <p className={cn('truncate font-mono text-xs text-muted-foreground', column)}>{code}</p>}
-                    {description !== undefined && (
-                        <p className={cn('mt-1 max-w-prose text-sm text-muted-foreground', column)}>{description}</p>
-                    )}
-                    {meta !== undefined && (
-                        <div
-                            className={cn(
-                                'mt-1.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground',
-                                column,
-                            )}
-                        >
-                            {meta}
-                        </div>
-                    )}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div className={cn('min-w-0', back && 'grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2')}>
+                {back && (
+                    <IconButton label={said.back} onClick={onBack} className={cn('col-start-1', trailed ? 'row-start-2' : 'row-start-1')}>
+                        <ChevronLeft aria-hidden />
+                    </IconButton>
+                )}
+                {trailed && (
+                    <nav aria-label={said.trail} className={cn('min-w-0', column)}>
+                        <ol className="flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
+                            {trail.map((crumb, index) => {
+                                const face = cn('truncate', crumb.code === true && 'font-mono')
+                                return (
+                                    <li key={`${crumb.label}-${String(index)}`} className="flex min-w-0 items-center gap-1">
+                                        {crumb.href === undefined ? (
+                                            <span className={face}>{crumb.label}</span>
+                                        ) : (
+                                            renderLink(crumb, cn(face, 'transition-colors hover:text-foreground'))
+                                        )}
+                                        <ChevronRight className="size-3 shrink-0 text-faint" aria-hidden />
+                                    </li>
+                                )
+                            })}
+                        </ol>
+                    </nav>
+                )}
+                <div className={cn('flex min-w-0 items-baseline gap-2', column)}>
+                    <h1
+                        className={
+                            showCode || code === undefined
+                                ? 'truncate text-page font-medium tracking-tight'
+                                : 'truncate font-mono text-page font-medium tracking-tight'
+                        }
+                    >
+                        {title}
+                    </h1>
+                    {count !== undefined && <span className="shrink-0 text-xs text-muted-foreground tabular-nums">{count}</span>}
                 </div>
-                {actions !== undefined && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
+                {showCode && <p className={cn('truncate font-mono text-xs text-muted-foreground', column)}>{code}</p>}
+                {description !== undefined && <p className={cn('mt-1 max-w-prose text-sm text-muted-foreground', column)}>{description}</p>}
+                {meta !== undefined && (
+                    <div className={cn('mt-1.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground', column)}>
+                        {meta}
+                    </div>
+                )}
             </div>
+            {actions !== undefined && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
         </div>
     )
 }
