@@ -47,8 +47,8 @@ visual: ## Compare every story with its screenshot, in the Linux image as CI doe
 visual-update: ## Retake the screenshots, in the Linux image as CI does
 	bun run test:visual:linux:update
 
-screenshots-ci: ## Retake the screenshots on GitHub for the current branch and commit them there
-	gh workflow run screenshots.yaml --ref $$(git branch --show-current)
+screenshots-ci: ## Retake the screenshots on GitHub for the current branch (STORIES='pattern' for some) and commit them there
+	gh workflow run screenshots.yaml --ref $$(git branch --show-current) -f stories='$(STORIES)'
 
 layout: storybook-build ## Check that no story scrolls sideways at the narrow widths
 	bunx playwright test e2e/layout.spec.ts

@@ -97,7 +97,7 @@ and ask before acting.
   terminal, code, an editor, a log, a table, a schema, a graph, a chart, a video, a track list)
   fills the canvas, and the height too when it scrolls. One with a natural width (an input, a menu,
   a button, a card, a dialog) keeps that width.
-- Screenshot baselines are Linux renders, taken on GitHub with `make screenshots-ci`, which retakes
+- Screenshot baselines are Linux renders, taken on GitHub with `make screenshots-ci` (`STORIES='a|b'` retakes only those story ids), which retakes
   them for the current branch and commits them there (`bun run test:visual:linux:update` does the
   same locally, only when CI cannot). Both recompress what they write with optipng, losslessly,
   to keep the repository small. Never commit baselines taken on a Mac. A change that alters
