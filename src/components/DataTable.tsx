@@ -979,7 +979,8 @@ export function DataTable<T>({
                             {bulkActions?.(selection, clear)}
                         </div>
                     ) : (
-                        <div className="flex min-w-0 flex-1 items-center gap-2">{toolbar}</div>
+                        // The tools scroll sideways when the bar is too narrow for them, as the selection's actions do.
+                        <div className="flex min-w-0 flex-1 [scrollbar-width:none] items-center gap-2 overflow-x-auto">{toolbar}</div>
                     )}
                     {selection.size === 0 && (
                         <span className="ml-auto shrink-0 font-mono text-xs text-muted-foreground tabular-nums">

@@ -1,6 +1,6 @@
+import { StatusChip } from '../../components/StatusChip'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { Badge } from '../../components/ui/badge'
 import { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '../../components/ui/table'
 import { Stack } from '../../components/Layout'
 
@@ -76,14 +76,6 @@ export const Empty: StoryObj = {
     ),
 }
 
-const TONE: Record<string, string> = {
-    succeeded: 'bg-status-succeeded/15 text-status-succeeded-ink',
-    failed: 'bg-status-failed/15 text-status-failed-ink',
-    running: 'bg-status-running/15 text-status-running-ink',
-    queued: 'bg-status-queued/15 text-status-queued-ink',
-    cancelled: 'bg-status-cancelled/15 text-status-cancelled-ink',
-}
-
 const RUNS = [
     ['rebuild-index', 'running', 'grace', '2026-11-04 14:05', ''],
     ['send-digest', 'queued', 'schedule', '2026-11-04 14:06', ''],
@@ -111,7 +103,7 @@ export const Runs: StoryObj = {
                     <TableRow key={at}>
                         <TableCell className="font-mono">{job}</TableCell>
                         <TableCell>
-                            <Badge className={TONE[state]}>{state}</Badge>
+                            <StatusChip status={state} />
                         </TableCell>
                         <TableCell className="text-muted-foreground">{by}</TableCell>
                         <TableCell className="text-muted-foreground tabular-nums">{started}</TableCell>

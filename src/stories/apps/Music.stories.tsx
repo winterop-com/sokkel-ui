@@ -23,6 +23,7 @@ import { TidevannMark } from '../fixtures/TidevannMark'
 import captions from '../media/fixtures/captions.vtt?url'
 import clip from '../media/fixtures/clip.webm?url'
 import { Row, Stack } from '../../components/Layout'
+import { GroupLabel } from '../../components/GroupLabel'
 
 /**
  * A music and video library player in the library's frame: the rail of library views and
@@ -277,7 +278,7 @@ function AlbumPage() {
                     </span>
                     <Stack>
                         <div className="min-w-0">
-                            <p className="text-xs font-medium tracking-wide text-faint uppercase">Album</p>
+                            <GroupLabel>Album</GroupLabel>
                             <h1 className="truncate text-page font-semibold tracking-tight">{PLAYING.title}</h1>
                             <p className="text-sm text-muted-foreground">
                                 <span className="font-medium text-foreground">{PLAYING.artist}</span> · {PLAYING.year} · {TRACKS.length}{' '}
@@ -386,7 +387,9 @@ function Watch() {
                     </p>
                 </div>
                 <aside className="-mx-2 flex shrink-0 flex-col gap-2 xl:w-80">
-                    <h2 className="px-2 text-xs font-medium tracking-wide text-faint uppercase">{FILM.series}, 5 episodes</h2>
+                    <GroupLabel as="h2" className="px-2">
+                        {FILM.series}, 5 episodes
+                    </GroupLabel>
                     <TrackList tracks={EPISODES} current="e1" variant="plain" artwork="wide" onPlay={() => undefined} />
                 </aside>
             </div>

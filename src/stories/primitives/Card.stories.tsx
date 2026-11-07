@@ -1,8 +1,8 @@
+import { StatusChip } from '../../components/StatusChip'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { FolderKanban, MoreHorizontal } from 'lucide-react'
 
 import { Avatar, AvatarFallback, AvatarGroup } from '../../components/ui/avatar'
-import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../components/ui/card'
 import { Columns, Row, Stack } from '../../components/Layout'
@@ -99,12 +99,6 @@ const PROJECTS = [
     },
 ] as const
 
-const TONE: Record<string, string> = {
-    succeeded: 'bg-status-succeeded/15 text-status-succeeded-ink',
-    failed: 'bg-status-failed/15 text-status-failed-ink',
-    running: 'bg-status-running/15 text-status-running-ink',
-}
-
 export const Projects: StoryObj = {
     render: () => (
         <Columns count={3} gap="lg">
@@ -131,7 +125,7 @@ export const Projects: StoryObj = {
                     </CardContent>
                     <CardFooter className="flex-wrap justify-between gap-2 text-xs">
                         <Row as="span">
-                            <Badge className={TONE[project.last]}>{project.last}</Badge>
+                            <StatusChip status={project.last} />
                             <span className="text-muted-foreground tabular-nums">{project.jobs} jobs</span>
                         </Row>
                         <span className="text-muted-foreground tabular-nums">{project.when}</span>
