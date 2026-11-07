@@ -10,6 +10,7 @@ import type { ChartLook } from '../look'
  * `series`.
  */
 export interface ChartSpec {
+    /** The rows the chart reads, one record of named fields each. */
     rows: readonly Row[]
     /** The field along the category axis, or the first number for a kind that plots two. */
     x?: string
