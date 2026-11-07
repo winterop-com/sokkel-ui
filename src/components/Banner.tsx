@@ -1,8 +1,8 @@
+import { IconButton } from './IconButton'
 import { CircleAlert, CircleCheck, Info, TriangleAlert, X } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
-import { Button } from './ui/button'
 
 export type BannerTone = 'critical' | 'warning' | 'info' | 'good'
 
@@ -47,9 +47,9 @@ export function Banner({
             <p className="min-w-0 flex-1 truncate text-sm">{children}</p>
             {actions !== undefined && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
             {onDismiss !== undefined && (
-                <Button variant="ghost" size="icon-sm" aria-label={words.dismiss} className="shrink-0 text-current" onClick={onDismiss}>
+                <IconButton label={words.dismiss} className="shrink-0 text-current" onClick={onDismiss}>
                     <X aria-hidden />
-                </Button>
+                </IconButton>
             )}
         </div>
     )

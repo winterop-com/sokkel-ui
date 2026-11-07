@@ -1,3 +1,4 @@
+import { IconButton } from './IconButton'
 import {
     ArrowDownIcon,
     ArrowUpDownIcon,
@@ -1033,12 +1034,11 @@ export function DataTable<T>({
                     {card !== undefined && !stacked && (
                         <div className="flex items-center gap-0.5 rounded-md bg-muted p-0.5">
                             {(['table', 'grid'] as const).map((one) => (
-                                <Button
+                                <IconButton
+                                    label={one === 'table' ? words.tableView : words.gridView}
                                     key={one}
-                                    variant="ghost"
                                     size="icon-xs"
-                                    aria-label={one === 'table' ? words.tableView : words.gridView}
-                                    aria-pressed={shownView === one}
+                                    pressed={shownView === one}
                                     onClick={() => setShownView(one)}
                                     className={cn(
                                         'text-muted-foreground',
@@ -1046,7 +1046,7 @@ export function DataTable<T>({
                                     )}
                                 >
                                     {one === 'table' ? <TableIcon /> : <LayoutGridIcon />}
-                                </Button>
+                                </IconButton>
                             ))}
                         </div>
                     )}
@@ -1342,13 +1342,11 @@ export function DataTable<T>({
                                                 <span className="flex items-center gap-0.5 opacity-0 group-hover/row:opacity-100 focus-within:opacity-100">
                                                     {actions.map((action) =>
                                                         'separator' in action || action.inline !== true ? null : (
-                                                            <Button
+                                                            <IconButton
+                                                                label={action.label}
                                                                 key={action.id}
-                                                                variant="ghost"
                                                                 size="icon-xs"
                                                                 tabIndex={-1}
-                                                                aria-label={action.label}
-                                                                title={action.label}
                                                                 disabled={action.disabled}
                                                                 onClick={(event) => {
                                                                     event.stopPropagation()
@@ -1360,7 +1358,7 @@ export function DataTable<T>({
                                                                 )}
                                                             >
                                                                 {action.icon}
-                                                            </Button>
+                                                            </IconButton>
                                                         ),
                                                     )}
                                                 </span>
@@ -1457,42 +1455,18 @@ export function DataTable<T>({
                     </label>
                     <div className="ml-auto flex items-center gap-1">
                         <span className="mr-2 tabular-nums">{words.page(current + 1, pages)}</span>
-                        <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            aria-label={words.firstPage}
-                            disabled={current === 0}
-                            onClick={() => setPage(0)}
-                        >
+                        <IconButton label={words.firstPage} disabled={current === 0} onClick={() => setPage(0)}>
                             <ChevronsLeftIcon />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            aria-label={words.previousPage}
-                            disabled={current === 0}
-                            onClick={() => setPage(current - 1)}
-                        >
+                        </IconButton>
+                        <IconButton label={words.previousPage} disabled={current === 0} onClick={() => setPage(current - 1)}>
                             <ChevronLeftIcon />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            aria-label={words.nextPage}
-                            disabled={current >= pages - 1}
-                            onClick={() => setPage(current + 1)}
-                        >
+                        </IconButton>
+                        <IconButton label={words.nextPage} disabled={current >= pages - 1} onClick={() => setPage(current + 1)}>
                             <ChevronRightIcon />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            aria-label={words.lastPage}
-                            disabled={current >= pages - 1}
-                            onClick={() => setPage(pages - 1)}
-                        >
+                        </IconButton>
+                        <IconButton label={words.lastPage} disabled={current >= pages - 1} onClick={() => setPage(pages - 1)}>
                             <ChevronsRightIcon />
-                        </Button>
+                        </IconButton>
                     </div>
                 </div>
             )}

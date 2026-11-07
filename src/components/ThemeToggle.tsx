@@ -1,7 +1,6 @@
 import { Moon, Sun } from 'lucide-react'
 
-import { Button } from './ui/button'
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
+import { IconButton } from './IconButton'
 
 /**
  * The light and dark switch for a top bar: the icon shows the scheme in use, and the name and
@@ -18,11 +17,8 @@ export function ThemeToggle({
 }) {
     const label = dark ? words.toLight : words.toDark
     return (
-        <Tooltip>
-            <TooltipTrigger render={<Button variant="ghost" size="icon-sm" aria-label={label} onClick={onToggle} />}>
-                {dark ? <Moon aria-hidden /> : <Sun aria-hidden />}
-            </TooltipTrigger>
-            <TooltipContent side="bottom">{label}</TooltipContent>
-        </Tooltip>
+        <IconButton label={label} side="bottom" onClick={onToggle}>
+            {dark ? <Moon aria-hidden /> : <Sun aria-hidden />}
+        </IconButton>
     )
 }

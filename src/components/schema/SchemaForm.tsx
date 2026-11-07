@@ -1,3 +1,4 @@
+import { IconButton } from '../IconButton'
 import { Plus, X } from 'lucide-react'
 import { useId, useMemo, useState, type ReactNode } from 'react'
 
@@ -677,15 +678,14 @@ function Property({
                             <div className="min-w-0 flex-1">
                                 <Control form={form} path={[...path, index]} at={itemSchema} label={`${label} ${String(index + 1)}`} />
                             </div>
-                            <Button
+                            <IconButton
+                                label={`${form.words.remove} ${form.words.item(index)}`}
                                 type="button"
-                                variant="ghost"
                                 size="icon"
-                                aria-label={`${form.words.remove} ${form.words.item(index)}`}
                                 onClick={() => removeAt(index)}
                             >
                                 <X aria-hidden />
-                            </Button>
+                            </IconButton>
                         </div>
                     ) : (
                         <section key={index} className="flex min-w-0 flex-col gap-3 rounded-lg border border-border p-3">

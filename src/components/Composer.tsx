@@ -1,8 +1,8 @@
+import { IconButton } from './IconButton'
 import { ArrowUp, FileText, Paperclip, Square, X } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
-import { Button } from './ui/button'
 
 /** A file waiting to go with the next message. */
 export interface ComposerAttachment {
@@ -180,36 +180,27 @@ export function Composer({
                                 event.target.value = ''
                             }}
                         />
-                        <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            aria-label={words.attach}
-                            title={words.attach}
-                            disabled={disabled}
-                            onClick={() => picker.current?.click()}
-                            className="text-muted-foreground"
-                        >
+                        <IconButton label={words.attach} disabled={disabled} onClick={() => picker.current?.click()}>
                             <Paperclip aria-hidden />
-                        </Button>
+                        </IconButton>
                     </>
                 )}
                 {tools}
                 <div className="flex-1" />
                 {busy && onStop !== undefined ? (
-                    <Button size="icon-sm" variant="secondary" aria-label={words.stop} title={words.stop} onClick={onStop}>
+                    <IconButton label={words.stop} variant="secondary" onClick={onStop}>
                         <Square className="fill-current" aria-hidden />
-                    </Button>
+                    </IconButton>
                 ) : (
-                    <Button
-                        size="icon-sm"
-                        aria-label={words.send}
-                        title={words.send}
+                    <IconButton
+                        label={words.send}
+                        variant="default"
                         aria-disabled={!ready || undefined}
                         className={cn(!ready && 'cursor-not-allowed opacity-50')}
                         onClick={ready ? onSend : undefined}
                     >
                         <ArrowUp aria-hidden />
-                    </Button>
+                    </IconButton>
                 )}
             </div>
         </div>

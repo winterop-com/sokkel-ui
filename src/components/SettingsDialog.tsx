@@ -1,3 +1,4 @@
+import { IconButton } from './IconButton'
 import { ChevronLeft, ChevronRight, XIcon, type LucideIcon } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 
@@ -135,16 +136,9 @@ export function SettingsDialog({
             >
                 <div className="flex h-12 shrink-0 items-center gap-1 border-b border-border px-4 max-sm:pl-2">
                     {inSection && (
-                        <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            className="sm:hidden"
-                            aria-label={say.back}
-                            title={say.back}
-                            onClick={() => setPhoneView('list')}
-                        >
+                        <IconButton label={say.back} className="sm:hidden" onClick={() => setPhoneView('list')}>
                             <ChevronLeft aria-hidden />
-                        </Button>
+                        </IconButton>
                     )}
                     <DialogTitle className={cn('flex-1 text-base leading-6 font-medium', !inSection && 'max-sm:pl-2')}>
                         {say.title}

@@ -1,3 +1,4 @@
+import { IconButton } from './IconButton'
 import {
     Check,
     ChevronLeft,
@@ -266,27 +267,23 @@ export function AssistantReply({
             <MessageFooter variant="actions" className={cn('w-full', !card && '-ml-2.5')}>
                 {versions !== undefined && (
                     <span className="flex items-center gap-1">
-                        <Button
-                            variant="ghost"
+                        <IconButton
+                            label={words.previous}
                             size="icon"
-                            aria-label={words.previous}
-                            title={words.previous}
                             disabled={versions.at <= 1}
                             onClick={() => versions.onChange(versions.at - 1)}
                         >
                             <ChevronLeft aria-hidden />
-                        </Button>
+                        </IconButton>
                         <span className="text-sm font-normal tabular-nums">{words.version(versions.at, versions.of)}</span>
-                        <Button
-                            variant="ghost"
+                        <IconButton
+                            label={words.next}
                             size="icon"
-                            aria-label={words.next}
-                            title={words.next}
                             disabled={versions.at >= versions.of}
                             onClick={() => versions.onChange(versions.at + 1)}
                         >
                             <ChevronRight aria-hidden />
-                        </Button>
+                        </IconButton>
                     </span>
                 )}
                 <CopyAction value={content} onCopy={onCopy} words={words} />
@@ -298,26 +295,24 @@ export function AssistantReply({
                 )}
                 {onFeedback !== undefined && (
                     <>
-                        <Button
-                            variant={feedback === 'good' ? 'secondary' : 'ghost'}
+                        <IconButton
+                            label={words.good}
+
                             size="icon"
-                            aria-label={words.good}
-                            title={words.good}
-                            aria-pressed={feedback === 'good'}
+                            pressed={feedback === 'good'}
                             onClick={() => onFeedback(feedback === 'good' ? undefined : 'good')}
                         >
                             <ThumbsUp aria-hidden />
-                        </Button>
-                        <Button
-                            variant={feedback === 'bad' ? 'secondary' : 'ghost'}
+                        </IconButton>
+                        <IconButton
+                            label={words.bad}
+
                             size="icon"
-                            aria-label={words.bad}
-                            title={words.bad}
-                            aria-pressed={feedback === 'bad'}
+                            pressed={feedback === 'bad'}
                             onClick={() => onFeedback(feedback === 'bad' ? undefined : 'bad')}
                         >
                             <ThumbsDown aria-hidden />
-                        </Button>
+                        </IconButton>
                     </>
                 )}
                 {actions}
