@@ -34,8 +34,20 @@ export interface ChartSpec {
     format?: (value: number) => string
     /** A unit written after each figure, such as `s` or `%`. */
     unit?: string
+    /** What a field is called where the chart names it, such as a scatter's axes and tooltip; the field's own name where none is given. */
+    fieldNames?: Readonly<Record<string, string>>
     /** A line drawn smooth rather than straight between points. */
     smooth?: boolean
+    /** Labels every nth category on the category axis, such as every hour of fifteen-minute steps; ECharts picks when omitted. */
+    labelEvery?: number
+    /** How far apart bars stand: `tight` draws a histogram's tall bars, nearly touching. */
+    gap?: 'tight' | 'normal'
+    /** How an area is filled: evenly, or fading from its line toward the axis. */
+    fill?: 'solid' | 'gradient'
+    /** A heatmap's color scale shown beside the grid. */
+    showScale?: boolean
+    /** A ring's total written in its middle, with this word under it, such as `runs`. */
+    total?: string
 }
 
 /** Builds a kind's ECharts option from the spec and the theme's look. */

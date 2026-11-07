@@ -6,7 +6,7 @@ import type { LegendItem } from '../ChartLegend'
 
 /**
  * One point per row, `x` against `y`, both numbers; `series` colors the points by a field's label
- * and `value` sizes them by a number.
+ * and `value` sizes them by a number. An axis is named where `fieldNames` names its field.
  */
 export const scatter: ChartBuilder = (spec, look) => {
     const x = spec.x
@@ -15,19 +15,29 @@ export const scatter: ChartBuilder = (spec, look) => {
     const groups = spec.series === undefined ? ['All'] : distinct(spec.rows, spec.series, spec.seriesOrder)
     const sizes = spec.value === undefined ? [] : spec.rows.map((row) => numberOf(row[spec.value as string]) ?? 0)
     const biggest = Math.max(1, ...sizes)
+    const named = (field: string) => spec.fieldNames?.[field] ?? field
+    const xName = spec.fieldNames?.[x]
+    const yName = spec.fieldNames?.[y]
     return {
         tooltip: {
             trigger: 'item',
             formatter: (point: { seriesName: string; value: [number, number, number?]; color: string }) =>
                 tooltipMarkup(point.seriesName, [
-                    { label: x, value: written({ ...spec, unit: '' }, point.value[0]) },
-                    { label: y, value: written(spec, point.value[1]) },
-                    ...(spec.value === undefined ? [] : [{ label: spec.value, value: written({ ...spec, unit: '' }, point.value[2]) }]),
+                    { label: named(x), value: written({ ...spec, unit: '' }, point.value[0]) },
+                    { label: named(y), value: written(spec, point.value[1]) },
+                    ...(spec.value === undefined
+                        ? []
+                        : [{ label: named(spec.value), value: written({ ...spec, unit: '' }, point.value[2]) }]),
                 ]),
         },
-        grid: { left: 4, right: 10, top: 10, bottom: 4, containLabel: true },
-        xAxis: { type: 'value', scale: true, splitLine: { show: true, lineStyle: { color: look.grid } } },
-        yAxis: { type: 'value', scale: true },
+        grid: { left: 4, right: 10, top: yName === undefined ? 10 : 22, bottom: xName === undefined ? 4 : 26, containLabel: true },
+        xAxis: {
+            type: 'value',
+            scale: true,
+            splitLine: { show: true, lineStyle: { color: look.grid } },
+            ...(xName === undefined ? {} : { name: xName, nameLocation: 'middle', nameGap: 22 }),
+        },
+        yAxis: { type: 'value', scale: true, ...(yName === undefined ? {} : { name: yName }) },
         series: groups.map((name, index) => ({
             type: 'scatter',
             name,

@@ -1,5 +1,5 @@
 import { asShares, formatNumber, pivot } from '../data'
-import { SERIES_ORDER, tooltipMarkup } from '../look'
+import { SERIES_ORDER, tooltipMarkup, type ChartLook } from '../look'
 import { colorOf, legendColor, type ChartBuilder, type ChartSpec } from './spec'
 import type { LegendItem } from '../ChartLegend'
 
@@ -24,6 +24,15 @@ function shaped(spec: ChartSpec) {
     return spec.stack === 'percent' ? { ...data, series: asShares(data.series) } : data
 }
 
+/** The category axis, its labels every `labelEvery`th category when the spec asks. */
+function categoryAxis(spec: ChartSpec, categories: string[]) {
+    return {
+        type: 'category',
+        data: categories,
+        ...(spec.labelEvery === undefined ? {} : { axisLabel: { interval: spec.labelEvery - 1 } }),
+    }
+}
+
 /** A tooltip listing every series at the category under the pointer. */
 function axisTooltip(spec: ChartSpec) {
     const unit = spec.stack === 'percent' ? { ...spec, format: (value: number) => value.toFixed(1), unit: '%' } : spec
@@ -38,34 +47,50 @@ function axisTooltip(spec: ChartSpec) {
     }
 }
 
-/** Bars per category, one bar per series side by side, stacked, or as shares of 100%. */
+/** Bars per category, one bar per series side by side, stacked, or as shares of 100%; `gap` sets how close they stand. */
 export const bar: ChartBuilder = (spec, look) => {
     const { categories, series } = shaped(spec)
-    const categoryAxis = { type: 'category', data: categories }
+    const along = categoryAxis(spec, categories)
     const valueAxis = { type: 'value', max: spec.stack === 'percent' ? 100 : undefined }
     return {
         tooltip: axisTooltip(spec),
         grid: { left: 4, right: 10, top: 10, bottom: 4, containLabel: true },
-        xAxis: spec.horizontal === true ? valueAxis : categoryAxis,
-        yAxis: spec.horizontal === true ? { ...categoryAxis, inverse: true } : valueAxis,
+        xAxis: spec.horizontal === true ? valueAxis : along,
+        yAxis: spec.horizontal === true ? { ...along, inverse: true } : valueAxis,
         series: series.map((entry, index) => ({
             type: 'bar',
             name: entry.name,
             data: entry.values,
             stack: spec.stack === undefined ? undefined : 'all',
+            ...(spec.gap === 'tight' ? { barCategoryGap: '6%', barMaxWidth: 400 } : {}),
             itemStyle: { color: colorOf(spec, look, entry.name, index) },
         })),
     }
 }
 
-/** A line per series across the categories, or areas filled under them. */
+/** An area's color fading from its line toward the axis, deeper where areas stack. */
+function fading(look: ChartLook, color: string, stacked: boolean) {
+    return {
+        type: 'linear',
+        x: 0,
+        y: 0,
+        x2: 0,
+        y2: 1,
+        colorStops: [
+            { offset: 0, color: look.mix(color, stacked ? 55 : 40) },
+            { offset: 1, color: look.mix(color, stacked ? 30 : 4) },
+        ],
+    }
+}
+
+/** A line per series across the categories, or areas filled under them, evenly or fading by `fill`. */
 function lines(filled: boolean): ChartBuilder {
     return (spec, look) => {
         const { categories, series } = shaped(spec)
         return {
             tooltip: { ...axisTooltip(spec), axisPointer: { type: 'line' } },
             grid: { left: 4, right: 10, top: 10, bottom: 4, containLabel: true },
-            xAxis: { type: 'category', data: categories, boundaryGap: false },
+            xAxis: { ...categoryAxis(spec, categories), boundaryGap: false },
             yAxis: { type: 'value', max: spec.stack === 'percent' ? 100 : undefined },
             series: series.map((entry, index) => {
                 const color = colorOf(spec, look, entry.name, index)
@@ -77,7 +102,11 @@ function lines(filled: boolean): ChartBuilder {
                     stack: spec.stack === undefined ? undefined : 'all',
                     itemStyle: { color },
                     lineStyle: { color },
-                    areaStyle: filled ? { color, opacity: spec.stack === undefined ? 0.15 : 0.55 } : undefined,
+                    areaStyle: !filled
+                        ? undefined
+                        : spec.fill === 'gradient'
+                          ? { opacity: 1, color: fading(look, color, spec.stack !== undefined) }
+                          : { color, opacity: spec.stack === undefined ? 0.15 : 0.55 },
                 }
             }),
         }
@@ -87,12 +116,26 @@ function lines(filled: boolean): ChartBuilder {
 export const line = lines(false)
 export const area = lines(true)
 
-/** A ring of slices, one per category, each its share of the whole. */
+/** A ring of slices, one per category, each its share of the whole, with the total in its middle when `total` names it. */
 export const donut: ChartBuilder = (spec, look) => {
     const { categories, series } = shaped(spec)
     const values = series[0]?.values ?? []
     const total = values.reduce<number>((sum, value) => sum + (value ?? 0), 0)
     return {
+        ...(spec.total === undefined
+            ? {}
+            : {
+                  title: {
+                      show: true,
+                      text: written(spec, total),
+                      subtext: spec.total,
+                      left: 'center',
+                      top: 'center',
+                      itemGap: 2,
+                      textStyle: { fontSize: look.size.stat, fontWeight: 600, color: look.foreground },
+                      subtextStyle: { fontSize: look.size.label, color: look.muted },
+                  },
+              }),
         tooltip: {
             trigger: 'item',
             formatter: (point: { name: string; value: number; color: string }) =>
@@ -119,7 +162,7 @@ export const donut: ChartBuilder = (spec, look) => {
     }
 }
 
-/** A grid of cells, `x` along and `series` down, each cell's color its combined `y`. */
+/** A grid of cells, `x` along and `series` down, each cell's color its combined `y`, with the scale beside it by `showScale`. */
 export const heatmap: ChartBuilder = (spec, look) => {
     const { categories, series } = shaped(spec)
     const cells = series.flatMap((entry, row) => entry.values.map((value, column) => [column, row, value]))
@@ -133,11 +176,17 @@ export const heatmap: ChartBuilder = (spec, look) => {
                     { label: spec.y === undefined ? 'Count' : String(spec.y), value: written(spec, point.value[2]) },
                 ]),
         },
-        grid: { left: 4, right: 10, top: 10, bottom: 4, containLabel: true },
-        xAxis: { type: 'category', data: categories, splitArea: { show: false } },
+        grid: { left: 4, right: spec.showScale === true ? 56 : 10, top: 10, bottom: 4, containLabel: true },
+        xAxis: { ...categoryAxis(spec, categories), splitArea: { show: false } },
         yAxis: { type: 'category', data: series.map((entry) => entry.name), inverse: true },
         visualMap: {
-            show: false,
+            show: spec.showScale === true,
+            calculable: false,
+            orient: 'vertical',
+            right: 0,
+            top: 'center',
+            itemWidth: 10,
+            itemHeight: 120,
             min: values.length === 0 ? 0 : Math.min(...values),
             max: values.length === 0 ? 1 : Math.max(...values),
             inRange: { color: look.ramp(token) },
