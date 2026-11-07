@@ -9,6 +9,7 @@
     "type": "module",
     "scripts": {
         "tokens": "bun scripts/build-tokens.ts",
+        "components": "bun scripts/components-index.ts",
         "storybook": "storybook dev -p 6106 --no-open",
         "build-storybook": "storybook build -o storybook-static",
         "typecheck": "bun check",
