@@ -18,7 +18,7 @@ export default meta
 
 export const Variants: StoryObj = {
     render: () => (
-        <Stack gap="xl" className="max-w-2xl">
+        <Stack gap="lg" className="max-w-2xl">
             {VARIANTS.map((variant) => (
                 <Stack key={variant} gap="xs">
                     <Caption>{variant}</Caption>
@@ -48,7 +48,7 @@ export const Variants: StoryObj = {
 
 export const States: StoryObj = {
     render: () => (
-        <Stack gap="xl" className="max-w-2xl">
+        <Stack gap="lg" className="max-w-2xl">
             <Stack gap="xs">
                 <Caption>interactive, rendered as a button</Caption>
                 <Bubble variant="outline">
