@@ -97,7 +97,7 @@ export const PerJob: StoryObj = {
 }
 
 /** Where the month's runs went: from each project through its jobs to how they ended. */
-export const Stages: StoryObj = {
+export const Sankey: StoryObj = {
     render: () => (
         <Ground title="Runs, October" columns={1}>
             <Framed
@@ -113,7 +113,8 @@ export const Stages: StoryObj = {
 }
 
 /** The failed runs alone, from each job to the step it stopped at. */
-export const Failures: StoryObj = {
+export const SankeyFailures: StoryObj = {
+    name: 'Sankey failures',
     render: () => (
         <Ground title="Failures, October" columns={1}>
             <Framed kind="sankey" spec={JOB_STEP} title="Failed runs" subtitle="job, step" label="Failed runs from job to step" />
@@ -122,8 +123,8 @@ export const Failures: StoryObj = {
 }
 
 /** Every run through the step it stopped at; runs that stopped nowhere pass straight to their state. */
-export const Skipped: StoryObj = {
-    name: 'Skipped stage',
+export const SankeySkips: StoryObj = {
+    name: 'Sankey skips',
     render: () => (
         <Ground title="Runs, October" columns={1}>
             <Framed
@@ -139,7 +140,8 @@ export const Skipped: StoryObj = {
 }
 
 /** Time spent rather than runs counted: each band as wide as the seconds that took it. */
-export const Weighted: StoryObj = {
+export const WeightedSankey: StoryObj = {
+    name: 'Weighted sankey',
     render: () => (
         <Ground title="Run time, October" columns={1}>
             <Framed
