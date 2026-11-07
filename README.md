@@ -69,7 +69,7 @@ its `.npmrc`, with a token that can read packages, and pins a version:
 ```
 
 ```
-bun add @winterop-com/sokkel-ui@0.7.0
+bun add @winterop-com/sokkel-ui@0.7.1
 ```
 
 An app that brings its own Tailwind imports `@winterop-com/sokkel-ui/tokens.css` (the tokens, themes and

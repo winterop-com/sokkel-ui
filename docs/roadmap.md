@@ -6,30 +6,19 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.7.0** is the latest release (2026-11-07): every example on shared components. Layout
-  components and a rule against hand-built layout, about twenty-five new parts, the dark lift for
-  every theme, and hovers that show on any surface. 0.6.0 brought the team chat and AI chat parts,
-  more charts, resizable panels and columns, and `DataTable` as the one table. 0.5.0 was the first
-  release under the new name; 0.2.0 was the first published version.
+- **0.7.1** is the latest release (2026-11-07): charts. `Chart` draws from rows by kind and
+  fields, with twenty-five kinds on ECharts (docs/charts.md lists them), small multiples,
+  linked panels and dials, and five dashboards whose ranges and filters work. 0.7.0 put every
+  example on shared components: layout components and a rule against hand-built layout, about
+  twenty-five new parts, the dark lift for every theme, and hovers that show on any surface. 0.6.0
+  brought the team chat and AI chat parts, resizable panels and columns, and `DataTable` as the one
+  table. 0.5.0 was the first release under the new name; 0.2.0 was the first published version.
 - The library was renamed from winterop-ui to sokkel-ui after 0.4.0: the repository is
   `winterop-com/sokkel-ui`, the package `@winterop-com/sokkel-ui`, the Storybook
   https://winterop-com.github.io/sokkel-ui/. 0.2.0 to 0.4.0 are republished under the new name, and
   the old `@winterop-com/ui` package is deleted.
 - No app uses it yet. Until one does, a PR merges as soon as the local gates pass and main's CI
   catches the rest; a release still waits for green.
-
-## 0.7.x: charts
-
-- **Many more charts.** A `Chart` drawn from rows by kind and fields, so the same data is a bar, a
-  line, a ring or a grid by changing the kind alone. Many more ECharts kinds on it: distributions
-  (histogram, box plot), flows (waterfall, funnel, sankey), targets (bullet, gauge, dual axes),
-  hierarchies (treemap, sunburst), time (calendar, stream, steps, bands), radar, rose, parallel
-  coordinates, small multiples, panels linked on one axis with a shared pointer and zoom, and
-  gauges as an arc, a ring, a half circle, bands or a needle. `docs/charts.md` lists every kind and
-  the fields it reads. The chart stories draw from rows instead of options built by
-  hand, more dashboard examples come with working time ranges, variables and folding rows, and an
-  Explore story picks the kind and fields. The charts and dashboard panels stand on the core and
-  never the other way round, a rule checks it, so they can become a package of their own later.
 
 ## 0.8: music
 
