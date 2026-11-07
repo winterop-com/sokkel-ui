@@ -1,0 +1,54 @@
+# sokkel-ui
+
+> A shared React component library: one set of tokens and themes, Base UI primitives, and the patterns apps are built from (frame, layout, forms, tables, chat, files, media, dashboards), with charts, maps and graphs in add-on packages. Apps install the packages and never copy from them, so one fix in the library reaches every app at its next version. Before building any UI part in an app, look it up in the component index.
+
+## Packages
+
+All four are published to GitHub Packages and released together at one version.
+
+- `@winterop-com/sokkel-ui` (core): the tokens and themes, the primitives and every pattern without an engine of its own. Every app installs it.
+- `@winterop-com/sokkel-ui-charts`: `Chart` and its kinds on ECharts, and the dashboard's chart panels.
+- `@winterop-com/sokkel-ui-maps`: `MapView` on maplibre, with its layers, legends, popups and basemaps.
+- `@winterop-com/sokkel-ui-graph`: the graphs and the graph editor on React Flow, laid out by elk.
+
+## Install and import
+
+The scope points at the registry in the app's `.npmrc` (`@winterop-com:registry=https://npm.pkg.github.com`, with a token that can read packages). Install the core, and an add-on only when the app draws charts, maps or graphs, all at the same version:
+
+```
+bun add @winterop-com/sokkel-ui @winterop-com/sokkel-ui-charts
+bun add -d tailwindcss @tailwindcss/vite
+```
+
+The app runs Tailwind CSS 4.1 or later itself. Each package's `styles.css` is Tailwind source, not finished CSS, so it must be `@import`ed in the same stylesheet as the core's `styles.css`, after it; importing it from JavaScript produces nothing. A theme other than the default needs its file, `@winterop-com/sokkel-ui/themes/<name>.css`, imported too, and is set on `<html data-theme="<name>">` (`.dark` picks dark mode):
+
+```css
+/* app.css, imported once from the entry */
+@import '@winterop-com/sokkel-ui/styles.css';
+@import '@winterop-com/sokkel-ui-charts/styles.css';
+@import '@winterop-com/sokkel-ui/themes/paper.css';
+```
+
+Components import by path, one module each:
+
+```ts
+import { DataTable } from '@winterop-com/sokkel-ui/DataTable'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { Chart } from '@winterop-com/sokkel-ui-charts/Chart'
+```
+
+## Docs
+
+- [Component index](https://github.com/winterop-com/sokkel-ui/blob/main/docs/components.md): every exported component by package and area, with its import path, what it is and a story that shows it
+- [README](https://github.com/winterop-com/sokkel-ui/blob/main/README.md): what is in the library, install, styles, themes and optional peer dependencies
+- [Charts](https://github.com/winterop-com/sokkel-ui/blob/main/docs/charts.md): how charts are drawn from rows, the kinds and the fields they read
+- [Plan](https://github.com/winterop-com/sokkel-ui/blob/main/docs/plan.md): what the library holds and why
+- [Storybook](https://winterop-com.github.io/sokkel-ui/): every component and composition, live
+
+## Rules for an app
+
+- Install the packages and never copy from them: no vendored component, no copied source, no local fork of a part.
+- Check the component index before building any UI part. A part that exists is used as it is.
+- A part an app needs to differ becomes an option in the library, never a local edit or a wrapper that patches it in the app.
+- Complex parts belong in the library. Before building a complex custom component, ask whether it belongs in sokkel-ui instead. If it is a reusable part, not one screen's glue, it is added to the library as a component or an option on one, and the app uses that.
+- Report what is missing. A missing feature, a missing option or a bug found while building an app is reported directly to sokkel-ui as an issue at https://github.com/winterop-com/sokkel-ui/issues. The library serves only its own apps, so the owner can add it quickly. Never work around it locally in the app.

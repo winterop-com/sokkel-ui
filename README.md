@@ -12,6 +12,16 @@ package and never copy from it, so one fix here reaches every app at its next ve
 
 The Storybook is published at **https://winterop-com.github.io/sokkel-ui/**.
 
+## For agents
+
+An agent working in an app that uses the library starts at [`llms.txt`](llms.txt): the packages,
+how to install and import them, and the rules an app follows. Before building any UI part, it looks
+the part up in [`docs/components.md`](docs/components.md), which lists every exported component
+with its import path, what it is and a story that shows it. A complex part that is reusable, not
+one screen's glue, belongs in the library as a component or an option on one. A missing feature or
+option, or a bug, is reported at https://github.com/winterop-com/sokkel-ui/issues, never worked
+around in the app.
+
 ## What is in it
 
 - **Primitives:** the full shadcn `base-nova` set on Base UI, restyled to the tokens: buttons,
