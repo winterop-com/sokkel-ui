@@ -1,3 +1,4 @@
+import { CopyButton } from '../../components/CopyButton'
 import { PersonRow } from '../../components/PersonRow'
 import { CheckboxField, CheckboxList } from '../../components/CheckboxField'
 import {
@@ -683,7 +684,6 @@ export function Share() {
     const [inviteRole, setInviteRole] = useState('run')
     const [members, setMembers] = useState(MEMBERS)
     const [link, setLink] = useState<'invited' | 'workspace'>('workspace')
-    const [copied, setCopied] = useState(false)
     const send = () => {
         setMembers([...members, ...invite.map((one) => ({ username: one.address.split('@')[0], email: one.address, role: inviteRole }))])
         setInvite([])
@@ -696,26 +696,20 @@ export function Share() {
                 title="Share harbor"
                 description="People see the jobs, runs and logs in the project, as their role allows."
                 footer={
-                    <Button
-                        variant="ghost"
-                        size="sm"
+                    <CopyButton
+                        value="https://tidevann.example.org/harbor"
+                        showLabel
+                        icon={<Link2 aria-hidden />}
+                        words={{ copy: 'Copy link', copied: 'Copied' }}
                         className="-ml-2"
-                        onClick={() => {
-                            void navigator.clipboard?.writeText('https://tidevann.example.org/harbor').catch(() => undefined)
-                            setCopied(true)
-                            setTimeout(() => setCopied(false), 1500)
-                        }}
-                    >
-                        {copied ? <Check aria-hidden /> : <Link2 aria-hidden />}
-                        {copied ? 'Copied' : 'Copy link'}
-                    </Button>
+                    />
                 }
                 confirm={{ label: 'Done', onConfirm: () => setOpen(false) }}
             >
-                <Stack gap="xs">
-                    <span className="text-sm font-medium">Invite</span>
+                <Field id="invite" label="Invite">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
                         <AddressInput
+                            id="invite"
                             value={invite}
                             onChange={setInvite}
                             className="min-w-0 flex-1"
@@ -744,7 +738,7 @@ export function Share() {
                             </Button>
                         </Row>
                     </div>
-                </Stack>
+                </Field>
                 <Stack gap="xs">
                     <span className="text-sm font-medium">People with access</span>
                     <Stack as="ul" gap="none">
