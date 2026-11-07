@@ -5,6 +5,7 @@ import { ListMusic } from 'lucide-react'
 import { useState } from 'react'
 
 import { MediaBar, type RepeatMode } from '../../components/media/MediaBar'
+import { MetaLine } from '../../components/MetaLine'
 import { Artwork, type Cover } from '../fixtures/Artwork'
 import { Row, Stack } from '../../components/Layout'
 
@@ -74,7 +75,7 @@ function Player({ startPlaying, queue = false }: { startPlaying: boolean; queue?
                 </div>
                 <MediaBar
                     title={track.title}
-                    subtitle={`${track.artist} · ${track.album}`}
+                    subtitle={<MetaLine inline items={[track.artist, track.album]} />}
                     artwork={<Artwork cover={track.cover} />}
                     playing={playing}
                     onPlayingChange={setPlaying}

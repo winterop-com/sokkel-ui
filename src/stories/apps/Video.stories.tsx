@@ -24,6 +24,7 @@ import { useState } from 'react'
 import { AccountMenu } from '../../components/AccountMenu'
 import { MediaCard, MediaGrid } from '../../components/media/MediaCard'
 import { formatTime } from '../../components/media/time'
+import { MetaLine } from '../../components/MetaLine'
 import { VideoPlayer } from '../../components/media/VideoPlayer'
 import { PersonAvatar } from '../../components/PersonAvatar'
 import { Rail, type RailGroup } from '../../components/Rail'
@@ -306,7 +307,7 @@ function HomePage() {
                             key={video.id}
                             shape="wide"
                             title={video.title}
-                            subtitle={`${video.channel} · ${video.views} · ${video.ago}`}
+                            subtitle={<MetaLine inline items={[video.channel, video.views, video.ago]} />}
                             cover={<Artwork cover={video.cover} wide />}
                             badge={formatTime(video.length)}
                             progress={video.watched}
@@ -510,9 +511,7 @@ function WatchPage() {
                         </Row>
                     </Row>
                     <Stack gap="2xs" className="rounded-surface bg-muted p-3 text-sm">
-                        <p className="font-medium">
-                            {WATCHING.views} · {WATCHING.ago}
-                        </p>
+                        <MetaLine size="sm" tone="strong" items={[WATCHING.views, WATCHING.ago]} />
                         <p className={more ? 'leading-relaxed' : 'line-clamp-2 leading-relaxed'}>
                             Four mornings on one headland of the northern coast, cut into one: the first light on the water, the harbor
                             waking up, and the boats leaving one by one. Filmed from the same spot each day, with nothing added but the
@@ -537,7 +536,7 @@ function WatchPage() {
                                     <>
                                         {video.channel}
                                         <br />
-                                        {video.views} · {video.ago}
+                                        <MetaLine inline items={[video.views, video.ago]} />
                                     </>
                                 }
                                 cover={<Artwork cover={video.cover} wide />}

@@ -23,6 +23,7 @@ import {
     treeBranchKeys,
 } from '../../components/DataTable'
 import { FileTypeIcon, formatSize } from '../../components/FileList'
+import { MetaLine } from '../../components/MetaLine'
 import { SearchField } from '../../components/SearchField'
 import { StatusChip } from '../../components/StatusChip'
 import { Button } from '../../components/ui/button'
@@ -809,9 +810,7 @@ function AlbumCard({ album }: { album: Album }) {
             <Artwork cover={album.cover} className="min-h-0 w-full flex-1 rounded-mini" />
             <div className="min-w-0 px-0.5">
                 <div className="truncate text-sm font-medium">{album.title}</div>
-                <div className="truncate text-xs text-muted-foreground">
-                    {album.artist} · {album.year}
-                </div>
+                <MetaLine truncate items={[album.artist, album.year]} />
             </div>
         </div>
     )

@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import { MediaCard, MediaGrid } from '../../components/media/MediaCard'
 import { formatTime } from '../../components/media/time'
+import { MetaLine } from '../../components/MetaLine'
 import { DropdownMenuItem } from '../../components/ui/dropdown-menu'
 import { Artwork, type Cover } from '../fixtures/Artwork'
 import { Stack } from '../../components/Layout'
@@ -43,7 +44,7 @@ export const Albums: StoryObj = {
                 <MediaCard
                     key={album.title}
                     title={album.title}
-                    subtitle={`${album.artist} · ${String(album.year)}`}
+                    subtitle={<MetaLine inline items={[album.artist, album.year]} />}
                     cover={<Artwork cover={album.cover} />}
                     href="#"
                     playing={index === 0}
@@ -72,7 +73,7 @@ export const Videos: StoryObj = {
                     key={episode.title}
                     shape="wide"
                     title={episode.title}
-                    subtitle={`Coastline · Episode ${String(index + 1)}`}
+                    subtitle={<MetaLine inline items={['Coastline', `Episode ${String(index + 1)}`]} />}
                     cover={<Artwork cover={episode.cover} wide />}
                     badge={formatTime(episode.length)}
                     progress={episode.watched}
@@ -102,7 +103,7 @@ export const Rows: StoryObj = {
                         <>
                             Coastline
                             <br />
-                            Episode {index + 1} · 2.4k views
+                            <MetaLine inline items={[`Episode ${String(index + 1)}`, '2.4k views']} />
                         </>
                     }
                     cover={<Artwork cover={episode.cover} wide />}
