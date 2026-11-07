@@ -115,18 +115,20 @@ export function EChart({
     const resolved = useMemo(() => (look === null ? null : typeof option === 'function' ? option(look) : option), [look, option])
 
     const themed = useRef<ChartLook | null>(null)
+    // The engine's count of parts loaded on demand when the chart was made.
+    const made = useRef(0)
     const drawn = look !== null
 
     useEffect(() => {
         if (!drawn) return
         let live = true
         let observer: ResizeObserver | null = null
-        void loadEngine().then(({ init }) => {
+        void loadEngine().then(({ init, partsLoaded }) => {
             const el = element.current
             if (!live || el === null || themed.current === null) return
-            const instance = init(el, chartTheme(themed.current), { renderer: 'canvas' })
-            chart.current = instance
-            observer = new ResizeObserver(() => instance.resize())
+            chart.current = init(el, chartTheme(themed.current), { renderer: 'canvas' })
+            made.current = partsLoaded()
+            observer = new ResizeObserver(() => chart.current?.resize())
             observer.observe(el)
             setReady(true)
         })
@@ -151,13 +153,19 @@ export function EChart({
         let live = true
         // A chart type outside the base set loads the first time an option draws it.
         setSettled(false)
-        void loadEngine()
-            .then(({ ensure }) => ensure(resolved as Record<string, unknown>))
-            .then(() => {
-                if (!live) return
-                chart.current?.setOption(compose(resolved, hidden, animate), { notMerge: true })
-                setSettled(true)
-            })
+        void loadEngine().then(async ({ ensure, init, partsLoaded }) => {
+            await ensure(resolved as Record<string, unknown>)
+            const el = element.current
+            if (!live || el === null) return
+            // A chart made before a part it draws loaded lacks that part's layout, so it is made again.
+            if (partsLoaded() !== made.current && themed.current !== null) {
+                chart.current?.dispose()
+                chart.current = init(el, chartTheme(themed.current), { renderer: 'canvas' })
+                made.current = partsLoaded()
+            }
+            chart.current?.setOption(compose(resolved, hidden, animate), { notMerge: true })
+            setSettled(true)
+        })
         return () => {
             live = false
         }

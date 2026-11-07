@@ -82,6 +82,15 @@ const COMPONENTS: Record<string, () => Promise<unknown>> = {
 }
 
 const loaded = new Map<string, Promise<unknown>>()
+let parts = 0
+
+/**
+ * How many parts have loaded on demand so far. ECharts gives a chart the layouts registered when
+ * the chart was made, so a chart made before a part loaded has to be made again to draw it.
+ */
+export function partsLoaded(): number {
+    return parts
+}
 
 /** Loads, once each, the chart types and components an option draws with beyond the base set. */
 export function ensure(option: Record<string, unknown>): Promise<unknown> {
@@ -94,7 +103,11 @@ export function ensure(option: Record<string, unknown>): Promise<unknown> {
         const [kind, name] = want.split(':') as ['series' | 'component', string]
         const load = (kind === 'series' ? SERIES : COMPONENTS)[name]
         if (load === undefined) return []
-        const known = loaded.get(want) ?? load()
+        const known =
+            loaded.get(want) ??
+            load().then(() => {
+                parts += 1
+            })
         loaded.set(want, known)
         return [known]
     })
