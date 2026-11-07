@@ -6,13 +6,13 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.8.0** is the latest release (2026-11-07): music. The player grows from its one-line bar
-  into a large now-playing panel, docked with the account kept at the bottom edge; a sound
-  visualizer draws what plays; the album page gains its trail and per-track actions. The package
-  ships only the library, with a file per theme and a size budget in CI, and avatars show
-  pictures. 0.7.1 brought charts drawn from rows, with twenty-five kinds on ECharts and five
-  dashboards. 0.7.0 put every example on shared components. 0.5.0 was the first release under the
-  new name; 0.2.0 was the first published version.
+- **0.9.0** is the latest release (2026-11-07): four packages, ready for adoption. The core
+  `@winterop-com/sokkel-ui` holds everything without a heavy engine; `-charts`, `-maps` and
+  `-graph` carry ECharts, maplibre and React Flow, each with its own styles. The player gains three
+  layouts that grow without a jump and a fullscreen now-playing view. `llms.txt` and the generated
+  `docs/components.md` let an app's agents find a part before building one. 0.8.0 brought the music
+  player, the sound visualizer and a file per theme; 0.7.1 charts drawn from rows; 0.7.0 every
+  example on shared components. 0.5.0 was the first release under the new name.
 - The library was renamed from winterop-ui to sokkel-ui after 0.4.0: the repository is
   `winterop-com/sokkel-ui`, the package `@winterop-com/sokkel-ui`, the Storybook
   https://winterop-com.github.io/sokkel-ui/. 0.2.0 to 0.4.0 are republished under the new name, and
