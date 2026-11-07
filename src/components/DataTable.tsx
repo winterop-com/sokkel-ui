@@ -957,7 +957,7 @@ export function DataTable<T>({
             )}
         >
             {(!list || selection.size > 0) && (
-                <div className="flex h-(--density-panel-head) shrink-0 items-center gap-2 border-b border-border px-(--density-panel-pad) text-sm">
+                <div className="flex min-h-(--density-panel-head) shrink-0 items-center gap-2 border-b border-border px-(--density-panel-pad) text-sm">
                     {selection.size > 0 ? (
                         // The selection's actions scroll sideways when the bar is too narrow for them.
                         <div className="flex min-w-0 flex-1 [scrollbar-width:none] items-center gap-2 overflow-x-auto">
@@ -979,8 +979,8 @@ export function DataTable<T>({
                             {bulkActions?.(selection, clear)}
                         </div>
                     ) : (
-                        // The tools scroll sideways when the bar is too narrow for them, as the selection's actions do.
-                        <div className="flex min-w-0 flex-1 [scrollbar-width:none] items-center gap-2 overflow-x-auto">{toolbar}</div>
+                        // The tools wrap onto more lines when the bar is too narrow for them, so none is hidden.
+                        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 py-0.5">{toolbar}</div>
                     )}
                     {selection.size === 0 && (
                         <span className="ml-auto shrink-0 font-mono text-xs text-muted-foreground tabular-nums">
