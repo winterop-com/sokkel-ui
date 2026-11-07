@@ -1,8 +1,8 @@
+import { IconButton } from '../IconButton'
 import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import { cn } from '../../lib/cn'
-import { Button } from '../ui/button'
 import { Slider } from '../ui/slider'
 
 /** One step of a period slider: what it answers with and what it is called. */
@@ -71,20 +71,18 @@ export function PeriodSlider({
                 className,
             )}
         >
-            <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label={playing ? said.pause : said.play}
+            <IconButton
+                label={playing ? said.pause : said.play}
                 onClick={() => {
                     if (!playing && index >= last) step(0)
                     setPlaying(!playing)
                 }}
             >
                 {playing ? <Pause /> : <Play />}
-            </Button>
-            <Button variant="ghost" size="icon-sm" aria-label={said.previous} disabled={index === 0} onClick={() => step(index - 1)}>
+            </IconButton>
+            <IconButton label={said.previous} disabled={index === 0} onClick={() => step(index - 1)}>
                 <ChevronLeft />
-            </Button>
+            </IconButton>
             <div className="flex min-w-0 flex-1 flex-col gap-1 px-1">
                 <Slider
                     aria-label={label}
@@ -100,9 +98,9 @@ export function PeriodSlider({
                     <span>{periods[last]?.label}</span>
                 </div>
             </div>
-            <Button variant="ghost" size="icon-sm" aria-label={said.next} disabled={index >= last} onClick={() => step(index + 1)}>
+            <IconButton label={said.next} disabled={index >= last} onClick={() => step(index + 1)}>
                 <ChevronRight />
-            </Button>
+            </IconButton>
             <output aria-live="polite" className="min-w-20 pr-1 text-right text-sm font-medium tabular-nums">
                 {periods[index]?.label}
             </output>

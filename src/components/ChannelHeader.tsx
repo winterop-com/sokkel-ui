@@ -1,3 +1,4 @@
+import { IconButton } from './IconButton'
 import { ChevronDown, Hash, Lock, Users } from 'lucide-react'
 import type { ReactNode } from 'react'
 
@@ -6,7 +7,6 @@ import { ChatFace, type ChatPerson } from './ChatMessage'
 import { PersonAvatar, PresenceDot, type Presence } from './PersonAvatar'
 import { Button } from './ui/button'
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs'
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 
 /** An icon button at the end of the header: pinned messages, search, more. */
 export interface ChannelHeaderAction {
@@ -172,23 +172,9 @@ export function ChannelHeader({
                         </Button>
                     )}
                     {actions?.map((action) => (
-                        <Tooltip key={action.id}>
-                            <TooltipTrigger
-                                render={
-                                    <Button
-                                        variant="ghost"
-                                        size="icon-sm"
-                                        aria-label={action.label}
-                                        aria-pressed={action.pressed}
-                                        onClick={action.onClick}
-                                        className={cn('text-muted-foreground', action.pressed === true && 'bg-muted text-foreground')}
-                                    />
-                                }
-                            >
-                                {action.icon}
-                            </TooltipTrigger>
-                            <TooltipContent>{action.label}</TooltipContent>
-                        </Tooltip>
+                        <IconButton key={action.id} label={action.label} pressed={action.pressed} onClick={action.onClick}>
+                            {action.icon}
+                        </IconButton>
                     ))}
                     {children}
                 </div>

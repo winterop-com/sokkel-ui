@@ -1,3 +1,4 @@
+import { IconButton } from './IconButton'
 import { ChevronRight, Ellipsis, FileText, MessageSquareText, SmilePlus } from 'lucide-react'
 import { isValidElement, useState, type CSSProperties, type ReactNode } from 'react'
 
@@ -97,12 +98,9 @@ export function ChatFace({ who, className }: { who: ReactNode | ChatPerson; clas
 /** One of the hover bar's icon buttons, its name in a tooltip. */
 function BarButton({ label, onClick, children }: { label: string; onClick?: () => void; children: ReactNode }) {
     return (
-        <Tooltip>
-            <TooltipTrigger render={<Button variant="ghost" size="icon-xs" aria-label={label} onClick={onClick} />}>
-                {children}
-            </TooltipTrigger>
-            <TooltipContent>{label}</TooltipContent>
-        </Tooltip>
+        <IconButton label={label} size="icon-xs" onClick={onClick}>
+            {children}
+        </IconButton>
     )
 }
 
