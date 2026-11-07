@@ -1,7 +1,15 @@
 import { clsx, type ClassValue } from 'clsx'
-import { twMerge } from 'tailwind-merge'
+import { extendTailwindMerge } from 'tailwind-merge'
+
+/**
+ * Tailwind's merge, told the text sizes the tokens add, so a size such as `text-page` is not taken
+ * for a color and dropped beside `text-muted-foreground`.
+ */
+const merge = extendTailwindMerge({
+    extend: { classGroups: { 'font-size': [{ text: ['title', 'page', 'stat', 'graph-small', 'graph-title'] }] } },
+})
 
 /** Join class names, later ones winning over earlier ones that set the same thing. */
 export function cn(...inputs: ClassValue[]): string {
-    return twMerge(clsx(inputs))
+    return merge(clsx(inputs))
 }
