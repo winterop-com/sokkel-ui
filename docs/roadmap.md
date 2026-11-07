@@ -50,8 +50,6 @@ The music parts grow to carry a whole player, before an app builds on them.
 
 ## Next
 
-- **A size budget in CI.** Build a few typical apps (forms only, a dashboard, a map page), measure
-  each bundle, and fail when one grows past its budget or pulls in an engine it does not use.
 - **Lighter installs, then packages (not urgent).** The engines (ECharts, maplibre, React Flow,
   CodeMirror, Mermaid) are optional peers already, and each part is imported by its own path, so an
   app bundles only what it uses. Still installed for everyone: `shiki`, `react-markdown` with its

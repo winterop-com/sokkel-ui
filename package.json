@@ -58,6 +58,7 @@
         "test:visual:update": "bun run build-storybook && playwright test --update-snapshots",
         "test:visual:tiles": "node e2e/record-tiles.ts",
         "build": "vite build -c vite.lib.config.ts && tsc -p tsconfig.build.json",
+        "size": "tsc -p examples/sizes && bun scripts/size-budget.ts",
         "lint": "oxlint --deny-warnings",
         "fmt": "oxfmt",
         "fmt:check": "oxfmt --check",
