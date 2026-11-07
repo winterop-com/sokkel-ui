@@ -110,6 +110,8 @@ export function EChart({
     const element = useRef<HTMLDivElement>(null)
     const chart = useRef<EChartsType | null>(null)
     const [ready, setReady] = useState(false)
+    // Whether the current option is drawn; marked on the element, so a screenshot waits for it.
+    const [settled, setSettled] = useState(false)
     const resolved = useMemo(() => (look === null ? null : typeof option === 'function' ? option(look) : option), [look, option])
 
     const themed = useRef<ChartLook | null>(null)
@@ -146,7 +148,19 @@ export function EChart({
 
     useEffect(() => {
         if (!ready || resolved === null) return
-        chart.current?.setOption(compose(resolved, hidden, animate), { notMerge: true })
+        let live = true
+        // A chart type outside the base set loads the first time an option draws it.
+        setSettled(false)
+        void loadEngine()
+            .then(({ ensure }) => ensure(resolved as Record<string, unknown>))
+            .then(() => {
+                if (!live) return
+                chart.current?.setOption(compose(resolved, hidden, animate), { notMerge: true })
+                setSettled(true)
+            })
+        return () => {
+            live = false
+        }
     }, [ready, resolved, hidden, animate])
 
     useEffect(() => {
@@ -160,8 +174,9 @@ export function EChart({
 
     useImperativeHandle(handle, () => {
         const render = async (renderer: 'svg' | 'canvas', decor: ExportDecor) => {
-            const { init } = await loadEngine()
+            const { init, ensure } = await loadEngine()
             if (look === null || resolved === null) throw new Error('The chart has not drawn yet.')
+            await ensure(resolved as Record<string, unknown>)
             const box = element.current?.getBoundingClientRect()
             const { option: decorated, extra } = decorate(compose(resolved, hidden, false), decor, look)
             const width = Math.max(320, Math.round(box?.width ?? 640))
@@ -188,7 +203,16 @@ export function EChart({
         return { svg: (decor = {}) => render('svg', decor), png: (decor = {}) => render('canvas', decor) }
     }, [look, resolved, hidden])
 
-    return <div ref={element} role="img" aria-label={label} className={cn('relative h-full min-h-0 w-full min-w-0', className)} />
+    return (
+        <div
+            ref={element}
+            role="img"
+            aria-label={label}
+            data-echart=""
+            data-echart-settled={settled ? '' : undefined}
+            className={cn('relative h-full min-h-0 w-full min-w-0', className)}
+        />
+    )
 }
 
 const EMPTY: ReadonlySet<string> = new Set()

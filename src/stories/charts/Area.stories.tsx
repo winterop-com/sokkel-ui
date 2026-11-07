@@ -1,25 +1,36 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
+import { Chart, chartLegend } from '../../components/chart/Chart'
 import { ChartFrame } from '../../components/chart/ChartFrame'
-import { EChart } from '../../components/chart/EChart'
-import { Ground, legendOf } from './Ground'
-import { areas, BY_JOB, BY_WORKER, TWO } from './options'
+import type { ChartSpec } from '../../components/chart/kinds'
+import { JOB_STEP_ROWS, STEP_COLORS, STEP_ROWS, WORKER_COLORS, WORKER_STEP_ROWS } from '../fixtures/dayRows'
+import { Ground } from './Ground'
 
-/** Area charts on EChart: lines filled toward the axis, alone or stacked. */
+/** Area charts on Chart: lines filled toward the axis, alone or stacked. */
 const meta: Meta = { title: 'Charts/Area' }
 export default meta
 
-const RUNS = TWO.slice(0, 1)
-const SINGLE = areas(RUNS)
-const OVERLAP = areas(BY_WORKER)
-const STACKED = areas(BY_JOB, true)
+const SINGLE: ChartSpec = { rows: STEP_ROWS, x: 'time', y: 'Runs', colors: STEP_COLORS, fill: 'gradient', labelEvery: 16 }
+const OVERLAP: ChartSpec = {
+    rows: WORKER_STEP_ROWS,
+    x: 'time',
+    y: 'waiting',
+    series: 'worker',
+    colors: WORKER_COLORS,
+    fill: 'gradient',
+    labelEvery: 16,
+}
+const STACKED: ChartSpec = { rows: JOB_STEP_ROWS, x: 'time', y: 'runs', series: 'job', stack: 'stacked', fill: 'gradient', labelEvery: 16 }
+
+const OVERLAP_LEGEND = chartLegend('area', OVERLAP)
+const STACKED_LEGEND = chartLegend('area', STACKED)
 
 /** One series filled with a fade toward the axis. */
 export const Single: StoryObj = {
     render: () => (
         <Ground title="Runs, today" columns={1}>
             <ChartFrame title="Runs started" subtitle="every 15 min" file="runs-started">
-                {(state) => <EChart option={SINGLE} label="Runs started across the day" {...state} />}
+                {(state) => <Chart kind="area" label="Runs started across the day" {...SINGLE} {...state} />}
             </ChartFrame>
         </Ground>
     ),
@@ -29,8 +40,8 @@ export const Single: StoryObj = {
 export const Overlapping: StoryObj = {
     render: () => (
         <Ground title="Queue, today" columns={1}>
-            <ChartFrame title="Queue depth" subtitle="by worker" legend={legendOf(BY_WORKER)} file="queue-depth">
-                {(state) => <EChart option={OVERLAP} label="Queue depth by worker across the day" {...state} />}
+            <ChartFrame title="Queue depth" subtitle="by worker" legend={OVERLAP_LEGEND} file="queue-depth">
+                {(state) => <Chart kind="area" label="Queue depth by worker across the day" {...OVERLAP} {...state} />}
             </ChartFrame>
         </Ground>
     ),
@@ -40,8 +51,8 @@ export const Overlapping: StoryObj = {
 export const Stacked: StoryObj = {
     render: () => (
         <Ground title="Runs by job, today" columns={1}>
-            <ChartFrame title="Runs by job" subtitle="stacked" legend={legendOf(BY_JOB)} file="runs-by-job-stacked" bodyClassName="h-64">
-                {(state) => <EChart option={STACKED} label="Runs by job, stacked, across the day" {...state} />}
+            <ChartFrame title="Runs by job" subtitle="stacked" legend={STACKED_LEGEND} file="runs-by-job-stacked" bodyClassName="h-64">
+                {(state) => <Chart kind="area" label="Runs by job, stacked, across the day" {...STACKED} {...state} />}
             </ChartFrame>
         </Ground>
     ),

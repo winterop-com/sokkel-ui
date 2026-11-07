@@ -74,6 +74,18 @@ const RULES: Rule[] = [
         in: STORIES,
     },
     {
+        name: 'a core component reaching into the charts',
+        // The charts and dashboard panels stand on the core and never the other way round, so they can
+        // move into a package of their own without unpicking the core.
+        pattern: /from '[./]*(?:chart|dashboard)\//,
+        in: ALL.filter(
+            (path) =>
+                path.includes('/src/components/') &&
+                !path.includes('/src/components/chart/') &&
+                !path.includes('/src/components/dashboard/'),
+        ),
+    },
+    {
         name: 'a message under a field instead of the issue mark',
         pattern: /<p\b[^>]*text-(destructive|critical-ink|critical)\b|<FieldError\b/,
         in: STORIES,
