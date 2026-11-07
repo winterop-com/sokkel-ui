@@ -1,6 +1,6 @@
 import type { Decorator, Preview } from '@storybook/react-vite'
 
-import '../src/styles/index.css'
+import './storybook.css'
 import './candidates.css'
 // Geist and Geist Mono, the typeface a theme may choose instead of the default Plex, for the toolbar.
 import '@fontsource-variable/geist'

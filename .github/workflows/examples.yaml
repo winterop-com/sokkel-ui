@@ -1,13 +1,13 @@
 name: examples
 
 # The examples build against the library, so a change to either can break them: they run when the
-# examples change, every night against main, and by hand.
+# examples change, every night against main, and by hand. The size apps are built by ci.yaml instead.
 on:
     pull_request:
-        paths: ['examples/**', '.github/workflows/examples.yaml']
+        paths: ['examples/**', '!examples/sizes/**', '.github/workflows/examples.yaml']
     push:
         branches: [main]
-        paths: ['examples/**', '.github/workflows/examples.yaml']
+        paths: ['examples/**', '!examples/sizes/**', '.github/workflows/examples.yaml']
     schedule:
         - cron: '0 3 * * *'
     workflow_dispatch:

@@ -72,11 +72,21 @@ its `.npmrc`, with a token that can read packages, and pins a version:
 bun add @winterop-com/sokkel-ui@0.7.1
 ```
 
-An app that brings its own Tailwind imports `@winterop-com/sokkel-ui/tokens.css` (the tokens, themes and
-density levels), with `motion.css` (the motion setting) and `typography.css` (mono sized to the text
-around it); one that does not imports `@winterop-com/sokkel-ui/styles.css` (Tailwind, the fonts, the
-tokens and base styles). Components import by path, such as `@winterop-com/sokkel-ui/DialogShell` or
-`@winterop-com/sokkel-ui/primitives/button`.
+The components are styled with Tailwind classes, so every app runs Tailwind CSS 4.1 or later and
+installs it itself; the package does not bring it. `@winterop-com/sokkel-ui/styles.css` is Tailwind
+source, not finished CSS: Tailwind, the fonts, the tokens and base styles, with Tailwind pointed at
+the components so the app's CSS carries their classes (the stories are not in the package, and none
+of their classes reach an app). A Vite app installs Tailwind and its plugin, adds `tailwindcss()`
+from `@tailwindcss/vite` to its plugins, and imports `styles.css` once from its entry:
+
+```
+bun add -d tailwindcss @tailwindcss/vite
+```
+
+An app that brings its own Tailwind entry imports `@winterop-com/sokkel-ui/tokens.css` (the tokens,
+themes and density levels) instead, with `motion.css` (the motion setting) and `typography.css` (mono
+sized to the text around it). Components import by path, such as
+`@winterop-com/sokkel-ui/DialogShell` or `@winterop-com/sokkel-ui/primitives/button`.
 
 The heavy engines are optional peer dependencies, so an app installs only those of the parts it
 uses:

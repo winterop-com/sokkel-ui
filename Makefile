@@ -1,7 +1,7 @@
 # The common commands, as `make <target>`. Everything runs through bun; `make help` lists them.
 
 .DEFAULT_GOAL := help
-.PHONY: help install tokens storybook build typecheck lint fmt fmt-check test check storybook-build visual visual-update screenshots-ci layout clean
+.PHONY: help install tokens storybook build size typecheck lint fmt fmt-check test check storybook-build visual visual-update screenshots-ci layout clean
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "} {printf "  %-16s %s\n", $$1, $$2}'
@@ -17,6 +17,9 @@ storybook: ## Run the Storybook dev server on port 6106
 
 build: ## Build the library into dist/
 	bun run build
+
+size: build ## Build the size apps against the library and hold each to its budget
+	bun run size
 
 typecheck: ## Check the types
 	bun run typecheck

@@ -37,6 +37,8 @@ jobs:
             - run: bun run typecheck
             - run: bun run test
             - run: bun run build
+            # A forms page, a dashboard and a map page built against the package, each within its budget.
+            - run: bun run size
             - run: bun run build-storybook
 
     # Every story against its screenshot, split across four machines so a PR waits for one quarter.
