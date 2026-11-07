@@ -6,12 +6,17 @@ import { cn } from '../../lib/cn'
 
 import { Separator } from './separator'
 
-function ItemGroup({ className, ...props }: React.ComponentProps<'div'>) {
+/** `flush` sets the items against each other, for a list that draws separators between them. */
+function ItemGroup({ className, flush = false, ...props }: React.ComponentProps<'div'> & { flush?: boolean }) {
     return (
         <div
             role="list"
             data-slot="item-group"
-            className={cn('group/item-group flex w-full flex-col gap-4 has-data-[size=sm]:gap-2.5 has-data-[size=xs]:gap-2', className)}
+            className={cn(
+                'group/item-group flex w-full flex-col',
+                flush ? 'gap-0' : 'gap-4 has-data-[size=sm]:gap-2.5 has-data-[size=xs]:gap-2',
+                className,
+            )}
             {...props}
         />
     )

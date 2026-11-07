@@ -21,11 +21,12 @@ function NavigationMenu({
     )
 }
 
+/** The menu's items in a row, flowing onto a second line where the row runs out of room. */
 function NavigationMenuList({ className, ...props }: React.ComponentPropsWithRef<typeof NavigationMenuPrimitive.List>) {
     return (
         <NavigationMenuPrimitive.List
             data-slot="navigation-menu-list"
-            className={cn('group flex flex-1 list-none items-center justify-center gap-0', className)}
+            className={cn('group flex flex-1 list-none flex-wrap items-center justify-center gap-0', className)}
             {...props}
         />
     )
