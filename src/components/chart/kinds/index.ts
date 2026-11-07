@@ -20,7 +20,7 @@ export const KINDS = {
     line: { build: line },
     area: { build: area },
     donut: { build: donut, legend: donutLegend },
-    heatmap: { build: heatmap },
+    heatmap: { build: heatmap, legend: () => [] },
     scatter: { build: scatter, legend: scatterLegend },
     histogram: { build: histogram, legend: histogramLegend },
     boxplot: { build: boxplot, legend: () => [] },
