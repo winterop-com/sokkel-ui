@@ -33,8 +33,9 @@ reaches them all. Done in waves, one PR each.
 - **Dark contrast for every theme: done.** Paper, tokyo, vinyl, cassette and neon take default's
   0.4.0 lift in their own colors: secondary and faint text, borders and inputs at least as light as
   default's, cards a step up and popovers above them. Contrast was already past that lift.
-- **Theme candidates.** Choose which of the candidate sets in `.storybook/candidates.json` to keep,
-  fold those into `tokens/tokens.json` named for how they look, and drop the rest.
+- **Theme candidates: done.** The fifteen candidates were mostly copies of each other and of the
+  library's own themes, so none was kept; the library keeps its eight. New themes come later, judged
+  as candidates first (`bun scripts/import-candidates.ts`).
 
 ## Next
 

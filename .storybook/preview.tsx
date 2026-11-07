@@ -10,12 +10,19 @@ import tokens from '../tokens/tokens.json'
 import { FACES } from '../src/stories/themes/themes'
 import candidates from './candidates.json'
 
+/** A theme written by scripts/import-candidates.ts, judged beside the library's own before it is adopted. */
+interface Candidate {
+    value: string
+    title: string
+    app: string
+}
+
 const title = (name: string) => name.charAt(0).toUpperCase() + name.slice(1)
 
 /** The library's themes first, then the candidates collected from the apps, marked with their app. */
 const THEMES = [
     ...Object.keys(tokens.themes).map((name) => ({ value: name, title: title(name) })),
-    ...candidates.map((entry) => ({ value: entry.value, title: `${entry.title} (candidate)`, right: entry.app })),
+    ...(candidates as Candidate[]).map((entry) => ({ value: entry.value, title: `${entry.title} (candidate)`, right: entry.app })),
 ]
 
 /** The scheme, theme, density, corners and typeface a story is drawn in, set on the document as an app sets them. */
