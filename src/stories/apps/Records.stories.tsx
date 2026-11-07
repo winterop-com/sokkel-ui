@@ -1,3 +1,4 @@
+import { TextField } from '../../components/TextField'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { Feature } from 'geojson'
 import {
@@ -19,6 +20,7 @@ import { DescriptionList } from '../../components/DescriptionList'
 import { DataTable, type DataColumn } from '../../components/DataTable'
 import { Field } from '../../components/Field'
 import { FilterChip } from '../../components/FilterChip'
+import { FormBar } from '../../components/FormBar'
 import { Inspector, InspectorSection } from '../../components/Inspector'
 import { IssueCount } from '../../components/IssueMark'
 import { BoundaryLayer } from '../../components/map/BoundaryLayer'
@@ -36,7 +38,6 @@ import { StatusChip, type Status } from '../../components/StatusChip'
 import { TopBar, type Crumb } from '../../components/TopBar'
 import { Button } from '../../components/ui/button'
 import { DropdownMenuItem } from '../../components/ui/dropdown-menu'
-import { Input } from '../../components/ui/input'
 import { NativeSelect, NativeSelectOption } from '../../components/ui/native-select'
 import {
     Questionnaire,
@@ -50,7 +51,6 @@ import {
     QuestionnaireProgress,
     QuestionnaireTitle,
 } from '../../components/ui/questionnaire'
-import { Textarea } from '../../components/ui/textarea'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { cn } from '../../lib/cn'
 import { TidevannMark } from '../fixtures/TidevannMark'
@@ -437,10 +437,8 @@ function VisitForm() {
                                         <NativeSelectOption value="margaret">margaret</NativeSelectOption>
                                     </NativeSelect>
                                 </Field>
-                                <Field id="date" label="Visit date" required>
-                                    <Input id="date" type="date" defaultValue="2026-11-04" />
-                                </Field>
-                                <Field
+                                <TextField id="date" label="Visit date" required type="date" defaultValue="2026-11-04" />
+                                <TextField
                                     id="time"
                                     label="Reading taken at"
                                     hint="24-hour"
@@ -448,14 +446,13 @@ function VisitForm() {
                                     error={timeError}
                                     issueOpen={issueOpen === 'time'}
                                     onIssueOpenChange={holdOpen('time')}
-                                >
-                                    <Input id="time" placeholder="09:40" />
-                                </Field>
+                                    placeholder="09:40"
+                                />
                             </Columns>
                         </Section>
                         <Section title="Measurements" meta="4 of 5">
                             <Columns gap="lg">
-                                <Field
+                                <TextField
                                     id="level"
                                     label="Water level"
                                     hint="m"
@@ -463,27 +460,36 @@ function VisitForm() {
                                     error={levelError}
                                     issueOpen={issueOpen === 'level'}
                                     onIssueOpenChange={holdOpen('level')}
-                                >
-                                    <Input id="level" inputMode="decimal" defaultValue="14.2" className="tabular-nums" />
-                                </Field>
-                                <Field id="temperature" label="Water temperature" hint="°C">
-                                    <Input id="temperature" inputMode="decimal" defaultValue="26.1" className="tabular-nums" />
-                                </Field>
-                                <Field id="turbidity" label="Turbidity" hint="NTU" help="Read after the sample has settled for a minute.">
-                                    <Input
-                                        id="turbidity"
-                                        inputMode="numeric"
-                                        defaultValue="12"
-                                        className="tabular-nums"
-                                        aria-describedby="turbidity-help"
-                                    />
-                                </Field>
-                                <Field id="ph" label="pH" hint="0 to 14">
-                                    <Input id="ph" inputMode="decimal" defaultValue="7.2" className="tabular-nums" />
-                                </Field>
-                                <Field id="rain" label="Rainfall, last 24 hours" hint="mm">
-                                    <Input id="rain" inputMode="decimal" placeholder="0.0" className="tabular-nums" />
-                                </Field>
+                                    inputMode="decimal"
+                                    defaultValue="14.2"
+                                    numeric
+                                />
+                                <TextField
+                                    id="temperature"
+                                    label="Water temperature"
+                                    hint="°C"
+                                    inputMode="decimal"
+                                    defaultValue="26.1"
+                                    numeric
+                                />
+                                <TextField
+                                    id="turbidity"
+                                    label="Turbidity"
+                                    hint="NTU"
+                                    help="Read after the sample has settled for a minute."
+                                    inputMode="numeric"
+                                    defaultValue="12"
+                                    numeric
+                                />
+                                <TextField id="ph" label="pH" hint="0 to 14" inputMode="decimal" defaultValue="7.2" numeric />
+                                <TextField
+                                    id="rain"
+                                    label="Rainfall, last 24 hours"
+                                    hint="mm"
+                                    inputMode="decimal"
+                                    placeholder="0.0"
+                                    numeric
+                                />
                             </Columns>
                         </Section>
                         <Section title="Site check" meta="3 questions">
@@ -530,14 +536,14 @@ function VisitForm() {
                             </Questionnaire>
                         </Section>
                         <Section title="Notes">
-                            <Field id="notes" label="What else did you see?" help="Anything the next visitor should know.">
-                                <Textarea
-                                    id="notes"
-                                    rows={4}
-                                    defaultValue="Gauge board cleaned before reading. The bank on the east side has worn since the last visit."
-                                    aria-describedby="notes-help"
-                                />
-                            </Field>
+                            <TextField
+                                id="notes"
+                                label="What else did you see?"
+                                help="Anything the next visitor should know."
+                                multiline
+                                rows={4}
+                                defaultValue="Gauge board cleaned before reading. The bank on the east side has worn since the last visit."
+                            />
                         </Section>
                     </form>
                     <nav aria-label="On this form" className="sticky top-0 hidden w-52 shrink-0 flex-col gap-1 xl:flex">
@@ -559,33 +565,28 @@ function VisitForm() {
                     </nav>
                 </Row>
             </Page>
-            <div className="sticky bottom-0 border-t border-border-strong bg-sidebar">
-                <Row className="px-(--density-page-inset) py-2.5">
-                    <span className="hidden text-xs text-muted-foreground sm:inline">Draft saved at 09:52</span>
-                    <Row className="ml-auto">
-                        <IssueCount
-                            critical={2}
-                            list={[
-                                {
-                                    label: 'Reading taken at',
-                                    issue: { tone: 'critical', text: timeError },
-                                    onGo: () => setIssueOpen('time'),
-                                },
-                                { label: 'Water level', issue: { tone: 'critical', text: levelError }, onGo: () => setIssueOpen('level') },
-                            ]}
-                        />
-                        <Button size="sm" variant="ghost">
-                            Cancel
-                        </Button>
-                        <Button size="sm" variant="outline">
-                            Save draft
-                        </Button>
-                        <Button size="sm" disabled>
-                            Submit
-                        </Button>
-                    </Row>
-                </Row>
-            </div>
+            <FormBar note="Draft saved at 09:52">
+                <IssueCount
+                    critical={2}
+                    list={[
+                        {
+                            label: 'Reading taken at',
+                            issue: { tone: 'critical', text: timeError },
+                            onGo: () => setIssueOpen('time'),
+                        },
+                        { label: 'Water level', issue: { tone: 'critical', text: levelError }, onGo: () => setIssueOpen('level') },
+                    ]}
+                />
+                <Button size="sm" variant="ghost">
+                    Cancel
+                </Button>
+                <Button size="sm" variant="outline">
+                    Save draft
+                </Button>
+                <Button size="sm" disabled>
+                    Submit
+                </Button>
+            </FormBar>
         </Stack>
     )
 }

@@ -1,3 +1,4 @@
+import { TextField } from '../../components/TextField'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
@@ -5,7 +6,6 @@ import { Field } from '../../components/Field'
 import { Section } from '../../components/Section'
 import { Tree, type TreeNode } from '../../components/Tree'
 import { TreeSelect } from '../../components/TreeSelect'
-import { Input } from '../../components/ui/input'
 import { Stack } from '../../components/Layout'
 
 /** A hierarchy to open a level at a time, and the field that picks from one. */
@@ -113,9 +113,7 @@ function Picker({ open }: { open?: 'one' | 'several' }) {
     const [several, setSeveral] = useState<string[]>(['norway', 'lisbon', 'porto'])
     return (
         <Stack gap="lg" className="mx-auto max-w-md">
-            <Field id="name" label="Office name">
-                <Input id="name" defaultValue="Harbor office" />
-            </Field>
+            <TextField id="name" label="Office name" defaultValue="Harbor office" />
             <Field id="city" label="City" required>
                 <TreeSelect
                     id="city"

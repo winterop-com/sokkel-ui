@@ -1,4 +1,5 @@
 import { CopyButton } from '../../components/CopyButton'
+import { TextField } from '../../components/TextField'
 import { PersonRow } from '../../components/PersonRow'
 import { CheckboxField, CheckboxList } from '../../components/CheckboxField'
 import {
@@ -24,11 +25,11 @@ import { StepIndicator, WizardDialog } from '../../components/StepIndicator'
 import { SwitchField } from '../../components/SwitchField'
 import { Button } from '../../components/ui/button'
 import { NativeSelect, NativeSelectOption } from '../../components/ui/native-select'
-import { Progress } from '../../components/ui/progress'
+import { Progress, ProgressLabel, ProgressValue } from '../../components/ui/progress'
 import { DropZone } from '../../components/UploadTray'
 import { cn } from '../../lib/cn'
 import { describeCron } from '../../lib/cron'
-import { Behind, TextField } from './parts'
+import { Behind } from './parts'
 import { Item, ItemContent, ItemDescription, ItemMedia } from '../../components/ui/item'
 import { Row, Stack } from '../../components/Layout'
 
@@ -502,13 +503,12 @@ export function ImportOrders({ stage: first = 'map' }: { stage?: ImportStage }) 
                 )}
                 {stage === 'running' && (
                     <div className="flex h-56 flex-col justify-center gap-3">
-                        <Row gap="none" align="baseline" justify="between" className="text-sm">
-                            <span>Importing rows</span>
-                            <span className="font-mono text-muted-foreground tabular-nums">
-                                {Math.round(progress * 1204).toLocaleString('en')} of 1,204
-                            </span>
-                        </Row>
-                        <Progress value={progress * 100} aria-label="Imported" />
+                        <Progress value={progress * 100}>
+                            <ProgressLabel className="font-normal">Importing rows</ProgressLabel>
+                            <ProgressValue className="font-mono">
+                                {() => `${Math.round(progress * 1204).toLocaleString('en')} of 1,204`}
+                            </ProgressValue>
+                        </Progress>
                         <p className="text-xs text-muted-foreground">
                             You can close this; the import carries on and the job page shows how it went.
                         </p>
@@ -639,11 +639,10 @@ export function ExportRuns({ stage: first = 'form' }: { stage?: ExportStage }) {
                 )}
                 {stage === 'running' && (
                     <div className="flex h-40 flex-col justify-center gap-3">
-                        <Row gap="none" align="baseline" justify="between" className="text-sm">
-                            <span>Writing {name}</span>
-                            <span className="font-mono text-muted-foreground tabular-nums">{Math.round(progress * 100)}%</span>
-                        </Row>
-                        <Progress value={progress * 100} aria-label="Exported" />
+                        <Progress value={progress * 100}>
+                            <ProgressLabel className="font-normal">Writing {name}</ProgressLabel>
+                            <ProgressValue className="font-mono">{() => `${String(Math.round(progress * 100))}%`}</ProgressValue>
+                        </Progress>
                     </div>
                 )}
                 {stage === 'ready' && (

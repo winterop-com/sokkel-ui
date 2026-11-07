@@ -1,4 +1,4 @@
-import { cn } from '../lib/cn'
+import { FormBar } from './FormBar'
 import { Button } from './ui/button'
 
 export interface SaveBarWords {
@@ -17,9 +17,9 @@ const WORDS: SaveBarWords = {
 
 /**
  * The bar pinned to the foot of a page while its edits are not yet saved: how many there are at
- * the left, Discard and Save at the right. It is the last child of the page's scrolling content
- * and stays at its bottom edge; with no changes it draws nothing, so the page keeps its full
- * height.
+ * the left, Discard and Save at the right. It is a `FormBar`, the last child of the page's
+ * scrolling content, and stays at its bottom edge; with no changes it draws nothing, so the page
+ * keeps its full height.
  */
 export function SaveBar({
     count,
@@ -43,27 +43,22 @@ export function SaveBar({
     const words = { ...WORDS, ...given }
     if (count === 0) return null
     return (
-        // As tall as the shell's foot strip, so its top line meets the rail's foot beside it.
-        <div className={cn('sticky bottom-0 z-20 border-t border-border-strong bg-sidebar', className)}>
-            <div
-                className={cn(
-                    'flex min-h-[calc(var(--spacing-shell-foot)-1px)] items-center gap-2 py-1',
-                    inset === 'page' ? 'px-(--density-page-inset)' : 'px-(--density-panel-pad)',
-                )}
-            >
-                <span role="status" className="flex min-w-0 items-center gap-2 text-sm">
+        <FormBar
+            inset={inset}
+            className={className}
+            note={
+                <>
                     <span className="size-2 shrink-0 rounded-full bg-warning" aria-hidden />
-                    <span className="truncate">{words.unsaved(count)}</span>
-                </span>
-                <div className="ml-auto flex shrink-0 items-center gap-2">
-                    <Button size="sm" variant="ghost" disabled={busy} onClick={onDiscard}>
-                        {words.discard}
-                    </Button>
-                    <Button size="sm" disabled={busy} onClick={onSave}>
-                        {busy ? words.saving : words.save}
-                    </Button>
-                </div>
-            </div>
-        </div>
+                    <span className="truncate text-foreground">{words.unsaved(count)}</span>
+                </>
+            }
+        >
+            <Button size="sm" variant="ghost" disabled={busy} onClick={onDiscard}>
+                {words.discard}
+            </Button>
+            <Button size="sm" disabled={busy} onClick={onSave}>
+                {busy ? words.saving : words.save}
+            </Button>
+        </FormBar>
     )
 }

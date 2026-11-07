@@ -1,3 +1,5 @@
+import { SliderField } from '../../components/SliderField'
+import { TextField } from '../../components/TextField'
 import { IconButton } from '../../components/IconButton'
 import { CopyButton } from '../../components/CopyButton'
 import type { Meta, StoryObj } from '@storybook/react-vite'
@@ -35,10 +37,8 @@ import { StatusChip, type Status } from '../../components/StatusChip'
 import { TopBar, type Crumb } from '../../components/TopBar'
 import { Button } from '../../components/ui/button'
 import { DropdownMenuItem } from '../../components/ui/dropdown-menu'
-import { Input } from '../../components/ui/input'
 import { Kbd } from '../../components/ui/kbd'
 import { NativeSelect, NativeSelectOption } from '../../components/ui/native-select'
-import { Slider } from '../../components/ui/slider'
 import { Textarea } from '../../components/ui/textarea'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { TidevannMark } from '../fixtures/TidevannMark'
@@ -318,7 +318,7 @@ const TRAILS: Record<View, Crumb[]> = {
     history: [{ label: 'History' }],
 }
 
-/** A slider with its name and its value on the line above it. */
+/** A sampling setting, held here as the playground would hold it. */
 function Tuning({
     id,
     label,
@@ -336,24 +336,16 @@ function Tuning({
 }) {
     const [current, setCurrent] = useState(value)
     return (
-        <Stack gap="sm">
-            <Row align="baseline" justify="between">
-                <label htmlFor={id} className="text-sm font-medium">
-                    {label}
-                </label>
-                <span className="font-mono text-xs text-muted-foreground tabular-nums">{current.toFixed(1)}</span>
-            </Row>
-            <Slider
-                id={id}
-                aria-label={label}
-                min={0}
-                max={max}
-                step={step}
-                value={[current]}
-                onValueChange={(next) => setCurrent(Array.isArray(next) ? next[0] : next)}
-            />
-            <p className="text-xs text-muted-foreground">{help}</p>
-        </Stack>
+        <SliderField
+            id={id}
+            label={label}
+            value={current}
+            onChange={setCurrent}
+            max={max}
+            step={step}
+            format={(number) => number.toFixed(1)}
+            help={help}
+        />
     )
 }
 
@@ -394,12 +386,8 @@ function Parameters() {
             </PanelSection>
             <PanelSection title="Length">
                 <Stack gap="lg">
-                    <Field id="max-tokens" label="Max tokens" hint="up to 8,192">
-                        <Input id="max-tokens" type="number" defaultValue={1024} className="tabular-nums" />
-                    </Field>
-                    <Field id="stop" label="Stop sequences" hint="comma separated">
-                        <Input id="stop" placeholder="###, END" className="font-mono" />
-                    </Field>
+                    <TextField id="max-tokens" label="Max tokens" hint="up to 8,192" type="number" defaultValue={1024} numeric />
+                    <TextField id="stop" label="Stop sequences" hint="comma separated" placeholder="###, END" mono />
                 </Stack>
             </PanelSection>
             <PanelSection title="System prompt">

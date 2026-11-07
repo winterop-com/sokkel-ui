@@ -1,9 +1,8 @@
+import { TextField } from '../../components/TextField'
 import { useState } from 'react'
 
-import { Field } from '../../components/Field'
 import type { GraphPointer } from '../../components/graph/GraphCanvas'
 import { PipelineGraph, type PipelineStep } from '../../components/graph/PipelineGraph'
-import { Input } from '../../components/ui/input'
 import { Stage } from './Frame'
 import { NIGHTLY_EXPORT } from './data'
 
@@ -121,21 +120,19 @@ export function Editor() {
                     {said}
                 </p>
                 {chosen !== undefined && (
-                    <Field id="step-name" label="Name" help="Backspace here edits the name and never removes the step.">
-                        <Input
-                            id="step-name"
-                            value={chosen.name ?? ''}
-                            placeholder={chosen.code}
-                            onChange={(event) => {
-                                const name = event.target.value
-                                setSteps((held) =>
-                                    held.map((step) =>
-                                        step.code === chosen.code ? { ...step, name: name === '' ? undefined : name } : step,
-                                    ),
-                                )
-                            }}
-                        />
-                    </Field>
+                    <TextField
+                        id="step-name"
+                        label="Name"
+                        help="Backspace here edits the name and never removes the step."
+                        value={chosen.name ?? ''}
+                        placeholder={chosen.code}
+                        onChange={(value) => {
+                            const name = value
+                            setSteps((held) =>
+                                held.map((step) => (step.code === chosen.code ? { ...step, name: name === '' ? undefined : name } : step)),
+                            )
+                        }}
+                    />
                 )}
             </aside>
         </Stage>
