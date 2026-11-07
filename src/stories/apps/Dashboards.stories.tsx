@@ -1,9 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { Feature, FeatureCollection, Point } from 'geojson'
-import { Activity, CalendarRange, Gauge, Globe, Play, Workflow, type LucideIcon } from 'lucide-react'
+import { Activity, CalendarRange, Gauge, Globe, ListChecks, Play, Workflow, type LucideIcon } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import { AccountMenu } from '../../components/AccountMenu'
+import { CheckList } from '../../components/CheckList'
 import { BarGauge } from '../../components/dashboard/BarGauge'
 import { BarPanel } from '../../components/dashboard/BarPanel'
 import { ChartPanel } from '../../components/dashboard/ChartPanel'
@@ -24,9 +25,13 @@ import { MapPopup } from '../../components/map/MapPopup'
 import { MapOverlay, MapView } from '../../components/map/MapView'
 import { PointLayer } from '../../components/map/PointLayer'
 import { classCounts, colorOf, sequentialScale } from '../../components/map/scale'
+import { DataTable, type DataColumn } from '../../components/DataTable'
 import { Rail, type RailGroup } from '../../components/Rail'
 import { Page, Shell } from '../../components/Shell'
+import { StatusChip, type Status } from '../../components/StatusChip'
+import { Timeline } from '../../components/Timeline'
 import { TopBar } from '../../components/TopBar'
+import { DropdownMenuItem } from '../../components/ui/dropdown-menu'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import {
     across,
@@ -45,6 +50,7 @@ import {
     failureRate,
     failures,
     frameOf,
+    HOUR,
     HOURLY_SHARE,
     JOB_PROJECT,
     JOBS,
@@ -64,6 +70,7 @@ import {
     spanOf,
     wait,
     WORKERS,
+    type Job,
     type Project,
     type Site,
     type Span,
@@ -75,14 +82,16 @@ import { TidevannMark } from '../fixtures/TidevannMark'
  * Tidevann's monitoring dashboards in the library's frame, each a screen of panels over seeded
  * metrics that run on from a fixed moment. The range picker narrows what every panel shows, the
  * variables filter them by project, worker or continent, a refresh moves the data on by five
- * minutes, legends hide and emphasize series, and rows fold.
+ * minutes, legends hide and emphasize series, and rows fold. The last stories show a board while
+ * its panels load and with no data for the range.
  */
 const meta: Meta = { title: 'Apps/Dashboards' }
 export default meta
 
-type Board = 'operations' | 'capacity' | 'regions' | 'forecast'
+type Board = 'job-runs' | 'operations' | 'capacity' | 'regions' | 'forecast'
 
 const BOARDS: { id: Board; label: string; icon: LucideIcon }[] = [
+    { id: 'job-runs', label: 'Job runs', icon: ListChecks },
     { id: 'operations', label: 'Operations', icon: Activity },
     { id: 'capacity', label: 'Capacity', icon: Gauge },
     { id: 'regions', label: 'Regions', icon: Globe },
@@ -215,6 +224,405 @@ const AVERAGES = ['avg'] as const
 /** Every pair of the chosen projects and workers, for a figure summed or weighed across them. */
 const pairs = (projects: readonly Project[], workers: readonly Worker[]) =>
     projects.flatMap((project) => workers.map((worker) => [project, worker] as const))
+
+const RUN_SLOW: Threshold[] = [{ color: 'good' }, { value: 10, color: 'warning' }, { value: 30, color: 'critical' }]
+const RUN_BUDGET: Threshold[] = [{ color: 'good' }, { value: 30, color: 'critical' }]
+const NONE_IS_GOOD: Threshold[] = [{ color: 'good' }, { value: 1, color: 'critical' }]
+const QUEUE_LINE: Threshold[] = [{ color: 'good' }, { value: 20, color: 'warning' }]
+const JOB_STATS = ['max', 'avg', 'current'] as const
+const SECONDS = (value: number) => `${value.toFixed(1)}s`
+
+/** Shares of the runs started that end cancelled or skipped; the rest that do not fail succeed. */
+const CANCELLED = 0.012
+const SKIPPED = 0.02
+
+/** What the job runs dashboard draws for a span, a project, a job and a worker. */
+function jobRuns(span: Span, project: string, job: string, worker: string) {
+    const projects = chosen(project, PROJECTS)
+    const jobs = chosen(job, JOBS).filter((one) => projects.includes(JOB_PROJECT[one]))
+    const workers = chosen(worker, WORKERS)
+    const line = frameOf(span, 150)
+    // Runs are counted in wider buckets than levels are read, so whole runs make a smooth line.
+    const counts = frameOf(span, 48)
+    const bars = frameOf(span, 30)
+    const heat = frameOf(span, 48)
+    const spark = frameOf(span, 40)
+    const startedBy = (one: Job) => (step: number) => total(workers.map((w) => runs(one, w, step)))
+    const failedBy = (one: Job) => (step: number) => total(workers.map((w) => failures(one, w, step)))
+    const started = (step: number) => total(jobs.map((one) => startedBy(one)(step)))
+    const failed = (step: number) => total(jobs.map((one) => failedBy(one)(step)))
+    const waiting = (step: number) => total(workers.map((w) => queue(w, step)))
+    const p95 = (step: number) => runSeconds(step) * 2.9
+    const end = span.end - 1
+    const runTotal = across(span, started, 'sum')
+    const failedTotal = across(span, failed, 'sum')
+    const lastHour: Span = { start: span.end - HOUR, end: span.end }
+    const failingNow = jobs.filter((one) => {
+        const ran = across(lastHour, startedBy(one), 'sum')
+        return ran > 0 && across(lastHour, failedBy(one), 'sum') / ran > 0.05
+    })
+    const percentile = (spread: number, name: string, color: string): PanelSeries => ({
+        name,
+        color,
+        values: sample(line, (step) => runSeconds(step) * spread).map((value) => Math.round(value * 10) / 10),
+    })
+    const cells = durationCells(heat, sample(heat, started, 'sum'), sample(heat, runSeconds))
+    const busiest = workers.reduce((most, w) => (cpu(w, end) > cpu(most, end) ? w : most), workers[0])
+    return {
+        success: {
+            now: runTotal === 0 ? 100 : 100 - (failedTotal / runTotal) * 100,
+            spark: sample(spark, (step) => 100 - (failed(step) / (started(step) || 1)) * 100),
+        },
+        runs: {
+            now: Math.round(runTotal),
+            spark: sample(spark, started, 'sum'),
+            change: change(runTotal, across(dayBefore(span), started, 'sum')),
+        },
+        queue: { now: waiting(end), spark: sample(spark, waiting) },
+        failing: failingNow.length,
+        p95: { now: p95(end), spark: sample(spark, p95) },
+        line: line.labels,
+        counts: counts.labels,
+        runsAndFailures: [
+            { name: 'Runs', values: sample(counts, started, 'sum').map(Math.round), color: 'chart-2' },
+            { name: 'Failures', values: sample(counts, failed, 'sum').map(Math.round), color: 'status-failed' },
+        ] satisfies PanelSeries[],
+        bars: bars.labels,
+        byState: [
+            {
+                name: 'Succeeded',
+                values: sample(bars, (step) => started(step) * (1 - CANCELLED - SKIPPED) - failed(step), 'sum').map(Math.round),
+                color: 'status-succeeded',
+            },
+            { name: 'Failed', values: sample(bars, failed, 'sum').map(Math.round), color: 'status-failed' },
+            {
+                name: 'Cancelled',
+                values: sample(bars, (step) => started(step) * CANCELLED, 'sum').map(Math.round),
+                color: 'status-cancelled',
+            },
+            { name: 'Skipped', values: sample(bars, (step) => started(step) * SKIPPED, 'sum').map(Math.round), color: 'status-skipped' },
+        ] satisfies PanelSeries[],
+        durations: [percentile(1, 'p50', 'chart-3'), percentile(2.1, 'p90', 'warning'), percentile(3.6, 'p99', 'status-failed')],
+        heat: heat.labels,
+        cells,
+        histogram: [
+            {
+                name: 'Runs',
+                values: DURATION_BUCKETS.map((_, bucket) => total(cells.filter((cell) => cell[1] === bucket).map((cell) => cell[2]))),
+                color: 'chart-2',
+            },
+        ] satisfies PanelSeries[],
+        perJob: jobs.map((one): PanelSeries => ({ name: one, values: sample(counts, startedBy(one), 'sum').map(Math.round) })),
+        perWorker: workers.map((w): PanelSeries => ({ name: w, values: sample(line, (step) => queue(w, step)) })),
+        load: workers.map((w) => ({ name: w, value: Math.round(cpu(w, end)) })),
+        slots: mean(workers.map((w) => cpu(w, end))),
+        cache: cacheHits(end),
+        health: [
+            { name: 'API', status: 'ok' as const, detail: `p95 ${Math.round(clientDuration('harbor', 'worker-1', end, 95))}ms` },
+            {
+                name: 'Worker',
+                status: waiting(end) > 20 ? ('warn' as const) : ('ok' as const),
+                detail: `queue depth ${waiting(end)}`,
+                hint: busiest === undefined ? undefined : `${busiest} is at ${Math.round(cpu(busiest, end))}% load.`,
+            },
+            { name: 'Scheduler', status: 'ok' as const, detail: `last tick ${clock(end)}` },
+        ],
+        latest: LATEST_RUNS.filter((run) => jobs.includes(run.job)),
+    }
+}
+
+interface LatestRun {
+    job: Job
+    state: Status
+    took: string
+    /** How long it took, for sorting; a run not yet started sorts first. */
+    seconds: number
+    at: string
+}
+
+const LATEST_RUNS: LatestRun[] = [
+    { job: 'import-orders', state: 'running', took: '1m 12s', seconds: 72, at: '11:58' },
+    { job: 'nightly-export', state: 'failed', took: '4.2s', seconds: 4.2, at: '11:45' },
+    { job: 'rebuild-index', state: 'succeeded', took: '6m 03s', seconds: 363, at: '11:40' },
+    { job: 'send-digest', state: 'succeeded', took: '12.8s', seconds: 12.8, at: '11:30' },
+    { job: 'sync-inventory', state: 'queued', took: '-', seconds: 0, at: '11:30' },
+    { job: 'import-orders', state: 'cancelled', took: '38.0s', seconds: 38, at: '11:15' },
+]
+
+const RUN_COLUMNS: DataColumn<LatestRun>[] = [
+    {
+        id: 'job',
+        header: 'Job',
+        width: 'minmax(7rem,1fr)',
+        cell: (run) => <span className="font-mono">{run.job}</span>,
+        sortValue: (run) => run.job,
+    },
+    { id: 'state', header: 'State', width: '7rem', cell: (run) => <StatusChip status={run.state} />, sortValue: (run) => run.state },
+    {
+        id: 'took',
+        header: 'Took',
+        width: '5.5rem',
+        align: 'end',
+        cell: (run) => <span className="text-muted-foreground tabular-nums">{run.took}</span>,
+        sortValue: (run) => run.seconds,
+    },
+    {
+        id: 'at',
+        header: 'At',
+        width: '4.5rem',
+        align: 'end',
+        cell: (run) => <span className="text-faint tabular-nums">{run.at}</span>,
+        sortValue: (run) => run.at,
+    },
+]
+
+const RUN_MENU = (
+    <>
+        <DropdownMenuItem>Open runs</DropdownMenuItem>
+        <DropdownMenuItem>Export as CSV</DropdownMenuItem>
+    </>
+)
+
+/**
+ * Tidevann's job runs: stat tiles colored by thresholds, runs and failures, runs by state, duration
+ * percentiles against the budget, a duration heatmap and histogram, runs by job, the workers' queue
+ * and load, and the health, latest runs and activity panels. The range, project, job and worker
+ * narrow every panel, and a refresh moves them on. `loading` and `empty` hold every panel loading,
+ * or with no data for the range.
+ */
+function JobRuns({ loading = false, empty: none = false }: { loading?: boolean; empty?: boolean }) {
+    const { span, empty: past, refreshing, controls } = useTimeControls()
+    const [project, setProject] = useState(ALL)
+    const [job, setJob] = useState(ALL)
+    const [worker, setWorker] = useState(ALL)
+    const data = useMemo(() => jobRuns(span, project, job, worker), [span, project, job, worker])
+    const busy = loading || refreshing
+    const empty = none || past
+    const reading = (value: number) => (empty ? null : value)
+    const variables: Variable[] = [
+        { kind: 'select', id: 'project', label: 'project', value: project, options: choices(PROJECTS), onChange: setProject },
+        { kind: 'select', id: 'job', label: 'job', value: job, options: choices(JOBS), onChange: setJob },
+        { kind: 'select', id: 'worker', label: 'worker', value: worker, options: choices(WORKERS), onChange: setWorker },
+    ]
+    return (
+        <>
+            <VariablesBar variables={variables} end={controls} />
+            <DashboardRow title="Overview" count={8}>
+                <StatPanel
+                    title="Success rate"
+                    value={reading(data.success.now)}
+                    unit="%"
+                    decimals={1}
+                    thresholds={SUCCESS}
+                    sparkline={data.success.spark}
+                    info="Runs that succeeded, of every run that finished in the range."
+                    loading={busy}
+                />
+                <StatPanel
+                    title="Runs"
+                    value={reading(data.runs.now)}
+                    color="chart-2"
+                    sparkline={data.runs.spark}
+                    delta={data.runs.change}
+                    good={data.runs.change?.startsWith('+')}
+                    loading={busy}
+                />
+                <StatPanel
+                    title="Queue depth"
+                    value={reading(data.queue.now)}
+                    thresholds={QUEUE_STEPS}
+                    sparkline={data.queue.spark}
+                    info="Runs waiting for a worker slot, now."
+                    loading={busy}
+                />
+                <StatPanel
+                    title="Failing now"
+                    value={reading(data.failing)}
+                    thresholds={NONE_IS_GOOD}
+                    colorMode="background"
+                    info="Jobs that failed more than one run in twenty in the last hour."
+                    loading={busy}
+                />
+                <StatPanel
+                    title="p95 duration"
+                    value={reading(data.p95.now)}
+                    unit="s"
+                    decimals={1}
+                    thresholds={RUN_SLOW}
+                    colorMode="background"
+                    sparkline={data.p95.spark}
+                    loading={busy}
+                />
+                <StatPanel
+                    title="Workers up"
+                    value={reading(WORKERS.length)}
+                    unit={`/ ${WORKERS.length}`}
+                    color="chart-4"
+                    colorMode="background"
+                    loading={busy}
+                />
+                <TimeSeriesPanel
+                    title="Runs and failures"
+                    subtitle="in the range"
+                    info="Runs started and runs failed in each step of the range."
+                    span="two-thirds"
+                    x={data.counts}
+                    series={data.runsAndFailures}
+                    bodyClassName="h-52"
+                    loading={busy}
+                    empty={empty}
+                    file="runs-and-failures"
+                />
+                <BarPanel
+                    title="Runs by state"
+                    subtitle="stacked"
+                    span="third"
+                    x={data.bars}
+                    series={data.byState}
+                    stacked
+                    bodyClassName="h-52"
+                    loading={busy}
+                    empty={empty}
+                    file="runs-by-state"
+                />
+            </DashboardRow>
+            <DashboardRow title="Latency" count={4}>
+                <TimeSeriesPanel
+                    title="Run duration"
+                    subtitle="percentiles"
+                    info="Run duration at the 50th, 90th and 99th percentile. The dashed line is the 30s budget."
+                    span="half"
+                    x={data.line}
+                    series={data.durations}
+                    unit="s"
+                    format={SECONDS}
+                    fill="none"
+                    thresholds={RUN_BUDGET}
+                    legend="table"
+                    loading={busy}
+                    empty={empty}
+                    file="run-duration"
+                />
+                <HeatmapPanel
+                    title="Run duration"
+                    subtitle="runs per duration bucket"
+                    info="Runs started in each step, by how long they took."
+                    span="half"
+                    x={data.heat}
+                    y={DURATION_BUCKETS}
+                    cells={data.cells}
+                    scale={HEAT_SCALE}
+                    bodyClassName="h-72"
+                    loading={busy}
+                    empty={empty}
+                    file="duration-heatmap"
+                />
+                <BarPanel
+                    title="Duration distribution"
+                    subtitle="in the range"
+                    span="third"
+                    x={DURATION_BUCKETS}
+                    series={data.histogram}
+                    gap="tight"
+                    bodyClassName="h-64"
+                    loading={busy}
+                    empty={empty}
+                    file="duration-histogram"
+                />
+                <TimeSeriesPanel
+                    title="Runs by job"
+                    subtitle="stacked"
+                    span="two-thirds"
+                    x={data.counts}
+                    series={data.perJob}
+                    stacked
+                    legend="table"
+                    legendStats={JOB_STATS}
+                    bodyClassName="h-44"
+                    loading={busy}
+                    empty={empty}
+                    file="runs-by-job"
+                />
+            </DashboardRow>
+            <DashboardRow title="Workers" count={4}>
+                <TimeSeriesPanel
+                    title="Queue depth"
+                    subtitle="by worker"
+                    span="third"
+                    x={data.line}
+                    series={data.perWorker}
+                    step
+                    thresholds={QUEUE_LINE}
+                    bodyClassName="h-36"
+                    loading={busy}
+                    empty={empty}
+                    file="queue-depth"
+                />
+                <BarGauge
+                    title="Worker load"
+                    subtitle="now"
+                    span="third"
+                    unit="%"
+                    thresholds={LOAD}
+                    loading={busy}
+                    empty={empty}
+                    bars={data.load}
+                />
+                <GaugePanel
+                    title="Slots used"
+                    value={reading(data.slots)}
+                    unit="%"
+                    thresholds={LOAD}
+                    label="mean"
+                    bodyClassName="h-40"
+                    loading={busy}
+                />
+                <GaugePanel
+                    title="Cache hits"
+                    value={reading(data.cache)}
+                    min={80}
+                    unit="%"
+                    decimals={1}
+                    thresholds={CACHE}
+                    label="fetch"
+                    bodyClassName="h-40"
+                    loading={busy}
+                />
+            </DashboardRow>
+            <DashboardRow title="Runs" count={3}>
+                <DashboardPanel title="Health" span="third" flush loading={busy}>
+                    <CheckList checks={data.health} />
+                </DashboardPanel>
+                <DashboardPanel
+                    title="Latest runs"
+                    span="third"
+                    flush
+                    menu={RUN_MENU}
+                    loading={busy}
+                    empty={empty || data.latest.length === 0}
+                >
+                    <DataTable
+                        columns={RUN_COLUMNS}
+                        rows={data.latest}
+                        rowKey={(run) => run.job + run.at}
+                        minWidth="24rem"
+                        className="flex-1 rounded-none border-0"
+                    />
+                </DashboardPanel>
+                <DashboardPanel title="Activity" span="third" loading={busy} empty={empty}>
+                    <Timeline
+                        events={[
+                            { id: '1', title: 'nightly-export failed at validate', at: '11:45', tone: 'failed' },
+                            { id: '2', title: 'worker-3 queue passed 20', at: '10:10', tone: 'waiting' },
+                            { id: '3', title: 'ada paused send-digest', at: '09:40' },
+                            { id: '4', title: 'grace added the job sync-inventory', at: '08:12' },
+                        ]}
+                    />
+                </DashboardPanel>
+            </DashboardRow>
+        </>
+    )
+}
 
 /** What the operations dashboard draws for a span, a project and a worker. */
 function operations(span: Span, project: string, worker: string) {
@@ -997,12 +1405,40 @@ export const OperationsBoard: StoryObj = {
     ),
 }
 
+/** Job runs: stat tiles on thresholds, runs and failures, duration percentiles, a heatmap and histogram, the workers' queue and load, and the health, latest runs and activity panels. */
+export const JobRunsBoard: StoryObj = {
+    name: 'Job runs',
+    render: () => (
+        <DashboardsApp board="job-runs">
+            <JobRuns />
+        </DashboardsApp>
+    ),
+}
+
 /** Regions: sites on a world map colored by latency, every site's latency in one dense chart with a long legend, and a folded row per continent. */
 export const RegionsBoard: StoryObj = {
     name: 'Regions',
     render: () => (
         <DashboardsApp board="regions">
             <Regions />
+        </DashboardsApp>
+    ),
+}
+
+/** The job runs board while every panel loads. */
+export const Loading: StoryObj = {
+    render: () => (
+        <DashboardsApp board="job-runs">
+            <JobRuns loading />
+        </DashboardsApp>
+    ),
+}
+
+/** The job runs board with no data for the range: each panel says so, and the figures show none. */
+export const Empty: StoryObj = {
+    render: () => (
+        <DashboardsApp board="job-runs">
+            <JobRuns empty />
         </DashboardsApp>
     ),
 }

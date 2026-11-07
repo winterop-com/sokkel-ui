@@ -40,7 +40,7 @@ import { RUN_ROWS, RUN_STATES, STATE_COLORS } from '../fixtures/runRows'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { places, regions, sites } from '../map/data'
 import { TopBar } from '../../components/TopBar'
-import { Stack } from '../../components/Layout'
+import { Row, Stack } from '../../components/Layout'
 
 /**
  * The panels a monitoring dashboard is made of: stat tiles colored by thresholds, gauges, bar
@@ -333,6 +333,18 @@ function Variables() {
 
 /** The variables bar: two dropdown filters and a toggle, with the range and refresh at the end. */
 export const VariablesStory: StoryObj = { name: 'Variables bar', render: () => <Variables /> }
+
+function OpenRange() {
+    const [range, setRange] = useState<TimeRangeValue>({ preset: '24h' })
+    return (
+        <Row gap="none" align="stretch" justify="end" className="min-h-svh bg-background p-6 text-foreground">
+            <TimeRangePicker value={range} onChange={setRange} defaultMonth={new Date(2026, 9, 1)} today={new Date(2026, 9, 20)} open />
+        </Row>
+    )
+}
+
+/** The range picker open: presets beside a calendar for a range of its own. */
+export const TimeRange: StoryObj = { name: 'Time range', render: () => <OpenRange /> }
 
 /** Rows grouping panels: one open, one collapsed saying how many panels it holds. */
 export const Rows: StoryObj = {
