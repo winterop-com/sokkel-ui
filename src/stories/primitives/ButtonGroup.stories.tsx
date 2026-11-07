@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { ChevronDown, ChevronLeft, ChevronRight, Copy, Pause, Play, Square } from 'lucide-react'
 
-import { Button } from '../../components/ui/button'
-import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText } from '../../components/ui/button-group'
-import { Input } from '../../components/ui/input'
-import { Row, Stack } from '../../components/Layout'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText } from '@winterop-com/sokkel-ui/primitives/button-group'
+import { Input } from '@winterop-com/sokkel-ui/primitives/input'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
 
 const meta: Meta = { title: 'Primitives/Actions/ButtonGroup', parameters: { frame: 'column' } }

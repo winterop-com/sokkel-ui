@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { Feature } from 'geojson'
 
-import { BLANK_BASEMAP, SATELLITE_BASEMAP, type Basemap } from '../../components/map/basemap'
-import { BoundaryLayer } from '../../components/map/BoundaryLayer'
-import { MapLegend } from '../../components/map/MapLegend'
-import { MapOverlay, MapView } from '../../components/map/MapView'
-import { sequentialScale } from '../../components/map/scale'
+import { BLANK_BASEMAP, SATELLITE_BASEMAP, type Basemap } from '@winterop-com/sokkel-ui-maps/basemap'
+import { BoundaryLayer } from '@winterop-com/sokkel-ui-maps/BoundaryLayer'
+import { MapLegend } from '@winterop-com/sokkel-ui-maps/MapLegend'
+import { MapOverlay, MapView } from '@winterop-com/sokkel-ui-maps/MapView'
+import { sequentialScale } from '@winterop-com/sokkel-ui-maps/scale'
 import { figures, regions } from './data'
 import { Page } from './Page'
 

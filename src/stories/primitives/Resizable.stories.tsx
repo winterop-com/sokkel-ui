@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
 
-import { StatusChip, type Status } from '../../components/StatusChip'
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../../components/ui/resizable'
-import { Row, Stack } from '../../components/Layout'
+import { StatusChip, type Status } from '@winterop-com/sokkel-ui/StatusChip'
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@winterop-com/sokkel-ui/primitives/resizable'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /** Panels with a handle between them that drags to share the space, side by side or stacked. */
 function Caption({ children }: { children: ReactNode }) {

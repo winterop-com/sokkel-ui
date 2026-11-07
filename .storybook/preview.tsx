@@ -6,7 +6,7 @@ import './candidates.css'
 import '@fontsource-variable/geist'
 import '@fontsource-variable/geist-mono'
 
-import tokens from '../tokens/tokens.json'
+import tokens from '../packages/core/tokens/tokens.json'
 import { FACES } from '../src/stories/themes/themes'
 import candidates from './candidates.json'
 

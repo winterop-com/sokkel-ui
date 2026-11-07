@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import type { ChartSpec, ChartStep } from '../../components/chart/kinds'
-import { ChartPanel } from '../../components/dashboard/ChartPanel'
-import { DashboardGrid } from '../../components/dashboard/DashboardGrid'
-import { Columns } from '../../components/Layout'
+import type { ChartSpec, ChartStep } from '@winterop-com/sokkel-ui-charts/kinds'
+import { ChartPanel } from '@winterop-com/sokkel-ui-charts/dashboard/ChartPanel'
+import { DashboardGrid } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
+import { Columns } from '@winterop-com/sokkel-ui/Layout'
 import { RUN_RATES } from '../fixtures/runMeasures'
 import { Framed, Ground } from './Ground'
 

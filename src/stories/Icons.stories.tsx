@@ -1,14 +1,14 @@
-import { PageHeader } from '../components/PageHeader'
-import { Empty, EmptyHeader, EmptyTitle } from '../components/ui/empty'
+import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
+import { Empty, EmptyHeader, EmptyTitle } from '@winterop-com/sokkel-ui/primitives/empty'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { icons, type LucideIcon } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
-import { SearchField } from '../components/SearchField'
-import { Segmented } from '../components/Segmented'
-import { Columns, Stack } from '../components/Layout'
-import { cn } from '../lib/cn'
-import { Toolbar } from '../components/Toolbar'
+import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
+import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
+import { Columns, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { Toolbar } from '@winterop-com/sokkel-ui/Toolbar'
 
 /**
  * The one icon set: Lucide, from `lucide-react`. Every icon in the library and its stories comes
@@ -17,7 +17,11 @@ import { Toolbar } from '../components/Toolbar'
 const meta: Meta = { title: 'Foundations/Icons', parameters: { frame: 'padded' } }
 export default meta
 
-const SOURCES = import.meta.glob('../components/**/*.tsx', { query: '?raw', import: 'default', eager: true }) as Record<string, string>
+const SOURCES = import.meta.glob(['../../packages/*/src/**/*.tsx', '!**/*.test.tsx'], {
+    query: '?raw',
+    import: 'default',
+    eager: true,
+}) as Record<string, string>
 
 const ALL = icons as Record<string, LucideIcon>
 

@@ -6,8 +6,8 @@ interface Candidate {
     title: string
     app: string
 }
-import tokens from '../../../tokens/tokens.json'
-import type { ThemeOption, ThemeSettings } from '../../components/ThemePicker'
+import tokens from '../../../packages/core/tokens/tokens.json'
+import type { ThemeOption, ThemeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
 
 const title = (name: string) => name.charAt(0).toUpperCase() + name.slice(1)
 

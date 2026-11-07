@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
 
-import { type DataColumn, DataTable } from '../../components/DataTable'
-import { StatusChip, type Status } from '../../components/StatusChip'
-import { ScrollArea, ScrollBar } from '../../components/ui/scroll-area'
-import { Row, Stack } from '../../components/Layout'
+import { type DataColumn, DataTable } from '@winterop-com/sokkel-ui/DataTable'
+import { StatusChip, type Status } from '@winterop-com/sokkel-ui/StatusChip'
+import { ScrollArea, ScrollBar } from '@winterop-com/sokkel-ui/primitives/scroll-area'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /** A region that scrolls with a thin drawn scrollbar, vertically, sideways, or both. */
 function Caption({ children }: { children: ReactNode }) {

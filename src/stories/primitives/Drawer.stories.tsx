@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { Button } from '../../components/ui/button'
-import { Row, Stack } from '../../components/Layout'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import {
     Drawer,
     DrawerClose,
@@ -11,7 +11,7 @@ import {
     DrawerHeader,
     DrawerTitle,
     DrawerTrigger,
-} from '../../components/ui/drawer'
+} from '@winterop-com/sokkel-ui/primitives/drawer'
 
 const meta: Meta = { title: 'Primitives/Overlays/Drawer', parameters: { frame: 'padded' } }
 export default meta

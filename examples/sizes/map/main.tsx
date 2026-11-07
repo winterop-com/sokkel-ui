@@ -1,14 +1,14 @@
 /** A map page: regions colored by a value on maplibre, sites as points, the legend and a popup for the region picked. */
 
-import '@winterop-com/sokkel-ui/styles.css'
+import './styles.css'
 
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
-import { BoundaryLayer } from '@winterop-com/sokkel-ui/map/BoundaryLayer'
-import { MapLegend } from '@winterop-com/sokkel-ui/map/MapLegend'
-import { MapPopup } from '@winterop-com/sokkel-ui/map/MapPopup'
-import { MapOverlay, MapView } from '@winterop-com/sokkel-ui/map/MapView'
-import { PointLayer } from '@winterop-com/sokkel-ui/map/PointLayer'
-import { sequentialScale } from '@winterop-com/sokkel-ui/map/scale'
+import { BoundaryLayer } from '@winterop-com/sokkel-ui-maps/BoundaryLayer'
+import { MapLegend } from '@winterop-com/sokkel-ui-maps/MapLegend'
+import { MapPopup } from '@winterop-com/sokkel-ui-maps/MapPopup'
+import { MapOverlay, MapView } from '@winterop-com/sokkel-ui-maps/MapView'
+import { PointLayer } from '@winterop-com/sokkel-ui-maps/PointLayer'
+import { sequentialScale } from '@winterop-com/sokkel-ui-maps/scale'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'

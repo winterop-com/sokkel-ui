@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { ItemCard } from '../../components/ItemCard'
-import { Columns } from '../../components/Layout'
-import { StatusChip } from '../../components/StatusChip'
-import { DropdownMenuItem } from '../../components/ui/dropdown-menu'
+import { ItemCard } from '@winterop-com/sokkel-ui/ItemCard'
+import { Columns } from '@winterop-com/sokkel-ui/Layout'
+import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
+import { DropdownMenuItem } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
 import { Artwork } from '../fixtures/Artwork'
 
 /**

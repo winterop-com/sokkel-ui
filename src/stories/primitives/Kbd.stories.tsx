@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Command, CornerDownLeft } from 'lucide-react'
 
-import { Kbd, KbdGroup } from '../../components/ui/kbd'
-import { Row, Stack } from '../../components/Layout'
+import { Kbd, KbdGroup } from '@winterop-com/sokkel-ui/primitives/kbd'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
 
 const meta: Meta = { title: 'Primitives/Actions/Kbd', parameters: { frame: 'column' } }

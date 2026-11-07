@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { Banner } from '../../components/Banner'
-import { CheckList } from '../../components/CheckList'
-import { ListSkeleton, Pending } from '../../components/Loading'
-import { Problem } from '../../components/Problem'
-import { Section } from '../../components/Section'
-import { Button } from '../../components/ui/button'
+import { Banner } from '@winterop-com/sokkel-ui/Banner'
+import { CheckList } from '@winterop-com/sokkel-ui/CheckList'
+import { ListSkeleton, Pending } from '@winterop-com/sokkel-ui/Loading'
+import { Problem } from '@winterop-com/sokkel-ui/Problem'
+import { Section } from '@winterop-com/sokkel-ui/Section'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 
 /** States the app tells a person about: banners for what holds, skeletons for what is coming, health checks. */
 function Ground({ children, pad = true }: { children: React.ReactNode; pad?: boolean }) {

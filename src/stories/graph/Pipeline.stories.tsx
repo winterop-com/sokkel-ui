@@ -1,13 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { PipelineGraph, type PipelineStep } from '../../components/graph/PipelineGraph'
-import { Section } from '../../components/Section'
-import type { GraphDirection } from '../../components/graph/layout'
+import { PipelineGraph, type PipelineStep } from '@winterop-com/sokkel-ui-graph/PipelineGraph'
+import { Section } from '@winterop-com/sokkel-ui/Section'
+import type { GraphDirection } from '@winterop-com/sokkel-ui-graph/layout'
 import { Editor } from './Editing'
 import { Stage } from './Frame'
 import { LARGE, NIGHTLY_EXPORT, SHORT } from './data'
-import { Stack } from '../../components/Layout'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
 
 function Pipeline({ steps, title, meta, direction }: { steps: PipelineStep[]; title: string; meta: string; direction?: GraphDirection }) {
     const [selected, setSelected] = useState<string | null>(null)

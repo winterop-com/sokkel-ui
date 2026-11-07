@@ -1,12 +1,12 @@
 import { Link2 } from 'lucide-react'
-import { Field } from '../../components/Field'
+import { Field } from '@winterop-com/sokkel-ui/Field'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { CopyButton } from '../../components/CopyButton'
-import { Segmented, type SegmentedVariant } from '../../components/Segmented'
-import { TooltipProvider } from '../../components/ui/tooltip'
-import { Columns, Row, Stack } from '../../components/Layout'
+import { CopyButton } from '@winterop-com/sokkel-ui/CopyButton'
+import { Segmented, type SegmentedVariant } from '@winterop-com/sokkel-ui/Segmented'
+import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
+import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /** The small controls a settings row or a code line carries: a segmented choice and a copy button. */
 function Ground({ children }: { children: React.ReactNode }) {

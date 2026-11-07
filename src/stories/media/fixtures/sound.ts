@@ -1,4 +1,4 @@
-import type { SoundFrame } from '../../../components/media/sound'
+import type { SoundFrame } from '@winterop-com/sokkel-ui/media/sound'
 
 const unit = (value: number) => Math.min(1, Math.max(0, value))
 const hump = (at: number, middle: number, width: number) => Math.exp(-((at - middle) ** 2) / width)

@@ -1,11 +1,11 @@
-import { StatusChip } from '../../components/StatusChip'
+import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { FolderKanban, MoreHorizontal } from 'lucide-react'
 
-import { Avatar, AvatarFallback, AvatarGroup } from '../../components/ui/avatar'
-import { Button } from '../../components/ui/button'
-import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../components/ui/card'
-import { Columns, Row, Stack } from '../../components/Layout'
+import { Avatar, AvatarFallback, AvatarGroup } from '@winterop-com/sokkel-ui/primitives/avatar'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@winterop-com/sokkel-ui/primitives/card'
+import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 const meta: Meta = { title: 'Primitives/Display/Card', parameters: { frame: 'column' } }
 export default meta

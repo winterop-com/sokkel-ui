@@ -5,7 +5,7 @@
  * every value is worked out from its step alone, so a story draws the same numbers every time, a
  * range narrows them, and a refresh moves the end on by a step.
  */
-import type { RangePreset, TimeRangeValue } from '../../components/dashboard/TimeRange'
+import type { RangePreset, TimeRangeValue } from '@winterop-com/sokkel-ui/dashboard/TimeRange'
 
 const STEP_MS = 5 * 60_000
 

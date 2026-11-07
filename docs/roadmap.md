@@ -20,6 +20,13 @@ to `plan.md` when it ships.
 - No app uses it yet. Until one does, a PR merges as soon as the local gates pass and main's CI
   catches the rest; a release still waits for green.
 
+## 0.9.0: packages
+
+- **The library splits into four packages**, released together at one version: the core
+  `@winterop-com/sokkel-ui` and an add-on per engine, `@winterop-com/sokkel-ui-charts` (ECharts),
+  `-maps` (maplibre) and `-graph` (React Flow and elk), each with its own styles. An app installs the
+  core and the add-ons it draws with. Move to `plan.md` once released.
+
 ## 0.10: example apps
 
 - **Working demo apps outside Storybook.** In `examples/`, built against the package as an app would
@@ -28,12 +35,10 @@ to `plan.md` when it ships.
 
 ## Next
 
-- **Lighter installs, then packages (not urgent).** The engines (ECharts, maplibre, React Flow,
-  CodeMirror, Mermaid) are optional peers already, and each part is imported by its own path, so an
-  app bundles only what it uses. Still installed for everyone: `shiki`, `react-markdown` with its
-  rehype and remark plugins, `ajv`, `embla`, `cmdk` and `react-day-picker`; make them optional peers
-  too. After that, if installs or styles stay too broad, split into packages, a core one and one per
-  engine (`sokkel-ui-charts`, `-maps`, `-graph`, `-editor`), each versioned and with its own styles.
+- **A lighter core install (not urgent).** Charts, maps and graphs are packages of their own from
+  0.9.0. Still installed with the core for everyone: `shiki`, `react-markdown` with its rehype and
+  remark plugins, `ajv`, `embla`, `cmdk` and `react-day-picker`; make them optional peers too, or
+  move `CodeEditor` and its CodeMirror into a `sokkel-ui-editor` package if the core stays too broad.
 - **Adoption.** Apps adopt the library one pattern per PR, each pinning a published version. The
   app adds a check in the same PR that refuses its own hand-rolled version of that pattern, so it
   cannot come back. A part an app needs to differ becomes an option here, never a local edit.

@@ -11,9 +11,9 @@ import {
     CodeBlockHeader,
     CodeBlockLine,
     CodeBlockTitle,
-} from '../../components/ui/code-block'
-import { useHighlightedCode } from '../../hooks/use-highlighted-code'
-import { Columns, Stack } from '../../components/Layout'
+} from '@winterop-com/sokkel-ui/primitives/code-block'
+import { useHighlightedCode } from '@winterop-com/sokkel-ui/hooks/use-highlighted-code'
+import { Columns, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /**
  * Code on a bordered surface: a title, actions, numbered or wrapped lines, and lines marked

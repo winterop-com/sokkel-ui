@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
 
-import { StatusChip, type Status } from '../../components/StatusChip'
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '../../components/ui/carousel'
-import { Row, Stack } from '../../components/Layout'
+import { StatusChip, type Status } from '@winterop-com/sokkel-ui/StatusChip'
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@winterop-com/sokkel-ui/primitives/carousel'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /** A row of slides that scrolls one or several at a time, with buttons either side. */
 function Caption({ children }: { children: ReactNode }) {

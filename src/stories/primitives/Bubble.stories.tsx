@@ -2,9 +2,9 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { CheckIcon, RotateCcwIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { Bubble, BubbleContent, BubbleGroup, BubbleReactions } from '../../components/ui/bubble'
-import { Message, MessageContent } from '../../components/ui/message'
-import { Row, Stack } from '../../components/Layout'
+import { Bubble, BubbleContent, BubbleGroup, BubbleReactions } from '@winterop-com/sokkel-ui/primitives/bubble'
+import { Message, MessageContent } from '@winterop-com/sokkel-ui/primitives/message'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /** The shaped surface a message's text sits on, in seven tones, either side of the column. */
 function Caption({ children }: { children: ReactNode }) {

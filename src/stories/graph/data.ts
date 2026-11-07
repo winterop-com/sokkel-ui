@@ -1,5 +1,5 @@
-import type { PipelineStep } from '../../components/graph/PipelineGraph'
-import type { RunStep } from '../../components/graph/RunGraph'
+import type { PipelineStep } from '@winterop-com/sokkel-ui-graph/PipelineGraph'
+import type { RunStep } from '@winterop-com/sokkel-ui-graph/RunGraph'
 
 /** The nightly-export job of the harbor project: fetch from two places, transform, validate, upload, notify. */
 export const NIGHTLY_EXPORT: PipelineStep[] = [

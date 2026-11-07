@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { GraphCanvas } from '../../components/graph/GraphCanvas'
-import { GraphNodeBox, graphNodeSize, type GraphNodeData } from '../../components/graph/GraphNode'
-import { measureByCharacters } from '../../components/graph/measure'
-import { useNodeGraph, type GraphItem, type GraphLink } from '../../components/graph/use-node-graph'
+import { GraphCanvas } from '@winterop-com/sokkel-ui-graph/GraphCanvas'
+import { GraphNodeBox, graphNodeSize, type GraphNodeData } from '@winterop-com/sokkel-ui-graph/GraphNode'
+import { measureByCharacters } from '@winterop-com/sokkel-ui-graph/measure'
+import { useNodeGraph, type GraphItem, type GraphLink } from '@winterop-com/sokkel-ui-graph/use-node-graph'
 import { Stage } from './Frame'
-import { Row } from '../../components/Layout'
+import { Row } from '@winterop-com/sokkel-ui/Layout'
 
 /** Every way a node box is drawn: named or not, with a kind, a status, a duration, progress, and chosen. */
 const BOXES: { data: GraphNodeData; selected?: boolean; width: number }[] = [

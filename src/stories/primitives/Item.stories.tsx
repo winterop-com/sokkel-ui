@@ -1,10 +1,10 @@
-import { StatusChip } from '../../components/StatusChip'
+import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { ChevronRight, FileText, ListChecks } from 'lucide-react'
 
-import { Badge } from '../../components/ui/badge'
-import { Button } from '../../components/ui/button'
-import { Stack } from '../../components/Layout'
+import { Badge } from '@winterop-com/sokkel-ui/primitives/badge'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
 import {
     Item,
     ItemActions,
@@ -16,7 +16,7 @@ import {
     ItemMedia,
     ItemSeparator,
     ItemTitle,
-} from '../../components/ui/item'
+} from '@winterop-com/sokkel-ui/primitives/item'
 
 const meta: Meta = { title: 'Primitives/Display/Item', parameters: { frame: 'column' } }
 export default meta

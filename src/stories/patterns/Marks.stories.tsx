@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Bell, Inbox } from 'lucide-react'
 
-import { Count } from '../../components/Count'
-import { Dot } from '../../components/Dot'
-import { Button } from '../../components/ui/button'
-import { Row, Stack } from '../../components/Layout'
+import { Count } from '@winterop-com/sokkel-ui/Count'
+import { Dot } from '@winterop-com/sokkel-ui/Dot'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /** Small marks: a count of what is waiting, and a dot for a label, a calendar or a step not started. */
 const meta: Meta = { title: 'Patterns/Marks' }

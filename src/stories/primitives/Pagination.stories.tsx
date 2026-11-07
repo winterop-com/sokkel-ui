@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { Row, Stack } from '../../components/Layout'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 import {
     Pagination,
@@ -9,7 +9,7 @@ import {
     PaginationLink,
     PaginationNext,
     PaginationPrevious,
-} from '../../components/ui/pagination'
+} from '@winterop-com/sokkel-ui/primitives/pagination'
 
 const meta: Meta = { title: 'Primitives/Navigation/Pagination', parameters: { frame: 'column' } }
 export default meta

@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { DashboardGrid, DashboardPanel } from '../../components/dashboard/DashboardGrid'
-import { ScoreTable, type ScoreColumn, type ScoreRow } from '../../components/dashboard/ScoreTable'
-import { ThresholdLegend } from '../../components/dashboard/ThresholdLegend'
-import type { Threshold } from '../../components/dashboard/thresholds'
+import { DashboardGrid, DashboardPanel } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
+import { ScoreTable, type ScoreColumn, type ScoreRow } from '@winterop-com/sokkel-ui/dashboard/ScoreTable'
+import { ThresholdLegend } from '@winterop-com/sokkel-ui/dashboard/ThresholdLegend'
+import type { Threshold } from '@winterop-com/sokkel-ui/dashboard/thresholds'
 import { JOB_MEASURES, MONTHS, SITES } from '../fixtures/scores'
 import { Ground } from './Ground'
 

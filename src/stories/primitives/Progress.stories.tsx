@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { Progress, ProgressLabel, ProgressValue } from '../../components/ui/progress'
-import { Row, Stack } from '../../components/Layout'
+import { Progress, ProgressLabel, ProgressValue } from '@winterop-com/sokkel-ui/primitives/progress'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 const meta: Meta = { title: 'Primitives/Display/Progress', parameters: { frame: 'column' } }
 export default meta

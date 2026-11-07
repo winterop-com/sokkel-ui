@@ -2,11 +2,11 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { AtSign, CircleAlert, CircleCheck, Play, Trash2, TriangleAlert } from 'lucide-react'
 import { useState } from 'react'
 
-import { ActivityList, ActivityMenu, type ActivityItem } from '../../components/ActivityList'
-import { ThemeToggle } from '../../components/ThemeToggle'
-import { AppBar } from '../../components/AppBar'
-import { TooltipProvider } from '../../components/ui/tooltip'
-import { Row, Stack } from '../../components/Layout'
+import { ActivityList, ActivityMenu, type ActivityItem } from '@winterop-com/sokkel-ui/ActivityList'
+import { ThemeToggle } from '@winterop-com/sokkel-ui/ThemeToggle'
+import { AppBar } from '@winterop-com/sokkel-ui/AppBar'
+import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { TidevannMark } from '../fixtures/TidevannMark'
 
 /**

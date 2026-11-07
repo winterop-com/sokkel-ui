@@ -13,9 +13,9 @@ import {
     AlertDialogMedia,
     AlertDialogTitle,
     AlertDialogTrigger,
-} from '../../components/ui/alert-dialog'
-import { Button } from '../../components/ui/button'
-import { Row } from '../../components/Layout'
+} from '@winterop-com/sokkel-ui/primitives/alert-dialog'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { Row } from '@winterop-com/sokkel-ui/Layout'
 
 const meta: Meta = { title: 'Primitives/Overlays/AlertDialog', parameters: { frame: 'padded' } }
 export default meta

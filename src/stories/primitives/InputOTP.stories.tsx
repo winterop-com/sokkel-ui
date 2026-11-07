@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState, type ReactNode } from 'react'
 
-import { Button } from '../../components/ui/button'
-import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '../../components/ui/input-otp'
-import { Row, Stack } from '../../components/Layout'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '@winterop-com/sokkel-ui/primitives/input-otp'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
 
 function Six({ invalid }: { invalid?: boolean }) {

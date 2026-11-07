@@ -13,7 +13,7 @@ import {
     MenubarSeparator,
     MenubarShortcut,
     MenubarTrigger,
-} from '../../components/ui/menubar'
+} from '@winterop-com/sokkel-ui/primitives/menubar'
 
 const meta: Meta = { title: 'Primitives/Menus/Menubar', parameters: { frame: 'padded' } }
 export default meta

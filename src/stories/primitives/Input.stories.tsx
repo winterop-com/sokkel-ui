@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { Card, CardContent } from '../../components/ui/card'
-import { Input } from '../../components/ui/input'
-import { Label } from '../../components/ui/label'
-import { Row, Stack } from '../../components/Layout'
+import { Card, CardContent } from '@winterop-com/sokkel-ui/primitives/card'
+import { Input } from '@winterop-com/sokkel-ui/primitives/input'
+import { Label } from '@winterop-com/sokkel-ui/primitives/label'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
 
 const meta: Meta = { title: 'Primitives/Inputs/Input', parameters: { frame: 'column' } }

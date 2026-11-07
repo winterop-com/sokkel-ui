@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Bold, Pin, WrapText } from 'lucide-react'
 
-import { Toggle } from '../../components/ui/toggle'
-import { Row, Stack } from '../../components/Layout'
+import { Toggle } from '@winterop-com/sokkel-ui/primitives/toggle'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
 
 const meta: Meta = { title: 'Primitives/Actions/Toggle', parameters: { frame: 'column' } }

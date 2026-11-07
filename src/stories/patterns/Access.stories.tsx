@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState, type ReactNode } from 'react'
 
-import { PermissionMatrix, type Grants, type MatrixGroup, type MatrixRole } from '../../components/PermissionMatrix'
-import { SaveBar } from '../../components/SaveBar'
-import { SecretReveal } from '../../components/SecretReveal'
-import { TooltipProvider } from '../../components/ui/tooltip'
-import { Stack } from '../../components/Layout'
+import { PermissionMatrix, type Grants, type MatrixGroup, type MatrixRole } from '@winterop-com/sokkel-ui/PermissionMatrix'
+import { SaveBar } from '@winterop-com/sokkel-ui/SaveBar'
+import { SecretReveal } from '@winterop-com/sokkel-ui/SecretReveal'
+import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /** The parts of an app's access screens: a secret shown once, unsaved edits, and roles against permissions. */
 function Ground({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
