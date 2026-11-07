@@ -9,6 +9,7 @@ import { useRef, useState } from 'react'
 import { AccountMenu } from '../../components/AccountMenu'
 import { CodeEditor } from '../../components/CodeEditor'
 import { DiffView } from '../../components/DiffView'
+import { InlineField } from '../../components/InlineField'
 import { Markdown, markdownHeadings } from '../../components/Markdown'
 import { Rail, type RailGroup } from '../../components/Rail'
 import { SearchField } from '../../components/SearchField'
@@ -312,16 +313,20 @@ function Compare({ chosen, against, onAgainst }: { chosen: number; against: numb
                     Version {after.number}, {after.note}
                 </h2>
                 {earlier.length > 0 && (
-                    <Row as="label" className="text-xs text-muted-foreground">
-                        Compared with
-                        <NativeSelect size="sm" value={String(against)} onChange={(event) => onAgainst(Number(event.target.value))}>
+                    <InlineField id="compare-with" label="Compared with" size="sm">
+                        <NativeSelect
+                            id="compare-with"
+                            size="sm"
+                            value={String(against)}
+                            onChange={(event) => onAgainst(Number(event.target.value))}
+                        >
                             {earlier.map((version) => (
                                 <NativeSelectOption key={version.number} value={String(version.number)}>
                                     Version {version.number}
                                 </NativeSelectOption>
                             ))}
                         </NativeSelect>
-                    </Row>
+                    </InlineField>
                 )}
             </Row>
             <DiffView before={before?.text ?? ''} after={after.text} title="nightly-export.md" size="sm" />

@@ -1,20 +1,17 @@
+import { TextField } from '../../../components/TextField'
 import { PageHeader } from '../../../components/PageHeader'
 import { PanelSection } from '../../../components/SidePanel'
 import { Box, CircleAlert, Trash2 } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 
-import { Field, describedBy } from '../../../components/Field'
 import { BlockPalette } from '../../../components/graph/BlockPalette'
 import { BlockPicker } from '../../../components/graph/BlockPicker'
 import { GraphOverlay, GraphNotice } from '../../../components/graph/GraphOverlay'
 import { GraphToolbar, GraphToolbarButton } from '../../../components/graph/GraphToolbar'
 import { PipelineGraph } from '../../../components/graph/PipelineGraph'
-import { ISSUE_EDGE } from '../../../components/IssueMark'
 import { Problem } from '../../../components/Problem'
 import { SchemaForm, useSchemaForm } from '../../../components/schema/SchemaForm'
 import type { JsonSchema } from '../../../components/schema/read'
-import { Input } from '../../../components/ui/input'
-import { cn } from '../../../lib/cn'
 import { blockOf, BLOCKS, GROUPS, type BlockSpec } from './blocks'
 import { usePipelineEditor, type Notice, type Picker, type PipelineDoc, type PipelineEditorState } from './use-editor'
 import { GroupLabel } from '../../../components/GroupLabel'
@@ -130,21 +127,18 @@ function CodeField({ editor, code }: { editor: PipelineEditorState; code: string
     const problem = editor.codeProblem(code, draft)
     const id = `step-code-${code}`
     return (
-        <Field id={id} label="Code" help="The key other steps and the pipeline file name this step by." error={problem}>
-            <Input
-                id={id}
-                value={draft}
-                className={cn('font-mono', problem !== null && ISSUE_EDGE.critical)}
-                aria-invalid={problem !== null || undefined}
-                aria-describedby={describedBy(id, { help: true, error: problem })}
-                onChange={(event) => setDraft(event.target.value)}
-                onBlur={() => editor.rename(code, draft)}
-                onKeyDown={(event) => {
-                    if (event.key === 'Enter') editor.rename(code, draft)
-                    if (event.key === 'Escape') setDraft(code)
-                }}
-            />
-        </Field>
+        <TextField
+            id={id}
+            label="Code"
+            help="The key other steps and the pipeline file name this step by."
+            error={problem}
+            mono
+            value={draft}
+            onChange={setDraft}
+            onBlur={() => editor.rename(code, draft)}
+            onEnter={() => editor.rename(code, draft)}
+            onEscape={() => setDraft(code)}
+        />
     )
 }
 
@@ -180,14 +174,14 @@ export function StepPanel({ editor }: { editor: PipelineEditorState }) {
                 <Problem title={inflow.text} detail={`${inflow.detail ?? ''} Drag from its output to this step's input.`.trim()} />
             )}
             <CodeField key={key} editor={editor} code={code} />
-            <Field id={`step-name-${code}`} label="Name" help="A title for people; the code stays the key.">
-                <Input
-                    id={`step-name-${code}`}
-                    value={step.name ?? ''}
-                    placeholder={code}
-                    onChange={(event) => editor.setName(code, event.target.value)}
-                />
-            </Field>
+            <TextField
+                id={`step-name-${code}`}
+                label="Name"
+                help="A title for people; the code stays the key."
+                value={step.name ?? ''}
+                placeholder={code}
+                onChange={(value) => editor.setName(code, value)}
+            />
             <div className="flex flex-col gap-3 border-t border-border pt-4">
                 <GroupLabel as="h3">Settings</GroupLabel>
                 <Settings

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
+import { Card, CardContent } from '../../components/ui/card'
 import { Input } from '../../components/ui/input'
 import { Label } from '../../components/ui/label'
 import { Row, Stack } from '../../components/Layout'
@@ -75,6 +76,23 @@ export const States: StoryObj = {
                 <Input aria-label="Code" placeholder="A code, such as import-orders" />
             </Specimen>
         </Row>
+    ),
+}
+
+/** No border, background or focus ring: a title typed straight onto a card, which draws the frame. */
+export const Bare: StoryObj = {
+    render: () => (
+        <Card className="max-w-md">
+            <CardContent>
+                <Input
+                    bare
+                    aria-label="Title"
+                    placeholder="Untitled"
+                    defaultValue="Why import-orders skipped validate"
+                    className="text-title font-medium"
+                />
+            </CardContent>
+        </Card>
     ),
 }
 

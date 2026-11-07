@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import { Button } from '../../components/ui/button'
+import { Card, CardContent } from '../../components/ui/card'
 import { Label } from '../../components/ui/label'
 import { Textarea } from '../../components/ui/textarea'
 import { Row, Stack } from '../../components/Layout'
@@ -41,6 +42,23 @@ export const States: StoryObj = {
                 <Textarea aria-label="Description" readOnly defaultValue="Written by the run; it cannot be changed." />
             </Specimen>
         </Row>
+    ),
+}
+
+/** No border, background or focus ring: a note written straight onto a card, which draws the frame, and grows with its text. */
+export const Bare: StoryObj = {
+    render: () => (
+        <Card className="max-w-md">
+            <CardContent>
+                <Textarea
+                    bare
+                    aria-label="Note"
+                    placeholder="Write a note"
+                    className="min-h-24 text-sm"
+                    defaultValue="The validate step skipped 14 rows of import-orders: their amounts were empty. Linus is looking at the source."
+                />
+            </CardContent>
+        </Card>
     ),
 }
 

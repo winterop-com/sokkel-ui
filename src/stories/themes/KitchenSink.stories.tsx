@@ -1,3 +1,4 @@
+import { TextField } from '../../components/TextField'
 import { CheckboxField } from '../../components/CheckboxField'
 import { IconButton } from '../../components/IconButton'
 import { Field } from '../../components/Field'
@@ -228,9 +229,7 @@ function NewRun() {
                             </SelectContent>
                         </Select>
                     </Field>
-                    <Field id="run-reason" label="Reason">
-                        <Input id="run-reason" placeholder="Why it runs now" />
-                    </Field>
+                    <TextField id="run-reason" label="Reason" placeholder="Why it runs now" />
                     <CheckboxField label="Tell ada when it finishes" checked={notify} onCheckedChange={setNotify} />
                 </Stack>
             </DialogShell>
@@ -313,9 +312,7 @@ function Schedule() {
         <Section title="Schedule" description="When nightly-export runs.">
             <Stack gap="lg">
                 <Columns min="sm" gap="md">
-                    <Field id="schedule-name" label="Name">
-                        <Input id="schedule-name" defaultValue="Nightly export" />
-                    </Field>
+                    <TextField id="schedule-name" label="Name" defaultValue="Nightly export" />
                     <Field id="schedule-project" label="Project">
                         <Select items={PROJECTS} value={project} onValueChange={(next) => next !== null && setProject(next)}>
                             <SelectTrigger id="schedule-project" className="w-full">

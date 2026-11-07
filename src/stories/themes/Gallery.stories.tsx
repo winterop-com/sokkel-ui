@@ -2,7 +2,7 @@ import { PageHeader } from '../../components/PageHeader'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { Progress } from '../../components/ui/progress'
+import { Progress, ProgressLabel, ProgressValue } from '../../components/ui/progress'
 import { cn } from '../../lib/cn'
 import { Skeleton } from '../../components/ui/skeleton'
 
@@ -121,12 +121,10 @@ function Grid({ base }: { base: ThemeSettings }) {
                         description={`${String(THEMES.length)} themes, dark and light. Press a sample to open the kitchen sink in it.`}
                     />
                     {!done && (
-                        <Row gap="md" className="mt-2 max-w-md text-xs text-muted-foreground">
-                            <Progress value={Math.round((count / total) * 100)} className="flex-1" aria-label="Drawing the themes" />
-                            <span className="shrink-0 tabular-nums">
-                                {count} of {total} drawn
-                            </span>
-                        </Row>
+                        <Progress value={Math.round((count / total) * 100)} className="mt-2 max-w-md">
+                            <ProgressLabel className="font-normal text-muted-foreground">Drawing the themes</ProgressLabel>
+                            <ProgressValue className="text-xs">{() => `${String(count)} of ${String(total)} drawn`}</ProgressValue>
+                        </Progress>
                     )}
                 </Stack>
                 <div className="grid gap-x-6 gap-y-8 lg:grid-cols-2">

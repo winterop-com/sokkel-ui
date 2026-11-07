@@ -1,3 +1,4 @@
+import { TextField } from '../../components/TextField'
 import { ChoiceList } from '../../components/ChoiceList'
 import { CheckboxField } from '../../components/CheckboxField'
 import type { Meta, StoryObj } from '@storybook/react-vite'
@@ -52,7 +53,6 @@ import { TopBar, type Crumb } from '../../components/TopBar'
 import { Avatar, AvatarFallback, AvatarGroup } from '../../components/ui/avatar'
 import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
-import { Input } from '../../components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { cn } from '../../lib/cn'
@@ -820,7 +820,7 @@ function TokenDialog({
                 />
             }
         >
-            <Field
+            <TextField
                 id="token-name"
                 label="Name"
                 hint="what uses it"
@@ -828,9 +828,10 @@ function TokenDialog({
                 error={nameError}
                 issueOpen={issueOpen === 'name'}
                 onIssueOpenChange={holdOpen('name')}
-            >
-                <Input id="token-name" className="font-mono" value={name} onChange={(event) => setName(event.target.value)} />
-            </Field>
+                mono
+                value={name}
+                onChange={(value) => setName(value)}
+            />
             <Field
                 id="token-scopes"
                 label="Scopes"

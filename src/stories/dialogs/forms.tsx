@@ -1,3 +1,4 @@
+import { TextField } from '../../components/TextField'
 import { CheckboxField, CheckboxList } from '../../components/CheckboxField'
 import { IconButton } from '../../components/IconButton'
 import { GripVertical, Trash2 } from 'lucide-react'
@@ -13,9 +14,8 @@ import { Segmented } from '../../components/Segmented'
 import { UnsavedChangesDialog, useUnsavedGuard } from '../../components/UnsavedChanges'
 import { NativeSelect, NativeSelectOption } from '../../components/ui/native-select'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '../../components/ui/sheet'
-import { Textarea } from '../../components/ui/textarea'
 import { cn } from '../../lib/cn'
-import { Behind, TextField, wait } from './parts'
+import { Behind, wait } from './parts'
 import { Row, Stack } from '../../components/Layout'
 
 const JOB: JsonSchema = {
@@ -122,14 +122,14 @@ export function UnsavedEdit() {
                 }}
             >
                 <TextField id="edit-name" label="Name" value={draft.name} onChange={(name) => setDraft({ ...draft, name })} />
-                <Field id="edit-description" label="Description">
-                    <Textarea
-                        id="edit-description"
-                        value={draft.description}
-                        onChange={(event) => setDraft({ ...draft, description: event.target.value })}
-                        rows={3}
-                    />
-                </Field>
+                <TextField
+                    id="edit-description"
+                    label="Description"
+                    multiline
+                    value={draft.description}
+                    onChange={(value) => setDraft({ ...draft, description: value })}
+                    rows={3}
+                />
                 <TextField
                     id="edit-timeout"
                     label="Timeout"
@@ -243,14 +243,14 @@ export function DetailsSheet() {
                     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
                         <div className="flex flex-1 flex-col gap-4 p-4">
                             <TextField id="sheet-name" label="Name" value={draft.name} onChange={(name) => setDraft({ ...draft, name })} />
-                            <Field id="sheet-description" label="Description">
-                                <Textarea
-                                    id="sheet-description"
-                                    rows={3}
-                                    value={draft.description}
-                                    onChange={(event) => setDraft({ ...draft, description: event.target.value })}
-                                />
-                            </Field>
+                            <TextField
+                                id="sheet-description"
+                                label="Description"
+                                multiline
+                                rows={3}
+                                value={draft.description}
+                                onChange={(value) => setDraft({ ...draft, description: value })}
+                            />
                             <Field id="sheet-owner" label="Owner">
                                 <NativeSelect
                                     id="sheet-owner"

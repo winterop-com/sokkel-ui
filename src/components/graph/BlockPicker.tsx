@@ -5,6 +5,7 @@ import { cn } from '../../lib/cn'
 import { BlockRow } from './BlockPalette'
 import { groupBlocks, type BlockGroup, type PipelineBlock } from './blocks'
 import { GroupLabel } from '../GroupLabel'
+import { Input } from '../ui/input'
 
 /** The words a block picker says. */
 export interface BlockPickerWords {
@@ -83,7 +84,8 @@ export function BlockPicker({
             {title !== undefined && <p className="shrink-0 truncate px-3 pt-2.5 text-xs font-medium text-muted-foreground">{title}</p>}
             <label className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2">
                 <Search className="size-4 shrink-0 text-faint" aria-hidden />
-                <input
+                <Input
+                    bare
                     autoFocus
                     role="combobox"
                     aria-expanded
@@ -97,7 +99,7 @@ export function BlockPicker({
                         setActive(0)
                     }}
                     onKeyDown={onKeyDown}
-                    className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-faint"
+                    className="flex-1 text-sm placeholder:text-faint"
                 />
             </label>
             <div id={`${base}-list`} role="listbox" aria-label={words.search} className="min-h-0 flex-1 overflow-y-auto p-1">

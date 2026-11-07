@@ -28,6 +28,7 @@ import { AccountMenu } from '../../components/AccountMenu'
 import { AddressInput, type Address } from '../../components/AddressInput'
 import { Composer } from '../../components/Composer'
 import { DialogShell } from '../../components/DialogShell'
+import { InlineField } from '../../components/InlineField'
 import { Markdown } from '../../components/Markdown'
 import { MessageRow, type MessageLabel } from '../../components/MessageRow'
 import { Rail, type RailEntry, type RailGroup } from '../../components/Rail'
@@ -46,6 +47,8 @@ import {
 import { Avatar, AvatarFallback } from '../../components/ui/avatar'
 import { Button } from '../../components/ui/button'
 import { Checkbox } from '../../components/ui/checkbox'
+import { Input } from '../../components/ui/input'
+import { Textarea } from '../../components/ui/textarea'
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '../../components/ui/empty'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { cn } from '../../lib/cn'
@@ -703,19 +706,15 @@ function ComposeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
             <Stack gap="none">
                 <AddressInput label="To" bare value={to} onChange={setTo} className="border-b border-border" />
                 <AddressInput label="Cc" bare value={cc} onChange={setCc} className="border-b border-border" />
-                <Row as="label" gap="none" className="h-(--density-control) min-h-9 border-b border-border text-sm">
-                    <span className="shrink-0 pr-1.5 pl-1 text-muted-foreground">Subject</span>
-                    <input
-                        value={subject}
-                        onChange={(event) => setSubject(event.target.value)}
-                        className="h-full min-w-0 flex-1 bg-transparent px-1 outline-none"
-                    />
-                </Row>
-                <textarea
+                <InlineField id="compose-subject" label="Subject" className="border-b border-border">
+                    <Input bare id="compose-subject" value={subject} onChange={(event) => setSubject(event.target.value)} />
+                </InlineField>
+                <Textarea
+                    bare
                     value={body}
                     onChange={(event) => setBody(event.target.value)}
                     aria-label="Message"
-                    className="min-h-56 resize-none bg-transparent px-1 py-3 text-sm leading-relaxed outline-none"
+                    className="min-h-56 px-1 py-3 text-sm leading-relaxed"
                 />
                 {files.length > 0 && (
                     <Row align="stretch" wrap className="pb-1">

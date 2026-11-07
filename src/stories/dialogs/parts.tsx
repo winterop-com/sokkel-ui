@@ -1,13 +1,9 @@
 import { PageHeader } from '../../components/PageHeader'
 import type { ReactNode } from 'react'
 
-import { Field } from '../../components/Field'
-import { ISSUE_EDGE, worst, type Issue } from '../../components/IssueMark'
 import { type DataColumn, DataTable } from '../../components/DataTable'
 import { StatusChip, type Status } from '../../components/StatusChip'
 import { Button } from '../../components/ui/button'
-import { Input } from '../../components/ui/input'
-import { cn } from '../../lib/cn'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { TopBar } from '../../components/TopBar'
 import { Stack } from '../../components/Layout'
@@ -81,74 +77,6 @@ export function Behind({ action, onAction, children }: { action?: string; onActi
                 </main>
             )}
         </Stack>
-    )
-}
-
-/**
- * A labeled input in the library's `Field`, which draws its issues as the mark at the input's end,
- * so the dialog keeps its height. `issueOpen` lets the footer's count open the mark.
- */
-export function TextField({
-    id,
-    label,
-    value,
-    onChange,
-    issues = [],
-    issueOpen,
-    onIssueOpenChange,
-    hint,
-    required,
-    mono = false,
-    type,
-    placeholder,
-    autoFocus,
-    onEnter,
-    onBlur,
-}: {
-    id: string
-    label: string
-    value: string
-    onChange: (value: string) => void
-    issues?: readonly Issue[]
-    issueOpen?: boolean
-    onIssueOpenChange?: (open: boolean) => void
-    hint?: string
-    required?: boolean
-    mono?: boolean
-    type?: string
-    placeholder?: string
-    autoFocus?: boolean
-    onEnter?: () => void
-    onBlur?: () => void
-}) {
-    const tone = worst(issues)
-    return (
-        <Field
-            id={id}
-            label={label}
-            hint={hint}
-            required={required}
-            issues={issues}
-            issueOpen={issueOpen}
-            onIssueOpenChange={onIssueOpenChange}
-        >
-            <Input
-                id={id}
-                type={type}
-                value={value}
-                placeholder={placeholder}
-                autoFocus={autoFocus}
-                spellCheck={mono ? false : undefined}
-                autoComplete="off"
-                aria-invalid={tone === 'critical' || undefined}
-                onChange={(event) => onChange(event.target.value)}
-                onBlur={onBlur}
-                onKeyDown={(event) => {
-                    if (event.key === 'Enter' && onEnter !== undefined) onEnter()
-                }}
-                className={cn(mono && 'font-mono', tone !== null && ISSUE_EDGE[tone])}
-            />
-        </Field>
     )
 }
 
