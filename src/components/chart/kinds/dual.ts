@@ -54,7 +54,7 @@ export const dual: ChartBuilder = (spec, look) => {
                       yAxisIndex: 0,
                       barCategoryGap: '28%',
                       barMaxWidth: 32,
-                      itemStyle: { color, borderRadius: [2, 2, 0, 0] },
+                      itemStyle: { color, borderRadius: [look.corner, look.corner, 0, 0] },
                   }
                 : {
                       type: 'line',

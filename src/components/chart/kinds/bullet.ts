@@ -120,7 +120,7 @@ export const bullet: ChartBuilder = (spec, look) => {
                 z: 3,
                 barWidth: '26%',
                 barMaxWidth: 16,
-                itemStyle: { color: tone, borderRadius: sideways ? [0, 2, 2, 0] : [2, 2, 0, 0] },
+                itemStyle: { color: tone, borderRadius: sideways ? [0, look.corner, look.corner, 0] : [look.corner, look.corner, 0, 0] },
                 data: values,
             },
             ...(spec.value === undefined

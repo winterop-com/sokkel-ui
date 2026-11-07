@@ -68,7 +68,7 @@ export const histogram: ChartBuilder = (spec, look) => {
                     color: overlaid ? withAlpha(color, 0.45) : color,
                     borderColor: overlaid ? color : look.card,
                     borderWidth: overlaid || spec.stack !== undefined ? 1 : 0,
-                    borderRadius: spec.stack === undefined || index === series.length - 1 ? [2, 2, 0, 0] : 0,
+                    borderRadius: spec.stack === undefined || index === series.length - 1 ? [look.corner, look.corner, 0, 0] : 0,
                 },
             }
         }),
