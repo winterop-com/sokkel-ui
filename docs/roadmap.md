@@ -27,10 +27,9 @@ reaches them all. Done in waves, one PR each.
   Stack, Row, Columns, Split and Fill; about 45 hand-built places use the component that already
   drew them; and the parts the stories built in two or more places are library components. Parts
   built in only one place stay in their story until a second place needs them.
-- **Raw layout rejected.** Move the stories' last hand-written flex and grid onto the layout
-  components, then `src/rules.test.ts` rejects raw layout in a story, so a layout fix lands once.
-- **The graph editor's node menu** as a real menu, opened at the pointer: `DropdownMenuContent`
-  takes an `anchor` now.
+- **Raw layout rejected: done.** Every story lays out with the layout components, and
+  `src/rules.test.ts` rejects a layout container built by hand in a story, so a layout fix lands once.
+  The graph editor's node menu is the library's menu, opened at the pointer.
 - **Dark contrast for every theme: done.** Paper, tokyo, vinyl, cassette and neon take default's
   0.4.0 lift in their own colors: secondary and faint text, borders and inputs at least as light as
   default's, cards a step up and popovers above them. Contrast was already past that lift.
@@ -39,6 +38,10 @@ reaches them all. Done in waves, one PR each.
 
 ## Next
 
+- **A sound visualizer.** A live picture of what is playing (bars, a wave, a ring), drawn from the
+  player's own audio element and sitting beside `MediaBar`, `TrackList` and the album views, with
+  stories in the music app. The `bar-visualizer` primitive reads only a microphone stream today; the
+  visualizer reads any playing media, holds still when paused, and has a static frame for stories.
 - **Many more charts, and a charts app.** More chart kinds on ECharts, and an Apps story where the
   rows of a `DataTable` can be shown as chart views the user picks (bars, lines, a breakdown, a
   map of where), each view a saved choice of columns, so data is explored rather than only listed.
