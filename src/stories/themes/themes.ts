@@ -1,4 +1,11 @@
 import candidates from '../../../.storybook/candidates.json'
+
+/** A theme written by scripts/import-candidates.ts, judged beside the library's own before it is adopted. */
+interface Candidate {
+    value: string
+    title: string
+    app: string
+}
 import tokens from '../../../tokens/tokens.json'
 import type { ThemeOption, ThemeSettings } from '../../components/ThemePicker'
 
@@ -7,7 +14,7 @@ const title = (name: string) => name.charAt(0).toUpperCase() + name.slice(1)
 /** Every theme the toolbar offers: the library's own, then the candidates, which answer on the whole document only. */
 export const THEMES: ThemeOption[] = [
     ...Object.keys(tokens.themes).map((name) => ({ value: name, label: title(name), swatch: true })),
-    ...candidates.map((entry) => ({ value: entry.value, label: entry.title, note: `${entry.app}, candidate` })),
+    ...(candidates as Candidate[]).map((entry) => ({ value: entry.value, label: entry.title, note: `${entry.app}, candidate` })),
 ]
 
 export const CORNERS: ThemeOption[] = [

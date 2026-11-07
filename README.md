@@ -47,8 +47,8 @@ The Storybook is published at **https://winterop-com.github.io/sokkel-ui/**.
 ## Storybook
 
 `bun run storybook` serves the stories on port 6106. The toolbar sets the scheme, the theme, the
-density, the corner radius and the typeface. The theme menu also lists candidate themes for
-judging before one is adopted into the tokens (`bun scripts/import-candidates.ts`).
+density, the corner radius and the typeface. A theme from an app can be judged there before it is
+adopted into the tokens: `bun scripts/import-candidates.ts` lists it in the theme menu as a candidate.
 
 Every story is held to its approved screenshot in dark and light, at desktop and phone width.
 The screenshots are Linux renders taken in the Playwright image, as CI checks them:
