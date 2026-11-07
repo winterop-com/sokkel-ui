@@ -25,7 +25,9 @@ jobs:
             - run: npm install -g bun
             - run: bun install --frozen-lockfile
             - run: bun run build-storybook
+            - run: touch /tmp/started
             - run: bunx playwright test e2e/stories.spec.ts --update-snapshots
+            - run: scripts/compress-screenshots.sh /tmp/started
             - name: Commit the baselines
               run: |
                   git config --global --add safe.directory "$GITHUB_WORKSPACE"
