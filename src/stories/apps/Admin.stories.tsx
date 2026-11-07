@@ -1,3 +1,5 @@
+import { ChoiceList } from '../../components/ChoiceList'
+import { CheckboxField } from '../../components/CheckboxField'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import {
     Ban,
@@ -50,9 +52,7 @@ import { TopBar, type Crumb } from '../../components/TopBar'
 import { Avatar, AvatarFallback, AvatarGroup } from '../../components/ui/avatar'
 import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
-import { Checkbox } from '../../components/ui/checkbox'
 import { Input } from '../../components/ui/input'
-import { RadioGroup, RadioGroupItem } from '../../components/ui/radio-group'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { cn } from '../../lib/cn'
@@ -274,23 +274,16 @@ function RoleChoice({ id, label, value, onChange }: { id: string; label: string;
             <span id={id} className="text-sm font-medium">
                 {label}
             </span>
-            <RadioGroup aria-labelledby={id} value={value} onValueChange={(next) => onChange(next as Role)} className="gap-0">
-                {ROLE_IDS.filter((role) => role !== 'owner').map((role) => (
-                    <label
-                        key={role}
-                        className={cn(
-                            'flex cursor-pointer items-start gap-3 rounded-control px-2 py-2 hover:bg-secondary/60',
-                            value === role && 'bg-secondary',
-                        )}
-                    >
-                        <RadioGroupItem value={role} className="mt-0.5" />
-                        <Stack as="span" gap="none">
-                            <span className="text-sm font-medium">{ROLE_LABEL[role]}</span>
-                            <span className="text-xs text-muted-foreground">{ROLE_ABOUT[role]}</span>
-                        </Stack>
-                    </label>
-                ))}
-            </RadioGroup>
+            <ChoiceList
+                labelledBy={id}
+                value={value}
+                onValueChange={onChange}
+                choices={ROLE_IDS.filter((role) => role !== 'owner').map((role) => ({
+                    value: role,
+                    label: ROLE_LABEL[role],
+                    description: ROLE_ABOUT[role],
+                }))}
+            />
         </Stack>
     )
 }
@@ -849,19 +842,13 @@ function TokenDialog({
             >
                 <Stack id="token-scopes" role="group" aria-label="Scopes" gap="none">
                     {SCOPES.map((scope) => (
-                        <label
+                        <CheckboxField
                             key={scope.id}
-                            className="flex cursor-pointer items-center gap-3 rounded-control px-2 py-1.5 hover:bg-secondary/60"
-                        >
-                            <Checkbox
-                                checked={scopes.includes(scope.id)}
-                                onCheckedChange={(next) =>
-                                    setScopes(next ? [...scopes, scope.id] : scopes.filter((one) => one !== scope.id))
-                                }
-                            />
-                            <span className="w-28 shrink-0 font-mono text-sm">{scope.id}</span>
-                            <span className="min-w-0 truncate text-xs text-muted-foreground">{scope.about}</span>
-                        </label>
+                            label={<span className="font-mono">{scope.id}</span>}
+                            description={scope.about}
+                            checked={scopes.includes(scope.id)}
+                            onCheckedChange={(next) => setScopes(next ? [...scopes, scope.id] : scopes.filter((one) => one !== scope.id))}
+                        />
                     ))}
                 </Stack>
             </Field>

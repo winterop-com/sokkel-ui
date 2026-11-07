@@ -1,3 +1,4 @@
+import { CheckboxField } from '../../components/CheckboxField'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { format } from 'date-fns'
 import {
@@ -34,7 +35,6 @@ import { ThemeToggle } from '../../components/ThemeToggle'
 import { Timeline } from '../../components/Timeline'
 import { TopBar } from '../../components/TopBar'
 import { Button } from '../../components/ui/button'
-import { Checkbox } from '../../components/ui/checkbox'
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
@@ -462,10 +462,11 @@ function ItemPanel({ item, onToggle }: { item: Item; onToggle: (index: number) =
                     <Stack as="ul" gap="none" className="-mx-1">
                         {item.checklist.map((step, index) => (
                             <li key={step.text}>
-                                <label className="flex min-h-8 items-center gap-2.5 rounded-md px-1 text-sm hover:bg-secondary/60">
-                                    <Checkbox checked={step.done} onCheckedChange={() => onToggle(index)} />
-                                    <span className={cn(step.done && 'text-muted-foreground line-through')}>{step.text}</span>
-                                </label>
+                                <CheckboxField
+                                    label={<span className={cn(step.done && 'text-muted-foreground line-through')}>{step.text}</span>}
+                                    checked={step.done}
+                                    onCheckedChange={() => onToggle(index)}
+                                />
                             </li>
                         ))}
                     </Stack>
