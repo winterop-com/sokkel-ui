@@ -11,10 +11,22 @@ GitHub Packages by the tag workflow, and apps pin that version. The heavy engine
 and elk, Mermaid, CodeMirror) and the Geist fonts are optional peer dependencies: an app installs
 one only when it uses its part, and the README lists which part needs which.
 
+The package carries the library alone: `dist/`, the component, hook and helper sources beside it,
+the styles and the tokens, with no stories, story fixtures or tests. `styles.css` is Tailwind
+source that scans only the components, hooks and helpers, so an app's CSS carries none of the
+stories' classes; every app runs Tailwind 4.1 or later itself. Storybook gets the stories' classes
+from its own entry, `.storybook/storybook.css`, which adds them as a source.
+
 `examples/` consumes the package as an app does: `examples/web` is a small Tidevann app that
 installs it from the repository root and imports only its public entry points, and the Electron and
 Tauri shells in `examples/electron` and `examples/tauri` load that app's build. The examples
 workflow builds all three, so a break in the package fails a check rather than an app.
+
+`examples/sizes` holds the size budget: a forms page, a dashboard and a map page, each built against
+the package in CI and measured gzipped (the JavaScript at start, what loads later, the CSS). A check
+fails when one grows past its budget in `examples/sizes/budget.json` or bundles an engine it does not
+use, so a forms page never carries ECharts, maplibre, React Flow, CodeMirror or Mermaid. A change
+that grows an app on purpose raises its budget in the same PR.
 
 ## Typefaces
 

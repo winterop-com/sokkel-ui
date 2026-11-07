@@ -3,8 +3,8 @@
 Apps that consume `@winterop-com/sokkel-ui` exactly as an app does: they install the package and
 import only its public entry points (`@winterop-com/sokkel-ui/<Component>`,
 `@winterop-com/sokkel-ui/primitives/<name>`, `@winterop-com/sokkel-ui/styles.css`). None copies a
-component or reaches into `src/`. `.github/workflows/examples.yaml` builds all three on every pull
-request.
+component or reaches into `src/`. `.github/workflows/examples.yaml` builds the web app and its two
+shells on every pull request that touches them; the size apps are built by `ci.yaml` on every one.
 
 Every example needs the library built first, from the repository root:
 
@@ -56,4 +56,24 @@ bun install
 bun run check     # builds the web example, then runs cargo check in src-tauri
 bun run dev       # opens the window
 bun run build     # a release binary, without installers
+```
+
+## sizes
+
+Three small Tidevann apps that hold the library to a size budget: `forms` (a settings page and a
+dialog with a schema form, and no engine), `dashboard` (stat and chart panels on ECharts, the range
+controls and a table) and `map` (regions and sites on maplibre with a legend and a popup).
+`scripts/size-budget.ts` builds each with Vite against the built package and measures it gzipped:
+the JavaScript loaded with the page (`start`), what a dynamic import fetches later (`lazy`) and the
+CSS. It fails when one grows past its budget in `sizes/budget.json`, or bundles an engine (ECharts,
+maplibre, React Flow, CodeMirror, Mermaid) its budget does not list. CI runs it after building the
+library.
+
+The apps have no install of their own: they import the package by its name from inside the
+repository, which resolves through the package's own `exports` to `dist/`, as an installed copy
+does. A change that makes an app bigger on purpose raises that app's budget in the same PR.
+
+```sh
+bun run build
+bun run size      # typecheck the apps, build them and compare each with its budget
 ```

@@ -8,7 +8,11 @@
 @import './motion.css';
 @import './typography.css';
 
-@source '../';
+/* The classes of what an app imports: the components, hooks and helpers, never their tests or the stories. */
+@source '../components';
+@source '../hooks';
+@source '../lib';
+@source not '../**/*.test.*';
 
 @layer base {
     * {
