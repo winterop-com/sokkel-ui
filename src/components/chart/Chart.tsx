@@ -1,4 +1,4 @@
-import { useMemo, type Ref } from 'react'
+import { useMemo, useState, type Ref } from 'react'
 
 import { pivot } from './data'
 import { EChart, type ChartHandle } from './EChart'
@@ -6,6 +6,21 @@ import { KINDS, type ChartKind, type ChartKindDef, type ChartSpec } from './kind
 import { legendColor } from './kinds/spec'
 import type { LegendItem } from './ChartLegend'
 import { SERIES_ORDER, type ChartLook } from './look'
+
+/**
+ * The value from an earlier render while every field holds the same, so an object spread afresh on
+ * each render keeps one identity until a field changes.
+ */
+function useSteady<T extends object>(value: T): T {
+    const [kept, keep] = useState(value)
+    const fields = Object.entries(value)
+    const same =
+        fields.length === Object.keys(kept).length &&
+        fields.every(([key, field]) => Object.is((kept as Record<string, unknown>)[key], field))
+    if (same) return kept
+    keep(value)
+    return value
+}
 
 /**
  * A chart drawn from rows: `kind` names how, and the spec's fields say which columns it reads, as
@@ -34,15 +49,8 @@ export function Chart({
     animate?: boolean
     className?: string
 }) {
-    const { rows, x, y, series, value, aggregate, stack, horizontal, order, seriesOrder, colors, format, unit, smooth } = spec
-    const option = useMemo(
-        () => (look: ChartLook) =>
-            KINDS[kind].build(
-                { rows, x, y, series, value, aggregate, stack, horizontal, order, seriesOrder, colors, format, unit, smooth },
-                look,
-            ),
-        [kind, rows, x, y, series, value, aggregate, stack, horizontal, order, seriesOrder, colors, format, unit, smooth],
-    )
+    const steady = useSteady(spec)
+    const option = useMemo(() => (look: ChartLook) => KINDS[kind].build(steady, look), [kind, steady])
     return (
         <EChart option={option} label={label} hidden={hidden} hovered={hovered} handle={handle} animate={animate} className={className} />
     )
