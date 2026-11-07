@@ -13,7 +13,7 @@ import { Page, Shell } from '../components/Shell'
 import { StatusChip, type Status } from '../components/StatusChip'
 import { Button } from '../components/ui/button'
 import { TidevannMark } from './fixtures/TidevannMark'
-import { Columns, Row } from '../components/Layout'
+import { Columns, Row, Split } from '../components/Layout'
 
 /**
  * A job's overview page in the three ways a page can be divided, drawn with the shell and
@@ -116,28 +116,40 @@ function Overview({ layout }: { layout: 'flat' | 'boxed' | 'hybrid' }) {
                 <Section variant="boxed" title="Graph" actions={tool} flush>
                     <Graph />
                 </Section>
-                <div className="grid gap-(--density-page-gap) lg:grid-cols-[2fr_1fr]">
+                <Split
+                    align="stretch"
+                    width="third"
+                    gap="page"
+                    aside={
+                        <Section variant="boxed" title="Details">
+                            <Facts />
+                        </Section>
+                    }
+                >
                     <Section variant="boxed" title="Recent runs" meta="3">
                         <RunsList />
                     </Section>
-                    <Section variant="boxed" title="Details">
-                        <Facts />
-                    </Section>
-                </div>
+                </Split>
             </>
         ) : layout === 'flat' ? (
             <>
                 <Section title="Graph" actions={tool}>
                     <Graph />
                 </Section>
-                <div className="grid gap-(--density-page-gap) lg:grid-cols-[2fr_1fr]">
+                <Split
+                    align="stretch"
+                    width="third"
+                    gap="page"
+                    aside={
+                        <Section title="Details">
+                            <Facts />
+                        </Section>
+                    }
+                >
                     <Section title="Recent runs" meta="3">
                         <RunsList />
                     </Section>
-                    <Section title="Details">
-                        <Facts />
-                    </Section>
-                </div>
+                </Split>
             </>
         ) : (
             <>
@@ -146,14 +158,20 @@ function Overview({ layout }: { layout: 'flat' | 'boxed' | 'hybrid' }) {
                         <Graph />
                     </Surface>
                 </Section>
-                <div className="grid gap-(--density-page-gap) lg:grid-cols-[2fr_1fr]">
+                <Split
+                    align="stretch"
+                    width="third"
+                    gap="page"
+                    aside={
+                        <Section title="Details">
+                            <Facts />
+                        </Section>
+                    }
+                >
                     <Section title="Recent runs" meta="3">
                         <RunsList />
                     </Section>
-                    <Section title="Details">
-                        <Facts />
-                    </Section>
-                </div>
+                </Split>
             </>
         )
     return (

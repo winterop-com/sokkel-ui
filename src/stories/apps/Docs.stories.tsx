@@ -27,7 +27,7 @@ import { NativeSelect, NativeSelectOption } from '../../components/ui/native-sel
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { cn } from '../../lib/cn'
 import { TidevannMark } from '../fixtures/TidevannMark'
-import { Columns, Row } from '../../components/Layout'
+import { Columns, Row, Stack } from '../../components/Layout'
 import { GroupLabel } from '../../components/GroupLabel'
 
 /**
@@ -254,7 +254,7 @@ function Reading({ content }: { content: string }) {
             <article ref={article} className="max-w-3xl min-w-0 flex-1">
                 <Markdown content={content} anchors />
             </article>
-            <TableOfContents entries={headings} active={active} className="sticky top-0 hidden w-52 shrink-0 self-start xl:flex" />
+            <TableOfContents entries={headings} active={active} className="sticky top-0 w-52 shrink-0 self-start max-xl:hidden" />
         </Row>
     )
 }
@@ -274,7 +274,7 @@ function Editing({ value, onChange }: { value: string; onChange: (value: string)
 
 function Versions({ chosen, onChoose }: { chosen: number; onChoose: (number: number) => void }) {
     return (
-        <ol className="flex flex-col overflow-hidden rounded-surface border border-border-strong bg-card">
+        <Stack as="ol" gap="none" className="overflow-hidden rounded-surface border border-border-strong bg-card">
             {VERSIONS.map((version) => (
                 <li key={version.number} className="border-b border-border last:border-b-0">
                     <button
@@ -282,24 +282,26 @@ function Versions({ chosen, onChoose }: { chosen: number; onChoose: (number: num
                         aria-current={version.number === chosen || undefined}
                         onClick={() => onChoose(version.number)}
                         className={cn(
-                            'flex w-full items-start gap-3 px-3 py-2.5 text-left outline-none hover:bg-secondary/60 focus-visible:bg-secondary',
+                            'w-full px-3 py-2.5 text-left outline-none hover:bg-secondary/60 focus-visible:bg-secondary',
                             version.number === chosen && 'bg-secondary',
                         )}
                     >
-                        <Person name={version.by} />
-                        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                            <Row as="span" align="baseline">
-                                <span className="truncate text-sm font-medium">{version.note}</span>
-                                {version.number === CURRENT.number && <Badge variant="secondary">Current</Badge>}
-                            </Row>
-                            <span className="truncate text-xs text-muted-foreground">
-                                Version {version.number}, {version.by}, {version.at}
-                            </span>
-                        </span>
+                        <Row as="span" gap="md" align="start">
+                            <Person name={version.by} />
+                            <Stack as="span" gap="3xs" className="flex-1">
+                                <Row as="span" align="baseline">
+                                    <span className="truncate text-sm font-medium">{version.note}</span>
+                                    {version.number === CURRENT.number && <Badge variant="secondary">Current</Badge>}
+                                </Row>
+                                <span className="truncate text-xs text-muted-foreground">
+                                    Version {version.number}, {version.by}, {version.at}
+                                </span>
+                            </Stack>
+                        </Row>
                     </button>
                 </li>
             ))}
-        </ol>
+        </Stack>
     )
 }
 
@@ -308,8 +310,8 @@ function Compare({ chosen, against, onAgainst }: { chosen: number; against: numb
     const before = VERSIONS.find((version) => version.number === against)
     const earlier = VERSIONS.filter((version) => version.number < chosen)
     return (
-        <section className="flex min-w-0 flex-1 flex-col gap-3">
-            <Row gap="none" wrap className="gap-x-3 gap-y-2">
+        <Stack as="section" className="flex-1">
+            <Row gap="md" rowGap="sm" wrap>
                 <h2 className="min-w-0 flex-1 truncate text-sm font-medium">
                     Version {after.number}, {after.note}
                 </h2>
@@ -331,7 +333,7 @@ function Compare({ chosen, against, onAgainst }: { chosen: number; against: numb
                 )}
             </Row>
             <DiffView before={before?.text ?? ''} after={after.text} title="nightly-export.md" size="sm" />
-        </section>
+        </Stack>
     )
 }
 
@@ -401,10 +403,11 @@ function DocsApp({ mode: initialMode = 'read' }: { mode?: 'read' | 'edit' | 'his
                             defaultOpen={['runbooks', 'projects']}
                         />
                     </SubNav>
-                    <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
-                        <div
+                    <Stack gap="none" className="min-h-0 flex-1 overflow-y-auto">
+                        <Stack
+                            gap="lg"
                             className={cn(
-                                'flex w-full flex-col gap-5 px-(--density-page-inset) pt-(--density-page-top) pb-10',
+                                'w-full px-(--density-page-inset) pt-(--density-page-top) pb-10',
                                 mode === 'edit' && 'min-h-0 flex-1 pb-(--density-page-inset)',
                                 mode === 'read' && 'max-w-[68rem]',
                             )}
@@ -452,8 +455,8 @@ function DocsApp({ mode: initialMode = 'read' }: { mode?: 'read' | 'edit' | 'his
                             {mode === 'read' && <Reading content={CURRENT.text} />}
                             {mode === 'edit' && <Editing value={draft} onChange={setDraft} />}
                             {mode === 'history' && (
-                                <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
-                                    <div className="flex w-full shrink-0 flex-col gap-2 lg:w-80">
+                                <Row gap="lg" align="start" stackBelow="lg">
+                                    <Stack gap="sm" className="w-full shrink-0 lg:w-80">
                                         <GroupLabel as="h2">{VERSIONS.length} versions</GroupLabel>
                                         <Versions
                                             chosen={chosen}
@@ -462,12 +465,12 @@ function DocsApp({ mode: initialMode = 'read' }: { mode?: 'read' | 'edit' | 'his
                                                 setAgainst(number - 1)
                                             }}
                                         />
-                                    </div>
+                                    </Stack>
                                     <Compare chosen={chosen} against={against} onAgainst={setAgainst} />
-                                </div>
+                                </Row>
                             )}
-                        </div>
-                    </div>
+                        </Stack>
+                    </Stack>
                 </Row>
             </Shell>
         </TooltipProvider>

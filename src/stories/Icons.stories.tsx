@@ -6,6 +6,7 @@ import { useMemo, useState } from 'react'
 
 import { SearchField } from '../components/SearchField'
 import { Segmented } from '../components/Segmented'
+import { Columns, Stack } from '../components/Layout'
 import { cn } from '../lib/cn'
 import { Toolbar } from '../components/Toolbar'
 
@@ -107,7 +108,7 @@ function Gallery({ start = 'library', query: initial = '' }: { start?: 'library'
                     </EmptyHeader>
                 </Empty>
             ) : (
-                <ul className="grid grid-cols-[repeat(auto-fill,minmax(7.5rem,1fr))] gap-2">
+                <Columns as="ul" count="fill" min="xs" gap="sm">
                     {shown.map((name) => {
                         const Icon = ALL[name]
                         return (
@@ -117,19 +118,21 @@ function Gallery({ start = 'library', query: initial = '' }: { start?: 'library'
                                     title={`Copy import { ${name} } from 'lucide-react'`}
                                     onClick={() => copy(name)}
                                     className={cn(
-                                        'flex h-24 w-full flex-col items-center justify-center gap-2.5 rounded-lg border border-border bg-card px-2 text-card-foreground outline-none hover:border-border-strong hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50',
+                                        'h-24 w-full rounded-lg border border-border bg-card px-2 text-card-foreground outline-none hover:border-border-strong hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50',
                                         copied === name && 'border-primary/60',
                                     )}
                                 >
-                                    <Icon style={{ width: Number(size), height: Number(size) }} aria-hidden />
-                                    <span className="w-full truncate text-center font-mono text-xs text-muted-foreground">
-                                        {copied === name ? 'Copied' : name}
-                                    </span>
+                                    <Stack as="span" gap="sm" align="center" justify="center" className="h-full">
+                                        <Icon style={{ width: Number(size), height: Number(size) }} aria-hidden />
+                                        <span className="w-full truncate text-center font-mono text-xs text-muted-foreground">
+                                            {copied === name ? 'Copied' : name}
+                                        </span>
+                                    </Stack>
                                 </button>
                             </li>
                         )
                     })}
-                </ul>
+                </Columns>
             )}
         </>
     )

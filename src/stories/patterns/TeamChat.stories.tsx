@@ -305,11 +305,11 @@ export const DayDividers: StoryObj = {
     name: 'Day dividers',
     render: () => (
         <TooltipProvider>
-            <div className="flex h-svh flex-col-reverse overflow-y-auto bg-background text-foreground">
+            <Stack gap="none" reverse className="h-svh overflow-y-auto bg-background text-foreground">
                 <div className="pb-4">
                     <Days />
                 </div>
-            </div>
+            </Stack>
         </TooltipProvider>
     ),
 }

@@ -8,7 +8,7 @@ import { SearchField } from '../../components/SearchField'
 import { StatusChip, type Status } from '../../components/StatusChip'
 import { Button } from '../../components/ui/button'
 import { TidevannMark } from '../fixtures/TidevannMark'
-import { Row, Stack } from '../../components/Layout'
+import { Center, Row, Stack } from '../../components/Layout'
 
 /**
  * The same small piece of Tidevann every gallery tile shows a theme with: a heading, buttons, a
@@ -56,9 +56,9 @@ function ThemeSample() {
         <div className="min-h-svh bg-background p-3 text-foreground">
             <Stack className="mx-auto w-full max-w-2xl">
                 <Row>
-                    <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
+                    <Center as="span" className="size-7 shrink-0 rounded-md bg-primary text-primary-foreground">
                         <TidevannMark />
-                    </span>
+                    </Center>
                     <div className="min-w-0">
                         <h1 className="truncate text-sm font-semibold">Tidevann</h1>
                         <p className="truncate text-xs text-muted-foreground">harbor, 248 runs today</p>

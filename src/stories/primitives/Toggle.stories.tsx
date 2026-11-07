@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Bold, Pin, WrapText } from 'lucide-react'
 
 import { Toggle } from '../../components/ui/toggle'
-import { Row } from '../../components/Layout'
+import { Row, Stack } from '../../components/Layout'
 import { Specimen } from '../fixtures/Specimen'
 
 const meta: Meta = { title: 'Primitives/Actions/Toggle', parameters: { frame: 'column' } }
@@ -64,7 +64,7 @@ export const States: StoryObj = {
 
 export const LogToolbar: StoryObj = {
     render: () => (
-        <div className="flex flex-col overflow-hidden rounded-lg border border-border">
+        <Stack gap="none" className="overflow-hidden rounded-lg border border-border">
             <Row justify="between" wrap className="border-b border-border px-3 py-2">
                 <p className="text-sm font-medium">Log for run 01a1a5c2</p>
                 <Row gap="2xs" align="stretch" wrap>
@@ -83,6 +83,6 @@ export const LogToolbar: StoryObj = {
 2026-11-04 14:02:11 fetch    GET https://api.example.org/v1/orders?month=2026-10
 2026-11-04 14:02:11 fetch    failed after 0.3s: connection refused`}
             </pre>
-        </div>
+        </Stack>
     ),
 }

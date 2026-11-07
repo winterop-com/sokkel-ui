@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from '../../components/ui/field'
+import { Field, FieldContent, FieldDescription, FieldLabel } from '../../components/ui/field'
 import { Switch } from '../../components/ui/switch'
 import { Row, Stack } from '../../components/Layout'
 import { Specimen } from '../fixtures/Specimen'
@@ -64,7 +64,7 @@ export const JobSchedules: StoryObj = {
     render: () => (
         <Stack className="max-w-lg">
             <p className="text-sm font-medium">Schedules and webhooks of sync-inventory</p>
-            <FieldGroup className="gap-0 divide-y divide-border rounded-lg border border-border">
+            <Stack gap="none" className="divide-y divide-border rounded-lg border border-border">
                 {SCHEDULES.map((schedule) => (
                     <Field key={schedule.code} orientation="horizontal" className="px-3 py-3">
                         <FieldContent>
@@ -76,7 +76,7 @@ export const JobSchedules: StoryObj = {
                         <Switch id={`s-${schedule.code}`} defaultChecked={schedule.on} />
                     </Field>
                 ))}
-            </FieldGroup>
+            </Stack>
         </Stack>
     ),
 }

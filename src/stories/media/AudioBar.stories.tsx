@@ -50,7 +50,7 @@ function Player({ startPlaying, queue = false }: { startPlaying: boolean; queue?
     return (
         <Row gap="none" align="stretch" justify="center" className="min-h-svh bg-background text-foreground">
             <Stack gap="none" className="min-h-svh w-full">
-                <div className="flex flex-1 flex-col justify-end p-4">
+                <Stack gap="none" justify="end" className="flex-1 p-4">
                     {queueOpen && (
                         <section className="ml-auto w-full max-w-sm rounded-surface border border-border-strong bg-popover text-popover-foreground shadow-md">
                             <PaneHeader title="Up next" />
@@ -73,7 +73,7 @@ function Player({ startPlaying, queue = false }: { startPlaying: boolean; queue?
                             />
                         </section>
                     )}
-                </div>
+                </Stack>
                 <MediaBar
                     title={track.title}
                     subtitle={<MetaLine inline items={[track.artist, track.album]} />}

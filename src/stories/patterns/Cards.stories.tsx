@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
 import { ItemCard } from '../../components/ItemCard'
+import { Columns } from '../../components/Layout'
 import { StatusChip } from '../../components/StatusChip'
 import { DropdownMenuItem } from '../../components/ui/dropdown-menu'
 import { Artwork } from '../fixtures/Artwork'
@@ -11,7 +12,11 @@ import { Artwork } from '../fixtures/Artwork'
  * cards to choose one from, and cards with artwork on top.
  */
 function Ground({ children }: { children: React.ReactNode }) {
-    return <div className="grid grid-cols-[repeat(auto-fill,minmax(min(18rem,100%),1fr))] gap-4">{children}</div>
+    return (
+        <Columns count="fill" min="lg" gap="lg">
+            {children}
+        </Columns>
+    )
 }
 
 const MENU = (

@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import { ChartFrame } from '../../components/chart/ChartFrame'
 import { EChart } from '../../components/chart/EChart'
+import { Columns } from '../../components/Layout'
 import { Ground } from './Ground'
 import { gauge } from './options'
 
@@ -30,7 +31,7 @@ const GAUGES = [
 export const Thresholds: StoryObj = {
     render: () => (
         <Ground title="Health, now" columns={1}>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <Columns count={3} min="md" gap="md">
                 {GAUGES.map((entry) => (
                     <ChartFrame
                         key={entry.title}
@@ -41,7 +42,7 @@ export const Thresholds: StoryObj = {
                         {(state) => <EChart option={entry.option} label={entry.title} {...state} />}
                     </ChartFrame>
                 ))}
-            </div>
+            </Columns>
         </Ground>
     ),
 }

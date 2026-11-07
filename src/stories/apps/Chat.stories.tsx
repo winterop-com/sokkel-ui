@@ -28,7 +28,7 @@ import { TooltipProvider } from '../../components/ui/tooltip'
 import { HARBOR_DUSK } from '../fixtures/photos'
 import { ModelPicker } from '../fixtures/models'
 import { TidevannMark } from '../fixtures/TidevannMark'
-import { Stack } from '../../components/Layout'
+import { Columns, Stack } from '../../components/Layout'
 
 /**
  * An assistant app in the library's frame: conversations in the rail, the exchange in a reading
@@ -182,15 +182,17 @@ function Start() {
                 <EmptyDescription>Ask about a job, a run or a service in harbor.</EmptyDescription>
             </EmptyHeader>
             <EmptyContent className="max-w-xl">
-                <ItemGroup className="grid gap-2 sm:grid-cols-2">
-                    {SUGGESTIONS.map((suggestion) => (
-                        <Item key={suggestion.title} variant="outline" size="sm" render={<a href="#" />} role="listitem">
-                            <ItemContent>
-                                <ItemTitle>{suggestion.title}</ItemTitle>
-                                <ItemDescription>{suggestion.detail}</ItemDescription>
-                            </ItemContent>
-                        </Item>
-                    ))}
+                <ItemGroup>
+                    <Columns gap="sm">
+                        {SUGGESTIONS.map((suggestion) => (
+                            <Item key={suggestion.title} variant="outline" size="sm" render={<a href="#" />} role="listitem">
+                                <ItemContent>
+                                    <ItemTitle>{suggestion.title}</ItemTitle>
+                                    <ItemDescription>{suggestion.detail}</ItemDescription>
+                                </ItemContent>
+                            </Item>
+                        ))}
+                    </Columns>
                 </ItemGroup>
             </EmptyContent>
         </Empty>
@@ -442,7 +444,9 @@ function ChatApp({
             >
                 <Stack gap="none" className="h-full min-h-0">
                     {scroll ? (
-                        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">{children}</div>
+                        <Stack gap="none" className="min-h-0 flex-1 overflow-y-auto">
+                            {children}
+                        </Stack>
                     ) : (
                         <div className="min-h-0 flex-1">{children}</div>
                     )}

@@ -7,7 +7,7 @@ import { LogView, type LogLine } from '../../components/LogView'
 import { Section } from '../../components/Section'
 import { Sparkline, Stat } from '../../components/Stat'
 import { Timeline } from '../../components/Timeline'
-import { Stack } from '../../components/Layout'
+import { Columns, Stack } from '../../components/Layout'
 
 /** The ways a record's facts are shown: terms and values, numbers, events, logs, JSON and diffs. */
 function Ground({ children }: { children: React.ReactNode }) {
@@ -53,7 +53,7 @@ const FAILURES = [6.1, 5.4, 7.2, 4.9, 4.1, 4.4, 3.8, 3.2, 3.9, 3.1, 2.7, 2.9, 2.
 function Numbers() {
     return (
         <Ground>
-            <div className="grid grid-cols-2 gap-6 rounded-surface border border-border-strong bg-card p-5 md:grid-cols-4">
+            <Columns count={4} min="xs" gap="xl" className="rounded-surface border border-border-strong bg-card p-5">
                 <Stat
                     label="Runs today"
                     value="302"
@@ -73,7 +73,7 @@ function Numbers() {
                 />
                 <Stat label="Median duration" value="4.2" unit="s" change="+0.6s" good={false} note="p50, last 24 hours" />
                 <Stat label="Jobs" value="18" note="3 paused" />
-            </div>
+            </Columns>
         </Ground>
     )
 }

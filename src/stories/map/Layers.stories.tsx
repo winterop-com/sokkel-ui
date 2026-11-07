@@ -5,6 +5,7 @@ import { useState } from 'react'
 
 import { BASEMAPS, SCHEME_BASEMAPS, resolveBasemap, type Basemap, type SchemeBasemaps } from '../../components/map/basemap'
 import { BoundaryLayer } from '../../components/map/BoundaryLayer'
+import { Row, Stack } from '../../components/Layout'
 import type { LngLat } from '../../components/map/geometry'
 import { GridLayer, gridValueAt } from '../../components/map/GridLayer'
 import { MapLayerList } from '../../components/map/MapLayerList'
@@ -46,11 +47,11 @@ function Rainfall() {
     const value = reading === null ? null : gridValueAt(grid, reading)
     const drawn = resolveBasemap(basemap, dark)
     return (
-        <div className="flex min-h-svh flex-col gap-3 bg-background p-4 text-foreground md:h-svh md:flex-row md:gap-4 md:p-6">
+        <Row gap="lg" align="stretch" stackBelow="md" className="min-h-svh bg-background p-4 text-foreground md:h-svh md:p-6">
             <div className="md:hidden">
                 <PageHeader title="Rainfall" description="Monthly totals, 2025" />
             </div>
-            <aside className="order-2 flex shrink-0 flex-col gap-2 md:order-1 md:w-72 md:overflow-y-auto">
+            <Stack as="aside" gap="sm" className="order-2 shrink-0 md:order-1 md:w-72 md:overflow-y-auto">
                 <div className="hidden md:block">
                     <PageHeader title="Rainfall" description="Monthly totals, 2025" />
                 </div>
@@ -86,8 +87,8 @@ function Rainfall() {
                         onOpacityChange: setBasemapOpacity,
                     }}
                 />
-            </aside>
-            <div className="order-1 flex h-[34rem] flex-col gap-3 md:order-2 md:h-auto md:min-h-0 md:flex-1">
+            </Stack>
+            <Stack className="order-1 h-[34rem] md:order-2 md:h-auto md:min-h-0 md:flex-1">
                 <MapView
                     label="Monthly rainfall"
                     basemap={basemap}
@@ -133,8 +134,8 @@ function Rainfall() {
                     )}
                 </MapView>
                 <PeriodSlider label="Rainfall month" periods={MONTHS} value={month} onValueChange={setMonth} />
-            </div>
-        </div>
+            </Stack>
+        </Row>
     )
 }
 

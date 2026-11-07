@@ -127,11 +127,11 @@ function Grid({ base }: { base: ThemeSettings }) {
                         </Progress>
                     )}
                 </Stack>
-                <div className="grid gap-x-6 gap-y-8 lg:grid-cols-2">
+                <Columns count={2} min="xl" gap="xl" rowGap="2xl">
                     {THEMES.map((theme) => (
                         <Tile key={theme.value} theme={theme} base={base} onDrawn={onDrawn} />
                     ))}
-                </div>
+                </Columns>
             </Stack>
         </div>
     )
