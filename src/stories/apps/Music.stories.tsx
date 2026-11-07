@@ -213,11 +213,11 @@ const WATCHED: Record<string, number> = { e1: 1, e2: 0.42 }
 function SeriesPage() {
     return (
         <Page>
-            <PageHeader title={FILM.series} count={`${String(EPISODES.length)} episodes`} />
-            <p className="-mt-2 max-w-prose text-sm text-muted-foreground">
-                A year along a northern coast, from the first light over the water to the last ferry of the evening. By {FILM.by},{' '}
-                {String(FILM.year)}.
-            </p>
+            <PageHeader
+                title={FILM.series}
+                count={`${String(EPISODES.length)} episodes`}
+                description={`A year along a northern coast, from the first light over the water to the last ferry of the evening. By ${FILM.by}, ${String(FILM.year)}.`}
+            />
             <MediaGrid shape="wide" label={`${FILM.series}, episodes`}>
                 {EPISODES.map((episode) => (
                     <MediaCard

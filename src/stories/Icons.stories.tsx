@@ -1,3 +1,4 @@
+import { PageHeader } from '../components/PageHeader'
 import { Empty, EmptyHeader, EmptyTitle } from '../components/ui/empty'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { icons, type LucideIcon } from 'lucide-react'
@@ -6,7 +7,7 @@ import { useMemo, useState } from 'react'
 import { SearchField } from '../components/SearchField'
 import { Segmented } from '../components/Segmented'
 import { cn } from '../lib/cn'
-import { Row, Stack } from '../components/Layout'
+import { Row } from '../components/Layout'
 
 /**
  * The one icon set: Lucide, from `lucide-react`. Every icon in the library and its stories comes
@@ -72,13 +73,17 @@ function Gallery({ start = 'library', query: initial = '' }: { start?: 'library'
     }
     return (
         <>
-            <Stack as="header" gap="2xs" className="mb-4">
-                <h1 className="text-page font-medium">Icons</h1>
-                <p className="text-sm text-muted-foreground">
-                    Lucide, from <span className="font-mono">lucide-react</span>. {USED.length} are used in the library, of{' '}
-                    {EVERY.length.toLocaleString('en-US')}.
-                </p>
-            </Stack>
+            <div className="mb-4">
+                <PageHeader
+                    title="Icons"
+                    description={
+                        <>
+                            Lucide, from <span className="font-mono">lucide-react</span>. {USED.length} are used in the library, of{' '}
+                            {EVERY.length.toLocaleString('en-US')}.
+                        </>
+                    }
+                />
+            </div>
             <Row gap="md" wrap className="mb-4">
                 <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-72" />
                 <Segmented

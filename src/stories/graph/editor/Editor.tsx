@@ -1,3 +1,4 @@
+import { PageHeader } from '../../../components/PageHeader'
 import { PanelSection } from '../../../components/SidePanel'
 import { Box, CircleAlert, Trash2 } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
@@ -246,10 +247,7 @@ function EditorStage({
 }) {
     return (
         <div className="flex h-svh flex-col gap-3 bg-background p-4 text-foreground max-md:h-auto max-md:min-h-svh md:p-6">
-            <header>
-                <h1 className="text-page font-medium">{title}</h1>
-                <p className="text-sm text-muted-foreground">{meta}</p>
-            </header>
+            <PageHeader title={title} description={meta} />
             <div className="flex min-h-0 flex-1 gap-4 max-md:flex-col">
                 {palette}
                 <div className="flex min-h-0 min-w-0 flex-1 max-md:order-first max-md:h-[65svh] max-md:flex-none">{children}</div>
