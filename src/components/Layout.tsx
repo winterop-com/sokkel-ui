@@ -3,7 +3,8 @@ import type { HTMLAttributes, ReactNode } from 'react'
 import { cn } from '../lib/cn'
 
 /**
- * The gaps a layout puts between its cells, smallest to largest. `page` is the density's gap
+ * The gaps a layout puts between its cells, smallest to largest. A gap that falls between two steps
+ * takes the smaller one, keeping the library's density. `page` is the density's gap
  * between a page's sections, `section` its gap between a section's head and body, and `inspector`
  * its gap between a list and its inspector, so all three tighten with compact density.
  */
