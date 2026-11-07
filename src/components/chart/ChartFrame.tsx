@@ -147,9 +147,10 @@ export function ChartFrame({
                 className,
             )}
         >
+            {/* The actions move under the title when the two do not fit on one line. */}
             {head && (
-                <header className="flex h-8 shrink-0 items-center gap-1 pr-1.5 pl-3">
-                    <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                <header className="flex min-h-8 shrink-0 flex-wrap items-center gap-1 pr-1.5 pl-3">
+                    <div className="flex min-h-8 min-w-0 grow basis-40 items-center gap-1.5">
                         {title !== undefined && <h3 className="truncate text-xs font-medium">{title}</h3>}
                         {info !== undefined && (
                             <Tooltip>
@@ -161,7 +162,7 @@ export function ChartFrame({
                         )}
                         {subtitle !== undefined && <span className="truncate text-xs text-muted-foreground">{subtitle}</span>}
                     </div>
-                    {actions}
+                    {actions !== undefined && <div className="ml-auto flex items-center gap-1">{actions}</div>}
                     <div className="flex items-center transition-opacity group-focus-within/frame:opacity-100 group-hover/frame:opacity-100 [@media(hover:hover)]:opacity-0">
                         {exportable && (
                             <DropdownMenu>
