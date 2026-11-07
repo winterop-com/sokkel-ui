@@ -1,0 +1,29 @@
+import type { Meta, StoryObj } from '@storybook/react-vite'
+import { FileJson, FileSpreadsheet } from 'lucide-react'
+import { useState } from 'react'
+
+import { AttachmentList, type AttachmentFile } from '../../components/AttachmentList'
+import { HARBOR_DUSK } from '../fixtures/photos'
+
+const meta: Meta = { title: 'Patterns/Attachment list', parameters: { frame: 'column' } }
+export default meta
+
+const FILES: AttachmentFile[] = [
+    { id: 'orders', name: 'orders-2026-10.csv', detail: 'CSV, 2.1 MB', icon: <FileSpreadsheet aria-hidden /> },
+    { id: 'config', name: 'nightly-export.yaml', detail: 'YAML, 0.6 KB' },
+    { id: 'schema', name: 'import-orders.schema.json', detail: 'JSON, 3.4 KB', icon: <FileJson aria-hidden /> },
+    { id: 'shot', name: 'rejections.png', detail: 'PNG, 184 KB', image: HARBOR_DUSK },
+]
+
+/** The files of a letter, wrapping onto a second line when the row runs out of room. */
+export const Files: StoryObj = {
+    render: () => <AttachmentList files={FILES} />,
+}
+
+/** Files waiting to be sent, each with a remove button. */
+export const Removable: StoryObj = {
+    render: function Render() {
+        const [files, setFiles] = useState(FILES.slice(0, 3))
+        return <AttachmentList files={files} onRemove={(id) => setFiles((current) => current.filter((file) => file.id !== id))} />
+    },
+}
