@@ -107,12 +107,12 @@ export function PersonAvatar({
         image !== undefined ? <img src={image} alt={label} className="size-full object-cover" /> : <span aria-label={label}>{letters}</span>
     if (presence === undefined)
         return (
-            <span title={label} className={cn(badge, className)}>
+            <span data-slot="avatar" title={label} className={cn(badge, className)}>
                 {content}
             </span>
         )
     return (
-        <span title={label} className={cn('relative inline-flex shrink-0', fit.box, corner, className)}>
+        <span data-slot="avatar" title={label} className={cn('relative inline-flex shrink-0', fit.box, corner, className)}>
             <span className={cn(badge, 'size-full')}>{content}</span>
             <PresenceDot presence={presence} label={words.presence[presence]} className={cn('absolute', fit.dot)} />
         </span>

@@ -1,3 +1,4 @@
+import { PageHeader } from '../../components/PageHeader'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Keyboard, Palette, Search as SearchIcon, Server, Settings2, User } from 'lucide-react'
 import { useState } from 'react'
@@ -381,7 +382,7 @@ function SettingsApp({ opening }: { opening?: Opening }) {
                 />
                 <main className="min-h-0 flex-1 overflow-y-auto">
                     <Stack gap="xl" className="mx-auto max-w-3xl px-4 py-6">
-                        <h1 className="text-page font-semibold">Settings</h1>
+                        <PageHeader title="Settings" />
                         <Section title="Appearance">
                             <Stack gap="lg">
                                 <Stack gap="xs" className="w-full max-w-80">

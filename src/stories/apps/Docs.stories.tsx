@@ -1,3 +1,4 @@
+import { Toggle } from '../../components/ui/toggle'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { BookOpen, FolderTree, History as HistoryIcon, LayoutDashboard, Pencil, Play, Plus, Settings } from 'lucide-react'
 import { useRef, useState } from 'react'
@@ -429,15 +430,14 @@ function DocsApp({ mode: initialMode = 'read' }: { mode?: 'read' | 'edit' | 'his
                                         </>
                                     ) : (
                                         <>
-                                            <Button
-                                                variant={mode === 'history' ? 'secondary' : 'ghost'}
+                                            <Toggle
                                                 size="sm"
-                                                aria-pressed={mode === 'history'}
-                                                onClick={() => setMode(mode === 'history' ? 'read' : 'history')}
+                                                pressed={mode === 'history'}
+                                                onPressedChange={(pressed) => setMode(pressed ? 'history' : 'read')}
                                             >
                                                 <HistoryIcon aria-hidden />
                                                 History
-                                            </Button>
+                                            </Toggle>
                                             <Button variant="outline" size="sm" onClick={() => setMode('edit')}>
                                                 <Pencil aria-hidden />
                                                 Edit
