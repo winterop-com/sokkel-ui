@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Loader2, MoreHorizontal, Play, Plus, RotateCcw, Trash2 } from 'lucide-react'
 
-import { Button } from '../../components/ui/button'
-import { Row, Stack } from '../../components/Layout'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
 
 const VARIANTS = ['default', 'outline', 'secondary', 'ghost', 'destructive', 'link'] as const

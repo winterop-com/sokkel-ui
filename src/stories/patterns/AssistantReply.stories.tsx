@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState, type ReactNode } from 'react'
 
-import { AssistantReply, type AssistantReplyLayout } from '../../components/AssistantReply'
-import type { ConfirmState } from '../../components/ConfirmCard'
-import type { ToolCallEntry } from '../../components/ToolCall'
-import { TooltipProvider } from '../../components/ui/tooltip'
+import { AssistantReply, type AssistantReplyLayout } from '@winterop-com/sokkel-ui/AssistantReply'
+import type { ConfirmState } from '@winterop-com/sokkel-ui/ConfirmCard'
+import type { ToolCallEntry } from '@winterop-com/sokkel-ui/ToolCall'
+import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { TidevannMark } from '../fixtures/TidevannMark'
-import { Stack } from '../../components/Layout'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /**
  * The assistant's side of a turn: who speaks, the tools it called folded behind one line, the

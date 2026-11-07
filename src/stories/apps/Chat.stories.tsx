@@ -1,21 +1,21 @@
-import { IconButton } from '../../components/IconButton'
+import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Bell, FileSpreadsheet, Folder, MessageSquare, PenSquare, Search } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
-import { AccountMenu } from '../../components/AccountMenu'
-import { AssistantReply, type AssistantReplyLayout } from '../../components/AssistantReply'
-import { AttachmentList } from '../../components/AttachmentList'
-import { Composer, type ComposerAttachment } from '../../components/Composer'
-import type { ConfirmState } from '../../components/ConfirmCard'
-import { Rail, type RailGroup } from '../../components/Rail'
-import { Shell } from '../../components/Shell'
-import type { ToolCallEntry } from '../../components/ToolCall'
-import { TopBar } from '../../components/TopBar'
-import { Bubble, BubbleContent } from '../../components/ui/bubble'
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '../../components/ui/empty'
-import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from '../../components/ui/item'
-import { Message, MessageContent } from '../../components/ui/message'
+import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
+import { AssistantReply, type AssistantReplyLayout } from '@winterop-com/sokkel-ui/AssistantReply'
+import { AttachmentList } from '@winterop-com/sokkel-ui/AttachmentList'
+import { Composer, type ComposerAttachment } from '@winterop-com/sokkel-ui/Composer'
+import type { ConfirmState } from '@winterop-com/sokkel-ui/ConfirmCard'
+import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
+import { Shell } from '@winterop-com/sokkel-ui/Shell'
+import type { ToolCallEntry } from '@winterop-com/sokkel-ui/ToolCall'
+import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
+import { Bubble, BubbleContent } from '@winterop-com/sokkel-ui/primitives/bubble'
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@winterop-com/sokkel-ui/primitives/empty'
+import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from '@winterop-com/sokkel-ui/primitives/item'
+import { Message, MessageContent } from '@winterop-com/sokkel-ui/primitives/message'
 import {
     MessageScroller,
     MessageScrollerButton,
@@ -23,13 +23,13 @@ import {
     MessageScrollerItem,
     MessageScrollerProvider,
     MessageScrollerViewport,
-} from '../../components/ui/message-scroller'
-import { TooltipProvider } from '../../components/ui/tooltip'
+} from '@winterop-com/sokkel-ui/primitives/message-scroller'
+import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { HARBOR_DUSK } from '../fixtures/photos'
 import { ModelPicker } from '../fixtures/models'
 import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
-import { Columns, Stack } from '../../components/Layout'
+import { Columns, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /**
  * An assistant app in the library's frame: conversations in the rail, the exchange in a reading

@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { AppBar } from '../../components/AppBar'
-import { type DataColumn, DataTable } from '../../components/DataTable'
-import { LoadingBar, LoadingOverlay, PageProgress } from '../../components/Loaders'
-import { StatusChip, type Status } from '../../components/StatusChip'
-import { Button } from '../../components/ui/button'
-import { Row, Stack } from '../../components/Layout'
+import { AppBar } from '@winterop-com/sokkel-ui/AppBar'
+import { type DataColumn, DataTable } from '@winterop-com/sokkel-ui/DataTable'
+import { LoadingBar, LoadingOverlay, PageProgress } from '@winterop-com/sokkel-ui/Loaders'
+import { StatusChip, type Status } from '@winterop-com/sokkel-ui/StatusChip'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /**
  * Waits that take a while: a bar with known or unknown progress, the bar along the top of a page

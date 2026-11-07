@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { IOCard } from '../../components/schema/IOCard'
-import { SchemaView } from '../../components/schema/SchemaView'
-import { StatusChip } from '../../components/StatusChip'
-import { DropdownMenuItem } from '../../components/ui/dropdown-menu'
-import type { JsonSchema } from '../../components/schema/read'
-import { Section } from '../../components/Section'
-import { Stack } from '../../components/Layout'
+import { IOCard } from '@winterop-com/sokkel-ui/schema/IOCard'
+import { SchemaView } from '@winterop-com/sokkel-ui/schema/SchemaView'
+import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
+import { DropdownMenuItem } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
+import type { JsonSchema } from '@winterop-com/sokkel-ui/schema/read'
+import { Section } from '@winterop-com/sokkel-ui/Section'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /**
  * JSON Schemas read as field lists: a job's settings with defaults and rules, and an order with

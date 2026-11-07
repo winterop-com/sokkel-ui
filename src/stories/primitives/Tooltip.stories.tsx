@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Pause, Play, RotateCcw } from 'lucide-react'
 
-import { Button } from '../../components/ui/button'
-import { Kbd } from '../../components/ui/kbd'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../components/ui/tooltip'
-import { Row } from '../../components/Layout'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { Kbd } from '@winterop-com/sokkel-ui/primitives/kbd'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@winterop-com/sokkel-ui/primitives/tooltip'
+import { Row } from '@winterop-com/sokkel-ui/Layout'
 
 const meta: Meta = { title: 'Primitives/Overlays/Tooltip', parameters: { frame: 'padded' } }
 export default meta

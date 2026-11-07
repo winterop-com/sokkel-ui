@@ -1,14 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { AppBar } from '../../components/AppBar'
-import { Stack } from '../../components/Layout'
-import { PageHeader } from '../../components/PageHeader'
-import { Page } from '../../components/Shell'
-import { ThemeToggle } from '../../components/ThemeToggle'
-import { TopBar } from '../../components/TopBar'
-import { Button } from '../../components/ui/button'
-import { TooltipProvider } from '../../components/ui/tooltip'
+import { AppBar } from '@winterop-com/sokkel-ui/AppBar'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
+import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
+import { Page } from '@winterop-com/sokkel-ui/Shell'
+import { ThemeToggle } from '@winterop-com/sokkel-ui/ThemeToggle'
+import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { TidevannMark } from '../fixtures/TidevannMark'
 
 const meta: Meta = { title: 'Patterns/App bar' }

@@ -1,13 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { Code } from '../../components/Code'
-import { ConfirmCard, type ConfirmState } from '../../components/ConfirmCard'
-import { Markdown } from '../../components/Markdown'
-import { MermaidDiagram } from '../../components/MermaidDiagram'
-import { ToolCalls, type ToolCallEntry } from '../../components/ToolCall'
-import { TooltipProvider } from '../../components/ui/tooltip'
-import { Stack } from '../../components/Layout'
+import { Code } from '@winterop-com/sokkel-ui/Code'
+import { ConfirmCard, type ConfirmState } from '@winterop-com/sokkel-ui/ConfirmCard'
+import { Markdown } from '@winterop-com/sokkel-ui/Markdown'
+import { MermaidDiagram } from '@winterop-com/sokkel-ui/MermaidDiagram'
+import { ToolCalls, type ToolCallEntry } from '@winterop-com/sokkel-ui/ToolCall'
+import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /**
  * The pieces an assistant's answer is made of: markdown with code and diagrams, the tools it

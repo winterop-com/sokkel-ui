@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { DayAgenda as DayAgendaPart } from '../../components/calendar/DayAgenda'
-import { DayStrip as DayStripPart } from '../../components/calendar/DayStrip'
-import { weekOf, type CalendarEvent } from '../../components/calendar/events'
-import { MiniMonth as MiniMonthPart } from '../../components/calendar/MiniMonth'
-import { MonthGrid as MonthGridPart } from '../../components/calendar/MonthGrid'
-import { WeekGrid as WeekGridPart } from '../../components/calendar/WeekGrid'
+import { DayAgenda as DayAgendaPart } from '@winterop-com/sokkel-ui/calendar/DayAgenda'
+import { DayStrip as DayStripPart } from '@winterop-com/sokkel-ui/calendar/DayStrip'
+import { weekOf, type CalendarEvent } from '@winterop-com/sokkel-ui/calendar/events'
+import { MiniMonth as MiniMonthPart } from '@winterop-com/sokkel-ui/calendar/MiniMonth'
+import { MonthGrid as MonthGridPart } from '@winterop-com/sokkel-ui/calendar/MonthGrid'
+import { WeekGrid as WeekGridPart } from '@winterop-com/sokkel-ui/calendar/WeekGrid'
 
 /** The parts of a calendar: a mini month, the week's grid, the month's grid, and a day as a list. */
 const meta: Meta = { title: 'Patterns/Calendar' }

@@ -1,14 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Play, RotateCcw } from 'lucide-react'
 
-import { DescriptionList } from '../../components/DescriptionList'
-import { Columns, Fill, Row, Split, Stack } from '../../components/Layout'
-import { PageHeader } from '../../components/PageHeader'
-import { Section } from '../../components/Section'
-import { Page } from '../../components/Shell'
-import { Stat } from '../../components/Stat'
-import { StatusChip, type Status } from '../../components/StatusChip'
-import { Button } from '../../components/ui/button'
+import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
+import { Columns, Fill, Row, Split, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
+import { Section } from '@winterop-com/sokkel-ui/Section'
+import { Page } from '@winterop-com/sokkel-ui/Shell'
+import { Stat } from '@winterop-com/sokkel-ui/Stat'
+import { StatusChip, type Status } from '@winterop-com/sokkel-ui/StatusChip'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 
 /**
  * The parts that arrange other parts: `Stack` one under the other, `Row` side by side, `Columns`

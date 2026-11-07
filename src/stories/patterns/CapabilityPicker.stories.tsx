@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Database, FileText, Filter, Globe, Mail, ShieldCheck, Table2, Upload, Webhook } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
-import { CapabilityPicker, type Capability, type PickerItem } from '../../components/CapabilityPicker'
-import { Stack } from '../../components/Layout'
+import { CapabilityPicker, type Capability, type PickerItem } from '@winterop-com/sokkel-ui/CapabilityPicker'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /**
  * Picking one block for a pipeline step from a catalog, by searching and by what each block can

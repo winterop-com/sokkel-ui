@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { AspectRatio } from '../../components/ui/aspect-ratio'
-import { Columns, Row, Stack } from '../../components/Layout'
+import { AspectRatio } from '@winterop-com/sokkel-ui/primitives/aspect-ratio'
+import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 const meta: Meta = { title: 'Primitives/Display/AspectRatio', parameters: { frame: 'column' } }
 export default meta

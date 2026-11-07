@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { BotIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { Message, MessageAvatar, MessageContent } from '../../components/ui/message'
-import { Row, Stack } from '../../components/Layout'
+import { Message, MessageAvatar, MessageContent } from '@winterop-com/sokkel-ui/primitives/message'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import {
     Questionnaire,
     QuestionnaireActions,
@@ -20,7 +20,7 @@ import {
     QuestionnaireSkip,
     QuestionnaireSubmit,
     QuestionnaireTitle,
-} from '../../components/ui/questionnaire'
+} from '@winterop-com/sokkel-ui/primitives/questionnaire'
 
 /**
  * Questions an assistant asks back, one at a time: a single choice, several choices, or a typed

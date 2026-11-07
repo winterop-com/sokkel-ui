@@ -2,9 +2,9 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { BotIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { Bubble, BubbleContent } from '../../components/ui/bubble'
-import { Message, MessageAvatar, MessageContent, MessageFooter } from '../../components/ui/message'
-import { Row, Stack } from '../../components/Layout'
+import { Bubble, BubbleContent } from '@winterop-com/sokkel-ui/primitives/bubble'
+import { Message, MessageAvatar, MessageContent, MessageFooter } from '@winterop-com/sokkel-ui/primitives/message'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import {
     MessageScroller,
     MessageScrollerButton,
@@ -12,7 +12,7 @@ import {
     MessageScrollerItem,
     MessageScrollerProvider,
     MessageScrollerViewport,
-} from '../../components/ui/message-scroller'
+} from '@winterop-com/sokkel-ui/primitives/message-scroller'
 
 /**
  * The scrolling column a conversation lives in. It opens at the end, and a button appears to

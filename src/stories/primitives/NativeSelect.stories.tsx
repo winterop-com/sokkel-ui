@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { Field, FieldDescription, FieldLabel } from '../../components/ui/field'
-import { NativeSelect, NativeSelectOptGroup, NativeSelectOption } from '../../components/ui/native-select'
-import { Row } from '../../components/Layout'
+import { Field, FieldDescription, FieldLabel } from '@winterop-com/sokkel-ui/primitives/field'
+import { NativeSelect, NativeSelectOptGroup, NativeSelectOption } from '@winterop-com/sokkel-ui/primitives/native-select'
+import { Row } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
 
 function States3(props: React.ComponentProps<typeof NativeSelect>) {

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { Row, Stack } from '../../components/Layout'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
 
 import {
@@ -17,7 +17,7 @@ import {
     ComboboxSeparator,
     ComboboxValue,
     useComboboxAnchor,
-} from '../../components/ui/combobox'
+} from '@winterop-com/sokkel-ui/primitives/combobox'
 
 const JOBS = ['import-orders', 'nightly-export', 'sync-inventory', 'rebuild-index', 'send-digest', 'archive-logs']
 

@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { Stack } from '../../components/Layout'
-import { SettingRow } from '../../components/SettingRow'
-import { SliderField } from '../../components/SliderField'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
+import { SettingRow } from '@winterop-com/sokkel-ui/SettingRow'
+import { SliderField } from '@winterop-com/sokkel-ui/SliderField'
 
 const meta: Meta = { title: 'Primitives/Inputs/Slider field', parameters: { frame: 'column' } }
 export default meta

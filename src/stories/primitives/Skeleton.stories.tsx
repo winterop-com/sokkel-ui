@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { Skeleton } from '../../components/ui/skeleton'
-import { Row, Stack } from '../../components/Layout'
+import { Skeleton } from '@winterop-com/sokkel-ui/primitives/skeleton'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
 
 const meta: Meta = { title: 'Primitives/Display/Skeleton', parameters: { frame: 'column' } }

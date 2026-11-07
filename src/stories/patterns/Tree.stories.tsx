@@ -1,12 +1,12 @@
-import { TextField } from '../../components/TextField'
+import { TextField } from '@winterop-com/sokkel-ui/TextField'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { Field } from '../../components/Field'
-import { Section } from '../../components/Section'
-import { Tree, type TreeNode } from '../../components/Tree'
-import { TreeSelect } from '../../components/TreeSelect'
-import { Columns, Stack } from '../../components/Layout'
+import { Field } from '@winterop-com/sokkel-ui/Field'
+import { Section } from '@winterop-com/sokkel-ui/Section'
+import { Tree, type TreeNode } from '@winterop-com/sokkel-ui/Tree'
+import { TreeSelect } from '@winterop-com/sokkel-ui/TreeSelect'
+import { Columns, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /** A hierarchy to open a level at a time, and the field that picks from one. */
 const PLACES: TreeNode[] = [

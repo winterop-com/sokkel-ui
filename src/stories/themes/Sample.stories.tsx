@@ -1,14 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { Chart } from '../../components/chart/Chart'
-import type { ChartSpec } from '../../components/chart/kinds'
-import { type DataColumn, DataTable } from '../../components/DataTable'
-import { SearchField } from '../../components/SearchField'
-import { StatusChip, type Status } from '../../components/StatusChip'
-import { Button } from '../../components/ui/button'
+import { Chart } from '@winterop-com/sokkel-ui-charts/Chart'
+import type { ChartSpec } from '@winterop-com/sokkel-ui-charts/kinds'
+import { type DataColumn, DataTable } from '@winterop-com/sokkel-ui/DataTable'
+import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
+import { StatusChip, type Status } from '@winterop-com/sokkel-ui/StatusChip'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { TidevannMark } from '../fixtures/TidevannMark'
-import { Center, Row, Stack } from '../../components/Layout'
+import { Center, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /**
  * The same small piece of Tidevann every gallery tile shows a theme with: a heading, buttons, a

@@ -1,8 +1,17 @@
-import { StatusChip } from '../../components/StatusChip'
+import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '../../components/ui/table'
-import { Stack } from '../../components/Layout'
+import {
+    Table,
+    TableBody,
+    TableCaption,
+    TableCell,
+    TableFooter,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@winterop-com/sokkel-ui/primitives/table'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
 
 const meta: Meta = { title: 'Primitives/Display/Table', parameters: { frame: 'column' } }
 export default meta

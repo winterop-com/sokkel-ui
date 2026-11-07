@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import type { ChartSpec, ChartStep } from '../../components/chart/kinds'
+import type { ChartSpec, ChartStep } from '@winterop-com/sokkel-ui-charts/kinds'
 import { JOB_GOALS } from '../fixtures/runMeasures'
 import { Framed, Ground } from './Ground'
 

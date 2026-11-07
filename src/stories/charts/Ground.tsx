@@ -1,11 +1,11 @@
 import { useMemo, type ReactNode } from 'react'
 
-import { Chart, chartLegend } from '../../components/chart/Chart'
-import { ChartFrame } from '../../components/chart/ChartFrame'
-import type { ChartKind, ChartSpec } from '../../components/chart/kinds'
+import { Chart, chartLegend } from '@winterop-com/sokkel-ui-charts/Chart'
+import { ChartFrame } from '@winterop-com/sokkel-ui-charts/ChartFrame'
+import type { ChartKind, ChartSpec } from '@winterop-com/sokkel-ui-charts/kinds'
 import { TidevannMark } from '../fixtures/TidevannMark'
-import { TopBar } from '../../components/TopBar'
-import { Columns, Stack } from '../../components/Layout'
+import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
+import { Columns, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /** The page a chart story sits on: Tidevann's mark and what the charts cover, then the charts in a grid. */
 export function Ground({ title, columns = 2, children }: { title: string; columns?: 1 | 2; children: ReactNode }) {

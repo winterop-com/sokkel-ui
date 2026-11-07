@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
 
-import type { Issue } from '../../../components/IssueMark'
-import type { GraphEditing } from '../../../components/graph/GraphCanvas'
-import type { GraphAnchor } from '../../../components/graph/GraphOverlay'
-import { wouldCycle, type PipelineStep } from '../../../components/graph/PipelineGraph'
-import { useGraphHistory } from '../../../components/graph/use-graph-history'
-import { initialValue } from '../../../components/schema/SchemaForm'
-import { validate } from '../../../components/schema/validate'
+import type { Issue } from '@winterop-com/sokkel-ui/IssueMark'
+import type { GraphEditing } from '@winterop-com/sokkel-ui-graph/GraphCanvas'
+import type { GraphAnchor } from '@winterop-com/sokkel-ui-graph/GraphOverlay'
+import { wouldCycle, type PipelineStep } from '@winterop-com/sokkel-ui-graph/PipelineGraph'
+import { useGraphHistory } from '@winterop-com/sokkel-ui-graph/use-graph-history'
+import { initialValue } from '@winterop-com/sokkel-ui/schema/SchemaForm'
+import { validate } from '@winterop-com/sokkel-ui/schema/validate'
 import { BLOCKS, blockOf, cannotFollow, type BlockSpec } from './blocks'
 
 /** A step as the editor holds it: the block it is made from, and its settings. */

@@ -1,4 +1,4 @@
-import type { FileKind } from '../../components/FileList'
+import type { FileKind } from '@winterop-com/sokkel-ui/FileList'
 import { PEOPLE, PROJECTS } from './tableRuns'
 
 /** A folder or a file in a project's store, with its children when they are known. */

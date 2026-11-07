@@ -2,14 +2,14 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Plus } from 'lucide-react'
 import { useState } from 'react'
 
-import { IconButton } from '../../components/IconButton'
-import { Fill, Row } from '../../components/Layout'
-import { PageHeader } from '../../components/PageHeader'
-import { SearchField } from '../../components/SearchField'
-import { Page } from '../../components/Shell'
-import { SubNav } from '../../components/SubNav'
-import { Tree, type TreeNode } from '../../components/Tree'
-import { TooltipProvider } from '../../components/ui/tooltip'
+import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
+import { Fill, Row } from '@winterop-com/sokkel-ui/Layout'
+import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
+import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
+import { Page } from '@winterop-com/sokkel-ui/Shell'
+import { SubNav } from '@winterop-com/sokkel-ui/SubNav'
+import { Tree, type TreeNode } from '@winterop-com/sokkel-ui/Tree'
+import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 
 const meta: Meta = { title: 'Patterns/Sub nav' }
 export default meta

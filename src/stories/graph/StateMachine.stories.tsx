@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { StateMachine, type MachineState, type MachineTransition } from '../../components/graph/StateMachine'
+import { StateMachine, type MachineState, type MachineTransition } from '@winterop-com/sokkel-ui-graph/StateMachine'
 import { Stage } from './Frame'
 
 /** The life of a run in the harbor project: queued, running, then succeeded, failed or cancelled, with a retry. */

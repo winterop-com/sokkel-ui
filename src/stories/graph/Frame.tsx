@@ -1,7 +1,7 @@
-import { PageHeader } from '../../components/PageHeader'
+import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import type { ReactNode } from 'react'
 
-import { Row, Stack } from '../../components/Layout'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /** A story's page: a title over a graph that takes the rest of the screen. */
 export function Stage({ title, meta, children }: { title: string; meta?: string; children: ReactNode }) {

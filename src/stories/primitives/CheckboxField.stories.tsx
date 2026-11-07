@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { CheckboxField, CheckboxList } from '../../components/CheckboxField'
-import { Stack } from '../../components/Layout'
+import { CheckboxField, CheckboxList } from '@winterop-com/sokkel-ui/CheckboxField'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
 
 const meta: Meta = { title: 'Primitives/Inputs/Checkbox field', parameters: { frame: 'column' } }
 export default meta

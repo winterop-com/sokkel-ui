@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { CheckIcon, DatabaseIcon, FileTextIcon, SearchIcon, TriangleAlertIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { DescriptionList } from '../../components/DescriptionList'
-import { Stack } from '../../components/Layout'
+import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
 import {
     Trace,
     TraceCollapsible,
@@ -13,7 +13,7 @@ import {
     TraceIcon,
     TraceLine,
     TraceTitle,
-} from '../../components/ui/trace'
+} from '@winterop-com/sokkel-ui/primitives/trace'
 
 /** The steps an assistant took, one line each, with a detail that folds open beneath a line. */
 function Caption({ children }: { children: ReactNode }) {

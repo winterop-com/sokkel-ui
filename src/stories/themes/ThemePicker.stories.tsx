@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { ThemePicker, type ThemePickerWords, type ThemeSettings } from '../../components/ThemePicker'
+import { ThemePicker, type ThemePickerWords, type ThemeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
 import { CORNERS, THEMES, TYPEFACES } from './themes'
 
 /**

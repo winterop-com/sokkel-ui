@@ -2,9 +2,9 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Archive, Bell, MoreHorizontal, PanelRight, Pencil, RotateCcw, Star, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 
-import { IconButton } from '../../components/IconButton'
-import { Row, Stack } from '../../components/Layout'
-import { TooltipProvider } from '../../components/ui/tooltip'
+import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { Specimen } from '../fixtures/Specimen'
 
 const meta: Meta = {

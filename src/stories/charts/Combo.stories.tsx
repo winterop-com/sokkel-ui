@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { ComboPanel, type ComboSeries } from '../../components/dashboard/ComboPanel'
+import { ComboPanel, type ComboSeries } from '@winterop-com/sokkel-ui-charts/dashboard/ComboPanel'
 import { FAILURE_TARGET, WEEKLY_BY_STATE, WEEKLY_FAILURE_RATE, WEEKLY_RUNS, WEEKLY_SUCCESS_RATE, WEEKS } from '../fixtures/scores'
 import { Ground } from './Ground'
 

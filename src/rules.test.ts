@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, relative } from 'node:path'
+import { dirname, join, relative, resolve } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
@@ -20,7 +20,16 @@ function files(dir: string): string[] {
     })
 }
 
-const ALL = files(join(ROOT, 'src'))
+/** The packages: the core one, and an add-on per engine that stands on it. */
+const CORE = 'core'
+const ADDONS = ['charts', 'maps', 'graph']
+const PACKAGES = [CORE, ...ADDONS]
+const NAMES: Record<string, string> = Object.fromEntries(
+    PACKAGES.map((name) => [name, name === CORE ? '@winterop-com/sokkel-ui' : `@winterop-com/sokkel-ui-${name}`]),
+)
+const SOURCES: Record<string, string[]> = Object.fromEntries(PACKAGES.map((name) => [name, files(join(ROOT, 'packages', name, 'src'))]))
+
+const ALL = [...files(join(ROOT, 'src')), ...Object.values(SOURCES).flat()]
 /** The research stories draw options to pick from, rejected looks included, so only the rules for every file hold there. */
 const STORIES = ALL.filter((path) => path.includes('/src/stories/') && !path.includes('/src/stories/research/'))
 
@@ -47,7 +56,7 @@ const RULES: Rule[] = [
         in: ALL,
         skipLine: picture,
         except: {
-            'src/components/chart/look.ts': 'the gray a chart falls back to when a canvas cannot resolve a token',
+            'packages/charts/src/look.ts': 'the gray a chart falls back to when a canvas cannot resolve a token',
             'src/stories/fixtures/photos.ts': 'pictures drawn as SVG data',
             'src/stories/fixtures/portraits.ts': 'portraits drawn as SVG data',
         },
@@ -75,17 +84,19 @@ const RULES: Rule[] = [
         in: STORIES,
     },
     {
-        name: 'a core component reaching into the charts',
-        // The charts and dashboard panels stand on the core and never the other way round, so they can
-        // move into a package of their own without unpicking the core.
-        pattern: /from '[./]*(?:chart|dashboard)\//,
-        in: ALL.filter(
-            (path) =>
-                path.includes('/src/components/') &&
-                !path.includes('/src/components/chart/') &&
-                !path.includes('/src/components/dashboard/'),
-        ),
+        name: 'a core module importing an add-on package',
+        // The add-ons stand on the core and never the other way round, so an app that installs only the
+        // core gets all of it.
+        pattern: /(?:from|import)\s*\(?\s*'@winterop-com\/sokkel-ui-/,
+        in: SOURCES[CORE],
     },
+    ...ADDONS.map((addon) => ({
+        name: `${addon} importing another add-on package`,
+        // An add-on carries one engine and stands on the core alone, so an app installs only the engines
+        // it draws with. The dashboard's chart panels sit in the charts package beside the charts they use.
+        pattern: new RegExp(`(?:from|import)\\s*\\(?\\s*'@winterop-com/sokkel-ui-(?!${addon}/)`),
+        in: SOURCES[addon],
+    })),
     {
         name: 'a chart option built in a story instead of a chart kind',
         pattern: /<EChart\b|type: '(?:bar|line|pie|gauge|scatter|heatmap|radar|treemap|sunburst|sankey|boxplot|funnel)'/,
@@ -98,10 +109,33 @@ const RULES: Rule[] = [
     },
 ]
 
-/** A component file: a `.tsx` under src/components that exports a component. */
-const COMPONENTS = ALL.filter((path) => path.includes('/src/components/') && path.endsWith('.tsx')).filter((path) =>
-    /export (function|const) [A-Z]/.test(readFileSync(path, 'utf8')),
-)
+/** A component file: a `.tsx` in a package, outside the core's hooks and helpers, that exports a component. */
+const COMPONENTS = Object.values(SOURCES)
+    .flat()
+    .filter((path) => path.endsWith('.tsx') && !/\/packages\/core\/src\/(hooks|lib)\//.test(path))
+    .filter((path) => /export (function|const) [A-Z]/.test(readFileSync(path, 'utf8')))
+
+/** The name an app imports a package's module by, as the package's `exports` map it. */
+function specifier(path: string): string {
+    const [, name, rest] = /\/packages\/([^/]+)\/src\/(.+)\.tsx?$/.exec(path) ?? []
+    if (name !== CORE) return `${NAMES[name]}/${rest.replace(/\/index$/, '')}`
+    return `${NAMES[CORE]}/${rest.replace(/^components\/ui\//, 'primitives/').replace(/^components\//, '')}`
+}
+
+describe('the packages', () => {
+    it('import one another by name, never by a path out of their own folder', () => {
+        const found: string[] = []
+        for (const name of PACKAGES) {
+            const own = join(ROOT, 'packages', name)
+            for (const path of SOURCES[name]) {
+                for (const match of readFileSync(path, 'utf8').matchAll(/(?:from|import)\s*\(?\s*'(\.{1,2}\/[^'?]*)/g)) {
+                    if (relative(own, resolve(dirname(path), match[1])).startsWith('..')) found.push(`${relative(ROOT, path)}: ${match[1]}`)
+                }
+            }
+        }
+        expect(found, found.join('\n')).toEqual([])
+    })
+})
 
 describe('the stories', () => {
     it('show every component, itself or through the component it is a part of', () => {
@@ -109,8 +143,8 @@ describe('the stories', () => {
             .map((path) => readFileSync(path, 'utf8'))
             .join('\n')
         const unseen = COMPONENTS.filter((path) => {
-            const module = relative(join(ROOT, 'src'), path).replace(/\.tsx$/, '')
-            if (stories.includes(`/${module}'`)) return false
+            const module = specifier(path)
+            if (stories.includes(`'${module}'`)) return false
             const name = module.split('/').pop() ?? module
             return !COMPONENTS.some((other) => other !== path && readFileSync(other, 'utf8').includes(`/${name}'`))
         }).map((path) => relative(ROOT, path))
@@ -120,7 +154,7 @@ describe('the stories', () => {
 
 describe('the chart stories', () => {
     it('name every chart kind, so a search of the catalog for it finds it', () => {
-        const kinds = [...readFileSync(join(ROOT, 'src/components/chart/kinds/index.ts'), 'utf8').matchAll(/^\s+(\w+): \{ build/gm)].map(
+        const kinds = [...readFileSync(join(ROOT, 'packages/charts/src/kinds/index.ts'), 'utf8').matchAll(/^\s+(\w+): \{ build/gm)].map(
             (match) => match[1],
         )
         expect(kinds.length).toBeGreaterThan(10)

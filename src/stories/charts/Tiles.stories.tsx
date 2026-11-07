@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { DashboardGrid } from '../../components/dashboard/DashboardGrid'
-import { StatPanel } from '../../components/dashboard/StatPanel'
-import type { Threshold } from '../../components/dashboard/thresholds'
+import { DashboardGrid } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
+import { StatPanel } from '@winterop-com/sokkel-ui/dashboard/StatPanel'
+import type { Threshold } from '@winterop-com/sokkel-ui/dashboard/thresholds'
 import { WEEKLY_FAILURE_RATE, WEEKLY_RUNS, WEEKLY_SUCCESS_RATE } from '../fixtures/scores'
 import { Ground } from './Ground'
 

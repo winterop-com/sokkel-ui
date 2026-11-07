@@ -8,9 +8,9 @@ import {
     InputGroupInput,
     InputGroupText,
     InputGroupTextarea,
-} from '../../components/ui/input-group'
-import { Kbd } from '../../components/ui/kbd'
-import { Row, Stack } from '../../components/Layout'
+} from '@winterop-com/sokkel-ui/primitives/input-group'
+import { Kbd } from '@winterop-com/sokkel-ui/primitives/kbd'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
 
 const meta: Meta = { title: 'Primitives/Inputs/InputGroup', parameters: { frame: 'column' } }

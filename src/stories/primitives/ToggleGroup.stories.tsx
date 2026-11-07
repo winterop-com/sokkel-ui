@@ -2,10 +2,10 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { LayoutGrid, List, Rows3 } from 'lucide-react'
 import { useState } from 'react'
 
-import { type DataColumn, DataTable } from '../../components/DataTable'
-import { StatusChip, type Status } from '../../components/StatusChip'
-import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group'
-import { Row, Stack } from '../../components/Layout'
+import { type DataColumn, DataTable } from '@winterop-com/sokkel-ui/DataTable'
+import { StatusChip, type Status } from '@winterop-com/sokkel-ui/StatusChip'
+import { ToggleGroup, ToggleGroupItem } from '@winterop-com/sokkel-ui/primitives/toggle-group'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
 
 function Views(props: React.ComponentProps<typeof ToggleGroup>) {

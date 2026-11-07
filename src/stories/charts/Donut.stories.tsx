@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { Chart, chartLegend } from '../../components/chart/Chart'
-import { ChartFrame } from '../../components/chart/ChartFrame'
-import type { ChartSpec } from '../../components/chart/kinds'
+import { Chart, chartLegend } from '@winterop-com/sokkel-ui-charts/Chart'
+import { ChartFrame } from '@winterop-com/sokkel-ui-charts/ChartFrame'
+import type { ChartSpec } from '@winterop-com/sokkel-ui-charts/kinds'
 import { STATE_HOUR_ROWS, STATE_LABEL_COLORS } from '../fixtures/dayRows'
 import { Ground } from './Ground'
 

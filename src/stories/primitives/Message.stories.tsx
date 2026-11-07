@@ -2,11 +2,24 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { BotIcon, FileSpreadsheetIcon, FileTextIcon, TriangleAlertIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { Attachment, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from '../../components/ui/attachment'
-import { Bubble, BubbleContent } from '../../components/ui/bubble'
-import { CodeBlock, CodeBlockContent, CodeBlockHeader, CodeBlockLine, CodeBlockTitle } from '../../components/ui/code-block'
-import { Marker, MarkerContent } from '../../components/ui/marker'
-import { Message, MessageAvatar, MessageContent, MessageFooter, MessageGroup, MessageHeader } from '../../components/ui/message'
+import {
+    Attachment,
+    AttachmentContent,
+    AttachmentDescription,
+    AttachmentMedia,
+    AttachmentTitle,
+} from '@winterop-com/sokkel-ui/primitives/attachment'
+import { Bubble, BubbleContent } from '@winterop-com/sokkel-ui/primitives/bubble'
+import { CodeBlock, CodeBlockContent, CodeBlockHeader, CodeBlockLine, CodeBlockTitle } from '@winterop-com/sokkel-ui/primitives/code-block'
+import { Marker, MarkerContent } from '@winterop-com/sokkel-ui/primitives/marker'
+import {
+    Message,
+    MessageAvatar,
+    MessageContent,
+    MessageFooter,
+    MessageGroup,
+    MessageHeader,
+} from '@winterop-com/sokkel-ui/primitives/message'
 import {
     Trace,
     TraceCollapsible,
@@ -16,9 +29,9 @@ import {
     TraceIcon,
     TraceLine,
     TraceTitle,
-} from '../../components/ui/trace'
-import { useHighlightedCode } from '../../hooks/use-highlighted-code'
-import { Stack } from '../../components/Layout'
+} from '@winterop-com/sokkel-ui/primitives/trace'
+import { useHighlightedCode } from '@winterop-com/sokkel-ui/hooks/use-highlighted-code'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /**
  * A message row: an avatar, a header, the content and a footer, aligned to the start for the

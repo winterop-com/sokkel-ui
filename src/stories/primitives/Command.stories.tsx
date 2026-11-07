@@ -12,7 +12,7 @@ import {
     CommandList,
     CommandSeparator,
     CommandShortcut,
-} from '../../components/ui/command'
+} from '@winterop-com/sokkel-ui/primitives/command'
 
 const meta: Meta = { title: 'Primitives/Menus/Command', parameters: { frame: 'padded' } }
 export default meta

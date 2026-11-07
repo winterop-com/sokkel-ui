@@ -1,13 +1,13 @@
-import { TransportButton } from '../../components/media/MediaControls'
-import { TrackList } from '../../components/media/TrackList'
+import { TransportButton } from '@winterop-com/sokkel-ui/media/MediaControls'
+import { TrackList } from '@winterop-com/sokkel-ui/media/TrackList'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { ListMusic } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
-import { MediaBar, type RepeatMode } from '../../components/media/MediaBar'
+import { MediaBar, type RepeatMode } from '@winterop-com/sokkel-ui/media/MediaBar'
 import { Artwork, type Cover } from '../fixtures/Artwork'
-import { Row, Stack } from '../../components/Layout'
-import { PaneHeader } from '../../components/PaneHeader'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { PaneHeader } from '@winterop-com/sokkel-ui/PaneHeader'
 import { waveformOf } from './fixtures/waveform'
 
 interface Track {

@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { VideoPlayer } from '../../components/media/VideoPlayer'
-import { MetaLine } from '../../components/MetaLine'
+import { VideoPlayer } from '@winterop-com/sokkel-ui/media/VideoPlayer'
+import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
 import captions from './fixtures/captions.vtt?url'
 import clip from './fixtures/clip.webm?url'
-import { Stack } from '../../components/Layout'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /** A player in the middle of a plain page. The clip is a local, silent gradient. */
 function Ground({ children }: { children: React.ReactNode }) {
