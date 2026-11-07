@@ -10,6 +10,7 @@ import { CodeField } from '../components/CodeField'
 import { DataTable, type DataColumn } from '../components/DataTable'
 import { DescriptionList } from '../components/DescriptionList'
 import { FilterChip } from '../components/FilterChip'
+import { FormBar } from '../components/FormBar'
 import { PageHeader } from '../components/PageHeader'
 import { Problem } from '../components/Problem'
 import { Rail, type RailGroup } from '../components/Rail'
@@ -315,10 +316,10 @@ function ServiceForm() {
                                 defaultChecked
                             />
                         </div>
-                        <div className="flex justify-end gap-2 lg:col-span-2">
+                        <FormBar placement="end" className="lg:col-span-2">
                             <Button variant="ghost">Cancel</Button>
                             <Button>Create</Button>
-                        </div>
+                        </FormBar>
                     </Columns>
                 </Section>
             </Page>

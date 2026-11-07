@@ -20,6 +20,7 @@ import { DescriptionList } from '../../components/DescriptionList'
 import { DataTable, type DataColumn } from '../../components/DataTable'
 import { Field } from '../../components/Field'
 import { FilterChip } from '../../components/FilterChip'
+import { FormBar } from '../../components/FormBar'
 import { Inspector, InspectorSection } from '../../components/Inspector'
 import { IssueCount } from '../../components/IssueMark'
 import { BoundaryLayer } from '../../components/map/BoundaryLayer'
@@ -564,33 +565,28 @@ function VisitForm() {
                     </nav>
                 </Row>
             </Page>
-            <div className="sticky bottom-0 border-t border-border-strong bg-sidebar">
-                <Row className="px-(--density-page-inset) py-2.5">
-                    <span className="hidden text-xs text-muted-foreground sm:inline">Draft saved at 09:52</span>
-                    <Row className="ml-auto">
-                        <IssueCount
-                            critical={2}
-                            list={[
-                                {
-                                    label: 'Reading taken at',
-                                    issue: { tone: 'critical', text: timeError },
-                                    onGo: () => setIssueOpen('time'),
-                                },
-                                { label: 'Water level', issue: { tone: 'critical', text: levelError }, onGo: () => setIssueOpen('level') },
-                            ]}
-                        />
-                        <Button size="sm" variant="ghost">
-                            Cancel
-                        </Button>
-                        <Button size="sm" variant="outline">
-                            Save draft
-                        </Button>
-                        <Button size="sm" disabled>
-                            Submit
-                        </Button>
-                    </Row>
-                </Row>
-            </div>
+            <FormBar note="Draft saved at 09:52">
+                <IssueCount
+                    critical={2}
+                    list={[
+                        {
+                            label: 'Reading taken at',
+                            issue: { tone: 'critical', text: timeError },
+                            onGo: () => setIssueOpen('time'),
+                        },
+                        { label: 'Water level', issue: { tone: 'critical', text: levelError }, onGo: () => setIssueOpen('level') },
+                    ]}
+                />
+                <Button size="sm" variant="ghost">
+                    Cancel
+                </Button>
+                <Button size="sm" variant="outline">
+                    Save draft
+                </Button>
+                <Button size="sm" disabled>
+                    Submit
+                </Button>
+            </FormBar>
         </Stack>
     )
 }
