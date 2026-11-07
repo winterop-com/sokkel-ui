@@ -82,7 +82,7 @@ aspect-ratio, attachment, avatar, badge, breadcrumb, bubble, button, button-grou
 carousel, checkbox, code-block, collapsible, combobox, command, context-menu, dialog,
 direction, drawer, dropdown-menu, empty, field, hover-card, input, input-group, input-otp, item,
 kbd, label, marker, menubar, message, message-scroller, native-select, navigation-menu, pagination,
-popover, progress, questionnaire, radio-group, resizable, scroll-area, select, separator, sheet,
+popover, progress, progress-ring, questionnaire, radio-group, resizable, scroll-area, select, separator, sheet,
 sidebar, skeleton, slider, sonner, spinner, switch, table, tabs, textarea, toast, toggle,
 toggle-group, tooltip, trace.
 
@@ -138,7 +138,8 @@ useGraphHistory are its parts; the Pipeline editor stories show each way of buil
 ## Media
 
 VideoPlayer, MediaBar, MediaCard and TrackList carry video and music, and the `AudioScrubber`
-primitive draws a recording's waveform under its position.
+primitive draws a recording's waveform under its position. AudioPlayer plays a recording in one line
+(a clip or voice note in a message, an answer read aloud) from the same controls.
 
 MediaBar resizes from its top edge. Up to about 96 pixels every layout is the one-line bar; above
 it the bar grows by its `layout`, picked from the player growth research, continuously and with no
