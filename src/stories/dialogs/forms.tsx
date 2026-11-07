@@ -1,3 +1,4 @@
+import { CheckboxField, CheckboxList } from '../../components/CheckboxField'
 import { IconButton } from '../../components/IconButton'
 import { GripVertical, Trash2 } from 'lucide-react'
 import { useState } from 'react'
@@ -10,7 +11,6 @@ import type { JsonSchema } from '../../components/schema/read'
 import { SchemaForm, SchemaIssueCount, useSchemaForm } from '../../components/schema/SchemaForm'
 import { Segmented } from '../../components/Segmented'
 import { UnsavedChangesDialog, useUnsavedGuard } from '../../components/UnsavedChanges'
-import { Checkbox } from '../../components/ui/checkbox'
 import { NativeSelect, NativeSelectOption } from '../../components/ui/native-select'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '../../components/ui/sheet'
 import { Textarea } from '../../components/ui/textarea'
@@ -367,25 +367,17 @@ export function Duplicate() {
                     issueOpen={issueOpen}
                     onIssueOpenChange={setIssueOpen}
                 />
-                <fieldset className="flex flex-col gap-1.5">
-                    <legend className="mb-1.5 text-sm font-medium">Copy</legend>
+                <CheckboxList label="Copy">
                     {items.map((item) => (
-                        <label
+                        <CheckboxField
                             key={item.key}
-                            className="flex cursor-pointer items-start gap-2.5 rounded-control px-1 py-1.5 hover:bg-muted/50"
-                        >
-                            <Checkbox
-                                checked={carry[item.key]}
-                                onCheckedChange={(checked) => setCarry({ ...carry, [item.key]: checked })}
-                                className="mt-0.5"
-                            />
-                            <Stack as="span" gap="none">
-                                <span className="text-sm leading-5">{item.label}</span>
-                                <span className="text-xs text-muted-foreground">{item.detail}</span>
-                            </Stack>
-                        </label>
+                            label={item.label}
+                            description={item.detail}
+                            checked={carry[item.key]}
+                            onCheckedChange={(checked) => setCarry({ ...carry, [item.key]: checked })}
+                        />
                     ))}
-                </fieldset>
+                </CheckboxList>
             </DialogShell>
         </Behind>
     )

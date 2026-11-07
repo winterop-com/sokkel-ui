@@ -1,3 +1,4 @@
+import { CheckboxField } from '../../components/CheckboxField'
 import { IconButton } from '../../components/IconButton'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { addMonths, addWeeks, format, getDay, isSameDay, isSameMonth } from 'date-fns'
@@ -31,7 +32,6 @@ import { StatusChip, type Status } from '../../components/StatusChip'
 import { ThemeToggle } from '../../components/ThemeToggle'
 import { TopBar } from '../../components/TopBar'
 import { Button } from '../../components/ui/button'
-import { Checkbox } from '../../components/ui/checkbox'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { useIsMobile } from '../../hooks/use-mobile'
 import { cn } from '../../lib/cn'
@@ -291,19 +291,19 @@ function CalendarToggles({ shown, onChange }: { shown: CalendarId[]; onChange: (
             {CALENDARS.map((calendar) => {
                 const on = shown.includes(calendar.id)
                 return (
-                    <label
+                    <CheckboxField
                         key={calendar.id}
-                        className="flex h-8 cursor-pointer items-center gap-2.5 rounded-md px-1.5 text-sm hover:bg-secondary"
-                    >
-                        <Checkbox
-                            checked={on}
-                            onCheckedChange={(next) =>
-                                onChange(next ? [...shown, calendar.id] : shown.filter((other) => other !== calendar.id))
-                            }
-                        />
-                        <Dot kind={calendar.color} />
-                        <span className={cn('flex-1 truncate', !on && 'text-muted-foreground')}>{calendar.name}</span>
-                    </label>
+                        label={
+                            <span className={cn('flex items-center gap-2.5', !on && 'text-muted-foreground')}>
+                                <Dot kind={calendar.color} />
+                                {calendar.name}
+                            </span>
+                        }
+                        checked={on}
+                        onCheckedChange={(next) =>
+                            onChange(next ? [...shown, calendar.id] : shown.filter((other) => other !== calendar.id))
+                        }
+                    />
                 )
             })}
         </Stack>

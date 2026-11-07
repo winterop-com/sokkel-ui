@@ -1,3 +1,4 @@
+import { PersonRow } from '../../components/PersonRow'
 import { PageHeader } from '../../components/PageHeader'
 import { CircleCheck, Database, FileText, Filter, Globe, Mail, RotateCw, ShieldCheck, Table2, Upload, Webhook } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -9,7 +10,6 @@ import { DialogShell } from '../../components/DialogShell'
 import { Field } from '../../components/Field'
 import { IssueCount, type Issue } from '../../components/IssueMark'
 import { Markdown } from '../../components/Markdown'
-import { PersonAvatar } from '../../components/PersonAvatar'
 import { Problem } from '../../components/Problem'
 import type { TreeNode } from '../../components/Tree'
 import { TreeSelect } from '../../components/TreeSelect'
@@ -17,7 +17,7 @@ import { Button } from '../../components/ui/button'
 import { Textarea } from '../../components/ui/textarea'
 import { describeCron } from '../../lib/cron'
 import { Behind, TextField, wait } from './parts'
-import { Row, Stack } from '../../components/Layout'
+import { Row } from '../../components/Layout'
 
 export function Rename() {
     const [open, setOpen] = useState(true)
@@ -290,13 +290,7 @@ export function SessionExpired() {
                     why: password === '' ? 'Enter your password.' : undefined,
                 }}
             >
-                <Row gap="md" className="rounded-control border border-border px-3 py-2">
-                    <PersonAvatar name="ada" />
-                    <Stack as="span" gap="none">
-                        <span className="font-mono text-xs">ada</span>
-                        <span className="text-xs text-muted-foreground">ada@example.org</span>
-                    </Stack>
-                </Row>
+                <PersonRow name="ada" detail="ada@example.org" className="rounded-control border border-border px-3 py-2" />
                 <TextField
                     id="password"
                     label="Password"

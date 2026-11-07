@@ -1,3 +1,4 @@
+import { CheckboxField } from '../../components/CheckboxField'
 import { IconButton } from '../../components/IconButton'
 import { Field } from '../../components/Field'
 import { DialogShell } from '../../components/DialogShell'
@@ -35,7 +36,6 @@ import { TopBar } from '../../components/TopBar'
 import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card'
-import { Checkbox } from '../../components/ui/checkbox'
 import { Input } from '../../components/ui/input'
 import { Label } from '../../components/ui/label'
 import { Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger } from '../../components/ui/popover'
@@ -231,10 +231,7 @@ function NewRun() {
                     <Field id="run-reason" label="Reason">
                         <Input id="run-reason" placeholder="Why it runs now" />
                     </Field>
-                    <Label className="flex items-center gap-2 font-normal">
-                        <Checkbox checked={notify} onCheckedChange={setNotify} />
-                        Tell ada when it finishes
-                    </Label>
+                    <CheckboxField label="Tell ada when it finishes" checked={notify} onCheckedChange={setNotify} />
                 </Stack>
             </DialogShell>
         </>
@@ -345,10 +342,7 @@ function Schedule() {
                     onChoose={setEvery}
                 />
                 <Row gap="none" wrap className="gap-x-6 gap-y-3">
-                    <Label className="flex items-center gap-2 font-normal">
-                        <Checkbox checked={retry} onCheckedChange={setRetry} />
-                        Retry once on failure
-                    </Label>
+                    <CheckboxField label="Retry once on failure" checked={retry} onCheckedChange={setRetry} />
                     <Label className="flex items-center gap-2 font-normal">
                         <Switch checked={paused} onCheckedChange={setPaused} />
                         Paused
