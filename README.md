@@ -95,10 +95,10 @@ token that can read packages, and pins one version for all of them:
 ```
 
 ```
-bun add @winterop-com/sokkel-ui@0.9.0
-bun add @winterop-com/sokkel-ui-charts@0.9.0   # only for charts and chart panels
-bun add @winterop-com/sokkel-ui-maps@0.9.0     # only for maps
-bun add @winterop-com/sokkel-ui-graph@0.9.0    # only for graphs
+bun add @winterop-com/sokkel-ui@0.9.1
+bun add @winterop-com/sokkel-ui-charts@0.9.1   # only for charts and chart panels
+bun add @winterop-com/sokkel-ui-maps@0.9.1     # only for maps
+bun add @winterop-com/sokkel-ui-graph@0.9.1    # only for graphs
 ```
 
 The components are styled with Tailwind classes, so every app runs Tailwind CSS 4.1 or later and

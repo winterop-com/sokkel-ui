@@ -6,6 +6,10 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
+- **0.9.1** is the latest release (2026-11-08): the gaps the first app found. Math in `Markdown`,
+  reasoning, waiting, uploads and audio in chat, `useAppearance` and `useScheme`, the palette on
+  Cmd/Ctrl+K owned by `Shell`, a status foot level with the account, theme-tinted surfaces, and
+  `Segmented` options, `Highlight`, `BarList` and `ImageAnnotations`.
 - **0.9.0** is the latest release (2026-11-07): four packages, ready for adoption. The core
   `@winterop-com/sokkel-ui` holds everything without a heavy engine; `-charts`, `-maps` and
   `-graph` carry ECharts, maplibre and React Flow, each with its own styles. The player gains three
