@@ -1,3 +1,4 @@
+import { IconButton } from '../IconButton'
 import type { Feature } from 'geojson'
 import { X } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
@@ -130,9 +131,9 @@ export function MapPopup({
                     {description !== undefined && <p className="text-xs leading-snug text-muted-foreground">{description}</p>}
                 </div>
                 {onClose !== undefined && (
-                    <Button variant="ghost" size="icon-xs" aria-label={closeLabel} className="text-muted-foreground" onClick={onClose}>
+                    <IconButton label={closeLabel} size="icon-xs" onClick={onClose}>
                         <X />
-                    </Button>
+                    </IconButton>
                 )}
             </div>
             {rows.length > 0 && (
