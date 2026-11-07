@@ -23,25 +23,14 @@ Every example on shared components. An audit of the stories found parts the exam
 hand; each becomes a library component or an option on one, and every example takes it, so a change
 reaches them all. Done in waves, one PR each.
 
-- **Layout components first.** The stories arrange components with raw flex and grid (about 840
-  and 130 uses in 139 files), and that glue is where layout bugs get patched one story at a time.
-  Layout components (a stack, a row, columns, a split with an aside, a page body) whose cells always
-  shrink, wrap or scroll correctly carry it instead; every story moves onto them, and
-  `src/rules.test.ts` then rejects raw layout in a story, so a layout fix lands once.
-
-- **Use what exists** (about 45 places): label and control pairs as `Field`, titled boxes as
-  `Section`, the uppercase panel heads as `PanelSection`, search and filters in `DataTable`'s
-  `toolbar`, `TopBar`, `StatusLine`, `Tabs` with arrow keys, `AvatarGroup`, `Toggle`, `TrackList`,
-  `MediaCard`, `KpiRow`, `Stat`, `Empty`, `Attachment`, `ItemCard` selection, `Item`, a real
-  `ContextMenu` for the graph editor's menu, `SettingRow`, `Composer`, `Dot`, `DialogShell`,
-  `SwitchField`, `PageHeader`, `ChatDayDivider`, and the inspector head.
-- **New parts** (widest reuse first): `IconButton` (a label and a tooltip in one); `TextField`, or
-  `Field` setting the issue edge on its control; a `FilterChip` that owns its menu; `MetaLine`; a page
-  `Toolbar`; `PaneHeader`; an app trail with the mark outside `Shell`; `SubNav`; a value-showing menu
-  button; `SliderField`; `SelectionBar`, shared with `DataTable`; `AttachmentList`; `DueText`; a `bare`
-  `Input` and `Textarea`; `FormBar`; `InlineField`; `PersonRow`; `CheckboxField` and `CheckboxList`;
-  `ChoiceList`; and `PageHeader` description and meta. Parts the stories build in only one place stay
-  in their story until a second place needs them.
+- **Layout components, use what exists, new parts: done** (#109 to #127). The stories stand on
+  Stack, Row, Columns, Split and Fill; about 45 hand-built places use the component that already
+  drew them; and the parts the stories built in two or more places are library components. Parts
+  built in only one place stay in their story until a second place needs them.
+- **Raw layout rejected.** Move the stories' last hand-written flex and grid onto the layout
+  components, then `src/rules.test.ts` rejects raw layout in a story, so a layout fix lands once.
+- **The graph editor's node menu** as a real menu, opened at the pointer: `DropdownMenuContent`
+  takes an `anchor` now.
 - **Dark contrast for every theme.** 0.4.0 lifted secondary text, borders, inputs, cards and
   popovers in the default theme's dark scheme (and amber, which shares it). Paper, contrast, tokyo,
   vinyl, cassette and neon get the same lift, each from its own colors, with their baselines
