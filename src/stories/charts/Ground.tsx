@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
 
-import type { LegendItem } from '../../components/chart/ChartLegend'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { TopBar } from '../../components/TopBar'
 import { Columns, Stack } from '../../components/Layout'
@@ -22,14 +21,3 @@ export function Ground({ title, columns = 2, children }: { title: string; column
         </div>
     )
 }
-
-/** A series a story draws: its name in the chart and the token it is drawn in. */
-export interface StorySeries {
-    name: string
-    token: string
-    values?: readonly number[]
-}
-
-/** The legend items for a story's series, colored by the same tokens as the chart. */
-export const legendOf = (series: readonly StorySeries[]): LegendItem[] =>
-    series.map((entry) => ({ key: entry.name, label: entry.name, color: `var(--${entry.token})`, values: entry.values }))

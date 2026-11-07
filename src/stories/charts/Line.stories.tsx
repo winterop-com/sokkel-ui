@@ -1,25 +1,30 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
+import { Chart, chartLegend } from '../../components/chart/Chart'
 import { ChartFrame } from '../../components/chart/ChartFrame'
-import { EChart } from '../../components/chart/EChart'
-import { Ground, legendOf } from './Ground'
-import { BY_JOB, lines, PERCENTILES, TWO } from './options'
+import type { ChartSpec } from '../../components/chart/kinds'
+import { JOB_STEP_ROWS, STEP_COLORS, STEP_ROWS } from '../fixtures/dayRows'
+import { Ground } from './Ground'
 
-/** Line charts on EChart: series over the day in fifteen-minute steps, with the legend under the chart driving it. */
+/** Line charts on Chart: series over the day in fifteen-minute steps, with the legend under the chart driving it. */
 const meta: Meta = { title: 'Charts/Line' }
 export default meta
 
-const TWO_OPTION = lines(TWO)
-const BY_JOB_OPTION = lines(BY_JOB)
-const PERCENTILE_OPTION = lines(PERCENTILES, 's')
+const TWO: ChartSpec = { rows: STEP_ROWS, x: 'time', y: ['Runs', 'Failures'], colors: STEP_COLORS, labelEvery: 16 }
+const BY_JOB: ChartSpec = { rows: JOB_STEP_ROWS, x: 'time', y: 'runs', series: 'job', labelEvery: 16 }
+const PERCENTILES: ChartSpec = { rows: STEP_ROWS, x: 'time', y: ['p50', 'p90', 'p99'], colors: STEP_COLORS, unit: 's', labelEvery: 16 }
+
+const TWO_LEGEND = chartLegend('line', TWO)
+const BY_JOB_LEGEND = chartLegend('line', BY_JOB)
+const PERCENTILE_LEGEND = chartLegend('line', PERCENTILES)
 
 /** Runs and failures across the day, the failures inked in the failed state's color. */
 export const TwoSeries: StoryObj = {
     name: 'Two series',
     render: () => (
         <Ground title="Runs, today" columns={1}>
-            <ChartFrame title="Runs and failures" subtitle="every 15 min" legend={legendOf(TWO)} file="runs-and-failures">
-                {(state) => <EChart option={TWO_OPTION} label="Runs and failures across the day" {...state} />}
+            <ChartFrame title="Runs and failures" subtitle="every 15 min" legend={TWO_LEGEND} file="runs-and-failures">
+                {(state) => <Chart kind="line" label="Runs and failures across the day" {...TWO} {...state} />}
             </ChartFrame>
         </Ground>
     ),
@@ -33,12 +38,12 @@ export const LegendTable: StoryObj = {
             <ChartFrame
                 title="Runs by job"
                 info="Runs started in each fifteen-minute step, by job."
-                legend={legendOf(BY_JOB)}
+                legend={BY_JOB_LEGEND}
                 legendMode="table"
                 file="runs-by-job"
                 bodyClassName="h-64"
             >
-                {(state) => <EChart option={BY_JOB_OPTION} label="Runs by job across the day" {...state} />}
+                {(state) => <Chart kind="line" label="Runs by job across the day" {...BY_JOB} {...state} />}
             </ChartFrame>
         </Ground>
     ),
@@ -51,12 +56,12 @@ export const Percentiles: StoryObj = {
             <ChartFrame
                 title="Run duration"
                 subtitle="percentiles"
-                legend={legendOf(PERCENTILES)}
+                legend={PERCENTILE_LEGEND}
                 legendMode="table"
                 legendFormat={(value) => `${value.toFixed(1)}s`}
                 file="run-duration"
             >
-                {(state) => <EChart option={PERCENTILE_OPTION} label="Run duration percentiles across the day" {...state} />}
+                {(state) => <Chart kind="line" label="Run duration percentiles across the day" {...PERCENTILES} {...state} />}
             </ChartFrame>
         </Ground>
     ),
