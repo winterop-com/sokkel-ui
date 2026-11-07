@@ -1,3 +1,4 @@
+import { IconButton } from '../../components/IconButton'
 import { GripVertical, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -9,7 +10,6 @@ import type { JsonSchema } from '../../components/schema/read'
 import { SchemaForm, SchemaIssueCount, useSchemaForm } from '../../components/schema/SchemaForm'
 import { Segmented } from '../../components/Segmented'
 import { UnsavedChangesDialog, useUnsavedGuard } from '../../components/UnsavedChanges'
-import { Button } from '../../components/ui/button'
 import { Checkbox } from '../../components/ui/checkbox'
 import { NativeSelect, NativeSelectOption } from '../../components/ui/native-select'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '../../components/ui/sheet'
@@ -179,14 +179,9 @@ export function NestedConfirm() {
                                 <span className="font-mono text-xs">{step.code}</span>
                                 <span className="truncate font-mono text-xs text-muted-foreground">{step.run}</span>
                             </span>
-                            <Button
-                                variant="ghost"
-                                size="icon-sm"
-                                aria-label={`Remove ${step.code}`}
-                                onClick={() => setRemoving(step.code)}
-                            >
+                            <IconButton label={`Remove ${step.code}`} onClick={() => setRemoving(step.code)}>
                                 <Trash2 />
-                            </Button>
+                            </IconButton>
                         </Row>
                     ))}
                 </Stack>

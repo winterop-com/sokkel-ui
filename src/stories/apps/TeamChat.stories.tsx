@@ -1,3 +1,4 @@
+import { IconButton } from '../../components/IconButton'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import {
     Bell,
@@ -72,12 +73,12 @@ const STRIP: RailGroup[] = [
 
 const STRIP_FOOT = (
     <>
-        <Button variant="secondary" size="icon-lg" aria-label="Create" title="Create">
+        <IconButton label="Create" variant="secondary" size="icon-lg">
             <Plus aria-hidden />
-        </Button>
-        <Button variant="ghost" size="icon-lg" aria-label="Account" title="ada">
+        </IconButton>
+        <IconButton label="Account" size="icon-lg">
             <PersonAvatar name="ada" size="lg" shape="square" presence="active" />
-        </Button>
+        </IconButton>
     </>
 )
 
@@ -153,9 +154,9 @@ function Sidebar({ active, onSelect }: { active: string; onSelect: (id: string) 
                     </Button>
                 }
                 actions={
-                    <Button variant="ghost" size="icon" aria-label="New message" title="New message">
+                    <IconButton label="New message" size="icon">
                         <PenSquare aria-hidden />
-                    </Button>
+                    </IconButton>
                 }
                 find
                 query={query}

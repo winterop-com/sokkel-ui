@@ -1,3 +1,4 @@
+import { IconButton } from '../../components/IconButton'
 import { PageHeader } from '../../components/PageHeader'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Keyboard, Palette, Search as SearchIcon, Server, Settings2, User } from 'lucide-react'
@@ -369,12 +370,12 @@ function SettingsApp({ opening }: { opening?: Opening }) {
                     ]}
                     end={
                         <>
-                            <Button variant="ghost" size="icon-sm" aria-label="Search">
+                            <IconButton label="Search">
                                 <SearchIcon aria-hidden />
-                            </Button>
-                            <Button variant="ghost" size="icon-sm" aria-label="Preferences" onClick={() => setPreferencesOpen(true)}>
+                            </IconButton>
+                            <IconButton label="Preferences" onClick={() => setPreferencesOpen(true)}>
                                 <Settings2 aria-hidden />
-                            </Button>
+                            </IconButton>
                             <ThemeToggle dark={dark} onToggle={() => setDark(!dark)} />
                             <PersonAvatar name="grace" size="md" className="ml-1" />
                         </>

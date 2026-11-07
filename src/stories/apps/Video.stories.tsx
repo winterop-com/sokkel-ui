@@ -1,3 +1,4 @@
+import { IconButton } from '../../components/IconButton'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import {
     Bookmark,
@@ -352,9 +353,9 @@ function CommentItem({ comment, reply = false }: { comment: Comment; reply?: boo
                         <ThumbsUp aria-hidden />
                         {comment.likes}
                     </Button>
-                    <Button variant="ghost" size="icon-xs" aria-label="Dislike">
+                    <IconButton label="Dislike" size="icon-xs">
                         <ThumbsDown aria-hidden />
-                    </Button>
+                    </IconButton>
                     <Button variant="ghost" size="xs">
                         Reply
                     </Button>
