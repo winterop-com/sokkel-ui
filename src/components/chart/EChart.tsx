@@ -58,15 +58,32 @@ const DECOR_TITLE = 36
 const DECOR_SUBTITLE = 16
 const DECOR_LEGEND = 28
 
-/** The option with the title and legend switched on above the plot, for an export. */
-function decorate(option: EChartsCoreOption, decor: ExportDecor, look: ChartLook): { option: EChartsCoreOption; extra: number } {
+/**
+ * The option with the title and legend switched on above the plot, for an export `height` tall
+ * before them. Each grid moves down by what they take, its shares of the height held in pixels so
+ * grids stacked by shares keep their places.
+ */
+function decorate(
+    option: EChartsCoreOption,
+    decor: ExportDecor,
+    look: ChartLook,
+    height: number,
+): { option: EChartsCoreOption; extra: number } {
     const title = decor.title !== undefined && decor.title !== ''
     const legend = decor.legend === true && seriesOf(option).length > 0
     const head = title ? DECOR_TITLE + (decor.subtitle ? DECOR_SUBTITLE : 0) : 12
     const extra = head + (legend ? DECOR_LEGEND : 0)
+    const pixels = (value: unknown) =>
+        typeof value === 'string' && value.endsWith('%') ? (Number.parseFloat(value) / 100) * height : value
     const shift = (grid: unknown) => {
-        const box = (grid ?? {}) as { top?: unknown }
-        return { ...box, top: (typeof box.top === 'number' ? box.top : 12) + extra }
+        const box = (grid ?? {}) as { top?: unknown; bottom?: unknown; height?: unknown }
+        const top = pixels(box.top)
+        return {
+            ...box,
+            top: (typeof top === 'number' ? top : 12) + extra,
+            ...(box.bottom === undefined ? {} : { bottom: pixels(box.bottom) }),
+            ...(box.height === undefined ? {} : { height: pixels(box.height) }),
+        }
     }
     const current = (Array.isArray(option.legend) ? option.legend[0] : option.legend) as Record<string, unknown> | undefined
     return {
@@ -187,9 +204,10 @@ export function EChart({
             if (look === null || resolved === null) throw new Error('The chart has not drawn yet.')
             await ensure(resolved as Record<string, unknown>)
             const box = element.current?.getBoundingClientRect()
-            const { option: decorated, extra } = decorate(compose(resolved, hidden, false), decor, look)
             const width = Math.max(320, Math.round(box?.width ?? 640))
-            const height = Math.max(200, Math.round(box?.height ?? 320)) + extra
+            const base = Math.max(200, Math.round(box?.height ?? 320))
+            const { option: decorated, extra } = decorate(compose(resolved, hidden, false), decor, look, base)
+            const height = base + extra
             if (renderer === 'svg') {
                 const ssr = init(null as unknown as HTMLElement, chartTheme(look), { renderer: 'svg', ssr: true, width, height })
                 ssr.setOption(decorated)

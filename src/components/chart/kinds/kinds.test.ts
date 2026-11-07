@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { chartLegend } from '../Chart'
 import type { ChartLook } from '../look'
+import { linkedLayout } from './linked'
 import { KINDS, type ChartKind, type ChartSpec } from '.'
 
 /** A look whose colors are the tokens' own names, so a test can read which token a part takes. */
@@ -43,6 +44,7 @@ const SPECS: Record<string, ChartSpec> = {
     rose: { rows: ROWS, x: 'job', series: 'state' },
     gauge: { rows: ROWS, y: 'failed', aggregate: 'avg', steps: [{ color: 'good' }, { value: 10, color: 'critical' }] },
     dual: { rows: ROWS, x: 'job', y: ['runs', 'failed'], aggregate: ['sum', 'avg'], unit: ['', '%'] },
+    linked: { rows: ROWS, x: 'job', y: ['duration', 'runs'], unit: [' s', ''], panels: { duration: { mark: 'bar', hang: true } } },
 }
 
 type Option = { series: { type: string; name?: string; data?: unknown[] }[] }
@@ -84,6 +86,56 @@ describe('the chart kinds', () => {
     it('colors a gauge by the threshold its figure reaches', () => {
         const option = KINDS.gauge.build(SPECS.gauge, LOOK) as unknown as { series: { progress?: { itemStyle: { color: string } } }[] }
         expect(option.series[1].progress?.itemStyle.color).toBe('critical')
+    })
+
+    it('stacks linked panels on one axis, zoomed and pointed at together', () => {
+        const option = KINDS.linked.build(SPECS.linked, LOOK) as unknown as {
+            grid: unknown[]
+            xAxis: { position: string; gridIndex: number }[]
+            yAxis: { inverse: boolean; name: string }[]
+            dataZoom: { type: string; xAxisIndex: number[] }[]
+            axisPointer: { link: unknown }
+        }
+        expect(option.grid).toHaveLength(2)
+        expect(option.yAxis.map((axis) => [axis.name, axis.inverse])).toEqual([
+            ['duration', true],
+            ['runs', false],
+        ])
+        expect(option.xAxis.map((axis) => axis.position)).toEqual(['top', 'bottom'])
+        expect(option.dataZoom.map((zoom) => [zoom.type, [...zoom.xAxisIndex].sort()])).toEqual([
+            ['inside', [0, 1]],
+            ['slider', [0, 1]],
+        ])
+        expect(option.axisPointer.link).toEqual([{ xAxisIndex: 'all' }])
+    })
+
+    it('gives a hanging last panel an axis of its own for the labels', () => {
+        const spec = { ...SPECS.linked, panels: { runs: { hang: true } } }
+        const option = KINDS.linked.build(spec, LOOK) as unknown as { xAxis: { gridIndex: number; position: string }[] }
+        expect(option.xAxis.map((axis) => [axis.gridIndex, axis.position])).toEqual([
+            [0, 'bottom'],
+            [1, 'top'],
+            [1, 'bottom'],
+        ])
+    })
+
+    it('drops a linked panel the legend hides, and opens zoomed to a window', () => {
+        const spec = { ...SPECS.linked, zoom: ['sync-inventory', 'rebuild-index'] as const }
+        const option = KINDS.linked.build(spec, LOOK, new Set(['duration'])) as unknown as Option & {
+            grid: unknown[]
+            dataZoom: { startValue: string; endValue: string }[]
+        }
+        expect(option.grid).toHaveLength(1)
+        expect(option.series.map((series) => series.name)).toEqual(['runs'])
+        expect([option.dataZoom[0].startValue, option.dataZoom[0].endValue]).toEqual(['sync-inventory', 'rebuild-index'])
+    })
+
+    it('lays linked panels out by their weights between a fixed top and bottom', () => {
+        expect(linkedLayout([1])).toEqual([{ top: 22, bottom: 58 }])
+        expect(linkedLayout([1, 2])).toEqual([
+            { top: 22, bottom: '71.04%' },
+            { top: '37.71%', bottom: 58 },
+        ])
     })
 
     it('reads a bullet target combined as its figure is', () => {

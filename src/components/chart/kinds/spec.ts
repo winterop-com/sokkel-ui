@@ -64,6 +64,23 @@ export interface ChartSpec {
     words?: Partial<ChartWords>
     /** The fields from the outermost in, for a kind that nests (boxes, rings) or flows through stages. */
     path?: readonly string[]
+    /** How each panel of a linked chart is drawn, by the name of its `y` field or series. */
+    panels?: Readonly<Record<string, LinkedPanel>>
+    /**
+     * The part of a linked chart's shared axis in view at first: from and to in percent of it, such
+     * as `[60, 100]`, or the first and last category in view, such as `['Aug 1', 'Aug 31']`.
+     */
+    zoom?: readonly [number, number] | readonly [string, string]
+}
+
+/** How one panel of a linked chart is drawn. */
+export interface LinkedPanel {
+    /** Bars, a line, or a line with the area under it filled; a line by default. */
+    mark?: 'bar' | 'line' | 'area'
+    /** The panel hangs from its top: its value axis runs down from zero, as rainfall hangs over a river's flow. */
+    hang?: boolean
+    /** The panel's share of the height against the others', 1 by default, so a panel of 2 is twice as tall as one of 1. */
+    weight?: number
 }
 
 /**

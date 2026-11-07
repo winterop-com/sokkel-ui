@@ -14,12 +14,12 @@ function niceStep(value: number): number {
     return (fraction < 1.5 ? 1 : fraction < 2.5 ? 2 : fraction < 4 ? 3 : fraction < 7 ? 5 : 10) * power
 }
 
-/** An extent widened to round ticks, about five of them, with the step between them. */
-export function niceExtent([low, high]: Extent): { min: number; max: number; interval: number } {
+/** An extent widened to round ticks, about `count` of them (five by default), with the step between them. */
+export function niceExtent([low, high]: Extent, count = 5): { min: number; max: number; interval: number } {
     if (low === high) return { min: low - 1, max: high + 1, interval: 1 }
     // Twelve digits drop the noise of binary fractions, so 0.7 / 0.1 counts as 7 steps, not 7.000000000000001.
     const clean = (value: number) => Number(value.toPrecision(12))
-    const interval = clean(niceStep((high - low) / 5))
+    const interval = clean(niceStep((high - low) / count))
     return { min: clean(Math.floor(clean(low / interval)) * interval), max: clean(Math.ceil(clean(high / interval)) * interval), interval }
 }
 

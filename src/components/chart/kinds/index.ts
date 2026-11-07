@@ -8,6 +8,7 @@ import { funnel, funnelLegend } from './funnel'
 import { gauge } from './gauge'
 import { sunburst, treeLegend, treemap } from './hierarchy'
 import { histogram, histogramLegend } from './histogram'
+import { linked } from './linked'
 import { parallel } from './parallel'
 import { scatter, scatterLegend } from './points'
 import { radar } from './radar'
@@ -45,8 +46,9 @@ export const KINDS = {
     stream: { build: stream },
     step: { build: step },
     range: { build: range, legend: rangeLegend },
+    linked: { build: linked },
 } satisfies Record<string, ChartKindDef>
 
 export type ChartKind = keyof typeof KINDS
 
-export type { ChartBuilder, ChartKindDef, ChartSpec, ChartStep, ChartWords } from './spec'
+export type { ChartBuilder, ChartKindDef, ChartSpec, ChartStep, ChartWords, LinkedPanel } from './spec'

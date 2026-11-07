@@ -138,3 +138,8 @@ export function asShares(series: readonly Series[]): Series[] {
 
 /** A figure written for a tooltip or a label: grouped thousands, at most two decimals. */
 export const formatNumber = (value: number): string => value.toLocaleString('en-US', { maximumFractionDigits: 2 })
+
+const compact = new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 })
+
+/** A figure written short for an axis' ticks: `1.2K` for 1,200. */
+export const formatCompact = (value: number): string => compact.format(value)

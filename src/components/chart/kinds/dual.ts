@@ -1,8 +1,7 @@
+import { formatCompact } from '../data'
 import { tooltipMarkup } from '../look'
 import { shaped, written } from './categories'
 import { colorOf, fieldsOf, unitAt, type ChartBuilder } from './spec'
-
-const compact = new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 })
 
 /**
  * Two measures over the same categories on axes of their own: the first `y` field as bars on the
@@ -22,7 +21,7 @@ export const dual: ChartBuilder = (spec, look) => {
         nameGap: 8,
         nameTextStyle: { align: side, padding: 0 },
         alignTicks: side === 'right',
-        axisLabel: { formatter: (value: number) => `${compact.format(value)}${unitAt(spec, index)}`, hideOverlap: true },
+        axisLabel: { formatter: (value: number) => `${formatCompact(value)}${unitAt(spec, index)}`, hideOverlap: true },
         splitLine: side === 'right' ? { show: false } : undefined,
     })
     return {

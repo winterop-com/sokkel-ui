@@ -66,7 +66,7 @@ function stackEnds(series: readonly Series[]) {
 }
 
 /** A bar's corners, rounded at its far end from the axis. */
-function farCorners(corner: number, horizontal: boolean, value: number) {
+export function farCorners(corner: number, horizontal: boolean, value: number) {
     if (horizontal) return value < 0 ? [corner, 0, 0, corner] : [0, corner, corner, 0]
     return value < 0 ? [0, 0, corner, corner] : [corner, corner, 0, 0]
 }
@@ -108,14 +108,14 @@ export const bar: ChartBuilder = (spec, look) => {
     }
 }
 
-/** An area's color fading from its line toward the axis, deeper where areas stack. */
-function fading(look: ChartLook, color: string, stacked: boolean) {
+/** An area's color fading from its line toward the axis, deeper where areas stack; upward where the area hangs from the top. */
+export function fading(look: ChartLook, color: string, stacked: boolean, hang = false) {
     return {
         type: 'linear',
         x: 0,
-        y: 0,
+        y: hang ? 1 : 0,
         x2: 0,
-        y2: 1,
+        y2: hang ? 0 : 1,
         colorStops: [
             { offset: 0, color: look.mix(color, stacked ? 55 : 40) },
             { offset: 1, color: look.mix(color, stacked ? 30 : 4) },
