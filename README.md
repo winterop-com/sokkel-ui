@@ -35,13 +35,15 @@ The Storybook is published at **https://winterop-com.github.io/sokkel-ui/**.
 
 ## Tokens and themes
 
-- `tokens/tokens.json` is the only place a token is defined. `bun run tokens` writes
-  `src/styles/tokens.css` from it, and `bun scripts/build-tokens.ts --check` fails when the two
-  disagree.
-- Themes are named for how they look. `default` defines every token; the others (paper,
+- `tokens/tokens.json` is the only place a token is defined. `bun run tokens` writes the CSS from
+  it: `src/styles/tokens.css` with the default theme and the density levels, one file for each
+  other theme in `src/styles/themes/`, and `src/styles/themes.css`, which imports them all.
+  `bun scripts/build-tokens.ts --check` fails when the CSS and the JSON disagree.
+- Themes are named for how they look. `default` defines every token; the others (amber, paper,
   contrast, tokyo, vinyl, cassette, neon) override what they change, which may be any token:
   colors, typefaces, radius or density. An app picks its theme on `<html data-theme>`, `.dark`
-  picks dark mode, and `data-theme-scope` draws one element in a theme of its own.
+  picks dark mode, and `data-theme-scope` draws one element in a theme of its own. A theme other
+  than the default answers once its file is imported.
 - Every corner derives from `--radius` (4.5px by default), which a theme or an app sets.
 
 ## Storybook
@@ -83,10 +85,25 @@ from `@tailwindcss/vite` to its plugins, and imports `styles.css` once from its 
 bun add -d tailwindcss @tailwindcss/vite
 ```
 
+`styles.css` carries the default theme. Every other theme is a file of its own, so an app carries
+only the themes it offers: it imports each one's file after `styles.css` and sets the theme on
+`<html data-theme>`, with `.dark` for dark mode:
+
+```ts
+import '@winterop-com/sokkel-ui/styles.css'
+import '@winterop-com/sokkel-ui/themes/paper.css'
+
+document.documentElement.dataset.theme = 'paper'
+```
+
+An app whose settings offer every theme imports `@winterop-com/sokkel-ui/themes.css`, which holds
+them all. `ThemePicker` draws its swatches from the same files, so it shows a theme's swatch only
+once that theme's file is imported.
+
 An app that brings its own Tailwind entry imports `@winterop-com/sokkel-ui/tokens.css` (the tokens,
-themes and density levels) instead, with `motion.css` (the motion setting) and `typography.css` (mono
-sized to the text around it). Components import by path, such as
-`@winterop-com/sokkel-ui/DialogShell` or `@winterop-com/sokkel-ui/primitives/button`.
+the default theme and the density levels) instead, with the theme files it offers, `motion.css`
+(the motion setting) and `typography.css` (mono sized to the text around it). Components import by
+path, such as `@winterop-com/sokkel-ui/DialogShell` or `@winterop-com/sokkel-ui/primitives/button`.
 
 The heavy engines are optional peer dependencies, so an app installs only those of the parts it
 uses:

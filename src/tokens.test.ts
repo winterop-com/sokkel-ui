@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import { join } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
@@ -41,4 +42,17 @@ describe('the tokens', () => {
             })
         }
     }
+})
+
+describe('the theme files', () => {
+    const resolve = createRequire(import.meta.url).resolve
+    const styles = join(__dirname, 'styles')
+    for (const theme of Object.keys(tokens.themes).filter((name) => name !== 'default')) {
+        it(`export ${theme} as themes/${theme}.css`, () => {
+            expect(resolve(`@winterop-com/sokkel-ui/themes/${theme}.css`)).toBe(join(styles, 'themes', `${theme}.css`))
+        })
+    }
+    it('export every theme together as themes.css', () => {
+        expect(resolve('@winterop-com/sokkel-ui/themes.css')).toBe(join(styles, 'themes.css'))
+    })
 })

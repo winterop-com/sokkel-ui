@@ -31,7 +31,8 @@ and ask before acting.
 - Apps install this package and never copy from it. A component an app needs to differ gets an
   option here, never a local edit in the app.
 - `tokens/tokens.json` is the only place a token is defined. Run `bun run tokens` after editing
-  it; `src/styles/tokens.css` is generated and never edited by hand.
+  it; `src/styles/tokens.css`, `src/styles/themes.css` and the theme files in `src/styles/themes/`
+  are generated and never edited by hand.
 - Every corner derives from `--radius`. Every color, typeface and size comes from a token, so a
   theme can change it.
 - A panel resizes by default, holding its own size from `defaultSize`; `size` with a size handler

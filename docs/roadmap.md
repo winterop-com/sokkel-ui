@@ -89,10 +89,10 @@ The music parts grow to carry a whole player, before an app builds on them.
 
 ## Later
 
-- **One token source, several outputs.** `tokens/tokens.json` already builds `tokens.css`. From the
-  same file: a W3C design-tokens file for Figma and theme tools, and a design system for design
-  tools built from the tokens and component screenshots, so decks and mockups match the apps.
-  Never two hand-kept copies.
+- **One token source, several outputs.** `tokens/tokens.json` already builds `tokens.css` and a
+  file per theme. From the same file: a W3C design-tokens file for Figma and theme tools, and a
+  design system for design tools built from the tokens and component screenshots, so decks and
+  mockups match the apps. Never two hand-kept copies.
 - **A registry for agents.** A shadcn-style registry only so coding agents can find components.
   Every item points at the package; none ships a copy.
 

@@ -9,7 +9,7 @@ help: ## List the targets
 install: ## Install the dependencies
 	bun install
 
-tokens: ## Build src/styles/tokens.css from tokens/tokens.json
+tokens: ## Build tokens.css and the theme files from tokens/tokens.json
 	bun run tokens
 
 storybook: ## Run the Storybook dev server on port 6106
