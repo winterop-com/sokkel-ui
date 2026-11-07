@@ -1,11 +1,16 @@
 name: screenshots
 
-# Retakes every screenshot baseline in the same Playwright image the visual job compares in, and
-# commits them back to the branch it was started on. Start it with `make screenshots-ci` or from
-# the Actions tab after a change that alters how stories look; then CI's visual job compares
-# against them.
+# Retakes screenshot baselines in the same Playwright image the visual job compares in, and commits
+# them back to the branch it was started on. `stories` narrows it to the story ids matching a
+# pattern, so a change to a few stories retakes in minutes; empty retakes every story. Start it with
+# `make screenshots-ci`, or `make screenshots-ci STORIES='foundations-icons|apps-music'`.
 on:
     workflow_dispatch:
+        inputs:
+            stories:
+                description: 'Story ids to retake, as a pattern; empty for every story'
+                required: false
+                default: ''
 
 permissions:
     contents: write
@@ -26,7 +31,9 @@ jobs:
             - run: bun install --frozen-lockfile
             - run: bun run build-storybook
             - run: touch /tmp/started
-            - run: bunx playwright test e2e/stories.spec.ts --update-snapshots
+            - run: bunx playwright test e2e/stories.spec.ts --update-snapshots ${STORIES:+-g "$STORIES"}
+              env:
+                  STORIES: ${{ inputs.stories }}
             - run: scripts/compress-screenshots.sh /tmp/started
             - name: Commit the baselines
               run: |
