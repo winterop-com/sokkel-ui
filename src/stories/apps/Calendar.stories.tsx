@@ -38,6 +38,7 @@ import { TooltipProvider } from '../../components/ui/tooltip'
 import { useIsMobile } from '../../hooks/use-mobile'
 import { cn } from '../../lib/cn'
 import { KIND_FILL, type KindColor } from '../../lib/kind'
+import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { DayStrip } from '../../components/calendar/DayStrip'
 import { Dot } from '../../components/Dot'
@@ -261,7 +262,7 @@ function Detail({ event }: { event: Entry }) {
                         <Users className="size-4 shrink-0 text-faint" aria-hidden />
                         <Row as="span" gap="2xs">
                             {event.people.map((person) => (
-                                <PersonAvatar key={person} name={person} size="xs" />
+                                <PersonAvatar key={person} name={person} image={pictureOf(person)} size="xs" />
                             ))}
                         </Row>
                         <span className="truncate text-muted-foreground">{event.people.join(', ')}</span>
@@ -348,7 +349,15 @@ function CalendarApp({ view: initialView = 'week', open = null }: { view?: View;
                         groups={GROUPS}
                         collapsed={collapsed}
                         onCollapsedChange={setCollapsed}
-                        foot={<AccountMenu name="ada" where="tidevann.example.org" collapsed={collapsed} onSignOut={() => undefined} />}
+                        foot={
+                            <AccountMenu
+                                name="ada"
+                                image={pictureOf('ada')}
+                                where="tidevann.example.org"
+                                collapsed={collapsed}
+                                onSignOut={() => undefined}
+                            />
+                        }
                     />
                 }
                 top={

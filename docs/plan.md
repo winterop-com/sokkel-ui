@@ -67,8 +67,8 @@ toggle-group, tooltip, trace.
 Shell, Rail, AppBar, SubNav, Page, PageHeader, PaneHeader, Toolbar, Section, Surface, the layout
 components (Stack, Row, Columns, Split, Fill), Field, TextField, InlineField, SliderField,
 CheckboxField, CheckboxList, ChoiceList, CodeField, SwitchField, SearchField, FilterChip, FormBar,
-SelectionBar, DataTable, StatusChip, PersonRow, MetaLine, DueText, AttachmentList, IconButton,
-StarButton, AccountMenu, SidePanel, DialogShell, ConfirmDialog, TreeSelect, AsyncSelect,
+SelectionBar, DataTable, StatusChip, PersonAvatar, PersonRow, MetaLine, DueText, AttachmentList,
+IconButton, StarButton, AccountMenu, SidePanel, DialogShell, ConfirmDialog, TreeSelect, AsyncSelect,
 CapabilityPicker.
 Every example arranges and builds its screens from these, never by hand, so a fix in one reaches
 them all.
@@ -82,6 +82,13 @@ a branch first opens, if the app wants), and moves by the keyboard. It pages in 
 from a server, loads more as its end comes near, and shows the same rows as a grid of cards (an
 album view) that keeps the selection, menus and sort. A short listing drops the bar above its
 head and may carry a foot line.
+
+PersonAvatar draws a person as their picture, or as their initials on their color. A picture takes
+the initials' place only once it has loaded (Base UI's avatar tracks it), so until then, and for good
+when it fails, the initials stay in the same box: nothing moves and a broken image never shows. The
+parts that show people (PersonRow, ChatMessage, ChannelHeader, ChannelList, BoardCard, PeopleFilter,
+AccountMenu) take the picture as an address. The stories draw Tidevann's people as SVG portraits,
+mixed with initials as a real team is.
 
 A team chat is built from Rail's `strip` (labeled icons with counts or an unread dot at the
 icon's corner), ChannelList, ChannelHeader, Conversation and ThreadView (the columns of a

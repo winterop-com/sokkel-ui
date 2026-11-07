@@ -32,6 +32,7 @@ import { describeCron } from '../../lib/cron'
 import { Behind } from './parts'
 import { Item, ItemContent, ItemDescription, ItemMedia } from '../../components/ui/item'
 import { Columns, Row, Stack } from '../../components/Layout'
+import { pictureOf } from '../fixtures/portraits'
 
 /** Counts from 0 to 1 while `running`, then calls `onDone`; a stand-in for a server's progress. */
 function useProgress(running: boolean, ms: number, onDone: () => void) {
@@ -754,6 +755,7 @@ export function Share() {
                             <li key={member.email} className="py-1.5">
                                 <PersonRow
                                     name={member.username}
+                                    image={pictureOf(member.username)}
                                     note={member.username === 'ada' ? '(you)' : undefined}
                                     detail={member.email}
                                     aside={

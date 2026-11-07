@@ -23,6 +23,7 @@ import { AccountMenu } from '../../components/AccountMenu'
 import { PersonAvatar } from '../../components/PersonAvatar'
 import { Rail, type RailEntry, type RailGroup } from '../../components/Rail'
 import { TooltipProvider } from '../../components/ui/tooltip'
+import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { Row } from '../../components/Layout'
 
@@ -76,7 +77,7 @@ const STRIP_FOOT = (
             <Plus aria-hidden />
         </IconButton>
         <IconButton label="Account" size="icon-lg">
-            <PersonAvatar name="ada" color="blue" size="lg" shape="square" presence="active" />
+            <PersonAvatar name="ada" color="blue" image={pictureOf('ada')} size="lg" shape="square" presence="active" />
         </IconButton>
     </>
 )

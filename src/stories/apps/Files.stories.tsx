@@ -37,6 +37,7 @@ import { Button } from '../../components/ui/button'
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '../../components/ui/empty'
 import { Input } from '../../components/ui/input'
 import { TooltipProvider } from '../../components/ui/tooltip'
+import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { CHART, FIELD, HARBOR_DUSK, LIGHTHOUSE, PINES } from '../fixtures/photos'
 import { Row } from '../../components/Layout'
@@ -487,7 +488,15 @@ function FilesApp({
                         collapsed={collapsed}
                         onCollapsedChange={setCollapsed}
                         defaultWidth={232}
-                        foot={<AccountMenu name="grace" where="tidevann.example.org" collapsed={collapsed} onSignOut={() => undefined} />}
+                        foot={
+                            <AccountMenu
+                                name="grace"
+                                image={pictureOf('grace')}
+                                where="tidevann.example.org"
+                                collapsed={collapsed}
+                                onSignOut={() => undefined}
+                            />
+                        }
                     />
                 }
                 top={

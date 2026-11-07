@@ -20,12 +20,13 @@ import { TableOfContents, useActiveHeading } from '../../components/TableOfConte
 import { ThemeToggle } from '../../components/ThemeToggle'
 import { TopBar } from '../../components/TopBar'
 import { Tree, type TreeNode } from '../../components/Tree'
-import { Avatar, AvatarFallback } from '../../components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar'
 import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
 import { NativeSelect, NativeSelectOption } from '../../components/ui/native-select'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { cn } from '../../lib/cn'
+import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { Columns, Row, Stack } from '../../components/Layout'
 import { GroupLabel } from '../../components/GroupLabel'
@@ -235,8 +236,10 @@ const VERSIONS: Version[] = [
 const CURRENT = VERSIONS[0]
 
 function Person({ name, size = 'sm' }: { name: string; size?: 'sm' | 'default' }) {
+    const picture = pictureOf(name)
     return (
         <Avatar size={size}>
+            {picture !== undefined && <AvatarImage src={picture} alt={name} />}
             <AvatarFallback className="bg-primary/15 font-medium text-primary-ink uppercase">{name.slice(0, 1)}</AvatarFallback>
         </Avatar>
     )
@@ -363,7 +366,15 @@ function DocsApp({ mode: initialMode = 'read' }: { mode?: 'read' | 'edit' | 'his
                         collapsed={collapsed}
                         onCollapsedChange={setCollapsed}
                         defaultWidth={232}
-                        foot={<AccountMenu name="grace" where="tidevann.example.org" collapsed={collapsed} onSignOut={() => undefined} />}
+                        foot={
+                            <AccountMenu
+                                name="grace"
+                                image={pictureOf('grace')}
+                                where="tidevann.example.org"
+                                collapsed={collapsed}
+                                onSignOut={() => undefined}
+                            />
+                        }
                     />
                 }
                 top={

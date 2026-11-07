@@ -42,6 +42,7 @@ import { DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSep
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { cn } from '../../lib/cn'
 import type { KindColor } from '../../lib/kind'
+import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { Progress } from '../../components/ui/progress'
 import { PeopleFilter } from '../../components/PeopleFilter'
@@ -402,7 +403,7 @@ function ItemPanel({ item, onToggle }: { item: Item; onToggle: (index: number) =
                             value:
                                 item.assignee === undefined ? undefined : (
                                     <Row as="span" inline>
-                                        <PersonAvatar name={item.assignee} size="xs" />
+                                        <PersonAvatar name={item.assignee} image={pictureOf(item.assignee)} size="xs" />
                                         {item.assignee}
                                     </Row>
                                 ),
@@ -500,7 +501,7 @@ function BoardApp({
             code={item.code}
             title={item.title}
             labels={item.labels.map((name) => ({ name, color: LABELS[name] }))}
-            assignee={item.assignee === undefined ? undefined : { name: item.assignee }}
+            assignee={item.assignee === undefined ? undefined : { name: item.assignee, image: pictureOf(item.assignee) }}
             due={item.due}
             now={NOW}
             done={item.column === 'done'}
@@ -522,7 +523,15 @@ function BoardApp({
                         groups={GROUPS}
                         collapsed={collapsed}
                         onCollapsedChange={setCollapsed}
-                        foot={<AccountMenu name="ada" where="tidevann.example.org" collapsed={collapsed} onSignOut={() => undefined} />}
+                        foot={
+                            <AccountMenu
+                                name="ada"
+                                image={pictureOf('ada')}
+                                where="tidevann.example.org"
+                                collapsed={collapsed}
+                                onSignOut={() => undefined}
+                            />
+                        }
                     />
                 }
                 top={
@@ -605,7 +614,7 @@ function BoardApp({
                             }
                         >
                             <PeopleFilter
-                                people={PEOPLE.map((name) => ({ name }))}
+                                people={PEOPLE.map((name) => ({ name, image: pictureOf(name) }))}
                                 chosen={filters.people}
                                 onChange={(people) => setFilters({ ...filters, people: people as Person[] })}
                                 words={{ label: 'Assignees' }}

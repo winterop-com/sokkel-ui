@@ -19,6 +19,7 @@ import { Textarea } from '../../components/ui/textarea'
 import { describeCron } from '../../lib/cron'
 import { Behind, wait } from './parts'
 import { Row, Stack } from '../../components/Layout'
+import { pictureOf } from '../fixtures/portraits'
 
 export function Rename() {
     const [open, setOpen] = useState(true)
@@ -297,7 +298,12 @@ export function SessionExpired() {
                     why: password === '' ? 'Enter your password.' : undefined,
                 }}
             >
-                <PersonRow name="ada" detail="ada@example.org" className="rounded-control border border-border px-3 py-2" />
+                <PersonRow
+                    name="ada"
+                    image={pictureOf('ada')}
+                    detail="ada@example.org"
+                    className="rounded-control border border-border px-3 py-2"
+                />
                 <TextField
                     id="password"
                     label="Password"

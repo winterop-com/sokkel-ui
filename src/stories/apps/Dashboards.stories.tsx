@@ -76,6 +76,7 @@ import {
     type Span,
     type Worker,
 } from '../fixtures/metrics'
+import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 
 /**
@@ -129,7 +130,15 @@ function DashboardsApp({ board, children }: { board: Board; children: ReactNode 
                         groups={groups(board)}
                         collapsed={collapsed}
                         onCollapsedChange={setCollapsed}
-                        foot={<AccountMenu name="ada" where="tidevann.example.org" collapsed={collapsed} onSettings={() => undefined} />}
+                        foot={
+                            <AccountMenu
+                                name="ada"
+                                image={pictureOf('ada')}
+                                where="tidevann.example.org"
+                                collapsed={collapsed}
+                                onSettings={() => undefined}
+                            />
+                        }
                     />
                 }
                 top={<TopBar trail={[{ label: 'Dashboards', href: '#' }, { label }]} onSearch={() => undefined} />}

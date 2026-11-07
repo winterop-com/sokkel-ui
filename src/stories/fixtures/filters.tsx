@@ -1,6 +1,7 @@
 import type { FilterOption } from '../../components/FilterChip'
 import { PersonAvatar } from '../../components/PersonAvatar'
 import { StatusChip, type Status } from '../../components/StatusChip'
+import { pictureOf } from './portraits'
 
 /** The values the toolbars' filter chips offer, from Tidevann's workspace. */
 
@@ -16,7 +17,7 @@ export const JOB_OPTIONS: FilterOption[] = ['nightly-export', 'sync-inventory', 
 /** People, each with their avatar. */
 export const PEOPLE_OPTIONS: FilterOption[] = ['ada', 'grace', 'linus', 'margaret'].map((name) => ({
     value: name,
-    icon: <PersonAvatar name={name} size="xs" />,
+    icon: <PersonAvatar name={name} image={pictureOf(name)} size="xs" />,
 }))
 
 export const PROJECT_OPTIONS: FilterOption[] = ['harbor', 'juniper', 'larkspur'].map((project) => ({ value: project }))
