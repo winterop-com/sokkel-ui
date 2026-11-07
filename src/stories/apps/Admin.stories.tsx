@@ -17,16 +17,17 @@ import {
     Send,
     ShieldCheck,
     Trash2,
-    TriangleAlert,
     UserPlus,
     Users,
     X,
 } from 'lucide-react'
+import { differenceInCalendarDays, format } from 'date-fns'
 import { useState, type ReactNode } from 'react'
 
 import { AccountMenu } from '../../components/AccountMenu'
 import { IssueCount } from '../../components/IssueMark'
 import { AddressInput, isAddress, type Address } from '../../components/AddressInput'
+import { DueText } from '../../components/DueText'
 import { DashboardGrid, KpiRow, SPAN } from '../../components/dashboard/DashboardGrid'
 import { BarGauge } from '../../components/dashboard/BarGauge'
 import type { PanelSeries } from '../../components/dashboard/series'
@@ -125,14 +126,24 @@ interface Invite {
     role: Role
     by: string
     sent: string
-    expires: string
-    /** Days until the invite expires. */
-    left: number
+    expires: Date
+}
+
+/** Today, which the expiry dates are judged against. */
+const NOW = new Date(2026, 10, 4)
+
+/** An invite's expiry as days from today. */
+const INVITE_EXPIRY = {
+    date: (date: Date, now: Date) => {
+        const days = differenceInCalendarDays(date, now)
+        return days === 1 ? 'tomorrow' : `in ${String(days)} days`
+    },
+    title: () => undefined,
 }
 
 const INVITES: Invite[] = [
-    { email: 'data@example.org', role: 'editor', by: 'grace', sent: 'Nov 2', expires: 'in 5 days', left: 5 },
-    { email: 'oncall@example.org', role: 'viewer', by: 'ada', sent: 'Oct 30', expires: 'tomorrow', left: 1 },
+    { email: 'data@example.org', role: 'editor', by: 'grace', sent: 'Nov 2', expires: new Date(2026, 10, 9) },
+    { email: 'oncall@example.org', role: 'viewer', by: 'ada', sent: 'Oct 30', expires: new Date(2026, 10, 5) },
 ]
 
 function groups(view: View): RailGroup[] {
@@ -255,16 +266,14 @@ const inviteColumns: DataColumn<Invite>[] = [
         header: 'Sent',
         width: '6rem',
         cell: (invite) => <span className="text-muted-foreground tabular-nums">{invite.sent}</span>,
-        sortValue: (invite) => -invite.left,
+        sortValue: (invite) => -invite.expires.getTime(),
     },
     {
         id: 'expires',
         header: 'Expires',
         width: '7rem',
-        cell: (invite) => (
-            <span className={cn('tabular-nums', invite.left <= 1 ? 'text-warning-ink' : 'text-muted-foreground')}>{invite.expires}</span>
-        ),
-        sortValue: (invite) => invite.left,
+        cell: (invite) => <DueText date={invite.expires} now={NOW} nearDays={1} words={INVITE_EXPIRY} />,
+        sortValue: (invite) => invite.expires.getTime(),
     },
 ]
 
@@ -604,19 +613,16 @@ function RolesPage() {
 
 /* Tokens */
 
-type ExpiryTone = 'normal' | 'soon' | 'expired'
-
 interface Token {
     name: string
     scopes: string[]
     created: string
     used: string
-    expires: string
-    tone: ExpiryTone
-    /** Days since it was made, minutes since it was used, and days until it expires, for sorting. */
+    /** None for a token that never expires. */
+    expires?: Date
+    /** Days since it was made and minutes since it was used, for sorting. */
     age: number
     idle: number
-    left: number
 }
 
 const TOKENS: Token[] = [
@@ -625,44 +631,35 @@ const TOKENS: Token[] = [
         scopes: ['runs:start', 'projects:read'],
         created: 'Aug 6, grace',
         used: '14 min ago',
-        expires: 'Nov 7, in 3 days',
-        tone: 'soon',
+        expires: new Date(2026, 10, 7),
         age: 90,
         idle: 14,
-        left: 3,
     },
     {
         name: 'metrics-export',
         scopes: ['runs:read'],
         created: 'Jun 2, ada',
         used: '2 h ago',
-        expires: 'Dec 31',
-        tone: 'normal',
+        expires: new Date(2026, 11, 31),
         age: 155,
         idle: 120,
-        left: 57,
     },
     {
         name: 'backup-sync',
         scopes: ['secrets:read', 'projects:read', 'runs:read'],
         created: 'Mar 14, linus',
         used: 'Oct 2',
-        expires: 'never',
-        tone: 'normal',
         age: 235,
         idle: 46_000,
-        left: Number.MAX_SAFE_INTEGER,
     },
     {
         name: 'old-webhook',
         scopes: ['runs:start'],
         created: 'Feb 1, grace',
         used: 'Feb 20',
-        expires: 'Oct 30, expired',
-        tone: 'expired',
+        expires: new Date(2026, 9, 30),
         age: 276,
         idle: 365_000,
-        left: -5,
     },
 ]
 
@@ -671,11 +668,9 @@ const NEW_TOKEN: Token = {
     scopes: ['runs:read', 'runs:start'],
     created: 'Nov 4, ada',
     used: 'never',
-    expires: 'Feb 2, 2027',
-    tone: 'normal',
+    expires: new Date(2027, 1, 2),
     age: 0,
     idle: Number.MAX_SAFE_INTEGER,
-    left: 90,
 }
 
 function Scope({ scope }: { scope: string }) {
@@ -686,14 +681,16 @@ function Scope({ scope }: { scope: string }) {
     )
 }
 
-function Expiry({ token }: { token: Token }) {
-    if (token.tone === 'normal') return <span className="text-muted-foreground tabular-nums">{token.expires}</span>
-    return (
-        <span className={cn('flex items-center gap-1 tabular-nums', token.tone === 'soon' ? 'text-warning-ink' : 'text-critical-ink')}>
-            <TriangleAlert className="size-3.5 shrink-0" aria-hidden />
-            <span className="truncate">{token.expires}</span>
-        </span>
-    )
+/** A token's expiry: its date, with how near it is within a week, and "never" without one. */
+const TOKEN_EXPIRY = {
+    date: (date: Date, now: Date) => {
+        const days = differenceInCalendarDays(date, now)
+        const written = format(date, date.getFullYear() === now.getFullYear() ? 'MMM d' : 'MMM d, yyyy')
+        if (days < 0) return `${written}, expired`
+        return days <= 7 ? `${written}, in ${String(days)} days` : written
+    },
+    title: () => undefined,
+    none: 'never',
 }
 
 const TOKEN_COLUMNS: DataColumn<Token>[] = [
@@ -731,7 +728,13 @@ const TOKEN_COLUMNS: DataColumn<Token>[] = [
         cell: (token) => <span className="text-muted-foreground tabular-nums">{token.used}</span>,
         sortValue: (token) => token.idle,
     },
-    { id: 'expires', header: 'Expires', width: '9rem', cell: (token) => <Expiry token={token} />, sortValue: (token) => token.left },
+    {
+        id: 'expires',
+        header: 'Expires',
+        width: '9rem',
+        cell: (token) => <DueText date={token.expires} now={NOW} nearDays={7} alert words={TOKEN_EXPIRY} />,
+        sortValue: (token) => token.expires?.getTime() ?? Number.MAX_SAFE_INTEGER,
+    },
 ]
 
 const tokenActions = (): DataAction[] => [

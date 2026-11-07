@@ -23,6 +23,7 @@ import { Board as BoardArea, BoardDrop, BoardLane, type BoardMove } from '../../
 import { BoardCard, BoardLabel } from '../../components/board/BoardCard'
 import { BoardColumn, BoardColumnHead } from '../../components/board/BoardColumn'
 import { DescriptionList } from '../../components/DescriptionList'
+import { DueText } from '../../components/DueText'
 import { FilterChip, type FilterOption } from '../../components/FilterChip'
 import { PageHeader } from '../../components/PageHeader'
 import { PersonAvatar } from '../../components/PersonAvatar'
@@ -412,9 +413,13 @@ function ItemPanel({ item, onToggle }: { item: Item; onToggle: (index: number) =
                             term: 'Due',
                             value:
                                 item.due === undefined ? undefined : (
-                                    <span className={cn(item.due < day(5) && item.column !== 'done' && 'font-medium text-critical-ink')}>
-                                        {format(item.due, 'EEEE d MMMM')}
-                                    </span>
+                                    <DueText
+                                        date={item.due}
+                                        now={NOW}
+                                        done={item.column === 'done'}
+                                        quiet={false}
+                                        words={{ date: (date) => format(date, 'EEEE d MMMM') }}
+                                    />
                                 ),
                         },
                         { term: 'Reporter', value: 'margaret' },
