@@ -1,7 +1,22 @@
 import { TransportButton } from '../../components/media/MediaControls'
 import { IconButton } from '../../components/IconButton'
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { Clapperboard, Disc3, Heart, ListMusic, MicVocal, MoreHorizontal, Music2, Play, Shuffle, Tv, type LucideIcon } from 'lucide-react'
+import {
+    Clapperboard,
+    Disc3,
+    Download,
+    Heart,
+    ListEnd,
+    ListMusic,
+    ListPlus,
+    MicVocal,
+    MoreHorizontal,
+    Music2,
+    Play,
+    Shuffle,
+    Tv,
+    type LucideIcon,
+} from 'lucide-react'
 import { useState } from 'react'
 
 import { AccountMenu } from '../../components/AccountMenu'
@@ -17,6 +32,7 @@ import { SearchField } from '../../components/SearchField'
 import { Segmented } from '../../components/Segmented'
 import { Page, Shell } from '../../components/Shell'
 import { PanelSection, SidePanel } from '../../components/SidePanel'
+import { StarButton } from '../../components/StarButton'
 import { Toolbar } from '../../components/Toolbar'
 import { TopBar, type Crumb } from '../../components/TopBar'
 import { Button } from '../../components/ui/button'
@@ -123,6 +139,9 @@ const THEN: Track[] = [
     duration: entry.duration,
 }))
 
+/** The album's tracks that are starred. */
+const STARRED = ['t2', 't4', 't8']
+
 const HISTORY: Track[] = TRACKS.slice(0, CURRENT).map((track, index) => ({
     id: `h${String(index)}`,
     title: track.title,
@@ -179,8 +198,8 @@ function groups(view: View): RailGroup[] {
 
 const TRAILS: Record<View, Crumb[]> = {
     library: [{ label: 'Albums' }],
-    album: [{ label: 'Albums', href: '#' }, { label: PLAYING.title }],
-    queue: [{ label: 'Albums', href: '#' }, { label: PLAYING.title }],
+    album: [],
+    queue: [],
     series: [{ label: 'Series', href: '#' }, { label: FILM.series }],
     video: [{ label: 'Series', href: '#' }, { label: FILM.series, href: '#' }, { label: FILM.title }],
 }
@@ -275,46 +294,79 @@ function LibraryPage() {
 
 function AlbumPage() {
     const total = TRACKS.reduce((sum, track) => sum + track.duration, 0)
+    const [starred, setStarred] = useState(true)
+    const [stars, setStars] = useState<ReadonlySet<string>>(() => new Set(STARRED))
+    const star = (id: string, on: boolean) =>
+        setStars((now) => {
+            const next = new Set(now)
+            if (on) next.add(id)
+            else next.delete(id)
+            return next
+        })
     return (
         <Page className="@container">
-            <Row gap="2xl" align="start" wrap>
-                <Row gap="lg" align="end" wrap className="w-full @4xl:sticky @4xl:top-0 @4xl:w-60 @4xl:shrink-0">
-                    <span className="block size-40 shrink-0 overflow-hidden rounded-surface shadow-xs ring-1 ring-border sm:size-48 @4xl:aspect-square @4xl:size-auto @4xl:w-full">
+            <PageHeader
+                onBack={() => undefined}
+                trail={[
+                    { label: 'Music', href: '#' },
+                    { label: PLAYING.artist, href: '#' },
+                ]}
+                title={PLAYING.title}
+                meta={
+                    <MetaLine
+                        size="sm"
+                        items={[
+                            <span className="font-medium text-foreground">{PLAYING.artist}</span>,
+                            PLAYING.year,
+                            `${String(TRACKS.length)} tracks, ${String(Math.round(total / 60))} min`,
+                        ]}
+                    />
+                }
+                actions={
+                    <>
+                        <Button size="sm" variant="outline">
+                            <Download aria-hidden />
+                            Download
+                        </Button>
+                        <StarButton variant="outline" starred={starred} onStarredChange={setStarred} />
+                        <Button size="sm" variant="outline">
+                            <ListPlus aria-hidden />
+                            Add to playlist
+                        </Button>
+                    </>
+                }
+            />
+            <Row gap="2xl" align="start" stackBelowRoom="2xl">
+                <Row gap="lg" align="end" wrap className="shrink-0 @2xl:sticky @2xl:top-0 @2xl:w-44 @4xl:w-60">
+                    <span className="block size-32 shrink-0 overflow-hidden rounded-surface shadow-xs ring-1 ring-border @2xl:aspect-square @2xl:size-auto @2xl:w-full">
                         <Artwork cover={PLAYING.cover} />
                     </span>
-                    <Stack className="grow basis-60">
-                        <div className="min-w-0">
-                            <GroupLabel>Album</GroupLabel>
-                            <h1 className="truncate text-page font-semibold tracking-tight">{PLAYING.title}</h1>
-                            <MetaLine
-                                size="sm"
-                                items={[
-                                    <span className="font-medium text-foreground">{PLAYING.artist}</span>,
-                                    PLAYING.year,
-                                    `${String(TRACKS.length)} tracks, ${String(Math.round(total / 60))} min`,
-                                ]}
-                            />
-                        </div>
-                        <Row>
-                            <Button size="sm">
-                                <Play className="fill-current" aria-hidden />
-                                Play
-                            </Button>
-                            <Button size="sm" variant="outline">
-                                <Shuffle aria-hidden />
-                                Shuffle
-                            </Button>
-                            <IconButton label="Add to favorites">
-                                <Heart aria-hidden />
-                            </IconButton>
-                            <IconButton label="More">
-                                <MoreHorizontal aria-hidden />
-                            </IconButton>
-                        </Row>
-                    </Stack>
+                    <Row>
+                        <Button size="sm">
+                            <Play className="fill-current" aria-hidden />
+                            Play
+                        </Button>
+                        <Button size="sm" variant="outline">
+                            <Shuffle aria-hidden />
+                            Shuffle
+                        </Button>
+                    </Row>
                 </Row>
                 <Stack gap="2xl" className="flex-1">
-                    <TrackList tracks={ALBUM_TRACKS} current={`t${String(CURRENT + 1)}`} playing onPlay={() => undefined} />
+                    <TrackList
+                        tracks={ALBUM_TRACKS}
+                        current={`t${String(CURRENT + 1)}`}
+                        playing
+                        onPlay={() => undefined}
+                        actions={(track) => (
+                            <>
+                                <IconButton label="Add to queue">
+                                    <ListEnd aria-hidden />
+                                </IconButton>
+                                <StarButton starred={stars.has(track.id)} onStarredChange={(on) => star(track.id, on)} />
+                            </>
+                        )}
+                    />
                     <Stack as="section">
                         <h2 className="text-sm font-medium">More by {PLAYING.artist}</h2>
                         <AlbumGrid albums={ALBUMS.filter((album) => album.artist === PLAYING.artist && album.id !== PLAYING.id)} />
@@ -503,7 +555,12 @@ export default meta
 /** The album grid, its covers drawn, with the playing album marked and the player bar along the foot. */
 export const Library: StoryObj = { name: 'Library', render: () => <MusicApp view="library" /> }
 
-/** One album's tracks, the one playing drawn in the accent with a speaker for its number. */
+/**
+ * One album's page: back and the trail through the music and its artist over the title, the
+ * artist and year under it, and Download, the favorite star and Add to playlist at its end. The
+ * cover stays beside the tracks as they scroll; the one playing is drawn in the accent with a
+ * speaker for its number, and each row carries its own add to the queue and star.
+ */
 export const Album: StoryObj = { name: 'Album', render: () => <MusicApp view="album" /> }
 
 /** The queue in the side panel beside the album, its button pressed in the bar; on a phone the queue is the page. */
