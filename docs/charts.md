@@ -100,6 +100,7 @@ What a chart reads. Each kind reads some of these fields; its row in the tables 
 | `path`        | The fields from the outermost in, for a kind that nests or flows through stages.                                             |
 | `dial`        | A gauge's shape: `arc` (the default), `ring`, `half`, `bands` or `needle`.                                                   |
 | `panels`      | How each panel of a linked chart is drawn, by its field's or series' name: `mark` (`bar`, `line`, `area`), `hang`, `weight`. |
+| `scales`      | Whether a linked chart's panels share one value scale: `shared` for panels split by `series`, `own` for separate fields.     |
 | `zoom`        | The part of a linked chart's axis in view at first: `[from, to]` in percent, or the first and last category.                 |
 
 ## The kinds
@@ -171,11 +172,13 @@ the charts'.
 
 ### Linked
 
-| Kind     | For                                                                                        | Reads                                                                                                                                               | Story         |
-| -------- | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| `linked` | Panels on one shared axis, one per `y` field or per series, pointed at and zoomed together | `x`, `y`, `series`, `aggregate`, `order`, `seriesOrder`, `panels`, `zoom`, `colors`, `fill`, `smooth`, `fieldNames`, `format`, `unit`, `labelEvery` | Charts/Linked |
+| Kind     | For                                                                                        | Reads                                                                                                                                                         | Story         |
+| -------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| `linked` | Panels on one shared axis, one per `y` field or per series, pointed at and zoomed together | `x`, `y`, `series`, `aggregate`, `order`, `seriesOrder`, `scales`, `panels`, `zoom`, `colors`, `fill`, `smooth`, `fieldNames`, `format`, `unit`, `labelEvery` | Charts/Linked |
 
-Each panel has a value axis of its own. Pointing at a category points at it in every panel, and
+Each panel has a value axis of its own. Panels split by `series` share one scale, so a panel's
+height compares with the others'; panels of separate `y` fields keep their own, as rain in
+millimeters beside flow in cubic meters; `scales` (`shared`, `own`) picks otherwise. Pointing at a category points at it in every panel, and
 one zoom moves them all: the slider under the last panel, a drag across a panel, or a pinch (Ctrl
 and the wheel with a mouse). `panels` draws each, by its field's or series' name, as bars, a line
 or an area (`mark`), hanging from its top on an inverted axis (`hang`), as rain hangs over the

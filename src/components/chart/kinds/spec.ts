@@ -70,6 +70,12 @@ export interface ChartSpec {
      * steps' colors, and `needle` swings a needle over a scale with ticks.
      */
     dial?: GaugeDial
+    /**
+     * Whether a linked chart's panels share one value scale, so a panel's height compares with the
+     * others': `shared` by default where `series` splits one measure into panels, `own` by default
+     * where each panel is a `y` field of its own, as rain in millimeters beside flow in cubic meters.
+     */
+    scales?: 'shared' | 'own'
     /** How each panel of a linked chart is drawn, by the name of its `y` field or series. */
     panels?: Readonly<Record<string, LinkedPanel>>
     /**

@@ -60,13 +60,14 @@ function widestTick(values: readonly (number | null)[], write: (value: number) =
 
 /**
  * Panels stacked on one shared `x` axis of categories or days, one panel per `y` field, or per
- * label of `series` when it names a field, each with a value axis of its own. Moving over one
+ * label of `series` when it names a field, each with a value axis of its own, on one scale where
+ * `scales` says so, as it does by default for panels split by `series`. Moving over one
  * panel points at the same category in all of them, and one zoom moves them together: a slider
  * under the last panel, dragging across a panel, and a pinch or Ctrl and the wheel. `panels` says
  * how each is drawn: as bars, a line or an area, standing or hanging from its top, and its share of
  * the height. `zoom` sets the part in view at first. The legend's hidden series drop their panels.
  * Reads `x`, `y`, `series`, `aggregate`, `order`, `seriesOrder`, `colors`, `format`, `unit`,
- * `fieldNames`, `smooth`, `fill`, `labelEvery`, `panels` and `zoom`.
+ * `fieldNames`, `smooth`, `fill`, `labelEvery`, `scales`, `panels` and `zoom`.
  */
 export const linked: ChartBuilder = (spec, look, hidden) => {
     const { categories, series } = shaped({ ...spec, stack: undefined })
@@ -83,7 +84,11 @@ export const linked: ChartBuilder = (spec, look, hidden) => {
     const last = panels.length - 1
     const layout = linkedLayout(panels.map((panel) => Math.max(0, panel.style.weight ?? 1)))
     const ticks = (unit: number) => (value: number) => `${formatCompact(value)}${unitAt(spec, unit)}`
-    const left = 12 + Math.max(...panels.map((panel) => widestTick(panel.values, ticks(panel.unit), look.size.label)))
+    // One measure split into panels shares a scale, so their heights compare; separate fields keep their own.
+    const shared = (spec.scales ?? (spec.series === undefined ? 'own' : 'shared')) === 'shared'
+    const figures = panels.flatMap((panel) => panel.values).filter((value): value is number => value !== null)
+    const scale = shared ? niceExtent([Math.min(0, ...figures), Math.max(0, ...figures)], 3) : null
+    const left = 12 + Math.max(...panels.map((panel) => widestTick(shared ? figures : panel.values, ticks(panel.unit), look.size.label)))
     // Bars need room at the axis' ends, and every panel takes the same room so the categories line up.
     const boundaryGap = panels.some((panel) => panel.style.mark === 'bar')
     const labels = {
@@ -190,6 +195,7 @@ export const linked: ChartBuilder = (spec, look, hidden) => {
                 gridIndex: index,
                 inverse: hang,
                 splitNumber: 3,
+                ...(scale === null ? {} : scale),
                 name: spec.fieldNames?.[panel.name] ?? panel.name,
                 // The panel's name sits above it, at zero's end of a hanging panel's axis.
                 nameLocation: hang ? 'start' : 'end',

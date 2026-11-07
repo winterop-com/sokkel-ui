@@ -162,6 +162,18 @@ describe('the chart kinds', () => {
         expect([option.dataZoom[0].startValue, option.dataZoom[0].endValue]).toEqual(['sync-inventory', 'rebuild-index'])
     })
 
+    it('puts linked panels split by series on one scale, and fields on their own', () => {
+        type Axes = { yAxis: { min?: number; max?: number }[] }
+        const bySeries = { rows: ROWS, x: 'job', y: 'duration', series: 'state' }
+        const split = KINDS.linked.build(bySeries, LOOK) as unknown as Axes
+        expect(new Set(split.yAxis.map((axis) => axis.max)).size).toBe(1)
+        expect(split.yAxis[0].max).toBeGreaterThan(0)
+        const own = KINDS.linked.build({ ...bySeries, scales: 'own' }, LOOK) as unknown as Axes
+        expect(own.yAxis.every((axis) => axis.max === undefined)).toBe(true)
+        const fields = KINDS.linked.build(SPECS.linked, LOOK) as unknown as Axes
+        expect(fields.yAxis.every((axis) => axis.max === undefined)).toBe(true)
+    })
+
     it('lays linked panels out by their weights between a fixed top and bottom', () => {
         expect(linkedLayout([1])).toEqual([{ top: 22, bottom: 58 }])
         expect(linkedLayout([1, 2])).toEqual([
