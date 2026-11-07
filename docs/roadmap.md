@@ -18,15 +18,47 @@ to `plan.md` when it ships.
 - No app uses it yet. Until one does, a PR merges as soon as the local gates pass and main's CI
   catches the rest; a release still waits for green.
 
+## 0.7.x: charts
+
+- **Many more charts.** A `Chart` drawn from rows by kind and fields, so the same data is a bar, a
+  line, a ring or a grid by changing the kind alone. Many more ECharts kinds on it: distributions
+  (histogram, box plot), flows (waterfall, funnel, sankey), targets (bullet, gauge, dual axes),
+  hierarchies (treemap, sunburst), time (calendar, stream, steps, bands), radar, rose, parallel
+  coordinates and small multiples. The chart stories draw from rows instead of options built by
+  hand, more dashboard examples come with working time ranges, variables and folding rows, and an
+  Explore story picks the kind and fields. The charts and dashboard panels stand on the core and
+  never the other way round, a rule checks it, so they can become a package of their own later.
+
+## 0.8: music
+
+The music parts grow to carry a whole player, before an app builds on them.
+
+- **A fuller music player.** `MediaBar` resizes from a handle on its top edge, from the one-line
+  bar to a large now-playing panel: the cover grows with the height; an eyebrow line in the accent
+  (track 13 of 16, the album, the year) over a large title and the artist; the scrubber drawn as the
+  track's waveform with the played part filled (the `AudioScrubber` primitive, not a plain slider);
+  shuffle, repeat, previous, play and next at the foot and the volume at the end. Behind the title
+  and scrubber rises a sound visualizer: a live picture of what is playing (a spectrum, a wave, a
+  ring), drawn from the player's own audio element, still when paused, with a static frame for
+  stories and a key that shows and hides it with a toast saying so. The `bar-visualizer` primitive
+  reads only a microphone stream today. An app's own visualizer kinds are the starting point; the
+  library goes further, one kind at a time. The player docks between the content and the foot: the
+  rail's foot (the account) stays at the window's bottom edge beside the shell's foot strip, under
+  the player, rather than being pushed up by it, as `Shell`'s `bottom` strip does today.
+- **A fuller album page.** `PageHeader` takes a back button and the trail above the title (Music,
+  then the artist), with the artist and year under it and Download, a favorite star and Add to
+  playlist at the end. Each `TrackList` row carries its actions through `actions`: add to the queue
+  and a favorite star, always in view. The star is now in two places, so a `StarButton` (a pressed
+  favorite with its own words) joins the parts.
+
+## 0.10: example apps
+
+- **Working demo apps outside Storybook.** In `examples/`, built against the package as an app would
+  be: a data visualizer (a table of data with chart views to pick, saved and shared), and others to
+  follow. Storybook stays the catalog of parts; the examples show them working together.
+
 ## Next
 
-- **Many more charts, and a charts app.** More chart kinds on ECharts, and an Apps story where the
-  rows of a `DataTable` can be shown as chart views the user picks (bars, lines, a breakdown, a
-  map of where), each view a saved choice of columns, so data is explored rather than only listed.
-- **A sound visualizer.** A live picture of what is playing (bars, a wave, a ring), drawn from the
-  player's own audio element and sitting beside `MediaBar`, `TrackList` and the album views, with
-  stories in the music app. The `bar-visualizer` primitive reads only a microphone stream today; the
-  visualizer reads any playing media, holds still when paused, and has a static frame for stories.
 - **Ship only the library.** The package publishes `src/stories` with `src`, and `styles.css`
   scans all of `src`, so an app's CSS carries classes only the stories use (398 kB in the example
   app). Publish without the stories, scan only the components, and say in the README that
