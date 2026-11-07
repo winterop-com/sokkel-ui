@@ -25,6 +25,8 @@
     "exports": {
         "./styles.css": "./src/styles/index.css",
         "./tokens.css": "./src/styles/tokens.css",
+        "./themes.css": "./src/styles/themes.css",
+        "./themes/*.css": "./src/styles/themes/*.css",
         "./motion.css": "./src/styles/motion.css",
         "./typography.css": "./src/styles/typography.css",
         "./tokens.json": "./tokens/tokens.json",

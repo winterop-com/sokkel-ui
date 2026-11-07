@@ -1,4 +1,6 @@
 /* The library's styles, with the stories as a source too, so Storybook gets every class a story uses. */
 @import '../src/styles/index.css';
+/* Every theme, as an app that offers them all imports them, for the toolbar and the theme stories. */
+@import '../src/styles/themes.css';
 
 @source '../src/stories';
