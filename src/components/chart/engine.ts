@@ -58,6 +58,7 @@ export function init(...args: Parameters<typeof start>): ReturnType<typeof start
 const SERIES: Record<string, () => Promise<unknown>> = {
     boxplot: () => import('echarts/lib/chart/boxplot'),
     candlestick: () => import('echarts/lib/chart/candlestick'),
+    custom: () => import('echarts/lib/chart/custom'),
     funnel: () => import('echarts/lib/chart/funnel'),
     graph: () => import('echarts/lib/chart/graph'),
     parallel: () => import('echarts/lib/chart/parallel'),

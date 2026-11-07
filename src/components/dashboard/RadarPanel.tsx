@@ -3,6 +3,7 @@ import { useMemo, type ReactNode } from 'react'
 import { cn } from '../../lib/cn'
 import { ChartFrame, type ChartFrameWords } from '../chart/ChartFrame'
 import { EChart } from '../chart/EChart'
+import { radarGrid, radarPolygon } from '../chart/kinds/radar'
 import type { ChartLook } from '../chart/look'
 import { SPAN, type PanelSpan } from './DashboardGrid'
 import { legendItems, seriesToken, valueWriter, type PanelSeries } from './series'
@@ -41,34 +42,17 @@ export function radarOption({
             trigger: 'item',
             valueFormatter: (value: number | null) => (value === null ? '-' : write(value)),
         },
-        radar: {
-            indicator: spokes.map((spoke) => ({ name: spoke.name, max: spoke.max })),
-            shape,
-            radius: '68%',
-            center: ['50%', '52%'],
-            splitNumber: rings,
-            axisName: { color: look.muted, fontFamily: look.font, fontSize: look.size.label },
-            axisNameGap: 6,
-            axisLine: { lineStyle: { color: look.grid } },
-            splitLine: { lineStyle: { color: look.grid } },
-            splitArea: { show: false },
-        },
+        radar: radarGrid(look, { spokes, shape, rings }),
         // One series per polygon, so the legend beside the chart can hide and emphasize each by name.
-        series: series.map((entry, index) => {
-            const color = look.token(seriesToken(entry, index))
-            return {
+        series: series.map((entry, index) =>
+            radarPolygon({
                 name: entry.name,
-                type: 'radar',
-                color,
-                symbol: entry.dashed === true ? 'none' : 'circle',
-                symbolSize: 4,
-                emphasis: { focus: 'series' },
-                blur: { lineStyle: { opacity: 0.2 }, areaStyle: { opacity: 0.04 }, itemStyle: { opacity: 0.25 } },
-                lineStyle: { width: 1.5, type: entry.dashed === true ? 'dashed' : 'solid' },
-                areaStyle: fill && entry.dashed !== true ? { color, opacity: 0.14 } : undefined,
-                data: [{ name: entry.name, value: entry.values }],
-            }
-        }),
+                values: entry.values,
+                color: look.token(seriesToken(entry, index)),
+                dashed: entry.dashed === true,
+                fill,
+            }),
+        ),
     })
 }
 
