@@ -1,7 +1,7 @@
 # The common commands, as `make <target>`. Everything runs through bun; `make help` lists them.
 
 .DEFAULT_GOAL := help
-.PHONY: help install tokens storybook build size typecheck lint fmt fmt-check test check storybook-build visual visual-update screenshots-ci layout clean
+.PHONY: help install tokens storybook build size typecheck lint fmt fmt-check test check storybook-build baselines visual visual-update screenshots-ci layout clean
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "} {printf "  %-16s %s\n", $$1, $$2}'
@@ -41,13 +41,16 @@ check: typecheck lint fmt-check test ## The fast gates to run before pushing
 storybook-build: ## Build the static Storybook into storybook-static/
 	bun run build-storybook
 
+baselines: ## Write the current branch's screenshot baselines into e2e/__screenshots__ from their branch
+	scripts/baselines.sh checkout
+
 visual: ## Compare every story with its screenshot, in the Linux image as CI does
 	bun run test:visual:linux
 
 visual-update: ## Retake the screenshots, in the Linux image as CI does
 	bun run test:visual:linux:update
 
-screenshots-ci: ## Retake the screenshots on GitHub for the current branch (STORIES='pattern' for some) and commit them there
+screenshots-ci: ## Retake the screenshots on GitHub into the current branch's baselines branch (STORIES='pattern' for some)
 	gh workflow run screenshots.yaml --ref $$(git branch --show-current) -f stories='$(STORIES)'
 
 layout: storybook-build ## Check that no story scrolls sideways at the narrow widths

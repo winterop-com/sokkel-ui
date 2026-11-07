@@ -3,10 +3,13 @@
 #   scripts/visual-linux.sh                     compare every story against its baselines
 #   scripts/visual-linux.sh --update-snapshots  take new baselines
 #   scripts/visual-linux.sh -g <story id>       one story; any Playwright flag passes through
-# Baselines a run writes are recompressed losslessly with optipng, so the repository grows less
-# with each retake; the pixels, which are what a comparison reads, are unchanged.
+# It first writes the current branch's baselines into e2e/__screenshots__ from their branch (see
+# scripts/baselines.sh), replacing what is there. Baselines a run retakes stay in that folder until
+# `scripts/baselines.sh commit` pushes them to the branch's baselines branch. They are recompressed
+# losslessly with optipng first; the pixels, which are what a comparison reads, are unchanged.
 set -euo pipefail
 args=$(printf '%q ' "$@")
+scripts/baselines.sh checkout
 version=$(node -p "require('./node_modules/@playwright/test/package.json').version")
 docker run --rm --ipc=host \
     -v "$PWD":/work -v sokkel-ui-linux-modules:/work/node_modules -w /work \

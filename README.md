@@ -66,6 +66,9 @@ adopted into the tokens: `bun scripts/import-candidates.ts` lists it in the them
 Every story is held to its approved screenshot in dark and light, at desktop and phone width.
 The screenshots are Linux renders taken in the Playwright image, as CI checks them:
 `bun run test:visual:linux` compares and `bun run test:visual:linux:update` takes new ones.
+They live on the branch `baselines`, not in main's tree, and a branch that changes a story's look
+keeps its own on `baselines-for/<branch>`; `scripts/baselines.sh` fetches them into
+`e2e/__screenshots__` and explains the rest. `make screenshots-ci` retakes them on GitHub.
 
 ## Roadmap
 
