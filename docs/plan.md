@@ -5,35 +5,57 @@ with real-shaped data, held to screenshot baselines in both schemes at desktop a
 
 ## Distribution
 
-`dist/` is built, not committed, so an install from a git URL gets no compiled code (bun also
-blocks a git dependency's install scripts). The library is published as `@winterop-com/sokkel-ui` to
-GitHub Packages by the tag workflow, and apps pin that version. The heavy engines (ECharts, maplibre, React Flow
-and elk, Mermaid, CodeMirror) and the Geist fonts are optional peer dependencies: an app installs
-one only when it uses its part, and the README lists which part needs which.
+The library is four packages, built from one Bun workspace and released together at one version:
 
-The package carries the library alone: `dist/`, the component, hook and helper sources beside it,
-the styles and the tokens, with no stories, story fixtures or tests. `styles.css` is Tailwind
-source that scans only the components, hooks and helpers, so an app's CSS carries none of the
-stories' classes; every app runs Tailwind 4.1 or later itself. Storybook gets the stories' classes
-from its own entry, `.storybook/storybook.css`, which adds them as a source.
+- `@winterop-com/sokkel-ui` (`packages/core`): the tokens and themes, the primitives, the patterns,
+  layout, forms, tables, the shell, media, board, calendar, schema, terminal, `CodeEditor`, the
+  dashboard's frame and its panels with no chart, the hooks and helpers. Every app installs it.
+- `@winterop-com/sokkel-ui-charts` (`packages/charts`): `Chart`, its kinds, the frame, legend and
+  grid around it, and the dashboard panels drawn by ECharts, which it brings as a dependency.
+- `@winterop-com/sokkel-ui-maps` (`packages/maps`): `MapView` and its layers, legends, popups,
+  basemaps and period slider, on maplibre.
+- `@winterop-com/sokkel-ui-graph` (`packages/graph`): the graph canvas, views and editor, on React
+  Flow, laid out by elk.
 
-`examples/` consumes the package as an app does: `examples/web` is a small Tidevann app that
-installs it from the repository root and imports only its public entry points, and the Electron and
+An app installs the core and the add-ons it draws with, so an engine is installed only by an app
+that uses it. Each add-on stands on the core as a peer dependency at the same version and imports it
+by its name; the core never imports an add-on and no add-on imports another, which
+`src/rules.test.ts` holds. A part that needs no engine belongs in the core. The engines left in the
+core (Mermaid, CodeMirror) and the Geist fonts are optional peer dependencies, loaded lazily, and the
+README lists which part needs which.
+
+`dist/` is built, not committed, so an install from a repository URL gets no compiled code (bun also
+blocks such a dependency's install scripts). The tag workflow publishes the four packages to GitHub
+Packages, and apps pin that version.
+
+Each package carries the library alone: `dist/`, the sources beside it and its styles (the core
+also its tokens), with no stories, story fixtures or tests. Each package's `styles.css` is Tailwind
+source that scans only that package's components: the core's also carries Tailwind, the fonts, the
+tokens and the base styles, and an add-on's is imported after it in the same stylesheet. An app's
+CSS so carries the classes of the packages it uses and none of the stories'; every app runs Tailwind
+4.1 or later itself. The themes are in the core. Storybook gets every package's classes and the
+stories' from its own entry, `.storybook/storybook.css`, which imports each package's styles and
+adds the stories as a source. The stories in `src/stories/` import the packages by their names; in
+Storybook and the tests those names resolve to the packages' sources, so neither needs a build.
+
+`examples/` consumes the packages as an app does: `examples/web` is a small Tidevann app that
+installs the core package from `packages/core` and imports only its public entry points, and the Electron and
 Tauri shells in `examples/electron` and `examples/tauri` load that app's build. The examples
-workflow builds all three, so a break in the package fails a check rather than an app.
+workflow builds all three, so a break in a package fails a check rather than an app.
 
 `examples/sizes` holds the size budget: a forms page, a dashboard and a map page, each built against
-the package in CI and measured gzipped (the JavaScript at start, what loads later, the CSS). A check
+the packages in CI and measured gzipped (the JavaScript at start, what loads later, the CSS). A check
 fails when one grows past its budget in `examples/sizes/budget.json` or bundles an engine it does not
 use, so a forms page never carries ECharts, maplibre, React Flow, CodeMirror or Mermaid. A change
-that grows an app on purpose raises its budget in the same PR.
+that grows an app on purpose raises its budget in the same PR. The forms page imports only the core
+package, the dashboard adds the charts package and the map page the maps package.
 
 ## Themes
 
-Every theme is defined in `tokens/tokens.json`, and `scripts/build-tokens.ts` writes it out.
+Every theme is defined in `packages/core/tokens/tokens.json`, and `scripts/build-tokens.ts` writes it out.
 `tokens.css`, which `styles.css` carries, holds the default theme and the density levels, so an app
 that picks no theme needs nothing more. Every other theme is a file of its own in
-`src/styles/themes/`, exported as `@winterop-com/sokkel-ui/themes/<name>.css`, with its light and
+`packages/core/src/styles/themes/`, exported as `@winterop-com/sokkel-ui/themes/<name>.css`, with its light and
 dark tokens on `html[data-theme]` for the whole app and on `[data-theme-scope]` for one element,
 such as a theme picker's swatch; `themes.css` imports them all. An app imports the files of the
 themes it offers and sets one on `<html data-theme>`, so its CSS carries no theme it never shows.
@@ -97,7 +119,8 @@ An app's own navigation strip is the library's `Rail`, with no hand-drawn badge.
 
 ## Graphs
 
-Their own entry under `graph/`, so an app that draws no graph loads neither React Flow nor elk.
+Their own package, `@winterop-com/sokkel-ui-graph`, so an app that draws no graph installs neither
+React Flow nor elk.
 GraphCanvas (React Flow in the tokens, fit, zoom buttons, a stage or a fitted frame), GraphNode
 (the node box), the layout (a rank layout at once, elk loaded lazily and answering after),
 useGraphLayout and useNodeGraph, and the views PipelineGraph, RunGraph, DependencyGraph (a lineage

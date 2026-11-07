@@ -28,11 +28,17 @@ and ask before acting.
 
 ## Building components
 
-- Apps install this package and never copy from it. A component an app needs to differ gets an
+- Apps install these packages and never copy from them. A component an app needs to differ gets an
   option here, never a local edit in the app.
-- `tokens/tokens.json` is the only place a token is defined. Run `bun run tokens` after editing
-  it; `src/styles/tokens.css`, `src/styles/themes.css` and the theme files in `src/styles/themes/`
-  are generated and never edited by hand.
+- Four packages in `packages/`: `core` (`@winterop-com/sokkel-ui`, everything without an engine of
+  its own, the tokens and the themes) and an add-on per engine: `charts` (ECharts: `Chart`, its
+  kinds and the dashboard's chart panels), `maps` (maplibre) and `graph` (React Flow and elk). An
+  add-on imports the core by its name (`@winterop-com/sokkel-ui/...`), never by a path; the core
+  never imports an add-on, and no add-on imports another. A part that needs no engine goes in the
+  core. `src/rules.test.ts` holds those lines.
+- `packages/core/tokens/tokens.json` is the only place a token is defined. Run `bun run tokens`
+  after editing it; `tokens.css`, `themes.css` and the theme files in `themes/`, all under
+  `packages/core/src/styles/`, are generated and never edited by hand.
 - Every corner derives from `--radius`. Every color, typeface and size comes from a token, so a
   theme can change it.
 - A panel resizes by default, holding its own size from `defaultSize`; `size` with a size handler
@@ -108,9 +114,10 @@ and ask before acting.
 - Work on a branch with a draft PR. Stage named paths, never everything.
 - Conventional commits (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`), with no attribution lines.
 - No tags and no releases unless the owner asks for one. A release is a PR that moves the version
-  in `package.json`; once it is merged, the tag `vX.Y.Z` on that commit runs
-  `.github/workflows/release.yaml`, which checks the tag against the version, runs the gates, builds,
-  and publishes `@winterop-com/sokkel-ui` to GitHub Packages. Then a GitHub release with the notes.
+  in every `packages/*/package.json` to the same one; once it is merged, the tag `vX.Y.Z` on that
+  commit runs `.github/workflows/release.yaml`, which checks the tag against each package's version,
+  runs the gates, builds, and publishes all four packages to GitHub Packages. Then a GitHub release
+  with the notes.
 - Ask before any outward or hard-to-undo action: publishing, changing repository settings,
   rewriting history, force-pushing, deleting.
 - Agents working in parallel each write scratch files in a folder of their own, and never touch
