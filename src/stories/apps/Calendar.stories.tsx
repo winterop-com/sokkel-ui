@@ -1,3 +1,4 @@
+import { IconButton } from '../../components/IconButton'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { addMonths, addWeeks, format, getDay, isSameDay, isSameMonth } from 'date-fns'
 import {
@@ -381,12 +382,12 @@ function CalendarApp({ view: initialView = 'week', open = null }: { view?: View;
                                 Today
                             </Button>
                             <Row gap="none">
-                                <Button size="icon-sm" variant="ghost" aria-label={`Previous ${view}`} onClick={() => step(-1)}>
+                                <IconButton label={`Previous ${view}`} onClick={() => step(-1)}>
                                     <ChevronLeft aria-hidden />
-                                </Button>
-                                <Button size="icon-sm" variant="ghost" aria-label={`Next ${view}`} onClick={() => step(1)}>
+                                </IconButton>
+                                <IconButton label={`Next ${view}`} onClick={() => step(1)}>
                                     <ChevronRight aria-hidden />
-                                </Button>
+                                </IconButton>
                             </Row>
                             <h1 className="min-w-0 flex-1 truncate text-title font-semibold">
                                 {phone ? format(anchor, view === 'week' ? 'EEE d MMM' : 'MMM yyyy') : title}

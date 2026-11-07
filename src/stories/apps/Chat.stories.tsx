@@ -1,3 +1,4 @@
+import { IconButton } from '../../components/IconButton'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Bell, ChevronDown, FileSpreadsheet, Folder, MessageSquare, PenSquare, Search } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
@@ -455,9 +456,9 @@ function ChatApp({
                                     fast model
                                     <ChevronDown aria-hidden />
                                 </Button>
-                                <Button variant="ghost" size="icon-sm" aria-label="Notifications">
+                                <IconButton label="Notifications">
                                     <Bell aria-hidden />
-                                </Button>
+                                </IconButton>
                             </>
                         }
                     />

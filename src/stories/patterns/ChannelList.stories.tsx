@@ -1,3 +1,4 @@
+import { IconButton } from '../../components/IconButton'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import {
     Bell,
@@ -18,7 +19,6 @@ import { useState, type ReactNode } from 'react'
 import { ChannelList, type ChannelEntry, type ChannelPlace, type ChannelSection } from '../../components/ChannelList'
 import { PersonAvatar } from '../../components/PersonAvatar'
 import { Rail } from '../../components/Rail'
-import { Button } from '../../components/ui/button'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { Row } from '../../components/Layout'
 
@@ -90,9 +90,9 @@ const PLACES: ChannelPlace[] = [
 ]
 
 const NEW_MESSAGE = (
-    <Button variant="ghost" size="icon" aria-label="New message" title="New message">
+    <IconButton label="New message" size="icon">
         <PenSquare aria-hidden />
-    </Button>
+    </IconButton>
 )
 
 /** The full sidebar, its open conversation followed as it is pressed. */
@@ -202,12 +202,12 @@ export const WithStrip: StoryObj = {
                 ]}
                 foot={
                     <>
-                        <Button variant="secondary" size="icon-lg" aria-label="Create" title="Create">
+                        <IconButton label="Create" variant="secondary" size="icon-lg">
                             <Plus aria-hidden />
-                        </Button>
-                        <Button variant="ghost" size="icon-lg" aria-label="Account" title="ada">
+                        </IconButton>
+                        <IconButton label="Account" size="icon-lg">
                             <PersonAvatar name="ada" color="blue" size="lg" shape="square" presence="active" />
-                        </Button>
+                        </IconButton>
                     </>
                 }
             />

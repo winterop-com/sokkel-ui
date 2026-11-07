@@ -1,3 +1,4 @@
+import { IconButton } from '../../components/IconButton'
 import { Toggle } from '../../components/ui/toggle'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { BookOpen, FolderTree, History as HistoryIcon, LayoutDashboard, Pencil, Play, Plus, Settings } from 'lucide-react'
@@ -387,9 +388,9 @@ function DocsApp({ mode: initialMode = 'read' }: { mode?: 'read' | 'edit' | 'his
                     <aside className="hidden w-60 shrink-0 flex-col gap-3 overflow-y-auto border-r border-border-strong bg-sidebar px-2 py-3 lg:flex">
                         <Row gap="2xs" className="px-1">
                             <SearchField value={query} onChange={setQuery} placeholder="Search" className="min-w-0 flex-1" />
-                            <Button variant="ghost" size="icon-sm" aria-label="New page" title="New page">
+                            <IconButton label="New page">
                                 <Plus aria-hidden />
-                            </Button>
+                            </IconButton>
                         </Row>
                         <Tree
                             label="Pages"

@@ -1,3 +1,4 @@
+import { IconButton } from '../../components/IconButton'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import {
     BookOpen,
@@ -575,15 +576,9 @@ function FilesApp({
                                                 aria-label="Selection"
                                                 className="flex min-w-0 flex-1 flex-wrap items-center gap-1 rounded-control border border-primary/40 bg-primary/8 py-0.5 pr-1 pl-1"
                                             >
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon-sm"
-                                                    aria-label="Clear the selection"
-                                                    title="Clear the selection"
-                                                    onClick={() => setSelected([])}
-                                                >
+                                                <IconButton label="Clear the selection" onClick={() => setSelected([])}>
                                                     <X aria-hidden />
-                                                </Button>
+                                                </IconButton>
                                                 <span className="mr-2 text-sm font-medium tabular-nums">{selected.length} selected</span>
                                                 <Button variant="ghost" size="sm">
                                                     <Download aria-hidden />

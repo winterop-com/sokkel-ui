@@ -1,3 +1,4 @@
+import { IconButton } from '../../components/IconButton'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Clapperboard, Disc3, Heart, ListMusic, MicVocal, MoreHorizontal, Music2, Play, Shuffle, Tv, type LucideIcon } from 'lucide-react'
 import { useState } from 'react'
@@ -294,12 +295,12 @@ function AlbumPage() {
                                 <Shuffle aria-hidden />
                                 Shuffle
                             </Button>
-                            <Button size="icon-sm" variant="ghost" aria-label="Add to favorites" className="text-muted-foreground">
+                            <IconButton label="Add to favorites">
                                 <Heart aria-hidden />
-                            </Button>
-                            <Button size="icon-sm" variant="ghost" aria-label="More" className="text-muted-foreground">
+                            </IconButton>
+                            <IconButton label="More">
                                 <MoreHorizontal aria-hidden />
-                            </Button>
+                            </IconButton>
                         </Row>
                     </Stack>
                 </div>
@@ -376,9 +377,9 @@ function Watch() {
                                 <Heart aria-hidden />
                                 Favorite
                             </Button>
-                            <Button size="icon-sm" variant="ghost" aria-label="More" className="text-muted-foreground">
+                            <IconButton label="More">
                                 <MoreHorizontal aria-hidden />
-                            </Button>
+                            </IconButton>
                         </Row>
                     </div>
                     <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
