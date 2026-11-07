@@ -3,6 +3,7 @@ import { useState, type ReactNode } from 'react'
 
 import { BarGauge } from '../../components/dashboard/BarGauge'
 import { BarPanel } from '../../components/dashboard/BarPanel'
+import { ChartPanel } from '../../components/dashboard/ChartPanel'
 import { DashboardGrid } from '../../components/dashboard/DashboardGrid'
 import { DashboardRow } from '../../components/dashboard/DashboardRow'
 import { GaugePanel } from '../../components/dashboard/GaugePanel'
@@ -29,6 +30,7 @@ import {
     TIMES,
     WORKERS,
 } from '../fixtures/runs'
+import { RUN_ROWS, RUN_STATES, STATE_COLORS } from '../fixtures/runRows'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { TopBar } from '../../components/TopBar'
 import { Stack } from '../../components/Layout'
@@ -187,6 +189,57 @@ export const Heatmap: StoryObj = {
                     cells={HEATMAP}
                     scale={['chart-2', 'chart-3', 'warning', 'critical']}
                     labelEvery={3}
+                />
+            </DashboardGrid>
+        </Ground>
+    ),
+}
+
+const STATE_ORDER = [...RUN_STATES]
+const HOURS_OF_DAY = Array.from({ length: 24 }, (_, hour) => `${String(hour).padStart(2, '0')}:00`)
+const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
+/** Charts drawn from a month of runs where no other panel draws them: a ring of states, runs as points, and when they start. */
+export const ChartPanels: StoryObj = {
+    name: 'Chart panels',
+    render: () => (
+        <Ground title="Chart panels">
+            <DashboardGrid dense>
+                <ChartPanel
+                    kind="donut"
+                    title="Runs by state"
+                    subtitle="October"
+                    rows={RUN_ROWS}
+                    x="state"
+                    order={STATE_ORDER}
+                    colors={STATE_COLORS}
+                    span="third"
+                    bodyClassName="h-56"
+                />
+                <ChartPanel
+                    kind="scatter"
+                    title="Duration against rows"
+                    subtitle="each run"
+                    rows={RUN_ROWS}
+                    x="rows"
+                    y="duration"
+                    series="project"
+                    unit=" s"
+                    span="third"
+                    bodyClassName="h-56"
+                />
+                <ChartPanel
+                    kind="heatmap"
+                    title="When runs start"
+                    subtitle="hour by weekday"
+                    rows={RUN_ROWS}
+                    x="hour"
+                    series="weekday"
+                    order={HOURS_OF_DAY}
+                    seriesOrder={WEEKDAYS}
+                    legend="none"
+                    span="third"
+                    bodyClassName="h-[15.75rem]"
                 />
             </DashboardGrid>
         </Ground>
