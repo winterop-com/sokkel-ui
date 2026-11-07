@@ -12,13 +12,28 @@ export interface Crumb {
     code?: boolean
 }
 
+export interface TopBarProps {
+    trail?: readonly Crumb[]
+    /** The app's mark before the trail, for a screen without the rail that carries it. */
+    mark?: ReactNode
+    /** Opens the command palette; no search is drawn without it. */
+    onSearch?: () => void
+    /** The keys that open the palette, shown in the search. */
+    shortcut?: string
+    actions?: ReactNode
+    renderLink?: (crumb: Crumb, className: string) => ReactNode
+    words?: { search: string; trail: string }
+}
+
 /**
  * What the shell's top bar holds: the trail to the current screen at the left, the search that
  * opens the command palette, and the screen's actions at the right. On a phone the trail keeps
- * only its last step and the search becomes an icon.
+ * only its last step and the search becomes an icon. `mark` puts the app's mark before the trail
+ * where no rail shows it; `AppBar` is the bar itself for a screen drawn without `Shell`.
  */
 export function TopBar({
     trail = [],
+    mark,
     onSearch,
     shortcut = '⌘K',
     actions,
@@ -28,18 +43,14 @@ export function TopBar({
         </a>
     ),
     words = { search: 'Search', trail: 'Where you are' },
-}: {
-    trail?: readonly Crumb[]
-    /** Opens the command palette; no search is drawn without it. */
-    onSearch?: () => void
-    /** The keys that open the palette, shown in the search. */
-    shortcut?: string
-    actions?: ReactNode
-    renderLink?: (crumb: Crumb, className: string) => ReactNode
-    words?: { search: string; trail: string }
-}) {
+}: TopBarProps) {
     return (
         <div className="flex h-full min-w-0 flex-1 items-center gap-3">
+            {mark !== undefined && (
+                <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
+                    {mark}
+                </span>
+            )}
             {trail.length > 0 && (
                 <nav aria-label={words.trail} className="min-w-0 flex-1">
                     <ol className="flex min-w-0 items-center gap-1 text-sm">
