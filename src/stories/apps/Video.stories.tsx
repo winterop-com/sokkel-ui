@@ -31,15 +31,9 @@ import { Page, Shell } from '../../components/Shell'
 import { TopBar, type Crumb } from '../../components/TopBar'
 import { Button } from '../../components/ui/button'
 import { ButtonGroup } from '../../components/ui/button-group'
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuTrigger,
-} from '../../components/ui/dropdown-menu'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../../components/ui/dropdown-menu'
 import { Input } from '../../components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import type { KindColor } from '../../lib/kind'
 import { Artwork, type Cover } from '../fixtures/Artwork'
@@ -398,6 +392,11 @@ function CommentItem({ comment, reply = false }: { comment: Comment; reply?: boo
     )
 }
 
+const ORDERS = [
+    { value: 'top', label: 'Top comments' },
+    { value: 'new', label: 'Newest first' },
+]
+
 function Comments() {
     const [order, setOrder] = useState('top')
     const [draft, setDraft] = useState('')
@@ -405,18 +404,19 @@ function Comments() {
         <section className="flex flex-col gap-5">
             <Row gap="lg">
                 <h2 className="text-title font-semibold">1,204 comments</h2>
-                <DropdownMenu>
-                    <DropdownMenuTrigger render={<Button variant="ghost" size="sm" />}>
+                <Select items={ORDERS} value={order} onValueChange={(value) => setOrder(value ?? 'top')}>
+                    <SelectTrigger variant="quiet" size="sm" aria-label="Sort by">
                         <SlidersHorizontal aria-hidden />
-                        Sort by
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-40">
-                        <DropdownMenuRadioGroup value={order} onValueChange={(value: string) => setOrder(value)}>
-                            <DropdownMenuRadioItem value="top">Top comments</DropdownMenuRadioItem>
-                            <DropdownMenuRadioItem value="new">Newest first</DropdownMenuRadioItem>
-                        </DropdownMenuRadioGroup>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {ORDERS.map((entry) => (
+                            <SelectItem key={entry.value} value={entry.value}>
+                                {entry.label}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             </Row>
             <Row gap="md" align="stretch">
                 <PersonAvatar name="ada" color={CHANNELS.ada.color} size="md" />
