@@ -265,8 +265,7 @@ export function FileList({
                                   className={cn(
                                       'grid min-h-(--density-row) items-center gap-3 border-b border-border px-(--density-panel-pad) py-1 text-sm last:border-b-0',
                                       template,
-                                      onOpen !== undefined &&
-                                          'cursor-pointer outline-none hover:bg-secondary/60 focus-visible:bg-secondary',
+                                      onOpen !== undefined && 'cursor-pointer outline-none hover:bg-hover focus-visible:bg-hover',
                                       isChosen && 'bg-primary/8 hover:bg-primary/12',
                                       entry.id === active && 'bg-secondary',
                                   )}

@@ -45,7 +45,7 @@ export function NavBar({
                 <Menu.Root>
                     <Menu.Trigger
                         aria-label={words.menu}
-                        className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary md:hidden"
+                        className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-hover md:hidden"
                     >
                         <MenuIcon className="size-4" aria-hidden />
                     </Menu.Trigger>
@@ -59,7 +59,7 @@ export function NavBar({
                                             renderLink(
                                                 link,
                                                 cn(
-                                                    'flex h-9 items-center rounded-md px-2 text-sm outline-none data-[highlighted]:bg-secondary',
+                                                    'flex h-9 items-center rounded-md px-2 text-sm outline-none data-[highlighted]:bg-hover',
                                                     link.active === true && 'font-medium text-primary-ink',
                                                 ),
                                             ) as React.ReactElement

@@ -178,7 +178,7 @@ export function ChatMessage({
         <article
             data-active={lit || undefined}
             className={cn(
-                'group/chat relative grid grid-cols-[2.25rem_minmax(0,1fr)] gap-x-2.5 px-(--density-chat-inset) hover:bg-muted/40',
+                'group/chat relative grid grid-cols-[2.25rem_minmax(0,1fr)] gap-x-2.5 px-(--density-chat-inset) hover:bg-hover',
                 continued ? 'py-(--density-chat-follow)' : 'pt-(--density-chat-gap) pb-(--density-chat-follow)',
                 lit && 'bg-muted/40',
                 highlighted && 'bg-warning/10 hover:bg-warning/15',

@@ -35,7 +35,7 @@ export function CheckboxField({
         <label
             className={cn(
                 'flex cursor-pointer items-start gap-2.5 rounded-control px-2 py-1.5 text-sm has-disabled:cursor-not-allowed has-disabled:opacity-60',
-                tone === 'critical' ? 'border border-critical/30 bg-critical/4 px-3 py-2.5' : 'hover:bg-muted/50',
+                tone === 'critical' ? 'border border-critical/30 bg-critical/4 px-3 py-2.5' : 'hover:bg-hover',
                 className,
             )}
         >

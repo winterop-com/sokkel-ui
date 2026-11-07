@@ -35,7 +35,7 @@ export function Unfoldable({
                     type="button"
                     aria-expanded={open}
                     onClick={() => setOpened(!opened)}
-                    className="-mx-1 flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md px-1 py-1 text-left text-sm font-medium outline-none hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                    className="-mx-1 flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md px-1 py-1 text-left text-sm font-medium outline-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
                 >
                     <ChevronRight
                         className={cn('size-3.5 shrink-0 text-muted-foreground transition-transform', open && 'rotate-90')}

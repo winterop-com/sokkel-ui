@@ -37,7 +37,7 @@ function NavigationMenuItem({ className, ...props }: React.ComponentPropsWithRef
 }
 
 const navigationMenuTriggerStyle = cva(
-    'group/navigation-menu-trigger inline-flex h-9 w-max items-center justify-center rounded-lg px-2.5 py-1.5 text-sm font-medium transition-all outline-none hover:bg-muted focus:bg-muted focus-visible:outline-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid disabled:pointer-events-none disabled:opacity-50 data-popup-open:bg-muted/50 data-popup-open:hover:bg-muted data-open:bg-muted/50 data-open:hover:bg-muted data-open:focus:bg-muted',
+    'group/navigation-menu-trigger inline-flex h-9 w-max items-center justify-center rounded-lg px-2.5 py-1.5 text-sm font-medium transition-all outline-none hover:bg-hover focus:bg-hover focus-visible:outline-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid disabled:pointer-events-none disabled:opacity-50 data-popup-open:bg-hover data-popup-open:hover:bg-hover data-open:bg-hover data-open:hover:bg-hover data-open:focus:bg-hover',
 )
 
 function NavigationMenuTrigger({ className, children, ...props }: NavigationMenuPrimitive.Trigger.Props) {
@@ -103,7 +103,7 @@ function NavigationMenuLink({ className, ...props }: NavigationMenuPrimitive.Lin
         <NavigationMenuPrimitive.Link
             data-slot="navigation-menu-link"
             className={cn(
-                "flex items-center gap-2 rounded-lg p-2 text-sm transition-all outline-none hover:bg-muted focus:bg-muted focus-visible:outline-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid in-data-[slot=navigation-menu-content]:rounded-md data-active:bg-muted/50 data-active:hover:bg-muted data-active:focus:bg-muted [&_svg:not([class*='size-'])]:size-4",
+                "flex items-center gap-2 rounded-lg p-2 text-sm transition-all outline-none hover:bg-hover focus:bg-hover focus-visible:outline-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid in-data-[slot=navigation-menu-content]:rounded-md data-active:bg-muted/50 data-active:hover:bg-hover data-active:focus:bg-hover [&_svg:not([class*='size-'])]:size-4",
                 className,
             )}
             {...props}

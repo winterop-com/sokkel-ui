@@ -100,7 +100,7 @@ export function SidePanel({
                                         'h-7 rounded-md px-2.5 text-sm',
                                         tab.id === current?.id
                                             ? 'bg-secondary font-medium text-foreground'
-                                            : 'text-muted-foreground hover:bg-foreground/8 hover:text-foreground dark:hover:bg-foreground/12',
+                                            : 'text-muted-foreground hover:bg-hover hover:text-foreground',
                                     )}
                                     onClick={() => onActiveChange?.(tab.id)}
                                 >

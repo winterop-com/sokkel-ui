@@ -33,9 +33,9 @@ const CHOSEN: Record<SegmentedVariant, string> = {
 
 const HOVER: Record<SegmentedVariant, string> = {
     track: 'hover:bg-foreground/5 hover:text-foreground',
-    tint: 'hover:bg-secondary hover:text-foreground',
-    outline: 'hover:bg-secondary hover:text-foreground',
-    solid: 'hover:bg-secondary hover:text-foreground',
+    tint: 'hover:bg-hover hover:text-foreground',
+    outline: 'hover:bg-hover hover:text-foreground',
+    solid: 'hover:bg-hover hover:text-foreground',
 }
 
 /** One option of a segmented control: what it answers with and what it is called. */

@@ -37,12 +37,13 @@ export function AccountMenu({
             {initial}
         </span>
     )
-    const item = 'flex h-8 cursor-default items-center gap-2.5 rounded-md px-2 text-sm outline-none data-[highlighted]:bg-secondary'
+    const item =
+        'flex h-8 cursor-default items-center gap-2.5 rounded-md px-2 text-sm outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground'
     return (
         <Menu.Root>
             <Menu.Trigger
                 aria-label={words.account}
-                className="mx-1.5 my-1 flex h-[calc(100%-0.5rem)] w-[calc(100%-0.75rem)] items-center gap-2.5 rounded-md pr-1.5 pl-2.5 text-sm outline-none hover:bg-foreground/8 focus-visible:ring-2 focus-visible:ring-ring/50 data-[popup-open]:bg-foreground/8 dark:hover:bg-foreground/12 dark:data-[popup-open]:bg-foreground/12"
+                className="mx-1.5 my-1 flex h-[calc(100%-0.5rem)] w-[calc(100%-0.75rem)] items-center gap-2.5 rounded-md pr-1.5 pl-2.5 text-sm outline-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring/50 data-[popup-open]:bg-hover"
             >
                 {avatar('size-6')}
                 {!collapsed && (

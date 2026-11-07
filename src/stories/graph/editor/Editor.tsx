@@ -210,7 +210,7 @@ export function ProblemsPanel({ editor }: { editor: PipelineEditorState }) {
                         <button
                             type="button"
                             onClick={() => editor.setSelection([step.code])}
-                            className="w-full rounded-control px-2 py-1.5 text-left hover:bg-muted"
+                            className="w-full rounded-control px-2 py-1.5 text-left hover:bg-hover"
                             aria-current={editor.selected === step.code}
                         >
                             <Stack as="span" gap="3xs">

@@ -32,7 +32,7 @@ function Node({ name, value, depth, open }: { name?: string; value: unknown; dep
                 type="button"
                 aria-expanded={expanded}
                 onClick={() => setExpanded(!expanded)}
-                className="flex items-center rounded-sm text-left outline-none hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring"
+                className="flex items-center rounded-sm text-left outline-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring"
             >
                 <ChevronRight
                     className={cn('size-3.5 shrink-0 text-muted-foreground transition-transform', expanded && 'rotate-90')}
