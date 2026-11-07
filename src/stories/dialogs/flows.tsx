@@ -1,3 +1,11 @@
+import {
+    Attachment,
+    AttachmentActions,
+    AttachmentContent,
+    AttachmentDescription,
+    AttachmentMedia,
+    AttachmentTitle,
+} from '../../components/ui/attachment'
 import { Check, CircleAlert, CircleCheck, Download, FileSpreadsheet, Globe, Link2, Lock, Users } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
@@ -646,14 +654,18 @@ export function ExportRuns({ stage: first = 'form' }: { stage?: ExportStage }) {
                     </div>
                 )}
                 {stage === 'ready' && (
-                    <Row gap="md" className="rounded-control border border-border px-3 py-3">
-                        <FileSpreadsheet className="size-8 shrink-0 text-muted-foreground" aria-hidden />
-                        <span className="flex min-w-0 flex-1 flex-col">
-                            <span className="truncate font-mono text-xs">{name}</span>
-                            <span className="text-xs text-muted-foreground">2.4 MB, 2,472 rows</span>
-                        </span>
-                        <CircleCheck className="size-5 shrink-0 text-good" aria-hidden />
-                    </Row>
+                    <Attachment className="w-full">
+                        <AttachmentMedia>
+                            <FileSpreadsheet aria-hidden />
+                        </AttachmentMedia>
+                        <AttachmentContent>
+                            <AttachmentTitle className="font-mono">{name}</AttachmentTitle>
+                            <AttachmentDescription>2.4 MB, 2,472 rows</AttachmentDescription>
+                        </AttachmentContent>
+                        <AttachmentActions>
+                            <CircleCheck className="size-5 text-good" aria-label="Ready" />
+                        </AttachmentActions>
+                    </Attachment>
                 )}
             </DialogShell>
         </Behind>

@@ -1,3 +1,4 @@
+import { TopBar } from '../components/TopBar'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { BookOpen, CalendarClock, Library, Maximize2, Play, Server, Webhook, Workflow } from 'lucide-react'
 import type { ReactNode } from 'react'
@@ -158,10 +159,10 @@ function Overview({ layout }: { layout: 'flat' | 'boxed' | 'hybrid' }) {
         <Shell
             rail={<Rail mark={<TidevannMark />} name="Tidevann" groups={GROUPS} onCollapsedChange={() => {}} />}
             top={
-                <>
-                    <span className="text-sm text-muted-foreground">Jobs</span>
-                    <span className="ml-auto font-mono text-xs text-muted-foreground">Tidevann 1.4.0</span>
-                </>
+                <TopBar
+                    trail={[{ label: 'Jobs' }]}
+                    actions={<span className="font-mono text-xs text-muted-foreground">Tidevann 1.4.0</span>}
+                />
             }
         >
             <Page>
