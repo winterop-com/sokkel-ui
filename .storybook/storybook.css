@@ -1,0 +1,4 @@
+/* The library's styles, with the stories as a source too, so Storybook gets every class a story uses. */
+@import '../src/styles/index.css';
+
+@source '../src/stories';

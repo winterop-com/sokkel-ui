@@ -11,6 +11,12 @@ GitHub Packages by the tag workflow, and apps pin that version. The heavy engine
 and elk, Mermaid, CodeMirror) and the Geist fonts are optional peer dependencies: an app installs
 one only when it uses its part, and the README lists which part needs which.
 
+The package carries the library alone: `dist/`, the component, hook and helper sources beside it,
+the styles and the tokens, with no stories, story fixtures or tests. `styles.css` is Tailwind
+source that scans only the components, hooks and helpers, so an app's CSS carries none of the
+stories' classes; every app runs Tailwind 4.1 or later itself. Storybook gets the stories' classes
+from its own entry, `.storybook/storybook.css`, which adds them as a source.
+
 `examples/` consumes the package as an app does: `examples/web` is a small Tidevann app that
 installs it from the repository root and imports only its public entry points, and the Electron and
 Tauri shells in `examples/electron` and `examples/tauri` load that app's build. The examples
