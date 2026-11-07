@@ -3,6 +3,7 @@ import { Database, FileText, Filter, Globe, Mail, ShieldCheck, Table2, Upload, W
 import { useState, type ReactNode } from 'react'
 
 import { CapabilityPicker, type Capability, type PickerItem } from '../../components/CapabilityPicker'
+import { Stack } from '../../components/Layout'
 
 /**
  * Picking one block for a pipeline step from a catalog, by searching and by what each block can
@@ -97,9 +98,9 @@ const BLOCKS: PickerItem[] = [
 
 function Ground({ children }: { children: ReactNode }) {
     return (
-        <div className="flex h-[32rem] max-w-xl flex-col overflow-hidden rounded-surface border border-border-strong shadow-pop">
+        <Stack gap="none" className="h-[32rem] max-w-xl overflow-hidden rounded-surface border border-border-strong shadow-pop">
             {children}
-        </div>
+        </Stack>
     )
 }
 

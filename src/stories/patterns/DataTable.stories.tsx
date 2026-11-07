@@ -31,7 +31,7 @@ import { type Album, makeAlbums } from '../fixtures/albums'
 import { Artwork } from '../fixtures/Artwork'
 import { folderContents, type FolderRow, makeFolderTree, projectFolders } from '../fixtures/folders'
 import { makeRuns, makeRunTree, startedAt, type TableRun, took, type TreeRow } from '../fixtures/tableRuns'
-import { Row, Stack } from '../../components/Layout'
+import { Columns, Row, Stack } from '../../components/Layout'
 
 /**
  * A table for many rows. Only the rows in view are drawn, so the 10k and 50k tables scroll like
@@ -438,7 +438,7 @@ export const RowMenus: StoryObj = {
     parameters: { frame: 'none' },
     name: 'Row menus',
     render: () => (
-        <div className="grid h-svh grid-rows-4 gap-4 bg-background p-4 text-foreground lg:grid-cols-2 lg:grid-rows-2">
+        <Columns count={2} min="xl" gap="lg" className="h-svh bg-background p-4 text-foreground">
             {MENUS.map((menu) => (
                 <Stack key={menu.title} as="section" gap="sm" className="min-h-0">
                     <div className="text-sm">
@@ -455,7 +455,7 @@ export const RowMenus: StoryObj = {
                     />
                 </Stack>
             ))}
-        </div>
+        </Columns>
     ),
 }
 
@@ -806,13 +806,13 @@ const albumActions = (): DataAction[] => [
 /** An album as a card: its cover filling the top, its title, artist and year under it. */
 function AlbumCard({ album }: { album: Album }) {
     return (
-        <div className="flex h-full flex-col gap-2 rounded-surface border border-border bg-card p-2 group-hover/card:bg-muted">
+        <Stack gap="sm" className="h-full rounded-surface border border-border bg-card p-2 group-hover/card:bg-muted">
             <Artwork cover={album.cover} className="min-h-0 w-full flex-1 rounded-mini" />
             <div className="min-w-0 px-0.5">
                 <div className="truncate text-sm font-medium">{album.title}</div>
                 <MetaLine truncate items={[album.artist, album.year]} />
             </div>
-        </div>
+        </Stack>
     )
 }
 

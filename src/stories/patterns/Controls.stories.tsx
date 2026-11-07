@@ -6,7 +6,7 @@ import { useState } from 'react'
 import { CopyButton } from '../../components/CopyButton'
 import { Segmented, type SegmentedVariant } from '../../components/Segmented'
 import { TooltipProvider } from '../../components/ui/tooltip'
-import { Row, Stack } from '../../components/Layout'
+import { Columns, Row, Stack } from '../../components/Layout'
 
 /** The small controls a settings row or a code line carries: a segmented choice and a copy button. */
 function Ground({ children }: { children: React.ReactNode }) {
@@ -119,7 +119,7 @@ const VARIANTS: { variant: SegmentedVariant; name: string; from: string }[] = [
 function SegmentedOptions() {
     return (
         <Ground>
-            <div className="grid gap-x-10 gap-y-8 lg:grid-cols-2">
+            <Columns count={2} min="xl" gap="3xl" rowGap="2xl">
                 {VARIANTS.map((entry, index) => (
                     <Stack key={entry.variant} as="section">
                         <div>
@@ -131,7 +131,7 @@ function SegmentedOptions() {
                         <Settings fill={false} variant={entry.variant} />
                     </Stack>
                 ))}
-            </div>
+            </Columns>
         </Ground>
     )
 }
@@ -140,7 +140,7 @@ function SegmentedStacked() {
     return (
         <Ground>
             <p className="text-xs text-muted-foreground">Labels above, each control the column's width, up to 320px.</p>
-            <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
+            <Columns count={4} min="sm" gap="3xl" rowGap="2xl">
                 {VARIANTS.map((entry, index) => (
                     <Stack key={entry.variant} as="section">
                         <h3 className="text-sm font-medium">
@@ -149,7 +149,7 @@ function SegmentedStacked() {
                         <Settings fill stacked variant={entry.variant} />
                     </Stack>
                 ))}
-            </div>
+            </Columns>
         </Ground>
     )
 }
@@ -194,11 +194,11 @@ function CopyLines() {
         <Ground>
             <div className="overflow-hidden rounded-surface border border-border-strong bg-card">
                 {lines.map((line) => (
-                    <div key={line.label} className="flex items-center gap-3 border-b border-border px-3 py-1.5 last:border-b-0">
+                    <Row key={line.label} gap="md" className="border-b border-border px-3 py-1.5 last:border-b-0">
                         <span className="w-20 shrink-0 text-xs text-muted-foreground">{line.label}</span>
                         <span className="min-w-0 flex-1 truncate font-mono text-sm">{line.value}</span>
                         <CopyButton value={line.value} />
-                    </div>
+                    </Row>
                 ))}
             </div>
             <Row gap="md">

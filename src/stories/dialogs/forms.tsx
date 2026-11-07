@@ -14,7 +14,6 @@ import { Segmented } from '../../components/Segmented'
 import { UnsavedChangesDialog, useUnsavedGuard } from '../../components/UnsavedChanges'
 import { NativeSelect, NativeSelectOption } from '../../components/ui/native-select'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '../../components/ui/sheet'
-import { cn } from '../../lib/cn'
 import { Behind, wait } from './parts'
 import { Row, Stack } from '../../components/Layout'
 
@@ -175,10 +174,10 @@ export function NestedConfirm() {
                         <Row key={step.code} as="li" className="py-1.5 pr-1.5 pl-2">
                             <GripVertical className="size-4 text-faint" aria-hidden />
                             <span className="w-5 font-mono text-xs text-faint tabular-nums">{at + 1}</span>
-                            <span className="flex min-w-0 flex-1 flex-col">
+                            <Stack as="span" gap="none" className="flex-1">
                                 <span className="font-mono text-xs">{step.code}</span>
                                 <span className="truncate font-mono text-xs text-muted-foreground">{step.run}</span>
-                            </span>
+                            </Stack>
                             <IconButton label={`Remove ${step.code}`} onClick={() => setRemoving(step.code)}>
                                 <Trash2 />
                             </IconButton>
@@ -235,13 +234,13 @@ export function DetailsSheet() {
     return (
         <Behind action="Details" onAction={() => setOpen(true)}>
             <Sheet open={open} onOpenChange={guard.onOpenChange}>
-                <SheetContent size="md" className={cn('gap-0', NESTED)}>
+                <SheetContent size="md" flush className={NESTED}>
                     <SheetHeader className="border-b border-border pr-12">
                         <SheetTitle>Import orders</SheetTitle>
                         <SheetDescription className="font-mono text-xs">import-orders</SheetDescription>
                     </SheetHeader>
-                    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-                        <div className="flex flex-1 flex-col gap-4 p-4">
+                    <Stack gap="none" className="min-h-0 flex-1 overflow-y-auto">
+                        <Stack gap="lg" className="flex-1 p-4">
                             <TextField id="sheet-name" label="Name" value={draft.name} onChange={(name) => setDraft({ ...draft, name })} />
                             <TextField
                                 id="sheet-description"
@@ -286,7 +285,7 @@ export function DetailsSheet() {
                                 value={draft.timeout}
                                 onChange={(timeout) => setDraft({ ...draft, timeout })}
                             />
-                        </div>
+                        </Stack>
                         <SaveBar
                             inset="panel"
                             count={count}
@@ -300,7 +299,7 @@ export function DetailsSheet() {
                                 })
                             }}
                         />
-                    </div>
+                    </Stack>
                     <UnsavedChangesDialog guard={guard} />
                 </SheetContent>
             </Sheet>

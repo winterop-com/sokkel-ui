@@ -18,7 +18,7 @@ import { Button } from '../../components/ui/button'
 import { Textarea } from '../../components/ui/textarea'
 import { describeCron } from '../../lib/cron'
 import { Behind, wait } from './parts'
-import { Row } from '../../components/Layout'
+import { Row, Stack } from '../../components/Layout'
 
 export function Rename() {
     const [open, setOpen] = useState(true)
@@ -262,13 +262,13 @@ export function SessionExpired() {
     }
     return (
         <Behind>
-            <main className="flex flex-1 flex-col gap-4 p-6">
+            <Stack as="main" gap="lg" className="flex-1 p-6">
                 <PageHeader title="Comment on run #4811" />
                 <Textarea value={draft} onChange={(event) => setDraft(event.target.value)} rows={5} className="max-w-2xl" />
                 <div>
                     <Button size="sm">Post comment</Button>
                 </div>
-            </main>
+            </Stack>
             <DialogShell
                 open={open}
                 onOpenChange={setOpen}

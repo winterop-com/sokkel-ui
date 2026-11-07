@@ -277,12 +277,12 @@ function AlbumPage() {
     const total = TRACKS.reduce((sum, track) => sum + track.duration, 0)
     return (
         <Page className="@container">
-            <div className="flex flex-col gap-8 @4xl:flex-row @4xl:items-start">
-                <div className="flex flex-col gap-5 sm:flex-row sm:items-end @4xl:sticky @4xl:top-0 @4xl:w-60 @4xl:shrink-0 @4xl:flex-col @4xl:items-stretch">
+            <Row gap="2xl" align="start" wrap>
+                <Row gap="lg" align="end" wrap className="w-full @4xl:sticky @4xl:top-0 @4xl:w-60 @4xl:shrink-0">
                     <span className="block size-40 shrink-0 overflow-hidden rounded-surface shadow-xs ring-1 ring-border sm:size-48 @4xl:aspect-square @4xl:size-auto @4xl:w-full">
                         <Artwork cover={PLAYING.cover} />
                     </span>
-                    <Stack>
+                    <Stack className="grow basis-60">
                         <div className="min-w-0">
                             <GroupLabel>Album</GroupLabel>
                             <h1 className="truncate text-page font-semibold tracking-tight">{PLAYING.title}</h1>
@@ -312,15 +312,15 @@ function AlbumPage() {
                             </IconButton>
                         </Row>
                     </Stack>
-                </div>
-                <div className="flex min-w-0 flex-1 flex-col gap-8">
+                </Row>
+                <Stack gap="2xl" className="flex-1">
                     <TrackList tracks={ALBUM_TRACKS} current={`t${String(CURRENT + 1)}`} playing onPlay={() => undefined} />
                     <Stack as="section">
                         <h2 className="text-sm font-medium">More by {PLAYING.artist}</h2>
                         <AlbumGrid albums={ALBUMS.filter((album) => album.artist === PLAYING.artist && album.id !== PLAYING.id)} />
                     </Stack>
-                </div>
-            </div>
+                </Stack>
+            </Row>
         </Page>
     )
 }
@@ -364,15 +364,15 @@ function QueueBody({ history = false }: { history?: boolean }) {
 function Watch() {
     return (
         <Page>
-            <div className="flex flex-col gap-6 xl:flex-row">
-                <div className="flex min-w-0 flex-1 flex-col gap-4">
+            <Row gap="xl" align="stretch" stackBelow="xl">
+                <Stack gap="lg" className="flex-1">
                     <VideoPlayer
                         src={`${clip}#t=24`}
                         preload="auto"
                         defaultControlsVisible
                         tracks={[{ src: captions, label: 'English', lang: 'en', default: true }]}
                     />
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <Row gap="md" align="start" justify="between" stackBelow="sm">
                         <div className="min-w-0">
                             <h1 className="text-title font-semibold">{FILM.title}</h1>
                             <MetaLine size="sm" items={[`${FILM.series}, episode 1`, FILM.by, FILM.year, formatTime(FILM.length)]} />
@@ -386,19 +386,19 @@ function Watch() {
                                 <MoreHorizontal aria-hidden />
                             </IconButton>
                         </Row>
-                    </div>
+                    </Row>
                     <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
                         The first hour of a day on a northern coast, filmed from one headland as the light comes up over the water and the
                         boats leave the harbor.
                     </p>
-                </div>
-                <aside className="-mx-2 flex shrink-0 flex-col gap-2 xl:w-80">
+                </Stack>
+                <Stack as="aside" gap="sm" className="-mx-2 shrink-0 xl:w-80">
                     <GroupLabel as="h2" className="px-2">
                         {FILM.series}, 5 episodes
                     </GroupLabel>
                     <TrackList tracks={EPISODES} current="e1" variant="plain" artwork="wide" onPlay={() => undefined} />
-                </aside>
-            </div>
+                </Stack>
+            </Row>
         </Page>
     )
 }

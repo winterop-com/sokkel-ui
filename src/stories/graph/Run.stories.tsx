@@ -5,6 +5,7 @@ import { DescriptionList } from '../../components/DescriptionList'
 import { formatDuration } from '../../components/graph/GraphNode'
 import { RunGraph, type RunStep } from '../../components/graph/RunGraph'
 import { Inspector, InspectorSection } from '../../components/Inspector'
+import { Fill } from '../../components/Layout'
 import { StatusChip } from '../../components/StatusChip'
 import { Stage } from './Frame'
 import { FAILED, RUNNING } from './data'
@@ -23,9 +24,9 @@ function Inspected() {
     const step = RUNNING.find((each) => each.code === selected)
     return (
         <Stage title="nightly-export" meta="Run 01a1a5b9, started by ada">
-            <div className="flex min-h-0 min-w-0 flex-1">
+            <Fill>
                 <RunGraph steps={RUNNING} selected={selected} onSelect={setSelected} words={{ label: 'nightly-export run' }} />
-            </div>
+            </Fill>
             {step !== undefined && (
                 <Inspector
                     title={step.name ?? <span className="font-mono">{step.code}</span>}

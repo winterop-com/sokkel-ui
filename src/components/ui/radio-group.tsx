@@ -2,8 +2,19 @@ import { Radio as RadioPrimitive } from '@base-ui/react/radio'
 import { RadioGroup as RadioGroupPrimitive } from '@base-ui/react/radio-group'
 import { cn } from '../../lib/cn'
 
-function RadioGroup({ className, ...props }: RadioGroupPrimitive.Props) {
-    return <RadioGroupPrimitive data-slot="radio-group" className={cn('grid w-full gap-2', className)} {...props} />
+/** The choices one under the other, or with `horizontal` side by side, flowing onto more lines where the row runs out of room. */
+function RadioGroup({
+    className,
+    orientation = 'vertical',
+    ...props
+}: RadioGroupPrimitive.Props & { orientation?: 'vertical' | 'horizontal' }) {
+    return (
+        <RadioGroupPrimitive
+            data-slot="radio-group"
+            className={cn('w-full', orientation === 'horizontal' ? 'flex flex-wrap gap-4' : 'grid gap-2', className)}
+            {...props}
+        />
+    )
 }
 
 function RadioGroupItem({ className, ...props }: RadioPrimitive.Root.Props) {

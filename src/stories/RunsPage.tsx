@@ -5,6 +5,7 @@ import { DataTable, type DataColumn } from '../components/DataTable'
 import { DescriptionList } from '../components/DescriptionList'
 import { FilterChip } from '../components/FilterChip'
 import { Inspector, InspectorSection } from '../components/Inspector'
+import { Row } from '../components/Layout'
 import { PageHeader } from '../components/PageHeader'
 import { Problem } from '../components/Problem'
 import { Rail, type RailGroup } from '../components/Rail'
@@ -127,7 +128,7 @@ export function RunsPage() {
             >
                 <Page className="h-full">
                     <PageHeader title="Runs" count="8 today" actions={<Button size="sm">Run a job</Button>} />
-                    <div className="flex min-h-0 flex-1 items-start gap-(--density-inspector-gap)">
+                    <Row gap="inspector" align="start" className="min-h-0 flex-1">
                         <DataTable
                             toolbar={
                                 <>
@@ -203,7 +204,7 @@ export function RunsPage() {
                                 />
                             </InspectorSection>
                         </Inspector>
-                    </div>
+                    </Row>
                 </Page>
             </Shell>
         </TooltipProvider>

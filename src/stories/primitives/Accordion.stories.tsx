@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../../components/ui/accordion'
-import { Stack } from '../../components/Layout'
+import { Row, Stack } from '../../components/Layout'
 
 const meta: Meta = { title: 'Primitives/Display/Accordion', parameters: { frame: 'column' } }
 export default meta
@@ -69,10 +69,10 @@ export const States: StoryObj = {
 function StepTrigger({ code, detail, tone }: { code: string; detail: string; tone?: string }) {
     return (
         <AccordionTrigger>
-            <span className="flex flex-1 items-center justify-between gap-3 pr-3">
+            <Row as="span" gap="md" justify="between" className="flex-1 pr-3">
                 <span className="font-mono">{code}</span>
                 <span className={`text-xs tabular-nums ${tone ?? 'text-muted-foreground'}`}>{detail}</span>
-            </span>
+            </Row>
         </AccordionTrigger>
     )
 }

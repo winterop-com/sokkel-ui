@@ -56,7 +56,7 @@ import { PEOPLE_OPTIONS } from '../fixtures/filters'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { NUMBER, regionName, regions } from '../map/data'
 import { Dot } from '../../components/Dot'
-import { Columns, Row, Stack } from '../../components/Layout'
+import { Center, Columns, Row, Stack } from '../../components/Layout'
 import { TableOfContents } from '../../components/TableOfContents'
 
 /**
@@ -338,7 +338,7 @@ function Records() {
                     </>
                 }
             />
-            <div className="flex min-h-0 flex-1 items-start gap-(--density-inspector-gap)">
+            <Row gap="inspector" align="start" className="min-h-0 flex-1">
                 <DataTable
                     toolbar={
                         <>
@@ -364,7 +364,7 @@ function Records() {
                     minWidth="40rem"
                     className="min-w-0 flex-1"
                 />
-                <div className="hidden self-stretch xl:flex">
+                <Row gap="none" align="stretch" from="xl" className="self-stretch">
                     <Inspector
                         title={chosen.site}
                         code={chosen.code}
@@ -416,8 +416,8 @@ function Records() {
                             </p>
                         </InspectorSection>
                     </Inspector>
-                </div>
-            </div>
+                </Row>
+            </Row>
         </Page>
     )
 }
@@ -445,10 +445,7 @@ function VisitForm() {
             <Page className="flex-1">
                 <PageHeader title="New visit" code="VIS-2049" />
                 <Row gap="2xl" align="start">
-                    <form
-                        className="flex max-w-4xl min-w-0 flex-1 flex-col gap-(--density-page-gap)"
-                        onSubmit={(event) => event.preventDefault()}
-                    >
+                    <Stack as="form" gap="page" className="max-w-4xl flex-1" onSubmit={(event) => event.preventDefault()}>
                         <Section title="Where and when">
                             <Columns gap="lg">
                                 <Field id="site" label="Site" required>
@@ -574,7 +571,7 @@ function VisitForm() {
                                 defaultValue="Gauge board cleaned before reading. The bank on the east side has worn since the last visit."
                             />
                         </Section>
-                    </form>
+                    </Stack>
                     <TableOfContents
                         entries={OUTLINE.map((part) => ({
                             id: part.id,
@@ -585,7 +582,7 @@ function VisitForm() {
                         active="measurements"
                         onJump={() => undefined}
                         words={{ title: 'On this form' }}
-                        className="sticky top-0 hidden w-52 shrink-0 xl:flex"
+                        className="sticky top-0 w-52 shrink-0 max-xl:hidden"
                     />
                 </Row>
             </Page>
@@ -619,9 +616,9 @@ function OutlineMark({ state }: { state: 'done' | 'error' | 'open' }) {
     if (state === 'done') return <CheckCircle2 className="size-4 text-good-ink" aria-label="Complete" />
     if (state === 'error') return <CircleAlert className="size-4 text-critical-ink" aria-label="Needs attention" />
     return (
-        <span className="flex size-4 shrink-0 items-center justify-center" aria-label="Not started">
+        <Center as="span" className="size-4 shrink-0" aria-label="Not started">
             <Dot outline />
-        </span>
+        </Center>
     )
 }
 
@@ -653,10 +650,10 @@ function regionColumns(counts: Record<string, number>): DataColumn<string>[] {
             header: 'Region',
             width: 'minmax(8rem,1fr)',
             cell: (id) => (
-                <span className="flex min-w-0 items-center gap-2.5">
+                <Row as="span" className="min-w-0">
                     <span className="size-2.5 shrink-0 rounded-mini" style={{ background: colorOf(visitScale, counts[id]) ?? undefined }} />
                     <span className="truncate">{regionName[id]}</span>
-                </span>
+                </Row>
             ),
             sortValue: (id) => regionName[id],
         },
@@ -694,8 +691,8 @@ function RegionsMap() {
                     />
                 }
             />
-            <div className="flex min-h-0 flex-1 flex-col gap-(--density-inspector-gap) xl:flex-row">
-                <div className="flex min-h-[28rem] min-w-0 flex-1 flex-col gap-3">
+            <Row gap="inspector" align="stretch" stackBelow="xl" className="min-h-0 flex-1">
+                <Stack className="min-h-[28rem] flex-1">
                     <MapView label={`Visits by region, ${label}`} className="min-h-[22rem] flex-1">
                         <BoundaryLayer
                             id="regions"
@@ -708,7 +705,7 @@ function RegionsMap() {
                         </MapOverlay>
                     </MapView>
                     <PeriodSlider label="Month" periods={MONTHS} value={month} onValueChange={setMonth} />
-                </div>
+                </Stack>
                 <DataTable
                     columns={regionColumns(counts)}
                     rows={REGION_IDS}
@@ -718,7 +715,7 @@ function RegionsMap() {
                     minWidth="14rem"
                     className="shrink-0 xl:w-72"
                 />
-            </div>
+            </Row>
         </Page>
     )
 }

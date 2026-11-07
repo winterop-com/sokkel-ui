@@ -44,7 +44,7 @@ import {
     SidebarTrigger,
 } from '../../components/ui/sidebar'
 import { PersonAvatar } from '../../components/PersonAvatar'
-import { Row, Stack } from '../../components/Layout'
+import { Center, Row, Stack } from '../../components/Layout'
 
 /**
  * The app's side navigation and the frame around it. On a desktop it sits fixed at the edge and
@@ -93,9 +93,9 @@ function Workspace() {
         <SidebarMenu>
             <SidebarMenuItem>
                 <SidebarMenuButton size="lg" tooltip="Tidevann">
-                    <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
+                    <Center as="span" className="size-8 shrink-0 rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
                         <Workflow />
-                    </span>
+                    </Center>
                     <Stack as="span" gap="none" className="leading-tight">
                         <span className="truncate font-medium">Tidevann</span>
                         <span className="truncate font-mono text-xs text-muted-foreground">api.example.org</span>

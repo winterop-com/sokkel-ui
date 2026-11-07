@@ -29,7 +29,7 @@ export const Variants: StoryObj = {
                 <Choices prefix="v" />
             </Specimen>
             <Specimen label="horizontal">
-                <Choices prefix="h" className="flex flex-wrap gap-4" />
+                <Choices prefix="h" orientation="horizontal" />
             </Specimen>
             <Specimen label="nothing picked">
                 <Choices prefix="n" defaultValue={undefined} />

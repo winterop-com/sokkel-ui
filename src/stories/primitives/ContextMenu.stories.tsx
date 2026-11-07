@@ -15,6 +15,7 @@ import {
     ContextMenuSubTrigger,
     ContextMenuTrigger,
 } from '../../components/ui/context-menu'
+import { Center } from '../../components/Layout'
 
 const meta: Meta = { title: 'Primitives/Menus/ContextMenu', parameters: { frame: 'padded' } }
 export default meta
@@ -22,8 +23,8 @@ export default meta
 function StepMenu({ open }: { open?: boolean }) {
     return (
         <ContextMenu defaultOpen={open}>
-            <ContextMenuTrigger className="flex h-40 max-w-md items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground">
-                Right-click the step validate
+            <ContextMenuTrigger className="max-w-md rounded-lg border border-dashed text-sm text-muted-foreground">
+                <Center className="h-40">Right-click the step validate</Center>
             </ContextMenuTrigger>
             <ContextMenuContent className="w-52">
                 <ContextMenuGroup>

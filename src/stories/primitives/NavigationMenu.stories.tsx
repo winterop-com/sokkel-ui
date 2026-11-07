@@ -50,7 +50,7 @@ function Links({ entries }: { entries: Entry[] }) {
 function ProductNav({ open }: { open?: string }) {
     return (
         <NavigationMenu defaultValue={open ?? null}>
-            <NavigationMenuList className="flex-wrap">
+            <NavigationMenuList>
                 <NavigationMenuItem value="build">
                     <NavigationMenuTrigger>Build</NavigationMenuTrigger>
                     <NavigationMenuContent>

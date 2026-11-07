@@ -98,14 +98,11 @@ export const RunInspector: StoryObj = {
                 <ResizablePanel defaultSize="35" minSize="20">
                     <Stack as="ul" gap="none" className="p-2 text-sm">
                         {RUNS.map(([id, status, took]) => (
-                            <li
-                                key={id}
-                                className={`flex items-center gap-2 rounded-md px-2 py-1.5 ${id === '01a1a5c2' ? 'bg-muted' : ''}`}
-                            >
+                            <Row as="li" key={id} className={`rounded-md px-2 py-1.5 ${id === '01a1a5c2' ? 'bg-muted' : ''}`}>
                                 <span className="font-mono">{id}</span>
                                 <StatusChip status={status} />
                                 <span className="ml-auto text-muted-foreground tabular-nums">{took}</span>
-                            </li>
+                            </Row>
                         ))}
                     </Stack>
                 </ResizablePanel>
