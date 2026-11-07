@@ -176,8 +176,8 @@ the charts'.
 | -------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
 | `linked` | Panels on one shared axis, one per `y` field or per series, pointed at and zoomed together | `x`, `y`, `series`, `aggregate`, `order`, `seriesOrder`, `scales`, `panels`, `zoom`, `colors`, `fill`, `smooth`, `fieldNames`, `format`, `unit`, `labelEvery` | Charts/Linked |
 
-Each panel has a value axis of its own. Panels split by `series` share one scale, so a panel's
-height compares with the others'; panels of separate `y` fields keep their own, as rain in
+Each panel has a value axis of its own. Panels split by `series` share one scale, fitted to the days
+in view, so a panel's height compares with the others'; panels of separate `y` fields keep their own, as rain in
 millimeters beside flow in cubic meters; `scales` (`shared`, `own`) picks otherwise. Pointing at a category points at it in every panel, and
 one zoom moves them all: the slider under the last panel, a drag across a panel, or a pinch (Ctrl
 and the wheel with a mouse). `panels` draws each, by its field's or series' name, as bars, a line

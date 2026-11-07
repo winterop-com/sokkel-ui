@@ -147,9 +147,10 @@ export function ChartFrame({
                 className,
             )}
         >
+            {/* A frame's own actions move under its title, with the export tools, when the two do not fit on one line. */}
             {head && (
-                <header className="flex h-8 shrink-0 items-center gap-1 pr-1.5 pl-3">
-                    <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                <header className={cn('flex min-h-8 shrink-0 items-center gap-1 pr-1.5 pl-3', actions !== undefined && 'flex-wrap')}>
+                    <div className={cn('flex min-h-8 min-w-0 items-center gap-1.5', actions !== undefined ? 'grow basis-40' : 'flex-1')}>
                         {title !== undefined && <h3 className="truncate text-xs font-medium">{title}</h3>}
                         {info !== undefined && (
                             <Tooltip>
@@ -161,30 +162,32 @@ export function ChartFrame({
                         )}
                         {subtitle !== undefined && <span className="truncate text-xs text-muted-foreground">{subtitle}</span>}
                     </div>
-                    {actions}
-                    <div className="flex items-center transition-opacity group-focus-within/frame:opacity-100 group-hover/frame:opacity-100 [@media(hover:hover)]:opacity-0">
-                        {exportable && (
-                            <DropdownMenu>
-                                <DropdownMenuTrigger aria-label={words.export} title={words.export} className={TOOL} disabled={empty}>
-                                    <Download className="size-3.5" aria-hidden />
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" container={root} className="w-40">
-                                    <DropdownMenuItem onClick={() => void exportAs('svg')}>{words.svg}</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => void exportAs('png')}>{words.png}</DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        )}
-                        {expandable && (
-                            <button
-                                type="button"
-                                aria-label={full ? words.exitFullscreen : words.fullscreen}
-                                title={full ? words.exitFullscreen : words.fullscreen}
-                                className={TOOL}
-                                onClick={() => void (full ? document.exitFullscreen() : root?.requestFullscreen())}
-                            >
-                                {full ? <Minimize2 className="size-3.5" aria-hidden /> : <Maximize2 className="size-3.5" aria-hidden />}
-                            </button>
-                        )}
+                    <div className="ml-auto flex items-center gap-1">
+                        {actions}
+                        <div className="flex items-center transition-opacity group-focus-within/frame:opacity-100 group-hover/frame:opacity-100 [@media(hover:hover)]:opacity-0">
+                            {exportable && (
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger aria-label={words.export} title={words.export} className={TOOL} disabled={empty}>
+                                        <Download className="size-3.5" aria-hidden />
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" container={root} className="w-40">
+                                        <DropdownMenuItem onClick={() => void exportAs('svg')}>{words.svg}</DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => void exportAs('png')}>{words.png}</DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            )}
+                            {expandable && (
+                                <button
+                                    type="button"
+                                    aria-label={full ? words.exitFullscreen : words.fullscreen}
+                                    title={full ? words.exitFullscreen : words.fullscreen}
+                                    className={TOOL}
+                                    onClick={() => void (full ? document.exitFullscreen() : root?.requestFullscreen())}
+                                >
+                                    {full ? <Minimize2 className="size-3.5" aria-hidden /> : <Maximize2 className="size-3.5" aria-hidden />}
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </header>
             )}

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { chartLegend } from '../Chart'
 import type { ChartLook } from '../look'
 import { dialSplits } from './gauge'
-import { linkedLayout } from './linked'
+import { linkedLayout, SHARED_SCALE } from './linked'
 import { ringFigures } from './rings'
 import { KINDS, type ChartKind, type ChartSpec } from '.'
 
@@ -163,15 +163,20 @@ describe('the chart kinds', () => {
     })
 
     it('puts linked panels split by series on one scale, and fields on their own', () => {
-        type Axes = { yAxis: { min?: number; max?: number }[] }
+        type Built = { yAxis: { max?: number }[]; series: { name: string; yAxisIndex: number; data: (number | null)[] }[] }
         const bySeries = { rows: ROWS, x: 'job', y: 'duration', series: 'state' }
-        const split = KINDS.linked.build(bySeries, LOOK) as unknown as Axes
-        expect(new Set(split.yAxis.map((axis) => axis.max)).size).toBe(1)
-        expect(split.yAxis[0].max).toBeGreaterThan(0)
-        const own = KINDS.linked.build({ ...bySeries, scales: 'own' }, LOOK) as unknown as Axes
-        expect(own.yAxis.every((axis) => axis.max === undefined)).toBe(true)
-        const fields = KINDS.linked.build(SPECS.linked, LOOK) as unknown as Axes
-        expect(fields.yAxis.every((axis) => axis.max === undefined)).toBe(true)
+        const split = KINDS.linked.build(bySeries, LOOK) as unknown as Built
+        // No axis is pinned, so each fits the part in view; the unseen lines put every panel on one scale there.
+        expect(split.yAxis.every((axis) => axis.max === undefined)).toBe(true)
+        const scale = split.series.filter((entry) => entry.name === SHARED_SCALE)
+        expect(scale.map((entry) => entry.yAxisIndex)).toEqual([0, 0, 1, 1])
+        // nightly-export: succeeded 100 and failed 40; sync-inventory: succeeded 960, nothing failed.
+        expect(scale[0].data).toEqual([100, 960, -30])
+        expect(scale[1].data).toEqual([40, 960, -30])
+        const own = KINDS.linked.build({ ...bySeries, scales: 'own' }, LOOK) as unknown as Built
+        expect(own.series.some((entry) => entry.name === SHARED_SCALE)).toBe(false)
+        const fields = KINDS.linked.build(SPECS.linked, LOOK) as unknown as Built
+        expect(fields.series.some((entry) => entry.name === SHARED_SCALE)).toBe(false)
     })
 
     it('lays linked panels out by their weights between a fixed top and bottom', () => {

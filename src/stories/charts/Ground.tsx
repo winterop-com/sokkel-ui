@@ -33,6 +33,7 @@ export function Framed({
     subtitle,
     label,
     bodyClassName,
+    actions,
 }: {
     kind: ChartKind
     spec: ChartSpec
@@ -41,6 +42,8 @@ export function Framed({
     label: string
     /** The chart area's size, when the kind wants more room than a frame's default. */
     bodyClassName?: string
+    /** Controls in the frame's header, beside its own. */
+    actions?: ReactNode
 }) {
     const legend = useMemo(() => chartLegend(kind, spec), [kind, spec])
     return (
@@ -50,6 +53,7 @@ export function Framed({
             legend={legend}
             file={title.toLowerCase().replaceAll(' ', '-')}
             bodyClassName={bodyClassName}
+            actions={actions}
         >
             {(state) => <Chart kind={kind} label={label} {...spec} {...state} />}
         </ChartFrame>
