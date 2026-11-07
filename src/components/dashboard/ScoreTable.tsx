@@ -48,6 +48,7 @@ const FILL = {
  * own when its measure reads differently. `fill` tints the cell, fills it solid, or puts a dot
  * beside the value. `trend` marks each value up or down against the column before it, inked by
  * whether that is an improvement. The first column stays put while a narrow box scrolls the rest.
+ * `framed={false}` drops the table's own border, for a table filling a panel that frames it.
  */
 export function ScoreTable({
     columns,
@@ -60,6 +61,7 @@ export function ScoreTable({
     trend = false,
     higherIsBetter = true,
     nameHeader,
+    framed = true,
     words = WORDS,
     className,
 }: {
@@ -74,12 +76,20 @@ export function ScoreTable({
     higherIsBetter?: boolean
     /** The first column's header; the `name` word when omitted. */
     nameHeader?: ReactNode
+    /** Draws the table in its own bordered, rounded box. */
+    framed?: boolean
     words?: ScoreWords
     className?: string
 }) {
     const width = columns.length + 1
     return (
-        <div className={cn('min-w-0 overflow-hidden rounded-surface border border-border bg-card text-card-foreground', className)}>
+        <div
+            className={cn(
+                'min-w-0 overflow-hidden bg-card text-card-foreground',
+                framed && 'rounded-surface border border-border',
+                className,
+            )}
+        >
             <Table className="border-separate border-spacing-0 text-xs tabular-nums">
                 <TableHeader>
                     <TableRow className="hover:bg-transparent">

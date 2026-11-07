@@ -1,7 +1,8 @@
 # Rules for agents
 
-`docs/plan.md` says what the library holds and why; `docs/roadmap.md` says what comes next. Read
-both before starting work.
+`docs/plan.md` says what the library holds and why; `docs/roadmap.md` says what comes next;
+`docs/charts.md` says how charts are drawn and which kinds there are. Read all three before starting
+work.
 
 These rules hold for every agent and every change. When a request seems to conflict with one, stop
 and ask before acting.
@@ -40,6 +41,9 @@ and ask before acting.
   resize by default, as panels do; `resizable={false}` turns that off.
 - One engine per job: ECharts draws every chart, maplibre every map, React Flow every interactive
   graph, Mermaid every diagram written as text, and sparklines are plain SVG. Never add a second.
+- Charts are drawn with `Chart` and a kind (or `ChartGrid`, `ChartPanel` and the dashboard panels),
+  never with an ECharts option built in a story. A chart the kinds cannot draw becomes a new kind or
+  an option on one. `docs/charts.md` lists the kinds, the fields they read and how to add one.
 - Fix the component, never the example. When a story looks or behaves wrong, the fix goes into
   the component that draws it (or a new component, or an option on one), so it reaches every
   example and every app at once. A class added to a story to patch a component's size, spacing,

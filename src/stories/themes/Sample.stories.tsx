@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import type { ChartLook } from '../../components/chart/look'
-import { EChart } from '../../components/chart/EChart'
+import { Chart } from '../../components/chart/Chart'
+import type { ChartSpec } from '../../components/chart/kinds'
 import { type DataColumn, DataTable } from '../../components/DataTable'
 import { SearchField } from '../../components/SearchField'
 import { StatusChip, type Status } from '../../components/StatusChip'
@@ -39,15 +39,13 @@ const HOURS = ['00', '02', '04', '06', '08', '10', '12', '14', '16', '18', '20',
 const RUNS = [12, 18, 9, 7, 14, 22, 26, 31, 24, 19, 15, 11]
 const FAILED = [1, 0, 2, 0, 1, 3, 1, 0, 2, 1, 0, 1]
 
-const BARS = (look: ChartLook) => ({
-    grid: { left: 2, right: 2, top: 6, bottom: 2 },
-    xAxis: { type: 'category', data: HOURS, axisLabel: { interval: 2 } },
-    yAxis: { type: 'value', splitNumber: 2 },
-    series: [
-        { name: 'Runs', type: 'bar', stack: 'runs', data: RUNS, color: look.token('chart-2') },
-        { name: 'Failed', type: 'bar', stack: 'runs', data: FAILED, color: look.token('status-failed') },
-    ],
-})
+const BARS: ChartSpec = {
+    rows: HOURS.map((hour, index) => ({ hour, Runs: RUNS[index], Failed: FAILED[index] })),
+    x: 'hour',
+    y: ['Runs', 'Failed'],
+    stack: 'stacked',
+    colors: { Runs: 'chart-2', Failed: 'status-failed' },
+}
 
 /** The tile's content, in whatever theme the document wears. */
 function ThemeSample() {
@@ -86,7 +84,7 @@ function ThemeSample() {
                 </Row>
                 <DataTable variant="list" columns={COLUMNS} rows={ROWS} rowKey={(row) => row.job} />
                 <div className="h-24 rounded-surface border border-border-strong bg-card p-2">
-                    <EChart option={BARS} label="Runs and failures by hour" />
+                    <Chart kind="bar" label="Runs and failures by hour" {...BARS} />
                 </div>
             </Stack>
         </div>
