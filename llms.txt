@@ -29,6 +29,15 @@ The app runs Tailwind CSS 4.1 or later itself. Each package's `styles.css` is Ta
 @import '@winterop-com/sokkel-ui/themes/paper.css';
 ```
 
+An app that offers every theme (a theme picker in its settings) imports them all at once instead, about 6 kB gzipped for all seven, and `ThemePicker` then shows each one:
+
+```css
+@import '@winterop-com/sokkel-ui/styles.css';
+@import '@winterop-com/sokkel-ui/themes.css';
+```
+
+The themes are default (in `styles.css`), amber, paper, contrast, tokyo, vinyl, cassette and neon.
+
 Components import by path, one module each:
 
 ```ts
