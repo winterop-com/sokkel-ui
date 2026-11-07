@@ -57,7 +57,8 @@ Shell, Rail, AppBar, SubNav, Page, PageHeader, PaneHeader, Toolbar, Section, Sur
 components (Stack, Row, Columns, Split, Fill), Field, TextField, InlineField, SliderField,
 CheckboxField, CheckboxList, ChoiceList, CodeField, SwitchField, SearchField, FilterChip, FormBar,
 SelectionBar, DataTable, StatusChip, PersonRow, MetaLine, DueText, AttachmentList, IconButton,
-AccountMenu, SidePanel, DialogShell, ConfirmDialog, TreeSelect, AsyncSelect, CapabilityPicker.
+StarButton, AccountMenu, SidePanel, DialogShell, ConfirmDialog, TreeSelect, AsyncSelect,
+CapabilityPicker.
 Every example arranges and builds its screens from these, never by hand, so a fix in one reaches
 them all.
 
