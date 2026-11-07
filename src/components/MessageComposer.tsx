@@ -24,6 +24,7 @@ import { returnFocusOnKeyboard } from '../lib/focus'
 import { Markdown, type MarkdownWords } from './Markdown'
 import { Segmented } from './Segmented'
 import { Checkbox } from './ui/checkbox'
+import { Textarea } from './ui/textarea'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -444,7 +445,8 @@ export function MessageComposer({
                 </div>
             )}
             <div className="grid min-w-0 grid-cols-1">
-                <textarea
+                <Textarea
+                    bare
                     ref={text}
                     value={value}
                     disabled={disabled}
@@ -459,10 +461,7 @@ export function MessageComposer({
                             if (!empty) send()
                         }
                     }}
-                    className={cn(
-                        'col-start-1 row-start-1 field-sizing-content max-h-60 min-h-10 resize-none bg-transparent px-3 py-2 leading-6 outline-none placeholder:text-muted-foreground',
-                        previewing && 'invisible',
-                    )}
+                    className={cn('col-start-1 row-start-1 max-h-60 min-h-10 px-3 py-2 leading-6', previewing && 'invisible')}
                 />
                 {previewing && (
                     <div className="col-start-1 row-start-1 max-h-96 min-w-0 overflow-y-auto px-3 py-2 text-sm leading-6 wrap-break-word">

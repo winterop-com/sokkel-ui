@@ -3,6 +3,7 @@ import { useMemo, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from './ui/command'
+import { Input } from './ui/input'
 
 /** One thing to pick: addressed by its code, titled by its name, and what it can do. */
 export interface PickerItem {
@@ -102,12 +103,13 @@ export function CapabilityPicker({
         >
             <div className="flex items-center gap-2 border-b border-border px-3">
                 <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-                <input
+                <Input
+                    bare
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder={words.search}
                     aria-label={words.search}
-                    className="h-10 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                    className="h-10 flex-1 text-sm"
                 />
             </div>
             <div role="group" aria-label={words.filters} className="flex flex-wrap items-center gap-1.5 border-b border-border px-3 py-2">

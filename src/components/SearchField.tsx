@@ -2,6 +2,7 @@ import { Search, X } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 
 import { cn } from '../lib/cn'
+import { Input } from './ui/input'
 
 /**
  * The one search box: a glyph, the text, a clear button once there is text, and the `/` key that
@@ -50,13 +51,14 @@ export function SearchField({
             )}
         >
             <Search className="size-4 shrink-0 text-faint" aria-hidden />
-            <input
+            <Input
+                bare
                 ref={input}
                 type="search"
                 value={value}
                 placeholder={placeholder}
                 aria-label={placeholder}
-                className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-faint [&::-webkit-search-cancel-button]:hidden"
+                className="flex-1 placeholder:text-faint [&::-webkit-search-cancel-button]:hidden"
                 onChange={(event) => onChange(event.target.value)}
                 onKeyDown={(event) => {
                     if (event.key !== 'Escape') return

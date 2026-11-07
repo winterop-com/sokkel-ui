@@ -3,6 +3,7 @@ import { useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { ISSUE_EDGE, IssueMark, worst, type Issue } from './IssueMark'
+import { Input } from './ui/input'
 
 /** One recipient: the address, and the name to show in its place when there is one. */
 export interface Address {
@@ -159,7 +160,8 @@ export function AddressInput({
                         </span>
                     )
                 })}
-                <input
+                <Input
+                    bare
                     ref={input}
                     id={id}
                     type="text"
@@ -170,7 +172,7 @@ export function AddressInput({
                     placeholder={value.length === 0 ? words.placeholder : undefined}
                     aria-label={id !== undefined ? undefined : typeof label === 'string' ? label : words.placeholder}
                     aria-invalid={tone === 'critical' || undefined}
-                    className="h-6 min-w-24 flex-1 bg-transparent px-1 outline-none placeholder:text-faint"
+                    className="h-6 min-w-24 flex-1 px-1 placeholder:text-faint"
                     onChange={(event) => {
                         const text = event.target.value
                         if (/[,;]/.test(text)) commit(text)

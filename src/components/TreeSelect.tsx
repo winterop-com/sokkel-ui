@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 
 import { cn } from '../lib/cn'
 import { Tree, treeHolding, type TreeNode } from './Tree'
+import { Input } from './ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 
 /** Every node by id, with the labels of its ancestors, for the trigger to name a choice by its path. */
@@ -110,12 +111,13 @@ export function TreeSelect({
             <PopoverContent align="start" className="flex w-(--anchor-width) min-w-72 flex-col gap-0 p-0">
                 <div className="flex items-center gap-2 border-b border-border px-2.5">
                     <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-                    <input
+                    <Input
+                        bare
                         value={query}
                         onChange={(event) => setQuery(event.target.value)}
                         placeholder={words.search}
                         aria-label={words.search}
-                        className="h-9 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                        className="h-9 flex-1 text-sm"
                     />
                     {value.length > 0 && (
                         <button

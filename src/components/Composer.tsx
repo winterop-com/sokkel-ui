@@ -3,6 +3,7 @@ import { ArrowUp, FileText, Paperclip, Square, X } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { Textarea } from './ui/textarea'
 
 /** A file waiting to go with the next message. */
 export interface ComposerAttachment {
@@ -142,7 +143,8 @@ export function Composer({
                     ))}
                 </ul>
             )}
-            <textarea
+            <Textarea
+                bare
                 value={value}
                 rows={1}
                 disabled={disabled}
@@ -164,7 +166,7 @@ export function Composer({
                     if (!event.clipboardData.types.includes('text/plain')) event.preventDefault()
                     onAttach(pasted)
                 }}
-                className="field-sizing-content max-h-60 min-h-12 w-full resize-none bg-transparent px-3 pt-3 pb-1 text-sm outline-none placeholder:text-muted-foreground"
+                className="max-h-60 min-h-12 px-3 pt-3 pb-1 text-sm"
             />
             <div className="flex items-center gap-1 px-2 pb-2">
                 {onAttach !== undefined && (
