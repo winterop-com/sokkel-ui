@@ -6,6 +6,7 @@ import { ShortcutsDialog } from '@winterop-com/sokkel-ui/ShortcutsDialog'
 import { ThemeToggle } from '@winterop-com/sokkel-ui/ThemeToggle'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { HARBOR_DUSK } from '../fixtures/photos'
 
 /** The app-level controls: the scheme switch, the shortcuts dialog, an image that opens full screen. */
 function Ground({ children }: { children: React.ReactNode }) {
@@ -84,6 +85,21 @@ function Lightbox({ open }: { open: boolean }) {
     )
 }
 
+const BOXES = [
+    { id: 'boat-near', x: 0.14, y: 0.64, w: 0.17, h: 0.18, label: 'boat', confidence: 0.94 },
+    { id: 'boat-far', x: 0.615, y: 0.72, w: 0.195, h: 0.165, label: 'boat', confidence: 0.88 },
+    { id: 'sun', x: 0.625, y: 0.365, w: 0.2, h: 0.265, label: 'sun', confidence: 0.71 },
+]
+
+function BoxedLightbox({ open }: { open: boolean }) {
+    return (
+        <Ground>
+            <p className="text-sm">What the worker found in the upload:</p>
+            <ImageLightbox src={HARBOR_DUSK} alt="A harbor at dusk" boxes={BOXES} numbered className="w-80" defaultOpen={open} />
+        </Ground>
+    )
+}
+
 const meta: Meta = { title: 'Patterns/App controls', parameters: { frame: 'padded' } }
 export default meta
 
@@ -91,3 +107,7 @@ export const Theme: StoryObj = { name: 'Theme toggle', render: () => <Toggle /> 
 export const Keys: StoryObj = { name: 'Shortcuts dialog', render: () => <Shortcuts /> }
 export const Image: StoryObj = { name: 'Image lightbox', render: () => <Lightbox open={false} /> }
 export const ImageOpen: StoryObj = { name: 'Image lightbox, open', render: () => <Lightbox open /> }
+/** An image with boxes over it, numbered and tagged, small and full screen alike. */
+export const ImageBoxes: StoryObj = { name: 'Image lightbox, boxes', render: () => <BoxedLightbox open={false} /> }
+/** The boxed image opened full screen. */
+export const ImageBoxesOpen: StoryObj = { name: 'Image lightbox, boxes open', render: () => <BoxedLightbox open /> }

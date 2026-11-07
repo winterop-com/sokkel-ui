@@ -5,6 +5,7 @@ import { useState } from 'react'
 
 import { CopyButton } from '@winterop-com/sokkel-ui/CopyButton'
 import { Segmented, type SegmentedVariant } from '@winterop-com/sokkel-ui/Segmented'
+import { Card, CardContent, CardHeader, CardTitle } from '@winterop-com/sokkel-ui/primitives/card'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
@@ -162,6 +163,56 @@ function SegmentedSettings({ fill }: { fill: boolean }) {
     )
 }
 
+function SegmentedOff() {
+    const [region, setRegion] = useState<'europe' | 'americas' | 'asia' | 'oceania'>('europe')
+    return (
+        <Ground>
+            <Segmented
+                label="Region"
+                value={region}
+                onChoose={setRegion}
+                options={[
+                    { value: 'europe', label: 'Europe' },
+                    { value: 'americas', label: 'Americas' },
+                    { value: 'asia', label: 'Asia', disabled: true, hint: 'No sites in Asia yet' },
+                    { value: 'oceania', label: 'Oceania', disabled: true, hint: 'The Oceania sites are paused' },
+                ]}
+            />
+        </Ground>
+    )
+}
+
+const STEPS = [
+    { value: 'all', label: 'All' },
+    { value: 'fetch', label: 'Fetch' },
+    { value: 'transform', label: 'Transform' },
+    { value: 'validate', label: 'Validate' },
+    { value: 'upload', label: 'Upload' },
+    { value: 'notify', label: 'Notify' },
+    { value: 'retry', label: 'Retry' },
+    { value: 'cleanup', label: 'Clean up' },
+] as const
+
+function SegmentedWrapping() {
+    const [step, setStep] = useState<(typeof STEPS)[number]['value']>('transform')
+    return (
+        <Ground>
+            <Columns count={3} min="lg" gap="lg">
+                {(['track', 'outline', 'solid'] as const).map((variant) => (
+                    <Card key={variant}>
+                        <CardHeader>
+                            <CardTitle>Step</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Segmented fill variant={variant} label="Step" value={step} onChoose={setStep} options={STEPS} />
+                        </CardContent>
+                    </Card>
+                ))}
+            </Columns>
+        </Ground>
+    )
+}
+
 function SegmentedInForm() {
     const [on, setOn] = useState<'success' | 'failure' | 'always'>('failure')
     return (
@@ -257,5 +308,9 @@ export const SegmentedVariants: StoryObj = { name: 'Segmented, options', render:
 export const SegmentedStackedLayout: StoryObj = { name: 'Segmented, stacked', render: () => <SegmentedStacked /> }
 export const SegmentedAligned: StoryObj = { name: 'Segmented, aligned', render: () => <SegmentedSettings fill /> }
 export const SegmentedChoice: StoryObj = { name: 'Segmented, natural width', render: () => <SegmentedSettings fill={false} /> }
+/** Two options off on their own, each with a tooltip on hover and focus that says why. */
+export const SegmentedOffOptions: StoryObj = { name: 'Segmented, off options', render: () => <SegmentedOff /> }
+/** Eight options in cards a third of the width: they wrap onto more lines rather than overflow, each line shared out evenly. */
+export const SegmentedWrap: StoryObj = { name: 'Segmented, wrapping', render: () => <SegmentedWrapping /> }
 export const SegmentedField: StoryObj = { name: 'Form field', render: () => <SegmentedInForm /> }
 export const Copy: StoryObj = { name: 'Copy button', render: () => <CopyLines /> }

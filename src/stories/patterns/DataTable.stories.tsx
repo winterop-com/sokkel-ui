@@ -209,6 +209,16 @@ export const ShortList: StoryObj = {
     ),
 }
 
+/** Only a failed run can be retried; every other row's actions are empty. */
+const listActions = (run: ListRun): DataAction[] =>
+    run.state === 'failed' ? [{ id: 'retry', label: 'Retry', icon: <RotateCcwIcon />, onSelect: () => undefined }] : []
+
+/** Menus on some rows only: a row whose actions are empty draws no button and opens no menu on a right-click. */
+export const SomeMenus: StoryObj = {
+    name: 'Some menus',
+    render: () => <DataTable variant="list" columns={LIST_COLUMNS} rows={LIST_RUNS} rowKey={(run) => run.id} rowActions={listActions} />,
+}
+
 function Picking() {
     const [chosen, setChosen] = useState('r2')
     return (
