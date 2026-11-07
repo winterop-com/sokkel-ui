@@ -23,6 +23,8 @@ export interface ChartLook {
     popover: string
     /** Text sizes in pixels, read from the size tokens: axis and legend labels, axis names, titles and tooltips, and a figure in a chart's middle. */
     size: { label: number; small: number; body: number; stat: number }
+    /** A mark's corner in pixels, such as a bar's top or a heatmap's cell: a share of the radius token, so a square theme draws square marks. */
+    corner: number
     /** The categorical colors in order. */
     series: string[]
     token: (name: string) => string
@@ -101,6 +103,7 @@ export function readLook(key = readKey()): ChartLook {
             body: pixels('text-xs', 13),
             stat: pixels('chart-stat-size', 24),
         },
+        corner: Math.max(0, pixels('radius', 4.5) * 0.4),
         series: SERIES_ORDER.map(token),
         token,
         mix,

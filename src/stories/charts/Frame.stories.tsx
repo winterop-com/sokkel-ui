@@ -1,23 +1,26 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
+import { Chart, chartLegend } from '../../components/chart/Chart'
 import { ChartFrame } from '../../components/chart/ChartFrame'
 import { ChartLegend } from '../../components/chart/ChartLegend'
-import { EChart } from '../../components/chart/EChart'
-import { Ground, legendOf } from './Ground'
-import { BY_JOB, lines, TWO } from './options'
+import type { ChartSpec } from '../../components/chart/kinds'
+import { JOB_STEP_ROWS, STEP_COLORS, STEP_ROWS } from '../fixtures/dayRows'
+import { Ground } from './Ground'
 
 /** The chart frame and legend on their own: the frame's states, and the legend in both modes. */
 const meta: Meta = { title: 'Charts/Frame' }
 export default meta
 
-const OPTION = lines(TWO)
+const TWO: ChartSpec = { rows: STEP_ROWS, x: 'time', y: ['Runs', 'Failures'], colors: STEP_COLORS, labelEvery: 16 }
+const TWO_LEGEND = chartLegend('line', TWO)
+const BY_JOB_LEGEND = chartLegend('line', { rows: JOB_STEP_ROWS, x: 'time', y: 'runs', series: 'job' })
 
 /** The legend as a wrapped row, one series switched off. */
 export const LegendList: StoryObj = {
     name: 'Legend list',
     render: () => (
         <Ground title="Legend" columns={1}>
-            <ChartLegend items={legendOf(BY_JOB)} hidden={new Set(['rebuild-index'])} />
+            <ChartLegend items={BY_JOB_LEGEND} hidden={new Set(['rebuild-index'])} />
         </Ground>
     ),
 }
@@ -27,7 +30,7 @@ export const LegendTable: StoryObj = {
     name: 'Legend table',
     render: () => (
         <Ground title="Legend" columns={1}>
-            <ChartLegend items={legendOf(BY_JOB)} mode="table" hidden={new Set(['rebuild-index'])} />
+            <ChartLegend items={BY_JOB_LEGEND} mode="table" hidden={new Set(['rebuild-index'])} />
         </Ground>
     ),
 }
@@ -36,11 +39,11 @@ export const LegendTable: StoryObj = {
 export const States: StoryObj = {
     render: () => (
         <Ground title="Panels">
-            <ChartFrame title="Runs and failures" legend={legendOf(TWO)} loading>
-                {(state) => <EChart option={OPTION} label="Runs and failures across the day" {...state} />}
+            <ChartFrame title="Runs and failures" legend={TWO_LEGEND} loading>
+                {(state) => <Chart kind="line" label="Runs and failures across the day" {...TWO} {...state} />}
             </ChartFrame>
             <ChartFrame title="Cancelled runs" empty>
-                {(state) => <EChart option={OPTION} label="Cancelled runs" {...state} />}
+                {(state) => <Chart kind="line" label="Cancelled runs" {...TWO} {...state} />}
             </ChartFrame>
         </Ground>
     ),

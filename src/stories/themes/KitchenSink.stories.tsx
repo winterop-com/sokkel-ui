@@ -22,7 +22,8 @@ import { toast } from 'sonner'
 
 import { AccountMenu } from '../../components/AccountMenu'
 import { Banner, type BannerTone } from '../../components/Banner'
-import { EChart } from '../../components/chart/EChart'
+import { Chart } from '../../components/chart/Chart'
+import type { ChartSpec } from '../../components/chart/kinds'
 import { Code } from '../../components/Code'
 import { DataTable, type DataColumn } from '../../components/DataTable'
 import { PageHeader } from '../../components/PageHeader'
@@ -45,7 +46,7 @@ import { Toaster } from '../../components/ui/sonner'
 import { Switch } from '../../components/ui/switch'
 import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs'
 import { TooltipProvider } from '../../components/ui/tooltip'
-import { lines, TWO } from '../charts/options'
+import { STEP_COLORS, STEP_ROWS } from '../fixtures/dayRows'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { applyToDocument, CORNERS, fromGlobals, THEMES, toGlobals, TYPEFACES } from './themes'
 import { Columns, Row, Stack } from '../../components/Layout'
@@ -162,7 +163,7 @@ steps:
   - notify: [ada, grace]
 `
 
-const CHART = lines(TWO)
+const CHART: ChartSpec = { rows: STEP_ROWS, x: 'time', y: ['Runs', 'Failures'], colors: STEP_COLORS, labelEvery: 16 }
 
 function Section({
     title,
@@ -487,7 +488,7 @@ function App({ globals }: { globals: Record<string, unknown> }) {
                             }
                         >
                             <div className="h-44">
-                                <EChart option={CHART} label="Runs and failures across the day" />
+                                <Chart kind="line" label="Runs and failures across the day" {...CHART} />
                             </div>
                         </Section>
                         <Controls />

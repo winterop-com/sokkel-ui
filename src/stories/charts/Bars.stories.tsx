@@ -1,19 +1,32 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
+import { Chart, chartLegend } from '../../components/chart/Chart'
 import { ChartFrame } from '../../components/chart/ChartFrame'
-import { EChart } from '../../components/chart/EChart'
+import type { ChartSpec } from '../../components/chart/kinds'
 import { BarPanel } from '../../components/dashboard/BarPanel'
 import type { PanelSeries } from '../../components/dashboard/series'
+import { DURATION_ROWS, STATE_HOUR_ROWS, STATE_LABEL_COLORS } from '../fixtures/dayRows'
 import { JOB_STATES, MONTHS, PROJECT_MONTHLY, SHARE_JOBS } from '../fixtures/scores'
-import { Ground, legendOf } from './Ground'
-import { BY_STATE_SERIES, histogram, stackedBars } from './options'
+import { Ground } from './Ground'
 
-/** Bar charts on EChart: runs per hour stacked by state, each job's runs as shares of 100%, and runs per duration bucket. */
+/**
+ * Bar charts: runs per hour stacked by state and runs per duration bucket on Chart, and each
+ * month's or job's runs as shares of 100% on the dashboard's bar panel.
+ */
 const meta: Meta = { title: 'Charts/Bars' }
 export default meta
 
-const STACKED = stackedBars(BY_STATE_SERIES)
-const HISTOGRAM = histogram()
+const STACKED: ChartSpec = {
+    rows: STATE_HOUR_ROWS,
+    x: 'hour',
+    y: 'runs',
+    series: 'state',
+    colors: STATE_LABEL_COLORS,
+    stack: 'stacked',
+    labelEvery: 4,
+}
+const STACKED_LEGEND = chartLegend('bar', STACKED)
+const HISTOGRAM: ChartSpec = { rows: DURATION_ROWS, x: 'bucket', y: 'runs', gap: 'tight' }
 
 const STATE_TOKENS = { succeeded: 'status-succeeded', failed: 'status-failed', cancelled: 'status-cancelled', skipped: 'status-skipped' }
 const stateSeries = (source: Record<keyof typeof STATE_TOKENS, readonly number[]>): PanelSeries[] =>
@@ -33,8 +46,8 @@ const PROJECT_SHARES: PanelSeries[] = [
 export const Stacked: StoryObj = {
     render: () => (
         <Ground title="Runs by state, today" columns={1}>
-            <ChartFrame title="Runs by state" subtitle="per hour" legend={legendOf(BY_STATE_SERIES)} file="runs-by-state">
-                {(state) => <EChart option={STACKED} label="Runs per hour, stacked by state" {...state} />}
+            <ChartFrame title="Runs by state" subtitle="per hour" legend={STACKED_LEGEND} file="runs-by-state">
+                {(state) => <Chart kind="bar" label="Runs per hour, stacked by state" {...STACKED} {...state} />}
             </ChartFrame>
         </Ground>
     ),
@@ -72,7 +85,7 @@ export const Histogram: StoryObj = {
     render: () => (
         <Ground title="Durations, today" columns={1}>
             <ChartFrame title="Run duration" subtitle="distribution" file="duration-histogram">
-                {(state) => <EChart option={HISTOGRAM} label="Runs by duration" {...state} />}
+                {(state) => <Chart kind="bar" label="Runs by duration" {...HISTOGRAM} {...state} />}
             </ChartFrame>
         </Ground>
     ),
