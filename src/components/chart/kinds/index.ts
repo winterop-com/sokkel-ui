@@ -12,6 +12,7 @@ import { linked } from './linked'
 import { parallel } from './parallel'
 import { scatter, scatterLegend } from './points'
 import { radar } from './radar'
+import { rings, ringsLegend } from './rings'
 import { rose, roseLegend } from './rose'
 import { range, rangeLegend, step } from './steps'
 import { stream } from './stream'
@@ -37,6 +38,7 @@ export const KINDS = {
     radar: { build: radar },
     rose: { build: rose, legend: roseLegend },
     gauge: { build: gauge, legend: () => [] },
+    rings: { build: rings, legend: ringsLegend },
     dual: { build: dual },
     treemap: { build: treemap, legend: treeLegend },
     sunburst: { build: sunburst, legend: treeLegend },
@@ -51,4 +53,4 @@ export const KINDS = {
 
 export type ChartKind = keyof typeof KINDS
 
-export type { ChartBuilder, ChartKindDef, ChartSpec, ChartStep, ChartWords, LinkedPanel } from './spec'
+export type { ChartBuilder, ChartKindDef, ChartSpec, ChartStep, ChartWords, GaugeDial, LinkedPanel } from './spec'

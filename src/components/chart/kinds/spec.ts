@@ -48,7 +48,7 @@ export interface ChartSpec {
     fill?: 'solid' | 'gradient'
     /** A heatmap's color scale shown beside the grid. */
     showScale?: boolean
-    /** A ring's total written in its middle, with this word under it, such as `runs`. */
+    /** A ring's total written in its middle, with this word under it, such as `runs`; under a gauge's figure, the word alone. */
     total?: string
     /** A scatter's axes fitted to its points rather than starting at zero. */
     fit?: boolean
@@ -64,6 +64,12 @@ export interface ChartSpec {
     words?: Partial<ChartWords>
     /** The fields from the outermost in, for a kind that nests (boxes, rings) or flows through stages. */
     path?: readonly string[]
+    /**
+     * How a gauge draws its figure: `arc` (the default) fills an open dial, `ring` a full circle,
+     * `half` a half circle low enough for a stat tile, `bands` points at the figure over an arc in its
+     * steps' colors, and `needle` swings a needle over a scale with ticks.
+     */
+    dial?: GaugeDial
     /** How each panel of a linked chart is drawn, by the name of its `y` field or series. */
     panels?: Readonly<Record<string, LinkedPanel>>
     /**
@@ -72,6 +78,9 @@ export interface ChartSpec {
      */
     zoom?: readonly [number, number] | readonly [string, string]
 }
+
+/** The shapes a gauge's dial takes; see `ChartSpec.dial`. */
+export type GaugeDial = 'arc' | 'ring' | 'half' | 'bands' | 'needle'
 
 /** How one panel of a linked chart is drawn. */
 export interface LinkedPanel {

@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 
 import { chartLegend } from '../Chart'
 import type { ChartLook } from '../look'
+import { dialSplits } from './gauge'
 import { linkedLayout } from './linked'
+import { ringFigures } from './rings'
 import { KINDS, type ChartKind, type ChartSpec } from '.'
 
 /** A look whose colors are the tokens' own names, so a test can read which token a part takes. */
@@ -44,6 +46,7 @@ const SPECS: Record<string, ChartSpec> = {
     rose: { rows: ROWS, x: 'job', series: 'state' },
     gauge: { rows: ROWS, y: 'failed', aggregate: 'avg', steps: [{ color: 'good' }, { value: 10, color: 'critical' }] },
     dual: { rows: ROWS, x: 'job', y: ['runs', 'failed'], aggregate: ['sum', 'avg'], unit: ['', '%'] },
+    rings: { rows: ROWS, y: 'failed', series: 'job', aggregate: 'avg' },
     linked: { rows: ROWS, x: 'job', y: ['duration', 'runs'], unit: [' s', ''], panels: { duration: { mark: 'bar', hang: true } } },
 }
 
@@ -86,6 +89,35 @@ describe('the chart kinds', () => {
     it('colors a gauge by the threshold its figure reaches', () => {
         const option = KINDS.gauge.build(SPECS.gauge, LOOK) as unknown as { series: { progress?: { itemStyle: { color: string } } }[] }
         expect(option.series[1].progress?.itemStyle.color).toBe('critical')
+    })
+
+    it('draws a gauge in every dial', () => {
+        for (const dial of ['arc', 'ring', 'half', 'bands', 'needle'] as const) {
+            const option = KINDS.gauge.build({ ...SPECS.gauge, dial }, LOOK) as unknown as { series: { pointer: { show: boolean } }[] }
+            expect(option.series.at(-1)?.pointer.show).toBe(dial === 'bands' || dial === 'needle')
+        }
+    })
+
+    it('splits a needle scale so each tick lands on a round figure', () => {
+        expect([dialSplits(0, 100), dialSplits(0, 120), dialSplits(0, 60), dialSplits(0, 1), dialSplits(0, 300)]).toEqual([5, 6, 6, 5, 6])
+    })
+
+    it('reads one ring per series label, per y field, or the rows counted', () => {
+        expect(ringFigures(SPECS.rings)).toEqual([
+            { name: 'nightly-export', value: 50, unit: 0 },
+            { name: 'sync-inventory', value: 0, unit: 0 },
+            { name: 'rebuild-index', value: 0, unit: 0 },
+        ])
+        expect(ringFigures({ rows: ROWS, y: ['runs', 'failed'], aggregate: ['sum', 'avg'] })).toEqual([
+            { name: 'runs', value: 5, unit: 0 },
+            { name: 'failed', value: 20, unit: 1 },
+        ])
+        expect(ringFigures({ rows: ROWS })).toEqual([{ name: 'Count', value: 5, unit: 0 }])
+    })
+
+    it('drops a ring the legend hides', () => {
+        const option = KINDS.rings.build(SPECS.rings, LOOK, new Set(['sync-inventory'])) as unknown as Option
+        expect(option.series[0].data?.map((item) => (item as { name: string }).name)).toEqual(['nightly-export', 'rebuild-index'])
     })
 
     it('stacks linked panels on one axis, zoomed and pointed at together', () => {
