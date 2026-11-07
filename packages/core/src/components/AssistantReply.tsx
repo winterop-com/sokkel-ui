@@ -151,6 +151,7 @@ export function AssistantReply({
     calls,
     summary,
     content,
+    math = true,
     children,
     state = 'done',
     problem,
@@ -180,6 +181,8 @@ export function AssistantReply({
     summary?: ReactNode
     /** The answer, as markdown. */
     content?: string
+    /** Draws the answer's LaTeX math, as `Markdown` does: on by default; off where every `$` is a dollar. */
+    math?: boolean
     /** More under the answer, such as a chart or files it made. */
     children?: ReactNode
     state?: AssistantReplyState
@@ -231,7 +234,9 @@ export function AssistantReply({
 
     const answer = (
         <>
-            {content !== undefined && <Markdown content={content} inlineCode={INLINE[layout]} streaming={streaming} caret={streaming} />}
+            {content !== undefined && (
+                <Markdown content={content} inlineCode={INLINE[layout]} streaming={streaming} caret={streaming} math={math} />
+            )}
             {children}
             {state === 'stopped' && (
                 <Marker>
