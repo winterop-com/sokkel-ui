@@ -55,7 +55,7 @@ export const range: ChartBuilder = (spec, look) => {
                 )
             },
         },
-        grid: { left: 4, right: 10, top: 10, bottom: 4, containLabel: true },
+        grid: { left: 4, right: 10, top: 10, bottom: 4 },
         xAxis: { type: 'category', data: categories, boundaryGap: false },
         yAxis: { type: 'value', scale: true },
         series: series.flatMap((entry, index) => {

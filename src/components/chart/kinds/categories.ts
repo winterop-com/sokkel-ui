@@ -87,7 +87,7 @@ export const bar: ChartBuilder = (spec, look) => {
         !stacked || (value > 0 ? ends.up[category] === index : ends.down[category] === index)
     return {
         tooltip: axisTooltip(spec),
-        grid: { left: 4, right: 10, top: 10, bottom: 4, containLabel: true },
+        grid: { left: 4, right: 10, top: 10, bottom: 4 },
         xAxis: horizontal ? valueAxis : along,
         yAxis: horizontal ? { ...along, inverse: true } : valueAxis,
         series: series.map((entry, index) => ({
@@ -129,7 +129,7 @@ function lines(filled: boolean): ChartBuilder {
         const { categories, series } = shaped(spec)
         return {
             tooltip: { ...axisTooltip(spec), axisPointer: { type: 'line' } },
-            grid: { left: 4, right: 10, top: 10, bottom: 4, containLabel: true },
+            grid: { left: 4, right: 10, top: 10, bottom: 4 },
             xAxis: { ...categoryAxis(spec, categories), boundaryGap: false },
             yAxis: { type: 'value', max: spec.stack === 'percent' ? 100 : undefined, ...valueLabels(spec) },
             series: series.map((entry, index) => {
@@ -217,7 +217,7 @@ export const heatmap: ChartBuilder = (spec, look) => {
                     { label: spec.y === undefined ? 'Count' : String(spec.y), value: written(spec, point.value[2]) },
                 ]),
         },
-        grid: { left: 4, right: spec.showScale === true ? 56 : 10, top: 10, bottom: 4, containLabel: true },
+        grid: { left: 4, right: spec.showScale === true ? 56 : 10, top: 10, bottom: 4 },
         xAxis: { ...categoryAxis(spec, categories), splitArea: { show: false } },
         yAxis: { type: 'category', data: series.map((entry) => entry.name), inverse: true },
         visualMap: {
