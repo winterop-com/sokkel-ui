@@ -1,16 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useMemo, useState } from 'react'
 
-import { Chart, chartLegend } from '../../components/chart/Chart'
-import { ChartFrame } from '../../components/chart/ChartFrame'
 import type { Aggregate } from '../../components/chart/data'
-import type { ChartKind, ChartSpec } from '../../components/chart/kinds'
+import type { ChartSpec } from '../../components/chart/kinds'
 import { Field } from '../../components/Field'
 import { Columns, Stack } from '../../components/Layout'
 import { Segmented } from '../../components/Segmented'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
 import { RUN_ROWS, RUN_STATES, STATE_COLORS } from '../fixtures/runRows'
-import { Ground } from './Ground'
+import { Framed, Ground } from './Ground'
 
 /**
  * Charts drawn from rows: `Chart` takes a month of Tidevann's runs and the fields to read, and the
@@ -21,27 +19,6 @@ const meta: Meta = { title: 'Charts/Chart' }
 export default meta
 
 const STATE_ORDER = [...RUN_STATES]
-
-function Framed({
-    kind,
-    spec,
-    title,
-    subtitle,
-    label,
-}: {
-    kind: ChartKind
-    spec: ChartSpec
-    title: string
-    subtitle?: string
-    label: string
-}) {
-    const legend = useMemo(() => chartLegend(kind, spec), [kind, spec])
-    return (
-        <ChartFrame title={title} subtitle={subtitle} legend={legend} file={title.toLowerCase().replaceAll(' ', '-')}>
-            {(state) => <Chart kind={kind} label={label} {...spec} {...state} />}
-        </ChartFrame>
-    )
-}
 
 const BY_JOB_STATE: ChartSpec = {
     rows: RUN_ROWS,

@@ -86,6 +86,11 @@ const RULES: Rule[] = [
         ),
     },
     {
+        name: 'a chart option built in a story instead of a chart kind',
+        pattern: /<EChart\b|type: '(?:bar|line|pie|gauge|scatter|heatmap|radar|treemap|sunburst|sankey|boxplot|funnel)'/,
+        in: STORIES,
+    },
+    {
         name: 'a message under a field instead of the issue mark',
         pattern: /<p\b[^>]*text-(destructive|critical-ink|critical)\b|<FieldError\b/,
         in: STORIES,

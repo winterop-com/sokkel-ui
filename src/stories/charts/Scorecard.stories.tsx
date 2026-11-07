@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
+import { DashboardGrid, DashboardPanel } from '../../components/dashboard/DashboardGrid'
 import { ScoreTable, type ScoreColumn, type ScoreRow } from '../../components/dashboard/ScoreTable'
 import { ThresholdLegend } from '../../components/dashboard/ThresholdLegend'
 import type { Threshold } from '../../components/dashboard/thresholds'
@@ -85,6 +86,20 @@ export const Solid: StoryObj = {
                 nameHeader="Site"
             />
             <ThresholdLegend thresholds={SUCCESS} labels={BANDS} unit="%" layout="bar" title="Success rate" className="max-w-md" />
+        </Ground>
+    ),
+}
+
+/** The job measures filling a dashboard panel, the table's own frame left to the panel's. */
+export const Panel: StoryObj = {
+    name: 'In a panel',
+    render: () => (
+        <Ground title="Jobs, this week" columns={1}>
+            <DashboardGrid>
+                <DashboardPanel title="Jobs" subtitle="this week" span="half" flush>
+                    <ScoreTable columns={MEASURE_COLUMNS} rows={JOB_ROWS} framed={false} nameHeader="Job" />
+                </DashboardPanel>
+            </DashboardGrid>
         </Ground>
     ),
 }

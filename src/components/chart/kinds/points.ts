@@ -31,7 +31,7 @@ export const scatter: ChartBuilder = (spec, look) => {
                         : [{ label: named(spec.value), value: written({ ...spec, unit: '' }, point.value[2]) }]),
                 ]),
         },
-        grid: { left: 4, right: 10, top: yName === undefined ? 10 : 22, bottom: xName === undefined ? 4 : 26, containLabel: true },
+        grid: { left: 4, right: 10, top: yName === undefined ? 10 : 22, bottom: xName === undefined ? 4 : 26 },
         xAxis: {
             type: 'value',
             scale: spec.fit === true,

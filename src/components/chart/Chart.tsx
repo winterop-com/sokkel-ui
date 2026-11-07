@@ -8,21 +8,6 @@ import type { LegendItem } from './ChartLegend'
 import { SERIES_ORDER, type ChartLook } from './look'
 
 /**
- * The value from an earlier render while every field holds the same, so an object spread afresh on
- * each render keeps one identity until a field changes.
- */
-function useSteady<T extends object>(value: T): T {
-    const [kept, keep] = useState(value)
-    const fields = Object.entries(value)
-    const same =
-        fields.length === Object.keys(kept).length &&
-        fields.every(([key, field]) => Object.is((kept as Record<string, unknown>)[key], field))
-    if (same) return kept
-    keep(value)
-    return value
-}
-
-/**
  * A chart drawn from rows: `kind` names how, and the spec's fields say which columns it reads, as
  * a table's columns would be picked. The same rows can be drawn as another kind by changing
  * `kind` and the fields alone, so a view of data is a choice, not code. Inside a `ChartFrame`,
@@ -49,11 +34,25 @@ export function Chart({
     animate?: boolean
     className?: string
 }) {
-    const steady = useSteady(spec)
-    const option = useMemo(() => (look: ChartLook) => KINDS[kind].build(steady, look), [kind, steady])
+    const kept = useSpec(spec)
+    const option = useMemo(() => (look: ChartLook) => KINDS[kind].build(kept, look, hidden), [kind, kept, hidden])
     return (
         <EChart option={option} label={label} hidden={hidden} hovered={hovered} handle={handle} animate={animate} className={className} />
     )
+}
+
+/** Whether two specs hold the same value in every field. */
+function sameSpec(a: ChartSpec, b: ChartSpec): boolean {
+    const keys = Object.keys(a) as (keyof ChartSpec)[]
+    return keys.length === Object.keys(b).length && keys.every((key) => Object.is(a[key], b[key]))
+}
+
+/** The spec, kept as the same object while every field holds the same value, so a chart is built again only when one changes. */
+export function useSpec(spec: ChartSpec): ChartSpec {
+    const [kept, setKept] = useState(spec)
+    const same = sameSpec(kept, spec)
+    if (!same) setKept(spec)
+    return same ? kept : spec
 }
 
 /**

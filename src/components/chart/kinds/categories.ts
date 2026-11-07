@@ -1,16 +1,16 @@
 import { asShares, formatNumber, pivot, type Series } from '../data'
 import { SERIES_ORDER, tooltipMarkup, type ChartLook } from '../look'
-import { colorOf, legendColor, type ChartBuilder, type ChartSpec } from './spec'
+import { colorOf, legendColor, unitAt, type ChartBuilder, type ChartSpec } from './spec'
 import type { LegendItem } from '../ChartLegend'
 
-/** The figure as a tooltip or a label writes it, with the spec's unit. */
-export function written(spec: ChartSpec, value: number | null | undefined): string {
+/** The figure as a tooltip or a label writes it, with the spec's unit, or the unit of the `field`th `y` field. */
+export function written(spec: ChartSpec, value: number | null | undefined, field = 0): string {
     if (value === null || value === undefined) return '-'
-    return `${(spec.format ?? formatNumber)(value)}${spec.unit ?? ''}`
+    return `${(spec.format ?? formatNumber)(value)}${unitAt(spec, field)}`
 }
 
 /** The rows as categories and series, as shares when the spec stacks them to 100%. */
-function shaped(spec: ChartSpec) {
+export function shaped(spec: ChartSpec) {
     if (spec.x === undefined) throw new Error('This chart needs an x field.')
     const data = pivot({
         rows: spec.rows,
@@ -46,10 +46,14 @@ function axisTooltip(spec: ChartSpec) {
     return {
         trigger: 'axis',
         axisPointer: { type: 'shadow' },
-        formatter: (points: { axisValueLabel: string; seriesName: string; value: number | null; color: string }[]) =>
+        formatter: (points: { axisValueLabel: string; seriesName: string; seriesIndex: number; value: number | null; color: string }[]) =>
             tooltipMarkup(
                 points[0]?.axisValueLabel ?? '',
-                points.map((point) => ({ label: point.seriesName, value: written(unit, point.value), color: point.color })),
+                points.map((point) => ({
+                    label: point.seriesName,
+                    value: written(unit, point.value, spec.series === undefined ? point.seriesIndex : 0),
+                    color: point.color,
+                })),
             ),
     }
 }
@@ -62,7 +66,7 @@ function stackEnds(series: readonly Series[]) {
 }
 
 /** A bar's corners, rounded at its far end from the axis. */
-function farCorners(corner: number, horizontal: boolean, value: number) {
+export function farCorners(corner: number, horizontal: boolean, value: number) {
     if (horizontal) return value < 0 ? [corner, 0, 0, corner] : [0, corner, corner, 0]
     return value < 0 ? [0, 0, corner, corner] : [corner, corner, 0, 0]
 }
@@ -83,7 +87,7 @@ export const bar: ChartBuilder = (spec, look) => {
         !stacked || (value > 0 ? ends.up[category] === index : ends.down[category] === index)
     return {
         tooltip: axisTooltip(spec),
-        grid: { left: 4, right: 10, top: 10, bottom: 4, containLabel: true },
+        grid: { left: 4, right: 10, top: 10, bottom: 4 },
         xAxis: horizontal ? valueAxis : along,
         yAxis: horizontal ? { ...along, inverse: true } : valueAxis,
         series: series.map((entry, index) => ({
@@ -104,18 +108,33 @@ export const bar: ChartBuilder = (spec, look) => {
     }
 }
 
-/** An area's color fading from its line toward the axis, deeper where areas stack. */
-function fading(look: ChartLook, color: string, stacked: boolean) {
+/** An area's color fading from its line toward the axis, deeper where areas stack; upward where the area hangs from the top. */
+export function fading(look: ChartLook, color: string, stacked: boolean, hang = false) {
     return {
         type: 'linear',
         x: 0,
-        y: 0,
+        y: hang ? 1 : 0,
         x2: 0,
-        y2: 1,
+        y2: hang ? 0 : 1,
         colorStops: [
             { offset: 0, color: look.mix(color, stacked ? 55 : 40) },
             { offset: 1, color: look.mix(color, stacked ? 30 : 4) },
         ],
+    }
+}
+
+/**
+ * A category axis whose points sit on its ends, as a line's do. Where the chart picks which labels
+ * show, the first and last always do, aligned inward so neither runs past the chart's edge, and a
+ * label too close to them gives way.
+ */
+export function edgeAxis(spec: ChartSpec, categories: string[]) {
+    if (spec.labelEvery !== undefined) return { ...categoryAxis(spec, categories), boundaryGap: false }
+    return {
+        type: 'category',
+        data: categories,
+        boundaryGap: false,
+        axisLabel: { showMinLabel: true, showMaxLabel: true, alignMinLabel: 'left', alignMaxLabel: 'right', hideOverlap: true },
     }
 }
 
@@ -125,8 +144,8 @@ function lines(filled: boolean): ChartBuilder {
         const { categories, series } = shaped(spec)
         return {
             tooltip: { ...axisTooltip(spec), axisPointer: { type: 'line' } },
-            grid: { left: 4, right: 10, top: 10, bottom: 4, containLabel: true },
-            xAxis: { ...categoryAxis(spec, categories), boundaryGap: false },
+            grid: { left: 4, right: 10, top: 10, bottom: 4 },
+            xAxis: edgeAxis(spec, categories),
             yAxis: { type: 'value', max: spec.stack === 'percent' ? 100 : undefined, ...valueLabels(spec) },
             series: series.map((entry, index) => {
                 const color = colorOf(spec, look, entry.name, index)
@@ -213,7 +232,7 @@ export const heatmap: ChartBuilder = (spec, look) => {
                     { label: spec.y === undefined ? 'Count' : String(spec.y), value: written(spec, point.value[2]) },
                 ]),
         },
-        grid: { left: 4, right: spec.showScale === true ? 56 : 10, top: 10, bottom: 4, containLabel: true },
+        grid: { left: 4, right: spec.showScale === true ? 56 : 10, top: 10, bottom: 4 },
         xAxis: { ...categoryAxis(spec, categories), splitArea: { show: false } },
         yAxis: { type: 'category', data: series.map((entry) => entry.name), inverse: true },
         visualMap: {

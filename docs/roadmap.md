@@ -24,7 +24,9 @@ to `plan.md` when it ships.
   line, a ring or a grid by changing the kind alone. Many more ECharts kinds on it: distributions
   (histogram, box plot), flows (waterfall, funnel, sankey), targets (bullet, gauge, dual axes),
   hierarchies (treemap, sunburst), time (calendar, stream, steps, bands), radar, rose, parallel
-  coordinates and small multiples. The chart stories draw from rows instead of options built by
+  coordinates, small multiples, panels linked on one axis with a shared pointer and zoom, and
+  gauges as an arc, a ring, a half circle, bands or a needle. `docs/charts.md` lists every kind and
+  the fields it reads. The chart stories draw from rows instead of options built by
   hand, more dashboard examples come with working time ranges, variables and folding rows, and an
   Explore story picks the kind and fields. The charts and dashboard panels stand on the core and
   never the other way round, a rule checks it, so they can become a package of their own later.

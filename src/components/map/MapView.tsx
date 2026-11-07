@@ -107,6 +107,8 @@ export interface MapViewProps {
     controls?: boolean
     /** Whether the map pans, zooms and answers clicks. */
     interactive?: boolean
+    /** Draws the map in its own bordered, rounded frame; off for a map filling a panel that frames it already. */
+    framed?: boolean
     words?: Partial<MapWords>
     className?: string
     /** Layers and overlays. */
@@ -264,6 +266,7 @@ export function MapView({
     onMapClick,
     controls = true,
     interactive = true,
+    framed = true,
     words,
     className,
     children,
@@ -591,7 +594,7 @@ export function MapView({
             aria-label={label}
             data-map-view=""
             data-map-idle={idle ? '' : undefined}
-            className={cn('relative isolate min-h-64 overflow-hidden rounded-surface border border-border bg-card', className)}
+            className={cn('relative isolate min-h-64 overflow-hidden bg-card', framed && 'rounded-surface border border-border', className)}
         >
             {projection === 'globe' && <div aria-hidden className="pointer-events-none absolute inset-0" style={starfieldStyle()} />}
             {/* Positioned inline: maplibre's own stylesheet sets the element relative, outside any layer. */}

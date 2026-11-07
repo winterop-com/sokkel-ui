@@ -49,7 +49,7 @@ export function chartTheme(look: ChartLook): Record<string, unknown> {
             },
         },
         categoryAxis: { ...axis, splitLine: { show: false } },
-        valueAxis: { ...axis, axisLine: { show: false } },
+        valueAxis: { ...axis, axisLine: { show: false }, axisLabel: { ...axis.axisLabel, hideOverlap: true } },
         timeAxis: { ...axis, splitLine: { show: false } },
         logAxis: { ...axis, axisLine: { show: false } },
         grid: { left: 4, right: 10, top: 10, bottom: 4, outerBoundsMode: 'same', outerBoundsContain: 'axisLabel' },

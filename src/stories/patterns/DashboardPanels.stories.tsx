@@ -1,18 +1,25 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import type { Feature } from 'geojson'
 import { useState, type ReactNode } from 'react'
 
 import { BarGauge } from '../../components/dashboard/BarGauge'
 import { BarPanel } from '../../components/dashboard/BarPanel'
-import { DashboardGrid } from '../../components/dashboard/DashboardGrid'
+import { ChartPanel } from '../../components/dashboard/ChartPanel'
+import { DashboardGrid, DashboardPanel } from '../../components/dashboard/DashboardGrid'
 import { DashboardRow } from '../../components/dashboard/DashboardRow'
 import { GaugePanel } from '../../components/dashboard/GaugePanel'
 import { HeatmapPanel } from '../../components/dashboard/HeatmapPanel'
 import type { PanelSeries } from '../../components/dashboard/series'
 import { StatPanel } from '../../components/dashboard/StatPanel'
-import type { Threshold } from '../../components/dashboard/thresholds'
+import { tokenVar, type Threshold } from '../../components/dashboard/thresholds'
 import { RefreshControl, TimeRangePicker, type TimeRangeValue } from '../../components/dashboard/TimeRange'
 import { TimeSeriesPanel } from '../../components/dashboard/TimeSeriesPanel'
 import { VariablesBar } from '../../components/dashboard/VariablesBar'
+import { BoundaryLayer } from '../../components/map/BoundaryLayer'
+import { MapLegend } from '../../components/map/MapLegend'
+import { MapOverlay, MapView } from '../../components/map/MapView'
+import { PointLayer } from '../../components/map/PointLayer'
+import { classCounts, sequentialScale } from '../../components/map/scale'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import {
     BUCKETS,
@@ -29,7 +36,9 @@ import {
     TIMES,
     WORKERS,
 } from '../fixtures/runs'
+import { RUN_ROWS, RUN_STATES, STATE_COLORS } from '../fixtures/runRows'
 import { TidevannMark } from '../fixtures/TidevannMark'
+import { places, regions, sites } from '../map/data'
 import { TopBar } from '../../components/TopBar'
 import { Stack } from '../../components/Layout'
 
@@ -188,6 +197,98 @@ export const Heatmap: StoryObj = {
                     scale={['chart-2', 'chart-3', 'warning', 'critical']}
                     labelEvery={3}
                 />
+            </DashboardGrid>
+        </Ground>
+    ),
+}
+
+const STATE_ORDER = [...RUN_STATES]
+const HOURS_OF_DAY = Array.from({ length: 24 }, (_, hour) => `${String(hour).padStart(2, '0')}:00`)
+const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
+/** Charts drawn from a month of runs where no other panel draws them: a ring of states, runs as points, and when they start. */
+export const ChartPanels: StoryObj = {
+    name: 'Chart panels',
+    render: () => (
+        <Ground title="Chart panels">
+            <DashboardGrid dense>
+                <ChartPanel
+                    kind="donut"
+                    title="Runs by state"
+                    subtitle="October"
+                    rows={RUN_ROWS}
+                    x="state"
+                    order={STATE_ORDER}
+                    colors={STATE_COLORS}
+                    span="third"
+                    bodyClassName="h-56"
+                />
+                <ChartPanel
+                    kind="scatter"
+                    title="Duration against rows"
+                    subtitle="each run"
+                    rows={RUN_ROWS}
+                    x="rows"
+                    y="duration"
+                    series="project"
+                    unit=" s"
+                    span="third"
+                    bodyClassName="h-56"
+                />
+                <ChartPanel
+                    kind="heatmap"
+                    title="When runs start"
+                    subtitle="hour by weekday"
+                    rows={RUN_ROWS}
+                    x="hour"
+                    series="weekday"
+                    order={HOURS_OF_DAY}
+                    seriesOrder={WEEKDAYS}
+                    legend="none"
+                    span="third"
+                    bodyClassName="h-[15.75rem]"
+                />
+            </DashboardGrid>
+        </Ground>
+    ),
+}
+
+const CAPACITY: Threshold[] = [{ color: 'critical' }, { value: 100, color: 'warning' }, { value: 300, color: 'good' }]
+const capacityScale = sequentialScale({
+    breaks: [100, 300],
+    colors: CAPACITY.map((step) => tokenVar(step.color)),
+    format: (value) => value.toLocaleString('en-US'),
+})
+const capacityOf = (place: Feature) => sites[String(place.id)]?.capacity
+const capacityTally = classCounts(
+    capacityScale,
+    places.features.map((place) => capacityOf(place)),
+)
+
+/** A map filling a panel: sites as points in the colors of a threshold scale, with the scale's key and the count in each band. */
+export const MapPanel: StoryObj = {
+    name: 'Map panel',
+    render: () => (
+        <Ground title="Map panel">
+            <DashboardGrid>
+                <DashboardPanel title="Sites" subtitle="by capacity" span="full" flush>
+                    <MapView label="Sites by capacity" framed={false} className="h-96">
+                        <BoundaryLayer id="regions" data={regions} interactive={false} />
+                        <PointLayer id="sites" data={places} scale={capacityScale} value={capacityOf} radius={4} />
+                        <MapOverlay corner="bottom-left">
+                            <MapLegend
+                                title="Capacity"
+                                description="People each site holds"
+                                scale={capacityScale}
+                                layout="list"
+                                shape="point"
+                                counts={capacityTally.counts}
+                                noData="Planned"
+                                noDataCount={capacityTally.noData}
+                            />
+                        </MapOverlay>
+                    </MapView>
+                </DashboardPanel>
             </DashboardGrid>
         </Ground>
     ),
