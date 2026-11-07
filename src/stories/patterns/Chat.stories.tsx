@@ -46,6 +46,33 @@ steps:
 
 See the [rows.filter reference](https://docs.example.org/steps/rows-filter) for the expression syntax.`
 
+const MATH = String.raw`Retries back off exponentially: the $n$-th retry waits $t_n = t_0 \cdot 2^{n}$, capped at \(t_{\max}\), so with $t_0 = 30\,\text{s}$ the fourth waits four minutes.
+
+The expected time a run of $k$ steps spends waiting, when each step fails with probability $p$:
+
+$$
+E[W] = k \sum_{n=1}^{\infty} p^{n}\, t_0\, 2^{n-1} = \frac{k\, p\, t_0}{1 - 2p}, \qquad p < \tfrac{1}{2}
+$$
+
+A run's throughput, in the delimiters some models write:
+
+\[
+\text{rows/s} = \frac{\text{rows read}}{t_{\text{fetch}} + t_{\text{transform}} + t_{\text{upload}}}
+\]
+
+The spread of run times, as a fenced block:
+
+~~~math
+\begin{aligned}
+\bar t &= \frac{1}{N}\sum_{i=1}^{N} t_i \\
+\sigma^2 &= \frac{1}{N}\sum_{i=1}^{N} (t_i - \bar t)^2
+\end{aligned}
+~~~
+
+A formula KaTeX cannot read keeps its source: $\frac{1}{2$.
+
+Prices stay prices: the worker costs $5 a day and the scheduler $10, so the pair is $15.`
+
 const FLOW = `flowchart LR
   fetch --> transform --> validate --> upload
   validate -. warn .-> notify`
@@ -75,6 +102,14 @@ function Answer() {
     return (
         <Ground>
             <Markdown content={ANSWER} />
+        </Ground>
+    )
+}
+
+function MathReply() {
+    return (
+        <Ground>
+            <Markdown content={MATH} />
         </Ground>
     )
 }
@@ -133,6 +168,11 @@ const meta: Meta = { title: 'Patterns/Chat', parameters: { frame: 'padded' } }
 export default meta
 
 export const MarkdownAnswer: StoryObj = { name: 'Markdown', render: () => <Answer /> }
+/**
+ * LaTeX in an answer, drawn by KaTeX once it loads: inline with `$…$` and `\(…\)`, display with
+ * `$$`, `\[…\]` and a `math` fence, a formula KaTeX cannot read, and dollars that stay prices.
+ */
+export const MathAnswer: StoryObj = { name: 'Math', render: () => <MathReply /> }
 export const Tools: StoryObj = { name: 'Tool calls', render: () => <Calls /> }
 export const Held: StoryObj = { name: 'Confirm card', render: () => <Confirm /> }
 export const Blocks: StoryObj = { name: 'Code and diagrams', render: () => <CodeAndDiagram /> }

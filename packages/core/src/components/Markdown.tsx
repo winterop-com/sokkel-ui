@@ -1,11 +1,12 @@
 import { CircleAlert, Info, Lightbulb, MessageSquareWarning, TriangleAlert, type LucideIcon } from 'lucide-react'
-import { memo, useMemo, type ReactNode } from 'react'
+import { memo, useEffect, useMemo, useState, type ReactNode } from 'react'
 import ReactMarkdown, { type Components, type Options } from 'react-markdown'
 import rehypeRaw from 'rehype-raw'
 import rehypeSanitize from 'rehype-sanitize'
 import remarkGfm from 'remark-gfm'
 
 import { cn } from '../lib/cn'
+import { hasMath, markdownSchema, normalizeMath } from '../lib/math'
 import { Code } from './Code'
 import { MermaidDiagram } from './MermaidDiagram'
 
@@ -116,6 +117,49 @@ function rehypeDocument(anchors: boolean) {
     }
 }
 
+type MathEngine = typeof import('../lib/katex')
+
+let engine: Promise<MathEngine> | undefined
+let ready: MathEngine | undefined
+
+/**
+ * Loads the math engine `Markdown` draws formulas with, once, and resolves when it is ready. Markdown
+ * calls it itself the first time a message holds math; an app that knows formulas are coming can call
+ * it ahead, so the first one draws at once.
+ */
+export function loadMath(): Promise<void> {
+    engine ??= import('../lib/katex').then(
+        (module) => {
+            ready = module
+            return module
+        },
+        (error: unknown) => {
+            engine = undefined
+            throw error
+        },
+    )
+    return engine.then(() => undefined)
+}
+
+/** The math engine once a message has needed it, loaded on the first such message and shared by the rest. */
+function useMathEngine(needed: boolean): MathEngine | undefined {
+    const [loaded, setLoaded] = useState<MathEngine | undefined>(ready)
+    useEffect(() => {
+        if (!needed || loaded !== undefined) return
+        let live = true
+        loadMath().then(
+            () => {
+                if (live) setLoaded(ready)
+            },
+            () => undefined,
+        )
+        return () => {
+            live = false
+        }
+    }, [needed, loaded])
+    return loaded
+}
+
 const PROSE = cn(
     'min-w-0 text-sm leading-relaxed break-words text-foreground',
     '[&>*:first-child]:mt-0 [&>*:last-child]:mb-0',
@@ -131,6 +175,8 @@ const PROSE = cn(
     '[&_td]:border [&_td]:border-border [&_td]:px-2.5 [&_td]:py-1',
     '[&_:not(pre)>code]:font-mono',
     '[&_.mermaid-block]:my-3 [&_[data-slot=code-block]]:my-3',
+    '[&_.katex-display]:my-3 [&_.katex-display]:overflow-x-auto [&_.katex-display]:overflow-y-hidden [&_.katex-display]:py-1',
+    '[&_.katex-error]:font-mono',
     '[&_[id]]:scroll-mt-4',
 )
 
@@ -161,6 +207,13 @@ const CARET = cn(
  * a callout. Raw HTML is dropped unless `allowHtml` is set, and then it is sanitized. While
  * `streaming`, a mermaid fence shows its source until the message completes.
  *
+ * `math` (on by default) draws LaTeX with KaTeX: `$…$` and `\(…\)` inline, `$$…$$`, `\[…\]` and a
+ * `math` fence on a line of their own. KaTeX loads the first time a message holds math, its
+ * stylesheet with it. A single `$` is math only as Pandoc reads it (a non-space after the opening
+ * one, a non-space before the closing one and no digit after it, on one line), so "costs $5 and
+ * $10" stays prices; turn `math` off where every `$` is a dollar. A formula KaTeX cannot read shows
+ * its source in the error color.
+ *
  * `anchors` gives each heading the id `headingId` makes of its text, for a table of contents to
  * link to; `markdownHeadings` lists the same ids from the source.
  *
@@ -174,6 +227,7 @@ export const Markdown = memo(function Markdown({
     anchors = false,
     inlineCode = 'chip',
     caret = false,
+    math = true,
     className,
     words: given,
 }: {
@@ -186,6 +240,8 @@ export const Markdown = memo(function Markdown({
     inlineCode?: InlineCode
     /** A caret after the last words while `streaming`. */
     caret?: boolean
+    /** Draws LaTeX math with KaTeX, loaded the first time a message holds math. On by default. */
+    math?: boolean
     className?: string
     words?: Partial<MarkdownWords>
 }) {
@@ -237,14 +293,28 @@ export const Markdown = memo(function Markdown({
         }),
         [streaming, note, tip, important, warning, caution],
     )
-    const rehype: Options['rehypePlugins'] = useMemo(
-        () => [...(allowHtml ? [rehypeRaw, rehypeSanitize] : []), rehypeDocument(anchors)],
-        [allowHtml, anchors],
+    const needsMath = useMemo(() => math && hasMath(content), [math, content])
+    const katex = useMathEngine(needsMath)
+    const source = useMemo(() => (math ? normalizeMath(content) : content), [math, content])
+    const remark: Options['remarkPlugins'] = useMemo(
+        () => (katex === undefined || !math ? [remarkGfm] : [remarkGfm, katex.remarkMath]),
+        [katex, math],
     )
+    const rehype = useMemo(() => {
+        const plugins: NonNullable<Options['rehypePlugins']> = []
+        if (allowHtml) plugins.push(rehypeRaw, [rehypeSanitize, markdownSchema])
+        // After sanitizing, so KaTeX's own markup is kept.
+        if (katex !== undefined && math) plugins.push([katex.rehypeKatex, { throwOnError: false, errorColor: 'var(--status-failed-ink)' }])
+        plugins.push(rehypeDocument(anchors))
+        return plugins
+    }, [allowHtml, anchors, katex, math])
     return (
-        <div className={cn(PROSE, INLINE_CODE[inlineCode], caret && streaming && CARET, className)}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={rehype} components={components}>
-                {content}
+        <div
+            data-settling={needsMath && katex === undefined ? '' : undefined}
+            className={cn(PROSE, INLINE_CODE[inlineCode], caret && streaming && CARET, className)}
+        >
+            <ReactMarkdown remarkPlugins={remark} rehypePlugins={rehype} components={components}>
+                {source}
             </ReactMarkdown>
         </div>
     )

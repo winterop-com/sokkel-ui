@@ -1,5 +1,6 @@
 import { IconButton } from './IconButton'
 import {
+    Brain,
     Check,
     ChevronLeft,
     ChevronRight,
@@ -27,6 +28,8 @@ import { Card, CardContent, CardFooter, CardHeader } from './ui/card'
 import { Marker, MarkerContent, MarkerIcon } from './ui/marker'
 import { MessageFooter, MessageHeader } from './ui/message'
 import { Spinner } from './ui/spinner'
+import { Trace, TraceCollapsible, TraceCollapsibleContent, TraceCollapsibleTrigger, TraceIcon, TraceLine, TraceTitle } from './ui/trace'
+import { AudioPlayer, type AudioPlayerLabels } from './media/AudioPlayer'
 
 /**
  * How the turn is drawn: `card` holds it in one quiet card, header to footer; `steps` sets it on a
@@ -72,6 +75,12 @@ export interface AssistantReplyWords {
     checked: string
     found: string
     nextStep: string
+    /** The folded line over a finished `reasoning`, from its length in words. */
+    thoughtFor: (words: number) => string
+    /** The line while the model thinks: over a streaming `reasoning`, and alone before anything has come. */
+    thinking: string
+    /** The read-back player's name. */
+    speech: string
 }
 
 const plural = (count: number, word: string) => `${String(count)} ${word}${count === 1 ? '' : 's'}`
@@ -98,6 +107,51 @@ const WORDS: AssistantReplyWords = {
     checked: 'Checked',
     found: 'Found',
     nextStep: 'Next',
+    thoughtFor: (count) => `Thought for ${plural(count, 'word')}`,
+    thinking: 'Thinking',
+    speech: 'Read aloud',
+}
+
+/** How many words a text holds, markdown marks and all. */
+export function wordCount(text: string): number {
+    return text.split(/\s+/).filter((word) => /[\p{L}\p{N}]/u.test(word)).length
+}
+
+/** The answer read aloud: a recording the model made of it. */
+export interface AssistantReplySpeech {
+    src: string
+    /** The recording's levels from start to end, each from 0 to 1, drawn as the scrubber. */
+    waveform?: readonly number[]
+    /** Its length in seconds, shown before it has loaded. */
+    duration?: number
+    /** The player's words: play, pause and seek. */
+    labels?: Partial<AudioPlayerLabels>
+}
+
+/**
+ * The model's thinking, folded behind one line that counts its words. While it is still being
+ * written it is open, its line says Thinking with a shimmer, and the text grows; once the answer
+ * begins it folds away, and a press opens it again.
+ */
+function Reasoning({ text, thinking, math, words }: { text: string; thinking: boolean; math: boolean; words: AssistantReplyWords }) {
+    const [open, setOpen] = useState(false)
+    return (
+        <Trace data-slot="assistant-reasoning">
+            <TraceCollapsible open={thinking || open} onOpenChange={(next) => setOpen(next)}>
+                <TraceCollapsibleTrigger>
+                    <TraceLine status={thinking ? 'running' : undefined}>
+                        <TraceIcon>
+                            <Brain />
+                        </TraceIcon>
+                        <TraceTitle>{thinking ? words.thinking : words.thoughtFor(wordCount(text))}</TraceTitle>
+                    </TraceLine>
+                </TraceCollapsibleTrigger>
+                <TraceCollapsibleContent>
+                    <Markdown content={text} streaming={thinking} math={math} className="text-muted-foreground" />
+                </TraceCollapsibleContent>
+            </TraceCollapsible>
+        </Trace>
+    )
 }
 
 /** The inline-code look of each layout. */
@@ -138,6 +192,11 @@ function CopyAction({ value, onCopy, words }: { value?: string; onCopy?: () => v
  * written under a Stopped mark; `failed` says what went wrong, with Try again. Try again also
  * waits while a held change is unanswered.
  *
+ * `reasoning`, the model's thinking, folds between the tools and the answer behind a line that
+ * counts its words; while it streams with no answer yet it stands open and grows. A streaming reply
+ * with nothing to show yet, no thinking, no calls and no answer, says Thinking with a shimmer
+ * instead of an empty card. `speech` puts the answer read aloud in a player under it.
+ *
  * The `card` layout (the default) holds the turn in one quiet card, inline code washed and the
  * held change as a section of it. The `steps` layout sets it on a rail: Checked holds the tools,
  * Found the answer, and Next the held change and the actions, inline code in the code face alone.
@@ -150,7 +209,10 @@ export function AssistantReply({
     timeTitle,
     calls,
     summary,
+    reasoning,
     content,
+    speech,
+    math = true,
     children,
     state = 'done',
     problem,
@@ -178,8 +240,14 @@ export function AssistantReply({
     calls?: readonly ToolCallEntry[]
     /** The folded line over the calls, written from their state; one is made from the calls when none is given. */
     summary?: ReactNode
+    /** The model's thinking, as markdown, folded between the tools and the answer. */
+    reasoning?: string
     /** The answer, as markdown. */
     content?: string
+    /** The answer read aloud, played in one line under it. */
+    speech?: AssistantReplySpeech
+    /** Draws the answer's LaTeX math, as `Markdown` does: on by default; off where every `$` is a dollar. */
+    math?: boolean
     /** More under the answer, such as a chart or files it made. */
     children?: ReactNode
     state?: AssistantReplyState
@@ -229,9 +297,32 @@ export function AssistantReply({
     const tools =
         calls !== undefined && calls.length > 0 ? <ToolCalls calls={calls} summary={summary ?? words.summary(calls)} /> : undefined
 
+    const written = content !== undefined && content !== ''
+    const thought = reasoning !== undefined && reasoning !== ''
+    const empty = streaming && !written && !thought && tools === undefined && children === undefined
+
     const answer = (
         <>
-            {content !== undefined && <Markdown content={content} inlineCode={INLINE[layout]} streaming={streaming} caret={streaming} />}
+            {empty && (
+                <Trace data-slot="assistant-waiting">
+                    <TraceLine status="running">
+                        <TraceTitle>{words.thinking}</TraceTitle>
+                    </TraceLine>
+                </Trace>
+            )}
+            {thought && <Reasoning text={reasoning} thinking={streaming && !written} math={math} words={words} />}
+            {written && <Markdown content={content} inlineCode={INLINE[layout]} streaming={streaming} caret={streaming} math={math} />}
+            {speech !== undefined && (
+                <AudioPlayer
+                    src={speech.src}
+                    waveform={speech.waveform}
+                    duration={speech.duration}
+                    label={words.speech}
+                    labels={speech.labels}
+                    variant="card"
+                    className="max-w-sm"
+                />
+            )}
             {children}
             {state === 'stopped' && (
                 <Marker>

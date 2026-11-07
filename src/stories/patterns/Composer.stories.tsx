@@ -4,8 +4,14 @@ import { useState } from 'react'
 import { Composer, type ComposerAttachment } from '@winterop-com/sokkel-ui/Composer'
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
 import { ModelPicker } from '../fixtures/models'
+import clip from '../media/fixtures/clip.webm?url'
+import { tuneUrl } from '../media/fixtures/tune'
+import { waveformOf } from '../media/fixtures/waveform'
 
-/** The message composer: empty, with a draft and attachments, while an answer streams, and shut. */
+/**
+ * The message composer: empty, with a draft and attachments, while an answer streams, and shut;
+ * then files on their way up, and a recording and a video that play before they are sent.
+ */
 function Ground({ children }: { children: React.ReactNode }) {
     return (
         <Stack gap="none" justify="end" className="min-h-svh bg-background p-6 text-foreground">
@@ -59,6 +65,7 @@ function Live({
                 ])
             }
             onRemove={(id) => setAttachments((current) => current.filter((attachment) => attachment.id !== id))}
+            onCancel={(id) => setAttachments((current) => current.filter((attachment) => attachment.id !== id))}
             tools={<ModelPicker />}
         />
     )
@@ -86,3 +93,30 @@ const meta: Meta = { title: 'Patterns/Composer' }
 export default meta
 
 export const States_: StoryObj = { name: 'States', render: () => <States /> }
+
+/**
+ * Files on their way up: a spinner while the share done is unknown, a ring when it is known, and a
+ * picture dimmed under its ring. Send waits until all are up, and each can be cancelled. Below, a
+ * recording plays in its chip and a video opens in a dialog.
+ */
+export const Uploads: StoryObj = {
+    render: () => (
+        <Ground>
+            <Live
+                initial="Here are this month's orders and the run's log."
+                files={[
+                    { id: 'a', name: 'orders-2026-11.csv', kind: 'file', detail: 'CSV, 2.4 MB', uploading: true, progress: 0.4 },
+                    { id: 'b', name: 'validate.log', kind: 'file', detail: '14 KB', uploading: true },
+                    { id: 'c', name: 'dashboard.png', kind: 'image', url: PREVIEW, uploading: true, progress: 0.75 },
+                ]}
+            />
+            <Live
+                initial="What does this run sound like?"
+                files={[
+                    { id: 'd', name: 'voice-note.wav', kind: 'audio', url: tuneUrl(), waveform: waveformOf(3, 64), duration: 8 },
+                    { id: 'e', name: 'coastline.webm', kind: 'video', url: clip },
+                ]}
+            />
+        </Ground>
+    ),
+}

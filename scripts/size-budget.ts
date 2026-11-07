@@ -28,6 +28,7 @@ const ENGINES: Record<string, RegExp> = {
     'react-flow': /\/node_modules\/(@xyflow|elkjs)\//,
     codemirror: /\/node_modules\/(@codemirror|@lezer)\//,
     mermaid: /\/node_modules\/mermaid\//,
+    katex: /\/node_modules\/(katex|rehype-katex|remark-math)\//,
 }
 
 type Measure = 'start' | 'lazy' | 'css'

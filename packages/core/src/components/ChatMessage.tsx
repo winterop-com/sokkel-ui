@@ -3,6 +3,8 @@ import { ChevronRight, Ellipsis, FileText, MessageSquareText, SmilePlus } from '
 import { isValidElement, useState, type CSSProperties, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { AudioPlayer } from './media/AudioPlayer'
+import { VideoPlayer } from './media/VideoPlayer'
 import { PersonAvatar } from './PersonAvatar'
 import { Button } from './ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from './ui/dropdown-menu'
@@ -38,11 +40,19 @@ export interface ChatThread {
 export interface ChatFile {
     id: string
     name: string
-    /** An image shows as a picture; anything else as a card. */
-    kind: 'image' | 'file'
+    /**
+     * An image shows as a picture, a recording plays in one line, a video plays in the library's
+     * player, and anything else is a card.
+     */
+    kind: 'image' | 'file' | 'audio' | 'video'
+    /** The picture, the recording or the video. */
     url?: string
     /** A short fact under the name: `CSV, 2.1 MB`. */
     detail?: string
+    /** A recording's levels from start to end, each from 0 to 1, drawn as its scrubber. */
+    waveform?: readonly number[]
+    /** A recording's length in seconds, shown before it has loaded. */
+    duration?: number
 }
 
 export interface ChatMessageWords {
@@ -56,6 +66,10 @@ export interface ChatMessageWords {
     lastReply: (when: string) => string
     /** Takes the last reply's place while the thread line is hovered. */
     viewThread: string
+    /** The players' buttons and scrubber, for a recording or a video. */
+    play: string
+    pause: string
+    seek: string
 }
 
 const WORDS: ChatMessageWords = {
@@ -67,6 +81,9 @@ const WORDS: ChatMessageWords = {
     replies: (count) => `${String(count)} ${count === 1 ? 'reply' : 'replies'}`,
     lastReply: (when) => `Last reply ${when}`,
     viewThread: 'View thread',
+    play: 'Play',
+    pause: 'Pause',
+    seek: 'Seek',
 }
 
 /** The link glyph drawn before every link in a body, as a mask so it takes the link's color. */
@@ -108,7 +125,8 @@ function BarButton({ label, onClick, children }: { label: string; onClick?: () =
  * One message in a conversation, laid out as a team chat does: the author's square picture, the
  * name and time on one line, the body right under it. A message that follows its author's last
  * one closely is `continued`: no picture and no name, its time shown in the gutter on hover, so
- * each message of a run still reads as its own. Under the body come the files, the reactions
+ * each message of a run still reads as its own. Under the body come the files (a recording and a video
+ * play in place), the reactions
  * (pressing one adds or takes back yours, the button at the end adds a new one) and the thread
  * line that opens the replies. Links in the body carry a link glyph; an edited message says so
  * after its last line. The actions float at the top right on hover: react, reply in thread and a
@@ -228,7 +246,27 @@ export function ChatMessage({
                 {files !== undefined && files.length > 0 && (
                     <div className="mt-1.5 flex flex-wrap gap-2">
                         {files.map((file) =>
-                            file.kind === 'image' && file.url !== undefined ? (
+                            file.kind === 'audio' && file.url !== undefined ? (
+                                <AudioPlayer
+                                    key={file.id}
+                                    src={file.url}
+                                    waveform={file.waveform}
+                                    duration={file.duration}
+                                    label={file.name}
+                                    labels={{ play: words.play, pause: words.pause, seek: words.seek }}
+                                    variant="card"
+                                    className="w-[min(100%,20rem)]"
+                                />
+                            ) : file.kind === 'video' && file.url !== undefined ? (
+                                <VideoPlayer
+                                    key={file.id}
+                                    src={file.url}
+                                    title={file.name}
+                                    preload="metadata"
+                                    labels={{ play: words.play, pause: words.pause, seek: words.seek }}
+                                    className="w-[min(100%,24rem)]"
+                                />
+                            ) : file.kind === 'image' && file.url !== undefined ? (
                                 <img
                                     key={file.id}
                                     src={file.url}

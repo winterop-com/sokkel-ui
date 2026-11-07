@@ -90,9 +90,12 @@
         "@fontsource-variable/geist": "^5.3.0",
         "@fontsource-variable/geist-mono": "^5.3.0",
         "@lezer/highlight": "^1.2.5",
+        "katex": "^0.16.47",
         "mermaid": "^12.3.0",
         "react": "^19.2.0",
-        "react-dom": "^19.2.0"
+        "react-dom": "^19.2.0",
+        "rehype-katex": "^7.0.1",
+        "remark-math": "^6.0.0"
     },
     "peerDependenciesMeta": {
         "@codemirror/commands": {
@@ -122,7 +125,16 @@
         "@lezer/highlight": {
             "optional": true
         },
+        "katex": {
+            "optional": true
+        },
         "mermaid": {
+            "optional": true
+        },
+        "rehype-katex": {
+            "optional": true
+        },
+        "remark-math": {
             "optional": true
         }
     }
