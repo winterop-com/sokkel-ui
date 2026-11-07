@@ -41,9 +41,13 @@ toggle-group, tooltip, trace.
 
 ## Patterns
 
-Shell, Rail, Page, PageHeader, Section, Surface, Field, CodeField, SwitchField, SearchField,
-FilterChip, DataTable, StatusChip, AccountMenu, SidePanel, DialogShell, ConfirmDialog,
-TreeSelect, AsyncSelect, CapabilityPicker.
+Shell, Rail, AppBar, SubNav, Page, PageHeader, PaneHeader, Toolbar, Section, Surface, the layout
+components (Stack, Row, Columns, Split, Fill), Field, TextField, InlineField, SliderField,
+CheckboxField, CheckboxList, ChoiceList, CodeField, SwitchField, SearchField, FilterChip, FormBar,
+SelectionBar, DataTable, StatusChip, PersonRow, MetaLine, DueText, AttachmentList, IconButton,
+AccountMenu, SidePanel, DialogShell, ConfirmDialog, TreeSelect, AsyncSelect, CapabilityPicker.
+Every example arranges and builds its screens from these, never by hand, so a fix in one reaches
+them all.
 
 DataTable is the one table, for five rows or fifty thousand: only the rows in view are drawn, at
 the density's one row height, so 50k rows sort, scroll and select at once; rows that grow to fit
