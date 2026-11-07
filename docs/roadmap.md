@@ -78,8 +78,9 @@ to `plan.md` when it ships.
   file per theme. From the same file: a W3C design-tokens file for Figma and theme tools, and a
   design system for design tools built from the tokens and component screenshots, so decks and
   mockups match the apps. Never two hand-kept copies.
-- **A registry for agents.** A shadcn-style registry only so coding agents can find components.
-  Every item points at the package; none ships a copy.
+- **A machine-readable registry.** `llms.txt` and `docs/components.md` point agents at the parts;
+  what remains is a form agent tools read directly (a shadcn-style registry), each item pointing at
+  the package, none shipping a copy.
 
 ## Not planned
 
