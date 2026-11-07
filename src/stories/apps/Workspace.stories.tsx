@@ -27,14 +27,17 @@ import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
 import { PanelSection, SidePanel } from '@winterop-com/sokkel-ui/SidePanel'
 import { StatusChip, type Status } from '@winterop-com/sokkel-ui/StatusChip'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
-import { ThemeToggle } from '@winterop-com/sokkel-ui/ThemeToggle'
+import { SchemeToggle } from '@winterop-com/sokkel-ui/SchemeToggle'
 import { Timeline } from '@winterop-com/sokkel-ui/Timeline'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
+import { useAppearance } from '@winterop-com/sokkel-ui/hooks/use-appearance'
+import { appearanceCommands, placeCommands } from '@winterop-com/sokkel-ui/lib/commands'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { JOB_OPTIONS, PEOPLE_OPTIONS, STATUS_OPTIONS } from '../fixtures/filters'
 import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
+import { fromGlobals } from '../themes/themes'
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /**
@@ -199,13 +202,23 @@ function Details({ run }: { run: Run }) {
     )
 }
 
-function Workspace({ dock = false }: { dock?: boolean }) {
+function Workspace({
+    globals,
+    dock = false,
+    palette = false,
+}: {
+    globals: Record<string, unknown>
+    dock?: boolean
+    /** Starts with the command palette open and no one signed in. */
+    palette?: boolean
+}) {
+    const defaults = fromGlobals(globals)
+    const { settings, setSettings } = useAppearance(defaults)
     const [rail, setRail] = useState(240)
     const [panel, setPanel] = useState(352)
     const [dockSize, setDockSize] = useState(200)
     const [dockOpen, setDockOpen] = useState(true)
     const [collapsed, setCollapsed] = useState(false)
-    const [dark, setDark] = useState(true)
     const [query, setQuery] = useState('')
     const [chosen, setChosen] = useState<Run>(RUNS[1])
     const [panelOpen, setPanelOpen] = useState<boolean | undefined>(undefined)
@@ -213,6 +226,8 @@ function Workspace({ dock = false }: { dock?: boolean }) {
     return (
         <TooltipProvider>
             <Shell
+                palette={[...placeCommands(GROUPS, () => undefined), ...appearanceCommands(settings, setSettings)]}
+                defaultPaletteOpen={palette}
                 rail={
                     <Rail
                         mark={<TidevannMark />}
@@ -224,22 +239,31 @@ function Workspace({ dock = false }: { dock?: boolean }) {
                         width={rail}
                         onWidthChange={setRail}
                         foot={
-                            <AccountMenu
-                                name="ada"
-                                image={pictureOf('ada')}
-                                where="tidevann.example.org"
-                                collapsed={collapsed}
-                                onSettings={() => undefined}
-                                onSignOut={() => undefined}
-                            />
+                            palette ? (
+                                <AccountMenu
+                                    name="Local"
+                                    local
+                                    collapsed={collapsed}
+                                    onSettings={() => undefined}
+                                    onAppearance={() => undefined}
+                                />
+                            ) : (
+                                <AccountMenu
+                                    name="ada"
+                                    image={pictureOf('ada')}
+                                    where="tidevann.example.org"
+                                    collapsed={collapsed}
+                                    onSettings={() => undefined}
+                                    onSignOut={() => undefined}
+                                />
+                            )
                         }
                     />
                 }
                 top={
                     <TopBar
                         trail={[{ label: 'Tidevann', href: '#' }, { label: 'Runs' }]}
-                        onSearch={() => undefined}
-                        actions={<ThemeToggle dark={dark} onToggle={() => setDark(!dark)} />}
+                        actions={<SchemeToggle fallback={defaults.scheme} />}
                     />
                 }
                 foot={
@@ -327,5 +351,12 @@ function Workspace({ dock = false }: { dock?: boolean }) {
 const meta: Meta = { title: 'Apps/Workspace' }
 export default meta
 
-export const ListAndPanel: StoryObj = { name: 'List and panel', render: () => <Workspace /> }
-export const WithDock: StoryObj = { name: 'Log dock', render: () => <Workspace dock /> }
+export const ListAndPanel: StoryObj = { name: 'List and panel', render: (_, { globals }) => <Workspace globals={globals} /> }
+export const WithDock: StoryObj = { name: 'Log dock', render: (_, { globals }) => <Workspace globals={globals} dock /> }
+
+/**
+ * The frame every app has, all at once: the rail of places, the command palette open on its
+ * places, scheme, density and themes (⌘K or Ctrl+K, or the top bar's search, opens it), and the
+ * account in the rail's foot before anyone has signed in.
+ */
+export const Palette: StoryObj = { name: 'Command palette', render: (_, { globals }) => <Workspace globals={globals} palette /> }

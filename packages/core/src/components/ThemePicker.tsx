@@ -1,35 +1,18 @@
 import type { ReactNode } from 'react'
 
+import type { ThemeOption, ThemeSettings } from '../lib/appearance'
 import { cn } from '../lib/cn'
 import { Segmented } from './Segmented'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 
-/** One choice the picker offers: what it answers with, what it is called, and a short note beside it. */
-export interface ThemeOption {
-    value: string
-    label: string
-    /** A short note after the label, such as where the theme comes from. */
-    note?: string
-    /** Draws a swatch of the theme beside its name. Only themes that answer `data-theme-scope` can be drawn. */
-    swatch?: boolean
-}
-
-/** Everything the picker sets: the named theme, the scheme, the density, the corners, the typeface and the motion. */
-export interface ThemeSettings {
-    theme: string
-    scheme: 'dark' | 'light'
-    density: string
-    corners: string
-    typeface: string
-    /** Whether things slide and fade: as the system asks, always, or never. The row shows only when set. */
-    motion?: 'system' | 'on' | 'off'
-}
+export type { ThemeOption, ThemeSettings } from '../lib/appearance'
 
 export interface ThemePickerWords {
     theme: string
     scheme: string
     dark: string
     light: string
+    system: string
     density: string
     regular: string
     compact: string
@@ -46,6 +29,7 @@ const WORDS: ThemePickerWords = {
     scheme: 'Scheme',
     dark: 'Dark',
     light: 'Light',
+    system: 'System',
     density: 'Density',
     regular: 'Regular',
     compact: 'Compact',
@@ -60,9 +44,9 @@ const WORDS: ThemePickerWords = {
 /**
  * The appearance controls an app's settings show: the named theme, dark or light, the density,
  * the corners, the typeface and the motion. It holds no state and applies nothing; `onChange` answers with the
- * whole settings, and the app sets them where it keeps its look.
+ * whole settings, and the app sets them where it keeps its look, as `useAppearance` keeps and wears them.
  *
- * The theme and scheme are always offered. Density offers regular and compact unless given its
+ * The theme and scheme are always offered, the system's scheme as a third when `system` is set. Density offers regular and compact unless given its
  * own options; corners and typeface show only when given options. A theme marked `swatch` is
  * drawn as a small sample of its background, text and accent.
  */
@@ -73,6 +57,7 @@ export function ThemePicker({
     densities,
     corners,
     typefaces,
+    system = false,
     className,
     words: given,
 }: {
@@ -85,6 +70,8 @@ export function ThemePicker({
     corners?: readonly ThemeOption[]
     /** The typefaces; the row shows only when given. */
     typefaces?: readonly ThemeOption[]
+    /** Offers the system's scheme beside dark and light, which follows the device until one is chosen. */
+    system?: boolean
     className?: string
     words?: Partial<ThemePickerWords>
 }) {
@@ -106,6 +93,7 @@ export function ThemePicker({
                     options={[
                         { value: 'dark', label: words.dark },
                         { value: 'light', label: words.light },
+                        ...(system ? [{ value: 'system' as const, label: words.system }] : []),
                     ]}
                     fill
                     onChoose={(next) => set('scheme', next)}

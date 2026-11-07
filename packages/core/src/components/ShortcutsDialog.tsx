@@ -14,10 +14,8 @@ export interface ShortcutGroup {
     shortcuts: readonly Shortcut[]
 }
 
-/** Whether a platform names its command key ⌘ rather than Ctrl. */
-export function applePlatform(userAgent: string): boolean {
-    return /Mac|iPhone|iPad|iPod/.test(userAgent)
-}
+export { applePlatform } from '../lib/keys'
+export { useShortcutsKey } from '../hooks/use-shortcuts-key'
 
 /**
  * Every keyboard shortcut, grouped, each with its keys drawn as keys. The dialog an app opens on

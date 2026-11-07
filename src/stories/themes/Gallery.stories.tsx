@@ -7,7 +7,7 @@ import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { Skeleton } from '@winterop-com/sokkel-ui/primitives/skeleton'
 
 import type { ThemeOption, ThemeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
-import { fromGlobals, THEMES, toGlobals } from './themes'
+import { fromGlobals, TOOLBAR_THEMES as THEMES, toGlobals } from './themes'
 import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /**

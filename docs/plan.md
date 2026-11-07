@@ -61,6 +61,18 @@ such as a theme picker's swatch; `themes.css` imports them all. An app imports t
 themes it offers and sets one on `<html data-theme>`, so its CSS carries no theme it never shows.
 Storybook imports `themes.css`, so its toolbar offers every theme.
 
+Applying and keeping the look is the library's too, never an app's: `useAppearance` keeps the theme,
+scheme, density, corners, typeface and motion in `localStorage` and wears them on `<html>`,
+`useScheme` does the same for the scheme alone, and `appearanceScript` wears the kept look before
+the page draws. Storybook's toolbar wears its globals through the same `applyAppearance`. The
+option lists a picker offers (`THEMES`, made from the tokens by `scripts/build-tokens.ts`,
+`CORNERS`, `TYPEFACES` and `FACES`) are in `lib/appearance`.
+
+Every app has the same frame: `Shell` with a `Rail` of its places, the command palette on ⌘K or
+Ctrl K through `Shell`'s `palette`, an `AccountMenu` in the rail's foot, `local` until the app has
+sign-in, and a `StatusLine` as the shell's `foot`, which the account sits level with as one bar
+across the window's bottom edge.
+
 ## Typefaces
 
 Plex Sans and Plex Mono are the default. Geist and Geist Mono are the one alternative a theme sets,

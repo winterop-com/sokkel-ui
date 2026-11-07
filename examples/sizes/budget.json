@@ -1,5 +1,5 @@
 {
-    "forms": { "engines": [], "start": 225, "lazy": 5, "css": 49 },
-    "dashboard": { "engines": ["echarts"], "start": 225, "lazy": 345, "css": 49 },
-    "map": { "engines": ["maplibre"], "start": 475, "lazy": 5, "css": 60 }
+    "forms": { "engines": [], "start": 225, "lazy": 20, "css": 49 },
+    "dashboard": { "engines": ["echarts"], "start": 225, "lazy": 360, "css": 49 },
+    "map": { "engines": ["maplibre"], "start": 475, "lazy": 25, "css": 60 }
 }

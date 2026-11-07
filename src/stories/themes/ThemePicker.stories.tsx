@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
 import { ThemePicker, type ThemePickerWords, type ThemeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
-import { CORNERS, THEMES, TYPEFACES } from './themes'
+import { CORNERS, THEMES, TYPEFACES } from '@winterop-com/sokkel-ui/lib/appearance'
 
 /**
  * The appearance controls on their own, as an app's settings page holds them. Here they change

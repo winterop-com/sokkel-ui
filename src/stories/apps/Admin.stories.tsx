@@ -48,6 +48,7 @@ import { SecretReveal } from '@winterop-com/sokkel-ui/SecretReveal'
 import { Section } from '@winterop-com/sokkel-ui/Section'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
+import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
 import { PanelSection, SidePanel } from '@winterop-com/sokkel-ui/SidePanel'
 import { StatusChip, type Status } from '@winterop-com/sokkel-ui/StatusChip'
 import { TopBar, type Crumb } from '@winterop-com/sokkel-ui/TopBar'
@@ -1293,6 +1294,12 @@ function AdminApp({ view, panel, children }: { view: View; panel?: ReactNode; ch
                     />
                 }
                 top={<TopBar trail={trail(view)} onSearch={() => undefined} />}
+                foot={
+                    <StatusLine note="Connected to api.example.org">
+                        <StatusItem label="members">24</StatusItem>
+                        <StatusItem>1.4.0</StatusItem>
+                    </StatusLine>
+                }
                 panel={panel}
             >
                 {children}

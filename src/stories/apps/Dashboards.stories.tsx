@@ -28,6 +28,7 @@ import { classCounts, colorOf, sequentialScale } from '@winterop-com/sokkel-ui-m
 import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
+import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
 import { StatusChip, type Status } from '@winterop-com/sokkel-ui/StatusChip'
 import { Timeline } from '@winterop-com/sokkel-ui/Timeline'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
@@ -142,6 +143,12 @@ function DashboardsApp({ board, children }: { board: Board; children: ReactNode 
                     />
                 }
                 top={<TopBar trail={[{ label: 'Dashboards', href: '#' }, { label }]} onSearch={() => undefined} />}
+                foot={
+                    <StatusLine note="Refreshed every 5 minutes">
+                        <StatusItem label="project">harbor</StatusItem>
+                        <StatusItem>1.4.0</StatusItem>
+                    </StatusLine>
+                }
             >
                 <Page>{children}</Page>
             </Shell>

@@ -6,3 +6,6 @@ import { createContext } from 'react'
  * foot stays in the rail itself, as in the shell's drawer.
  */
 export const ShellFootCell = createContext<HTMLElement | null>(null)
+
+/** Opens the shell's command palette, for the top bar's search; undefined where the shell has none. */
+export const ShellPalette = createContext<(() => void) | undefined>(undefined)

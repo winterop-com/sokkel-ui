@@ -6,8 +6,8 @@ import './candidates.css'
 import '@fontsource-variable/geist'
 import '@fontsource-variable/geist-mono'
 
-import tokens from '../packages/core/tokens/tokens.json'
-import { FACES } from '../src/stories/themes/themes'
+import { applyAppearance, CORNERS, FACES, THEMES } from '@winterop-com/sokkel-ui/lib/appearance'
+import { fromGlobals } from '../src/stories/themes/themes'
 import candidates from './candidates.json'
 
 /** A theme written by scripts/import-candidates.ts, judged beside the library's own before it is adopted. */
@@ -17,44 +17,15 @@ interface Candidate {
     app: string
 }
 
-const title = (name: string) => name.charAt(0).toUpperCase() + name.slice(1)
-
 /** The library's themes first, then the candidates collected from the apps, marked with their app. */
-const THEMES = [
-    ...Object.keys(tokens.themes).map((name) => ({ value: name, title: title(name) })),
+const TOOLBAR_THEMES = [
+    ...THEMES.map((theme) => ({ value: theme.value, title: theme.label })),
     ...(candidates as Candidate[]).map((entry) => ({ value: entry.value, title: `${entry.title} (candidate)`, right: entry.app })),
 ]
 
-/** The scheme, theme, density, corners and typeface a story is drawn in, set on the document as an app sets them. */
+/** The scheme, theme, density, corners, typeface and motion a story is drawn in, worn on the document as an app wears them. */
 const withLook: Decorator = (Story, context) => {
-    const { theme, look, density, corners, typeface, motion } = context.globals as {
-        theme?: string
-        look?: string
-        density?: string
-        corners?: string
-        typeface?: string
-        motion?: string
-    }
-    const root = document.documentElement
-    if (motion === undefined || motion === 'system') root.removeAttribute('data-motion')
-    else root.setAttribute('data-motion', motion)
-    root.classList.toggle('dark', theme !== 'light')
-    if (look === undefined || look === 'default') root.removeAttribute('data-theme')
-    else root.setAttribute('data-theme', look)
-    root.setAttribute('data-density', density ?? 'regular')
-    if (corners === undefined || corners === 'theme') root.style.removeProperty('--radius')
-    else root.style.setProperty('--radius', corners)
-    const face = typeface === undefined ? undefined : FACES[typeface]
-    const faceProps: [string, string | undefined][] = [
-        ['--typeface-sans', face?.sans],
-        ['--typeface-mono', face?.mono],
-        ['--mono-x-height', face?.monoX],
-        ['--mono-x-height-small', face?.monoXSmall],
-    ]
-    for (const [name, value] of faceProps) {
-        if (value === undefined) root.style.removeProperty(name)
-        else root.style.setProperty(name, value)
-    }
+    applyAppearance(fromGlobals(context.globals))
     return <Story />
 }
 
@@ -133,7 +104,7 @@ const preview: Preview = {
         },
         look: {
             description: 'Theme',
-            toolbar: { title: 'Theme', icon: 'paintbrush', items: THEMES, dynamicTitle: true },
+            toolbar: { title: 'Theme', icon: 'paintbrush', items: TOOLBAR_THEMES, dynamicTitle: true },
         },
         density: {
             description: 'Density',
@@ -152,16 +123,10 @@ const preview: Preview = {
             toolbar: {
                 title: 'Corners',
                 icon: 'circlehollow',
-                items: [
-                    { value: 'theme', title: "Theme's corners" },
-                    { value: '0px', title: 'Square corners' },
-                    { value: '3px', title: 'Corners 3px' },
-                    { value: '4px', title: 'Corners 4px' },
-                    { value: '5px', title: 'Corners 5px' },
-                    { value: '6px', title: 'Corners 6px' },
-                    { value: '8px', title: 'Corners 8px' },
-                    { value: '10px', title: 'Corners 10px' },
-                ],
+                items: CORNERS.map((corner) => ({
+                    value: corner.value,
+                    title: corner.value === 'theme' ? corner.label : corner.value === '0px' ? 'Square corners' : `Corners ${corner.label}`,
+                })),
                 dynamicTitle: true,
             },
         },
