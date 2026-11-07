@@ -25,6 +25,14 @@ const OPTION: Record<SegmentedVariant, string> = {
     solid: '',
 }
 
+/** A small option's least height, so a line of options with its frame is a finger tall, and 1.75rem from `md`. */
+const LINE: Record<SegmentedVariant, string> = {
+    track: 'min-h-[calc(var(--spacing-finger)-4px)] md:min-h-6',
+    tint: 'min-h-finger md:min-h-7',
+    outline: 'min-h-[calc(var(--spacing-finger)-2px)] md:min-h-[calc(1.75rem-2px)]',
+    solid: 'min-h-[calc(var(--spacing-finger)-2px)] md:min-h-[calc(1.75rem-2px)]',
+}
+
 const CHOSEN: Record<SegmentedVariant, string> = {
     track: 'bg-card font-medium text-foreground shadow-[0_1px_2px_rgb(0_0_0/0.10)] ring-1 ring-border-strong dark:bg-input/70 dark:shadow-none dark:ring-input',
     tint: 'bg-primary/15 font-medium text-primary-ink',
@@ -97,7 +105,7 @@ export function Segmented<T extends string>({
                 FRAME[variant],
                 size === 'md'
                     ? cn('grid w-full grid-cols-2 md:flex md:min-h-8 md:flex-wrap', !fill && 'md:w-auto')
-                    : cn('max-w-full flex-wrap md:min-h-7', fill ? 'flex w-full' : 'inline-flex shrink-0'),
+                    : cn('max-w-full flex-wrap', fill ? 'flex w-full' : 'inline-flex shrink-0'),
                 disabled && 'opacity-50',
                 className,
             )}
@@ -120,7 +128,7 @@ export function Segmented<T extends string>({
                                       'min-h-finger px-3 py-1 text-sm last:odd:col-span-2 md:min-h-7 md:py-0 md:whitespace-nowrap',
                                       fill ? 'md:flex-1 md:basis-0' : 'md:flex-1',
                                   )
-                                : 'min-h-finger flex-1 px-2.5 text-xs whitespace-nowrap md:min-h-6',
+                                : cn('flex-1 px-2.5 text-xs whitespace-nowrap', LINE[variant]),
                             chosen ? CHOSEN[variant] : cn('text-muted-foreground', !disabled && !off && HOVER[variant]),
                             off && !chosen && 'text-faint',
                             (disabled || off) && 'cursor-not-allowed',
