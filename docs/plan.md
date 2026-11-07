@@ -92,6 +92,19 @@ button at a node's output or an edge's middle, takes blocks dragged in from a pa
 several nodes with Shift. BlockPalette, BlockPicker, GraphOverlay, GraphNotice, GraphToolbar and
 useGraphHistory are its parts; the Pipeline editor stories show each way of building a pipeline.
 
+## Media
+
+VideoPlayer, MediaBar, MediaCard and TrackList carry video and music, and the `AudioScrubber`
+primitive draws a recording's waveform under its position. SoundVisualizer is the one live picture
+of sound: it reads a playing media element or a live stream, such as a microphone's, through Web
+Audio and draws it on a canvas as a spectrum, an area, a wave or a ring, filling its box in a color
+token, faint behind text when it is a backdrop. It moves only while the source sounds and the box
+is in view; paused, hidden or unmounted it holds still with no frame loop running, and a still frame
+of levels or samples draws without any audio. Each element is wired to the page's one audio context
+once, on its first play, and is heard through it from then on, so cross-origin media needs CORS; a
+source Web Audio cannot read is never wired and draws at rest. The `bar-visualizer` primitive, a
+voice input's level bars, is drawn by it.
+
 ## Validation
 
 Option F, picked from the validation research. A field with a problem gets a colored
