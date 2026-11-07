@@ -4,16 +4,7 @@
  * held. Seeded, so every story draws the same.
  */
 
-import { RUN_PROJECTS } from './runRows'
-
-/** A seeded generator, so every story draws the same numbers. */
-function seeded(seed: number): () => number {
-    let state = seed >>> 0
-    return () => {
-        state = (state * 1664525 + 1013904223) >>> 0
-        return state / 2 ** 32
-    }
-}
+import { RUN_PROJECTS, seeded } from './runRows'
 
 /** One project's day. */
 export interface RunDay {
