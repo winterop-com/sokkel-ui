@@ -13,7 +13,7 @@ import { Page, Shell } from '../components/Shell'
 import { StatusChip, type Status } from '../components/StatusChip'
 import { Button } from '../components/ui/button'
 import { TidevannMark } from './fixtures/TidevannMark'
-import { Row } from '../components/Layout'
+import { Columns, Row } from '../components/Layout'
 
 /**
  * A job's overview page in the three ways a page can be divided, drawn with the shell and
@@ -194,3 +194,20 @@ type Story = StoryObj<typeof Overview>
 export const Flat: Story = { args: { layout: 'flat' } }
 export const Boxed: Story = { args: { layout: 'boxed' } }
 export const Hybrid: Story = { args: { layout: 'hybrid' } }
+
+const LOG = Array.from({ length: 40 }, (_, at) => `02:00:${String(at).padStart(2, '0')}  validate  row ${String(at * 61 + 7)} checked`)
+
+/** Two boxes that take the height they are given, their bodies scrolling inside: an editor beside its preview. */
+export const Filling: StoryObj = {
+    parameters: { frame: 'none' },
+    render: () => (
+        <Columns gap="lg" className="h-svh bg-background p-6 text-foreground">
+            <Section title="Log" meta="40 lines" flush fill>
+                <pre className="px-3 py-2 font-mono text-xs leading-5">{LOG.join('\n')}</pre>
+            </Section>
+            <Section title="Summary" fill>
+                <p className="text-sm">2,184 rows checked, 37 refused. The run stopped at validate.</p>
+            </Section>
+        </Columns>
+    ),
+}

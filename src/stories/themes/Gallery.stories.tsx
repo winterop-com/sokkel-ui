@@ -1,3 +1,4 @@
+import { PageHeader } from '../../components/PageHeader'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
@@ -115,10 +116,10 @@ function Grid({ base }: { base: ThemeSettings }) {
         <div className="relative min-h-svh bg-background p-4 text-foreground md:p-6" data-settling={done ? undefined : ''}>
             <Stack gap="xl" className="mx-auto max-w-[1800px]">
                 <Stack gap="2xs">
-                    <h1 className="text-page font-medium tracking-tight">Themes</h1>
-                    <p className="text-sm text-muted-foreground">
-                        {THEMES.length} themes, dark and light. Press a sample to open the kitchen sink in it.
-                    </p>
+                    <PageHeader
+                        title="Themes"
+                        description={`${String(THEMES.length)} themes, dark and light. Press a sample to open the kitchen sink in it.`}
+                    />
                     {!done && (
                         <Row gap="md" className="mt-2 max-w-md text-xs text-muted-foreground">
                             <Progress value={Math.round((count / total) * 100)} className="flex-1" aria-label="Drawing the themes" />

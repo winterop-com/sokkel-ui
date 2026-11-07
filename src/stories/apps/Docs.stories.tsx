@@ -1,3 +1,5 @@
+import { Section } from '../../components/Section'
+import { PageHeader } from '../../components/PageHeader'
 import { IconButton } from '../../components/IconButton'
 import { Toggle } from '../../components/ui/toggle'
 import type { Meta, StoryObj } from '@storybook/react-vite'
@@ -23,7 +25,7 @@ import { NativeSelect, NativeSelectOption } from '../../components/ui/native-sel
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { cn } from '../../lib/cn'
 import { TidevannMark } from '../fixtures/TidevannMark'
-import { Columns, Row, Stack } from '../../components/Layout'
+import { Columns, Row } from '../../components/Layout'
 import { GroupLabel } from '../../components/GroupLabel'
 
 /**
@@ -258,22 +260,12 @@ function Reading({ content }: { content: string }) {
 function Editing({ value, onChange }: { value: string; onChange: (value: string) => void }) {
     return (
         <Columns gap="lg" className="min-h-0 flex-1">
-            <section className="flex min-h-[24rem] min-w-0 flex-col overflow-hidden rounded-surface border border-border-strong bg-card lg:min-h-0">
-                <h2 className="flex h-(--density-panel-head) shrink-0 items-center border-b border-border-strong bg-panel-ground px-3 text-xs font-medium text-muted-foreground">
-                    Markdown
-                </h2>
-                <div className="min-h-0 flex-1 overflow-auto">
-                    <CodeEditor value={value} onChange={onChange} wrap label="The page as markdown" />
-                </div>
-            </section>
-            <section className="flex min-h-[24rem] min-w-0 flex-col overflow-hidden rounded-surface border border-border-strong bg-card lg:min-h-0">
-                <h2 className="flex h-(--density-panel-head) shrink-0 items-center border-b border-border-strong bg-panel-ground px-3 text-xs font-medium text-muted-foreground">
-                    Preview
-                </h2>
-                <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-                    <Markdown content={value} />
-                </div>
-            </section>
+            <Section title="Markdown" flush fill className="min-h-[24rem] lg:min-h-0">
+                <CodeEditor value={value} onChange={onChange} wrap label="The page as markdown" />
+            </Section>
+            <Section title="Preview" fill className="min-h-[24rem] lg:min-h-0">
+                <Markdown content={value} />
+            </Section>
         </Columns>
     )
 }
@@ -409,44 +401,46 @@ function DocsApp({ mode: initialMode = 'read' }: { mode?: 'read' | 'edit' | 'his
                                 mode === 'read' && 'max-w-[68rem]',
                             )}
                         >
-                            <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                                <Stack gap="sm">
-                                    <h1 className="text-page font-semibold tracking-tight">Nightly export</h1>
-                                    <Row as="p" className="min-w-0 text-xs text-muted-foreground">
+                            <PageHeader
+                                title="Nightly export"
+                                meta={
+                                    <>
                                         <Person name={CURRENT.by} />
                                         <span className="truncate">
                                             Last edited by <span className="font-medium text-foreground">{CURRENT.by}</span> on {CURRENT.at}
                                         </span>
-                                    </Row>
-                                </Stack>
-                                <div className="flex shrink-0 items-center gap-1.5">
-                                    {mode === 'edit' ? (
-                                        <>
-                                            <Button variant="ghost" size="sm" onClick={() => setMode('read')}>
-                                                Cancel
-                                            </Button>
-                                            <Button size="sm" onClick={() => setMode('read')}>
-                                                Save
-                                            </Button>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Toggle
-                                                size="sm"
-                                                pressed={mode === 'history'}
-                                                onPressedChange={(pressed) => setMode(pressed ? 'history' : 'read')}
-                                            >
-                                                <HistoryIcon aria-hidden />
-                                                History
-                                            </Toggle>
-                                            <Button variant="outline" size="sm" onClick={() => setMode('edit')}>
-                                                <Pencil aria-hidden />
-                                                Edit
-                                            </Button>
-                                        </>
-                                    )}
-                                </div>
-                            </header>
+                                    </>
+                                }
+                                actions={
+                                    <>
+                                        {mode === 'edit' ? (
+                                            <>
+                                                <Button variant="ghost" size="sm" onClick={() => setMode('read')}>
+                                                    Cancel
+                                                </Button>
+                                                <Button size="sm" onClick={() => setMode('read')}>
+                                                    Save
+                                                </Button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Toggle
+                                                    size="sm"
+                                                    pressed={mode === 'history'}
+                                                    onPressedChange={(pressed) => setMode(pressed ? 'history' : 'read')}
+                                                >
+                                                    <HistoryIcon aria-hidden />
+                                                    History
+                                                </Toggle>
+                                                <Button variant="outline" size="sm" onClick={() => setMode('edit')}>
+                                                    <Pencil aria-hidden />
+                                                    Edit
+                                                </Button>
+                                            </>
+                                        )}
+                                    </>
+                                }
+                            />
                             {mode === 'read' && <Reading content={CURRENT.text} />}
                             {mode === 'edit' && <Editing value={draft} onChange={setDraft} />}
                             {mode === 'history' && (
