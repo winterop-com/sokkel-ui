@@ -1,70 +1,22 @@
-import { Music, Repeat, Repeat1, Shuffle, SkipBack, SkipForward } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
 
 import { usePanelSize } from '../../hooks/use-panel-size'
 import { cn } from '../../lib/cn'
-import { GroupLabel } from '../GroupLabel'
-import { MetaLine } from '../MetaLine'
 import { ResizeHandle } from '../ResizeHandle'
-import { PlayButton, Position, TransportButton, VolumeControl } from './MediaControls'
+import { grows, LINE, WIDE, type MediaBarLayout } from './bar-growth'
+import { LineBar, PanelBar, RowsBar, StageBar, type BarProps } from './MediaBarLayouts'
+import { kindOf, MEDIA_BAR_LABELS, type Deck, type MediaBarLabels, type RepeatMode } from './MediaBarParts'
+import { MediaFullscreen } from './MediaFullscreen'
+import type { SoundKind } from './SoundVisualizer'
 import type { MediaRange } from './time'
 
-/** How a queue repeats: not at all, the whole queue, or the one item playing. */
-export type RepeatMode = 'off' | 'all' | 'one'
-
-/** The words the bar says, each with an English default. */
-export interface MediaBarLabels {
-    play: string
-    pause: string
-    previous: string
-    next: string
-    shuffle: string
-    repeatOff: string
-    repeatAll: string
-    repeatOne: string
-    mute: string
-    unmute: string
-    volume: string
-    seek: string
-    /** The name of the top edge that resizes the bar. */
-    resize: string
-    /** The place in the line over the large title, such as "Track 13 of 16". */
-    trackOf: (number: number, count?: number) => string
-}
-
-const LABELS: MediaBarLabels = {
-    play: 'Play',
-    pause: 'Pause',
-    previous: 'Previous',
-    next: 'Next',
-    shuffle: 'Shuffle',
-    repeatOff: 'Repeat',
-    repeatAll: 'Repeat all',
-    repeatOne: 'Repeat one',
-    mute: 'Mute',
-    unmute: 'Unmute',
-    volume: 'Volume',
-    seek: 'Seek',
-    resize: 'Resize the player',
-    trackOf: (number, count) => (count === undefined ? `Track ${String(number)}` : `Track ${String(number)} of ${String(count)}`),
-}
-
-const NEXT_REPEAT: Record<RepeatMode, RepeatMode> = { off: 'all', all: 'one', one: 'off' }
-
-/** The one-line bar's height, the least the bar is dragged to. */
-const LINE = 64
-
-/** The height from which the bar is the large now-playing panel. */
-const LARGE = 200
-
-/** The height from which the large panel's title takes the larger size. */
-const TALL = 280
+export type { MediaBarLayout } from './bar-growth'
+export type { MediaBarLabels, RepeatMode } from './MediaBarParts'
 
 /** The most of the window's height the bar takes, whatever its size, so the page keeps the rest. */
 const WINDOW_SHARE = 0.5
 
-/** The width at which the bar lays out on one row, the `@2xl` container size. */
-const WIDE = 672
+const BARS: Record<MediaBarLayout, (props: BarProps) => ReactNode> = { rows: RowsBar, panel: PanelBar, stage: StageBar }
 
 export interface MediaBarProps {
     title: ReactNode
@@ -90,11 +42,13 @@ export interface MediaBarProps {
     onSeek: (seconds: number) => void
     /** Loaded stretches, in seconds. */
     buffered?: readonly MediaRange[]
-    /** The track's loudness from start to end, each level from 0 to 1, drawn as the large panel's scrubber. */
+    /** The track's loudness from start to end, each level from 0 to 1, drawn as the grown bar's scrubber. */
     waveform?: readonly number[]
     /**
-     * A live picture of the sound, drawn faintly behind the large panel's title and scrubber and
-     * filling the room above its controls. Presses between the words reach it.
+     * A live picture of the sound, passed at full strength. Once the bar grows it rises faintly
+     * behind the words, standing on the waveform; the fullscreen view draws it at full strength. A
+     * `SoundVisualizer` takes the kind picked in the fullscreen view, and is centered there for the
+     * `stage` layout; any other node is drawn as given.
      */
     visualizer?: ReactNode
     /** From 0 to 1. */
@@ -113,6 +67,8 @@ export interface MediaBarProps {
     onRepeatChange?: (repeat: RepeatMode) => void
     /** Controls at the bar's end, such as a queue button. */
     extra?: ReactNode
+    /** How the bar grows once dragged taller than its one line: `rows` by default. */
+    layout?: MediaBarLayout
     /** The height in pixels, held from outside with `onSizeChange`. */
     size?: number
     onSizeChange?: (size: number) => void
@@ -124,31 +80,53 @@ export interface MediaBarProps {
     maxSize?: number
     /** The height in pixels the bar starts at and a double click on the edge returns to: the one-line bar unless given. */
     defaultSize?: number
+    /** Whether the bar draws the button that opens the fullscreen view. */
+    expandable?: boolean
+    /** Whether the fullscreen view is open, held from outside with `onFullscreenChange`, as an app's own key opens it. */
+    fullscreen?: boolean
+    onFullscreenChange?: (fullscreen: boolean) => void
+    /**
+     * Whether the fullscreen view starts open. It is drawn over the window without asking the
+     * browser, as no press asked for it; the bar's button asks.
+     */
+    defaultFullscreen?: boolean
+    /** The visualizer's kind in the fullscreen view, held from outside with `onVisualizerKindChange`; the slot's own by default. */
+    visualizerKind?: SoundKind
+    onVisualizerKindChange?: (kind: SoundKind) => void
     labels?: Partial<MediaBarLabels>
     className?: string
 }
 
 /**
  * The player along the foot of a screen, for audio. As one line it holds what is playing at the
- * left, the transport and the position in the middle, and volume and any extra controls at the
- * right; the cover grows as the bar is made taller.
+ * left, the transport and the position in the middle, and volume, any extra controls and the
+ * fullscreen button at the right; the cover grows as the bar is made taller.
  *
- * From 200 pixels tall it is the large now-playing panel: the cover as tall as the bar at its left
- * edge, a line in the accent over the title (the place, the album, the year), the title large with
- * the artist under it, the scrubber drawn as the track's `waveform` with the played part filled,
- * and at the foot shuffle, repeat, previous, play and next, with the volume and any extra controls
- * at the end. A `visualizer` fills the room behind the words and the scrubber, drawn faint so the
- * words stay clear over it; pass it at full strength.
+ * Dragged taller than about 96 pixels it grows by its `layout`, continuously from there up, each
+ * with the track's `waveform` as its scrubber and the `visualizer` rising faintly behind the words:
  *
- * Its top edge drags to resize it, from the one line to the large panel, and a double click on the
- * edge puts it back. Left to itself it holds its own height, starting at `defaultSize`; `size` with
- * `onSizeChange` holds it from outside, and `resizable={false}` keeps it fixed. It never takes more
- * than half the window's height.
+ * - `rows`, the default: the cover across two rows, what plays, the transport and the volume in
+ *   the top one, and a waveform as wide as the rest of the bar under them, growing from 18 to 96
+ *   pixels.
+ * - `panel`: the large now-playing panel, the cover flush and as tall as the bar, a line in the
+ *   accent over the title (the place, the album, the year) and the artist, the waveform under
+ *   them, and the transport along the foot.
+ * - `stage`: a stage centered on the bar between the cover and the volume, the words over a wide
+ *   waveform with the transport under it.
+ *
+ * The corner button opens the fullscreen now-playing view (`MediaFullscreen`), arranged after the
+ * layout, a dark room in every theme with the visualizer at full strength and a picker of its
+ * kind; Escape leaves it.
+ *
+ * Its top edge drags to resize it and a double click on the edge puts it back. Left to itself it
+ * holds its own height, starting at `defaultSize`; `size` with `onSizeChange` holds it from
+ * outside, and `resizable={false}` keeps it fixed. It never takes more than half the window's
+ * height.
  *
  * It is controlled: it holds no clock, and draws the `position` it is given until a seek is
  * reported through `onSeek`. Under 672 pixels of its own width the one line folds into two rows,
- * the title beside the transport over the position, and leaves shuffle, repeat and volume to the
- * device; the large panel puts a smaller cover beside the title and the transport alone at its foot.
+ * the title beside the transport over the position, and every layout leaves shuffle, repeat and
+ * volume to the device.
  */
 export function MediaBar({
     title,
@@ -178,212 +156,136 @@ export function MediaBar({
     repeat = 'off',
     onRepeatChange,
     extra,
+    layout = 'rows',
     size,
     onSizeChange,
     resizable = true,
     minSize = LINE,
     maxSize = 360,
     defaultSize,
+    expandable = true,
+    fullscreen,
+    onFullscreenChange,
+    defaultFullscreen = false,
+    visualizerKind,
+    onVisualizerKindChange,
     labels,
     className,
 }: MediaBarProps) {
-    const words = { ...LABELS, ...labels }
+    const words = { ...MEDIA_BAR_LABELS, ...labels }
     const [scrub, setScrub] = useState<number | null>(null)
     const bar = useRef<HTMLDivElement | null>(null)
     const box = useBox(bar)
-    const width = box.width
     const room = useWindowHeight()
     const held = usePanelSize({ size, onSizeChange, rest: defaultSize ?? minSize, fallback: minSize, min: minSize, max: maxSize })
     const top = Math.max(minSize, Math.min(maxSize, Math.floor(room * WINDOW_SHARE)))
     const shown = Math.min(top, Math.max(minSize, held.size ?? minSize))
-    const large = shown >= LARGE
-    const wide = width >= WIDE
-    const at = scrub ?? position
-    const level = muted ? 0 : volume
-    const repeatLabel = repeat === 'one' ? words.repeatOne : repeat === 'all' ? words.repeatAll : words.repeatOff
-    const line = subtitle ?? (artist !== undefined || album !== undefined ? <MetaLine inline items={[artist, album]} /> : undefined)
+    const grown = grows(layout, shown)
 
-    const cover = (
-        <div className="flex size-full items-center justify-center overflow-hidden bg-muted text-faint [&>*]:size-full [&>svg]:block">
-            {artwork ?? <Music className="size-2/5! max-h-12 max-w-12 p-0" aria-hidden />}
-        </div>
-    )
-    const shuffleButton = onShuffleChange !== undefined && (
-        <TransportButton label={words.shuffle} pressed={shuffle} onClick={() => onShuffleChange(!shuffle)}>
-            <Shuffle aria-hidden />
-        </TransportButton>
-    )
-    const repeatButton = onRepeatChange !== undefined && (
-        <TransportButton label={repeatLabel} pressed={repeat !== 'off'} onClick={() => onRepeatChange(NEXT_REPEAT[repeat])}>
-            {repeat === 'one' ? <Repeat1 aria-hidden /> : <Repeat aria-hidden />}
-        </TransportButton>
-    )
-    const transport = (
-        <>
-            <TransportButton label={words.previous} onClick={onPrevious} disabled={onPrevious === undefined}>
-                <SkipBack className="fill-current" aria-hidden />
-            </TransportButton>
-            <PlayButton playing={playing} onToggle={() => onPlayingChange(!playing)} words={words} />
-            <TransportButton label={words.next} onClick={onNext} disabled={onNext === undefined}>
-                <SkipForward className="fill-current" aria-hidden />
-            </TransportButton>
-        </>
-    )
-    const seekRow = (shape?: readonly number[]) => (
-        <Position at={at} duration={duration} buffered={buffered} label={words.seek} onSeek={onSeek} onScrub={setScrub} waveform={shape} />
-    )
-    const volumeControl = (compact: boolean) => (
-        <VolumeControl
-            level={level}
-            muted={muted}
-            onMutedChange={onMutedChange}
-            onVolumeChange={onVolumeChange}
-            compact={compact}
-            words={words}
-        />
-    )
-    const extras = extra !== undefined && <div className="flex items-center gap-1">{extra}</div>
+    const [ownOpen, setOwnOpen] = useState(defaultFullscreen)
+    const open = fullscreen ?? ownOpen
+    // Open since the bar was first drawn, so drawn over the window without asking the browser.
+    const [first, setFirst] = useState(open)
+    if (first && !open) setFirst(false)
+    const setOpen = (next: boolean) => {
+        if (fullscreen === undefined) setOwnOpen(next)
+        onFullscreenChange?.(next)
+    }
+
+    const slotKind = kindOf(visualizer)
+    const [ownKind, setOwnKind] = useState<SoundKind>(slotKind ?? 'spectrum')
+    const kind = visualizerKind ?? ownKind
+    const setKind = (next: SoundKind) => {
+        if (visualizerKind === undefined) setOwnKind(next)
+        onVisualizerKindChange?.(next)
+    }
+
+    const deck: Deck = {
+        words,
+        title,
+        subtitle,
+        artist,
+        album,
+        year,
+        trackNumber,
+        trackCount,
+        artwork,
+        playing,
+        onPlayingChange,
+        at: scrub ?? position,
+        duration,
+        onSeek,
+        onScrub: setScrub,
+        buffered,
+        waveform,
+        level: muted ? 0 : volume,
+        muted,
+        onMutedChange,
+        onVolumeChange,
+        onPrevious,
+        onNext,
+        shuffle,
+        onShuffleChange,
+        repeat,
+        onRepeatChange,
+        extra,
+    }
+    const Bar = grown ? BARS[layout] : LineBar
 
     return (
-        <div
-            ref={bar}
-            data-slot="media-bar"
-            data-playing={playing || undefined}
-            data-size={large ? 'large' : 'line'}
-            className={cn(
-                '@container relative flex border-t border-border-strong bg-sidebar text-sidebar-foreground',
-                !large && 'flex-col justify-center',
-                className,
-            )}
-            style={large ? { height: shown } : { minHeight: shown }}
-        >
-            {resizable && held.changeable && (
-                <ResizeHandle
-                    target={bar}
-                    size={Math.max(shown, box.height)}
-                    onSize={held.set}
-                    onReset={held.reset}
-                    min={minSize}
-                    max={top}
-                    axis="y"
-                    grows={-1}
-                    follow={false}
-                    label={words.resize}
-                    className="absolute inset-x-0 top-0 my-0 -translate-y-1/2"
+        <>
+            <div
+                ref={bar}
+                data-slot="media-bar"
+                data-playing={playing || undefined}
+                data-layout={layout}
+                data-size={grown ? 'grown' : 'line'}
+                className={cn(
+                    '@container relative flex flex-col border-t border-border-strong bg-sidebar text-sidebar-foreground',
+                    !grown && 'justify-center',
+                    className,
+                )}
+                style={grown ? { height: shown } : { minHeight: shown }}
+            >
+                {resizable && held.changeable && (
+                    <ResizeHandle
+                        target={bar}
+                        size={Math.max(shown, box.height)}
+                        onSize={held.set}
+                        onReset={held.reset}
+                        min={minSize}
+                        max={top}
+                        axis="y"
+                        grows={-1}
+                        follow={false}
+                        label={words.resize}
+                        className="absolute inset-x-0 top-0 z-10 my-0 -translate-y-1/2"
+                    />
+                )}
+                <div className={cn(grown && 'min-h-0 flex-1 overflow-hidden')}>
+                    <Bar
+                        deck={deck}
+                        height={shown}
+                        width={box.width}
+                        visualizer={open ? undefined : visualizer}
+                        onFullscreen={expandable ? () => setOpen(true) : undefined}
+                    />
+                </div>
+            </div>
+            {open && (
+                <MediaFullscreen
+                    deck={deck}
+                    layout={layout}
+                    visualizer={visualizer}
+                    pickable={slotKind !== undefined}
+                    kind={kind}
+                    onKindChange={setKind}
+                    onLeave={() => setOpen(false)}
+                    native={!first}
                 />
             )}
-            {large ? (
-                <>
-                    {wide && <div className="aspect-square h-full shrink-0">{cover}</div>}
-                    <div className="flex min-w-0 flex-1 flex-col">
-                        <div className="relative min-h-0 flex-1 overflow-hidden">
-                            {visualizer !== undefined && (
-                                <div data-slot="media-bar-visualizer" className="absolute inset-0 opacity-30">
-                                    {visualizer}
-                                </div>
-                            )}
-                            <div className="pointer-events-none relative flex h-full flex-col justify-end gap-3 px-5 pt-4 pb-1">
-                                <div className="flex min-w-0 items-end gap-4">
-                                    {!wide && (
-                                        <div
-                                            className="shrink-0 overflow-hidden rounded-mini"
-                                            style={{ width: narrowCover(shown, width), height: narrowCover(shown, width) }}
-                                        >
-                                            {cover}
-                                        </div>
-                                    )}
-                                    <div className="min-w-0 flex-1">
-                                        {(trackNumber !== undefined || album !== undefined || year !== undefined) && (
-                                            <GroupLabel className="truncate text-primary-ink">
-                                                <MetaLine
-                                                    inline
-                                                    items={[
-                                                        trackNumber === undefined ? undefined : words.trackOf(trackNumber, trackCount),
-                                                        album,
-                                                        year,
-                                                    ]}
-                                                />
-                                            </GroupLabel>
-                                        )}
-                                        <p
-                                            className={cn(
-                                                'truncate font-semibold tracking-tight text-foreground',
-                                                shown >= TALL && wide ? 'text-stat' : 'text-page',
-                                            )}
-                                        >
-                                            <span className="pointer-events-auto">{title}</span>
-                                        </p>
-                                        {(artist ?? subtitle) !== undefined && (
-                                            <p
-                                                className={cn(
-                                                    'truncate text-muted-foreground',
-                                                    shown >= TALL && wide ? 'text-base' : 'text-sm',
-                                                )}
-                                            >
-                                                <span className="pointer-events-auto">{artist ?? subtitle}</span>
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="pointer-events-auto">{seekRow(waveform ?? [])}</div>
-                            </div>
-                        </div>
-                        <div className={cn('flex h-shell-foot shrink-0 items-center gap-1 px-3', !wide && 'justify-center')}>
-                            {shuffleButton}
-                            {repeatButton}
-                            {transport}
-                            {wide && (
-                                <>
-                                    <div className="flex-1" />
-                                    {volumeControl(width - shown < 480)}
-                                </>
-                            )}
-                            {extras}
-                        </div>
-                    </div>
-                </>
-            ) : (
-                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1.5 px-3 py-2.5 @2xl:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)_minmax(0,1fr)] @2xl:gap-x-6 @2xl:py-2">
-                    <div className="flex min-w-0 items-center gap-3">
-                        <div
-                            className="size-10 shrink-0 overflow-hidden rounded-mini @2xl:size-12"
-                            style={wide && shown - 17 > 48 ? { width: shown - 17, height: shown - 17 } : undefined}
-                        >
-                            {cover}
-                        </div>
-                        <div className="min-w-0">
-                            <p className="truncate text-sm font-medium text-foreground">{title}</p>
-                            {line !== undefined && <p className="truncate text-xs text-muted-foreground">{line}</p>}
-                        </div>
-                    </div>
-
-                    <div className="flex min-w-0 items-center justify-end gap-1 @2xl:flex-col @2xl:items-stretch @2xl:justify-center @2xl:gap-0.5">
-                        <div className="flex items-center justify-center gap-1 @2xl:gap-2">
-                            {wide && shuffleButton}
-                            {transport}
-                            {wide && repeatButton}
-                            {!wide && extras}
-                        </div>
-                        {wide && seekRow()}
-                    </div>
-
-                    {!wide && <div className="col-span-2">{seekRow()}</div>}
-
-                    {wide && (
-                        <div className="flex min-w-0 items-center justify-end gap-2">
-                            {volumeControl(false)}
-                            {extras}
-                        </div>
-                    )}
-                </div>
-            )}
-        </div>
+        </>
     )
-}
-
-/** The cover's side beside the large title on a narrow bar, growing with the bar's height and leaving the title room. */
-function narrowCover(height: number, width: number): number {
-    return Math.round(Math.max(56, Math.min(128, width * 0.28, height - 160)))
 }
 
 /**

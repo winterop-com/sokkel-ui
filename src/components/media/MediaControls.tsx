@@ -23,24 +23,47 @@ export function toneButton(tone: MediaTone): string | undefined {
 export const SEEK_STEP = 5
 export const SEEK_LARGE_STEP = 30
 
+/**
+ * How large the transport is drawn: `sm` in a bar, `md` in a tall panel, `lg` on a screen of its
+ * own, such as a fullscreen now-playing view.
+ */
+export type TransportSize = 'sm' | 'md' | 'lg'
+
+const PLAY_SIZE: Record<TransportSize, string | undefined> = {
+    sm: undefined,
+    md: undefined,
+    lg: "size-14 rounded-surface [&_svg:not([class*='size-'])]:size-6",
+}
+
+const TRANSPORT_SIZE: Record<TransportSize, string | undefined> = {
+    sm: undefined,
+    md: undefined,
+    lg: "[&_svg:not([class*='size-'])]:size-5",
+}
+
 /** The play button at the center of the transport, the one filled control. */
 export function PlayButton({
     playing,
     onToggle,
     tone = 'surface',
+    size = 'sm',
     words,
 }: {
     playing: boolean
     onToggle: () => void
     tone?: MediaTone
+    size?: TransportSize
     words: { play: string; pause: string }
 }) {
     return (
         <Button
-            size="icon"
+            size={size === 'sm' ? 'icon' : 'icon-lg'}
             aria-label={playing ? words.pause : words.play}
             onClick={onToggle}
-            className={cn(tone === 'overlay' && 'bg-terminal-foreground text-terminal hover:bg-terminal-foreground/85 hover:text-terminal')}
+            className={cn(
+                tone === 'overlay' && 'bg-terminal-foreground text-terminal hover:bg-terminal-foreground/85 hover:text-terminal',
+                PLAY_SIZE[size],
+            )}
         >
             {playing ? <Pause className="fill-current" aria-hidden /> : <Play className="translate-x-px fill-current" aria-hidden />}
         </Button>
@@ -54,6 +77,7 @@ export function TransportButton({
     disabled = false,
     pressed,
     tone = 'surface',
+    size = 'sm',
     className,
     children,
 }: {
@@ -63,13 +87,14 @@ export function TransportButton({
     /** For a toggle such as shuffle; drawn in the accent while on. */
     pressed?: boolean
     tone?: MediaTone
+    size?: TransportSize
     className?: string
     children: ReactNode
 }) {
     return (
         <Button
             variant="ghost"
-            size="icon-sm"
+            size={size === 'sm' ? 'icon-sm' : size === 'md' ? 'icon' : 'icon-lg'}
             aria-label={label}
             aria-pressed={pressed}
             onClick={onClick}
@@ -78,6 +103,7 @@ export function TransportButton({
                 toneButton(tone),
                 pressed === true && (tone === 'overlay' ? 'text-terminal-accent' : 'text-primary-ink'),
                 pressed === false && tone === 'surface' && 'text-muted-foreground',
+                TRANSPORT_SIZE[size],
                 className,
             )}
         >
@@ -88,7 +114,8 @@ export function TransportButton({
 
 /**
  * The seek slider between the elapsed and the remaining time. Given the track's `waveform`, the
- * slider is drawn as that waveform with the played part filled, and the same keys move it.
+ * slider is drawn as that waveform with the played part filled, and the same keys move it; its
+ * bars widen once it is 64 pixels tall. `size="lg"` writes the times larger, for a screen of its own.
  */
 export function Position({
     at,
@@ -99,6 +126,9 @@ export function Position({
     onScrub,
     tone = 'surface',
     waveform,
+    height = 40,
+    size = 'sm',
+    className,
 }: {
     at: number
     duration: number
@@ -109,16 +139,24 @@ export function Position({
     tone?: MediaTone
     /** The track's levels from start to end, each from 0 to 1. */
     waveform?: readonly number[]
+    /** The waveform's height in pixels. */
+    height?: number
+    size?: 'sm' | 'lg'
+    className?: string
 }) {
     const valueText = (value: number) => `${formatTime(value)} / ${formatTime(duration)}`
+    const broad = height >= 64
+    const time = size === 'lg' ? 'w-14' : 'w-11'
     return (
         <div
             className={cn(
-                'flex items-center gap-2 font-mono text-xs tabular-nums',
+                'flex items-center font-mono tabular-nums',
+                size === 'lg' ? 'gap-4 text-sm' : 'gap-2 text-xs',
                 tone === 'overlay' ? 'text-terminal-foreground' : 'text-muted-foreground',
+                className,
             )}
         >
-            <span className="w-11 shrink-0 text-right">{formatTime(at)}</span>
+            <span className={cn(time, 'shrink-0 text-right')}>{formatTime(at)}</span>
             {waveform === undefined ? (
                 <MediaSlider
                     tone={tone}
@@ -144,13 +182,14 @@ export function Position({
                     largeStep={SEEK_LARGE_STEP}
                     onSeek={onSeek}
                     onScrub={onScrub}
-                    height={40}
-                    barWidth={3}
+                    height={height}
+                    barWidth={broad ? 4 : 3}
                     barGap={2}
+                    barRadius={broad ? 2 : 1}
                     className="min-w-0 flex-1 aria-disabled:opacity-50"
                 />
             )}
-            <span className={cn('w-11 shrink-0', tone === 'overlay' && 'text-terminal-muted')}>{formatRemaining(at, duration)}</span>
+            <span className={cn(time, 'shrink-0', tone === 'overlay' && 'text-terminal-muted')}>{formatRemaining(at, duration)}</span>
         </div>
     )
 }
