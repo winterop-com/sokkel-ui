@@ -31,10 +31,9 @@ reaches them all. Done in waves, one PR each.
   components, then `src/rules.test.ts` rejects raw layout in a story, so a layout fix lands once.
 - **The graph editor's node menu** as a real menu, opened at the pointer: `DropdownMenuContent`
   takes an `anchor` now.
-- **Dark contrast for every theme.** 0.4.0 lifted secondary text, borders, inputs, cards and
-  popovers in the default theme's dark scheme (and amber, which shares it). Paper, contrast, tokyo,
-  vinyl, cassette and neon get the same lift, each from its own colors, with their baselines
-  retaken.
+- **Dark contrast for every theme: done.** Paper, tokyo, vinyl, cassette and neon take default's
+  0.4.0 lift in their own colors: secondary and faint text, borders and inputs at least as light as
+  default's, cards a step up and popovers above them. Contrast was already past that lift.
 - **Theme candidates.** Choose which of the candidate sets in `.storybook/candidates.json` to keep,
   fold those into `tokens/tokens.json` named for how they look, and drop the rest.
 
