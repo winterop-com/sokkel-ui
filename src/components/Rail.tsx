@@ -2,6 +2,7 @@ import { Tooltip } from '@base-ui/react/tooltip'
 import { ChevronRight, PanelLeftClose, PanelLeftOpen, type LucideIcon } from 'lucide-react'
 import {
     Fragment,
+    useContext,
     useId,
     useRef,
     useState,
@@ -11,9 +12,11 @@ import {
     type ReactElement,
     type ReactNode,
 } from 'react'
+import { createPortal } from 'react-dom'
 
 import { cn } from '../lib/cn'
 import { usePanelSize } from '../hooks/use-panel-size'
+import { ShellFootCell } from './shell-context'
 import { ResizeHandle } from './ResizeHandle'
 import { Count } from './Count'
 import { Dot } from './Dot'
@@ -51,7 +54,8 @@ export interface RailGroup {
 
 /**
  * The app's left navigation: a head with the app's mark and the collapse control, the groups,
- * and a foot cell the shell's foot strip lines up with.
+ * and a foot cell the shell's foot strip lines up with. In a shell with a `bottom` strip, such as
+ * a player, the foot cell is drawn at the window's bottom edge under that strip, as wide as the rail.
  *
  * Expanded, an entry is its icon and its label, and the active one wears a slim accent bar on
  * its left edge over a faint wash. Collapsed, the rail is icons alone, each naming itself in a
@@ -136,6 +140,7 @@ export function Rail({
     defaultFlyout?: string
 }) {
     const aside = useRef<HTMLElement>(null)
+    const footCell = useContext(ShellFootCell)
     const unread = labels.unread ?? 'Unread'
     const [ownOpen, setOwnOpen] = useState<string[]>(() => [
         ...new Set([
@@ -251,8 +256,18 @@ export function Rail({
                         </nav>
                     ))}
                 </div>
-                {foot !== undefined && <div className="flex h-shell-foot shrink-0 items-stretch border-t border-border-strong">{foot}</div>}
+                {foot !== undefined && footCell === null && (
+                    <div className="flex h-shell-foot shrink-0 items-stretch border-t border-border-strong">{foot}</div>
+                )}
             </aside>
+            {foot !== undefined &&
+                footCell !== null &&
+                createPortal(
+                    <div className="flex h-shell-foot w-full items-stretch border-t border-r border-border-strong bg-sidebar text-sidebar-foreground">
+                        {foot}
+                    </div>,
+                    footCell,
+                )}
             {!collapsed && resizable && held.changeable && (
                 <ResizeHandle
                     target={aside}
