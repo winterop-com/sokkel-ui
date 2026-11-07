@@ -15,8 +15,12 @@
  * - A stream (a microphone) is never routed to the speakers, which would echo it.
  */
 
-/** What a visualizer can listen to: a media element that plays, or a live stream such as a microphone's. */
-export type SoundSource = HTMLMediaElement | MediaStream
+/**
+ * What a visualizer can listen to: a media element that plays, a live stream such as a microphone's,
+ * or an analyser on an app's own audio graph, for an app that has wired its element itself (an
+ * element can be wired to Web Audio only once).
+ */
+export type SoundSource = HTMLMediaElement | MediaStream | AnalyserNode
 
 /** How the analyser reads: its transform's size, its own smoothing, and the decibels its bytes span. */
 export interface AnalyserSettings {
@@ -40,6 +44,11 @@ export function isStream(source: SoundSource): source is MediaStream {
     return typeof (source as MediaStream).getAudioTracks === 'function'
 }
 
+/** Whether a source is an analyser an app hands over from its own graph, told by its shape. */
+export function isAnalyser(source: SoundSource): source is AnalyserNode {
+    return typeof (source as AnalyserNode).getByteFrequencyData === 'function'
+}
+
 /**
  * Whether Web Audio may read an element playing `src`: anything from the page's own origin, a
  * blob or data URL, a stream set as its `srcObject` (no `src` at all), or a cross-origin URL the
@@ -59,12 +68,17 @@ export function canRead(src: string, crossOrigin: string | null, pageOrigin: str
 
 /** Whether a source can be listened to now: a stream with a live audio track, or a readable element. */
 export function readable(source: SoundSource, pageOrigin: string): boolean {
+    if (isAnalyser(source)) return true
     if (isStream(source)) return source.getAudioTracks().some((track) => track.readyState === 'live')
     return canRead(source.currentSrc || source.src, source.crossOrigin, pageOrigin)
 }
 
-/** Whether a source is sounding: an element playing, or a stream with a live, enabled audio track. */
+/**
+ * Whether a source is sounding: an element playing, or a stream with a live, enabled audio track.
+ * An analyser cannot say, so the visualizer takes `playing` for one.
+ */
 export function sounding(source: SoundSource): boolean {
+    if (isAnalyser(source)) return true
     if (isStream(source)) return source.getAudioTracks().some((track) => track.readyState === 'live' && track.enabled)
     return !source.paused && !source.ended
 }
@@ -146,7 +160,7 @@ export function createSoundGraph(host: SoundGraphHost = BROWSER): SoundGraph {
         return source
     }
 
-    function analyserOn(graph: AudioContext, settings: Partial<AnalyserSettings>): AnalyserNode {
+    function analyserOn(graph: BaseAudioContext, settings: Partial<AnalyserSettings>): AnalyserNode {
         const chosen = { ...ANALYSER, ...settings }
         const analyser = graph.createAnalyser()
         analyser.fftSize = chosen.fftSize
@@ -158,6 +172,12 @@ export function createSoundGraph(host: SoundGraphHost = BROWSER): SoundGraph {
 
     return {
         async listen(source, settings = {}) {
+            if (isAnalyser(source)) {
+                // The app's own graph and context: an analyser of ours hangs off its analyser, with our settings.
+                const analyser = analyserOn(source.context, settings)
+                source.connect(analyser)
+                return { analyser, sampleRate: source.context.sampleRate, release: () => source.disconnect(analyser) }
+            }
             if (!readable(source, host.origin())) return null
             const graph = await whenRunning()
             // Read again: the element may have moved to a source it cannot read while the context woke.

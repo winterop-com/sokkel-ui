@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
-import { ANALYSER, canRead, createSoundGraph, isStream, readable, sounding, type SoundGraphHost, type SoundSource } from './sound-source'
+import {
+    ANALYSER,
+    canRead,
+    createSoundGraph,
+    isAnalyser,
+    isStream,
+    readable,
+    sounding,
+    type SoundGraphHost,
+    type SoundSource,
+} from './sound-source'
 
 /** A node that remembers what it is connected to. */
 class FakeNode {
@@ -251,5 +261,35 @@ describe('the sound graph', () => {
         expect(analyser.minDecibels).toBe(ANALYSER.minDecibels)
         expect(analyser.maxDecibels).toBe(ANALYSER.maxDecibels)
         expect(tap?.sampleRate).toBe(48_000)
+    })
+})
+
+describe("an analyser from an app's own graph", () => {
+    /** The app's analyser, on the app's context, already hearing its element. */
+    function owned() {
+        const context = new FakeContext('running', new WeakSet())
+        const analyser = Object.assign(new FakeAnalyser(), { context, getByteFrequencyData: () => undefined })
+        return { context, analyser: analyser as unknown as AnalyserNode }
+    }
+
+    it('is told by its shape, and is always readable', () => {
+        const { analyser } = owned()
+        expect(isAnalyser(analyser)).toBe(true)
+        expect(isAnalyser(element())).toBe(false)
+        expect(isAnalyser(stream())).toBe(false)
+        expect(readable(analyser, PAGE)).toBe(true)
+    })
+
+    it('is listened to through an analyser of ours on its own context, never wiring an element or making a context', async () => {
+        const { graph, contexts } = setup()
+        const { context, analyser } = owned()
+        const tap = await graph.listen(analyser)
+        expect(contexts).toEqual([])
+        expect(context.elementSources).toEqual([])
+        expect(tap?.sampleRate).toBe(48_000)
+        expect(tap?.analyser.fftSize).toBe(ANALYSER.fftSize)
+        expect((analyser as unknown as FakeNode).outputs.has(tap?.analyser as unknown as FakeNode)).toBe(true)
+        tap?.release()
+        expect((analyser as unknown as FakeNode).outputs.size).toBe(0)
     })
 })

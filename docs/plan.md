@@ -102,7 +102,9 @@ token, faint behind text when it is a backdrop. It moves only while the source s
 is in view; paused, hidden or unmounted it holds still with no frame loop running, and a still frame
 of levels or samples draws without any audio. Each element is wired to the page's one audio context
 once, on its first play, and is heard through it from then on, so cross-origin media needs CORS; a
-source Web Audio cannot read is never wired and draws at rest. The `bar-visualizer` primitive, a
+source Web Audio cannot read is never wired and draws at rest. An app that wires its element into
+its own audio graph passes an `AnalyserNode` from it instead, with `playing`, since an element can
+be wired only once. The `bar-visualizer` primitive, a
 voice input's level bars, is drawn by it.
 
 ## Validation

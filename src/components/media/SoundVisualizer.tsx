@@ -23,7 +23,7 @@ import {
     type SoundKind,
     type SoundRange,
 } from './sound'
-import { isStream, soundGraph, sounding, type SoundSource, type SoundTap } from './sound-source'
+import { isAnalyser, isStream, soundGraph, sounding, type SoundSource, type SoundTap } from './sound-source'
 
 export type { SoundAlign, SoundFrame, SoundKind, SoundRange } from './sound'
 export type { SoundSource } from './sound-source'
@@ -33,9 +33,12 @@ export interface SoundVisualizerProps {
      * What to listen to: a media element (audio or video) or a live stream such as a microphone's.
      * An element is wired to Web Audio on its first play and is heard through it from then on, so
      * a cross-origin one needs `crossOrigin` and a server that allows it; one without is never
-     * wired and draws at rest.
+     * wired and draws at rest. An app that wires its element into its own audio graph passes an
+     * `AnalyserNode` from that graph instead, as an element can be wired only once.
      */
     source?: SoundSource | null
+    /** For an analyser source, whether what it hears is playing; an element or a stream says so itself. */
+    playing?: boolean
     /** A still picture drawn instead of listening: levels for a spectrum, an area or a ring, samples for a wave. */
     frame?: SoundFrame
     kind?: SoundKind
@@ -78,6 +81,7 @@ export interface SoundVisualizerProps {
  */
 export function SoundVisualizer({
     source = null,
+    playing = true,
     frame,
     kind = 'spectrum',
     align = 'bottom',
@@ -110,8 +114,8 @@ export function SoundVisualizer({
     const low = range.low
     const high = range.high
     useLayoutEffect(() => {
-        engine.current?.set({ kind, align, bands, range: { low, high }, floor, ceiling, barWidth, backdrop, frame })
-    }, [kind, align, bands, low, high, floor, ceiling, barWidth, backdrop, frame])
+        engine.current?.set({ kind, align, bands, range: { low, high }, floor, ceiling, barWidth, backdrop, frame, playing })
+    }, [kind, align, bands, low, high, floor, ceiling, barWidth, backdrop, frame, playing])
 
     useLayoutEffect(() => {
         engine.current?.restyle()
@@ -150,6 +154,8 @@ interface Look {
     barWidth: number | undefined
     backdrop: boolean
     frame: SoundFrame | undefined
+    /** Whether an analyser source is playing; elements and streams say so themselves. */
+    playing: boolean
 }
 
 interface Engine {
@@ -184,6 +190,7 @@ function createEngine(canvas: HTMLCanvasElement, box: HTMLDivElement): Engine {
         barWidth: undefined,
         backdrop: false,
         frame: undefined,
+        playing: true,
     }
     let width = 0
     let height = 0
@@ -205,6 +212,11 @@ function createEngine(canvas: HTMLCanvasElement, box: HTMLDivElement): Engine {
     let quietPainted = false
 
     const count = () => look.bands ?? autoBands(look.kind, width, height)
+
+    /** Whether the source sounds now; an analyser has no events, so `playing` says for one. */
+    const heard = (from: SoundSource) => (isAnalyser(from) ? look.playing : sounding(from))
+    /** The events that say a source started or stopped; an analyser has none. */
+    const eventsOf = (from: SoundSource): readonly string[] => (isAnalyser(from) ? [] : isStream(from) ? STREAM_EVENTS : ELEMENT_EVENTS)
 
     const setState = (state: 'still' | 'live' | 'unreadable') => {
         box.dataset.state = state
@@ -276,7 +288,7 @@ function createEngine(canvas: HTMLCanvasElement, box: HTMLDivElement): Engine {
         if (!(quiet && quietPainted) && look.frame === undefined) paint()
         quietPainted = quiet
         // After the sound stops the bands keep falling until they rest, then the loop ends.
-        if (sounding(source) || !quiet) {
+        if (heard(source) || !quiet) {
             request = requestAnimationFrame(step)
         } else {
             last = 0
@@ -317,7 +329,7 @@ function createEngine(canvas: HTMLCanvasElement, box: HTMLDivElement): Engine {
 
     const changed = () => {
         if (source === null) return
-        if (sounding(source)) {
+        if (heard(source)) {
             soundGraph().wake()
             if (tap === null && asking !== source) void acquire(source)
         }
@@ -326,10 +338,7 @@ function createEngine(canvas: HTMLCanvasElement, box: HTMLDivElement): Engine {
 
     const detach = () => {
         stop()
-        if (source !== null) {
-            const events = isStream(source) ? STREAM_EVENTS : ELEMENT_EVENTS
-            for (const name of events) source.removeEventListener(name, changed)
-        }
+        if (source !== null) for (const name of eventsOf(source)) source.removeEventListener(name, changed)
         tap?.release()
         tap = null
         levels = []
@@ -368,8 +377,7 @@ function createEngine(canvas: HTMLCanvasElement, box: HTMLDivElement): Engine {
             source = next
             setState('still')
             if (source !== null) {
-                const events = isStream(source) ? STREAM_EVENTS : ELEMENT_EVENTS
-                for (const name of events) source.addEventListener(name, changed)
+                for (const name of eventsOf(source)) source.addEventListener(name, changed)
                 changed()
             }
             paint()
