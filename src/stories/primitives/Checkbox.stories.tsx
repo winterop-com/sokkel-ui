@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { Checkbox } from '../../components/ui/checkbox'
-import { Field, FieldContent, FieldDescription, FieldLabel, FieldLegend, FieldSet } from '../../components/ui/field'
-import { Label } from '../../components/ui/label'
-import { Row, Stack } from '../../components/Layout'
+import { Checkbox } from '@winterop-com/sokkel-ui/primitives/checkbox'
+import { Field, FieldContent, FieldDescription, FieldLabel, FieldLegend, FieldSet } from '@winterop-com/sokkel-ui/primitives/field'
+import { Label } from '@winterop-com/sokkel-ui/primitives/label'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
 
 const meta: Meta = { title: 'Primitives/Inputs/Checkbox', parameters: { frame: 'column' } }

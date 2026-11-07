@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { Stack } from '../../components/Layout'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
 import { pictureOf } from '../fixtures/portraits'
-import { PersonRow } from '../../components/PersonRow'
-import { NativeSelect, NativeSelectOption } from '../../components/ui/native-select'
+import { PersonRow } from '@winterop-com/sokkel-ui/PersonRow'
+import { NativeSelect, NativeSelectOption } from '@winterop-com/sokkel-ui/primitives/native-select'
 
 const meta: Meta = { title: 'Patterns/Person row', parameters: { frame: 'column' } }
 export default meta

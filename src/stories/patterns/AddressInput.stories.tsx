@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { AddressInput, type Address } from '../../components/AddressInput'
-import { Stack } from '../../components/Layout'
+import { AddressInput, type Address } from '@winterop-com/sokkel-ui/AddressInput'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /** A field of recipients as chips: empty, filled, with an address that is not one, and bare in a form. */
 function Ground({ children }: { children: React.ReactNode }) {

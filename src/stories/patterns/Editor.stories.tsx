@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { CodeEditor } from '../../components/CodeEditor'
-import { Field } from '../../components/Field'
-import { SourceSheet } from '../../components/SourceSheet'
-import { Button } from '../../components/ui/button'
-import { Columns, Row, Stack } from '../../components/Layout'
+import { CodeEditor } from '@winterop-com/sokkel-ui/CodeEditor'
+import { Field } from '@winterop-com/sokkel-ui/Field'
+import { SourceSheet } from '@winterop-com/sokkel-ui/SourceSheet'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /** Editing code in a form or a pane, and a record's source one press away. */
 function Ground({ children }: { children: React.ReactNode }) {

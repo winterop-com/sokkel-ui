@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { BookOpen, CalendarClock, Play, Server, Webhook, Workflow } from 'lucide-react'
 import type { ComponentType } from 'react'
-import { Stack } from '../../components/Layout'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
 
 import {
     NavigationMenu,
@@ -11,7 +11,7 @@ import {
     NavigationMenuList,
     NavigationMenuTrigger,
     navigationMenuTriggerStyle,
-} from '../../components/ui/navigation-menu'
+} from '@winterop-com/sokkel-ui/primitives/navigation-menu'
 
 const meta: Meta = { title: 'Primitives/Menus/NavigationMenu', parameters: { frame: 'padded' } }
 export default meta

@@ -2,9 +2,9 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 import type { DateRange } from 'react-day-picker'
 
-import { Button } from '../../components/ui/button'
-import { Calendar } from '../../components/ui/calendar'
-import { Row, Stack } from '../../components/Layout'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { Calendar } from '@winterop-com/sokkel-ui/primitives/calendar'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
 
 const MONTH = new Date(2026, 10, 1)

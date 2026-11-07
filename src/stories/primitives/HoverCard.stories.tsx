@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Server } from 'lucide-react'
 
-import { StatusChip } from '../../components/StatusChip'
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '../../components/ui/hover-card'
-import { Row, Stack } from '../../components/Layout'
+import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@winterop-com/sokkel-ui/primitives/hover-card'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 const meta: Meta = { title: 'Primitives/Overlays/HoverCard', parameters: { frame: 'padded' } }
 export default meta

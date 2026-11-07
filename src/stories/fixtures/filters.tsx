@@ -1,6 +1,6 @@
-import type { FilterOption } from '../../components/FilterChip'
-import { PersonAvatar } from '../../components/PersonAvatar'
-import { StatusChip, type Status } from '../../components/StatusChip'
+import type { FilterOption } from '@winterop-com/sokkel-ui/FilterChip'
+import { PersonAvatar } from '@winterop-com/sokkel-ui/PersonAvatar'
+import { StatusChip, type Status } from '@winterop-com/sokkel-ui/StatusChip'
 import { pictureOf } from './portraits'
 
 /** The values the toolbars' filter chips offer, from Tidevann's workspace. */

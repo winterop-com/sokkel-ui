@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { DashboardGrid } from '../../components/dashboard/DashboardGrid'
-import { RadarPanel, type RadarSpoke } from '../../components/dashboard/RadarPanel'
-import type { PanelSeries } from '../../components/dashboard/series'
+import { DashboardGrid } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
+import { RadarPanel, type RadarSpoke } from '@winterop-com/sokkel-ui-charts/dashboard/RadarPanel'
+import type { PanelSeries } from '@winterop-com/sokkel-ui-charts/dashboard/series'
 import { PROJECT_SCORES, PROJECT_SPOKES, PROJECT_TARGET } from '../fixtures/scores'
 import { Ground } from './Ground'
 

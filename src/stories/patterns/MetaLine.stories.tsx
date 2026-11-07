@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { Stack } from '../../components/Layout'
-import { MediaCard } from '../../components/media/MediaCard'
-import { MetaLine } from '../../components/MetaLine'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
+import { MediaCard } from '@winterop-com/sokkel-ui/media/MediaCard'
+import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
 import { Artwork } from '../fixtures/Artwork'
 
 const meta: Meta = { title: 'Patterns/Meta line', parameters: { frame: 'column' } }

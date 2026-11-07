@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-import { Stack } from '../../components/Layout'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /**
  * A part shown with a small caption naming the variant or state it is in: above it, or under it

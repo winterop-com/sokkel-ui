@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { MediaCard, MediaGrid } from '../../components/media/MediaCard'
-import { formatTime } from '../../components/media/time'
-import { MetaLine } from '../../components/MetaLine'
-import { DropdownMenuItem } from '../../components/ui/dropdown-menu'
+import { MediaCard, MediaGrid } from '@winterop-com/sokkel-ui/media/MediaCard'
+import { formatTime } from '@winterop-com/sokkel-ui/media/time'
+import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
+import { DropdownMenuItem } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
 import { Artwork, type Cover } from '../fixtures/Artwork'
-import { Stack } from '../../components/Layout'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /**
  * Albums and videos as a grid of covers: square for an album, wide for a film or an episode, with

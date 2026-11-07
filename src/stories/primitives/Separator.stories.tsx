@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { PageHeader } from '../../components/PageHeader'
-import { Separator } from '../../components/ui/separator'
-import { Row, Stack } from '../../components/Layout'
+import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
+import { Separator } from '@winterop-com/sokkel-ui/primitives/separator'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 const meta: Meta = { title: 'Primitives/Display/Separator', parameters: { frame: 'column' } }
 export default meta

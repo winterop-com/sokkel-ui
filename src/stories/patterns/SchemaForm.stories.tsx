@@ -2,10 +2,10 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { RotateCw } from 'lucide-react'
 import { useState } from 'react'
 
-import { DialogShell } from '../../components/DialogShell'
-import type { JsonSchema } from '../../components/schema/read'
-import { SchemaForm, SchemaIssueCount, useSchemaForm, type ServerIssue } from '../../components/schema/SchemaForm'
-import type { Path } from '../../components/schema/validate'
+import { DialogShell } from '@winterop-com/sokkel-ui/DialogShell'
+import type { JsonSchema } from '@winterop-com/sokkel-ui/schema/read'
+import { SchemaForm, SchemaIssueCount, useSchemaForm, type ServerIssue } from '@winterop-com/sokkel-ui/schema/SchemaForm'
+import type { Path } from '@winterop-com/sokkel-ui/schema/validate'
 
 /**
  * A form drawn from a JSON Schema: a field per property, checked against the schema as it is

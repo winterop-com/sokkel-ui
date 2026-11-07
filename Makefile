@@ -15,10 +15,10 @@ tokens: ## Build tokens.css and the theme files from tokens/tokens.json
 storybook: ## Run the Storybook dev server on port 6106
 	bun run storybook
 
-build: ## Build the library into dist/
+build: ## Build every package into its dist/
 	bun run build
 
-size: build ## Build the size apps against the library and hold each to its budget
+size: build ## Build the size apps against the packages and hold each to its budget
 	bun run size
 
 typecheck: ## Check the types
@@ -54,4 +54,4 @@ layout: storybook-build ## Check that no story scrolls sideways at the narrow wi
 	bunx playwright test e2e/layout.spec.ts
 
 clean: ## Remove what the builds made
-	rm -rf dist storybook-static test-results
+	rm -rf packages/*/dist storybook-static test-results

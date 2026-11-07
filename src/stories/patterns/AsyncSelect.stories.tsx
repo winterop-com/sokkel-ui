@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState, type ReactNode } from 'react'
 
-import { AsyncSelect } from '../../components/AsyncSelect'
-import { Field } from '../../components/Field'
-import { Row } from '../../components/Layout'
+import { AsyncSelect } from '@winterop-com/sokkel-ui/AsyncSelect'
+import { Field } from '@winterop-com/sokkel-ui/Field'
+import { Row } from '@winterop-com/sokkel-ui/Layout'
 
 /**
  * A select whose options come from a search, for lists too long to send whole: datasets on a

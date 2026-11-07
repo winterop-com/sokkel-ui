@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { ChoiceList } from '../../components/ChoiceList'
-import { PersonRow } from '../../components/PersonRow'
+import { ChoiceList } from '@winterop-com/sokkel-ui/ChoiceList'
+import { PersonRow } from '@winterop-com/sokkel-ui/PersonRow'
 import { pictureOf } from '../fixtures/portraits'
 
 const meta: Meta = { title: 'Primitives/Inputs/Choice list', parameters: { frame: 'column' } }

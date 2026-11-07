@@ -9,7 +9,7 @@
         "preview": "vite preview"
     },
     "dependencies": {
-        "@winterop-com/sokkel-ui": "file:../..",
+        "@winterop-com/sokkel-ui": "file:../../packages/core",
         "lucide-react": "^1.68.0",
         "react": "^19.3.1",
         "react-dom": "^19.3.1"

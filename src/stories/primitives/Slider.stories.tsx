@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState, type ReactNode } from 'react'
 
-import { Field, FieldDescription, FieldLabel } from '../../components/ui/field'
-import { Slider } from '../../components/ui/slider'
-import { Row, Stack } from '../../components/Layout'
+import { Field, FieldDescription, FieldLabel } from '@winterop-com/sokkel-ui/primitives/field'
+import { Slider } from '@winterop-com/sokkel-ui/primitives/slider'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 function Labeled({ label, children }: { label: string; children: ReactNode }) {
     return (

@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { FileGrid, FileList, sortFiles, type FileEntry, type FileSort } from '../../components/FileList'
-import { FilePreview } from '../../components/FilePreview'
-import { Section } from '../../components/Section'
-import { DropZone, UploadTray, type Upload } from '../../components/UploadTray'
+import { FileGrid, FileList, sortFiles, type FileEntry, type FileSort } from '@winterop-com/sokkel-ui/FileList'
+import { FilePreview } from '@winterop-com/sokkel-ui/FilePreview'
+import { Section } from '@winterop-com/sokkel-ui/Section'
+import { DropZone, UploadTray, type Upload } from '@winterop-com/sokkel-ui/UploadTray'
 import { CHART, HARBOR_DUSK, LIGHTHOUSE, PINES } from '../fixtures/photos'
-import { Columns, Row, Stack } from '../../components/Layout'
+import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /** A folder's files as rows and as tiles, a file's contents by kind, and uploads on their way. */
 const FILES: FileEntry[] = [

@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { ImageLightbox } from '../../components/ImageLightbox'
-import { ShortcutsDialog } from '../../components/ShortcutsDialog'
-import { ThemeToggle } from '../../components/ThemeToggle'
-import { TooltipProvider } from '../../components/ui/tooltip'
-import { Row, Stack } from '../../components/Layout'
+import { ImageLightbox } from '@winterop-com/sokkel-ui/ImageLightbox'
+import { ShortcutsDialog } from '@winterop-com/sokkel-ui/ShortcutsDialog'
+import { ThemeToggle } from '@winterop-com/sokkel-ui/ThemeToggle'
+import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /** The app-level controls: the scheme switch, the shortcuts dialog, an image that opens full screen. */
 function Ground({ children }: { children: React.ReactNode }) {

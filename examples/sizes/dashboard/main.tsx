@@ -1,16 +1,16 @@
 /** A dashboard app: Tidevann's job runs board, with stat and chart panels on ECharts, the range controls and a table of runs. */
 
-import '@winterop-com/sokkel-ui/styles.css'
+import './styles.css'
 
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
-import { Chart } from '@winterop-com/sokkel-ui/chart/Chart'
-import { ChartFrame } from '@winterop-com/sokkel-ui/chart/ChartFrame'
-import { BarPanel } from '@winterop-com/sokkel-ui/dashboard/BarPanel'
+import { Chart } from '@winterop-com/sokkel-ui-charts/Chart'
+import { ChartFrame } from '@winterop-com/sokkel-ui-charts/ChartFrame'
+import { BarPanel } from '@winterop-com/sokkel-ui-charts/dashboard/BarPanel'
 import { DashboardRow } from '@winterop-com/sokkel-ui/dashboard/DashboardRow'
 import { StatPanel } from '@winterop-com/sokkel-ui/dashboard/StatPanel'
 import type { Threshold } from '@winterop-com/sokkel-ui/dashboard/thresholds'
 import { RefreshControl, TimeRangePicker, type TimeRangeValue } from '@winterop-com/sokkel-ui/dashboard/TimeRange'
-import { TimeSeriesPanel } from '@winterop-com/sokkel-ui/dashboard/TimeSeriesPanel'
+import { TimeSeriesPanel } from '@winterop-com/sokkel-ui-charts/dashboard/TimeSeriesPanel'
 import { VariablesBar, type Variable } from '@winterop-com/sokkel-ui/dashboard/VariablesBar'
 import { type DataColumn, DataTable } from '@winterop-com/sokkel-ui/DataTable'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'

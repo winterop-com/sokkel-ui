@@ -1,6 +1,6 @@
 /** Fixed, neutral rows for the data table stories: Tidevann's runs, as many as a story asks for, the same every time. */
 
-import type { Status } from '../../components/StatusChip'
+import type { Status } from '@winterop-com/sokkel-ui/StatusChip'
 
 /** A seeded generator, so every story draws the same rows. */
 function seeded(seed: number): () => number {

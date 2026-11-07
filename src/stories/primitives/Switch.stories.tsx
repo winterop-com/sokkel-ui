@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { Field, FieldContent, FieldDescription, FieldLabel } from '../../components/ui/field'
-import { Switch } from '../../components/ui/switch'
-import { Row, Stack } from '../../components/Layout'
+import { Field, FieldContent, FieldDescription, FieldLabel } from '@winterop-com/sokkel-ui/primitives/field'
+import { Switch } from '@winterop-com/sokkel-ui/primitives/switch'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
 
 const meta: Meta = { title: 'Primitives/Inputs/Switch', parameters: { frame: 'column' } }

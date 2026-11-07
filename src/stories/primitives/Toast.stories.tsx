@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useEffect } from 'react'
 
-import { Toaster, createToastManager } from '../../components/ui/toast'
+import { Toaster, createToastManager } from '@winterop-com/sokkel-ui/primitives/toast'
 
 const meta: Meta = { title: 'Primitives/Feedback/Toast', parameters: { frame: 'padded' } }
 export default meta

@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Files, Play, Settings } from 'lucide-react'
 
-import { FileList, type FileEntry } from '../../components/FileList'
-import { PageHeader } from '../../components/PageHeader'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs'
-import { Row, Stack } from '../../components/Layout'
+import { FileList, type FileEntry } from '@winterop-com/sokkel-ui/FileList'
+import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@winterop-com/sokkel-ui/primitives/tabs'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 const meta: Meta = { title: 'Primitives/Navigation/Tabs', parameters: { frame: 'column' } }
 export default meta

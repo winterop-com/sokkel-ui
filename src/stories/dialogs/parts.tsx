@@ -1,12 +1,12 @@
-import { PageHeader } from '../../components/PageHeader'
+import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import type { ReactNode } from 'react'
 
-import { type DataColumn, DataTable } from '../../components/DataTable'
-import { StatusChip, type Status } from '../../components/StatusChip'
-import { Button } from '../../components/ui/button'
+import { type DataColumn, DataTable } from '@winterop-com/sokkel-ui/DataTable'
+import { StatusChip, type Status } from '@winterop-com/sokkel-ui/StatusChip'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { TidevannMark } from '../fixtures/TidevannMark'
-import { AppBar } from '../../components/AppBar'
-import { Stack } from '../../components/Layout'
+import { AppBar } from '@winterop-com/sokkel-ui/AppBar'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
 
 interface Run {
     id: number

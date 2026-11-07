@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Archive, Download, FolderInput, Tag, Trash2 } from 'lucide-react'
 
-import { IconButton } from '../../components/IconButton'
-import { Row } from '../../components/Layout'
-import { SelectionBar } from '../../components/SelectionBar'
-import { Button } from '../../components/ui/button'
+import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
+import { Row } from '@winterop-com/sokkel-ui/Layout'
+import { SelectionBar } from '@winterop-com/sokkel-ui/SelectionBar'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 
 const meta: Meta = { title: 'Patterns/Selection bar', parameters: { frame: 'column' } }
 export default meta

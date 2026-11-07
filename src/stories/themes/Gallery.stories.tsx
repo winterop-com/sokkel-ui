@@ -1,14 +1,14 @@
-import { PageHeader } from '../../components/PageHeader'
+import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { Progress, ProgressLabel, ProgressValue } from '../../components/ui/progress'
-import { cn } from '../../lib/cn'
-import { Skeleton } from '../../components/ui/skeleton'
+import { Progress, ProgressLabel, ProgressValue } from '@winterop-com/sokkel-ui/primitives/progress'
+import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { Skeleton } from '@winterop-com/sokkel-ui/primitives/skeleton'
 
-import type { ThemeOption, ThemeSettings } from '../../components/ThemePicker'
+import type { ThemeOption, ThemeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
 import { fromGlobals, THEMES, toGlobals } from './themes'
-import { Columns, Row, Stack } from '../../components/Layout'
+import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /**
  * Every theme the toolbar offers, side by side: each tile is the same small sample of Tidevann in

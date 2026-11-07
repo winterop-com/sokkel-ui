@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { Stack } from '../../components/Layout'
-import { TextField } from '../../components/TextField'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
+import { TextField } from '@winterop-com/sokkel-ui/TextField'
 
 const meta: Meta = { title: 'Primitives/Inputs/Text field', parameters: { frame: 'column' } }
 export default meta

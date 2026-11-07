@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { FileJson, FileSpreadsheet } from 'lucide-react'
 import { useState } from 'react'
 
-import { AttachmentList, type AttachmentFile } from '../../components/AttachmentList'
+import { AttachmentList, type AttachmentFile } from '@winterop-com/sokkel-ui/AttachmentList'
 import { HARBOR_DUSK } from '../fixtures/photos'
 
 const meta: Meta = { title: 'Patterns/Attachment list', parameters: { frame: 'column' } }

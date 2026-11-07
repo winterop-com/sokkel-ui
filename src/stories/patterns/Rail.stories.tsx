@@ -1,4 +1,4 @@
-import { IconButton } from '../../components/IconButton'
+import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import {
     Bell,
@@ -19,13 +19,13 @@ import {
 } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { AccountMenu } from '../../components/AccountMenu'
-import { PersonAvatar } from '../../components/PersonAvatar'
-import { Rail, type RailEntry, type RailGroup } from '../../components/Rail'
-import { TooltipProvider } from '../../components/ui/tooltip'
+import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
+import { PersonAvatar } from '@winterop-com/sokkel-ui/PersonAvatar'
+import { Rail, type RailEntry, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
+import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
-import { Row } from '../../components/Layout'
+import { Row } from '@winterop-com/sokkel-ui/Layout'
 
 /**
  * The app's navigation down the left of the window. As a strip it is the narrow column a team chat

@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { CircleCheck, Clock, Repeat } from 'lucide-react'
 
-import { Badge } from '../../components/ui/badge'
-import { Row, Stack } from '../../components/Layout'
+import { Badge } from '@winterop-com/sokkel-ui/primitives/badge'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
 
 const meta: Meta = { title: 'Primitives/Display/Badge', parameters: { frame: 'column' } }

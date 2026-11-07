@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { Row, Stack } from '../../components/Layout'
-import { StarButton } from '../../components/StarButton'
-import { TooltipProvider } from '../../components/ui/tooltip'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { StarButton } from '@winterop-com/sokkel-ui/StarButton'
+import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { Specimen } from '../fixtures/Specimen'
 
 /**

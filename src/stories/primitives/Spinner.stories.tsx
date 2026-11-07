@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { Badge } from '../../components/ui/badge'
-import { Button } from '../../components/ui/button'
-import { Spinner } from '../../components/ui/spinner'
-import { Row } from '../../components/Layout'
+import { Badge } from '@winterop-com/sokkel-ui/primitives/badge'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { Spinner } from '@winterop-com/sokkel-ui/primitives/spinner'
+import { Row } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
 
 const meta: Meta = { title: 'Primitives/Display/Spinner', parameters: { frame: 'column' } }

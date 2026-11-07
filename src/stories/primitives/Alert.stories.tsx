@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { CircleAlert, Info, RefreshCw } from 'lucide-react'
 
-import { Alert, AlertAction, AlertDescription, AlertTitle } from '../../components/ui/alert'
-import { Button } from '../../components/ui/button'
-import { Stack } from '../../components/Layout'
+import { Alert, AlertAction, AlertDescription, AlertTitle } from '@winterop-com/sokkel-ui/primitives/alert'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
 
 const meta: Meta = { title: 'Primitives/Display/Alert', parameters: { frame: 'padded' } }
 export default meta

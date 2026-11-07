@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Play } from 'lucide-react'
 import { useState } from 'react'
 
-import { Button } from '../../components/ui/button'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import {
     Dialog,
     DialogClose,
@@ -12,10 +12,10 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-} from '../../components/ui/dialog'
-import { Input } from '../../components/ui/input'
-import { Label } from '../../components/ui/label'
-import { Row, Stack } from '../../components/Layout'
+} from '@winterop-com/sokkel-ui/primitives/dialog'
+import { Input } from '@winterop-com/sokkel-ui/primitives/input'
+import { Label } from '@winterop-com/sokkel-ui/primitives/label'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 const meta: Meta = { title: 'Primitives/Overlays/Dialog', parameters: { frame: 'padded' } }
 export default meta

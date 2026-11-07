@@ -1,0 +1,46 @@
+{
+    "name": "@winterop-com/sokkel-ui-maps",
+    "version": "0.9.0",
+    "description": "Maps on maplibre, with layers, legends, popups and basemaps, for sokkel-ui.",
+    "license": "SEE LICENSE IN LICENSE",
+    "repository": {
+        "type": "git",
+        "url": "git+ssh://git@github.com/winterop-com/sokkel-ui.git",
+        "directory": "packages/maps"
+    },
+    "files": [
+        "LICENSE",
+        "THIRD_PARTY_NOTICES.md",
+        "dist",
+        "src",
+        "!src/**/*.test.*"
+    ],
+    "type": "module",
+    "sideEffects": [
+        "*.css"
+    ],
+    "exports": {
+        "./styles.css": "./src/styles.css",
+        "./*": {
+            "types": "./dist/*.d.ts",
+            "import": "./dist/*.js"
+        }
+    },
+    "publishConfig": {
+        "registry": "https://npm.pkg.github.com"
+    },
+    "scripts": {
+        "build": "vite build && tsc -p tsconfig.build.json",
+        "prepack": "cp ../../LICENSE ../../THIRD_PARTY_NOTICES.md ."
+    },
+    "dependencies": {
+        "@types/geojson": "^7946.0.16",
+        "lucide-react": "^1.68.0",
+        "maplibre-gl": "^6.7.0"
+    },
+    "peerDependencies": {
+        "@winterop-com/sokkel-ui": "workspace:*",
+        "react": "^19.2.0",
+        "react-dom": "^19.2.0"
+    }
+}

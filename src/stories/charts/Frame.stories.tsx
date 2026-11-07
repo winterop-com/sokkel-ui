@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { Chart, chartLegend } from '../../components/chart/Chart'
-import { ChartFrame } from '../../components/chart/ChartFrame'
-import { ChartLegend } from '../../components/chart/ChartLegend'
-import type { ChartSpec } from '../../components/chart/kinds'
+import { Chart, chartLegend } from '@winterop-com/sokkel-ui-charts/Chart'
+import { ChartFrame } from '@winterop-com/sokkel-ui-charts/ChartFrame'
+import { ChartLegend } from '@winterop-com/sokkel-ui-charts/ChartLegend'
+import type { ChartSpec } from '@winterop-com/sokkel-ui-charts/kinds'
 import { JOB_STEP_ROWS, STEP_COLORS, STEP_ROWS } from '../fixtures/dayRows'
 import { Ground } from './Ground'
 

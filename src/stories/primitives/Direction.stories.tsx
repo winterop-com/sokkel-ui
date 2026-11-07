@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
 
-import { Button } from '../../components/ui/button'
-import { DirectionProvider, useDirection } from '../../components/ui/direction'
-import { Slider } from '../../components/ui/slider'
-import { Row, Stack } from '../../components/Layout'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { DirectionProvider, useDirection } from '@winterop-com/sokkel-ui/primitives/direction'
+import { Slider } from '@winterop-com/sokkel-ui/primitives/slider'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /**
  * The text direction Base UI components read for keyboard and layout. The provider sets it;

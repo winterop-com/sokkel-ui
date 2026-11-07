@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { DependencyGraph, type LineageEdge, type LineageNode } from '../../components/graph/DependencyGraph'
+import { DependencyGraph, type LineageEdge, type LineageNode } from '@winterop-com/sokkel-ui-graph/DependencyGraph'
 import { Stage } from './Frame'
 
 /** Where the juniper project's order data comes from and goes: datasets read and written by jobs. */

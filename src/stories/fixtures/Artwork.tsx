@@ -1,6 +1,6 @@
 import { useId } from 'react'
 
-import { cn } from '../../lib/cn'
+import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 
 /** The shapes a cover is drawn with. */
 export type Motif = 'sun' | 'rings' | 'bands' | 'dots' | 'wave' | 'peaks'

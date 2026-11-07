@@ -1,13 +1,13 @@
-import { Empty, EmptyContent, EmptyHeader, EmptyTitle } from '../../components/ui/empty'
+import { Empty, EmptyContent, EmptyHeader, EmptyTitle } from '@winterop-com/sokkel-ui/primitives/empty'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Plus } from 'lucide-react'
 
-import { DescriptionList } from '../../components/DescriptionList'
-import { PageState } from '../../components/PageState'
-import { ProseText } from '../../components/ProseText'
-import { Unfoldable } from '../../components/Unfoldable'
-import { Button } from '../../components/ui/button'
-import { Stack } from '../../components/Layout'
+import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
+import { PageState } from '@winterop-com/sokkel-ui/PageState'
+import { ProseText } from '@winterop-com/sokkel-ui/ProseText'
+import { Unfoldable } from '@winterop-com/sokkel-ui/Unfoldable'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /** The states a read lands in, and the small text pieces that carry a server's words. */
 function Ground({ children }: { children: React.ReactNode }) {

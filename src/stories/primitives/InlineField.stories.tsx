@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { AddressInput, type Address } from '../../components/AddressInput'
-import { InlineField } from '../../components/InlineField'
-import { Stack } from '../../components/Layout'
-import { Input } from '../../components/ui/input'
-import { NativeSelect, NativeSelectOption } from '../../components/ui/native-select'
+import { AddressInput, type Address } from '@winterop-com/sokkel-ui/AddressInput'
+import { InlineField } from '@winterop-com/sokkel-ui/InlineField'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
+import { Input } from '@winterop-com/sokkel-ui/primitives/input'
+import { NativeSelect, NativeSelectOption } from '@winterop-com/sokkel-ui/primitives/native-select'
 
 const meta: Meta = { title: 'Primitives/Inputs/Inline field', parameters: { frame: 'column' } }
 export default meta

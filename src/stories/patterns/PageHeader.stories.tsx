@@ -2,12 +2,12 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Download, ListPlus, Play, RotateCcw, Upload } from 'lucide-react'
 import { useState } from 'react'
 
-import { MetaLine } from '../../components/MetaLine'
-import { PageHeader } from '../../components/PageHeader'
-import { StarButton } from '../../components/StarButton'
-import { StatusChip } from '../../components/StatusChip'
-import { Button } from '../../components/ui/button'
-import { TooltipProvider } from '../../components/ui/tooltip'
+import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
+import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
+import { StarButton } from '@winterop-com/sokkel-ui/StarButton'
+import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 
 /**
  * The head of a page: its title with what is known about it under it, and its actions at the end,

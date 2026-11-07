@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { format } from 'date-fns'
 import { CalendarDays } from 'lucide-react'
 
-import { DueText } from '../../components/DueText'
-import { Stack } from '../../components/Layout'
+import { DueText } from '@winterop-com/sokkel-ui/DueText'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
 
 const meta: Meta = { title: 'Patterns/Due text', parameters: { frame: 'column' } }
 export default meta

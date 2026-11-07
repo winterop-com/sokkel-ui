@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { DescriptionList } from '../../components/DescriptionList'
-import { formatDuration } from '../../components/graph/GraphNode'
-import { RunGraph, type RunStep } from '../../components/graph/RunGraph'
-import { Inspector, InspectorSection } from '../../components/Inspector'
-import { Fill } from '../../components/Layout'
-import { StatusChip } from '../../components/StatusChip'
+import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
+import { formatDuration } from '@winterop-com/sokkel-ui-graph/GraphNode'
+import { RunGraph, type RunStep } from '@winterop-com/sokkel-ui-graph/RunGraph'
+import { Inspector, InspectorSection } from '@winterop-com/sokkel-ui/Inspector'
+import { Fill } from '@winterop-com/sokkel-ui/Layout'
+import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 import { Stage } from './Frame'
 import { FAILED, RUNNING } from './data'
 

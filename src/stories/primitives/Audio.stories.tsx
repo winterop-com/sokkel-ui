@@ -1,11 +1,11 @@
-import { IconButton } from '../../components/IconButton'
+import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Mic, Pause } from 'lucide-react'
 import { useState } from 'react'
 
-import { BarVisualizer } from '../../components/ui/bar-visualizer'
-import { AudioScrubber, StaticWaveform, Waveform } from '../../components/ui/waveform'
-import { Row, Stack } from '../../components/Layout'
+import { BarVisualizer } from '@winterop-com/sokkel-ui/primitives/bar-visualizer'
+import { AudioScrubber, StaticWaveform, Waveform } from '@winterop-com/sokkel-ui/primitives/waveform'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /**
  * Audio shown as bars: a recording's waveform, a scrubber over a voice note, and the level bars a

@@ -13,8 +13,8 @@ import {
     TableProperties,
 } from 'lucide-react'
 
-import type { BlockGroup, PipelineBlock } from '../../../components/graph/blocks'
-import type { JsonSchema } from '../../../components/schema/read'
+import type { BlockGroup, PipelineBlock } from '@winterop-com/sokkel-ui-graph/blocks'
+import type { JsonSchema } from '@winterop-com/sokkel-ui/schema/read'
 
 /** What passes along an edge of the Tidevann pipelines. */
 export type Data = 'records' | 'files'

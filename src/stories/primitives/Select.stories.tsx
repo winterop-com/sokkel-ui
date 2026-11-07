@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { Row, Stack } from '../../components/Layout'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
 
 import {
@@ -11,7 +11,7 @@ import {
     SelectSeparator,
     SelectTrigger,
     SelectValue,
-} from '../../components/ui/select'
+} from '@winterop-com/sokkel-ui/primitives/select'
 
 const STATES = [
     { value: 'succeeded', label: 'succeeded' },

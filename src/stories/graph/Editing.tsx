@@ -1,10 +1,10 @@
-import { TextField } from '../../components/TextField'
+import { TextField } from '@winterop-com/sokkel-ui/TextField'
 import { useState } from 'react'
 
-import type { GraphPointer } from '../../components/graph/GraphCanvas'
-import { PipelineGraph, type PipelineStep } from '../../components/graph/PipelineGraph'
-import { Fill, Stack } from '../../components/Layout'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem } from '../../components/ui/dropdown-menu'
+import type { GraphPointer } from '@winterop-com/sokkel-ui-graph/GraphCanvas'
+import { PipelineGraph, type PipelineStep } from '@winterop-com/sokkel-ui-graph/PipelineGraph'
+import { Fill, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
 import { Stage } from './Frame'
 import { NIGHTLY_EXPORT } from './data'
 

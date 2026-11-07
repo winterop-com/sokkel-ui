@@ -1,7 +1,7 @@
 import type { Feature, FeatureCollection, MultiPolygon, Point, Polygon } from 'geojson'
 
-import type { Bounds } from '../../components/map/geometry'
-import type { Grid } from '../../components/map/GridLayer'
+import type { Bounds } from '@winterop-com/sokkel-ui-maps/geometry'
+import type { Grid } from '@winterop-com/sokkel-ui-maps/GridLayer'
 import placeFixture from './fixtures/sierra-leone-places.json'
 import regionFixture from './fixtures/sierra-leone-regions.json'
 
