@@ -4,7 +4,7 @@
  */
 
 /** A seeded generator, so every story draws the same numbers. */
-function seeded(seed: number): () => number {
+export function seeded(seed: number): () => number {
     let state = seed >>> 0
     return () => {
         state = (state * 1664525 + 1013904223) >>> 0
