@@ -157,10 +157,10 @@ appear in Storybook.
 
 ### Gauges
 
-| Kind    | For                                                                                     | Reads                                                                                | Story                         |
-| ------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ----------------------------- |
-| `gauge` | One figure on a dial, in the color of the step it reaches, in the shape `dial` picks    | `y`, `aggregate`, `steps`, `min`, `max`, `dial`, `total`, `colors`, `format`, `unit` | Charts/Targets, Charts/Gauges |
-| `rings` | Concentric rings, one per label of `series` or per `y` field, each filling to its share | `y`, `series`, `aggregate`, `seriesOrder`, `min`, `max`, `colors`, `format`, `unit`  | Charts/Gauges                 |
+| Kind    | For                                                                                     | Reads                                                                                | Story         |
+| ------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------- |
+| `gauge` | One figure on a dial, in the color of the step it reaches, in the shape `dial` picks    | `y`, `aggregate`, `steps`, `min`, `max`, `dial`, `total`, `colors`, `format`, `unit` | Charts/Gauges |
+| `rings` | Concentric rings, one per label of `series` or per `y` field, each filling to its share | `y`, `series`, `aggregate`, `seriesOrder`, `min`, `max`, `colors`, `format`, `unit`  | Charts/Gauges |
 
 The dials: `arc`, the default, an open dial filled to the figure with the steps as a thin band
 outside it; `ring`, the same as a progress ring over a full circle; `half`, a half circle low
