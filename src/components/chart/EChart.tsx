@@ -39,8 +39,21 @@ function seriesOf(option: EChartsCoreOption): Series[] {
     return (Array.isArray(series) ? series : [series]) as Series[]
 }
 
-/** The option as drawn: ECharts' own legend hidden behind ours, series hidden by name, animation off when asked, the tooltip on the page body. */
-function compose(option: EChartsCoreOption, hidden: ReadonlySet<string>, animate: boolean): EChartsCoreOption {
+/** Below this height, in pixels, a value axis up the side draws two steps rather than five, so its labels and lines keep apart. */
+const SHORT = 140
+
+/** A value axis with two steps, where the option leaves the count to the chart. */
+function fewerSteps(axis: unknown): unknown {
+    if (Array.isArray(axis)) return axis.map(fewerSteps)
+    const box = axis as { type?: unknown; splitNumber?: unknown } | undefined
+    return box?.type === 'value' && box.splitNumber === undefined ? { ...box, splitNumber: 2 } : axis
+}
+
+/**
+ * The option as drawn: ECharts' own legend hidden behind ours, series hidden by name, animation off
+ * when asked, the tooltip on the page body, and fewer steps up the side of a short chart.
+ */
+function compose(option: EChartsCoreOption, hidden: ReadonlySet<string>, animate: boolean, short = false): EChartsCoreOption {
     const legend = (Array.isArray(option.legend) ? option.legend[0] : option.legend) as Record<string, unknown> | undefined
     // The tooltip lives on the page body, so a panel's clipping or the chart above it never covers it.
     const onBody = (tooltip: unknown) => ({ appendTo: 'body', ...(tooltip as Record<string, unknown>) })
@@ -49,6 +62,7 @@ function compose(option: EChartsCoreOption, hidden: ReadonlySet<string>, animate
     return {
         ...option,
         ...(tooltip === undefined ? {} : { tooltip }),
+        ...(short && option.yAxis !== undefined ? { yAxis: fewerSteps(option.yAxis) } : {}),
         animation: animate && option.animation !== false,
         legend: { show: false, ...legend, selected: Object.fromEntries([...hidden].map((name) => [name, false])) },
     }
@@ -129,6 +143,7 @@ export function EChart({
     const [ready, setReady] = useState(false)
     // Whether the current option is drawn; marked on the element, so a screenshot waits for it.
     const [settled, setSettled] = useState(false)
+    const [short, setShort] = useState(false)
     const resolved = useMemo(() => (look === null ? null : typeof option === 'function' ? option(look) : option), [look, option])
 
     const themed = useRef<ChartLook | null>(null)
@@ -145,7 +160,11 @@ export function EChart({
             if (!live || el === null || themed.current === null) return
             chart.current = init(el, chartTheme(themed.current), { renderer: 'canvas' })
             made.current = partsLoaded()
-            observer = new ResizeObserver(() => chart.current?.resize())
+            setShort(el.clientHeight < SHORT)
+            observer = new ResizeObserver(() => {
+                chart.current?.resize()
+                setShort(el.clientHeight < SHORT)
+            })
             observer.observe(el)
             setReady(true)
         })
@@ -180,13 +199,13 @@ export function EChart({
                 chart.current = init(el, chartTheme(themed.current), { renderer: 'canvas' })
                 made.current = partsLoaded()
             }
-            chart.current?.setOption(compose(resolved, hidden, animate), { notMerge: true })
+            chart.current?.setOption(compose(resolved, hidden, animate, short), { notMerge: true })
             setSettled(true)
         })
         return () => {
             live = false
         }
-    }, [ready, resolved, hidden, animate])
+    }, [ready, resolved, hidden, animate, short])
 
     useEffect(() => {
         const instance = chart.current
