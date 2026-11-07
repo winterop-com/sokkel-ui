@@ -1,3 +1,4 @@
+import { PageHeader } from '../../components/PageHeader'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { Feature } from 'geojson'
 import { useState } from 'react'
@@ -46,15 +47,13 @@ function Rainfall() {
     const drawn = resolveBasemap(basemap, dark)
     return (
         <div className="flex min-h-svh flex-col gap-3 bg-background p-4 text-foreground md:h-svh md:flex-row md:gap-4 md:p-6">
-            <header className="md:hidden">
-                <h1 className="text-page font-medium">Rainfall</h1>
-                <p className="text-sm text-muted-foreground">Monthly totals, 2025</p>
-            </header>
+            <div className="md:hidden">
+                <PageHeader title="Rainfall" description="Monthly totals, 2025" />
+            </div>
             <aside className="order-2 flex shrink-0 flex-col gap-2 md:order-1 md:w-72 md:overflow-y-auto">
-                <header className="hidden md:block">
-                    <h1 className="text-page font-medium">Rainfall</h1>
-                    <p className="text-sm text-muted-foreground">Monthly totals, 2025</p>
-                </header>
+                <div className="hidden md:block">
+                    <PageHeader title="Rainfall" description="Monthly totals, 2025" />
+                </div>
                 <MapLayerList
                     layers={[
                         {

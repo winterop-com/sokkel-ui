@@ -73,12 +73,10 @@ export function Behind({ action, onAction, children }: { action?: string; onActi
             </header>
             {children ?? (
                 <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-auto p-6">
-                    <Stack gap="2xs">
-                        <PageHeader title="Import orders" />
-                        <p className="text-sm text-muted-foreground">
-                            Loads the monthly orders file into the warehouse, every night at 02:00 UTC.
-                        </p>
-                    </Stack>
+                    <PageHeader
+                        title="Import orders"
+                        description="Loads the monthly orders file into the warehouse, every night at 02:00 UTC."
+                    />
                     <DataTable variant="list" columns={RUN_COLUMNS} rows={RUNS} rowKey={(run) => String(run.id)} className="max-w-3xl" />
                 </main>
             )}
