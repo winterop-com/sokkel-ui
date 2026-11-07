@@ -28,6 +28,17 @@ fails when one grows past its budget in `examples/sizes/budget.json` or bundles 
 use, so a forms page never carries ECharts, maplibre, React Flow, CodeMirror or Mermaid. A change
 that grows an app on purpose raises its budget in the same PR.
 
+## Themes
+
+Every theme is defined in `tokens/tokens.json`, and `scripts/build-tokens.ts` writes it out.
+`tokens.css`, which `styles.css` carries, holds the default theme and the density levels, so an app
+that picks no theme needs nothing more. Every other theme is a file of its own in
+`src/styles/themes/`, exported as `@winterop-com/sokkel-ui/themes/<name>.css`, with its light and
+dark tokens on `html[data-theme]` for the whole app and on `[data-theme-scope]` for one element,
+such as a theme picker's swatch; `themes.css` imports them all. An app imports the files of the
+themes it offers and sets one on `<html data-theme>`, so its CSS carries no theme it never shows.
+Storybook imports `themes.css`, so its toolbar offers every theme.
+
 ## Typefaces
 
 Plex Sans and Plex Mono are the default. Geist and Geist Mono are the one alternative a theme sets,
