@@ -1,3 +1,4 @@
+import { TextField } from '../components/TextField'
 import { StatusItem, StatusLine } from '../components/StatusLine'
 import { TopBar } from '../components/TopBar'
 import type { Meta, StoryObj } from '@storybook/react-vite'
@@ -8,7 +9,6 @@ import { AccountMenu } from '../components/AccountMenu'
 import { CodeField } from '../components/CodeField'
 import { DataTable, type DataColumn } from '../components/DataTable'
 import { DescriptionList } from '../components/DescriptionList'
-import { Field } from '../components/Field'
 import { FilterChip } from '../components/FilterChip'
 import { PageHeader } from '../components/PageHeader'
 import { Problem } from '../components/Problem'
@@ -20,8 +20,6 @@ import { Section } from '../components/Section'
 import { SwitchField } from '../components/SwitchField'
 import { Page, Shell } from '../components/Shell'
 import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import { Textarea } from '../components/ui/textarea'
 import { TidevannMark } from './fixtures/TidevannMark'
 import { Columns } from '../components/Layout'
 
@@ -293,17 +291,22 @@ function ServiceForm() {
                 <Section title="Service">
                     <Columns gap="lg" className="@container">
                         <CodeField id="code" value={code} onChange={setCode} />
-                        <Field id="base-url" label="Base URL" hint="base_url" keyHint help="Where the service answers, without /v1.">
-                            <Input
-                                id="base-url"
-                                className="font-mono"
-                                defaultValue="https://api.example.org"
-                                aria-describedby="base-url-help"
-                            />
-                        </Field>
-                        <Field id="description" label="Description" className="lg:col-span-2">
-                            <Textarea id="description" defaultValue="The orders API, read by the import jobs." />
-                        </Field>
+                        <TextField
+                            id="base-url"
+                            label="Base URL"
+                            hint="base_url"
+                            keyHint
+                            help="Where the service answers, without /v1."
+                            mono
+                            defaultValue="https://api.example.org"
+                        />
+                        <TextField
+                            id="description"
+                            label="Description"
+                            className="lg:col-span-2"
+                            multiline
+                            defaultValue="The orders API, read by the import jobs."
+                        />
                         <div className="lg:col-span-2">
                             <SwitchField
                                 id="verify-tls"

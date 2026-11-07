@@ -1,3 +1,4 @@
+import { TextField } from '../../components/TextField'
 import { PersonRow } from '../../components/PersonRow'
 import { PageHeader } from '../../components/PageHeader'
 import { CircleCheck, Database, FileText, Filter, Globe, Mail, RotateCw, ShieldCheck, Table2, Upload, Webhook } from 'lucide-react'
@@ -16,7 +17,7 @@ import { TreeSelect } from '../../components/TreeSelect'
 import { Button } from '../../components/ui/button'
 import { Textarea } from '../../components/ui/textarea'
 import { describeCron } from '../../lib/cron'
-import { Behind, TextField, wait } from './parts'
+import { Behind, wait } from './parts'
 import { Row } from '../../components/Layout'
 
 export function Rename() {
@@ -126,9 +127,15 @@ export function Refused() {
                         }
                     />
                 )}
-                <Field id="run-note" label="Note" hint="Shown on the run">
-                    <Textarea id="run-note" value={note} onChange={(event) => setNote(event.target.value)} rows={2} />
-                </Field>
+                <TextField
+                    id="run-note"
+                    label="Note"
+                    hint="Shown on the run"
+                    multiline
+                    value={note}
+                    onChange={(value) => setNote(value)}
+                    rows={2}
+                />
             </DialogShell>
         </Behind>
     )

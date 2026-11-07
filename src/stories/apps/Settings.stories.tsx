@@ -1,10 +1,12 @@
+import { SliderField } from '../../components/SliderField'
+import { Field } from '../../components/Field'
+import { TextField } from '../../components/TextField'
 import { IconButton } from '../../components/IconButton'
 import { PageHeader } from '../../components/PageHeader'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Keyboard, Palette, Search as SearchIcon, Server, Settings2, User } from 'lucide-react'
 import { useState } from 'react'
 
-import { Field } from '../../components/Field'
 import { NavBar } from '../../components/NavBar'
 import { Section } from '../../components/Section'
 import { Segmented } from '../../components/Segmented'
@@ -13,47 +15,11 @@ import { SwitchField } from '../../components/SwitchField'
 import { ThemeToggle } from '../../components/ThemeToggle'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
-import { Slider } from '../../components/ui/slider'
 import { Switch } from '../../components/ui/switch'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { PersonAvatar } from '../../components/PersonAvatar'
-import { Columns, Row, Stack } from '../../components/Layout'
-
-/** A number setting on a slider, its value written beside it. */
-function SliderSetting({
-    label,
-    value,
-    min,
-    max,
-    step,
-    unit,
-    onChange,
-}: {
-    label: string
-    value: number
-    min: number
-    max: number
-    step: number
-    unit: string
-    onChange: (value: number) => void
-}) {
-    return (
-        <Row gap="md" className="w-56">
-            <Slider
-                aria-label={label}
-                value={[value]}
-                min={min}
-                max={max}
-                step={step}
-                onValueChange={(next) => onChange(Array.isArray(next) ? next[0] : (next as number))}
-            />
-            <span className="w-16 shrink-0 text-right font-mono text-xs text-muted-foreground tabular-nums">
-                {value} {unit}
-            </span>
-        </Row>
-    )
-}
+import { Columns, Stack } from '../../components/Layout'
 
 /** Tidevann's preferences, from the start page to how long the server keeps its runs. */
 function usePreferences(): SettingsGroup[] {
@@ -125,8 +91,10 @@ function usePreferences(): SettingsGroup[] {
                             description: 'How long a running job waits before its log is redrawn.',
                             note: 'Raise it on a slow connection; the log still arrives whole.',
                             control: (
-                                <SliderSetting
+                                <SliderField
+                                    id="live-update-delay"
                                     label="Live update delay"
+                                    inline
                                     value={delay}
                                     min={0}
                                     max={2000}
@@ -210,8 +178,10 @@ function usePreferences(): SettingsGroup[] {
                             title: 'Code size',
                             description: 'The size of logs and step definitions.',
                             control: (
-                                <SliderSetting
+                                <SliderField
+                                    id="code-size"
                                     label="Code size"
+                                    inline
                                     value={codeSize}
                                     min={11}
                                     max={16}
@@ -417,12 +387,15 @@ function SettingsApp({ opening }: { opening?: Opening }) {
                         </Section>
                         <Section title="Workspace" actions={<Button size="sm">Save</Button>}>
                             <Columns gap="lg">
-                                <Field id="name" label="Name">
-                                    <Input id="name" defaultValue="Tidevann" />
-                                </Field>
-                                <Field id="url" label="Address" hint="base_url" keyHint>
-                                    <Input id="url" className="font-mono" defaultValue="https://tidevann.example.org" />
-                                </Field>
+                                <TextField id="name" label="Name" defaultValue="Tidevann" />
+                                <TextField
+                                    id="url"
+                                    label="Address"
+                                    hint="base_url"
+                                    keyHint
+                                    mono
+                                    defaultValue="https://tidevann.example.org"
+                                />
                                 <Field id="schedule-clock" label="Schedule clock" className="w-full">
                                     <Segmented
                                         id="schedule-clock"
