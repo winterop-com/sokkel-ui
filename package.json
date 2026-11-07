@@ -1,6 +1,6 @@
 {
     "name": "@winterop-com/sokkel-ui",
-    "version": "0.6.1",
+    "version": "0.7.0",
     "description": "A shared React component library: tokens and themes, Base UI primitives, app patterns, and their stories.",
     "license": "SEE LICENSE IN LICENSE",
     "repository": {
