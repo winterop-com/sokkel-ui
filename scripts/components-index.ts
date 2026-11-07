@@ -32,6 +32,7 @@ const CORE_AREAS: Record<string, string> = {
     StatusLine: 'Frame and navigation',
     SubNav: 'Frame and navigation',
     TableOfContents: 'Frame and navigation',
+    SchemeToggle: 'Frame and navigation',
     ThemePicker: 'Frame and navigation',
     ThemeToggle: 'Frame and navigation',
     TopBar: 'Frame and navigation',
@@ -445,6 +446,13 @@ export function render(entries: Entry[]): string {
         'A row is one module. Its first name is the main component; the others are the parts it exports',
         'with it, imported from the same path. Hooks are under `@winterop-com/sokkel-ui/hooks/*` and helpers',
         'under `@winterop-com/sokkel-ui/lib/*`; the chart kinds and the fields they read are in `docs/charts.md`.',
+        '',
+        'Every app has the same frame: `Shell` with a `Rail` of its places, the command palette on ⌘K or',
+        "Ctrl+K through `Shell`'s `palette` (`placeCommands` and `appearanceCommands` in",
+        "`@winterop-com/sokkel-ui/lib/commands`), an `AccountMenu` in the rail's foot, `local` until the",
+        "app has sign-in, and a `StatusLine` as the shell's `foot`.",
+        'The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appearance`,',
+        '`hooks/use-scheme`), with the option lists in `@winterop-com/sokkel-ui/lib/appearance`.',
         '',
     ]
     const packages = [...new Set(entries.map((entry) => entry.pkg))]

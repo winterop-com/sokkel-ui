@@ -1,7 +1,9 @@
 import { ChevronRight, Search } from 'lucide-react'
-import { Fragment, type ReactNode } from 'react'
+import { Fragment, useContext, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { shortcutLabel } from '../lib/keys'
+import { ShellPalette } from './shell-context'
 import { Kbd } from './ui/kbd'
 
 /** One step of the trail to the current screen. */
@@ -16,9 +18,13 @@ export interface TopBarProps {
     trail?: readonly Crumb[]
     /** The app's mark before the trail, for a screen without the rail that carries it. */
     mark?: ReactNode
-    /** Opens the command palette; no search is drawn without it. */
+    /** Opens the command palette; in a `Shell` with a `palette` it opens the shell's. No search is drawn without either. */
     onSearch?: () => void
-    /** The keys that open the palette, shown in the search. */
+    /**
+     * The keys that open the palette, shown in the search. Shown only when bound: given here by an
+     * app that binds them itself, or as `shortcutLabel('k')` (⌘K on a Mac, Ctrl K elsewhere) in a
+     * `Shell` that holds the palette.
+     */
     shortcut?: string
     actions?: ReactNode
     renderLink?: (crumb: Crumb, className: string) => ReactNode
@@ -35,7 +41,7 @@ export function TopBar({
     trail = [],
     mark,
     onSearch,
-    shortcut = '⌘K',
+    shortcut: given,
     actions,
     renderLink = (crumb, className) => (
         <a href={crumb.href} className={className}>
@@ -44,6 +50,9 @@ export function TopBar({
     ),
     words = { search: 'Search', trail: 'Where you are' },
 }: TopBarProps) {
+    const shellPalette = useContext(ShellPalette)
+    const search = onSearch ?? shellPalette
+    const shortcut = given ?? (shellPalette === undefined ? undefined : shortcutLabel('k'))
     return (
         <div className="flex h-full min-w-0 flex-1 items-center gap-3">
             {mark !== undefined && (
@@ -83,16 +92,16 @@ export function TopBar({
                 </nav>
             )}
             {trail.length === 0 && <div className="flex-1" />}
-            {onSearch !== undefined && (
+            {search !== undefined && (
                 <button
                     type="button"
-                    onClick={onSearch}
+                    onClick={search}
                     aria-label={words.search}
-                    className="flex h-8 shrink-0 items-center gap-2 rounded-control border border-border bg-field px-2.5 text-sm text-muted-foreground outline-none hover:border-border-strong hover:text-foreground focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring max-md:size-8 max-md:justify-center max-md:border-transparent max-md:bg-transparent max-md:px-0 md:w-56"
+                    className="ml-auto flex h-8 shrink-0 items-center gap-2 rounded-control border border-border bg-field px-2.5 text-sm text-muted-foreground outline-none hover:border-border-strong hover:text-foreground focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring max-md:size-8 max-md:justify-center max-md:border-transparent max-md:bg-transparent max-md:px-0 md:w-56"
                 >
                     <Search className="size-4 shrink-0" aria-hidden />
                     <span className="flex-1 text-left max-md:hidden">{words.search}</span>
-                    <Kbd className="max-md:hidden">{shortcut}</Kbd>
+                    {shortcut !== undefined && <Kbd className="max-md:hidden">{shortcut}</Kbd>}
                 </button>
             )}
             {actions !== undefined && <div className="flex shrink-0 items-center gap-1.5">{actions}</div>}

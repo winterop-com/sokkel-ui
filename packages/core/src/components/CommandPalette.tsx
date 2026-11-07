@@ -1,7 +1,9 @@
 import type { LucideIcon } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { Kbd, KbdGroup } from './ui/kbd'
+
+export { usePaletteShortcut } from '../hooks/use-palette-shortcut'
 import {
     Command,
     CommandDialog,
@@ -32,20 +34,6 @@ export interface PaletteCommand {
 export interface PaletteGroup {
     title: string
     commands: readonly PaletteCommand[]
-}
-
-/** Opens the palette on ⌘K or Ctrl+K, wherever focus is. */
-export function usePaletteShortcut(onOpen: () => void, key = 'k') {
-    useEffect(() => {
-        const listen = (event: KeyboardEvent) => {
-            if (event.key.toLowerCase() === key && (event.metaKey || event.ctrlKey) && !event.altKey) {
-                event.preventDefault()
-                onOpen()
-            }
-        }
-        window.addEventListener('keydown', listen)
-        return () => window.removeEventListener('keydown', listen)
-    }, [onOpen, key])
 }
 
 /**

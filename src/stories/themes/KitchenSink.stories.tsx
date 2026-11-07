@@ -55,7 +55,8 @@ import { Tabs, TabsList, TabsTrigger } from '@winterop-com/sokkel-ui/primitives/
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { STEP_COLORS, STEP_ROWS } from '../fixtures/dayRows'
 import { TidevannMark } from '../fixtures/TidevannMark'
-import { applyToDocument, CORNERS, fromGlobals, THEMES, toGlobals, TYPEFACES } from './themes'
+import { CORNERS, TYPEFACES } from '@winterop-com/sokkel-ui/lib/appearance'
+import { applyToDocument, fromGlobals, TOOLBAR_THEMES as THEMES, toGlobals } from './themes'
 import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /**

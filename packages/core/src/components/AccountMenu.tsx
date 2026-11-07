@@ -1,7 +1,10 @@
 import { Avatar } from '@base-ui/react/avatar'
 import { Menu } from '@base-ui/react/menu'
-import { ChevronsUpDown, Keyboard, LogOut, Settings } from 'lucide-react'
+import { ChevronsUpDown, Keyboard, LogOut, Palette, Settings, User } from 'lucide-react'
 import type { ReactNode } from 'react'
+
+import { useShortcutsKey } from '../hooks/use-shortcuts-key'
+import { cn } from '../lib/cn'
 
 /**
  * The account control in the rail's foot cell: a full-cell row with the initial, the name and a
@@ -10,17 +13,23 @@ import type { ReactNode } from 'react'
  * stays.
  *
  * Expanded, it fills the cell edge to edge; collapsed, it is the picture or the initial alone.
+ *
+ * Every app has it in the rail's foot, before it has sign-in too: then it is `local`, named for
+ * the local user or as "Local", with a neutral figure for the avatar and no sign-out, so the place
+ * is held and the frame looks the same in every app.
  */
 export function AccountMenu({
     name,
     image,
     where,
     collapsed = false,
+    local = false,
     onSettings,
+    onAppearance,
     onShortcuts,
     onSignOut,
     extra,
-    words = { settings: 'Settings', shortcuts: 'Keyboard shortcuts', signOut: 'Sign out', account: 'Account' },
+    words: given,
 }: {
     name: string
     /** The person's picture, drawn over the initial once it has loaded. */
@@ -28,20 +37,31 @@ export function AccountMenu({
     /** Where they are signed in: a host, an instance, a version, in the code face. */
     where?: string
     collapsed?: boolean
+    /** No one is signed in: the avatar is a neutral figure in place of an initial or picture, and there is no sign-out. */
+    local?: boolean
     onSettings?: () => void
+    /** Opens the appearance settings: the theme, the scheme, the density. */
+    onAppearance?: () => void
+    /** Opens the keyboard shortcuts, from the menu and on `?` outside a field. */
     onShortcuts?: () => void
     onSignOut?: () => void
     /** More rows, placed before Sign out. */
     extra?: ReactNode
-    words?: { settings: string; shortcuts: string; signOut: string; account: string }
+    words?: Partial<AccountMenuWords>
 }) {
+    const words = { ...WORDS, ...given }
+    // The `?` beside Keyboard shortcuts works: it opens them from anywhere outside a field.
+    useShortcutsKey(onShortcuts)
     const initial = name.slice(0, 1).toUpperCase()
     const avatar = (size: string) => (
         <Avatar.Root
-            className={`flex ${size} shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-xs font-semibold text-primary-foreground`}
+            className={cn(
+                `flex ${size} shrink-0 items-center justify-center overflow-hidden rounded-full text-xs font-semibold`,
+                local ? 'bg-muted text-muted-foreground' : 'bg-primary text-primary-foreground',
+            )}
         >
-            {image !== undefined && <Avatar.Image src={image} alt="" className="size-full object-cover" />}
-            <Avatar.Fallback>{initial}</Avatar.Fallback>
+            {!local && image !== undefined && <Avatar.Image src={image} alt="" className="size-full object-cover" />}
+            <Avatar.Fallback>{local ? <User className="size-[62%]" aria-hidden /> : initial}</Avatar.Fallback>
         </Avatar.Root>
     )
     const item =
@@ -77,6 +97,12 @@ export function AccountMenu({
                                 {words.settings}
                             </Menu.Item>
                         )}
+                        {onAppearance !== undefined && (
+                            <Menu.Item className={item} onClick={onAppearance}>
+                                <Palette className="size-4 text-muted-foreground" aria-hidden />
+                                {words.appearance}
+                            </Menu.Item>
+                        )}
                         {onShortcuts !== undefined && (
                             <Menu.Item className={item} onClick={onShortcuts}>
                                 <Keyboard className="size-4 text-muted-foreground" aria-hidden />
@@ -85,7 +111,7 @@ export function AccountMenu({
                             </Menu.Item>
                         )}
                         {extra}
-                        {onSignOut !== undefined && (
+                        {!local && onSignOut !== undefined && (
                             <>
                                 <div className="my-1 h-px bg-border" />
                                 <Menu.Item className={item} onClick={onSignOut}>
@@ -99,4 +125,20 @@ export function AccountMenu({
             </Menu.Portal>
         </Menu.Root>
     )
+}
+
+export interface AccountMenuWords {
+    settings: string
+    appearance: string
+    shortcuts: string
+    signOut: string
+    account: string
+}
+
+const WORDS: AccountMenuWords = {
+    settings: 'Settings',
+    appearance: 'Appearance',
+    shortcuts: 'Keyboard shortcuts',
+    signOut: 'Sign out',
+    account: 'Account',
 }

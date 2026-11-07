@@ -1,15 +1,22 @@
 import { Menu, PanelRight } from 'lucide-react'
-import { useEffect, useState, type ReactNode } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
-import { ShellFootCell } from './shell-context'
+import { usePaletteShortcut } from '../hooks/use-palette-shortcut'
+import type { PaletteGroup } from './CommandPalette'
+import { ShellFootCell, ShellPalette } from './shell-context'
+
+// The palette loads when it first opens, so an app's start carries none of it.
+const CommandPalette = lazy(() => import('./CommandPalette').then((module) => ({ default: module.CommandPalette })))
 
 /**
  * The app's frame: the rail on the left, a thin top bar over the content, the content as the one
  * thing that scrolls, and an optional foot strip.
  *
  * The top bar and the rail's head are the same height and share one rule, so the shell reads as
- * one strip across the window; the foot strip lines up with the rail's foot cell the same way.
+ * one strip across the window. With a `foot` (a `StatusLine`), the rail's foot cell (the
+ * `AccountMenu`) sits in the window's bottom-left corner level with the foot strip, so the account
+ * and the status read as one bar across the window's foot, under the rail, the content and the panel.
  *
  * A `bottom` strip docks between the content and the foot, across the whole window under the rail
  * and the panel, for what belongs to the whole app rather than one screen, such as a player. The
@@ -27,6 +34,11 @@ import { ShellFootCell } from './shell-context'
  * Left to itself it starts open on a wide window and closed on a narrow one;
  * `panelOpen` with `onPanelOpenChange` holds it from outside, which is how a panel's own close
  * button closes it.
+ *
+ * With `palette`, the shell holds the app's command palette: ⌘K or Ctrl+K opens it wherever focus
+ * is, and so does the top bar's search, unless the app gives `TopBar` its own `onSearch`.
+ * `placeCommands` makes its places from the rail's groups and `appearanceCommands` its scheme,
+ * density and theme from `useAppearance`.
  */
 export function Shell({
     rail,
@@ -36,6 +48,9 @@ export function Shell({
     bottom,
     panelOpen,
     onPanelOpenChange,
+    palette,
+    defaultPaletteOpen = false,
+    paletteWords,
     children,
     words: given,
 }: {
@@ -51,6 +66,11 @@ export function Shell({
     /** Whether the panel shows; held inside the shell when not given. */
     panelOpen?: boolean
     onPanelOpenChange?: (open: boolean) => void
+    /** The command palette's groups; the shell opens it on ⌘K or Ctrl+K and from the top bar's search. No palette without it. */
+    palette?: readonly PaletteGroup[]
+    /** Whether the palette starts open. */
+    defaultPaletteOpen?: boolean
+    paletteWords?: { placeholder: string; empty: string; title: string }
     children: ReactNode
     words?: Partial<ShellWords>
 }) {
@@ -71,7 +91,25 @@ export function Shell({
         setWasWide(wide)
         if (panelOpen === undefined) setOwnOpen(null)
     }
-    const docked = bottom !== undefined
+    // With a foot or a bottom strip the frame is a grid, so the rail's foot can sit in the corner cell.
+    const docked = bottom !== undefined || foot !== undefined
+    const [paletteOpen, setPaletteOpen] = useState(defaultPaletteOpen)
+    // Drawn from its first opening on, so it can close with its own animation.
+    const [paletteShown, setPaletteShown] = useState(defaultPaletteOpen)
+    const openPalette = useCallback(() => {
+        setPaletteShown(true)
+        setPaletteOpen(true)
+    }, [])
+    const commands = palette !== undefined && (
+        <>
+            <PaletteKeys onOpen={openPalette} />
+            {paletteShown && (
+                <Suspense fallback={null}>
+                    <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} groups={palette} words={paletteWords} />
+                </Suspense>
+            )}
+        </>
+    )
 
     const toggle = panel !== undefined && (
         <button
@@ -133,7 +171,7 @@ export function Shell({
                     {top}
                 </header>
             )}
-            <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>
+            <main className="relative min-h-0 flex-1 overflow-y-auto">{children}</main>
             {!docked && strip}
         </div>
     )
@@ -179,42 +217,54 @@ export function Shell({
 
     if (!docked)
         return (
-            <div className="relative flex h-svh min-h-0 flex-col bg-background text-foreground">
-                {toggle}
-                <div className="flex min-h-0 flex-1">
-                    <div className="hidden md:flex">{rail}</div>
-                    {drawn}
-                    {content}
-                    {panels}
+            <ShellPalette value={palette === undefined ? undefined : openPalette}>
+                <div className="relative flex h-svh min-h-0 flex-col overflow-hidden bg-background text-foreground">
+                    {toggle}
+                    <div className="flex min-h-0 flex-1">
+                        <div className="hidden md:flex">{rail}</div>
+                        {drawn}
+                        {content}
+                        {panels}
+                    </div>
                 </div>
-            </div>
+                {commands}
+            </ShellPalette>
         )
 
     // The rail's column is as wide as the rail, so the foot cell under the bottom strip follows the
     // rail's width as it is dragged or collapsed; the cell hides while the rail has no foot in it.
     return (
-        <div className="relative grid h-svh min-h-0 grid-cols-[auto_minmax(0,1fr)] grid-rows-[minmax(0,1fr)_auto_auto] bg-background text-foreground">
-            {toggle}
-            <div className="col-start-1 row-start-1 hidden min-h-0 md:flex">
-                <ShellFootCell value={footCell}>{rail}</ShellFootCell>
+        <ShellPalette value={palette === undefined ? undefined : openPalette}>
+            <div className="relative grid h-svh min-h-0 grid-cols-[auto_minmax(0,1fr)] grid-rows-[minmax(0,1fr)_auto_auto] overflow-hidden bg-background text-foreground">
+                {toggle}
+                <div className="col-start-1 row-start-1 hidden min-h-0 md:flex">
+                    <ShellFootCell value={footCell}>{rail}</ShellFootCell>
+                </div>
+                {drawn}
+                <div className="col-start-2 row-start-1 flex min-h-0 min-w-0">
+                    {content}
+                    {panels}
+                </div>
+                <div className="col-span-full row-start-2 min-w-0">{bottom}</div>
+                <div ref={setFootCell} className="peer col-start-1 row-start-3 hidden w-0 min-w-full md:flex md:empty:hidden" />
+                {strip !== false ? (
+                    strip
+                ) : (
+                    <div
+                        aria-hidden
+                        className="col-start-2 row-start-3 hidden h-shell-foot border-t border-border-strong bg-sidebar md:block md:peer-empty:hidden"
+                    />
+                )}
             </div>
-            {drawn}
-            <div className="col-start-2 row-start-1 flex min-h-0 min-w-0">
-                {content}
-                {panels}
-            </div>
-            <div className="col-span-full row-start-2 min-w-0">{bottom}</div>
-            <div ref={setFootCell} className="peer col-start-1 row-start-3 hidden w-0 min-w-full md:flex md:empty:hidden" />
-            {strip !== false ? (
-                strip
-            ) : (
-                <div
-                    aria-hidden
-                    className="col-start-2 row-start-3 hidden h-shell-foot border-t border-border-strong bg-sidebar md:block md:peer-empty:hidden"
-                />
-            )}
-        </div>
+            {commands}
+        </ShellPalette>
     )
+}
+
+/** Opens the palette on ⌘K or Ctrl+K while the shell has one. */
+function PaletteKeys({ onOpen }: { onOpen: () => void }) {
+    usePaletteShortcut(onOpen)
+    return null
 }
 
 export interface ShellWords {

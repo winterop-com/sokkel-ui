@@ -11,7 +11,14 @@ A row is one module. Its first name is the main component; the others are the pa
 with it, imported from the same path. Hooks are under `@winterop-com/sokkel-ui/hooks/*` and helpers
 under `@winterop-com/sokkel-ui/lib/*`; the chart kinds and the fields they read are in `docs/charts.md`.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 200 modules
+Every app has the same frame: `Shell` with a `Rail` of its places, the command palette on ⌘K or
+Ctrl+K through `Shell`'s `palette` (`placeCommands` and `appearanceCommands` in
+`@winterop-com/sokkel-ui/lib/commands`), an `AccountMenu` in the rail's foot, `local` until the
+app has sign-in, and a `StatusLine` as the shell's `foot`.
+The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appearance`,
+`hooks/use-scheme`), with the option lists in `@winterop-com/sokkel-ui/lib/appearance`.
+
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 201 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 13 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 9 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 11 modules
@@ -151,9 +158,10 @@ under `@winterop-com/sokkel-ui/lib/*`; the chart kinds and the fields they read 
 | **AppBar** | `@winterop-com/sokkel-ui/AppBar` | The app's bar along the top of a screen drawn without `Shell`, such as a page a dialog opens over or a screen of its own: the app's mark, the trail to the screen, the search and the actions, in the bar the shell draws, so the screen reads as the same app. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-app-bar--bar) |
 | **CommandPalette** | `@winterop-com/sokkel-ui/CommandPalette` | The command palette: one search over everything an app can do, grouped, each row with its icon, a hint and the keys that run it directly. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-command-palette--closed) |
 | **Dock** | `@winterop-com/sokkel-ui/Dock` | A panel along the bottom of the content, for a log, a terminal or a result: a head bar with the title, tools and a fold control, and its content scrolling under it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/apps-workspace--list-and-panel) |
-| **NavBar** | `@winterop-com/sokkel-ui/NavBar` | The app's frame along the top, for an app with few places and no rail: the mark and name, the places as links with the current one underlined, and the right-hand controls. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/apps-settings--with-nav-bar) |
+| **NavBar** | `@winterop-com/sokkel-ui/NavBar` | The app's frame along the top, for an app with few places and no rail: the mark and name, the places as links with the current one underlined, and the right-hand controls. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/themes-appearance--scheme) |
 | **Rail** | `@winterop-com/sokkel-ui/Rail` | The app's left navigation: a head with the app's mark and the collapse control, the groups, and a foot cell the shell's foot strip lines up with. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-rail--strip) |
 | **ResizeHandle** | `@winterop-com/sokkel-ui/ResizeHandle` | The edge a panel is resized by: dragged with a pointer, moved 16px a press with the arrows, sent to its limits with Home and End, and put back to `reset` with a double click or Enter. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/research-player-growth--liner) |
+| **SchemeToggle** | `@winterop-com/sokkel-ui/SchemeToggle` | The light and dark switch wired to `useScheme`: it shows the scheme the document wears, and a press chooses the other one and keeps it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/themes-appearance--scheme) |
 | **Shell**, Page | `@winterop-com/sokkel-ui/Shell` | The app's frame: the rail on the left, a thin top bar over the content, the content as the one thing that scrolls, and an optional foot strip. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-app-bar--bar) |
 | **SidePanel**, PanelSection | `@winterop-com/sokkel-ui/SidePanel` | The right-hand panel beside a page: a header bar the height of the shell's top bar, with the panel's tabs (or its title when it has one tab), then the content scrolling under it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-pane-header--plain) |
 | **StatusLine**, StatusItem | `@winterop-com/sokkel-ui/StatusLine` | What the shell's foot strip says for the screen: a short note at the left and identifiers at the right, on one row of fixed height. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-status-line--tones) |

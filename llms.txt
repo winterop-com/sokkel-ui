@@ -46,6 +46,105 @@ import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Chart } from '@winterop-com/sokkel-ui-charts/Chart'
 ```
 
+## The frame every app has
+
+Every app stands in the same frame, so a person moving between apps finds everything in the same
+place. It has four parts, and an app has all four from its first screen:
+
+- **`Shell` with a `Rail`** of the app's places down the left.
+- **The command palette**, always there: `Shell`'s `palette` takes its groups and opens it on ⌘K
+  (Ctrl K off a Mac) and from `TopBar`'s search in the top right corner, which shows the key.
+  `placeCommands` makes its "Go to" group from the rail's groups, and `appearanceCommands` its
+  scheme, density and theme commands, so an app's places and look come for free.
+- **An `AccountMenu`** in the rail's foot, always there, before the app has sign-in too: then it is
+  `local`, named for the local user or "Local", with a neutral avatar, settings and appearance, and
+  no sign-out. The place is held, and the frame looks the same in every app.
+- **A `StatusLine` as `Shell`'s `foot`**, the strip along the window's bottom edge: the connection
+  or the server's state, the active model or project, background work, the version. With it, the
+  `AccountMenu` sits in the bottom-left corner level with the strip, so the account and the status
+  read as one bar across the window. An app without a foot looks unfinished.
+
+The look is kept by `useAppearance`, called in the app's root: it reads the theme, scheme,
+density, corners, typeface and motion from `localStorage`, follows the system's scheme until one is
+chosen, and wears them on `<html>` (`data-theme`, `.dark`, `data-density`, `data-motion`, `--radius`
+and the typeface variables). `ThemePicker` takes its settings and setter, with the option lists
+`THEMES` (every theme in the tokens), `CORNERS` and `TYPEFACES` from `lib/appearance`. Every call
+follows the same kept look, so a settings page calls `useAppearance()` again with the same defaults.
+
+```tsx
+import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
+import { useAppearance } from '@winterop-com/sokkel-ui/hooks/use-appearance'
+import { CORNERS, THEMES, TYPEFACES } from '@winterop-com/sokkel-ui/lib/appearance'
+import { appearanceCommands, placeCommands } from '@winterop-com/sokkel-ui/lib/commands'
+import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
+import { SchemeToggle } from '@winterop-com/sokkel-ui/SchemeToggle'
+import { Shell } from '@winterop-com/sokkel-ui/Shell'
+import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
+import { ThemePicker } from '@winterop-com/sokkel-ui/ThemePicker'
+import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
+
+const PLACES: RailGroup[] = [
+    { id: 'work', entries: [{ id: 'runs', label: 'Runs', icon: Play, href: '/runs' }] },
+    { id: 'system', title: 'System', entries: [{ id: 'settings', label: 'Settings', icon: Settings, href: '/settings' }] },
+]
+
+export function App() {
+    const { settings, setSettings } = useAppearance()
+    const navigate = useNavigate()
+    return (
+        <Shell
+            palette={[...placeCommands(PLACES, navigate), ...appearanceCommands(settings, setSettings)]}
+            rail={
+                <Rail
+                    mark={<Mark />}
+                    name="Tidevann"
+                    groups={PLACES}
+                    foot={<AccountMenu name="Local" local onSettings={() => navigate('/settings')} onAppearance={() => navigate('/settings')} />}
+                />
+            }
+            top={<TopBar trail={[{ label: 'Runs' }]} actions={<SchemeToggle />} />}
+            foot={
+                <StatusLine note="Connected to api.example.org">
+                    <StatusItem label="project">harbor</StatusItem>
+                    <StatusItem>1.4.0</StatusItem>
+                </StatusLine>
+            }
+        >
+            <Routes />
+        </Shell>
+    )
+}
+
+/** The settings page: the same kept look, in the picker. */
+function Appearance() {
+    const { settings, setSettings } = useAppearance()
+    return <ThemePicker value={settings} onChange={setSettings} themes={THEMES} corners={CORNERS} typefaces={TYPEFACES} system />
+}
+```
+
+An app with only a light and dark switch needs no more than `useScheme()`, which answers
+`{ scheme, resolved, setScheme }` (light, dark or system, kept and worn as `.dark`), or
+`SchemeToggle`, the theme toggle wired to it. `useAppearance(defaults)` takes the look an app starts
+in until the person chooses, such as `{ theme: 'paper' }`; give `SchemeToggle` the same scheme as its
+`fallback`.
+
+So the page never shows the wrong scheme while it loads, `appearanceScript()` writes the kept look
+on `<html>` before the page draws. A Vite app puts it at the top of `<head>`:
+
+```ts
+// vite.config.ts
+import { appearanceScript } from '@winterop-com/sokkel-ui/lib/appearance'
+
+const appearance = {
+    name: 'appearance',
+    transformIndexHtml: () => [{ tag: 'script', children: appearanceScript(), injectTo: 'head-prepend' as const }],
+}
+// plugins: [react(), tailwindcss(), appearance]
+```
+
+An app rendered on a server puts `<script dangerouslySetInnerHTML={{ __html: appearanceScript() }} />`
+first in its `<head>`. Given the same defaults as `useAppearance`, it starts in the same look.
+
 ## Docs
 
 - [Component index](https://github.com/winterop-com/sokkel-ui/blob/main/docs/components.md): every exported component by package and area, with its import path, what it is and a story that shows it
