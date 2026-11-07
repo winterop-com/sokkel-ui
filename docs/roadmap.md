@@ -74,10 +74,9 @@ to `plan.md` when it ships.
 
 ## Later
 
-- **One token source, several outputs.** `tokens/tokens.json` already builds `tokens.css` and a
-  file per theme. From the same file: a W3C design-tokens file for Figma and theme tools, and a
-  design system for design tools built from the tokens and component screenshots, so decks and
-  mockups match the apps. Never two hand-kept copies.
+- **A design system for decks and mockups.** Built from the repo itself (the tokens, the
+  component screenshots and `docs/components.md`), so slides and mockups made with AI design tools
+  match the apps. Never a hand-kept copy.
 - **A machine-readable registry.** `llms.txt` and `docs/components.md` point agents at the parts;
   what remains is a form agent tools read directly (a shadcn-style registry), each item pointing at
   the package, none shipping a copy.
