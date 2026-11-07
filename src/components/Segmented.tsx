@@ -55,6 +55,7 @@ export interface Segment<T extends string> {
  * tall.
  */
 export function Segmented<T extends string>({
+    id,
     label,
     value,
     options,
@@ -65,6 +66,8 @@ export function Segmented<T extends string>({
     onChoose,
     className,
 }: {
+    /** The group's id, for a `Field` around it to point its label at. */
+    id?: string
     /** What the group is called, for a screen reader. */
     label: string
     value: T
@@ -78,6 +81,7 @@ export function Segmented<T extends string>({
 }) {
     return (
         <div
+            id={id}
             role="group"
             aria-label={label}
             className={cn(

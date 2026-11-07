@@ -1,3 +1,5 @@
+import { Link2 } from 'lucide-react'
+import { Field } from '../../components/Field'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
@@ -164,9 +166,9 @@ function SegmentedInForm() {
     const [on, setOn] = useState<'success' | 'failure' | 'always'>('failure')
     return (
         <Ground>
-            <Stack gap="sm">
-                <span className="text-sm font-medium">Notify on</span>
+            <Field id="notify-on" label="Notify on">
                 <Segmented
+                    id="notify-on"
                     size="md"
                     label="Notify on"
                     value={on}
@@ -177,7 +179,7 @@ function SegmentedInForm() {
                         { value: 'always', label: 'Every run' },
                     ]}
                 />
-            </Stack>
+            </Field>
         </Ground>
     )
 }
@@ -203,6 +205,12 @@ function CopyLines() {
                 <CopyButton value="xs" size="icon-xs" />
                 <CopyButton value="sm" size="icon-sm" />
                 <CopyButton value="md" size="icon" />
+                <CopyButton
+                    value="https://tidevann.example.org/harbor"
+                    showLabel
+                    icon={<Link2 aria-hidden />}
+                    words={{ copy: 'Copy link', copied: 'Copied' }}
+                />
             </Row>
         </Ground>
     )

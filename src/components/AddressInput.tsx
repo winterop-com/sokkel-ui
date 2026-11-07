@@ -62,6 +62,7 @@ export function parseAddresses(text: string): Address[] {
 export function AddressInput({
     value,
     onChange,
+    id,
     label,
     bare = false,
     valid = isAddress,
@@ -74,6 +75,8 @@ export function AddressInput({
 }: {
     value: readonly Address[]
     onChange: (value: Address[]) => void
+    /** The typing input's id, for a `Field`'s label to name it. */
+    id?: string
     /** A short label inside the field before the chips: `To`, `Cc`. */
     label?: ReactNode
     bare?: boolean
@@ -158,13 +161,14 @@ export function AddressInput({
                 })}
                 <input
                     ref={input}
+                    id={id}
                     type="text"
                     inputMode="email"
                     autoComplete="off"
                     autoFocus={autoFocus}
                     value={draft}
                     placeholder={value.length === 0 ? words.placeholder : undefined}
-                    aria-label={typeof label === 'string' ? label : words.placeholder}
+                    aria-label={id !== undefined ? undefined : typeof label === 'string' ? label : words.placeholder}
                     aria-invalid={tone === 'critical' || undefined}
                     className="h-6 min-w-24 flex-1 bg-transparent px-1 outline-none placeholder:text-faint"
                     onChange={(event) => {

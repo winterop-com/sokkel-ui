@@ -1,3 +1,4 @@
+import { TransportButton } from '../../components/media/MediaControls'
 import { IconButton } from '../../components/IconButton'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Clapperboard, Disc3, Heart, ListMusic, MicVocal, MoreHorizontal, Music2, Play, Shuffle, Tv, type LucideIcon } from 'lucide-react'
@@ -428,15 +429,9 @@ function Player({ queueOpen }: { queueOpen: boolean }) {
             repeat={repeat}
             onRepeatChange={setRepeat}
             extra={
-                <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label="Queue"
-                    aria-pressed={queueOpen}
-                    className={queueOpen ? 'text-primary-ink' : 'text-muted-foreground'}
-                >
+                <TransportButton label="Queue" pressed={queueOpen}>
                     <ListMusic aria-hidden />
-                </Button>
+                </TransportButton>
             }
         />
     )

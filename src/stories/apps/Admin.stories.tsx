@@ -346,9 +346,9 @@ function InviteDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (op
                 />
             }
         >
-            <Stack gap="xs">
-                <span className="text-sm font-medium">Email addresses</span>
+            <Field id="email-addresses" label="Email addresses" help="Separate them with commas, or paste a list.">
                 <AddressInput
+                    id="email-addresses"
                     value={emails}
                     onChange={setEmails}
                     autoFocus
@@ -356,8 +356,7 @@ function InviteDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (op
                     onIssueOpenChange={setIssueOpen}
                     words={{ placeholder: 'Email addresses' }}
                 />
-                <p className="text-xs text-muted-foreground">Separate them with commas, or paste a list.</p>
-            </Stack>
+            </Field>
             <RoleChoice id="invite-role" label="Role" value={role} onChange={setRole} />
         </DialogShell>
     )
@@ -852,9 +851,9 @@ function TokenDialog({
                     ))}
                 </Stack>
             </Field>
-            <Stack gap="xs">
-                <span className="text-sm font-medium">Expires after</span>
+            <Field id="expires-after" label="Expires after">
                 <Segmented
+                    id="expires-after"
                     label="Expires after"
                     size="md"
                     fill
@@ -868,7 +867,7 @@ function TokenDialog({
                     ]}
                 />
                 <p className={cn('text-xs', expires === 'never' ? 'text-warning-ink' : 'text-muted-foreground')}>{EXPIRES_ON[expires]}</p>
-            </Stack>
+            </Field>
         </DialogShell>
     )
 }
