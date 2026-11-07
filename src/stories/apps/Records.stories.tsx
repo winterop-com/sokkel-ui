@@ -57,6 +57,7 @@ import { TidevannMark } from '../fixtures/TidevannMark'
 import { NUMBER, regionName, regions } from '../map/data'
 import { Dot } from '../../components/Dot'
 import { Columns, Row, Stack } from '../../components/Layout'
+import { GroupLabel } from '../../components/GroupLabel'
 
 /**
  * A records app for structured data capture in the library's frame: a list of site visits with
@@ -314,15 +315,17 @@ function Records() {
                     </>
                 }
             />
-            <Row wrap>
-                <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-full sm:w-64" />
-                <FilterChip facet="Period" value="Nov 2026" onClear={() => undefined} />
-                <FilterChip facet="State" />
-                <FilterChip facet="Region" />
-                <FilterChip facet="Collected by" />
-            </Row>
             <div className="flex min-h-0 flex-1 items-start gap-(--density-inspector-gap)">
                 <DataTable
+                    toolbar={
+                        <>
+                            <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-full max-w-64 min-w-40" />
+                            <FilterChip facet="Period" value="Nov 2026" onClear={() => undefined} />
+                            <FilterChip facet="State" />
+                            <FilterChip facet="Region" />
+                            <FilterChip facet="Collected by" />
+                        </>
+                    }
                     columns={COLUMNS}
                     rows={rows}
                     rowKey={(visit) => visit.code}
@@ -538,7 +541,7 @@ function VisitForm() {
                         </Section>
                     </form>
                     <nav aria-label="On this form" className="sticky top-0 hidden w-52 shrink-0 flex-col gap-1 xl:flex">
-                        <p className="px-2 pb-1 text-xs font-medium tracking-wide text-faint uppercase">On this form</p>
+                        <GroupLabel className="px-2 pb-1">On this form</GroupLabel>
                         {OUTLINE.map((part, index) => (
                             <a
                                 key={part.id}

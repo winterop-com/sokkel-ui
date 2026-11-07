@@ -22,6 +22,7 @@ import { TooltipProvider } from '../../components/ui/tooltip'
 import { cn } from '../../lib/cn'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { Columns, Row, Stack } from '../../components/Layout'
+import { GroupLabel } from '../../components/GroupLabel'
 
 /**
  * An internal wiki in the library's frame: the page tree with its search beside the page, the
@@ -450,9 +451,7 @@ function DocsApp({ mode: initialMode = 'read' }: { mode?: 'read' | 'edit' | 'his
                             {mode === 'history' && (
                                 <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
                                     <div className="flex w-full shrink-0 flex-col gap-2 lg:w-80">
-                                        <h2 className="text-xs font-medium tracking-wide text-faint uppercase">
-                                            {VERSIONS.length} versions
-                                        </h2>
+                                        <GroupLabel as="h2">{VERSIONS.length} versions</GroupLabel>
                                         <Versions
                                             chosen={chosen}
                                             onChoose={(number) => {

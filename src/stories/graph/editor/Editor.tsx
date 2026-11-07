@@ -15,6 +15,7 @@ import { Input } from '../../../components/ui/input'
 import { cn } from '../../../lib/cn'
 import { blockOf, BLOCKS, GROUPS, type BlockSpec } from './blocks'
 import { usePipelineEditor, type Notice, type Picker, type PipelineDoc, type PipelineEditorState } from './use-editor'
+import { GroupLabel } from '../../../components/GroupLabel'
 
 /** The canvas of the editor: the pipeline with its toolbar, the open picker, and the last notice. */
 export function EditorCanvas({
@@ -186,7 +187,7 @@ export function StepPanel({ editor }: { editor: PipelineEditorState }) {
                 />
             </Field>
             <div className="flex flex-col gap-3 border-t border-border pt-4">
-                <h3 className="text-xs font-medium tracking-wide text-faint uppercase">Settings</h3>
+                <GroupLabel as="h3">Settings</GroupLabel>
                 <Settings
                     key={key}
                     schema={block.schema}
@@ -203,7 +204,7 @@ export function ProblemsPanel({ editor }: { editor: PipelineEditorState }) {
     const listed = editor.doc.steps.filter((step) => editor.issues.has(step.code))
     return (
         <div className="flex flex-col gap-2 p-4">
-            <h3 className="text-xs font-medium tracking-wide text-faint uppercase">Problems</h3>
+            <GroupLabel as="h3">Problems</GroupLabel>
             {listed.length === 0 && <p className="text-sm text-muted-foreground">Every step is ready to run.</p>}
             <ul className="flex flex-col gap-1">
                 {listed.map((step) => (

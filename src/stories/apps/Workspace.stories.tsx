@@ -33,7 +33,7 @@ import { TopBar } from '../../components/TopBar'
 import { Button } from '../../components/ui/button'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { TidevannMark } from '../fixtures/TidevannMark'
-import { Row, Stack } from '../../components/Layout'
+import { Stack } from '../../components/Layout'
 
 /**
  * A whole app in the library's frame: the rail with Projects unfolded to its projects, the top bar with the trail and search, a list page
@@ -272,13 +272,20 @@ function Workspace({ dock = false }: { dock?: boolean }) {
                                     </Button>
                                 }
                             />
-                            <Row wrap>
-                                <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-64" />
-                                <FilterChip facet="State" value="failed, running" onClear={() => undefined} />
-                                <FilterChip facet="Job" />
-                                <FilterChip facet="Started by" />
-                            </Row>
                             <DataTable
+                                toolbar={
+                                    <>
+                                        <SearchField
+                                            value={query}
+                                            onChange={setQuery}
+                                            placeholder="Search"
+                                            className="w-full max-w-64 min-w-40"
+                                        />
+                                        <FilterChip facet="State" value="failed, running" onClear={() => undefined} />
+                                        <FilterChip facet="Job" />
+                                        <FilterChip facet="Started by" />
+                                    </>
+                                }
                                 columns={COLUMNS}
                                 rows={rows}
                                 rowKey={(run) => run.id}

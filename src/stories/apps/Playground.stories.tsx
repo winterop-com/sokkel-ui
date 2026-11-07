@@ -1,8 +1,8 @@
+import { CopyButton } from '../../components/CopyButton'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import {
     BookText,
     Columns3,
-    Copy,
     Database,
     FlaskConical,
     Gauge,
@@ -477,9 +477,7 @@ function PromptPage() {
                 meta={answer.model}
                 actions={
                     <>
-                        <Button variant="ghost" size="icon-sm" aria-label="Copy the answer" className="text-muted-foreground">
-                            <Copy aria-hidden />
-                        </Button>
+                        <CopyButton value={answer.text} words={{ copy: 'Copy the answer', copied: 'Copied' }} />
                         <Button variant="ghost" size="icon-sm" aria-label="Run again" className="text-muted-foreground">
                             <RotateCcw aria-hidden />
                         </Button>
@@ -568,15 +566,22 @@ function HistoryPage() {
     return (
         <Page className="h-full">
             <PageHeader title="History" count="1,284 runs" />
-            <Row wrap>
-                <SearchField value={query} onChange={setQuery} placeholder="Search prompts" className="w-full sm:w-64" />
-                <FilterChip facet="Model" />
-                <FilterChip facet="State" />
-                <FilterChip facet="Project" value="larkspur" onClear={() => undefined} />
-                <FilterChip facet="By" />
-            </Row>
             <div className="flex min-h-0 flex-1 items-start gap-(--density-inspector-gap)">
                 <DataTable
+                    toolbar={
+                        <>
+                            <SearchField
+                                value={query}
+                                onChange={setQuery}
+                                placeholder="Search prompts"
+                                className="w-full max-w-64 min-w-40"
+                            />
+                            <FilterChip facet="Model" />
+                            <FilterChip facet="State" />
+                            <FilterChip facet="Project" value="larkspur" onClear={() => undefined} />
+                            <FilterChip facet="By" />
+                        </>
+                    }
                     columns={COLUMNS}
                     rows={rows}
                     rowKey={(run) => run.id}

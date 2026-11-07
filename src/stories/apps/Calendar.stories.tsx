@@ -39,6 +39,7 @@ import { TidevannMark } from '../fixtures/TidevannMark'
 import { DayStrip } from '../../components/calendar/DayStrip'
 import { Dot } from '../../components/Dot'
 import { Row, Stack } from '../../components/Layout'
+import { GroupLabel } from '../../components/GroupLabel'
 
 /**
  * A schedule of job runs and team events in the library's frame: the week with its hours, all-day
@@ -283,7 +284,9 @@ function Detail({ event }: { event: Entry }) {
 function CalendarToggles({ shown, onChange }: { shown: CalendarId[]; onChange: (shown: CalendarId[]) => void }) {
     return (
         <Stack as="section" gap="2xs">
-            <h3 className="px-1.5 pb-1 text-xs font-medium tracking-wide text-faint uppercase">Calendars</h3>
+            <GroupLabel as="h3" className="px-1.5 pb-1">
+                Calendars
+            </GroupLabel>
             {CALENDARS.map((calendar) => {
                 const on = shown.includes(calendar.id)
                 return (

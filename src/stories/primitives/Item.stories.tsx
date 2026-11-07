@@ -1,3 +1,4 @@
+import { StatusChip } from '../../components/StatusChip'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { ChevronRight, FileText, ListChecks } from 'lucide-react'
 
@@ -99,13 +100,6 @@ const JOBS = [
     { code: 'send-digest', name: 'Weekly digest', last: 'cancelled', when: '2026-11-03 08:00' },
 ] as const
 
-const TONE: Record<string, string> = {
-    succeeded: 'bg-status-succeeded/15 text-status-succeeded-ink',
-    failed: 'bg-status-failed/15 text-status-failed-ink',
-    running: 'bg-status-running/15 text-status-running-ink',
-    cancelled: 'bg-status-cancelled/15 text-status-cancelled-ink',
-}
-
 export const JobList: StoryObj = {
     render: () => (
         <ItemGroup className="max-w-2xl gap-0">
@@ -121,7 +115,7 @@ export const JobList: StoryObj = {
                             {job.name !== undefined && <ItemDescription className="font-mono text-xs">{job.code}</ItemDescription>}
                         </ItemContent>
                         <ItemActions>
-                            <Badge className={TONE[job.last]}>{job.last}</Badge>
+                            <StatusChip status={job.last} />
                             <span className="hidden text-xs text-muted-foreground tabular-nums sm:inline">{job.when}</span>
                         </ItemActions>
                     </Item>
