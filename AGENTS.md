@@ -97,11 +97,16 @@ and ask before acting.
   terminal, code, an editor, a log, a table, a schema, a graph, a chart, a video, a track list)
   fills the canvas, and the height too when it scrolls. One with a natural width (an input, a menu,
   a button, a card, a dialog) keeps that width.
-- Screenshot baselines are Linux renders, taken on GitHub with `make screenshots-ci` (`STORIES='a|b'` retakes only those story ids), which retakes
-  them for the current branch and commits them there (`bun run test:visual:linux:update` does the
-  same locally, only when CI cannot). Both recompress what they write with optipng, losslessly,
-  to keep the repository small. Never commit baselines taken on a Mac. A change that alters
-  a story's look carries its retaken baselines in the same PR.
+- Screenshot baselines are Linux renders, and never live in main's tree: the branch `baselines`
+  holds main's, as a single commit, and `baselines-for/<branch>` holds a code branch's own changes
+  to them. `scripts/baselines.sh` writes them into `e2e/__screenshots__` (git ignores the folder).
+  Retake them on GitHub with `make screenshots-ci` (`STORIES='a|b'` retakes only those story ids):
+  on a branch it writes `baselines-for/<branch>`, which CI compares that branch against and lays
+  onto `baselines` when its PR merges; on main it writes `baselines`.
+  `bun run test:visual:linux:update` retakes locally, only when CI cannot, and
+  `scripts/baselines.sh commit` pushes what it took. Both recompress with optipng, losslessly. Never push baselines taken on a Mac. A change that alters a story's
+  look has its baselines retaken on its branch before the PR merges; bring the branch up to date
+  with main before a full retake, so it does not undo baselines main has moved on.
 
 ## Design
 
