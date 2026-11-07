@@ -40,6 +40,7 @@ import { TooltipProvider } from '../../components/ui/tooltip'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { CHART, FIELD, HARBOR_DUSK, LIGHTHOUSE, PINES } from '../fixtures/photos'
 import { Row } from '../../components/Layout'
+import { GroupLabel } from '../../components/GroupLabel'
 
 /**
  * A file browser for a project's stored data in the library's frame: the folder tree beside the
@@ -520,7 +521,9 @@ function FilesApp({
             >
                 <Row gap="none" align="stretch" className="h-full min-h-0">
                     <aside className="hidden w-56 shrink-0 flex-col gap-2 overflow-y-auto border-r border-border-strong bg-sidebar px-2 py-3 lg:flex">
-                        <h2 className="px-2 text-xs font-medium tracking-wide text-faint uppercase">Folders</h2>
+                        <GroupLabel as="h2" className="px-2">
+                            Folders
+                        </GroupLabel>
                         <Tree
                             label="Folders"
                             nodes={FOLDERS}
