@@ -135,7 +135,7 @@ export function ChannelHeader({
                             type="button"
                             aria-label={words.details(name)}
                             onClick={onDetails}
-                            className="-ml-1.5 flex min-w-0 items-center gap-1.5 rounded-md px-1.5 py-0.5 outline-none hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid"
+                            className="-ml-1.5 flex min-w-0 items-center gap-1.5 rounded-md px-1.5 py-0.5 outline-none hover:bg-hover focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid"
                         >
                             {title}
                         </button>

@@ -106,10 +106,7 @@ export function ChartLegend({
                             const off = hidden.has(item.key)
                             const figures = legendStats(item.values ?? [])
                             return (
-                                <tr
-                                    key={item.key}
-                                    className={cn('border-t border-border hover:bg-muted/60', off && 'text-muted-foreground')}
-                                >
+                                <tr key={item.key} className={cn('border-t border-border hover:bg-hover', off && 'text-muted-foreground')}>
                                     <td className="p-0">
                                         <button
                                             type="button"
@@ -148,7 +145,7 @@ export function ChartLegend({
                             aria-pressed={!off}
                             {...handlers(item.key, off)}
                             className={cn(
-                                'inline-flex h-6 items-center gap-1.5 rounded-md px-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground',
+                                'inline-flex h-6 items-center gap-1.5 rounded-md px-1.5 text-xs text-muted-foreground hover:bg-hover hover:text-foreground',
                                 ITEM,
                                 off && 'opacity-60',
                             )}

@@ -156,7 +156,7 @@ export function MediaCard({
                             <DropdownMenuTrigger
                                 aria-label={`${words.menu}: ${title}`}
                                 title={words.menu}
-                                className="flex size-7 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-secondary hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid"
+                                className="flex size-7 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid"
                             >
                                 <MoreHorizontal className="size-4" aria-hidden />
                             </DropdownMenuTrigger>

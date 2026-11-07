@@ -119,9 +119,7 @@ export function MonthGrid<E extends CalendarEvent>({
                                         onSelect={onSelectEvent}
                                         className={cn(
                                             'flex h-5 min-w-0 items-center gap-1.5 rounded-sm px-1.5 text-left text-xs data-open:ring-2 data-open:ring-ring',
-                                            event.allDay === true
-                                                ? cn('font-medium', KIND_WASH[event.color ?? 'blue'])
-                                                : 'hover:bg-secondary',
+                                            event.allDay === true ? cn('font-medium', KIND_WASH[event.color ?? 'blue']) : 'hover:bg-hover',
                                             event.muted === true && 'opacity-60',
                                             !inMonth && 'opacity-70',
                                         )}
@@ -140,7 +138,7 @@ export function MonthGrid<E extends CalendarEvent>({
                                 {hidden > 0 && (
                                     <button
                                         type="button"
-                                        className="flex h-5 items-center rounded-sm px-1.5 text-left text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
+                                        className="flex h-5 items-center rounded-sm px-1.5 text-left text-xs font-medium text-muted-foreground hover:bg-hover hover:text-foreground"
                                         onClick={() => onMore?.(day)}
                                     >
                                         {words.more(hidden)}

@@ -86,7 +86,7 @@ export function TimeRangePicker({
                                         setOpen(false)
                                     }}
                                     className={cn(
-                                        'flex h-8 w-full items-center rounded-md px-2 text-left text-sm outline-none hover:bg-secondary focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid',
+                                        'flex h-8 w-full items-center rounded-md px-2 text-left text-sm outline-none hover:bg-hover focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid',
                                         chosen && 'bg-secondary font-medium',
                                     )}
                                 >

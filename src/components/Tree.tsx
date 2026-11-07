@@ -176,7 +176,7 @@ export function Tree({
                         onClick={() => choose(row.node.id)}
                         style={{ paddingLeft: `calc(${row.level - 1} * 1rem + 0.25rem)` }}
                         className={cn(
-                            'flex h-8 cursor-default items-center gap-1.5 rounded-md pr-2 outline-none select-none hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                            'flex h-8 cursor-default items-center gap-1.5 rounded-md pr-2 outline-none select-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                             selection === 'single' && isChosen && 'bg-primary/12 font-medium text-primary-ink hover:bg-primary/18',
                         )}
                     >

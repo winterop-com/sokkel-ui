@@ -282,7 +282,7 @@ function Versions({ chosen, onChoose }: { chosen: number; onChoose: (number: num
                         aria-current={version.number === chosen || undefined}
                         onClick={() => onChoose(version.number)}
                         className={cn(
-                            'w-full px-3 py-2.5 text-left outline-none hover:bg-secondary/60 focus-visible:bg-secondary',
+                            'w-full px-3 py-2.5 text-left outline-none hover:bg-hover focus-visible:bg-hover',
                             version.number === chosen && 'bg-secondary',
                         )}
                     >

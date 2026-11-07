@@ -136,7 +136,7 @@ export function BoardCard({
                             <DropdownMenuTrigger
                                 aria-label={words.menu}
                                 title={words.menu}
-                                className="flex size-7 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-secondary hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid data-popup-open:bg-secondary md:opacity-0 md:group-hover/card:opacity-100 md:focus-visible:opacity-100 md:data-popup-open:opacity-100"
+                                className="flex size-7 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid data-popup-open:bg-hover md:opacity-0 md:group-hover/card:opacity-100 md:focus-visible:opacity-100 md:data-popup-open:opacity-100"
                             >
                                 <MoreHorizontal className="size-4" aria-hidden />
                             </DropdownMenuTrigger>

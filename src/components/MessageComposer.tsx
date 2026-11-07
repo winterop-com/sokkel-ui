@@ -171,7 +171,7 @@ const MARK: Record<Exclude<MessageFormat, 'codeBlock'>, [string, string]> = {
 }
 
 const ACTION =
-    'flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-pressed:text-foreground data-popup-open:bg-secondary data-popup-open:text-foreground [&_svg]:size-4'
+    'flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-pressed:text-foreground data-popup-open:bg-hover data-popup-open:text-foreground [&_svg]:size-4'
 
 /**
  * A button in a message composer's rows, drawn as the composer draws its own: an icon with its

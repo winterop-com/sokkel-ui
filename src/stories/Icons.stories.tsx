@@ -118,7 +118,7 @@ function Gallery({ start = 'library', query: initial = '' }: { start?: 'library'
                                     title={`Copy import { ${name} } from 'lucide-react'`}
                                     onClick={() => copy(name)}
                                     className={cn(
-                                        'h-24 w-full rounded-lg border border-border bg-card px-2 text-card-foreground outline-none hover:border-border-strong hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50',
+                                        'h-24 w-full rounded-lg border border-border bg-card px-2 text-card-foreground outline-none hover:border-border-strong hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring/50',
                                         copied === name && 'border-primary/60',
                                     )}
                                 >

@@ -883,7 +883,7 @@ export function DataTable<T>({
         const [title, ...rest] = shown
         // Stacked, the box, the title and the menu share the first line, and every line starts at the box's edge.
         const stackedCard = (
-            <div className="flex h-full flex-col rounded-surface border border-border bg-card px-3 py-2 group-hover/card:bg-muted">
+            <div className="flex h-full flex-col rounded-surface border border-border bg-card px-3 py-2 group-hover/card:bg-hover">
                 <div className="flex h-6 min-w-0 items-center gap-2">
                     {box !== null && (
                         <span className="flex" onClick={(event) => event.stopPropagation()}>
@@ -1219,7 +1219,7 @@ export function DataTable<T>({
                                     onClick={(event) => press(entry, event)}
                                     className={cn(
                                         'flex flex-col gap-1 px-(--density-panel-pad) py-2.5 text-sm',
-                                        hover && 'hover:bg-muted',
+                                        hover && 'hover:bg-hover',
                                         onOpen !== undefined && 'cursor-pointer',
                                         isOpened && 'bg-secondary hover:bg-secondary',
                                         'group-focus-visible/table:data-active:shadow-[inset_2px_0_0_var(--ring)]',
@@ -1294,7 +1294,7 @@ export function DataTable<T>({
                                         spaced,
                                         list && first + offset === flat.length - 1 && 'border-b-0',
                                         every ? 'min-h-(--density-row) scroll-mt-(--density-row)' : 'h-(--density-row)',
-                                        hover && 'hover:bg-muted',
+                                        hover && 'hover:bg-hover',
                                         onOpen !== undefined && 'cursor-pointer',
                                         (chosen || isOpened) && 'bg-secondary hover:bg-secondary',
                                         'group-focus-visible/table:data-active:shadow-[inset_2px_0_0_var(--ring)]',

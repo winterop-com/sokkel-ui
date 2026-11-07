@@ -90,7 +90,7 @@ export function DashboardPanel({
     const [expanded, setExpanded] = useState(false)
     const body = empty ? <p className="px-4 py-8 text-center text-sm text-muted-foreground">{words.empty}</p> : children
     const tool =
-        'flex size-7 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-secondary hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-ring'
+        'flex size-7 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-ring'
     return (
         <section
             className={cn(

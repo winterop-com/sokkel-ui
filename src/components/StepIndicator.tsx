@@ -82,7 +82,7 @@ export function StepIndicator({
                                 <button
                                     type="button"
                                     onClick={() => onStep(index)}
-                                    className="-mx-1 flex min-w-0 items-center gap-2 rounded-md px-1 py-0.5 outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/50"
+                                    className="-mx-1 flex min-w-0 items-center gap-2 rounded-md px-1 py-0.5 outline-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring/50"
                                 >
                                     {mark}
                                 </button>
