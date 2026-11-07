@@ -76,8 +76,10 @@ and ask before acting.
 - A story renders the same every time without interaction: no dates from the clock, no
   randomness, overlays opened by `open` or `defaultOpen`, and no network except the recorded map
   tiles.
-- Look at every new or changed story in dark and light, at desktop and phone width, before
-  committing it.
+- Keep the local loop light. Before a commit run only the fast gates (fmt, lint, tsc, vitest),
+  and take one quick look at the main new or changed story. Never run the screenshot suites
+  locally and never review screenshots one by one; CI on GitHub runs them, and its failures say
+  which stories to look at.
 - Desktop is the main target; phones, foldables and tablets must still work. A story is written
   once, at full width, and the viewport toolbar shows it at the widths layouts are checked at: 344
   and 690 for a foldable folded and open, 360, 390 and 430 for phones, 768 and 1024 for tablets,
@@ -87,9 +89,9 @@ and ask before acting.
   terminal, code, an editor, a log, a table, a schema, a graph, a chart, a video, a track list)
   fills the canvas, and the height too when it scrolls. One with a natural width (an input, a menu,
   a button, a card, a dialog) keeps that width.
-- Screenshot baselines are Linux renders, taken in the Playwright image as CI takes them:
-  `bun run test:visual:linux:update`, or on GitHub with `make screenshots-ci`, which retakes them
-  for the current branch and commits them there. Both recompress what they write with optipng, losslessly,
+- Screenshot baselines are Linux renders, taken on GitHub with `make screenshots-ci`, which retakes
+  them for the current branch and commits them there (`bun run test:visual:linux:update` does the
+  same locally, only when CI cannot). Both recompress what they write with optipng, losslessly,
   to keep the repository small. Never commit baselines taken on a Mac. A change that alters
   a story's look carries its retaken baselines in the same PR.
 
