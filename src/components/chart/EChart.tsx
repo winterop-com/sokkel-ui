@@ -4,6 +4,7 @@ import { useEffect, useImperativeHandle, useMemo, useRef, useState, type Ref } f
 import { cn } from '../../lib/cn'
 import { useChartLook, type ChartLook } from './look'
 import { chartTheme } from './theme'
+import { keepZoom } from './zoom'
 
 type Engine = typeof import('./engine')
 
@@ -149,6 +150,8 @@ export function EChart({
     const themed = useRef<ChartLook | null>(null)
     // The engine's count of parts loaded on demand when the chart was made.
     const made = useRef(0)
+    // The option last drawn, so a redraw that asks for the same zoom keeps the reader's.
+    const drawnOption = useRef<EChartsCoreOption | null>(null)
     const drawn = look !== null
 
     useEffect(() => {
@@ -173,6 +176,7 @@ export function EChart({
             observer?.disconnect()
             chart.current?.dispose()
             chart.current = null
+            drawnOption.current = null
             setReady(false)
         }
     }, [drawn])
@@ -198,8 +202,13 @@ export function EChart({
                 chart.current?.dispose()
                 chart.current = init(el, chartTheme(themed.current), { renderer: 'canvas' })
                 made.current = partsLoaded()
+                drawnOption.current = null
             }
-            chart.current?.setOption(compose(resolved, hidden, animate, short), { notMerge: true })
+            const instance = chart.current
+            if (instance === null) return
+            const zooms = (instance.getOption() as { dataZoom?: { start?: number; end?: number }[] } | undefined)?.dataZoom ?? []
+            instance.setOption(keepZoom(drawnOption.current, compose(resolved, hidden, animate, short), zooms), { notMerge: true })
+            drawnOption.current = resolved
             setSettled(true)
         })
         return () => {

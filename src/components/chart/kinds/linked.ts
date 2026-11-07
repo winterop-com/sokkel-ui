@@ -61,7 +61,7 @@ function widestTick(values: readonly (number | null)[], write: (value: number) =
 /**
  * Panels stacked on one shared `x` axis of categories or days, one panel per `y` field, or per
  * label of `series` when it names a field, each with a value axis of its own, on one scale where
- * `scales` says so, as it does by default for panels split by `series`. Moving over one
+ * `scales` says so, as it does by default for panels split by `series`, fitted to the part in view. Moving over one
  * panel points at the same category in all of them, and one zoom moves them together: a slider
  * under the last panel, dragging across a panel, and a pinch or Ctrl and the wheel. `panels` says
  * how each is drawn: as bars, a line or an area, standing or hanging from its top, and its share of
@@ -87,7 +87,6 @@ export const linked: ChartBuilder = (spec, look, hidden) => {
     // One measure split into panels shares a scale, so their heights compare; separate fields keep their own.
     const shared = (spec.scales ?? (spec.series === undefined ? 'own' : 'shared')) === 'shared'
     const figures = panels.flatMap((panel) => panel.values).filter((value): value is number => value !== null)
-    const scale = shared ? niceExtent([Math.min(0, ...figures), Math.max(0, ...figures)], 3) : null
     const left = 12 + Math.max(...panels.map((panel) => widestTick(shared ? figures : panel.values, ticks(panel.unit), look.size.label)))
     // Bars need room at the axis' ends, and every panel takes the same room so the categories line up.
     const boundaryGap = panels.some((panel) => panel.style.mark === 'bar')
@@ -145,11 +144,13 @@ export const linked: ChartBuilder = (spec, look, hidden) => {
             formatter: (points: { axisValueLabel: string; seriesName: string; value: number | null; color: string }[]) =>
                 tooltipMarkup(
                     points[0]?.axisValueLabel ?? '',
-                    points.map((point) => ({
-                        label: spec.fieldNames?.[point.seriesName] ?? point.seriesName,
-                        value: written(spec, point.value, unitOf.get(point.seriesName) ?? 0),
-                        color: point.color,
-                    })),
+                    points
+                        .filter((point) => point.seriesName !== SHARED_SCALE)
+                        .map((point) => ({
+                            label: spec.fieldNames?.[point.seriesName] ?? point.seriesName,
+                            value: written(spec, point.value, unitOf.get(point.seriesName) ?? 0),
+                            color: point.color,
+                        })),
                 ),
         },
         axisPointer: { link: [{ xAxisIndex: 'all' }] },
@@ -195,7 +196,6 @@ export const linked: ChartBuilder = (spec, look, hidden) => {
                 gridIndex: index,
                 inverse: hang,
                 splitNumber: 3,
-                ...(scale === null ? {} : scale),
                 name: spec.fieldNames?.[panel.name] ?? panel.name,
                 // The panel's name sits above it, at zero's end of a hanging panel's axis.
                 nameLocation: hang ? 'start' : 'end',
@@ -204,10 +204,45 @@ export const linked: ChartBuilder = (spec, look, hidden) => {
                 axisLabel: { formatter: ticks(panel.unit), hideOverlap: true },
             }
         }),
-        series: panels.map((panel, index) =>
-            seriesOf(panel, index, spec.smooth === true, spec.fill, look, colorOf(spec, look, panel.name, panel.index)),
-        ),
+        series: [
+            ...panels.map((panel, index) =>
+                seriesOf(panel, index, spec.smooth === true, spec.fill, look, colorOf(spec, look, panel.name, panel.index)),
+            ),
+            ...(shared ? sharedScale(panels, categories.length) : []),
+        ],
     }
+}
+
+/** The name of the unseen series that hold the panels to one scale. */
+export const SHARED_SCALE = '\u0000shared scale'
+
+/**
+ * Unseen lines, one in each panel, through every category's highest and lowest figure across all
+ * panels. Each panel's axis fits the figures in view, these included, so the panels come out on one
+ * scale that still fits again as the zoom moves.
+ */
+function sharedScale(panels: readonly { values: readonly (number | null)[] }[], count: number) {
+    const across = (pick: (values: number[]) => number) =>
+        Array.from({ length: count }, (_, at) => {
+            const values = panels.map((panel) => panel.values[at]).filter((value): value is number => value !== null && value !== undefined)
+            return values.length === 0 ? null : pick(values)
+        })
+    const highest = across((values) => Math.max(...values))
+    const lowest = across((values) => Math.min(...values))
+    const unseen = {
+        type: 'line',
+        name: SHARED_SCALE,
+        silent: true,
+        symbol: 'none',
+        lineStyle: { opacity: 0 },
+        tooltip: { show: false },
+        emphasis: { disabled: true },
+        animation: false,
+    }
+    return panels.flatMap((_, index) => [
+        { ...unseen, xAxisIndex: index, yAxisIndex: index, data: highest },
+        { ...unseen, xAxisIndex: index, yAxisIndex: index, data: lowest },
+    ])
 }
 
 /** One panel's series, drawn by its mark. */
