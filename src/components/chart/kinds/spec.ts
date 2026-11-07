@@ -63,8 +63,11 @@ export interface ChartSpec {
     words?: Partial<ChartWords>
 }
 
-/** Builds a kind's ECharts option from the spec and the theme's look. */
-export type ChartBuilder = (spec: ChartSpec, look: ChartLook) => EChartsCoreOption
+/**
+ * Builds a kind's ECharts option from the spec and the theme's look. `hidden` names what the
+ * frame's legend hides, for a kind whose legend lists what ECharts cannot hide by a series' name.
+ */
+export type ChartBuilder = (spec: ChartSpec, look: ChartLook, hidden?: ReadonlySet<string>) => EChartsCoreOption
 
 /**
  * A kind of chart: `build` draws it, and `legend` lists what a frame's legend shows for it where

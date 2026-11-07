@@ -168,9 +168,9 @@ export function EChart({
         if (!ready || instance === null || resolved === null) return
         instance.dispatchAction({ type: 'downplay' })
         if (hovered === null || hidden.has(hovered)) return
-        // A ring's or a funnel's legend names its slices, which are items of one series rather than series.
-        const items = seriesOf(resolved).some((series) => series.type === 'pie' || series.type === 'funnel')
-        instance.dispatchAction(items ? { type: 'highlight', seriesIndex: 0, name: hovered } : { type: 'highlight', seriesName: hovered })
+        // A legend entry names a series, or else an item of the first one: a slice, a band, a branch, a node.
+        const named = seriesOf(resolved).some((series) => series.name === hovered)
+        instance.dispatchAction(named ? { type: 'highlight', seriesName: hovered } : { type: 'highlight', seriesIndex: 0, name: hovered })
     }, [ready, resolved, hovered, hidden])
 
     useImperativeHandle(handle, () => {
