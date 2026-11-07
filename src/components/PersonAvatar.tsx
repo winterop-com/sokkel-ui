@@ -1,4 +1,5 @@
 import { Avatar } from '@base-ui/react/avatar'
+import { useState } from 'react'
 
 import { cn } from '../lib/cn'
 import { KIND_WASH, kindOf, type KindColor } from '../lib/kind'
@@ -109,20 +110,35 @@ export function PersonAvatar({
         corner,
         KIND_WASH[color ?? kindOf(name)],
     )
+    // A picture still loading marks the badge, so a screenshot waits for it as it waits for a chart.
+    const [status, setStatus] = useState<{ image?: string; done: boolean }>({ done: false })
+    const settling = image !== undefined && image !== '' && !(status.image === image && status.done)
     const content = (
         <>
-            {image !== undefined && <Avatar.Image src={image} alt={label} className="size-full object-cover" />}
+            {image !== undefined && (
+                <Avatar.Image
+                    src={image}
+                    alt={label}
+                    className="size-full object-cover"
+                    onLoadingStatusChange={(now) => setStatus({ image, done: now === 'loaded' || now === 'error' })}
+                />
+            )}
             <Avatar.Fallback aria-label={label}>{letters}</Avatar.Fallback>
         </>
     )
     if (presence === undefined)
         return (
-            <Avatar.Root data-slot="avatar" title={label} className={cn(badge, className)}>
+            <Avatar.Root data-slot="avatar" data-settling={settling ? '' : undefined} title={label} className={cn(badge, className)}>
                 {content}
             </Avatar.Root>
         )
     return (
-        <span data-slot="avatar" title={label} className={cn('relative inline-flex shrink-0', fit.box, corner, className)}>
+        <span
+            data-slot="avatar"
+            data-settling={settling ? '' : undefined}
+            title={label}
+            className={cn('relative inline-flex shrink-0', fit.box, corner, className)}
+        >
             <Avatar.Root className={cn(badge, 'size-full')}>{content}</Avatar.Root>
             <PresenceDot presence={presence} label={words.presence[presence]} className={cn('absolute', fit.dot)} />
         </span>
