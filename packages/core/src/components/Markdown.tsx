@@ -122,21 +122,36 @@ type MathEngine = typeof import('../lib/katex')
 let engine: Promise<MathEngine> | undefined
 let ready: MathEngine | undefined
 
+/**
+ * Loads the math engine `Markdown` draws formulas with, once, and resolves when it is ready. Markdown
+ * calls it itself the first time a message holds math; an app that knows formulas are coming can call
+ * it ahead, so the first one draws at once.
+ */
+export function loadMath(): Promise<void> {
+    engine ??= import('../lib/katex').then(
+        (module) => {
+            ready = module
+            return module
+        },
+        (error: unknown) => {
+            engine = undefined
+            throw error
+        },
+    )
+    return engine.then(() => undefined)
+}
+
 /** The math engine once a message has needed it, loaded on the first such message and shared by the rest. */
 function useMathEngine(needed: boolean): MathEngine | undefined {
     const [loaded, setLoaded] = useState<MathEngine | undefined>(ready)
     useEffect(() => {
         if (!needed || loaded !== undefined) return
         let live = true
-        engine ??= import('../lib/katex')
-        engine.then(
-            (module) => {
-                ready = module
-                if (live) setLoaded(module)
-            },
+        loadMath().then(
             () => {
-                engine = undefined
+                if (live) setLoaded(ready)
             },
+            () => undefined,
         )
         return () => {
             live = false

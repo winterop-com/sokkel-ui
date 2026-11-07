@@ -366,13 +366,20 @@ const TURNS: { id: string; time: string; ask: string; answer: string; calls?: To
         id: 't5',
         time: '09:33',
         ask: 'Will the locale parse slow it down?',
-        answer: `Barely. A locale parse costs about $2\\,\\mu\\text{s}$ more a row, so for the 2,184 rows of a night:
+        answer:
+            String.raw`Barely. A locale parse costs about $2\,\mu\text{s}$ more a row, so for the 2,184 rows of a night:
 
 $$
-2184 \\times 2\\,\\mu\\text{s} \\approx 4.4\\,\\text{ms}
+2184 \times 2\,\mu\text{s} \approx 4.4\,\text{ms}
 $$
 
-against a median run of 4 min 12 s, which spends most of its time in \`fetch\` and \`upload\`.`,
+against a median run of 4 min 12 s:
+
+\[
+\frac{4.4\,\text{ms}}{252\,\text{s}} \approx 0.002\,\%
+\]
+
+The run spends most of its time in ` + '`fetch` and `upload`, so \\(t_{\\text{transform}}\\) barely moves.',
     },
 ]
 

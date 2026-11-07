@@ -237,6 +237,7 @@ export function MessageComposer({
     onAlsoSendChange,
     defaultFormatting = true,
     preview = true,
+    math = true,
     mode: givenMode,
     defaultMode = 'write',
     onModeChange,
@@ -270,6 +271,8 @@ export function MessageComposer({
     defaultFormatting?: boolean
     /** Offers Write and Preview at the end of the toolbar. */
     preview?: boolean
+    /** Draws LaTeX math in the preview, as `Markdown` does: on by default; off where every `$` is a dollar. */
+    math?: boolean
     /** The mode shown, when the app holds it; otherwise the composer does, from `defaultMode`. */
     mode?: MessageComposerMode
     defaultMode?: MessageComposerMode
@@ -468,7 +471,7 @@ export function MessageComposer({
                         {empty ? (
                             <p className="text-muted-foreground">{words.nothingToPreview}</p>
                         ) : (
-                            <Markdown content={value} words={words.markdown} />
+                            <Markdown content={value} words={words.markdown} math={math} />
                         )}
                     </div>
                 )}
