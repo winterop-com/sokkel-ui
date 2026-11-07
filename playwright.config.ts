@@ -10,7 +10,8 @@ export default defineConfig({
     snapshotPathTemplate: '{testDir}/__screenshots__/{arg}{ext}',
     fullyParallel: true,
     reporter: [['line']],
-    expect: { toHaveScreenshot: { maxDiffPixels: 20, animations: 'disabled' } },
+    // A screenshot of a tall story, such as every icon, can take more than the default five seconds on a busy runner.
+    expect: { toHaveScreenshot: { maxDiffPixels: 20, animations: 'disabled', timeout: 20_000 } },
     use: { baseURL: `http://127.0.0.1:${PORT}`, ...devices['Desktop Chrome'] },
     webServer: {
         command,
