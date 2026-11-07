@@ -61,6 +61,8 @@ export interface ChartSpec {
     max?: number
     /** The words a chart writes itself, in tooltips and legends. */
     words?: Partial<ChartWords>
+    /** The fields from the outermost in, for a kind that nests (boxes, rings) or flows through stages. */
+    path?: readonly string[]
 }
 
 /**

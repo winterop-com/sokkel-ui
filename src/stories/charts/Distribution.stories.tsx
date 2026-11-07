@@ -2,8 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import type { ChartSpec } from '../../components/chart/kinds'
 import { RUN_PROJECTS, RUN_ROWS, RUN_STATES, RUN_WORKERS, STATE_COLORS } from '../fixtures/runRows'
-import { Framed } from './Framed'
-import { Ground } from './Ground'
+import { Framed, Ground } from './Ground'
 
 /**
  * How a number spreads, drawn from a month of Tidevann's runs: `Chart` with the histogram kind bins

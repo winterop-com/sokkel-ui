@@ -1,5 +1,8 @@
-import type { ReactNode } from 'react'
+import { useMemo, type ReactNode } from 'react'
 
+import { Chart, chartLegend } from '../../components/chart/Chart'
+import { ChartFrame } from '../../components/chart/ChartFrame'
+import type { ChartKind, ChartSpec } from '../../components/chart/kinds'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { TopBar } from '../../components/TopBar'
 import { Columns, Stack } from '../../components/Layout'
@@ -19,5 +22,36 @@ export function Ground({ title, columns = 2, children }: { title: string; column
                 )}
             </Stack>
         </div>
+    )
+}
+
+/** A chart drawn from rows in its frame, with the frame's legend for the same spec and its file named for the title. */
+export function Framed({
+    kind,
+    spec,
+    title,
+    subtitle,
+    label,
+    bodyClassName,
+}: {
+    kind: ChartKind
+    spec: ChartSpec
+    title: string
+    subtitle?: string
+    label: string
+    /** The chart area's size, when the kind wants more room than a frame's default. */
+    bodyClassName?: string
+}) {
+    const legend = useMemo(() => chartLegend(kind, spec), [kind, spec])
+    return (
+        <ChartFrame
+            title={title}
+            subtitle={subtitle}
+            legend={legend}
+            file={title.toLowerCase().replaceAll(' ', '-')}
+            bodyClassName={bodyClassName}
+        >
+            {(state) => <Chart kind={kind} label={label} {...spec} {...state} />}
+        </ChartFrame>
     )
 }

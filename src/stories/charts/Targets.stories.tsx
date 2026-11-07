@@ -3,8 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ChartSpec, ChartStep } from '../../components/chart/kinds'
 import { Columns } from '../../components/Layout'
 import { JOB_GOALS, RUN_RATES } from '../fixtures/runMeasures'
-import { Framed } from './Framed'
-import { Ground } from './Ground'
+import { Framed, Ground } from './Ground'
 
 /**
  * Figures against what they aim for, drawn from Tidevann's month: `Chart` with the bullet kind sets

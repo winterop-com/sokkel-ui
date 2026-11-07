@@ -8,8 +8,7 @@ import { Columns, Stack } from '../../components/Layout'
 import { Segmented } from '../../components/Segmented'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
 import { RUN_ROWS, RUN_STATES, STATE_COLORS } from '../fixtures/runRows'
-import { Framed } from './Framed'
-import { Ground } from './Ground'
+import { Framed, Ground } from './Ground'
 
 /**
  * Charts drawn from rows: `Chart` takes a month of Tidevann's runs and the fields to read, and the

@@ -2,8 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import type { ChartSpec } from '../../components/chart/kinds'
 import { RUN_RATES } from '../fixtures/runMeasures'
-import { Framed } from './Framed'
-import { Ground } from './Ground'
+import { Framed, Ground } from './Ground'
 
 /**
  * Two measures over the same categories, drawn from a month of Tidevann's runs: `Chart` with the

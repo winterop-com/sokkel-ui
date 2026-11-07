@@ -2,8 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import type { ChartSpec } from '../../components/chart/kinds'
 import { CARRY_STEPS, INDEX_ROWS, STEP_ROWS } from '../fixtures/runMeasures'
-import { Framed } from './Framed'
-import { Ground } from './Ground'
+import { Framed, Ground } from './Ground'
 
 /**
  * What adds up and what drops out, drawn from Tidevann's runs: `Chart` with the waterfall kind runs a
