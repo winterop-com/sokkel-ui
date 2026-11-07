@@ -28,7 +28,7 @@ import { DropZone } from '../../components/UploadTray'
 import { cn } from '../../lib/cn'
 import { describeCron } from '../../lib/cron'
 import { Behind, TextField } from './parts'
-import { ItemMedia } from '../../components/ui/item'
+import { Item, ItemContent, ItemDescription, ItemMedia } from '../../components/ui/item'
 import { Row, Stack } from '../../components/Layout'
 
 /** Counts from 0 to 1 while `running`, then calls `onDone`; a stand-in for a server's progress. */
@@ -800,9 +800,9 @@ export function Share() {
                 </Stack>
                 <Stack gap="xs">
                     <span className="text-sm font-medium">Link access</span>
-                    <Row gap="md" className="rounded-control border border-border px-3 py-2.5">
+                    <Item variant="outline" size="sm">
                         <ItemMedia variant="icon">{link === 'invited' ? <Lock aria-hidden /> : <Users aria-hidden />}</ItemMedia>
-                        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                        <ItemContent>
                             <NativeSelect
                                 size="sm"
                                 aria-label="Who the link opens for"
@@ -813,17 +813,17 @@ export function Share() {
                                 <NativeSelectOption value="invited">Only people invited</NativeSelectOption>
                                 <NativeSelectOption value="workspace">Anyone in Tidevann</NativeSelectOption>
                             </NativeSelect>
-                            <span className="text-xs text-muted-foreground">
+                            <ItemDescription className="text-xs">
                                 {link === 'invited'
                                     ? 'Others who open the link are asked to request access.'
                                     : 'Anyone signed in to Tidevann can view with the link.'}
-                            </span>
-                        </span>
+                            </ItemDescription>
+                        </ItemContent>
                         <Globe
                             className={cn('size-4 shrink-0', link === 'workspace' ? 'text-muted-foreground' : 'text-transparent')}
                             aria-hidden
                         />
-                    </Row>
+                    </Item>
                 </Stack>
             </DialogShell>
         </Behind>
