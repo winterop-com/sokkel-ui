@@ -24,7 +24,7 @@ import { CodeEditor } from '../../components/CodeEditor'
 import { DataTable, type DataColumn } from '../../components/DataTable'
 import { DescriptionList } from '../../components/DescriptionList'
 import { Field } from '../../components/Field'
-import { FilterChip } from '../../components/FilterChip'
+import { FilterChip, type FilterOption } from '../../components/FilterChip'
 import { Inspector, InspectorSection } from '../../components/Inspector'
 import { Markdown } from '../../components/Markdown'
 import { PageHeader } from '../../components/PageHeader'
@@ -41,6 +41,7 @@ import { Kbd } from '../../components/ui/kbd'
 import { NativeSelect, NativeSelectOption } from '../../components/ui/native-select'
 import { Textarea } from '../../components/ui/textarea'
 import { TooltipProvider } from '../../components/ui/tooltip'
+import { PEOPLE_OPTIONS, PROJECT_OPTIONS, STATUS_OPTIONS } from '../fixtures/filters'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { Row, Stack } from '../../components/Layout'
 
@@ -455,12 +456,9 @@ function PromptPage() {
                     <CodeEditor label="log" value={log} onChange={setLog} className="h-28" />
                 </Field>
             </Section>
-            <Surface className="lg:hidden">
-                <h2 className="flex h-(--density-panel-head) items-center border-b border-border-strong bg-panel-ground px-(--density-panel-pad) text-sm font-medium">
-                    Parameters
-                </h2>
+            <Section title="Parameters" flush className="lg:hidden">
                 <Parameters />
-            </Surface>
+            </Section>
             <Section
                 title="Answer"
                 meta={answer.model}
@@ -548,10 +546,21 @@ function ComparePage() {
     )
 }
 
+const MODEL_OPTIONS: FilterOption[] = ['tide-large', 'tide-medium', 'tide-small'].map((model) => ({ value: model }))
+
 function HistoryPage() {
     const [query, setQuery] = useState('')
     const [chosen, setChosen] = useState<Run>(RUNS[2])
-    const rows = RUNS.filter((run) => run.prompt.includes(query.trim()))
+    const [models, setModels] = useState<string[]>([])
+    const [states, setStates] = useState<string[]>([])
+    const [people, setPeople] = useState<string[]>([])
+    const rows = RUNS.filter(
+        (run) =>
+            (models.length === 0 || models.includes(run.model)) &&
+            (states.length === 0 || states.includes(run.state)) &&
+            (people.length === 0 || people.includes(run.by)) &&
+            run.prompt.includes(query.trim()),
+    )
     return (
         <Page className="h-full">
             <PageHeader title="History" count="1,284 runs" />
@@ -565,10 +574,10 @@ function HistoryPage() {
                                 placeholder="Search prompts"
                                 className="w-full max-w-64 min-w-40"
                             />
-                            <FilterChip facet="Model" />
-                            <FilterChip facet="State" />
-                            <FilterChip facet="Project" value="larkspur" onClear={() => undefined} />
-                            <FilterChip facet="By" />
+                            <FilterChip facet="Model" options={MODEL_OPTIONS} multiple selected={models} onSelectedChange={setModels} />
+                            <FilterChip facet="State" options={STATUS_OPTIONS} multiple selected={states} onSelectedChange={setStates} />
+                            <FilterChip facet="Project" options={PROJECT_OPTIONS} defaultSelected={['larkspur']} />
+                            <FilterChip facet="By" options={PEOPLE_OPTIONS} multiple selected={people} onSelectedChange={setPeople} />
                         </>
                     }
                     columns={COLUMNS}

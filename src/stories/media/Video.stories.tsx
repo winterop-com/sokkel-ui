@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import { VideoPlayer } from '../../components/media/VideoPlayer'
+import { MetaLine } from '../../components/MetaLine'
 import captions from './fixtures/captions.vtt?url'
 import clip from './fixtures/clip.webm?url'
 import { Stack } from '../../components/Layout'
@@ -13,7 +14,7 @@ function Ground({ children }: { children: React.ReactNode }) {
                 {children}
                 <div>
                     <p className="text-sm font-medium">Coastline, morning to evening</p>
-                    <p className="text-xs text-muted-foreground">Margaret &middot; 1:36</p>
+                    <MetaLine items={['Margaret', '1:36']} />
                 </div>
             </Stack>
         </div>

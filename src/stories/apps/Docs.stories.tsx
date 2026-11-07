@@ -15,6 +15,7 @@ import { Rail, type RailGroup } from '../../components/Rail'
 import { SearchField } from '../../components/SearchField'
 import { Shell } from '../../components/Shell'
 import { StatusItem, StatusLine } from '../../components/StatusLine'
+import { SubNav } from '../../components/SubNav'
 import { TableOfContents, useActiveHeading } from '../../components/TableOfContents'
 import { ThemeToggle } from '../../components/ThemeToggle'
 import { TopBar } from '../../components/TopBar'
@@ -382,13 +383,15 @@ function DocsApp({ mode: initialMode = 'read' }: { mode?: 'read' | 'edit' | 'his
                 }
             >
                 <Row gap="none" align="stretch" className="h-full min-h-0">
-                    <aside className="hidden w-60 shrink-0 flex-col gap-3 overflow-y-auto border-r border-border-strong bg-sidebar px-2 py-3 lg:flex">
-                        <Row gap="2xs" className="px-1">
-                            <SearchField value={query} onChange={setQuery} placeholder="Search" className="min-w-0 flex-1" />
+                    <SubNav
+                        label="Pages"
+                        search={<SearchField value={query} onChange={setQuery} placeholder="Search" />}
+                        actions={
                             <IconButton label="New page">
                                 <Plus aria-hidden />
                             </IconButton>
-                        </Row>
+                        }
+                    >
                         <Tree
                             label="Pages"
                             nodes={PAGES}
@@ -397,7 +400,7 @@ function DocsApp({ mode: initialMode = 'read' }: { mode?: 'read' | 'edit' | 'his
                             onSelect={(ids) => setPageId(ids[0])}
                             defaultOpen={['runbooks', 'projects']}
                         />
-                    </aside>
+                    </SubNav>
                     <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
                         <div
                             className={cn(

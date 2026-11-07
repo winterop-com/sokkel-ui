@@ -1,26 +1,18 @@
 import { IconButton } from '../../components/IconButton'
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { Bell, ChevronDown, FileSpreadsheet, Folder, MessageSquare, PenSquare, Search } from 'lucide-react'
+import { Bell, FileSpreadsheet, Folder, MessageSquare, PenSquare, Search } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
 import { AccountMenu } from '../../components/AccountMenu'
 import { AssistantReply, type AssistantReplyLayout } from '../../components/AssistantReply'
+import { AttachmentList } from '../../components/AttachmentList'
 import { Composer, type ComposerAttachment } from '../../components/Composer'
 import type { ConfirmState } from '../../components/ConfirmCard'
 import { Rail, type RailGroup } from '../../components/Rail'
 import { Shell } from '../../components/Shell'
 import type { ToolCallEntry } from '../../components/ToolCall'
 import { TopBar } from '../../components/TopBar'
-import {
-    Attachment,
-    AttachmentContent,
-    AttachmentDescription,
-    AttachmentGroup,
-    AttachmentMedia,
-    AttachmentTitle,
-} from '../../components/ui/attachment'
 import { Bubble, BubbleContent } from '../../components/ui/bubble'
-import { Button } from '../../components/ui/button'
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '../../components/ui/empty'
 import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from '../../components/ui/item'
 import { Message, MessageContent } from '../../components/ui/message'
@@ -34,6 +26,7 @@ import {
 } from '../../components/ui/message-scroller'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { HARBOR_DUSK } from '../fixtures/photos'
+import { ModelPicker } from '../fixtures/models'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { Stack } from '../../components/Layout'
 
@@ -284,26 +277,12 @@ function Attached() {
         <Thread>
             <Message align="end">
                 <MessageContent>
-                    <AttachmentGroup>
-                        <Attachment size="sm">
-                            <AttachmentMedia>
-                                <FileSpreadsheet />
-                            </AttachmentMedia>
-                            <AttachmentContent>
-                                <AttachmentTitle>orders-2026-10.csv</AttachmentTitle>
-                                <AttachmentDescription>CSV, 2.1 MB</AttachmentDescription>
-                            </AttachmentContent>
-                        </Attachment>
-                        <Attachment size="sm">
-                            <AttachmentMedia variant="image">
-                                <img src={HARBOR_DUSK} alt="" />
-                            </AttachmentMedia>
-                            <AttachmentContent>
-                                <AttachmentTitle>rejections.png</AttachmentTitle>
-                                <AttachmentDescription>PNG, 184 KB</AttachmentDescription>
-                            </AttachmentContent>
-                        </Attachment>
-                    </AttachmentGroup>
+                    <AttachmentList
+                        files={[
+                            { id: 'orders', name: 'orders-2026-10.csv', detail: 'CSV, 2.1 MB', icon: <FileSpreadsheet aria-hidden /> },
+                            { id: 'rejections', name: 'rejections.png', detail: 'PNG, 184 KB', image: HARBOR_DUSK },
+                        ]}
+                    />
                     <Bubble align="end" variant="secondary">
                         <BubbleContent>Do these explain the rejected rows?</BubbleContent>
                     </Bubble>
@@ -452,10 +431,7 @@ function ChatApp({
                         trail={[{ label: title }]}
                         actions={
                             <>
-                                <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground">
-                                    fast model
-                                    <ChevronDown aria-hidden />
-                                </Button>
+                                <ModelPicker />
                                 <IconButton label="Notifications">
                                     <Bell aria-hidden />
                                 </IconButton>

@@ -17,16 +17,17 @@ import {
     Send,
     ShieldCheck,
     Trash2,
-    TriangleAlert,
     UserPlus,
     Users,
     X,
 } from 'lucide-react'
+import { differenceInCalendarDays, format } from 'date-fns'
 import { useState, type ReactNode } from 'react'
 
 import { AccountMenu } from '../../components/AccountMenu'
 import { IssueCount } from '../../components/IssueMark'
 import { AddressInput, isAddress, type Address } from '../../components/AddressInput'
+import { DueText } from '../../components/DueText'
 import { DashboardGrid, KpiRow, SPAN } from '../../components/dashboard/DashboardGrid'
 import { BarGauge } from '../../components/dashboard/BarGauge'
 import type { PanelSeries } from '../../components/dashboard/series'
@@ -37,7 +38,7 @@ import { DescriptionList } from '../../components/DescriptionList'
 import { ConfirmDialog, DialogShell } from '../../components/DialogShell'
 import { DiffView } from '../../components/DiffView'
 import { Field } from '../../components/Field'
-import { FilterChip } from '../../components/FilterChip'
+import { FilterChip, type FilterOption } from '../../components/FilterChip'
 import { PageHeader } from '../../components/PageHeader'
 import { countChanges, PermissionMatrix, type Grants, type MatrixGroup, type MatrixRole } from '../../components/PermissionMatrix'
 import { Rail, type RailGroup } from '../../components/Rail'
@@ -56,6 +57,7 @@ import { Button } from '../../components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { cn } from '../../lib/cn'
+import { PEOPLE_OPTIONS, PERIOD_OPTIONS, PROJECT_OPTIONS } from '../fixtures/filters'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { Row, Stack } from '../../components/Layout'
 
@@ -124,14 +126,24 @@ interface Invite {
     role: Role
     by: string
     sent: string
-    expires: string
-    /** Days until the invite expires. */
-    left: number
+    expires: Date
+}
+
+/** Today, which the expiry dates are judged against. */
+const NOW = new Date(2026, 10, 4)
+
+/** An invite's expiry as days from today. */
+const INVITE_EXPIRY = {
+    date: (date: Date, now: Date) => {
+        const days = differenceInCalendarDays(date, now)
+        return days === 1 ? 'tomorrow' : `in ${String(days)} days`
+    },
+    title: () => undefined,
 }
 
 const INVITES: Invite[] = [
-    { email: 'data@example.org', role: 'editor', by: 'grace', sent: 'Nov 2', expires: 'in 5 days', left: 5 },
-    { email: 'oncall@example.org', role: 'viewer', by: 'ada', sent: 'Oct 30', expires: 'tomorrow', left: 1 },
+    { email: 'data@example.org', role: 'editor', by: 'grace', sent: 'Nov 2', expires: new Date(2026, 10, 9) },
+    { email: 'oncall@example.org', role: 'viewer', by: 'ada', sent: 'Oct 30', expires: new Date(2026, 10, 5) },
 ]
 
 function groups(view: View): RailGroup[] {
@@ -254,16 +266,14 @@ const inviteColumns: DataColumn<Invite>[] = [
         header: 'Sent',
         width: '6rem',
         cell: (invite) => <span className="text-muted-foreground tabular-nums">{invite.sent}</span>,
-        sortValue: (invite) => -invite.left,
+        sortValue: (invite) => -invite.expires.getTime(),
     },
     {
         id: 'expires',
         header: 'Expires',
         width: '7rem',
-        cell: (invite) => (
-            <span className={cn('tabular-nums', invite.left <= 1 ? 'text-warning-ink' : 'text-muted-foreground')}>{invite.expires}</span>
-        ),
-        sortValue: (invite) => invite.left,
+        cell: (invite) => <DueText date={invite.expires} now={NOW} nearDays={1} words={INVITE_EXPIRY} />,
+        sortValue: (invite) => invite.expires.getTime(),
     },
 ]
 
@@ -603,19 +613,16 @@ function RolesPage() {
 
 /* Tokens */
 
-type ExpiryTone = 'normal' | 'soon' | 'expired'
-
 interface Token {
     name: string
     scopes: string[]
     created: string
     used: string
-    expires: string
-    tone: ExpiryTone
-    /** Days since it was made, minutes since it was used, and days until it expires, for sorting. */
+    /** None for a token that never expires. */
+    expires?: Date
+    /** Days since it was made and minutes since it was used, for sorting. */
     age: number
     idle: number
-    left: number
 }
 
 const TOKENS: Token[] = [
@@ -624,44 +631,35 @@ const TOKENS: Token[] = [
         scopes: ['runs:start', 'projects:read'],
         created: 'Aug 6, grace',
         used: '14 min ago',
-        expires: 'Nov 7, in 3 days',
-        tone: 'soon',
+        expires: new Date(2026, 10, 7),
         age: 90,
         idle: 14,
-        left: 3,
     },
     {
         name: 'metrics-export',
         scopes: ['runs:read'],
         created: 'Jun 2, ada',
         used: '2 h ago',
-        expires: 'Dec 31',
-        tone: 'normal',
+        expires: new Date(2026, 11, 31),
         age: 155,
         idle: 120,
-        left: 57,
     },
     {
         name: 'backup-sync',
         scopes: ['secrets:read', 'projects:read', 'runs:read'],
         created: 'Mar 14, linus',
         used: 'Oct 2',
-        expires: 'never',
-        tone: 'normal',
         age: 235,
         idle: 46_000,
-        left: Number.MAX_SAFE_INTEGER,
     },
     {
         name: 'old-webhook',
         scopes: ['runs:start'],
         created: 'Feb 1, grace',
         used: 'Feb 20',
-        expires: 'Oct 30, expired',
-        tone: 'expired',
+        expires: new Date(2026, 9, 30),
         age: 276,
         idle: 365_000,
-        left: -5,
     },
 ]
 
@@ -670,11 +668,9 @@ const NEW_TOKEN: Token = {
     scopes: ['runs:read', 'runs:start'],
     created: 'Nov 4, ada',
     used: 'never',
-    expires: 'Feb 2, 2027',
-    tone: 'normal',
+    expires: new Date(2027, 1, 2),
     age: 0,
     idle: Number.MAX_SAFE_INTEGER,
-    left: 90,
 }
 
 function Scope({ scope }: { scope: string }) {
@@ -685,14 +681,16 @@ function Scope({ scope }: { scope: string }) {
     )
 }
 
-function Expiry({ token }: { token: Token }) {
-    if (token.tone === 'normal') return <span className="text-muted-foreground tabular-nums">{token.expires}</span>
-    return (
-        <span className={cn('flex items-center gap-1 tabular-nums', token.tone === 'soon' ? 'text-warning-ink' : 'text-critical-ink')}>
-            <TriangleAlert className="size-3.5 shrink-0" aria-hidden />
-            <span className="truncate">{token.expires}</span>
-        </span>
-    )
+/** A token's expiry: its date, with how near it is within a week, and "never" without one. */
+const TOKEN_EXPIRY = {
+    date: (date: Date, now: Date) => {
+        const days = differenceInCalendarDays(date, now)
+        const written = format(date, date.getFullYear() === now.getFullYear() ? 'MMM d' : 'MMM d, yyyy')
+        if (days < 0) return `${written}, expired`
+        return days <= 7 ? `${written}, in ${String(days)} days` : written
+    },
+    title: () => undefined,
+    none: 'never',
 }
 
 const TOKEN_COLUMNS: DataColumn<Token>[] = [
@@ -730,7 +728,13 @@ const TOKEN_COLUMNS: DataColumn<Token>[] = [
         cell: (token) => <span className="text-muted-foreground tabular-nums">{token.used}</span>,
         sortValue: (token) => token.idle,
     },
-    { id: 'expires', header: 'Expires', width: '9rem', cell: (token) => <Expiry token={token} />, sortValue: (token) => token.left },
+    {
+        id: 'expires',
+        header: 'Expires',
+        width: '9rem',
+        cell: (token) => <DueText date={token.expires} now={NOW} nearDays={7} alert words={TOKEN_EXPIRY} />,
+        sortValue: (token) => token.expires?.getTime() ?? Number.MAX_SAFE_INTEGER,
+    },
 ]
 
 const tokenActions = (): DataAction[] => [
@@ -1110,10 +1114,20 @@ const EVENT_COLUMNS: DataColumn<AuditEvent>[] = [
     },
 ]
 
+/** The actions the audit log records, each once, in the order first seen. */
+const ACTION_OPTIONS: FilterOption[] = [...new Set(EVENTS.map((event) => event.action))].map((action) => ({ value: action }))
+
 function AuditPage({ chosen, onChoose }: { chosen: AuditEvent; onChoose: (event: AuditEvent) => void }) {
     const [query, setQuery] = useState('')
+    const [actors, setActors] = useState<string[]>([])
+    const [actions, setActions] = useState<string[]>([])
     const q = query.trim().toLowerCase()
-    const shown = EVENTS.filter((event) => `${event.who} ${event.action} ${event.object} ${event.ip}`.toLowerCase().includes(q))
+    const shown = EVENTS.filter(
+        (event) =>
+            (actors.length === 0 || actors.includes(event.who)) &&
+            (actions.length === 0 || actions.includes(event.action)) &&
+            `${event.who} ${event.action} ${event.object} ${event.ip}`.toLowerCase().includes(q),
+    )
     return (
         <Page>
             <PageHeader
@@ -1130,10 +1144,10 @@ function AuditPage({ chosen, onChoose }: { chosen: AuditEvent; onChoose: (event:
                 toolbar={
                     <>
                         <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-full max-w-64 min-w-40" />
-                        <FilterChip facet="Period" value="Last 7 days" onClear={() => undefined} />
-                        <FilterChip facet="Actor" />
-                        <FilterChip facet="Action" />
-                        <FilterChip facet="Project" />
+                        <FilterChip facet="Period" options={PERIOD_OPTIONS} defaultSelected={['7d']} />
+                        <FilterChip facet="Actor" options={PEOPLE_OPTIONS} multiple selected={actors} onSelectedChange={setActors} />
+                        <FilterChip facet="Action" options={ACTION_OPTIONS} multiple selected={actions} onSelectedChange={setActions} />
+                        <FilterChip facet="Project" options={PROJECT_OPTIONS} multiple />
                     </>
                 }
                 columns={EVENT_COLUMNS}

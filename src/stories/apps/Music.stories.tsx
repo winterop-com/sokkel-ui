@@ -8,6 +8,7 @@ import { AccountMenu } from '../../components/AccountMenu'
 import { MediaBar, type RepeatMode } from '../../components/media/MediaBar'
 import { MediaCard, MediaGrid } from '../../components/media/MediaCard'
 import { formatTime } from '../../components/media/time'
+import { MetaLine } from '../../components/MetaLine'
 import { TrackList, type Track } from '../../components/media/TrackList'
 import { VideoPlayer } from '../../components/media/VideoPlayer'
 import { PageHeader } from '../../components/PageHeader'
@@ -16,6 +17,7 @@ import { SearchField } from '../../components/SearchField'
 import { Segmented } from '../../components/Segmented'
 import { Page, Shell } from '../../components/Shell'
 import { PanelSection, SidePanel } from '../../components/SidePanel'
+import { Toolbar } from '../../components/Toolbar'
 import { TopBar, type Crumb } from '../../components/TopBar'
 import { Button } from '../../components/ui/button'
 import { DropdownMenuItem } from '../../components/ui/dropdown-menu'
@@ -103,7 +105,7 @@ const ALBUM_TRACKS: Track[] = TRACKS.map((track, index) => ({
 const NEXT_UP: Track[] = TRACKS.slice(CURRENT + 1).map((track, index) => ({
     id: `q${String(index)}`,
     title: track.title,
-    subtitle: `${PLAYING.artist} · ${PLAYING.title}`,
+    subtitle: <MetaLine inline items={[PLAYING.artist, PLAYING.title]} />,
     artwork: <Artwork cover={PLAYING.cover} />,
     duration: track.duration,
 }))
@@ -116,7 +118,7 @@ const THEN: Track[] = [
 ].map((entry, index) => ({
     id: `p${String(index)}`,
     title: entry.title,
-    subtitle: `${entry.album.artist} · ${entry.album.title}`,
+    subtitle: <MetaLine inline items={[entry.album.artist, entry.album.title]} />,
     artwork: <Artwork cover={entry.album.cover} />,
     duration: entry.duration,
 }))
@@ -124,7 +126,7 @@ const THEN: Track[] = [
 const HISTORY: Track[] = TRACKS.slice(0, CURRENT).map((track, index) => ({
     id: `h${String(index)}`,
     title: track.title,
-    subtitle: `${PLAYING.artist} · ${PLAYING.title}`,
+    subtitle: <MetaLine inline items={[PLAYING.artist, PLAYING.title]} />,
     artwork: <Artwork cover={PLAYING.cover} />,
     duration: track.duration,
 }))
@@ -190,7 +192,7 @@ function AlbumGrid({ albums }: { albums: Release[] }) {
                 <MediaCard
                     key={album.id}
                     title={album.title}
-                    subtitle={`${album.artist} · ${String(album.year)}`}
+                    subtitle={<MetaLine inline items={[album.artist, album.year]} />}
                     cover={<Artwork cover={album.cover} />}
                     href="#"
                     playing={album.id === PLAYING.id}
@@ -244,26 +246,28 @@ function LibraryPage() {
     return (
         <Page>
             <PageHeader title="Albums" count={`${String(ALBUMS.length)} albums`} />
-            <Row wrap>
-                <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-full sm:w-64" />
-                <div className="flex flex-1 flex-wrap items-center justify-between gap-2 sm:justify-end">
-                    <Segmented
-                        label="Order"
-                        value={order}
-                        onChoose={setOrder}
-                        options={[
-                            { value: 'recent', label: 'Recent' },
-                            { value: 'name', label: 'Name' },
-                            { value: 'artist', label: 'Artist' },
-                            { value: 'year', label: 'Year' },
-                        ]}
-                    />
-                    <Button size="sm" variant="outline">
-                        <Shuffle aria-hidden />
-                        Shuffle all
-                    </Button>
-                </div>
-            </Row>
+            <Toolbar
+                search={<SearchField value={query} onChange={setQuery} placeholder="Search" />}
+                end={
+                    <>
+                        <Segmented
+                            label="Order"
+                            value={order}
+                            onChoose={setOrder}
+                            options={[
+                                { value: 'recent', label: 'Recent' },
+                                { value: 'name', label: 'Name' },
+                                { value: 'artist', label: 'Artist' },
+                                { value: 'year', label: 'Year' },
+                            ]}
+                        />
+                        <Button size="sm" variant="outline">
+                            <Shuffle aria-hidden />
+                            Shuffle all
+                        </Button>
+                    </>
+                }
+            />
             <AlbumGrid albums={ALBUMS} />
         </Page>
     )
@@ -282,10 +286,14 @@ function AlbumPage() {
                         <div className="min-w-0">
                             <GroupLabel>Album</GroupLabel>
                             <h1 className="truncate text-page font-semibold tracking-tight">{PLAYING.title}</h1>
-                            <p className="text-sm text-muted-foreground">
-                                <span className="font-medium text-foreground">{PLAYING.artist}</span> · {PLAYING.year} · {TRACKS.length}{' '}
-                                tracks, {Math.round(total / 60)} min
-                            </p>
+                            <MetaLine
+                                size="sm"
+                                items={[
+                                    <span className="font-medium text-foreground">{PLAYING.artist}</span>,
+                                    PLAYING.year,
+                                    `${String(TRACKS.length)} tracks, ${String(Math.round(total / 60))} min`,
+                                ]}
+                            />
                         </div>
                         <Row>
                             <Button size="sm">
@@ -336,9 +344,7 @@ function QueueBody({ history = false }: { history?: boolean }) {
                     </span>
                     <div className="min-w-0">
                         <p className="truncate text-sm font-medium">{TRACKS[CURRENT].title}</p>
-                        <p className="truncate text-xs text-muted-foreground">
-                            {PLAYING.artist} · {PLAYING.title}
-                        </p>
+                        <MetaLine truncate items={[PLAYING.artist, PLAYING.title]} />
                         <p className="font-mono text-xs text-faint tabular-nums">
                             {formatTime(POSITION)} of {formatTime(TRACKS[CURRENT].duration)}
                         </p>
@@ -369,9 +375,7 @@ function Watch() {
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="min-w-0">
                             <h1 className="text-title font-semibold">{FILM.title}</h1>
-                            <p className="text-sm text-muted-foreground">
-                                {FILM.series}, episode 1 · {FILM.by} · {FILM.year} · {formatTime(FILM.length)}
-                            </p>
+                            <MetaLine size="sm" items={[`${FILM.series}, episode 1`, FILM.by, FILM.year, formatTime(FILM.length)]} />
                         </div>
                         <Row>
                             <Button size="sm" variant="outline">
@@ -410,7 +414,7 @@ function Player({ queueOpen }: { queueOpen: boolean }) {
     return (
         <MediaBar
             title={track.title}
-            subtitle={`${PLAYING.artist} · ${PLAYING.title}`}
+            subtitle={<MetaLine inline items={[PLAYING.artist, PLAYING.title]} />}
             artwork={<Artwork cover={PLAYING.cover} />}
             playing={playing}
             onPlayingChange={setPlaying}

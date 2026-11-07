@@ -38,7 +38,13 @@ import { Shell } from '../../components/Shell'
 import { SidePanel } from '../../components/SidePanel'
 import { TopBar } from '../../components/TopBar'
 import { Button } from '../../components/ui/button'
-import { DropdownMenuItem, DropdownMenuSeparator } from '../../components/ui/dropdown-menu'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '../../components/ui/dropdown-menu'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { Row } from '../../components/Layout'
@@ -148,10 +154,18 @@ function Sidebar({ active, onSelect }: { active: string; onSelect: (id: string) 
                 active={active}
                 onSelect={onSelect}
                 title={
-                    <Button variant="ghost" size="sm" className="-ml-2 font-semibold">
-                        Tidevann
-                        <ChevronDown aria-hidden />
-                    </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger render={<Button variant="ghost" size="sm" className="-ml-2 font-semibold" />}>
+                            Tidevann
+                            <ChevronDown aria-hidden />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="w-56">
+                            <DropdownMenuItem>Invite people</DropdownMenuItem>
+                            <DropdownMenuItem>Preferences</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem>Sign out of Tidevann</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 }
                 actions={
                     <IconButton label="New message" size="icon">

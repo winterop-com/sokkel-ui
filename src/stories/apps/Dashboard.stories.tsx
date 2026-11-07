@@ -37,6 +37,7 @@ import {
 } from '../fixtures/runs'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { Row, Stack } from '../../components/Layout'
+import { TopBar } from '../../components/TopBar'
 
 /**
  * Tidevann's job runs as a monitoring dashboard: variables across the top with the range and
@@ -150,12 +151,7 @@ function Head() {
     const [interval, setInterval] = useState(30)
     return (
         <Stack gap="sm">
-            <Row className="text-sm">
-                <TidevannMark className="size-4 text-primary" />
-                <span className="font-medium">Tidevann</span>
-                <span className="text-muted-foreground">/</span>
-                <h1 className="font-medium">Job runs</h1>
-            </Row>
+            <TopBar mark={<TidevannMark />} trail={[{ label: 'Tidevann', href: '#' }, { label: 'Job runs' }]} />
             <VariablesBar
                 variables={[
                     { kind: 'select', id: 'project', label: 'project', value: project, options: PROJECTS, onChange: setProject },

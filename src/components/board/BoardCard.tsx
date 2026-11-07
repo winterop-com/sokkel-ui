@@ -1,9 +1,10 @@
-import { format, isBefore, isSameDay, startOfDay } from 'date-fns'
+import { format } from 'date-fns'
 import { CalendarDays, ListChecks, MessageSquare, MoreHorizontal } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { cn } from '../../lib/cn'
 import { KIND_WASH, kindOf, type KindColor } from '../../lib/kind'
+import { DueText } from '../DueText'
 import { PersonAvatar } from '../PersonAvatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '../ui/dropdown-menu'
 import { DropLine, useBoardDrag, useBoardZone } from './Board'
@@ -101,9 +102,6 @@ export function BoardCard({
     const zone = useBoardZone()
     const dragged = drag?.card === id
     const landing = drag !== null && !dragged && drag.zone === zone && drag.before === id
-    const today = startOfDay(now)
-    const overdue = due !== undefined && !done && isBefore(due, today)
-    const dueToday = due !== undefined && !done && isSameDay(due, today)
     const hasFoot = due !== undefined || comments !== undefined || checklist !== undefined || assignee !== undefined
     return (
         <article
@@ -159,17 +157,14 @@ export function BoardCard({
             {hasFoot && (
                 <div className="pointer-events-none relative flex items-center gap-3 text-xs text-muted-foreground tabular-nums">
                     {due !== undefined && (
-                        <span
-                            title={words.dueTitle(due, overdue)}
-                            className={cn(
-                                'inline-flex items-center gap-1',
-                                overdue && 'font-medium text-critical-ink',
-                                dueToday && 'font-medium text-warning-ink',
-                            )}
-                        >
-                            <CalendarDays className="size-3.5" aria-hidden />
-                            {words.due(due)}
-                        </span>
+                        <DueText
+                            date={due}
+                            now={now}
+                            done={done}
+                            quiet={false}
+                            icon={<CalendarDays aria-hidden />}
+                            words={{ date: words.due, title: (date, state) => words.dueTitle(date, state === 'overdue') }}
+                        />
                     )}
                     {comments !== undefined && comments > 0 && (
                         <span title={words.comments(comments)} className="inline-flex items-center gap-1">

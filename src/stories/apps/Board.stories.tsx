@@ -23,8 +23,10 @@ import { Board as BoardArea, BoardDrop, BoardLane, type BoardMove } from '../../
 import { BoardCard, BoardLabel } from '../../components/board/BoardCard'
 import { BoardColumn, BoardColumnHead } from '../../components/board/BoardColumn'
 import { DescriptionList } from '../../components/DescriptionList'
-import { FilterChip } from '../../components/FilterChip'
+import { DueText } from '../../components/DueText'
+import { FilterChip, type FilterOption } from '../../components/FilterChip'
 import { PageHeader } from '../../components/PageHeader'
+import { PaneHeader } from '../../components/PaneHeader'
 import { PersonAvatar } from '../../components/PersonAvatar'
 import { Rail, type RailGroup } from '../../components/Rail'
 import { SearchField } from '../../components/SearchField'
@@ -33,18 +35,10 @@ import { Shell } from '../../components/Shell'
 import { PanelSection, SidePanel } from '../../components/SidePanel'
 import { ThemeToggle } from '../../components/ThemeToggle'
 import { Timeline } from '../../components/Timeline'
+import { Toolbar } from '../../components/Toolbar'
 import { TopBar } from '../../components/TopBar'
 import { Button } from '../../components/ui/button'
-import {
-    DropdownMenu,
-    DropdownMenuCheckboxItem,
-    DropdownMenuContent,
-    DropdownMenuGroup,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '../../components/ui/dropdown-menu'
+import { DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from '../../components/ui/dropdown-menu'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { cn } from '../../lib/cn'
 import type { KindColor } from '../../lib/kind'
@@ -375,55 +369,26 @@ function MoveMenu({ item, onMove }: { item: Item; onMove: (column: ColumnId) => 
     )
 }
 
-function LabelFilter({ chosen, onChange }: { chosen: string[]; onChange: (labels: string[]) => void }) {
-    const [open, setOpen] = useState(false)
-    return (
-        <span className="relative inline-flex">
-            <FilterChip
-                facet="Labels"
-                icon={<Tag className="size-3.5 text-muted-foreground" aria-hidden />}
-                value={chosen.length === 0 ? undefined : chosen.join(', ')}
-                onOpen={() => setOpen(true)}
-                onClear={() => onChange([])}
-            />
-            <DropdownMenu open={open} onOpenChange={setOpen}>
-                <DropdownMenuTrigger tabIndex={-1} aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-0 opacity-0" />
-                <DropdownMenuContent align="start" className="w-44">
-                    {Object.keys(LABELS).map((label) => (
-                        <DropdownMenuCheckboxItem
-                            key={label}
-                            checked={chosen.includes(label)}
-                            onCheckedChange={(checked) =>
-                                onChange(checked ? [...chosen, label] : chosen.filter((other) => other !== label))
-                            }
-                        >
-                            <BoardLabel name={label} color={LABELS[label]} />
-                        </DropdownMenuCheckboxItem>
-                    ))}
-                </DropdownMenuContent>
-            </DropdownMenu>
-        </span>
-    )
-}
+/** The labels to filter by, each drawn as the label it is. */
+const LABEL_OPTIONS: FilterOption[] = Object.entries(LABELS).map(([label, color]) => ({
+    value: label,
+    row: <BoardLabel name={label} color={color} />,
+}))
 
 function ItemPanel({ item, onToggle }: { item: Item; onToggle: (index: number) => void }) {
     const column = COLUMNS.find((entry) => entry.id === item.column)
     const done = item.checklist.filter((step) => step.done).length
     return (
         <>
-            <Stack gap="sm" className="border-b border-border px-4 py-3">
-                <span className="font-mono text-xs text-muted-foreground">{item.code}</span>
-                <h2 className="text-title font-semibold">{item.title}</h2>
-                <Row gap="xs" wrap>
-                    <span className="inline-flex items-center gap-1.5 rounded-chip bg-secondary px-1.5 py-0.5 text-xs">
-                        {column?.icon}
-                        {column?.title}
-                    </span>
-                    {item.labels.map((label) => (
-                        <BoardLabel key={label} name={label} color={LABELS[label]} />
-                    ))}
-                </Row>
-            </Stack>
+            <PaneHeader size="lg" code={item.code} title={item.title}>
+                <span className="inline-flex items-center gap-1.5 rounded-chip bg-secondary px-1.5 py-0.5 text-xs">
+                    {column?.icon}
+                    {column?.title}
+                </span>
+                {item.labels.map((label) => (
+                    <BoardLabel key={label} name={label} color={LABELS[label]} />
+                ))}
+            </PaneHeader>
             <PanelSection title="Description">
                 <p className="text-sm leading-6 text-pretty">{item.description}</p>
             </PanelSection>
@@ -446,9 +411,13 @@ function ItemPanel({ item, onToggle }: { item: Item; onToggle: (index: number) =
                             term: 'Due',
                             value:
                                 item.due === undefined ? undefined : (
-                                    <span className={cn(item.due < day(5) && item.column !== 'done' && 'font-medium text-critical-ink')}>
-                                        {format(item.due, 'EEEE d MMMM')}
-                                    </span>
+                                    <DueText
+                                        date={item.due}
+                                        now={NOW}
+                                        done={item.column === 'done'}
+                                        quiet={false}
+                                        words={{ date: (date) => format(date, 'EEEE d MMMM') }}
+                                    />
                                 ),
                         },
                         { term: 'Reporter', value: 'margaret' },
@@ -612,34 +581,44 @@ function BoardApp({
                                 </Button>
                             }
                         />
-                        <Row gap="none" wrap className="gap-x-3 gap-y-2">
-                            <SearchField
-                                value={filters.query}
-                                onChange={(query) => setFilters({ ...filters, query })}
-                                placeholder="Search"
-                                className="w-full sm:w-56"
-                            />
+                        <Toolbar
+                            search={
+                                <SearchField
+                                    value={filters.query}
+                                    onChange={(query) => setFilters({ ...filters, query })}
+                                    placeholder="Search"
+                                />
+                            }
+                            end={
+                                <Row as="span" className="text-xs text-muted-foreground">
+                                    Swimlanes
+                                    <Segmented
+                                        label="Swimlanes"
+                                        value={lanes ? 'project' : 'none'}
+                                        options={[
+                                            { value: 'none', label: 'None' },
+                                            { value: 'project', label: 'Project' },
+                                        ]}
+                                        onChoose={(value) => setLanes(value === 'project')}
+                                    />
+                                </Row>
+                            }
+                        >
                             <PeopleFilter
                                 people={PEOPLE.map((name) => ({ name }))}
                                 chosen={filters.people}
                                 onChange={(people) => setFilters({ ...filters, people: people as Person[] })}
                                 words={{ label: 'Assignees' }}
                             />
-                            <LabelFilter chosen={filters.labels} onChange={(labels) => setFilters({ ...filters, labels })} />
-                            <div className="flex-1" />
-                            <Row as="span" className="text-xs text-muted-foreground">
-                                Swimlanes
-                                <Segmented
-                                    label="Swimlanes"
-                                    value={lanes ? 'project' : 'none'}
-                                    options={[
-                                        { value: 'none', label: 'None' },
-                                        { value: 'project', label: 'Project' },
-                                    ]}
-                                    onChoose={(value) => setLanes(value === 'project')}
-                                />
-                            </Row>
-                        </Row>
+                            <FilterChip
+                                facet="Labels"
+                                icon={<Tag className="size-3.5 text-muted-foreground" aria-hidden />}
+                                options={LABEL_OPTIONS}
+                                multiple
+                                selected={filters.labels}
+                                onSelectedChange={(labels) => setFilters({ ...filters, labels })}
+                            />
+                        </Toolbar>
                     </div>
                     <BoardArea
                         onMove={onMove}

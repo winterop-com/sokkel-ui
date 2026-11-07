@@ -19,31 +19,26 @@ import {
     Star,
     Tag,
     Trash2,
-    X,
     type LucideIcon,
 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
 import { AccountMenu } from '../../components/AccountMenu'
 import { AddressInput, type Address } from '../../components/AddressInput'
+import { AttachmentList, type AttachmentFile } from '../../components/AttachmentList'
 import { Composer } from '../../components/Composer'
 import { DialogShell } from '../../components/DialogShell'
 import { InlineField } from '../../components/InlineField'
 import { Markdown } from '../../components/Markdown'
 import { MessageRow, type MessageLabel } from '../../components/MessageRow'
+import { PaneHeader } from '../../components/PaneHeader'
 import { Rail, type RailEntry, type RailGroup } from '../../components/Rail'
 import { SearchField } from '../../components/SearchField'
 import { Segmented } from '../../components/Segmented'
+import { SelectionBar } from '../../components/SelectionBar'
 import { Shell } from '../../components/Shell'
+import { Toolbar } from '../../components/Toolbar'
 import { TopBar } from '../../components/TopBar'
-import {
-    Attachment,
-    AttachmentAction,
-    AttachmentContent,
-    AttachmentDescription,
-    AttachmentMedia,
-    AttachmentTitle,
-} from '../../components/ui/attachment'
 import { Avatar, AvatarFallback } from '../../components/ui/avatar'
 import { Button } from '../../components/ui/button'
 import { Checkbox } from '../../components/ui/checkbox'
@@ -361,22 +356,14 @@ function LetterView({ letter, open, last, onToggle }: { letter: Letter; open: bo
                 <div className="mt-3 flex flex-col gap-4 sm:pl-11">
                     <Markdown content={letter.body} />
                     {letter.files !== undefined && (
-                        <Row align="stretch" wrap>
-                            {letter.files.map((file) => {
-                                const Icon = file.icon
-                                return (
-                                    <Attachment key={file.name} size="sm" className="min-w-0">
-                                        <AttachmentMedia>
-                                            <Icon aria-hidden />
-                                        </AttachmentMedia>
-                                        <AttachmentContent>
-                                            <AttachmentTitle>{file.name}</AttachmentTitle>
-                                            <AttachmentDescription>{file.detail}</AttachmentDescription>
-                                        </AttachmentContent>
-                                    </Attachment>
-                                )
-                            })}
-                        </Row>
+                        <AttachmentList
+                            files={letter.files.map((file) => ({
+                                id: file.name,
+                                name: file.name,
+                                detail: file.detail,
+                                icon: <file.icon aria-hidden />,
+                            }))}
+                        />
                     )}
                     {last && (
                         <Row align="stretch" wrap>
@@ -406,37 +393,41 @@ function Reading({ mail, onBack }: { mail: Conversation; onBack: () => void }) {
     const thread = mail.id === 't1' ? THREAD : [{ id: 'only', from: mail.from, to: [PEOPLE.ada], time: mail.time, body: mail.snippet }]
     return (
         <Stack gap="none" className="h-full min-h-0">
-            <div className="flex h-11 shrink-0 items-center gap-1 border-b border-border px-2 md:px-4">
-                <Button variant="ghost" size="sm" className="-ml-1 lg:hidden" onClick={onBack}>
-                    <ArrowLeft aria-hidden />
-                    Back
-                </Button>
-                <div className="ml-auto flex items-center gap-0.5 lg:ml-0">
-                    <IconButton label="Archive">
-                        <Archive aria-hidden />
-                    </IconButton>
-                    <IconButton label="Delete">
-                        <Trash2 aria-hidden />
-                    </IconButton>
-                    <IconButton label="Mark as unread">
-                        <MailOpen aria-hidden />
-                    </IconButton>
-                    <IconButton label="Label">
-                        <Tag aria-hidden />
-                    </IconButton>
-                </div>
-                <div className="ml-auto flex items-center gap-0.5 max-lg:ml-0">
-                    <IconButton label="Reply">
-                        <Reply aria-hidden />
-                    </IconButton>
-                    <IconButton label="Forward">
-                        <Forward aria-hidden />
-                    </IconButton>
-                    <IconButton label="More">
-                        <MoreHorizontal aria-hidden />
-                    </IconButton>
-                </div>
-            </div>
+            <PaneHeader
+                start={
+                    <>
+                        <Button variant="ghost" size="sm" className="lg:hidden" onClick={onBack}>
+                            <ArrowLeft aria-hidden />
+                            Back
+                        </Button>
+                        <IconButton label="Archive">
+                            <Archive aria-hidden />
+                        </IconButton>
+                        <IconButton label="Delete">
+                            <Trash2 aria-hidden />
+                        </IconButton>
+                        <IconButton label="Mark as unread">
+                            <MailOpen aria-hidden />
+                        </IconButton>
+                        <IconButton label="Label">
+                            <Tag aria-hidden />
+                        </IconButton>
+                    </>
+                }
+                actions={
+                    <>
+                        <IconButton label="Reply">
+                            <Reply aria-hidden />
+                        </IconButton>
+                        <IconButton label="Forward">
+                            <Forward aria-hidden />
+                        </IconButton>
+                        <IconButton label="More">
+                            <MoreHorizontal aria-hidden />
+                        </IconButton>
+                    </>
+                }
+            />
             <div className="min-h-0 flex-1 overflow-y-auto">
                 <header className="flex items-start gap-3 border-b border-border px-4 pt-5 pb-4 md:px-6">
                     <div className="flex min-w-0 flex-1 flex-col gap-2">
@@ -580,56 +571,53 @@ function List({
     const searching = query.trim() !== ''
     return (
         <Stack gap="none" className="h-full min-h-0">
-            <div className="flex shrink-0 flex-col gap-2 border-b border-border px-3 pt-3 pb-2">
-                <SearchField value={query} onChange={onQuery} placeholder="Search" />
-                <Row className="min-h-8 pl-0.5">
-                    <Checkbox
-                        checked={all}
-                        indeterminate={some && !all}
-                        disabled={rows.length === 0}
-                        aria-label={all ? 'Clear the selection' : 'Select every conversation'}
-                        onCheckedChange={() => onChecked(all || some ? [] : rows.map((mail) => mail.id))}
-                    />
-                    {some ? (
-                        <>
-                            <span className="ml-1 text-sm font-medium tabular-nums">{checked.length} selected</span>
-                            <Row gap="3xs" className="ml-auto">
-                                <IconButton label="Archive">
-                                    <Archive aria-hidden />
-                                </IconButton>
-                                <IconButton label="Delete">
-                                    <Trash2 aria-hidden />
-                                </IconButton>
-                                <IconButton label="Mark as read">
-                                    <MailOpen aria-hidden />
-                                </IconButton>
-                                <IconButton label="Label">
-                                    <Tag aria-hidden />
-                                </IconButton>
-                                <IconButton label="Clear the selection" onClick={() => onChecked([])}>
-                                    <X aria-hidden />
-                                </IconButton>
-                            </Row>
-                        </>
+            <Toolbar
+                variant="pane"
+                search={<SearchField value={query} onChange={onQuery} placeholder="Search" />}
+                end={
+                    some ? (
+                        <Row gap="3xs">
+                            <IconButton label="Archive">
+                                <Archive aria-hidden />
+                            </IconButton>
+                            <IconButton label="Delete">
+                                <Trash2 aria-hidden />
+                            </IconButton>
+                            <IconButton label="Mark as read">
+                                <MailOpen aria-hidden />
+                            </IconButton>
+                            <IconButton label="Label">
+                                <Tag aria-hidden />
+                            </IconButton>
+                        </Row>
                     ) : (
-                        <>
-                            <Segmented
-                                label="Show"
-                                value={only}
-                                options={[
-                                    { value: 'all', label: 'All' },
-                                    { value: 'unread', label: 'Unread' },
-                                ]}
-                                onChoose={setOnly}
-                                className="ml-1"
-                            />
-                            <span className="ml-auto text-xs text-muted-foreground tabular-nums">
-                                {searching ? `${rows.length} ${rows.length === 1 ? 'result' : 'results'}` : `${rows.length} conversations`}
-                            </span>
-                        </>
-                    )}
-                </Row>
-            </div>
+                        <span className="text-xs text-muted-foreground tabular-nums">
+                            {searching ? `${rows.length} ${rows.length === 1 ? 'result' : 'results'}` : `${rows.length} conversations`}
+                        </span>
+                    )
+                }
+            >
+                <Checkbox
+                    checked={all}
+                    indeterminate={some && !all}
+                    disabled={rows.length === 0}
+                    aria-label={all ? 'Clear the selection' : 'Select every conversation'}
+                    onCheckedChange={() => onChecked(all || some ? [] : rows.map((mail) => mail.id))}
+                />
+                {some ? (
+                    <SelectionBar count={checked.length} onClear={() => onChecked([])} />
+                ) : (
+                    <Segmented
+                        label="Show"
+                        value={only}
+                        options={[
+                            { value: 'all', label: 'All' },
+                            { value: 'unread', label: 'Unread' },
+                        ]}
+                        onChoose={setOnly}
+                    />
+                )}
+            </Toolbar>
             <div className="min-h-0 flex-1 overflow-y-auto">
                 {rows.length === 0 ? (
                     <Empty className="h-full">
@@ -687,7 +675,7 @@ function ComposeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
     const [body, setBody] = useState(
         'I will take step 3. I will run nightly-export at 08:30 and watch the validate step, and write here when it has passed.\n\nAda',
     )
-    const [files, setFiles] = useState([{ name: 'validate-rules.yaml', detail: 'YAML, 3 KB' }])
+    const [files, setFiles] = useState<AttachmentFile[]>([{ id: 'validate-rules', name: 'validate-rules.yaml', detail: 'YAML, 3 KB' }])
     return (
         <DialogShell
             open={open}
@@ -717,25 +705,11 @@ function ComposeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
                     className="min-h-56 px-1 py-3 text-sm leading-relaxed"
                 />
                 {files.length > 0 && (
-                    <Row align="stretch" wrap className="pb-1">
-                        {files.map((file) => (
-                            <Attachment key={file.name} size="sm">
-                                <AttachmentMedia>
-                                    <FileText aria-hidden />
-                                </AttachmentMedia>
-                                <AttachmentContent>
-                                    <AttachmentTitle>{file.name}</AttachmentTitle>
-                                    <AttachmentDescription>{file.detail}</AttachmentDescription>
-                                </AttachmentContent>
-                                <AttachmentAction
-                                    aria-label={`Remove ${file.name}`}
-                                    onClick={() => setFiles((current) => current.filter((entry) => entry.name !== file.name))}
-                                >
-                                    <X aria-hidden />
-                                </AttachmentAction>
-                            </Attachment>
-                        ))}
-                    </Row>
+                    <AttachmentList
+                        files={files}
+                        onRemove={(id) => setFiles((current) => current.filter((file) => file.id !== id))}
+                        className="pb-1"
+                    />
                 )}
             </Stack>
         </DialogShell>

@@ -5,8 +5,10 @@ import { ListMusic } from 'lucide-react'
 import { useState } from 'react'
 
 import { MediaBar, type RepeatMode } from '../../components/media/MediaBar'
+import { MetaLine } from '../../components/MetaLine'
 import { Artwork, type Cover } from '../fixtures/Artwork'
 import { Row, Stack } from '../../components/Layout'
+import { PaneHeader } from '../../components/PaneHeader'
 
 interface Track {
     title: string
@@ -51,7 +53,7 @@ function Player({ startPlaying, queue = false }: { startPlaying: boolean; queue?
                 <div className="flex flex-1 flex-col justify-end p-4">
                     {queueOpen && (
                         <section className="ml-auto w-full max-w-sm rounded-surface border border-border-strong bg-popover text-popover-foreground shadow-md">
-                            <h2 className="border-b border-border px-3 py-2 text-xs font-medium text-muted-foreground">Up next</h2>
+                            <PaneHeader title="Up next" />
                             <TrackList
                                 variant="plain"
                                 className="p-1"
@@ -74,7 +76,7 @@ function Player({ startPlaying, queue = false }: { startPlaying: boolean; queue?
                 </div>
                 <MediaBar
                     title={track.title}
-                    subtitle={`${track.artist} · ${track.album}`}
+                    subtitle={<MetaLine inline items={[track.artist, track.album]} />}
                     artwork={<Artwork cover={track.cover} />}
                     playing={playing}
                     onPlayingChange={setPlaying}

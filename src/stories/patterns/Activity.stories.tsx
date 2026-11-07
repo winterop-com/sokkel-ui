@@ -4,9 +4,10 @@ import { useState } from 'react'
 
 import { ActivityList, ActivityMenu, type ActivityItem } from '../../components/ActivityList'
 import { ThemeToggle } from '../../components/ThemeToggle'
-import { TopBar } from '../../components/TopBar'
+import { AppBar } from '../../components/AppBar'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { Row, Stack } from '../../components/Layout'
+import { TidevannMark } from '../fixtures/TidevannMark'
 
 /**
  * What happened while the person was away, or needs following up. The bell in the top bar counts
@@ -90,18 +91,17 @@ function InTopBar({ start = ITEMS }: { start?: ActivityItem[] }) {
     return (
         <TooltipProvider>
             <Stack gap="none" className="min-h-svh bg-background text-foreground">
-                <header className="flex h-shell-top shrink-0 items-center gap-2 border-b border-border-strong bg-sidebar px-3">
-                    <TopBar
-                        trail={[{ label: 'Tidevann', href: '#' }, { label: 'Runs' }]}
-                        onSearch={() => undefined}
-                        actions={
-                            <>
-                                <ActivityMenu {...activity} defaultOpen />
-                                <ThemeToggle dark={dark} onToggle={() => setDark(!dark)} />
-                            </>
-                        }
-                    />
-                </header>
+                <AppBar
+                    mark={<TidevannMark />}
+                    trail={[{ label: 'Tidevann', href: '#' }, { label: 'Runs' }]}
+                    onSearch={() => undefined}
+                    actions={
+                        <>
+                            <ActivityMenu {...activity} defaultOpen />
+                            <ThemeToggle dark={dark} onToggle={() => setDark(!dark)} />
+                        </>
+                    }
+                />
             </Stack>
         </TooltipProvider>
     )
