@@ -1,3 +1,4 @@
+import { IconButton } from '../../components/IconButton'
 import { Field } from '../../components/Field'
 import { DialogShell } from '../../components/DialogShell'
 import type { Meta, StoryObj } from '@storybook/react-vite'
@@ -42,7 +43,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Toaster } from '../../components/ui/sonner'
 import { Switch } from '../../components/ui/switch'
 import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../components/ui/tooltip'
+import { TooltipProvider } from '../../components/ui/tooltip'
 import { lines, TWO } from '../charts/options'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { applyToDocument, CORNERS, fromGlobals, THEMES, toGlobals, TYPEFACES } from './themes'
@@ -184,17 +185,6 @@ function Section({
             </CardHeader>
             <CardContent>{children}</CardContent>
         </Card>
-    )
-}
-
-function IconAction({ label, onClick, children }: { label: string; onClick: () => void; children: ReactNode }) {
-    return (
-        <Tooltip>
-            <TooltipTrigger render={<Button variant="outline" size="icon-sm" aria-label={label} onClick={onClick} />}>
-                {children}
-            </TooltipTrigger>
-            <TooltipContent>{label}</TooltipContent>
-        </Tooltip>
     )
 }
 
@@ -498,9 +488,13 @@ function App({ globals }: { globals: Record<string, unknown> }) {
                             title="Runs, today"
                             description="Started and failed, every 15 minutes."
                             action={
-                                <IconAction label="Refresh" onClick={() => toast('Refreshed', { description: 'Runs are up to date.' })}>
+                                <IconButton
+                                    variant="outline"
+                                    label="Refresh"
+                                    onClick={() => toast('Refreshed', { description: 'Runs are up to date.' })}
+                                >
                                     <RefreshCw aria-hidden />
-                                </IconAction>
+                                </IconButton>
                             }
                         >
                             <div className="h-44">
@@ -518,12 +512,13 @@ function App({ globals }: { globals: Record<string, unknown> }) {
                                     <TabsTrigger value="running">Running</TabsTrigger>
                                 </TabsList>
                             </Tabs>
-                            <IconAction
+                            <IconButton
+                                variant="outline"
                                 label="Run the chosen job now"
                                 onClick={() => toast.success(`${RUNS.find((run) => run.id === chosen)?.job ?? 'Job'} queued`)}
                             >
                                 <Play aria-hidden />
-                            </IconAction>
+                            </IconButton>
                         </Row>
                         <DataTable
                             columns={COLUMNS}

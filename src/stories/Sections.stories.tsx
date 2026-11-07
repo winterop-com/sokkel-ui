@@ -1,3 +1,4 @@
+import { IconButton } from '../components/IconButton'
 import { TopBar } from '../components/TopBar'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { BookOpen, CalendarClock, Library, Maximize2, Play, Server, Webhook, Workflow } from 'lucide-react'
@@ -103,9 +104,9 @@ function Facts() {
 }
 
 const tool = (
-    <Button variant="ghost" size="icon-sm" aria-label="Open the graph in a window">
+    <IconButton label="Open the graph in a window">
         <Maximize2 aria-hidden />
-    </Button>
+    </IconButton>
 )
 
 function Overview({ layout }: { layout: 'flat' | 'boxed' | 'hybrid' }) {

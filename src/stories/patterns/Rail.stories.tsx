@@ -1,3 +1,4 @@
+import { IconButton } from '../../components/IconButton'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import {
     Bell,
@@ -21,7 +22,6 @@ import type { ReactNode } from 'react'
 import { AccountMenu } from '../../components/AccountMenu'
 import { PersonAvatar } from '../../components/PersonAvatar'
 import { Rail, type RailEntry, type RailGroup } from '../../components/Rail'
-import { Button } from '../../components/ui/button'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { Row } from '../../components/Layout'
@@ -72,12 +72,12 @@ function strip(waiting: boolean, nested = false): RailGroup[] {
 /** The foot of a strip: a button that makes something new, and the account's avatar with its presence. */
 const STRIP_FOOT = (
     <>
-        <Button variant="secondary" size="icon-lg" aria-label="Create" title="Create">
+        <IconButton label="Create" variant="secondary" size="icon-lg">
             <Plus aria-hidden />
-        </Button>
-        <Button variant="ghost" size="icon-lg" aria-label="Account" title="ada">
+        </IconButton>
+        <IconButton label="Account" size="icon-lg">
             <PersonAvatar name="ada" color="blue" size="lg" shape="square" presence="active" />
-        </Button>
+        </IconButton>
     </>
 )
 

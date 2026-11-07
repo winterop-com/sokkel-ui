@@ -1,3 +1,4 @@
+import { IconButton } from '../../components/IconButton'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import {
     Archive,
@@ -396,14 +397,6 @@ function LetterView({ letter, open, last, onToggle }: { letter: Letter; open: bo
     )
 }
 
-function IconAction({ label, icon: Icon, onClick }: { label: string; icon: LucideIcon; onClick?: () => void }) {
-    return (
-        <Button variant="ghost" size="icon-sm" aria-label={label} title={label} className="text-muted-foreground" onClick={onClick}>
-            <Icon aria-hidden />
-        </Button>
-    )
-}
-
 function Reading({ mail, onBack }: { mail: Conversation; onBack: () => void }) {
     const [open, setOpen] = useState<Set<string>>(() => new Set(['m3', 'm4']))
     const [reply, setReply] = useState('')
@@ -416,15 +409,29 @@ function Reading({ mail, onBack }: { mail: Conversation; onBack: () => void }) {
                     Back
                 </Button>
                 <div className="ml-auto flex items-center gap-0.5 lg:ml-0">
-                    <IconAction label="Archive" icon={Archive} />
-                    <IconAction label="Delete" icon={Trash2} />
-                    <IconAction label="Mark as unread" icon={MailOpen} />
-                    <IconAction label="Label" icon={Tag} />
+                    <IconButton label="Archive">
+                        <Archive aria-hidden />
+                    </IconButton>
+                    <IconButton label="Delete">
+                        <Trash2 aria-hidden />
+                    </IconButton>
+                    <IconButton label="Mark as unread">
+                        <MailOpen aria-hidden />
+                    </IconButton>
+                    <IconButton label="Label">
+                        <Tag aria-hidden />
+                    </IconButton>
                 </div>
                 <div className="ml-auto flex items-center gap-0.5 max-lg:ml-0">
-                    <IconAction label="Reply" icon={Reply} />
-                    <IconAction label="Forward" icon={Forward} />
-                    <IconAction label="More" icon={MoreHorizontal} />
+                    <IconButton label="Reply">
+                        <Reply aria-hidden />
+                    </IconButton>
+                    <IconButton label="Forward">
+                        <Forward aria-hidden />
+                    </IconButton>
+                    <IconButton label="More">
+                        <MoreHorizontal aria-hidden />
+                    </IconButton>
                 </div>
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto">
@@ -584,11 +591,21 @@ function List({
                         <>
                             <span className="ml-1 text-sm font-medium tabular-nums">{checked.length} selected</span>
                             <Row gap="3xs" className="ml-auto">
-                                <IconAction label="Archive" icon={Archive} />
-                                <IconAction label="Delete" icon={Trash2} />
-                                <IconAction label="Mark as read" icon={MailOpen} />
-                                <IconAction label="Label" icon={Tag} />
-                                <IconAction label="Clear the selection" icon={X} onClick={() => onChecked([])} />
+                                <IconButton label="Archive">
+                                    <Archive aria-hidden />
+                                </IconButton>
+                                <IconButton label="Delete">
+                                    <Trash2 aria-hidden />
+                                </IconButton>
+                                <IconButton label="Mark as read">
+                                    <MailOpen aria-hidden />
+                                </IconButton>
+                                <IconButton label="Label">
+                                    <Tag aria-hidden />
+                                </IconButton>
+                                <IconButton label="Clear the selection" onClick={() => onChecked([])}>
+                                    <X aria-hidden />
+                                </IconButton>
                             </Row>
                         </>
                     ) : (

@@ -1,3 +1,4 @@
+import { IconButton } from '../../components/IconButton'
 import { CopyButton } from '../../components/CopyButton'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import {
@@ -478,9 +479,9 @@ function PromptPage() {
                 actions={
                     <>
                         <CopyButton value={answer.text} words={{ copy: 'Copy the answer', copied: 'Copied' }} />
-                        <Button variant="ghost" size="icon-sm" aria-label="Run again" className="text-muted-foreground">
+                        <IconButton label="Run again">
                             <RotateCcw aria-hidden />
-                        </Button>
+                        </IconButton>
                     </>
                 }
             >

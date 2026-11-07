@@ -1,9 +1,9 @@
+import { IconButton } from '../../components/IconButton'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Heart } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { TrackList, type Track } from '../../components/media/TrackList'
-import { Button } from '../../components/ui/button'
 import { Artwork, type Cover } from '../fixtures/Artwork'
 
 const COVER: Cover = { motif: 'wave', from: 'blue', to: 'teal' }
@@ -96,14 +96,9 @@ export const WithArtwork: StoryObj = {
                 playing
                 onPlay={() => undefined}
                 actions={(track) => (
-                    <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label={`Add ${String(track.title)} to favorites`}
-                        className="text-muted-foreground"
-                    >
+                    <IconButton label={`Add ${String(track.title)} to favorites`}>
                         <Heart aria-hidden />
-                    </Button>
+                    </IconButton>
                 )}
             />
         </Ground>
