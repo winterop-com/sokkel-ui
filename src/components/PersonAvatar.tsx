@@ -1,3 +1,6 @@
+import { Avatar } from '@base-ui/react/avatar'
+import { useState } from 'react'
+
 import { cn } from '../lib/cn'
 import { KIND_WASH, kindOf, type KindColor } from '../lib/kind'
 
@@ -47,11 +50,14 @@ export function PresenceDot({ presence, label, className }: { presence: Presence
 }
 
 /**
- * A person as a badge of their initials on a wash of their color: an assignee, an attendee, an
- * author. Round by default; `square` gives the rounded square a message list's authors wear. The
- * color follows from the name unless one is given, so a person wears the same one everywhere.
- * Given `image`, the picture stands in for the initials. At `2xs` and `xs` only the first initial
- * shows, since two do not fit.
+ * A person as a badge of their picture, or of their initials on a wash of their color: an
+ * assignee, an attendee, an author. Round by default; `square` gives the rounded square a message
+ * list's authors wear. The color follows from the name unless one is given, so a person wears the
+ * same one everywhere. At `2xs` and `xs` only the first initial shows, since two do not fit.
+ *
+ * Given `image`, the picture takes the initials' place once it has loaded. Until then, and for
+ * good when it fails, the initials stay on their color in the same box, so nothing moves and a
+ * broken image never shows.
  *
  * Given `presence`, a dot at the lower right corner says whether they are around. It sits outside
  * the letters, ringed in `--avatar-ring` (the background by default), so a list on another ground
@@ -75,6 +81,7 @@ export function PersonAvatar({
     /** One or two letters; the name's first letters by default. */
     initials?: string
     color?: KindColor
+    /** The person's picture, drawn over the initials once it has loaded. */
     image?: string
     size?: keyof typeof SIZE
     /** `square` is a rounded square, as a message list's authors wear. */
@@ -103,17 +110,36 @@ export function PersonAvatar({
         corner,
         KIND_WASH[color ?? kindOf(name)],
     )
-    const content =
-        image !== undefined ? <img src={image} alt={label} className="size-full object-cover" /> : <span aria-label={label}>{letters}</span>
+    // A picture still loading marks the badge, so a screenshot waits for it as it waits for a chart.
+    const [status, setStatus] = useState<{ image?: string; done: boolean }>({ done: false })
+    const settling = image !== undefined && image !== '' && !(status.image === image && status.done)
+    const content = (
+        <>
+            {image !== undefined && (
+                <Avatar.Image
+                    src={image}
+                    alt={label}
+                    className="size-full object-cover"
+                    onLoadingStatusChange={(now) => setStatus({ image, done: now === 'loaded' || now === 'error' })}
+                />
+            )}
+            <Avatar.Fallback aria-label={label}>{letters}</Avatar.Fallback>
+        </>
+    )
     if (presence === undefined)
         return (
-            <span data-slot="avatar" title={label} className={cn(badge, className)}>
+            <Avatar.Root data-slot="avatar" data-settling={settling ? '' : undefined} title={label} className={cn(badge, className)}>
                 {content}
-            </span>
+            </Avatar.Root>
         )
     return (
-        <span data-slot="avatar" title={label} className={cn('relative inline-flex shrink-0', fit.box, corner, className)}>
-            <span className={cn(badge, 'size-full')}>{content}</span>
+        <span
+            data-slot="avatar"
+            data-settling={settling ? '' : undefined}
+            title={label}
+            className={cn('relative inline-flex shrink-0', fit.box, corner, className)}
+        >
+            <Avatar.Root className={cn(badge, 'size-full')}>{content}</Avatar.Root>
             <PresenceDot presence={presence} label={words.presence[presence]} className={cn('absolute', fit.dot)} />
         </span>
     )

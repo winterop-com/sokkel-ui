@@ -39,6 +39,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { TooltipProvider } from '../../components/ui/tooltip'
 import type { KindColor } from '../../lib/kind'
 import { Artwork, type Cover } from '../fixtures/Artwork'
+import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import captions from '../media/fixtures/captions.vtt?url'
 import clip from '../media/fixtures/clip.webm?url'
@@ -328,7 +329,7 @@ function CommentItem({ comment, reply = false }: { comment: Comment; reply?: boo
     const channel = CHANNELS[comment.by]
     return (
         <Row as="li" gap="md" align="stretch">
-            <PersonAvatar name={comment.by} color={channel.color} size={reply ? 'sm' : 'md'} />
+            <PersonAvatar name={comment.by} color={channel.color} image={pictureOf(comment.by)} size={reply ? 'sm' : 'md'} />
             <Stack gap="2xs" className="flex-1">
                 {comment.pinned === true && (
                     <Row as="span" gap="2xs" className="text-xs text-muted-foreground">
@@ -424,7 +425,7 @@ function Comments() {
                 <ToolbarTitle>1,204 comments</ToolbarTitle>
             </Toolbar>
             <Row gap="md" align="stretch">
-                <PersonAvatar name="ada" color={CHANNELS.ada.color} size="md" />
+                <PersonAvatar name="ada" color={CHANNELS.ada.color} image={pictureOf('ada')} size="md" />
                 <Stack gap="sm" className="flex-1">
                     <Input
                         value={draft}
@@ -470,7 +471,7 @@ function WatchPage() {
                     <h1 className="text-title font-semibold">{WATCHING.title}</h1>
                     <Row gap="md" justify="between" wrap>
                         <Row gap="md" className="min-w-0">
-                            <PersonAvatar name={WATCHING.channel} color={channel.color} size="md" />
+                            <PersonAvatar name={WATCHING.channel} color={channel.color} image={pictureOf(WATCHING.channel)} size="md" />
                             <div className="min-w-0">
                                 <p className="truncate text-sm font-medium">{WATCHING.channel}</p>
                                 <p className="truncate text-xs text-muted-foreground">{channel.followers}</p>
@@ -569,7 +570,15 @@ function VideoApp({ view }: { view: 'home' | 'watch' }) {
                         groups={groups(view)}
                         collapsed={collapsed}
                         onCollapsedChange={setCollapsed}
-                        foot={<AccountMenu name="ada" where="tidevann.example.org" collapsed={collapsed} onSettings={() => undefined} />}
+                        foot={
+                            <AccountMenu
+                                name="ada"
+                                image={pictureOf('ada')}
+                                where="tidevann.example.org"
+                                collapsed={collapsed}
+                                onSettings={() => undefined}
+                            />
+                        }
                     />
                 }
                 top={

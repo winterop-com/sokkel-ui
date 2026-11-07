@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { ConsequenceList } from '../../components/ConsequenceList'
 import { ConfirmDialog, DialogShell } from '../../components/DialogShell'
 import { TypedConfirmDialog } from '../../components/TypedConfirmDialog'
+import { pictureOf } from '../fixtures/portraits'
 import { Behind, wait } from './parts'
 
 export function ConfirmDelete() {
@@ -139,7 +140,14 @@ export function TransferOwnership({ step: first = 1 }: { step?: 0 | 1 }) {
                         onValueChange={setTo}
                         choices={PEOPLE.map((person) => ({
                             value: person.username,
-                            label: <PersonRow name={person.username} detail={person.email} aside={person.role} />,
+                            label: (
+                                <PersonRow
+                                    name={person.username}
+                                    image={pictureOf(person.username)}
+                                    detail={person.email}
+                                    aside={person.role}
+                                />
+                            ),
                         }))}
                     />
                 ) : (

@@ -51,13 +51,14 @@ import { Page, Shell } from '../../components/Shell'
 import { PanelSection, SidePanel } from '../../components/SidePanel'
 import { StatusChip, type Status } from '../../components/StatusChip'
 import { TopBar, type Crumb } from '../../components/TopBar'
-import { Avatar, AvatarFallback, AvatarGroup } from '../../components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarGroup, AvatarImage } from '../../components/ui/avatar'
 import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { cn } from '../../lib/cn'
 import { PEOPLE_OPTIONS, PERIOD_OPTIONS, PROJECT_OPTIONS } from '../fixtures/filters'
+import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { Row, Stack } from '../../components/Layout'
 
@@ -174,10 +175,12 @@ const TITLES: Record<View, string> = { members: 'Members', roles: 'Roles', token
 
 const trail = (view: View): Crumb[] => [{ label: 'Tidevann', href: '#' }, { label: 'Admin', href: '#' }, { label: TITLES[view] }]
 
-/** A person's round mark: the first letter of their username, or of their address. */
+/** A person's round mark: their picture, or the first letter of their username or address. */
 function Person({ who, size = 'sm' }: { who: string; size?: 'sm' | 'default' }) {
+    const picture = pictureOf(who)
     return (
         <Avatar size={size}>
+            {picture !== undefined && <AvatarImage src={picture} alt={who} />}
             <AvatarFallback className="bg-primary/15 font-medium text-primary-ink uppercase">{who.slice(0, 1)}</AvatarFallback>
         </Avatar>
     )
@@ -1280,6 +1283,7 @@ function AdminApp({ view, panel, children }: { view: View; panel?: ReactNode; ch
                         foot={
                             <AccountMenu
                                 name="ada"
+                                image={pictureOf('ada')}
                                 where="tidevann.example.org"
                                 collapsed={collapsed}
                                 onSettings={() => undefined}

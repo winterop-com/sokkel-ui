@@ -3,6 +3,7 @@ import { useState } from 'react'
 
 import { ChoiceList } from '../../components/ChoiceList'
 import { PersonRow } from '../../components/PersonRow'
+import { pictureOf } from '../fixtures/portraits'
 
 const meta: Meta = { title: 'Primitives/Inputs/Choice list', parameters: { frame: 'column' } }
 export default meta
@@ -39,7 +40,9 @@ export const People: StoryObj = {
                 className="max-w-md"
                 choices={PEOPLE.map((person) => ({
                     value: person.username,
-                    label: <PersonRow name={person.username} detail={person.email} aside={person.role} />,
+                    label: (
+                        <PersonRow name={person.username} image={pictureOf(person.username)} detail={person.email} aside={person.role} />
+                    ),
                 }))}
             />
         )

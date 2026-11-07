@@ -43,6 +43,7 @@ import { DropdownMenuItem } from '../../components/ui/dropdown-menu'
 import { Toaster } from '../../components/ui/sonner'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { Artwork, type Cover } from '../fixtures/Artwork'
+import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import captions from '../media/fixtures/captions.vtt?url'
 import clip from '../media/fixtures/clip.webm?url'
@@ -540,7 +541,15 @@ function MusicApp({ view, player }: { view: View; player?: number }) {
                         groups={groups(view)}
                         collapsed={collapsed}
                         onCollapsedChange={setCollapsed}
-                        foot={<AccountMenu name="ada" where="tidevann.example.org" collapsed={collapsed} onSettings={() => undefined} />}
+                        foot={
+                            <AccountMenu
+                                name="ada"
+                                image={pictureOf('ada')}
+                                where="tidevann.example.org"
+                                collapsed={collapsed}
+                                onSettings={() => undefined}
+                            />
+                        }
                     />
                 }
                 top={<TopBar trail={TRAILS[view]} onSearch={() => undefined} />}

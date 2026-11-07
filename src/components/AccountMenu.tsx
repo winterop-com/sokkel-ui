@@ -1,15 +1,19 @@
+import { Avatar } from '@base-ui/react/avatar'
 import { Menu } from '@base-ui/react/menu'
 import { ChevronsUpDown, Keyboard, LogOut, Settings } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 /**
  * The account control in the rail's foot cell: a full-cell row with the initial, the name and a
- * chevron, opening upward into a menu headed by who is signed in and where.
+ * chevron, opening upward into a menu headed by who is signed in and where. Given `image`, the
+ * picture takes the initial's place once it has loaded; until then, or when it fails, the initial
+ * stays.
  *
- * Expanded, it fills the cell edge to edge; collapsed, it is the initial alone.
+ * Expanded, it fills the cell edge to edge; collapsed, it is the picture or the initial alone.
  */
 export function AccountMenu({
     name,
+    image,
     where,
     collapsed = false,
     onSettings,
@@ -19,6 +23,8 @@ export function AccountMenu({
     words = { settings: 'Settings', shortcuts: 'Keyboard shortcuts', signOut: 'Sign out', account: 'Account' },
 }: {
     name: string
+    /** The person's picture, drawn over the initial once it has loaded. */
+    image?: string
     /** Where they are signed in: a host, an instance, a version, in the code face. */
     where?: string
     collapsed?: boolean
@@ -31,11 +37,12 @@ export function AccountMenu({
 }) {
     const initial = name.slice(0, 1).toUpperCase()
     const avatar = (size: string) => (
-        <span
-            className={`flex ${size} shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground`}
+        <Avatar.Root
+            className={`flex ${size} shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-xs font-semibold text-primary-foreground`}
         >
-            {initial}
-        </span>
+            {image !== undefined && <Avatar.Image src={image} alt="" className="size-full object-cover" />}
+            <Avatar.Fallback>{initial}</Avatar.Fallback>
+        </Avatar.Root>
     )
     const item =
         'flex h-8 cursor-default items-center gap-2.5 rounded-md px-2 text-sm outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground'

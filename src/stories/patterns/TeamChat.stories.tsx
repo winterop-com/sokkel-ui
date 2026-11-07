@@ -12,6 +12,7 @@ import { Button } from '../../components/ui/button'
 import { DropdownMenuItem, DropdownMenuSeparator } from '../../components/ui/dropdown-menu'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { Row, Stack } from '../../components/Layout'
+import { pictureOf } from '../fixtures/portraits'
 
 /**
  * The message half of a team chat: messages laid out densely with the author's square picture,
@@ -46,10 +47,10 @@ const MENU = (
 /** What every message offers on hover: react, reply in thread, and the menu. */
 const BAR = { onAddReaction: noop, onReply: noop, menu: MENU }
 
-const GRACE: ChatPerson = { name: 'grace' }
-const LINUS: ChatPerson = { name: 'linus' }
-const MARGARET: ChatPerson = { name: 'margaret' }
-const ADA: ChatPerson = { name: 'ada' }
+const GRACE: ChatPerson = { name: 'grace', image: pictureOf('grace') }
+const LINUS: ChatPerson = { name: 'linus', image: pictureOf('linus') }
+const MARGARET: ChatPerson = { name: 'margaret', image: pictureOf('margaret') }
+const ADA: ChatPerson = { name: 'ada', image: pictureOf('ada') }
 
 /** Reactions with the reader's own taken from `mine`, so pressing one adds or takes it back. */
 function useReactions(start: Record<string, boolean>) {
@@ -68,7 +69,7 @@ function useReactions(start: Record<string, boolean>) {
 export const Message: StoryObj = {
     render: () => (
         <Ground>
-            <ChatMessage author="ada" time="09:12" timeTitle="Friday, November 6 at 09:12" {...BAR}>
+            <ChatMessage author="ada" image={ADA.image} time="09:12" timeTitle="Friday, November 6 at 09:12" {...BAR}>
                 <Markdown content="Morning. `nightly-export` failed at **validate** again: 37 rows carry an amount that is not a number." />
             </ChatMessage>
         </Ground>
@@ -82,7 +83,7 @@ export const Message: StoryObj = {
 export const Grouped: StoryObj = {
     render: () => (
         <Ground>
-            <ChatMessage author="margaret" time="09:41" {...BAR}>
+            <ChatMessage author="margaret" image={MARGARET.image} time="09:41" {...BAR}>
                 <Markdown content="Here are the rows that failed, from the run's output." />
             </ChatMessage>
             <ChatMessage author="margaret" time="09:41" continued {...BAR}>
@@ -104,6 +105,7 @@ function ReactionsStory() {
         <Ground>
             <ChatMessage
                 author="grace"
+                image={GRACE.image}
                 time="16:02"
                 {...BAR}
                 reactions={of([
@@ -117,6 +119,7 @@ function ReactionsStory() {
             </ChatMessage>
             <ChatMessage
                 author="linus"
+                image={LINUS.image}
                 time="16:05"
                 {...BAR}
                 reactions={of([
@@ -147,6 +150,7 @@ export const ThreadSummary: StoryObj = {
         <Ground>
             <ChatMessage
                 author="ada"
+                image={ADA.image}
                 time="09:12"
                 {...BAR}
                 thread={{ count: 5, people: [GRACE, LINUS, MARGARET, ADA], last: 'today at 09:40' }}
@@ -156,6 +160,7 @@ export const ThreadSummary: StoryObj = {
             </ChatMessage>
             <ChatMessage
                 author="linus"
+                image={LINUS.image}
                 time="10:02"
                 {...BAR}
                 thread={{ count: 1, people: [GRACE], last: 'today at 10:05' }}
@@ -171,10 +176,10 @@ export const ThreadSummary: StoryObj = {
 export const Edited: StoryObj = {
     render: () => (
         <Ground>
-            <ChatMessage author="margaret" time="09:41" editedAt="today at 09:44" {...BAR}>
+            <ChatMessage author="margaret" image={MARGARET.image} time="09:41" editedAt="today at 09:44" {...BAR}>
                 <Markdown content="**@ada** is `12,50` a decimal comma? Then the locale fixes most of them." />
             </ChatMessage>
-            <ChatMessage author="linus" time="09:52" editedAt="today at 10:01" {...BAR}>
+            <ChatMessage author="linus" image={LINUS.image} time="09:52" editedAt="today at 10:01" {...BAR}>
                 <Markdown
                     content={
                         "Plan for the fix:\n\nParse amounts with the feed's locale in `transform`, then let `validate` stay strict.\n\nI will ship it behind a flag first."
@@ -192,13 +197,13 @@ export const Edited: StoryObj = {
 export const Links: StoryObj = {
     render: () => (
         <Ground>
-            <ChatMessage author="grace" time="11:20" {...BAR}>
+            <ChatMessage author="grace" image={GRACE.image} time="11:20" {...BAR}>
                 <Markdown content="The failed run is [harbor run 412](https://runs.example.org/harbor/412), and the filter is described in the [rows.filter reference](https://docs.example.org/steps/rows-filter)." />
             </ChatMessage>
             <ChatMessage author="grace" time="11:21" continued {...BAR}>
                 <Markdown content="Status page: https://status.example.org" />
             </ChatMessage>
-            <ChatMessage author="ada" time="11:30" {...BAR}>
+            <ChatMessage author="ada" image={ADA.image} time="11:30" {...BAR}>
                 Thanks, the dashboard is at <a href="https://larkspur.example.org/dashboards/queues">larkspur queues</a>.
             </ChatMessage>
         </Ground>
@@ -211,22 +216,23 @@ function Days({ unreadFrom = false }: { unreadFrom?: boolean }) {
     return (
         <>
             <ChatDay label="Tuesday, November 3">
-                <ChatMessage author="linus" time="14:10" {...BAR}>
+                <ChatMessage author="linus" image={LINUS.image} time="14:10" {...BAR}>
                     <Markdown content="`sync-inventory` is moving to the new scheduler this week." />
                 </ChatMessage>
                 <ChatMessage author="linus" time="14:11" continued {...BAR}>
                     <Markdown content="It runs every 15 minutes there, same as before." />
                 </ChatMessage>
-                <ChatMessage author="margaret" time="15:30" {...BAR}>
+                <ChatMessage author="margaret" image={MARGARET.image} time="15:30" {...BAR}>
                     <Markdown content="Good. Keep the old one around until Friday in case we need to roll back." />
                 </ChatMessage>
             </ChatDay>
             <ChatDay label="Wednesday, November 4">
-                <ChatMessage author="ada" time="10:02" {...BAR}>
+                <ChatMessage author="ada" image={ADA.image} time="10:02" {...BAR}>
                     <Markdown content="`rebuild-index` took 41 minutes last night, up from 12." />
                 </ChatMessage>
                 <ChatMessage
                     author="grace"
+                    image={GRACE.image}
                     time="10:15"
                     {...BAR}
                     thread={{ count: 2, people: [LINUS, ADA], last: 'Wednesday at 10:40' }}
@@ -234,13 +240,14 @@ function Days({ unreadFrom = false }: { unreadFrom?: boolean }) {
                 >
                     <Markdown content="That is the new larkspur projects. I will look at the batch size." />
                 </ChatMessage>
-                <ChatMessage author="grace" time="16:48" {...BAR}>
+                <ChatMessage author="grace" image={GRACE.image} time="16:48" {...BAR}>
                     <Markdown content="Batch size is back to 500. Tonight's run will tell." />
                 </ChatMessage>
             </ChatDay>
             <ChatDay label="Yesterday">
                 <ChatMessage
                     author="grace"
+                    image={GRACE.image}
                     time="16:02"
                     {...BAR}
                     reactions={of([
@@ -251,7 +258,7 @@ function Days({ unreadFrom = false }: { unreadFrom?: boolean }) {
                 >
                     <Markdown content="The deploy of **harbor-api 1.4.0** is done. The rollout took 6 minutes and no run was interrupted." />
                 </ChatMessage>
-                <ChatMessage author="linus" time="16:05" {...BAR}>
+                <ChatMessage author="linus" image={LINUS.image} time="16:05" {...BAR}>
                     <Markdown content="Nice. `nightly-export` still writes to the old bucket; I will move it tomorrow." />
                 </ChatMessage>
                 <ChatMessage author="linus" time="16:06" continued {...BAR}>
@@ -261,6 +268,7 @@ function Days({ unreadFrom = false }: { unreadFrom?: boolean }) {
             <ChatDay label="Today">
                 <ChatMessage
                     author="ada"
+                    image={ADA.image}
                     time="09:12"
                     {...BAR}
                     thread={{ count: 3, people: [GRACE, LINUS], last: 'today at 09:40' }}
@@ -280,6 +288,7 @@ function Days({ unreadFrom = false }: { unreadFrom?: boolean }) {
                 {unreadFrom && <ChatNewDivider />}
                 <ChatMessage
                     author="margaret"
+                    image={MARGARET.image}
                     time="09:41"
                     files={[{ id: 'f1', name: 'orders-failed.csv', kind: 'file', detail: 'CSV, 4 KB' }]}
                     {...BAR}
@@ -289,7 +298,7 @@ function Days({ unreadFrom = false }: { unreadFrom?: boolean }) {
                 <ChatMessage author="margaret" time="09:42" continued editedAt="today at 09:44" {...BAR}>
                     <Markdown content="**@ada** is `12,50` a decimal comma? Then the locale fixes most of them." />
                 </ChatMessage>
-                <ChatMessage author="grace" time="09:47" {...BAR}>
+                <ChatMessage author="grace" image={GRACE.image} time="09:47" {...BAR}>
                     <Markdown content="Probably. juniper switched its export to `nb-NO` on Monday." />
                 </ChatMessage>
             </ChatDay>
@@ -356,7 +365,14 @@ export const Header: StoryObj = {
                     onMembers={noop}
                     actions={ACTIONS}
                 />
-                <ChannelHeader name="grace" kind="direct" presence="active" onDetails={noop} actions={ACTIONS.slice(1)} />
+                <ChannelHeader
+                    name="grace"
+                    kind="direct"
+                    image={GRACE.image}
+                    presence="active"
+                    onDetails={noop}
+                    actions={ACTIONS.slice(1)}
+                />
             </Stack>
         </Ground>
     ),
@@ -370,7 +386,7 @@ export const Start: StoryObj = {
     render: () => (
         <Ground>
             <Stack gap="2xl">
-                <ConversationStart picture={<PersonAvatar name="grace" size="xl" shape="square" />} title="grace">
+                <ConversationStart picture={<PersonAvatar name="grace" image={GRACE.image} size="xl" shape="square" />} title="grace">
                     Platform, on call this week. This is the start of your conversation with grace.
                 </ConversationStart>
                 <ConversationStart
@@ -430,16 +446,16 @@ export const Thread: StoryObj = {
                 <ThreadView
                     className="w-full max-w-sm border-l border-border-strong bg-sidebar"
                     parent={
-                        <ChatMessage author="ada" time="09:12" {...BAR}>
+                        <ChatMessage author="ada" image={ADA.image} time="09:12" {...BAR}>
                             <Markdown content="Morning. `nightly-export` failed at **validate** again: 37 rows carry an amount that is not a number." />
                         </ChatMessage>
                     }
                     composer={<Reply placeholder="Reply" thread />}
                 >
-                    <ChatMessage author="grace" time="09:20" {...BAR}>
+                    <ChatMessage author="grace" image={GRACE.image} time="09:20" {...BAR}>
                         <Markdown content="Same file as last week? The export from juniper changed its number format on Monday." />
                     </ChatMessage>
-                    <ChatMessage author="linus" time="09:31" editedAt="today at 09:33" {...BAR}>
+                    <ChatMessage author="linus" image={LINUS.image} time="09:31" editedAt="today at 09:33" {...BAR}>
                         <Markdown content="Yes, juniper switched to `nb-NO`. I can parse with the locale in `transform`." />
                     </ChatMessage>
                     <ChatMessage author="linus" time="09:32" continued {...BAR}>
