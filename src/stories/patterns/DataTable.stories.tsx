@@ -806,7 +806,7 @@ const albumActions = (): DataAction[] => [
 /** An album as a card: its cover filling the top, its title, artist and year under it. */
 function AlbumCard({ album }: { album: Album }) {
     return (
-        <Stack gap="sm" className="h-full rounded-surface border border-border bg-card p-2 group-hover/card:bg-muted">
+        <Stack gap="sm" className="h-full rounded-surface border border-border bg-card p-2 group-hover/card:bg-hover">
             <Artwork cover={album.cover} className="min-h-0 w-full flex-1 rounded-mini" />
             <div className="min-w-0 px-0.5">
                 <div className="truncate text-sm font-medium">{album.title}</div>

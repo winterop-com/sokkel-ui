@@ -336,7 +336,7 @@ export function BoardLane({
                     aria-expanded={!collapsed}
                     aria-label={collapsed ? words.expand : words.collapse}
                     title={collapsed ? words.expand : words.collapse}
-                    className="flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    className="flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-hover hover:text-foreground"
                     onClick={() => onCollapsedChange?.(!collapsed)}
                 >
                     <ChevronRight className={cn('size-4 transition-transform', !collapsed && 'rotate-90')} aria-hidden />

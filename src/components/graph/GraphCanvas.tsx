@@ -564,7 +564,7 @@ function ViewControls({ empty, onMoved, children }: { empty: boolean; onMoved: (
 function ZoomButtons({ words, row }: { words: GraphWords; row: boolean }) {
     const controls = useGraphControls()
     const button =
-        'flex size-7 items-center justify-center text-muted-foreground outline-none hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring [&_svg]:size-3.5'
+        'flex size-7 items-center justify-center text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring [&_svg]:size-3.5'
     if (controls === null) return null
     return (
         <div className={cn('flex overflow-hidden rounded-control border border-border bg-card shadow-node', !row && 'flex-col')}>

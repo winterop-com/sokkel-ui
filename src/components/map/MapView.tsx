@@ -221,7 +221,7 @@ function ControlButton({
                         variant="outline"
                         size="icon-sm"
                         aria-label={label}
-                        className="bg-card text-foreground shadow-xs hover:bg-muted dark:bg-card dark:hover:bg-muted"
+                        className="bg-card text-foreground shadow-xs hover:bg-hover dark:bg-card"
                         onClick={onClick}
                     />
                 }

@@ -47,7 +47,7 @@ function save(name: string, href: string) {
 }
 
 const TOOL =
-    'flex size-6 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-secondary hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-solid focus-visible:outline-ring data-popup-open:bg-secondary'
+    'flex size-6 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-solid focus-visible:outline-ring data-popup-open:bg-hover'
 
 /**
  * The chrome around a chart: a small title with an optional info marker and subtitle, the panel's

@@ -129,7 +129,7 @@ export function CapabilityPicker({
                                 'inline-flex h-6 items-center gap-1.5 rounded-control border px-2.5 text-xs transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid disabled:cursor-not-allowed disabled:opacity-40',
                                 on
                                     ? 'border-primary/40 bg-accent text-foreground'
-                                    : 'border-border-strong text-muted-foreground hover:bg-secondary hover:text-foreground',
+                                    : 'border-border-strong text-muted-foreground hover:bg-hover hover:text-foreground',
                             )}
                         >
                             {capability.label}

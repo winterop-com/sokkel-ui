@@ -71,7 +71,7 @@ export function IssueMark({
                         type="button"
                         aria-label={spoken(issues)}
                         className={cn(
-                            'absolute inset-y-0 right-1 my-auto flex size-7 items-center justify-center rounded-md outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/50 data-popup-open:bg-muted',
+                            'absolute inset-y-0 right-1 my-auto flex size-7 items-center justify-center rounded-md outline-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring/50 data-popup-open:bg-hover',
                             INK[tone],
                             className,
                         )}
@@ -199,7 +199,7 @@ export function IssueCount({
                                 setOpen(false)
                                 entry.onGo()
                             }}
-                            className="flex items-start gap-2 rounded-md px-2 py-1.5 text-left outline-none hover:bg-muted focus-visible:bg-muted"
+                            className="flex items-start gap-2 rounded-md px-2 py-1.5 text-left outline-none hover:bg-hover focus-visible:bg-hover"
                         >
                             <Mark className={cn('mt-0.5 size-4 shrink-0', INK[entry.issue.tone])} aria-hidden />
                             <span className="flex min-w-0 flex-col">

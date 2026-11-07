@@ -179,7 +179,7 @@ export function NewJobWizard() {
                                         type="button"
                                         aria-pressed={source === one.value}
                                         onClick={() => setSource(one.value)}
-                                        className="min-w-0 flex-1 rounded-control border border-border p-3 text-left outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/50 aria-pressed:border-primary/60 aria-pressed:bg-primary/6"
+                                        className="min-w-0 flex-1 rounded-control border border-border p-3 text-left outline-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring/50 aria-pressed:border-primary/60 aria-pressed:bg-primary/6"
                                     >
                                         <Stack as="span" gap="2xs" className="h-full">
                                             <Row as="span" justify="between" className="text-sm font-medium">
@@ -429,7 +429,7 @@ export function ImportOrders({ stage: first = 'map' }: { stage?: ImportStage }) 
                             gap="sm"
                             align="center"
                             justify="center"
-                            className="h-56 cursor-pointer rounded-surface border-2 border-dashed border-border text-center hover:bg-muted/40"
+                            className="h-56 cursor-pointer rounded-surface border-2 border-dashed border-border text-center hover:bg-hover"
                         >
                             <FileSpreadsheet className="size-8 text-muted-foreground" aria-hidden />
                             <span className="text-sm font-medium">Drop a CSV file here, or choose one</span>

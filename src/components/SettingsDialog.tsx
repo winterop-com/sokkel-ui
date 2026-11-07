@@ -181,7 +181,7 @@ export function SettingsDialog({
                                                 'flex min-h-finger items-center gap-2.5 rounded-md px-2 text-left text-sm transition-colors outline-none focus-visible:outline-2 focus-visible:outline-ring sm:min-h-0 sm:py-1.5',
                                                 chosen
                                                     ? 'sm:bg-secondary sm:font-medium sm:text-foreground'
-                                                    : 'sm:text-muted-foreground sm:hover:bg-secondary/60 sm:hover:text-foreground',
+                                                    : 'sm:text-muted-foreground sm:hover:bg-hover sm:hover:text-foreground',
                                             )}
                                             onClick={() => {
                                                 onActiveChange(section.id)

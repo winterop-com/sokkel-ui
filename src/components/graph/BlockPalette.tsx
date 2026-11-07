@@ -113,7 +113,7 @@ export function BlockPalette({
                                         onDragStart={onDragStart(block)}
                                         onClick={() => onPick?.(block)}
                                         title={block.description}
-                                        className="flex w-full cursor-grab items-center rounded-control px-1.5 py-1 text-left outline-none hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring active:cursor-grabbing"
+                                        className="flex w-full cursor-grab items-center rounded-control px-1.5 py-1 text-left outline-none hover:bg-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring active:cursor-grabbing"
                                     >
                                         <BlockRow block={block} />
                                     </button>

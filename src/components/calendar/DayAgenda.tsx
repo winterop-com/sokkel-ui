@@ -63,7 +63,7 @@ export function DayAgenda<E extends CalendarEvent>({
                             onSelect={onSelectEvent}
                             side="bottom"
                             className={cn(
-                                'flex min-h-finger w-full items-start gap-3 px-3 py-2 text-left hover:bg-secondary data-open:bg-secondary',
+                                'flex min-h-finger w-full items-start gap-3 px-3 py-2 text-left hover:bg-hover data-open:bg-secondary',
                                 event.muted === true && 'opacity-60',
                             )}
                         >

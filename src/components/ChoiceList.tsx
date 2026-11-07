@@ -46,7 +46,7 @@ export function ChoiceList<T extends string>({
                 <label
                     key={choice.value}
                     className={cn(
-                        'flex cursor-pointer items-center gap-3 rounded-control px-2.5 py-2 text-sm hover:bg-muted/60',
+                        'flex cursor-pointer items-center gap-3 rounded-control px-2.5 py-2 text-sm hover:bg-hover',
                         choice.value === value && 'bg-secondary hover:bg-secondary',
                     )}
                 >

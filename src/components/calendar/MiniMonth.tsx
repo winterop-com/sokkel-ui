@@ -66,7 +66,7 @@ export function MiniMonth({
                     type="button"
                     aria-label={words.previous}
                     title={words.previous}
-                    className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-hover hover:text-foreground"
                     onClick={() => onMonthChange?.(addMonths(month, -1))}
                 >
                     <ChevronLeft className="size-4" aria-hidden />
@@ -75,7 +75,7 @@ export function MiniMonth({
                     type="button"
                     aria-label={words.next}
                     title={words.next}
-                    className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-hover hover:text-foreground"
                     onClick={() => onMonthChange?.(addMonths(month, 1))}
                 >
                     <ChevronRight className="size-4" aria-hidden />

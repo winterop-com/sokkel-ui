@@ -91,7 +91,7 @@ export function MessageRow({
             data-open={open || undefined}
             className={cn(
                 'relative flex gap-3 border-b border-border px-3 py-2.5 text-sm transition-colors',
-                open ? 'bg-sidebar-accent' : checked ? 'bg-accent' : 'hover:bg-secondary/60',
+                open ? 'bg-sidebar-accent' : checked ? 'bg-accent' : 'hover:bg-hover',
                 className,
             )}
         >

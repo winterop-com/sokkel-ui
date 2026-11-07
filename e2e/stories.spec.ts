@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs'
 
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 
 import { mapsSettled, routeTiles } from './tiles.ts'
 
@@ -154,6 +154,69 @@ for (const theme of THEMES) {
                 await page.goto(`/iframe.html?id=themes-kitchen-sink--kitchen-sink&viewMode=story&globals=theme:${mode};look:${theme}`)
                 await settled(page)
                 await expect(page).toHaveScreenshot(`theme-${theme}--${mode}.png`, { threshold: 0.02 })
+            })
+        }
+    })
+}
+
+/**
+ * How far a hovered part's fill stands from the surface behind it: the largest difference in any
+ * channel, 0 to 255, with a see-through fill laid over that surface first.
+ */
+async function hoverStandsOut(page: Page, part: Locator): Promise<number> {
+    await part.hover()
+    await page.waitForTimeout(150)
+    return part.evaluate((element) => {
+        const paint = (css: string) => {
+            const canvas = document.createElement('canvas')
+            canvas.width = 1
+            canvas.height = 1
+            const context = canvas.getContext('2d')
+            if (context === null) return [0, 0, 0, 0]
+            context.fillStyle = css
+            context.fillRect(0, 0, 1, 1)
+            return [...context.getImageData(0, 0, 1, 1).data]
+        }
+        let behind = element.parentElement
+        while (behind !== null && paint(getComputedStyle(behind).backgroundColor)[3] === 0) behind = behind.parentElement
+        const [r, g, b] = paint(behind === null ? 'white' : getComputedStyle(behind).backgroundColor)
+        const [hr, hg, hb, ha] = paint(getComputedStyle(element).backgroundColor)
+        const alpha = ha / 255
+        const over = [hr * alpha + r * (1 - alpha), hg * alpha + g * (1 - alpha), hb * alpha + b * (1 - alpha)]
+        return Math.max(Math.abs(over[0] - r), Math.abs(over[1] - g), Math.abs(over[2] - b))
+    })
+}
+
+/** The least a hover must stand out from its surface, so the pointer always shows where it is. */
+const HOVER_SHOWS = 8
+
+// Every theme, dark and light: a hovered menu item, an entry in the rail, a quiet button on a card and an
+// item in the account menu each stand out from the surface behind them. A hover painted in the surface's
+// own color passes every screenshot, as no screenshot hovers, so this measures it instead.
+for (const theme of THEMES) {
+    test(`hover shows in ${theme}`, async ({ page }) => {
+        await still(page)
+        await page.setViewportSize(VIEWPORTS.desktop.size)
+        for (const mode of VIEWPORTS.desktop.modes) {
+            await test.step(mode, async () => {
+                const globals = `theme:${mode};look:${theme}`
+                await page.goto(`/iframe.html?id=primitives-menus-dropdownmenu--items&viewMode=story&globals=${globals}`)
+                await settled(page)
+                expect(await hoverStandsOut(page, page.getByRole('menuitem').first()), 'a menu item').toBeGreaterThanOrEqual(HOVER_SHOWS)
+                await page.goto(`/iframe.html?id=themes-kitchen-sink--kitchen-sink&viewMode=story&globals=${globals}`)
+                await settled(page)
+                expect(
+                    await hoverStandsOut(page, page.getByRole('navigation').getByRole('link').nth(1)),
+                    'a rail entry',
+                ).toBeGreaterThanOrEqual(HOVER_SHOWS)
+                expect(
+                    await hoverStandsOut(page, page.getByRole('button', { name: 'Refresh' })),
+                    'a quiet button on a card',
+                ).toBeGreaterThanOrEqual(HOVER_SHOWS)
+                await page.locator('[data-slot=account-menu-trigger], button:has-text("ada")').first().click()
+                expect(await hoverStandsOut(page, page.getByRole('menuitem').first()), 'an account menu item').toBeGreaterThanOrEqual(
+                    HOVER_SHOWS,
+                )
             })
         }
     })

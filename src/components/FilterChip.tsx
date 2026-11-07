@@ -114,7 +114,7 @@ export function FilterChip({
                   choose([])
                   onClear?.()
               }
-    const face = 'flex items-center gap-1.5 px-2.5 hover:bg-secondary/60 data-popup-open:bg-secondary/60'
+    const face = 'flex items-center gap-1.5 px-2.5 hover:bg-hover data-popup-open:bg-hover'
     const inner = (
         <>
             {icon}
@@ -195,7 +195,7 @@ export function FilterChip({
                     type="button"
                     aria-label={words.clear(facet)}
                     title={words.clear(facet)}
-                    className="flex items-center border-l border-primary/30 px-1.5 text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+                    className="flex items-center border-l border-primary/30 px-1.5 text-muted-foreground hover:bg-hover hover:text-foreground"
                     onClick={clear}
                 >
                     <X className="size-3.5" aria-hidden />

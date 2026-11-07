@@ -167,7 +167,7 @@ export function AsyncSelect<T>({
                                 <Combobox.Item
                                     key={itemKey(item)}
                                     value={item}
-                                    className="relative flex min-h-8 w-full cursor-default items-center gap-2 rounded-md py-1 pr-8 pl-2 text-sm outline-none select-none data-highlighted:bg-secondary"
+                                    className="relative flex min-h-8 w-full cursor-default items-center gap-2 rounded-md py-1 pr-8 pl-2 text-sm outline-none select-none data-highlighted:bg-hover"
                                 >
                                     <span className="min-w-0 flex-1">{renderItem === undefined ? itemLabel(item) : renderItem(item)}</span>
                                     <Combobox.ItemIndicator className="absolute right-2 flex size-4 items-center justify-center">

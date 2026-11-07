@@ -88,7 +88,7 @@ export function TrackList({
                             aria-label={label}
                             onClick={onPlay === undefined ? undefined : () => onPlay(track)}
                             className={cn(
-                                'flex min-h-(--density-row) min-w-0 flex-1 items-center gap-3 py-1.5 text-left text-sm outline-none focus-visible:bg-secondary',
+                                'flex min-h-(--density-row) min-w-0 flex-1 items-center gap-3 py-1.5 text-left text-sm outline-none focus-visible:bg-hover',
                                 variant === 'boxed' ? 'pl-(--density-panel-pad)' : 'pl-2',
                                 onPlay !== undefined && 'cursor-pointer',
                             )}
