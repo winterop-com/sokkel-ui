@@ -1,11 +1,10 @@
+import { TrackList } from '../../components/media/TrackList'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { ListMusic } from 'lucide-react'
 import { useState } from 'react'
 
 import { MediaBar, type RepeatMode } from '../../components/media/MediaBar'
-import { formatTime } from '../../components/media/time'
 import { Button } from '../../components/ui/button'
-import { cn } from '../../lib/cn'
 import { Artwork, type Cover } from '../fixtures/Artwork'
 import { Row, Stack } from '../../components/Layout'
 
@@ -53,39 +52,23 @@ function Player({ startPlaying, queue = false }: { startPlaying: boolean; queue?
                     {queueOpen && (
                         <section className="ml-auto w-full max-w-sm rounded-surface border border-border-strong bg-popover text-popover-foreground shadow-md">
                             <h2 className="border-b border-border px-3 py-2 text-xs font-medium text-muted-foreground">Up next</h2>
-                            <ol className="p-1">
-                                {QUEUE.map((entry, at) => (
-                                    <li key={entry.title}>
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setIndex(at)
-                                                setPosition(0)
-                                            }}
-                                            aria-current={at === index || undefined}
-                                            className="flex w-full items-center gap-3 rounded-control px-2 py-1.5 text-left hover:bg-muted aria-current:bg-accent"
-                                        >
-                                            <span className="size-8 shrink-0 overflow-hidden rounded-mini">
-                                                <Artwork cover={entry.cover} />
-                                            </span>
-                                            <span className="min-w-0 flex-1">
-                                                <span
-                                                    className={cn(
-                                                        'block truncate text-sm',
-                                                        at === index ? 'font-medium text-primary-ink' : 'text-foreground',
-                                                    )}
-                                                >
-                                                    {entry.title}
-                                                </span>
-                                                <span className="block truncate text-xs text-muted-foreground">{entry.artist}</span>
-                                            </span>
-                                            <span className="font-mono text-xs text-muted-foreground tabular-nums">
-                                                {formatTime(entry.duration)}
-                                            </span>
-                                        </button>
-                                    </li>
-                                ))}
-                            </ol>
+                            <TrackList
+                                variant="plain"
+                                className="p-1"
+                                tracks={QUEUE.map((entry) => ({
+                                    id: entry.title,
+                                    title: entry.title,
+                                    subtitle: entry.artist,
+                                    artwork: <Artwork cover={entry.cover} />,
+                                    duration: entry.duration,
+                                }))}
+                                current={track.title}
+                                playing={playing}
+                                onPlay={(chosen) => {
+                                    setIndex(QUEUE.findIndex((entry) => entry.title === chosen.id))
+                                    setPosition(0)
+                                }}
+                            />
                         </section>
                     )}
                 </div>
