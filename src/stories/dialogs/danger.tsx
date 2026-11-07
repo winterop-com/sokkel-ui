@@ -1,13 +1,12 @@
+import { PersonRow } from '../../components/PersonRow'
+import { ChoiceList } from '../../components/ChoiceList'
+import { CheckboxField } from '../../components/CheckboxField'
 import { Bell, CalendarClock, History, KeyRound, Workflow } from 'lucide-react'
 import { useState } from 'react'
 
 import { ConsequenceList } from '../../components/ConsequenceList'
 import { ConfirmDialog, DialogShell } from '../../components/DialogShell'
-import { PersonAvatar } from '../../components/PersonAvatar'
 import { TypedConfirmDialog } from '../../components/TypedConfirmDialog'
-import { Checkbox } from '../../components/ui/checkbox'
-import { RadioGroup, RadioGroupItem } from '../../components/ui/radio-group'
-import { cn } from '../../lib/cn'
 import { Behind, wait } from './parts'
 
 export function ConfirmDelete() {
@@ -134,35 +133,29 @@ export function TransferOwnership({ step: first = 1 }: { step?: 0 | 1 }) {
                 }
             >
                 {step === 0 ? (
-                    <RadioGroup value={to} onValueChange={(value) => setTo(String(value))} aria-label="New owner" className="gap-0">
-                        {PEOPLE.map((person) => (
-                            <label
-                                key={person.username}
-                                className={cn(
-                                    'flex cursor-pointer items-center gap-3 rounded-control border border-transparent px-3 py-2.5 hover:bg-muted',
-                                    to === person.username && 'border-primary/40 bg-primary/6',
-                                )}
-                            >
-                                <RadioGroupItem value={person.username} />
-                                <PersonAvatar name={person.username} />
-                                <span className="flex min-w-0 flex-1 flex-col">
-                                    <span className="font-mono text-xs">{person.username}</span>
-                                    <span className="truncate text-xs text-muted-foreground">{person.email}</span>
-                                </span>
-                                <span className="text-xs text-muted-foreground">{person.role}</span>
-                            </label>
-                        ))}
-                    </RadioGroup>
+                    <ChoiceList
+                        label="New owner"
+                        value={to}
+                        onValueChange={setTo}
+                        choices={PEOPLE.map((person) => ({
+                            value: person.username,
+                            label: <PersonRow name={person.username} detail={person.email} aside={person.role} />,
+                        }))}
+                    />
                 ) : (
                     <>
                         <ConsequenceList items={OWNED} tone="neutral" words={{ heading: `Moves to ${to}` }} />
-                        <label className="flex cursor-pointer items-start gap-2.5 rounded-control border border-critical/30 bg-critical/4 px-3 py-2.5">
-                            <Checkbox checked={understood} onCheckedChange={(checked) => setUnderstood(checked)} className="mt-0.5" />
-                            <span className="text-sm">
-                                I understand that I lose the owner’s rights at once, and that only <span className="font-mono">{to}</span>{' '}
-                                can give them back.
-                            </span>
-                        </label>
+                        <CheckboxField
+                            tone="critical"
+                            label={
+                                <>
+                                    I understand that I lose the owner’s rights at once, and that only{' '}
+                                    <span className="font-mono">{to}</span> can give them back.
+                                </>
+                            }
+                            checked={understood}
+                            onCheckedChange={setUnderstood}
+                        />
                     </>
                 )}
             </DialogShell>

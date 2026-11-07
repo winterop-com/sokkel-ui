@@ -1,3 +1,5 @@
+import { PersonRow } from '../../components/PersonRow'
+import { CheckboxField, CheckboxList } from '../../components/CheckboxField'
 import {
     Attachment,
     AttachmentActions,
@@ -16,12 +18,10 @@ import { DialogShell } from '../../components/DialogShell'
 import { Field } from '../../components/Field'
 import { IssueCount, IssueMark, type Issue } from '../../components/IssueMark'
 import { type DataColumn, DataTable } from '../../components/DataTable'
-import { PersonAvatar } from '../../components/PersonAvatar'
 import { Segmented } from '../../components/Segmented'
 import { StepIndicator, WizardDialog } from '../../components/StepIndicator'
 import { SwitchField } from '../../components/SwitchField'
 import { Button } from '../../components/ui/button'
-import { Checkbox } from '../../components/ui/checkbox'
 import { NativeSelect, NativeSelectOption } from '../../components/ui/native-select'
 import { Progress } from '../../components/ui/progress'
 import { DropZone } from '../../components/UploadTray'
@@ -623,25 +623,17 @@ export function ExportRuns({ stage: first = 'form' }: { stage?: ExportStage }) {
                                 placeholder="2026-10-31"
                             />
                         </div>
-                        <fieldset className="flex flex-col gap-1">
-                            <legend className="mb-1.5 text-sm font-medium">Include</legend>
+                        <CheckboxList label="Include">
                             {parts.map((part) => (
-                                <label
+                                <CheckboxField
                                     key={part.key}
-                                    className="flex cursor-pointer items-start gap-2.5 rounded-control px-1 py-1.5 hover:bg-muted/50"
-                                >
-                                    <Checkbox
-                                        checked={include[part.key]}
-                                        onCheckedChange={(checked) => setInclude({ ...include, [part.key]: checked })}
-                                        className="mt-0.5"
-                                    />
-                                    <Stack as="span" gap="none">
-                                        <span className="text-sm leading-5">{part.label}</span>
-                                        <span className="text-xs text-muted-foreground">{part.detail}</span>
-                                    </Stack>
-                                </label>
+                                    label={part.label}
+                                    description={part.detail}
+                                    checked={include[part.key]}
+                                    onCheckedChange={(checked) => setInclude({ ...include, [part.key]: checked })}
+                                />
                             ))}
-                        </fieldset>
+                        </CheckboxList>
                     </>
                 )}
                 {stage === 'running' && (
@@ -757,44 +749,41 @@ export function Share() {
                     <span className="text-sm font-medium">People with access</span>
                     <Stack as="ul" gap="none">
                         {members.map((member) => (
-                            <Row key={member.email} as="li" gap="md" className="py-1.5">
-                                <PersonAvatar name={member.username} />
-                                <span className="flex min-w-0 flex-1 flex-col">
-                                    <span className="font-mono text-xs">
-                                        {member.username}
-                                        {member.username === 'ada' && (
-                                            <span className="ml-1.5 font-sans text-xs text-muted-foreground">(you)</span>
-                                        )}
-                                    </span>
-                                    <span className="truncate text-xs text-muted-foreground">{member.email}</span>
-                                </span>
-                                {member.role === 'owner' ? (
-                                    <span className="px-2.5 text-sm text-muted-foreground">Owner</span>
-                                ) : (
-                                    <NativeSelect
-                                        size="sm"
-                                        aria-label={`Role for ${member.username}`}
-                                        value={member.role}
-                                        onChange={(event) =>
-                                            setMembers(
-                                                event.target.value === 'remove'
-                                                    ? members.filter((one) => one.email !== member.email)
-                                                    : members.map((one) =>
-                                                          one.email === member.email ? { ...one, role: event.target.value } : one,
-                                                      ),
-                                            )
-                                        }
-                                        className="w-32"
-                                    >
-                                        {ROLES.map((role) => (
-                                            <NativeSelectOption key={role.value} value={role.value}>
-                                                {role.label}
-                                            </NativeSelectOption>
-                                        ))}
-                                        <NativeSelectOption value="remove">Remove</NativeSelectOption>
-                                    </NativeSelect>
-                                )}
-                            </Row>
+                            <li key={member.email} className="flex py-1.5">
+                                <PersonRow
+                                    name={member.username}
+                                    note={member.username === 'ada' ? '(you)' : undefined}
+                                    detail={member.email}
+                                    aside={
+                                        member.role === 'owner' ? (
+                                            <span className="px-2.5 text-sm">Owner</span>
+                                        ) : (
+                                            <NativeSelect
+                                                size="sm"
+                                                aria-label={`Role for ${member.username}`}
+                                                value={member.role}
+                                                onChange={(event) =>
+                                                    setMembers(
+                                                        event.target.value === 'remove'
+                                                            ? members.filter((one) => one.email !== member.email)
+                                                            : members.map((one) =>
+                                                                  one.email === member.email ? { ...one, role: event.target.value } : one,
+                                                              ),
+                                                    )
+                                                }
+                                                className="w-32"
+                                            >
+                                                {ROLES.map((role) => (
+                                                    <NativeSelectOption key={role.value} value={role.value}>
+                                                        {role.label}
+                                                    </NativeSelectOption>
+                                                ))}
+                                                <NativeSelectOption value="remove">Remove</NativeSelectOption>
+                                            </NativeSelect>
+                                        )
+                                    }
+                                />
+                            </li>
                         ))}
                     </Stack>
                 </Stack>
