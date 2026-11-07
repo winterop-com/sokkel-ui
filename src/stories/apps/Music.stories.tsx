@@ -462,20 +462,31 @@ function Watch() {
 /** The playing track's loudness, drawn as the large player's scrubber. */
 const WAVEFORM = waveformOf(4)
 
+/** Whether a key press is the plain letter `key`, typed outside any field. */
+function pressed(event: KeyboardEvent, key: string): boolean {
+    const target = event.target as HTMLElement | null
+    if (event.key.toLowerCase() !== key || event.metaKey || event.ctrlKey || event.altKey) return false
+    return target === null || target.closest('input, textarea, select, [contenteditable="true"]') === null
+}
+
 /**
- * The player bar, resizable from its top edge, starting at `size` pixels tall. Made tall, a sound
- * visualizer rises behind the title; here it draws a still frame, as the story plays no audio. V
- * shows and hides it, and a toast says which.
+ * The player bar, resizable from its top edge, starting at `size` pixels tall. Made taller than
+ * its one line, it grows into two rows and a sound visualizer rises behind the title; here it
+ * draws a still frame, as the story plays no audio. V shows and hides it, and a toast says which.
+ * F opens the fullscreen view and closes it, as the bar's corner button does.
  */
-function Player({ queueOpen, size }: { queueOpen: boolean; size?: number }) {
+function Player({ queueOpen, size, fullscreen = false }: { queueOpen: boolean; size?: number; fullscreen?: boolean }) {
     const [visualizer, setVisualizer] = useState(true)
+    const [full, setFull] = useState(fullscreen)
     // The key handler's own copy of whether it shows, so a press toggles and toasts exactly once.
     const shown = useRef(true)
     useEffect(() => {
         const toggle = (event: KeyboardEvent) => {
-            const target = event.target as HTMLElement | null
-            if (event.key.toLowerCase() !== 'v' || event.metaKey || event.ctrlKey || event.altKey) return
-            if (target !== null && target.closest('input, textarea, select, [contenteditable="true"]') !== null) return
+            if (pressed(event, 'f')) {
+                setFull((open) => !open)
+                return
+            }
+            if (!pressed(event, 'v')) return
             shown.current = !shown.current
             setVisualizer(shown.current)
             toast(shown.current ? 'Visualizer shown' : 'Visualizer hidden')
@@ -508,6 +519,8 @@ function Player({ queueOpen, size }: { queueOpen: boolean; size?: number }) {
             waveform={WAVEFORM}
             visualizer={visualizer ? <SoundVisualizer frame={FRAME} label="What is playing" /> : undefined}
             defaultSize={size}
+            fullscreen={full}
+            onFullscreenChange={setFull}
             volume={volume}
             onVolumeChange={setVolume}
             muted={muted}
@@ -527,7 +540,7 @@ function Player({ queueOpen, size }: { queueOpen: boolean; size?: number }) {
     )
 }
 
-function MusicApp({ view, player }: { view: View; player?: number }) {
+function MusicApp({ view, player, fullscreen = false }: { view: View; player?: number; fullscreen?: boolean }) {
     const [collapsed, setCollapsed] = useState(false)
     const [tab, setTab] = useState('queue')
     const queue = view === 'queue'
@@ -570,7 +583,9 @@ function MusicApp({ view, player }: { view: View; player?: number }) {
                         <StatusItem label="library">{`${String(ALBUMS.length)} albums`}</StatusItem>
                     </StatusLine>
                 }
-                bottom={view === 'video' || view === 'series' ? undefined : <Player queueOpen={queue} size={player} />}
+                bottom={
+                    view === 'video' || view === 'series' ? undefined : <Player queueOpen={queue} size={player} fullscreen={fullscreen} />
+                }
             >
                 {view === 'library' && <LibraryPage />}
                 {view === 'album' && <AlbumPage />}
@@ -615,11 +630,19 @@ export const Album: StoryObj = { name: 'Album', render: () => <MusicApp view="al
 export const Queue: StoryObj = { name: 'Queue', render: () => <MusicApp view="queue" /> }
 
 /**
- * The player dragged up from its top edge into the large now-playing panel, docked between the
- * album and the foot: the cover as tall as the panel under the rail, the title large over the
- * track's waveform, and the account still at the window's bottom edge beside the foot strip.
+ * The player dragged up from its top edge, docked between the album and the foot: the cover
+ * across two rows under the rail, the title large beside the transport over the track's
+ * waveform, the visualizer rising behind them, and the account still at the window's bottom edge
+ * beside the foot strip.
  */
 export const NowPlaying: StoryObj = { name: 'Now playing', render: () => <MusicApp view="album" player={300} /> }
+
+/**
+ * The fullscreen view, opened from the player's corner button or with F: what plays across the
+ * head, the visualizer between, and the waveform along the foot, dark whatever the scheme. F or
+ * Escape leaves it.
+ */
+export const Fullscreen: StoryObj = { name: 'Fullscreen', render: () => <MusicApp view="album" player={300} fullscreen /> }
 
 /** A series' episodes as wide covers, with their lengths and how far each was watched. */
 export const Series: StoryObj = { name: 'Series', render: () => <MusicApp view="series" /> }

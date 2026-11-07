@@ -48,7 +48,7 @@ Both pairs were picked from the typeface research once mono was sized to its san
 
 Text is 15px (`text-sm`) on the page and in the components alike, with inputs at 16px on a phone so
 a focused field does not zoom. Every size comes from a token: `text-xs`, `text-sm`, `text-title`,
-`text-page` and `text-stat` in the interface, and `--chart-text-size`, `--chart-text-size-small`
+`text-page`, `text-stat` and `text-display` (a fullscreen view's title) in the interface, and `--chart-text-size`, `--chart-text-size-small`
 and `--chart-stat-size` for the text ECharts draws.
 
 ## Primitives
@@ -113,7 +113,19 @@ useGraphHistory are its parts; the Pipeline editor stories show each way of buil
 ## Media
 
 VideoPlayer, MediaBar, MediaCard and TrackList carry video and music, and the `AudioScrubber`
-primitive draws a recording's waveform under its position. SoundVisualizer is the one live picture
+primitive draws a recording's waveform under its position.
+
+MediaBar resizes from its top edge. Up to about 96 pixels every layout is the one-line bar; above
+it the bar grows by its `layout`, picked from the player growth research, continuously and with no
+jump: `rows` (the default: the cover across two rows, what plays, the transport and the volume over
+a full-width waveform that grows from 18 to 96 pixels), `panel` (the large now-playing panel) or
+`stage` (a centered stage). The heights where things change and the sizes between them are pure
+arithmetic in `media/bar-growth.ts`. The visualizer rises faintly behind the words from about 96
+pixels, standing on the waveform. A corner button, or an app's own key through `fullscreen`, opens
+MediaFullscreen, a now-playing view arranged after the layout, with the visualizer at full strength
+and a picker of its kind; it asks the browser for its fullscreen and falls back to covering the
+window, and it is a dark room in every theme: `.dark` around an element scoped to the document's
+theme with `data-theme-scope`. SoundVisualizer is the one live picture
 of sound: it reads a playing media element or a live stream, such as a microphone's, through Web
 Audio and draws it on a canvas as a spectrum, an area, a wave or a ring, filling its box in a color
 token, faint behind text when it is a backdrop. It moves only while the source sounds and the box
