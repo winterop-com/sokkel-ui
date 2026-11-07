@@ -6,39 +6,19 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.7.1** is the latest release (2026-11-07): charts. `Chart` draws from rows by kind and
-  fields, with twenty-five kinds on ECharts (docs/charts.md lists them), small multiples,
-  linked panels and dials, and five dashboards whose ranges and filters work. 0.7.0 put every
-  example on shared components: layout components and a rule against hand-built layout, about
-  twenty-five new parts, the dark lift for every theme, and hovers that show on any surface. 0.6.0
-  brought the team chat and AI chat parts, resizable panels and columns, and `DataTable` as the one
-  table. 0.5.0 was the first release under the new name; 0.2.0 was the first published version.
+- **0.8.0** is the latest release (2026-11-07): music. The player grows from its one-line bar
+  into a large now-playing panel, docked with the account kept at the bottom edge; a sound
+  visualizer draws what plays; the album page gains its trail and per-track actions. The package
+  ships only the library, with a file per theme and a size budget in CI, and avatars show
+  pictures. 0.7.1 brought charts drawn from rows, with twenty-five kinds on ECharts and five
+  dashboards. 0.7.0 put every example on shared components. 0.5.0 was the first release under the
+  new name; 0.2.0 was the first published version.
 - The library was renamed from winterop-ui to sokkel-ui after 0.4.0: the repository is
   `winterop-com/sokkel-ui`, the package `@winterop-com/sokkel-ui`, the Storybook
   https://winterop-com.github.io/sokkel-ui/. 0.2.0 to 0.4.0 are republished under the new name, and
   the old `@winterop-com/ui` package is deleted.
 - No app uses it yet. Until one does, a PR merges as soon as the local gates pass and main's CI
   catches the rest; a release still waits for green.
-
-## 0.8: music
-
-The music parts grow to carry a whole player, before an app builds on them.
-
-- **A fuller music player: done.** `MediaBar` resizes from its top edge, from the one-line bar to
-  a large now-playing panel: the cover as tall as the bar, a line in the accent (track 13 of 16, the
-  album, the year) over a large title and the artist, the scrubber drawn as the track's waveform
-  with the played part filled, and the transport at the foot with the volume at the end. `Shell`
-  docks it between the content and the foot, with the rail's foot (the account) kept at the
-  window's bottom edge.
-- **A sound visualizer: done.** `SoundVisualizer` draws what plays from an audio or video element,
-  or a live stream such as a microphone's, as a spectrum, an area, a wave or a ring. It holds still
-  when paused or hidden, follows the theme, and draws a still frame for stories; the bar visualizer
-  is drawn by it, so there is one. It rises behind the large player's title, and the music app's V
-  key shows and hides it with a toast. More kinds come one at a time: a two-channel level meter,
-  glow and trails.
-- **A fuller album page: done.** `PageHeader` takes a back button and the trail above the title,
-  each `TrackList` row carries add to queue and a favorite star in view, and `StarButton` is the
-  star in both places.
 
 ## 0.10: example apps
 
