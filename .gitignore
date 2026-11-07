@@ -2,6 +2,8 @@ node_modules/
 storybook-static/
 dist/
 test-results/
+# The screenshot baselines live on their own branches; scripts/baselines.sh fetches them here.
+e2e/__screenshots__/
 playwright-report/
 .playwright-mcp/
 *.log
