@@ -1,12 +1,13 @@
 import { distinct, labelOf, numberOf } from '../data'
 import { SERIES_ORDER, tooltipMarkup } from '../look'
-import { written } from './categories'
+import { valueLabels, written } from './categories'
 import { colorOf, legendColor, type ChartBuilder, type ChartSpec } from './spec'
 import type { LegendItem } from '../ChartLegend'
 
 /**
  * One point per row, `x` against `y`, both numbers; `series` colors the points by a field's label
- * and `value` sizes them by a number. An axis is named where `fieldNames` names its field.
+ * and `value` sizes them by a number. An axis is named where `fieldNames` names its field, and
+ * both start at zero unless `fit` fits them to the points.
  */
 export const scatter: ChartBuilder = (spec, look) => {
     const x = spec.x
@@ -33,15 +34,15 @@ export const scatter: ChartBuilder = (spec, look) => {
         grid: { left: 4, right: 10, top: yName === undefined ? 10 : 22, bottom: xName === undefined ? 4 : 26, containLabel: true },
         xAxis: {
             type: 'value',
-            scale: true,
+            scale: spec.fit === true,
             splitLine: { show: true, lineStyle: { color: look.grid } },
             ...(xName === undefined ? {} : { name: xName, nameLocation: 'middle', nameGap: 22 }),
         },
-        yAxis: { type: 'value', scale: true, ...(yName === undefined ? {} : { name: yName }) },
+        yAxis: { type: 'value', scale: spec.fit === true, ...valueLabels(spec), ...(yName === undefined ? {} : { name: yName }) },
         series: groups.map((name, index) => ({
             type: 'scatter',
             name,
-            itemStyle: { color: colorOf(spec, look, name, index) },
+            itemStyle: { color: colorOf(spec, look, name, index), opacity: 0.7, borderColor: look.card, borderWidth: 1 },
             symbolSize:
                 spec.value === undefined ? undefined : (point: [number, number, number]) => 6 + 18 * Math.sqrt((point[2] ?? 0) / biggest),
             data: spec.rows

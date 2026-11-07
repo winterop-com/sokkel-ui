@@ -1,4 +1,4 @@
-import { asShares, formatNumber, pivot } from '../data'
+import { asShares, formatNumber, pivot, type Series } from '../data'
 import { SERIES_ORDER, tooltipMarkup, type ChartLook } from '../look'
 import { colorOf, legendColor, type ChartBuilder, type ChartSpec } from './spec'
 import type { LegendItem } from '../ChartLegend'
@@ -33,6 +33,13 @@ function categoryAxis(spec: ChartSpec, categories: string[]) {
     }
 }
 
+/** The value axis' labels: with the spec's unit where it has one, or `%` where the figures stack to 100%. */
+export function valueLabels(spec: ChartSpec) {
+    if (spec.stack === 'percent') return { axisLabel: { formatter: (value: number) => `${formatNumber(value)}%` } }
+    if (spec.unit === undefined) return {}
+    return { axisLabel: { formatter: (value: number) => written(spec, value) } }
+}
+
 /** A tooltip listing every series at the category under the pointer. */
 function axisTooltip(spec: ChartSpec) {
     const unit = spec.stack === 'percent' ? { ...spec, format: (value: number) => value.toFixed(1), unit: '%' } : spec
@@ -47,23 +54,52 @@ function axisTooltip(spec: ChartSpec) {
     }
 }
 
-/** Bars per category, one bar per series side by side, stacked, or as shares of 100%; `gap` sets how close they stand. */
+/** Which series ends each category's stack: the last with a figure above zero, and the last with one below. */
+function stackEnds(series: readonly Series[]) {
+    const last = (sign: number) =>
+        (series[0]?.values ?? []).map((_, category) => series.findLastIndex((entry) => Math.sign(entry.values[category] ?? 0) === sign))
+    return { up: last(1), down: last(-1) }
+}
+
+/** A bar's corners, rounded at its far end from the axis. */
+function farCorners(corner: number, horizontal: boolean, value: number) {
+    if (horizontal) return value < 0 ? [corner, 0, 0, corner] : [0, corner, corner, 0]
+    return value < 0 ? [0, 0, corner, corner] : [corner, corner, 0, 0]
+}
+
+/**
+ * Bars per category, one bar per series side by side, stacked, or as shares of 100%; `gap` sets how
+ * close they stand. Each bar, or each stack, is rounded at its far end, and stacked bars are parted
+ * by a line in the card's color.
+ */
 export const bar: ChartBuilder = (spec, look) => {
     const { categories, series } = shaped(spec)
     const along = categoryAxis(spec, categories)
-    const valueAxis = { type: 'value', max: spec.stack === 'percent' ? 100 : undefined }
+    const valueAxis = { type: 'value', max: spec.stack === 'percent' ? 100 : undefined, ...valueLabels(spec) }
+    const stacked = spec.stack !== undefined
+    const horizontal = spec.horizontal === true
+    const ends = stackEnds(series)
+    const isEnd = (index: number, category: number, value: number) =>
+        !stacked || (value > 0 ? ends.up[category] === index : ends.down[category] === index)
     return {
         tooltip: axisTooltip(spec),
         grid: { left: 4, right: 10, top: 10, bottom: 4, containLabel: true },
-        xAxis: spec.horizontal === true ? valueAxis : along,
-        yAxis: spec.horizontal === true ? { ...along, inverse: true } : valueAxis,
+        xAxis: horizontal ? valueAxis : along,
+        yAxis: horizontal ? { ...along, inverse: true } : valueAxis,
         series: series.map((entry, index) => ({
             type: 'bar',
             name: entry.name,
-            data: entry.values,
-            stack: spec.stack === undefined ? undefined : 'all',
-            ...(spec.gap === 'tight' ? { barCategoryGap: '6%', barMaxWidth: 400 } : {}),
-            itemStyle: { color: colorOf(spec, look, entry.name, index) },
+            data: entry.values.map((value, category) =>
+                value === null || value === 0 || !isEnd(index, category, value)
+                    ? value
+                    : { value, itemStyle: { borderRadius: farCorners(look.corner, horizontal, value) } },
+            ),
+            stack: stacked ? 'all' : undefined,
+            ...(spec.gap === 'tight' ? { barCategoryGap: '6%', barMaxWidth: 400 } : stacked ? { barCategoryGap: '24%' } : {}),
+            itemStyle: {
+                color: colorOf(spec, look, entry.name, index),
+                ...(stacked ? { borderColor: look.card, borderWidth: 1 } : {}),
+            },
         })),
     }
 }
@@ -91,7 +127,7 @@ function lines(filled: boolean): ChartBuilder {
             tooltip: { ...axisTooltip(spec), axisPointer: { type: 'line' } },
             grid: { left: 4, right: 10, top: 10, bottom: 4, containLabel: true },
             xAxis: { ...categoryAxis(spec, categories), boundaryGap: false },
-            yAxis: { type: 'value', max: spec.stack === 'percent' ? 100 : undefined },
+            yAxis: { type: 'value', max: spec.stack === 'percent' ? 100 : undefined, ...valueLabels(spec) },
             series: series.map((entry, index) => {
                 const color = colorOf(spec, look, entry.name, index)
                 return {
@@ -150,7 +186,8 @@ export const donut: ChartBuilder = (spec, look) => {
         series: [
             {
                 type: 'pie',
-                radius: ['55%', '85%'],
+                radius: ['58%', '82%'],
+                padAngle: 1,
                 label: { show: false },
                 data: categories.map((name, index) => ({
                     name,
@@ -189,9 +226,9 @@ export const heatmap: ChartBuilder = (spec, look) => {
             itemHeight: 120,
             min: values.length === 0 ? 0 : Math.min(...values),
             max: values.length === 0 ? 1 : Math.max(...values),
-            inRange: { color: look.ramp(token) },
+            inRange: { color: look.ramp(token, 7) },
         },
-        series: [{ type: 'heatmap', data: cells }],
+        series: [{ type: 'heatmap', data: cells, itemStyle: { borderColor: look.card, borderWidth: 1, borderRadius: look.corner } }],
     }
 }
 

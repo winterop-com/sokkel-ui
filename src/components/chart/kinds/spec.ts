@@ -32,7 +32,7 @@ export interface ChartSpec {
     colors?: Readonly<Record<string, string>>
     /** How a figure is written in tooltips and labels. */
     format?: (value: number) => string
-    /** A unit written after each figure, such as `s` or `%`. */
+    /** A unit written after each figure, on the value axis too, such as `s` or `%`. */
     unit?: string
     /** What a field is called where the chart names it, such as a scatter's axes and tooltip; the field's own name where none is given. */
     fieldNames?: Readonly<Record<string, string>>
@@ -48,6 +48,8 @@ export interface ChartSpec {
     showScale?: boolean
     /** A ring's total written in its middle, with this word under it, such as `runs`. */
     total?: string
+    /** A scatter's axes fitted to its points rather than starting at zero. */
+    fit?: boolean
 }
 
 /** Builds a kind's ECharts option from the spec and the theme's look. */
