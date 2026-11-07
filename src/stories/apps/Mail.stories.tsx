@@ -19,13 +19,13 @@ import {
     Star,
     Tag,
     Trash2,
-    X,
     type LucideIcon,
 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
 import { AccountMenu } from '../../components/AccountMenu'
 import { AddressInput, type Address } from '../../components/AddressInput'
+import { AttachmentList, type AttachmentFile } from '../../components/AttachmentList'
 import { Composer } from '../../components/Composer'
 import { DialogShell } from '../../components/DialogShell'
 import { InlineField } from '../../components/InlineField'
@@ -34,16 +34,9 @@ import { MessageRow, type MessageLabel } from '../../components/MessageRow'
 import { Rail, type RailEntry, type RailGroup } from '../../components/Rail'
 import { SearchField } from '../../components/SearchField'
 import { Segmented } from '../../components/Segmented'
+import { SelectionBar } from '../../components/SelectionBar'
 import { Shell } from '../../components/Shell'
 import { TopBar } from '../../components/TopBar'
-import {
-    Attachment,
-    AttachmentAction,
-    AttachmentContent,
-    AttachmentDescription,
-    AttachmentMedia,
-    AttachmentTitle,
-} from '../../components/ui/attachment'
 import { Avatar, AvatarFallback } from '../../components/ui/avatar'
 import { Button } from '../../components/ui/button'
 import { Checkbox } from '../../components/ui/checkbox'
@@ -361,22 +354,14 @@ function LetterView({ letter, open, last, onToggle }: { letter: Letter; open: bo
                 <div className="mt-3 flex flex-col gap-4 sm:pl-11">
                     <Markdown content={letter.body} />
                     {letter.files !== undefined && (
-                        <Row align="stretch" wrap>
-                            {letter.files.map((file) => {
-                                const Icon = file.icon
-                                return (
-                                    <Attachment key={file.name} size="sm" className="min-w-0">
-                                        <AttachmentMedia>
-                                            <Icon aria-hidden />
-                                        </AttachmentMedia>
-                                        <AttachmentContent>
-                                            <AttachmentTitle>{file.name}</AttachmentTitle>
-                                            <AttachmentDescription>{file.detail}</AttachmentDescription>
-                                        </AttachmentContent>
-                                    </Attachment>
-                                )
-                            })}
-                        </Row>
+                        <AttachmentList
+                            files={letter.files.map((file) => ({
+                                id: file.name,
+                                name: file.name,
+                                detail: file.detail,
+                                icon: <file.icon aria-hidden />,
+                            }))}
+                        />
                     )}
                     {last && (
                         <Row align="stretch" wrap>
@@ -591,8 +576,7 @@ function List({
                         onCheckedChange={() => onChecked(all || some ? [] : rows.map((mail) => mail.id))}
                     />
                     {some ? (
-                        <>
-                            <span className="ml-1 text-sm font-medium tabular-nums">{checked.length} selected</span>
+                        <SelectionBar count={checked.length} onClear={() => onChecked([])} className="ml-1">
                             <Row gap="3xs" className="ml-auto">
                                 <IconButton label="Archive">
                                     <Archive aria-hidden />
@@ -606,11 +590,8 @@ function List({
                                 <IconButton label="Label">
                                     <Tag aria-hidden />
                                 </IconButton>
-                                <IconButton label="Clear the selection" onClick={() => onChecked([])}>
-                                    <X aria-hidden />
-                                </IconButton>
                             </Row>
-                        </>
+                        </SelectionBar>
                     ) : (
                         <>
                             <Segmented
@@ -687,7 +668,7 @@ function ComposeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
     const [body, setBody] = useState(
         'I will take step 3. I will run nightly-export at 08:30 and watch the validate step, and write here when it has passed.\n\nAda',
     )
-    const [files, setFiles] = useState([{ name: 'validate-rules.yaml', detail: 'YAML, 3 KB' }])
+    const [files, setFiles] = useState<AttachmentFile[]>([{ id: 'validate-rules', name: 'validate-rules.yaml', detail: 'YAML, 3 KB' }])
     return (
         <DialogShell
             open={open}
@@ -717,25 +698,11 @@ function ComposeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
                     className="min-h-56 px-1 py-3 text-sm leading-relaxed"
                 />
                 {files.length > 0 && (
-                    <Row align="stretch" wrap className="pb-1">
-                        {files.map((file) => (
-                            <Attachment key={file.name} size="sm">
-                                <AttachmentMedia>
-                                    <FileText aria-hidden />
-                                </AttachmentMedia>
-                                <AttachmentContent>
-                                    <AttachmentTitle>{file.name}</AttachmentTitle>
-                                    <AttachmentDescription>{file.detail}</AttachmentDescription>
-                                </AttachmentContent>
-                                <AttachmentAction
-                                    aria-label={`Remove ${file.name}`}
-                                    onClick={() => setFiles((current) => current.filter((entry) => entry.name !== file.name))}
-                                >
-                                    <X aria-hidden />
-                                </AttachmentAction>
-                            </Attachment>
-                        ))}
-                    </Row>
+                    <AttachmentList
+                        files={files}
+                        onRemove={(id) => setFiles((current) => current.filter((file) => file.id !== id))}
+                        className="pb-1"
+                    />
                 )}
             </Stack>
         </DialogShell>

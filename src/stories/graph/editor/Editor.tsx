@@ -10,6 +10,7 @@ import { GraphOverlay, GraphNotice } from '../../../components/graph/GraphOverla
 import { GraphToolbar, GraphToolbarButton } from '../../../components/graph/GraphToolbar'
 import { PipelineGraph } from '../../../components/graph/PipelineGraph'
 import { Problem } from '../../../components/Problem'
+import { SelectionBar } from '../../../components/SelectionBar'
 import { SchemaForm, useSchemaForm } from '../../../components/schema/SchemaForm'
 import type { JsonSchema } from '../../../components/schema/read'
 import { blockOf, BLOCKS, GROUPS, type BlockSpec } from './blocks'
@@ -53,14 +54,15 @@ export function EditorCanvas({
                     issues={editor.steps.length === 0 ? undefined : editor.issueCount}
                     onIssues={editor.firstIssue}
                 >
-                    {!readOnly && count > 1 && <span className="px-1 text-xs whitespace-nowrap text-muted-foreground">{count} chosen</span>}
                     {!readOnly && count > 0 && (
-                        <GraphToolbarButton
-                            label={count === 1 ? 'Remove the chosen step' : `Remove the ${String(count)} chosen steps`}
-                            onClick={() => editor.remove(editor.selection)}
-                        >
-                            <Trash2 aria-hidden />
-                        </GraphToolbarButton>
+                        <SelectionBar count={count} size="sm" words={{ selected: (chosen) => `${String(chosen)} chosen` }}>
+                            <GraphToolbarButton
+                                label={count === 1 ? 'Remove the chosen step' : `Remove the ${String(count)} chosen steps`}
+                                onClick={() => editor.remove(editor.selection)}
+                            >
+                                <Trash2 aria-hidden />
+                            </GraphToolbarButton>
+                        </SelectionBar>
                     )}
                     {toolbar}
                 </GraphToolbar>

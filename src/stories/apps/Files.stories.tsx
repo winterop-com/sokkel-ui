@@ -1,4 +1,3 @@
-import { IconButton } from '../../components/IconButton'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import {
     BookOpen,
@@ -13,7 +12,6 @@ import {
     Settings,
     Trash2,
     Upload as UploadIcon,
-    X,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -27,6 +25,7 @@ import { PageHeader } from '../../components/PageHeader'
 import { Rail, type RailGroup } from '../../components/Rail'
 import { SearchField } from '../../components/SearchField'
 import { Segmented } from '../../components/Segmented'
+import { SelectionBar } from '../../components/SelectionBar'
 import { Page, Shell } from '../../components/Shell'
 import { PanelSection, SidePanel } from '../../components/SidePanel'
 import { StatusItem, StatusLine } from '../../components/StatusLine'
@@ -571,15 +570,7 @@ function FilesApp({
                                 {files.length > 0 && (
                                     <Row wrap className="min-h-8">
                                         {selected.length > 0 ? (
-                                            <div
-                                                role="toolbar"
-                                                aria-label="Selection"
-                                                className="flex min-w-0 flex-1 flex-wrap items-center gap-1 rounded-control border border-primary/40 bg-primary/8 py-0.5 pr-1 pl-1"
-                                            >
-                                                <IconButton label="Clear the selection" onClick={() => setSelected([])}>
-                                                    <X aria-hidden />
-                                                </IconButton>
-                                                <span className="mr-2 text-sm font-medium tabular-nums">{selected.length} selected</span>
+                                            <SelectionBar count={selected.length} onClear={() => setSelected([])} framed>
                                                 <Button variant="ghost" size="sm">
                                                     <Download aria-hidden />
                                                     Download
@@ -606,7 +597,7 @@ function FilesApp({
                                                     <Trash2 aria-hidden />
                                                     Delete
                                                 </Button>
-                                            </div>
+                                            </SelectionBar>
                                         ) : (
                                             <SearchField
                                                 value={query}
