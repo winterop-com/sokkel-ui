@@ -12,6 +12,10 @@
  * answers on `[data-theme-scope]` for one element and what is inside it, as a theme picker's
  * preview swatch is. A theme may override any token, the density levels' included.
  *
+ * The default sets its surfaces (canvas, node, panel ground and line, critical wash) as fixed
+ * colors; every other theme takes them from `derived`, mixed from its own colors, unless it sets
+ * one itself.
+ *
  *   bun scripts/build-tokens.ts          write the CSS
  *   bun scripts/build-tokens.ts --check  fail when the CSS is not what the tokens make
  */
@@ -22,6 +26,7 @@ type Vars = Record<string, string>
 interface Tokens {
     theme: Vars
     themes: Record<string, { light: Vars; dark: Vars }>
+    derived: { light: Vars; dark: Vars }
     density: Record<string, Vars | string> & { default: string }
 }
 
@@ -39,7 +44,15 @@ function block(selectors: string[], vars: Vars): string {
 
 const base = tokens.themes.default
 if (base === undefined) throw new Error('tokens.json has no default theme')
-const others = Object.entries(tokens.themes).filter(([name]) => name !== 'default')
+const others = Object.entries(tokens.themes)
+    .filter(([name]) => name !== 'default')
+    .map(([name, theme]) => [name, withDerived(theme)] as const)
+
+/** A theme with the derived surfaces under what it sets itself. */
+function withDerived(theme: { light: Vars; dark: Vars }): { light: Vars; dark: Vars } {
+    const own = (vars: Vars): Vars => Object.fromEntries(Object.entries(vars).filter(([name]) => !name.startsWith('$')))
+    return { light: { ...own(tokens.derived.light), ...theme.light }, dark: { ...own(tokens.derived.dark), ...theme.dark } }
+}
 
 /** A theme's dark tokens, with the default's dark value for every token it sets in light alone. */
 function darkOf(theme: { light: Vars; dark: Vars }): Vars {

@@ -1,20 +1,39 @@
 import { IconButton } from './IconButton'
-import { ArrowUp, FileText, Paperclip, Square, X } from 'lucide-react'
+import { ArrowUp, FileText, Paperclip, Play, Square, X } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { DialogShell } from './DialogShell'
+import { AudioPlayer } from './media/AudioPlayer'
+import { VideoPlayer } from './media/VideoPlayer'
+import { ProgressRing } from './ui/progress-ring'
+import { Spinner } from './ui/spinner'
 import { Textarea } from './ui/textarea'
 
 /** A file waiting to go with the next message. */
 export interface ComposerAttachment {
     id: string
     name: string
-    /** An image shows as a thumbnail; anything else as a chip. */
-    kind: 'image' | 'file'
-    /** The image to show, for `image`. */
+    /**
+     * An image shows as a thumbnail, a recording plays in its chip, a video shows its first frame and
+     * plays in a dialog, and anything else is a chip.
+     */
+    kind: 'image' | 'file' | 'audio' | 'video'
+    /** The image, the recording or the video, for those kinds. */
     url?: string
     /** A short fact under the name: `CSV, 2.1 MB`. */
     detail?: string
+    /**
+     * Still on its way up: the chip takes a spinner, or a ring filled to `progress` when that is
+     * given, and Send waits until every file is up.
+     */
+    uploading?: boolean
+    /** How much of the upload is done, from 0 to 1. */
+    progress?: number
+    /** A recording's levels from start to end, each from 0 to 1, drawn as its scrubber. */
+    waveform?: readonly number[]
+    /** A recording's length in seconds, shown before it has loaded. */
+    duration?: number
 }
 
 export interface ComposerWords {
@@ -24,6 +43,18 @@ export interface ComposerWords {
     attach: string
     remove: string
     drop: string
+    /** The cancel button on a file still uploading, when `onCancel` is given. */
+    cancel: string
+    /** Said for a file still uploading. */
+    uploading: string
+    /** The send button's name while a file is still uploading. */
+    waiting: string
+    /** The players' buttons and scrubber, for a recording or a video. */
+    play: string
+    pause: string
+    seek: string
+    /** The video dialog's way out. */
+    close: string
 }
 
 const WORDS: ComposerWords = {
@@ -33,6 +64,102 @@ const WORDS: ComposerWords = {
     attach: 'Attach files',
     remove: 'Remove',
     drop: 'Drop files to attach them',
+    cancel: 'Cancel upload',
+    uploading: 'Uploading',
+    waiting: 'Waiting for files to upload',
+    play: 'Play',
+    pause: 'Pause',
+    seek: 'Seek',
+    close: 'Close',
+}
+
+/** A spinner, or a ring filled to the upload's progress when it is known. */
+function Upload({ attachment, words }: { attachment: ComposerAttachment; words: ComposerWords }) {
+    return attachment.progress === undefined ? (
+        <Spinner aria-label={words.uploading} className="shrink-0 text-muted-foreground" />
+    ) : (
+        <ProgressRing value={attachment.progress} label={words.uploading} className="shrink-0" />
+    )
+}
+
+/** What an uploading file says under its name: its share done, or Uploading. */
+function uploadNote(attachment: ComposerAttachment, words: ComposerWords): string {
+    if (attachment.progress === undefined) return words.uploading
+    return `${words.uploading} · ${String(Math.round(Math.min(1, Math.max(0, attachment.progress)) * 100))}%`
+}
+
+/** One file waiting to go, drawn by its kind and whether it is still uploading. */
+function Chip({ attachment, words, onPlay }: { attachment: ComposerAttachment; words: ComposerWords; onPlay: () => void }) {
+    const uploading = attachment.uploading === true
+    const { kind, url, name } = attachment
+    if (kind === 'image' && url !== undefined) {
+        return (
+            <span className="relative block size-14">
+                <img
+                    src={url}
+                    alt={name}
+                    title={name}
+                    className={cn('size-14 rounded-md border border-border object-cover', uploading && 'opacity-50')}
+                />
+                {uploading && (
+                    <span className="absolute inset-0 flex items-center justify-center">
+                        <Upload attachment={attachment} words={words} />
+                    </span>
+                )}
+            </span>
+        )
+    }
+    if (kind === 'video' && url !== undefined && !uploading) {
+        return (
+            <button
+                type="button"
+                aria-label={`${words.play} ${name}`}
+                title={name}
+                onClick={onPlay}
+                className="relative block size-14 overflow-hidden rounded-md border border-border bg-terminal outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+                <video src={url} muted playsInline preload="metadata" aria-hidden className="size-full object-cover" />
+                <span className="absolute inset-0 flex items-center justify-center bg-terminal/30 text-terminal-foreground">
+                    <Play className="size-4 fill-current" aria-hidden />
+                </span>
+            </button>
+        )
+    }
+    if (kind === 'audio' && url !== undefined && !uploading) {
+        return (
+            <div className="flex min-h-14 w-72 max-w-full flex-col justify-center rounded-md border border-border bg-card py-1 pr-2.5 pl-1">
+                <span className="truncate pl-1.5 text-xs font-medium" title={name}>
+                    {name}
+                </span>
+                <AudioPlayer
+                    src={url}
+                    waveform={attachment.waveform}
+                    duration={attachment.duration}
+                    label={name}
+                    labels={{ play: words.play, pause: words.pause, seek: words.seek }}
+                />
+            </div>
+        )
+    }
+    return (
+        <div className="flex h-14 max-w-56 items-center gap-2 rounded-md border border-border bg-card px-2.5">
+            {uploading ? (
+                <Upload attachment={attachment} words={words} />
+            ) : (
+                <FileText className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+            )}
+            <span className="flex min-w-0 flex-col">
+                <span className={cn('truncate text-xs font-medium', uploading && 'text-muted-foreground')} title={name}>
+                    {name}
+                </span>
+                {uploading ? (
+                    <span className="truncate text-xs text-muted-foreground tabular-nums">{uploadNote(attachment, words)}</span>
+                ) : (
+                    attachment.detail !== undefined && <span className="truncate text-xs text-muted-foreground">{attachment.detail}</span>
+                )}
+            </span>
+        </div>
+    )
 }
 
 /**
@@ -40,6 +167,10 @@ const WORDS: ComposerWords = {
  * Shift+Enter breaks the line, and files come in by the attach button, a paste or a drop. While an
  * answer is streaming the send button becomes Stop. Tools such as a model picker sit in the row
  * under the text.
+ *
+ * A file still uploading shows a spinner, or a ring when its progress is known. It has no remove
+ * button then, unless `onCancel` is given, and Send waits until every file is up, so a message
+ * never goes without its files. A recording plays in its chip, and a video opens in a dialog.
  */
 export function Composer({
     value,
@@ -50,10 +181,11 @@ export function Composer({
     attachments = [],
     onAttach,
     onRemove,
+    onCancel,
     tools,
     disabled = false,
     accept,
-    words = WORDS,
+    words: given,
     className,
 }: {
     value: string
@@ -66,16 +198,21 @@ export function Composer({
     /** Takes files from the button, a paste or a drop; the composer accepts none without it. */
     onAttach?: (files: File[]) => void
     onRemove?: (id: string) => void
+    /** Stops a file's upload and drops it; a file still uploading cannot be taken off without it. */
+    onCancel?: (id: string) => void
     tools?: ReactNode
     disabled?: boolean
     /** The file types the attach button offers, as an `accept` attribute. */
     accept?: string
-    words?: ComposerWords
+    words?: Partial<ComposerWords>
     className?: string
 }) {
+    const words = { ...WORDS, ...given }
     const picker = useRef<HTMLInputElement>(null)
     const [over, setOver] = useState(false)
-    const ready = !disabled && !busy && (value.trim() !== '' || attachments.length > 0)
+    const [playing, setPlaying] = useState<ComposerAttachment>()
+    const uploading = attachments.some((attachment) => attachment.uploading === true)
+    const ready = !disabled && !busy && !uploading && (value.trim() !== '' || attachments.length > 0)
     const files = (list: FileList | null) => {
         if (onAttach !== undefined && list !== null && list.length > 0) onAttach([...list])
     }
@@ -107,40 +244,25 @@ export function Composer({
             )}
             {attachments.length > 0 && (
                 <ul className="flex flex-wrap gap-2 px-3 pt-3">
-                    {attachments.map((attachment) => (
-                        <li key={attachment.id} className="group relative">
-                            {attachment.kind === 'image' && attachment.url !== undefined ? (
-                                <img
-                                    src={attachment.url}
-                                    alt={attachment.name}
-                                    title={attachment.name}
-                                    className="size-14 rounded-md border border-border object-cover"
-                                />
-                            ) : (
-                                <div className="flex h-14 max-w-56 items-center gap-2 rounded-md border border-border bg-card px-2.5">
-                                    <FileText className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-                                    <span className="flex min-w-0 flex-col">
-                                        <span className="truncate text-xs font-medium" title={attachment.name}>
-                                            {attachment.name}
-                                        </span>
-                                        {attachment.detail !== undefined && (
-                                            <span className="truncate text-xs text-muted-foreground">{attachment.detail}</span>
-                                        )}
-                                    </span>
-                                </div>
-                            )}
-                            {onRemove !== undefined && (
-                                <button
-                                    type="button"
-                                    aria-label={`${words.remove} ${attachment.name}`}
-                                    onClick={() => onRemove(attachment.id)}
-                                    className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full border border-border-strong bg-popover text-muted-foreground opacity-0 shadow-sm transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 hover:text-foreground pointer-coarse:opacity-100"
-                                >
-                                    <X className="size-3" aria-hidden />
-                                </button>
-                            )}
-                        </li>
-                    ))}
+                    {attachments.map((attachment) => {
+                        const pending = attachment.uploading === true
+                        const drop = pending ? onCancel : onRemove
+                        return (
+                            <li key={attachment.id} className="group relative max-w-full">
+                                <Chip attachment={attachment} words={words} onPlay={() => setPlaying(attachment)} />
+                                {drop !== undefined && (
+                                    <button
+                                        type="button"
+                                        aria-label={`${pending ? words.cancel : words.remove} ${attachment.name}`}
+                                        onClick={() => drop(attachment.id)}
+                                        className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full border border-border-strong bg-popover text-muted-foreground opacity-0 shadow-sm transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 hover:text-foreground pointer-coarse:opacity-100"
+                                    >
+                                        <X className="size-3" aria-hidden />
+                                    </button>
+                                )}
+                            </li>
+                        )
+                    })}
                 </ul>
             )}
             <Textarea
@@ -195,7 +317,7 @@ export function Composer({
                     </IconButton>
                 ) : (
                     <IconButton
-                        label={words.send}
+                        label={uploading ? words.waiting : words.send}
                         variant="default"
                         aria-disabled={!ready || undefined}
                         className={cn(!ready && 'cursor-not-allowed opacity-50')}
@@ -205,6 +327,19 @@ export function Composer({
                     </IconButton>
                 )}
             </div>
+            {playing?.url !== undefined && (
+                <DialogShell
+                    open
+                    onOpenChange={(open) => {
+                        if (!open) setPlaying(undefined)
+                    }}
+                    width="lg"
+                    title={playing.name}
+                    words={{ cancel: words.close }}
+                >
+                    <VideoPlayer src={playing.url} autoPlay labels={{ play: words.play, pause: words.pause, seek: words.seek }} />
+                </DialogShell>
+            )}
         </div>
     )
 }

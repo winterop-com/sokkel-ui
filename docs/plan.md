@@ -21,8 +21,10 @@ An app installs the core and the add-ons it draws with, so an engine is installe
 that uses it. Each add-on stands on the core as a peer dependency at the same version and imports it
 by its name; the core never imports an add-on and no add-on imports another, which
 `src/rules.test.ts` holds. A part that needs no engine belongs in the core. The engines left in the
-core (Mermaid, CodeMirror) and the Geist fonts are optional peer dependencies, loaded lazily, and the
-README lists which part needs which.
+core (Mermaid, KaTeX, CodeMirror) and the Geist fonts are optional peer dependencies, loaded lazily, and the
+README lists which part needs which. Mermaid draws every diagram written as text and KaTeX every
+formula, through remark-math and rehype-katex in `Markdown`, which loads it the first time a message
+holds math, its stylesheet with it.
 
 `dist/` is built, not committed, so an install from a repository URL gets no compiled code (bun also
 blocks such a dependency's install scripts). The tag workflow publishes the four packages to GitHub
@@ -46,7 +48,7 @@ workflow builds all three, so a break in a package fails a check rather than an 
 `examples/sizes` holds the size budget: a forms page, a dashboard and a map page, each built against
 the packages in CI and measured gzipped (the JavaScript at start, what loads later, the CSS). A check
 fails when one grows past its budget in `examples/sizes/budget.json` or bundles an engine it does not
-use, so a forms page never carries ECharts, maplibre, React Flow, CodeMirror or Mermaid. A change
+use, so a forms page never carries ECharts, maplibre, React Flow, CodeMirror, Mermaid or KaTeX. A change
 that grows an app on purpose raises its budget in the same PR. The forms page imports only the core
 package, the dashboard adds the charts package and the map page the maps package.
 
@@ -80,7 +82,7 @@ aspect-ratio, attachment, avatar, badge, breadcrumb, bubble, button, button-grou
 carousel, checkbox, code-block, collapsible, combobox, command, context-menu, dialog,
 direction, drawer, dropdown-menu, empty, field, hover-card, input, input-group, input-otp, item,
 kbd, label, marker, menubar, message, message-scroller, native-select, navigation-menu, pagination,
-popover, progress, questionnaire, radio-group, resizable, scroll-area, select, separator, sheet,
+popover, progress, progress-ring, questionnaire, radio-group, resizable, scroll-area, select, separator, sheet,
 sidebar, skeleton, slider, sonner, spinner, switch, table, tabs, textarea, toast, toggle,
 toggle-group, tooltip, trace.
 
@@ -136,7 +138,8 @@ useGraphHistory are its parts; the Pipeline editor stories show each way of buil
 ## Media
 
 VideoPlayer, MediaBar, MediaCard and TrackList carry video and music, and the `AudioScrubber`
-primitive draws a recording's waveform under its position.
+primitive draws a recording's waveform under its position. AudioPlayer plays a recording in one line
+(a clip or voice note in a message, an answer read aloud) from the same controls.
 
 MediaBar resizes from its top edge. Up to about 96 pixels every layout is the one-line bar; above
 it the bar grows by its `layout`, picked from the player growth research, continuously and with no

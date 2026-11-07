@@ -4,6 +4,9 @@ import { useState } from 'react'
 
 import { AttachmentList, type AttachmentFile } from '@winterop-com/sokkel-ui/AttachmentList'
 import { HARBOR_DUSK } from '../fixtures/photos'
+import clip from '../media/fixtures/clip.webm?url'
+import { tuneUrl } from '../media/fixtures/tune'
+import { waveformOf } from '../media/fixtures/waveform'
 
 const meta: Meta = { title: 'Patterns/Attachment list', parameters: { frame: 'column' } }
 export default meta
@@ -26,4 +29,16 @@ export const Removable: StoryObj = {
         const [files, setFiles] = useState(FILES.slice(0, 3))
         return <AttachmentList files={files} onRemove={(id) => setFiles((current) => current.filter((file) => file.id !== id))} />
     },
+}
+
+/** A recording plays in one line under its name, and a video in the library's player. */
+export const Media: StoryObj = {
+    render: () => (
+        <AttachmentList
+            files={[
+                { id: 'note', name: 'voice-note.wav', kind: 'audio', src: tuneUrl(), waveform: waveformOf(3, 64), duration: 8 },
+                { id: 'clip', name: 'coastline.webm', kind: 'video', src: clip },
+            ]}
+        />
+    ),
 }

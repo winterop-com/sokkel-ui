@@ -85,6 +85,6 @@ to `plan.md` when it ships.
 
 - Accessibility audits, axe gates in CI and contrast scoring.
 - A second engine for a job that already has one: ECharts draws every chart, maplibre every map,
-  React Flow every interactive graph, Mermaid every diagram written as text. Sparklines are plain
-  SVG.
+  React Flow every interactive graph, Mermaid every diagram written as text, KaTeX every formula.
+  Sparklines are plain SVG.
 - Copy-in distribution. Apps install the package; nothing is vendored.
