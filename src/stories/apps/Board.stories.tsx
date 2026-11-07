@@ -26,6 +26,7 @@ import { DescriptionList } from '../../components/DescriptionList'
 import { DueText } from '../../components/DueText'
 import { FilterChip, type FilterOption } from '../../components/FilterChip'
 import { PageHeader } from '../../components/PageHeader'
+import { PaneHeader } from '../../components/PaneHeader'
 import { PersonAvatar } from '../../components/PersonAvatar'
 import { Rail, type RailGroup } from '../../components/Rail'
 import { SearchField } from '../../components/SearchField'
@@ -34,6 +35,7 @@ import { Shell } from '../../components/Shell'
 import { PanelSection, SidePanel } from '../../components/SidePanel'
 import { ThemeToggle } from '../../components/ThemeToggle'
 import { Timeline } from '../../components/Timeline'
+import { Toolbar } from '../../components/Toolbar'
 import { TopBar } from '../../components/TopBar'
 import { Button } from '../../components/ui/button'
 import { DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from '../../components/ui/dropdown-menu'
@@ -378,19 +380,15 @@ function ItemPanel({ item, onToggle }: { item: Item; onToggle: (index: number) =
     const done = item.checklist.filter((step) => step.done).length
     return (
         <>
-            <Stack gap="sm" className="border-b border-border px-4 py-3">
-                <span className="font-mono text-xs text-muted-foreground">{item.code}</span>
-                <h2 className="text-title font-semibold">{item.title}</h2>
-                <Row gap="xs" wrap>
-                    <span className="inline-flex items-center gap-1.5 rounded-chip bg-secondary px-1.5 py-0.5 text-xs">
-                        {column?.icon}
-                        {column?.title}
-                    </span>
-                    {item.labels.map((label) => (
-                        <BoardLabel key={label} name={label} color={LABELS[label]} />
-                    ))}
-                </Row>
-            </Stack>
+            <PaneHeader size="lg" code={item.code} title={item.title}>
+                <span className="inline-flex items-center gap-1.5 rounded-chip bg-secondary px-1.5 py-0.5 text-xs">
+                    {column?.icon}
+                    {column?.title}
+                </span>
+                {item.labels.map((label) => (
+                    <BoardLabel key={label} name={label} color={LABELS[label]} />
+                ))}
+            </PaneHeader>
             <PanelSection title="Description">
                 <p className="text-sm leading-6 text-pretty">{item.description}</p>
             </PanelSection>
@@ -583,13 +581,29 @@ function BoardApp({
                                 </Button>
                             }
                         />
-                        <Row gap="none" wrap className="gap-x-3 gap-y-2">
-                            <SearchField
-                                value={filters.query}
-                                onChange={(query) => setFilters({ ...filters, query })}
-                                placeholder="Search"
-                                className="w-full sm:w-56"
-                            />
+                        <Toolbar
+                            search={
+                                <SearchField
+                                    value={filters.query}
+                                    onChange={(query) => setFilters({ ...filters, query })}
+                                    placeholder="Search"
+                                />
+                            }
+                            end={
+                                <Row as="span" className="text-xs text-muted-foreground">
+                                    Swimlanes
+                                    <Segmented
+                                        label="Swimlanes"
+                                        value={lanes ? 'project' : 'none'}
+                                        options={[
+                                            { value: 'none', label: 'None' },
+                                            { value: 'project', label: 'Project' },
+                                        ]}
+                                        onChoose={(value) => setLanes(value === 'project')}
+                                    />
+                                </Row>
+                            }
+                        >
                             <PeopleFilter
                                 people={PEOPLE.map((name) => ({ name }))}
                                 chosen={filters.people}
@@ -604,20 +618,7 @@ function BoardApp({
                                 selected={filters.labels}
                                 onSelectedChange={(labels) => setFilters({ ...filters, labels })}
                             />
-                            <div className="flex-1" />
-                            <Row as="span" className="text-xs text-muted-foreground">
-                                Swimlanes
-                                <Segmented
-                                    label="Swimlanes"
-                                    value={lanes ? 'project' : 'none'}
-                                    options={[
-                                        { value: 'none', label: 'None' },
-                                        { value: 'project', label: 'Project' },
-                                    ]}
-                                    onChoose={(value) => setLanes(value === 'project')}
-                                />
-                            </Row>
-                        </Row>
+                        </Toolbar>
                     </div>
                     <BoardArea
                         onMove={onMove}

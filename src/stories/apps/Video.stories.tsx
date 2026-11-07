@@ -29,6 +29,7 @@ import { VideoPlayer } from '../../components/media/VideoPlayer'
 import { PersonAvatar } from '../../components/PersonAvatar'
 import { Rail, type RailGroup } from '../../components/Rail'
 import { Page, Shell } from '../../components/Shell'
+import { Toolbar, ToolbarTitle } from '../../components/Toolbar'
 import { TopBar, type Crumb } from '../../components/TopBar'
 import { Button } from '../../components/ui/button'
 import { ButtonGroup } from '../../components/ui/button-group'
@@ -403,22 +404,25 @@ function Comments() {
     const [draft, setDraft] = useState('')
     return (
         <section className="flex flex-col gap-5">
-            <Row gap="lg">
-                <h2 className="text-title font-semibold">1,204 comments</h2>
-                <Select items={ORDERS} value={order} onValueChange={(value) => setOrder(value ?? 'top')}>
-                    <SelectTrigger variant="quiet" size="sm" aria-label="Sort by">
-                        <SlidersHorizontal aria-hidden />
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {ORDERS.map((entry) => (
-                            <SelectItem key={entry.value} value={entry.value}>
-                                {entry.label}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </Row>
+            <Toolbar
+                end={
+                    <Select items={ORDERS} value={order} onValueChange={(value) => setOrder(value ?? 'top')}>
+                        <SelectTrigger variant="quiet" size="sm" aria-label="Sort by">
+                            <SlidersHorizontal aria-hidden />
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent align="end">
+                            {ORDERS.map((entry) => (
+                                <SelectItem key={entry.value} value={entry.value}>
+                                    {entry.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                }
+            >
+                <ToolbarTitle>1,204 comments</ToolbarTitle>
+            </Toolbar>
             <Row gap="md" align="stretch">
                 <PersonAvatar name="ada" color={CHANNELS.ada.color} size="md" />
                 <div className="flex min-w-0 flex-1 flex-col gap-2">

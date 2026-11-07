@@ -40,7 +40,8 @@ import { TooltipProvider } from '../../components/ui/tooltip'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { CHART, FIELD, HARBOR_DUSK, LIGHTHOUSE, PINES } from '../fixtures/photos'
 import { Row } from '../../components/Layout'
-import { GroupLabel } from '../../components/GroupLabel'
+import { SubNav } from '../../components/SubNav'
+import { Toolbar } from '../../components/Toolbar'
 
 /**
  * A file browser for a project's stored data in the library's frame: the folder tree beside the
@@ -520,10 +521,7 @@ function FilesApp({
                 }
             >
                 <Row gap="none" align="stretch" className="h-full min-h-0">
-                    <aside className="hidden w-56 shrink-0 flex-col gap-2 overflow-y-auto border-r border-border-strong bg-sidebar px-2 py-3 lg:flex">
-                        <GroupLabel as="h2" className="px-2">
-                            Folders
-                        </GroupLabel>
+                    <SubNav title="Folders">
                         <Tree
                             label="Folders"
                             nodes={FOLDERS}
@@ -531,7 +529,7 @@ function FilesApp({
                             onSelect={(ids) => goTo(ids[0])}
                             defaultOpen={['harbor', 'harbor/shared']}
                         />
-                    </aside>
+                    </SubNav>
                     <DropZone
                         open={dropping || undefined}
                         className="flex min-w-0 flex-1 flex-col"
@@ -568,8 +566,34 @@ function FilesApp({
                                     }
                                 />
                                 {files.length > 0 && (
-                                    <Row wrap className="min-h-8">
-                                        {selected.length > 0 ? (
+                                    <Toolbar
+                                        search={
+                                            selected.length > 0 ? undefined : (
+                                                <SearchField
+                                                    value={query}
+                                                    onChange={(text) => {
+                                                        setQuery(text)
+                                                        if (view === 'tree')
+                                                            setTreeOpen(new Set([...treeOpen, ...findInStore(text, store).open]))
+                                                    }}
+                                                    placeholder={view === 'tree' ? 'Find' : 'Filter this folder'}
+                                                />
+                                            )
+                                        }
+                                        end={
+                                            <Segmented
+                                                label="View"
+                                                value={view}
+                                                options={[
+                                                    { value: 'list', label: 'List' },
+                                                    { value: 'grid', label: 'Grid' },
+                                                    { value: 'tree', label: 'Tree' },
+                                                ]}
+                                                onChoose={setView}
+                                            />
+                                        }
+                                    >
+                                        {selected.length > 0 && (
                                             <SelectionBar count={selected.length} onClear={() => setSelected([])} framed>
                                                 <Button variant="ghost" size="sm">
                                                     <Download aria-hidden />
@@ -598,30 +622,8 @@ function FilesApp({
                                                     Delete
                                                 </Button>
                                             </SelectionBar>
-                                        ) : (
-                                            <SearchField
-                                                value={query}
-                                                onChange={(text) => {
-                                                    setQuery(text)
-                                                    if (view === 'tree')
-                                                        setTreeOpen(new Set([...treeOpen, ...findInStore(text, store).open]))
-                                                }}
-                                                placeholder={view === 'tree' ? 'Find' : 'Filter this folder'}
-                                                className="w-64 max-sm:flex-1"
-                                            />
                                         )}
-                                        <Segmented
-                                            label="View"
-                                            value={view}
-                                            options={[
-                                                { value: 'list', label: 'List' },
-                                                { value: 'grid', label: 'Grid' },
-                                                { value: 'tree', label: 'Tree' },
-                                            ]}
-                                            onChoose={setView}
-                                            className="ml-auto"
-                                        />
-                                    </Row>
+                                    </Toolbar>
                                 )}
                                 {files.length === 0 ? (
                                     empty

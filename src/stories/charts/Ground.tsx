@@ -3,18 +3,15 @@ import type { ReactNode } from 'react'
 import type { LegendItem } from '../../components/chart/ChartLegend'
 import { cn } from '../../lib/cn'
 import { TidevannMark } from '../fixtures/TidevannMark'
-import { Row, Stack } from '../../components/Layout'
+import { TopBar } from '../../components/TopBar'
+import { Stack } from '../../components/Layout'
 
 /** The page a chart story sits on: Tidevann's mark and what the charts cover, then the charts in a grid. */
 export function Ground({ title, columns = 2, children }: { title: string; columns?: 1 | 2; children: ReactNode }) {
     return (
         <div className="min-h-svh bg-background p-4 text-foreground md:p-6">
             <Stack>
-                <Row as="header" className="text-sm">
-                    <TidevannMark className="size-4 text-primary" />
-                    <span className="font-medium">Tidevann</span>
-                    <span className="text-muted-foreground">{title}</span>
-                </Row>
+                <TopBar mark={<TidevannMark />} trail={[{ label: 'Tidevann', href: '#' }, { label: title }]} />
                 <div className={cn('grid gap-3', columns === 2 && 'lg:grid-cols-2')}>{children}</div>
             </Stack>
         </div>

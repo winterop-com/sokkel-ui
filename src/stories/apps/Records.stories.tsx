@@ -52,13 +52,12 @@ import {
     QuestionnaireTitle,
 } from '../../components/ui/questionnaire'
 import { TooltipProvider } from '../../components/ui/tooltip'
-import { cn } from '../../lib/cn'
 import { PEOPLE_OPTIONS } from '../fixtures/filters'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { NUMBER, regionName, regions } from '../map/data'
 import { Dot } from '../../components/Dot'
 import { Columns, Row, Stack } from '../../components/Layout'
-import { GroupLabel } from '../../components/GroupLabel'
+import { TableOfContents } from '../../components/TableOfContents'
 
 /**
  * A records app for structured data capture in the library's frame: a list of site visits with
@@ -576,23 +575,18 @@ function VisitForm() {
                             />
                         </Section>
                     </form>
-                    <nav aria-label="On this form" className="sticky top-0 hidden w-52 shrink-0 flex-col gap-1 xl:flex">
-                        <GroupLabel className="px-2 pb-1">On this form</GroupLabel>
-                        {OUTLINE.map((part, index) => (
-                            <a
-                                key={part.id}
-                                href="#"
-                                aria-current={index === 1 ? 'location' : undefined}
-                                className={cn(
-                                    'flex h-(--density-row) items-center gap-2 rounded-control px-2 text-sm hover:bg-secondary',
-                                    index === 1 ? 'bg-secondary font-medium text-foreground' : 'text-muted-foreground',
-                                )}
-                            >
-                                <OutlineMark state={part.state} />
-                                {part.label}
-                            </a>
-                        ))}
-                    </nav>
+                    <TableOfContents
+                        entries={OUTLINE.map((part) => ({
+                            id: part.id,
+                            label: part.label,
+                            level: 1,
+                            icon: <OutlineMark state={part.state} />,
+                        }))}
+                        active="measurements"
+                        onJump={() => undefined}
+                        words={{ title: 'On this form' }}
+                        className="sticky top-0 hidden w-52 shrink-0 xl:flex"
+                    />
                 </Row>
             </Page>
             <FormBar note="Draft saved at 09:52">

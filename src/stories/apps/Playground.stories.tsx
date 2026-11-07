@@ -456,12 +456,9 @@ function PromptPage() {
                     <CodeEditor label="log" value={log} onChange={setLog} className="h-28" />
                 </Field>
             </Section>
-            <Surface className="lg:hidden">
-                <h2 className="flex h-(--density-panel-head) items-center border-b border-border-strong bg-panel-ground px-(--density-panel-pad) text-sm font-medium">
-                    Parameters
-                </h2>
+            <Section title="Parameters" flush className="lg:hidden">
                 <Parameters />
-            </Surface>
+            </Section>
             <Section
                 title="Answer"
                 meta={answer.model}

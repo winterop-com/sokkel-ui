@@ -31,11 +31,13 @@ import { DialogShell } from '../../components/DialogShell'
 import { InlineField } from '../../components/InlineField'
 import { Markdown } from '../../components/Markdown'
 import { MessageRow, type MessageLabel } from '../../components/MessageRow'
+import { PaneHeader } from '../../components/PaneHeader'
 import { Rail, type RailEntry, type RailGroup } from '../../components/Rail'
 import { SearchField } from '../../components/SearchField'
 import { Segmented } from '../../components/Segmented'
 import { SelectionBar } from '../../components/SelectionBar'
 import { Shell } from '../../components/Shell'
+import { Toolbar } from '../../components/Toolbar'
 import { TopBar } from '../../components/TopBar'
 import { Avatar, AvatarFallback } from '../../components/ui/avatar'
 import { Button } from '../../components/ui/button'
@@ -391,37 +393,41 @@ function Reading({ mail, onBack }: { mail: Conversation; onBack: () => void }) {
     const thread = mail.id === 't1' ? THREAD : [{ id: 'only', from: mail.from, to: [PEOPLE.ada], time: mail.time, body: mail.snippet }]
     return (
         <Stack gap="none" className="h-full min-h-0">
-            <div className="flex h-11 shrink-0 items-center gap-1 border-b border-border px-2 md:px-4">
-                <Button variant="ghost" size="sm" className="-ml-1 lg:hidden" onClick={onBack}>
-                    <ArrowLeft aria-hidden />
-                    Back
-                </Button>
-                <div className="ml-auto flex items-center gap-0.5 lg:ml-0">
-                    <IconButton label="Archive">
-                        <Archive aria-hidden />
-                    </IconButton>
-                    <IconButton label="Delete">
-                        <Trash2 aria-hidden />
-                    </IconButton>
-                    <IconButton label="Mark as unread">
-                        <MailOpen aria-hidden />
-                    </IconButton>
-                    <IconButton label="Label">
-                        <Tag aria-hidden />
-                    </IconButton>
-                </div>
-                <div className="ml-auto flex items-center gap-0.5 max-lg:ml-0">
-                    <IconButton label="Reply">
-                        <Reply aria-hidden />
-                    </IconButton>
-                    <IconButton label="Forward">
-                        <Forward aria-hidden />
-                    </IconButton>
-                    <IconButton label="More">
-                        <MoreHorizontal aria-hidden />
-                    </IconButton>
-                </div>
-            </div>
+            <PaneHeader
+                start={
+                    <>
+                        <Button variant="ghost" size="sm" className="lg:hidden" onClick={onBack}>
+                            <ArrowLeft aria-hidden />
+                            Back
+                        </Button>
+                        <IconButton label="Archive">
+                            <Archive aria-hidden />
+                        </IconButton>
+                        <IconButton label="Delete">
+                            <Trash2 aria-hidden />
+                        </IconButton>
+                        <IconButton label="Mark as unread">
+                            <MailOpen aria-hidden />
+                        </IconButton>
+                        <IconButton label="Label">
+                            <Tag aria-hidden />
+                        </IconButton>
+                    </>
+                }
+                actions={
+                    <>
+                        <IconButton label="Reply">
+                            <Reply aria-hidden />
+                        </IconButton>
+                        <IconButton label="Forward">
+                            <Forward aria-hidden />
+                        </IconButton>
+                        <IconButton label="More">
+                            <MoreHorizontal aria-hidden />
+                        </IconButton>
+                    </>
+                }
+            />
             <div className="min-h-0 flex-1 overflow-y-auto">
                 <header className="flex items-start gap-3 border-b border-border px-4 pt-5 pb-4 md:px-6">
                     <div className="flex min-w-0 flex-1 flex-col gap-2">
@@ -565,52 +571,53 @@ function List({
     const searching = query.trim() !== ''
     return (
         <Stack gap="none" className="h-full min-h-0">
-            <div className="flex shrink-0 flex-col gap-2 border-b border-border px-3 pt-3 pb-2">
-                <SearchField value={query} onChange={onQuery} placeholder="Search" />
-                <Row className="min-h-8 pl-0.5">
-                    <Checkbox
-                        checked={all}
-                        indeterminate={some && !all}
-                        disabled={rows.length === 0}
-                        aria-label={all ? 'Clear the selection' : 'Select every conversation'}
-                        onCheckedChange={() => onChecked(all || some ? [] : rows.map((mail) => mail.id))}
-                    />
-                    {some ? (
-                        <SelectionBar count={checked.length} onClear={() => onChecked([])} className="ml-1">
-                            <Row gap="3xs" className="ml-auto">
-                                <IconButton label="Archive">
-                                    <Archive aria-hidden />
-                                </IconButton>
-                                <IconButton label="Delete">
-                                    <Trash2 aria-hidden />
-                                </IconButton>
-                                <IconButton label="Mark as read">
-                                    <MailOpen aria-hidden />
-                                </IconButton>
-                                <IconButton label="Label">
-                                    <Tag aria-hidden />
-                                </IconButton>
-                            </Row>
-                        </SelectionBar>
+            <Toolbar
+                variant="pane"
+                search={<SearchField value={query} onChange={onQuery} placeholder="Search" />}
+                end={
+                    some ? (
+                        <Row gap="3xs">
+                            <IconButton label="Archive">
+                                <Archive aria-hidden />
+                            </IconButton>
+                            <IconButton label="Delete">
+                                <Trash2 aria-hidden />
+                            </IconButton>
+                            <IconButton label="Mark as read">
+                                <MailOpen aria-hidden />
+                            </IconButton>
+                            <IconButton label="Label">
+                                <Tag aria-hidden />
+                            </IconButton>
+                        </Row>
                     ) : (
-                        <>
-                            <Segmented
-                                label="Show"
-                                value={only}
-                                options={[
-                                    { value: 'all', label: 'All' },
-                                    { value: 'unread', label: 'Unread' },
-                                ]}
-                                onChoose={setOnly}
-                                className="ml-1"
-                            />
-                            <span className="ml-auto text-xs text-muted-foreground tabular-nums">
-                                {searching ? `${rows.length} ${rows.length === 1 ? 'result' : 'results'}` : `${rows.length} conversations`}
-                            </span>
-                        </>
-                    )}
-                </Row>
-            </div>
+                        <span className="text-xs text-muted-foreground tabular-nums">
+                            {searching ? `${rows.length} ${rows.length === 1 ? 'result' : 'results'}` : `${rows.length} conversations`}
+                        </span>
+                    )
+                }
+            >
+                <Checkbox
+                    checked={all}
+                    indeterminate={some && !all}
+                    disabled={rows.length === 0}
+                    aria-label={all ? 'Clear the selection' : 'Select every conversation'}
+                    onCheckedChange={() => onChecked(all || some ? [] : rows.map((mail) => mail.id))}
+                />
+                {some ? (
+                    <SelectionBar count={checked.length} onClear={() => onChecked([])} />
+                ) : (
+                    <Segmented
+                        label="Show"
+                        value={only}
+                        options={[
+                            { value: 'all', label: 'All' },
+                            { value: 'unread', label: 'Unread' },
+                        ]}
+                        onChoose={setOnly}
+                    />
+                )}
+            </Toolbar>
             <div className="min-h-0 flex-1 overflow-y-auto">
                 {rows.length === 0 ? (
                     <Empty className="h-full">

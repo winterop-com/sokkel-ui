@@ -17,6 +17,7 @@ import { SearchField } from '../../components/SearchField'
 import { Segmented } from '../../components/Segmented'
 import { Page, Shell } from '../../components/Shell'
 import { PanelSection, SidePanel } from '../../components/SidePanel'
+import { Toolbar } from '../../components/Toolbar'
 import { TopBar, type Crumb } from '../../components/TopBar'
 import { Button } from '../../components/ui/button'
 import { DropdownMenuItem } from '../../components/ui/dropdown-menu'
@@ -245,26 +246,28 @@ function LibraryPage() {
     return (
         <Page>
             <PageHeader title="Albums" count={`${String(ALBUMS.length)} albums`} />
-            <Row wrap>
-                <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-full sm:w-64" />
-                <div className="flex flex-1 flex-wrap items-center justify-between gap-2 sm:justify-end">
-                    <Segmented
-                        label="Order"
-                        value={order}
-                        onChoose={setOrder}
-                        options={[
-                            { value: 'recent', label: 'Recent' },
-                            { value: 'name', label: 'Name' },
-                            { value: 'artist', label: 'Artist' },
-                            { value: 'year', label: 'Year' },
-                        ]}
-                    />
-                    <Button size="sm" variant="outline">
-                        <Shuffle aria-hidden />
-                        Shuffle all
-                    </Button>
-                </div>
-            </Row>
+            <Toolbar
+                search={<SearchField value={query} onChange={setQuery} placeholder="Search" />}
+                end={
+                    <>
+                        <Segmented
+                            label="Order"
+                            value={order}
+                            onChoose={setOrder}
+                            options={[
+                                { value: 'recent', label: 'Recent' },
+                                { value: 'name', label: 'Name' },
+                                { value: 'artist', label: 'Artist' },
+                                { value: 'year', label: 'Year' },
+                            ]}
+                        />
+                        <Button size="sm" variant="outline">
+                            <Shuffle aria-hidden />
+                            Shuffle all
+                        </Button>
+                    </>
+                }
+            />
             <AlbumGrid albums={ALBUMS} />
         </Page>
     )
