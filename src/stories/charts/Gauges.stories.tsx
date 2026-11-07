@@ -9,7 +9,7 @@ import { Framed, Ground } from './Ground'
 
 /**
  * One figure on a dial, or several on rings, drawn from Tidevann's month of runs: `Chart` with the
- * gauge kind picks the dial's shape by `dial` (a ring, a half circle for a stat tile, colored bands
+ * gauge kind picks the dial's shape by `dial` (the arc by default, a ring, a half circle for a stat tile, colored bands
  * with a pointer, a needle over ticks), and the rings kind fills one ring per series or field. Each
  * figure takes the color of the step it reaches.
  */
@@ -41,6 +41,12 @@ const FAILURES: ChartSpec = {
 }
 const WAIT: ChartSpec = { rows: RUN_RATES, y: 'wait', aggregate: 'p90', steps: WAIT_STEPS, max: 120, format: seconds, unit: ' s' }
 
+const ARCS = [
+    { title: 'All jobs', spec: successOf() },
+    { title: 'sync-inventory', spec: successOf('job', 'sync-inventory') },
+    { title: 'rebuild-index', spec: successOf('job', 'rebuild-index') },
+] satisfies { title: string; spec: ChartSpec }[]
+
 const RINGS = [
     { title: 'All jobs', spec: { ...successOf(), dial: 'ring', total: 'succeeded' } },
     { title: 'sync-inventory', spec: { ...successOf('job', 'sync-inventory'), dial: 'ring', total: 'succeeded' } },
@@ -69,6 +75,35 @@ const ringsBy = (series: 'project' | 'job'): ChartSpec => ({
 })
 const BY_PROJECT = ringsBy('project')
 const BY_JOB = ringsBy('job')
+
+/** The success rate of all jobs and of two of them on the default arc, and the queue wait on a larger one, each in the color of the step it reaches. */
+export const Arc: StoryObj = {
+    render: () => (
+        <Ground title="Goals, October" columns={1}>
+            <Columns count={3} min="md" gap="md">
+                {ARCS.map((entry) => (
+                    <Framed
+                        key={entry.title}
+                        kind="gauge"
+                        spec={entry.spec}
+                        title={entry.title}
+                        subtitle="success rate"
+                        label={`The success rate of ${entry.title}`}
+                        bodyClassName="h-40"
+                    />
+                ))}
+            </Columns>
+            <Framed
+                kind="gauge"
+                spec={WAIT}
+                title="Queue wait"
+                subtitle="90th percentile, all runs"
+                label="The 90th percentile of queue wait across all runs"
+                bodyClassName="h-56"
+            />
+        </Ground>
+    ),
+}
 
 /** Each success rate as a ring filling to its share, the figure in its middle in the color of the step it reaches. */
 export const Ring: StoryObj = {
