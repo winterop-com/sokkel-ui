@@ -1,10 +1,10 @@
+import { TransportButton } from '../../components/media/MediaControls'
 import { TrackList } from '../../components/media/TrackList'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { ListMusic } from 'lucide-react'
 import { useState } from 'react'
 
 import { MediaBar, type RepeatMode } from '../../components/media/MediaBar'
-import { Button } from '../../components/ui/button'
 import { Artwork, type Cover } from '../fixtures/Artwork'
 import { Row, Stack } from '../../components/Layout'
 
@@ -97,18 +97,9 @@ function Player({ startPlaying, queue = false }: { startPlaying: boolean; queue?
                     repeat={repeat}
                     onRepeatChange={setRepeat}
                     extra={
-                        <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            aria-label="Queue"
-                            aria-pressed={queueOpen}
-                            onClick={() => {
-                                setQueueOpen(!queueOpen)
-                            }}
-                            className={queueOpen ? 'text-primary-ink' : 'text-muted-foreground'}
-                        >
+                        <TransportButton label="Queue" pressed={queueOpen} onClick={() => setQueueOpen(!queueOpen)}>
                             <ListMusic aria-hidden />
-                        </Button>
+                        </TransportButton>
                     }
                 />
             </Stack>

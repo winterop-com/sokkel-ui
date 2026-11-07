@@ -386,9 +386,9 @@ function SettingsApp({ opening }: { opening?: Opening }) {
                         <PageHeader title="Settings" />
                         <Section title="Appearance">
                             <Stack gap="lg">
-                                <Stack gap="xs" className="w-full max-w-80">
-                                    <span className="text-sm font-medium">Scheme</span>
+                                <Field id="scheme" label="Scheme" className="w-full max-w-80">
                                     <Segmented
+                                        id="scheme"
                                         fill
                                         label="Scheme"
                                         value={scheme}
@@ -399,10 +399,10 @@ function SettingsApp({ opening }: { opening?: Opening }) {
                                             { value: 'dark', label: 'Dark' },
                                         ]}
                                     />
-                                </Stack>
-                                <Stack gap="xs" className="w-full max-w-80">
-                                    <span className="text-sm font-medium">Density</span>
+                                </Field>
+                                <Field id="density" label="Density" className="w-full max-w-80">
                                     <Segmented
+                                        id="density"
                                         fill
                                         label="Density"
                                         value={density}
@@ -412,7 +412,7 @@ function SettingsApp({ opening }: { opening?: Opening }) {
                                             { value: 'compact', label: 'Compact' },
                                         ]}
                                     />
-                                </Stack>
+                                </Field>
                             </Stack>
                         </Section>
                         <Section title="Workspace" actions={<Button size="sm">Save</Button>}>
@@ -423,9 +423,9 @@ function SettingsApp({ opening }: { opening?: Opening }) {
                                 <Field id="url" label="Address" hint="base_url" keyHint>
                                     <Input id="url" className="font-mono" defaultValue="https://tidevann.example.org" />
                                 </Field>
-                                <Stack gap="xs" className="w-full">
-                                    <span className="text-sm font-medium">Schedule clock</span>
+                                <Field id="schedule-clock" label="Schedule clock" className="w-full">
                                     <Segmented
+                                        id="schedule-clock"
                                         fill
                                         label="Schedule clock"
                                         value={clock}
@@ -435,7 +435,7 @@ function SettingsApp({ opening }: { opening?: Opening }) {
                                             { value: 'local', label: 'Server time' },
                                         ]}
                                     />
-                                </Stack>
+                                </Field>
                             </Columns>
                         </Section>
                         <Section title="Notifications">
