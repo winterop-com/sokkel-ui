@@ -21,7 +21,7 @@ export function labelOf(value: unknown): string {
     return String(value)
 }
 
-/** The value at a fraction of the way through sorted numbers, interpolated between neighbours. */
+/** The value at a fraction of the way through sorted numbers, interpolated between neighbors. */
 export function quantile(sorted: readonly number[], at: number): number | null {
     if (sorted.length === 0) return null
     const index = (sorted.length - 1) * at
@@ -72,24 +72,31 @@ export interface PivotSpec {
     y?: string | readonly string[]
     /** The field whose labels split the rows into series. */
     series?: string
-    aggregate?: Aggregate
+    /** How each group's values are combined, or one way for each `y` field in order. */
+    aggregate?: Aggregate | readonly Aggregate[]
     /** Categories in this order first, then any others as the rows give them. */
     order?: readonly string[]
     /** Series in this order first, then any others. */
     seriesOrder?: readonly string[]
 }
 
+/** How the `index`th `y` field is combined: its own way where `how` lists one per field, the sum where none is given. */
+export function aggregateAt(how: Aggregate | readonly Aggregate[] | undefined, index: number): Aggregate {
+    if (how === undefined) return 'sum'
+    if (typeof how === 'string') return how
+    return (how as readonly Aggregate[])[index] ?? 'sum'
+}
+
 /**
  * The rows grouped by category, and by series where `series` names a field, each group's `y`
  * combined by `aggregate`: the sum where a `y` is given and the count where none is. Several `y`
- * fields make one series each.
+ * fields make one series each, each combined its own way where `aggregate` lists one per field.
  */
 export function pivot({ rows, x, y, series, aggregate: how, order, seriesOrder }: PivotSpec): Pivot {
     const categories = distinct(rows, x, order)
     const fields = y === undefined ? [] : typeof y === 'string' ? [y] : [...y]
-    const combine: Aggregate = how ?? (fields.length === 0 ? 'count' : 'sum')
     const at = new Map(categories.map((name, index) => [name, index]))
-    const collect = (pick: (row: Row) => boolean, field: string | undefined): (number | null)[] => {
+    const collect = (pick: (row: Row) => boolean, field: string | undefined, combine: Aggregate = 'sum'): (number | null)[] => {
         const buckets: number[][] = categories.map(() => [])
         for (const row of rows) {
             if (!pick(row)) continue
@@ -109,12 +116,15 @@ export function pivot({ rows, x, y, series, aggregate: how, order, seriesOrder }
             categories,
             series: distinct(rows, series, seriesOrder).map((name) => ({
                 name,
-                values: collect((row) => labelOf(row[series]) === name, field),
+                values: collect((row) => labelOf(row[series]) === name, field, aggregateAt(how, 0)),
             })),
         }
     }
     if (fields.length === 0) return { categories, series: [{ name: 'Count', values: collect(() => true, undefined) }] }
-    return { categories, series: fields.map((field) => ({ name: field, values: collect(() => true, field) })) }
+    return {
+        categories,
+        series: fields.map((field, index) => ({ name: field, values: collect(() => true, field, aggregateAt(how, index)) })),
+    }
 }
 
 /** Each category's figures as shares of that category's total, in percent. */

@@ -1,16 +1,16 @@
 import { asShares, formatNumber, pivot, type Series } from '../data'
 import { SERIES_ORDER, tooltipMarkup, type ChartLook } from '../look'
-import { colorOf, legendColor, type ChartBuilder, type ChartSpec } from './spec'
+import { colorOf, legendColor, unitAt, type ChartBuilder, type ChartSpec } from './spec'
 import type { LegendItem } from '../ChartLegend'
 
-/** The figure as a tooltip or a label writes it, with the spec's unit. */
-export function written(spec: ChartSpec, value: number | null | undefined): string {
+/** The figure as a tooltip or a label writes it, with the spec's unit, or the unit of the `field`th `y` field. */
+export function written(spec: ChartSpec, value: number | null | undefined, field = 0): string {
     if (value === null || value === undefined) return '-'
-    return `${(spec.format ?? formatNumber)(value)}${spec.unit ?? ''}`
+    return `${(spec.format ?? formatNumber)(value)}${unitAt(spec, field)}`
 }
 
 /** The rows as categories and series, as shares when the spec stacks them to 100%. */
-function shaped(spec: ChartSpec) {
+export function shaped(spec: ChartSpec) {
     if (spec.x === undefined) throw new Error('This chart needs an x field.')
     const data = pivot({
         rows: spec.rows,
@@ -46,10 +46,14 @@ function axisTooltip(spec: ChartSpec) {
     return {
         trigger: 'axis',
         axisPointer: { type: 'shadow' },
-        formatter: (points: { axisValueLabel: string; seriesName: string; value: number | null; color: string }[]) =>
+        formatter: (points: { axisValueLabel: string; seriesName: string; seriesIndex: number; value: number | null; color: string }[]) =>
             tooltipMarkup(
                 points[0]?.axisValueLabel ?? '',
-                points.map((point) => ({ label: point.seriesName, value: written(unit, point.value), color: point.color })),
+                points.map((point) => ({
+                    label: point.seriesName,
+                    value: written(unit, point.value, spec.series === undefined ? point.seriesIndex : 0),
+                    color: point.color,
+                })),
             ),
     }
 }

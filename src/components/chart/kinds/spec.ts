@@ -19,7 +19,8 @@ export interface ChartSpec {
     series?: string
     /** A third field some kinds read: a point's size, a cell's value, a link's target. */
     value?: string
-    aggregate?: Aggregate
+    /** How the values that fall in one place are combined, or one way for each `y` field in order. */
+    aggregate?: Aggregate | readonly Aggregate[]
     /** Bars and areas stacked on each other, or as shares of each category's total. */
     stack?: 'stacked' | 'percent'
     /** Bars running sideways, categories down the side. */
@@ -32,8 +33,8 @@ export interface ChartSpec {
     colors?: Readonly<Record<string, string>>
     /** How a figure is written in tooltips and labels. */
     format?: (value: number) => string
-    /** A unit written after each figure, on the value axis too, such as `s` or `%`. */
-    unit?: string
+    /** A unit written after each figure, on the value axis too, such as `s` or `%`, or one for each `y` field in order. */
+    unit?: string | readonly string[]
     /** What a field is called where the chart names it, such as a scatter's axes and tooltip; the field's own name where none is given. */
     fieldNames?: Readonly<Record<string, string>>
     /** A line drawn smooth rather than straight between points. */
@@ -50,6 +51,16 @@ export interface ChartSpec {
     total?: string
     /** A scatter's axes fitted to its points rather than starting at zero. */
     fit?: boolean
+    /** How many bins a histogram splits its numbers into, or how wide each is. */
+    bins?: number | { width: number }
+    /** Steps along the value axis: a gauge's thresholds, a bullet's qualitative bands. */
+    steps?: readonly ChartStep[]
+    /** Where the value axis starts, for a kind that fixes it, such as a gauge's dial. */
+    min?: number
+    /** Where the value axis ends, for a kind that fixes it, such as a gauge's dial. */
+    max?: number
+    /** The words a chart writes itself, in tooltips and legends. */
+    words?: Partial<ChartWords>
 }
 
 /** Builds a kind's ECharts option from the spec and the theme's look. */
@@ -74,3 +85,60 @@ export function colorOf(spec: ChartSpec, look: ChartLook, name: string, index: n
     const token = spec.colors?.[name]
     return token === undefined ? look.series[index % look.series.length] : look.token(token)
 }
+
+/**
+ * One step of a scale, from its `value` up to the next step's: a gauge's threshold or a bullet's
+ * band. The first step's `value` is ignored, so it starts where the axis starts.
+ */
+export interface ChartStep {
+    value?: number
+    /** A color token; a bullet's bands without one are shades of gray, darkest first. */
+    color?: string
+    /** What the step means, such as `Poor`, shown in the legend. */
+    label?: string
+}
+
+/** The words a chart writes itself, beside the names its rows give. */
+export interface ChartWords {
+    count: string
+    total: string
+    rise: string
+    fall: string
+    change: string
+    low: string
+    lower: string
+    median: string
+    upper: string
+    high: string
+    outlier: string
+    ofFirst: string
+    target: string
+}
+
+const WORDS: ChartWords = {
+    count: 'Count',
+    total: 'Total',
+    rise: 'Rise',
+    fall: 'Fall',
+    change: 'Change',
+    low: 'Low',
+    lower: 'Lower quartile',
+    median: 'Median',
+    upper: 'Upper quartile',
+    high: 'High',
+    outlier: 'Outlier',
+    ofFirst: 'of first',
+    target: 'Target',
+}
+
+/** The spec's words over the English defaults. */
+export const wordsOf = (spec: ChartSpec): ChartWords => ({ ...WORDS, ...spec.words })
+
+/** The unit written after the `index`th `y` field's figures. */
+export function unitAt(spec: ChartSpec, index = 0): string {
+    if (spec.unit === undefined) return ''
+    return typeof spec.unit === 'string' ? spec.unit : (spec.unit[index] ?? '')
+}
+
+/** The `y` fields as a list. */
+export const fieldsOf = (spec: ChartSpec): string[] => (spec.y === undefined ? [] : typeof spec.y === 'string' ? [spec.y] : [...spec.y])
