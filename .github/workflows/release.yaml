@@ -20,15 +20,23 @@ jobs:
                   registry-url: https://npm.pkg.github.com
                   scope: '@winterop-com'
             - run: bun install --frozen-lockfile
-            - name: The tag names the version in package.json
+            # The packages ship together, so every one of them carries the tag's version.
+            - name: The tag names the version in every package.json
               run: |
-                  version=$(node -p "require('./package.json').version")
-                  test "v$version" = "$GITHUB_REF_NAME" || { echo "tag $GITHUB_REF_NAME, package.json $version"; exit 1; }
+                  for package in packages/*/; do
+                      version=$(node -p "require('./${package}package.json').version")
+                      test "v$version" = "$GITHUB_REF_NAME" || { echo "tag $GITHUB_REF_NAME, ${package}package.json $version"; exit 1; }
+                  done
             - run: bun run fmt:check
             - run: bun run lint
             - run: bun run typecheck
             - run: bun run test
             - run: bun run build
-            - run: npm publish
+            # bun packs each package with its `workspace:` dependency on the core written as the version,
+            # and npm publishes the tarballs, core first, since the add-ons name it as a peer.
+            - name: Pack the packages
+              run: for package in core charts maps graph; do (cd "packages/$package" && bun pm pack --destination ../../packed); done
+            - name: Publish the packages
+              run: for tarball in packed/winterop-com-sokkel-ui-0*.tgz packed/winterop-com-sokkel-ui-charts-*.tgz packed/winterop-com-sokkel-ui-maps-*.tgz packed/winterop-com-sokkel-ui-graph-*.tgz; do npm publish "$tarball"; done
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
