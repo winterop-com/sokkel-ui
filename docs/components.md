@@ -11,12 +11,18 @@ A row is one module. Its first name is the main component; the others are the pa
 with it, imported from the same path. Hooks are under `@winterop-com/sokkel-ui/hooks/*` and helpers
 under `@winterop-com/sokkel-ui/lib/*`; the chart kinds and the fields they read are in `docs/charts.md`.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 195 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 197 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 13 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 9 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 11 modules
 
 ## @winterop-com/sokkel-ui
+
+### Primitives
+
+| Component | Import | What it is | Story |
+| --- | --- | --- | --- |
+| **ProgressRing** | `@winterop-com/sokkel-ui/primitives/progress-ring` | How far a piece of work has come, drawn as a ring that fills clockwise from the top: an upload, a download. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-composer--states) (in Composer) |
 
 ### Primitives: Actions
 
@@ -166,7 +172,7 @@ under `@winterop-com/sokkel-ui/lib/*`; the chart kinds and the fields they read 
 | **PageHeader** | `@winterop-com/sokkel-ui/PageHeader` | A page's title, its code under it in the code face, and its actions at the right with the primary one last. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-page-header--title) |
 | **PaneHeader** | `@winterop-com/sokkel-ui/PaneHeader` | The strip across the top of a pane, with a rule under it: the pane's title, controls before it such as a back button, and actions at its right end. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-pane-header--plain) |
 | **Section**, Surface | `@winterop-com/sokkel-ui/Section` | A titled part of a page. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-sections--flat) |
-| **Stack**, Row, Center, Columns, Split, Fill | `@winterop-com/sokkel-ui/Layout` | Cells one under the other, each as wide as the stack. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-address-input--empty) |
+| **Stack**, Row, Center, Columns, Split, Fill | `@winterop-com/sokkel-ui/Layout` | Cells one under the other, each as wide as the stack. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-audio-player--slider) |
 | **Toolbar**, ToolbarTitle | `@winterop-com/sokkel-ui/Toolbar` | The row of tools above a page's or a pane's content: a search, filters, a `Segmented`, a sort, a count. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-toolbar--page) |
 | **Unfoldable** | `@winterop-com/sokkel-ui/Unfoldable` | A heading that opens what is under it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-states--read) |
 
@@ -313,6 +319,7 @@ under `@winterop-com/sokkel-ui/lib/*`; the chart kinds and the fields they read 
 
 | Component | Import | What it is | Story |
 | --- | --- | --- | --- |
+| **AudioPlayer** | `@winterop-com/sokkel-ui/media/AudioPlayer` | A recording in one line: play and pause, the scrubber, and the time played and still to play. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-audio-player--slider) |
 | **Cover**, Eyebrow, Words, ScreenWords, Scrub, Steps, ShuffleButton, RepeatButton, Volume, Extras, FullscreenButton, Backdrop | `@winterop-com/sokkel-ui/media/MediaBarParts` | The cover, square and filled edge to edge; a note glyph stands in without artwork. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-audio-bar--playing) (in MediaBar) |
 | **LineBar**, RowsBar, PanelBar, StageBar | `@winterop-com/sokkel-ui/media/MediaBarLayouts` | The one-line bar, drawn by every layout until it grows: what plays at the left with the cover growing with the height, the transport over the position in the middle, the volume and the extra controls at the right. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-audio-bar--playing) (in MediaBar) |
 | **MediaBar** | `@winterop-com/sokkel-ui/media/MediaBar` | The player along the foot of a screen, for audio. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-audio-bar--playing) |

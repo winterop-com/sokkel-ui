@@ -30,12 +30,15 @@ import { ModelPicker } from '../fixtures/models'
 import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { Columns, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { tuneUrl } from '../media/fixtures/tune'
+import { waveformOf } from '../media/fixtures/waveform'
 
 /**
  * An assistant app in the library's frame: conversations in the rail, the exchange in a reading
  * column, and the composer pinned under it. Each answer is an AssistantReply: the tools it called
- * folded behind one line, the answer in markdown, a held change and the reply's actions. The
- * stories after the first conversation show the states an answer passes through.
+ * folded behind one line, the model's thinking behind another, the answer in markdown, a held
+ * change and the reply's actions. The stories after the first conversation show the states an
+ * answer passes through, from waiting for the first word to failing, and files that go both ways.
  */
 const GROUPS: RailGroup[] = [
     {
@@ -81,6 +84,12 @@ transform:
 \`\`\`
 
 The rest are blanks, and dropping them before \`validate\` is safe.`
+
+const REASONING = `The person asks why **nightly-export** failed. Start with the latest run, then its log at the failing step.
+
+\`validate\` rejected 37 rows, all on \`amount\`. Two samples should show whether it is one cause or several: \`n/a\` is a blank written out, and \`12,50\` looks like a decimal comma from a European feed.
+
+If most rejections are commas, parsing with the locale in \`transform\` fixes them without loosening \`validate\`.`
 
 const CALLS: ToolCallEntry[] = [
     {
@@ -147,6 +156,7 @@ function Exchange({ layout }: { layout?: AssistantReplyLayout }) {
                 time="09:42"
                 calls={CALLS}
                 summary={layout === 'steps' ? 'Run, log, and sample checked · 3 tools' : 'Investigation complete · 3 tools'}
+                reasoning={REASONING}
                 content={ANSWER}
                 held={{
                     action: 'Add the locale-aware parse to nightly-export and save it',
@@ -208,6 +218,38 @@ The second sample, \`12,50\`, is a decimal comma. Parsing amounts with`
 const RUNNING: ToolCallEntry[] = CALLS.map((call, index) =>
     index < 2 ? call : { ...call, label: 'Sampling rejected rows', status: 'running', result: undefined, duration: undefined },
 )
+
+/** A question just sent: nothing has come back yet, so the reply says it is thinking. */
+function WaitingThread() {
+    return (
+        <Thread>
+            <Question>Why did nightly-export fail last night?</Question>
+            <AssistantReply {...SPEAKER} time="09:42" state="streaming" />
+        </Thread>
+    )
+}
+
+/** The model's thinking while it is written, open and growing until the answer begins. */
+const THINKING = `The person asks why **nightly-export** failed. Start with the latest run, then its log at the failing step.
+
+\`validate\` rejected 37 rows, all on \`amount\`. Two samples should show whether it is one cause or`
+
+/** The thinking streams after the tools have run, before the first word of the answer. */
+function ThinkingThread() {
+    return (
+        <Thread>
+            <Question>Why did nightly-export fail last night?</Question>
+            <AssistantReply
+                {...SPEAKER}
+                time="09:42"
+                calls={CALLS}
+                summary="Investigation complete · 3 tools"
+                reasoning={THINKING}
+                state="streaming"
+            />
+        </Thread>
+    )
+}
 
 /** The answer while it is written: a tool still runs and the text grows, with Stop in place of Send. */
 function StreamingThread() {
@@ -274,7 +316,10 @@ function FailedThread() {
 
 const SENT_REPLY = `Both files agree: the 37 rejected rows are the ones whose \`amount\` uses a decimal comma or is blank. The chart shows the rejections began on **October 14**, when the export started reading the new supplier feed.`
 
-/** A question sent with a spreadsheet and a screenshot, and another file waiting in the composer. */
+/**
+ * A question sent with a spreadsheet, a screenshot and a voice note, answered and read aloud; in
+ * the composer one file waits and two are still uploading.
+ */
 function Attached() {
     return (
         <Thread>
@@ -284,6 +329,14 @@ function Attached() {
                         files={[
                             { id: 'orders', name: 'orders-2026-10.csv', detail: 'CSV, 2.1 MB', icon: <FileSpreadsheet aria-hidden /> },
                             { id: 'rejections', name: 'rejections.png', detail: 'PNG, 184 KB', image: HARBOR_DUSK },
+                            {
+                                id: 'note',
+                                name: 'voice-note.wav',
+                                kind: 'audio',
+                                src: tuneUrl(),
+                                waveform: waveformOf(3, 64),
+                                duration: 8,
+                            },
                         ]}
                     />
                     <Bubble align="end" variant="secondary">
@@ -291,12 +344,22 @@ function Attached() {
                     </Bubble>
                 </MessageContent>
             </Message>
-            <AssistantReply {...SPEAKER} time="10:05" content={SENT_REPLY} onFeedback={() => undefined} />
+            <AssistantReply
+                {...SPEAKER}
+                time="10:05"
+                content={SENT_REPLY}
+                speech={{ src: tuneUrl(), waveform: waveformOf(11, 64), duration: 8 }}
+                onFeedback={() => undefined}
+            />
         </Thread>
     )
 }
 
-const PENDING: ComposerAttachment[] = [{ id: 'a1', name: 'nightly-export.yaml', kind: 'file', detail: 'YAML, 0.6 KB' }]
+const PENDING: ComposerAttachment[] = [
+    { id: 'a1', name: 'nightly-export.yaml', kind: 'file', detail: 'YAML, 0.6 KB' },
+    { id: 'a2', name: 'orders-2026-11.csv', kind: 'file', detail: 'CSV, 2.4 MB', uploading: true, progress: 0.4 },
+    { id: 'a3', name: 'validate.log', kind: 'file', detail: '14 KB', uploading: true },
+]
 
 const VERSIONS = [
     'The run failed at `validate`: 37 rows carry an `amount` that is not a number, most of them written with a decimal comma.',
@@ -469,6 +532,7 @@ function ChatApp({
                             attachments={files}
                             onAttach={() => undefined}
                             onRemove={(id) => setFiles(files.filter((file) => file.id !== id))}
+                            onCancel={(id) => setFiles(files.filter((file) => file.id !== id))}
                         />
                     </div>
                 </Stack>
@@ -508,6 +572,24 @@ export const Steps: StoryObj = {
     ),
 }
 
+/** A question just sent, before anything has come back. */
+export const Waiting: StoryObj = {
+    render: () => (
+        <ChatApp busy>
+            <WaitingThread />
+        </ChatApp>
+    ),
+}
+
+/** The model thinking: its thought open and growing, before the answer begins. */
+export const Thinking: StoryObj = {
+    render: () => (
+        <ChatApp busy>
+            <ThinkingThread />
+        </ChatApp>
+    ),
+}
+
 /** The answer while it streams, with Stop in the composer. */
 export const Streaming: StoryObj = {
     render: () => (
@@ -535,7 +617,7 @@ export const Failed: StoryObj = {
     ),
 }
 
-/** Files sent with a question, and one waiting to go with the next. */
+/** Files sent with a question, a voice note among them, the answer read aloud, and files waiting or uploading for the next. */
 export const Attachments: StoryObj = {
     render: () => (
         <ChatApp title="Rejected rows" attachments={PENDING}>

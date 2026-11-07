@@ -13,6 +13,9 @@ import { DropdownMenuItem, DropdownMenuSeparator } from '@winterop-com/sokkel-ui
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { pictureOf } from '../fixtures/portraits'
+import clip from '../media/fixtures/clip.webm?url'
+import { tuneUrl } from '../media/fixtures/tune'
+import { waveformOf } from '../media/fixtures/waveform'
 
 /**
  * The message half of a team chat: messages laid out densely with the author's square picture,
@@ -205,6 +208,32 @@ export const Links: StoryObj = {
             </ChatMessage>
             <ChatMessage author="ada" image={ADA.image} time="11:30" {...BAR}>
                 Thanks, the dashboard is at <a href="https://larkspur.example.org/dashboards/queues">larkspur queues</a>.
+            </ChatMessage>
+        </Ground>
+    ),
+}
+
+/** A voice note plays in one line under its message, and a video in the library's player. */
+export const Media: StoryObj = {
+    render: () => (
+        <Ground>
+            <ChatMessage
+                author="grace"
+                image={GRACE.image}
+                time="11:40"
+                files={[{ id: 'v1', name: 'voice-note.wav', kind: 'audio', url: tuneUrl(), waveform: waveformOf(3, 64), duration: 8 }]}
+                {...BAR}
+            >
+                Quick note on the harbor feed, easier said than typed.
+            </ChatMessage>
+            <ChatMessage
+                author="linus"
+                image={LINUS.image}
+                time="11:44"
+                files={[{ id: 'v2', name: 'coastline.webm', kind: 'video', url: clip }]}
+                {...BAR}
+            >
+                The screen recording of the failed run.
             </ChatMessage>
         </Ground>
     ),

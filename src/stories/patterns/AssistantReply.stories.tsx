@@ -7,11 +7,14 @@ import type { ToolCallEntry } from '@winterop-com/sokkel-ui/ToolCall'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
+import { tuneUrl } from '../media/fixtures/tune'
+import { waveformOf } from '../media/fixtures/waveform'
 
 /**
  * The assistant's side of a turn: who speaks, the tools it called folded behind one line, the
- * answer, a held change and the reply's actions, on the card layout or the steps layout, and the
- * states an answer passes through.
+ * model's thinking folded behind another, the answer, a held change and the reply's actions, on the
+ * card layout or the steps layout, and the states an answer passes through, from waiting for the
+ * first word to failing.
  */
 function Ground({ children }: { children: ReactNode }) {
     return (
@@ -44,6 +47,16 @@ The rest are blanks, and dropping them before \`validate\` is safe.`
 const PARTIAL = `The run failed at **\`validate\`**: 37 rows of \`orders-2026-10.csv\` carry an \`amount\` that is not a number.
 
 The second sample, \`12,50\`, is a decimal comma. Parsing amounts with`
+
+const REASONING = `The person asks why **nightly-export** failed. Start with the latest run, then its log at the failing step.
+
+\`validate\` rejected 37 rows, all on \`amount\`. Two samples should show whether it is one cause or several: \`n/a\` is a blank written out, and \`12,50\` looks like a decimal comma from a European feed.
+
+If most rejections are commas, parsing with the locale in \`transform\` fixes them without loosening \`validate\`.`
+
+const THINKING = `The person asks why **nightly-export** failed. Start with the latest run, then its log at the failing step.
+
+\`validate\` rejected 37 rows, all on \`amount\`. Two samples should show whether it is one cause or`
 
 const CALLS: ToolCallEntry[] = [
     {
@@ -97,6 +110,7 @@ function Full({ layout }: { layout: AssistantReplyLayout }) {
             layout={layout}
             calls={CALLS}
             summary="Investigation complete · 3 tools"
+            reasoning={REASONING}
             content={ANSWER}
             held={{
                 action: 'Add the locale-aware parse to nightly-export and save it',
@@ -117,6 +131,8 @@ function States({ layout }: { layout: AssistantReplyLayout }) {
     const [at, setAt] = useState(2)
     return (
         <>
+            <AssistantReply {...SPEAKER} layout={layout} state="streaming" />
+            <AssistantReply {...SPEAKER} layout={layout} calls={CALLS} reasoning={THINKING} state="streaming" />
             <AssistantReply
                 {...SPEAKER}
                 layout={layout}
@@ -175,7 +191,22 @@ export const Steps: StoryObj = {
     ),
 }
 
-/** In a card: streaming with a caret while a tool runs, stopped, failed with Try again, and the second of three versions. */
+/** An answer the model also read aloud, played in one line under it. */
+export const ReadAloud: StoryObj = {
+    name: 'Read aloud',
+    render: () => (
+        <Ground>
+            <AssistantReply
+                {...SPEAKER}
+                content="Two jobs failed this week: **nightly-export** on Tuesday and Wednesday, and **sync-inventory** once on Monday."
+                speech={{ src: tuneUrl(), waveform: waveformOf(11, 64), duration: 8 }}
+                onFeedback={() => undefined}
+            />
+        </Ground>
+    ),
+}
+
+/** In a card: waiting for the first word, thinking with the thought open and growing, streaming with a caret while a tool runs, stopped, failed with Try again, and the second of three versions. */
 export const CardStates: StoryObj = {
     name: 'Card states',
     render: () => (
