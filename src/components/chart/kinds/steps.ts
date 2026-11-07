@@ -1,6 +1,6 @@
 import { SERIES_ORDER, tooltipMarkup } from '../look'
 import { spread } from '../shapes'
-import { line, written } from './categories'
+import { edgeAxis, line, written } from './categories'
 import { colorOf, legendColor, type ChartBuilder, type ChartSpec } from './spec'
 import type { LegendItem } from '../ChartLegend'
 
@@ -56,7 +56,7 @@ export const range: ChartBuilder = (spec, look) => {
             },
         },
         grid: { left: 4, right: 10, top: 10, bottom: 4 },
-        xAxis: { type: 'category', data: categories, boundaryGap: false },
+        xAxis: edgeAxis(spec, categories),
         yAxis: { type: 'value', scale: true },
         series: series.flatMap((entry, index) => {
             const color = colorOf(spec, look, entry.name, index)

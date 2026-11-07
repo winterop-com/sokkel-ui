@@ -123,6 +123,21 @@ export function fading(look: ChartLook, color: string, stacked: boolean, hang = 
     }
 }
 
+/**
+ * A category axis whose points sit on its ends, as a line's do. Where the chart picks which labels
+ * show, the first and last always do, aligned inward so neither runs past the chart's edge, and a
+ * label too close to them gives way.
+ */
+export function edgeAxis(spec: ChartSpec, categories: string[]) {
+    if (spec.labelEvery !== undefined) return { ...categoryAxis(spec, categories), boundaryGap: false }
+    return {
+        type: 'category',
+        data: categories,
+        boundaryGap: false,
+        axisLabel: { showMinLabel: true, showMaxLabel: true, alignMinLabel: 'left', alignMaxLabel: 'right', hideOverlap: true },
+    }
+}
+
 /** A line per series across the categories, or areas filled under them, evenly or fading by `fill`. */
 function lines(filled: boolean): ChartBuilder {
     return (spec, look) => {
@@ -130,7 +145,7 @@ function lines(filled: boolean): ChartBuilder {
         return {
             tooltip: { ...axisTooltip(spec), axisPointer: { type: 'line' } },
             grid: { left: 4, right: 10, top: 10, bottom: 4 },
-            xAxis: { ...categoryAxis(spec, categories), boundaryGap: false },
+            xAxis: edgeAxis(spec, categories),
             yAxis: { type: 'value', max: spec.stack === 'percent' ? 100 : undefined, ...valueLabels(spec) },
             series: series.map((entry, index) => {
                 const color = colorOf(spec, look, entry.name, index)
