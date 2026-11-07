@@ -22,6 +22,26 @@ describe('the zoom on a redraw', () => {
         ])
     })
 
+    it('keeps the zoom when a panel drops but the days stay, and opens afresh on other days', () => {
+        const days = ['Aug 1', 'Aug 2', 'Aug 3']
+        const three = { ...ASKED, xAxis: [{ data: days }, { data: days }, { data: days }] }
+        const two = { ...ASKED, xAxis: [{ data: days }, { data: days }] }
+        expect(keepZoom(three, two, READER).dataZoom).toEqual([
+            { type: 'inside', start: 10, end: 20 },
+            { type: 'slider', start: 10, end: 20 },
+        ])
+        const week = { ...ASKED, xAxis: [{ data: ['Oct 24', 'Oct 25'] }] }
+        expect(keepZoom(three, week, READER)).toBe(week)
+    })
+
+    it('opens afresh when a chart without categories draws other data', () => {
+        const before = { ...ASKED, series: [{ type: 'line', data: [[1, 2]] }] }
+        const same = { ...ASKED, series: [{ type: 'line', data: [[1, 2]] }] }
+        const other = { ...ASKED, series: [{ type: 'line', data: [[5, 6]] }] }
+        expect(keepZoom(before, same, READER).dataZoom).not.toBe(same.dataZoom)
+        expect(keepZoom(before, other, READER)).toBe(other)
+    })
+
     it('opens where the option asks when it asks for another window', () => {
         const next = {
             dataZoom: [
