@@ -21,13 +21,14 @@ import { Section } from '../components/Section'
 import { SwitchField } from '../components/SwitchField'
 import { Page, Shell } from '../components/Shell'
 import { Button } from '../components/ui/button'
+import { JOB_OPTIONS, PEOPLE_OPTIONS, STATUS_OPTIONS } from './fixtures/filters'
 import { TidevannMark } from './fixtures/TidevannMark'
 import { Columns } from '../components/Layout'
 
 /**
  * The Runs page built from the library alone, with real-shaped data and working controls: the
- * search narrows the rows, the status filter can be set and cleared, and a row opens beside the
- * list. A second story is a form in a boxed section.
+ * search narrows the rows, the status and job filters open their values and clear, and a row
+ * opens beside the list. A second story is a form in a boxed section.
  */
 interface Run {
     id: string
@@ -181,12 +182,19 @@ function Frame({
 
 function RunsListPage() {
     const [query, setQuery] = useState('')
-    const [status, setStatus] = useState<string | undefined>('failed')
+    const [status, setStatus] = useState<string[]>(['failed'])
+    const [jobs, setJobs] = useState<string[]>([])
     const [chosen, setChosen] = useState<string>('01a1a5c2')
     const [panelOpen, setPanelOpen] = useState<boolean | undefined>(undefined)
     const rows = useMemo(
-        () => RUNS.filter((run) => (status === undefined || run.status === status) && run.job.includes(query.trim())),
-        [query, status],
+        () =>
+            RUNS.filter(
+                (run) =>
+                    (status.length === 0 || status.includes(run.status)) &&
+                    (jobs.length === 0 || jobs.includes(run.job)) &&
+                    run.job.includes(query.trim()),
+            ),
+        [query, status, jobs],
     )
     const open = RUNS.find((run) => run.id === chosen) ?? null
     const [tab, setTab] = useState('run')
@@ -257,14 +265,9 @@ function RunsListPage() {
                     toolbar={
                         <>
                             <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-full max-w-64 min-w-40" />
-                            <FilterChip
-                                facet="Status"
-                                value={status}
-                                onOpen={() => setStatus(status === undefined ? 'failed' : status)}
-                                onClear={() => setStatus(undefined)}
-                            />
-                            <FilterChip facet="Job" />
-                            <FilterChip facet="Started by" />
+                            <FilterChip facet="Status" options={STATUS_OPTIONS} selected={status} onSelectedChange={setStatus} />
+                            <FilterChip facet="Job" options={JOB_OPTIONS} multiple selected={jobs} onSelectedChange={setJobs} />
+                            <FilterChip facet="Started by" options={PEOPLE_OPTIONS} multiple />
                         </>
                     }
                     columns={COLUMNS}

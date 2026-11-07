@@ -37,7 +37,7 @@ import { DescriptionList } from '../../components/DescriptionList'
 import { ConfirmDialog, DialogShell } from '../../components/DialogShell'
 import { DiffView } from '../../components/DiffView'
 import { Field } from '../../components/Field'
-import { FilterChip } from '../../components/FilterChip'
+import { FilterChip, type FilterOption } from '../../components/FilterChip'
 import { PageHeader } from '../../components/PageHeader'
 import { countChanges, PermissionMatrix, type Grants, type MatrixGroup, type MatrixRole } from '../../components/PermissionMatrix'
 import { Rail, type RailGroup } from '../../components/Rail'
@@ -56,6 +56,7 @@ import { Button } from '../../components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { cn } from '../../lib/cn'
+import { PEOPLE_OPTIONS, PERIOD_OPTIONS, PROJECT_OPTIONS } from '../fixtures/filters'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { Row, Stack } from '../../components/Layout'
 
@@ -1110,10 +1111,20 @@ const EVENT_COLUMNS: DataColumn<AuditEvent>[] = [
     },
 ]
 
+/** The actions the audit log records, each once, in the order first seen. */
+const ACTION_OPTIONS: FilterOption[] = [...new Set(EVENTS.map((event) => event.action))].map((action) => ({ value: action }))
+
 function AuditPage({ chosen, onChoose }: { chosen: AuditEvent; onChoose: (event: AuditEvent) => void }) {
     const [query, setQuery] = useState('')
+    const [actors, setActors] = useState<string[]>([])
+    const [actions, setActions] = useState<string[]>([])
     const q = query.trim().toLowerCase()
-    const shown = EVENTS.filter((event) => `${event.who} ${event.action} ${event.object} ${event.ip}`.toLowerCase().includes(q))
+    const shown = EVENTS.filter(
+        (event) =>
+            (actors.length === 0 || actors.includes(event.who)) &&
+            (actions.length === 0 || actions.includes(event.action)) &&
+            `${event.who} ${event.action} ${event.object} ${event.ip}`.toLowerCase().includes(q),
+    )
     return (
         <Page>
             <PageHeader
@@ -1130,10 +1141,10 @@ function AuditPage({ chosen, onChoose }: { chosen: AuditEvent; onChoose: (event:
                 toolbar={
                     <>
                         <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-full max-w-64 min-w-40" />
-                        <FilterChip facet="Period" value="Last 7 days" onClear={() => undefined} />
-                        <FilterChip facet="Actor" />
-                        <FilterChip facet="Action" />
-                        <FilterChip facet="Project" />
+                        <FilterChip facet="Period" options={PERIOD_OPTIONS} defaultSelected={['7d']} />
+                        <FilterChip facet="Actor" options={PEOPLE_OPTIONS} multiple selected={actors} onSelectedChange={setActors} />
+                        <FilterChip facet="Action" options={ACTION_OPTIONS} multiple selected={actions} onSelectedChange={setActions} />
+                        <FilterChip facet="Project" options={PROJECT_OPTIONS} multiple />
                     </>
                 }
                 columns={EVENT_COLUMNS}

@@ -32,6 +32,7 @@ import { Timeline } from '../../components/Timeline'
 import { TopBar } from '../../components/TopBar'
 import { Button } from '../../components/ui/button'
 import { TooltipProvider } from '../../components/ui/tooltip'
+import { JOB_OPTIONS, PEOPLE_OPTIONS, STATUS_OPTIONS } from '../fixtures/filters'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { Stack } from '../../components/Layout'
 
@@ -281,9 +282,14 @@ function Workspace({ dock = false }: { dock?: boolean }) {
                                             placeholder="Search"
                                             className="w-full max-w-64 min-w-40"
                                         />
-                                        <FilterChip facet="State" value="failed, running" onClear={() => undefined} />
-                                        <FilterChip facet="Job" />
-                                        <FilterChip facet="Started by" />
+                                        <FilterChip
+                                            facet="State"
+                                            options={STATUS_OPTIONS}
+                                            multiple
+                                            defaultSelected={['failed', 'running']}
+                                        />
+                                        <FilterChip facet="Job" options={JOB_OPTIONS} multiple />
+                                        <FilterChip facet="Started by" options={PEOPLE_OPTIONS} multiple />
                                     </>
                                 }
                                 columns={COLUMNS}

@@ -19,7 +19,7 @@ import { AccountMenu } from '../../components/AccountMenu'
 import { DescriptionList } from '../../components/DescriptionList'
 import { DataTable, type DataColumn } from '../../components/DataTable'
 import { Field } from '../../components/Field'
-import { FilterChip } from '../../components/FilterChip'
+import { FilterChip, type FilterOption } from '../../components/FilterChip'
 import { FormBar } from '../../components/FormBar'
 import { Inspector, InspectorSection } from '../../components/Inspector'
 import { IssueCount } from '../../components/IssueMark'
@@ -53,6 +53,7 @@ import {
 } from '../../components/ui/questionnaire'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { cn } from '../../lib/cn'
+import { PEOPLE_OPTIONS } from '../fixtures/filters'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { NUMBER, regionName, regions } from '../map/data'
 import { Dot } from '../../components/Dot'
@@ -293,10 +294,33 @@ function Measurements({ visit }: { visit: Visit }) {
     )
 }
 
+const PERIOD_OPTIONS: FilterOption[] = [
+    { value: '2026-09', label: 'Sep 2026' },
+    { value: '2026-10', label: 'Oct 2026' },
+    { value: '2026-11', label: 'Nov 2026' },
+]
+
+const STATE_OPTIONS: FilterOption[] = (['draft', 'submitted', 'approved', 'returned'] as const).map((state) => ({
+    value: state,
+    row: <StateChip state={state} />,
+}))
+
+/** The regions the visits were made in, each once, in order. */
+const REGION_OPTIONS: FilterOption[] = [...new Set(VISITS.map((visit) => visit.region))].sort().map((region) => ({ value: region }))
+
 function Records() {
     const [query, setQuery] = useState('')
     const [chosen, setChosen] = useState<Visit>(VISITS[0])
-    const rows = VISITS.filter((visit) => `${visit.code} ${visit.site}`.toLowerCase().includes(query.trim().toLowerCase()))
+    const [states, setStates] = useState<string[]>([])
+    const [places, setPlaces] = useState<string[]>([])
+    const [people, setPeople] = useState<string[]>([])
+    const rows = VISITS.filter(
+        (visit) =>
+            (states.length === 0 || states.includes(visit.state)) &&
+            (places.length === 0 || places.includes(visit.region)) &&
+            (people.length === 0 || people.includes(visit.by)) &&
+            `${visit.code} ${visit.site}`.toLowerCase().includes(query.trim().toLowerCase()),
+    )
     return (
         <Page className="h-full">
             <PageHeader
@@ -320,10 +344,16 @@ function Records() {
                     toolbar={
                         <>
                             <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-full max-w-64 min-w-40" />
-                            <FilterChip facet="Period" value="Nov 2026" onClear={() => undefined} />
-                            <FilterChip facet="State" />
-                            <FilterChip facet="Region" />
-                            <FilterChip facet="Collected by" />
+                            <FilterChip facet="Period" options={PERIOD_OPTIONS} defaultSelected={['2026-11']} />
+                            <FilterChip facet="State" options={STATE_OPTIONS} multiple selected={states} onSelectedChange={setStates} />
+                            <FilterChip facet="Region" options={REGION_OPTIONS} multiple selected={places} onSelectedChange={setPlaces} />
+                            <FilterChip
+                                facet="Collected by"
+                                options={PEOPLE_OPTIONS}
+                                multiple
+                                selected={people}
+                                onSelectedChange={setPeople}
+                            />
                         </>
                     }
                     columns={COLUMNS}

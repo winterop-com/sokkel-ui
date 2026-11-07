@@ -23,7 +23,7 @@ import { Board as BoardArea, BoardDrop, BoardLane, type BoardMove } from '../../
 import { BoardCard, BoardLabel } from '../../components/board/BoardCard'
 import { BoardColumn, BoardColumnHead } from '../../components/board/BoardColumn'
 import { DescriptionList } from '../../components/DescriptionList'
-import { FilterChip } from '../../components/FilterChip'
+import { FilterChip, type FilterOption } from '../../components/FilterChip'
 import { PageHeader } from '../../components/PageHeader'
 import { PersonAvatar } from '../../components/PersonAvatar'
 import { Rail, type RailGroup } from '../../components/Rail'
@@ -35,16 +35,7 @@ import { ThemeToggle } from '../../components/ThemeToggle'
 import { Timeline } from '../../components/Timeline'
 import { TopBar } from '../../components/TopBar'
 import { Button } from '../../components/ui/button'
-import {
-    DropdownMenu,
-    DropdownMenuCheckboxItem,
-    DropdownMenuContent,
-    DropdownMenuGroup,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '../../components/ui/dropdown-menu'
+import { DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from '../../components/ui/dropdown-menu'
 import { TooltipProvider } from '../../components/ui/tooltip'
 import { cn } from '../../lib/cn'
 import type { KindColor } from '../../lib/kind'
@@ -375,36 +366,11 @@ function MoveMenu({ item, onMove }: { item: Item; onMove: (column: ColumnId) => 
     )
 }
 
-function LabelFilter({ chosen, onChange }: { chosen: string[]; onChange: (labels: string[]) => void }) {
-    const [open, setOpen] = useState(false)
-    return (
-        <span className="relative inline-flex">
-            <FilterChip
-                facet="Labels"
-                icon={<Tag className="size-3.5 text-muted-foreground" aria-hidden />}
-                value={chosen.length === 0 ? undefined : chosen.join(', ')}
-                onOpen={() => setOpen(true)}
-                onClear={() => onChange([])}
-            />
-            <DropdownMenu open={open} onOpenChange={setOpen}>
-                <DropdownMenuTrigger tabIndex={-1} aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-0 opacity-0" />
-                <DropdownMenuContent align="start" className="w-44">
-                    {Object.keys(LABELS).map((label) => (
-                        <DropdownMenuCheckboxItem
-                            key={label}
-                            checked={chosen.includes(label)}
-                            onCheckedChange={(checked) =>
-                                onChange(checked ? [...chosen, label] : chosen.filter((other) => other !== label))
-                            }
-                        >
-                            <BoardLabel name={label} color={LABELS[label]} />
-                        </DropdownMenuCheckboxItem>
-                    ))}
-                </DropdownMenuContent>
-            </DropdownMenu>
-        </span>
-    )
-}
+/** The labels to filter by, each drawn as the label it is. */
+const LABEL_OPTIONS: FilterOption[] = Object.entries(LABELS).map(([label, color]) => ({
+    value: label,
+    row: <BoardLabel name={label} color={color} />,
+}))
 
 function ItemPanel({ item, onToggle }: { item: Item; onToggle: (index: number) => void }) {
     const column = COLUMNS.find((entry) => entry.id === item.column)
@@ -625,7 +591,14 @@ function BoardApp({
                                 onChange={(people) => setFilters({ ...filters, people: people as Person[] })}
                                 words={{ label: 'Assignees' }}
                             />
-                            <LabelFilter chosen={filters.labels} onChange={(labels) => setFilters({ ...filters, labels })} />
+                            <FilterChip
+                                facet="Labels"
+                                icon={<Tag className="size-3.5 text-muted-foreground" aria-hidden />}
+                                options={LABEL_OPTIONS}
+                                multiple
+                                selected={filters.labels}
+                                onSelectedChange={(labels) => setFilters({ ...filters, labels })}
+                            />
                             <div className="flex-1" />
                             <Row as="span" className="text-xs text-muted-foreground">
                                 Swimlanes
