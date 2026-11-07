@@ -12,11 +12,11 @@ import {
     resolveBasemap,
     type Basemap,
     type SchemeBasemaps,
-} from '../../components/map/basemap'
-import { BasemapGallery, BasemapSwitcher } from '../../components/map/BasemapSwitcher'
-import { BoundaryLayer } from '../../components/map/BoundaryLayer'
-import { MapOverlay, MapView } from '../../components/map/MapView'
-import { useDark } from '../../hooks/use-dark'
+} from '@winterop-com/sokkel-ui-maps/basemap'
+import { BasemapGallery, BasemapSwitcher } from '@winterop-com/sokkel-ui-maps/BasemapSwitcher'
+import { BoundaryLayer } from '@winterop-com/sokkel-ui-maps/BoundaryLayer'
+import { MapOverlay, MapView } from '@winterop-com/sokkel-ui-maps/MapView'
+import { useDark } from '@winterop-com/sokkel-ui/hooks/use-dark'
 import { regions } from './data'
 import { Page } from './Page'
 

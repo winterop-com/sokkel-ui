@@ -1,4 +1,4 @@
-import { IconButton } from '../../components/IconButton'
+import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import {
     Bell,
@@ -26,29 +26,36 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 
-import { ChannelHeader, type ChannelHeaderAction, type ChannelHeaderTab } from '../../components/ChannelHeader'
-import { ChannelList, type ChannelSection } from '../../components/ChannelList'
-import { ChatDay, ChatMessage, ChatNewDivider, type ChatFile, type ChatPerson, type ChatReaction } from '../../components/ChatMessage'
-import { Conversation, ConversationStart, ThreadView } from '../../components/Conversation'
-import { Markdown } from '../../components/Markdown'
-import { MessageComposer, type MessageSchedule } from '../../components/MessageComposer'
-import { PersonAvatar } from '../../components/PersonAvatar'
-import { Rail, type RailGroup } from '../../components/Rail'
-import { Shell } from '../../components/Shell'
-import { SidePanel } from '../../components/SidePanel'
-import { TopBar } from '../../components/TopBar'
-import { Button } from '../../components/ui/button'
+import { ChannelHeader, type ChannelHeaderAction, type ChannelHeaderTab } from '@winterop-com/sokkel-ui/ChannelHeader'
+import { ChannelList, type ChannelSection } from '@winterop-com/sokkel-ui/ChannelList'
+import {
+    ChatDay,
+    ChatMessage,
+    ChatNewDivider,
+    type ChatFile,
+    type ChatPerson,
+    type ChatReaction,
+} from '@winterop-com/sokkel-ui/ChatMessage'
+import { Conversation, ConversationStart, ThreadView } from '@winterop-com/sokkel-ui/Conversation'
+import { Markdown } from '@winterop-com/sokkel-ui/Markdown'
+import { MessageComposer, type MessageSchedule } from '@winterop-com/sokkel-ui/MessageComposer'
+import { PersonAvatar } from '@winterop-com/sokkel-ui/PersonAvatar'
+import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
+import { Shell } from '@winterop-com/sokkel-ui/Shell'
+import { SidePanel } from '@winterop-com/sokkel-ui/SidePanel'
+import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
-} from '../../components/ui/dropdown-menu'
-import { TooltipProvider } from '../../components/ui/tooltip'
+} from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
+import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
-import { Row } from '../../components/Layout'
+import { Row } from '@winterop-com/sokkel-ui/Layout'
 
 /**
  * A team chat in the library's frame: a strip of places on the far left, the channels and direct

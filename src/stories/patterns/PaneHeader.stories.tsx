@@ -1,15 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Archive, ArrowLeft, Forward, MoreHorizontal, Plus, Reply, Trash2 } from 'lucide-react'
 
-import { DescriptionList } from '../../components/DescriptionList'
-import { IconButton } from '../../components/IconButton'
-import { PaneHeader } from '../../components/PaneHeader'
-import { Surface } from '../../components/Section'
-import { PanelSection } from '../../components/SidePanel'
-import { StatusChip } from '../../components/StatusChip'
-import { Badge } from '../../components/ui/badge'
-import { Button } from '../../components/ui/button'
-import { TooltipProvider } from '../../components/ui/tooltip'
+import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
+import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
+import { PaneHeader } from '@winterop-com/sokkel-ui/PaneHeader'
+import { Surface } from '@winterop-com/sokkel-ui/Section'
+import { PanelSection } from '@winterop-com/sokkel-ui/SidePanel'
+import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
+import { Badge } from '@winterop-com/sokkel-ui/primitives/badge'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 
 const meta: Meta = { title: 'Patterns/Pane header', parameters: { frame: 'column' } }
 export default meta

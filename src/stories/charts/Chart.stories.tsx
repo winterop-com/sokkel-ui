@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useMemo, useState } from 'react'
 
-import type { Aggregate } from '../../components/chart/data'
-import type { ChartSpec } from '../../components/chart/kinds'
-import { Field } from '../../components/Field'
-import { Columns, Stack } from '../../components/Layout'
-import { Segmented } from '../../components/Segmented'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
+import type { Aggregate } from '@winterop-com/sokkel-ui-charts/data'
+import type { ChartSpec } from '@winterop-com/sokkel-ui-charts/kinds'
+import { Field } from '@winterop-com/sokkel-ui/Field'
+import { Columns, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@winterop-com/sokkel-ui/primitives/select'
 import { RUN_ROWS, RUN_STATES, STATE_COLORS } from '../fixtures/runRows'
 import { Framed, Ground } from './Ground'
 

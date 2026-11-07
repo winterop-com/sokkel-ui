@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { Feature } from 'geojson'
 
-import { MapLegend } from '../../components/map/MapLegend'
-import { categoricalScale, classCounts, divergingScale, sequentialScale } from '../../components/map/scale'
+import { MapLegend } from '@winterop-com/sokkel-ui-maps/MapLegend'
+import { categoricalScale, classCounts, divergingScale, sequentialScale } from '@winterop-com/sokkel-ui-maps/scale'
 import { figures, places, regions, sites } from './data'
-import { Row } from '../../components/Layout'
+import { Row } from '@winterop-com/sokkel-ui/Layout'
 
 const density = sequentialScale({ breaks: [50, 75, 100, 125], hue: 'var(--chart-2)' })
 const rainfall = sequentialScale({ breaks: [100, 200, 300, 400, 500, 600], hue: 'var(--chart-2)' })

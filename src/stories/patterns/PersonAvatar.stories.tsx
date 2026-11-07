@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { PersonAvatar, type Presence } from '../../components/PersonAvatar'
-import { Row, Stack } from '../../components/Layout'
+import { PersonAvatar, type Presence } from '@winterop-com/sokkel-ui/PersonAvatar'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { PORTRAITS } from '../fixtures/portraits'
 
 /** A person as their picture or their initials on a wash of the color their name picks, round or a rounded square, with a dot for whether they are around. */

@@ -1,11 +1,18 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Filter, Info } from 'lucide-react'
 
-import { Field } from '../../components/Field'
-import { Button } from '../../components/ui/button'
-import { Input } from '../../components/ui/input'
-import { Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger } from '../../components/ui/popover'
-import { Row } from '../../components/Layout'
+import { Field } from '@winterop-com/sokkel-ui/Field'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { Input } from '@winterop-com/sokkel-ui/primitives/input'
+import {
+    Popover,
+    PopoverContent,
+    PopoverDescription,
+    PopoverHeader,
+    PopoverTitle,
+    PopoverTrigger,
+} from '@winterop-com/sokkel-ui/primitives/popover'
+import { Row } from '@winterop-com/sokkel-ui/Layout'
 
 const meta: Meta = { title: 'Primitives/Overlays/Popover', parameters: { frame: 'padded' } }
 export default meta

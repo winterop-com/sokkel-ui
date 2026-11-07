@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { StatusItem, StatusLine } from '../../components/StatusLine'
-import { Row, Stack } from '../../components/Layout'
+import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /** The foot strip's contents in each tone, at the strip's own height. */
 function Strip({ children }: { children: React.ReactNode }) {

@@ -12,11 +12,11 @@ import {
     AttachmentMedia,
     AttachmentTitle,
     AttachmentTrigger,
-} from '../../components/ui/attachment'
-import { Bubble, BubbleContent } from '../../components/ui/bubble'
-import { Message, MessageContent } from '../../components/ui/message'
-import { Spinner } from '../../components/ui/spinner'
-import { Row, Stack } from '../../components/Layout'
+} from '@winterop-com/sokkel-ui/primitives/attachment'
+import { Bubble, BubbleContent } from '@winterop-com/sokkel-ui/primitives/bubble'
+import { Message, MessageContent } from '@winterop-com/sokkel-ui/primitives/message'
+import { Spinner } from '@winterop-com/sokkel-ui/primitives/spinner'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /** A file a person adds to a message: a media tile, a name, a line of detail, and its actions. */
 function Caption({ children }: { children: ReactNode }) {

@@ -1,5 +1,8 @@
 import { defineConfig } from 'vitest/config'
 
+import { alias } from './vite.config'
+
 export default defineConfig({
-    test: { include: ['src/**/*.test.{ts,tsx}'] },
+    resolve: { alias },
+    test: { include: ['src/**/*.test.{ts,tsx}', 'packages/*/src/**/*.test.{ts,tsx}'] },
 })

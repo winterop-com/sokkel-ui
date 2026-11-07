@@ -2,9 +2,9 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { ChevronRightIcon } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
-import { Button } from '../../components/ui/button'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../../components/ui/collapsible'
-import { Stack } from '../../components/Layout'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@winterop-com/sokkel-ui/primitives/collapsible'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /** A region a trigger shows and hides. It carries no styling of its own; the story draws it. */
 function Caption({ children }: { children: ReactNode }) {

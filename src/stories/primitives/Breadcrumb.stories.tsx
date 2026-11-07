@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Slash } from 'lucide-react'
 
-import { PageHeader } from '../../components/PageHeader'
-import { Stack } from '../../components/Layout'
+import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
 import {
     Breadcrumb,
     BreadcrumbEllipsis,
@@ -11,7 +11,7 @@ import {
     BreadcrumbList,
     BreadcrumbPage,
     BreadcrumbSeparator,
-} from '../../components/ui/breadcrumb'
+} from '@winterop-com/sokkel-ui/primitives/breadcrumb'
 
 const meta: Meta = { title: 'Primitives/Navigation/Breadcrumb', parameters: { frame: 'column' } }
 export default meta

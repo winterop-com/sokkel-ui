@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Archive, Copy, Ellipsis, FolderInput, History, Pencil, Play, Share2, Tag, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 
-import { Button } from '../../components/ui/button'
-import { Row, Stack } from '../../components/Layout'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
@@ -19,7 +19,7 @@ import {
     DropdownMenuSubContent,
     DropdownMenuSubTrigger,
     DropdownMenuTrigger,
-} from '../../components/ui/dropdown-menu'
+} from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
 
 const meta: Meta = { title: 'Primitives/Menus/DropdownMenu', parameters: { frame: 'padded' } }
 export default meta

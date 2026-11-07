@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { FormBar } from '../../components/FormBar'
-import { IssueCount } from '../../components/IssueMark'
-import { Stack } from '../../components/Layout'
-import { TextField } from '../../components/TextField'
-import { Button } from '../../components/ui/button'
-import { TooltipProvider } from '../../components/ui/tooltip'
+import { FormBar } from '@winterop-com/sokkel-ui/FormBar'
+import { IssueCount } from '@winterop-com/sokkel-ui/IssueMark'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
+import { TextField } from '@winterop-com/sokkel-ui/TextField'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 
 const meta: Meta = { title: 'Patterns/Form bar' }
 export default meta

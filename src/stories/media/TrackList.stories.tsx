@@ -1,11 +1,11 @@
-import { IconButton } from '../../components/IconButton'
+import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { ListEnd } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
-import { TrackList, type Track } from '../../components/media/TrackList'
-import { StarButton } from '../../components/StarButton'
-import { TooltipProvider } from '../../components/ui/tooltip'
+import { TrackList, type Track } from '@winterop-com/sokkel-ui/media/TrackList'
+import { StarButton } from '@winterop-com/sokkel-ui/StarButton'
+import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { Artwork, type Cover } from '../fixtures/Artwork'
 
 const COVER: Cover = { motif: 'wave', from: 'blue', to: 'teal' }

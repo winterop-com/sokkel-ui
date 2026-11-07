@@ -7,16 +7,16 @@
     "semi": false,
     "trailingComma": "all",
     "sortTailwindcss": {
-        "stylesheet": "src/styles/index.css",
+        "stylesheet": "packages/core/src/styles/index.css",
         "functions": ["cn", "cva"]
     },
     "ignorePatterns": [
         "dist",
         "storybook-static",
         "components.json",
-        "src/styles/tokens.css",
+        "packages/core/src/styles/tokens.css",
         "e2e/__screenshots__",
         "e2e/tiles",
-        "src/styles/shadcn.css"
+        "packages/core/src/styles/shadcn.css"
     ]
 }

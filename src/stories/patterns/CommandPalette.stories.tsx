@@ -2,10 +2,10 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { CalendarClock, FileText, FolderGit2, ListChecks, Moon, Play, Plus, Settings, Users } from 'lucide-react'
 import { useCallback, useState } from 'react'
 
-import { CommandPalette, usePaletteShortcut, type PaletteGroup } from '../../components/CommandPalette'
-import { Button } from '../../components/ui/button'
-import { Kbd } from '../../components/ui/kbd'
-import { Stack } from '../../components/Layout'
+import { CommandPalette, usePaletteShortcut, type PaletteGroup } from '@winterop-com/sokkel-ui/CommandPalette'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { Kbd } from '@winterop-com/sokkel-ui/primitives/kbd'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /** The palette open over an app, with places, actions and recent records. */
 const GROUPS: PaletteGroup[] = [

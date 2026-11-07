@@ -1,12 +1,12 @@
-import { PersonRow } from '../../components/PersonRow'
-import { ChoiceList } from '../../components/ChoiceList'
-import { CheckboxField } from '../../components/CheckboxField'
+import { PersonRow } from '@winterop-com/sokkel-ui/PersonRow'
+import { ChoiceList } from '@winterop-com/sokkel-ui/ChoiceList'
+import { CheckboxField } from '@winterop-com/sokkel-ui/CheckboxField'
 import { Bell, CalendarClock, History, KeyRound, Workflow } from 'lucide-react'
 import { useState } from 'react'
 
-import { ConsequenceList } from '../../components/ConsequenceList'
-import { ConfirmDialog, DialogShell } from '../../components/DialogShell'
-import { TypedConfirmDialog } from '../../components/TypedConfirmDialog'
+import { ConsequenceList } from '@winterop-com/sokkel-ui/ConsequenceList'
+import { ConfirmDialog, DialogShell } from '@winterop-com/sokkel-ui/DialogShell'
+import { TypedConfirmDialog } from '@winterop-com/sokkel-ui/TypedConfirmDialog'
 import { pictureOf } from '../fixtures/portraits'
 import { Behind, wait } from './parts'
 

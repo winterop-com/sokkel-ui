@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { Composer, type ComposerAttachment } from '../../components/Composer'
-import { Stack } from '../../components/Layout'
+import { Composer, type ComposerAttachment } from '@winterop-com/sokkel-ui/Composer'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
 import { ModelPicker } from '../fixtures/models'
 
 /** The message composer: empty, with a draft and attachments, while an answer streams, and shut. */

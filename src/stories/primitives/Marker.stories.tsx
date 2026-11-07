@@ -2,10 +2,10 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { CircleXIcon, PauseIcon, PlayIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { Bubble, BubbleContent } from '../../components/ui/bubble'
-import { Marker, MarkerContent, MarkerIcon } from '../../components/ui/marker'
-import { Message, MessageContent } from '../../components/ui/message'
-import { Stack } from '../../components/Layout'
+import { Bubble, BubbleContent } from '@winterop-com/sokkel-ui/primitives/bubble'
+import { Marker, MarkerContent, MarkerIcon } from '@winterop-com/sokkel-ui/primitives/marker'
+import { Message, MessageContent } from '@winterop-com/sokkel-ui/primitives/message'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /** A quiet line between messages: a date, an event, or a note that something happened. */
 function Caption({ children }: { children: ReactNode }) {

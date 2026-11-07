@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../../components/ui/accordion'
-import { Row, Stack } from '../../components/Layout'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@winterop-com/sokkel-ui/primitives/accordion'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 const meta: Meta = { title: 'Primitives/Display/Accordion', parameters: { frame: 'column' } }
 export default meta

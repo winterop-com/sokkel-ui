@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useEffect, useState } from 'react'
 
-import { Terminal, type TerminalEntry } from '../../components/terminal/Terminal'
-import { TooltipProvider } from '../../components/ui/tooltip'
-import { Stack } from '../../components/Layout'
+import { Terminal, type TerminalEntry } from '@winterop-com/sokkel-ui/terminal/Terminal'
+import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /**
  * A terminal: commands and what they wrote, escape codes drawn as colors, and output that streams

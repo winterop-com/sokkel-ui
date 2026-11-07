@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { Field as IssueField } from '../../components/Field'
-import { Button } from '../../components/ui/button'
-import { Checkbox } from '../../components/ui/checkbox'
+import { Field as IssueField } from '@winterop-com/sokkel-ui/Field'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { Checkbox } from '@winterop-com/sokkel-ui/primitives/checkbox'
 import {
     Field,
     FieldContent,
@@ -14,13 +14,13 @@ import {
     FieldSeparator,
     FieldSet,
     FieldTitle,
-} from '../../components/ui/field'
-import { Input } from '../../components/ui/input'
-import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from '../../components/ui/input-group'
-import { RadioGroup, RadioGroupItem } from '../../components/ui/radio-group'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
-import { Switch } from '../../components/ui/switch'
-import { Row, Stack } from '../../components/Layout'
+} from '@winterop-com/sokkel-ui/primitives/field'
+import { Input } from '@winterop-com/sokkel-ui/primitives/input'
+import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from '@winterop-com/sokkel-ui/primitives/input-group'
+import { RadioGroup, RadioGroupItem } from '@winterop-com/sokkel-ui/primitives/radio-group'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@winterop-com/sokkel-ui/primitives/select'
+import { Switch } from '@winterop-com/sokkel-ui/primitives/switch'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
 
 const meta: Meta = { title: 'Primitives/Inputs/Field', parameters: { frame: 'column' } }

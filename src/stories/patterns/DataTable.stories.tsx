@@ -21,17 +21,17 @@ import {
     findInTree,
     sortRows,
     treeBranchKeys,
-} from '../../components/DataTable'
-import { FileTypeIcon, formatSize } from '../../components/FileList'
-import { MetaLine } from '../../components/MetaLine'
-import { SearchField } from '../../components/SearchField'
-import { StatusChip } from '../../components/StatusChip'
-import { Button } from '../../components/ui/button'
+} from '@winterop-com/sokkel-ui/DataTable'
+import { FileTypeIcon, formatSize } from '@winterop-com/sokkel-ui/FileList'
+import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
+import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
+import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { type Album, makeAlbums } from '../fixtures/albums'
 import { Artwork } from '../fixtures/Artwork'
 import { folderContents, type FolderRow, makeFolderTree, projectFolders } from '../fixtures/folders'
 import { makeRuns, makeRunTree, startedAt, type TableRun, took, type TreeRow } from '../fixtures/tableRuns'
-import { Columns, Row, Stack } from '../../components/Layout'
+import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /**
  * A table for many rows. Only the rows in view are drawn, so the 10k and 50k tables scroll like

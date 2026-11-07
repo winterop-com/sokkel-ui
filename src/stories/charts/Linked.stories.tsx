@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useMemo, useState } from 'react'
 
-import type { ChartSpec } from '../../components/chart/kinds'
-import { Segmented } from '../../components/Segmented'
+import type { ChartSpec } from '@winterop-com/sokkel-ui-charts/kinds'
+import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { RAIN_DAYS } from '../fixtures/rainDays'
 import { Framed, Ground } from './Ground'
 

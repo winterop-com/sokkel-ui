@@ -14,8 +14,8 @@ import {
     ContextMenuSubContent,
     ContextMenuSubTrigger,
     ContextMenuTrigger,
-} from '../../components/ui/context-menu'
-import { Center } from '../../components/Layout'
+} from '@winterop-com/sokkel-ui/primitives/context-menu'
+import { Center } from '@winterop-com/sokkel-ui/Layout'
 
 const meta: Meta = { title: 'Primitives/Menus/ContextMenu', parameters: { frame: 'padded' } }
 export default meta

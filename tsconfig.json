@@ -10,9 +10,28 @@
         "noUnusedParameters": true,
         "skipLibCheck": true,
         "isolatedModules": true,
+        "allowImportingTsExtensions": true,
         "noEmit": true,
         "types": ["vite/client", "node"],
-        "paths": { "@/*": ["./src/*"] }
+        "paths": {
+            "@/*": ["./packages/core/src/*"],
+            "@winterop-com/sokkel-ui/primitives/*": ["./packages/core/src/components/ui/*"],
+            "@winterop-com/sokkel-ui/hooks/*": ["./packages/core/src/hooks/*"],
+            "@winterop-com/sokkel-ui/lib/*": ["./packages/core/src/lib/*"],
+            "@winterop-com/sokkel-ui/*": ["./packages/core/src/components/*"],
+            "@winterop-com/sokkel-ui-charts/*": ["./packages/charts/src/*"],
+            "@winterop-com/sokkel-ui-maps/*": ["./packages/maps/src/*"],
+            "@winterop-com/sokkel-ui-graph/*": ["./packages/graph/src/*"]
+        }
     },
-    "include": ["src", ".storybook", "scripts", "vite.config.ts", "vite.lib.config.ts", "vitest.config.ts"]
+    "include": [
+        "src",
+        "packages/*/src",
+        "packages/*/vite.config.ts",
+        ".storybook",
+        "scripts",
+        "vite.config.ts",
+        "vite.lib.ts",
+        "vitest.config.ts"
+    ]
 }

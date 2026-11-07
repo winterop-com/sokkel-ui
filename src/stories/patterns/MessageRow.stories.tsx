@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { MessageRow, type MessageLabel } from '../../components/MessageRow'
+import { MessageRow, type MessageLabel } from '@winterop-com/sokkel-ui/MessageRow'
 
 /** A row of a message list, alone and in a list column with every mark it carries. */
 const HARBOR: MessageLabel = { id: 'harbor', label: 'harbor', color: 'var(--color-kind-blue)' }

@@ -1,13 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { DescriptionList } from '../../components/DescriptionList'
-import { DiffView } from '../../components/DiffView'
-import { JsonTree } from '../../components/JsonTree'
-import { LogView, type LogLine } from '../../components/LogView'
-import { Section } from '../../components/Section'
-import { Sparkline, Stat } from '../../components/Stat'
-import { Timeline } from '../../components/Timeline'
-import { Columns, Stack } from '../../components/Layout'
+import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
+import { DiffView } from '@winterop-com/sokkel-ui/DiffView'
+import { JsonTree } from '@winterop-com/sokkel-ui/JsonTree'
+import { LogView, type LogLine } from '@winterop-com/sokkel-ui/LogView'
+import { Section } from '@winterop-com/sokkel-ui/Section'
+import { Sparkline, Stat } from '@winterop-com/sokkel-ui/Stat'
+import { Timeline } from '@winterop-com/sokkel-ui/Timeline'
+import { Columns, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /** The ways a record's facts are shown: terms and values, numbers, events, logs, JSON and diffs. */
 function Ground({ children }: { children: React.ReactNode }) {

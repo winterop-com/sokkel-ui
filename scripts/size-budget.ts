@@ -1,11 +1,12 @@
 /**
- * Builds the apps in examples/sizes against the built package and fails when one grows past its
+ * Builds the apps in examples/sizes against the built packages and fails when one grows past its
  * budget in examples/sizes/budget.json, or bundles an engine its budget does not list.
  *
  *   bun run build && bun run size
  *
- * The apps import the package by its name, which resolves through the package's own `exports`, so
- * each bundles what an installed copy would give it. Every size is gzipped, in kB: `start` is the
+ * The apps import the packages by their names, which resolve through the workspace's links and each
+ * package's own `exports`, so each bundles what an installed copy would give it. The forms app
+ * imports only the core package. Every size is gzipped, in kB: `start` is the
  * JavaScript loaded with the page, `lazy` what is fetched later by a dynamic import, and `css` the
  * stylesheet.
  */
@@ -37,8 +38,9 @@ type Budget = Record<Measure, number> & {
     engines: string[]
 }
 
-if (!existsSync(join(ROOT, 'dist/components'))) {
-    console.error('No dist/ to build against: run `bun run build` first.')
+const unbuilt = ['core', 'charts', 'maps', 'graph'].filter((name) => !existsSync(join(ROOT, 'packages', name, 'dist')))
+if (unbuilt.length > 0) {
+    console.error(`No dist/ to build against in ${unbuilt.join(', ')}: run \`bun run build\` first.`)
     process.exit(1)
 }
 

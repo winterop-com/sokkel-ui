@@ -1,4 +1,4 @@
-import { IconButton } from '../../components/IconButton'
+import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import {
     Bell,
@@ -16,12 +16,12 @@ import {
 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
-import { ChannelList, type ChannelEntry, type ChannelPlace, type ChannelSection } from '../../components/ChannelList'
-import { PersonAvatar } from '../../components/PersonAvatar'
-import { Rail } from '../../components/Rail'
+import { ChannelList, type ChannelEntry, type ChannelPlace, type ChannelSection } from '@winterop-com/sokkel-ui/ChannelList'
+import { PersonAvatar } from '@winterop-com/sokkel-ui/PersonAvatar'
+import { Rail } from '@winterop-com/sokkel-ui/Rail'
 import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
-import { Row } from '../../components/Layout'
+import { Row } from '@winterop-com/sokkel-ui/Layout'
 
 /**
  * The places to talk in a team chat, in sections that fold: channels, private channels behind a

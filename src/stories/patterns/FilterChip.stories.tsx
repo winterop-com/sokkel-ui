@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { CircleDot, Workflow } from 'lucide-react'
 
-import { FilterChip } from '../../components/FilterChip'
-import { Row } from '../../components/Layout'
+import { FilterChip } from '@winterop-com/sokkel-ui/FilterChip'
+import { Row } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
 import { JOB_OPTIONS, PEOPLE_OPTIONS, PERIOD_OPTIONS, STATUS_OPTIONS } from '../fixtures/filters'
 

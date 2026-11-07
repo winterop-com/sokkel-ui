@@ -6,15 +6,30 @@ ring or a grid by changing the kind and the fields alone, so a view of data is a
 Neither an app nor a story builds an ECharts option: a chart the kinds cannot draw becomes a new
 kind, or an option on one.
 
-An app that draws charts installs `echarts`, an optional peer dependency. The base set (lines,
-bars, heatmaps, gauges, pies, radars and scatters, with the grid, tooltip, legend, zoom, color
-scale and marks) loads with the first chart. Every other chart type and component loads the first
+Charts are their own package, `@winterop-com/sokkel-ui-charts`, beside the core
+`@winterop-com/sokkel-ui`. An app that draws charts installs it, which brings `echarts` with it, and
+imports its `styles.css` after the core's, in the same stylesheet:
+
+```css
+@import '@winterop-com/sokkel-ui/styles.css';
+@import '@winterop-com/sokkel-ui-charts/styles.css';
+```
+
+It holds `Chart`, `ChartFrame`, `ChartGrid`, `ChartLegend`, `EChart`, the kinds
+(`@winterop-com/sokkel-ui-charts/kinds`) and the dashboard panels drawn by ECharts, under
+`@winterop-com/sokkel-ui-charts/dashboard/`. The dashboard's frame and the panels with no chart
+(`DashboardGrid`, `DashboardRow`, `StatPanel`, `ScoreTable`, `ThresholdLegend`, `TimeRange`,
+`VariablesBar` and the thresholds) are in the core, under `@winterop-com/sokkel-ui/dashboard/`, so a
+dashboard of tiles needs no ECharts.
+
+The base set (lines, bars, heatmaps, gauges, pies, radars and scatters, with the grid, tooltip,
+legend, zoom, color scale and marks) loads with the first chart. Every other chart type and component loads the first
 time an option draws with it, so an app that draws only bars never downloads a sankey.
 
 ## Drawing a chart
 
 ```tsx
-import { Chart } from '@winterop-com/sokkel-ui/chart/Chart'
+import { Chart } from '@winterop-com/sokkel-ui-charts/Chart'
 
 export function RunsByJob({ runs }: { runs: readonly Run[] }) {
     return <Chart kind="bar" label="Runs per job by state" rows={runs} x="job" series="state" stack="stacked" />
@@ -105,7 +120,7 @@ What a chart reads. Each kind reads some of these fields; its row in the tables 
 
 ## The kinds
 
-The registry is `src/components/chart/kinds/index.ts`; each kind is one builder in its own file
+The registry is `packages/charts/src/kinds/index.ts`; each kind is one builder in its own file
 there, and its doc comment says what it draws and which fields it reads. Stories are named as they
 appear in Storybook.
 
@@ -187,7 +202,7 @@ series in the legend drops its panel.
 
 ## Adding a kind
 
-1. **A builder.** A file under `src/components/chart/kinds/`, exporting a `ChartBuilder`: a function
+1. **A builder.** A file under `packages/charts/src/kinds/`, exporting a `ChartBuilder`: a function
    of the spec, the theme's look and the legend's hidden names that returns an ECharts option. Every
    color comes from the look (`look.token`, `colorOf`, `look.mix`) and every size from `look.size`,
    so a theme reaches it; every corner from `look.corner`. Its doc comment says what it draws and

@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { StatusChip, type Status } from '../../components/StatusChip'
-import { Button } from '../../components/ui/button'
-import { Row, Stack } from '../../components/Layout'
+import { StatusChip, type Status } from '@winterop-com/sokkel-ui/StatusChip'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import {
     Sheet,
     SheetClose,
@@ -12,7 +12,7 @@ import {
     SheetHeader,
     SheetTitle,
     SheetTrigger,
-} from '../../components/ui/sheet'
+} from '@winterop-com/sokkel-ui/primitives/sheet'
 
 const meta: Meta = { title: 'Primitives/Overlays/Sheet', parameters: { frame: 'padded' } }
 export default meta

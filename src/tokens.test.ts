@@ -8,7 +8,7 @@ interface Tokens {
     themes: Record<string, { light?: Record<string, string>; dark?: Record<string, string> }>
 }
 
-const tokens = JSON.parse(readFileSync(join(__dirname, '..', 'tokens', 'tokens.json'), 'utf8')) as Tokens
+const tokens = JSON.parse(readFileSync(join(__dirname, '..', 'packages', 'core', 'tokens', 'tokens.json'), 'utf8')) as Tokens
 
 /** The lightness of an oklch color, or null for a color written another way. */
 function lightness(value: string | undefined): number | null {
@@ -46,7 +46,7 @@ describe('the tokens', () => {
 
 describe('the theme files', () => {
     const resolve = createRequire(import.meta.url).resolve
-    const styles = join(__dirname, 'styles')
+    const styles = join(__dirname, '..', 'packages', 'core', 'src', 'styles')
     for (const theme of Object.keys(tokens.themes).filter((name) => name !== 'default')) {
         it(`export ${theme} as themes/${theme}.css`, () => {
             expect(resolve(`@winterop-com/sokkel-ui/themes/${theme}.css`)).toBe(join(styles, 'themes', `${theme}.css`))

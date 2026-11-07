@@ -176,7 +176,9 @@ for (const story of stories) {
 }
 
 /** The library's themes, read from the tokens, so a new theme is photographed without being listed here. */
-const THEMES = Object.keys((JSON.parse(readFileSync('tokens/tokens.json', 'utf8')) as { themes: Record<string, unknown> }).themes)
+const THEMES = Object.keys(
+    (JSON.parse(readFileSync('packages/core/tokens/tokens.json', 'utf8')) as { themes: Record<string, unknown> }).themes,
+)
 
 // Every theme's kitchen sink in dark and in light. The story suite above draws only the default theme, and its
 // comparison lets a small color shift through; here a theme whose colors move fails.

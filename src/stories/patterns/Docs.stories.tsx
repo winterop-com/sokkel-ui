@@ -2,10 +2,10 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { CheckCircle2, CircleAlert } from 'lucide-react'
 import { useRef } from 'react'
 
-import { Dot } from '../../components/Dot'
-import { Markdown, markdownHeadings } from '../../components/Markdown'
-import { TableOfContents, useActiveHeading } from '../../components/TableOfContents'
-import { Row } from '../../components/Layout'
+import { Dot } from '@winterop-com/sokkel-ui/Dot'
+import { Markdown, markdownHeadings } from '@winterop-com/sokkel-ui/Markdown'
+import { TableOfContents, useActiveHeading } from '@winterop-com/sokkel-ui/TableOfContents'
+import { Row } from '@winterop-com/sokkel-ui/Layout'
 
 /** The parts of a long page: callouts in markdown, and the list of its headings that follows the reader. */
 const CALLOUTS = `> [!NOTE]

@@ -35,9 +35,10 @@ The Storybook is published at **https://winterop-com.github.io/sokkel-ui/**.
 
 ## Tokens and themes
 
-- `tokens/tokens.json` is the only place a token is defined. `bun run tokens` writes the CSS from
-  it: `src/styles/tokens.css` with the default theme and the density levels, one file for each
-  other theme in `src/styles/themes/`, and `src/styles/themes.css`, which imports them all.
+- `packages/core/tokens/tokens.json` is the only place a token is defined. `bun run tokens` writes
+  the CSS from it, in `packages/core/src/styles/`: `tokens.css` with the default theme and the
+  density levels, one file for each other theme in `themes/`, and `themes.css`, which imports them
+  all.
   `bun scripts/build-tokens.ts --check` fails when the CSS and the JSON disagree.
 - Themes are named for how they look. `default` defines every token; the others (amber, paper,
   contrast, tokyo, vinyl, cassette, neon) override what they change, which may be any token:
@@ -62,8 +63,18 @@ The screenshots are Linux renders taken in the Playwright image, as CI checks th
 
 ## Using it
 
-The package is `@winterop-com/sokkel-ui` on GitHub Packages. An app points the scope at that registry in
-its `.npmrc`, with a token that can read packages, and pins a version:
+The library is four packages on GitHub Packages, released together at one version:
+
+| Package                          | Holds                                                                |
+| -------------------------------- | -------------------------------------------------------------------- |
+| `@winterop-com/sokkel-ui`        | the tokens and themes, the primitives and every pattern below        |
+| `@winterop-com/sokkel-ui-charts` | `Chart` and its kinds on ECharts, and the dashboard's chart panels   |
+| `@winterop-com/sokkel-ui-maps`   | `MapView` on maplibre, with its layers, legends, popups and basemaps |
+| `@winterop-com/sokkel-ui-graph`  | the graphs and the graph editor on React Flow, laid out by elk       |
+
+Every app installs the core package; an app that draws charts, maps or graphs adds that package too,
+which brings its engine with it. An app points the scope at the registry in its `.npmrc`, with a
+token that can read packages, and pins one version for all of them:
 
 ```
 @winterop-com:registry=https://npm.pkg.github.com
@@ -71,28 +82,49 @@ its `.npmrc`, with a token that can read packages, and pins a version:
 ```
 
 ```
-bun add @winterop-com/sokkel-ui@0.8.0
+bun add @winterop-com/sokkel-ui@0.9.0
+bun add @winterop-com/sokkel-ui-charts@0.9.0   # only for charts and chart panels
+bun add @winterop-com/sokkel-ui-maps@0.9.0     # only for maps
+bun add @winterop-com/sokkel-ui-graph@0.9.0    # only for graphs
 ```
 
 The components are styled with Tailwind classes, so every app runs Tailwind CSS 4.1 or later and
-installs it itself; the package does not bring it. `@winterop-com/sokkel-ui/styles.css` is Tailwind
-source, not finished CSS: Tailwind, the fonts, the tokens and base styles, with Tailwind pointed at
-the components so the app's CSS carries their classes (the stories are not in the package, and none
-of their classes reach an app). A Vite app installs Tailwind and its plugin, adds `tailwindcss()`
-from `@tailwindcss/vite` to its plugins, and imports `styles.css` once from its entry:
+installs it itself; the packages do not bring it. Each package's `styles.css` is Tailwind source,
+not finished CSS. The core's carries Tailwind, the fonts, the tokens and base styles, with Tailwind
+pointed at the core's components; an add-on's points Tailwind at its own components only. So the
+app's CSS carries the classes of the packages it imports and no others (the stories are not in any
+package, and none of their classes reach an app). A Vite app installs Tailwind and its plugin and
+adds `tailwindcss()` from `@tailwindcss/vite` to its plugins:
 
 ```
 bun add -d tailwindcss @tailwindcss/vite
 ```
 
-`styles.css` carries the default theme. Every other theme is a file of its own, so an app carries
-only the themes it offers: it imports each one's file after `styles.css` and sets the theme on
-`<html data-theme>`, with `.dark` for dark mode:
+It then imports the core's `styles.css` and, after it, the `styles.css` of each add-on it uses, all
+in one stylesheet, so Tailwind reads them together. That stylesheet is imported once from the
+entry:
+
+```css
+/* app.css */
+@import '@winterop-com/sokkel-ui/styles.css';
+@import '@winterop-com/sokkel-ui-charts/styles.css';
+@import '@winterop-com/sokkel-ui-maps/styles.css';
+```
 
 ```ts
-import '@winterop-com/sokkel-ui/styles.css'
-import '@winterop-com/sokkel-ui/themes/paper.css'
+import './app.css'
+```
 
+The themes are in the core package. `styles.css` carries the default theme. Every other theme is a
+file of its own, so an app carries only the themes it offers: it imports each one's file after
+`styles.css` and sets the theme on `<html data-theme>`, with `.dark` for dark mode:
+
+```css
+@import '@winterop-com/sokkel-ui/styles.css';
+@import '@winterop-com/sokkel-ui/themes/paper.css';
+```
+
+```ts
 document.documentElement.dataset.theme = 'paper'
 ```
 
@@ -102,20 +134,29 @@ once that theme's file is imported.
 
 An app that brings its own Tailwind entry imports `@winterop-com/sokkel-ui/tokens.css` (the tokens,
 the default theme and the density levels) instead, with the theme files it offers, `motion.css`
-(the motion setting) and `typography.css` (mono sized to the text around it). Components import by
-path, such as `@winterop-com/sokkel-ui/DialogShell` or `@winterop-com/sokkel-ui/primitives/button`.
+(the motion setting) and `typography.css` (mono sized to the text around it), and adds the
+add-ons' `styles.css` after them.
 
-The heavy engines are optional peer dependencies, so an app installs only those of the parts it
-uses:
+Components import by path: `@winterop-com/sokkel-ui/DialogShell`,
+`@winterop-com/sokkel-ui/primitives/button`, `@winterop-com/sokkel-ui/dashboard/StatPanel`,
+`@winterop-com/sokkel-ui-charts/Chart`, `@winterop-com/sokkel-ui-charts/dashboard/BarPanel`,
+`@winterop-com/sokkel-ui-maps/MapView` or `@winterop-com/sokkel-ui-graph/PipelineGraph`.
 
-| The app uses                                 | It also installs                                                                                                                                                 |
-| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Charts and dashboard panels                  | `echarts`                                                                                                                                                        |
-| Maps                                         | `maplibre-gl`                                                                                                                                                    |
-| Graphs (`@winterop-com/sokkel-ui/graph/...`) | `@xyflow/react` and `elkjs`                                                                                                                                      |
-| `MermaidDiagram`                             | `mermaid`                                                                                                                                                        |
-| `CodeEditor`                                 | `@codemirror/commands`, `@codemirror/lang-json`, `@codemirror/lang-yaml`, `@codemirror/language`, `@codemirror/state`, `@codemirror/view` and `@lezer/highlight` |
-| Geist as a theme's typeface                  | `@fontsource-variable/geist` and `@fontsource-variable/geist-mono`                                                                                               |
+A few core parts load an engine the app installs only when it uses them, as optional peer
+dependencies:
+
+| The app uses                | It also installs                                                                                                                                                 |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `MermaidDiagram`            | `mermaid`                                                                                                                                                        |
+| `CodeEditor`                | `@codemirror/commands`, `@codemirror/lang-json`, `@codemirror/lang-yaml`, `@codemirror/language`, `@codemirror/state`, `@codemirror/view` and `@lezer/highlight` |
+| Geist as a theme's typeface | `@fontsource-variable/geist` and `@fontsource-variable/geist-mono`                                                                                               |
+
+## Working on it
+
+The repository is a Bun workspace: the packages are in `packages/core`, `packages/charts`,
+`packages/maps` and `packages/graph`, and the stories in `src/stories/` import them by their names,
+as an app does. `bun run build` builds all four, `bun run test` runs every package's tests and the
+library rules, and `bun run size` holds the apps in `examples/sizes` to their budgets.
 
 ## License
 

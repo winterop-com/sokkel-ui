@@ -1,9 +1,17 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { Field, FieldContent, FieldDescription, FieldLabel, FieldLegend, FieldSet, FieldTitle } from '../../components/ui/field'
-import { Label } from '../../components/ui/label'
-import { RadioGroup, RadioGroupItem } from '../../components/ui/radio-group'
-import { Row } from '../../components/Layout'
+import {
+    Field,
+    FieldContent,
+    FieldDescription,
+    FieldLabel,
+    FieldLegend,
+    FieldSet,
+    FieldTitle,
+} from '@winterop-com/sokkel-ui/primitives/field'
+import { Label } from '@winterop-com/sokkel-ui/primitives/label'
+import { RadioGroup, RadioGroupItem } from '@winterop-com/sokkel-ui/primitives/radio-group'
+import { Row } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
 
 function Choices({ prefix, ...props }: { prefix: string } & React.ComponentProps<typeof RadioGroup>) {

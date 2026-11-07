@@ -15,9 +15,9 @@ import {
 } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { type DataColumn, DataTable } from '../../components/DataTable'
-import { PageHeader } from '../../components/PageHeader'
-import { StatusChip, type Status } from '../../components/StatusChip'
+import { type DataColumn, DataTable } from '@winterop-com/sokkel-ui/DataTable'
+import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
+import { StatusChip, type Status } from '@winterop-com/sokkel-ui/StatusChip'
 import {
     Sidebar,
     SidebarContent,
@@ -42,9 +42,9 @@ import {
     SidebarRail,
     SidebarSeparator,
     SidebarTrigger,
-} from '../../components/ui/sidebar'
-import { PersonAvatar } from '../../components/PersonAvatar'
-import { Center, Row, Stack } from '../../components/Layout'
+} from '@winterop-com/sokkel-ui/primitives/sidebar'
+import { PersonAvatar } from '@winterop-com/sokkel-ui/PersonAvatar'
+import { Center, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /**
  * The app's side navigation and the frame around it. On a desktop it sits fixed at the edge and
