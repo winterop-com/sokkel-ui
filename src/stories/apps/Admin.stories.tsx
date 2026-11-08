@@ -52,7 +52,8 @@ import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
 import { PanelSection, SidePanel } from '@winterop-com/sokkel-ui/SidePanel'
 import { StatusChip, type Status } from '@winterop-com/sokkel-ui/StatusChip'
 import { TopBar, type Crumb } from '@winterop-com/sokkel-ui/TopBar'
-import { Avatar, AvatarFallback, AvatarGroup, AvatarImage } from '@winterop-com/sokkel-ui/primitives/avatar'
+import { AvatarGroup } from '@winterop-com/sokkel-ui/primitives/avatar'
+import { PersonAvatar } from '@winterop-com/sokkel-ui/PersonAvatar'
 import { Badge } from '@winterop-com/sokkel-ui/primitives/badge'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@winterop-com/sokkel-ui/primitives/select'
@@ -177,16 +178,6 @@ const TITLES: Record<View, string> = { members: 'Members', roles: 'Roles', token
 const trail = (view: View): Crumb[] => [{ label: 'Tidevann', href: '#' }, { label: 'Admin', href: '#' }, { label: TITLES[view] }]
 
 /** A person's round mark: their picture, or the first letter of their username or address. */
-function Person({ who, size = 'sm' }: { who: string; size?: 'sm' | 'default' }) {
-    const picture = pictureOf(who)
-    return (
-        <Avatar size={size}>
-            {picture !== undefined && <AvatarImage src={picture} alt={who} />}
-            <AvatarFallback className="bg-primary/15 font-medium text-primary-ink uppercase">{who.slice(0, 1)}</AvatarFallback>
-        </Avatar>
-    )
-}
-
 /* Members */
 
 const memberColumns: DataColumn<Member>[] = [
@@ -196,7 +187,7 @@ const memberColumns: DataColumn<Member>[] = [
         width: 'minmax(10rem,1.2fr)',
         cell: (member) => (
             <Row as="span" className="min-w-0">
-                <Person who={member.username || member.email} />
+                <PersonAvatar name={member.username || member.email} image={pictureOf(member.username || member.email)} />
                 <span className="truncate">{member.name}</span>
             </Row>
         ),
@@ -245,7 +236,7 @@ const inviteColumns: DataColumn<Invite>[] = [
         width: 'minmax(12rem,1.4fr)',
         cell: (invite) => (
             <Row as="span" className="min-w-0">
-                <Person who={invite.email} />
+                <PersonAvatar name={invite.email} image={pictureOf(invite.email)} />
                 <span className="truncate">{invite.email}</span>
             </Row>
         ),
@@ -570,7 +561,7 @@ const HOLDER_COLUMNS: DataColumn<Role>[] = [
             <Row as="span" gap="md" className="min-w-0">
                 <AvatarGroup className="shrink-0">
                     {holders(id).map((person) => (
-                        <Person key={person.email} who={person.username} />
+                        <PersonAvatar key={person.email} name={person.username} image={pictureOf(person.username)} />
                     ))}
                 </AvatarGroup>
                 <span className="min-w-0 truncate font-mono text-xs text-muted-foreground">
@@ -1087,7 +1078,7 @@ const EVENT_COLUMNS: DataColumn<AuditEvent>[] = [
         width: '8rem',
         cell: (event) => (
             <Row as="span" className="min-w-0">
-                <Person who={event.who} />
+                <PersonAvatar name={event.who} image={pictureOf(event.who)} />
                 <span className="truncate font-medium">{event.who}</span>
             </Row>
         ),

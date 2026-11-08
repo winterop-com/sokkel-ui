@@ -114,6 +114,7 @@ const CORE_AREAS: Record<string, string> = {
     ChannelHeader: 'Chat and messaging',
     ChannelList: 'Chat and messaging',
     ChatMessage: 'Chat and messaging',
+    CommentThread: 'Chat and messaging',
     Composer: 'Chat and messaging',
     Conversation: 'Chat and messaging',
     MessageComposer: 'Chat and messaging',
@@ -131,10 +132,12 @@ const CORE_AREAS: Record<string, string> = {
     Code: 'Code, text and documents',
     CodeEditor: 'Code, text and documents',
     DiffView: 'Code, text and documents',
+    EditPreview: 'Code, text and documents',
     LogView: 'Code, text and documents',
     Markdown: 'Code, text and documents',
     MermaidDiagram: 'Code, text and documents',
     ProseText: 'Code, text and documents',
+    ShowMore: 'Code, text and documents',
 }
 
 /** The area of a component in a folder of its own, by the folder's path under the package's sources. */

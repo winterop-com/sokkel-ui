@@ -32,6 +32,7 @@ import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { Section, Surface } from '@winterop-com/sokkel-ui/Section'
 import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
+import { ShowMore } from '@winterop-com/sokkel-ui/ShowMore'
 import { PanelSection, SidePanel } from '@winterop-com/sokkel-ui/SidePanel'
 import { StatusChip, type Status } from '@winterop-com/sokkel-ui/StatusChip'
 import { TopBar, type Crumb } from '@winterop-com/sokkel-ui/TopBar'
@@ -503,19 +504,19 @@ function ComparePage() {
                 }
             />
             <Surface className="p-(--density-panel-pad)">
-                <Row gap="md" align="start">
-                    <div className="min-w-0 flex-1">
-                        <p className="font-mono text-xs text-muted-foreground">failure-note, temperature 0.7, max 1,024 tokens</p>
-                        <p className="mt-1 line-clamp-2 text-sm">
-                            Write a short note to the team about why nightly-export failed last night. Say which step failed, how many rows
-                            it rejected and why, and what we changed so it does not happen again.
-                        </p>
-                    </div>
-                    <Button size="sm" variant="ghost" className="text-muted-foreground">
-                        <Pencil aria-hidden />
-                        Edit
-                    </Button>
-                </Row>
+                <ShowMore
+                    head={<p className="font-mono text-xs text-muted-foreground">failure-note, temperature 0.7, max 1,024 tokens</p>}
+                    actions={
+                        <Button size="sm" variant="ghost" className="text-muted-foreground">
+                            <Pencil aria-hidden />
+                            Edit
+                        </Button>
+                    }
+                >
+                    Write a short note to the team about why nightly-export failed last night. Say which step failed, how many rows it
+                    rejected and why, and what we changed so it does not happen again. Keep it under two hundred words, plain and without
+                    blame, and end with the one thing we are still watching.
+                </ShowMore>
             </Surface>
             <Columns count={3} gap="inspector">
                 {ANSWERS.map((answer) => (

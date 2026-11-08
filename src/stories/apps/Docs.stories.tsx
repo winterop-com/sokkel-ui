@@ -1,4 +1,3 @@
-import { Section } from '@winterop-com/sokkel-ui/Section'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import { Toggle } from '@winterop-com/sokkel-ui/primitives/toggle'
@@ -8,9 +7,13 @@ import { useRef, useState } from 'react'
 
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { CodeEditor } from '@winterop-com/sokkel-ui/CodeEditor'
+import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
 import { DiffView } from '@winterop-com/sokkel-ui/DiffView'
+import { EditPreview } from '@winterop-com/sokkel-ui/EditPreview'
 import { InlineField } from '@winterop-com/sokkel-ui/InlineField'
 import { Markdown, markdownHeadings } from '@winterop-com/sokkel-ui/Markdown'
+import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
+import { PersonAvatar } from '@winterop-com/sokkel-ui/PersonAvatar'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { Shell } from '@winterop-com/sokkel-ui/Shell'
@@ -20,7 +23,6 @@ import { TableOfContents, useActiveHeading } from '@winterop-com/sokkel-ui/Table
 import { ThemeToggle } from '@winterop-com/sokkel-ui/ThemeToggle'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
 import { Tree, type TreeNode } from '@winterop-com/sokkel-ui/Tree'
-import { Avatar, AvatarFallback, AvatarImage } from '@winterop-com/sokkel-ui/primitives/avatar'
 import { Badge } from '@winterop-com/sokkel-ui/primitives/badge'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { NativeSelect, NativeSelectOption } from '@winterop-com/sokkel-ui/primitives/native-select'
@@ -28,7 +30,7 @@ import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
-import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
 
 /**
@@ -235,16 +237,6 @@ const VERSIONS: Version[] = [
 
 const CURRENT = VERSIONS[0]
 
-function Person({ name, size = 'sm' }: { name: string; size?: 'sm' | 'default' }) {
-    const picture = pictureOf(name)
-    return (
-        <Avatar size={size}>
-            {picture !== undefined && <AvatarImage src={picture} alt={name} />}
-            <AvatarFallback className="bg-primary/15 font-medium text-primary-ink uppercase">{name.slice(0, 1)}</AvatarFallback>
-        </Avatar>
-    )
-}
-
 function Reading({ content }: { content: string }) {
     const article = useRef<HTMLDivElement>(null)
     const headings = markdownHeadings(content)
@@ -264,47 +256,47 @@ function Reading({ content }: { content: string }) {
 
 function Editing({ value, onChange }: { value: string; onChange: (value: string) => void }) {
     return (
-        <Columns gap="lg" className="min-h-0 flex-1">
-            <Section title="Markdown" flush fill className="min-h-[24rem] lg:min-h-0">
-                <CodeEditor value={value} onChange={onChange} wrap label="The page as markdown" />
-            </Section>
-            <Section title="Preview" fill className="min-h-[24rem] lg:min-h-0">
-                <Markdown content={value} scale="document" />
-            </Section>
-        </Columns>
+        <EditPreview
+            edit={<CodeEditor value={value} onChange={onChange} wrap label="The page as markdown" />}
+            preview={<Markdown content={value} scale="document" />}
+            words={{ edit: 'Markdown' }}
+            className="flex-1"
+        />
     )
 }
 
+const VERSION_COLUMNS: DataColumn<Version>[] = [
+    {
+        id: 'version',
+        header: 'Version',
+        width: '1fr',
+        cell: (version) => (
+            <Row gap="md" align="start">
+                <PersonAvatar name={version.by} image={pictureOf(version.by)} />
+                <Stack gap="3xs" className="flex-1">
+                    <Row align="baseline">
+                        <span className="truncate font-medium">{version.note}</span>
+                        {version.number === CURRENT.number && <Badge variant="secondary">Current</Badge>}
+                    </Row>
+                    <MetaLine truncate items={[`Version ${String(version.number)}`, version.by, version.at]} />
+                </Stack>
+            </Row>
+        ),
+    },
+]
+
 function Versions({ chosen, onChoose }: { chosen: number; onChoose: (number: number) => void }) {
     return (
-        <Stack as="ol" gap="none" className="overflow-hidden rounded-surface border border-border-strong bg-card">
-            {VERSIONS.map((version) => (
-                <li key={version.number} className="border-b border-border last:border-b-0">
-                    <button
-                        type="button"
-                        aria-current={version.number === chosen || undefined}
-                        onClick={() => onChoose(version.number)}
-                        className={cn(
-                            'w-full px-3 py-2.5 text-left outline-none hover:bg-hover focus-visible:bg-hover',
-                            version.number === chosen && 'bg-secondary',
-                        )}
-                    >
-                        <Row as="span" gap="md" align="start">
-                            <Person name={version.by} />
-                            <Stack as="span" gap="3xs" className="flex-1">
-                                <Row as="span" align="baseline">
-                                    <span className="truncate text-sm font-medium">{version.note}</span>
-                                    {version.number === CURRENT.number && <Badge variant="secondary">Current</Badge>}
-                                </Row>
-                                <span className="truncate text-xs text-muted-foreground">
-                                    Version {version.number}, {version.by}, {version.at}
-                                </span>
-                            </Stack>
-                        </Row>
-                    </button>
-                </li>
-            ))}
-        </Stack>
+        <DataTable
+            variant="list"
+            columns={VERSION_COLUMNS}
+            rows={VERSIONS}
+            rowKey={(version) => String(version.number)}
+            rowHeight="auto"
+            onOpen={(version) => onChoose(version.number)}
+            opened={(version) => version.number === chosen}
+            resizable={false}
+        />
     )
 }
 
@@ -427,7 +419,7 @@ function DocsApp({ mode: initialMode = 'read' }: { mode?: 'read' | 'edit' | 'his
                                 title="Nightly export"
                                 meta={
                                     <>
-                                        <Person name={CURRENT.by} />
+                                        <PersonAvatar name={CURRENT.by} image={pictureOf(CURRENT.by)} />
                                         <span className="truncate">
                                             Last edited by <span className="font-medium text-foreground">{CURRENT.by}</span> on {CURRENT.at}
                                         </span>
