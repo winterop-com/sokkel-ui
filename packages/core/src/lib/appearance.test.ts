@@ -98,8 +98,9 @@ afterEach(() => {
 const LOOK: ThemeSettings = { theme: 'paper', scheme: 'dark', density: 'compact', corners: '4px', typeface: 'geist', motion: 'off' }
 
 describe('the option lists', () => {
-    it('offer every theme in the tokens, the default first, with a label and a swatch', () => {
-        expect(THEMES[0]).toEqual({ value: 'default', label: 'Default', swatch: true })
+    it('offer every theme in the tokens, tidevann first, with a label and a swatch', () => {
+        expect(THEMES[0]).toEqual({ value: 'tidevann', label: 'Tidevann', swatch: true })
+        expect(THEMES[0]?.value).toBe(DEFAULT_APPEARANCE.theme)
         expect(THEMES.map((theme) => theme.value)).toContain('paper')
         for (const theme of THEMES) expect(theme.label).not.toBe('')
     })
@@ -243,6 +244,11 @@ describe('appearanceScript', () => {
         const root = run(appearanceScript({ scheme: 'dark', theme: 'paper' }), false)
         expect(root.classes.has('dark')).toBe(true)
         expect(root.attributes.get('data-theme')).toBe('paper')
+    })
+
+    it('wears tidevann, the base theme, with no data-theme', () => {
+        storeAppearance({ ...LOOK, theme: 'tidevann' })
+        expect(run(appearanceScript({ theme: 'paper' })).attributes.has('data-theme')).toBe(false)
     })
 
     it('does nothing where storage throws', () => {

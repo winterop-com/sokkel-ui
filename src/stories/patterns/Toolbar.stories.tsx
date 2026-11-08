@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Archive, ArrowUpDown, ChevronLeft, ChevronRight, Copy, Download, Pin, Play, Share2 } from 'lucide-react'
 import { useState } from 'react'
 
 import { FilterChip } from '@winterop-com/sokkel-ui/FilterChip'
@@ -8,7 +8,7 @@ import { Row } from '@winterop-com/sokkel-ui/Layout'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { Surface } from '@winterop-com/sokkel-ui/Section'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
-import { Toolbar, ToolbarTitle } from '@winterop-com/sokkel-ui/Toolbar'
+import { Toolbar, ToolbarTitle, type ToolbarItem } from '@winterop-com/sokkel-ui/Toolbar'
 import { Tree } from '@winterop-com/sokkel-ui/Tree'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
@@ -120,3 +120,35 @@ export const Pane: StoryObj = {
         )
     },
 }
+
+/** A job's tools as items that give way: Run now, Export, Duplicate, Share, Pin as a toggle and Archive, moved in order into More when the row has no room for them. */
+function JobTools({ narrow = false }: { narrow?: boolean }) {
+    const [pinned, setPinned] = useState(true)
+    const [query, setQuery] = useState('')
+    const items: ToolbarItem[] = [
+        { id: 'run', label: 'Run now', icon: <Play aria-hidden />, onSelect: () => undefined },
+        { id: 'export', label: 'Export', icon: <Download aria-hidden />, onSelect: () => undefined },
+        { id: 'duplicate', label: 'Duplicate', icon: <Copy aria-hidden />, onSelect: () => undefined },
+        { id: 'share', label: 'Share', icon: <Share2 aria-hidden />, onSelect: () => undefined },
+        { id: 'pin', label: 'Pinned', icon: <Pin aria-hidden />, pressed: pinned, onSelect: () => setPinned(!pinned) },
+        { id: 'archive', label: 'Archive', icon: <Archive aria-hidden />, disabled: true, onSelect: () => undefined },
+    ]
+    const toolbar = (
+        <Toolbar
+            variant={narrow ? 'pane' : 'page'}
+            search={narrow ? undefined : <SearchField value={query} onChange={setQuery} placeholder="Search" />}
+            items={items}
+            defaultMoreOpen={narrow}
+            end={<span className="text-xs text-muted-foreground tabular-nums">12 runs</span>}
+        >
+            <FilterChip facet="State" value="failed" onClear={() => undefined} />
+        </Toolbar>
+    )
+    return narrow ? <Surface className="max-w-sm">{toolbar}</Surface> : toolbar
+}
+
+/** Tools that move into a More menu at their end, in order, as the toolbar narrows; measured on the toolbar, so they come back as it widens. */
+export const Overflow: StoryObj = { render: () => <JobTools /> }
+
+/** The same tools in a narrow pane with More open: plain entries, Pinned checked, and Archive shut. */
+export const OverflowOpen: StoryObj = { name: 'Overflow open', render: () => <JobTools narrow /> }

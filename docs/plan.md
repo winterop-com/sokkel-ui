@@ -41,9 +41,9 @@ start carries only what draws at once: `MapView` loads maplibre (`loadMapEngine`
 spinner after a moment, `Chart` and `ChartGrid` load the kinds' builders beside ECharts, a basemap's
 preview loads when the switcher shows it, `useSchemaForm` and `CodeEditor` load ajv (`loadSchemaChecks`
 ahead), the form taking input at once and refusing a submit until its checks are there,
-`TimeRangePicker` loads its calendar when the trigger is pointed at or focused, the highlighter
-loads Shiki with the first code drawn plain until then, and `MediaBar` loads its fullscreen view
-after the bar is drawn. A module that only asks whether a node is a part tells it by a mark, so it
+`TimeRangePicker` and the date fields load the calendar when first pointed at or focused, the
+highlighter loads Shiki with the first code drawn plain until then, and `MediaBar` loads its
+fullscreen view after the bar is drawn. A module that only asks whether a node is a part tells it by a mark, so it
 need not import the part (`isSoundVisualizer`), and `chartLegend` has a module of its own, since it
 reads every kind.
 
@@ -102,12 +102,12 @@ page the maps package and the music page the media package. `forms-lean` is the 
 ## Themes
 
 Every theme is defined in `packages/core/tokens/tokens.json`, and `scripts/build-tokens.ts` writes it out.
-`tokens.css`, which `styles.css` carries, holds the default theme and the density levels, so an app
-that picks no theme needs nothing more. Every other theme is a file of its own in
+`tokens.css`, which `styles.css` carries, holds tidevann, the base theme, and the density levels, so
+an app that picks no theme needs nothing more. Every other theme is a file of its own in
 `packages/core/src/styles/themes/`, exported as `@winterop-com/sokkel-ui/themes/<name>.css`, with its light and
 dark tokens on `html[data-theme]` for the whole app and on `[data-theme-scope]` for one element,
 such as a theme picker's swatch, each written once for both; `themes.css` imports them all. Every
-scope first takes the default's whole set from `tokens.css`, at no specificity, so the page's theme
+scope first takes tidevann's whole set from `tokens.css`, at no specificity, so the page's theme
 never shows through a scope of another. An app imports the files of the
 themes it offers and sets one on `<html data-theme>`, so its CSS carries no theme it never shows.
 Storybook imports `themes.css`, so its toolbar offers every theme.
@@ -117,8 +117,8 @@ read (`$parts` in `tokens.json` lists them): the heading face, a section head's 
 ink and a page title's ink; a table's head (ground, rule, ink, case) and its zebra; a wash over the
 editor's and a code block's ground and over their gutter; the scroll area's thumb and track, which
 the browser's own scroll bars take where `--scrollbar` names them; the shell's foot strip; and the
-palette's insets. Each defaults to what the part drew before, so a theme that sets none looks as the
-default does. Corners go by role: controls (buttons, fields, selects, toggles, the composers) round
+palette's insets. Each defaults to what the part drew before, so a theme that sets none looks as
+tidevann does. Corners go by role: controls (buttons, fields, selects, toggles, the composers) round
 by `--control-radius` and surfaces (cards, boxed sections, popovers, menus, dialogs, code blocks)
 by `--surface-radius`, each `var(--radius)` unless a theme derives another from it, so one theme
 has sharp surfaces and round controls and another the reverse. Ocean (deep sea blues, teal), indigo
@@ -304,14 +304,27 @@ toggle-group, tooltip, trace.
 ## Patterns
 
 Shell, Rail, AppBar, SubNav, Page, PageHeader, PaneHeader, Toolbar, Section, Surface, the layout
-components (Stack, Row, Columns, Split, Fill), SplitPane, Field, TextField, InlineField, SliderField,
-CheckboxField, CheckboxList, ChoiceList, CodeField, SwitchField, SearchField, FilterChip, FormBar,
+components (Stack, Row, Columns, Split, Fill), SplitPane, Field, TextField, DateField, TimeField,
+DateTimeField, NumberField, InlineField, SliderField, CheckboxField, CheckboxList, ChoiceList,
+CodeField, SwitchField, SearchField, FileField, FilterChip, FilterBar, SavedViews, FormBar,
 SelectionBar, DataTable, StatusChip, PersonAvatar, PersonRow, MetaLine, DueText, AttachmentList,
 IconButton, StarButton, SplitButton, DownloadButton, AccountMenu, SidePanel, DialogShell,
 ConfirmDialog, TreeSelect, AsyncSelect, CapabilityPicker, SignIn, RelativeTime, ApiLink, TagChips,
 DetailSheet.
 Every example arranges and builds its screens from these, never by hand, so a fix in one reaches
 them all.
+
+`DateField`, `TimeField`, `DateTimeField` and `NumberField` are typed: each reads what is typed by
+one format, writes the value back in it once the field is left, and says text that does not read
+with the issue mark, keeping the value as it was. Dates and times cross the API as ISO strings with
+no zone (`2026-11-09`, `02:00`, `2026-11-09T02:00`, as HTML's `date`, `time` and `datetime-local`
+inputs hold them), never as `Date`s, so a day never moves across a time zone and the zone a time is
+read in stays the app's to name (`zone`). A value outside `min` and `max` is kept and said, with an
+action that puts in the bound; `onIssueChange` tells a form what a field finds wrong so it can count
+it. The display format is a prop (`format`, `clock`, a number's `format` and `parse`, with
+`localeNumber` for a locale's marks) until the `locale` provider comes. The date fields pick from
+the calendar, loaded on first use; `SchemaForm` draws numbers with `NumberField` and keeps the
+browser's own date input, since the calendar would put the forms page past its budget.
 
 A records app is built from the same parts (Apps/Records). A `Rail` entry says what its
 place holds on a second line (`description`), which the palette's Go to rows repeat; a palette row's
@@ -346,8 +359,13 @@ for the rest, and `DescriptionList`'s `row` layout sets its facts in one wrappin
 its upper part and the mark, the name and a few facts at its foot, beside a centered form of a
 username and password (or a token, or the app's own fields), an optional server address, an error
 over the submit and other ways in under a rule. The seam between the panes drags, the form rises
-into place as it opens, and the username can be kept in the browser. On a phone the brand pane is a
-bar over the form. The art that ships, `LevelBars` and `FlowLines`, is drawn from a seed in the
+into place as it opens, and the username can be kept in the browser. Each field is led by an icon
+unless `icons` is off, and `optional` lets the password, or every credential, be left empty for a
+server that needs none. An app that finds its server itself says so in the server field's place
+(`looking`), then offers a link to a different server (`found`) that brings the field back; with the
+values held from outside (`values`, `onValuesChange`) it asks a typed address as it is typed, and
+`probe` says in the brand pane what answered there, its version or no answer. On a phone the brand
+pane is a bar over the form. The art that ships, `LevelBars` and `FlowLines`, is drawn from a seed in the
 theme's primary and muted inks and holds still when motion is reduced; an app may pass its own.
 
 DataTable is the one table, for five rows or fifty thousand: only the rows in view are drawn, at
@@ -361,10 +379,33 @@ album view) that keeps the selection, menus and sort. A short listing drops the 
 head and may carry a foot line. Rows gather under group heads by a field or a key made from the row
 (`groupBy`), each head with its label, its count and a column's `aggregate`; a head folds its
 group, rows sort within their group, and a head's box selects the group, in the table, the list and
-the grid alike.
+the grid alike. Its column menu hides columns and moves them a place earlier or later, the first
+column staying first as each row's title, and the order is held like the widths (`columnOrder`).
+
+A listing filters from a `FilterBar` in its table's bar: Filter adds a filter from a menu of the
+fields with a search over them, each filter is a chip saying its field, how it compares and its
+value, the chip opens the field's operators over its value (is, is not and contains for text; any
+of and none of for a set, its values ticked from a list with a search; between, at least and at most
+for a number; between, after and before for a day), and Clear all removes them. A filter applies as
+it is changed, and one closed with nothing filled in goes away. Filters are data (`lib/filters`): a
+field, an operator and values as strings, so they keep and travel as they are. The bar holds no
+rows: a listing filtered in the browser passes its rows through `filterRows` with the same fields,
+and one filtered on a server sends it `activeFilters`. `FilterChip`'s own menu holds a search past
+eight values, the ticked ones leading it, and takes an `editor` in place of options. `SavedViews`
+keeps a listing's setups under names: a view holds the filters, the sort and the columns (hidden,
+order, widths) as `ListViewState` (`lib/list-views`), the part lists the views to pick, saves the
+listing as a new view, saves it into the chosen one, renames and deletes it, and says when the
+listing differs from the chosen view (`viewChanges`), with Reset and Save beside it. The app stores
+the views; the part takes them and its callbacks and keeps nothing itself.
+
+`AsyncSelect` takes several values with `multiple`: chips in the field, each with its remove button,
+the search typed after them and the list open while values are picked. A loader that answers a page
+at a time (`{ items, next }`) gets the next page as the list nears its end, and `onCreate` offers
+typed text no option is called as a new one at the list's end.
 
 `SettingsDialog` holds an app's preferences: its sections in a navigation with a search over every
-setting, the chosen section's rows beside it, and under both a footer drawn as `DialogShell`'s,
+setting (its title, description and `keywords`, which are never drawn, and its section's name, so a
+search for a section keeps it whole), the chosen section's rows beside it, and under both a footer drawn as `DialogShell`'s,
 outside the scrolling, that says changes are kept as they are made (or the app's own `footer`, such
 as when they last synced) and closes with Done. `onReset` adds Reset to defaults at the footer's
 start, for the shown section or for every setting, asked once more before it runs. On a phone the
@@ -417,6 +458,26 @@ it refuses the rest, cancels through the signal (and drops what an uploader that
 later), and hands `AttachmentList`, `Composer` and `UploadTray` their files. `ConversationHistory`, the list
 beside a chat, is a `DataTable` list grouped under Pinned, Today and Earlier, with rename in place,
 pin, and delete after a question.
+
+`FileField` takes files in a form, in a `Field` as the other inputs are: a zone they are dropped on
+(the drag `DropZone`'s, from `use-file-drop`) with a button that opens the picker, the limits under
+it (the types in `accept`, `maxSize`, `maxFiles`), each file refused said with why ("too large: 12
+MB, at most 10 MB"), sorted by `checkFiles`, which `useUploads` shares, and the files taken listed
+by `AttachmentList`, an image with its picture and a file the app says is going up (`progress`) with
+its ring. With `maxFiles` of 1 a file chosen takes the place of the one held. `useUnsavedChanges`
+guards a page: while it is `dirty`, closing the tab or reloading asks through the browser's own
+warning, and since the library has no router, the app's blocker awaits `confirmLeave()`, which asks
+through `ConfirmDialog` (the hook's `dialog`, drawn once in the page) and answers whether to leave;
+`useUnsavedGuard` does the same for a dialog's form. `Toolbar`'s `items` give way as it narrows,
+measured on the toolbar itself: those it has no room for move, in order, into a More menu at their
+end, a toggle checked there. `ImageLightbox` moves between its `images` by the arrow keys, the
+buttons at its sides and a swipe, saying "3 of 12"; it zooms by the wheel, a pinch and its buttons
+about the pointer, from the fit to four times it or twice the image's own pixels, a zoomed image
+moves by a drag without leaving a gap at an edge, and a double press goes between the fit and 100%.
+Both composers take `mentions`: an `@` typed (or put in by `MessageComposer`'s mention button)
+suggests people at the caret from the app's list or its search, the arrow keys and Enter or Tab put
+one in as `@handle`, Escape closes them, and `onChange` hears the ids the text mentions;
+`mentionsIn` in `lib/mentions` reads them from a text the app holds.
 
 Tree and TreeSelect pick from a hierarchy of any depth and size. A single choice made outside the
 tree, such as a place picked on a map beside it, opens the tree down to it and scrolls to it. A node marked `hasChildren` loads

@@ -5,6 +5,7 @@ import { FilterChip } from '@winterop-com/sokkel-ui/FilterChip'
 import { Row } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
 import { JOB_OPTIONS, PEOPLE_OPTIONS, PERIOD_OPTIONS, STATUS_OPTIONS } from '../fixtures/filters'
+import { REGION_OPTIONS } from '../fixtures/weekRuns'
 
 const meta: Meta = { title: 'Patterns/Filter chip', parameters: { frame: 'padded' } }
 export default meta
@@ -63,4 +64,9 @@ export const Open: StoryObj = {
 /** Several choices open: each person is ticked or unticked, and the menu stays open. */
 export const Several: StoryObj = {
     render: () => <FilterChip facet="Started by" options={PEOPLE_OPTIONS} multiple defaultSelected={['ada', 'grace']} defaultOpen />,
+}
+
+/** A long list of values: the menu holds a search over them, and the ticked ones lead it as it opens. */
+export const Search: StoryObj = {
+    render: () => <FilterChip facet="Region" options={REGION_OPTIONS} multiple defaultSelected={['Kenya', 'Norway']} defaultOpen />,
 }

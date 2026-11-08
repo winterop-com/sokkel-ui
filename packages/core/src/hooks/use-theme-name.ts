@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 
-/** The theme `<html>` names in `data-theme`, or `default` without one. */
+/** The theme `<html>` names in `data-theme`, or `tidevann`, the base theme, without one. */
 function read(): string {
-    if (typeof document === 'undefined') return 'default'
-    return document.documentElement.getAttribute('data-theme') ?? 'default'
+    if (typeof document === 'undefined') return 'tidevann'
+    return document.documentElement.getAttribute('data-theme') ?? 'tidevann'
 }
 
 /**

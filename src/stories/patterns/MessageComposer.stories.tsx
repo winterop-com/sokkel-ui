@@ -5,6 +5,7 @@ import { useState, type ComponentProps } from 'react'
 import { MessageComposer, MessageComposerAction, type MessageSchedule } from '@winterop-com/sokkel-ui/MessageComposer'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
+import { PEOPLE, searchPeople } from '../fixtures/people'
 
 /**
  * The composer of a team chat: the format bar, Write and Preview, the code block's languages, and
@@ -104,6 +105,35 @@ export const JsonPreview: StoryObj = {
 export const DiagramPreview: StoryObj = {
     name: 'Diagram preview',
     render: () => <Live draft={FLOW} defaultMode="preview" words={{ placeholder: 'Message #harbor-ops' }} />,
+}
+
+/**
+ * People suggested at the caret as an `@` is typed, or as the mention button puts one in: their
+ * picture, name, role and handle. The arrow keys move, Enter or Tab puts the one chosen in as
+ * `@linus`, and Escape closes them.
+ */
+export const Mentions: StoryObj = {
+    render: () => (
+        <Live
+            draft="Thanks for the fix. @"
+            mentions={{ people: PEOPLE, defaultOpen: true }}
+            defaultFormatting={false}
+            words={{ placeholder: 'Message #harbor-ops' }}
+        />
+    ),
+}
+
+/** The same suggestions from the app's own search, which answers for each query typed; here it holds Grace for `@gr`. */
+export const MentionSearch: StoryObj = {
+    name: 'Mention search',
+    render: () => (
+        <Live
+            draft="Can @gr"
+            mentions={{ people: searchPeople, defaultOpen: true }}
+            defaultFormatting={false}
+            words={{ placeholder: 'Message #harbor-ops' }}
+        />
+    ),
 }
 
 function Reply() {

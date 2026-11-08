@@ -1,6 +1,7 @@
 import { Check, ChevronDown, CircleAlert, CloudUpload, RotateCw, X } from 'lucide-react'
-import { useRef, useState, type DragEvent, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 
+import { useFileDrop } from '../hooks/use-file-drop'
 import { cn } from '../lib/cn'
 import { formatSize } from './FileList'
 
@@ -224,11 +225,6 @@ export interface DropZoneWords {
 
 const DROP_WORDS: DropZoneWords = { title: 'Drop to upload', detail: 'The files go into this folder.' }
 
-/** Whether a drag carries files, rather than text or a link from the page. */
-function carriesFiles(event: DragEvent<HTMLElement>): boolean {
-    return [...event.dataTransfer.types].includes('Files')
-}
-
 export interface DropZoneProps {
     onFiles: (files: File[]) => void
     /** Shows the drop frame whether or not files are being dragged. */
@@ -245,37 +241,10 @@ export interface DropZoneProps {
  */
 export function DropZone({ onFiles, open, children, className, words: given }: DropZoneProps) {
     const words = { ...DROP_WORDS, ...given }
-    const [over, setOver] = useState(false)
-    const depth = useRef(0)
-    const shown = open ?? over
+    const drop = useFileDrop(onFiles)
+    const shown = open ?? drop.over
     return (
-        <div
-            className={cn('relative', className)}
-            onDragEnter={(event) => {
-                if (!carriesFiles(event)) return
-                event.preventDefault()
-                depth.current += 1
-                setOver(true)
-            }}
-            onDragOver={(event) => {
-                if (!carriesFiles(event)) return
-                event.preventDefault()
-                event.dataTransfer.dropEffect = 'copy'
-            }}
-            onDragLeave={(event) => {
-                if (!carriesFiles(event)) return
-                depth.current = Math.max(0, depth.current - 1)
-                if (depth.current === 0) setOver(false)
-            }}
-            onDrop={(event) => {
-                if (!carriesFiles(event)) return
-                event.preventDefault()
-                depth.current = 0
-                setOver(false)
-                const files = [...event.dataTransfer.files]
-                if (files.length > 0) onFiles(files)
-            }}
-        >
+        <div className={cn('relative', className)} {...drop.handlers}>
             {children}
             {shown && (
                 <div className="pointer-events-none absolute inset-2 z-20 flex flex-col items-center justify-center gap-2 rounded-surface border-2 border-dashed border-primary bg-primary/8 text-center backdrop-blur-[1px]">

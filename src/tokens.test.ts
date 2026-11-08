@@ -24,7 +24,7 @@ const FILLS = ['muted', 'secondary', 'accent'] as const
 const SURFACES = ['popover', 'card', 'background'] as const
 
 describe('the tokens', () => {
-    const base = tokens.themes.default
+    const base = tokens.themes.tidevann
     for (const [theme, schemes] of Object.entries(tokens.themes)) {
         for (const scheme of ['light', 'dark'] as const) {
             it(`set ${theme} ${scheme}'s fills apart from the surfaces they sit on`, () => {
@@ -44,15 +44,15 @@ describe('the tokens', () => {
     }
 })
 
-/** The surfaces the default sets as fixed colors, which every other theme mixes from its own. */
+/** The surfaces tidevann, the base theme, sets as fixed colors, which every other theme mixes from its own. */
 const SURFACES_OF_THEIR_OWN = ['canvas', 'node', 'node-line', 'critical-wash', 'panel-line', 'panel-ground'] as const
 
 describe('the tinted surfaces', () => {
-    const base = tokens.themes.default
+    const base = tokens.themes.tidevann
     const styles = join(__dirname, '..', 'packages', 'core', 'src', 'styles')
     const fixed = new Set(SURFACES_OF_THEIR_OWN.flatMap((name) => [base.light?.[name], base.dark?.[name]]))
-    for (const theme of Object.keys(tokens.themes).filter((name) => name !== 'default')) {
-        it(`set ${theme}'s own, never the default's`, () => {
+    for (const theme of Object.keys(tokens.themes).filter((name) => name !== 'tidevann')) {
+        it(`set ${theme}'s own, never tidevann's`, () => {
             const css = readFileSync(join(styles, 'themes', `${theme}.css`), 'utf8')
             const blocks = [...css.matchAll(/^(html[^{}]*) \{\n([^}]*)\}/gm)]
             expect(blocks).toHaveLength(2)
@@ -72,8 +72,8 @@ describe('the tinted surfaces', () => {
 })
 
 describe('the terminal', () => {
-    const base = tokens.themes.default
-    for (const [theme, schemes] of Object.entries(tokens.themes).filter(([name]) => name !== 'default')) {
+    const base = tokens.themes.tidevann
+    for (const [theme, schemes] of Object.entries(tokens.themes).filter(([name]) => name !== 'tidevann')) {
         it(`takes ${theme}'s own accent on its dark ground in both schemes`, () => {
             const light = schemes.light?.['terminal-accent']
             expect(light).toBeDefined()
@@ -110,7 +110,7 @@ describe('the corners', () => {
 describe('the theme files', () => {
     const resolve = createRequire(import.meta.url).resolve
     const styles = join(__dirname, '..', 'packages', 'core', 'src', 'styles')
-    for (const theme of Object.keys(tokens.themes).filter((name) => name !== 'default')) {
+    for (const theme of Object.keys(tokens.themes).filter((name) => name !== 'tidevann')) {
         it(`set ${theme}'s light and dark once each, for the whole app and for one element`, () => {
             const css = readFileSync(join(styles, 'themes', `${theme}.css`), 'utf8')
             const selectors = [...css.matchAll(/([^{}]+)\{[^}]*\}/g)].map(([, head]) =>

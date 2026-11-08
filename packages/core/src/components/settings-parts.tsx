@@ -16,6 +16,8 @@ export interface Setting {
     control: ReactNode
     /** Where the control sits: `trailing` for a switch or a small button, `below` for a wide control; by the row's width when absent. */
     layout?: SettingRowLayout
+    /** Other words the search finds the setting by, never drawn: "logout" for Sign out, "dark" for the scheme. */
+    keywords?: readonly string[]
 }
 
 /** A page of settings, reached from the navigation. */
@@ -77,22 +79,25 @@ export const SETTINGS_WORDS: SettingsWords = {
 }
 
 /**
- * The groups as a search leaves them: each section keeps the settings whose title or description
- * holds every word of the search, and a section or group left empty is dropped. An empty search
- * leaves everything.
+ * The groups as a search leaves them: each section keeps the settings that hold every word of the
+ * search in their title, description or keywords or in the section's label or heading, so a search
+ * for a section's name keeps the whole section, and a section or group left empty is dropped. An
+ * empty search leaves everything.
  */
 export function filterSettings(groups: readonly SettingsGroup[], search: string): SettingsGroup[] {
     const words = search.toLowerCase().split(/\s+/).filter(Boolean)
     if (words.length === 0) return [...groups]
-    const matches = (setting: Setting) => {
-        const text = `${setting.title} ${setting.description ?? ''}`.toLowerCase()
+    const matches = (section: SettingsSection) => (setting: Setting) => {
+        const text = [section.label, section.heading ?? '', setting.title, setting.description ?? '', ...(setting.keywords ?? [])]
+            .join('\n')
+            .toLowerCase()
         return words.every((word) => text.includes(word))
     }
     return groups
         .map((group) => ({
             ...group,
             sections: group.sections
-                .map((section) => ({ ...section, settings: section.settings.filter(matches) }))
+                .map((section) => ({ ...section, settings: section.settings.filter(matches(section)) }))
                 .filter((section) => section.settings.length > 0),
         }))
         .filter((group) => group.sections.length > 0)

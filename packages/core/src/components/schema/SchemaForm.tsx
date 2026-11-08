@@ -7,6 +7,7 @@ import { Banner } from '../Banner'
 import { Field } from '../Field'
 import { IssueMarks } from '../IssueMarks'
 import { ISSUE_EDGE, IssueCount, IssueMark, worst, type Issue, type IssueAction, type IssueEntry } from '../IssueMark'
+import { NumberField } from '../NumberField'
 import { SwitchField } from '../SwitchField'
 import { Button } from '../ui/button'
 import { Checkbox } from '../ui/checkbox'
@@ -189,9 +190,11 @@ export interface SchemaFormState {
     value: unknown
     setValue: (value: unknown) => void
     set: (path: Path, value: unknown) => void
-    /** The text typed into a field that holds a number or JSON, kept while it does not parse. */
+    /** The text typed into a field that holds JSON, kept while it does not parse. */
     draft: (path: Path) => string | undefined
     setDraft: (path: Path, text: string | undefined) => void
+    /** Marks a number field whose typed text is not a number, which is said and stops the submit until it is one. */
+    setUnread: (path: Path, unread: boolean) => void
     /** Marks a field as left, so its issues show from now on. */
     touch: (path: Path) => void
     /** The issues a field shows now, worst first. */
@@ -245,6 +248,7 @@ export function useSchemaForm(
     const base = useId()
     const [value, setValue] = useState<unknown>(() => initial ?? initialValue(schema))
     const [drafts, setDrafts] = useState<Record<string, string>>({})
+    const [unread, setUnread] = useState<ReadonlySet<string>>(new Set())
     const [touched, setTouched] = useState<ReadonlySet<string>>(new Set())
     const [submitted, setSubmitted] = useState(defaultSubmitted)
     const [open, setOpen] = useState<string | null>(defaultOpen === undefined ? null : pointer(defaultOpen))
@@ -289,22 +293,21 @@ export function useSchemaForm(
     const add = (at: string, issue: Issue) => all.set(at, [...(all.get(at) ?? []), issue])
     for (const issue of found) {
         const at = pointer(issue.path)
-        if (issue.kind === 'required' && (drafts[at] ?? '').trim() !== '') continue
+        if (issue.kind === 'required' && ((drafts[at] ?? '').trim() !== '' || unread.has(at))) continue
         add(at, asIssue(issue))
     }
     // Text typed into a number or JSON field that does not parse leaves the value as it was, and says so.
-    for (const [at, text] of Object.entries(drafts)) {
-        if (text.trim() === '') continue
+    for (const at of unread) {
         const field = schemaAt(schema, parsePointer(at))
-        const kind = kindOf(field, schema)
-        if (kind === 'number' && !Number.isFinite(Number(text)))
-            add(at, { tone: 'critical', ...words.say({ kind: 'type', expected: types(field).main[0], path: [], tone: 'critical' }, field) })
-        if (kind === 'json')
-            try {
-                JSON.parse(text)
-            } catch {
-                add(at, { tone: 'critical', text: words.notJson })
-            }
+        add(at, { tone: 'critical', ...words.say({ kind: 'type', expected: types(field).main[0], path: [], tone: 'critical' }, field) })
+    }
+    for (const [at, text] of Object.entries(drafts)) {
+        if (text.trim() === '' || kindOf(schemaAt(schema, parsePointer(at)), schema) !== 'json') continue
+        try {
+            JSON.parse(text)
+        } catch {
+            add(at, { tone: 'critical', text: words.notJson })
+        }
     }
     const refusedAt = (at: string): Issue[] =>
         changed.has(at)
@@ -349,9 +352,18 @@ export function useSchemaForm(
         draft: (path) => drafts[pointer(path)],
         setDraft: (path, text) =>
             setDrafts(({ [pointer(path)]: _gone, ...rest }) => (text === undefined ? rest : { ...rest, [pointer(path)]: text })),
+        setUnread: (path, now) =>
+            setUnread((current) => {
+                const at = pointer(path)
+                if (current.has(at) === now) return current
+                const next = new Set(current)
+                if (now) next.add(at)
+                else next.delete(at)
+                return next
+            }),
         touch: (path) => {
             const at = pointer(path)
-            if (given(valueAt(value, path)) || drafts[at] !== undefined) setTouched((current) => new Set(current).add(at))
+            if (given(valueAt(value, path)) || drafts[at] !== undefined || unread.has(at)) setTouched((current) => new Set(current).add(at))
         },
         shown: (path) => shownAt(pointer(path)),
         count,
@@ -503,20 +515,27 @@ function Control({ form, path, at, label }: { form: SchemaFormState; path: Path;
             )
         }
         case 'number': {
-            const text = form.draft(path) ?? (typeof value === 'number' ? String(value) : '')
+            // The field reads, writes and steps within the bounds; a value past them is said by the schema's checks, with their fix.
+            const said = (expected: string) => form.words.say({ kind: 'type', expected, path, tone: 'critical' }, at).text
+            const unreadable = [said('number'), said('integer')]
             return (
                 <Marked form={form} path={path}>
-                    <Input
-                        {...common}
-                        inputMode={types(at).main[0] === 'integer' ? 'numeric' : 'decimal'}
-                        value={text}
-                        onChange={(event) => {
-                            const raw = event.target.value
-                            const number = Number(raw)
-                            form.set(path, raw.trim() === '' ? undefined : Number.isFinite(number) ? number : undefined)
-                            form.setDraft(path, raw)
-                        }}
-                        className={cn('tabular-nums', edge(form, path))}
+                    <NumberField
+                        bare
+                        id={id}
+                        label={label ?? ''}
+                        issues={form.shown(path)}
+                        value={typeof value === 'number' ? value : null}
+                        onValueChange={(next) => form.set(path, next ?? undefined)}
+                        onIssueChange={(issue) => form.setUnread(path, issue !== null && unreadable.includes(issue.text))}
+                        integer={types(at).main[0] === 'integer'}
+                        min={at.minimum}
+                        max={at.maximum}
+                        step={typeof at.multipleOf === 'number' ? at.multipleOf : undefined}
+                        readOnly={at.readOnly === true}
+                        onBlur={() => form.touch(path)}
+                        className={edge(form, path)}
+                        words={{ unreadable: unreadable[0], whole: unreadable[1] }}
                     />
                 </Marked>
             )

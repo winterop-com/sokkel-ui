@@ -30,10 +30,11 @@ around in the app.
 - **Frame:** Shell, Rail, TopBar, NavBar, SidePanel, Dock, StatusLine, CommandPalette and
   AccountMenu. The rail, side panel, inspector, channel list and dock resize by
   default.
-- **Content:** Section, PageHeader, SplitPane, DataTable, DescriptionList, Stat, Timeline, Tree and
-  TreeSelect, Field, Segmented, CodeEditor, LogView, JsonTree, DiffView and TableOfContents.
-  DataTable is the one table, from a short listing to 50k rows or a tree loaded on demand; its
-  columns resize by default.
+- **Content:** Section, PageHeader, SplitPane, DataTable, FilterBar, SavedViews, DescriptionList,
+  Stat, Timeline, Tree and TreeSelect, Field, Segmented, AsyncSelect, CodeEditor, LogView, JsonTree,
+  DiffView and TableOfContents. DataTable is the one table, from a short listing to 50k rows or a
+  tree loaded on demand; its columns resize by default. A listing filters from a FilterBar in its
+  bar and keeps its setups as SavedViews, which the app stores.
 - **Files:** FileList, FileGrid and FileTile, FilePreview, UploadTray and DropZone.
 - **Chat:** Markdown, Code, MermaidDiagram, ToolCalls, ConfirmCard, Composer and audio
   waveforms.
@@ -46,15 +47,16 @@ around in the app.
 ## Tokens and themes
 
 - `packages/core/tokens/tokens.json` is the only place a token is defined. `bun run tokens` writes
-  the CSS from it, in `packages/core/src/styles/`: `tokens.css` with the default theme and the
-  density levels, one file for each other theme in `themes/`, and `themes.css`, which imports them
-  all.
+  the CSS from it, in `packages/core/src/styles/`: `tokens.css` with tidevann, the base theme, and
+  the density levels, one file for each other theme in `themes/`, and `themes.css`, which imports
+  them all.
   `bun scripts/build-tokens.ts --check` fails when the CSS and the JSON disagree.
-- Themes are named for how they look. `default` defines every token; the others (amber, paper,
+- Themes are named for how they look, save `tidevann`, the base theme, named for the examples app
+  that wears it. Tidevann defines every token and needs no `data-theme`; the others (amber, paper,
   contrast, tokyo, vinyl, cassette, neon, ocean, indigo, terminal) override what they change, which
   may be any token: colors, typefaces, radius or density. An app picks its theme on `<html data-theme>`, `.dark`
   picks dark mode, and `data-theme-scope` draws one element in a theme of its own. A theme other
-  than the default answers once its file is imported.
+  than tidevann answers once its file is imported.
 - Every corner derives from `--radius` (4.5px by default), which a theme or an app sets. A theme
   may round controls and surfaces apart (`--control-radius`, `--surface-radius`), each from
   `--radius`, and give the frame's parts their own look: section and page heads, a table's head and
@@ -135,9 +137,9 @@ entry:
 import './app.css'
 ```
 
-The themes are in the core package. `styles.css` carries the default theme. Every other theme is a
-file of its own, so an app carries only the themes it offers: it imports each one's file after
-`styles.css` and sets the theme on `<html data-theme>`, with `.dark` for dark mode:
+The themes are in the core package. `styles.css` carries tidevann, the base theme. Every other
+theme is a file of its own, so an app carries only the themes it offers: it imports each one's file
+after `styles.css` and sets the theme on `<html data-theme>`, with `.dark` for dark mode:
 
 ```css
 @import '@winterop-com/sokkel-ui/styles.css';
@@ -195,9 +197,9 @@ way, `examples/sizes/forms-lean`, ships 20 kB of CSS gzipped.
 ### An app's own Tailwind entry
 
 An app that brings its own Tailwind entry imports `@winterop-com/sokkel-ui/tokens.css` (the tokens,
-the default theme and the density levels) instead, with the theme files it offers, `motion.css`
-(the motion setting) and `typography.css` (mono sized to the text around it), and adds the
-add-ons' `styles.css` after them.
+tidevann, the base theme, and the density levels) instead, with the theme files it offers,
+`motion.css` (the motion setting) and `typography.css` (mono sized to the text around it), and adds
+the add-ons' `styles.css` after them.
 
 ### The frame every app has
 
@@ -366,7 +368,7 @@ app's bundler still resolves the import when it builds, so the app installs it a
 | `MermaidDiagram`                                                                 | `mermaid`                                                                                                                                                                                                                                                    |
 | `schema/SchemaForm`, `schema/validate`                                           | `ajv` and `ajv-formats`                                                                                                                                                                                                                                      |
 | `CodeEditor`                                                                     | `@codemirror/autocomplete`, `@codemirror/commands`, `@codemirror/lang-json`, `@codemirror/lang-yaml`, `@codemirror/language`, `@codemirror/lint`, `@codemirror/search`, `@codemirror/state`, `@codemirror/view`, `@lezer/highlight`, `ajv` and `ajv-formats` |
-| `dashboard/TimeRange`, `primitives/calendar`                                     | `react-day-picker`                                                                                                                                                                                                                                           |
+| `DateField`, `DateTimeField`, `dashboard/TimeRange`, `primitives/calendar`       | `react-day-picker`                                                                                                                                                                                                                                           |
 | `calendar/*`, `board/BoardCard`, `DueText`                                       | `date-fns`                                                                                                                                                                                                                                                   |
 | `primitives/carousel`                                                            | `embla-carousel-react`                                                                                                                                                                                                                                       |
 | `primitives/sonner`                                                              | `sonner`                                                                                                                                                                                                                                                     |
