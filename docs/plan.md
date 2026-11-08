@@ -322,6 +322,13 @@ head and may carry a foot line. Rows gather under group heads by a field or a ke
 group, rows sort within their group, and a head's box selects the group, in the table, the list and
 the grid alike.
 
+`SettingsDialog` holds an app's preferences: its sections in a navigation with a search over every
+setting, the chosen section's rows beside it, and under both a footer drawn as `DialogShell`'s,
+outside the scrolling, that says changes are kept as they are made (or the app's own `footer`, such
+as when they last synced) and closes with Done. `onReset` adds Reset to defaults at the footer's
+start, for the shown section or for every setting, asked once more before it runs. On a phone the
+dialog is a full-screen sheet with the footer at its foot, clear of the home indicator.
+
 On a phone each part lays itself out by the room it has, so no example patches it. `DataTable`'s bar
 gives its `search` a line of its own, the tools wrapping across the width under it with the count
 and the sort after them, and its stacked cards set each column by its `stack`: a line, named or not,

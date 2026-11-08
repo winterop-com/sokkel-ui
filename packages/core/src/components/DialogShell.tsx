@@ -133,7 +133,12 @@ export function DialogShell({
                     </div>
                 )}
                 {confirm !== undefined && (
-                    <DialogFooter className="mt-auto items-center">
+                    <DialogFooter
+                        className={cn(
+                            'mt-auto items-center',
+                            phone === 'sheet' && 'max-sm:pb-[calc(--spacing(4)+env(safe-area-inset-bottom))]',
+                        )}
+                    >
                         {footer !== undefined && <div className="mr-auto min-w-0 text-xs text-muted-foreground">{footer}</div>}
                         {count}
                         {/* As wide as its verbs while they fit one row, else the whole width with a verb to each line. */}

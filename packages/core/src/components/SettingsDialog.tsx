@@ -3,10 +3,11 @@ import { ChevronLeft, ChevronRight, XIcon, type LucideIcon } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { ConfirmDialog, NESTED } from './DialogShell'
 import { SearchField } from './SearchField'
 import { SettingRow, type SettingRowLayout } from './SettingRow'
 import { Button } from './ui/button'
-import { Dialog, DialogClose, DialogContent, DialogTitle } from './ui/dialog'
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogTitle } from './ui/dialog'
 
 /** One setting in a section: what it is called, what it does, and the control that sets it. */
 export interface Setting {
@@ -45,6 +46,23 @@ export interface SettingsDialogWords {
     close: string
     back: string
     noMatch: string
+    /** The footer's note, unless the app gives its own `footer`. */
+    saved: string
+    /** The footer's button that closes the dialog. */
+    done: string
+    /** The footer's button that asks to reset. */
+    reset: string
+    /** The question asked before the shown section is reset, given its label. */
+    resetSection: (section: string) => string
+    /** The line under that question. */
+    resetSectionDetail: (section: string) => string
+    /** The question asked before every setting is reset. */
+    resetAll: string
+    /** The line under that question. */
+    resetAllDetail: string
+    /** The verb that answers either question. */
+    resetConfirm: string
+    cancel: string
 }
 
 const WORDS: SettingsDialogWords = {
@@ -54,6 +72,15 @@ const WORDS: SettingsDialogWords = {
     close: 'Close',
     back: 'Back',
     noMatch: 'No setting matches the search.',
+    saved: 'Changes are saved as you make them',
+    done: 'Done',
+    reset: 'Reset to defaults',
+    resetSection: (section) => `Reset ${section} to its defaults?`,
+    resetSectionDetail: (section) => `Every setting in ${section} goes back to its default.`,
+    resetAll: 'Reset every setting to its default?',
+    resetAllDetail: 'Every setting in every section goes back to its default.',
+    resetConfirm: 'Reset',
+    cancel: 'Cancel',
 }
 
 /**
@@ -88,6 +115,15 @@ export interface SettingsDialogProps {
     search: string
     onSearchChange: (search: string) => void
     phoneStart?: 'list' | 'section'
+    /** The note at the start of the footer, in place of the words' `saved`: when the settings were last saved, or how they sync. */
+    footer?: ReactNode
+    /**
+     * Adds Reset to defaults at the start of the footer, which asks once more before it calls this.
+     * It is given the shown section's id when `resetScope` is `section`, and nothing when it is `all`.
+     */
+    onReset?: (section?: string) => void
+    /** What Reset to defaults puts back: the shown section (the default) or every setting. */
+    resetScope?: 'section' | 'all'
     words?: Partial<SettingsDialogWords>
 }
 
@@ -100,9 +136,14 @@ export interface SettingsDialogProps {
  * sections that still have one. When the chosen section has none left, the first section that does
  * is shown.
  *
+ * A footer under both, outside the scrolling, says that changes are kept as they are made (or
+ * the app's own `footer`) and ends with Done, which closes the dialog. `onReset` adds Reset to
+ * defaults at its start, for the shown section or for every setting, asked once more before it runs.
+ *
  * On a phone the dialog fills the screen and the navigation is a list to go into: choosing a
  * section shows its rows, and a back button returns to the list. `phoneStart` says which of the
- * two a phone opens on.
+ * two a phone opens on. The footer stays at the foot of the screen, clear of the home indicator,
+ * and a section's reset shows only inside the section.
  */
 export function SettingsDialog({
     open,
@@ -113,16 +154,22 @@ export function SettingsDialog({
     search,
     onSearchChange,
     phoneStart = 'list',
+    footer,
+    onReset,
+    resetScope = 'section',
     words = WORDS,
 }: SettingsDialogProps) {
     const say = { ...WORDS, ...words }
     const [phoneView, setPhoneView] = useState(phoneStart)
+    const [resetting, setResetting] = useState(false)
     const nav = useRef<HTMLElement | null>(null)
     const pane = useRef<HTMLDivElement | null>(null)
     const visible = filterSettings(groups, search)
     const sections = visible.flatMap((group) => group.sections)
     const shown = sections.find((section) => section.id === active) ?? sections[0]
     const inSection = phoneView === 'section'
+    const all = resetScope === 'all'
+    const resettable = onReset !== undefined && (all || shown !== undefined)
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -135,6 +182,7 @@ export function SettingsDialog({
                 }}
                 className={cn(
                     'flex h-[min(44rem,calc(100svh-4rem))] flex-col gap-0 overflow-hidden p-0 sm:max-w-4xl',
+                    NESTED,
                     'max-sm:top-0 max-sm:left-0 max-sm:h-svh max-sm:max-h-none max-sm:w-screen max-sm:max-w-none max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-none',
                 )}
             >
@@ -227,6 +275,34 @@ export function SettingsDialog({
                         )}
                     </div>
                 </div>
+                <DialogFooter className="m-0 shrink-0 flex-nowrap max-sm:rounded-none max-sm:pb-[calc(--spacing(4)+env(safe-area-inset-bottom))]">
+                    {resettable && (
+                        <Button variant="ghost" className={cn(!all && !inSection && 'max-sm:hidden')} onClick={() => setResetting(true)}>
+                            {say.reset}
+                        </Button>
+                    )}
+                    <div role="status" className="min-w-0 flex-1 text-xs text-muted-foreground">
+                        {footer ?? say.saved}
+                    </div>
+                    <DialogClose render={<Button />}>{say.done}</DialogClose>
+                </DialogFooter>
+                {onReset !== undefined && (
+                    <ConfirmDialog
+                        open={resetting}
+                        onOpenChange={setResetting}
+                        question={all ? say.resetAll : say.resetSection(shown?.label ?? '')}
+                        detail={all ? say.resetAllDetail : say.resetSectionDetail(shown?.label ?? '')}
+                        confirm={{
+                            label: say.resetConfirm,
+                            destructive: true,
+                            onConfirm: () => {
+                                onReset(all ? undefined : shown?.id)
+                                setResetting(false)
+                            },
+                        }}
+                        words={{ cancel: say.cancel }}
+                    />
+                )}
             </DialogContent>
         </Dialog>
     )
