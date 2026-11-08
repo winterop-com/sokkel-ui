@@ -57,7 +57,7 @@ export type { CellAt, EditedValue, EditOption, EditorKind, EditValue, TableEditi
 
 /** How one kind of editor reads and saves a column's cells. */
 type CellEditing<T, K extends EditorKind, V = EditedValue<K>> = {
-    /** Which control edits a cell: a line of text, several lines, a number, a date (`YYYY-MM-DD`), or one of `options`. */
+    /** Which control edits a cell: a line of text, several lines, a number, a date (`YYYY-MM-DD`), a time of day (`HH:mm`), or one of `options`. */
     editor: K
     /** The value a cell's editor starts from. */
     value: (row: T) => V
@@ -81,6 +81,7 @@ export type DataCellEdit<T> =
     | (CellEditing<T, 'multiline'> & { options?: undefined })
     | (CellEditing<T, 'number'> & { options?: undefined })
     | (CellEditing<T, 'date'> & { options?: undefined })
+    | (CellEditing<T, 'time'> & { options?: undefined })
     | (CellEditing<T, 'select'> & {
           /** The choices, the same for every row or a row's own. */
           options: readonly EditOption[] | ((row: T) => readonly EditOption[])

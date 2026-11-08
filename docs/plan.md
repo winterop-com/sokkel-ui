@@ -411,9 +411,9 @@ pure and tested): it opens on a press, Enter or F2, Escape drops what was typed,
 runs while the editor holds the value with a spinner; a refusal, the app's own message, keeps what
 was typed with a critical edge and the message in an `IssueMark`, and typing clears it, as a field a
 server refused is no longer refused once changed. A line of text, several lines or a choice from a
-list is edited on the library's own input, text area or select, and a number or a day on
-`NumberField` or `DateField` drawn `bare`, whose own refusals (text it cannot read, a value outside
-its bounds) refuse the save. `InlineEdit` draws a field's value boxed as its editor is, so nothing
+list is edited on the library's own input, text area or select, and a number, a day or a time of
+day on `NumberField`, `DateField` or `TimeField` drawn `bare`, whose own refusals (text it cannot
+read, a value outside its bounds) refuse the save. `InlineEdit` draws a field's value boxed as its editor is, so nothing
 moves as it opens, or a page title with only a rule under it, so `PageHeader`'s `title` edits where
 it stands. A table edits its cells only given `editing` (`tableEditing` from `table-editing`), so a
 table that edits nothing carries none of it; a column's `edit` then makes its cells editable, each

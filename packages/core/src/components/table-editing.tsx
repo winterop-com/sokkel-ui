@@ -336,10 +336,10 @@ export const tableEditing: TableEditing = {
             Enter: opens ? () => openEdit(table, entry, column) : undefined,
             F2: opens ? () => openEdit(table, entry, column) : undefined,
         }
-        // A character typed opens a text or number cell on it; Backspace or Delete opens it, or a date, empty.
+        // A character typed opens a text or number cell on it; Backspace or Delete opens it, or a date or a time, empty.
         const kind = column?.edit?.editor
         const typed =
-            opens && kind !== 'select' && (kind !== 'date' || !typesInto(event))
+            opens && kind !== 'select' && ((kind !== 'date' && kind !== 'time') || !typesInto(event))
                 ? typesInto(event)
                     ? event.key
                     : event.key === 'Backspace' || event.key === 'Delete'
