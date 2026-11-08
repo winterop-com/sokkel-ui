@@ -20,8 +20,8 @@ The library is six packages, built from one Bun workspace and released together 
   xterm.js.
 - `@winterop-com/sokkel-ui-media` (`packages/media`): the music and video app parts, `MediaBar`
   with its layouts and fullscreen view, `TrackList`, `ChapterList`, `Lyrics`, `MediaCard`,
-  `Artwork`, `useMediaSession`, `useQueue`, `VideoStatsOverlay`, and `hlsSource`, which plays an
-  HTTP live stream in `VideoPlayer` through hls.js, an optional peer.
+  `Artwork`, `useMediaSession`, `useQueue`, `VideoStatsOverlay`, `UpNext`, and `hlsSource`, which
+  plays an HTTP live stream in `VideoPlayer` through hls.js, an optional peer.
 
 An app installs the core and the add-ons it draws with, so an engine is installed only by an app
 that uses it, and the music and video parts only by an app that plays music or video. Each add-on
@@ -591,7 +591,7 @@ app that plays nothing does not carry them: `MediaBar` with its layouts, parts a
 covers (`cover-seed`), the arithmetic of chapters, of a timeline over several files and of the
 bar's growth, the queue (`queue`, `useQueue`), LRC lyrics (`lrc`), `useMediaSession` with its
 helpers in `media-session`, a position read on every animation frame (`useFramePosition`),
-`VideoStatsOverlay`, and `hlsSource` in `hls-source`. It stands on the core by name, and its one engine, hls.js, is an
+`VideoStatsOverlay`, `UpNext`, and `hlsSource` in `hls-source`. It stands on the core by name, and its one engine, hls.js, is an
 optional peer it loads only when a stream plays. What a core part plays through
 stays in the core, under `@winterop-com/sokkel-ui/media/*`: `AudioPlayer` and `VideoPlayer`, which
 attachments, chat messages, the composer and a spoken answer use; the controls they share
@@ -643,6 +643,17 @@ handle on `ref` (`play`, `pause`, `toggle`, `seekTo`, held until the media can t
 loud); `onFullscreenChange` says when the picture fills the screen. `crossOrigin` is the video
 element's `crossorigin`, so captions served from another origin load, the media then fetched with
 CORS too.
+
+Over the picture an app draws in two places, both kept in full screen: `overlay` in the top corner,
+such as the stats, scrolling when taller than the picture, and `cover` over the whole of it, dimmed
+behind, such as what plays next as a video ends. They are two slots, not one with a placement, since
+both can stand at once (the stats stay over a cover) and a cover takes the player over: its controls
+hidden and out of reach (their focus handed to the player), no play button over the picture, and none
+of the player's own keys while it stands, so the cover's buttons are what the viewer does next.
+`UpNext` in the media package is the cover every video app with a queue needs: the next title, a line
+under it and its artwork, which shows once the player is wide enough, a countdown that calls `onPlay`
+at zero (held by `paused`, absent when the app's autoplay is off), Play now, and Cancel, its words
+props.
 
 Captions are words on the picture, outlined with no box, in `--caption-*` tokens, sized against
 the player's width (`--caption-size`, never under `--caption-size-min`). The captions button opens

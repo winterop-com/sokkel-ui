@@ -19,6 +19,7 @@ import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { ButtonGroup } from '@winterop-com/sokkel-ui/primitives/button-group'
 import { hlsSource } from '@winterop-com/sokkel-ui-media/hls-source'
+import { UpNext } from '@winterop-com/sokkel-ui-media/UpNext'
 import { VideoStatsOverlay } from '@winterop-com/sokkel-ui-media/VideoStatsOverlay'
 import captions from './fixtures/captions.vtt?url'
 import clip from './fixtures/clip.webm?url'
@@ -31,14 +32,24 @@ const ENGLISH: VideoTrack[] = [
 ]
 
 /** A player in the middle of a plain page, with what plays under it. The clip is a local, silent gradient. */
-function Ground({ children, after }: { children: ReactNode; after?: ReactNode }) {
+function Ground({
+    children,
+    after,
+    title = 'Coastline, morning to evening',
+    meta = ['Margaret', '1:36'],
+}: {
+    children: ReactNode
+    after?: ReactNode
+    title?: string
+    meta?: string[]
+}) {
     return (
         <div className="min-h-svh bg-background p-4 text-foreground sm:p-8">
             <Stack>
                 {children}
                 <div>
-                    <p className="text-sm font-medium">Coastline, morning to evening</p>
-                    <MetaLine items={['Margaret', '1:36']} />
+                    <p className="text-sm font-medium">{title}</p>
+                    <MetaLine items={meta} />
                 </div>
                 {after}
             </Stack>
@@ -158,6 +169,63 @@ const READING: VideoStats = {
     live: false,
     playing: true,
     readyState: 4,
+}
+
+/** An episode in a queue, as a series plays them one after another. */
+interface Episode {
+    id: string
+    title: string
+    subtitle: string
+}
+
+const EPISODES: Episode[] = [
+    { id: 'e1', title: 'Coastline, morning to evening', subtitle: 'Harbor, episode 1' },
+    { id: 'e2', title: 'The long quay at low tide', subtitle: 'Harbor, episode 2' },
+    { id: 'e3', title: 'Lighthouses of the western cape, from the first lamp to the last', subtitle: 'Harbor, episode 3' },
+]
+
+/**
+ * A queue of episodes, each started near its end: as one ends, `UpNext` covers the picture and
+ * counts down to the next, which Play now starts at once and Cancel turns down.
+ */
+function Queued() {
+    const [index, setIndex] = useState(0)
+    const [ended, setEnded] = useState(false)
+    const episode = EPISODES[index]
+    const next = EPISODES.at(index + 1)
+    return (
+        <Ground title={episode.title} meta={[episode.subtitle, `${String(index + 1)} of ${String(EPISODES.length)} in the queue`]}>
+            <VideoPlayer
+                key={episode.id}
+                src={clip}
+                preload="auto"
+                startAt={88}
+                autoPlay={index > 0}
+                defaultControlsVisible
+                title={episode.title}
+                onEnded={() => setEnded(true)}
+                onPlayingChange={(playing) => {
+                    if (playing) setEnded(false)
+                }}
+                cover={
+                    ended &&
+                    next !== undefined && (
+                        <UpNext
+                            title={next.title}
+                            subtitle={next.subtitle}
+                            placeholderSeed={next.id}
+                            countdown={5}
+                            onPlay={() => {
+                                setEnded(false)
+                                setIndex(index + 1)
+                            }}
+                            onCancel={() => setEnded(false)}
+                        />
+                    )
+                }
+            />
+        </Ground>
+    )
 }
 
 /** A player whose keys and controls are the screen's, driving it through its handle. */
@@ -367,6 +435,43 @@ export const StatsOverlay: StoryObj = {
         </Ground>
     ),
 }
+
+/**
+ * What plays next, over the whole picture as a video ends: the player's `cover` dims the picture
+ * and holds `UpNext` in its middle, the controls out of reach under it, all of it kept in full
+ * screen. The countdown is held here with `paused`, so the story stays still; an app lets it run
+ * and plays the next one at zero.
+ */
+export const UpNextCover: StoryObj = {
+    name: 'Up next',
+    render: () => (
+        <Ground>
+            <VideoPlayer
+                src={`${clip}#t=95.9`}
+                preload="auto"
+                title="Coastline, morning to evening"
+                cover={
+                    <UpNext
+                        title="The long quay at low tide"
+                        subtitle="Harbor, episode 2"
+                        placeholderSeed="e2"
+                        countdown={8}
+                        paused
+                        onPlay={() => undefined}
+                        onCancel={() => undefined}
+                    />
+                }
+            />
+        </Ground>
+    ),
+}
+
+/**
+ * A queue played through: each episode starts eight seconds from its end, and as it ends `UpNext`
+ * counts down five seconds to the next, which Play now starts at once and Cancel turns down,
+ * bringing the controls back.
+ */
+export const AutoplayNext: StoryObj = { name: 'Autoplay next', render: () => <Queued /> }
 
 /** Its tries spent: the player says the video could not be played, with a button to try again. */
 export const Failed: StoryObj = { render: () => <GaveUp /> }

@@ -3,6 +3,7 @@ import {
     useCallback,
     useEffect,
     useImperativeHandle,
+    useLayoutEffect,
     useRef,
     useState,
     useSyncExternalStore,
@@ -242,9 +243,17 @@ export interface VideoPlayerProps {
     stallAfter?: number
     /**
      * What the app draws over the picture's top corner, such as `VideoStatsOverlay`: kept over the
-     * picture in full screen, and pressed without playing or pausing the video.
+     * picture in full screen, and pressed without playing or pausing the video. It stays over a
+     * `cover`, and one taller than the picture scrolls.
      */
     overlay?: ReactNode
+    /**
+     * What the app draws over the whole picture, such as `UpNext` from the media package once the
+     * video has ended: centered on the picture dimmed behind it, kept in full screen. While it
+     * stands the controls are hidden and out of reach and the player answers no keys of its own,
+     * so the cover's own buttons are what the viewer does next.
+     */
+    cover?: ReactNode
     /** Show the controls before the video is first played; otherwise only the play button is drawn until then. */
     defaultControlsVisible?: boolean
     /** How long the controls stay after the pointer stops while playing, in milliseconds. */
@@ -371,6 +380,7 @@ export function VideoPlayer({
     retries = 3,
     stallAfter = 8000,
     overlay,
+    cover,
     defaultControlsVisible = false,
     hideAfter = 2500,
     exclusive = true,
@@ -383,6 +393,8 @@ export function VideoPlayer({
     const words = { ...VIDEO_PLAYER_WORDS, ...given }
     const root = useRef<HTMLDivElement | null>(null)
     const video = useRef<HTMLVideoElement | null>(null)
+    const controls = useRef<HTMLDivElement | null>(null)
+    const covered = cover !== undefined && cover !== null && cover !== false
     const [state, setState] = useState<Playback>({
         playing: false,
         started: false,
@@ -799,6 +811,11 @@ export function VideoPlayer({
         [],
     )
 
+    // Controls going out of reach under a cover hand their focus to the player, so the keyboard stays in it.
+    useLayoutEffect(() => {
+        if (covered && controls.current?.contains(document.activeElement) === true) root.current?.focus()
+    }, [covered])
+
     const reveal = useCallback(() => {
         setActive(true)
         clearTimeout(timer.current)
@@ -892,7 +909,7 @@ export function VideoPlayer({
     }))
 
     const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-        if (!keys || event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return
+        if (!keys || covered || event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return
         const target = event.target as HTMLElement
         if (target.closest('[role=menu]') !== null) return
         const onSlider = target.closest('[role=slider]') !== null || target.getAttribute('type') === 'range'
@@ -941,7 +958,7 @@ export function VideoPlayer({
         toggle()
     }
 
-    const shown = state.playing ? active || held || menuOpen : state.started || active || held || menuOpen
+    const shown = !covered && (state.playing ? active || held || menuOpen : state.started || active || held || menuOpen)
     const cueCss = captionCss(captions)
     // A menu stays inside the player while it fills the screen, and is free to reach past a small one otherwise.
     const menuRoom = fullscreen ? root : undefined
@@ -953,7 +970,7 @@ export function VideoPlayer({
             ref={root}
             data-slot="video-player"
             data-playing={state.playing || undefined}
-            data-controls={shown ? 'shown' : 'hidden'}
+            data-controls={covered ? 'covered' : shown ? 'shown' : 'hidden'}
             data-trouble={trouble?.phase}
             tabIndex={0}
             onKeyDown={onKeyDown}
@@ -1013,11 +1030,7 @@ export function VideoPlayer({
                 </div>
             )}
 
-            {overlay !== undefined && overlay !== null && overlay !== false && (
-                <div className="pointer-events-none absolute top-0 left-0 z-10 max-w-full p-2 *:pointer-events-auto @lg:p-3">{overlay}</div>
-            )}
-
-            {trouble === null && !state.started && !state.playing && !shown && (
+            {trouble === null && !covered && !state.started && !state.playing && !shown && (
                 <Button
                     size="icon-lg"
                     aria-label={words.play}
@@ -1055,6 +1068,8 @@ export function VideoPlayer({
             )}
 
             <div
+                ref={controls}
+                inert={covered}
                 className={cn(
                     'absolute inset-x-0 bottom-0 bg-linear-to-t from-terminal/90 via-terminal/55 to-transparent px-2 pt-10 pb-1.5 transition-opacity duration-200 @lg:px-3',
                     shown ? 'opacity-100' : 'pointer-events-none opacity-0',
@@ -1173,6 +1188,21 @@ export function VideoPlayer({
                     </div>
                 </div>
             </div>
+
+            {covered && (
+                <div
+                    data-slot="video-cover"
+                    className="absolute inset-0 z-10 flex items-center justify-center overflow-y-auto bg-terminal/75 p-2 backdrop-blur-sm @lg:p-3"
+                >
+                    {cover}
+                </div>
+            )}
+
+            {overlay !== undefined && overlay !== null && overlay !== false && (
+                <div className="pointer-events-none absolute top-0 left-0 z-10 flex max-h-full max-w-full p-2 *:pointer-events-auto @lg:p-3">
+                    {overlay}
+                </div>
+            )}
         </div>
     )
 }

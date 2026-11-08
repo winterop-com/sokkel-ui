@@ -11,7 +11,7 @@ All six are published to GitHub Packages and released together at one version.
 - `@winterop-com/sokkel-ui-maps`: `MapView` on maplibre, with its layers, legends, popups and basemaps.
 - `@winterop-com/sokkel-ui-graph`: the graphs and the graph editor on React Flow, laid out by elk.
 - `@winterop-com/sokkel-ui-terminal`: terminals on xterm.js: `TerminalView`, an interactive terminal whose connection the app owns, and `Terminal`, commands and their output.
-- `@winterop-com/sokkel-ui-media`: the music and video app parts: `MediaBar` (the player along the foot of a screen) and its fullscreen view, `TrackList`, `MediaCard`, `Artwork` (a cover, or one drawn from a seed), `useMediaSession` (media keys and the lock screen), `VideoStatsOverlay` (how a video plays, from `useVideoStats`, over the picture through `VideoPlayer`'s `overlay`) and `hlsSource` (an HTTP live stream for `VideoPlayer`'s `source`, through hls.js, an optional peer the app installs). The players chat uses, `AudioPlayer` and `VideoPlayer`, and `SoundVisualizer` stay in the core.
+- `@winterop-com/sokkel-ui-media`: the music and video app parts: `MediaBar` (the player along the foot of a screen) and its fullscreen view, `TrackList`, `MediaCard`, `Artwork` (a cover, or one drawn from a seed), `useMediaSession` (media keys and the lock screen), `VideoStatsOverlay` (how a video plays, from `useVideoStats`, over the picture through `VideoPlayer`'s `overlay`), `UpNext` (what plays next with a countdown, over the whole picture through `VideoPlayer`'s `cover`) and `hlsSource` (an HTTP live stream for `VideoPlayer`'s `source`, through hls.js, an optional peer the app installs). The players chat uses, `AudioPlayer` and `VideoPlayer`, and `SoundVisualizer` stay in the core.
 
 ## Install and import
 
