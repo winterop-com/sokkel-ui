@@ -18,7 +18,7 @@ app has sign-in, and a `StatusLine` as the shell's `foot`.
 The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appearance`,
 `hooks/use-scheme`), with the option lists in `@winterop-com/sokkel-ui/lib/appearance`.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 201 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 203 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 13 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 9 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 11 modules
@@ -202,7 +202,9 @@ The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appeara
 | **PeopleFilter** | `@winterop-com/sokkel-ui/PeopleFilter` | People as overlapping avatars that filter a board or a list: pressing one shows only that person's items, more than one can be on, and once any is on the others fade until hovered. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-board--cards) |
 | **PermissionMatrix** | `@winterop-com/sokkel-ui/PermissionMatrix` | Roles against permissions as a grid of checkboxes: a column per role, a row per permission, the rows grouped by what they act on with each group's row counting what every role holds of it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-access--secret) |
 | **SaveBar** | `@winterop-com/sokkel-ui/SaveBar` | The bar pinned to the foot of a page while its edits are not yet saved: how many there are at the left, Discard and Save at the right. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-access--secret) |
+| **Search**, SearchResultBody, SearchPreview, SearchGroupHeading | `@winterop-com/sokkel-ui/Search` | The one search for a page, built on `SearchField`: as words are typed the app's `search` is asked, and its results open in a popover under the field, grouped by kind, each with its thumbnail or icon, its title with the query's words marked and a line under it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-search--open) |
 | **SearchField** | `@winterop-com/sokkel-ui/SearchField` | The one search box: a glyph, the text, a clear button once there is text, and the `/` key that focuses it from anywhere on the page. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/foundations-icons--library) |
+| **SearchResults** | `@winterop-com/sokkel-ui/SearchResults` | The page of a search's results: the query in a `SearchField` over everything that matches, grouped by kind under headings with their counts, and the facets beside them (the kind and the app's own, such as the project) as checkboxes with how many results each keeps. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-search--open) |
 | **SecretReveal** | `@winterop-com/sokkel-ui/SecretReveal` | A secret shown once, as it is created: an API token, a signing key, a recovery code. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-access--secret) |
 | **Segmented** | `@winterop-com/sokkel-ui/Segmented` | A choice from a small fixed set, drawn as one control with every option in view. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/charts-linked--rain-and-flow) |
 | **SettingRow** | `@winterop-com/sokkel-ui/SettingRow` | One setting: its title and what it does on the left, its control on the right. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-slider-field--plain) |

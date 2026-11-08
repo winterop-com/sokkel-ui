@@ -21,6 +21,11 @@ export interface TopBarProps {
     /** Opens the command palette; in a `Shell` with a `palette` it opens the shell's. No search is drawn without either. */
     onSearch?: () => void
     /**
+     * A search drawn in the bar itself, such as `Search` with its results under it, in place of
+     * the button that opens the palette. It takes the room the trail leaves, up to a field's width.
+     */
+    search?: ReactNode
+    /**
      * The keys that open the palette, shown in the search. Shown only when bound: given here by an
      * app that binds them itself, or as `shortcutLabel('k')` (⌘K on a Mac, Ctrl K elsewhere) in a
      * `Shell` that holds the palette.
@@ -41,6 +46,7 @@ export function TopBar({
     trail = [],
     mark,
     onSearch,
+    search: field,
     shortcut: given,
     actions,
     renderLink = (crumb, className) => (
@@ -92,7 +98,8 @@ export function TopBar({
                 </nav>
             )}
             {trail.length === 0 && <div className="flex-1" />}
-            {search !== undefined && (
+            {field !== undefined && <div className="ml-auto max-w-80 min-w-0 flex-1 md:min-w-56">{field}</div>}
+            {field === undefined && search !== undefined && (
                 <button
                     type="button"
                     onClick={search}

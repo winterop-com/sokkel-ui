@@ -1,5 +1,5 @@
 import { Search, X } from 'lucide-react'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type ComponentProps, type Ref } from 'react'
 
 import { cn } from '../lib/cn'
 import { Input } from './ui/input'
@@ -18,6 +18,8 @@ export function SearchField({
     shortcut = true,
     className,
     words = { clear: 'Clear the search' },
+    inputRef,
+    inputProps,
 }: {
     value: string
     onChange: (value: string) => void
@@ -26,8 +28,29 @@ export function SearchField({
     shortcut?: boolean
     className?: string
     words?: { clear: string }
+    /** The text input itself, for a part built on the field that moves focus to it. */
+    inputRef?: Ref<HTMLInputElement>
+    /**
+     * More for the text input, for a part built on the field, such as a search whose results open
+     * under it: its role and state, and handlers. A key handler that calls `preventDefault` keeps
+     * the field's own Escape from running.
+     */
+    inputProps?: Pick<
+        ComponentProps<'input'>,
+        | 'id'
+        | 'role'
+        | 'aria-expanded'
+        | 'aria-controls'
+        | 'aria-activedescendant'
+        | 'aria-autocomplete'
+        | 'autoComplete'
+        | 'onFocus'
+        | 'onBlur'
+        | 'onKeyDown'
+    >
 }) {
     const input = useRef<HTMLInputElement | null>(null)
+    const { onKeyDown, ...rest } = inputProps ?? {}
 
     useEffect(() => {
         if (!shortcut) return
@@ -53,7 +76,12 @@ export function SearchField({
             <Search className="size-4 shrink-0 text-faint" aria-hidden />
             <Input
                 bare
-                ref={input}
+                {...rest}
+                ref={(node) => {
+                    input.current = node
+                    if (typeof inputRef === 'function') inputRef(node)
+                    else if (inputRef) inputRef.current = node
+                }}
                 type="search"
                 value={value}
                 placeholder={placeholder}
@@ -61,7 +89,8 @@ export function SearchField({
                 className="flex-1 placeholder:text-faint [&::-webkit-search-cancel-button]:hidden"
                 onChange={(event) => onChange(event.target.value)}
                 onKeyDown={(event) => {
-                    if (event.key !== 'Escape') return
+                    onKeyDown?.(event)
+                    if (event.defaultPrevented || event.key !== 'Escape') return
                     if (value === '') event.currentTarget.blur()
                     else onChange('')
                 }}

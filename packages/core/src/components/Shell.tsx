@@ -3,7 +3,7 @@ import { lazy, Suspense, useCallback, useEffect, useState, type ReactNode } from
 
 import { cn } from '../lib/cn'
 import { usePaletteShortcut } from '../hooks/use-palette-shortcut'
-import type { PaletteGroup } from './CommandPalette'
+import type { PaletteGroup, PaletteSearch } from './CommandPalette'
 import { ShellFootCell, ShellPalette } from './shell-context'
 
 // The palette loads when it first opens, so an app's start carries none of it.
@@ -51,6 +51,7 @@ export function Shell({
     palette,
     defaultPaletteOpen = false,
     paletteWords,
+    paletteSearch,
     children,
     words: given,
 }: {
@@ -71,6 +72,8 @@ export function Shell({
     /** Whether the palette starts open. */
     defaultPaletteOpen?: boolean
     paletteWords?: { placeholder: string; empty: string; title: string }
+    /** The app's search, whose results the palette lists under its commands. */
+    paletteSearch?: PaletteSearch
     children: ReactNode
     words?: Partial<ShellWords>
 }) {
@@ -105,7 +108,13 @@ export function Shell({
             <PaletteKeys onOpen={openPalette} />
             {paletteShown && (
                 <Suspense fallback={null}>
-                    <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} groups={palette} words={paletteWords} />
+                    <CommandPalette
+                        open={paletteOpen}
+                        onOpenChange={setPaletteOpen}
+                        groups={palette}
+                        search={paletteSearch}
+                        words={paletteWords}
+                    />
                 </Suspense>
             )}
         </>
