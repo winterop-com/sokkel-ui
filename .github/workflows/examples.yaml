@@ -20,7 +20,7 @@ jobs:
             ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
         steps:
             - uses: actions/checkout@v5
-            - uses: oven-sh/setup-bun@v2
+            - run: npm install -g bun
             - run: bun install --frozen-lockfile
             - run: bun run build
             - name: Web example

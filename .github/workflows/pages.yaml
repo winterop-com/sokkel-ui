@@ -43,7 +43,7 @@ jobs:
                       echo "Not published: main has moved past $BUILT to $head, whose own run publishes it." >> "$GITHUB_STEP_SUMMARY"
                   fi
             - if: steps.latest.outputs.stale != 'true'
-              uses: oven-sh/setup-bun@v2
+              run: npm install -g bun
             - if: steps.latest.outputs.stale != 'true'
               run: bun install --frozen-lockfile
             - if: steps.latest.outputs.stale != 'true'
