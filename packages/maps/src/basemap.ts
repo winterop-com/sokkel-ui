@@ -190,7 +190,9 @@ export function composeStyle(
     { ground, ink, opacity, visible }: { ground: string; ink: string; opacity: number; visible: boolean },
 ): StyleSpecification {
     const own = (id: string) => id.startsWith('wui-') && !BASEMAP_IDS.has(id)
-    const carried = previous?.layers.filter((layer) => own(layer.id)) ?? []
+    // Text needs the basemap's glyph server; a layer of names waits for a basemap that has one.
+    const writes = (layer: LayerSpecification) => layer.type === 'symbol' && layer.layout?.['text-field'] !== undefined
+    const carried = previous?.layers.filter((layer) => own(layer.id) && (basemap.glyphs !== undefined || !writes(layer))) ?? []
     const carriedSources = Object.fromEntries(Object.entries(previous?.sources ?? {}).filter(([id]) => own(id)))
     const visibility = visible ? 'visible' : 'none'
     const hide = (layer: LayerSpecification) => ({ ...layer, layout: { ...layer.layout, visibility } }) as LayerSpecification

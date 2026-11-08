@@ -134,3 +134,89 @@ export function anchorOf(feature: Feature): LngLat | null {
     const extent = boundsOf([{ type: 'FeatureCollection', features: [feature] }])
     return extent === null ? null : [(extent[0] + extent[2]) / 2, (extent[1] + extent[3]) / 2]
 }
+
+/** The area of a polygon's or multipolygon's outer rings, in square degrees; zero for anything else. */
+export function areaOf(feature: Feature): number {
+    const geometry = feature.geometry
+    if (geometry === null) return 0
+    if (geometry.type === 'Polygon') return ringArea(geometry.coordinates[0])
+    if (geometry.type === 'MultiPolygon') return geometry.coordinates.reduce((sum, polygon) => sum + ringArea(polygon[0]), 0)
+    return 0
+}
+
+/** How far a point lies from the segment between two others, squared. */
+function segmentDistance([x, y]: Position, [ax, ay]: Position, [bx, by]: Position): number {
+    const dx = bx - ax
+    const dy = by - ay
+    const length = dx * dx + dy * dy
+    const t = length === 0 ? 0 : Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / length))
+    const px = ax + t * dx - x
+    const py = ay + t * dy - y
+    return px * px + py * py
+}
+
+/** A line with every point closer than `tolerance` to the line through its neighbors dropped (Douglas-Peucker). */
+export function simplifyLine(line: Position[], tolerance: number): Position[] {
+    if (line.length <= 2 || tolerance <= 0) return line
+    const keep = new Uint8Array(line.length)
+    keep[0] = 1
+    keep[line.length - 1] = 1
+    const squared = tolerance * tolerance
+    const stack: [number, number][] = [[0, line.length - 1]]
+    while (stack.length > 0) {
+        const [first, last] = stack.pop() as [number, number]
+        let farthest = -1
+        let distance = squared
+        for (let index = first + 1; index < last; index += 1) {
+            const away = segmentDistance(line[index], line[first], line[last])
+            if (away > distance) {
+                farthest = index
+                distance = away
+            }
+        }
+        if (farthest === -1) continue
+        keep[farthest] = 1
+        stack.push([first, farthest], [farthest, last])
+    }
+    return line.filter((_, index) => keep[index] === 1)
+}
+
+/** A ring simplified, or as it was when simplifying would leave it no area. */
+function simplifyRing(ring: Position[], tolerance: number): Position[] {
+    const simpler = simplifyLine(ring, tolerance)
+    return simpler.length < 4 ? ring : simpler
+}
+
+/** A geometry with its lines and rings simplified to `tolerance` degrees; points stay as they are. */
+export function simplifyGeometry(geometry: Geometry | null, tolerance: number): Geometry | null {
+    if (geometry === null || tolerance <= 0) return geometry
+    switch (geometry.type) {
+        case 'LineString':
+            return { ...geometry, coordinates: simplifyLine(geometry.coordinates, tolerance) }
+        case 'MultiLineString':
+            return { ...geometry, coordinates: geometry.coordinates.map((line) => simplifyLine(line, tolerance)) }
+        case 'Polygon':
+            return { ...geometry, coordinates: geometry.coordinates.map((ring) => simplifyRing(ring, tolerance)) }
+        case 'MultiPolygon':
+            return {
+                ...geometry,
+                coordinates: geometry.coordinates.map((polygon) => polygon.map((ring) => simplifyRing(ring, tolerance))),
+            }
+        case 'GeometryCollection':
+            return { ...geometry, geometries: geometry.geometries.map((part) => simplifyGeometry(part, tolerance) ?? part) }
+        default:
+            return geometry
+    }
+}
+
+/**
+ * The tolerance `simplify: true` uses for a collection: none while its geometry is light, and a
+ * five-thousandth of its extent's larger side once it holds more positions than a map draws smoothly.
+ */
+export function autoTolerance(collection: FeatureCollection, budget = 200_000): number {
+    let count = 0
+    for (const feature of collection.features) visit(feature.geometry, () => (count += 1))
+    if (count <= budget) return 0
+    const extent = boundsOf([collection])
+    return extent === null ? 0 : Math.max(extent[2] - extent[0], extent[3] - extent[1]) / 5000
+}

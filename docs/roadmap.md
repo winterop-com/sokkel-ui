@@ -46,9 +46,6 @@ to `plan.md` when it ships.
 - **Adoption.** Apps adopt the library one pattern per PR, each pinning a published version. The
   app adds a check in the same PR that refuses its own hand-rolled version of that pattern, so it
   cannot come back. A part an app needs to differ becomes an option here, never a local edit.
-- **Hierarchy trees and maps at scale.** A tree that picks from a deep hierarchy (lazy children,
-  search, a path shown for the choice) and maps over many boundaries come with the last wave of
-  adoption, not before.
 - **Search.** One search component for any page, beyond the plain field: results as the words are
   typed, grouped by kind (videos, people, jobs) with thumbnails and previews, moved through by the
   keyboard, and a results page with facets and counts. A data table's bar, the top bar and the
