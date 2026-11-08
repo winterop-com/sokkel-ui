@@ -76,16 +76,17 @@ keeps its own on `baselines-for/<branch>`; `scripts/baselines.sh` fetches them i
 
 ## Using it
 
-The library is four packages on GitHub Packages, released together at one version:
+The library is five packages on GitHub Packages, released together at one version:
 
-| Package                          | Holds                                                                |
-| -------------------------------- | -------------------------------------------------------------------- |
-| `@winterop-com/sokkel-ui`        | the tokens and themes, the primitives and every pattern below        |
-| `@winterop-com/sokkel-ui-charts` | `Chart` and its kinds on ECharts, and the dashboard's chart panels   |
-| `@winterop-com/sokkel-ui-maps`   | `MapView` on maplibre, with its layers, legends, popups and basemaps |
-| `@winterop-com/sokkel-ui-graph`  | the graphs and the graph editor on React Flow, laid out by elk       |
+| Package                            | Holds                                                                |
+| ---------------------------------- | -------------------------------------------------------------------- |
+| `@winterop-com/sokkel-ui`          | the tokens and themes, the primitives and every pattern below        |
+| `@winterop-com/sokkel-ui-charts`   | `Chart` and its kinds on ECharts, and the dashboard's chart panels   |
+| `@winterop-com/sokkel-ui-maps`     | `MapView` on maplibre, with its layers, legends, popups and basemaps |
+| `@winterop-com/sokkel-ui-graph`    | the graphs and the graph editor on React Flow, laid out by elk       |
+| `@winterop-com/sokkel-ui-terminal` | `TerminalView`, an interactive terminal, and `Terminal`, on xterm.js |
 
-Every app installs the core package; an app that draws charts, maps or graphs adds that package too,
+Every app installs the core package; an app that draws charts, maps, graphs or terminals adds that package too,
 which brings its engine with it. An app points the scope at the registry in its `.npmrc`, with a
 token that can read packages, and pins one version for all of them:
 
@@ -99,6 +100,7 @@ bun add @winterop-com/sokkel-ui@0.9.1
 bun add @winterop-com/sokkel-ui-charts@0.9.1   # only for charts and chart panels
 bun add @winterop-com/sokkel-ui-maps@0.9.1     # only for maps
 bun add @winterop-com/sokkel-ui-graph@0.9.1    # only for graphs
+bun add @winterop-com/sokkel-ui-terminal@0.9.1 # only for terminals
 ```
 
 The components are styled with Tailwind classes, so every app runs Tailwind CSS 4.1 or later and
@@ -259,7 +261,8 @@ first in its `<head>`. Given the same defaults as `useAppearance`, it starts in 
 Components import by path: `@winterop-com/sokkel-ui/DialogShell`,
 `@winterop-com/sokkel-ui/primitives/button`, `@winterop-com/sokkel-ui/dashboard/StatPanel`,
 `@winterop-com/sokkel-ui-charts/Chart`, `@winterop-com/sokkel-ui-charts/dashboard/BarPanel`,
-`@winterop-com/sokkel-ui-maps/MapView` or `@winterop-com/sokkel-ui-graph/PipelineGraph`.
+`@winterop-com/sokkel-ui-maps/MapView`, `@winterop-com/sokkel-ui-graph/PipelineGraph` or
+`@winterop-com/sokkel-ui-terminal/TerminalView`.
 
 A few core parts load an engine the app installs only when it uses them, as optional peer
 dependencies:
@@ -274,8 +277,8 @@ dependencies:
 ## Working on it
 
 The repository is a Bun workspace: the packages are in `packages/core`, `packages/charts`,
-`packages/maps` and `packages/graph`, and the stories in `src/stories/` import them by their names,
-as an app does. `bun run build` builds all four, `bun run test` runs every package's tests and the
+`packages/maps`, `packages/graph` and `packages/terminal`, and the stories in `src/stories/` import them by their names,
+as an app does. `bun run build` builds all five, `bun run test` runs every package's tests and the
 library rules, and `bun run size` holds the apps in `examples/sizes` to their budgets.
 
 ## License

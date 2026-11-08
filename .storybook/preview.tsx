@@ -68,6 +68,7 @@ const preview: Preview = {
                     'Charts',
                     'Maps',
                     'Graphs',
+                    'Terminal',
                     'Media',
                     'Apps',
                     'Research',

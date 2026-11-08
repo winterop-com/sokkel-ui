@@ -5,10 +5,10 @@ with real-shaped data, held to screenshot baselines in both schemes at desktop a
 
 ## Distribution
 
-The library is four packages, built from one Bun workspace and released together at one version:
+The library is five packages, built from one Bun workspace and released together at one version:
 
 - `@winterop-com/sokkel-ui` (`packages/core`): the tokens and themes, the primitives, the patterns,
-  layout, forms, tables, the shell, media, board, calendar, schema, terminal, `CodeEditor`, the
+  layout, forms, tables, the shell, media, board, calendar, schema, `CodeEditor`, the
   dashboard's frame and its panels with no chart, the hooks and helpers. Every app installs it.
 - `@winterop-com/sokkel-ui-charts` (`packages/charts`): `Chart`, its kinds, the frame, legend and
   grid around it, and the dashboard panels drawn by ECharts, which it brings as a dependency.
@@ -16,6 +16,8 @@ The library is four packages, built from one Bun workspace and released together
   basemaps and period slider, on maplibre.
 - `@winterop-com/sokkel-ui-graph` (`packages/graph`): the graph canvas, views and editor, on React
   Flow, laid out by elk.
+- `@winterop-com/sokkel-ui-terminal` (`packages/terminal`): `TerminalView` and `Terminal`, on
+  xterm.js.
 
 An app installs the core and the add-ons it draws with, so an engine is installed only by an app
 that uses it. Each add-on stands on the core as a peer dependency at the same version and imports it
@@ -27,7 +29,7 @@ formula, through remark-math and rehype-katex in `Markdown`, which loads it the 
 holds math, its stylesheet with it.
 
 `dist/` is built, not committed, so an install from a repository URL gets no compiled code (bun also
-blocks such a dependency's install scripts). The tag workflow publishes the four packages to GitHub
+blocks such a dependency's install scripts). The tag workflow publishes the five packages to GitHub
 Packages, and apps pin that version.
 
 Each package carries the library alone: `dist/`, the sources beside it and its styles (the core
@@ -48,7 +50,7 @@ workflow builds all three, so a break in a package fails a check rather than an 
 `examples/sizes` holds the size budget: a forms page, a dashboard and a map page, each built against
 the packages in CI and measured gzipped (the JavaScript at start, what loads later, the CSS). A check
 fails when one grows past its budget in `examples/sizes/budget.json` or bundles an engine it does not
-use, so a forms page never carries ECharts, maplibre, React Flow, CodeMirror, Mermaid or KaTeX. A change
+use, so a forms page never carries ECharts, maplibre, React Flow, xterm.js, CodeMirror, Mermaid or KaTeX. A change
 that grows an app on purpose raises its budget in the same PR. The forms page imports only the core
 package, the dashboard adds the charts package and the map page the maps package.
 
@@ -168,6 +170,17 @@ An editor also refuses a connection with the reason said on the canvas, adds a s
 button at a node's output or an edge's middle, takes blocks dragged in from a palette, and chooses
 several nodes with Shift. BlockPalette, BlockPicker, GraphOverlay, GraphNotice, GraphToolbar and
 useGraphHistory are its parts; the Pipeline editor stories show each way of building a pipeline.
+
+## Terminals
+
+Their own package, `@winterop-com/sokkel-ui-terminal`, on xterm.js, so an app that shows no terminal
+does not install it. `TerminalView` is a real terminal on the terminal ground, in the theme's
+colors and the terminal face (`--typeface-terminal`), following the theme and scheme as they change: it fills its box (or a
+fixed number of rows) and reports its size in cells, sends keystrokes and paste through `onData`,
+and takes output through its handle's `write`, with full emulation for programs that move the
+cursor or take the whole screen, a scrollback, selection and copy. The connection to the program
+stays the app's. `Terminal` shows commands and what they wrote on the same engine, read-only, with
+a title bar, copy and clear, writing only what was added while output streams in.
 
 ## Media
 

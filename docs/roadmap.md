@@ -31,6 +31,12 @@ to `plan.md` when it ships.
   `-maps` (maplibre) and `-graph` (React Flow and elk), each with its own styles. An app installs the
   core and the add-ons it draws with. Move to `plan.md` once released.
 
+## 0.10: terminals (done on main)
+
+- **An interactive terminal**, in a fifth package, `@winterop-com/sokkel-ui-terminal`, on xterm.js:
+  `TerminalView` takes keystrokes and output, reports its size and emulates full-screen programs,
+  and the read-only `Terminal` moved onto the same engine. The core keeps no terminal of its own.
+
 ## 0.10: example apps
 
 - **Working demo apps outside Storybook.** In `examples/`, built against the package as an app would
@@ -66,17 +72,6 @@ to `plan.md` when it ships.
   blog post yet; stable Tauri is 2.12 on the system webview. Next: once Tauri 3 reaches beta, add
   an `examples/tauri-cef` shell on `tauri-runtime-cef` beside `examples/tauri`, built by the
   examples workflow; until then, nothing to build.
-- **An interactive terminal.** `Terminal` shows commands and their output; a shell needs a real
-  terminal: keystrokes and paste sent to the app (which carries them to a remote shell over its own
-  connection), full emulation for programs that move the cursor or take the whole screen (an
-  editor, `top`), the size reported as it changes, a scrollback, selection and copy. That needs a
-  terminal emulator as its engine; pick one, likely xterm.js, and move the read-only `Terminal` onto
-  the same engine so there is one per job. The library draws it and hands the bytes over; the
-  connection stays the app's.
-- **The terminal face in `Terminal`.** `LogView` wears `--typeface-terminal` (JetBrains Mono NL
-  Nerd Font Mono, subset to Latin, box drawing and the Powerline and Octicons glyphs, about 22 KB
-  per weight). The interactive terminal takes the same face, read from `--typeface-terminal`, and
-  any icon it needs beyond the subset is added to it.
 - **Mono at `text-2xs`.** The mono size grid (Foundations/Typography) shows the rule holding:
   mono's x-height is 0.87 of sans's at every size and 0.95 inside `text-xs`, in Plex and in Geist,
   while mono words still run about 20 percent wider. `text-2xs` takes the body share, so its mono
@@ -95,6 +90,6 @@ to `plan.md` when it ships.
 
 - Accessibility audits, axe gates in CI and contrast scoring.
 - A second engine for a job that already has one: ECharts draws every chart, maplibre every map,
-  React Flow every interactive graph, Mermaid every diagram written as text, KaTeX every formula.
+  React Flow every interactive graph, xterm.js every terminal, Mermaid every diagram written as text, KaTeX every formula.
   Sparklines are plain SVG.
 - Copy-in distribution. Apps install the package; nothing is vendored.
