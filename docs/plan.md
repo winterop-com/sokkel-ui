@@ -41,9 +41,9 @@ start carries only what draws at once: `MapView` loads maplibre (`loadMapEngine`
 spinner after a moment, `Chart` and `ChartGrid` load the kinds' builders beside ECharts, a basemap's
 preview loads when the switcher shows it, `useSchemaForm` and `CodeEditor` load ajv (`loadSchemaChecks`
 ahead), the form taking input at once and refusing a submit until its checks are there,
-`TimeRangePicker` loads its calendar when the trigger is pointed at or focused, the highlighter
-loads Shiki with the first code drawn plain until then, and `MediaBar` loads its fullscreen view
-after the bar is drawn. A module that only asks whether a node is a part tells it by a mark, so it
+`TimeRangePicker` and the date fields load the calendar when first pointed at or focused, the
+highlighter loads Shiki with the first code drawn plain until then, and `MediaBar` loads its
+fullscreen view after the bar is drawn. A module that only asks whether a node is a part tells it by a mark, so it
 need not import the part (`isSoundVisualizer`), and `chartLegend` has a module of its own, since it
 reads every kind.
 
@@ -304,14 +304,27 @@ toggle-group, tooltip, trace.
 ## Patterns
 
 Shell, Rail, AppBar, SubNav, Page, PageHeader, PaneHeader, Toolbar, Section, Surface, the layout
-components (Stack, Row, Columns, Split, Fill), SplitPane, Field, TextField, InlineField, SliderField,
-CheckboxField, CheckboxList, ChoiceList, CodeField, SwitchField, SearchField, FileField, FilterChip, FilterBar,
-SavedViews, FormBar, SelectionBar, DataTable, StatusChip, PersonAvatar, PersonRow, MetaLine, DueText, AttachmentList,
+components (Stack, Row, Columns, Split, Fill), SplitPane, Field, TextField, DateField, TimeField,
+DateTimeField, NumberField, InlineField, SliderField, CheckboxField, CheckboxList, ChoiceList,
+CodeField, SwitchField, SearchField, FileField, FilterChip, FilterBar, SavedViews, FormBar,
+SelectionBar, DataTable, StatusChip, PersonAvatar, PersonRow, MetaLine, DueText, AttachmentList,
 IconButton, StarButton, SplitButton, DownloadButton, AccountMenu, SidePanel, DialogShell,
 ConfirmDialog, TreeSelect, AsyncSelect, CapabilityPicker, SignIn, RelativeTime, ApiLink, TagChips,
 DetailSheet.
 Every example arranges and builds its screens from these, never by hand, so a fix in one reaches
 them all.
+
+`DateField`, `TimeField`, `DateTimeField` and `NumberField` are typed: each reads what is typed by
+one format, writes the value back in it once the field is left, and says text that does not read
+with the issue mark, keeping the value as it was. Dates and times cross the API as ISO strings with
+no zone (`2026-11-09`, `02:00`, `2026-11-09T02:00`, as HTML's `date`, `time` and `datetime-local`
+inputs hold them), never as `Date`s, so a day never moves across a time zone and the zone a time is
+read in stays the app's to name (`zone`). A value outside `min` and `max` is kept and said, with an
+action that puts in the bound; `onIssueChange` tells a form what a field finds wrong so it can count
+it. The display format is a prop (`format`, `clock`, a number's `format` and `parse`, with
+`localeNumber` for a locale's marks) until the `locale` provider comes. The date fields pick from
+the calendar, loaded on first use; `SchemaForm` draws numbers with `NumberField` and keeps the
+browser's own date input, since the calendar would put the forms page past its budget.
 
 A records app is built from the same parts (Apps/Records). A `Rail` entry says what its
 place holds on a second line (`description`), which the palette's Go to rows repeat; a palette row's

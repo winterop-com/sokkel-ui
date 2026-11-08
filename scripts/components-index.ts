@@ -38,12 +38,16 @@ export const PRIVATE: Record<PackageDir, Record<string, string>> = {
     core: {
         'components/code/guides': "`CodeEditor`'s bracket colors and indent guides",
         'components/code/schema': "`CodeEditor`'s JSON Schema checks and completion; `CodeSchemaWords` is exported by `CodeEditor`",
+        'components/day-pick': 'the calendar the date fields pick from, loaded on first use',
+        'components/entry':
+            'what the typed fields share: the value held as text, its issues and its frame; `EntryFieldProps` is exported by each field',
         'components/option-list':
             'the searchable list `FilterChip`, `FilterBar` and their menus draw values in; `FilterOption` is exported by `FilterChip`',
         'components/Mentions':
             'the suggestions at the caret both composers share; `ComposerMentions` and the types it names are exported by `Composer` and `MessageComposer`',
         'components/media/sound-delay': "how far `SoundVisualizer` holds its picture back behind the output's latency",
         'components/media/sound-source': 'what `SoundVisualizer` listens through; `SoundSource` is exported by `SoundVisualizer`',
+        'components/pickers': 'the popup the date and time fields pick in, and the list of times',
         'components/schema/checker':
             '`validate` loaded on first use, for `SchemaForm` and `CodeEditor`; an app preloads it with `loadSchemaChecks`',
         'components/settings-parts':
@@ -196,12 +200,15 @@ const CORE_AREAS: Record<string, string> = {
     ChoiceList: 'Forms and inputs',
     CodeField: 'Forms and inputs',
     CronField: 'Forms and inputs',
+    DateField: 'Forms and inputs',
+    DateTimeField: 'Forms and inputs',
     Field: 'Forms and inputs',
     FilterBar: 'Forms and inputs',
     FileField: 'Forms and inputs',
     FilterChip: 'Forms and inputs',
     FormBar: 'Forms and inputs',
     InlineField: 'Forms and inputs',
+    NumberField: 'Forms and inputs',
     PeopleFilter: 'Forms and inputs',
     PermissionMatrix: 'Forms and inputs',
     SaveBar: 'Forms and inputs',
@@ -216,6 +223,7 @@ const CORE_AREAS: Record<string, string> = {
     SliderField: 'Forms and inputs',
     SwitchField: 'Forms and inputs',
     TextField: 'Forms and inputs',
+    TimeField: 'Forms and inputs',
     TreeSelect: 'Forms and inputs',
     UnsavedChanges: 'Forms and inputs',
     SignIn: 'Forms and inputs',

@@ -35,7 +35,7 @@ over several files maps its timeline to a file with `timeline`, a position that 
 animation frame is read by `useFramePosition` (`use-frame-position`), and LRC lyrics are read by
 `parseLyrics` in `lrc`, all under `@winterop-com/sokkel-ui-media/`.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 221 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 225 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 10 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 11 modules
@@ -219,6 +219,8 @@ animation frame is read by `useFramePosition` (`use-frame-position`), and LRC ly
 | **ChoiceList** | `@winterop-com/sokkel-ui/ChoiceList` | Pick one of a few choices, each a row with its radio, its name and a line saying what it means. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-choice-list--described) |
 | **CodeField** | `@winterop-com/sokkel-ui/CodeField` | The field a thing's code is typed in. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-pages--runs-list) |
 | **CronField** | `@winterop-com/sokkel-ui/CronField` | A cron expression typed in, read back in words under it, with the next runs it makes listed after a given time. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-dialogs--confirm) |
+| **DateField** | `@winterop-com/sokkel-ui/DateField` | A date typed in one format, with a calendar beside it to pick from. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-date-field--plain) |
+| **DateTimeField** | `@winterop-com/sokkel-ui/DateTimeField` | A date and a time typed as one, with a calendar and a list of times beside it to pick from. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-date-and-time-field--plain) |
 | **Field** | `@winterop-com/sokkel-ui/Field` | A form control with its label, an optional hint beside the label, and help under the control. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-field--variants) |
 | **FileField** | `@winterop-com/sokkel-ui/FileField` | A field that takes files: a zone they are dropped on, with a button that opens the picker, and under it the limits it holds them to (the types in `accept`, `maxSize` and `maxFiles`). | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-file-field--empty) |
 | **FilterBar** | `@winterop-com/sokkel-ui/FilterBar` | Filters on a listing, each a chip that says what it keeps: the field, how it compares and the value. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-filter-bar--empty) |
@@ -226,6 +228,7 @@ animation frame is read by `useFramePosition` (`use-frame-position`), and LRC ly
 | **FormBar** | `@winterop-com/sokkel-ui/FormBar` | A form's actions: a note at the start, such as when the draft was last saved, and the actions at the end, the main verb last; `start` puts a control before the note, away from the verbs. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-form-bar--end) |
 | **InlineField** | `@winterop-com/sokkel-ui/InlineField` | A label and its control on one row: the label quiet at the start, never shrinking or wrapping, and the control taking the rest of the row. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-inline-field--compose) |
 | **LevelBars**, FlowLines | `@winterop-com/sokkel-ui/SignInArt` | Art for a sign-in screen's brand pane: a row of level bars, the run around the tallest peak lit in `color` (the theme's primary by default) and the rest in its muted ground, each breathing slowly at its own phase. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-sign-in--password) |
+| **NumberField** | `@winterop-com/sokkel-ui/NumberField` | A number typed in, written in one format, with its unit before or after it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-number-field--plain) |
 | **PeopleFilter** | `@winterop-com/sokkel-ui/PeopleFilter` | People as overlapping avatars that filter a board or a list: pressing one shows only that person's items, more than one can be on, and once any is on the others fade until hovered. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-board--cards) |
 | **PermissionMatrix** | `@winterop-com/sokkel-ui/PermissionMatrix` | Roles against permissions as a grid of checkboxes: a column per role, a row per permission, the rows grouped by what they act on with each group's row counting what every role holds of it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-access--secret) |
 | **SaveBar** | `@winterop-com/sokkel-ui/SaveBar` | The bar pinned to the foot of a page while its edits are not yet saved: how many there are at the left, Discard and Save at the right. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-access--secret) |
@@ -240,6 +243,7 @@ animation frame is read by `useFramePosition` (`use-frame-position`), and LRC ly
 | **SliderField** | `@winterop-com/sokkel-ui/SliderField` | A number chosen on a slider, its value written out in figures so the setting reads without dragging. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-slider-field--plain) |
 | **SwitchField** | `@winterop-com/sokkel-ui/SwitchField` | An on/off setting: its label and the switch at the row's right edge. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-stored-state--kept) |
 | **TextField** | `@winterop-com/sokkel-ui/TextField` | A labeled text input: a `Field` with its input inside, wired together. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-text-field--plain) |
+| **TimeField** | `@winterop-com/sokkel-ui/TimeField` | A time of day typed on a 24 or a 12-hour clock, with a list of times beside it to pick from. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-time-field--plain) |
 | **TreeSelect** | `@winterop-com/sokkel-ui/TreeSelect` | A field that picks from a hierarchy: the trigger reads like a select and names the choice with its path, and the popover holds a search over a tree. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-tree--trees) |
 | **UnsavedChangesDialog** | `@winterop-com/sokkel-ui/UnsavedChanges` | The question a guarded dialog asks before it closes with changes. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-unsaved-changes--edited) |
 
