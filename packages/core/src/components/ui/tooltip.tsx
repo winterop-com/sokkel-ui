@@ -2,17 +2,27 @@ import { Tooltip as TooltipPrimitive } from '@base-ui/react/tooltip'
 
 import { cn } from '../../lib/utils'
 
-function TooltipProvider({ delay = 0, ...props }: TooltipPrimitive.Provider.Props) {
+export type TooltipProviderProps = TooltipPrimitive.Provider.Props
+
+function TooltipProvider({ delay = 0, ...props }: TooltipProviderProps) {
     return <TooltipPrimitive.Provider data-slot="tooltip-provider" delay={delay} {...props} />
 }
 
-function Tooltip({ ...props }: TooltipPrimitive.Root.Props) {
+export type TooltipProps = TooltipPrimitive.Root.Props
+
+function Tooltip({ ...props }: TooltipProps) {
     return <TooltipPrimitive.Root data-slot="tooltip" {...props} />
 }
 
-function TooltipTrigger({ ...props }: TooltipPrimitive.Trigger.Props) {
+export type TooltipTriggerProps = TooltipPrimitive.Trigger.Props
+
+function TooltipTrigger({ ...props }: TooltipTriggerProps) {
     return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />
 }
+
+export type TooltipContentProps = TooltipPrimitive.Popup.Props &
+    Pick<TooltipPrimitive.Positioner.Props, 'align' | 'alignOffset' | 'side' | 'sideOffset'> &
+    Pick<TooltipPrimitive.Portal.Props, 'container'>
 
 function TooltipContent({
     className,
@@ -23,9 +33,7 @@ function TooltipContent({
     container,
     children,
     ...props
-}: TooltipPrimitive.Popup.Props &
-    Pick<TooltipPrimitive.Positioner.Props, 'align' | 'alignOffset' | 'side' | 'sideOffset'> &
-    Pick<TooltipPrimitive.Portal.Props, 'container'>) {
+}: TooltipContentProps) {
     return (
         <TooltipPrimitive.Portal container={container}>
             <TooltipPrimitive.Positioner

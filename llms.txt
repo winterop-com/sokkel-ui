@@ -64,6 +64,8 @@ import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Chart } from '@winterop-com/sokkel-ui-charts/Chart'
 ```
 
+Each package's `exports` map lists every path it offers and nothing else: a module it does not list is the library's own and cannot be imported. Every component exports the type of its props as `<Component>Props` from the same path (`import { DataTable, type DataTableProps } from '@winterop-com/sokkel-ui/DataTable'`).
+
 ## The frame every app has
 
 Every app stands in the same frame, so a person moving between apps finds everything in the same

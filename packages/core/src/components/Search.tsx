@@ -40,23 +40,20 @@ const THUMB = {
     md: 'size-10',
 } as const
 
-/**
- * One result as a row draws it: its thumbnail or icon, its title with the query's words marked,
- * the line under it and a quiet fact at the end. The row around it (an option in a list, a link
- * on a results page, a palette's item) is the caller's; this is what it holds.
- */
-export function SearchResultBody({
-    result,
-    query,
-    size = 'sm',
-    className,
-}: {
+export interface SearchResultBodyProps {
     result: SearchResult
     /** The words marked in the title and the line under it, unless the result gives its own `matches`. */
     query: string
     size?: keyof typeof THUMB
     className?: string
-}) {
+}
+
+/**
+ * One result as a row draws it: its thumbnail or icon, its title with the query's words marked,
+ * the line under it and a quiet fact at the end. The row around it (an option in a list, a link
+ * on a results page, a palette's item) is the caller's; this is what it holds.
+ */
+export function SearchResultBody({ result, query, size = 'sm', className }: SearchResultBodyProps) {
     const Icon = result.icon
     return (
         <span className={cn('flex min-w-0 flex-1 items-center gap-2.5', className)}>
@@ -109,25 +106,21 @@ export function SearchResultBody({
     )
 }
 
-/**
- * What the preview pane beside a search's results holds for one result: its picture across the
- * pane, its title and the line under it, then whatever the app shows of it, such as a
- * `DescriptionList` of its facts.
- */
-export function SearchPreview({
-    title,
-    detail,
-    picture,
-    children,
-    className,
-}: {
+export interface SearchPreviewProps {
     title: ReactNode
     detail?: ReactNode
     /** The address of a picture drawn across the top of the pane. */
     picture?: string
     children?: ReactNode
     className?: string
-}) {
+}
+
+/**
+ * What the preview pane beside a search's results holds for one result: its picture across the
+ * pane, its title and the line under it, then whatever the app shows of it, such as a
+ * `DescriptionList` of its facts.
+ */
+export function SearchPreview({ title, detail, picture, children, className }: SearchPreviewProps) {
     return (
         <div className={cn('flex min-w-0 flex-col gap-3', className)}>
             {picture !== undefined && <img src={picture} alt="" className="aspect-video w-full rounded-md bg-muted object-cover" />}
@@ -140,8 +133,13 @@ export function SearchPreview({
     )
 }
 
+export interface SearchGroupHeadingProps {
+    group: SearchGroup
+    className?: string
+}
+
 /** A group's heading with how many of its kind match, when more match than are listed. */
-export function SearchGroupHeading({ group, className }: { group: SearchGroup; className?: string }) {
+export function SearchGroupHeading({ group, className }: SearchGroupHeadingProps) {
     const total = group.total ?? group.results.length
     return (
         <GroupLabel as="div" className={cn('flex items-baseline justify-between gap-2', className)}>
@@ -149,6 +147,32 @@ export function SearchGroupHeading({ group, className }: { group: SearchGroup; c
             {total > group.results.length && <span className="tabular-nums">{total}</span>}
         </GroupLabel>
     )
+}
+
+export interface SearchProps {
+    search: SearchSource
+    /** Opens a result the person chose. The list closes after. */
+    onOpen: (result: SearchResult, group: SearchGroup) => void
+    /** Goes to the full results page for the query; the list ends in a way to it when given. */
+    onSeeAll?: (query: string) => void
+    /** What the pane beside the list shows for the highlighted result, where the popover has room; none for null. */
+    renderPreview?: (result: SearchResult, group: SearchGroup) => ReactNode
+    /** The text in the field, held by the app with `onQueryChange`; held here from `defaultQuery` otherwise. */
+    query?: string
+    onQueryChange?: (query: string) => void
+    defaultQuery?: string
+    /** Whether the results are open, held by the app with `onOpenChange`; held here from `defaultOpen` otherwise. */
+    open?: boolean
+    onOpenChange?: (open: boolean) => void
+    defaultOpen?: boolean
+    /** Milliseconds of quiet typing before the search is asked again. */
+    debounce?: number
+    /** Characters needed before the search is asked. */
+    minQuery?: number
+    /** Whether `/` focuses the field. Only one field on a page should take it. */
+    shortcut?: boolean
+    className?: string
+    words?: Partial<SearchWords>
 }
 
 /**
@@ -180,31 +204,7 @@ export function Search({
     shortcut = true,
     className,
     words: wordsGiven,
-}: {
-    search: SearchSource
-    /** Opens a result the person chose. The list closes after. */
-    onOpen: (result: SearchResult, group: SearchGroup) => void
-    /** Goes to the full results page for the query; the list ends in a way to it when given. */
-    onSeeAll?: (query: string) => void
-    /** What the pane beside the list shows for the highlighted result, where the popover has room; none for null. */
-    renderPreview?: (result: SearchResult, group: SearchGroup) => ReactNode
-    /** The text in the field, held by the app with `onQueryChange`; held here from `defaultQuery` otherwise. */
-    query?: string
-    onQueryChange?: (query: string) => void
-    defaultQuery?: string
-    /** Whether the results are open, held by the app with `onOpenChange`; held here from `defaultOpen` otherwise. */
-    open?: boolean
-    onOpenChange?: (open: boolean) => void
-    defaultOpen?: boolean
-    /** Milliseconds of quiet typing before the search is asked again. */
-    debounce?: number
-    /** Characters needed before the search is asked. */
-    minQuery?: number
-    /** Whether `/` focuses the field. Only one field on a page should take it. */
-    shortcut?: boolean
-    className?: string
-    words?: Partial<SearchWords>
-}) {
+}: SearchProps) {
     const words = { ...WORDS, ...wordsGiven }
     const [queryHeld, setQueryHeld] = useState(defaultQuery)
     const query = given ?? queryHeld

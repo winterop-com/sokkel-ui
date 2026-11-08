@@ -4,22 +4,7 @@ import { cn } from '../lib/cn'
 import type { KindColor } from '../lib/kind'
 import { PersonAvatar } from './PersonAvatar'
 
-/**
- * Someone a page is about, in one line: their picture, their name over a short fact (followers,
- * a team, a role) and an action beside them, such as Follow. The picture is as tall as the two
- * lines, and the action is centered on them, so the row reads as one piece. `actions` at the row's
- * end hold whatever the page does with the thing itself (like, share, save) and wrap under on a
- * narrow row.
- */
-export function ProfileRow({
-    name,
-    detail,
-    image,
-    color,
-    action,
-    actions,
-    className,
-}: {
+export interface ProfileRowProps {
     name: string
     /** The short fact under the name. */
     detail?: ReactNode
@@ -30,7 +15,16 @@ export function ProfileRow({
     /** At the row's end. */
     actions?: ReactNode
     className?: string
-}) {
+}
+
+/**
+ * Someone a page is about, in one line: their picture, their name over a short fact (followers,
+ * a team, a role) and an action beside them, such as Follow. The picture is as tall as the two
+ * lines, and the action is centered on them, so the row reads as one piece. `actions` at the row's
+ * end hold whatever the page does with the thing itself (like, share, save) and wrap under on a
+ * narrow row.
+ */
+export function ProfileRow({ name, detail, image, color, action, actions, className }: ProfileRowProps) {
     return (
         <div data-slot="profile-row" className={cn('flex min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-3', className)}>
             <div className="flex min-w-0 items-center gap-3">

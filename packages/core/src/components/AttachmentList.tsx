@@ -59,6 +59,17 @@ function uploadNote(file: AttachmentFile, words: AttachmentListWords): string {
     return `${words.uploading} · ${String(Math.round(Math.min(1, Math.max(0, file.progress)) * 100))}%`
 }
 
+export interface AttachmentListProps {
+    files: readonly AttachmentFile[]
+    /** Removes a file by its id; no remove buttons without it. */
+    onRemove?: (id: string) => void
+    /** Stops a file's upload and drops it; a file still uploading has no button without it. */
+    onCancel?: (id: string) => void
+    size?: 'default' | 'sm' | 'xs'
+    words?: Partial<AttachmentListWords>
+    className?: string
+}
+
 /**
  * Files attached to a letter or a message, each an `Attachment` with its tile, name and detail, in
  * a row that wraps onto more lines when it runs out of room, so every file stays in view. With
@@ -73,23 +84,7 @@ function uploadNote(file: AttachmentFile, words: AttachmentListWords): string {
  * says how far it has got under its name. It takes a cancel button only with `onCancel`, never
  * the remove button.
  */
-export function AttachmentList({
-    files,
-    onRemove,
-    onCancel,
-    size = 'sm',
-    words: given,
-    className,
-}: {
-    files: readonly AttachmentFile[]
-    /** Removes a file by its id; no remove buttons without it. */
-    onRemove?: (id: string) => void
-    /** Stops a file's upload and drops it; a file still uploading has no button without it. */
-    onCancel?: (id: string) => void
-    size?: 'default' | 'sm' | 'xs'
-    words?: Partial<AttachmentListWords>
-    className?: string
-}) {
+export function AttachmentList({ files, onRemove, onCancel, size = 'sm', words: given, className }: AttachmentListProps) {
     const words = { ...ATTACHMENT_LIST_WORDS, ...given }
     return (
         <ul data-slot="attachment-list" className={cn('flex min-w-0 flex-wrap items-stretch gap-2', className)}>

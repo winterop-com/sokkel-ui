@@ -41,24 +41,20 @@ export function diffLines(before: string, after: string): DiffLine[] {
     return out
 }
 
-/**
- * Two versions of a text as one list of lines, the removed ones marked `-` and the added ones `+`:
- * a job definition before and after an edit, a config against the one it replaces. A count of each heads
- * it beside the title.
- */
-export function DiffView({
-    before,
-    after,
-    title,
-    size = 'default',
-    className,
-}: {
+export interface DiffViewProps {
     before: string
     after: string
     title?: string
     size?: 'default' | 'sm'
     className?: string
-}) {
+}
+
+/**
+ * Two versions of a text as one list of lines, the removed ones marked `-` and the added ones `+`:
+ * a job definition before and after an edit, a config against the one it replaces. A count of each heads
+ * it beside the title.
+ */
+export function DiffView({ before, after, title, size = 'default', className }: DiffViewProps) {
     const lines = diffLines(before, after)
     const added = lines.filter((line) => line.kind === 'added').length
     const removed = lines.filter((line) => line.kind === 'removed').length

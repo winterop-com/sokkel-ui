@@ -1,10 +1,16 @@
 import { cn } from '../../lib/cn'
 
+export interface ProgressRingProps {
+    value: number
+    label?: string
+    className?: string
+}
+
 /**
  * How far a piece of work has come, drawn as a ring that fills clockwise from the top: an upload,
  * a download. `value` runs from 0 to 1. For work with no known end, use `Spinner`.
  */
-function ProgressRing({ value, label = 'Progress', className }: { value: number; label?: string; className?: string }) {
+function ProgressRing({ value, label = 'Progress', className }: ProgressRingProps) {
     const share = Math.min(1, Math.max(0, Number.isFinite(value) ? value : 0))
     const radius = 6
     const around = 2 * Math.PI * radius

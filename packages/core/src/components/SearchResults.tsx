@@ -69,6 +69,33 @@ function FacetList({ facet, chosen, onToggle }: { facet: SearchFacet; chosen: re
     )
 }
 
+export interface SearchResultsProps {
+    query: string
+    onQueryChange: (query: string) => void
+    /** The results to list, already narrowed by the chosen values. */
+    groups: readonly SearchGroup[]
+    /** The facets with their values' counts; the kind facet's id is `KIND_FACET`. */
+    facets?: readonly SearchFacet[]
+    /** The values chosen in each facet. */
+    chosen?: SearchChosen
+    onChosenChange?: (chosen: SearchChosen) => void
+    /** How many results match in all; the listed ones are counted otherwise. */
+    total?: number
+    onOpen: (result: SearchResult, group: SearchGroup) => void
+    /** Asks for the next page of results; a button under the list calls it while given. */
+    onMore?: () => void
+    /** `loading` with no results yet draws their shape; `failed` says the search did not answer. */
+    state?: 'loading' | 'done' | 'failed'
+    /** The next page is on its way: the more button waits. */
+    loadingMore?: boolean
+    /** Controls at a result row's end, such as a menu. */
+    renderActions?: (result: SearchResult, group: SearchGroup) => ReactNode
+    /** Whether `/` focuses the query field. */
+    shortcut?: boolean
+    className?: string
+    words?: Partial<SearchResultsWords>
+}
+
 /**
  * The page of a search's results: the query in a `SearchField` over everything that matches,
  * grouped by kind under headings with their counts, and the facets beside them (the kind and the
@@ -96,32 +123,7 @@ export function SearchResults({
     shortcut = true,
     className,
     words: given,
-}: {
-    query: string
-    onQueryChange: (query: string) => void
-    /** The results to list, already narrowed by the chosen values. */
-    groups: readonly SearchGroup[]
-    /** The facets with their values' counts; the kind facet's id is `KIND_FACET`. */
-    facets?: readonly SearchFacet[]
-    /** The values chosen in each facet. */
-    chosen?: SearchChosen
-    onChosenChange?: (chosen: SearchChosen) => void
-    /** How many results match in all; the listed ones are counted otherwise. */
-    total?: number
-    onOpen: (result: SearchResult, group: SearchGroup) => void
-    /** Asks for the next page of results; a button under the list calls it while given. */
-    onMore?: () => void
-    /** `loading` with no results yet draws their shape; `failed` says the search did not answer. */
-    state?: 'loading' | 'done' | 'failed'
-    /** The next page is on its way: the more button waits. */
-    loadingMore?: boolean
-    /** Controls at a result row's end, such as a menu. */
-    renderActions?: (result: SearchResult, group: SearchGroup) => ReactNode
-    /** Whether `/` focuses the query field. */
-    shortcut?: boolean
-    className?: string
-    words?: Partial<SearchResultsWords>
-}) {
+}: SearchResultsProps) {
     const words = { ...WORDS, ...given }
     const listed = groups.reduce((sum, group) => sum + group.results.length, 0)
     const all = total ?? groups.reduce((sum, group) => sum + (group.total ?? group.results.length), 0)

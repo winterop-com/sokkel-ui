@@ -22,9 +22,69 @@
     "exports": {
         "./styles.css": "./src/styles.css",
         "./sources/*.css": "./dist/sources/*.css",
-        "./*": {
-            "types": "./dist/*.d.ts",
-            "import": "./dist/*.js"
+        "./BlockPalette": {
+            "types": "./dist/BlockPalette.d.ts",
+            "import": "./dist/BlockPalette.js"
+        },
+        "./BlockPicker": {
+            "types": "./dist/BlockPicker.d.ts",
+            "import": "./dist/BlockPicker.js"
+        },
+        "./blocks": {
+            "types": "./dist/blocks.d.ts",
+            "import": "./dist/blocks.js"
+        },
+        "./DependencyGraph": {
+            "types": "./dist/DependencyGraph.d.ts",
+            "import": "./dist/DependencyGraph.js"
+        },
+        "./GraphCanvas": {
+            "types": "./dist/GraphCanvas.d.ts",
+            "import": "./dist/GraphCanvas.js"
+        },
+        "./GraphEdge": {
+            "types": "./dist/GraphEdge.d.ts",
+            "import": "./dist/GraphEdge.js"
+        },
+        "./GraphNode": {
+            "types": "./dist/GraphNode.d.ts",
+            "import": "./dist/GraphNode.js"
+        },
+        "./GraphOverlay": {
+            "types": "./dist/GraphOverlay.d.ts",
+            "import": "./dist/GraphOverlay.js"
+        },
+        "./GraphToolbar": {
+            "types": "./dist/GraphToolbar.d.ts",
+            "import": "./dist/GraphToolbar.js"
+        },
+        "./layout": {
+            "types": "./dist/layout.d.ts",
+            "import": "./dist/layout.js"
+        },
+        "./measure": {
+            "types": "./dist/measure.d.ts",
+            "import": "./dist/measure.js"
+        },
+        "./PipelineGraph": {
+            "types": "./dist/PipelineGraph.d.ts",
+            "import": "./dist/PipelineGraph.js"
+        },
+        "./RunGraph": {
+            "types": "./dist/RunGraph.d.ts",
+            "import": "./dist/RunGraph.js"
+        },
+        "./StateMachine": {
+            "types": "./dist/StateMachine.d.ts",
+            "import": "./dist/StateMachine.js"
+        },
+        "./use-graph-history": {
+            "types": "./dist/use-graph-history.d.ts",
+            "import": "./dist/use-graph-history.js"
+        },
+        "./use-node-graph": {
+            "types": "./dist/use-node-graph.d.ts",
+            "import": "./dist/use-node-graph.js"
         }
     },
     "publishConfig": {

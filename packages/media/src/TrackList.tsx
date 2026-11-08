@@ -32,6 +32,25 @@ const WORDS: TrackListWords = { play: (title) => `Play ${title}`, playing: 'Now 
 /** What the current row shows of how far it has played: the time left in place of its length, or a line along its foot. */
 export type TrackProgress = 'left' | 'bar'
 
+export interface TrackListProps {
+    tracks: readonly Track[]
+    /** The id of the row that is playing or paused. */
+    current?: string
+    playing?: boolean
+    /** Seconds played into the current row, which `progress` shows. */
+    position?: number
+    progress?: TrackProgress
+    /** Whether the current row is kept in view as it changes. */
+    follow?: boolean
+    onPlay?: (track: Track) => void
+    /** A row's own controls, drawn at its end. */
+    actions?: (track: Track) => ReactNode
+    variant?: 'boxed' | 'plain'
+    artwork?: 'square' | 'wide'
+    className?: string
+    words?: Partial<TrackListWords>
+}
+
 /**
  * A list of tracks or episodes: the number or a small picture, the title over an optional second
  * line, a quiet meta column, and the length in the code face at the end.
@@ -64,24 +83,7 @@ export function TrackList({
     artwork = 'square',
     className,
     words,
-}: {
-    tracks: readonly Track[]
-    /** The id of the row that is playing or paused. */
-    current?: string
-    playing?: boolean
-    /** Seconds played into the current row, which `progress` shows. */
-    position?: number
-    progress?: TrackProgress
-    /** Whether the current row is kept in view as it changes. */
-    follow?: boolean
-    onPlay?: (track: Track) => void
-    /** A row's own controls, drawn at its end. */
-    actions?: (track: Track) => ReactNode
-    variant?: 'boxed' | 'plain'
-    artwork?: 'square' | 'wide'
-    className?: string
-    words?: Partial<TrackListWords>
-}) {
+}: TrackListProps) {
     const said = { ...WORDS, ...words }
     const row = useRef<HTMLLIElement | null>(null)
     useFollow(row, current, { enabled: follow && current !== undefined })

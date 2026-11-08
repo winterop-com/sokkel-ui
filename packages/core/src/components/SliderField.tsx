@@ -1,6 +1,25 @@
 import { cn } from '../lib/cn'
 import { Slider } from './ui/slider'
 
+export interface SliderFieldProps {
+    id: string
+    /** The setting's name: shown above the slider, or only said to a screen reader when `inline`. */
+    label: string
+    value: number
+    onChange: (value: number) => void
+    min?: number
+    max: number
+    step?: number
+    /** Written after the value: `ms`, `px`. */
+    unit?: string
+    /** How the value is written, such as to one decimal. */
+    format?: (value: number) => string
+    /** A sentence under the slider. */
+    help?: string
+    inline?: boolean
+    className?: string
+}
+
 /**
  * A number chosen on a slider, its value written out in figures so the setting reads without
  * dragging. By default the name and the value sit on a line above the slider, with an optional help
@@ -20,24 +39,7 @@ export function SliderField({
     help,
     inline = false,
     className,
-}: {
-    id: string
-    /** The setting's name: shown above the slider, or only said to a screen reader when `inline`. */
-    label: string
-    value: number
-    onChange: (value: number) => void
-    min?: number
-    max: number
-    step?: number
-    /** Written after the value: `ms`, `px`. */
-    unit?: string
-    /** How the value is written, such as to one decimal. */
-    format?: (value: number) => string
-    /** A sentence under the slider. */
-    help?: string
-    inline?: boolean
-    className?: string
-}) {
+}: SliderFieldProps) {
     const written = unit === undefined ? format(value) : `${format(value)} ${unit}`
     const slider = (
         <Slider

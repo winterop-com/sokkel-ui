@@ -61,6 +61,8 @@ function loopOf(sx: number, sy: number, tx: number, ty: number, down: boolean): 
     }
 }
 
+export type GraphEdgeProps = EdgeProps<GraphEdgeKind>
+
 /**
  * One edge, along the route elk gave it, or a stepped line between the two handles until elk has
  * answered. A label sits where elk made room for it, or at the middle of the line. On a canvas
@@ -79,7 +81,7 @@ export function GraphEdge({
     targetY,
     sourcePosition,
     targetPosition,
-}: EdgeProps<GraphEdgeKind>) {
+}: GraphEdgeProps) {
     const points = data?.points
     const routed = points !== undefined && points.length >= 2 && data?.loop !== true
     const [stepped, middleX, middleY] = getSmoothStepPath({

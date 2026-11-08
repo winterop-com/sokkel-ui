@@ -98,19 +98,7 @@ function Head({ title, description, toggle }: { title: string; description?: str
     )
 }
 
-/**
- * The map's layers as a panel of cards, topmost first: each with its name and a button that shows
- * or hides it, its legend on an inset ground, and its opacity under a rule. A basemap card comes last, with the basemap
- * previews and the same two controls for the basemap.
- */
-export function MapLayerList({
-    layers,
-    onVisibleChange,
-    onOpacityChange,
-    basemap,
-    words,
-    className,
-}: {
+export interface MapLayerListProps {
     layers: readonly MapLayerItem[]
     onVisibleChange: (id: string, visible: boolean) => void
     onOpacityChange: (id: string, opacity: number) => void
@@ -125,7 +113,14 @@ export function MapLayerList({
     }
     words?: Partial<MapLayerListWords>
     className?: string
-}) {
+}
+
+/**
+ * The map's layers as a panel of cards, topmost first: each with its name and a button that shows
+ * or hides it, its legend on an inset ground, and its opacity under a rule. A basemap card comes last, with the basemap
+ * previews and the same two controls for the basemap.
+ */
+export function MapLayerList({ layers, onVisibleChange, onOpacityChange, basemap, words, className }: MapLayerListProps) {
     const said = { ...WORDS, ...words }
     return (
         <div className={cn('flex flex-col gap-2', className)}>

@@ -62,24 +62,7 @@ function Side({ label, side, words }: { label: string; side?: IOSide; words: IOC
     )
 }
 
-/**
- * A thing that takes something in and gives something back, as a card: a job step, an endpoint,
- * a tool. Its head names it (name, or code when it has none, the code always in the code face),
- * with a description, a status and a menu; under it the input and the output, each a JSON Schema
- * read as fields, with a filled-in example a press away. The two sides stand side by side on a
- * wide card and stack on a narrow one.
- */
-export function IOCard({
-    title,
-    code,
-    description,
-    status,
-    menu,
-    input,
-    output,
-    className,
-    words: given,
-}: {
+export interface IOCardProps {
     title?: ReactNode
     code?: string
     description?: ReactNode
@@ -89,7 +72,16 @@ export function IOCard({
     output?: IOSide
     className?: string
     words?: Partial<IOCardWords>
-}) {
+}
+
+/**
+ * A thing that takes something in and gives something back, as a card: a job step, an endpoint,
+ * a tool. Its head names it (name, or code when it has none, the code always in the code face),
+ * with a description, a status and a menu; under it the input and the output, each a JSON Schema
+ * read as fields, with a filled-in example a press away. The two sides stand side by side on a
+ * wide card and stack on a narrow one.
+ */
+export function IOCard({ title, code, description, status, menu, input, output, className, words: given }: IOCardProps) {
     const words = { ...WORDS, ...given }
     const heading = title ?? code
     return (

@@ -47,6 +47,32 @@ const WORDS: TreeSelectWords = {
     searchFailed: 'The search did not answer.',
 }
 
+export interface TreeSelectProps {
+    id?: string
+    nodes: readonly TreeNode[]
+    value: readonly string[]
+    onValueChange: (ids: string[]) => void
+    multiple?: boolean
+    /** The branches unfolded when the popover first opens. */
+    defaultExpanded?: readonly string[]
+    /** Whether the popover is open, held from outside with `onOpenChange`. */
+    open?: boolean
+    /** Whether the popover starts open when `open` is not given. */
+    defaultOpen?: boolean
+    onOpenChange?: (open: boolean) => void
+    /** The search the popover opens with, for a static view of it. */
+    defaultQuery?: string
+    /** Brings the children of a node marked `hasChildren` when it is first opened. */
+    loadChildren?: (node: TreeNode) => Promise<readonly TreeNode[]>
+    /** Answers a query over the whole hierarchy with each match and its ancestors. */
+    search?: (query: string) => Promise<readonly TreeTrail[]>
+    /** Where chosen nodes not loaded yet sit, so the trigger names them by their path and the tree opens to them. */
+    trails?: readonly TreeTrail[]
+    words?: Partial<TreeSelectWords>
+    className?: string
+    invalid?: boolean
+}
+
 /**
  * A field that picks from a hierarchy: the trigger reads like a select and names the choice with
  * its path, and the popover holds a search over a tree. `multiple` chooses several with checkboxes
@@ -77,31 +103,7 @@ export function TreeSelect({
     words: given,
     className,
     invalid = false,
-}: {
-    id?: string
-    nodes: readonly TreeNode[]
-    value: readonly string[]
-    onValueChange: (ids: string[]) => void
-    multiple?: boolean
-    /** The branches unfolded when the popover first opens. */
-    defaultExpanded?: readonly string[]
-    /** Whether the popover is open, held from outside with `onOpenChange`. */
-    open?: boolean
-    /** Whether the popover starts open when `open` is not given. */
-    defaultOpen?: boolean
-    onOpenChange?: (open: boolean) => void
-    /** The search the popover opens with, for a static view of it. */
-    defaultQuery?: string
-    /** Brings the children of a node marked `hasChildren` when it is first opened. */
-    loadChildren?: (node: TreeNode) => Promise<readonly TreeNode[]>
-    /** Answers a query over the whole hierarchy with each match and its ancestors. */
-    search?: (query: string) => Promise<readonly TreeTrail[]>
-    /** Where chosen nodes not loaded yet sit, so the trigger names them by their path and the tree opens to them. */
-    trails?: readonly TreeTrail[]
-    words?: Partial<TreeSelectWords>
-    className?: string
-    invalid?: boolean
-}) {
+}: TreeSelectProps) {
     const words = { ...WORDS, ...given }
     const [ownOpen, setOwnOpen] = useState(defaultOpen)
     const open = openProp ?? ownOpen

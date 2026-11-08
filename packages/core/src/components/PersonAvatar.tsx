@@ -30,12 +30,18 @@ export interface PersonAvatarWords {
 
 const WORDS: PersonAvatarWords = { presence: { active: 'Active', away: 'Away', offline: 'Offline' } }
 
+export interface PresenceDotProps {
+    presence: Presence
+    label?: string
+    className?: string
+}
+
 /**
  * Whether a person is around, as a small dot: filled green while active, a hollow ring while away
  * or offline. It wears a ring of `--avatar-ring`, the ground it sits on (the background unless a
  * container sets it), so it reads as cut out of whatever it overlaps.
  */
-export function PresenceDot({ presence, label, className }: { presence: Presence; label?: string; className?: string }) {
+export function PresenceDot({ presence, label, className }: PresenceDotProps) {
     return (
         <span
             role="img"
@@ -47,6 +53,24 @@ export function PresenceDot({ presence, label, className }: { presence: Presence
             )}
         />
     )
+}
+
+export interface PersonAvatarProps {
+    name: string
+    /** What the badge says on hover and to a screen reader; the name by default. */
+    label?: string
+    /** One or two letters; the name's first letters by default, an address's from the part before the `@`. */
+    initials?: string
+    color?: KindColor
+    /** The person's picture, drawn over the initials once it has loaded. */
+    image?: string
+    size?: keyof typeof SIZE
+    /** `square` is a rounded square, as a message list's authors wear. */
+    shape?: 'round' | 'square'
+    /** Whether they are around, drawn as a dot at the corner. */
+    presence?: Presence
+    className?: string
+    words?: Partial<PersonAvatarWords>
 }
 
 /**
@@ -74,23 +98,7 @@ export function PersonAvatar({
     presence,
     className,
     words: given,
-}: {
-    name: string
-    /** What the badge says on hover and to a screen reader; the name by default. */
-    label?: string
-    /** One or two letters; the name's first letters by default, an address's from the part before the `@`. */
-    initials?: string
-    color?: KindColor
-    /** The person's picture, drawn over the initials once it has loaded. */
-    image?: string
-    size?: keyof typeof SIZE
-    /** `square` is a rounded square, as a message list's authors wear. */
-    shape?: 'round' | 'square'
-    /** Whether they are around, drawn as a dot at the corner. */
-    presence?: Presence
-    className?: string
-    words?: Partial<PersonAvatarWords>
-}) {
+}: PersonAvatarProps) {
     const words = { ...WORDS, ...given }
     const fit = SIZE[size]
     const letters = (

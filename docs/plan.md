@@ -37,6 +37,25 @@ holds math, its stylesheet with it.
 blocks such a dependency's install scripts). The tag workflow publishes the six packages to GitHub
 Packages, and apps pin that version.
 
+Each package's `exports` map names every module an app may import, one entry per module with its
+`types` and `import`, and no wildcard for code. Public are the components and the parts they
+export, the primitives, the hooks, the helpers an app calls (`lib/appearance`, `lib/commands`,
+`lib/desktop`, `lib/highlighter`, `lib/stored` and the like) and those the stories and examples
+use, the chart kinds' registry as `kinds`, and the styles, the lists of sources, the theme files
+and `tokens.json`. Every component exports the type of its props as `<Component>Props`, and a type
+those props name is exported beside it. Private is what only the library's own parts use: the
+contexts a part hands what it draws (`shell-context`, the map's and the graph's `context`), each
+chart kind's builder and the arithmetic, look and engine they share, the player bar's layout sizes
+(`bar-growth`), the stores behind hooks (`lib/uploads`, `lib/overlay`, `lib/shortcuts`,
+`lib/scroll-memory`, `media-session`, `follow`), and layout constants such as the table head's
+text. A core module an add-on imports is public, since an add-on imports the core by name as an
+app does: `hooks/use-panel-size`, `hooks/use-clamped`, `hooks/use-theme-name`, `lib/title-lines`,
+`media/one-sound` and `media/video-source` are public for that. `PRIVATE` in
+`scripts/components-index.ts` lists each private module with the reason; `src/rules.test.ts` fails
+a module in neither the map nor that list, a private module in the map, an import of a path the
+map does not export from the packages, the stories, the examples, the tools or the docs, and a
+component without its `<Component>Props`.
+
 Each package carries the library alone: `dist/`, the sources beside it and its styles (the core
 also its tokens), with no stories, story fixtures or tests. Each package's `styles.css` is Tailwind
 source that scans only that package's components: the core's also carries Tailwind, the fonts, the

@@ -49,20 +49,7 @@ const MARK: Record<HighlightTone, string> = {
     terminal: 'bg-terminal-accent/30 text-terminal-foreground',
 }
 
-/**
- * A text with spans of it marked, such as the words a search matched or the phrase a model picked
- * out. Give one span as `start` and `end`, or several as `ranges`; both are character offsets into
- * the text. The mark is the accent's tint under the accent's ink; `tone="terminal"` marks a text on
- * the terminal ground, such as a log.
- */
-export function Highlight({
-    text,
-    start,
-    end,
-    ranges = [],
-    tone = 'accent',
-    className,
-}: {
+export interface HighlightProps {
     text: string
     /** Where the one marked span starts, with `end`. */
     start?: number
@@ -72,7 +59,15 @@ export function Highlight({
     ranges?: readonly HighlightRange[]
     tone?: HighlightTone
     className?: string
-}) {
+}
+
+/**
+ * A text with spans of it marked, such as the words a search matched or the phrase a model picked
+ * out. Give one span as `start` and `end`, or several as `ranges`; both are character offsets into
+ * the text. The mark is the accent's tint under the accent's ink; `tone="terminal"` marks a text on
+ * the terminal ground, such as a log.
+ */
+export function Highlight({ text, start, end, ranges = [], tone = 'accent', className }: HighlightProps) {
     const all = start !== undefined && end !== undefined ? [{ start, end }, ...ranges] : ranges
     return (
         <span className={className}>

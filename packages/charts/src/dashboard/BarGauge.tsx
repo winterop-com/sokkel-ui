@@ -12,6 +12,28 @@ export interface GaugeBar {
     value: number | null
 }
 
+export interface BarGaugeProps {
+    title: ReactNode
+    subtitle?: ReactNode
+    info?: ReactNode
+    actions?: ReactNode
+    bars: readonly GaugeBar[]
+    min?: number
+    max?: number
+    thresholds?: readonly Threshold[]
+    /** The bars' color token when there are no thresholds. */
+    color?: string
+    unit?: string
+    decimals?: number
+    format?: (value: number) => string
+    mode?: 'gradient' | 'basic'
+    span?: PanelSpan
+    loading?: boolean
+    empty?: boolean
+    words?: Partial<ChartFrameWords>
+    className?: string
+}
+
 /**
  * A dashboard panel of readings as bars against one scale from `min` to `max`, each bar and its
  * value in the color its thresholds give it: workers' load, jobs' failure rates. `gradient` fades
@@ -36,27 +58,7 @@ export function BarGauge({
     empty,
     words,
     className,
-}: {
-    title: ReactNode
-    subtitle?: ReactNode
-    info?: ReactNode
-    actions?: ReactNode
-    bars: readonly GaugeBar[]
-    min?: number
-    max?: number
-    thresholds?: readonly Threshold[]
-    /** The bars' color token when there are no thresholds. */
-    color?: string
-    unit?: string
-    decimals?: number
-    format?: (value: number) => string
-    mode?: 'gradient' | 'basic'
-    span?: PanelSpan
-    loading?: boolean
-    empty?: boolean
-    words?: Partial<ChartFrameWords>
-    className?: string
-}) {
+}: BarGaugeProps) {
     const write = valueWriter(unit, decimals, format)
     return (
         <ChartFrame

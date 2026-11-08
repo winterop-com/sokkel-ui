@@ -3,6 +3,20 @@ import type { ReactNode } from 'react'
 import { cn } from '../lib/cn'
 import { Checkbox } from './ui/checkbox'
 
+export interface CheckboxFieldProps {
+    label: ReactNode
+    /** A line under the label: what ticking it means. */
+    description?: ReactNode
+    checked?: boolean
+    defaultChecked?: boolean
+    onCheckedChange?: (checked: boolean) => void
+    /** Some but not all of what it stands for is ticked. */
+    indeterminate?: boolean
+    disabled?: boolean
+    tone?: 'plain' | 'critical'
+    className?: string
+}
+
 /**
  * A checkbox with its label beside it and, where the label alone does not say enough, a line
  * under it. The whole row is the label, so a press anywhere on it ticks the box. `critical` frames
@@ -18,19 +32,7 @@ export function CheckboxField({
     disabled,
     tone = 'plain',
     className,
-}: {
-    label: ReactNode
-    /** A line under the label: what ticking it means. */
-    description?: ReactNode
-    checked?: boolean
-    defaultChecked?: boolean
-    onCheckedChange?: (checked: boolean) => void
-    /** Some but not all of what it stands for is ticked. */
-    indeterminate?: boolean
-    disabled?: boolean
-    tone?: 'plain' | 'critical'
-    className?: string
-}) {
+}: CheckboxFieldProps) {
     return (
         <label
             className={cn(
@@ -55,8 +57,14 @@ export function CheckboxField({
     )
 }
 
+export interface CheckboxListProps {
+    label: string
+    children: ReactNode
+    className?: string
+}
+
 /** A titled group of checkbox fields: the title names what the boxes choose among. */
-export function CheckboxList({ label, children, className }: { label: string; children: ReactNode; className?: string }) {
+export function CheckboxList({ label, children, className }: CheckboxListProps) {
     return (
         <fieldset className={cn('flex min-w-0 flex-col gap-0.5', className)}>
             <legend className="mb-1.5 text-sm font-medium">{label}</legend>

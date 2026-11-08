@@ -13,6 +13,29 @@ const TITLE = {
     large: 'text-detail-title text-pretty break-words',
 } as const
 
+export interface PaneHeaderProps {
+    title?: ReactNode
+    /** The heading's level in the page's outline. */
+    as?: 'h1' | 'h2' | 'h3' | 'p'
+    /** A count or a short fact beside the title, drawn quieter than it. */
+    meta?: ReactNode
+    /** A sentence under the title: what the pane holds. */
+    description?: ReactNode
+    /** An addressable code over the title, in the code face. */
+    code?: ReactNode
+    /** Controls before the title, such as a back button or a pane's own tools. */
+    start?: ReactNode
+    /** Controls at the right end. */
+    actions?: ReactNode
+    /** A line under the title, such as chips or labels. */
+    children?: ReactNode
+    variant?: keyof typeof GROUND
+    size?: 'md' | 'lg'
+    /** Whether the strip pads its sides. */
+    inset?: boolean
+    className?: string
+}
+
 /**
  * The strip across the top of a pane, with a rule under it: the pane's title, controls before it
  * such as a back button, and actions at its right end. A pane of tools alone leaves the title out.
@@ -36,28 +59,7 @@ export function PaneHeader({
     size = 'md',
     inset = true,
     className,
-}: {
-    title?: ReactNode
-    /** The heading's level in the page's outline. */
-    as?: 'h1' | 'h2' | 'h3' | 'p'
-    /** A count or a short fact beside the title, drawn quieter than it. */
-    meta?: ReactNode
-    /** A sentence under the title: what the pane holds. */
-    description?: ReactNode
-    /** An addressable code over the title, in the code face. */
-    code?: ReactNode
-    /** Controls before the title, such as a back button or a pane's own tools. */
-    start?: ReactNode
-    /** Controls at the right end. */
-    actions?: ReactNode
-    /** A line under the title, such as chips or labels. */
-    children?: ReactNode
-    variant?: keyof typeof GROUND
-    size?: 'md' | 'lg'
-    /** Whether the strip pads its sides. */
-    inset?: boolean
-    className?: string
-}) {
+}: PaneHeaderProps) {
     const large = size === 'lg'
     const titled = title !== undefined || code !== undefined || children !== undefined
     const described = description !== undefined

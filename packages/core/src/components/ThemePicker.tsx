@@ -41,6 +41,22 @@ const WORDS: ThemePickerWords = {
     motionOff: 'Off',
 }
 
+export interface ThemePickerProps {
+    value: ThemeSettings
+    onChange: (next: ThemeSettings) => void
+    themes: readonly ThemeOption[]
+    /** The density levels; regular and compact when not given, none when empty. */
+    densities?: readonly ThemeOption[]
+    /** The corner radii; the row shows only when given. */
+    corners?: readonly ThemeOption[]
+    /** The typefaces; the row shows only when given. */
+    typefaces?: readonly ThemeOption[]
+    /** Offers the system's scheme beside dark and light, which follows the device until one is chosen. */
+    system?: boolean
+    className?: string
+    words?: Partial<ThemePickerWords>
+}
+
 /**
  * The appearance controls an app's settings show: the named theme, dark or light, the density,
  * the corners, the typeface and the motion. It holds no state and applies nothing; `onChange` answers with the
@@ -60,21 +76,7 @@ export function ThemePicker({
     system = false,
     className,
     words: given,
-}: {
-    value: ThemeSettings
-    onChange: (next: ThemeSettings) => void
-    themes: readonly ThemeOption[]
-    /** The density levels; regular and compact when not given, none when empty. */
-    densities?: readonly ThemeOption[]
-    /** The corner radii; the row shows only when given. */
-    corners?: readonly ThemeOption[]
-    /** The typefaces; the row shows only when given. */
-    typefaces?: readonly ThemeOption[]
-    /** Offers the system's scheme beside dark and light, which follows the device until one is chosen. */
-    system?: boolean
-    className?: string
-    words?: Partial<ThemePickerWords>
-}) {
+}: ThemePickerProps) {
     const words = { ...WORDS, ...given }
     const levels = densities ?? [
         { value: 'regular', label: words.regular },

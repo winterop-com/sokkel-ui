@@ -1,11 +1,15 @@
 import * as React from 'react'
 import { cn } from '../../lib/cn'
 
-function MessageGroup({ className, ...props }: React.ComponentProps<'div'>) {
+export type MessageGroupProps = React.ComponentProps<'div'>
+
+function MessageGroup({ className, ...props }: MessageGroupProps) {
     return <div data-slot="message-group" className={cn('flex min-w-0 flex-col gap-2', className)} {...props} />
 }
 
-function Message({ className, align = 'start', ...props }: React.ComponentProps<'div'> & { align?: 'start' | 'end' }) {
+export type MessageProps = React.ComponentProps<'div'> & { align?: 'start' | 'end' }
+
+function Message({ className, align = 'start', ...props }: MessageProps) {
     return (
         <div
             data-slot="message"
@@ -16,7 +20,9 @@ function Message({ className, align = 'start', ...props }: React.ComponentProps<
     )
 }
 
-function MessageAvatar({ className, ...props }: React.ComponentProps<'div'>) {
+export type MessageAvatarProps = React.ComponentProps<'div'>
+
+function MessageAvatar({ className, ...props }: MessageAvatarProps) {
     return (
         <div
             data-slot="message-avatar"
@@ -29,7 +35,9 @@ function MessageAvatar({ className, ...props }: React.ComponentProps<'div'>) {
     )
 }
 
-function MessageContent({ className, ...props }: React.ComponentProps<'div'>) {
+export type MessageContentProps = React.ComponentProps<'div'>
+
+function MessageContent({ className, ...props }: MessageContentProps) {
     return (
         <div
             data-slot="message-content"
@@ -42,11 +50,13 @@ function MessageContent({ className, ...props }: React.ComponentProps<'div'>) {
     )
 }
 
+export type MessageHeaderProps = React.ComponentProps<'div'> & { variant?: 'default' | 'speaker' }
+
 /**
  * The line over a message. `speaker` names who speaks, in the body size and ink and flush with the
  * content, for a turn that has no bubble to start it.
  */
-function MessageHeader({ className, variant = 'default', ...props }: React.ComponentProps<'div'> & { variant?: 'default' | 'speaker' }) {
+function MessageHeader({ className, variant = 'default', ...props }: MessageHeaderProps) {
     return (
         <div
             data-slot="message-header"
@@ -60,11 +70,13 @@ function MessageHeader({ className, variant = 'default', ...props }: React.Compo
     )
 }
 
+export type MessageFooterProps = React.ComponentProps<'div'> & { variant?: 'default' | 'actions' }
+
 /**
  * The line under a message. `actions` holds a row of buttons such as Copy and Try again, flush with
  * the content, wrapping when narrow, and a finger wide each on a touch screen.
  */
-function MessageFooter({ className, variant = 'default', ...props }: React.ComponentProps<'div'> & { variant?: 'default' | 'actions' }) {
+function MessageFooter({ className, variant = 'default', ...props }: MessageFooterProps) {
     return (
         <div
             data-slot="message-footer"

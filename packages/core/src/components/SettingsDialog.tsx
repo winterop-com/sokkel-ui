@@ -78,6 +78,19 @@ export function filterSettings(groups: readonly SettingsGroup[], search: string)
         .filter((group) => group.sections.length > 0)
 }
 
+export interface SettingsDialogProps {
+    open: boolean
+    onOpenChange: (open: boolean) => void
+    groups: readonly SettingsGroup[]
+    /** The id of the chosen section. */
+    active: string
+    onActiveChange: (id: string) => void
+    search: string
+    onSearchChange: (search: string) => void
+    phoneStart?: 'list' | 'section'
+    words?: Partial<SettingsDialogWords>
+}
+
 /**
  * A large dialog of settings: the navigation on the left, a search over every setting at its top
  * and the sections under their group titles, and the chosen section's rows on the right, which
@@ -101,18 +114,7 @@ export function SettingsDialog({
     onSearchChange,
     phoneStart = 'list',
     words = WORDS,
-}: {
-    open: boolean
-    onOpenChange: (open: boolean) => void
-    groups: readonly SettingsGroup[]
-    /** The id of the chosen section. */
-    active: string
-    onActiveChange: (id: string) => void
-    search: string
-    onSearchChange: (search: string) => void
-    phoneStart?: 'list' | 'section'
-    words?: Partial<SettingsDialogWords>
-}) {
+}: SettingsDialogProps) {
     const say = { ...WORDS, ...words }
     const [phoneView, setPhoneView] = useState(phoneStart)
     const nav = useRef<HTMLElement | null>(null)

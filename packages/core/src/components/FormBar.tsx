@@ -2,6 +2,17 @@ import type { ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 
+export interface FormBarProps {
+    /** What the form's state is, said at the start of the bar. */
+    note?: ReactNode
+    /** The actions, such as `IssueCount` and the buttons. */
+    children: ReactNode
+    placement?: 'foot' | 'end'
+    /** The bar's side padding at the foot: a page's inset, or a panel's, for a sheet or a side panel. */
+    inset?: 'page' | 'panel'
+    className?: string
+}
+
 /**
  * A form's actions: a note at the start, such as when the draft was last saved, and the actions at
  * the end, the main verb last. When the row is too narrow for both, the actions move under the
@@ -12,22 +23,7 @@ import { cn } from '../lib/cn'
  * matches its side padding to a page's or a panel's. At the `end` it is a plain row closing a short
  * form, with the actions at its right.
  */
-export function FormBar({
-    note,
-    children,
-    placement = 'foot',
-    inset = 'page',
-    className,
-}: {
-    /** What the form's state is, said at the start of the bar. */
-    note?: ReactNode
-    /** The actions, such as `IssueCount` and the buttons. */
-    children: ReactNode
-    placement?: 'foot' | 'end'
-    /** The bar's side padding at the foot: a page's inset, or a panel's, for a sheet or a side panel. */
-    inset?: 'page' | 'panel'
-    className?: string
-}) {
+export function FormBar({ note, children, placement = 'foot', inset = 'page', className }: FormBarProps) {
     const row = (
         <div
             className={cn(

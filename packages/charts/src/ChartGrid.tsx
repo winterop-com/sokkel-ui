@@ -9,6 +9,25 @@ import { KINDS, type ChartKind, type ChartSpec } from './kinds'
 import { SERIES_ORDER, type ChartLook } from './look'
 import { shareScales } from './scales'
 
+export type ChartGridProps = ChartSpec & {
+    kind: ChartKind
+    /** What the charts show, for a screen reader; each chart adds its label. */
+    label: string
+    /** The field whose labels each get a chart. */
+    facet: string
+    /** The facet's labels in this order first. */
+    facetOrder?: readonly string[]
+    /** The most charts side by side. */
+    columns?: ComponentProps<typeof Columns>['count']
+    /** The narrowest a chart may get before the grid drops a column. */
+    narrowest?: ComponentProps<typeof Columns>['min']
+    hidden?: ReadonlySet<string>
+    hovered?: string | null
+    /** Each chart's size. */
+    chartClassName?: string
+    className?: string
+}
+
 /**
  * Small multiples: the same chart once per label of `facet`, each drawn from that label's rows,
  * headed by the label and laid out in `Columns`. The charts share one scale, so a bar of the same
@@ -29,24 +48,7 @@ export function ChartGrid({
     chartClassName = 'h-40',
     className,
     ...spec
-}: ChartSpec & {
-    kind: ChartKind
-    /** What the charts show, for a screen reader; each chart adds its label. */
-    label: string
-    /** The field whose labels each get a chart. */
-    facet: string
-    /** The facet's labels in this order first. */
-    facetOrder?: readonly string[]
-    /** The most charts side by side. */
-    columns?: ComponentProps<typeof Columns>['count']
-    /** The narrowest a chart may get before the grid drops a column. */
-    narrowest?: ComponentProps<typeof Columns>['min']
-    hidden?: ReadonlySet<string>
-    hovered?: string | null
-    /** Each chart's size. */
-    chartClassName?: string
-    className?: string
-}) {
+}: ChartGridProps) {
     const kept = useSpec(spec)
     const panels = useMemo(() => {
         const field = kept.series ?? kept.path?.[0] ?? kept.x

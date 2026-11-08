@@ -38,6 +38,21 @@ export interface MapPopupWords {
 
 const WORDS: MapPopupWords = { close: 'Close' }
 
+export interface MapPopupProps {
+    /** The feature the card points at, from a point's position or inside a polygon. */
+    feature?: Feature
+    /** The position the card points at, instead of a feature's. */
+    at?: LngLat
+    title: string
+    description?: string
+    rows?: MapPopupRow[]
+    action?: { label: string; onClick: () => void }
+    onClose?: () => void
+    words?: Partial<MapPopupWords>
+    children?: ReactNode
+    className?: string
+}
+
 /**
  * A card over the map, pointing at a feature or a position: a title, rows of names and values,
  * and an optional action. It sits above its anchor, or below when there is no room above, keeps
@@ -54,20 +69,7 @@ export function MapPopup({
     words: given,
     children,
     className,
-}: {
-    /** The feature the card points at, from a point's position or inside a polygon. */
-    feature?: Feature
-    /** The position the card points at, instead of a feature's. */
-    at?: LngLat
-    title: string
-    description?: string
-    rows?: MapPopupRow[]
-    action?: { label: string; onClick: () => void }
-    onClose?: () => void
-    words?: Partial<MapPopupWords>
-    children?: ReactNode
-    className?: string
-}) {
+}: MapPopupProps) {
     const words = { ...WORDS, ...given }
     const { map, overlay } = useMapContext()
     const card = useRef<HTMLDivElement>(null)

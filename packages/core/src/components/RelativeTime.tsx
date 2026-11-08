@@ -44,6 +44,16 @@ export function tickFor(distance: number): number {
     return HOUR
 }
 
+export interface RelativeTimeProps {
+    date: Date | string | number
+    /** The moment to count from; without it, the clock. */
+    now?: Date
+    locale?: string
+    timeZone?: string
+    length?: Intl.RelativeTimeFormatStyle
+    className?: string
+}
+
 /**
  * A time said relative to now, "3 minutes ago", with the exact instant on hover and on focus. With
  * no `now` it keeps its own clock and reads itself again as the words may change: every 15 seconds
@@ -52,22 +62,7 @@ export function tickFor(distance: number): number {
  * the words and the instant as the reader wants them; `length` is Intl's style, `short` giving
  * "3 min. ago".
  */
-export function RelativeTime({
-    date,
-    now: given,
-    locale,
-    timeZone,
-    length = 'long',
-    className,
-}: {
-    date: Date | string | number
-    /** The moment to count from; without it, the clock. */
-    now?: Date
-    locale?: string
-    timeZone?: string
-    length?: Intl.RelativeTimeFormatStyle
-    className?: string
-}) {
+export function RelativeTime({ date, now: given, locale, timeZone, length = 'long', className }: RelativeTimeProps) {
     const when = date instanceof Date ? date : new Date(date)
     const [clock, setClock] = useState(() => given ?? new Date())
     const now = given ?? clock

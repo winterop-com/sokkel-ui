@@ -3,21 +3,7 @@ import { useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 
-/**
- * A heading that opens what is under it. The whole heading row is the control: the chevron turns,
- * the row carries `aria-expanded`, and it washes under the pointer the way a menu row does.
- *
- * `forced` holds it open whatever the reader chose, as a filter does while it is being typed; the
- * reader's own choice returns when it is let go.
- */
-export function Unfoldable({
-    heading,
-    aside,
-    defaultOpen = false,
-    forced = false,
-    className,
-    children,
-}: {
+export interface UnfoldableProps {
     heading: ReactNode
     /** Facts at the row's right end, such as a count, outside the button's name. */
     aside?: ReactNode
@@ -25,7 +11,16 @@ export function Unfoldable({
     forced?: boolean
     className?: string
     children: ReactNode
-}) {
+}
+
+/**
+ * A heading that opens what is under it. The whole heading row is the control: the chevron turns,
+ * the row carries `aria-expanded`, and it washes under the pointer the way a menu row does.
+ *
+ * `forced` holds it open whatever the reader chose, as a filter does while it is being typed; the
+ * reader's own choice returns when it is let go.
+ */
+export function Unfoldable({ heading, aside, defaultOpen = false, forced = false, className, children }: UnfoldableProps) {
     const [opened, setOpened] = useState(defaultOpen)
     const open = opened || forced
     return (

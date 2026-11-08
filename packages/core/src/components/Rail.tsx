@@ -74,6 +74,38 @@ const WORDS: RailWords = {
     unread: 'Unread',
 }
 
+export interface RailProps {
+    /** The app's mark, drawn in a small tile; in a strip, the workspace's tile at the top. */
+    mark?: ReactNode
+    /** The app's name beside the mark; in a strip, the workspace tile's name. */
+    name: string
+    groups: RailGroup[]
+    /** `nav` is the app's navigation, expanded or collapsed; `strip` is a team chat's narrow column of labeled icons. */
+    variant?: 'nav' | 'strip'
+    collapsed?: boolean
+    onCollapsedChange?: (collapsed: boolean) => void
+    /** What stands in the rail's foot cell, normally the account control; in a strip, the items stacked at its foot. */
+    foot?: ReactNode
+    renderLink?: (entry: RailEntry, children: ReactNode, className: string) => ReactNode
+    /** The expanded width in pixels, held from outside with `onSizeChange`. */
+    size?: number
+    onSizeChange?: (size: number) => void
+    /** Whether the expanded rail's edge drags to resize it. */
+    resizable?: boolean
+    minSize?: number
+    maxSize?: number
+    /** The expanded width the rail starts at and a double click on the edge returns to. */
+    defaultSize?: number
+    words?: Partial<RailWords>
+    /** The ids of the unfolded parents, held from outside with `onExpandedChange`. */
+    expanded?: string[]
+    onExpandedChange?: (expanded: string[]) => void
+    /** The parents unfolded at the start, beside those holding the active entry. */
+    defaultExpanded?: string[]
+    /** The parent whose flyout stands open at the start in a collapsed rail or a strip. */
+    defaultFlyout?: string
+}
+
 /**
  * The app's left navigation: a head with the app's mark and the collapse control, the groups,
  * and a foot cell the shell's foot strip lines up with. In a shell with a `bottom` strip, such as
@@ -136,37 +168,7 @@ export function Rail({
     onExpandedChange,
     defaultExpanded = [],
     defaultFlyout,
-}: {
-    /** The app's mark, drawn in a small tile; in a strip, the workspace's tile at the top. */
-    mark?: ReactNode
-    /** The app's name beside the mark; in a strip, the workspace tile's name. */
-    name: string
-    groups: RailGroup[]
-    /** `nav` is the app's navigation, expanded or collapsed; `strip` is a team chat's narrow column of labeled icons. */
-    variant?: 'nav' | 'strip'
-    collapsed?: boolean
-    onCollapsedChange?: (collapsed: boolean) => void
-    /** What stands in the rail's foot cell, normally the account control; in a strip, the items stacked at its foot. */
-    foot?: ReactNode
-    renderLink?: (entry: RailEntry, children: ReactNode, className: string) => ReactNode
-    /** The expanded width in pixels, held from outside with `onSizeChange`. */
-    size?: number
-    onSizeChange?: (size: number) => void
-    /** Whether the expanded rail's edge drags to resize it. */
-    resizable?: boolean
-    minSize?: number
-    maxSize?: number
-    /** The expanded width the rail starts at and a double click on the edge returns to. */
-    defaultSize?: number
-    words?: Partial<RailWords>
-    /** The ids of the unfolded parents, held from outside with `onExpandedChange`. */
-    expanded?: string[]
-    onExpandedChange?: (expanded: string[]) => void
-    /** The parents unfolded at the start, beside those holding the active entry. */
-    defaultExpanded?: string[]
-    /** The parent whose flyout stands open at the start in a collapsed rail or a strip. */
-    defaultFlyout?: string
-}) {
+}: RailProps) {
     const aside = useRef<HTMLElement>(null)
     const footCell = useContext(ShellFootCell)
     const desktop = useContext(ShellDesktop)

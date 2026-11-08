@@ -148,6 +148,17 @@ An app whose settings offer every theme imports `@winterop-com/sokkel-ui/themes.
 them all. `ThemePicker` draws its swatches from the same files, so it shows a theme's swatch only
 once that theme's file is imported.
 
+### Importing
+
+Each module is imported by its own path, so an app pulls in only what it uses:
+`@winterop-com/sokkel-ui/DataTable`, `@winterop-com/sokkel-ui/primitives/button`,
+`@winterop-com/sokkel-ui/hooks/use-appearance`, `@winterop-com/sokkel-ui/lib/appearance`,
+`@winterop-com/sokkel-ui-charts/Chart`. Each package's `exports` map lists every path it offers and
+nothing else; a module it does not list is the library's own and cannot be imported. Every
+component exports the type of its props as `<Component>Props` from the same path, such as
+`DataTableProps` from `@winterop-com/sokkel-ui/DataTable`, and a type those props name is exported
+there too.
+
 ### Only the classes an app uses
 
 `styles.css` points Tailwind at every module of the core, so an app's CSS carries the classes of

@@ -19,19 +19,7 @@ export interface ChipBarWords {
 
 const WORDS: ChipBarWords = { back: 'Scroll back', forward: 'Scroll forward' }
 
-/**
- * A row of chips with one chosen, such as topics over a feed. When the chips run past the row's
- * room it scrolls sideways with no scroll bar: the cut edges fade, and an arrow at each side that
- * has more scrolls a page that way (a phone swipes). The chosen chip is kept in view.
- */
-export function ChipBar<T extends string = string>({
-    label,
-    chips,
-    value,
-    onValueChange,
-    words: given,
-    className,
-}: {
+export interface ChipBarProps<T extends string = string> {
     /** The row's accessible name. */
     label: string
     chips: readonly Chip<T>[]
@@ -39,7 +27,14 @@ export function ChipBar<T extends string = string>({
     onValueChange: (value: T) => void
     words?: Partial<ChipBarWords>
     className?: string
-}) {
+}
+
+/**
+ * A row of chips with one chosen, such as topics over a feed. When the chips run past the row's
+ * room it scrolls sideways with no scroll bar: the cut edges fade, and an arrow at each side that
+ * has more scrolls a page that way (a phone swipes). The chosen chip is kept in view.
+ */
+export function ChipBar<T extends string = string>({ label, chips, value, onValueChange, words: given, className }: ChipBarProps<T>) {
     const words = { ...WORDS, ...given }
     const row = useRef<HTMLDivElement>(null)
     const [more, setMore] = useState({ back: false, forward: false })

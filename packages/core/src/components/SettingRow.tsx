@@ -19,18 +19,7 @@ const LAYOUT: Record<SettingRowLayout, { grid: string; control: string }> = {
     },
 }
 
-/**
- * One setting: its title and what it does, and its control, placed by `layout`. A note spans the
- * row under both, for what the setting needs or changes elsewhere.
- */
-export function SettingRow({
-    title,
-    description,
-    note,
-    control,
-    layout = 'auto',
-    className,
-}: {
+export interface SettingRowProps {
     title: ReactNode
     description?: ReactNode
     note?: ReactNode
@@ -38,7 +27,13 @@ export function SettingRow({
     /** Where the control sits; `auto` places it by the row's width. */
     layout?: SettingRowLayout
     className?: string
-}) {
+}
+
+/**
+ * One setting: its title and what it does, and its control, placed by `layout`. A note spans the
+ * row under both, for what the setting needs or changes elsewhere.
+ */
+export function SettingRow({ title, description, note, control, layout = 'auto', className }: SettingRowProps) {
     const placed = LAYOUT[layout]
     return (
         <div data-slot="setting-row" className={cn('@container py-4', className)}>

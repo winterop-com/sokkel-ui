@@ -31,6 +31,29 @@ function Count({ value }: { value: number | undefined }) {
     return <span className="ml-auto pl-3 text-muted-foreground tabular-nums">{value.toLocaleString('en-US')}</span>
 }
 
+export interface MapLegendProps {
+    title?: string
+    /** A line under the title, such as the period or the unit. */
+    description?: string
+    scale?: ColorScale
+    /** Lines keyed by their own colors, after the scale's classes or in place of a scale. */
+    entries?: readonly MapLegendEntry[]
+    /** How a sequential or diverging scale is drawn; a categorical scale is always a list. */
+    layout?: 'ramp' | 'list'
+    /** Words under the two ends of a ramp, such as "Fewer" and "More". */
+    captions?: [string, string]
+    /** Whether the swatches stand for areas or for points. */
+    shape?: 'area' | 'point'
+    /** Shows the no-data swatch, with this label or "No data". */
+    noData?: boolean | string
+    /** How many features fall in each class (or each entry, without a scale), in order. */
+    counts?: number[]
+    noDataCount?: number
+    /** Draws the legend in its own card. */
+    framed?: boolean
+    className?: string
+}
+
 /**
  * The key to a map's colors, in a card, or bare inside a panel that frames it already.
  *
@@ -55,28 +78,7 @@ export function MapLegend({
     noDataCount,
     framed = true,
     className,
-}: {
-    title?: string
-    /** A line under the title, such as the period or the unit. */
-    description?: string
-    scale?: ColorScale
-    /** Lines keyed by their own colors, after the scale's classes or in place of a scale. */
-    entries?: readonly MapLegendEntry[]
-    /** How a sequential or diverging scale is drawn; a categorical scale is always a list. */
-    layout?: 'ramp' | 'list'
-    /** Words under the two ends of a ramp, such as "Fewer" and "More". */
-    captions?: [string, string]
-    /** Whether the swatches stand for areas or for points. */
-    shape?: 'area' | 'point'
-    /** Shows the no-data swatch, with this label or "No data". */
-    noData?: boolean | string
-    /** How many features fall in each class (or each entry, without a scale), in order. */
-    counts?: number[]
-    noDataCount?: number
-    /** Draws the legend in its own card. */
-    framed?: boolean
-    className?: string
-}) {
+}: MapLegendProps) {
     const colors = scale === undefined ? [] : scaleColors(scale)
     const labels = scale === undefined ? [] : classLabels(scale)
     const list = scale === undefined || scale.kind === 'categorical' || layout === 'list'

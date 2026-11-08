@@ -3,13 +3,20 @@
 import { PreviewCard as PreviewCardPrimitive } from '@base-ui/react/preview-card'
 import { cn } from '../../lib/cn'
 
-function HoverCard({ ...props }: PreviewCardPrimitive.Root.Props) {
+export type HoverCardProps = PreviewCardPrimitive.Root.Props
+
+function HoverCard({ ...props }: HoverCardProps) {
     return <PreviewCardPrimitive.Root data-slot="hover-card" {...props} />
 }
 
-function HoverCardTrigger({ ...props }: PreviewCardPrimitive.Trigger.Props) {
+export type HoverCardTriggerProps = PreviewCardPrimitive.Trigger.Props
+
+function HoverCardTrigger({ ...props }: HoverCardTriggerProps) {
     return <PreviewCardPrimitive.Trigger data-slot="hover-card-trigger" {...props} />
 }
+
+export type HoverCardContentProps = PreviewCardPrimitive.Popup.Props &
+    Pick<PreviewCardPrimitive.Positioner.Props, 'align' | 'alignOffset' | 'side' | 'sideOffset'>
 
 function HoverCardContent({
     className,
@@ -18,7 +25,7 @@ function HoverCardContent({
     align = 'center',
     alignOffset = 4,
     ...props
-}: PreviewCardPrimitive.Popup.Props & Pick<PreviewCardPrimitive.Positioner.Props, 'align' | 'alignOffset' | 'side' | 'sideOffset'>) {
+}: HoverCardContentProps) {
     return (
         <PreviewCardPrimitive.Portal data-slot="hover-card-portal">
             <PreviewCardPrimitive.Positioner

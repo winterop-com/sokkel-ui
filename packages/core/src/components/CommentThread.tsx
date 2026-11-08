@@ -67,6 +67,20 @@ export interface CommentComposerWords {
 
 const COMPOSER_WORDS: CommentComposerWords = { placeholder: 'Add a comment', submit: 'Comment', cancel: 'Cancel' }
 
+export interface CommentComposerProps {
+    /** Who is writing, drawn as their picture. */
+    author: string
+    image?: string
+    color?: KindColor
+    /** `sm` for a reply's field, under the comment it answers. */
+    size?: 'sm' | 'md'
+    autoFocus?: boolean
+    onSubmit?: (text: string) => void
+    onCancel?: () => void
+    className?: string
+    words?: Partial<CommentComposerWords>
+}
+
 /**
  * A field to write a comment in, beside the writer's picture. It grows with the text, and its
  * Cancel and Comment buttons show once something is written, or always while `onCancel` is given,
@@ -83,19 +97,7 @@ export function CommentComposer({
     onCancel,
     className,
     words: given,
-}: {
-    /** Who is writing, drawn as their picture. */
-    author: string
-    image?: string
-    color?: KindColor
-    /** `sm` for a reply's field, under the comment it answers. */
-    size?: 'sm' | 'md'
-    autoFocus?: boolean
-    onSubmit?: (text: string) => void
-    onCancel?: () => void
-    className?: string
-    words?: Partial<CommentComposerWords>
-}) {
+}: CommentComposerProps) {
     const words = { ...COMPOSER_WORDS, ...given }
     const [draft, setDraft] = useState('')
     const submit = () => {
@@ -155,6 +157,8 @@ interface ItemProps {
     composerWords?: Partial<CommentComposerWords>
 }
 
+export type CommentItemProps = ItemProps & { comment: ThreadComment; depth?: number }
+
 /**
  * One comment of a thread: the author's picture, their name with a creator mark and the time, what
  * they wrote, the like, dislike and reply buttons, and a menu at its right. A pinned comment says
@@ -173,7 +177,7 @@ export function CommentItem({
     openReplies,
     words: given,
     composerWords,
-}: ItemProps & { comment: ThreadComment; depth?: number }) {
+}: CommentItemProps) {
     const words = { ...WORDS, ...given }
     const [open, setOpen] = useState(openReplies?.includes(comment.id) ?? false)
     const [replying, setReplying] = useState(false)
@@ -296,6 +300,11 @@ export function CommentItem({
     )
 }
 
+export type CommentThreadProps = ItemProps & {
+    comments: readonly ThreadComment[]
+    className?: string
+}
+
 /**
  * The comments under a post or a video, as a list: each with its author, time, likes and menu, the
  * pinned one first as given, and replies folded under their comment behind a count. The likes and
@@ -319,10 +328,7 @@ export function CommentThread({
     className,
     words: given,
     composerWords,
-}: ItemProps & {
-    comments: readonly ThreadComment[]
-    className?: string
-}) {
+}: CommentThreadProps) {
     return (
         <ul data-slot="comment-thread" className={cn('flex min-w-0 flex-col gap-6', className)}>
             {comments.map((comment) => (

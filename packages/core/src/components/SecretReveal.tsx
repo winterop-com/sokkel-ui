@@ -16,19 +16,7 @@ const WORDS: SecretRevealWords = {
     copied: 'Copied',
 }
 
-/**
- * A secret shown once, as it is created: an API token, a signing key, a recovery code. The value
- * sits whole in the code face, wrapped rather than cut so all of it can be checked, with a copy
- * button beside it and a warning under it that it will not be shown again. A label over it says
- * what the secret is.
- */
-export function SecretReveal({
-    value,
-    label,
-    note,
-    className,
-    words: given,
-}: {
+export interface SecretRevealProps {
     value: string
     /** What the secret is, over the value: the token's name. */
     label?: ReactNode
@@ -36,7 +24,15 @@ export function SecretReveal({
     note?: ReactNode
     className?: string
     words?: Partial<SecretRevealWords>
-}) {
+}
+
+/**
+ * A secret shown once, as it is created: an API token, a signing key, a recovery code. The value
+ * sits whole in the code face, wrapped rather than cut so all of it can be checked, with a copy
+ * button beside it and a warning under it that it will not be shown again. A label over it says
+ * what the secret is.
+ */
+export function SecretReveal({ value, label, note, className, words: given }: SecretRevealProps) {
     const words = { ...WORDS, ...given }
     return (
         <div className={cn('flex flex-col gap-2', className)}>

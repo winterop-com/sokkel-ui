@@ -153,9 +153,6 @@ under Next. Each is a part or an option here, never a copy in an app. Roughly on
 
 Settle before 1.0:
 
-- **Exports.** An explicit `exports` list per package instead of `./*`; internals and layout
-  constants go private.
-- **Types.** A `*Props` type exported from every component.
 - **A changelog.** `CHANGELOG.md` with each release's breaking changes, from 1.0 on.
 - **Open source.** The library is open source from 1.0: an open license in `LICENSE` and every
   `package.json`, published where anyone can install it without a token (the npm registry, or

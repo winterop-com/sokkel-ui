@@ -142,6 +142,15 @@ const WORDS: ToolCallsWords = {
     result: 'Result',
 }
 
+export interface ToolCallsProps {
+    calls: readonly ToolCallEntry[]
+    /** One line that stands for every call and opens into them, written from the calls' state. */
+    summary?: ReactNode
+    /** Whether the folded calls start open; by default only when one has failed. */
+    defaultOpen?: boolean
+    words?: Partial<ToolCallsWords>
+}
+
 /**
  * The tools an assistant called, one line each: the name, its arguments in one line, and how long
  * it took. A call that has finished opens into its arguments and its result in full.
@@ -150,19 +159,7 @@ const WORDS: ToolCallsWords = {
  * run, log, and sample · 3 tools". The line takes a spinner while a call runs and the destructive
  * ink once one has failed; then it starts open, with the failed call open inside it.
  */
-export function ToolCalls({
-    calls,
-    summary,
-    defaultOpen,
-    words: given,
-}: {
-    calls: readonly ToolCallEntry[]
-    /** One line that stands for every call and opens into them, written from the calls' state. */
-    summary?: ReactNode
-    /** Whether the folded calls start open; by default only when one has failed. */
-    defaultOpen?: boolean
-    words?: Partial<ToolCallsWords>
-}) {
+export function ToolCalls({ calls, summary, defaultOpen, words: given }: ToolCallsProps) {
     const words = { ...WORDS, ...given }
     if (summary === undefined) return <Calls calls={calls} words={words} openFailed={false} />
     const running = calls.some((call) => call.status === 'running' || call.status === 'pending')

@@ -88,6 +88,17 @@ const WORDS: CommandPaletteWords = {
     close: 'Close',
 }
 
+export interface CommandPaletteProps {
+    open: boolean
+    onOpenChange: (open: boolean) => void
+    groups: readonly PaletteGroup[]
+    /** The app's search, whose results are listed under the commands. */
+    search?: PaletteSearch
+    /** What the search holds when the palette opens. */
+    defaultQuery?: string
+    words?: Partial<CommandPaletteWords>
+}
+
 /**
  * The command palette: one search over everything an app can do, grouped, each row with its
  * icon, a hint in words or a code, and the keys that run it directly. Choosing a row closes the
@@ -97,23 +108,7 @@ const WORDS: CommandPaletteWords = {
  * the query follow the commands, each with its thumbnail, artwork or icon and the query's words
  * marked. On a touch screen, which has no Escape, a Close button stands at its foot.
  */
-export function CommandPalette({
-    open,
-    onOpenChange,
-    groups,
-    search,
-    defaultQuery = '',
-    words: given,
-}: {
-    open: boolean
-    onOpenChange: (open: boolean) => void
-    groups: readonly PaletteGroup[]
-    /** The app's search, whose results are listed under the commands. */
-    search?: PaletteSearch
-    /** What the search holds when the palette opens. */
-    defaultQuery?: string
-    words?: Partial<CommandPaletteWords>
-}) {
+export function CommandPalette({ open, onOpenChange, groups, search, defaultQuery = '', words: given }: CommandPaletteProps) {
     const words = { ...WORDS, ...given }
     const listed = useMemo(() => mergeCommands(groups), [groups])
     const [query, setQuery] = useState(defaultQuery)

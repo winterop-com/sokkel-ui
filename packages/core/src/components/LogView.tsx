@@ -23,22 +23,7 @@ const LEVEL: Record<LogLevel, string> = {
     error: 'text-terminal-critical',
 }
 
-/**
- * A log on the terminal ground: time, level, source and text in columns, levels inked, lines
- * numbered. `follow` keeps the newest line in view as lines arrive, until the reader scrolls up;
- * `query` marks its matches. Long lines wrap when `wrap` is set and scroll sideways otherwise.
- * It is set in the terminal face, `--typeface-terminal`, whose Nerd Font icons a line can carry.
- * `framed={false}` drops its rounded corners, for a log set edge to edge in a dock or a panel.
- */
-export function LogView({
-    lines,
-    follow = false,
-    wrap = false,
-    query = '',
-    numbered = true,
-    framed = true,
-    className,
-}: {
+export interface LogViewProps {
     lines: readonly LogLine[]
     follow?: boolean
     wrap?: boolean
@@ -47,7 +32,16 @@ export function LogView({
     /** Rounds the log's corners; off for a log set edge to edge. */
     framed?: boolean
     className?: string
-}) {
+}
+
+/**
+ * A log on the terminal ground: time, level, source and text in columns, levels inked, lines
+ * numbered. `follow` keeps the newest line in view as lines arrive, until the reader scrolls up;
+ * `query` marks its matches. Long lines wrap when `wrap` is set and scroll sideways otherwise.
+ * It is set in the terminal face, `--typeface-terminal`, whose Nerd Font icons a line can carry.
+ * `framed={false}` drops its rounded corners, for a log set edge to edge in a dock or a panel.
+ */
+export function LogView({ lines, follow = false, wrap = false, query = '', numbered = true, framed = true, className }: LogViewProps) {
     const scroller = useRef<HTMLDivElement>(null)
     const pinned = useRef(true)
     useEffect(() => {

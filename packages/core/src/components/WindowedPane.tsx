@@ -34,11 +34,15 @@ export function useWindowedPane(): Windowed | null {
     return useContext(WindowedContext)
 }
 
+export interface WindowedPaneButtonProps {
+    className?: string
+}
+
 /**
  * The expand button of the `WindowedPane` around it, for a pane that sets it in a toolbar of its
  * own (with `button="none"` on the pane). Draws nothing outside a pane or inside the window.
  */
-export function WindowedPaneButton({ className }: { className?: string }) {
+export function WindowedPaneButton({ className }: WindowedPaneButtonProps) {
     const pane = useWindowedPane()
     if (pane === null || pane.windowed) return null
     return (
@@ -46,6 +50,19 @@ export function WindowedPaneButton({ className }: { className?: string }) {
             <Maximize2 />
         </IconButton>
     )
+}
+
+export interface WindowedPaneProps {
+    /** The window's title, and the name of what the pane holds. */
+    title: ReactNode
+    children: ReactNode
+    open?: boolean
+    defaultOpen?: boolean
+    onOpenChange?: (open: boolean) => void
+    /** `corner`: the pane draws the expand button over its top right corner; `none`: the content does. */
+    button?: 'corner' | 'none'
+    className?: string
+    words?: Partial<WindowedPaneWords>
 }
 
 /**
@@ -68,18 +85,7 @@ export function WindowedPane({
     button = 'corner',
     className,
     words: given,
-}: {
-    /** The window's title, and the name of what the pane holds. */
-    title: ReactNode
-    children: ReactNode
-    open?: boolean
-    defaultOpen?: boolean
-    onOpenChange?: (open: boolean) => void
-    /** `corner`: the pane draws the expand button over its top right corner; `none`: the content does. */
-    button?: 'corner' | 'none'
-    className?: string
-    words?: Partial<WindowedPaneWords>
-}) {
+}: WindowedPaneProps) {
     const words = { ...WINDOWED_PANE_WORDS, ...given }
     const [ownOpen, setOwnOpen] = useState(defaultOpen)
     const open = heldOpen ?? ownOpen

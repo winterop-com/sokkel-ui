@@ -6,6 +6,18 @@ import { KIND_FILL } from '../../lib/kind'
 import { EventPopover, useOpenEvent } from './EventPopover'
 import { CALENDAR_WORDS, eventsOn, type CalendarEvent, type CalendarWords } from './events'
 
+export interface DayAgendaProps<E extends CalendarEvent> {
+    day: Date
+    events: readonly E[]
+    now?: Date
+    renderDetail?: (event: E) => ReactNode
+    openEvent?: string | null
+    onOpenEventChange?: (id: string | null) => void
+    onSelectEvent?: (event: E) => void
+    className?: string
+    words?: Partial<CalendarWords>
+}
+
 /**
  * One day's events as a list, the day view where a grid has no room, as on a phone: all-day
  * events first, then each timed one with its times, its calendar's color, its title and its
@@ -22,17 +34,7 @@ export function DayAgenda<E extends CalendarEvent>({
     onSelectEvent,
     className,
     words: given,
-}: {
-    day: Date
-    events: readonly E[]
-    now?: Date
-    renderDetail?: (event: E) => ReactNode
-    openEvent?: string | null
-    onOpenEventChange?: (id: string | null) => void
-    onSelectEvent?: (event: E) => void
-    className?: string
-    words?: Partial<CalendarWords>
-}) {
+}: DayAgendaProps<E>) {
     const words = { ...CALENDAR_WORDS, ...given }
     const [open, setOpen] = useOpenEvent(openEvent, onOpenEventChange)
     const list = eventsOn(events, day)

@@ -3,12 +3,9 @@ import { cva } from 'class-variance-authority'
 import { cn } from '../../lib/cn'
 import { ChevronDownIcon } from 'lucide-react'
 
-function NavigationMenu({
-    align = 'start',
-    className,
-    children,
-    ...props
-}: NavigationMenuPrimitive.Root.Props & Pick<NavigationMenuPrimitive.Positioner.Props, 'align'>) {
+export type NavigationMenuProps = NavigationMenuPrimitive.Root.Props & Pick<NavigationMenuPrimitive.Positioner.Props, 'align'>
+
+function NavigationMenu({ align = 'start', className, children, ...props }: NavigationMenuProps) {
     return (
         <NavigationMenuPrimitive.Root
             data-slot="navigation-menu"
@@ -21,8 +18,10 @@ function NavigationMenu({
     )
 }
 
+export type NavigationMenuListProps = React.ComponentPropsWithRef<typeof NavigationMenuPrimitive.List>
+
 /** The menu's items in a row, flowing onto a second line where the row runs out of room. */
-function NavigationMenuList({ className, ...props }: React.ComponentPropsWithRef<typeof NavigationMenuPrimitive.List>) {
+function NavigationMenuList({ className, ...props }: NavigationMenuListProps) {
     return (
         <NavigationMenuPrimitive.List
             data-slot="navigation-menu-list"
@@ -32,7 +31,9 @@ function NavigationMenuList({ className, ...props }: React.ComponentPropsWithRef
     )
 }
 
-function NavigationMenuItem({ className, ...props }: React.ComponentPropsWithRef<typeof NavigationMenuPrimitive.Item>) {
+export type NavigationMenuItemProps = React.ComponentPropsWithRef<typeof NavigationMenuPrimitive.Item>
+
+function NavigationMenuItem({ className, ...props }: NavigationMenuItemProps) {
     return <NavigationMenuPrimitive.Item data-slot="navigation-menu-item" className={cn('relative', className)} {...props} />
 }
 
@@ -40,7 +41,9 @@ const navigationMenuTriggerStyle = cva(
     'group/navigation-menu-trigger inline-flex h-9 w-max items-center justify-center rounded-lg px-2.5 py-1.5 text-sm font-medium transition-all outline-none hover:bg-hover focus:bg-hover focus-visible:outline-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid disabled:pointer-events-none disabled:opacity-50 data-popup-open:bg-hover data-popup-open:hover:bg-hover data-open:bg-hover data-open:hover:bg-hover data-open:focus:bg-hover',
 )
 
-function NavigationMenuTrigger({ className, children, ...props }: NavigationMenuPrimitive.Trigger.Props) {
+export type NavigationMenuTriggerProps = NavigationMenuPrimitive.Trigger.Props
+
+function NavigationMenuTrigger({ className, children, ...props }: NavigationMenuTriggerProps) {
     return (
         <NavigationMenuPrimitive.Trigger
             data-slot="navigation-menu-trigger"
@@ -56,7 +59,9 @@ function NavigationMenuTrigger({ className, children, ...props }: NavigationMenu
     )
 }
 
-function NavigationMenuContent({ className, ...props }: NavigationMenuPrimitive.Content.Props) {
+export type NavigationMenuContentProps = NavigationMenuPrimitive.Content.Props
+
+function NavigationMenuContent({ className, ...props }: NavigationMenuContentProps) {
     return (
         <NavigationMenuPrimitive.Content
             data-slot="navigation-menu-content"
@@ -69,6 +74,8 @@ function NavigationMenuContent({ className, ...props }: NavigationMenuPrimitive.
     )
 }
 
+export type NavigationMenuPositionerProps = NavigationMenuPrimitive.Positioner.Props
+
 function NavigationMenuPositioner({
     className,
     side = 'bottom',
@@ -76,7 +83,7 @@ function NavigationMenuPositioner({
     align = 'start',
     alignOffset = 0,
     ...props
-}: NavigationMenuPrimitive.Positioner.Props) {
+}: NavigationMenuPositionerProps) {
     return (
         <NavigationMenuPrimitive.Portal>
             <NavigationMenuPrimitive.Positioner
@@ -98,7 +105,9 @@ function NavigationMenuPositioner({
     )
 }
 
-function NavigationMenuLink({ className, ...props }: NavigationMenuPrimitive.Link.Props) {
+export type NavigationMenuLinkProps = NavigationMenuPrimitive.Link.Props
+
+function NavigationMenuLink({ className, ...props }: NavigationMenuLinkProps) {
     return (
         <NavigationMenuPrimitive.Link
             data-slot="navigation-menu-link"
@@ -111,7 +120,9 @@ function NavigationMenuLink({ className, ...props }: NavigationMenuPrimitive.Lin
     )
 }
 
-function NavigationMenuIndicator({ className, ...props }: React.ComponentPropsWithRef<typeof NavigationMenuPrimitive.Icon>) {
+export type NavigationMenuIndicatorProps = React.ComponentPropsWithRef<typeof NavigationMenuPrimitive.Icon>
+
+function NavigationMenuIndicator({ className, ...props }: NavigationMenuIndicatorProps) {
     return (
         <NavigationMenuPrimitive.Icon
             data-slot="navigation-menu-indicator"

@@ -65,25 +65,21 @@ const WORDS: TableOfContentsWords = {
     title: 'On this page',
 }
 
-/**
- * An "on this page" list beside a long page or form: its headings, the deeper ones indented, the
- * one the reader is in marked with a bar, each with an optional mark such as a part's state. A press scrolls its heading into view; `onJump` replaces that.
- * `useActiveHeading` says which entry is current as the page scrolls.
- */
-export function TableOfContents({
-    entries,
-    active,
-    onJump,
-    className,
-    words: given,
-}: {
+export interface TableOfContentsProps {
     entries: readonly ContentsEntry[]
     /** The id of the heading the reader is in. */
     active?: string
     onJump?: (id: string) => void
     className?: string
     words?: Partial<TableOfContentsWords>
-}) {
+}
+
+/**
+ * An "on this page" list beside a long page or form: its headings, the deeper ones indented, the
+ * one the reader is in marked with a bar, each with an optional mark such as a part's state. A press scrolls its heading into view; `onJump` replaces that.
+ * `useActiveHeading` says which entry is current as the page scrolls.
+ */
+export function TableOfContents({ entries, active, onJump, className, words: given }: TableOfContentsProps) {
     const words = { ...WORDS, ...given }
     if (entries.length === 0) return null
     const top = Math.min(...entries.map((entry) => entry.level))

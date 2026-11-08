@@ -12,6 +12,26 @@ export interface DetailSheetWords {
 
 const WORDS: DetailSheetWords = { close: 'Close' }
 
+export interface DetailSheetProps {
+    open: boolean
+    onOpenChange: (open: boolean) => void
+    title: ReactNode
+    /** The thing's addressable code, over the title in the code face. */
+    code?: string
+    /** A sentence under the title. */
+    description?: ReactNode
+    /** The thing's chips on a line under the title: its kind, its state, its id. */
+    chips?: ReactNode
+    /** Actions after the chips on the same line, such as opening the full page. */
+    actions?: ReactNode
+    /** The verbs pinned at the sheet's foot. */
+    foot?: ReactNode
+    size?: 'md' | 'lg' | 'xl'
+    className?: string
+    children: ReactNode
+    words?: Partial<DetailSheetWords>
+}
+
 /**
  * One thing's detail in a sheet from the right, so a row of a list is read without leaving the
  * list: a head with the thing's code over its title, a sentence under it, and one line of its chips
@@ -35,25 +55,7 @@ export function DetailSheet({
     className,
     children,
     words: given,
-}: {
-    open: boolean
-    onOpenChange: (open: boolean) => void
-    title: ReactNode
-    /** The thing's addressable code, over the title in the code face. */
-    code?: string
-    /** A sentence under the title. */
-    description?: ReactNode
-    /** The thing's chips on a line under the title: its kind, its state, its id. */
-    chips?: ReactNode
-    /** Actions after the chips on the same line, such as opening the full page. */
-    actions?: ReactNode
-    /** The verbs pinned at the sheet's foot. */
-    foot?: ReactNode
-    size?: 'md' | 'lg' | 'xl'
-    className?: string
-    children: ReactNode
-    words?: Partial<DetailSheetWords>
-}) {
+}: DetailSheetProps) {
     const words = { ...WORDS, ...given }
     const lined = chips !== undefined || actions !== undefined
     const body = useRef<HTMLDivElement>(null)

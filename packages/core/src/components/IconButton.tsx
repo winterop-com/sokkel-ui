@@ -4,6 +4,23 @@ import { cn } from '../lib/cn'
 import { Button } from './ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 
+export type IconButtonProps = Omit<
+    ComponentProps<typeof Button>,
+    'children' | 'size' | 'aria-label' | 'aria-pressed' | 'reason' | 'reasonSide'
+> & {
+    /** What the button does, said by its tooltip and its accessible name. */
+    label: string
+    /** The icon. */
+    children: ReactNode
+    size?: 'icon-xs' | 'icon-sm' | 'icon' | 'icon-lg'
+    /** On or off, for a button that toggles; leave it out for one that acts. */
+    pressed?: boolean
+    /** Which side the tooltip opens on. */
+    side?: 'top' | 'bottom' | 'left' | 'right'
+    /** Why the button cannot be pressed now; given, the button is disabled and its tooltip says it. */
+    reason?: ReactNode
+}
+
 /**
  * A button that shows only an icon. Its label is its accessible name and its tooltip, so the two
  * never drift apart. A ghost button draws its icon in the quiet ink until hovered; `pressed` marks
@@ -21,19 +38,7 @@ export function IconButton({
     disabled,
     className,
     ...props
-}: Omit<ComponentProps<typeof Button>, 'children' | 'size' | 'aria-label' | 'aria-pressed' | 'reason' | 'reasonSide'> & {
-    /** What the button does, said by its tooltip and its accessible name. */
-    label: string
-    /** The icon. */
-    children: ReactNode
-    size?: 'icon-xs' | 'icon-sm' | 'icon' | 'icon-lg'
-    /** On or off, for a button that toggles; leave it out for one that acts. */
-    pressed?: boolean
-    /** Which side the tooltip opens on. */
-    side?: 'top' | 'bottom' | 'left' | 'right'
-    /** Why the button cannot be pressed now; given, the button is disabled and its tooltip says it. */
-    reason?: ReactNode
-}) {
+}: IconButtonProps) {
     const held = reason !== undefined && reason !== null && reason !== false
     return (
         <Tooltip>

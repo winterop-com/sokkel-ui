@@ -111,22 +111,7 @@ function Json({ text, words }: { text: string; words: FilePreviewWords }) {
     )
 }
 
-/**
- * What a file holds, drawn for its kind: an image whole on a checkered ground, a CSV as a small
- * table of its first rows, JSON as a tree to open, and text or code highlighted. Any other kind
- * shows its icon and says it has no preview.
- */
-export function FilePreview({
-    name,
-    kind,
-    src,
-    text,
-    language,
-    maxRows = 12,
-    fallback,
-    className,
-    words: given,
-}: {
+export interface FilePreviewProps {
     name: string
     kind: FileKind
     /** An image's address or data URI. */
@@ -141,7 +126,14 @@ export function FilePreview({
     fallback?: ReactNode
     className?: string
     words?: Partial<FilePreviewWords>
-}) {
+}
+
+/**
+ * What a file holds, drawn for its kind: an image whole on a checkered ground, a CSV as a small
+ * table of its first rows, JSON as a tree to open, and text or code highlighted. Any other kind
+ * shows its icon and says it has no preview.
+ */
+export function FilePreview({ name, kind, src, text, language, maxRows = 12, fallback, className, words: given }: FilePreviewProps) {
     const words = { ...WORDS, ...given }
     const body = (() => {
         if (kind === 'image' && src !== undefined) {

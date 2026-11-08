@@ -14,27 +14,22 @@ export interface CopyButtonWords {
 
 const WORDS: CopyButtonWords = { copy: 'Copy', copied: 'Copied' }
 
-/**
- * A button that copies a value. Its name and its tooltip turn to the copied word for a moment after
- * a press, so the announcement matches what is drawn. `showLabel` draws the word beside the icon
- * and drops the tooltip, for a footer where the action wants saying; `icon` replaces the copy glyph,
- * such as a link for copying an address.
- */
-export function CopyButton({
-    value,
-    size = 'icon-sm',
-    className,
-    words: given,
-    showLabel = false,
-    icon,
-}: {
+export interface CopyButtonProps {
     value: string
     size?: 'icon-xs' | 'icon-sm' | 'icon'
     className?: string
     words?: Partial<CopyButtonWords>
     showLabel?: boolean
     icon?: ReactNode
-}) {
+}
+
+/**
+ * A button that copies a value. Its name and its tooltip turn to the copied word for a moment after
+ * a press, so the announcement matches what is drawn. `showLabel` draws the word beside the icon
+ * and drops the tooltip, for a footer where the action wants saying; `icon` replaces the copy glyph,
+ * such as a link for copying an address.
+ */
+export function CopyButton({ value, size = 'icon-sm', className, words: given, showLabel = false, icon }: CopyButtonProps) {
     const words = { ...WORDS, ...given }
     const { copied, copy: write } = useCopy()
     const word = copied ? words.copied : words.copy

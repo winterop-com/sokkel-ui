@@ -5,27 +5,22 @@ const SIZE = {
     md: 'h-5 min-w-5 text-xs',
 } as const
 
-/**
- * A count of what is waiting, such as unread messages, on the critical color. Above `max` it
- * says `99+`. Placed over an icon, the caller positions it. `sm` is the small count a narrow strip
- * hangs at an icon's corner; `round` is the round badge a count over an icon reads as, growing into
- * a capsule past one digit.
- */
-export function Count({
-    value,
-    max = 99,
-    label,
-    size = 'md',
-    shape = 'square',
-    className,
-}: {
+export interface CountProps {
     value: number
     max?: number
     label?: string
     size?: keyof typeof SIZE
     shape?: 'square' | 'round'
     className?: string
-}) {
+}
+
+/**
+ * A count of what is waiting, such as unread messages, on the critical color. Above `max` it
+ * says `99+`. Placed over an icon, the caller positions it. `sm` is the small count a narrow strip
+ * hangs at an icon's corner; `round` is the round badge a count over an icon reads as, growing into
+ * a capsule past one digit.
+ */
+export function Count({ value, max = 99, label, size = 'md', shape = 'square', className }: CountProps) {
     return (
         <span
             aria-label={label}

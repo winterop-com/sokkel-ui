@@ -1,11 +1,16 @@
 import { Fragment } from 'react'
 
+export interface ProseTextProps {
+    text: string
+    className?: string
+}
+
 /**
  * A sentence whose machine parts are marked with backticks, drawn with those parts in the code
  * face: "Set `base_url` in the service" shows `base_url` in mono. A server's own diagnostics
  * arrive written that way.
  */
-export function ProseText({ text, className }: { text: string; className?: string }) {
+export function ProseText({ text, className }: ProseTextProps) {
     const parts = text.split('`')
     // An odd count of backticks leaves the last one unmatched; it is drawn as written.
     const closed = parts.length % 2 === 1

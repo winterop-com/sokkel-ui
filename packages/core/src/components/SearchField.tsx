@@ -14,23 +14,7 @@ const WORDS: SearchFieldWords = {
     clear: 'Clear the search',
 }
 
-/**
- * The one search box: a glyph, the text, a clear button once there is text, and the `/` key that
- * focuses it from anywhere on the page. Escape clears it, then leaves it.
- *
- * A single border recolors on focus; there is no ring outside it, so a focused field shows one
- * outline, not two.
- */
-export function SearchField({
-    value,
-    onChange,
-    placeholder = 'Search',
-    shortcut = true,
-    className,
-    words: given,
-    inputRef,
-    inputProps,
-}: {
+export interface SearchFieldProps {
     value: string
     onChange: (value: string) => void
     placeholder?: string
@@ -61,7 +45,25 @@ export function SearchField({
         | 'onBlur'
         | 'onKeyDown'
     >
-}) {
+}
+
+/**
+ * The one search box: a glyph, the text, a clear button once there is text, and the `/` key that
+ * focuses it from anywhere on the page. Escape clears it, then leaves it.
+ *
+ * A single border recolors on focus; there is no ring outside it, so a focused field shows one
+ * outline, not two.
+ */
+export function SearchField({
+    value,
+    onChange,
+    placeholder = 'Search',
+    shortcut = true,
+    className,
+    words: given,
+    inputRef,
+    inputProps,
+}: SearchFieldProps) {
     const words = { ...WORDS, ...given }
     const input = useRef<HTMLInputElement | null>(null)
     const { onKeyDown, ...rest } = inputProps ?? {}

@@ -120,6 +120,10 @@ const PROGRESS_TONE: Partial<Record<Status, string>> = {
     succeeded: 'bg-status-succeeded',
 }
 
+export interface GraphHandlesProps {
+    selected?: boolean
+}
+
 /**
  * Where a node's edges end. React Flow routes an edge only to a handle, so a box keeps two, on the
  * sides its graph's direction gives them; in a view they are invisible and connect nothing, and on
@@ -127,7 +131,7 @@ const PROGRESS_TONE: Partial<Record<Status, string>> = {
  * takes `onAppend`, the output port grows into an add button while the node is hovered or chosen:
  * a click on it adds the next step, and a drag from it still connects.
  */
-export function GraphHandles({ selected = false }: { selected?: boolean }) {
+export function GraphHandles({ selected = false }: GraphHandlesProps) {
     const down = useGraphDirection() === 'down'
     const editable = useContext(GraphEditableContext)
     const context = useContext(GraphEditingContext)
@@ -173,13 +177,19 @@ const APPEND_SHOWN = 'size-4! [&_svg]:opacity-100'
 const PORT =
     'z-10! size-2.5! rounded-chip! border! border-border-strong! bg-card! transition-colors hover:border-ring! hover:bg-ring! group-data-graph-connecting/graph:border-ring! group-data-graph-connecting/graph:bg-[color-mix(in_oklab,var(--ring)_45%,var(--card))]!'
 
+export interface GraphNodeBoxProps {
+    data: GraphNodeData
+    selected?: boolean
+    className?: string
+}
+
 /**
  * One node as a box: the title (the name, or else the code in the code face) with an optional glyph
  * and a status dot, then the code and kind on a mono line with the duration at its right, and a
  * progress line along the foot. A status's color is the only color it wears; selection is a
  * neutral ring.
  */
-export function GraphNodeBox({ data, selected = false, className }: { data: GraphNodeData; selected?: boolean; className?: string }) {
+export function GraphNodeBox({ data, selected = false, className }: GraphNodeBoxProps) {
     const { title, named, line, duration } = linesOf(data)
     const Icon = data.icon
     const status = data.status
@@ -233,8 +243,10 @@ export function GraphNodeBox({ data, selected = false, className }: { data: Grap
     )
 }
 
+export type GraphNodeProps = NodeProps<GraphNodeKind>
+
 /** A node box as React Flow's node component, with the handles its edges end at. */
-export function GraphNode({ data, selected }: NodeProps<GraphNodeKind>) {
+export function GraphNode({ data, selected }: GraphNodeProps) {
     return (
         <>
             <GraphHandles selected={selected} />

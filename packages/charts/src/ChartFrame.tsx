@@ -56,6 +56,34 @@ function save(name: string, href: string) {
 const TOOL =
     'flex size-6 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-solid focus-visible:outline-ring data-popup-open:bg-hover'
 
+export interface ChartFrameProps {
+    title?: ReactNode
+    subtitle?: ReactNode
+    /** What the panel shows, behind an info marker beside the title. */
+    info?: ReactNode
+    actions?: ReactNode
+    legend?: readonly LegendItem[]
+    /** A wrapped row of series under the chart, or a table of their figures. */
+    legendMode?: 'list' | 'table'
+    legendStats?: readonly LegendStat[]
+    legendFormat?: (value: number) => string
+    /** The export's file name, without an extension. */
+    file?: string
+    exportable?: boolean
+    expandable?: boolean
+    /** Opens the chart in the window at first. */
+    defaultExpanded?: boolean
+    loading?: boolean
+    empty?: boolean
+    /** The chart area's size; it fills the window when expanded. */
+    bodyClassName?: string
+    /** The content sets the body's height, for content laid out in the page rather than drawn on a canvas. */
+    fit?: boolean
+    words?: Partial<ChartFrameWords>
+    className?: string
+    children: (state: ChartState) => ReactNode
+}
+
 /**
  * The chrome around a chart: a small title with an optional info marker and subtitle, the panel's
  * actions, an Export menu (SVG and PNG, with the title and legend drawn into the image) and an
@@ -84,33 +112,7 @@ export function ChartFrame({
     words: given,
     className,
     children,
-}: {
-    title?: ReactNode
-    subtitle?: ReactNode
-    /** What the panel shows, behind an info marker beside the title. */
-    info?: ReactNode
-    actions?: ReactNode
-    legend?: readonly LegendItem[]
-    /** A wrapped row of series under the chart, or a table of their figures. */
-    legendMode?: 'list' | 'table'
-    legendStats?: readonly LegendStat[]
-    legendFormat?: (value: number) => string
-    /** The export's file name, without an extension. */
-    file?: string
-    exportable?: boolean
-    expandable?: boolean
-    /** Opens the chart in the window at first. */
-    defaultExpanded?: boolean
-    loading?: boolean
-    empty?: boolean
-    /** The chart area's size; it fills the window when expanded. */
-    bodyClassName?: string
-    /** The content sets the body's height, for content laid out in the page rather than drawn on a canvas. */
-    fit?: boolean
-    words?: Partial<ChartFrameWords>
-    className?: string
-    children: (state: ChartState) => ReactNode
-}) {
+}: ChartFrameProps) {
     const words = { ...WORDS, ...given }
     const handle = useRef<ChartHandle | null>(null)
     const [root, setRoot] = useState<HTMLElement | null>(null)

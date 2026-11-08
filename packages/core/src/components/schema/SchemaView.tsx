@@ -159,23 +159,20 @@ function Fields({
     )
 }
 
-/**
- * A JSON Schema as a person reads it: each field's name in the code face, `*` when required, its
- * type in words, its description, then its allowed values, default and rules. Objects and arrays
- * of objects fold open, to `open` levels at first; local `$ref`s and `allOf` are followed.
- */
-export function SchemaView({
-    schema,
-    open = 1,
-    words: given,
-    className,
-}: {
+export interface SchemaViewProps {
     schema: JsonSchema
     /** How many levels of nested fields start open. */
     open?: number
     words?: Partial<SchemaViewWords>
     className?: string
-}) {
+}
+
+/**
+ * A JSON Schema as a person reads it: each field's name in the code face, `*` when required, its
+ * type in words, its description, then its allowed values, default and rules. Objects and arrays
+ * of objects fold open, to `open` levels at first; local `$ref`s and `allOf` are followed.
+ */
+export function SchemaView({ schema, open = 1, words: given, className }: SchemaViewProps) {
     const words = { ...WORDS, ...given }
     return (
         <div className={cn('text-sm', className)}>

@@ -75,8 +75,13 @@ const ICONS: Record<FileKind, { icon: LucideIcon; tone: string }> = {
     other: { icon: File, tone: 'text-muted-foreground' },
 }
 
+export interface FileTypeIconProps {
+    kind: FileKind
+    className?: string
+}
+
 /** The icon of a file's kind, in that kind's color. */
-export function FileTypeIcon({ kind, className }: { kind: FileKind; className?: string }) {
+export function FileTypeIcon({ kind, className }: FileTypeIconProps) {
     const { icon: Icon, tone } = ICONS[kind]
     return <Icon aria-hidden className={cn('size-4 shrink-0', tone, className)} />
 }
@@ -135,6 +140,23 @@ function pressable(onPress: (() => void) | undefined) {
     }
 }
 
+export interface FileListProps {
+    /** The rows in the order to draw them; `sortFiles` orders them by `sort`. */
+    entries: readonly FileEntry[]
+    sort?: FileSort
+    onSortChange?: (sort: FileSort) => void
+    selected?: readonly string[]
+    /** Draws the checkboxes; without it the listing has no selection. */
+    onSelectedChange?: (ids: string[]) => void
+    /** The row whose file is open, as in a preview beside the listing. */
+    active?: string
+    onOpen?: (entry: FileEntry) => void
+    /** What an empty folder shows in place of the rows. */
+    empty?: ReactNode
+    className?: string
+    words?: Partial<FileListWords>
+}
+
 /**
  * A folder's contents as rows: a checkbox, the name with its kind's icon, the size, when it
  * changed, and who owns it. A column header sorts by that column and a second press reverses it;
@@ -155,22 +177,7 @@ export function FileList({
     empty,
     className,
     words: given,
-}: {
-    /** The rows in the order to draw them; `sortFiles` orders them by `sort`. */
-    entries: readonly FileEntry[]
-    sort?: FileSort
-    onSortChange?: (sort: FileSort) => void
-    selected?: readonly string[]
-    /** Draws the checkboxes; without it the listing has no selection. */
-    onSelectedChange?: (ids: string[]) => void
-    /** The row whose file is open, as in a preview beside the listing. */
-    active?: string
-    onOpen?: (entry: FileEntry) => void
-    /** What an empty folder shows in place of the rows. */
-    empty?: ReactNode
-    className?: string
-    words?: Partial<FileListWords>
-}) {
+}: FileListProps) {
     const words = { ...WORDS, ...given }
     const selectable = onSelectedChange !== undefined
     const chosen = new Set(selected)
@@ -305,6 +312,18 @@ export function FileList({
     )
 }
 
+export interface FileTileProps {
+    entry: FileEntry
+    selected?: boolean
+    /** Draws the checkbox; without it the tile has no selection. */
+    onSelectedChange?: (selected: boolean) => void
+    /** Whether anything in the grid is selected, which keeps every checkbox in view. */
+    selecting?: boolean
+    active?: boolean
+    onOpen?: (entry: FileEntry) => void
+    words?: Partial<Pick<FileListWords, 'select'>>
+}
+
 /**
  * One file as a tile: its picture when it has one, its kind's icon on a wash when not, then the
  * name and the size. The checkbox in its corner shows on hover, on focus, and whenever anything
@@ -318,17 +337,7 @@ export function FileTile({
     active = false,
     onOpen,
     words: given,
-}: {
-    entry: FileEntry
-    selected?: boolean
-    /** Draws the checkbox; without it the tile has no selection. */
-    onSelectedChange?: (selected: boolean) => void
-    /** Whether anything in the grid is selected, which keeps every checkbox in view. */
-    selecting?: boolean
-    active?: boolean
-    onOpen?: (entry: FileEntry) => void
-    words?: Partial<Pick<FileListWords, 'select'>>
-}) {
+}: FileTileProps) {
     const words = { ...WORDS, ...given }
     return (
         <div
@@ -378,6 +387,19 @@ export function FileTile({
     )
 }
 
+export interface FileGridProps {
+    entries: readonly FileEntry[]
+    selected?: readonly string[]
+    onSelectedChange?: (ids: string[]) => void
+    active?: string
+    onOpen?: (entry: FileEntry) => void
+    empty?: ReactNode
+    /** The narrowest a tile gets before the row holds one fewer. */
+    minTile?: string
+    className?: string
+    words?: Partial<FileListWords>
+}
+
 /**
  * A folder's contents as tiles, as many to a row as the box holds: pictures for images, icons for
  * everything else. Selection and opening work as in `FileList`.
@@ -392,18 +414,7 @@ export function FileGrid({
     minTile = '9.5rem',
     className,
     words: given,
-}: {
-    entries: readonly FileEntry[]
-    selected?: readonly string[]
-    onSelectedChange?: (ids: string[]) => void
-    active?: string
-    onOpen?: (entry: FileEntry) => void
-    empty?: ReactNode
-    /** The narrowest a tile gets before the row holds one fewer. */
-    minTile?: string
-    className?: string
-    words?: Partial<FileListWords>
-}) {
+}: FileGridProps) {
     const words = { ...WORDS, ...given }
     if (entries.length === 0) return <>{empty ?? <p className="py-3 text-sm text-muted-foreground">{words.empty}</p>}</>
     const chosen = new Set(selected)

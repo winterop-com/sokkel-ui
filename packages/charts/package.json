@@ -22,13 +22,69 @@
     "exports": {
         "./styles.css": "./src/styles.css",
         "./sources/*.css": "./dist/sources/*.css",
+        "./Chart": {
+            "types": "./dist/Chart.d.ts",
+            "import": "./dist/Chart.js"
+        },
+        "./ChartFrame": {
+            "types": "./dist/ChartFrame.d.ts",
+            "import": "./dist/ChartFrame.js"
+        },
+        "./ChartGrid": {
+            "types": "./dist/ChartGrid.d.ts",
+            "import": "./dist/ChartGrid.js"
+        },
+        "./ChartLegend": {
+            "types": "./dist/ChartLegend.d.ts",
+            "import": "./dist/ChartLegend.js"
+        },
+        "./data": {
+            "types": "./dist/data.d.ts",
+            "import": "./dist/data.js"
+        },
+        "./EChart": {
+            "types": "./dist/EChart.d.ts",
+            "import": "./dist/EChart.js"
+        },
         "./kinds": {
             "types": "./dist/kinds/index.d.ts",
             "import": "./dist/kinds/index.js"
         },
-        "./*": {
-            "types": "./dist/*.d.ts",
-            "import": "./dist/*.js"
+        "./dashboard/BarGauge": {
+            "types": "./dist/dashboard/BarGauge.d.ts",
+            "import": "./dist/dashboard/BarGauge.js"
+        },
+        "./dashboard/BarPanel": {
+            "types": "./dist/dashboard/BarPanel.d.ts",
+            "import": "./dist/dashboard/BarPanel.js"
+        },
+        "./dashboard/ChartPanel": {
+            "types": "./dist/dashboard/ChartPanel.d.ts",
+            "import": "./dist/dashboard/ChartPanel.js"
+        },
+        "./dashboard/ComboPanel": {
+            "types": "./dist/dashboard/ComboPanel.d.ts",
+            "import": "./dist/dashboard/ComboPanel.js"
+        },
+        "./dashboard/GaugePanel": {
+            "types": "./dist/dashboard/GaugePanel.d.ts",
+            "import": "./dist/dashboard/GaugePanel.js"
+        },
+        "./dashboard/HeatmapPanel": {
+            "types": "./dist/dashboard/HeatmapPanel.d.ts",
+            "import": "./dist/dashboard/HeatmapPanel.js"
+        },
+        "./dashboard/RadarPanel": {
+            "types": "./dist/dashboard/RadarPanel.d.ts",
+            "import": "./dist/dashboard/RadarPanel.js"
+        },
+        "./dashboard/series": {
+            "types": "./dist/dashboard/series.d.ts",
+            "import": "./dist/dashboard/series.js"
+        },
+        "./dashboard/TimeSeriesPanel": {
+            "types": "./dist/dashboard/TimeSeriesPanel.d.ts",
+            "import": "./dist/dashboard/TimeSeriesPanel.js"
         }
     },
     "publishConfig": {

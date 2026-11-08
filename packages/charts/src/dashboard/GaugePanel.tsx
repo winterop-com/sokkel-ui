@@ -50,6 +50,30 @@ export function gaugeOption({
     })
 }
 
+export interface GaugePanelProps {
+    title: ReactNode
+    info?: ReactNode
+    actions?: ReactNode
+    value: number | null
+    min?: number
+    max?: number
+    thresholds?: readonly Threshold[]
+    /** The arc's color token when there are no thresholds. */
+    color?: string
+    unit?: string
+    decimals?: number
+    format?: (value: number) => string
+    /** A word under the value, such as what it measures. */
+    label?: string
+    span?: PanelSpan
+    /** The dial's box: `h-32` by default, and `h-28` on a phone. */
+    bodyClassName?: string
+    loading?: boolean
+    file?: string
+    words?: Partial<ChartFrameWords>
+    className?: string
+}
+
 /**
  * A dashboard panel of one reading on an arc from `min` to `max`, filled in the color its
  * thresholds give it, with the thresholds themselves as a thin band outside the arc.
@@ -76,29 +100,7 @@ export function GaugePanel({
     file,
     words,
     className,
-}: {
-    title: ReactNode
-    info?: ReactNode
-    actions?: ReactNode
-    value: number | null
-    min?: number
-    max?: number
-    thresholds?: readonly Threshold[]
-    /** The arc's color token when there are no thresholds. */
-    color?: string
-    unit?: string
-    decimals?: number
-    format?: (value: number) => string
-    /** A word under the value, such as what it measures. */
-    label?: string
-    span?: PanelSpan
-    /** The dial's box: `h-32` by default, and `h-28` on a phone. */
-    bodyClassName?: string
-    loading?: boolean
-    file?: string
-    words?: Partial<ChartFrameWords>
-    className?: string
-}) {
+}: GaugePanelProps) {
     const phone = useIsMobile()
     const option = useMemo(
         () => gaugeOption({ value, min, max, thresholds, color, unit, decimals, format, label, small: phone }),

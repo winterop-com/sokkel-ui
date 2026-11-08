@@ -58,6 +58,21 @@ function Line({ icon, label, children }: { icon: ReactNode; label?: string; chil
     )
 }
 
+export interface EventDetailsProps {
+    event: CalendarEvent
+    code?: boolean
+    facts?: readonly EventFact[]
+    /** Where it happens: a room, an address, a call. */
+    location?: ReactNode
+    people?: readonly EventPerson[]
+    /** How many pictures show before the rest are counted. */
+    peopleShown?: number
+    notes?: ReactNode
+    actions?: ReactNode
+    className?: string
+    words?: Partial<EventDetailsWords>
+}
+
 /**
  * What an event is, as its popover or a dialog shows it: its color and title over the date and
  * time, then a line for each fact the app gives (`facts`: the calendar, a run's state, a host),
@@ -79,20 +94,7 @@ export function EventDetails({
     actions,
     className,
     words: given,
-}: {
-    event: CalendarEvent
-    code?: boolean
-    facts?: readonly EventFact[]
-    /** Where it happens: a room, an address, a call. */
-    location?: ReactNode
-    people?: readonly EventPerson[]
-    /** How many pictures show before the rest are counted. */
-    peopleShown?: number
-    notes?: ReactNode
-    actions?: ReactNode
-    className?: string
-    words?: Partial<EventDetailsWords>
-}) {
+}: EventDetailsProps) {
     const words = { ...WORDS, ...given }
     const shown = people?.slice(0, peopleShown) ?? []
     const rest = (people?.length ?? 0) - shown.length

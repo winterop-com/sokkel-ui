@@ -1,7 +1,9 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
+
+import { exportedComponents, exportProblems, importPath, manifestOf, type PackageDir } from '../scripts/components-index'
 
 /**
  * The library's rules, checked on every source file: sizes and colors come from tokens, and the
@@ -115,12 +117,58 @@ const COMPONENTS = Object.values(SOURCES)
     .filter((path) => path.endsWith('.tsx') && !/\/packages\/core\/src\/(hooks|lib)\//.test(path))
     .filter((path) => /export (function|const) [A-Z]/.test(readFileSync(path, 'utf8')))
 
-/** The name an app imports a package's module by, as the package's `exports` map it. */
+/** A package's `exports` map, by the package's folder name. */
+const EXPORTS = Object.fromEntries(PACKAGES.map((name) => [name, manifestOf(name as PackageDir).exports]))
+
+/** The name an app imports a package's module by, as the package's `exports` map gives it; a private module keeps its path. */
 function specifier(path: string): string {
     const [, name, rest] = /\/packages\/([^/]+)\/src\/(.+)\.tsx?$/.exec(path) ?? []
-    if (name !== CORE) return `${NAMES[name]}/${rest.replace(/\/index$/, '')}`
-    return `${NAMES[CORE]}/${rest.replace(/^components\/ui\//, 'primitives/').replace(/^components\//, '')}`
+    return importPath(NAMES[name], EXPORTS[name], rest) ?? `${NAMES[name]}/${rest}`
 }
+
+/**
+ * Where an import of a package's path lands under its `exports` map: the target of an exact entry
+ * or of a pattern whose `*` the path fills, or undefined when the map does not export the path.
+ */
+function exported(path: string): string | undefined {
+    const name = Object.entries(NAMES).find(([, full]) => path.startsWith(`${full}/`))?.[0]
+    if (name === undefined) return undefined
+    const subpath = `.${path.slice(NAMES[name].length)}`
+    for (const [key, target] of Object.entries(EXPORTS[name])) {
+        const built = typeof target === 'string' ? target : target.import
+        if (built === undefined) continue
+        if (key === subpath) return built
+        const star = key.indexOf('*')
+        if (star < 0) continue
+        const [prefix, suffix] = [key.slice(0, star), key.slice(star + 1)]
+        if (subpath.startsWith(prefix) && subpath.endsWith(suffix) && subpath.length > prefix.length + suffix.length) {
+            return built.replace('*', subpath.slice(prefix.length, subpath.length - suffix.length))
+        }
+    }
+    return undefined
+}
+
+/** Every script, test and stylesheet under `dir` that may import a package path, outside installed and built folders. */
+function importers(dir: string): string[] {
+    if (!existsSync(dir)) return []
+    return readdirSync(dir).flatMap((name) => {
+        const path = join(dir, name)
+        if (['node_modules', 'dist', 'target'].includes(name)) return []
+        if (statSync(path).isDirectory()) return importers(path)
+        return /\.(tsx?|css)$/.test(name) ? [path] : []
+    })
+}
+
+/** The packages with their tests, the stories, Storybook, the examples, the tools and the root's build configs. */
+const IMPORTERS = [
+    ...['packages', 'src', '.storybook', 'examples', 'scripts', 'e2e'].flatMap((dir) => importers(join(ROOT, dir))),
+    ...['vite.config.ts', 'vite.lib.ts', 'vitest.config.ts'].map((file) => join(ROOT, file)),
+]
+
+/** The docs an app's people and agents read paths from. */
+const DOCS = ['llms.txt', 'README.md', 'examples/README.md', ...readdirSync(join(ROOT, 'docs')).map((name) => `docs/${name}`)]
+    .filter((file) => /\.(md|txt)$/.test(file))
+    .map((file) => join(ROOT, file))
 
 describe('the packages', () => {
     it('import one another by name, never by a path out of their own folder', () => {
@@ -134,6 +182,70 @@ describe('the packages', () => {
             }
         }
         expect(found, found.join('\n')).toEqual([])
+    })
+})
+
+describe('the exports maps', () => {
+    it('export every module that is not private, and no private one', () => {
+        const problems = exportProblems()
+        expect(problems, problems.join('\n')).toEqual([])
+    })
+
+    it('point every entry at a module or a file that is there', () => {
+        const missing: string[] = []
+        for (const name of PACKAGES) {
+            const own = join(ROOT, 'packages', name)
+            for (const [key, target] of Object.entries(EXPORTS[name])) {
+                const built = typeof target === 'string' ? target : target.import
+                if (built === undefined || built.includes('*')) continue
+                // A built module is there when its source is; the build writes the rest of `dist`.
+                const source = /^\.\/dist\/(.+)\.js$/.exec(built)?.[1]
+                const there =
+                    source === undefined
+                        ? existsSync(join(own, built))
+                        : ['.ts', '.tsx'].some((ext) => existsSync(join(own, 'src', `${source}${ext}`)))
+                if (!there) missing.push(`${NAMES[name]} ${key}: ${built}`)
+            }
+        }
+        expect(missing, missing.join('\n')).toEqual([])
+    })
+
+    it('export every package path the packages, stories, examples, tools and docs import', () => {
+        const unexported: string[] = []
+        for (const path of IMPORTERS) {
+            const text = readFileSync(path, 'utf8')
+            for (const match of text.matchAll(/(?:from|import|mock)\s*\(?\s*['"](@winterop-com\/sokkel-ui[^'"]*)['"]/g)) {
+                if (exported(match[1]) === undefined) unexported.push(`${relative(ROOT, path)}: ${match[1]}`)
+            }
+        }
+        // A path a doc names in code, quotes or backticks; a placeholder such as `<name>` or `*`, or a folder, names no one module.
+        for (const path of DOCS) {
+            for (const match of readFileSync(path, 'utf8').matchAll(/[`'"](@winterop-com\/sokkel-ui(?:-[a-z]+)?\/[^`'"\s]+)[`'"]/g)) {
+                if (/[<*{$]|\/$/.test(match[1])) continue
+                if (exported(match[1]) === undefined) unexported.push(`${relative(ROOT, path)}: ${match[1]}`)
+            }
+        }
+        expect(unexported, unexported.join('\n')).toEqual([])
+    })
+})
+
+describe('the components', () => {
+    it('export the type of their props as `<Component>Props`, beside them', () => {
+        const missing: string[] = []
+        for (const path of Object.values(SOURCES).flat()) {
+            if (!path.endsWith('.tsx')) continue
+            const source = readFileSync(path, 'utf8')
+            for (const { name } of exportedComponents(source)) {
+                const takesNone = new RegExp(`(?:function ${name}\\s*(?:<[^>]*>)?\\(\\s*\\)|const ${name}\\s*=\\s*\\(\\s*\\)\\s*=>)`).test(
+                    source,
+                )
+                const exportsProps =
+                    new RegExp(`^export (?:interface|type) ${name}Props\\b`, 'm').test(source) ||
+                    new RegExp(`^export (?:type )?\\{[^}]*\\b${name}Props\\b[^}]*\\}`, 'm').test(source)
+                if (!takesNone && !exportsProps) missing.push(`${relative(ROOT, path)}: ${name}Props`)
+            }
+        }
+        expect(missing, missing.join('\n')).toEqual([])
     })
 })
 

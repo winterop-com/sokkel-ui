@@ -67,6 +67,14 @@ function scrollNear(element: HTMLElement, x: number, y: number) {
     }
 }
 
+export interface BoardProps {
+    onMove?: (move: BoardMove) => void
+    /** The width of a column, and of a lane's cell. */
+    columnWidth?: string
+    children: ReactNode
+    className?: string
+}
+
 /**
  * A board of cards in drop zones, the ground a board's columns or lanes stand on. It scrolls
  * sideways when the columns are wider than the room, and moves cards by drag and drop with
@@ -82,18 +90,7 @@ function scrollNear(element: HTMLElement, x: number, y: number) {
  * `BoardDrop`. Anything inside a card marked `data-board-nodrag`, such as its menu, keeps its
  * own press.
  */
-export function Board({
-    onMove,
-    columnWidth = '18rem',
-    children,
-    className,
-}: {
-    onMove?: (move: BoardMove) => void
-    /** The width of a column, and of a lane's cell. */
-    columnWidth?: string
-    children: ReactNode
-    className?: string
-}) {
+export function Board({ onMove, columnWidth = '18rem', children, className }: BoardProps) {
     const root = useRef<HTMLDivElement>(null)
     const [drag, setDrag] = useState<DragState | null>(null)
     const session = useRef<Session | null>(null)
@@ -261,23 +258,20 @@ function cardsIn(zone: HTMLElement): HTMLElement[] {
     return [...zone.querySelectorAll<HTMLElement>('[data-board-card]')].filter((card) => card.closest('[data-board-drop]') === zone)
 }
 
-/**
- * Where cards lie and land: a column's list, or one cell of a lane. Its `id` is what a move
- * names; a board with lanes gives each cell an id that says both its lane and its column. While
- * a card is over it, it washes, and a line at its end shows a card landing last.
- */
-export function BoardDrop({
-    id,
-    children,
-    empty,
-    className,
-}: {
+export interface BoardDropProps {
     id: string
     children?: ReactNode
     /** What an empty zone says, such as "No items". */
     empty?: ReactNode
     className?: string
-}) {
+}
+
+/**
+ * Where cards lie and land: a column's list, or one cell of a lane. Its `id` is what a move
+ * names; a board with lanes gives each cell an id that says both its lane and its column. While
+ * a card is over it, it washes, and a line at its end shows a card landing last.
+ */
+export function BoardDrop({ id, children, empty, className }: BoardDropProps) {
     const drag = useBoardDrag()
     const over = drag !== null && drag.zone === id
     const hasCards = Array.isArray(children) ? children.some((child) => child !== null && child !== false) : children != null
@@ -316,20 +310,7 @@ const LANE_WORDS: BoardLaneWords = {
     expand: 'Unfold the lane',
 }
 
-/**
- * One lane of a board with swimlanes: a header across the board with the lane's title and how
- * many cards it holds, then its cells, one `BoardDrop` per column. The header stays in view as
- * the board scrolls sideways, and folds the lane away.
- */
-export function BoardLane({
-    title,
-    count,
-    columns,
-    collapsed = false,
-    onCollapsedChange,
-    children,
-    words: given,
-}: {
+export interface BoardLaneProps {
     title: ReactNode
     count?: number
     /** How many columns the board has, so the lane's cells line up under their heads. */
@@ -338,7 +319,14 @@ export function BoardLane({
     onCollapsedChange?: (collapsed: boolean) => void
     children: ReactNode
     words?: Partial<BoardLaneWords>
-}) {
+}
+
+/**
+ * One lane of a board with swimlanes: a header across the board with the lane's title and how
+ * many cards it holds, then its cells, one `BoardDrop` per column. The header stays in view as
+ * the board scrolls sideways, and folds the lane away.
+ */
+export function BoardLane({ title, count, columns, collapsed = false, onCollapsedChange, children, words: given }: BoardLaneProps) {
     const words = { ...LANE_WORDS, ...given }
     return (
         <section className="flex flex-col">

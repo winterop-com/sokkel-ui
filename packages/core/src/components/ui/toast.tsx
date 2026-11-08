@@ -9,15 +9,21 @@ import { XIcon, CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Load
 
 const toast = ToastPrimitive.createToastManager()
 
-function ToastProvider({ ...props }: ToastPrimitive.Provider.Props) {
+export type ToastProviderProps = ToastPrimitive.Provider.Props
+
+function ToastProvider({ ...props }: ToastProviderProps) {
     return <ToastPrimitive.Provider {...props} />
 }
 
-function ToastPortal({ ...props }: ToastPrimitive.Portal.Props) {
+export type ToastPortalProps = ToastPrimitive.Portal.Props
+
+function ToastPortal({ ...props }: ToastPortalProps) {
     return <ToastPrimitive.Portal data-slot="toast-portal" {...props} />
 }
 
-function ToastViewport({ className, ...props }: ToastPrimitive.Viewport.Props) {
+export type ToastViewportProps = ToastPrimitive.Viewport.Props
+
+function ToastViewport({ className, ...props }: ToastViewportProps) {
     return (
         <ToastPrimitive.Viewport
             data-slot="toast-viewport"
@@ -30,7 +36,9 @@ function ToastViewport({ className, ...props }: ToastPrimitive.Viewport.Props) {
     )
 }
 
-function Toast({ className, ...props }: ToastPrimitive.Root.Props) {
+export type ToastProps = ToastPrimitive.Root.Props
+
+function Toast({ className, ...props }: ToastProps) {
     return (
         <ToastPrimitive.Root
             data-slot="toast"
@@ -57,7 +65,9 @@ function Toast({ className, ...props }: ToastPrimitive.Root.Props) {
     )
 }
 
-function ToastContent({ className, ...props }: ToastPrimitive.Content.Props) {
+export type ToastContentProps = ToastPrimitive.Content.Props
+
+function ToastContent({ className, ...props }: ToastContentProps) {
     return (
         <ToastPrimitive.Content
             data-slot="toast-content"
@@ -70,21 +80,29 @@ function ToastContent({ className, ...props }: ToastPrimitive.Content.Props) {
     )
 }
 
-function ToastTitle({ className, ...props }: ToastPrimitive.Title.Props) {
+export type ToastTitleProps = ToastPrimitive.Title.Props
+
+function ToastTitle({ className, ...props }: ToastTitleProps) {
     return <ToastPrimitive.Title data-slot="toast-title" className={cn('text-sm font-medium', className)} {...props} />
 }
 
-function ToastDescription({ className, ...props }: ToastPrimitive.Description.Props) {
+export type ToastDescriptionProps = ToastPrimitive.Description.Props
+
+function ToastDescription({ className, ...props }: ToastDescriptionProps) {
     return (
         <ToastPrimitive.Description data-slot="toast-description" className={cn('text-sm text-muted-foreground', className)} {...props} />
     )
 }
 
-function ToastAction({ className, render = <Button variant="outline" size="sm" />, ...props }: ToastPrimitive.Action.Props) {
+export type ToastActionProps = ToastPrimitive.Action.Props
+
+function ToastAction({ className, render = <Button variant="outline" size="sm" />, ...props }: ToastActionProps) {
     return <ToastPrimitive.Action data-slot="toast-action" render={render} className={cn('shrink-0', className)} {...props} />
 }
 
-function ToastClose({ className, children, render = <Button variant="ghost" size="icon-sm" />, ...props }: ToastPrimitive.Close.Props) {
+export type ToastCloseProps = ToastPrimitive.Close.Props
+
+function ToastClose({ className, children, render = <Button variant="ghost" size="icon-sm" />, ...props }: ToastCloseProps) {
     return (
         <ToastPrimitive.Close
             data-slot="toast-close"
@@ -153,7 +171,9 @@ function ToastList() {
     ))
 }
 
-function Toaster({ children, toastManager = toast, ...props }: ToastPrimitive.Provider.Props) {
+export type ToasterProps = ToastPrimitive.Provider.Props
+
+function Toaster({ children, toastManager = toast, ...props }: ToasterProps) {
     return (
         <ToastProvider toastManager={toastManager} {...props}>
             {children}

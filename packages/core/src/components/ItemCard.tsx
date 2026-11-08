@@ -21,6 +21,27 @@ const WORDS: ItemCardWords = {
     menu: 'More actions',
 }
 
+export interface ItemCardProps {
+    /** The name; with none, the code is the title. */
+    title?: ReactNode
+    code?: string
+    description?: ReactNode
+    /** Drawn edge to edge at the top: artwork, a preview. */
+    media?: ReactNode
+    status?: ReactNode
+    facts?: readonly CardFact[]
+    /** Dropdown menu items behind the head's more button. */
+    menu?: ReactNode
+    href?: string
+    onSelect?: () => void
+    /** Marks the chosen card when the cards are a set to choose from. */
+    selected?: boolean
+    /** How many lines the title may take before it is cut short. */
+    titleLines?: TitleLines
+    className?: string
+    words?: Partial<ItemCardWords>
+}
+
 /**
  * The card for one thing: a project, a job, an album, a plan. Its title is the thing's name, or its
  * code when it has none; the code is drawn once, in the code face. A description, a status and
@@ -46,26 +67,7 @@ export function ItemCard({
     titleLines = 2,
     className,
     words: given,
-}: {
-    /** The name; with none, the code is the title. */
-    title?: ReactNode
-    code?: string
-    description?: ReactNode
-    /** Drawn edge to edge at the top: artwork, a preview. */
-    media?: ReactNode
-    status?: ReactNode
-    facts?: readonly CardFact[]
-    /** Dropdown menu items behind the head's more button. */
-    menu?: ReactNode
-    href?: string
-    onSelect?: () => void
-    /** Marks the chosen card when the cards are a set to choose from. */
-    selected?: boolean
-    /** How many lines the title may take before it is cut short. */
-    titleLines?: TitleLines
-    className?: string
-    words?: Partial<ItemCardWords>
-}) {
+}: ItemCardProps) {
     const words = { ...WORDS, ...given }
     const heading = title ?? code
     const showCode = title !== undefined && code !== undefined

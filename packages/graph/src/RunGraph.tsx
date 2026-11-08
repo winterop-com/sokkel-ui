@@ -25,6 +25,8 @@ function toneInto(status: Status | undefined): GraphEdgeData['tone'] {
     return AHEAD.has(status) ? 'quiet' : 'plain'
 }
 
+export type RunGraphProps = GraphViewProps & { steps: RunStep[]; formatDuration?: (ms: number) => string }
+
 /**
  * A run of a pipeline as a graph: each step with its status, its duration and, while it runs, its
  * progress. A step changing status moves no node; only a change of steps or their words does.
@@ -38,7 +40,7 @@ export function RunGraph({
     formatDuration = sayDuration,
     words,
     className,
-}: GraphViewProps & { steps: RunStep[]; formatDuration?: (ms: number) => string }) {
+}: RunGraphProps) {
     const items = useMemo<GraphItem[]>(
         () =>
             steps.map((step) => ({

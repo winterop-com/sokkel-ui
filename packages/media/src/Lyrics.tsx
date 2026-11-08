@@ -14,6 +14,17 @@ export interface LyricsWords {
 
 export const LYRICS_WORDS: LyricsWords = { label: 'Lyrics', none: 'No lyrics' }
 
+export interface LyricsProps {
+    lyrics: string | ParsedLyrics
+    /** Seconds from the start of what plays. */
+    position?: number
+    onSeek?: (seconds: number) => void
+    /** Whether timed lyrics keep the line being sung in the middle. */
+    follow?: boolean
+    className?: string
+    words?: Partial<LyricsWords>
+}
+
 /**
  * The lyrics of what plays, filling the box it is given and scrolling within it, as a panel beside
  * the player or the fullscreen view in the visualizer's place (`MediaBar`'s `lyrics`).
@@ -27,23 +38,7 @@ export const LYRICS_WORDS: LyricsWords = { label: 'Lyrics', none: 'No lyrics' }
  * `lyrics` takes LRC or plain text, read by `parseLyrics`, or lines it has already read. The
  * lines grow with the box: larger once it is as wide as a tablet.
  */
-export function Lyrics({
-    lyrics,
-    position = 0,
-    onSeek,
-    follow = true,
-    className,
-    words,
-}: {
-    lyrics: string | ParsedLyrics
-    /** Seconds from the start of what plays. */
-    position?: number
-    onSeek?: (seconds: number) => void
-    /** Whether timed lyrics keep the line being sung in the middle. */
-    follow?: boolean
-    className?: string
-    words?: Partial<LyricsWords>
-}) {
+export function Lyrics({ lyrics, position = 0, onSeek, follow = true, className, words }: LyricsProps) {
     const said = { ...LYRICS_WORDS, ...words }
     const read = useMemo(() => (typeof lyrics === 'string' ? parseLyrics(lyrics) : lyrics), [lyrics])
     const at = read.timed ? lyricLineAt(read.lines, position) : -1
