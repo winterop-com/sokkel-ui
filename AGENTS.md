@@ -119,6 +119,9 @@ and ask before acting.
 
 - Work on a branch with a draft PR. Stage named paths, never everything.
 - Conventional commits (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`), with no attribution lines.
+- Never wait on CI. A PR is merged as soon as the fast gates pass locally; neither its own CI run nor
+  main's is waited for, and a failure on main is fixed forward. A release does not wait for main's
+  CI either: `release.yaml` runs the gates itself before it publishes.
 - No tags and no releases unless the owner asks for one. A release is a PR that moves the version
   in every `packages/*/package.json` to the same one; once it is merged, the tag `vX.Y.Z` on that
   commit runs `.github/workflows/release.yaml`, which checks the tag against each package's version,
