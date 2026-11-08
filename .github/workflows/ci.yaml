@@ -1,14 +1,8 @@
 name: ci
 
-# The fast gates, then every story against its screenshot baseline and at the narrow widths.
-# Baselines are not in the code's tree; scripts/baselines.sh fetches them into e2e/__screenshots__:
-#   - `baselines` holds main's, as a single commit;
-#   - `baselines-for/<branch>` holds a branch's own, made by the screenshots workflow: one commit on
-#     top of `baselines` with what the branch changed. A branch is compared against `baselines`
-#     with its own commit laid over them, or against `baselines` alone when it has none.
-# On a push to main, the `baselines` job first finds the PR the push merged (through the API, from
-# the pushed commit); if that PR's branch has baselines of its own, it lays them onto `baselines`
-# and deletes its branch, so the visual jobs after it compare main against what the PR approved.
+# The fast gates, then every story rendered at the narrow widths: a story fails when it throws or
+# its page scrolls sideways. Screenshot comparison is off until the looks settle near 1.0; the
+# screenshots workflow and scripts/baselines.sh still retake baselines by hand.
 on:
     # A run can also be started by hand; the screenshots workflow starts one after a retake.
     workflow_dispatch:
@@ -25,7 +19,7 @@ concurrency:
 
 jobs:
     # Whether anything a story draws changed; a change to docs, Markdown or the Makefile alone skips
-    # the screenshot and layout jobs. Pushes to main always run them.
+    # the layout job. Pushes to main always run them.
     changes:
         runs-on: ubuntu-latest
         outputs:
@@ -42,34 +36,6 @@ jobs:
                           - '!docs/**'
                           - '!**/*.md'
                           - '!Makefile'
-
-    baselines:
-        if: github.event_name == 'push'
-        runs-on: ubuntu-latest
-        permissions:
-            contents: write
-            pull-requests: read
-        concurrency:
-            group: baselines
-            cancel-in-progress: false
-        env:
-            GIT_AUTHOR_NAME: github-actions[bot]
-            GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
-            GIT_COMMITTER_NAME: github-actions[bot]
-            GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
-        steps:
-            - uses: actions/checkout@v5
-            - name: Lay the merged PR's baselines onto main's
-              env:
-                  GH_TOKEN: ${{ github.token }}
-              run: |
-                  branch=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/pulls" \
-                      --jq '[.[] | select(.merged_at != null and .base.ref == "main")][0].head.ref // ""')
-                  if [ -z "$branch" ]; then
-                      echo 'This push merged no PR.'
-                  else
-                      scripts/baselines.sh promote "$branch"
-                  fi
 
     check:
         runs-on: ubuntu-latest
@@ -88,40 +54,7 @@ jobs:
             - run: bun run size
             - run: bun run build-storybook
 
-    # Every story against its screenshot, split across four machines so a PR waits for one quarter.
-    visual:
-        needs: [changes, baselines]
-        if: >-
-            !cancelled() && needs.changes.outputs.drawn == 'true' &&
-            (needs.baselines.result == 'success' || needs.baselines.result == 'skipped')
-        runs-on: ubuntu-latest
-        strategy:
-            fail-fast: false
-            matrix:
-                shard: [1, 2, 3, 4]
-        container:
-            image: mcr.microsoft.com/playwright:v1.64.1-noble
-            options: --ipc=host
-        env:
-            CI: '1'
-        steps:
-            - uses: actions/checkout@v5
-            - run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-            - run: scripts/baselines.sh checkout "$BRANCH"
-              env:
-                  BRANCH: ${{ github.head_ref || github.ref_name }}
-            - run: npm install -g bun
-            - run: bun install --frozen-lockfile
-            - run: bun run build-storybook
-            - run: bunx playwright test e2e/stories.spec.ts --shard=${{ matrix.shard }}/4
-            - if: failure()
-              uses: actions/upload-artifact@v4
-              with:
-                  name: screenshot-diffs-${{ matrix.shard }}
-                  path: test-results/
-                  retention-days: 7
-
-    # Every story at the narrow widths, failing on sideways scrolling, beside the screenshots.
+    # Every story at the narrow widths, failing when it throws or its page scrolls sideways.
     layout:
         needs: changes
         if: needs.changes.outputs.drawn == 'true'

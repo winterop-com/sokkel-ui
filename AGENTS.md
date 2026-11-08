@@ -87,9 +87,8 @@ and ask before acting.
   randomness, overlays opened by `open` or `defaultOpen`, and no network except the recorded map
   tiles.
 - Keep the local loop light. Before a commit run only the fast gates (fmt, lint, tsc, vitest),
-  and take one quick look at the main new or changed story. Never run the screenshot suites
-  locally and never review screenshots one by one; CI on GitHub runs them, and its failures say
-  which stories to look at.
+  and take one quick look at the main new or changed story. Never run the browser suites
+  locally; CI on GitHub runs them, and its failures say which stories to look at.
 - Desktop is the main target; phones, foldables and tablets must still work. A story is written
   once, at full width, and the viewport toolbar shows it at the widths layouts are checked at: 344
   and 690 for a foldable folded and open, 360, 390 and 430 for phones, 768 and 1024 for tablets,
@@ -99,20 +98,14 @@ and ask before acting.
   terminal, code, an editor, a log, a table, a schema, a graph, a chart, a video, a track list)
   fills the canvas, and the height too when it scrolls. One with a natural width (an input, a menu,
   a button, a card, a dialog) keeps that width.
-- Screenshot baselines are Linux renders, and never live in main's tree: the branch `baselines`
-  holds main's, as a single commit, and `baselines-for/<branch>` holds a code branch's own changes
-  to them. `scripts/baselines.sh` writes them into `e2e/__screenshots__` (git ignores the folder).
-  Retake them on GitHub with `make screenshots-ci` (`STORIES='a|b'` retakes only those story ids):
-  on a branch it writes `baselines-for/<branch>`, which CI compares that branch against and lays
-  onto `baselines` when its PR merges; on main it writes `baselines`.
-  `bun run test:visual:linux:update` retakes locally, only when CI cannot, and
-  `scripts/baselines.sh commit` pushes what it took. Both recompress with optipng, losslessly. Never push baselines taken on a Mac. A change that alters a story's
-  look has its baselines retaken on its branch before the PR merges; bring the branch up to date
-  with main before a full retake, so it does not undo baselines main has moved on.
+- CI compares no screenshots until the looks settle near 1.0. It renders every story at the narrow
+  widths and fails one that throws or whose page scrolls sideways (`e2e/layout.spec.ts`). The
+  screenshot tooling stays for when it comes back: `make screenshots-ci` retakes baselines on
+  GitHub into the branch `baselines` (or `baselines-for/<branch>`), and `scripts/baselines.sh`
+  fetches them. Never push baselines taken on a Mac.
 - Every agent shares one GitHub API limit. Wait on a run with `gh run watch <id> --interval 60
-  --exit-status`, one watch per run, never a loop that polls faster. A retake runs the commit's CI run
-  (its PR's or its push's) again once its baselines are pushed (or starts one where there is none), so do not start a second
-  one; watch that run. A newer push to a branch cancels the run of the older one.
+  --exit-status`, one watch per run, never a loop that polls faster. A newer push to a branch cancels the run
+  of the older one.
 
 ## Design
 
