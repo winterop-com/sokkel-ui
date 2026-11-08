@@ -86,7 +86,7 @@ describe('desktopShellOf', () => {
 
 describe('the stylesheet', () => {
     it('opts every control in WINDOW_CONTROLS out of the drag region', () => {
-        const css = readFileSync(join(import.meta.dirname, '../styles/index.css'), 'utf8').replaceAll("'", '"')
+        const css = readFileSync(join(import.meta.dirname, '../styles/base.css'), 'utf8').replaceAll("'", '"')
         const rule = css.slice(css.indexOf('[data-window-drag]\n'), css.indexOf('no-drag;'))
         for (const control of WINDOW_CONTROLS) expect(rule).toContain(control)
     })

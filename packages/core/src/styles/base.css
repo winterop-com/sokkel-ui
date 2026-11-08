@@ -1,0 +1,111 @@
+/*
+ * Tailwind, the fonts, the tokens and the base styles, with Tailwind pointed at none of the core's
+ * modules: the app adds an `@source` for each module it uses. styles.css is this with the whole core
+ * as its source.
+ */
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import './shadcn.css';
+@import '@fontsource-variable/ibm-plex-sans';
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/500.css';
+@import '@fontsource/ibm-plex-mono/600.css';
+@import '@fontsource/ibm-plex-mono/700.css';
+@import './tokens.css';
+@import './motion.css';
+@import './typography.css';
+
+@layer base {
+    * {
+        @apply border-border outline-ring/50;
+    }
+    html {
+        color-scheme: light;
+    }
+    html.dark {
+        color-scheme: dark;
+    }
+    body {
+        @apply bg-background font-sans text-sm text-foreground antialiased;
+    }
+
+    /*
+     * A desktop frame's top strip is the window's title bar: Electron's Chromium moves the window
+     * from it, and it is not selected as text. The controls in it opt out, the list kept the same
+     * as `WINDOW_CONTROLS` in lib/desktop.ts.
+     */
+    [data-window-drag] {
+        -webkit-app-region: drag;
+        app-region: drag;
+        cursor: default;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+    [data-window-drag]
+        :is(
+            a,
+            button,
+            input,
+            label,
+            select,
+            textarea,
+            summary,
+            [role='button'],
+            [role='link'],
+            [role='checkbox'],
+            [role='switch'],
+            [role='slider'],
+            [role='tab'],
+            [role='combobox'],
+            [role='menuitem'],
+            [contenteditable='true'],
+            [data-window-no-drag]
+        ),
+    [data-window-no-drag] {
+        -webkit-app-region: no-drag;
+        app-region: no-drag;
+    }
+}
+
+/* The delayed spinner fading in once its wait is over. */
+@keyframes pending-in {
+    to {
+        opacity: 1;
+    }
+}
+
+/* A level bar of the sign-in art breathing; it starts and ends at rest, so stopped motion shows it still. */
+@keyframes level-breathe {
+    0%,
+    100% {
+        transform: scaleY(1);
+    }
+    50% {
+        transform: scaleY(0.62);
+    }
+}
+
+/* A lit line of the sign-in art flowing along its dashes; one cycle is one dash period, so it rests seamlessly. */
+@keyframes line-flow {
+    to {
+        stroke-dashoffset: -24;
+    }
+}
+
+/* A part of a screen rising into place as the screen opens. */
+@keyframes rise-in {
+    from {
+        opacity: 0;
+        transform: translateY(0.5rem);
+    }
+}
+
+/* The segment of a loading bar whose progress is unknown, sliding across its track. */
+@keyframes loading-slide {
+    0% {
+        transform: translateX(-10%);
+    }
+    100% {
+        transform: translateX(260%);
+    }
+}

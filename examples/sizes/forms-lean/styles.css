@@ -1,0 +1,19 @@
+/* The forms app's styles on styles-base.css, with the sources of each core module it imports and none of the others. */
+@import '@winterop-com/sokkel-ui/styles-base.css';
+@import '@winterop-com/sokkel-ui/sources/AccountMenu.css';
+@import '@winterop-com/sokkel-ui/sources/CheckboxField.css';
+@import '@winterop-com/sokkel-ui/sources/DialogShell.css';
+@import '@winterop-com/sokkel-ui/sources/FormBar.css';
+@import '@winterop-com/sokkel-ui/sources/Layout.css';
+@import '@winterop-com/sokkel-ui/sources/PageHeader.css';
+@import '@winterop-com/sokkel-ui/sources/Rail.css';
+@import '@winterop-com/sokkel-ui/sources/Section.css';
+@import '@winterop-com/sokkel-ui/sources/Segmented.css';
+@import '@winterop-com/sokkel-ui/sources/Shell.css';
+@import '@winterop-com/sokkel-ui/sources/SliderField.css';
+@import '@winterop-com/sokkel-ui/sources/SwitchField.css';
+@import '@winterop-com/sokkel-ui/sources/TextField.css';
+@import '@winterop-com/sokkel-ui/sources/TopBar.css';
+@import '@winterop-com/sokkel-ui/sources/primitives/button.css';
+@import '@winterop-com/sokkel-ui/sources/primitives/tooltip.css';
+@import '@winterop-com/sokkel-ui/sources/schema/SchemaForm.css';

@@ -5,6 +5,12 @@
         "lazy": 21,
         "css": 52
     },
+    "forms-lean": {
+        "engines": [],
+        "start": 225,
+        "lazy": 21,
+        "css": 52
+    },
     "dashboard": {
         "engines": ["echarts"],
         "start": 225,
