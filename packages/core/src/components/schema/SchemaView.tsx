@@ -167,15 +167,16 @@ function Fields({
 export function SchemaView({
     schema,
     open = 1,
-    words = WORDS,
+    words: given,
     className,
 }: {
     schema: JsonSchema
     /** How many levels of nested fields start open. */
     open?: number
-    words?: SchemaViewWords
+    words?: Partial<SchemaViewWords>
     className?: string
 }) {
+    const words = { ...WORDS, ...given }
     return (
         <div className={cn('text-sm', className)}>
             <Fields schema={schema} root={schema} depth={0} open={open} words={words} />

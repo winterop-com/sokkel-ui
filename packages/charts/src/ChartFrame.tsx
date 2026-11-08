@@ -25,7 +25,7 @@ export interface ChartFrameWords {
     exitFullscreen: string
     empty: string
     loading: string
-    legend?: LegendWords
+    legend?: Partial<LegendWords>
 }
 
 const WORDS: ChartFrameWords = {
@@ -71,7 +71,7 @@ export function ChartFrame({
     empty = false,
     bodyClassName = 'h-56',
     fit = false,
-    words = WORDS,
+    words: given,
     className,
     children,
 }: {
@@ -95,10 +95,11 @@ export function ChartFrame({
     bodyClassName?: string
     /** The content sets the body's height, for content laid out in the page rather than drawn on a canvas. */
     fit?: boolean
-    words?: ChartFrameWords
+    words?: Partial<ChartFrameWords>
     className?: string
     children: (state: ChartState) => ReactNode
 }) {
+    const words = { ...WORDS, ...given }
     const handle = useRef<ChartHandle | null>(null)
     const [root, setRoot] = useState<HTMLElement | null>(null)
     const [hidden, setHidden] = useState<ReadonlySet<string>>(() => new Set())

@@ -41,8 +41,8 @@ function Mini() {
             <MiniMonthPart
                 month={month}
                 onMonthChange={setMonth}
-                selected={chosen}
-                onSelect={setChosen}
+                value={chosen}
+                onValueChange={setChosen}
                 now={NOW}
                 range={{ start: week[0], end: week[6] }}
                 marked={EVENTS.map((event) => event.start)}
@@ -58,7 +58,7 @@ function Strip() {
     const [chosen, setChosen] = useState(at(5, 0))
     return (
         <div className="max-w-md p-6">
-            <DayStripPart days={weekOf(chosen)} chosen={chosen} today={NOW} onChoose={setChosen} />
+            <DayStripPart days={weekOf(chosen)} value={chosen} today={NOW} onValueChange={setChosen} />
         </div>
     )
 }

@@ -49,7 +49,7 @@ export function ThresholdLegend({
     decimals,
     format,
     noData = false,
-    words = WORDS,
+    words: given,
     className,
 }: {
     thresholds: readonly Threshold[]
@@ -63,9 +63,10 @@ export function ThresholdLegend({
     format?: (value: number) => string
     /** Shows the no-data swatch, with this label or the default. */
     noData?: boolean | string
-    words?: ThresholdWords
+    words?: Partial<ThresholdWords>
     className?: string
 }) {
+    const words = { ...WORDS, ...given }
     const write = (value: number) => (format !== undefined ? format(value) : `${formatValue(value, decimals)}${unit}`)
     const bands = thresholdBands(thresholds, write, words)
     const missing = noData === false ? undefined : noData === true ? words.noData : noData

@@ -4,6 +4,15 @@ import { cn } from '../lib/cn'
 import { IssueMark, worst, type Issue } from './IssueMark'
 import { Label } from './ui/label'
 
+/** The words a field says. */
+export interface FieldWords {
+    required: string
+}
+
+const WORDS: FieldWords = {
+    required: 'required',
+}
+
 /**
  * A form control with its label, an optional hint beside the label, and help under the control. A
  * required field is marked by a star after its label, and says "required" to a screen reader.
@@ -26,14 +35,14 @@ export function Field({
     required,
     help,
     error,
-    issues: given = [],
+    issues: issuesGiven = [],
     issueOpen,
     onIssueOpenChange,
     mono = false,
     keyHint = false,
     children,
     className,
-    words = { required: 'required' },
+    words: given,
 }: {
     id: string
     label: string
@@ -54,9 +63,10 @@ export function Field({
     keyHint?: boolean
     children: ReactNode
     className?: string
-    words?: { required: string }
+    words?: Partial<FieldWords>
 }) {
-    const issues: Issue[] = [...(error === undefined || error === null ? [] : [{ tone: 'critical' as const, text: error }]), ...given]
+    const words = { ...WORDS, ...given }
+    const issues: Issue[] = [...(error === undefined || error === null ? [] : [{ tone: 'critical' as const, text: error }]), ...issuesGiven]
     const tone = worst(issues)
     return (
         <div className={cn('flex min-w-0 flex-col gap-1.5', className)}>

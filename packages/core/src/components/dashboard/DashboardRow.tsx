@@ -5,6 +5,15 @@ import { cn } from '../../lib/cn'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible'
 import { DashboardGrid } from './DashboardGrid'
 
+/** The words a dashboard row; `panels` counts what a collapsed row holds says. */
+export interface DashboardRowWords {
+    panels: (count: number) => string
+}
+
+const WORDS: DashboardRowWords = {
+    panels: (n: number) => `${n} ${n === 1 ? 'panel' : 'panels'}`,
+}
+
 /**
  * A collapsible group of a dashboard's panels under a heading, such as Overview or Latency. A
  * collapsed row says how many panels it holds. Its panels sit in a grid of their own, dense when
@@ -18,7 +27,7 @@ export function DashboardRow({
     onOpenChange,
     dense = true,
     actions,
-    words = { panels: (n: number) => `${n} ${n === 1 ? 'panel' : 'panels'}` },
+    words: given,
     className,
     children,
 }: {
@@ -30,10 +39,11 @@ export function DashboardRow({
     onOpenChange?: (open: boolean) => void
     dense?: boolean
     actions?: ReactNode
-    words?: { panels: (count: number) => string }
+    words?: Partial<DashboardRowWords>
     className?: string
     children: ReactNode
 }) {
+    const words = { ...WORDS, ...given }
     return (
         <Collapsible
             defaultOpen={defaultOpen}

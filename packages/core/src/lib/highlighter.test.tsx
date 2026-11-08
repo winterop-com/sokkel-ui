@@ -1,7 +1,12 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 
-import { hasLanguage, highlightCode, registerLanguage } from './highlighter'
+import { hasLanguage, loadHighlighter, registerLanguage } from './highlighter'
+
+async function highlightCode(code: string, language: string) {
+    const highlighter = await loadHighlighter(language)
+    return highlighter ? highlighter.highlight(code).lines : null
+}
 
 const html = (lines: React.ReactNode[] | null) => renderToStaticMarkup(<>{lines}</>)
 

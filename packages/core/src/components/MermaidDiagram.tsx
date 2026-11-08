@@ -98,6 +98,15 @@ async function render(code: string, host: HTMLElement): Promise<string> {
     return svg
 }
 
+/** The words a diagram says: its toggle's two sides, and the note when its source does not parse. */
+export interface MermaidDiagramWords {
+    source: string
+    diagram: string
+    failed: string
+}
+
+const WORDS: MermaidDiagramWords = { source: 'Source', diagram: 'Diagram', failed: 'This diagram does not parse; its source is shown.' }
+
 /**
  * A mermaid diagram, drawn in the current theme's colors and typeface and redrawn when the scheme,
  * the theme or a token override changes. Its source shows
@@ -107,12 +116,13 @@ async function render(code: string, host: HTMLElement): Promise<string> {
 export function MermaidDiagram({
     code,
     streaming = false,
-    words = { source: 'Source', diagram: 'Diagram', failed: 'This diagram does not parse; its source is shown.' },
+    words: given,
 }: {
     code: string
     streaming?: boolean
-    words?: { source: string; diagram: string; failed: string }
+    words?: Partial<MermaidDiagramWords>
 }) {
+    const words = { ...WORDS, ...given }
     const look = useLook()
     const host = useRef<HTMLDivElement>(null)
     const [svg, setSvg] = useState<string | null>(null)

@@ -618,7 +618,7 @@ export function ExportRuns({ stage: first = 'form' }: { stage?: ExportStage }) {
                 {stage === 'form' && (
                     <>
                         <Field id="export-format" label="Format">
-                            <Segmented label="Format" value={format} options={FORMATS} onChoose={setFormat} fill />
+                            <Segmented label="Format" value={format} options={FORMATS} onValueChange={setFormat} fill />
                         </Field>
                         <Columns count={2} min="xs" gap="md">
                             <TextField id="export-from" label="From" mono value={from} onChange={setFrom} placeholder="2026-10-01" />

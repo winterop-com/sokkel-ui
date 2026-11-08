@@ -5,13 +5,13 @@ import { cn } from '../../lib/cn'
 import { ResizeHandle } from '../ResizeHandle'
 import { grows, LINE, WIDE, type MediaBarLayout } from './bar-growth'
 import { LineBar, PanelBar, RowsBar, StageBar, type BarProps } from './MediaBarLayouts'
-import { kindOf, MEDIA_BAR_LABELS, type Deck, type MediaBarLabels, type RepeatMode } from './MediaBarParts'
+import { kindOf, MEDIA_BAR_WORDS, type Deck, type MediaBarWords, type RepeatMode } from './MediaBarParts'
 import { MediaFullscreen } from './MediaFullscreen'
 import type { SoundKind } from './SoundVisualizer'
 import type { MediaRange } from './time'
 
 export type { MediaBarLayout } from './bar-growth'
-export type { MediaBarLabels, RepeatMode } from './MediaBarParts'
+export type { MediaBarWords, RepeatMode } from './MediaBarParts'
 
 /** The most of the window's height the bar takes, whatever its size, so the page keeps the rest. */
 const WINDOW_SHARE = 0.5
@@ -93,7 +93,7 @@ export interface MediaBarProps {
     /** The visualizer's kind in the fullscreen view, held from outside with `onVisualizerKindChange`; the slot's own by default. */
     visualizerKind?: SoundKind
     onVisualizerKindChange?: (kind: SoundKind) => void
-    labels?: Partial<MediaBarLabels>
+    words?: Partial<MediaBarWords>
     className?: string
 }
 
@@ -169,10 +169,10 @@ export function MediaBar({
     defaultFullscreen = false,
     visualizerKind,
     onVisualizerKindChange,
-    labels,
+    words: given,
     className,
 }: MediaBarProps) {
-    const words = { ...MEDIA_BAR_LABELS, ...labels }
+    const words = { ...MEDIA_BAR_WORDS, ...given }
     const [scrub, setScrub] = useState<number | null>(null)
     const bar = useRef<HTMLDivElement | null>(null)
     const box = useBox(bar)

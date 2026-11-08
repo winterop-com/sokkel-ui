@@ -43,7 +43,7 @@ function Side({ label, side, words }: { label: string; side?: IOSide; words: IOC
                     <Segmented
                         label={`${label}: ${words.schema} or ${words.example}`}
                         value={view}
-                        onChoose={setView}
+                        onValueChange={setView}
                         options={[
                             { value: 'schema', label: words.schema },
                             { value: 'example', label: words.example },
@@ -78,7 +78,7 @@ export function IOCard({
     input,
     output,
     className,
-    words = WORDS,
+    words: given,
 }: {
     title?: ReactNode
     code?: string
@@ -88,8 +88,9 @@ export function IOCard({
     input?: IOSide
     output?: IOSide
     className?: string
-    words?: IOCardWords
+    words?: Partial<IOCardWords>
 }) {
+    const words = { ...WORDS, ...given }
     const heading = title ?? code
     return (
         <article

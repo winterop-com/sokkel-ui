@@ -61,8 +61,3 @@ export function resolveColors<K extends string>(scope: HTMLElement, colors: Reco
     }
     return resolved
 }
-
-/** Resolve one CSS color in the scope of an element; see `resolveColors`. */
-export function resolveColor(scope: HTMLElement, color: string): string {
-    return resolveColors(scope, { color }).color
-}

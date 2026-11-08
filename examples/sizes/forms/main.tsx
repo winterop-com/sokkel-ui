@@ -90,7 +90,7 @@ function App() {
                                 <Segmented
                                     label="Run history"
                                     value={history}
-                                    onChoose={setHistory}
+                                    onValueChange={setHistory}
                                     options={[
                                         { value: '30', label: '30 days' },
                                         { value: '90', label: '90 days' },

@@ -31,6 +31,13 @@ interface Placement {
     visible: boolean
 }
 
+/** The words a map popup says. */
+export interface MapPopupWords {
+    close: string
+}
+
+const WORDS: MapPopupWords = { close: 'Close' }
+
 /**
  * A card over the map, pointing at a feature or a position: a title, rows of names and values,
  * and an optional action. It sits above its anchor, or below when there is no room above, keeps
@@ -44,7 +51,7 @@ export function MapPopup({
     rows = [],
     action,
     onClose,
-    closeLabel = 'Close',
+    words: given,
     children,
     className,
 }: {
@@ -57,10 +64,11 @@ export function MapPopup({
     rows?: MapPopupRow[]
     action?: { label: string; onClick: () => void }
     onClose?: () => void
-    closeLabel?: string
+    words?: Partial<MapPopupWords>
     children?: ReactNode
     className?: string
 }) {
+    const words = { ...WORDS, ...given }
     const { map, overlay } = useMapContext()
     const card = useRef<HTMLDivElement>(null)
     const anchor = at ?? (feature === undefined ? null : anchorOf(feature))
@@ -131,7 +139,7 @@ export function MapPopup({
                     {description !== undefined && <p className="text-xs leading-snug text-muted-foreground">{description}</p>}
                 </div>
                 {onClose !== undefined && (
-                    <IconButton label={closeLabel} size="icon-xs" onClick={onClose}>
+                    <IconButton label={words.close} size="icon-xs" onClick={onClose}>
                         <X />
                     </IconButton>
                 )}
@@ -145,7 +153,7 @@ export function MapPopup({
                                 {row.color !== undefined && (
                                     <span
                                         aria-hidden
-                                        className="size-2.5 rounded-[2px] ring-1 ring-foreground/15 ring-inset"
+                                        className="size-2.5 rounded-mini ring-1 ring-foreground/15 ring-inset"
                                         style={{ background: row.color }}
                                     />
                                 )}

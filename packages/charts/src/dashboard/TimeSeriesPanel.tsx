@@ -161,7 +161,7 @@ export function TimeSeriesPanel({
     loading?: boolean
     empty?: boolean
     file?: string
-    words?: ChartFrameWords
+    words?: Partial<ChartFrameWords>
     className?: string
 }) {
     const option = useMemo(

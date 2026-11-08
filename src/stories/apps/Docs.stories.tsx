@@ -419,7 +419,7 @@ function DocsApp({ mode: initialMode = 'read', guide = false }: { mode?: 'read' 
                         groups={GROUPS}
                         collapsed={collapsed}
                         onCollapsedChange={setCollapsed}
-                        defaultWidth={232}
+                        defaultSize={232}
                         foot={
                             <AccountMenu
                                 name="grace"
@@ -465,7 +465,7 @@ function DocsApp({ mode: initialMode = 'read', guide = false }: { mode?: 'read' 
                             query={query}
                             selected={[pageId]}
                             onSelect={(ids) => setPageId(ids[0])}
-                            defaultOpen={guide ? ['start'] : ['runbooks', 'projects']}
+                            defaultExpanded={guide ? ['start'] : ['runbooks', 'projects']}
                         />
                     </SubNav>
                     <Stack gap="none" className="min-h-0 flex-1 overflow-y-auto">

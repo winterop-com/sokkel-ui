@@ -17,6 +17,15 @@ export interface ShortcutGroup {
 export { applePlatform } from '../lib/keys'
 export { useShortcutsKey } from '../hooks/use-shortcuts-key'
 
+/** The words the shortcuts dialog says. */
+export interface ShortcutsDialogWords {
+    title: string
+}
+
+const WORDS: ShortcutsDialogWords = {
+    title: 'Keyboard shortcuts',
+}
+
 /**
  * Every keyboard shortcut, grouped, each with its keys drawn as keys. The dialog an app opens on
  * `?` and from its account menu.
@@ -25,13 +34,14 @@ export function ShortcutsDialog({
     open,
     onOpenChange,
     groups,
-    words = { title: 'Keyboard shortcuts' },
+    words: given,
 }: {
     open: boolean
     onOpenChange: (open: boolean) => void
     groups: readonly ShortcutGroup[]
-    words?: { title: string }
+    words?: Partial<ShortcutsDialogWords>
 }) {
+    const words = { ...WORDS, ...given }
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-md">

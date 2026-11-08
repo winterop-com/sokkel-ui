@@ -487,7 +487,7 @@ function FilesApp({
                         groups={GROUPS}
                         collapsed={collapsed}
                         onCollapsedChange={setCollapsed}
-                        defaultWidth={232}
+                        defaultSize={232}
                         foot={
                             <AccountMenu
                                 name="grace"
@@ -536,7 +536,7 @@ function FilesApp({
                             nodes={FOLDERS}
                             selected={[folder]}
                             onSelect={(ids) => goTo(ids[0])}
-                            defaultOpen={['harbor', 'harbor/shared']}
+                            defaultExpanded={['harbor', 'harbor/shared']}
                         />
                     </SubNav>
                     <DropZone
@@ -598,7 +598,7 @@ function FilesApp({
                                                     { value: 'grid', label: 'Grid' },
                                                     { value: 'tree', label: 'Tree' },
                                                 ]}
-                                                onChoose={setView}
+                                                onValueChange={setView}
                                             />
                                         }
                                     >
@@ -705,7 +705,7 @@ function FilesApp({
                     onConfirm: () => setMoving(false),
                 }}
             >
-                <Tree label="Folders" nodes={FOLDERS} selected={moveTo} onSelect={setMoveTo} defaultOpen={['harbor']} />
+                <Tree label="Folders" nodes={FOLDERS} selected={moveTo} onSelect={setMoveTo} defaultExpanded={['harbor']} />
             </DialogShell>
             <DialogShell
                 open={renaming}

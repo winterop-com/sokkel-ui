@@ -666,7 +666,7 @@ function PlaygroundApp({ view, children }: { view: View; children: ReactNode }) 
                         mark={<TidevannMark />}
                         name="Tidevann"
                         groups={groups(view)}
-                        defaultOpen={['prompts']}
+                        defaultExpanded={['prompts']}
                         collapsed={collapsed}
                         onCollapsedChange={setCollapsed}
                         foot={

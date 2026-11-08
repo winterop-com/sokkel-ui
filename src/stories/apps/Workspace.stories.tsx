@@ -231,9 +231,6 @@ function Workspace({
 }) {
     const defaults = fromGlobals(globals)
     const { settings, setSettings } = useAppearance(defaults)
-    const [rail, setRail] = useState(240)
-    const [panel, setPanel] = useState(352)
-    const [dockSize, setDockSize] = useState(200)
     const [dockOpen, setDockOpen] = useState(true)
     const [collapsed, setCollapsed] = useState(false)
     const [query, setQuery] = useState('')
@@ -250,11 +247,9 @@ function Workspace({
                         mark={<TidevannMark />}
                         name="Tidevann"
                         groups={GROUPS}
-                        defaultOpen={['projects']}
+                        defaultExpanded={['projects']}
                         collapsed={collapsed}
                         onCollapsedChange={setCollapsed}
-                        width={rail}
-                        onWidthChange={setRail}
                         foot={
                             palette ? (
                                 <AccountMenu
@@ -306,9 +301,7 @@ function Workspace({
                             },
                             { id: 'log', label: 'Log', content: <LogView lines={LOG} wrap numbered={false} className="m-3" /> },
                         ]}
-                        active={tab}
-                        size={panel}
-                        onSizeChange={setPanel}
+                        defaultActive={tab}
                     />
                 }
             >
@@ -358,14 +351,8 @@ function Workspace({
                         </Page>
                     </div>
                     {dock && (
-                        <Dock
-                            title="Log, nightly-export"
-                            open={dockOpen}
-                            onOpenChange={setDockOpen}
-                            size={dockSize}
-                            onSizeChange={setDockSize}
-                        >
-                            <LogView lines={LOG} className="rounded-none" />
+                        <Dock title="Log, nightly-export" open={dockOpen} onOpenChange={setDockOpen} defaultSize={200}>
+                            <LogView lines={LOG} framed={false} />
                         </Dock>
                     )}
                 </Stack>
