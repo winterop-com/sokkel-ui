@@ -95,3 +95,13 @@ export const PageScheme: StoryObj = {
     name: 'Page scheme',
     render: () => <SignIn {...BRAND} brandScheme="page" brandWidth="36%" onSubmit={() => undefined} />,
 }
+
+/**
+ * In a desktop window with its title bar hidden: the brand pane drags the window, outlined here,
+ * and the window's buttons sit over its corner, clear of the mark; on a narrow window the bar
+ * over the form leaves them room at its start.
+ */
+export const Desktop: StoryObj = {
+    parameters: { desktopWindow: true },
+    render: () => <SignIn {...BRAND} art={<FlowLines />} desktop={{ trafficLights: true }} onSubmit={() => undefined} />,
+}

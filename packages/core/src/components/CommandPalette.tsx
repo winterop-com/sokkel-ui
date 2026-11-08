@@ -1,7 +1,8 @@
 import type { LucideIcon } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 
 import { useSearch } from '../hooks/use-search'
+import { mergeCommands } from '../lib/commands'
 import type { SearchGroup, SearchResult, SearchSource } from '../lib/search'
 import { SearchResultBody } from './Search'
 import { Kbd, KbdGroup } from './ui/kbd'
@@ -31,6 +32,15 @@ export interface PaletteCommand {
     keys?: readonly string[]
     /** More words it is found by, beyond its label. */
     keywords?: readonly string[]
+    /** A second line under the label, such as who made it or where it lives; it is found by these words too. */
+    detail?: string
+    /**
+     * A picture at the row's start in the icon's place: an image's address, or a node that fills
+     * the box, such as a drawn cover. With it or a `detail` the row is two lines tall.
+     */
+    artwork?: ReactNode
+    /** Draws the artwork round, as a person's picture. */
+    round?: boolean
     onSelect: () => void
 }
 
@@ -38,6 +48,12 @@ export interface PaletteCommand {
 export interface PaletteGroup {
     title: string
     commands: readonly PaletteCommand[]
+    /**
+     * Where the group stands among the others: lower first, 0 when not given. At equal rank the
+     * groups keep their order, and in a `Shell` a screen's groups (`useCommands`) come before the
+     * app's own. Groups of one title are listed as one.
+     */
+    rank?: number
 }
 
 /**
@@ -69,8 +85,10 @@ const WORDS: CommandPaletteWords = {
 /**
  * The command palette: one search over everything an app can do, grouped, each row with its
  * icon, a hint and the keys that run it directly. Choosing a row closes the palette and runs it.
- * With `search` the app's own results for the query follow the commands, each with its thumbnail
- * or icon and the query's words marked.
+ * A row with a `detail` or `artwork` is two lines tall, a picture or its icon on a tile at its
+ * start, as a record found by a search is. The groups are listed by their `rank`, one group to a
+ * title. With `search` the app's own results for the query follow the commands, each with its
+ * thumbnail, artwork or icon and the query's words marked.
  */
 export function CommandPalette({
     open,
@@ -90,6 +108,7 @@ export function CommandPalette({
     words?: Partial<CommandPaletteWords>
 }) {
     const words = { ...WORDS, ...given }
+    const listed = useMemo(() => mergeCommands(groups), [groups])
     const [query, setQuery] = useState(defaultQuery)
     const answer = useSearch(search?.search, query, { enabled: open, minQuery: search?.minQuery })
     const found = answer.groups.filter((group) => group.results.length > 0)
@@ -99,7 +118,7 @@ export function CommandPalette({
                 <CommandInput placeholder={words.placeholder} value={query} onValueChange={setQuery} />
                 <CommandList className="max-h-[min(24rem,60svh)] scroll-fade-b pb-1.5">
                     {found.length === 0 && answer.state !== 'loading' && <CommandEmpty>{words.empty}</CommandEmpty>}
-                    {groups.map((group, index) => (
+                    {listed.map((group, index) => (
                         <div key={group.title}>
                             {index > 0 && <CommandSeparator />}
                             <CommandGroup heading={group.title}>
@@ -109,16 +128,24 @@ export function CommandPalette({
                                         <CommandItem
                                             key={command.id}
                                             value={`${command.label} ${command.id}`}
-                                            keywords={command.keywords === undefined ? undefined : [...command.keywords]}
+                                            keywords={findBy(command)}
                                             onSelect={() => {
                                                 onOpenChange(false)
                                                 command.onSelect()
                                             }}
                                         >
-                                            {Icon !== undefined && <Icon className="text-muted-foreground" aria-hidden />}
-                                            <span className="truncate">{command.label}</span>
-                                            {command.hint !== undefined && (
-                                                <span className="truncate font-mono text-xs text-muted-foreground">{command.hint}</span>
+                                            {twoLines(command) ? (
+                                                <SearchResultBody result={asResult(command)} query="" />
+                                            ) : (
+                                                <>
+                                                    {Icon !== undefined && <Icon className="text-muted-foreground" aria-hidden />}
+                                                    <span className="truncate">{command.label}</span>
+                                                    {command.hint !== undefined && (
+                                                        <span className="truncate font-mono text-xs text-muted-foreground">
+                                                            {command.hint}
+                                                        </span>
+                                                    )}
+                                                </>
                                             )}
                                             {command.keys !== undefined && (
                                                 <CommandShortcut className="tracking-normal">
@@ -165,4 +192,29 @@ export function CommandPalette({
             </Command>
         </CommandDialog>
     )
+}
+
+/** Whether a command is drawn as a two-line row. */
+function twoLines(command: PaletteCommand): boolean {
+    return command.detail !== undefined || (command.artwork !== undefined && command.artwork !== null)
+}
+
+/** The words a command is found by beyond its label: its keywords and its second line. */
+function findBy(command: PaletteCommand): string[] | undefined {
+    const words = [...(command.keywords ?? []), ...(command.detail === undefined ? [] : [command.detail])]
+    return words.length === 0 ? undefined : words
+}
+
+/** A two-line command as the row a search result is drawn as, its hint the quiet fact at the end. */
+function asResult(command: PaletteCommand): SearchResult {
+    const picture = command.artwork
+    return {
+        id: command.id,
+        title: command.label,
+        detail: command.detail,
+        meta: command.hint,
+        icon: command.icon,
+        round: command.round,
+        ...(typeof picture === 'string' ? { thumbnail: picture } : { artwork: picture }),
+    }
 }

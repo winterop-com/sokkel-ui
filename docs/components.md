@@ -14,7 +14,10 @@ under `@winterop-com/sokkel-ui/lib/*`; the chart kinds and the fields they read 
 Every app has the same frame: `Shell` with a `Rail` of its places, the command palette on ⌘K or
 Ctrl+K through `Shell`'s `palette` (`placeCommands` and `appearanceCommands` in
 `@winterop-com/sokkel-ui/lib/commands`), an `AccountMenu` in the rail's foot, `local` until the
-app has sign-in, and a `StatusLine` as the shell's `foot`.
+app has sign-in, and a `StatusLine` as the shell's `foot`. A screen adds its own palette groups
+while it is mounted with `useCommands` (`hooks/use-commands`). In a desktop window with its title
+bar hidden, `Shell`'s `desktop` makes the top strip the window's drag region and leaves room for
+the window's buttons (`lib/desktop`).
 The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appearance`,
 `hooks/use-scheme`), with the option lists in `@winterop-com/sokkel-ui/lib/appearance`.
 Other state an app keeps across reloads goes through `useStored` (`hooks/use-stored`), and files
@@ -165,7 +168,7 @@ being uploaded through `useUploads` (`hooks/use-uploads`), which feeds `Attachme
 | **Rail** | `@winterop-com/sokkel-ui/Rail` | The app's left navigation: a head with the app's mark and the collapse control, the groups, and a foot cell the shell's foot strip lines up with. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-rail--strip) |
 | **ResizeHandle** | `@winterop-com/sokkel-ui/ResizeHandle` | The edge a panel is resized by: dragged with a pointer, moved 16px a press with the arrows, sent to its limits with Home and End, and put back to `reset` with a double click or Enter. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-channel-list--channels) (in ChannelList) |
 | **SchemeToggle** | `@winterop-com/sokkel-ui/SchemeToggle` | The light and dark switch wired to `useScheme`: it shows the scheme the document wears, and a press chooses the other one and keeps it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/themes-appearance--scheme) |
-| **Shell**, Page | `@winterop-com/sokkel-ui/Shell` | The app's frame: the rail on the left, a thin top bar over the content, the content as the one thing that scrolls, and an optional foot strip. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-app-bar--bar) |
+| **Shell**, Page | `@winterop-com/sokkel-ui/Shell` | The app's frame: the rail on the left, a thin top bar over the content, the content as the one thing that scrolls, and an optional foot strip. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-shell--desktop) |
 | **SidePanel**, PanelSection | `@winterop-com/sokkel-ui/SidePanel` | The right-hand panel beside a page: a header bar the height of the shell's top bar, with the panel's tabs (or its title when it has one tab), then the content scrolling under it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-pane-header--plain) |
 | **StatusLine**, StatusItem | `@winterop-com/sokkel-ui/StatusLine` | What the shell's foot strip says for the screen: a short note at the left and identifiers at the right, on one row of fixed height. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-status-line--tones) |
 | **SubNav** | `@winterop-com/sokkel-ui/SubNav` | The second column beside the rail: what the app's section holds, such as a tree of folders, a section's pages or a month to pick a day from. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-sub-nav--folders) |

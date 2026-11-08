@@ -122,13 +122,12 @@ under Next. Each is a part or an option here, never a copy in an app. Roughly on
   500ms on Bluetooth); `SpeakButton` (fetched on demand, one player) and dictation in `Composer`.
 - **Round 5, the frame and keys.** A shortcut registry matched by the typed character (so it works
   on any keyboard layout), keys scoped to a screen and quiet under a dialog, read by
-  `ShortcutsDialog`; palette entries a screen adds while mounted (`useCommands`) and two-line rows
-  with artwork; `useOverlay` (inert, focus return, Escape), `useScrollMemory` and
-  `useReducedMotion`; desktop shells (a drag region on `TopBar`, fullscreen through the shell,
-  `isDesktopShell`); `useAppearance` with pluggable storage and `appearanceScript` as an external
-  module for pages that refuse inline script (browser extensions); `Shell`'s `bottom` spanning
-  under the rail; a full-page `SettingsView` beside `SettingsDialog`, and a wizard's steps laid out
-  on a page; a way for a three-pane work page to hide or narrow the rail.
+  `ShortcutsDialog`; `useOverlay` (inert, focus return, Escape), `useScrollMemory` and
+  `useReducedMotion`; fullscreen through a desktop shell (the app's own call in place of the
+  browser's, for the player, the video, charts and maps); `useAppearance` with pluggable storage and
+  `appearanceScript` as an external module for pages that refuse inline script (browser
+  extensions); a full-page `SettingsView` beside `SettingsDialog`, and a wizard's steps laid out on
+  a page; a way for a three-pane work page to hide or narrow the rail.
 
 ## 1.0
 

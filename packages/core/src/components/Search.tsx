@@ -60,7 +60,18 @@ export function SearchResultBody({
     const Icon = result.icon
     return (
         <span className={cn('flex min-w-0 flex-1 items-center gap-2.5', className)}>
-            {result.thumbnail !== undefined ? (
+            {result.artwork !== undefined && result.artwork !== null ? (
+                <span
+                    aria-hidden
+                    className={cn(
+                        'flex shrink-0 overflow-hidden bg-muted',
+                        THUMB[size],
+                        result.round === true ? 'rounded-full' : 'rounded-md',
+                    )}
+                >
+                    {result.artwork}
+                </span>
+            ) : result.thumbnail !== undefined ? (
                 <img
                     src={result.thumbnail}
                     alt=""

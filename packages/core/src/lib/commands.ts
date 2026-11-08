@@ -5,6 +5,31 @@ import type { RailEntry, RailGroup } from '../components/Rail'
 import { THEMES, type ThemeOption, type ThemeSettings } from './appearance'
 
 /**
+ * The palette's groups in the order it lists them. Groups of one title are drawn as one, at the
+ * first one's place and with the lowest rank among them; within it, the first command of an id
+ * stands and a later one of the same id is left out, so a screen's command overrides the app's
+ * when the screen's groups come first. Empty groups are left out, and the rest are sorted by
+ * `rank`, lowest first (0 when not given), keeping their order at equal rank.
+ */
+export function mergeCommands(groups: readonly PaletteGroup[]): PaletteGroup[] {
+    const merged = new Map<string, { rank: number; order: number; commands: PaletteCommand[]; ids: Set<string> }>()
+    for (const group of groups) {
+        const held = merged.get(group.title) ?? { rank: group.rank ?? 0, order: merged.size, commands: [], ids: new Set<string>() }
+        held.rank = Math.min(held.rank, group.rank ?? 0)
+        for (const command of group.commands) {
+            if (held.ids.has(command.id)) continue
+            held.ids.add(command.id)
+            held.commands.push(command)
+        }
+        merged.set(group.title, held)
+    }
+    return [...merged.entries()]
+        .filter(([, held]) => held.commands.length > 0)
+        .sort(([, left], [, right]) => left.rank - right.rank || left.order - right.order)
+        .map(([title, held]) => ({ title, commands: held.commands, ...(held.rank === 0 ? {} : { rank: held.rank }) }))
+}
+
+/**
  * A "Go to" group for the command palette, made from the rail's groups: every entry that leads
  * somewhere, the entries folded under a parent included, with the parent's label as their hint.
  * `navigate` is called with the entry's `href` and the entry.

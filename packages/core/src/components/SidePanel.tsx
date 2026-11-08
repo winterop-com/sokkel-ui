@@ -1,8 +1,9 @@
-import { useRef, useState, type ReactNode } from 'react'
+import { useContext, useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { usePanelSize } from '../hooks/use-panel-size'
 import { ResizeHandle } from './ResizeHandle'
+import { ShellDesktop } from './shell-context'
 import { GroupLabel } from './GroupLabel'
 
 /** One tab of a side panel. */
@@ -78,6 +79,7 @@ export function SidePanel({
         onActiveChange?.(id)
     }
     const panel = useRef<HTMLElement>(null)
+    const desktop = useContext(ShellDesktop)
     const held = usePanelSize({
         size,
         onSizeChange,
@@ -105,7 +107,10 @@ export function SidePanel({
                 className={cn('flex h-full shrink-0 flex-col border-l border-border-strong bg-sidebar', className)}
                 style={{ width: held.style }}
             >
-                <div className="flex h-shell-top shrink-0 items-center gap-1 border-b border-border-strong pr-12 pl-2">
+                <div
+                    data-window-drag={desktop === undefined ? undefined : ''}
+                    className="flex h-shell-top shrink-0 items-center gap-1 border-b border-border-strong pr-12 pl-2"
+                >
                     {tabs.length === 1 ? (
                         <h2 className="truncate px-1.5 text-sm font-medium">{current?.label}</h2>
                     ) : (
