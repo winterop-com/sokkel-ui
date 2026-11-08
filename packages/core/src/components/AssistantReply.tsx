@@ -144,7 +144,7 @@ function shown(node: ReactNode): boolean {
 
 /**
  * The model's thinking, folded behind one line that counts its words. While it is still being
- * written it is open, its line says Thinking with a shimmer, and the text grows; once the answer
+ * written it is open, its line shimmers as it says Thinking, and the text grows; once the answer
  * begins it folds away, and a press opens it again.
  */
 function Reasoning({ text, thinking, math, words }: { text: string; thinking: boolean; math: boolean; words: AssistantReplyWords }) {
@@ -251,7 +251,7 @@ export interface AssistantReplyProps {
  *
  * `reasoning`, the model's thinking, folds between the tools and the answer behind a line that
  * counts its words; while it streams with no answer yet it stands open and grows. A streaming reply
- * with nothing to show yet, no thinking, no calls and no answer, says Thinking with a shimmer
+ * with nothing to show yet, no thinking, no calls and no answer, says Thinking, shimmering,
  * instead of an empty card. `speech` puts the answer read aloud in a player under it; `speak`
  * instead fetches it on demand from Read aloud in the footer.
  *
