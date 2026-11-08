@@ -27,7 +27,8 @@ import { CommentComposer, CommentThread, type ThreadComment } from '@winterop-co
 import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
 import { ShowMore } from '@winterop-com/sokkel-ui/ShowMore'
 import { VideoPlayer } from '@winterop-com/sokkel-ui/media/VideoPlayer'
-import { PersonAvatar } from '@winterop-com/sokkel-ui/PersonAvatar'
+import { ProfileRow } from '@winterop-com/sokkel-ui/ProfileRow'
+import { ChipBar } from '@winterop-com/sokkel-ui/ChipBar'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
 import { Toolbar, ToolbarTitle } from '@winterop-com/sokkel-ui/Toolbar'
@@ -269,21 +270,7 @@ const TRAILS: Record<'home' | 'watch', Crumb[]> = {
 /** The topic chips over the videos: one chosen, the row scrolling sideways when it runs out of room. */
 function Topics() {
     const [topic, setTopic] = useState('All')
-    return (
-        <Row className="-mx-1 overflow-x-auto px-1">
-            {TOPICS.map((name) => (
-                <Button
-                    key={name}
-                    size="sm"
-                    variant={topic === name ? 'default' : 'secondary'}
-                    aria-pressed={topic === name}
-                    onClick={() => setTopic(name)}
-                >
-                    {name}
-                </Button>
-            ))}
-        </Row>
-    )
+    return <ChipBar label="Topics" chips={TOPICS.map((name) => ({ value: name, label: name }))} value={topic} onValueChange={setTopic} />
 }
 
 const videoMenu = (
@@ -415,52 +402,53 @@ function WatchPage() {
                         tracks={[{ src: captions, label: 'English', lang: 'en', default: true }]}
                     />
                     <h1 className="text-title font-semibold">{WATCHING.title}</h1>
-                    <Row gap="md" justify="between" wrap>
-                        <Row gap="md" className="min-w-0">
-                            <PersonAvatar name={WATCHING.channel} color={channel.color} image={pictureOf(WATCHING.channel)} size="md" />
-                            <div className="min-w-0">
-                                <p className="truncate text-sm font-medium">{WATCHING.channel}</p>
-                                <p className="truncate text-xs text-muted-foreground">{channel.followers}</p>
-                            </div>
+                    <ProfileRow
+                        name={WATCHING.channel}
+                        detail={channel.followers}
+                        image={pictureOf(WATCHING.channel)}
+                        color={channel.color}
+                        action={
                             <Button size="sm" variant={following ? 'secondary' : 'default'} onClick={() => setFollowing(!following)}>
                                 {following ? 'Following' : 'Follow'}
                             </Button>
-                        </Row>
-                        <Row>
-                            <ButtonGroup>
-                                <Button variant="outline" size="sm" aria-label="Like">
-                                    <ThumbsUp aria-hidden />
-                                    4.1k
+                        }
+                        actions={
+                            <>
+                                <ButtonGroup>
+                                    <Button variant="outline" size="sm" aria-label="Like">
+                                        <ThumbsUp aria-hidden />
+                                        4.1k
+                                    </Button>
+                                    <Button variant="outline" size="sm" aria-label="Dislike">
+                                        <ThumbsDown aria-hidden />
+                                    </Button>
+                                </ButtonGroup>
+                                <Button variant="outline" size="sm">
+                                    <Share2 aria-hidden />
+                                    Share
                                 </Button>
-                                <Button variant="outline" size="sm" aria-label="Dislike">
-                                    <ThumbsDown aria-hidden />
+                                <Button variant="outline" size="sm">
+                                    <Bookmark aria-hidden />
+                                    Save
                                 </Button>
-                            </ButtonGroup>
-                            <Button variant="outline" size="sm">
-                                <Share2 aria-hidden />
-                                Share
-                            </Button>
-                            <Button variant="outline" size="sm">
-                                <Bookmark aria-hidden />
-                                Save
-                            </Button>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger render={<Button variant="outline" size="icon-sm" aria-label="More" />}>
-                                    <MoreHorizontal aria-hidden />
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-44">
-                                    <DropdownMenuItem>
-                                        <ListPlus aria-hidden />
-                                        Add to playlist
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem>
-                                        <Flag aria-hidden />
-                                        Report
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </Row>
-                    </Row>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger render={<Button variant="outline" size="icon-sm" aria-label="More" />}>
+                                        <MoreHorizontal aria-hidden />
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-44">
+                                        <DropdownMenuItem>
+                                            <ListPlus aria-hidden />
+                                            Add to playlist
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem>
+                                            <Flag aria-hidden />
+                                            Report
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </>
+                        }
+                    />
                     <ShowMore variant="well" head={<MetaLine size="sm" tone="strong" items={[WATCHING.views, WATCHING.ago]} />}>
                         Four mornings on one headland of the northern coast, cut into one: the first light on the water, the harbor waking
                         up, and the boats leaving one by one. Filmed from the same spot each day, with nothing added but the sound of the
