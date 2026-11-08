@@ -31,7 +31,7 @@ over several files maps its timeline to a file with `timeline`, and LRC lyrics a
 `parseLyrics` in `lrc`, all under `@winterop-com/sokkel-ui-media/`.
 
 - [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 214 modules
-- [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 13 modules
+- [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 9 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 11 modules
 - [`@winterop-com/sokkel-ui-terminal`](#winterop-com-sokkel-ui-terminal): 2 modules
@@ -388,7 +388,6 @@ over several files maps its timeline to a file with `timeline`, and LRC lyrics a
 | **ChartFrame** | `@winterop-com/sokkel-ui-charts/ChartFrame` | The chrome around a chart: a small title with an optional info marker and subtitle, the panel's actions, an Export menu (SVG and PNG, with the title and legend drawn into the image) and an expand button, the legend, and the chart. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/charts-frame--legend-list) |
 | **ChartGrid** | `@winterop-com/sokkel-ui-charts/ChartGrid` | Small multiples: the same chart once per label of `facet`, each drawn from that label's rows, headed by the label and laid out in `Columns`. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/charts-multiples--bars) |
 | **ChartLegend** | `@winterop-com/sokkel-ui-charts/ChartLegend` | The legend for a chart drawn beside it rather than inside it: a swatch and label per series that a click or Enter hides or shows, and hover or focus emphasizes. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/charts-frame--legend-list) |
-| **EChart** | `@winterop-com/sokkel-ui-charts/EChart` | One ECharts chart, themed from the library's tokens and typeface, drawn again when the scheme, the theme or a token override changes, and resized with its box. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/charts-chart--stacked) (in Chart) |
 
 ### Dashboard chart panels
 

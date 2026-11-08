@@ -46,10 +46,6 @@
             "types": "./dist/data.d.ts",
             "import": "./dist/data.js"
         },
-        "./EChart": {
-            "types": "./dist/EChart.d.ts",
-            "import": "./dist/EChart.js"
-        },
         "./kinds": {
             "types": "./dist/kinds/index.d.ts",
             "import": "./dist/kinds/index.js"
