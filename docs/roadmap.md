@@ -96,12 +96,6 @@ to `plan.md` when it ships.
 Mapping each app's own UI onto the library's parts found these, beyond the review's missing parts
 under Next. Each is a part or an option here, never a copy in an app. Roughly one release a round.
 
-- **Round 1, shared by several apps (core).** A `SignIn` layout (a brand pane and a form of one or
-  two fields, an optional server address); a `reason` on `Button` and `IconButton`, disabled with
-  the reason on hover; `SplitButton` (the main action and other ways); `RelativeTime` (relative,
-  the exact instant on hover, ticking); an `ApiLink` chip naming the request behind a screen;
-  `DownloadButton` (idle, n of m, cancel, kept) on `ProgressRing`; a `row` layout for
-  `DescriptionList` and `TagChips` that fit the room a row has left.
 - **Round 2, the code editor and code color.** `CodeEditor` gains: a `languages` extension point
   and a `jq` language; `completions` (label, detail, docs, kind) on CodeMirror's autocomplete; a
   `hover(word)` for docs; ranged marks with a message (from and to columns, an underline, a gutter

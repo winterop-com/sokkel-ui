@@ -16,8 +16,8 @@ export interface ThreadComment {
     /** The author's picture, drawn over their initials once it has loaded. */
     image?: string
     color?: KindColor
-    /** When it was written, as the app says it: `3 weeks ago`. */
-    time: string
+    /** When it was written, as the app says it (`3 weeks ago`), or a `RelativeTime` that says it and keeps it current. */
+    time: ReactNode
     /** The full date and time, on hover. */
     timeTitle?: string
     body: ReactNode
@@ -193,9 +193,13 @@ export function CommentItem({
                 <p className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 text-xs">
                     <span className="truncate font-medium">{comment.author}</span>
                     {comment.creator === true && <span className="rounded-mini bg-muted px-1 text-muted-foreground">{words.creator}</span>}
-                    <time title={comment.timeTitle} className="text-muted-foreground">
-                        {comment.time}
-                    </time>
+                    {typeof comment.time === 'string' ? (
+                        <time title={comment.timeTitle} className="text-muted-foreground">
+                            {comment.time}
+                        </time>
+                    ) : (
+                        <span className="text-muted-foreground">{comment.time}</span>
+                    )}
                     {comment.edited === true && <span className="text-muted-foreground">{words.edited}</span>}
                 </p>
                 <div className="text-sm leading-relaxed wrap-break-word">{comment.body}</div>

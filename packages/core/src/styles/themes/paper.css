@@ -7,6 +7,7 @@ html[data-theme='paper'] {
     --critical-wash: color-mix(in oklab, var(--destructive) 12%, var(--card));
     --panel-line: color-mix(in oklab, var(--border-strong) 25%, var(--border));
     --panel-ground: color-mix(in oklab, var(--muted) 35%, var(--card));
+    --brand-ground: color-mix(in oklab, var(--foreground) 5%, var(--background));
     --background: oklch(0.97 0.012 85);
     --foreground: oklch(0.2 0.02 60);
     --card: oklch(0.99 0.008 85);
@@ -78,6 +79,7 @@ html.dark[data-theme='paper'] {
     --critical-wash: color-mix(in oklab, var(--destructive) 16%, var(--card));
     --panel-line: color-mix(in oklab, var(--border-strong) 50%, var(--border));
     --panel-ground: color-mix(in oklab, var(--muted) 35%, var(--card));
+    --brand-ground: color-mix(in oklab, var(--shade) 45%, var(--background));
     --background: oklch(0.16 0.012 70);
     --foreground: oklch(0.95 0.012 85);
     --card: oklch(0.225 0.015 70);
@@ -235,6 +237,7 @@ html.dark[data-theme='paper'] {
     --elevation-pop: 0 14px 44px #23333e2e;
     --panel-line: color-mix(in oklab, var(--border-strong) 25%, var(--border));
     --panel-ground: color-mix(in oklab, var(--muted) 35%, var(--card));
+    --brand-ground: color-mix(in oklab, var(--foreground) 5%, var(--background));
     --panel-dot: #202b3426;
     --terminal: oklch(0.24 0.012 255);
     --terminal-foreground: oklch(0.93 0.008 255);
@@ -380,6 +383,7 @@ html.dark[data-theme='paper'] {
     --elevation-pop: 0 14px 44px #00000059;
     --panel-line: color-mix(in oklab, var(--border-strong) 50%, var(--border));
     --panel-ground: color-mix(in oklab, var(--muted) 35%, var(--card));
+    --brand-ground: color-mix(in oklab, var(--shade) 45%, var(--background));
     --panel-dot: #ffffff1c;
     --terminal: oklch(0.105 0.012 255);
     --terminal-foreground: oklch(0.93 0.008 255);

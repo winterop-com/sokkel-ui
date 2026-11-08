@@ -126,6 +126,9 @@ a `font-*` class still overrides:
 | Badge and status            | `text-badge`                | 13 / 20                 | 500       |
 | Main statistic              | `text-statistic`            | 32 / 36                 | 600       |
 | Fullscreen media title      | `text-media-title`          | 48 / 56                 | 600       |
+| Brand name on a sign-in     | `text-brand-name`           | 48 / 56, tight tracking | 700       |
+| Sign-in title               | `text-welcome-title`        | 32 / 36, tight tracking | 700       |
+| Eyebrow over a title        | `text-eyebrow`              | 15 / 22, wide tracking  | 500       |
 
 Code takes the size around it at 400, 500 for emphasis, in mono adjusted by `font-size-adjust`:
 every size and role sets `--mono-adjust`, the body or the small share, and mono reads it, so a size
@@ -150,10 +153,27 @@ Shell, Rail, AppBar, SubNav, Page, PageHeader, PaneHeader, Toolbar, Section, Sur
 components (Stack, Row, Columns, Split, Fill), Field, TextField, InlineField, SliderField,
 CheckboxField, CheckboxList, ChoiceList, CodeField, SwitchField, SearchField, FilterChip, FormBar,
 SelectionBar, DataTable, StatusChip, PersonAvatar, PersonRow, MetaLine, DueText, AttachmentList,
-IconButton, StarButton, AccountMenu, SidePanel, DialogShell, ConfirmDialog, TreeSelect, AsyncSelect,
-CapabilityPicker.
+IconButton, StarButton, SplitButton, DownloadButton, AccountMenu, SidePanel, DialogShell,
+ConfirmDialog, TreeSelect, AsyncSelect, CapabilityPicker, SignIn, RelativeTime, ApiLink, TagChips.
 Every example arranges and builds its screens from these, never by hand, so a fix in one reaches
 them all.
+
+A button that cannot be pressed now says why: `reason` on `Button`, `IconButton` and `SplitButton`
+disables it and shows the reason on hover and focus, the button kept in the tab order so a keyboard
+reaches it. `SplitButton` joins the main action to a menu of other ways; `DownloadButton` goes from
+idle through n of m on a `ProgressRing`, with a cancel, to kept, its state held by the app.
+`RelativeTime` says a time as "3 minutes ago" through `Intl.RelativeTimeFormat`, the instant on
+hover, ticking on its own clock unless the app passes `now`. `ApiLink` names the request behind a
+screen as a copyable chip. `TagChips` shows as many tags as fit the room its row has left and a +N
+for the rest, and `DescriptionList`'s `row` layout sets its facts in one wrapping line.
+
+`SignIn` is every app's door: a brand pane, dark in every scheme on `--brand-ground`, with art over
+its upper part and the mark, the name and a few facts at its foot, beside a centered form of a
+username and password (or a token, or the app's own fields), an optional server address, an error
+over the submit and other ways in under a rule. The seam between the panes drags, the form rises
+into place as it opens, and the username can be kept in the browser. On a phone the brand pane is a
+bar over the form. The art that ships, `LevelBars` and `FlowLines`, is drawn from a seed in the
+theme's primary and muted inks and holds still when motion is reduced; an app may pass its own.
 
 DataTable is the one table, for five rows or fifty thousand: only the rows in view are drawn, at
 the density's one row height, so 50k rows sort, scroll and select at once; rows that grow to fit

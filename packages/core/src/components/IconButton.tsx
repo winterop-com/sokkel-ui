@@ -7,7 +7,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 /**
  * A button that shows only an icon. Its label is its accessible name and its tooltip, so the two
  * never drift apart. A ghost button draws its icon in the quiet ink until hovered; `pressed` marks
- * a toggle as on, filled as a pressed toggle is everywhere else.
+ * a toggle as on, filled as a pressed toggle is everywhere else. `reason` disables the button and
+ * adds why to its tooltip, under the label; the button stays focusable so the reason can be read.
  */
 export function IconButton({
     label,
@@ -16,9 +17,11 @@ export function IconButton({
     size = 'icon-sm',
     pressed,
     side = 'top',
+    reason,
+    disabled,
     className,
     ...props
-}: Omit<ComponentProps<typeof Button>, 'children' | 'size' | 'aria-label' | 'aria-pressed'> & {
+}: Omit<ComponentProps<typeof Button>, 'children' | 'size' | 'aria-label' | 'aria-pressed' | 'reason' | 'reasonSide'> & {
     /** What the button does, said by its tooltip and its accessible name. */
     label: string
     /** The icon. */
@@ -28,7 +31,10 @@ export function IconButton({
     pressed?: boolean
     /** Which side the tooltip opens on. */
     side?: 'top' | 'bottom' | 'left' | 'right'
+    /** Why the button cannot be pressed now; given, the button is disabled and its tooltip says it. */
+    reason?: ReactNode
 }) {
+    const held = reason !== undefined && reason !== null && reason !== false
     return (
         <Tooltip>
             <TooltipTrigger
@@ -39,6 +45,8 @@ export function IconButton({
                         size={size}
                         aria-label={label}
                         aria-pressed={pressed}
+                        disabled={held || disabled}
+                        focusableWhenDisabled={held || props.focusableWhenDisabled}
                         className={cn(
                             variant === 'ghost' && 'text-muted-foreground',
                             pressed === true && 'bg-muted text-foreground',
@@ -49,7 +57,16 @@ export function IconButton({
             >
                 {children}
             </TooltipTrigger>
-            <TooltipContent side={side}>{label}</TooltipContent>
+            <TooltipContent side={side}>
+                {held ? (
+                    <span className="flex flex-col">
+                        <span className="font-medium">{label}</span>
+                        <span>{reason}</span>
+                    </span>
+                ) : (
+                    label
+                )}
+            </TooltipContent>
         </Tooltip>
     )
 }
