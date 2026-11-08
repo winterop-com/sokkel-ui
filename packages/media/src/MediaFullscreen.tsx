@@ -13,11 +13,13 @@ import {
     RepeatButton,
     ScreenWords,
     Scrub,
+    kindOf,
     ShuffleButton,
     Speed,
     Steps,
     Volume,
     type Deck,
+    type MediaVisualizerOption,
 } from './MediaBarParts'
 import { TransportButton } from '@winterop-com/sokkel-ui/media/MediaControls'
 import { SOUND_KINDS, type SoundKind } from '@winterop-com/sokkel-ui/media/sound'
@@ -44,6 +46,15 @@ export interface MediaFullscreenProps {
     actions?: ReactNode
     kind: SoundKind
     onKindChange: (kind: SoundKind) => void
+    /**
+     * The app's own looks for the visualizer, which the picker offers in place of the library's
+     * kinds, reporting the id chosen. The app draws the one chosen, so the visualizer is then
+     * drawn as given, its kind and look its own.
+     */
+    visualizerOptions?: readonly MediaVisualizerOption[]
+    /** The id of the option shown. */
+    visualizerOption?: string
+    onVisualizerOptionChange?: (id: string) => void
     onLeave: () => void
     /**
      * Whether to ask the browser for its fullscreen, as a press of the bar's button does. Without
@@ -55,10 +66,12 @@ export interface MediaFullscreenProps {
 /**
  * The player's now-playing view over the whole screen, opened from the bar: what plays at full
  * size, the visualizer at full strength, the waveform and the transport, arranged after the
- * bar's layout. The corner holds the visualizer's kind picker and the button that leaves; Escape
- * leaves too. Given `lyrics`, the corner's lyrics button shows them in the visualizer's place:
- * between the head and the waveform, above the liner, or across the stage. `actions`, such as a
- * star for what plays, end the line under its title.
+ * bar's layout. The title is never cut short: it has the room its line has and wraps onto as many
+ * lines as it needs. The corner holds the visualizer's picker, of the library's kinds or of the
+ * app's own `visualizerOptions`, and the button that leaves; Escape leaves too. Given `lyrics`, the
+ * corner's lyrics button shows them in the visualizer's place: between the head and the waveform,
+ * above the liner, or across the stage. `actions`, such as a star for what plays, end the line
+ * under its title.
  *
  * It is a dark room in every scheme and theme: the `.dark` class around an element scoped to the
  * document's theme, so the theme's own dark tokens hold inside whatever the page wears.
@@ -79,6 +92,9 @@ function Room({
     pickable,
     kind,
     onKindChange,
+    visualizerOptions,
+    visualizerOption,
+    onVisualizerOptionChange,
     onLeave,
     native,
     lyrics,
@@ -126,7 +142,17 @@ function Room({
 
     const phone = box.width < PHONE
     const worded = lyrics !== undefined && lyrics !== null
-    const view = { deck, visualizer, kind, phone, room, lyrics: worded && lyricsShown ? lyrics : undefined, actions }
+    const own = visualizerOptions !== undefined && visualizerOptions.length > 0
+    // The app's options leave the visualizer as the app drew it; the library's kinds are drawn into it.
+    const view = {
+        deck,
+        visualizer,
+        kind: own ? undefined : kind,
+        phone,
+        room,
+        lyrics: worded && lyricsShown ? lyrics : undefined,
+        actions,
+    }
     return (
         <div
             ref={room}
@@ -149,8 +175,17 @@ function Room({
                             <MicVocal aria-hidden />
                         </TransportButton>
                     )}
-                    {pickable && visualizer !== undefined && visualizer !== null && view.lyrics === undefined && (
-                        <KindPicker words={deck.words} kind={kind} onKindChange={onKindChange} compact={phone} />
+                    {(own || pickable) && visualizer !== undefined && visualizer !== null && view.lyrics === undefined && (
+                        <LookPicker
+                            label={deck.words.visualizerKind}
+                            options={own ? visualizerOptions : SOUND_KINDS.map((id) => ({ id, label: deck.words[id] }))}
+                            value={own ? (visualizerOption ?? visualizerOptions[0].id) : kind}
+                            onValueChange={(id) => {
+                                if (own) onVisualizerOptionChange?.(id)
+                                else onKindChange(SOUND_KINDS.find((one) => one === id) ?? kind)
+                            }}
+                            compact={phone}
+                        />
                     )}
                     <TransportButton label={deck.words.exitFullscreen} onClick={onLeave} className="text-muted-foreground">
                         <Minimize2 aria-hidden />
@@ -161,24 +196,27 @@ function Room({
     )
 }
 
-/** The visualizer's kinds side by side; on a phone, one button that moves to the next. */
-function KindPicker({
-    words,
-    kind,
-    onKindChange,
+/** The visualizer's looks side by side; on a phone, one button that moves to the next. */
+function LookPicker({
+    label,
+    options,
+    value,
+    onValueChange,
     compact,
 }: {
-    words: Deck['words']
-    kind: SoundKind
-    onKindChange: (kind: SoundKind) => void
+    label: string
+    options: readonly MediaVisualizerOption[]
+    value: string
+    onValueChange: (id: string) => void
     compact: boolean
 }) {
     if (compact) {
-        const next = SOUND_KINDS[(SOUND_KINDS.indexOf(kind) + 1) % SOUND_KINDS.length]
+        const at = options.findIndex((option) => option.id === value)
+        const next = options[(at + 1) % options.length]
         return (
             <TransportButton
-                label={`${words.visualizerKind}: ${words[kind]}`}
-                onClick={() => onKindChange(next)}
+                label={at === -1 ? label : `${label}: ${options[at].label}`}
+                onClick={() => onValueChange(next.id)}
                 className="text-muted-foreground"
             >
                 <AudioLines aria-hidden />
@@ -187,10 +225,10 @@ function KindPicker({
     }
     return (
         <Segmented
-            label={words.visualizerKind}
-            value={kind}
-            options={SOUND_KINDS.map((value) => ({ value, label: words[value] }))}
-            onValueChange={onKindChange}
+            label={label}
+            value={value}
+            options={options.map((option) => ({ value: option.id, label: option.label }))}
+            onValueChange={onValueChange}
         />
     )
 }
@@ -198,7 +236,8 @@ function KindPicker({
 interface ViewProps {
     deck: Deck
     visualizer?: ReactNode
-    kind: SoundKind
+    /** The library's kind picked; none while the app's options pick the look, the visualizer drawn as given. */
+    kind?: SoundKind
     phone: boolean
     /** The view's own element, which holds the speed menu while the browser shows only it. */
     room: RefObject<HTMLDivElement | null>
@@ -219,9 +258,10 @@ function Transport({ deck }: { deck: Deck }) {
 }
 
 /**
- * After `rows`: the two rows pulled apart with the visualizer between them. What plays, the
- * transport and the volume across the head; the visualizer filling the middle; the waveform, tall
- * and as wide as the screen, along the foot. On a phone the transport moves under the waveform.
+ * After `rows`: the two rows pulled apart with the visualizer between them. What plays across the
+ * head, the words taking all the room the transport and the volume leave at its end; the
+ * visualizer filling the middle; the waveform, tall and as wide as the screen, along the foot. On
+ * a phone the transport moves under the waveform.
  */
 function RowsView({ deck, visualizer, kind, phone, room, lyrics, actions, width }: ViewProps & { width: number }) {
     // Short of a laptop's width, the transport and the volume move to a row under what plays.
@@ -235,7 +275,7 @@ function RowsView({ deck, visualizer, kind, phone, room, lyrics, actions, width 
                         ? 'grid-cols-1 px-5 pt-16'
                         : tablet
                           ? 'grid-cols-[auto_minmax(0,1fr)] gap-x-8 gap-y-6 px-10 pt-16'
-                          : 'grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-8 px-10 pt-16',
+                          : 'grid-cols-[minmax(0,1fr)_auto_auto] gap-8 px-10 pt-16',
                 )}
             >
                 <div className={cn('flex min-w-0 items-end', phone ? 'gap-4' : 'gap-6', tablet && 'col-span-2')}>
@@ -247,7 +287,7 @@ function RowsView({ deck, visualizer, kind, phone, room, lyrics, actions, width 
                         <div className="flex h-14 items-center gap-3">
                             <Transport deck={deck} />
                         </div>
-                        <div className="flex h-14 min-w-0 items-center justify-end gap-2">
+                        <div className="flex h-14 items-center gap-2">
                             <Speed deck={deck} size="md" container={room} />
                             <Volume deck={deck} />
                             <Extras deck={deck} />
@@ -255,7 +295,9 @@ function RowsView({ deck, visualizer, kind, phone, room, lyrics, actions, width 
                     </>
                 )}
             </div>
-            <div className={cn('min-h-0 flex-1', phone ? 'px-5 py-5' : 'px-10 py-8')}>{lyrics ?? drawVisualizer(visualizer, { kind })}</div>
+            <div className={cn('min-h-0 flex-1', phone ? 'px-5 py-5' : 'px-10 py-8')}>
+                {lyrics ?? drawVisualizer(visualizer, lookOf(kind))}
+            </div>
             <div className={cn('flex flex-col', phone ? 'gap-4 px-5 pb-6' : 'px-10 pb-10')}>
                 <Scrub deck={deck} height={phone ? 64 : 112} size={phone ? 'sm' : 'lg'} />
                 {phone && (
@@ -271,17 +313,16 @@ function RowsView({ deck, visualizer, kind, phone, room, lyrics, actions, width 
 /**
  * After `panel`: the liner at full size in the lower left over the visualizer, which fills the
  * screen and fades into the ground under the words, with the waveform and the transport along
- * the foot.
+ * the foot. The lyrics take the room over the liner, however many lines its title runs onto.
  */
 function PanelView({ deck, visualizer, kind, phone, room, lyrics, actions }: ViewProps) {
-    const cover = phone ? 88 : 208
     return (
         <>
-            <div className="relative min-h-0 flex-1">
+            <div className="relative flex min-h-0 flex-1 flex-col justify-end">
                 {lyrics === undefined ? (
                     <>
                         <div className={cn('absolute inset-0', phone ? 'px-3 pt-16' : 'px-8 pt-16')}>
-                            {drawVisualizer(visualizer, { kind })}
+                            {drawVisualizer(visualizer, lookOf(kind))}
                         </div>
                         <div
                             aria-hidden
@@ -289,12 +330,12 @@ function PanelView({ deck, visualizer, kind, phone, room, lyrics, actions }: Vie
                         />
                     </>
                 ) : (
-                    <div className={cn('absolute inset-x-0 top-0 pt-16', phone ? 'px-1' : 'px-4')} style={{ bottom: cover + 24 }}>
-                        {lyrics}
+                    <div className="relative mb-6 min-h-0 flex-1">
+                        <div className={cn('absolute inset-0 pt-16', phone ? 'px-1' : 'px-4')}>{lyrics}</div>
                     </div>
                 )}
-                <div className={cn('absolute inset-x-0 bottom-0 flex min-w-0 items-end', phone ? 'gap-4 px-5' : 'gap-7 px-10')}>
-                    <Cover deck={deck} size={cover} className="rounded-surface shadow-pop" />
+                <div className={cn('relative flex min-w-0 shrink-0 items-end', phone ? 'gap-4 px-5' : 'gap-7 px-10')}>
+                    <Cover deck={deck} size={phone ? 88 : 208} className="rounded-surface shadow-pop" />
                     <ScreenWords deck={deck} phone={phone} actions={actions} className="pb-1" />
                 </div>
             </div>
@@ -319,26 +360,33 @@ function PanelView({ deck, visualizer, kind, phone, room, lyrics, actions }: Vie
 /**
  * After `stage`: everything on the screen's middle line. The cover stands inside the visualizer,
  * which spreads to either side of it (or rings it, the cover set in the ring's middle), and the
- * words, the waveform, the transport and the volume follow under it, centered.
+ * words, the waveform, the transport and the volume follow under it, centered. Short of height,
+ * as under a title of several lines, the visualizer's band and the cover give way first.
  */
 function StageView({ deck, visualizer, kind, phone, room, lyrics, actions, width, height }: ViewProps & { width: number; height: number }) {
     const band = Math.round(phone ? Math.min(width * 0.9, height * 0.4) : Math.min(height * 0.46, 440))
     const shown = visualizer !== undefined && visualizer !== null
-    const ring = shown && kind === 'ring'
+    const ring = shown && (kind ?? kindOf(visualizer)) === 'ring'
+    // The library's kinds are centered on the line; the app's options keep their own alignment.
+    const look = {
+        ...lookOf(kind),
+        ...(kind === undefined ? {} : { align: 'center' as const }),
+        ...(ring ? { middle: <Cover deck={deck} flush /> } : {}),
+    }
     return (
-        <div className={cn('flex h-full flex-col items-center justify-center', phone ? 'gap-6 px-5 pt-14' : 'gap-8 px-10')}>
-            <div className="relative flex w-full shrink-0 items-center justify-center" style={{ height: band }}>
+        <div className={cn('flex h-full flex-col items-center justify-center', phone ? 'gap-6 px-5 pt-14' : 'gap-8 px-10 pt-16 pb-8')}>
+            <div className="relative flex min-h-0 w-full items-center justify-center" style={{ height: band }}>
                 {lyrics !== undefined && lyrics}
                 {lyrics === undefined && shown && (
-                    <div className={cn('absolute inset-y-0', phone ? '-inset-x-5' : '-inset-x-10')}>
-                        {drawVisualizer(visualizer, { kind, align: 'center', middle: ring ? <Cover deck={deck} flush /> : undefined })}
-                    </div>
+                    <div className={cn('absolute inset-y-0', phone ? '-inset-x-5' : '-inset-x-10')}>{drawVisualizer(visualizer, look)}</div>
                 )}
                 {lyrics === undefined && !ring && (
-                    <Cover deck={deck} size={Math.round(band * 0.78)} className="relative rounded-surface shadow-pop" />
+                    <div className="relative aspect-square h-[78%] max-w-full">
+                        <Cover deck={deck} className="rounded-surface shadow-pop" />
+                    </div>
                 )}
             </div>
-            <div className={cn('flex w-full flex-col items-center', phone ? 'gap-4' : 'max-w-3xl gap-5')}>
+            <div className={cn('flex w-full shrink-0 flex-col items-center', phone ? 'gap-4' : 'max-w-3xl gap-5')}>
                 <ScreenWords deck={deck} phone={phone} actions={actions} center />
                 <Scrub deck={deck} height={phone ? 44 : 56} size={phone ? 'sm' : 'lg'} className="w-full" />
                 <div className="flex items-center justify-center gap-3">
@@ -354,6 +402,11 @@ function StageView({ deck, visualizer, kind, phone, room, lyrics, actions, width
             </div>
         </div>
     )
+}
+
+/** What a view draws into a `SoundVisualizer`: the kind picked, or nothing, leaving the app's own. */
+function lookOf(kind: SoundKind | undefined): { kind?: SoundKind } {
+    return kind === undefined ? {} : { kind }
 }
 
 /** The element's size, measured before paint and on every resize; the window's until measured. */

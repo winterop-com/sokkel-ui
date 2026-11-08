@@ -6,9 +6,15 @@ import { useMemo, useState, type ReactNode } from 'react'
 
 import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
 import { useMediaSession } from '@winterop-com/sokkel-ui-media/use-media-session'
-import { MediaBar, rowsHeightFor, type MediaBarLayout, type RepeatMode } from '@winterop-com/sokkel-ui-media/MediaBar'
+import {
+    MediaBar,
+    rowsHeightFor,
+    type MediaBarLayout,
+    type MediaVisualizerOption,
+    type RepeatMode,
+} from '@winterop-com/sokkel-ui-media/MediaBar'
 import { chapterIndex } from '@winterop-com/sokkel-ui-media/chapters'
-import { SoundVisualizer } from '@winterop-com/sokkel-ui/media/SoundVisualizer'
+import { SoundVisualizer, type SoundVisualizerProps } from '@winterop-com/sokkel-ui/media/SoundVisualizer'
 import { formatRemaining, formatTime } from '@winterop-com/sokkel-ui/media/time'
 import { Artwork, type ArtworkCover } from '@winterop-com/sokkel-ui-media/Artwork'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
@@ -87,6 +93,29 @@ interface BarOptions {
     star?: boolean
     /** Whether the app holds the bar's height, as it holds one it kept to restore. */
     held?: boolean
+    /** A title in place of the playing track's, such as a long one. */
+    title?: string
+    /** Whether the fullscreen view's picker offers the app's own visualizer looks. */
+    looks?: boolean
+}
+
+/** A live recording's title, long enough to run onto more than one line. */
+const LONG_TITLE = 'Songs for the Last Ferry Across the Bay (Live at Larkspur Hall)'
+
+/** The app's own visualizer looks, as its settings offer them. */
+const LOOKS: readonly MediaVisualizerOption[] = [
+    { id: 'bars', label: 'Bars' },
+    { id: 'centered', label: 'Centered' },
+    { id: 'ridge', label: 'Ridge' },
+    { id: 'scope', label: 'Scope' },
+]
+
+/** How the app draws each of its looks, as the visualizer's kind, alignment, mirror and ramp. */
+const LOOK_PROPS: Readonly<Record<string, Pick<SoundVisualizerProps, 'kind' | 'align' | 'mirror' | 'ramp'>>> = {
+    bars: { kind: 'spectrum' },
+    centered: { kind: 'spectrum', align: 'center', ramp: 'lagoon' },
+    ridge: { kind: 'area', mirror: true, ramp: 'cool' },
+    scope: { kind: 'wave', align: 'center' },
 }
 
 /**
@@ -95,12 +124,7 @@ interface BarOptions {
  */
 function DeckFace({ track, position }: { track: Track; position: number }) {
     return (
-        <Row
-            room
-            gap="lg"
-            align="center"
-            className="h-full min-w-0 rounded-control border border-border bg-background px-3 py-1.5 font-mono"
-        >
+        <Row room gap="lg" align="center" className="min-w-0 rounded-control border border-border bg-background px-3 py-1.5 font-mono">
             <Stack gap="none" className="min-w-0 flex-1">
                 <span className="truncate text-sm text-primary-ink uppercase">{track.title}</span>
                 <span className="truncate text-xs text-muted-foreground uppercase">
@@ -139,6 +163,8 @@ function Bar({
     face = false,
     star = false,
     held = false,
+    title,
+    looks = false,
     queueOpen = false,
     onQueue,
     playback,
@@ -152,6 +178,7 @@ function Bar({
     const [repeat, setRepeat] = useState<RepeatMode>('all')
     const [starred, setStarred] = useState(true)
     const [height, setHeight] = useState(size ?? 64)
+    const [look, setLook] = useState('ridge')
     const track = QUEUE[index]
     const waveform = useMemo(() => waveformOf(index + 1), [index])
     const step = (by: number) => {
@@ -161,7 +188,7 @@ function Bar({
     return (
         <MediaBar
             layout={layout}
-            title={track.title}
+            title={title ?? track.title}
             artist={track.artist}
             album={track.album}
             year={track.year}
@@ -175,7 +202,12 @@ function Bar({
             onSeek={setPosition}
             buffered={[{ start: 0, end: Math.min(track.duration, position + 60) }]}
             waveform={waveform}
-            visualizer={visualizer ? <SoundVisualizer frame={FRAME} label="What is playing" /> : undefined}
+            visualizer={
+                visualizer ? <SoundVisualizer frame={FRAME} label="What is playing" {...(looks ? LOOK_PROPS[look] : {})} /> : undefined
+            }
+            visualizerOptions={looks ? LOOKS : undefined}
+            visualizerOption={looks ? look : undefined}
+            onVisualizerOptionChange={looks ? setLook : undefined}
             volume={volume}
             onVolumeChange={setVolume}
             muted={muted}
@@ -431,13 +463,15 @@ export const TallerStart: StoryObj = {
 
 /**
  * The app's own now-playing face, a deck's readout, in place of the words and the scrubber: in
- * the one line, where it stands between the cover and the transport, and grown in `rows` at the
- * height of a 158 pixel cover. The face says what plays and how far itself; the transport, the
- * volume and the fullscreen view stay the bar's.
+ * the one line, where it stands between the cover and the transport, and grown in `rows`, at the
+ * height of a 158 pixel cover among others, where it takes the whole block beside the cover that
+ * the words and the waveform had, the transport and the volume staying where they sit without
+ * it. The face says what plays and how far itself; the transport, the volume and the fullscreen
+ * view stay the bar's.
  */
 export const CustomFace: StoryObj = {
     name: 'Custom face',
-    render: () => <Ladder layout="rows" heights={[64, TALL_START]} face />,
+    render: () => <Ladder layout="rows" heights={[64, 120, TALL_START, 300]} face />,
 }
 
 /**
@@ -470,4 +504,28 @@ export const PanelFullscreen: StoryObj = {
 export const StageFullscreen: StoryObj = {
     name: 'Stage fullscreen',
     render: () => <Player layout="stage" size={200} visualizer fullscreen />,
+}
+
+/**
+ * The fullscreen view of a live recording with a long title, which is never cut short: it takes
+ * the head's room up to the transport and wraps onto more lines, a size smaller once it would run
+ * past two (three on a phone).
+ */
+export const LongTitle: StoryObj = {
+    name: 'Long title',
+    render: () => (
+        <TooltipProvider>
+            <Player layout="rows" size={200} visualizer fullscreen star title={LONG_TITLE} />
+        </TooltipProvider>
+    ),
+}
+
+/**
+ * The fullscreen view with the app's own visualizer looks in `visualizerOptions`, as its settings
+ * offer them: the picker lists Bars, Centered, Ridge and Scope and reports the id chosen, and the
+ * app draws each as a kind, an alignment, a mirror and a ramp on its `SoundVisualizer`.
+ */
+export const VisualizerOptions: StoryObj = {
+    name: 'Visualizer options',
+    render: () => <Player layout="rows" size={200} visualizer fullscreen looks />,
 }

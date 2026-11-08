@@ -13,6 +13,7 @@ import {
     type MediaBarWords,
     type MediaSteps,
     type MediaTimeline,
+    type MediaVisualizerOption,
     type RepeatMode,
 } from './MediaBarParts'
 import { MEDIA_RATES } from '@winterop-com/sokkel-ui/media/MediaControls'
@@ -26,7 +27,7 @@ const MediaFullscreen = lazy(() => loadFullscreen().then((module) => ({ default:
 
 export type { MediaBarLayout } from './bar-growth'
 export { rowsHeightFor } from './bar-growth'
-export type { MediaBarWords, MediaSteps, MediaTimeline, RepeatMode } from './MediaBarParts'
+export type { MediaBarWords, MediaSteps, MediaTimeline, MediaVisualizerOption, RepeatMode } from './MediaBarParts'
 export { MEDIA_RATES } from '@winterop-com/sokkel-ui/media/MediaControls'
 
 /** How far the skip buttons move unless told otherwise, in seconds. */
@@ -185,6 +186,16 @@ export interface MediaBarProps {
     /** The visualizer's kind in the fullscreen view, held from outside with `onVisualizerKindChange`; the slot's own by default. */
     visualizerKind?: SoundKind
     onVisualizerKindChange?: (kind: SoundKind) => void
+    /**
+     * The app's own looks for the visualizer, such as the styles its settings offer, which the
+     * fullscreen view's picker lists in place of the library's kinds, reporting the id chosen
+     * through `onVisualizerOptionChange`. The app maps each id onto its `visualizer`'s props
+     * (`kind`, `align`, `mirror`, `ramp`, `effect`), and the view draws the visualizer as given.
+     */
+    visualizerOptions?: readonly MediaVisualizerOption[]
+    /** The id of the option shown, held from outside with `onVisualizerOptionChange`; the first option's by default. */
+    visualizerOption?: string
+    onVisualizerOptionChange?: (id: string) => void
     words?: Partial<MediaBarWords>
     className?: string
 }
@@ -208,7 +219,8 @@ export interface MediaBarProps {
  *
  * The corner button opens the fullscreen now-playing view (`MediaFullscreen`), arranged after the
  * layout, a dark room in every theme with the visualizer at full strength and a picker of its
- * kind; Escape leaves it. Given `lyrics`, a button in its corner shows them in the visualizer's
+ * kind, or of the app's own looks given in `visualizerOptions`; its title is never cut short, and
+ * Escape leaves it. Given `lyrics`, a button in its corner shows them in the visualizer's
  * place. The view is fetched after the bar is first drawn, so it is there when the button is pressed.
  *
  * Its top edge drags to resize it and a double click on the edge puts it back. Left to itself it
@@ -292,6 +304,9 @@ export function MediaBar({
     fullscreenActions,
     visualizerKind,
     onVisualizerKindChange,
+    visualizerOptions,
+    visualizerOption,
+    onVisualizerOptionChange,
     words: given,
     className,
 }: MediaBarProps) {
@@ -332,6 +347,12 @@ export function MediaBar({
     const setKind = (next: SoundKind) => {
         if (visualizerKind === undefined) setOwnKind(next)
         onVisualizerKindChange?.(next)
+    }
+    const [ownOption, setOwnOption] = useState<string | undefined>(undefined)
+    const option = visualizerOption ?? ownOption ?? visualizerOptions?.[0]?.id
+    const setOption = (next: string) => {
+        if (visualizerOption === undefined) setOwnOption(next)
+        onVisualizerOptionChange?.(next)
     }
 
     const marked = chapters !== undefined && chapters.length > 0 ? chapters : undefined
@@ -450,6 +471,9 @@ export function MediaBar({
                         pickable={slotKind !== undefined}
                         kind={kind}
                         onKindChange={setKind}
+                        visualizerOptions={visualizerOptions}
+                        visualizerOption={option}
+                        onVisualizerOptionChange={setOption}
                         onLeave={() => setOpen(false)}
                         native={!first}
                         lyrics={lyrics}

@@ -543,8 +543,9 @@ rest of the bar keeps to the app's `position`, which still counts the chapters, 
 holds the last frame read until the reported position moves. `useFramePosition` is the same clock
 for an app's own readout. `face` puts the app's own now-playing display, such as a deck's readout,
 in place of the words and the scrubber in the one line and in `rows`, beside the cover and before
-the transport, the face then saying what plays and how far; `panel`, `stage` and the fullscreen
-view keep their own. The bar starts at `defaultSize`, grown if it is tall enough (`rowsHeightFor`
+the transport, the face then saying what plays and how far; in `rows` it takes the whole block
+beside the cover that both rows had, stretched to its height, and the transport and the volume stay
+where they sit without it. `panel`, `stage` and the fullscreen view keep their own. The bar starts at `defaultSize`, grown if it is tall enough (`rowsHeightFor`
 gives the height at which `rows` draws a cover of a given size, 182 pixels for 158), and `size`
 with `onSizeChange` restores a height the app kept. `fullscreenActions`, such as a star for what
 plays, end the line under its title in the fullscreen view, so they never take the title's room.
@@ -559,7 +560,13 @@ standing on the waveform. A corner button, or an app's own key through `fullscre
 MediaFullscreen, a now-playing view arranged after the layout, with the visualizer at full strength
 and a picker of its kind; it asks the browser for its fullscreen and falls back to covering the
 window, and it is a dark room in every theme: `.dark` around an element scoped to the document's
-theme with `data-theme-scope`. SoundVisualizer is the one live picture
+theme with `data-theme-scope`. Its title is never cut short: in `rows` the words take the head's
+room up to the transport and the volume at its end, and in every layout the title wraps onto as many
+lines as it needs, a size smaller once it would run past two lines (three on a phone), measured by
+hidden copies at each size. `visualizerOptions` puts the app's own looks in the picker in place of
+the library's kinds, for an app whose settings offer other styles: the picker reports the id chosen
+through `onVisualizerOptionChange`, the app maps it onto its `SoundVisualizer`'s props, and the view
+draws the visualizer as given. SoundVisualizer is the one live picture
 of sound: it reads a playing media element or a live stream, such as a microphone's, through Web
 Audio and draws it on a canvas as a spectrum, an area, a wave or a ring, filling its box in a color
 token, faint behind text when it is a backdrop. It moves only while the source sounds and the box
