@@ -3,7 +3,7 @@
     "features": [
         {
             "type": "Feature",
-            "id": "O6uvpzGd5pu",
+            "id": "bo",
             "properties": { "name": "Bo" },
             "geometry": {
                 "type": "Polygon",
@@ -132,7 +132,7 @@
         },
         {
             "type": "Feature",
-            "id": "fdc6uOvgoji",
+            "id": "bombali",
             "properties": { "name": "Bombali" },
             "geometry": {
                 "type": "Polygon",
@@ -311,7 +311,7 @@
         },
         {
             "type": "Feature",
-            "id": "lc3eMKXaEfw",
+            "id": "bonthe",
             "properties": { "name": "Bonthe" },
             "geometry": {
                 "type": "MultiPolygon",
@@ -701,7 +701,7 @@
         },
         {
             "type": "Feature",
-            "id": "jUb8gELQApl",
+            "id": "kailahun",
             "properties": { "name": "Kailahun" },
             "geometry": {
                 "type": "Polygon",
@@ -852,7 +852,7 @@
         },
         {
             "type": "Feature",
-            "id": "PMa2VCrupOd",
+            "id": "kambia",
             "properties": { "name": "Kambia" },
             "geometry": {
                 "type": "MultiPolygon",
@@ -1085,7 +1085,7 @@
         },
         {
             "type": "Feature",
-            "id": "kJq2mPyFEHo",
+            "id": "kenema",
             "properties": { "name": "Kenema" },
             "geometry": {
                 "type": "Polygon",
@@ -1246,7 +1246,7 @@
         },
         {
             "type": "Feature",
-            "id": "qhqAxPSTUXp",
+            "id": "koinadugu",
             "properties": { "name": "Koinadugu" },
             "geometry": {
                 "type": "Polygon",
@@ -1427,7 +1427,7 @@
         },
         {
             "type": "Feature",
-            "id": "Vth0fbpFcsO",
+            "id": "kono",
             "properties": { "name": "Kono" },
             "geometry": {
                 "type": "Polygon",
@@ -1542,7 +1542,7 @@
         },
         {
             "type": "Feature",
-            "id": "jmIPBj66vD6",
+            "id": "moyamba",
             "properties": { "name": "Moyamba" },
             "geometry": {
                 "type": "MultiPolygon",
@@ -1729,7 +1729,7 @@
         },
         {
             "type": "Feature",
-            "id": "TEQlaapDQoK",
+            "id": "port-loko",
             "properties": { "name": "Port Loko" },
             "geometry": {
                 "type": "MultiPolygon",
@@ -2114,7 +2114,7 @@
         },
         {
             "type": "Feature",
-            "id": "bL4ooGhyHRQ",
+            "id": "pujehun",
             "properties": { "name": "Pujehun" },
             "geometry": {
                 "type": "Polygon",
@@ -2248,7 +2248,7 @@
         },
         {
             "type": "Feature",
-            "id": "eIQbndfxQMb",
+            "id": "tonkolili",
             "properties": { "name": "Tonkolili" },
             "geometry": {
                 "type": "Polygon",
@@ -2429,7 +2429,7 @@
         },
         {
             "type": "Feature",
-            "id": "at6UHUQatSo",
+            "id": "western-area",
             "properties": { "name": "Western Area" },
             "geometry": {
                 "type": "MultiPolygon",

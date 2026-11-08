@@ -175,6 +175,8 @@ html.dark[data-theme='amber'] {
     --on-fill: oklch(0.99 0.003 255);
     --graph-edge: oklch(0.75 0.01 255);
     --binding-ink: oklch(0.48 0.17 305);
+    --map-selection: var(--warning);
+    --map-highlight: var(--chart-2);
     --brand: #dfb863;
     --brand-foreground: #29251d;
     --canvas: color-mix(in oklab, var(--muted) 78%, var(--background));
@@ -322,6 +324,8 @@ html.dark[data-theme='amber'] {
     --on-fill: oklch(0.99 0.003 255);
     --graph-edge: oklch(0.48 0.02 255);
     --binding-ink: oklch(0.7 0.18 305);
+    --map-selection: var(--warning);
+    --map-highlight: var(--chart-2);
     --brand: #dfb863;
     --brand-foreground: #29251d;
     --canvas: color-mix(in oklab, var(--muted) 78%, var(--background));

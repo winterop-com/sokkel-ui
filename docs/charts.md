@@ -40,9 +40,11 @@ export function RunsByJob({ runs }: { runs: readonly Run[] }) {
 level or memoized: the chart is built again when they change. A chart fills its box, so give the
 box a size.
 
-**In a frame.** `ChartFrame` puts a title, a subtitle, an Export menu (SVG and PNG), a Fullscreen
-button and a legend around a chart. `chartLegend` gives the frame the legend for the same kind and
-spec, and the frame's state goes to the chart, so the legend hides and highlights what it lists:
+**In a frame.** `ChartFrame` puts a title, a subtitle, an Export menu (SVG and PNG), an expand
+button and a legend around a chart. Expanding opens the chart and its legend near full screen
+through core's `WindowedPane`, as every expandable pane opens. `chartLegend` gives the frame the
+legend for the same kind and spec, and the frame's state goes to the chart, so the legend hides and
+highlights what it lists:
 
 ```tsx
 const SPEC: ChartSpec = { rows: RUNS, x: 'day', y: 'runs', series: 'project' }

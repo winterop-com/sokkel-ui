@@ -120,7 +120,15 @@ export function GridLayer({ id, grid, scale, opacity = 0.85, visible = true, smo
     }, [map, source, visible, opacity, smooth])
 
     useEffect(
-        () => register(source, { source, hitLayers: [], tolerance: 0, features: new Map(), bounds: [west, south, east, north] }),
+        () =>
+            register(source, {
+                source,
+                hitLayers: [],
+                tolerance: 0,
+                features: new Map(),
+                bounds: [west, south, east, north],
+                unreadable: 0,
+            }),
         [register, source, west, south, east, north],
     )
     return null

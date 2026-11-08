@@ -1,7 +1,7 @@
 import 'maplibre-gl/dist/maplibre-gl.css'
 
 import type { Feature } from 'geojson'
-import { Expand, LocateFixed, Minus, Plus, Shrink } from 'lucide-react'
+import { Expand, Globe, LocateFixed, Map as MapIcon, Minus, Plus, Shrink } from 'lucide-react'
 import {
     Map as MapLibreMap,
     getWorkerUrl,
@@ -50,8 +50,12 @@ export interface MapWords {
     fit: string
     fullscreen: string
     exitFullscreen: string
+    globe: string
+    flat: string
     basemap: string
     unavailable: string
+    /** The note under the map when its layers left out features whose geometry they could not read. */
+    unreadable: (count: number) => string
 }
 
 const WORDS: MapWords = {
@@ -60,9 +64,31 @@ const WORDS: MapWords = {
     fit: 'Fit to the data',
     fullscreen: 'Full screen',
     exitFullscreen: 'Exit full screen',
+    globe: 'View as a globe',
+    flat: 'View as a flat map',
     basemap: 'Basemap',
     unavailable: 'This browser cannot draw the map, because WebGL is not available.',
+    unreadable: (count) =>
+        count === 1
+            ? '1 geometry could not be read and is not drawn.'
+            : `${count.toLocaleString('en-US')} geometries could not be read and are not drawn.`,
 }
+
+/** How the map is projected: flat, or as a globe. */
+export type MapProjection = 'mercator' | 'globe'
+
+/** Which of the map's own controls it draws in its top right corner. */
+export interface MapControls {
+    /** Zoom in and out. */
+    zoom?: boolean
+    /** Back to everything the layers draw, or to `bounds`. */
+    fit?: boolean
+    fullscreen?: boolean
+    /** A toggle between the flat map and the globe. */
+    projection?: boolean
+}
+
+const CONTROLS: Required<MapControls> = { zoom: true, fit: true, fullscreen: true, projection: false }
 
 /** A camera position: the center and the zoom. */
 export interface MapCamera {
@@ -81,17 +107,29 @@ export interface MapViewProps {
      * street maps.
      */
     defaultBasemap?: Basemap | SchemeBasemaps
-    /** Basemaps offered in the control stack, every preset by default; with fewer than two there is no switcher. */
+    /**
+     * Basemaps offered in the control stack, every preset by default; with fewer than two there is
+     * no switcher. The map draws only a basemap it offers: the default when it is offered, the first
+     * one offered otherwise, and with none offered the ground alone, which reaches no network.
+     */
     basemaps?: Basemap[]
     onBasemapChange?: (basemap: Basemap) => void
     /** How opaque the basemap's tiles and place names are, from 0 to 1. */
     basemapOpacity?: number
     /** Whether the basemap's tiles and place names are drawn; the ground always is. */
     basemapVisible?: boolean
-    projection?: 'mercator' | 'globe'
+    /** The projection, when the caller holds it. */
+    projection?: MapProjection
+    /** The projection the map opens in when it holds it itself; the `projection` control toggles it. */
+    defaultProjection?: MapProjection
+    onProjectionChange?: (projection: MapProjection) => void
     /** Draws meridians and parallels every 15 degrees over the basemap. */
     graticule?: boolean
-    /** What the map frames instead of everything its layers draw. */
+    /**
+     * What the map frames instead of everything its layers draw, such as the selected feature and
+     * what lies under it. A change of bounds is a new subject: the map eases to it even after the
+     * reader has moved it.
+     */
     bounds?: Bounds
     /** A fixed opening camera, which turns fitting to the data off. */
     camera?: MapCamera
@@ -103,12 +141,17 @@ export interface MapViewProps {
     onSelectedChange?: (id: string | null, feature: Feature | null) => void
     /** Called with the position of every click on the map. */
     onMapClick?: (at: LngLat) => void
-    /** Whether the zoom, fit and full screen controls are drawn. */
-    controls?: boolean
+    /** Which of the map's own controls are drawn: zoom, fit and full screen, none, or a choice. */
+    controls?: boolean | MapControls
     /** Whether the map pans, zooms and answers clicks. */
     interactive?: boolean
     /** Draws the map in its own bordered, rounded frame; off for a map filling a panel that frames it already. */
     framed?: boolean
+    /**
+     * Lines under the map, such as how it frames a selection that has no geometry of its own. A
+     * line counting the features the layers could not read is added after them.
+     */
+    notes?: readonly ReactNode[]
     words?: Partial<MapWords>
     className?: string
     /** Layers and overlays. */
@@ -154,9 +197,9 @@ function mapPalette(scope: HTMLElement) {
 }
 
 /** The space each occupied corner takes, measured from the edges of the map. */
-function cornerBoxes(scope: HTMLElement, corners: Record<MapCorner, HTMLElement> | null) {
+function cornerBoxes(stage: HTMLElement, corners: Record<MapCorner, HTMLElement> | null) {
     if (corners === null) return []
-    const frame = scope.getBoundingClientRect()
+    const frame = stage.getBoundingClientRect()
     return CORNERS.flatMap((corner) => {
         const element = corners[corner]
         if (element.childElementCount === 0) return []
@@ -242,10 +285,12 @@ function ControlButton({
  *
  * It opens on the light or dark street map by the document's scheme, with the basemap's place
  * names drawn above the data, and offers every preset basemap in its control stack. It fits
- * everything its layers draw, clear of the overlays in its corners, until someone moves it;
- * follows the document's `.dark` class and `data-theme`, redrawing in the new tokens; and
- * holds the selected feature itself or takes it from `selected`. Once the map has drawn everything
- * it was given and nothing is moving or loading, the frame carries `data-map-idle`.
+ * everything its layers draw (or `bounds`), clear of the overlays in its corners, until someone
+ * moves it, and eases to new `bounds` when they change; follows the document's `.dark` class and
+ * `data-theme`, redrawing in the new tokens; and holds the selected feature itself or takes it
+ * from `selected`. Notes run under the map, with a count of the features its layers could not
+ * read. Once the map has drawn everything it was given and nothing is moving or loading, the
+ * frame carries `data-map-idle`.
  */
 export function MapView({
     label,
@@ -255,7 +300,9 @@ export function MapView({
     onBasemapChange,
     basemapOpacity = 1,
     basemapVisible = true,
-    projection = 'mercator',
+    projection,
+    defaultProjection = 'mercator',
+    onProjectionChange,
     graticule = false,
     bounds,
     camera,
@@ -267,13 +314,16 @@ export function MapView({
     controls = true,
     interactive = true,
     framed = true,
+    notes = [],
     words,
     className,
     children,
 }: MapViewProps) {
     const said = { ...WORDS, ...words }
+    const shown = controls === false ? null : controls === true ? CONTROLS : { ...CONTROLS, ...controls }
     const [supported] = useState(webglAvailable)
     const [scope, setScope] = useState<HTMLDivElement | null>(null)
+    const [stage, setStage] = useState<HTMLDivElement | null>(null)
     const [canvasHost, setCanvasHost] = useState<HTMLDivElement | null>(null)
     const [overlay, setOverlay] = useState<HTMLDivElement | null>(null)
     const cornerElements = useRef<Partial<Record<MapCorner, HTMLElement>>>({})
@@ -285,7 +335,12 @@ export function MapView({
     const [reading, setReading] = useState(0)
     const [fullscreen, setFullscreen] = useState(false)
     const [picked, setPicked] = useState<Basemap | null>(null)
-    const shownBasemap = resolveBasemap(basemap ?? picked ?? defaultBasemap, dark)
+    const wanted = resolveBasemap(basemap ?? picked ?? defaultBasemap, dark)
+    const shownBasemap =
+        basemap !== undefined || basemaps.some((option) => option.id === wanted.id) ? wanted : (basemaps[0] ?? BLANK_BASEMAP)
+    const [heldProjection, setHeldProjection] = useState<MapProjection>(defaultProjection)
+    const shownProjection = projection ?? heldProjection
+    const [unreadable, setUnreadable] = useState(0)
     const [heldSelection, setHeldSelection] = useState<string | null>(defaultSelected)
     const current = selected !== undefined ? selected : heldSelection
 
@@ -295,6 +350,8 @@ export function MapView({
     const pendingStyle = useRef(true)
     const moved = useRef(false)
     const lastFit = useRef('')
+    /** The bounds the map last framed, so new ones can be told from the same ones again. */
+    const framedOn = useRef<string | null>(null)
 
     const select = useCallback(
         (id: string | null) => {
@@ -315,11 +372,14 @@ export function MapView({
     })
 
     const register = useCallback((key: string, entry: MapLayerEntry) => {
+        const count = () => [...entries.current.values()].reduce((sum, each) => sum + each.unreadable, 0)
         entries.current.set(key, entry)
         setLayerVersion((version) => version + 1)
+        setUnreadable(count())
         return () => {
             if (entries.current.get(key) === entry) entries.current.delete(key)
             setLayerVersion((version) => version + 1)
+            setUnreadable(count())
         }
     }, [])
 
@@ -351,10 +411,10 @@ export function MapView({
 
     const fit = useCallback(
         (animate: boolean) => {
-            if (map === null || scope === null) return
+            if (map === null || stage === null) return
             const target = fitTarget()
             if (target === null) return
-            const next = fitCamera(map, target, cornerBoxes(scope, corners), maxFitZoom)
+            const next = fitCamera(map, target, cornerBoxes(stage, corners), maxFitZoom)
             if (next === null) return
             const key = JSON.stringify([next.center.map((value) => value.toFixed(6)), next.zoom.toFixed(4)])
             if (!animate && key === lastFit.current) return
@@ -362,7 +422,7 @@ export function MapView({
             if (animate) map.easeTo({ ...next, duration: 400 })
             else map.jumpTo(next)
         },
-        [map, scope, corners, fitTarget, maxFitZoom],
+        [map, stage, corners, fitTarget, maxFitZoom],
     )
     const fitNow = useRef(fit)
     const shownBasemapRef = useRef(shownBasemap)
@@ -374,7 +434,7 @@ export function MapView({
     // Built once per frame element, reading the camera and interactivity then; the basemap and the
     // theme change in place.
     useEffect(() => {
-        if (!supported || scope === null || canvasHost === null) return
+        if (!supported || scope === null || stage === null || canvasHost === null) return
         ensureWorker()
         const instance = new MapLibreMap({
             container: canvasHost,
@@ -464,19 +524,20 @@ export function MapView({
             instance.resize()
             if (!moved.current) fitNow.current(false)
         })
-        resize.observe(scope)
+        resize.observe(stage)
         setMap(instance)
         return () => {
             resize.disconnect()
             armed.current = false
             pendingStyle.current = true
             lastFit.current = ''
+            framedOn.current = null
             setReady(false)
             setIdle(false)
             setMap(null)
             instance.remove()
         }
-    }, [supported, scope, canvasHost])
+    }, [supported, scope, stage, canvasHost])
 
     useEffect(() => {
         const root = document.documentElement
@@ -542,18 +603,26 @@ export function MapView({
 
     useEffect(() => {
         if (map === null || scope === null || !ready) return
-        map.setProjection({ type: projection })
+        map.setProjection({ type: shownProjection })
         const palette = mapPalette(scope)
-        map.setSky(projection === 'globe' ? globeSky(palette.horizon, palette.ground) : FLAT_SKY)
-    }, [map, scope, ready, projection, reading])
+        map.setSky(shownProjection === 'globe' ? globeSky(palette.horizon, palette.ground) : FLAT_SKY)
+    }, [map, scope, ready, shownProjection, reading])
 
-    // Runs after every layer's own effects, so the fit sees what they registered.
+    // Runs after every layer's own effects, so the fit sees what they registered. New bounds are a
+    // new subject, eased to whether or not the reader has moved the map since the last.
+    const boundsKey = bounds === undefined ? '' : bounds.join(' ')
     useEffect(() => {
         if (map === null || !ready) return
-        if (camera === undefined && !moved.current) fit(false)
+        if (camera === undefined) {
+            if (framedOn.current !== null && framedOn.current !== boundsKey) {
+                moved.current = false
+                fit(true)
+            } else if (!moved.current) fit(false)
+            framedOn.current = boundsKey
+        }
         armed.current = true
         map.triggerRepaint()
-    }, [map, ready, layerVersion, camera, fit])
+    }, [map, ready, layerVersion, camera, fit, boundsKey])
 
     useEffect(() => {
         if (corners === null) return
@@ -587,6 +656,13 @@ export function MapView({
     }
     const credits = hasTiles(shownBasemap) && basemapVisible ? (shownBasemap.attribution ?? []) : []
 
+    const toggleProjection = () => {
+        const next: MapProjection = shownProjection === 'globe' ? 'mercator' : 'globe'
+        if (projection === undefined) setHeldProjection(next)
+        onProjectionChange?.(next)
+    }
+    const lines = unreadable > 0 ? [...notes, said.unreadable(unreadable)] : notes
+
     return (
         <div
             ref={setScope}
@@ -594,98 +670,137 @@ export function MapView({
             aria-label={label}
             data-map-view=""
             data-map-idle={idle ? '' : undefined}
-            className={cn('relative isolate min-h-64 overflow-hidden bg-card', framed && 'rounded-surface border border-border', className)}
-        >
-            {projection === 'globe' && <div aria-hidden className="pointer-events-none absolute inset-0" style={starfieldStyle()} />}
-            {/* Positioned inline: maplibre's own stylesheet sets the element relative, outside any layer. */}
-            <div ref={setCanvasHost} style={{ position: 'absolute', inset: 0 }} />
-            <div ref={setOverlay} className="pointer-events-none absolute inset-0 overflow-hidden" />
-            {CORNERS.map((corner) => (
-                <div
-                    key={corner}
-                    ref={cornerRefs[corner]}
-                    className={cn(
-                        'pointer-events-none absolute flex max-w-[calc(100%-1.5rem)] flex-col gap-2 *:pointer-events-auto',
-                        CORNER_CLASS[corner],
-                        credits.length > 0 && corner.startsWith('bottom') && 'bottom-7',
-                    )}
-                >
-                    {corner === 'top-right' && supported && controls && (
-                        <>
-                            <ButtonGroup orientation="vertical" className="rounded-lg shadow-xs">
-                                <ControlButton
-                                    label={said.zoomIn}
-                                    container={scope}
-                                    onClick={() => {
-                                        moved.current = true
-                                        map?.zoomIn()
-                                    }}
-                                >
-                                    <Plus />
-                                </ControlButton>
-                                <ControlButton
-                                    label={said.zoomOut}
-                                    container={scope}
-                                    onClick={() => {
-                                        moved.current = true
-                                        map?.zoomOut()
-                                    }}
-                                >
-                                    <Minus />
-                                </ControlButton>
-                                <ControlButton
-                                    label={said.fit}
-                                    container={scope}
-                                    onClick={() => {
-                                        moved.current = false
-                                        fit(true)
-                                    }}
-                                >
-                                    <LocateFixed />
-                                </ControlButton>
-                            </ButtonGroup>
-                            <ControlButton
-                                label={fullscreen ? said.exitFullscreen : said.fullscreen}
-                                container={scope}
-                                onClick={() => {
-                                    if (document.fullscreenElement === scope) void document.exitFullscreen()
-                                    else void scope?.requestFullscreen()
-                                }}
-                            >
-                                {fullscreen ? <Shrink /> : <Expand />}
-                            </ControlButton>
-                        </>
-                    )}
-                    {corner === 'top-right' && supported && offered && (
-                        <BasemapSwitcher
-                            basemaps={basemaps}
-                            value={shownBasemap.id}
-                            onValueChange={chooseBasemap}
-                            words={{ label: said.basemap }}
-                        />
-                    )}
-                </div>
-            ))}
-            {credits.length > 0 && (
-                <p className="absolute right-0 bottom-0 max-w-full truncate rounded-tl-sm bg-card/85 px-1.5 py-0.5 text-2xs leading-snug text-muted-foreground">
-                    {credits.map((credit, index) => (
-                        <Fragment key={credit.label}>
-                            {index > 0 && ' '}
-                            {credit.href === undefined ? (
-                                credit.label
-                            ) : (
-                                <a href={credit.href} target="_blank" rel="noreferrer" className="hover:text-foreground hover:underline">
-                                    {credit.label}
-                                </a>
-                            )}
-                        </Fragment>
-                    ))}
-                </p>
+            className={cn(
+                'relative isolate flex min-h-64 flex-col overflow-hidden bg-card',
+                framed && 'rounded-surface border border-border',
+                className,
             )}
-            {!supported && (
-                <p className="absolute inset-0 flex items-center justify-center p-6 text-center text-sm text-muted-foreground">
-                    {said.unavailable}
-                </p>
+        >
+            <div ref={setStage} className="relative min-h-0 flex-1">
+                {shownProjection === 'globe' && (
+                    <div aria-hidden className="pointer-events-none absolute inset-0" style={starfieldStyle()} />
+                )}
+                {/* Positioned inline: maplibre's own stylesheet sets the element relative, outside any layer. */}
+                <div ref={setCanvasHost} style={{ position: 'absolute', inset: 0 }} />
+                <div ref={setOverlay} className="pointer-events-none absolute inset-0 overflow-hidden" />
+                {CORNERS.map((corner) => (
+                    <div
+                        key={corner}
+                        ref={cornerRefs[corner]}
+                        className={cn(
+                            'pointer-events-none absolute flex max-w-[calc(100%-1.5rem)] flex-col gap-2 *:pointer-events-auto',
+                            CORNER_CLASS[corner],
+                            credits.length > 0 && corner.startsWith('bottom') && 'bottom-7',
+                        )}
+                    >
+                        {corner === 'top-right' && supported && shown !== null && (
+                            <>
+                                {(shown.zoom || shown.fit) && (
+                                    <ButtonGroup orientation="vertical" className="rounded-lg shadow-xs">
+                                        {shown.zoom && (
+                                            <>
+                                                <ControlButton
+                                                    label={said.zoomIn}
+                                                    container={scope}
+                                                    onClick={() => {
+                                                        moved.current = true
+                                                        map?.zoomIn()
+                                                    }}
+                                                >
+                                                    <Plus />
+                                                </ControlButton>
+                                                <ControlButton
+                                                    label={said.zoomOut}
+                                                    container={scope}
+                                                    onClick={() => {
+                                                        moved.current = true
+                                                        map?.zoomOut()
+                                                    }}
+                                                >
+                                                    <Minus />
+                                                </ControlButton>
+                                            </>
+                                        )}
+                                        {shown.fit && (
+                                            <ControlButton
+                                                label={said.fit}
+                                                container={scope}
+                                                onClick={() => {
+                                                    moved.current = false
+                                                    fit(true)
+                                                }}
+                                            >
+                                                <LocateFixed />
+                                            </ControlButton>
+                                        )}
+                                    </ButtonGroup>
+                                )}
+                                {shown.fullscreen && (
+                                    <ControlButton
+                                        label={fullscreen ? said.exitFullscreen : said.fullscreen}
+                                        container={scope}
+                                        onClick={() => {
+                                            if (document.fullscreenElement === scope) void document.exitFullscreen()
+                                            else void scope?.requestFullscreen()
+                                        }}
+                                    >
+                                        {fullscreen ? <Shrink /> : <Expand />}
+                                    </ControlButton>
+                                )}
+                                {shown.projection && (
+                                    <ControlButton
+                                        label={shownProjection === 'globe' ? said.flat : said.globe}
+                                        container={scope}
+                                        onClick={toggleProjection}
+                                    >
+                                        {shownProjection === 'globe' ? <MapIcon /> : <Globe />}
+                                    </ControlButton>
+                                )}
+                            </>
+                        )}
+                        {corner === 'top-right' && supported && offered && (
+                            <BasemapSwitcher
+                                basemaps={basemaps}
+                                value={shownBasemap.id}
+                                onValueChange={chooseBasemap}
+                                words={{ label: said.basemap }}
+                            />
+                        )}
+                    </div>
+                ))}
+                {credits.length > 0 && (
+                    <p className="absolute right-0 bottom-0 max-w-full truncate rounded-tl-sm bg-card/85 px-1.5 py-0.5 text-2xs leading-snug text-muted-foreground">
+                        {credits.map((credit, index) => (
+                            <Fragment key={credit.label}>
+                                {index > 0 && ' '}
+                                {credit.href === undefined ? (
+                                    credit.label
+                                ) : (
+                                    <a
+                                        href={credit.href}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="hover:text-foreground hover:underline"
+                                    >
+                                        {credit.label}
+                                    </a>
+                                )}
+                            </Fragment>
+                        ))}
+                    </p>
+                )}
+                {!supported && (
+                    <p className="absolute inset-0 flex items-center justify-center p-6 text-center text-sm text-muted-foreground">
+                        {said.unavailable}
+                    </p>
+                )}
+            </div>
+            {lines.length > 0 && (
+                <ul className="shrink-0 space-y-0.5 border-t border-border px-3 py-1.5 text-help text-muted-foreground">
+                    {lines.map((line, index) => (
+                        <li key={index}>{line}</li>
+                    ))}
+                </ul>
             )}
             {context !== null && ready && <MapContext.Provider value={context}>{children}</MapContext.Provider>}
         </div>

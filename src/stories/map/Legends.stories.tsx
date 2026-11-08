@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { Feature } from 'geojson'
 
 import { MapLegend } from '@winterop-com/sokkel-ui-maps/MapLegend'
-import { categoricalScale, classCounts, divergingScale, sequentialScale } from '@winterop-com/sokkel-ui-maps/scale'
+import { AREA_EMPHASIS, categoricalScale, classCounts, divergingScale, sequentialScale } from '@winterop-com/sokkel-ui-maps/scale'
 import { figures, places, regions, sites } from './data'
 import { Row } from '@winterop-com/sokkel-ui/Layout'
 
@@ -86,6 +86,14 @@ function Legends() {
                 className="w-44"
             />
             <MapLegend title="Land cover" scale={land} />
+            <MapLegend
+                title="Selection"
+                entries={[
+                    { label: 'Selected region', ...AREA_EMPHASIS.selected },
+                    { label: 'Regions under it', ...AREA_EMPHASIS.highlighted },
+                    { label: 'Other regions', ...AREA_EMPHASIS.plain },
+                ]}
+            />
         </Row>
     )
 }
@@ -93,5 +101,8 @@ function Legends() {
 const meta: Meta = { title: 'Maps/Legends', parameters: { frame: 'padded' } }
 export default meta
 
-/** Categorical, sequential and diverging legends, as ramps and as lists with counts and no data. */
+/**
+ * Categorical, sequential and diverging legends, as ramps and as lists with counts and no data, and
+ * the key to the selection's emphasis in the colors plain boundaries draw it in.
+ */
 export const All: StoryObj = { name: 'Legends', render: () => <Legends /> }

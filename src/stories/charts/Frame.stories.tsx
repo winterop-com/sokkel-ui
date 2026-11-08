@@ -48,3 +48,14 @@ export const States: StoryObj = {
         </Ground>
     ),
 }
+
+/** A frame opened in its window near full screen, the legend with it; Escape or the close button brings it back. */
+export const Expanded: StoryObj = {
+    render: () => (
+        <Ground title="Panels" columns={1}>
+            <ChartFrame title="Runs and failures" subtitle="Today" legend={TWO_LEGEND} defaultExpanded>
+                {(state) => <Chart kind="line" label="Runs and failures across the day" {...TWO} {...state} />}
+            </ChartFrame>
+        </Ground>
+    ),
+}
