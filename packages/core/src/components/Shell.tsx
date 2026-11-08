@@ -10,7 +10,7 @@ import { trafficLightsStyle, useTrafficLights, windowPressHandler, type DesktopW
 import { createShortcutRegistry, type KeyBinding, type ShortcutGroup } from '../lib/shortcuts'
 import type { CommandPaletteWords, PaletteGroup, PaletteSearch } from './CommandPalette'
 import type { ShortcutsDialogWords } from './ShortcutsDialog'
-import { ShellDesktop, ShellFootCell, ShellPalette, ShellScroller, ShellShortcuts } from './shell-context'
+import { ShellDesktop, ShellDrawer, ShellFootCell, ShellPalette, ShellScroller, ShellShortcuts } from './shell-context'
 
 // The palette and the shortcuts load when they first open, so an app's start carries neither.
 const CommandPalette = lazy(() => import('./CommandPalette').then((module) => ({ default: module.CommandPalette })))
@@ -30,10 +30,21 @@ const ShortcutsDialog = lazy(() => import('./ShortcutsDialog').then((module) => 
  * rail's foot cell stays at the window's bottom edge under it, beside the foot strip, which is
  * drawn empty when there is no `foot` and the rail has a foot.
  *
+ * A `banner`, such as a `Banner` saying the server is not answering, stands between the top bar and
+ * the content: it does not scroll with the content and covers none of it.
+ *
  * Below the `md` breakpoint the rail leaves the frame: a menu button at the start of the top bar
- * opens it as a drawer over the content, and a press outside it, on a link or Escape closes it. The
- * drawer and the panel's sheet are marked `data-overlay`, so the panels' resize edges are not drawn
- * there; while either is open over the content, the content is out of reach (`useOverlay`).
+ * opens it as a drawer over the content, drawn expanded even where the app holds it `collapsed`,
+ * its head's end closing it. A press outside it, on a link or Escape closes it, and so does a
+ * change of the app's `route`, so a page reached from the palette or by the app's own navigation
+ * closes it too; `drawerOpen` with `onDrawerOpenChange` holds it from outside. The drawer and the
+ * panel's sheet are marked `data-overlay`, so the panels' resize edges are not drawn there; while
+ * either is open over the content, the content is out of reach (`useOverlay`).
+ *
+ * The frame keeps clear of a phone's notch and home indicator by the safe-area insets, on all four
+ * sides. They are zero unless the app's page opts in to drawing under them with
+ * `<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">`, which
+ * a web app added to a home screen wants.
  *
  * A panel is shown or hidden by a toggle held in the window's top-right corner: at the end of the top bar while the
  * panel is closed, in the corner of the panel's header while it is open. From the `lg` breakpoint it is
@@ -69,8 +80,12 @@ export function Shell({
     foot,
     panel,
     bottom,
+    banner,
     panelOpen,
     onPanelOpenChange,
+    drawerOpen,
+    onDrawerOpenChange,
+    route,
     palette,
     paletteOpen,
     defaultPaletteOpen = false,
@@ -94,9 +109,16 @@ export function Shell({
     panel?: ReactNode
     /** A strip across the whole window between the content and the foot, under the rail and the panel. */
     bottom?: ReactNode
+    /** A strip between the top bar and the content, such as a `Banner`, that does not scroll with the content. */
+    banner?: ReactNode
     /** Whether the panel shows; held inside the shell when not given. */
     panelOpen?: boolean
     onPanelOpenChange?: (open: boolean) => void
+    /** Whether the rail's drawer on a narrow window is open; held inside the shell when not given. */
+    drawerOpen?: boolean
+    onDrawerOpenChange?: (open: boolean) => void
+    /** The app's current route, such as the location's path or key: the drawer closes when it changes. */
+    route?: string
     /** The command palette's groups; the shell opens it on ⌘K or Ctrl+K and from the top bar's search. No palette without it. */
     palette?: readonly PaletteGroup[]
     /** Whether the palette is open; held inside the shell when not given. */
@@ -126,7 +148,24 @@ export function Shell({
     words?: Partial<ShellWords>
 }) {
     const words = { ...WORDS, ...given }
-    const [drawer, setDrawer] = useState(false)
+    const [ownDrawer, setOwnDrawer] = useState(false)
+    const drawer = drawerOpen ?? ownDrawer
+    const setDrawer = useCallback(
+        (next: boolean) => {
+            if (drawerOpen === undefined) setOwnDrawer(next)
+            onDrawerOpenChange?.(next)
+        },
+        [drawerOpen, onDrawerOpenChange],
+    )
+    const closeDrawer = useCallback(() => setDrawer(false), [setDrawer])
+    const drawerContext = useMemo(() => ({ close: closeDrawer, label: words.close }), [closeDrawer, words.close])
+    // A change of route closes the drawer, however the app navigated.
+    const routeSeen = useRef(route)
+    useEffect(() => {
+        if (routeSeen.current === route) return
+        routeSeen.current = route
+        if (drawer) setDrawer(false)
+    }, [route, drawer, setDrawer])
     const [footCell, setFootCell] = useState<HTMLDivElement | null>(null)
     const wide = useWide()
     const [ownOpen, setOwnOpen] = useState<boolean | null>(null)
@@ -200,7 +239,7 @@ export function Shell({
         shortcutRegistry.set('shell', own, { fallback: true })
     }, [shortcutRegistry, hasPalette, hasShortcuts, words.openPalette, words.openShortcuts, togglePalette, openShortcuts])
     const mobile = useIsMobile()
-    const drawerRef = useOverlay(drawer && mobile, { onClose: () => setDrawer(false) })
+    const drawerRef = useOverlay(drawer && mobile, { onClose: closeDrawer })
     const panelRef = useOverlay(panel !== undefined && !wide && open, { onClose: () => setOpen(false), inert: false })
     const [main, setMain] = useState<HTMLElement | null>(null)
 
@@ -212,7 +251,7 @@ export function Shell({
             title={open ? words.hidePanel : words.showPanel}
             data-window-no-drag
             className={cn(
-                'absolute top-[calc((var(--spacing-shell-top)-2rem)/2)] right-2 z-50 flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid',
+                'absolute top-[calc(env(safe-area-inset-top)+(var(--spacing-shell-top)-2rem)/2)] right-[calc(env(safe-area-inset-right)+0.5rem)] z-50 flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid',
                 open && 'text-foreground',
             )}
             onClick={() => setOpen(!open)}
@@ -222,15 +261,15 @@ export function Shell({
     )
     const drawn = drawer && (
         <div ref={drawerRef} className="fixed inset-0 z-40 outline-none md:hidden">
-            <button type="button" aria-label={words.close} className="absolute inset-0 bg-scrim" onClick={() => setDrawer(false)} />
+            <button type="button" aria-label={words.close} className="absolute inset-0 bg-scrim" onClick={closeDrawer} />
             <div
                 data-overlay
-                className="absolute inset-y-0 left-0 flex shadow-pop"
+                className="absolute inset-y-0 left-0 flex bg-sidebar pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] shadow-pop"
                 onClick={(event) => {
-                    if ((event.target as HTMLElement).closest('a')) setDrawer(false)
+                    if ((event.target as HTMLElement).closest('a')) closeDrawer()
                 }}
             >
-                {rail}
+                <ShellDrawer value={drawerContext}>{rail}</ShellDrawer>
             </div>
         </div>
     )
@@ -262,6 +301,7 @@ export function Shell({
                         type="button"
                         aria-label={words.menu}
                         title={words.menu}
+                        aria-expanded={drawer}
                         className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-hover md:hidden"
                         onClick={() => setDrawer(true)}
                     >
@@ -270,6 +310,7 @@ export function Shell({
                     {top}
                 </header>
             )}
+            {banner !== undefined && banner !== null && banner !== false && <div className="shrink-0">{banner}</div>}
             <main className="@container relative min-h-0 flex-1 overflow-y-auto" ref={setMain}>
                 {children}
             </main>
@@ -310,7 +351,7 @@ export function Shell({
                     <div
                         data-overlay
                         className={cn(
-                            'absolute inset-y-0 right-0 flex max-w-[calc(100vw-3rem)] shadow-pop transition-transform duration-200 ease-out [&>*]:max-w-full',
+                            'absolute inset-y-0 right-0 flex max-w-[calc(100vw-3rem)] bg-sidebar pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] shadow-pop transition-transform duration-200 ease-out [&>*]:max-w-full',
                             open ? 'translate-x-0' : 'translate-x-full shadow-none',
                         )}
                     >
@@ -341,7 +382,10 @@ export function Shell({
 
     if (!docked)
         return provide(
-            <div {...frame} className="group/shell relative flex h-svh min-h-0 flex-col overflow-hidden bg-background text-foreground">
+            <div
+                {...frame}
+                className="group/shell relative flex h-svh min-h-0 flex-col overflow-hidden bg-background pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] text-foreground"
+            >
                 {toggle}
                 <div className="flex min-h-0 flex-1">
                     <div data-shell-rail className="hidden md:flex">
@@ -359,7 +403,7 @@ export function Shell({
     return provide(
         <div
             {...frame}
-            className="group/shell relative grid h-svh min-h-0 grid-cols-[auto_minmax(0,1fr)] grid-rows-[minmax(0,1fr)_auto_auto] overflow-hidden bg-background text-foreground"
+            className="group/shell relative grid h-svh min-h-0 grid-cols-[auto_minmax(0,1fr)] grid-rows-[minmax(0,1fr)_auto_auto] overflow-hidden bg-background pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] text-foreground"
         >
             {toggle}
             <div data-shell-rail className="col-start-1 row-start-1 hidden min-h-0 md:flex">

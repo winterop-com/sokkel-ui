@@ -122,6 +122,15 @@ return, the shell's content when no ref is given. `useReducedMotion()` says whet
 reduced, from the look's own `motion` and else the system's, following both, for motion a script
 draws.
 
+On a phone the shell's drawer draws the rail expanded, its account with it, even where the app holds
+the rail `collapsed`; its head's end closes it, and a row chosen in the account menu closes it too.
+Besides a press on a link it closes when the app's `route` (a location's path or key) changes, so
+the palette and the app's own navigation leave it the same way; `drawerOpen` with
+`onDrawerOpenChange` holds it from outside. A `banner` (a `Banner` saying the server is not
+answering) stands between the top bar and the content, scrolling with neither. The shell's root pads
+the safe-area insets on all four sides, for a home-screen web app and a notch; they are zero unless
+the app's page sets `viewport-fit=cover` in its viewport meta.
+
 In a desktop window whose native title bar is hidden (Electron's `hiddenInset`, Tauri's
 `Overlay`), `Shell`'s `desktop` makes its top strip, the rail's head, the top bar and an open
 panel's header, the window's title bar. Electron moves the window from it through

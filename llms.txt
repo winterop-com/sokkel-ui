@@ -101,6 +101,13 @@ webview ignores `app-region` (Tauri on macOS) `onWindowDrag` and `onWindowZoom` 
 window API, such as `getCurrentWindow().startDragging()`. `isDesktopShell()` in `lib/desktop` says
 whether the page runs in one. The library never imports the shell.
 
+On a phone the rail opens as a drawer, always drawn expanded. Pass `Shell` the router's location as
+`route` (`route={location.pathname}`) so the drawer closes on any navigation, the palette's too;
+`drawerOpen` with `onDrawerOpenChange` holds it. A state of the whole app, such as a server not
+answering, goes in `Shell`'s `banner` as a `Banner`, between the top bar and the content. The shell
+pads the safe-area insets itself; a home-screen web app sets `viewport-fit=cover` in its viewport
+meta and adds no padding of its own.
+
 The look is kept by `useAppearance`, called in the app's root: it reads the theme, scheme,
 density, corners, typeface and motion from `localStorage`, follows the system's scheme until one is
 chosen, and wears them on `<html>` (`data-theme`, `.dark`, `data-density`, `data-motion`, `--radius`
