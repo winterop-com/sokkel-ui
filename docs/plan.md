@@ -119,6 +119,14 @@ from a server, loads more as its end comes near, and shows the same rows as a gr
 album view) that keeps the selection, menus and sort. A short listing drops the bar above its
 head and may carry a foot line.
 
+Tree and TreeSelect pick from a hierarchy of any depth and size. A node marked `hasChildren` loads
+its level through the app's `loadChildren` when first opened, with a loading row meanwhile and a row
+to try again when it fails; the app's `search` looks through the whole hierarchy, loaded or not, and
+lists each match with its path, and choosing one opens the tree down to it. TreeSelect names its
+choice by its path, from `trails` when the choice's level has not loaded yet. Past a few hundred
+visible rows a tree draws only those in view of its nearest scrolling box, so fifty thousand open
+rows scroll as smoothly as fifty.
+
 PersonAvatar draws a person as their picture, or as their initials on their color. A picture takes
 the initials' place only once it has loaded (Base UI's avatar tracks it), so until then, and for good
 when it fails, the initials stay in the same box: nothing moves and a broken image never shows. The
@@ -130,6 +138,14 @@ A team chat is built from Rail's `strip` (labeled icons with counts or an unread
 icon's corner), ChannelList, ChannelHeader, Conversation and ThreadView (the columns of a
 conversation and of a thread), ConversationStart, ChatMessage with ChatDay, and MessageComposer.
 An app's own navigation strip is the library's `Rail`, with no hand-drawn badge.
+
+## Maps at scale
+
+Each map layer is one GeoJSON source with hover and selection as feature state, so thousands of
+areas or points draw and answer the cursor with no work per feature in React. `BoundaryLayer`
+simplifies heavy geometry once as it arrives (`simplify`) and names its areas (`label`) in a symbol
+layer that maplibre declutters, the larger areas placed first; names need a basemap with fonts.
+`PointLayer` gathers points into counted clusters, and the map fits whatever its layers draw.
 
 ## Graphs
 
