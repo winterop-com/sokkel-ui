@@ -1,6 +1,8 @@
 import { cn } from '../../lib/cn'
 
-function AspectRatio({ ratio, className, ...props }: React.ComponentProps<'div'> & { ratio: number }) {
+export type AspectRatioProps = React.ComponentProps<'div'> & { ratio: number }
+
+function AspectRatio({ ratio, className, ...props }: AspectRatioProps) {
     return (
         <div
             data-slot="aspect-ratio"

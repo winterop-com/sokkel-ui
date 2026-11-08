@@ -76,11 +76,17 @@ function ToggleVariable({ variable }: { variable: Extract<Variable, { kind: 'tog
     )
 }
 
+export interface VariablesBarProps {
+    variables: readonly Variable[]
+    end?: ReactNode
+    className?: string
+}
+
 /**
  * The bar across a dashboard's top: its variables as labeled dropdowns and toggles that filter
  * every panel, and at the end, such as the range and refresh controls. It wraps on a narrow screen.
  */
-export function VariablesBar({ variables, end, className }: { variables: readonly Variable[]; end?: ReactNode; className?: string }) {
+export function VariablesBar({ variables, end, className }: VariablesBarProps) {
     return (
         <div className={cn('flex flex-wrap items-center gap-1.5', className)}>
             {variables.map((variable) =>

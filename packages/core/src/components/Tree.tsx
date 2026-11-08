@@ -175,6 +175,25 @@ function Marked({ text, query }: { text: string; query: string }) {
 
 type Found = { query: string; state: 'loading' | 'done' | 'failed'; trails: readonly TreeTrail[] }
 
+export interface TreeProps {
+    nodes: readonly TreeNode[]
+    selection?: 'single' | 'multiple' | 'none'
+    selected?: readonly string[]
+    onSelect?: (ids: string[]) => void
+    query?: string
+    defaultExpanded?: readonly string[]
+    /** Brings the children of a node marked `hasChildren`; a rejection shows a row to try again. */
+    loadChildren?: (node: TreeNode) => Promise<readonly TreeNode[]>
+    /** Answers a query over the whole hierarchy with each match and its ancestors; without it the query searches the loaded nodes. */
+    search?: (query: string) => Promise<readonly TreeTrail[]>
+    /** Where chosen nodes not loaded yet sit, so the parents above them show that they hold a choice. */
+    trails?: readonly TreeTrail[]
+    words?: Partial<TreeWords>
+    /** What the tree is, for a screen reader. */
+    label: string
+    className?: string
+}
+
 /**
  * A hierarchy a reader opens a level at a time: regions, folders, teams. The arrows move through
  * the visible rows, Right opens and Left closes or climbs to the parent, Enter or Space chooses.
@@ -205,24 +224,7 @@ export function Tree({
     words: given,
     label,
     className,
-}: {
-    nodes: readonly TreeNode[]
-    selection?: 'single' | 'multiple' | 'none'
-    selected?: readonly string[]
-    onSelect?: (ids: string[]) => void
-    query?: string
-    defaultExpanded?: readonly string[]
-    /** Brings the children of a node marked `hasChildren`; a rejection shows a row to try again. */
-    loadChildren?: (node: TreeNode) => Promise<readonly TreeNode[]>
-    /** Answers a query over the whole hierarchy with each match and its ancestors; without it the query searches the loaded nodes. */
-    search?: (query: string) => Promise<readonly TreeTrail[]>
-    /** Where chosen nodes not loaded yet sit, so the parents above them show that they hold a choice. */
-    trails?: readonly TreeTrail[]
-    words?: Partial<TreeWords>
-    /** What the tree is, for a screen reader. */
-    label: string
-    className?: string
-}) {
+}: TreeProps) {
     const words = { ...WORDS, ...given }
     const [open, setOpen] = useState<Set<string>>(() => new Set(defaultExpanded))
     const [loads, setLoads] = useState<Map<string, TreeLoad>>(() => new Map())

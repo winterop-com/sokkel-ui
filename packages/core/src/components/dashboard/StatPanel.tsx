@@ -92,34 +92,7 @@ function SparkArea({ values, className }: { values: readonly number[]; className
     )
 }
 
-/**
- * One reading as a dashboard tile: a small title, the value written large, and optionally a trend
- * drawn faintly behind it and a change against an earlier period. `thresholds` pick the reading's
- * color, which inks the value (`colorMode="value"`) or fills the tile (`colorMode="background"`).
- * `target` draws a meter under the value toward it. A null value says there is no data, in
- * neutral ink and without its trend.
- */
-export function StatPanel({
-    title,
-    value,
-    unit,
-    decimals,
-    format,
-    thresholds,
-    color,
-    colorMode = 'value',
-    sparkline,
-    delta,
-    good,
-    target,
-    targetRange,
-    note,
-    info,
-    span = 'sixth',
-    loading = false,
-    words: given,
-    className,
-}: {
+export interface StatPanelProps {
     title: ReactNode
     value: number | null
     /** Written after the value: `%`, `ms`, `/min`. */
@@ -147,7 +120,36 @@ export function StatPanel({
     loading?: boolean
     words?: Partial<StatWords>
     className?: string
-}) {
+}
+
+/**
+ * One reading as a dashboard tile: a small title, the value written large, and optionally a trend
+ * drawn faintly behind it and a change against an earlier period. `thresholds` pick the reading's
+ * color, which inks the value (`colorMode="value"`) or fills the tile (`colorMode="background"`).
+ * `target` draws a meter under the value toward it. A null value says there is no data, in
+ * neutral ink and without its trend.
+ */
+export function StatPanel({
+    title,
+    value,
+    unit,
+    decimals,
+    format,
+    thresholds,
+    color,
+    colorMode = 'value',
+    sparkline,
+    delta,
+    good,
+    target,
+    targetRange,
+    note,
+    info,
+    span = 'sixth',
+    loading = false,
+    words: given,
+    className,
+}: StatPanelProps) {
     const words = { ...WORDS, ...given }
     const tone = value === null ? undefined : (thresholdColor(value, thresholds) ?? color)
     const filled = colorMode === 'background' && tone !== undefined

@@ -50,6 +50,23 @@ const TIME_RANGE_WORDS: TimeRangeWords = {
     range: (from, to) => rangeLabel(from, to),
 }
 
+export interface TimeRangePickerProps {
+    value: TimeRangeValue
+    onChange: (value: TimeRangeValue) => void
+    presets?: readonly RangePreset[]
+    /** The month the calendar shows first. */
+    defaultMonth?: Date
+    /** The day the calendar marks as today; the clock's day when omitted. */
+    today?: Date
+    /** Whether the popover is open, held from outside with `onOpenChange`. */
+    open?: boolean
+    /** Whether the popover starts open when `open` is not given. */
+    defaultOpen?: boolean
+    onOpenChange?: (open: boolean) => void
+    words?: Partial<TimeRangeWords>
+    className?: string
+}
+
 /**
  * The range a dashboard covers: a trigger naming the current range, opening a list of presets
  * beside a calendar for a custom span. Choosing a preset applies it at once; a custom span applies
@@ -70,22 +87,7 @@ export function TimeRangePicker({
     onOpenChange,
     words: given,
     className,
-}: {
-    value: TimeRangeValue
-    onChange: (value: TimeRangeValue) => void
-    presets?: readonly RangePreset[]
-    /** The month the calendar shows first. */
-    defaultMonth?: Date
-    /** The day the calendar marks as today; the clock's day when omitted. */
-    today?: Date
-    /** Whether the popover is open, held from outside with `onOpenChange`. */
-    open?: boolean
-    /** Whether the popover starts open when `open` is not given. */
-    defaultOpen?: boolean
-    onOpenChange?: (open: boolean) => void
-    words?: Partial<TimeRangeWords>
-    className?: string
-}) {
+}: TimeRangePickerProps) {
     const words = { ...TIME_RANGE_WORDS, ...given }
     const [ownOpen, setOwnOpen] = useState(defaultOpen)
     const open = openProp ?? ownOpen
@@ -197,18 +199,7 @@ const REFRESH_WORDS: RefreshWords = {
     seconds: (count) => (count < 60 ? `${count}s` : `${count / 60}m`),
 }
 
-/**
- * Refreshing a dashboard: a button that refreshes now and spins while it does, a menu choosing how
- * often it refreshes by itself, and when it last did, already written for a reader.
- */
-export function RefreshControl({
-    onRefresh,
-    refreshing = false,
-    interval,
-    onIntervalChange,
-    updated,
-    words: given,
-}: {
+export interface RefreshControlProps {
     onRefresh: () => void
     refreshing?: boolean
     /** Seconds between refreshes; 0 is never. */
@@ -217,7 +208,13 @@ export function RefreshControl({
     /** When it last refreshed: `updated 2 min ago`. */
     updated?: string
     words?: Partial<RefreshWords>
-}) {
+}
+
+/**
+ * Refreshing a dashboard: a button that refreshes now and spins while it does, a menu choosing how
+ * often it refreshes by itself, and when it last did, already written for a reader.
+ */
+export function RefreshControl({ onRefresh, refreshing = false, interval, onIntervalChange, updated, words: given }: RefreshControlProps) {
     const words = { ...REFRESH_WORDS, ...given }
     return (
         <div className="flex items-center gap-2">

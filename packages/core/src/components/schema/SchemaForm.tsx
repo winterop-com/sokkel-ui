@@ -793,6 +793,13 @@ function Fields({ form, path, schema }: { form: SchemaFormState; path: Path; sch
     )
 }
 
+export interface SchemaFormProps {
+    form: SchemaFormState
+    /** Marks each issue on a strip along the scroll area's edge while the form scrolls (`IssueMarks`). */
+    marks?: boolean
+    className?: string
+}
+
 /**
  * A form drawn from a JSON Schema and held by `useSchemaForm`: a field for each property, in the
  * schema's order, labeled by its title with the key beside it (or by the key alone in mono), its
@@ -805,16 +812,7 @@ function Fields({ form, path, schema }: { form: SchemaFormState; path: Path; sch
  * the submit verb. While the form scrolls, a strip along the scroll area's edge marks where each
  * issue sits.
  */
-export function SchemaForm({
-    form,
-    marks = true,
-    className,
-}: {
-    form: SchemaFormState
-    /** Marks each issue on a strip along the scroll area's edge while the form scrolls (`IssueMarks`). */
-    marks?: boolean
-    className?: string
-}) {
+export function SchemaForm({ form, marks = true, className }: SchemaFormProps) {
     const root = fieldSchema(form.schema, form.schema)
     const whole = form.shown([])
     return (
@@ -835,7 +833,11 @@ export function SchemaForm({
     )
 }
 
+export interface SchemaIssueCountProps {
+    form: SchemaFormState
+}
+
 /** How many things stop the submit, for the footer beside the verb; pressing it opens the first. */
-export function SchemaIssueCount({ form }: { form: SchemaFormState }) {
+export function SchemaIssueCount({ form }: SchemaIssueCountProps) {
     return <IssueCount critical={form.count.critical} warning={form.count.warning} list={form.list} />
 }

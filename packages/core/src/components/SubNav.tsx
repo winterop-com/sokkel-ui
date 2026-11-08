@@ -21,6 +21,31 @@ const WORDS: SubNavWords = {
     resize: 'Resize the column',
 }
 
+export interface SubNavProps {
+    /** A group label over the content, such as "Folders". */
+    title?: string
+    /** A search field at the top, beside `actions`. */
+    search?: ReactNode
+    /** Controls at the end of the top line, such as a button that adds a page. */
+    actions?: ReactNode
+    children: ReactNode
+    /** The column's name for a screen reader, when it has no `title`. */
+    label?: string
+    /** The breakpoint the column shows from. */
+    from?: keyof typeof SHOWN
+    /** The width in pixels, held from outside with `onSizeChange`. */
+    size?: number
+    onSizeChange?: (size: number) => void
+    /** Whether the right edge drags to resize the column. */
+    resizable?: boolean
+    minSize?: number
+    maxSize?: number
+    /** The width in pixels the column starts at and a double click on the edge returns to. */
+    defaultSize?: number
+    className?: string
+    words?: Partial<SubNavWords>
+}
+
 /**
  * The second column beside the rail: what the app's section holds, such as a tree of folders, a
  * section's pages or a month to pick a day from. It sits on the rail's ground with a strong rule
@@ -47,30 +72,7 @@ export function SubNav({
     defaultSize = 240,
     className,
     words: given,
-}: {
-    /** A group label over the content, such as "Folders". */
-    title?: string
-    /** A search field at the top, beside `actions`. */
-    search?: ReactNode
-    /** Controls at the end of the top line, such as a button that adds a page. */
-    actions?: ReactNode
-    children: ReactNode
-    /** The column's name for a screen reader, when it has no `title`. */
-    label?: string
-    /** The breakpoint the column shows from. */
-    from?: keyof typeof SHOWN
-    /** The width in pixels, held from outside with `onSizeChange`. */
-    size?: number
-    onSizeChange?: (size: number) => void
-    /** Whether the right edge drags to resize the column. */
-    resizable?: boolean
-    minSize?: number
-    maxSize?: number
-    /** The width in pixels the column starts at and a double click on the edge returns to. */
-    defaultSize?: number
-    className?: string
-    words?: Partial<SubNavWords>
-}) {
+}: SubNavProps) {
     const words = { ...WORDS, ...given }
     const column = useRef<HTMLElement>(null)
     const held = usePanelSize({ size, onSizeChange, rest: defaultSize, fallback: 240, min: minSize, max: maxSize })

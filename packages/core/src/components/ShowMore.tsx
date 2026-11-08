@@ -9,6 +9,20 @@ export interface ShowMoreWords {
 
 const WORDS: ShowMoreWords = { more: 'Show more', less: 'Show less' }
 
+export interface ShowMoreProps {
+    /** How many lines show while it is folded. */
+    lines?: number
+    head?: ReactNode
+    actions?: ReactNode
+    variant?: 'plain' | 'well'
+    open?: boolean
+    defaultOpen?: boolean
+    onOpenChange?: (open: boolean) => void
+    children: ReactNode
+    className?: string
+    words?: Partial<ShowMoreWords>
+}
+
 /**
  * A block of text held to a few lines, with Show more under it to read the rest and Show less to
  * fold it again: a description, a prompt, a long note. The control shows only when the text runs
@@ -30,19 +44,7 @@ export function ShowMore({
     children,
     className,
     words: given,
-}: {
-    /** How many lines show while it is folded. */
-    lines?: number
-    head?: ReactNode
-    actions?: ReactNode
-    variant?: 'plain' | 'well'
-    open?: boolean
-    defaultOpen?: boolean
-    onOpenChange?: (open: boolean) => void
-    children: ReactNode
-    className?: string
-    words?: Partial<ShowMoreWords>
-}) {
+}: ShowMoreProps) {
     const words = { ...WORDS, ...given }
     const [own, setOwn] = useState(defaultOpen)
     const open = openValue ?? own

@@ -22,6 +22,11 @@ export interface BasemapWords {
 
 const WORDS: BasemapWords = { label: 'Basemap' }
 
+export interface BasemapPreviewProps {
+    basemap: Basemap
+    className?: string
+}
+
 type PreviewLoader = () => Promise<string>
 
 /** Each preview fetched so far, by the function that fetches it. */
@@ -49,7 +54,7 @@ function usePreview(preview: Basemap['preview']): string | undefined {
 }
 
 /** A basemap's preview image, a muted tile while it is fetched, or the card color for one without tiles. */
-export function BasemapPreview({ basemap, className }: { basemap: Basemap; className?: string }) {
+export function BasemapPreview({ basemap, className }: BasemapPreviewProps) {
     const src = usePreview(basemap.preview)
     if (basemap.preview !== undefined && src === undefined) {
         return <span aria-hidden className={cn('block shrink-0 rounded-mini bg-muted ring-1 ring-foreground/15', className)} />
@@ -75,18 +80,7 @@ export function BasemapPreview({ basemap, className }: { basemap: Basemap; class
     )
 }
 
-/**
- * A button that opens the choice of basemap: one entry per basemap, each with its preview. Inside
- * a map its menu opens in the map's own frame, so it still shows while the map is full screen.
- */
-export function BasemapSwitcher({
-    basemaps,
-    value,
-    onValueChange,
-    words: given,
-    defaultOpen = false,
-    className,
-}: {
+export interface BasemapSwitcherProps {
     basemaps: readonly Basemap[]
     /** The id of the basemap drawn. */
     value: string
@@ -94,7 +88,13 @@ export function BasemapSwitcher({
     words?: Partial<BasemapWords>
     defaultOpen?: boolean
     className?: string
-}) {
+}
+
+/**
+ * A button that opens the choice of basemap: one entry per basemap, each with its preview. Inside
+ * a map its menu opens in the map's own frame, so it still shows while the map is full screen.
+ */
+export function BasemapSwitcher({ basemaps, value, onValueChange, words: given, defaultOpen = false, className }: BasemapSwitcherProps) {
     const { label } = { ...WORDS, ...given }
     const map = useOptionalMapContext()
     return (
@@ -129,23 +129,19 @@ export function BasemapSwitcher({
     )
 }
 
-/**
- * Every basemap as a preview tile with its name, the drawn one ringed: the choice laid out in a
- * panel rather than behind a button.
- */
-export function BasemapGallery({
-    basemaps,
-    value,
-    onValueChange,
-    words: given,
-    className,
-}: {
+export interface BasemapGalleryProps {
     basemaps: readonly Basemap[]
     value: string
     onValueChange: (id: string) => void
     words?: Partial<BasemapWords>
     className?: string
-}) {
+}
+
+/**
+ * Every basemap as a preview tile with its name, the drawn one ringed: the choice laid out in a
+ * panel rather than behind a button.
+ */
+export function BasemapGallery({ basemaps, value, onValueChange, words: given, className }: BasemapGalleryProps) {
     const { label } = { ...WORDS, ...given }
     return (
         <div role="radiogroup" aria-label={label} className={cn('grid grid-cols-3 gap-1.5', className)}>

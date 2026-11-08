@@ -22,9 +22,69 @@
     "exports": {
         "./styles.css": "./src/styles.css",
         "./sources/*.css": "./dist/sources/*.css",
-        "./*": {
-            "types": "./dist/*.d.ts",
-            "import": "./dist/*.js"
+        "./Artwork": {
+            "types": "./dist/Artwork.d.ts",
+            "import": "./dist/Artwork.js"
+        },
+        "./ChapterList": {
+            "types": "./dist/ChapterList.d.ts",
+            "import": "./dist/ChapterList.js"
+        },
+        "./chapters": {
+            "types": "./dist/chapters.d.ts",
+            "import": "./dist/chapters.js"
+        },
+        "./hls-source": {
+            "types": "./dist/hls-source.d.ts",
+            "import": "./dist/hls-source.js"
+        },
+        "./lrc": {
+            "types": "./dist/lrc.d.ts",
+            "import": "./dist/lrc.js"
+        },
+        "./Lyrics": {
+            "types": "./dist/Lyrics.d.ts",
+            "import": "./dist/Lyrics.js"
+        },
+        "./MediaBar": {
+            "types": "./dist/MediaBar.d.ts",
+            "import": "./dist/MediaBar.js"
+        },
+        "./MediaBarLayouts": {
+            "types": "./dist/MediaBarLayouts.d.ts",
+            "import": "./dist/MediaBarLayouts.js"
+        },
+        "./MediaBarParts": {
+            "types": "./dist/MediaBarParts.d.ts",
+            "import": "./dist/MediaBarParts.js"
+        },
+        "./MediaCard": {
+            "types": "./dist/MediaCard.d.ts",
+            "import": "./dist/MediaCard.js"
+        },
+        "./MediaFullscreen": {
+            "types": "./dist/MediaFullscreen.d.ts",
+            "import": "./dist/MediaFullscreen.js"
+        },
+        "./queue": {
+            "types": "./dist/queue.d.ts",
+            "import": "./dist/queue.js"
+        },
+        "./timeline": {
+            "types": "./dist/timeline.d.ts",
+            "import": "./dist/timeline.js"
+        },
+        "./TrackList": {
+            "types": "./dist/TrackList.d.ts",
+            "import": "./dist/TrackList.js"
+        },
+        "./use-media-session": {
+            "types": "./dist/use-media-session.d.ts",
+            "import": "./dist/use-media-session.js"
+        },
+        "./use-queue": {
+            "types": "./dist/use-queue.d.ts",
+            "import": "./dist/use-queue.js"
         }
     },
     "publishConfig": {

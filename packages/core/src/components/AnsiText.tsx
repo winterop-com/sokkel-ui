@@ -3,6 +3,16 @@ import { useMemo, type CSSProperties } from 'react'
 import { ansiCss, parseAnsi, type AnsiStyle } from '../lib/ansi'
 import { cn } from '../lib/cn'
 
+export interface AnsiTextProps {
+    text: string
+    /** A block of mono output instead of a run inside a sentence. */
+    block?: boolean
+    /** Wraps long lines of a block instead of scrolling sideways. */
+    wrap?: boolean
+    start?: AnsiStyle
+    className?: string
+}
+
 /**
  * Output written with ANSI color escapes, drawn as spans: the sixteen colors in the kind and status
  * inks of the theme, the 256-color palette and 24-bit color as they are, with bold, dim, italic,
@@ -12,21 +22,7 @@ import { cn } from '../lib/cn'
  * the style the text begins in, for output that arrives in pieces (`parseAnsi` returns the style
  * a piece ends in).
  */
-export function AnsiText({
-    text,
-    block = false,
-    wrap = false,
-    start,
-    className,
-}: {
-    text: string
-    /** A block of mono output instead of a run inside a sentence. */
-    block?: boolean
-    /** Wraps long lines of a block instead of scrolling sideways. */
-    wrap?: boolean
-    start?: AnsiStyle
-    className?: string
-}) {
+export function AnsiText({ text, block = false, wrap = false, start, className }: AnsiTextProps) {
     const segments = useMemo(() => parseAnsi(text, start).segments, [text, start])
     const spans = segments.map((segment, index) =>
         Object.keys(segment.style).length === 0 ? (

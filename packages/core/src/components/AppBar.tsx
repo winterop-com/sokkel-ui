@@ -4,6 +4,13 @@ import { cn } from '../lib/cn'
 import { trafficLightsStyle, useTrafficLights, windowPressHandler, type DesktopWindow } from '../lib/desktop'
 import { TopBar, type TopBarProps } from './TopBar'
 
+export type AppBarProps = TopBarProps & {
+    children?: ReactNode
+    className?: string
+    /** The desktop window the screen stands in, when its native title bar is hidden; leave it off in a browser. */
+    desktop?: DesktopWindow
+}
+
 /**
  * The app's bar along the top of a screen drawn without `Shell`, such as a page a dialog opens
  * over or a screen of its own: the app's mark, the trail to the screen, the search and the
@@ -11,17 +18,7 @@ import { TopBar, type TopBarProps } from './TopBar'
  * over the bar, such as a `PageProgress` along its foot. With `desktop` it is the window's title
  * strip, as the shell's is: it drags the window and leaves room for the window's buttons.
  */
-export function AppBar({
-    children,
-    className,
-    desktop,
-    ...bar
-}: TopBarProps & {
-    children?: ReactNode
-    className?: string
-    /** The desktop window the screen stands in, when its native title bar is hidden; leave it off in a browser. */
-    desktop?: DesktopWindow
-}) {
+export function AppBar({ children, className, desktop, ...bar }: AppBarProps) {
     const lights = useTrafficLights(desktop)
     return (
         <header

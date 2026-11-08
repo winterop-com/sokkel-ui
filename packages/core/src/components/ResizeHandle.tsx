@@ -3,6 +3,27 @@ import type { RefObject } from 'react'
 import { useDragSize } from '../hooks/use-drag-size'
 import { cn } from '../lib/cn'
 
+export interface ResizeHandleProps {
+    /** The element whose size the drag sets. */
+    target: RefObject<HTMLElement | null>
+    /** The size in pixels; when not known, as for a panel resting at a CSS length, the target's rendered size. */
+    size?: number
+    onSize: (size: number) => void
+    min: number
+    max: number
+    /** The size a double click or Enter returns to. */
+    reset?: number
+    /** Called in place of returning to `reset`. */
+    onReset?: () => void
+    axis?: 'x' | 'y'
+    /** 1 when dragging away from the origin grows the panel (a left panel's right edge), -1 otherwise. */
+    grows?: 1 | -1
+    /** Whether the drag sets the target's own width or height as it moves; off when the size takes effect elsewhere, such as a grid's column. */
+    follow?: boolean
+    label: string
+    className?: string
+}
+
 /**
  * The edge a panel is resized by: dragged with a pointer, moved 16px a press with the arrows, sent
  * to its limits with Home and End, and put back to `reset` with a double click or Enter. It draws a
@@ -22,26 +43,7 @@ export function ResizeHandle({
     follow = true,
     label,
     className,
-}: {
-    /** The element whose size the drag sets. */
-    target: RefObject<HTMLElement | null>
-    /** The size in pixels; when not known, as for a panel resting at a CSS length, the target's rendered size. */
-    size?: number
-    onSize: (size: number) => void
-    min: number
-    max: number
-    /** The size a double click or Enter returns to. */
-    reset?: number
-    /** Called in place of returning to `reset`. */
-    onReset?: () => void
-    axis?: 'x' | 'y'
-    /** 1 when dragging away from the origin grows the panel (a left panel's right edge), -1 otherwise. */
-    grows?: 1 | -1
-    /** Whether the drag sets the target's own width or height as it moves; off when the size takes effect elsewhere, such as a grid's column. */
-    follow?: boolean
-    label: string
-    className?: string
-}) {
+}: ResizeHandleProps) {
     const clamp = (value: number) => Math.round(Math.min(max, Math.max(min, value)))
     const now = () => {
         if (size !== undefined) return size

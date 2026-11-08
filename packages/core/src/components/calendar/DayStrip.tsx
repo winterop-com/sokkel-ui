@@ -18,18 +18,7 @@ const WORDS: DayStripWords = {
     day: (date) => format(date, 'EEEE d MMMM'),
 }
 
-/**
- * A row of days to choose from, as a phone's week view shows above its agenda: each day's letter
- * over its number, today in the primary ink and the chosen day filled.
- */
-export function DayStrip({
-    days,
-    value,
-    today,
-    onValueChange,
-    className,
-    words: given,
-}: {
+export interface DayStripProps {
     days: readonly Date[]
     /** The chosen day. */
     value: Date
@@ -37,7 +26,13 @@ export function DayStrip({
     onValueChange: (day: Date) => void
     className?: string
     words?: Partial<DayStripWords>
-}) {
+}
+
+/**
+ * A row of days to choose from, as a phone's week view shows above its agenda: each day's letter
+ * over its number, today in the primary ink and the chosen day filled.
+ */
+export function DayStrip({ days, value, today, onValueChange, className, words: given }: DayStripProps) {
     const words = { ...WORDS, ...given }
     return (
         <div className={cn('grid gap-1', className)} style={{ gridTemplateColumns: `repeat(${String(days.length)}, minmax(0, 1fr))` }}>

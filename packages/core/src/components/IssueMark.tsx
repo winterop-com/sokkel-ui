@@ -44,22 +44,19 @@ export function spoken(issues: readonly Issue[]): string {
     return issues.map((issue) => `${PREFIX[issue.tone]}${issue.text}${issue.detail === undefined ? '' : `. ${issue.detail}`}`).join(' ')
 }
 
+export interface IssueMarkProps {
+    issues: readonly Issue[]
+    open?: boolean
+    onOpenChange?: (open: boolean) => void
+    className?: string
+}
+
 /**
  * The mark at the end of an input whose value has issues: pressing it opens what is wrong, what
  * to do, and the actions that put it right. It sits inside the input's box, which takes `pr-9`,
  * so a form keeps its height whatever it has to say. Nothing renders without an issue.
  */
-export function IssueMark({
-    issues,
-    open,
-    onOpenChange,
-    className,
-}: {
-    issues: readonly Issue[]
-    open?: boolean
-    onOpenChange?: (open: boolean) => void
-    className?: string
-}) {
+export function IssueMark({ issues, open, onOpenChange, className }: IssueMarkProps) {
     const tone = worst(issues)
     if (tone === null) return null
     const Icon = ICON[tone]
@@ -154,26 +151,22 @@ const EDGE = {
     warning: 'border-warning/45 bg-warning/8 hover:bg-warning/12 data-popup-open:bg-warning/12',
 } as const
 
-/**
- * A form's issues as one control beside the verb: a figure for each kind, the errors that stop the
- * submit in the critical ink and the warnings in the warning ink, on the tint of the worst. Pressing
- * it opens the issues right there, each naming its field, and choosing one goes to that field and
- * opens its mark. Nothing renders at zero. A dialog takes it in its `count` slot, beside its verbs.
- */
-export function IssueCount({
-    critical,
-    warning = 0,
-    list,
-    defaultOpen = false,
-    words: given,
-}: {
+export interface IssueCountProps {
     critical: number
     warning?: number
     list: readonly IssueEntry[]
     /** Starts with the list open. */
     defaultOpen?: boolean
     words?: Partial<IssueCountWords>
-}) {
+}
+
+/**
+ * A form's issues as one control beside the verb: a figure for each kind, the errors that stop the
+ * submit in the critical ink and the warnings in the warning ink, on the tint of the worst. Pressing
+ * it opens the issues right there, each naming its field, and choosing one goes to that field and
+ * opens its mark. Nothing renders at zero. A dialog takes it in its `count` slot, beside its verbs.
+ */
+export function IssueCount({ critical, warning = 0, list, defaultOpen = false, words: given }: IssueCountProps) {
     const words = { ...COUNT_WORDS, ...given }
     const [open, setOpen] = useState(defaultOpen)
     const tone = critical > 0 ? 'critical' : warning > 0 ? 'warning' : null

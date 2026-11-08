@@ -46,6 +46,31 @@ function said(options: readonly FilterOption[], chosen: readonly string[], words
     return `${labels[0]} ${words.more(labels.length - 1)}`
 }
 
+export interface FilterChipProps {
+    facet: string
+    /** What the chip says it is set to, in place of the chosen labels; unset when absent and nothing is chosen. */
+    value?: ReactNode
+    /** The facet's values, which give the chip its own menu. */
+    options?: readonly FilterOption[]
+    /** Whether several values can be chosen at once. */
+    multiple?: boolean
+    /** The chosen values, held by the app; at most one without `multiple`. */
+    selected?: readonly string[]
+    /** The chosen values the chip starts from when it holds them itself. */
+    defaultSelected?: readonly string[]
+    onSelectedChange?: (selected: string[]) => void
+    /** Holds the menu open or shut. */
+    open?: boolean
+    defaultOpen?: boolean
+    onOpenChange?: (open: boolean) => void
+    /** Called on a press when the chip has no options of its own. */
+    onOpen?: () => void
+    onClear?: () => void
+    icon?: ReactNode
+    className?: string
+    words?: Partial<FilterChipWords>
+}
+
 /**
  * One filter in a toolbar: the facet it filters on, and what it is set to.
  *
@@ -77,30 +102,7 @@ export function FilterChip({
     icon,
     className,
     words: given,
-}: {
-    facet: string
-    /** What the chip says it is set to, in place of the chosen labels; unset when absent and nothing is chosen. */
-    value?: ReactNode
-    /** The facet's values, which give the chip its own menu. */
-    options?: readonly FilterOption[]
-    /** Whether several values can be chosen at once. */
-    multiple?: boolean
-    /** The chosen values, held by the app; at most one without `multiple`. */
-    selected?: readonly string[]
-    /** The chosen values the chip starts from when it holds them itself. */
-    defaultSelected?: readonly string[]
-    onSelectedChange?: (selected: string[]) => void
-    /** Holds the menu open or shut. */
-    open?: boolean
-    defaultOpen?: boolean
-    onOpenChange?: (open: boolean) => void
-    /** Called on a press when the chip has no options of its own. */
-    onOpen?: () => void
-    onClear?: () => void
-    icon?: ReactNode
-    className?: string
-    words?: Partial<FilterChipWords>
-}) {
+}: FilterChipProps) {
     const words = { ...WORDS, ...given }
     const chipRef = useRef<HTMLSpanElement>(null)
     const [own, setOwn] = useState<readonly string[]>(defaultSelected ?? [])

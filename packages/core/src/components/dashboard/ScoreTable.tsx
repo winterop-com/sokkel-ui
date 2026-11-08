@@ -42,6 +42,24 @@ const FILL = {
     dot: '',
 }
 
+export interface ScoreTableProps {
+    columns: readonly ScoreColumn[]
+    rows: readonly ScoreRow[]
+    thresholds?: readonly Threshold[]
+    unit?: string
+    decimals?: number
+    format?: (value: number) => string
+    fill?: 'tint' | 'solid' | 'dot'
+    trend?: boolean
+    higherIsBetter?: boolean
+    /** The first column's header; the `name` word when omitted. */
+    nameHeader?: ReactNode
+    /** Draws the table in its own bordered, rounded box. */
+    framed?: boolean
+    words?: Partial<ScoreWords>
+    className?: string
+}
+
 /**
  * A scorecard: rows of places, teams or jobs against columns of periods or measures, each value
  * colored by the band it falls in on a threshold scale. The scale is the table's, or a column's
@@ -64,23 +82,7 @@ export function ScoreTable({
     framed = true,
     words: given,
     className,
-}: {
-    columns: readonly ScoreColumn[]
-    rows: readonly ScoreRow[]
-    thresholds?: readonly Threshold[]
-    unit?: string
-    decimals?: number
-    format?: (value: number) => string
-    fill?: 'tint' | 'solid' | 'dot'
-    trend?: boolean
-    higherIsBetter?: boolean
-    /** The first column's header; the `name` word when omitted. */
-    nameHeader?: ReactNode
-    /** Draws the table in its own bordered, rounded box. */
-    framed?: boolean
-    words?: Partial<ScoreWords>
-    className?: string
-}) {
+}: ScoreTableProps) {
     const words = { ...WORDS, ...given }
     const width = columns.length + 1
     return (

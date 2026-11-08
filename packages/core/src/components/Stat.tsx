@@ -4,6 +4,30 @@ import type { CSSProperties, ReactNode } from 'react'
 import { cn } from '../lib/cn'
 import { Dot } from './Dot'
 
+export interface StatProps {
+    label: ReactNode
+    value: ReactNode
+    unit?: ReactNode
+    /** The change written for a reader: `+12%`, `-0.4s`. */
+    change?: string
+    /** Whether the change is an improvement; leaves it neutral when omitted. */
+    good?: boolean
+    /** A short qualifier under the number: `vs last week`. */
+    note?: ReactNode
+    /** A small chart under the number, such as a sparkline. */
+    trend?: ReactNode
+    /** A CSS color drawn as a dot before the label, such as a status token: `var(--status-running)`. */
+    dot?: string
+    /** `plain` sits in whatever holds it; `tile` is a card of its own. */
+    variant?: 'plain' | 'tile'
+    /** Where the tile leads, such as a list filtered to what it counts. */
+    href?: string
+    onSelect?: () => void
+    /** Edges the tile in its dot's color: the count that asks for work. */
+    emphasis?: boolean
+    className?: string
+}
+
 /**
  * One number with what it counts: runs today, the failure rate, the median duration. A change
  * against an earlier period is drawn beside it, inked by whether the change is good, which the
@@ -30,29 +54,7 @@ export function Stat({
     onSelect,
     emphasis = false,
     className,
-}: {
-    label: ReactNode
-    value: ReactNode
-    unit?: ReactNode
-    /** The change written for a reader: `+12%`, `-0.4s`. */
-    change?: string
-    /** Whether the change is an improvement; leaves it neutral when omitted. */
-    good?: boolean
-    /** A short qualifier under the number: `vs last week`. */
-    note?: ReactNode
-    /** A small chart under the number, such as a sparkline. */
-    trend?: ReactNode
-    /** A CSS color drawn as a dot before the label, such as a status token: `var(--status-running)`. */
-    dot?: string
-    /** `plain` sits in whatever holds it; `tile` is a card of its own. */
-    variant?: 'plain' | 'tile'
-    /** Where the tile leads, such as a list filtered to what it counts. */
-    href?: string
-    onSelect?: () => void
-    /** Edges the tile in its dot's color: the count that asks for work. */
-    emphasis?: boolean
-    className?: string
-}) {
+}: StatProps) {
     const rising = change !== undefined && !change.startsWith('-')
     const tile = variant === 'tile'
     const interactive = href !== undefined || onSelect !== undefined
@@ -117,24 +119,20 @@ export function Stat({
     )
 }
 
-/**
- * A line of values drawn small, with no axes, for the trend under a stat. Values are spaced
- * evenly; the last one is marked.
- */
-export function Sparkline({
-    values,
-    width = 120,
-    height = 28,
-    tone = 'primary',
-    label,
-}: {
+export interface SparklineProps {
     values: readonly number[]
     width?: number
     height?: number
     tone?: 'primary' | 'good' | 'critical' | 'muted'
     /** What the line shows, for a screen reader. */
     label: string
-}) {
+}
+
+/**
+ * A line of values drawn small, with no axes, for the trend under a stat. Values are spaced
+ * evenly; the last one is marked.
+ */
+export function Sparkline({ values, width = 120, height = 28, tone = 'primary', label }: SparklineProps) {
     if (values.length === 0) return null
     const min = Math.min(...values)
     const max = Math.max(...values)

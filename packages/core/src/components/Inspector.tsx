@@ -24,6 +24,33 @@ const WORDS: InspectorWords = {
     copied: 'Copied',
 }
 
+export interface InspectorProps {
+    title: ReactNode
+    /** The thing's code, drawn under the title in the code face, with a copy button. */
+    code?: string
+    /** A status line under the header, such as a status chip and the step it stopped at. */
+    status?: ReactNode
+    /** Buttons for what can be done with the thing, under the header. */
+    actions?: ReactNode
+    /** Dropdown menu items behind the header's more button. */
+    menu?: ReactNode
+    onClose?: () => void
+    /** The width in pixels, held from outside with `onSizeChange`. */
+    size?: number
+    onSizeChange?: (size: number) => void
+    /** Whether the left edge drags to resize the panel. */
+    resizable?: boolean
+    minSize?: number
+    maxSize?: number
+    /** The width the panel starts at and a double click on the edge returns to. */
+    defaultSize?: number
+    /** Keeps the title to one line, cut short with an ellipsis, rather than wrapping. */
+    singleLine?: boolean
+    className?: string
+    words?: Partial<InspectorWords>
+    children: ReactNode
+}
+
 /**
  * The panel beside a list that shows the chosen row: a header naming the thing (its name, then its
  * code in the code face with a copy button), the thing's actions, then titled sections. It starts
@@ -50,32 +77,7 @@ export function Inspector({
     className,
     words: given,
     children,
-}: {
-    title: ReactNode
-    /** The thing's code, drawn under the title in the code face, with a copy button. */
-    code?: string
-    /** A status line under the header, such as a status chip and the step it stopped at. */
-    status?: ReactNode
-    /** Buttons for what can be done with the thing, under the header. */
-    actions?: ReactNode
-    /** Dropdown menu items behind the header's more button. */
-    menu?: ReactNode
-    onClose?: () => void
-    /** The width in pixels, held from outside with `onSizeChange`. */
-    size?: number
-    onSizeChange?: (size: number) => void
-    /** Whether the left edge drags to resize the panel. */
-    resizable?: boolean
-    minSize?: number
-    maxSize?: number
-    /** The width the panel starts at and a double click on the edge returns to. */
-    defaultSize?: number
-    /** Keeps the title to one line, cut short with an ellipsis, rather than wrapping. */
-    singleLine?: boolean
-    className?: string
-    words?: Partial<InspectorWords>
-    children: ReactNode
-}) {
+}: InspectorProps) {
     const words = { ...WORDS, ...given }
     const panel = useRef<HTMLElement>(null)
     const held = usePanelSize({ size, onSizeChange, rest: defaultSize, fallback: defaultSize, min: minSize, max: maxSize })
@@ -145,8 +147,13 @@ export function Inspector({
     )
 }
 
+export interface InspectorSectionProps {
+    title: ReactNode
+    children: ReactNode
+}
+
 /** One titled section of an inspector: a small heading over its content. */
-export function InspectorSection({ title, children }: { title: ReactNode; children: ReactNode }) {
+export function InspectorSection({ title, children }: InspectorSectionProps) {
     return (
         <section className="flex flex-col gap-3">
             <h3 className="text-xs leading-4 font-semibold text-foreground">{title}</h3>

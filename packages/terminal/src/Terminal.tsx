@@ -26,6 +26,21 @@ const WORDS: TerminalWords = {
 const SHOW_CURSOR = '\u001b[?1047l\u001b[?25h'
 const HIDE_CURSOR = '\u001b[?25l'
 
+export interface TerminalProps {
+    entries: readonly TerminalEntry[]
+    /** What runs here, in the title bar: a host, a job, a shell. */
+    title?: ReactNode
+    prompt?: string
+    streaming?: boolean
+    onClear?: () => void
+    /** More controls in the title bar. */
+    actions?: ReactNode
+    /** A fixed number of rows, so the terminal is as tall as they are; without it, it fills the height it is given. */
+    rows?: number
+    className?: string
+    words?: Partial<TerminalWords>
+}
+
 /**
  * A terminal that shows commands and what they wrote: a title bar with copy and clear, then each
  * command after its prompt and its output with escape codes drawn as colors, on the same engine as
@@ -44,20 +59,7 @@ export function Terminal({
     rows,
     className,
     words: given,
-}: {
-    entries: readonly TerminalEntry[]
-    /** What runs here, in the title bar: a host, a job, a shell. */
-    title?: ReactNode
-    prompt?: string
-    streaming?: boolean
-    onClear?: () => void
-    /** More controls in the title bar. */
-    actions?: ReactNode
-    /** A fixed number of rows, so the terminal is as tall as they are; without it, it fills the height it is given. */
-    rows?: number
-    className?: string
-    words?: Partial<TerminalWords>
-}) {
+}: TerminalProps) {
     const view = useRef<TerminalHandle>(null)
     const written = useRef('')
     const words = { ...WORDS, ...given }

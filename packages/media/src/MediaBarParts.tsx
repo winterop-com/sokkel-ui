@@ -23,6 +23,7 @@ import type { MediaRange } from '@winterop-com/sokkel-ui/media/time'
 import { nextRepeat, type RepeatMode } from './queue'
 
 export type { RepeatMode } from './queue'
+export type { Tier } from './bar-growth'
 
 /** What previous and next step between, and say: tracks, or the chapters of one long item. */
 export type MediaSteps = 'track' | 'chapter'
@@ -156,8 +157,15 @@ export interface Deck {
     extra?: ReactNode
 }
 
+export interface CoverProps {
+    deck: Deck
+    size?: number
+    flush?: boolean
+    className?: string
+}
+
 /** The cover, square and filled edge to edge; without artwork one drawn from the seed, or a note glyph. `size` pixels across, or filling its box. */
-export function Cover({ deck, size, flush = false, className }: { deck: Deck; size?: number; flush?: boolean; className?: string }) {
+export function Cover({ deck, size, flush = false, className }: CoverProps) {
     return (
         <div
             className={cn(
@@ -178,8 +186,13 @@ export function Cover({ deck, size, flush = false, className }: { deck: Deck; si
     )
 }
 
+export interface EyebrowProps {
+    deck: Deck
+    className?: string
+}
+
 /** The line in the accent over a large title: the place, the album and the year. */
-export function Eyebrow({ deck, className }: { deck: Deck; className?: string }) {
+export function Eyebrow({ deck, className }: EyebrowProps) {
     const { place, album, year } = deck
     if (place === undefined && album === undefined && year === undefined) return null
     return (
@@ -189,8 +202,15 @@ export function Eyebrow({ deck, className }: { deck: Deck; className?: string })
     )
 }
 
+export interface WordsProps {
+    deck: Deck
+    tier: Tier
+    center?: boolean
+    className?: string
+}
+
 /** What plays, saying as much as the tier allows: one line, two, the liner, or the liner at its largest. */
-export function Words({ deck, tier, center = false, className }: { deck: Deck; tier: Tier; center?: boolean; className?: string }) {
+export function Words({ deck, tier, center = false, className }: WordsProps) {
     const by = deck.artist ?? deck.subtitle
     const align = center && 'text-center'
     if (tier === 'line') {
@@ -222,18 +242,15 @@ export function Words({ deck, tier, center = false, className }: { deck: Deck; t
     )
 }
 
-/** What plays at the size of a screen of its own: the liner, its title in the display size, or the page's on a phone. */
-export function ScreenWords({
-    deck,
-    phone,
-    center = false,
-    className,
-}: {
+export interface ScreenWordsProps {
     deck: Deck
     phone: boolean
     center?: boolean
     className?: string
-}) {
+}
+
+/** What plays at the size of a screen of its own: the liner, its title in the display size, or the page's on a phone. */
+export function ScreenWords({ deck, phone, center = false, className }: ScreenWordsProps) {
     const by = deck.artist ?? deck.subtitle
     return (
         <div className={cn('min-w-0', center && 'w-full text-center', className)}>
@@ -246,8 +263,15 @@ export function ScreenWords({
     )
 }
 
+export interface ScrubProps {
+    deck: Deck
+    height: number
+    size?: 'sm' | 'lg'
+    className?: string
+}
+
 /** The track's waveform as the scrubber, between the elapsed and the remaining time, `height` pixels tall; the live mark on a live stream. */
-export function Scrub({ deck, height, size, className }: { deck: Deck; height: number; size?: 'sm' | 'lg'; className?: string }) {
+export function Scrub({ deck, height, size, className }: ScrubProps) {
     if (deck.live) return <LiveMark label={deck.words.live} size={size} className={className} />
     return (
         <Position
@@ -265,11 +289,16 @@ export function Scrub({ deck, height, size, className }: { deck: Deck; height: n
     )
 }
 
+export interface StepsProps {
+    deck: Deck
+    size?: TransportSize
+}
+
 /**
  * Previous, play and next, named for chapters while they step through chapters, between the skip
  * buttons when the deck has an interval. A live stream's skip buttons are drawn disabled.
  */
-export function Steps({ deck, size = 'sm' }: { deck: Deck; size?: TransportSize }) {
+export function Steps({ deck, size = 'sm' }: StepsProps) {
     const { words, playing, onPlayingChange, onPrevious, onNext, skip, onSkip, live } = deck
     const chapter = deck.steps === 'chapter'
     const skipping = skip !== undefined && onSkip !== undefined
@@ -301,16 +330,14 @@ export function Steps({ deck, size = 'sm' }: { deck: Deck; size?: TransportSize 
     )
 }
 
-/** The speed menu, drawn only with a handler and never on a live stream. `container` holds its menu inside a fullscreen view. */
-export function Speed({
-    deck,
-    size,
-    container,
-}: {
+export interface SpeedProps {
     deck: Deck
     size?: TransportSize
     container?: ComponentProps<typeof RateMenu>['container']
-}) {
+}
+
+/** The speed menu, drawn only with a handler and never on a live stream. `container` holds its menu inside a fullscreen view. */
+export function Speed({ deck, size, container }: SpeedProps) {
     const { words, rate, rates, onRateChange, live } = deck
     if (onRateChange === undefined || live) return null
     return (
@@ -326,8 +353,13 @@ export function Speed({
     )
 }
 
+export interface ShuffleButtonProps {
+    deck: Deck
+    size?: TransportSize
+}
+
 /** Shuffle, drawn only when it has a handler. */
-export function ShuffleButton({ deck, size }: { deck: Deck; size?: TransportSize }) {
+export function ShuffleButton({ deck, size }: ShuffleButtonProps) {
     const { words, shuffle, onShuffleChange } = deck
     if (onShuffleChange === undefined) return null
     return (
@@ -337,8 +369,13 @@ export function ShuffleButton({ deck, size }: { deck: Deck; size?: TransportSize
     )
 }
 
+export interface RepeatButtonProps {
+    deck: Deck
+    size?: TransportSize
+}
+
 /** Repeat, drawn only when it has a handler; a press moves to the next mode. */
-export function RepeatButton({ deck, size }: { deck: Deck; size?: TransportSize }) {
+export function RepeatButton({ deck, size }: RepeatButtonProps) {
     const { words, repeat, onRepeatChange } = deck
     if (onRepeatChange === undefined) return null
     const label = repeat === 'one' ? words.repeatOne : repeat === 'all' ? words.repeatAll : words.repeatOff
@@ -349,8 +386,13 @@ export function RepeatButton({ deck, size }: { deck: Deck; size?: TransportSize 
     )
 }
 
+export interface VolumeProps {
+    deck: Deck
+    compact?: boolean
+}
+
 /** Mute and the volume slider, the slider left out where `compact` says there is no room. */
-export function Volume({ deck, compact = false }: { deck: Deck; compact?: boolean }) {
+export function Volume({ deck, compact = false }: VolumeProps) {
     return (
         <VolumeControl
             level={deck.level}
@@ -363,14 +405,24 @@ export function Volume({ deck, compact = false }: { deck: Deck; compact?: boolea
     )
 }
 
+export interface ExtrasProps {
+    deck: Deck
+}
+
 /** The app's own controls at the bar's end, such as a queue button. */
-export function Extras({ deck }: { deck: Deck }) {
+export function Extras({ deck }: ExtrasProps) {
     if (deck.extra === undefined) return null
     return <div className="flex items-center gap-1">{deck.extra}</div>
 }
 
+export interface FullscreenButtonProps {
+    label: string
+    onClick: () => void
+    className?: string
+}
+
 /** The button that opens the fullscreen view. */
-export function FullscreenButton({ label, onClick, className }: { label: string; onClick: () => void; className?: string }) {
+export function FullscreenButton({ label, onClick, className }: FullscreenButtonProps) {
     return (
         <TransportButton label={label} onClick={onClick} className={cn('text-muted-foreground', className)}>
             <Maximize2 aria-hidden />
@@ -390,18 +442,15 @@ export function drawVisualizer(visualizer: ReactNode, look: Look): ReactNode {
     return isSoundVisualizer(visualizer) ? cloneElement(visualizer, look) : visualizer
 }
 
-/** The visualizer behind the words at `strength`, from 0 to 1, out of reach of the pointer; nothing at zero. */
-export function Backdrop({
-    visualizer,
-    strength,
-    className,
-    style,
-}: {
+export interface BackdropProps {
     visualizer: ReactNode
     strength: number
     className?: string
     style?: CSSProperties
-}) {
+}
+
+/** The visualizer behind the words at `strength`, from 0 to 1, out of reach of the pointer; nothing at zero. */
+export function Backdrop({ visualizer, strength, className, style }: BackdropProps) {
     if (visualizer === undefined || visualizer === null || strength <= 0) return null
     return (
         <div

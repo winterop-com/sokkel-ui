@@ -185,23 +185,19 @@ const GROUP_GAP = 2
 const ACTION =
     'flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-pressed:text-foreground data-popup-open:bg-hover data-popup-open:text-foreground [&_svg]:size-4'
 
-/**
- * A button in a message composer's rows, drawn as the composer draws its own: an icon with its
- * label as the tooltip. Pass it to `actions` for more actions after the mention button.
- */
-export function MessageComposerAction({
-    label,
-    onClick,
-    children,
-    pressed,
-    disabled = false,
-}: {
+export interface MessageComposerActionProps {
     label: string
     onClick?: () => void
     children: ReactNode
     pressed?: boolean
     disabled?: boolean
-}) {
+}
+
+/**
+ * A button in a message composer's rows, drawn as the composer draws its own: an icon with its
+ * label as the tooltip. Pass it to `actions` for more actions after the mention button.
+ */
+export function MessageComposerAction({ label, onClick, children, pressed, disabled = false }: MessageComposerActionProps) {
     return (
         <button
             type="button"
@@ -215,6 +211,46 @@ export function MessageComposerAction({
             {children}
         </button>
     )
+}
+
+export interface MessageComposerProps {
+    value: string
+    onChange: (value: string) => void
+    onSend: () => void
+    onAttach?: () => void
+    onEmoji?: () => void
+    onMention?: () => void
+    /** Shows the More button after `actions`. */
+    onMore?: () => void
+    /** More buttons after the mention button, such as `MessageComposerAction`s. */
+    actions?: ReactNode
+    /** Offers the chevron beside Send; with `schedule` it is the send menu's last entry. */
+    onSendLater?: () => void
+    /** The times the send menu offers. */
+    schedule?: readonly MessageSchedule[]
+    /** Called with the id of the time chosen from `schedule`. */
+    onSchedule?: (id: string) => void
+    /** Where a thread reply can be sent as well, as the channel's name with its mark. */
+    alsoSendTo?: ReactNode
+    alsoSend?: boolean
+    onAlsoSendChange?: (checked: boolean) => void
+    /** Whether the formatting toolbar starts shown. */
+    defaultFormatting?: boolean
+    /** Offers Write and Preview at the end of the toolbar. */
+    preview?: boolean
+    /** Draws LaTeX math in the preview, as `Markdown` does: on by default; off where every `$` is a dollar. */
+    math?: boolean
+    /** The mode shown, when the app holds it; otherwise the composer does, from `defaultMode`. */
+    mode?: MessageComposerMode
+    defaultMode?: MessageComposerMode
+    onModeChange?: (mode: MessageComposerMode) => void
+    /** The languages the code block menu lists after Plain text. */
+    codeLanguages?: readonly CodeLanguage[]
+    /** Opens the code block menu on the first render, inside the More menu when the toolbar has put it there. */
+    defaultCodeMenuOpen?: boolean
+    disabled?: boolean
+    className?: string
+    words?: Partial<MessageComposerWords>
 }
 
 /**
@@ -262,45 +298,7 @@ export function MessageComposer({
     disabled = false,
     className,
     words: given,
-}: {
-    value: string
-    onChange: (value: string) => void
-    onSend: () => void
-    onAttach?: () => void
-    onEmoji?: () => void
-    onMention?: () => void
-    /** Shows the More button after `actions`. */
-    onMore?: () => void
-    /** More buttons after the mention button, such as `MessageComposerAction`s. */
-    actions?: ReactNode
-    /** Offers the chevron beside Send; with `schedule` it is the send menu's last entry. */
-    onSendLater?: () => void
-    /** The times the send menu offers. */
-    schedule?: readonly MessageSchedule[]
-    /** Called with the id of the time chosen from `schedule`. */
-    onSchedule?: (id: string) => void
-    /** Where a thread reply can be sent as well, as the channel's name with its mark. */
-    alsoSendTo?: ReactNode
-    alsoSend?: boolean
-    onAlsoSendChange?: (checked: boolean) => void
-    /** Whether the formatting toolbar starts shown. */
-    defaultFormatting?: boolean
-    /** Offers Write and Preview at the end of the toolbar. */
-    preview?: boolean
-    /** Draws LaTeX math in the preview, as `Markdown` does: on by default; off where every `$` is a dollar. */
-    math?: boolean
-    /** The mode shown, when the app holds it; otherwise the composer does, from `defaultMode`. */
-    mode?: MessageComposerMode
-    defaultMode?: MessageComposerMode
-    onModeChange?: (mode: MessageComposerMode) => void
-    /** The languages the code block menu lists after Plain text. */
-    codeLanguages?: readonly CodeLanguage[]
-    /** Opens the code block menu on the first render, inside the More menu when the toolbar has put it there. */
-    defaultCodeMenuOpen?: boolean
-    disabled?: boolean
-    className?: string
-    words?: Partial<MessageComposerWords>
-}) {
+}: MessageComposerProps) {
     const words = { ...WORDS, ...given, format: { ...WORDS.format, ...given?.format } }
     const [formatting, setFormatting] = useState(defaultFormatting)
     const [ownMode, setOwnMode] = useState<MessageComposerMode>(defaultMode)

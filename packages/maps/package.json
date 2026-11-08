@@ -22,9 +22,53 @@
     "exports": {
         "./styles.css": "./src/styles.css",
         "./sources/*.css": "./dist/sources/*.css",
-        "./*": {
-            "types": "./dist/*.d.ts",
-            "import": "./dist/*.js"
+        "./basemap": {
+            "types": "./dist/basemap.d.ts",
+            "import": "./dist/basemap.js"
+        },
+        "./BasemapSwitcher": {
+            "types": "./dist/BasemapSwitcher.d.ts",
+            "import": "./dist/BasemapSwitcher.js"
+        },
+        "./BoundaryLayer": {
+            "types": "./dist/BoundaryLayer.d.ts",
+            "import": "./dist/BoundaryLayer.js"
+        },
+        "./geometry": {
+            "types": "./dist/geometry.d.ts",
+            "import": "./dist/geometry.js"
+        },
+        "./GridLayer": {
+            "types": "./dist/GridLayer.d.ts",
+            "import": "./dist/GridLayer.js"
+        },
+        "./MapLayerList": {
+            "types": "./dist/MapLayerList.d.ts",
+            "import": "./dist/MapLayerList.js"
+        },
+        "./MapLegend": {
+            "types": "./dist/MapLegend.d.ts",
+            "import": "./dist/MapLegend.js"
+        },
+        "./MapPopup": {
+            "types": "./dist/MapPopup.d.ts",
+            "import": "./dist/MapPopup.js"
+        },
+        "./MapView": {
+            "types": "./dist/MapView.d.ts",
+            "import": "./dist/MapView.js"
+        },
+        "./PeriodSlider": {
+            "types": "./dist/PeriodSlider.d.ts",
+            "import": "./dist/PeriodSlider.js"
+        },
+        "./PointLayer": {
+            "types": "./dist/PointLayer.d.ts",
+            "import": "./dist/PointLayer.js"
+        },
+        "./scale": {
+            "types": "./dist/scale.d.ts",
+            "import": "./dist/scale.js"
         }
     },
     "publishConfig": {

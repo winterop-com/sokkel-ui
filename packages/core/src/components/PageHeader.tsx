@@ -14,6 +14,29 @@ export interface PageHeaderWords {
 
 const WORDS: PageHeaderWords = { back: 'Back', trail: 'Where you are' }
 
+export interface PageHeaderProps {
+    title: string
+    /** The addressable code, shown under the title unless it is the title. */
+    code?: string
+    /** A short count beside the title, such as how many rows are loaded. */
+    count?: ReactNode
+    /** A sentence under the title: what the page holds. */
+    description?: ReactNode
+    /** Small facts under the title, such as a byline. */
+    meta?: ReactNode
+    /** Buttons, the primary one last. */
+    actions?: ReactNode
+    /** The places above this page, the furthest first. */
+    trail?: readonly Crumb[]
+    /** Draws a back button before the title. */
+    onBack?: () => void
+    /** Keeps the title to one line, cut short with an ellipsis, rather than wrapping. */
+    singleLine?: boolean
+    /** Draws a step of the trail that has an `href`, for an app's own router link. */
+    renderLink?: (crumb: Crumb, className: string) => ReactNode
+    words?: Partial<PageHeaderWords>
+}
+
 /**
  * A page's title, its code under it in the code face, and its actions at the right with the
  * primary one last. The actions stay on the title's row while the header has room for both, so one
@@ -46,28 +69,7 @@ export function PageHeader({
         </a>
     ),
     words,
-}: {
-    title: string
-    /** The addressable code, shown under the title unless it is the title. */
-    code?: string
-    /** A short count beside the title, such as how many rows are loaded. */
-    count?: ReactNode
-    /** A sentence under the title: what the page holds. */
-    description?: ReactNode
-    /** Small facts under the title, such as a byline. */
-    meta?: ReactNode
-    /** Buttons, the primary one last. */
-    actions?: ReactNode
-    /** The places above this page, the furthest first. */
-    trail?: readonly Crumb[]
-    /** Draws a back button before the title. */
-    onBack?: () => void
-    /** Keeps the title to one line, cut short with an ellipsis, rather than wrapping. */
-    singleLine?: boolean
-    /** Draws a step of the trail that has an `href`, for an app's own router link. */
-    renderLink?: (crumb: Crumb, className: string) => ReactNode
-    words?: Partial<PageHeaderWords>
-}) {
+}: PageHeaderProps) {
     const said = { ...WORDS, ...words }
     const showCode = code !== undefined && code !== title
     const back = onBack !== undefined

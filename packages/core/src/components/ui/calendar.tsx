@@ -7,6 +7,10 @@ import { DayPicker, getDefaultClassNames, type DayButton, type Locale } from 're
 import { Button, buttonVariants } from './button'
 import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon } from 'lucide-react'
 
+export type CalendarProps = React.ComponentProps<typeof DayPicker> & {
+    buttonVariant?: React.ComponentProps<typeof Button>['variant']
+}
+
 function Calendar({
     className,
     classNames,
@@ -17,9 +21,7 @@ function Calendar({
     formatters,
     components,
     ...props
-}: React.ComponentProps<typeof DayPicker> & {
-    buttonVariant?: React.ComponentProps<typeof Button>['variant']
-}) {
+}: CalendarProps) {
     const defaultClassNames = getDefaultClassNames()
 
     return (
@@ -130,13 +132,9 @@ function Calendar({
     )
 }
 
-function CalendarDayButton({
-    className,
-    day,
-    modifiers,
-    locale,
-    ...props
-}: React.ComponentProps<typeof DayButton> & { locale?: Partial<Locale> }) {
+export type CalendarDayButtonProps = React.ComponentProps<typeof DayButton> & { locale?: Partial<Locale> }
+
+function CalendarDayButton({ className, day, modifiers, locale, ...props }: CalendarDayButtonProps) {
     const defaultClassNames = getDefaultClassNames()
 
     const ref = React.useRef<HTMLButtonElement>(null)

@@ -31,25 +31,21 @@ export function fitCount(widths: readonly number[], room: number, gap: number, m
 /** The gap between chips, in pixels; `gap-1` below. */
 const GAP = 4
 
+export interface TagChipsProps {
+    tags: readonly string[]
+    max?: number
+    variant?: 'secondary' | 'outline'
+    className?: string
+    words?: Partial<TagChipsWords>
+}
+
 /**
  * A row of tags as chips that shows as many as fit the room it is given and a +N chip for the
  * rest, which names them on hover and focus. It takes the width left in the row it sits in, so it
  * goes beside a title or a name, and measures its chips again whenever that width changes. `max`
  * caps how many show even when more would fit.
  */
-export function TagChips({
-    tags,
-    max,
-    variant = 'secondary',
-    className,
-    words: given,
-}: {
-    tags: readonly string[]
-    max?: number
-    variant?: 'secondary' | 'outline'
-    className?: string
-    words?: Partial<TagChipsWords>
-}) {
+export function TagChips({ tags, max, variant = 'secondary', className, words: given }: TagChipsProps) {
     const words = { ...WORDS, ...given }
     const box = useRef<HTMLDivElement>(null)
     const ruler = useRef<HTMLDivElement>(null)

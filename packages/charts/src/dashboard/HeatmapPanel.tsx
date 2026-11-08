@@ -82,6 +82,29 @@ export function heatmapOption({
     })
 }
 
+export interface HeatmapPanelProps {
+    title: ReactNode
+    subtitle?: ReactNode
+    info?: ReactNode
+    actions?: ReactNode
+    x: readonly string[]
+    y: readonly string[]
+    cells: readonly HeatCell[]
+    unit?: string
+    decimals?: number
+    format?: (value: number) => string
+    scale?: string | readonly string[]
+    labelEvery?: number
+    showScale?: boolean
+    span?: PanelSpan
+    bodyClassName?: string
+    loading?: boolean
+    empty?: boolean
+    file?: string
+    words?: Partial<ChartFrameWords>
+    className?: string
+}
+
 /**
  * A dashboard panel of a heatmap: a value for each pair of x and y categories, such as runs per
  * hour and duration, shaded from the card to `scale` with the scale beside it. `scale` names one
@@ -108,28 +131,7 @@ export function HeatmapPanel({
     file,
     words,
     className,
-}: {
-    title: ReactNode
-    subtitle?: ReactNode
-    info?: ReactNode
-    actions?: ReactNode
-    x: readonly string[]
-    y: readonly string[]
-    cells: readonly HeatCell[]
-    unit?: string
-    decimals?: number
-    format?: (value: number) => string
-    scale?: string | readonly string[]
-    labelEvery?: number
-    showScale?: boolean
-    span?: PanelSpan
-    bodyClassName?: string
-    loading?: boolean
-    empty?: boolean
-    file?: string
-    words?: Partial<ChartFrameWords>
-    className?: string
-}) {
+}: HeatmapPanelProps) {
     const option = useMemo(
         () => heatmapOption({ x, y, cells, unit, decimals, format, scale, labelEvery, showScale }),
         [x, y, cells, unit, decimals, format, scale, labelEvery, showScale],

@@ -28,14 +28,47 @@ that uses it, and the music and video parts only by an app that plays music or v
 stands on the core as a peer dependency at the same version and imports it by its name; the core
 never imports an add-on and no add-on imports another, which `src/rules.test.ts` holds. A part that
 needs no engine belongs in the core, save the music and video app parts in the media package. The
-engines left in the core (Mermaid, KaTeX, CodeMirror) and the Geist fonts are optional peer
-dependencies, loaded lazily, and the README lists which part needs which. Mermaid draws every diagram written as text and KaTeX every
-formula, through remark-math and rehype-katex in `Markdown`, which loads it the first time a message
-holds math, its stylesheet with it.
+core's own dependencies are what every app's frame draws with (Base UI, lucide, cmdk for the
+palette, the class helpers, the Plex fonts); every library only some parts need is an optional peer
+dependency: the engines left in the core (Mermaid, KaTeX, CodeMirror), Shiki, react-markdown and its
+plugins, ajv, react-day-picker, date-fns, embla, sonner, input-otp, react-resizable-panels,
+`@shadcn/react` and the Geist fonts. The README lists which part needs which. Mermaid draws every
+diagram written as text and KaTeX every formula, through remark-math and rehype-katex in `Markdown`,
+which loads it the first time a message holds math, its stylesheet with it.
+
+A part loads a heavy library on first use wherever it can draw before it arrives, so a page's
+start carries only what draws at once: `MapView` loads maplibre (`loadMapEngine` ahead) with a
+spinner after a moment, `Chart` and `ChartGrid` load the kinds' builders beside ECharts, a basemap's
+preview loads when the switcher shows it, `useSchemaForm` and `CodeEditor` load ajv (`loadSchemaChecks`
+ahead), the form taking input at once and refusing a submit until its checks are there,
+`TimeRangePicker` loads its calendar when the trigger is pointed at or focused, the highlighter
+loads Shiki with the first code drawn plain until then, and `MediaBar` loads its fullscreen view
+after the bar is drawn. A module that only asks whether a node is a part tells it by a mark, so it
+need not import the part (`isSoundVisualizer`), and `chartLegend` has a module of its own, since it
+reads every kind.
 
 `dist/` is built, not committed, so an install from a repository URL gets no compiled code (bun also
 blocks such a dependency's install scripts). The tag workflow publishes the six packages to GitHub
 Packages, and apps pin that version.
+
+Each package's `exports` map names every module an app may import, one entry per module with its
+`types` and `import`, and no wildcard for code. Public are the components and the parts they
+export, the primitives, the hooks, the helpers an app calls (`lib/appearance`, `lib/commands`,
+`lib/desktop`, `lib/highlighter`, `lib/stored` and the like) and those the stories and examples
+use, the chart kinds' registry as `kinds`, and the styles, the lists of sources, the theme files
+and `tokens.json`. Every component exports the type of its props as `<Component>Props`, and a type
+those props name is exported beside it. Private is what only the library's own parts use: the
+contexts a part hands what it draws (`shell-context`, the map's and the graph's `context`), each
+chart kind's builder and the arithmetic, look and engine they share, the player bar's layout sizes
+(`bar-growth`), the stores behind hooks (`lib/uploads`, `lib/overlay`, `lib/shortcuts`,
+`lib/scroll-memory`, `media-session`, `follow`), and layout constants such as the table head's
+text. A core module an add-on imports is public, since an add-on imports the core by name as an
+app does: `hooks/use-panel-size`, `hooks/use-clamped`, `hooks/use-theme-name`, `lib/title-lines`,
+`media/one-sound` and `media/video-source` are public for that. `PRIVATE` in
+`scripts/components-index.ts` lists each private module with the reason; `src/rules.test.ts` fails
+a module in neither the map nor that list, a private module in the map, an import of a path the
+map does not export from the packages, the stories, the examples, the tools or the docs, and a
+component without its `<Component>Props`.
 
 Each package carries the library alone: `dist/`, the sources beside it and its styles (the core
 also its tokens), with no stories, story fixtures or tests. Each package's `styles.css` is Tailwind
@@ -60,8 +93,9 @@ workflow builds all three, so a break in a package fails a check rather than an 
 built against the packages in CI and measured gzipped (the JavaScript at start, what loads later,
 the CSS). A check fails when one grows past its budget in `examples/sizes/budget.json` or bundles an
 engine it does not use, so a forms page never carries ECharts, maplibre, React Flow, xterm.js,
-hls.js, CodeMirror, Mermaid or KaTeX. A change that grows an app on purpose raises its budget in the same
-PR. The forms page imports only the core package, the dashboard adds the charts package, the map
+hls.js, CodeMirror, Mermaid or KaTeX. A budget is the app's size plus about 3 percent. A change that
+grows an app's start is cut first, by loading what it adds on first use; one that grows it on purpose
+raises its budget in the same PR. The forms page imports only the core package, the dashboard adds the charts package, the map
 page the maps package and the music page the media package. `forms-lean` is the forms page on
 `styles-base.css` and its modules' lists of sources, so the lean path is measured too.
 

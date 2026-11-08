@@ -7,6 +7,30 @@ import { ShortcutRegistry, useShortcuts } from '../hooks/use-shortcuts'
 import { cn } from '../lib/cn'
 import { ShellDrawer, ShellShortcuts } from './shell-context'
 
+export interface AccountMenuProps {
+    name: string
+    /** The person's picture, drawn over the initial once it has loaded. */
+    image?: string
+    /** Where they are signed in: a host, an instance, a version, in the code face. */
+    where?: string
+    collapsed?: boolean
+    /** No one is signed in: the avatar is a neutral figure in place of an initial or picture, and there is no sign-out. */
+    local?: boolean
+    onSettings?: () => void
+    /** Opens the appearance settings: the theme, the scheme, the density. */
+    onAppearance?: () => void
+    /**
+     * Opens the app's own keyboard shortcuts from the menu, and outside a `Shell` on `?` outside a
+     * field too. In a `Shell` given `shortcuts`, the menu opens the shell's without it, and the shell
+     * binds `?` once, however many account menus the frame draws.
+     */
+    onShortcuts?: () => void
+    onSignOut?: () => void
+    /** More rows, placed before Sign out. */
+    extra?: ReactNode
+    words?: Partial<AccountMenuWords>
+}
+
 /**
  * The account control in the rail's foot cell: a full-cell row with the initial, the name and a
  * chevron, opening upward into a menu headed by who is signed in and where. Given `image`, the
@@ -33,29 +57,7 @@ export function AccountMenu({
     onSignOut,
     extra,
     words: given,
-}: {
-    name: string
-    /** The person's picture, drawn over the initial once it has loaded. */
-    image?: string
-    /** Where they are signed in: a host, an instance, a version, in the code face. */
-    where?: string
-    collapsed?: boolean
-    /** No one is signed in: the avatar is a neutral figure in place of an initial or picture, and there is no sign-out. */
-    local?: boolean
-    onSettings?: () => void
-    /** Opens the appearance settings: the theme, the scheme, the density. */
-    onAppearance?: () => void
-    /**
-     * Opens the app's own keyboard shortcuts from the menu, and outside a `Shell` on `?` outside a
-     * field too. In a `Shell` given `shortcuts`, the menu opens the shell's without it, and the shell
-     * binds `?` once, however many account menus the frame draws.
-     */
-    onShortcuts?: () => void
-    onSignOut?: () => void
-    /** More rows, placed before Sign out. */
-    extra?: ReactNode
-    words?: Partial<AccountMenuWords>
-}) {
+}: AccountMenuProps) {
     const words = { ...WORDS, ...given }
     const drawer = useContext(ShellDrawer)
     const collapsed = kept && drawer === undefined

@@ -3,18 +3,7 @@ import type { ReactNode } from 'react'
 import { cn } from '../lib/cn'
 import { ChatTyping } from './ChatMessage'
 
-/**
- * A conversation's column, as a team chat lays it out: the header on top, the messages scrolling
- * under it from their end, as a conversation opens at its latest message, then who is typing and
- * the composer at the foot. The column fills the height it is given.
- */
-export function Conversation({
-    header,
-    typing,
-    composer,
-    children,
-    className,
-}: {
+export interface ConversationProps {
     /** The head of the conversation, such as a `ChannelHeader`. */
     header?: ReactNode
     /** Who is writing now, under the messages. */
@@ -24,7 +13,14 @@ export function Conversation({
     /** The messages, such as `ChatDay`s of `ChatMessage`s, oldest first. */
     children: ReactNode
     className?: string
-}) {
+}
+
+/**
+ * A conversation's column, as a team chat lays it out: the header on top, the messages scrolling
+ * under it from their end, as a conversation opens at its latest message, then who is typing and
+ * the composer at the foot. The column fills the height it is given.
+ */
+export function Conversation({ header, typing, composer, children, className }: ConversationProps) {
     return (
         <div className={cn('flex h-full min-h-0 flex-col', className)}>
             {header}
@@ -41,18 +37,7 @@ export function Conversation({
     )
 }
 
-/**
- * The start of a conversation, at the top of its messages: a large picture of the person, or the
- * channel's icon on a tile, its name, a line on what it is, and the ways to get it going.
- */
-export function ConversationStart({
-    picture,
-    icon,
-    title,
-    children,
-    actions,
-    className,
-}: {
+export interface ConversationStartProps {
     /** The person's picture, such as a `PersonAvatar` at `xl`; drawn as given. */
     picture?: ReactNode
     /** The channel's icon, drawn on a tile in the primary wash when there is no `picture`. */
@@ -63,7 +48,13 @@ export function ConversationStart({
     /** Buttons that get it going: add people, set a topic. */
     actions?: ReactNode
     className?: string
-}) {
+}
+
+/**
+ * The start of a conversation, at the top of its messages: a large picture of the person, or the
+ * channel's icon on a tile, its name, a line on what it is, and the ways to get it going.
+ */
+export function ConversationStart({ picture, icon, title, children, actions, className }: ConversationStartProps) {
     return (
         <div className={cn('flex max-w-lg flex-col items-start gap-3 px-(--density-chat-inset) pt-6 pb-4', className)}>
             {picture ??
@@ -81,17 +72,7 @@ export function ConversationStart({
     )
 }
 
-/**
- * A thread, as a side panel shows it: the message it started from, its replies right under it, and
- * the reply box after the last one, all in one column that scrolls. Replies by the same author in a
- * row are given `continued`, so they read as one run.
- */
-export function ThreadView({
-    parent,
-    composer,
-    children,
-    className,
-}: {
+export interface ThreadViewProps {
     /** The message the thread started from, as a `ChatMessage`. */
     parent: ReactNode
     /** The reply box, such as a `MessageComposer`. */
@@ -99,7 +80,14 @@ export function ThreadView({
     /** The replies, oldest first, as `ChatMessage`s. */
     children?: ReactNode
     className?: string
-}) {
+}
+
+/**
+ * A thread, as a side panel shows it: the message it started from, its replies right under it, and
+ * the reply box after the last one, all in one column that scrolls. Replies by the same author in a
+ * row are given `continued`, so they read as one run.
+ */
+export function ThreadView({ parent, composer, children, className }: ThreadViewProps) {
     return (
         <div className={cn('flex h-full min-h-0 flex-col', className)}>
             <div className="min-h-0 flex-1 overflow-y-auto pt-1 pb-4">

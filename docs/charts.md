@@ -215,7 +215,9 @@ series in the legend drops its panel.
    file or in `data.ts`, `stats.ts` or `shapes.ts`, where a test can reach it.
 2. **The registry.** Add the builder to `KINDS` in `kinds/index.ts`, with a `legend` when its legend
    is not one entry per series (slices, bands, branches), or `() => []` when it has none. A field
-   the spec lacks joins `ChartSpec` in `kinds/spec.ts`, documented, and this file's table.
+   the spec lacks joins `ChartSpec` in `kinds/spec.ts`, documented, and this file's table. The
+   builder's file is private, reached through the registry: name it in `PRIVATE` in
+   `scripts/components-index.ts` beside the other kinds.
 3. **The engine.** A chart type or component outside the base set joins the `SERIES` or
    `COMPONENTS` map in `engine.ts`, so it loads on first use. Never add it to the base `PARTS`.
 4. **Tests.** The kind's spec in `kinds/kinds.test.ts`, so it is drawn and its legend listed, and a

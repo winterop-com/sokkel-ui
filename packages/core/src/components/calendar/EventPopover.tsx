@@ -20,6 +20,18 @@ export function useOpenEvent(open: string | null | undefined, onOpenChange?: (id
 /** The room the details keep from the window's edges. */
 const INSET = 'var(--density-overlay-inset)'
 
+export interface EventPopoverProps<E extends CalendarEvent> {
+    event: E
+    open: boolean
+    onOpenChange: (open: boolean) => void
+    detail?: (event: E) => ReactNode
+    onSelect?: (event: E) => void
+    className?: string
+    style?: CSSProperties
+    children: ReactNode
+    side?: 'right' | 'bottom' | 'left' | 'top'
+}
+
 /**
  * An event drawn as a control that opens its details beside it. With no `detail` it is a plain
  * button that calls `onSelect`. The details keep the overlay inset from the window's edges, and on a
@@ -35,17 +47,7 @@ export function EventPopover<E extends CalendarEvent>({
     style,
     children,
     side = 'right',
-}: {
-    event: E
-    open: boolean
-    onOpenChange: (open: boolean) => void
-    detail?: (event: E) => ReactNode
-    onSelect?: (event: E) => void
-    className?: string
-    style?: CSSProperties
-    children: ReactNode
-    side?: 'right' | 'bottom' | 'left' | 'top'
-}) {
+}: EventPopoverProps<E>) {
     const face = cn(
         'outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring focus-visible:outline-solid',
         className,

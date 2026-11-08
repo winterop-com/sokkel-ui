@@ -2,12 +2,10 @@ import { Radio as RadioPrimitive } from '@base-ui/react/radio'
 import { RadioGroup as RadioGroupPrimitive } from '@base-ui/react/radio-group'
 import { cn } from '../../lib/cn'
 
+export type RadioGroupProps = RadioGroupPrimitive.Props & { orientation?: 'vertical' | 'horizontal' }
+
 /** The choices one under the other, or with `horizontal` side by side, flowing onto more lines where the row runs out of room. */
-function RadioGroup({
-    className,
-    orientation = 'vertical',
-    ...props
-}: RadioGroupPrimitive.Props & { orientation?: 'vertical' | 'horizontal' }) {
+function RadioGroup({ className, orientation = 'vertical', ...props }: RadioGroupProps) {
     return (
         <RadioGroupPrimitive
             data-slot="radio-group"
@@ -17,7 +15,9 @@ function RadioGroup({
     )
 }
 
-function RadioGroupItem({ className, ...props }: RadioPrimitive.Root.Props) {
+export type RadioGroupItemProps = RadioPrimitive.Root.Props
+
+function RadioGroupItem({ className, ...props }: RadioGroupItemProps) {
     return (
         <RadioPrimitive.Root
             data-slot="radio-group-item"

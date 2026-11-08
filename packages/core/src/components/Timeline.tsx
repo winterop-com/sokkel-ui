@@ -36,11 +36,16 @@ const INK: Record<TimelineTone, string> = {
     skipped: 'text-status-skipped',
 }
 
+export interface TimelineProps {
+    events: readonly TimelineEvent[]
+    className?: string
+}
+
 /**
  * Events in the order they happened, on a rail: a run's steps, a job's history, an audit
  * trail. Each event's dot is inked by its state; its time sits at the right in tabular figures.
  */
-export function Timeline({ events, className }: { events: readonly TimelineEvent[]; className?: string }) {
+export function Timeline({ events, className }: TimelineProps) {
     return (
         <ol className={cn('flex flex-col', className)}>
             {events.map((event, index) => {

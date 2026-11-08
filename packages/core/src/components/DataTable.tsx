@@ -420,119 +420,7 @@ const STACK_PRIMARY_LINE = 22
 /** The height of a stacked card's line of secondary facts, room for an avatar among them. */
 const STACK_FACTS = 24
 
-/**
- * A table for rows of any number: sorting, selection with a bulk bar, a column menu, child rows,
- * column widths, and the keyboard. Only the rows in view are drawn, so fifty thousand scroll as
- * smoothly as fifty.
- *
- * Rows are one line at the density's row height; `rowHeight="auto"` lets a row grow to its
- * tallest cell, and then every row is drawn, so it suits listings of a few hundred rows. The head
- * stays put while the rows scroll, and the first column stays put while they scroll sideways.
- * Each column head's right edge resizes its column, as a panel's edge does: drag it, move it with
- * the arrows, or double-click it or press Enter to put it back. A column sized as a fraction
- * becomes pixels once dragged. `resizable={false}`, or `resizable: false` on a column, turns it
- * off; phones and stacked cards have no handles. A column with a `sortValue` sorts from
- * its head: up, down, then as the rows came. With `selectable`, each row gets a box; Shift picks
- * a range and Ctrl or Command a single row from anywhere on the row, and once anything is
- * selected the bar above says how many and holds `bulkActions`. With `childRows`, a row with
- * children opens and closes, children sort among themselves, and choosing a row chooses its
- * whole branch. With `hasChildren` and `loadChildren`, a branch's children load when it first
- * opens, a spinner in its control until they come. Arrow keys move through the rows, Space
- * selects, Enter opens, and Right and Left open and close a branch.
- *
- * Without `selectable`, a plain click, Enter or Space picks a row with `onOpen`, and the row
- * `opened` names is drawn and marked selected, for a list beside its detail. `variant="list"` is
- * the look of a short listing: no bar above the head (until rows are selected), the column names
- * as the box's head, the columns set apart by a gap rather than padded, and, once the box is
- * narrow, a plain divided list of rows each as tall as its lines; a `foot` line says what the bar
- * would have.
- *
- * With `groupBy`, the rows gather under group heads, each with its label, its count and what each
- * column's `aggregate` says for its rows; pressing a head folds the group. Rows sort within their
- * group, and a head's box selects the whole group. Groups apply to a table drawn whole or scrolled,
- * not paged; in the grid view each group's cards sit under their head.
- *
- * Sort, selection, open branches, folded groups, hidden columns and column widths are each held by
- * the table unless the app passes the value and hears the change.
- *
- * The bar above the head holds `search` and the `toolbar`'s tools, then the count, the sort and the
- * view switch. On a narrow table the search takes a line of its own and the tools wrap across the
- * whole width, the count and the sort after them. Once the rows stack as cards, each column's
- * `stack` says how it shows: a line (named, or not with `stackLabel: false`), a primary value over
- * several lines under the title, or a secondary fact on the card's last line.
- *
- * The table draws its own box, a border with rounded corners; `framed={false}` drops both, for a
- * table set into a panel or a card that already frames it.
- */
-export function DataTable<T>({
-    columns,
-    rows,
-    rowKey,
-    childRows,
-    hasChildren,
-    loadChildren,
-    expanded: expandedValue,
-    defaultExpanded = EMPTY,
-    onExpandedChange,
-    sort: sortValue,
-    defaultSort = null,
-    onSortChange,
-    manualSort = false,
-    selectable = false,
-    selection: selectionValue,
-    defaultSelection = EMPTY,
-    onSelectionChange,
-    bulkActions,
-    hiddenColumns: hiddenValue,
-    defaultHiddenColumns = EMPTY,
-    onHiddenColumnsChange,
-    onOpen,
-    opened,
-    rowActions,
-    actionButton = 'always',
-    actionIcon = <EllipsisIcon />,
-    search,
-    toolbar,
-    total,
-    paging,
-    page: pageValue,
-    defaultPage = 0,
-    onPageChange,
-    pageSize: pageSizeValue,
-    defaultPageSize = 50,
-    onPageSizeChange,
-    pageSizes = [25, 50, 100],
-    hasMore = false,
-    loading = false,
-    onLoadMore,
-    onSelectAllPages,
-    card,
-    view: viewValue,
-    defaultView = 'table',
-    onViewChange,
-    cardWidth = '12rem',
-    cardHeight = '16rem',
-    stackBelow = 576,
-    minWidth: ownMinWidth,
-    rowHeight: rowSizing = 'fixed',
-    resizable = true,
-    columnWidths: widthsValue,
-    defaultColumnWidths = NO_WIDTHS,
-    onColumnWidthsChange,
-    variant = 'table',
-    foot,
-    hover = true,
-    columnHeads = true,
-    groupBy,
-    groupLabel,
-    groupOrder,
-    foldedGroups: foldedValue,
-    defaultFoldedGroups = EMPTY,
-    onFoldedGroupsChange,
-    framed = true,
-    words: ownWords,
-    className,
-}: {
+export interface DataTableProps<T> {
     columns: DataColumn<T>[]
     rows: readonly T[]
     rowKey: (row: T) => string
@@ -665,7 +553,121 @@ export function DataTable<T>({
     framed?: boolean
     words?: Partial<DataTableWords>
     className?: string
-}) {
+}
+
+/**
+ * A table for rows of any number: sorting, selection with a bulk bar, a column menu, child rows,
+ * column widths, and the keyboard. Only the rows in view are drawn, so fifty thousand scroll as
+ * smoothly as fifty.
+ *
+ * Rows are one line at the density's row height; `rowHeight="auto"` lets a row grow to its
+ * tallest cell, and then every row is drawn, so it suits listings of a few hundred rows. The head
+ * stays put while the rows scroll, and the first column stays put while they scroll sideways.
+ * Each column head's right edge resizes its column, as a panel's edge does: drag it, move it with
+ * the arrows, or double-click it or press Enter to put it back. A column sized as a fraction
+ * becomes pixels once dragged. `resizable={false}`, or `resizable: false` on a column, turns it
+ * off; phones and stacked cards have no handles. A column with a `sortValue` sorts from
+ * its head: up, down, then as the rows came. With `selectable`, each row gets a box; Shift picks
+ * a range and Ctrl or Command a single row from anywhere on the row, and once anything is
+ * selected the bar above says how many and holds `bulkActions`. With `childRows`, a row with
+ * children opens and closes, children sort among themselves, and choosing a row chooses its
+ * whole branch. With `hasChildren` and `loadChildren`, a branch's children load when it first
+ * opens, a spinner in its control until they come. Arrow keys move through the rows, Space
+ * selects, Enter opens, and Right and Left open and close a branch.
+ *
+ * Without `selectable`, a plain click, Enter or Space picks a row with `onOpen`, and the row
+ * `opened` names is drawn and marked selected, for a list beside its detail. `variant="list"` is
+ * the look of a short listing: no bar above the head (until rows are selected), the column names
+ * as the box's head, the columns set apart by a gap rather than padded, and, once the box is
+ * narrow, a plain divided list of rows each as tall as its lines; a `foot` line says what the bar
+ * would have.
+ *
+ * With `groupBy`, the rows gather under group heads, each with its label, its count and what each
+ * column's `aggregate` says for its rows; pressing a head folds the group. Rows sort within their
+ * group, and a head's box selects the whole group. Groups apply to a table drawn whole or scrolled,
+ * not paged; in the grid view each group's cards sit under their head.
+ *
+ * Sort, selection, open branches, folded groups, hidden columns and column widths are each held by
+ * the table unless the app passes the value and hears the change.
+ *
+ * The bar above the head holds `search` and the `toolbar`'s tools, then the count, the sort and the
+ * view switch. On a narrow table the search takes a line of its own and the tools wrap across the
+ * whole width, the count and the sort after them. Once the rows stack as cards, each column's
+ * `stack` says how it shows: a line (named, or not with `stackLabel: false`), a primary value over
+ * several lines under the title, or a secondary fact on the card's last line.
+ *
+ * The table draws its own box, a border with rounded corners; `framed={false}` drops both, for a
+ * table set into a panel or a card that already frames it.
+ */
+export function DataTable<T>({
+    columns,
+    rows,
+    rowKey,
+    childRows,
+    hasChildren,
+    loadChildren,
+    expanded: expandedValue,
+    defaultExpanded = EMPTY,
+    onExpandedChange,
+    sort: sortValue,
+    defaultSort = null,
+    onSortChange,
+    manualSort = false,
+    selectable = false,
+    selection: selectionValue,
+    defaultSelection = EMPTY,
+    onSelectionChange,
+    bulkActions,
+    hiddenColumns: hiddenValue,
+    defaultHiddenColumns = EMPTY,
+    onHiddenColumnsChange,
+    onOpen,
+    opened,
+    rowActions,
+    actionButton = 'always',
+    actionIcon = <EllipsisIcon />,
+    search,
+    toolbar,
+    total,
+    paging,
+    page: pageValue,
+    defaultPage = 0,
+    onPageChange,
+    pageSize: pageSizeValue,
+    defaultPageSize = 50,
+    onPageSizeChange,
+    pageSizes = [25, 50, 100],
+    hasMore = false,
+    loading = false,
+    onLoadMore,
+    onSelectAllPages,
+    card,
+    view: viewValue,
+    defaultView = 'table',
+    onViewChange,
+    cardWidth = '12rem',
+    cardHeight = '16rem',
+    stackBelow = 576,
+    minWidth: ownMinWidth,
+    rowHeight: rowSizing = 'fixed',
+    resizable = true,
+    columnWidths: widthsValue,
+    defaultColumnWidths = NO_WIDTHS,
+    onColumnWidthsChange,
+    variant = 'table',
+    foot,
+    hover = true,
+    columnHeads = true,
+    groupBy,
+    groupLabel,
+    groupOrder,
+    foldedGroups: foldedValue,
+    defaultFoldedGroups = EMPTY,
+    onFoldedGroupsChange,
+    framed = true,
+    words: ownWords,
+    className,
+}: DataTableProps<T>) {
     const words = { ...WORDS, ...ownWords }
     const [sort, setSort] = useHeld(sortValue, defaultSort, onSortChange)
     const [selection, setSelection] = useHeld(selectionValue, defaultSelection, onSelectionChange)

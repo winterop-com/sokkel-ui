@@ -41,21 +41,7 @@ function inkStyle(color: string | undefined): CSSProperties | undefined {
     return color === undefined ? undefined : ({ '--art-ink': color } as CSSProperties)
 }
 
-/**
- * Art for a sign-in screen's brand pane: a row of level bars, the run around the tallest peak lit
- * in `color` (the theme's primary by default) and the rest in its muted ground, each breathing
- * slowly at its own phase. `seed` picks the shape, the same every time; motion stops when the
- * system or the app asks for less, or with `breathe={false}`, the bars resting at full height. It
- * fills its box, standing on the box's foot.
- */
-export function LevelBars({
-    seed = 7,
-    count = 56,
-    lit = 9,
-    breathe = true,
-    color,
-    className,
-}: {
+export interface LevelBarsProps {
     seed?: number
     /** How many bars. */
     count?: number
@@ -66,7 +52,16 @@ export function LevelBars({
     /** The lit bars' ink, any CSS color. */
     color?: string
     className?: string
-}) {
+}
+
+/**
+ * Art for a sign-in screen's brand pane: a row of level bars, the run around the tallest peak lit
+ * in `color` (the theme's primary by default) and the rest in its muted ground, each breathing
+ * slowly at its own phase. `seed` picks the shape, the same every time; motion stops when the
+ * system or the app asks for less, or with `breathe={false}`, the bars resting at full height. It
+ * fills its box, standing on the box's foot.
+ */
+export function LevelBars({ seed = 7, count = 56, lit = 9, breathe = true, color, className }: LevelBarsProps) {
     const bars = useMemo(() => {
         const heights = levelHeights(count, seed)
         const peak = heights.indexOf(1)
@@ -170,6 +165,27 @@ export function flowGraph(seed: number, { columns: wanted = 6, rows = [2, 4] }: 
     return { nodes, edges }
 }
 
+export interface FlowLinesProps {
+    seed?: number
+    /** How many columns of nodes, the first and last holding one each. */
+    columns?: number
+    /** How few and how many nodes a middle column holds. */
+    rows?: readonly [number, number]
+    /** How many faint rings behind the graph; 0 for none. */
+    rings?: number
+    /** Whether one path from the first node to the last is lit. */
+    lit?: boolean
+    /** Whether the lit path flows toward the last node. */
+    flow?: boolean
+    /** Whether the last node glows in the ink. */
+    glow?: boolean
+    /** Nodes as small cards with a dot and a line, or as dots alone. */
+    nodes?: 'card' | 'dot'
+    /** The lit path's ink, any CSS color. */
+    color?: string
+    className?: string
+}
+
 /**
  * Art for a sign-in screen's brand pane: a few nodes in columns joined by curved lines, one path
  * through them lit in `color` (the theme's primary by default) and flowing toward the last node,
@@ -189,26 +205,7 @@ export function FlowLines({
     nodes: shape = 'card',
     color,
     className,
-}: {
-    seed?: number
-    /** How many columns of nodes, the first and last holding one each. */
-    columns?: number
-    /** How few and how many nodes a middle column holds. */
-    rows?: readonly [number, number]
-    /** How many faint rings behind the graph; 0 for none. */
-    rings?: number
-    /** Whether one path from the first node to the last is lit. */
-    lit?: boolean
-    /** Whether the lit path flows toward the last node. */
-    flow?: boolean
-    /** Whether the last node glows in the ink. */
-    glow?: boolean
-    /** Nodes as small cards with a dot and a line, or as dots alone. */
-    nodes?: 'card' | 'dot'
-    /** The lit path's ink, any CSS color. */
-    color?: string
-    className?: string
-}) {
+}: FlowLinesProps) {
     const [fewest, most] = rows
     const { nodes, edges } = useMemo(() => flowGraph(seed, { columns, rows: [fewest, most] }), [seed, columns, fewest, most])
     const shown = edges.map((edge) => ({ ...edge, lit: lit && edge.lit }))

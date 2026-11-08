@@ -22,21 +22,7 @@ export const BLOCK_PICKER_WORDS: BlockPickerWords = {
     nothing: 'No block fits here',
 }
 
-/**
- * A searchable list of blocks to choose one from, for a step about to be added: after a step,
- * between two, or at the end of a connection. The search takes the focus; the arrow keys move
- * through the list, Enter picks, and Escape closes. Hand it only the blocks that fit where the
- * step would go. Place it with `GraphOverlay` to open it on a canvas.
- */
-export function BlockPicker({
-    blocks,
-    groups,
-    onPick,
-    onClose,
-    title,
-    words: given,
-    className,
-}: {
+export interface BlockPickerProps {
     blocks: readonly PipelineBlock[]
     groups: readonly BlockGroup[]
     onPick: (block: PipelineBlock) => void
@@ -45,7 +31,15 @@ export function BlockPicker({
     title?: string
     words?: Partial<BlockPickerWords>
     className?: string
-}) {
+}
+
+/**
+ * A searchable list of blocks to choose one from, for a step about to be added: after a step,
+ * between two, or at the end of a connection. The search takes the focus; the arrow keys move
+ * through the list, Enter picks, and Escape closes. Hand it only the blocks that fit where the
+ * step would go. Place it with `GraphOverlay` to open it on a canvas.
+ */
+export function BlockPicker({ blocks, groups, onPick, onClose, title, words: given, className }: BlockPickerProps) {
     const words = { ...BLOCK_PICKER_WORDS, ...given }
     const [query, setQuery] = useState('')
     const [active, setActive] = useState(0)

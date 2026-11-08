@@ -12,19 +12,7 @@ export interface Choice<T extends string> {
     description?: ReactNode
 }
 
-/**
- * Pick one of a few choices, each a row with its radio, its name and a line saying what it means.
- * The whole row is pressable and the chosen one is filled, so the choice reads at a glance where a
- * bare radio would be easy to miss.
- */
-export function ChoiceList<T extends string>({
-    options,
-    value,
-    onValueChange,
-    label,
-    labelledBy,
-    className,
-}: {
+export interface ChoiceListProps<T extends string> {
     options: readonly Choice<T>[]
     value: T
     onValueChange: (value: T) => void
@@ -33,7 +21,14 @@ export function ChoiceList<T extends string>({
     /** The id of a visible heading that names the list. */
     labelledBy?: string
     className?: string
-}) {
+}
+
+/**
+ * Pick one of a few choices, each a row with its radio, its name and a line saying what it means.
+ * The whole row is pressable and the chosen one is filled, so the choice reads at a glance where a
+ * bare radio would be easy to miss.
+ */
+export function ChoiceList<T extends string>({ options, value, onValueChange, label, labelledBy, className }: ChoiceListProps<T>) {
     return (
         <RadioGroup
             value={value}

@@ -81,6 +81,40 @@ const ROW =
 const OPEN = 'bg-accent font-medium text-accent-foreground [--avatar-ring:var(--color-accent)]'
 const HOVER = 'hover:bg-hover'
 
+export interface ChannelListProps {
+    sections: readonly ChannelSection[]
+    places?: readonly ChannelPlace[]
+    active?: string
+    onSelect?: (id: string) => void
+    /** The workspace's name, or a menu that switches it, in a head the shell's top bar lines up with. */
+    title?: ReactNode
+    /** Buttons at the end of the head, such as a new message. */
+    actions?: ReactNode
+    /** What sits above the sections, under the head: anything an app draws of its own. */
+    header?: ReactNode
+    /** Shows the find field under the header. */
+    find?: boolean
+    /** What the find field holds, when held from outside with `onQueryChange`. */
+    query?: string
+    onQueryChange?: (query: string) => void
+    /** The ids of the folded sections, when held from outside with `onFoldedChange`. */
+    folded?: readonly string[]
+    /** The sections folded at first, when the list holds the folds itself. */
+    defaultFolded?: readonly string[]
+    onFoldedChange?: (folded: string[]) => void
+    /** The width in pixels, held from outside with `onSizeChange`. */
+    size?: number
+    onSizeChange?: (size: number) => void
+    /** Whether the right edge drags to resize the list. */
+    resizable?: boolean
+    minSize?: number
+    maxSize?: number
+    /** The width in pixels the list starts at and a double click on the edge returns to; without it, the width the class sets, and 256 for a held size. */
+    defaultSize?: number
+    className?: string
+    words?: Partial<ChannelListWords>
+}
+
 /**
  * The places to talk, in sections that fold, each section with an icon of its own: channels with
  * `#` (a lock for a private one), and conversations with a small round picture of the person and a
@@ -120,39 +154,7 @@ export function ChannelList({
     defaultSize,
     className,
     words: given,
-}: {
-    sections: readonly ChannelSection[]
-    places?: readonly ChannelPlace[]
-    active?: string
-    onSelect?: (id: string) => void
-    /** The workspace's name, or a menu that switches it, in a head the shell's top bar lines up with. */
-    title?: ReactNode
-    /** Buttons at the end of the head, such as a new message. */
-    actions?: ReactNode
-    /** What sits above the sections, under the head: anything an app draws of its own. */
-    header?: ReactNode
-    /** Shows the find field under the header. */
-    find?: boolean
-    /** What the find field holds, when held from outside with `onQueryChange`. */
-    query?: string
-    onQueryChange?: (query: string) => void
-    /** The ids of the folded sections, when held from outside with `onFoldedChange`. */
-    folded?: readonly string[]
-    /** The sections folded at first, when the list holds the folds itself. */
-    defaultFolded?: readonly string[]
-    onFoldedChange?: (folded: string[]) => void
-    /** The width in pixels, held from outside with `onSizeChange`. */
-    size?: number
-    onSizeChange?: (size: number) => void
-    /** Whether the right edge drags to resize the list. */
-    resizable?: boolean
-    minSize?: number
-    maxSize?: number
-    /** The width in pixels the list starts at and a double click on the edge returns to; without it, the width the class sets, and 256 for a held size. */
-    defaultSize?: number
-    className?: string
-    words?: Partial<ChannelListWords>
-}) {
+}: ChannelListProps) {
     const list = useRef<HTMLElement>(null)
     const held = usePanelSize({ size, onSizeChange, rest: defaultSize, fallback: 256, min: minSize, max: maxSize })
     const words = { ...WORDS, ...given }

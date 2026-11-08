@@ -3,7 +3,9 @@ import { cva, type VariantProps } from 'class-variance-authority'
 
 import { cn } from '../../lib/utils'
 
-function Tabs({ className, orientation = 'horizontal', ...props }: TabsPrimitive.Root.Props) {
+export type TabsProps = TabsPrimitive.Root.Props
+
+function Tabs({ className, orientation = 'horizontal', ...props }: TabsProps) {
     return (
         <TabsPrimitive.Root
             data-slot="tabs"
@@ -29,7 +31,9 @@ const tabsListVariants = cva(
     },
 )
 
-function TabsList({ className, variant = 'default', ...props }: TabsPrimitive.List.Props & VariantProps<typeof tabsListVariants>) {
+export type TabsListProps = TabsPrimitive.List.Props & VariantProps<typeof tabsListVariants>
+
+function TabsList({ className, variant = 'default', ...props }: TabsListProps) {
     return (
         <TabsPrimitive.List
             data-slot="tabs-list"
@@ -40,7 +44,9 @@ function TabsList({ className, variant = 'default', ...props }: TabsPrimitive.Li
     )
 }
 
-function TabsTrigger({ className, ...props }: TabsPrimitive.Tab.Props) {
+export type TabsTriggerProps = TabsPrimitive.Tab.Props
+
+function TabsTrigger({ className, ...props }: TabsTriggerProps) {
     return (
         <TabsPrimitive.Tab
             data-slot="tabs-trigger"
@@ -56,7 +62,9 @@ function TabsTrigger({ className, ...props }: TabsPrimitive.Tab.Props) {
     )
 }
 
-function TabsContent({ className, ...props }: TabsPrimitive.Panel.Props) {
+export type TabsContentProps = TabsPrimitive.Panel.Props
+
+function TabsContent({ className, ...props }: TabsContentProps) {
     return <TabsPrimitive.Panel data-slot="tabs-content" className={cn('flex-1 text-sm outline-none', className)} {...props} />
 }
 

@@ -52,6 +52,19 @@ function Swatch({ color, off }: { color: string; off: boolean }) {
 const ITEM =
     'outline-none focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-solid focus-visible:outline-ring'
 
+export interface ChartLegendProps {
+    items: readonly LegendItem[]
+    hidden?: ReadonlySet<string>
+    onToggle?: (key: string) => void
+    onHover?: (key: string | null) => void
+    mode?: 'list' | 'table'
+    /** The figures table mode shows, in order. */
+    stats?: readonly LegendStat[]
+    format?: (value: number) => string
+    words?: Partial<LegendWords>
+    className?: string
+}
+
 /**
  * The legend for a chart drawn beside it rather than inside it: a swatch and label per series that
  * a click or Enter hides or shows, and hover or focus emphasizes. In table mode each series is a
@@ -67,18 +80,7 @@ export function ChartLegend({
     format = defaultFormat,
     words: given,
     className,
-}: {
-    items: readonly LegendItem[]
-    hidden?: ReadonlySet<string>
-    onToggle?: (key: string) => void
-    onHover?: (key: string | null) => void
-    mode?: 'list' | 'table'
-    /** The figures table mode shows, in order. */
-    stats?: readonly LegendStat[]
-    format?: (value: number) => string
-    words?: Partial<LegendWords>
-    className?: string
-}) {
+}: ChartLegendProps) {
     const words = { ...WORDS, ...given }
     const handlers = (key: string, off: boolean) => ({
         onClick: () => onToggle?.(key),

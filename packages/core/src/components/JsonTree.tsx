@@ -77,21 +77,18 @@ function Node({ name, value, depth, open, words }: { name?: string; value: unkno
     )
 }
 
-/**
- * A JSON value as a tree that folds: objects and lists open to `open` levels deep, and a folded
- * one shows how many entries it holds. Strings, numbers and booleans are inked by type.
- */
-export function JsonTree({
-    value,
-    open = 2,
-    className,
-    words: given,
-}: {
+export interface JsonTreeProps {
     value: unknown
     open?: number
     className?: string
     words?: Partial<JsonTreeWords>
-}) {
+}
+
+/**
+ * A JSON value as a tree that folds: objects and lists open to `open` levels deep, and a folded
+ * one shows how many entries it holds. Strings, numbers and booleans are inked by type.
+ */
+export function JsonTree({ value, open = 2, className, words: given }: JsonTreeProps) {
     const words = { ...WORDS, ...given }
     return (
         <div className={cn('font-mono text-xs leading-5', className)}>

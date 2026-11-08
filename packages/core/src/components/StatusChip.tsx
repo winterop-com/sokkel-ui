@@ -24,12 +24,18 @@ const TONE: Record<Status, string> = {
     completed_with_errors: 'bg-status-completed-with-errors/15 text-status-completed-with-errors-ink',
 }
 
+export interface StatusChipProps {
+    status: Status
+    label?: string
+    className?: string
+}
+
 /**
  * A state as a small chip: the status's own color on a faint wash of it, the word lowercase.
  * Status colors are the only color voice a chip has; `label` overrides the word, for an app
  * that says it in another language.
  */
-export function StatusChip({ status, label, className }: { status: Status; label?: string; className?: string }) {
+export function StatusChip({ status, label, className }: StatusChipProps) {
     return (
         <span className={cn('inline-flex items-center rounded-chip px-1.5 py-0.5 text-badge whitespace-nowrap', TONE[status], className)}>
             {label ?? status.replaceAll('_', ' ')}

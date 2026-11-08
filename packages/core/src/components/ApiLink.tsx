@@ -18,27 +18,22 @@ function methodTone(method: string): string {
     return 'text-muted-foreground'
 }
 
-/**
- * A small chip naming the request behind a screen, its method and path: `GET /api/jobs/nightly-export`.
- * A press on the copy button copies the method and the path, or `copyValue` when given, such as the
- * full address or a curl line. With `href` the path is a link, to the API's reference or the raw
- * response. The path truncates in a narrow room, its whole text on hover.
- */
-export function ApiLink({
-    method = 'GET',
-    path,
-    href,
-    copyValue,
-    className,
-    words: given,
-}: {
+export interface ApiLinkProps {
     method?: string
     path: string
     href?: string
     copyValue?: string
     className?: string
     words?: Partial<ApiLinkWords>
-}) {
+}
+
+/**
+ * A small chip naming the request behind a screen, its method and path: `GET /api/jobs/nightly-export`.
+ * A press on the copy button copies the method and the path, or `copyValue` when given, such as the
+ * full address or a curl line. With `href` the path is a link, to the API's reference or the raw
+ * response. The path truncates in a narrow room, its whole text on hover.
+ */
+export function ApiLink({ method = 'GET', path, href, copyValue, className, words: given }: ApiLinkProps) {
     const words = { ...WORDS, ...given }
     const pathClass = 'min-w-0 truncate font-mono text-xs'
     return (

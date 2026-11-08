@@ -22,6 +22,25 @@ const THUMB: Record<MediaSliderTone, string> = {
     overlay: 'border-terminal-foreground bg-terminal-foreground',
 }
 
+export interface MediaSliderProps {
+    value: number
+    max: number
+    onChange: (value: number) => void
+    /** The value under the pointer while dragging, and `null` once the drag ends. */
+    onScrub?: (value: number | null) => void
+    /** The slider's accessible name. */
+    label: string
+    /** What a screen reader says for a value. */
+    valueText?: (value: number) => string
+    /** Loaded stretches, in the slider's units. */
+    buffered?: readonly MediaRange[]
+    step?: number
+    largeStep?: number
+    tone?: MediaSliderTone
+    disabled?: boolean
+    className?: string
+}
+
 /**
  * A horizontal slider for a media position or a level, with loaded stretches drawn under the
  * played part. The arrow keys step by `step`, Page Up and Page Down by `largeStep`, and Home and
@@ -44,24 +63,7 @@ export function MediaSlider({
     tone = 'surface',
     disabled = false,
     className,
-}: {
-    value: number
-    max: number
-    onChange: (value: number) => void
-    /** The value under the pointer while dragging, and `null` once the drag ends. */
-    onScrub?: (value: number | null) => void
-    /** The slider's accessible name. */
-    label: string
-    /** What a screen reader says for a value. */
-    valueText?: (value: number) => string
-    /** Loaded stretches, in the slider's units. */
-    buffered?: readonly MediaRange[]
-    step?: number
-    largeStep?: number
-    tone?: MediaSliderTone
-    disabled?: boolean
-    className?: string
-}) {
+}: MediaSliderProps) {
     const [scrub, setScrub] = useState<number | null>(null)
     const top = max > 0 ? max : 1
     const shown = Math.min(top, Math.max(0, scrub ?? (Number.isFinite(value) ? value : 0)))

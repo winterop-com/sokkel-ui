@@ -14,24 +14,20 @@ const WORDS: PeopleFilterWords = {
     stop: (name) => `Stop showing only ${name}'s items`,
 }
 
-/**
- * People as overlapping avatars that filter a board or a list: pressing one shows only that
- * person's items, more than one can be on, and once any is on the others fade until hovered.
- */
-export function PeopleFilter({
-    people,
-    chosen,
-    onChange,
-    className,
-    words: given,
-}: {
+export interface PeopleFilterProps {
     /** Each person, with their picture when they have one. */
     people: readonly { name: string; color?: KindColor; image?: string }[]
     chosen: readonly string[]
     onChange: (chosen: string[]) => void
     className?: string
     words?: Partial<PeopleFilterWords>
-}) {
+}
+
+/**
+ * People as overlapping avatars that filter a board or a list: pressing one shows only that
+ * person's items, more than one can be on, and once any is on the others fade until hovered.
+ */
+export function PeopleFilter({ people, chosen, onChange, className, words: given }: PeopleFilterProps) {
     const words = { ...WORDS, ...given }
     return (
         <div role="group" aria-label={words.label} className={cn('flex items-center -space-x-1', className)}>

@@ -1,7 +1,9 @@
 import { ScrollArea as ScrollAreaPrimitive } from '@base-ui/react/scroll-area'
 import { cn } from '../../lib/cn'
 
-function ScrollArea({ className, children, ...props }: ScrollAreaPrimitive.Root.Props) {
+export type ScrollAreaProps = ScrollAreaPrimitive.Root.Props
+
+function ScrollArea({ className, children, ...props }: ScrollAreaProps) {
     return (
         <ScrollAreaPrimitive.Root data-slot="scroll-area" className={cn('relative', className)} {...props}>
             <ScrollAreaPrimitive.Viewport
@@ -16,7 +18,9 @@ function ScrollArea({ className, children, ...props }: ScrollAreaPrimitive.Root.
     )
 }
 
-function ScrollBar({ className, orientation = 'vertical', ...props }: ScrollAreaPrimitive.Scrollbar.Props) {
+export type ScrollBarProps = ScrollAreaPrimitive.Scrollbar.Props
+
+function ScrollBar({ className, orientation = 'vertical', ...props }: ScrollBarProps) {
     return (
         <ScrollAreaPrimitive.Scrollbar
             data-slot="scroll-area-scrollbar"

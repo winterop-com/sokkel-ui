@@ -22,6 +22,8 @@ import {
 import { TransportButton } from '@winterop-com/sokkel-ui/media/MediaControls'
 import { SOUND_KINDS, type SoundKind } from '@winterop-com/sokkel-ui/media/sound'
 
+export type { MediaBarLayout } from './bar-growth'
+
 /** The view's width under which the rows view puts its transport under what plays. */
 const TABLET = 1280
 

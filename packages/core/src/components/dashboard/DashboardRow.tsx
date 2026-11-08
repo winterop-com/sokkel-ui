@@ -14,6 +14,20 @@ const WORDS: DashboardRowWords = {
     panels: (n: number) => `${n} ${n === 1 ? 'panel' : 'panels'}`,
 }
 
+export interface DashboardRowProps {
+    title: ReactNode
+    /** How many panels the row holds, said while it is collapsed. */
+    count?: number
+    defaultOpen?: boolean
+    open?: boolean
+    onOpenChange?: (open: boolean) => void
+    dense?: boolean
+    actions?: ReactNode
+    words?: Partial<DashboardRowWords>
+    className?: string
+    children: ReactNode
+}
+
 /**
  * A collapsible group of a dashboard's panels under a heading, such as Overview or Latency. A
  * collapsed row says how many panels it holds. Its panels sit in a grid of their own, dense when
@@ -30,19 +44,7 @@ export function DashboardRow({
     words: given,
     className,
     children,
-}: {
-    title: ReactNode
-    /** How many panels the row holds, said while it is collapsed. */
-    count?: number
-    defaultOpen?: boolean
-    open?: boolean
-    onOpenChange?: (open: boolean) => void
-    dense?: boolean
-    actions?: ReactNode
-    words?: Partial<DashboardRowWords>
-    className?: string
-    children: ReactNode
-}) {
+}: DashboardRowProps) {
     const words = { ...WORDS, ...given }
     return (
         <Collapsible

@@ -50,6 +50,15 @@ const MARKERS: NodeTypes = {
 const INITIAL = '~initial'
 const FINAL = '~final'
 
+export type StateMachineProps = GraphViewProps & {
+    states: MachineState[]
+    transitions: MachineTransition[]
+    /** The code of the state the machine starts in. */
+    initial?: string
+    /** The code of the state the machine is in now. */
+    current?: string | null
+}
+
 /**
  * A state machine: its states, its labeled transitions, a marker the initial state is entered from
  * and one every final state leads to. The `current` state is drawn as running, in the status
@@ -66,14 +75,7 @@ export function StateMachine({
     frame = 'stage',
     words,
     className,
-}: GraphViewProps & {
-    states: MachineState[]
-    transitions: MachineTransition[]
-    /** The code of the state the machine starts in. */
-    initial?: string
-    /** The code of the state the machine is in now. */
-    current?: string | null
-}) {
+}: StateMachineProps) {
     const finals = useMemo(() => states.filter((state) => state.final === true), [states])
     const items = useMemo<GraphItem[]>(
         () => [

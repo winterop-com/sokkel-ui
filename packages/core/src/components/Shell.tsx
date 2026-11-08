@@ -12,9 +12,60 @@ import type { CommandPaletteWords, PaletteGroup, PaletteSearch } from './Command
 import type { ShortcutsDialogWords } from './ShortcutsDialog'
 import { ShellDesktop, ShellDrawer, ShellFootCell, ShellPalette, ShellScroller, ShellShortcuts } from './shell-context'
 
+export type { ShortcutGroup } from '../lib/shortcuts'
+
 // The palette and the shortcuts load when they first open, so an app's start carries neither.
 const CommandPalette = lazy(() => import('./CommandPalette').then((module) => ({ default: module.CommandPalette })))
 const ShortcutsDialog = lazy(() => import('./ShortcutsDialog').then((module) => ({ default: module.ShortcutsDialog })))
+
+export interface ShellProps {
+    rail: ReactNode
+    /** What the top bar holds: a search, the version, the theme control. */
+    top?: ReactNode
+    /** What the foot strip holds to the right of the rail's foot cell, if anything. */
+    foot?: ReactNode
+    /** A side panel as the shell's right column, full height, its header level with the top bar. */
+    panel?: ReactNode
+    /** A strip across the whole window between the content and the foot, under the rail and the panel. */
+    bottom?: ReactNode
+    /** A strip between the top bar and the content, such as a `Banner`, that does not scroll with the content. */
+    banner?: ReactNode
+    /** Whether the panel shows; held inside the shell when not given. */
+    panelOpen?: boolean
+    onPanelOpenChange?: (open: boolean) => void
+    /** Whether the rail's drawer on a narrow window is open; held inside the shell when not given. */
+    drawerOpen?: boolean
+    onDrawerOpenChange?: (open: boolean) => void
+    /** The app's current route, such as the location's path or key: the drawer closes when it changes. */
+    route?: string
+    /** The command palette's groups; the shell opens it on ⌘K or Ctrl+K and from the top bar's search. No palette without it. */
+    palette?: readonly PaletteGroup[]
+    /** Whether the palette is open; held inside the shell when not given. */
+    paletteOpen?: boolean
+    /** Whether the palette starts open. */
+    defaultPaletteOpen?: boolean
+    onPaletteOpenChange?: (open: boolean) => void
+    /**
+     * Asked before the palette opens, from the keys or the top bar's search; false keeps it closed,
+     * as over an app's own full-screen view.
+     */
+    mayOpenPalette?: () => boolean
+    paletteWords?: Partial<CommandPaletteWords>
+    /** The app's search, whose results the palette lists under its commands. */
+    paletteSearch?: PaletteSearch
+    /**
+     * The keys the app answers itself, listed in the shortcuts dialog after the keys bound with
+     * `useShortcuts`; given, even empty, the shell holds the dialog and opens it on `?`.
+     */
+    shortcuts?: readonly ShortcutGroup[]
+    /** Whether the shortcuts dialog starts open. */
+    defaultShortcutsOpen?: boolean
+    shortcutsWords?: Partial<ShortcutsDialogWords>
+    /** The desktop window the shell stands in, when its native title bar is hidden; leave it off in a browser. */
+    desktop?: DesktopWindow
+    children: ReactNode
+    words?: Partial<ShellWords>
+}
 
 /**
  * The app's frame: the rail on the left, a thin top bar over the content, the content as the one
@@ -99,54 +150,7 @@ export function Shell({
     desktop,
     children,
     words: given,
-}: {
-    rail: ReactNode
-    /** What the top bar holds: a search, the version, the theme control. */
-    top?: ReactNode
-    /** What the foot strip holds to the right of the rail's foot cell, if anything. */
-    foot?: ReactNode
-    /** A side panel as the shell's right column, full height, its header level with the top bar. */
-    panel?: ReactNode
-    /** A strip across the whole window between the content and the foot, under the rail and the panel. */
-    bottom?: ReactNode
-    /** A strip between the top bar and the content, such as a `Banner`, that does not scroll with the content. */
-    banner?: ReactNode
-    /** Whether the panel shows; held inside the shell when not given. */
-    panelOpen?: boolean
-    onPanelOpenChange?: (open: boolean) => void
-    /** Whether the rail's drawer on a narrow window is open; held inside the shell when not given. */
-    drawerOpen?: boolean
-    onDrawerOpenChange?: (open: boolean) => void
-    /** The app's current route, such as the location's path or key: the drawer closes when it changes. */
-    route?: string
-    /** The command palette's groups; the shell opens it on ⌘K or Ctrl+K and from the top bar's search. No palette without it. */
-    palette?: readonly PaletteGroup[]
-    /** Whether the palette is open; held inside the shell when not given. */
-    paletteOpen?: boolean
-    /** Whether the palette starts open. */
-    defaultPaletteOpen?: boolean
-    onPaletteOpenChange?: (open: boolean) => void
-    /**
-     * Asked before the palette opens, from the keys or the top bar's search; false keeps it closed,
-     * as over an app's own full-screen view.
-     */
-    mayOpenPalette?: () => boolean
-    paletteWords?: Partial<CommandPaletteWords>
-    /** The app's search, whose results the palette lists under its commands. */
-    paletteSearch?: PaletteSearch
-    /**
-     * The keys the app answers itself, listed in the shortcuts dialog after the keys bound with
-     * `useShortcuts`; given, even empty, the shell holds the dialog and opens it on `?`.
-     */
-    shortcuts?: readonly ShortcutGroup[]
-    /** Whether the shortcuts dialog starts open. */
-    defaultShortcutsOpen?: boolean
-    shortcutsWords?: Partial<ShortcutsDialogWords>
-    /** The desktop window the shell stands in, when its native title bar is hidden; leave it off in a browser. */
-    desktop?: DesktopWindow
-    children: ReactNode
-    words?: Partial<ShellWords>
-}) {
+}: ShellProps) {
     const words = { ...WORDS, ...given }
     const [ownDrawer, setOwnDrawer] = useState(false)
     const drawer = drawerOpen ?? ownDrawer
@@ -464,12 +468,17 @@ function useWide(): boolean {
     return wide
 }
 
+export interface PageProps {
+    children: ReactNode
+    className?: string
+}
+
 /**
  * The content's own padding, the density's page inset, for a page to sit in. The inset is the
  * wide one where the shell's content (or the window, outside a shell) is 40rem or wider, and the
  * phone-sized one below it.
  */
-export function Page({ children, className }: { children: ReactNode; className?: string }) {
+export function Page({ children, className }: PageProps) {
     return (
         <div className={cn('flex flex-col gap-(--density-page-gap) px-(--density-page-inset) pt-(--density-page-top) pb-10', className)}>
             {children}

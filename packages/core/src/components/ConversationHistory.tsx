@@ -97,6 +97,28 @@ function RenameField({ entry, label, onDone }: { entry: ConversationEntry; label
     )
 }
 
+export interface ConversationHistoryProps {
+    conversations: readonly ConversationEntry[]
+    /** The id of the conversation shown in the chat. */
+    current?: string
+    onSelect?: (id: string) => void
+    onRename?: (id: string, title: string) => void
+    onPin?: (id: string, pinned: boolean) => void
+    onDelete?: (id: string) => void
+    /** The instant the groups and times are read against, in milliseconds since the epoch. */
+    now?: number
+    /** A conversation's time as shown, given the instant it is read against. */
+    formatTime?: (time: number, now: number) => string
+    /** The id of a conversation whose title is being changed at first. */
+    defaultRenaming?: string
+    /** The id of a conversation whose delete dialog is open at first. */
+    defaultDeleting?: string
+    /** A box with a border all round; `false` for a column of its own at a window's edge, with a rule at its end. */
+    framed?: boolean
+    className?: string
+    words?: Partial<ConversationHistoryWords>
+}
+
 /**
  * The conversations beside a chat, newest first and grouped under Pinned, Today and Earlier, with
  * the current one marked. A conversation's menu (its button, shown on hover, or a right-click)
@@ -121,27 +143,7 @@ export function ConversationHistory({
     framed = true,
     className,
     words: given,
-}: {
-    conversations: readonly ConversationEntry[]
-    /** The id of the conversation shown in the chat. */
-    current?: string
-    onSelect?: (id: string) => void
-    onRename?: (id: string, title: string) => void
-    onPin?: (id: string, pinned: boolean) => void
-    onDelete?: (id: string) => void
-    /** The instant the groups and times are read against, in milliseconds since the epoch. */
-    now?: number
-    /** A conversation's time as shown, given the instant it is read against. */
-    formatTime?: (time: number, now: number) => string
-    /** The id of a conversation whose title is being changed at first. */
-    defaultRenaming?: string
-    /** The id of a conversation whose delete dialog is open at first. */
-    defaultDeleting?: string
-    /** A box with a border all round; `false` for a column of its own at a window's edge, with a rule at its end. */
-    framed?: boolean
-    className?: string
-    words?: Partial<ConversationHistoryWords>
-}) {
+}: ConversationHistoryProps) {
     const words = { ...CONVERSATION_HISTORY_WORDS, ...given }
     const [renaming, setRenaming] = useState(defaultRenaming)
     const [deleting, setDeleting] = useState(defaultDeleting)

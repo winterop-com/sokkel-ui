@@ -8,11 +8,13 @@ const FRAMED =
 /** No frame of its own: the text area inherits its text size and takes its height and padding from `className`. */
 const BARE = 'field-sizing-content w-full min-w-0 resize-none bg-transparent outline-none placeholder:text-muted-foreground'
 
+export type TextareaProps = React.ComponentProps<'textarea'> & { bare?: boolean }
+
 /**
  * A text area that grows with its text. `bare` drops its border, background and focus ring, for a
  * text area inside another frame, such as a message composer, which draws them instead.
  */
-function Textarea({ className, bare = false, ...props }: React.ComponentProps<'textarea'> & { bare?: boolean }) {
+function Textarea({ className, bare = false, ...props }: TextareaProps) {
     return <textarea data-slot="textarea" className={cn(bare ? BARE : FRAMED, className)} {...props} />
 }
 

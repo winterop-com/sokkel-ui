@@ -9,6 +9,26 @@ import type { ChartKind, ChartSpec } from '../kinds'
 import { written } from '../kinds/categories'
 import { SPAN, type PanelSpan } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
 
+export type ChartPanelProps = ChartSpec & {
+    kind: ChartKind
+    /** What the chart shows, for a screen reader; the title when omitted. */
+    label?: string
+    title: ReactNode
+    subtitle?: ReactNode
+    info?: ReactNode
+    actions?: ReactNode
+    legend?: 'list' | 'table' | 'none'
+    legendStats?: readonly LegendStat[]
+    span?: PanelSpan
+    bodyClassName?: string
+    loading?: boolean
+    empty?: boolean
+    file?: string
+    /** The frame's words; the chart's own are the spec's `words`. */
+    frameWords?: Partial<ChartFrameWords>
+    className?: string
+}
+
 /**
  * A dashboard panel of a `Chart` drawn from rows, for what the other panels do not draw: a ring of
  * shares, a cloud of points, or any kind the rows read best as. `kind` and the spec's fields say
@@ -32,25 +52,7 @@ export function ChartPanel({
     frameWords,
     className,
     ...rest
-}: ChartSpec & {
-    kind: ChartKind
-    /** What the chart shows, for a screen reader; the title when omitted. */
-    label?: string
-    title: ReactNode
-    subtitle?: ReactNode
-    info?: ReactNode
-    actions?: ReactNode
-    legend?: 'list' | 'table' | 'none'
-    legendStats?: readonly LegendStat[]
-    span?: PanelSpan
-    bodyClassName?: string
-    loading?: boolean
-    empty?: boolean
-    file?: string
-    /** The frame's words; the chart's own are the spec's `words`. */
-    frameWords?: Partial<ChartFrameWords>
-    className?: string
-}) {
+}: ChartPanelProps) {
     const spec = useSpec(rest)
     const items = useMemo(() => (legend === 'none' ? undefined : chartLegend(kind, spec)), [legend, kind, spec])
     const write = useMemo(() => (figure: number) => written(spec, figure), [spec])

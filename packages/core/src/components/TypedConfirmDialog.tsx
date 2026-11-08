@@ -18,6 +18,18 @@ const WORDS: TypedConfirmWords = {
     cancel: 'Cancel',
 }
 
+export interface TypedConfirmDialogProps {
+    open: boolean
+    onOpenChange: (open: boolean) => void
+    question: ReactNode
+    detail?: ReactNode
+    /** What has to be typed: the item's code. */
+    code: string
+    confirm: { label: string; onConfirm: () => void; busy?: boolean; busyLabel?: string }
+    children?: ReactNode
+    words?: Partial<TypedConfirmWords>
+}
+
 /**
  * A confirm for what cannot be undone: the verb stays shut until the item's code is typed out
  * exactly. What goes with it, such as a `ConsequenceList`, is the body above the input. The
@@ -32,17 +44,7 @@ export function TypedConfirmDialog({
     confirm,
     children,
     words: given,
-}: {
-    open: boolean
-    onOpenChange: (open: boolean) => void
-    question: ReactNode
-    detail?: ReactNode
-    /** What has to be typed: the item's code. */
-    code: string
-    confirm: { label: string; onConfirm: () => void; busy?: boolean; busyLabel?: string }
-    children?: ReactNode
-    words?: Partial<TypedConfirmWords>
-}) {
+}: TypedConfirmDialogProps) {
     const words = { ...WORDS, ...given }
     const id = useId()
     const [typed, setTyped] = useState('')

@@ -43,21 +43,7 @@ function Frame({ children, className }: { children: ReactNode; className?: strin
     )
 }
 
-/**
- * The states a read lands in, kept distinct all the way to the screen: loading, failed, empty, and
- * the content. A failure is headed by what the server answered, with its own diagnostic under the
- * heading; a string diagnostic has its backticked parts drawn in the code face.
- */
-export function PageState({
-    loading,
-    error,
-    status,
-    empty = false,
-    emptyMessage,
-    emptyRender,
-    words: given,
-    children,
-}: {
+export interface PageStateProps {
     loading: boolean
     /** What the server said when it refused, or a sentence the caller wrote in its place. */
     error?: ReactNode
@@ -69,7 +55,14 @@ export function PageState({
     emptyRender?: ReactNode
     words?: Partial<PageStateWords>
     children: ReactNode
-}) {
+}
+
+/**
+ * The states a read lands in, kept distinct all the way to the screen: loading, failed, empty, and
+ * the content. A failure is headed by what the server answered, with its own diagnostic under the
+ * heading; a string diagnostic has its backticked parts drawn in the code face.
+ */
+export function PageState({ loading, error, status, empty = false, emptyMessage, emptyRender, words: given, children }: PageStateProps) {
     const words = { ...WORDS, ...given }
     if (loading) {
         return (

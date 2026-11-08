@@ -25,6 +25,24 @@ const VARIANT: Record<AudioPlayerVariant, string> = {
     card: 'rounded-lg border border-border bg-card py-1 pr-3 pl-1',
 }
 
+export interface AudioPlayerProps {
+    src: string
+    /** The recording's levels from start to end, each from 0 to 1. */
+    waveform?: readonly number[]
+    /** The length in seconds, when the app knows it: shown before the audio has loaded. */
+    duration?: number
+    /** What the recording is, for a screen reader: its file name, or "Read aloud". */
+    label?: string
+    variant?: AudioPlayerVariant
+    preload?: 'none' | 'metadata' | 'auto'
+    /** Whether starting it pauses the other sounds the library plays, and another starting pauses it. */
+    exclusive?: boolean
+    words?: Partial<AudioPlayerWords>
+    /** The `<audio>` element, for whatever the screen around the player needs from it. */
+    audioRef?: Ref<HTMLAudioElement>
+    className?: string
+}
+
 /**
  * A recording in one line: play and pause, the scrubber, and the time played and still to play. The
  * scrubber is the recording's waveform when `waveform` is given, and the media slider otherwise.
@@ -46,23 +64,7 @@ export function AudioPlayer({
     words: given,
     audioRef,
     className,
-}: {
-    src: string
-    /** The recording's levels from start to end, each from 0 to 1. */
-    waveform?: readonly number[]
-    /** The length in seconds, when the app knows it: shown before the audio has loaded. */
-    duration?: number
-    /** What the recording is, for a screen reader: its file name, or "Read aloud". */
-    label?: string
-    variant?: AudioPlayerVariant
-    preload?: 'none' | 'metadata' | 'auto'
-    /** Whether starting it pauses the other sounds the library plays, and another starting pauses it. */
-    exclusive?: boolean
-    words?: Partial<AudioPlayerWords>
-    /** The `<audio>` element, for whatever the screen around the player needs from it. */
-    audioRef?: Ref<HTMLAudioElement>
-    className?: string
-}) {
+}: AudioPlayerProps) {
     const words = { ...WORDS, ...given }
     const element = useRef<HTMLAudioElement | null>(null)
     const [playing, setPlaying] = useState(false)

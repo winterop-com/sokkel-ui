@@ -86,12 +86,17 @@ function Group({ node }: { node: CheckNode }) {
     )
 }
 
+export interface CheckListProps {
+    checks: readonly Check[]
+    className?: string
+}
+
 /**
  * A health report: each check with its verdict as a dot, its finding, and a hint when it needs
  * attention. A check with checks under it wears the worst of them and opens to show them; one
  * that is not ok starts open.
  */
-export function CheckList({ checks, className }: { checks: readonly Check[]; className?: string }) {
+export function CheckList({ checks, className }: CheckListProps) {
     return (
         <ul className={cn('flex flex-col', className)}>
             {checkTree(checks).map((node) =>

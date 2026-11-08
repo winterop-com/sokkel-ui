@@ -184,50 +184,7 @@ function CopyAction({ value, onCopy, words }: { value?: string; onCopy?: () => v
     )
 }
 
-/**
- * The assistant's side of a turn in a conversation: who speaks, the tools it called folded behind
- * one line that opens into them, the answer in markdown, a change it holds until a person answers,
- * and the reply's actions: Copy, Try again, feedback, and the versions when it was asked again.
- *
- * While `streaming` the answer ends in a caret and the actions wait; `stopped` keeps what was
- * written under a Stopped mark; `failed` says what went wrong, with Try again. Try again also
- * waits while a held change is unanswered.
- *
- * `reasoning`, the model's thinking, folds between the tools and the answer behind a line that
- * counts its words; while it streams with no answer yet it stands open and grows. A streaming reply
- * with nothing to show yet, no thinking, no calls and no answer, says Thinking with a shimmer
- * instead of an empty card. `speech` puts the answer read aloud in a player under it.
- *
- * The `card` layout (the default) holds the turn in one quiet card, inline code washed and the
- * held change as a section of it. The `steps` layout sets it on a rail: Checked holds the tools,
- * Found the answer, and Next the held change and the actions, inline code in the code face alone.
- */
-export function AssistantReply({
-    layout = 'card',
-    name,
-    mark,
-    time,
-    timeTitle,
-    calls,
-    summary,
-    reasoning,
-    content,
-    speech,
-    math = true,
-    children,
-    state = 'done',
-    problem,
-    held,
-    onRetry,
-    onCopy,
-    feedback,
-    onFeedback,
-    versions,
-    facts,
-    actions,
-    className,
-    words: given,
-}: {
+export interface AssistantReplyProps {
     layout?: AssistantReplyLayout
     /** Who speaks; `words.name` when none is given. */
     name?: ReactNode
@@ -272,7 +229,52 @@ export function AssistantReply({
     actions?: ReactNode
     className?: string
     words?: Partial<AssistantReplyWords>
-}) {
+}
+
+/**
+ * The assistant's side of a turn in a conversation: who speaks, the tools it called folded behind
+ * one line that opens into them, the answer in markdown, a change it holds until a person answers,
+ * and the reply's actions: Copy, Try again, feedback, and the versions when it was asked again.
+ *
+ * While `streaming` the answer ends in a caret and the actions wait; `stopped` keeps what was
+ * written under a Stopped mark; `failed` says what went wrong, with Try again. Try again also
+ * waits while a held change is unanswered.
+ *
+ * `reasoning`, the model's thinking, folds between the tools and the answer behind a line that
+ * counts its words; while it streams with no answer yet it stands open and grows. A streaming reply
+ * with nothing to show yet, no thinking, no calls and no answer, says Thinking with a shimmer
+ * instead of an empty card. `speech` puts the answer read aloud in a player under it.
+ *
+ * The `card` layout (the default) holds the turn in one quiet card, inline code washed and the
+ * held change as a section of it. The `steps` layout sets it on a rail: Checked holds the tools,
+ * Found the answer, and Next the held change and the actions, inline code in the code face alone.
+ */
+export function AssistantReply({
+    layout = 'card',
+    name,
+    mark,
+    time,
+    timeTitle,
+    calls,
+    summary,
+    reasoning,
+    content,
+    speech,
+    math = true,
+    children,
+    state = 'done',
+    problem,
+    held,
+    onRetry,
+    onCopy,
+    feedback,
+    onFeedback,
+    versions,
+    facts,
+    actions,
+    className,
+    words: given,
+}: AssistantReplyProps) {
     const words = { ...WORDS, ...given }
     const card = layout === 'card'
     const streaming = state === 'streaming'

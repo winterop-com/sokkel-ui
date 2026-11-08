@@ -114,6 +114,29 @@ export function comboOption({
     }
 }
 
+export interface ComboPanelProps {
+    title: ReactNode
+    subtitle?: ReactNode
+    info?: ReactNode
+    actions?: ReactNode
+    /** The categories, written for a reader. */
+    x: readonly string[]
+    series: readonly ComboSeries[]
+    left?: ComboAxis
+    right?: ComboAxis
+    stacked?: boolean
+    labelEvery?: number
+    legend?: 'list' | 'table' | 'none'
+    legendStats?: readonly LegendStat[]
+    span?: PanelSpan
+    bodyClassName?: string
+    loading?: boolean
+    empty?: boolean
+    file?: string
+    words?: Partial<ChartFrameWords>
+    className?: string
+}
+
 /**
  * A dashboard panel of bars and lines over the same categories, such as a count per week in bars
  * and a rate in a line. A series measured on the right axis gets an axis of its own there, its
@@ -140,28 +163,7 @@ export function ComboPanel({
     file,
     words,
     className,
-}: {
-    title: ReactNode
-    subtitle?: ReactNode
-    info?: ReactNode
-    actions?: ReactNode
-    /** The categories, written for a reader. */
-    x: readonly string[]
-    series: readonly ComboSeries[]
-    left?: ComboAxis
-    right?: ComboAxis
-    stacked?: boolean
-    labelEvery?: number
-    legend?: 'list' | 'table' | 'none'
-    legendStats?: readonly LegendStat[]
-    span?: PanelSpan
-    bodyClassName?: string
-    loading?: boolean
-    empty?: boolean
-    file?: string
-    words?: Partial<ChartFrameWords>
-    className?: string
-}) {
+}: ComboPanelProps) {
     const option = useMemo(
         () => comboOption({ x, series, left, right, stacked, labelEvery }),
         [x, series, left, right, stacked, labelEvery],

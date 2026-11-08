@@ -16,6 +16,25 @@ export function monthDays(month: Date, weekStartsOn: 0 | 1 = 1): Date[] {
     return days
 }
 
+export interface MonthGridProps<E extends CalendarEvent> {
+    month: Date
+    events: readonly E[]
+    now?: Date
+    /** The chosen day, marked on a phone where a day is pressed to see its events. */
+    selected?: Date
+    /** The most events a day shows before it says how many more there are. */
+    max?: number
+    weekStartsOn?: 0 | 1
+    renderDetail?: (event: E) => ReactNode
+    openEvent?: string | null
+    onOpenEventChange?: (id: string | null) => void
+    onSelectEvent?: (event: E) => void
+    onSelectDay?: (day: Date) => void
+    onMore?: (day: Date) => void
+    className?: string
+    words?: Partial<CalendarWords>
+}
+
 /**
  * A month as a grid of days, each with its events in order: all-day ones as bars, timed ones
  * as a dot, the time and the title. A day with more than `max` events shows the first and says how
@@ -40,24 +59,7 @@ export function MonthGrid<E extends CalendarEvent>({
     onMore,
     className,
     words: given,
-}: {
-    month: Date
-    events: readonly E[]
-    now?: Date
-    /** The chosen day, marked on a phone where a day is pressed to see its events. */
-    selected?: Date
-    /** The most events a day shows before it says how many more there are. */
-    max?: number
-    weekStartsOn?: 0 | 1
-    renderDetail?: (event: E) => ReactNode
-    openEvent?: string | null
-    onOpenEventChange?: (id: string | null) => void
-    onSelectEvent?: (event: E) => void
-    onSelectDay?: (day: Date) => void
-    onMore?: (day: Date) => void
-    className?: string
-    words?: Partial<CalendarWords>
-}) {
+}: MonthGridProps<E>) {
     const words = { ...CALENDAR_WORDS, ...given }
     const [open, setOpen] = useOpenEvent(openEvent, onOpenEventChange)
     const days = monthDays(month, weekStartsOn)

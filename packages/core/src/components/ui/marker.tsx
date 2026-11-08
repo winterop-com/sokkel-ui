@@ -18,12 +18,9 @@ const markerVariants = cva(
     },
 )
 
-function Marker({
-    className,
-    variant = 'default',
-    render,
-    ...props
-}: useRender.ComponentProps<'div'> & VariantProps<typeof markerVariants>) {
+export type MarkerProps = useRender.ComponentProps<'div'> & VariantProps<typeof markerVariants>
+
+function Marker({ className, variant = 'default', render, ...props }: MarkerProps) {
     return useRender({
         defaultTagName: 'div',
         props: mergeProps<'div'>(
@@ -40,7 +37,9 @@ function Marker({
     })
 }
 
-function MarkerIcon({ className, ...props }: React.ComponentProps<'span'>) {
+export type MarkerIconProps = React.ComponentProps<'span'>
+
+function MarkerIcon({ className, ...props }: MarkerIconProps) {
     return (
         <span
             data-slot="marker-icon"
@@ -51,7 +50,9 @@ function MarkerIcon({ className, ...props }: React.ComponentProps<'span'>) {
     )
 }
 
-function MarkerContent({ className, ...props }: React.ComponentProps<'span'>) {
+export type MarkerContentProps = React.ComponentProps<'span'>
+
+function MarkerContent({ className, ...props }: MarkerContentProps) {
     return (
         <span
             data-slot="marker-content"

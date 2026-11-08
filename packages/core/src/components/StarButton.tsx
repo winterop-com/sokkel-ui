@@ -14,6 +14,12 @@ export interface StarButtonWords {
 
 const WORDS: StarButtonWords = { star: 'Add to favorites', unstar: 'Remove from favorites' }
 
+export type StarButtonProps = Omit<ComponentProps<typeof IconButton>, 'label' | 'children' | 'pressed' | 'onClick'> & {
+    starred?: boolean
+    onStarredChange?: (starred: boolean) => void
+    words?: Partial<StarButtonWords>
+}
+
 /**
  * A favorite toggle: an outlined star in the quiet ink that fills in the accent once starred, the
  * button pressed while it is. Its tooltip and accessible name say what a press does, so they
@@ -21,18 +27,7 @@ const WORDS: StarButtonWords = { star: 'Add to favorites', unstar: 'Remove from 
  * starred ghost star shows its fill alone, without the pressed ground, so a column of them down a
  * list stays quiet.
  */
-export function StarButton({
-    starred = false,
-    onStarredChange,
-    variant = 'ghost',
-    className,
-    words,
-    ...props
-}: Omit<ComponentProps<typeof IconButton>, 'label' | 'children' | 'pressed' | 'onClick'> & {
-    starred?: boolean
-    onStarredChange?: (starred: boolean) => void
-    words?: Partial<StarButtonWords>
-}) {
+export function StarButton({ starred = false, onStarredChange, variant = 'ghost', className, words, ...props }: StarButtonProps) {
     const said = { ...WORDS, ...words }
     return (
         <IconButton

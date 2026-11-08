@@ -20,20 +20,7 @@ export interface PeriodSliderWords {
 
 const WORDS: PeriodSliderWords = { previous: 'Previous period', next: 'Next period', play: 'Play', pause: 'Pause' }
 
-/**
- * Steps through a fixed run of periods, such as the months of a year: a slider with one stop per
- * period, buttons for the period before and after, and a play button that advances one period at
- * a time and stops at the last.
- */
-export function PeriodSlider({
-    label,
-    periods,
-    value,
-    onValueChange,
-    interval = 1200,
-    words,
-    className,
-}: {
+export interface PeriodSliderProps {
     /** What the periods are of, such as "Rainfall"; it names the slider for a screen reader. */
     label: string
     periods: readonly Period[]
@@ -44,7 +31,14 @@ export function PeriodSlider({
     interval?: number
     words?: Partial<PeriodSliderWords>
     className?: string
-}) {
+}
+
+/**
+ * Steps through a fixed run of periods, such as the months of a year: a slider with one stop per
+ * period, buttons for the period before and after, and a play button that advances one period at
+ * a time and stops at the last.
+ */
+export function PeriodSlider({ label, periods, value, onValueChange, interval = 1200, words, className }: PeriodSliderProps) {
     const said = { ...WORDS, ...words }
     const index = Math.max(
         0,

@@ -15,6 +15,22 @@ export function chapterStarts(chapters: readonly MediaChapter[]): number[] {
     return chapters.map((chapter) => chapter.start)
 }
 
+export interface ChapterListProps {
+    chapters: readonly MediaChapter[]
+    /** The length of the whole, in seconds, where the last chapter ends. */
+    duration: number
+    /** Seconds from the start of the whole; the chapter it falls in is marked. */
+    position?: number
+    playing?: boolean
+    onSeek?: (seconds: number) => void
+    progress?: TrackProgress
+    /** Whether the chapter playing is kept in view as it changes. */
+    follow?: boolean
+    variant?: 'boxed' | 'plain'
+    className?: string
+    words?: Partial<TrackListWords>
+}
+
 /**
  * The chapters of a book, a podcast or a long work, in order: each one's number, its title over
  * where it starts, and its length at the end, the last one's running to `duration`. The chapter
@@ -39,21 +55,7 @@ export function ChapterList({
     variant = 'boxed',
     className,
     words,
-}: {
-    chapters: readonly MediaChapter[]
-    /** The length of the whole, in seconds, where the last chapter ends. */
-    duration: number
-    /** Seconds from the start of the whole; the chapter it falls in is marked. */
-    position?: number
-    playing?: boolean
-    onSeek?: (seconds: number) => void
-    progress?: TrackProgress
-    /** Whether the chapter playing is kept in view as it changes. */
-    follow?: boolean
-    variant?: 'boxed' | 'plain'
-    className?: string
-    words?: Partial<TrackListWords>
-}) {
+}: ChapterListProps) {
     const starts = chapterStarts(chapters)
     const index = position === undefined ? -1 : chapterIndex(starts, position)
     const tracks: Track[] = chapters.map((chapter, at) => {

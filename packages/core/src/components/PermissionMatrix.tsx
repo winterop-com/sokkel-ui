@@ -68,6 +68,17 @@ export function countChanges(value: Grants, saved: Grants, roles: readonly Matri
     return count
 }
 
+export interface PermissionMatrixProps {
+    roles: readonly MatrixRole[]
+    groups: readonly MatrixGroup[]
+    value: Grants
+    /** The grants as last saved; cells that differ from it are marked. */
+    saved?: Grants
+    onChange?: (role: string, permission: string, granted: boolean) => void
+    className?: string
+    words?: Partial<PermissionMatrixWords>
+}
+
 /**
  * Roles against permissions as a grid of checkboxes: a column per role, a row per permission, the
  * rows grouped by what they act on with each group's row counting what every role holds of it.
@@ -77,24 +88,7 @@ export function countChanges(value: Grants, saved: Grants, roles: readonly Matri
  * When the box is too narrow for every role's column, it shows one role at a time with a picker
  * above to choose which, so a phone reads one column instead of scrolling through all of them.
  */
-export function PermissionMatrix({
-    roles,
-    groups,
-    value,
-    saved,
-    onChange,
-    className,
-    words: given,
-}: {
-    roles: readonly MatrixRole[]
-    groups: readonly MatrixGroup[]
-    value: Grants
-    /** The grants as last saved; cells that differ from it are marked. */
-    saved?: Grants
-    onChange?: (role: string, permission: string, granted: boolean) => void
-    className?: string
-    words?: Partial<PermissionMatrixWords>
-}) {
+export function PermissionMatrix({ roles, groups, value, saved, onChange, className, words: given }: PermissionMatrixProps) {
     const words = { ...WORDS, ...given }
     const stuck = 'sticky left-0 z-10 bg-card'
     // One role at a time once the permission column and every role's column no longer fit.

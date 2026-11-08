@@ -6,6 +6,8 @@ import { useChartLook, type ChartLook } from './look'
 import { chartTheme } from './theme'
 import { keepZoom } from './zoom'
 
+export type { ChartLook } from './look'
+
 type Engine = typeof import('./engine')
 
 let engine: Promise<Engine> | null = null
@@ -113,22 +115,7 @@ function decorate(
     }
 }
 
-/**
- * One ECharts chart, themed from the library's tokens and typeface, drawn again when the scheme,
- * the theme or a token override changes, and resized with its box. The engine loads on first use.
- * ECharts' own legend stays hidden: `hidden` names the series to leave out and `hovered` the one
- * to emphasize, so a legend beside the chart drives it. `handle` exports it as SVG or PNG. Keep
- * `option` stable between renders, at module level or memoized, or the chart redraws on each one.
- */
-export function EChart({
-    option,
-    label,
-    hidden = EMPTY,
-    hovered = null,
-    animate = false,
-    handle,
-    className,
-}: {
+export interface EChartProps {
     /** What to draw; null while it is not known yet, which draws nothing. */
     option: ChartOption | null
     /** What the chart shows, for a screen reader. */
@@ -138,7 +125,16 @@ export function EChart({
     animate?: boolean
     handle?: Ref<ChartHandle | null>
     className?: string
-}) {
+}
+
+/**
+ * One ECharts chart, themed from the library's tokens and typeface, drawn again when the scheme,
+ * the theme or a token override changes, and resized with its box. The engine loads on first use.
+ * ECharts' own legend stays hidden: `hidden` names the series to leave out and `hovered` the one
+ * to emphasize, so a legend beside the chart drives it. `handle` exports it as SVG or PNG. Keep
+ * `option` stable between renders, at module level or memoized, or the chart redraws on each one.
+ */
+export function EChart({ option, label, hidden = EMPTY, hovered = null, animate = false, handle, className }: EChartProps) {
     const look = useChartLook()
     const element = useRef<HTMLDivElement>(null)
     const chart = useRef<EChartsType | null>(null)

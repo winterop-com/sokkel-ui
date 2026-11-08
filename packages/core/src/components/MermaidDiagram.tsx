@@ -135,6 +135,16 @@ export const MERMAID_DIAGRAM_WORDS: MermaidDiagramWords = {
     away: 'Shown in a window.',
 }
 
+export interface MermaidDiagramProps {
+    code: string
+    streaming?: boolean
+    /** The window's title when the diagram is expanded; `Diagram` by default. */
+    title?: ReactNode
+    /** Opens the diagram in the window at first. */
+    defaultExpanded?: boolean
+    words?: Partial<MermaidDiagramWords>
+}
+
 /**
  * A mermaid diagram, drawn in the current theme's colors and typeface and redrawn when the scheme,
  * the theme or a token override changes. Its source shows
@@ -146,21 +156,7 @@ export const MERMAID_DIAGRAM_WORDS: MermaidDiagramWords = {
  * button beside the toggle opens the diagram near full screen through `WindowedPane`, drawn as
  * large as the window allows; Escape or the close button brings it back.
  */
-export function MermaidDiagram({
-    code,
-    streaming = false,
-    title,
-    defaultExpanded = false,
-    words: given,
-}: {
-    code: string
-    streaming?: boolean
-    /** The window's title when the diagram is expanded; `Diagram` by default. */
-    title?: ReactNode
-    /** Opens the diagram in the window at first. */
-    defaultExpanded?: boolean
-    words?: Partial<MermaidDiagramWords>
-}) {
+export function MermaidDiagram({ code, streaming = false, title, defaultExpanded = false, words: given }: MermaidDiagramProps) {
     const words = { ...MERMAID_DIAGRAM_WORDS, ...given }
     const look = useLook()
     const host = useRef<HTMLDivElement>(null)

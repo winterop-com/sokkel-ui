@@ -162,6 +162,49 @@ function IconInput({
     )
 }
 
+export interface SignInProps {
+    /** The app's mark, drawn in the current ink. */
+    mark?: ReactNode
+    /** Sets the mark on a tile of the primary ground; turn it off for a mark in its own colors. */
+    markTile?: boolean
+    name: string
+    /** The picture over the brand pane's upper part; decorative, left out on a phone. */
+    art?: ReactNode
+    facts?: readonly SignInFact[]
+    /** The brand pane's width in a wide room, as a CSS length or share. */
+    brandWidth?: string
+    /** `dark` draws the brand pane in the theme's dark tokens in either scheme; `page` follows the page. */
+    brandScheme?: 'dark' | 'page'
+    resizable?: boolean
+    reveal?: boolean
+    /** A short line over the title in the primary ink, such as "Welcome to" and the app's name. */
+    eyebrow?: ReactNode
+    /** A line under the title. */
+    description?: ReactNode
+    method?: 'password' | 'token'
+    server?: boolean
+    /** Offers a box to keep the username for next time; with `rememberKey` the form keeps it itself. */
+    remember?: boolean
+    /** The local storage key the username is kept under in this browser. */
+    rememberKey?: string
+    /** The app's own fields, in place of the username and password or the token. */
+    children?: ReactNode
+    /** Whether the app's own fields are filled, so the form can be sent; read only with `children`. */
+    ready?: boolean
+    defaultValues?: Partial<SignInValues>
+    error?: ReactNode
+    busy?: boolean
+    onSubmit: (values: SignInValues) => void
+    /** Other ways in, as buttons; each is drawn full width under the rule. */
+    alternatives?: ReactNode
+    /** A line under the form, such as who to ask for an account. */
+    footer?: ReactNode
+    /** The desktop window the screen stands in, when its native title bar is hidden; leave it off in a browser. */
+    desktop?: DesktopWindow
+    className?: string
+    words?: Partial<SignInWords>
+}
+
 /**
  * A sign-in screen in two panes the window's height. The brand pane holds `art` over its upper
  * part (`LevelBars` and `FlowLines` ship with the library, or the app's own picture), the `mark`
@@ -215,48 +258,7 @@ export function SignIn({
     desktop,
     className,
     words: given,
-}: {
-    /** The app's mark, drawn in the current ink. */
-    mark?: ReactNode
-    /** Sets the mark on a tile of the primary ground; turn it off for a mark in its own colors. */
-    markTile?: boolean
-    name: string
-    /** The picture over the brand pane's upper part; decorative, left out on a phone. */
-    art?: ReactNode
-    facts?: readonly SignInFact[]
-    /** The brand pane's width in a wide room, as a CSS length or share. */
-    brandWidth?: string
-    /** `dark` draws the brand pane in the theme's dark tokens in either scheme; `page` follows the page. */
-    brandScheme?: 'dark' | 'page'
-    resizable?: boolean
-    reveal?: boolean
-    /** A short line over the title in the primary ink, such as "Welcome to" and the app's name. */
-    eyebrow?: ReactNode
-    /** A line under the title. */
-    description?: ReactNode
-    method?: 'password' | 'token'
-    server?: boolean
-    /** Offers a box to keep the username for next time; with `rememberKey` the form keeps it itself. */
-    remember?: boolean
-    /** The local storage key the username is kept under in this browser. */
-    rememberKey?: string
-    /** The app's own fields, in place of the username and password or the token. */
-    children?: ReactNode
-    /** Whether the app's own fields are filled, so the form can be sent; read only with `children`. */
-    ready?: boolean
-    defaultValues?: Partial<SignInValues>
-    error?: ReactNode
-    busy?: boolean
-    onSubmit: (values: SignInValues) => void
-    /** Other ways in, as buttons; each is drawn full width under the rule. */
-    alternatives?: ReactNode
-    /** A line under the form, such as who to ask for an account. */
-    footer?: ReactNode
-    /** The desktop window the screen stands in, when its native title bar is hidden; leave it off in a browser. */
-    desktop?: DesktopWindow
-    className?: string
-    words?: Partial<SignInWords>
-}) {
+}: SignInProps) {
     const words = { ...WORDS, ...given }
     const id = useId()
     const theme = useThemeName()

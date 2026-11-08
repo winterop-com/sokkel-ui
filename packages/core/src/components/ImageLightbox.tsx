@@ -14,6 +14,20 @@ const WORDS: ImageLightboxWords = {
     close: 'Close',
 }
 
+export interface ImageLightboxProps {
+    src: string
+    alt: string
+    className?: string
+    defaultOpen?: boolean
+    /** Boxes drawn over the image, as `ImageAnnotations` draws them. */
+    boxes?: readonly ImageBox[]
+    /** Each box's tag starts with its number. */
+    numbered?: boolean
+    /** How a box's confidence is written; a whole percent by default. */
+    format?: (value: number) => string
+    words?: Partial<ImageLightboxWords>
+}
+
 /**
  * An image that opens full screen when pressed: a chart an assistant drew, a screenshot someone
  * attached. A press anywhere or Escape closes it, and focus returns to the image.
@@ -29,19 +43,7 @@ export function ImageLightbox({
     numbered = false,
     format,
     words: given,
-}: {
-    src: string
-    alt: string
-    className?: string
-    defaultOpen?: boolean
-    /** Boxes drawn over the image, as `ImageAnnotations` draws them. */
-    boxes?: readonly ImageBox[]
-    /** Each box's tag starts with its number. */
-    numbered?: boolean
-    /** How a box's confidence is written; a whole percent by default. */
-    format?: (value: number) => string
-    words?: Partial<ImageLightboxWords>
-}) {
+}: ImageLightboxProps) {
     const words = { ...WORDS, ...given }
     return (
         <Dialog.Root defaultOpen={defaultOpen}>

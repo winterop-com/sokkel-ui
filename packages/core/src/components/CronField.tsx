@@ -33,6 +33,25 @@ function formatRun(date: Date): string {
     return `${DAYS[date.getUTCDay()]} ${String(date.getUTCFullYear())}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())} ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}`
 }
 
+export interface CronFieldProps {
+    id?: string
+    value: string
+    onChange: (value: string) => void
+    /** The time the next runs are counted from: now, in an app. */
+    from: Date
+    count?: number
+    presets?: readonly { label: string; value: string }[]
+    /** Reads an expression back in words; English by default. */
+    describe?: (expression: string) => string | null
+    /** Draws a run's time. */
+    format?: (date: Date) => string
+    /** Whether the issue mark's message is open, for a form's count to open it. */
+    issueOpen?: boolean
+    onIssueOpenChange?: (open: boolean) => void
+    className?: string
+    words?: Partial<CronFieldWords>
+}
+
 /**
  * A cron expression typed in, read back in words under it, with the next runs it makes listed
  * after a given time. Presets fill the expression in one press. An expression that does not read
@@ -51,24 +70,7 @@ export function CronField({
     onIssueOpenChange,
     className,
     words: said,
-}: {
-    id?: string
-    value: string
-    onChange: (value: string) => void
-    /** The time the next runs are counted from: now, in an app. */
-    from: Date
-    count?: number
-    presets?: readonly { label: string; value: string }[]
-    /** Reads an expression back in words; English by default. */
-    describe?: (expression: string) => string | null
-    /** Draws a run's time. */
-    format?: (date: Date) => string
-    /** Whether the issue mark's message is open, for a form's count to open it. */
-    issueOpen?: boolean
-    onIssueOpenChange?: (open: boolean) => void
-    className?: string
-    words?: Partial<CronFieldWords>
-}) {
+}: CronFieldProps) {
     const words = { ...WORDS, ...said }
     const own = useId()
     const id = given ?? own

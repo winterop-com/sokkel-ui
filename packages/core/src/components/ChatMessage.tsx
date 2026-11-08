@@ -102,8 +102,13 @@ export function isChatPerson(who: ReactNode | ChatPerson): who is ChatPerson {
     return typeof who === 'object' && who !== null && !isValidElement(who) && 'name' in who && typeof who.name === 'string'
 }
 
+export interface ChatFaceProps {
+    who: ReactNode | ChatPerson
+    className?: string
+}
+
 /** A person filling the square they are given: a picture as given, or a person as their initials on their color. */
-export function ChatFace({ who, className }: { who: ReactNode | ChatPerson; className?: string }) {
+export function ChatFace({ who, className }: ChatFaceProps) {
     if (!isChatPerson(who)) return who
     return <PersonAvatar name={who.name} image={who.image} size="md" className={cn('size-full rounded-none', className)} />
 }
@@ -115,6 +120,42 @@ function BarButton({ label, onClick, children }: { label: string; onClick?: () =
             {children}
         </IconButton>
     )
+}
+
+export interface ChatMessageProps {
+    author: string
+    /** The author's picture as a node; their initials on their color when none is given. */
+    avatar?: ReactNode
+    /** The author's picture as an address, drawn over their initials once it has loaded. */
+    image?: string
+    /** The time as the conversation shows it: `09:42`. */
+    time: string
+    /** The full date and time, on hover. */
+    timeTitle?: string
+    continued?: boolean
+    edited?: boolean
+    /** When the message was last edited, as the app says it: `today at 09:44`. Marks it edited. */
+    editedAt?: string
+    /** Drawn as the message a link or a search landed on. */
+    highlighted?: boolean
+    /** Held in its hover look, as while a picker opened from it is showing. */
+    active?: boolean
+    files?: readonly ChatFile[]
+    reactions?: readonly ChatReaction[]
+    onReact?: (id: string) => void
+    /** Offers the add-reaction button after the reactions and in the hover bar. */
+    onAddReaction?: () => void
+    thread?: ChatThread
+    onOpenThread?: () => void
+    /** Offers reply in thread in the hover bar. */
+    onReply?: () => void
+    /** Dropdown menu items behind the hover bar's more button. */
+    menu?: ReactNode
+    /** More buttons for the hover bar, before its more button. */
+    actions?: ReactNode
+    children: ReactNode
+    className?: string
+    words?: Partial<ChatMessageWords>
 }
 
 /**
@@ -151,41 +192,7 @@ export function ChatMessage({
     children,
     className,
     words: given,
-}: {
-    author: string
-    /** The author's picture as a node; their initials on their color when none is given. */
-    avatar?: ReactNode
-    /** The author's picture as an address, drawn over their initials once it has loaded. */
-    image?: string
-    /** The time as the conversation shows it: `09:42`. */
-    time: string
-    /** The full date and time, on hover. */
-    timeTitle?: string
-    continued?: boolean
-    edited?: boolean
-    /** When the message was last edited, as the app says it: `today at 09:44`. Marks it edited. */
-    editedAt?: string
-    /** Drawn as the message a link or a search landed on. */
-    highlighted?: boolean
-    /** Held in its hover look, as while a picker opened from it is showing. */
-    active?: boolean
-    files?: readonly ChatFile[]
-    reactions?: readonly ChatReaction[]
-    onReact?: (id: string) => void
-    /** Offers the add-reaction button after the reactions and in the hover bar. */
-    onAddReaction?: () => void
-    thread?: ChatThread
-    onOpenThread?: () => void
-    /** Offers reply in thread in the hover bar. */
-    onReply?: () => void
-    /** Dropdown menu items behind the hover bar's more button. */
-    menu?: ReactNode
-    /** More buttons for the hover bar, before its more button. */
-    actions?: ReactNode
-    children: ReactNode
-    className?: string
-    words?: Partial<ChatMessageWords>
-}) {
+}: ChatMessageProps) {
     const words = { ...WORDS, ...given }
     const [menuOpen, setMenuOpen] = useState(false)
     const lit = active || menuOpen
@@ -401,12 +408,17 @@ export function ChatMessage({
     )
 }
 
+export interface ChatDayDividerProps {
+    children: ReactNode
+    sticky?: boolean
+}
+
 /**
  * The date between a day's messages and the previous day's: a pill on a rule, on an opaque strip
  * across the list's width. In a `ChatDay` the strip is sticky, so the day in view stays named at
  * the top of the list, with no message showing behind it, and leaves with its last message. A `sticky` divider outside one stays stuck to the end of the list, under the later ones.
  */
-export function ChatDayDivider({ children, sticky = false }: { children: ReactNode; sticky?: boolean }) {
+export function ChatDayDivider({ children, sticky = false }: ChatDayDividerProps) {
     return (
         <div
             role="separator"
@@ -423,8 +435,14 @@ export function ChatDayDivider({ children, sticky = false }: { children: ReactNo
     )
 }
 
+export interface ChatDayProps {
+    label: ReactNode
+    children: ReactNode
+    className?: string
+}
+
 /** One day of a conversation: its date divider, then its messages; the date stays in view while the day scrolls by. */
-export function ChatDay({ label, children, className }: { label: ReactNode; children: ReactNode; className?: string }) {
+export function ChatDay({ label, children, className }: ChatDayProps) {
     return (
         <section className={cn('relative', className)}>
             <ChatDayDivider sticky>{label}</ChatDayDivider>
@@ -433,8 +451,12 @@ export function ChatDay({ label, children, className }: { label: ReactNode; chil
     )
 }
 
+export interface ChatNewDividerProps {
+    label?: string
+}
+
 /** Where the messages not read yet begin: a rule in the critical color, with the word at its end. */
-export function ChatNewDivider({ label = 'New' }: { label?: string }) {
+export function ChatNewDivider({ label = 'New' }: ChatNewDividerProps) {
     return (
         <div role="separator" aria-label={label} className="relative flex h-4 items-center justify-end px-(--density-chat-inset)">
             <span className="absolute inset-x-(--density-chat-inset) top-1/2 h-px bg-critical/70" aria-hidden />
@@ -443,8 +465,12 @@ export function ChatNewDivider({ label = 'New' }: { label?: string }) {
     )
 }
 
+export interface ChatTypingProps {
+    children: ReactNode
+}
+
 /** Who is writing now, under the conversation. */
-export function ChatTyping({ children }: { children: ReactNode }) {
+export function ChatTyping({ children }: ChatTypingProps) {
     return (
         <p aria-live="polite" className="flex h-5 items-center gap-1.5 px-(--density-chat-inset) text-xs text-muted-foreground">
             <span className="flex gap-0.5" aria-hidden>

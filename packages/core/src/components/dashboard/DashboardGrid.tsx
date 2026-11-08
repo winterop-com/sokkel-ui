@@ -23,12 +23,18 @@ export const SPAN: Record<PanelSpan, string> = {
     full: 'col-span-full',
 }
 
+export interface DashboardGridProps {
+    dense?: boolean
+    children: ReactNode
+    className?: string
+}
+
 /**
  * The grid a dashboard's panels sit in: twelve columns on a wide screen, six on a tablet, two on a
  * phone, with panels in a row stretched to the same height. On a phone a wide panel spans both
  * columns while stat tiles and gauges stand two to a row. A dense grid packs panels with small gaps.
  */
-export function DashboardGrid({ dense = false, children, className }: { dense?: boolean; children: ReactNode; className?: string }) {
+export function DashboardGrid({ dense = false, children, className }: DashboardGridProps) {
     return (
         <div
             className={cn('grid grid-cols-2 md:grid-cols-6 xl:grid-cols-12', dense ? 'gap-1.5' : 'gap-(--density-section-gap)', className)}
@@ -45,6 +51,24 @@ export interface PanelWords {
 }
 
 const WORDS: PanelWords = { expand: 'Expand', menu: 'Panel actions', empty: 'No data for this range.' }
+
+export interface DashboardPanelProps {
+    title: ReactNode
+    subtitle?: ReactNode
+    span?: PanelSpan
+    actions?: ReactNode
+    /** Dropdown menu items, behind the panel's more button. */
+    menu?: ReactNode
+    expandable?: boolean
+    loading?: boolean
+    empty?: boolean
+    /** Content that fills the panel to its edges, such as a list, takes no padding. */
+    flush?: boolean
+    footer?: ReactNode
+    words?: Partial<PanelWords>
+    className?: string
+    children?: ReactNode
+}
 
 /**
  * One panel of a dashboard: a head with the title, a quiet subtitle such as the range it covers,
@@ -66,23 +90,7 @@ export function DashboardPanel({
     words: given,
     className,
     children,
-}: {
-    title: ReactNode
-    subtitle?: ReactNode
-    span?: PanelSpan
-    actions?: ReactNode
-    /** Dropdown menu items, behind the panel's more button. */
-    menu?: ReactNode
-    expandable?: boolean
-    loading?: boolean
-    empty?: boolean
-    /** Content that fills the panel to its edges, such as a list, takes no padding. */
-    flush?: boolean
-    footer?: ReactNode
-    words?: Partial<PanelWords>
-    className?: string
-    children?: ReactNode
-}) {
+}: DashboardPanelProps) {
     const words = { ...WORDS, ...given }
     const [expanded, setExpanded] = useState(false)
     const body = empty ? <p className="px-4 py-8 text-center text-sm text-muted-foreground">{words.empty}</p> : children
@@ -160,11 +168,16 @@ export interface Kpi {
     trend?: ReactNode
 }
 
+export interface KpiRowProps {
+    items: readonly Kpi[]
+    className?: string
+}
+
 /**
  * A row of key figures across a dashboard's top, each a stat divided from the next. The row wraps
  * to two columns on a phone.
  */
-export function KpiRow({ items, className }: { items: readonly Kpi[]; className?: string }) {
+export function KpiRow({ items, className }: KpiRowProps) {
     return (
         <div
             className={cn(
