@@ -258,6 +258,10 @@
             "types": "./dist/components/ImageLightbox.d.ts",
             "import": "./dist/components/ImageLightbox.js"
         },
+        "./InlineEdit": {
+            "types": "./dist/components/InlineEdit.d.ts",
+            "import": "./dist/components/InlineEdit.js"
+        },
         "./InlineField": {
             "types": "./dist/components/InlineField.d.ts",
             "import": "./dist/components/InlineField.js"
@@ -505,6 +509,10 @@
         "./TableOfContents": {
             "types": "./dist/components/TableOfContents.d.ts",
             "import": "./dist/components/TableOfContents.js"
+        },
+        "./table-editing": {
+            "types": "./dist/components/table-editing.d.ts",
+            "import": "./dist/components/table-editing.js"
         },
         "./TagChips": {
             "types": "./dist/components/TagChips.d.ts",
