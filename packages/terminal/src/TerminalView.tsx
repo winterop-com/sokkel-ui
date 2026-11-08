@@ -312,7 +312,7 @@ export function TerminalView({
             ref={frame}
             data-settling=""
             className={cn(
-                'flex min-h-0 min-w-0 flex-col overflow-hidden rounded-lg border border-terminal-bar bg-terminal font-terminal text-xs leading-5',
+                'flex min-h-0 min-w-0 flex-col overflow-hidden rounded-surface border border-terminal-bar bg-terminal font-terminal text-xs leading-5',
                 rows === undefined && 'h-full',
                 className,
             )}

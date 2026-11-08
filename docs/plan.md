@@ -112,6 +112,19 @@ never shows through a scope of another. An app imports the files of the
 themes it offers and sets one on `<html data-theme>`, so its CSS carries no theme it never shows.
 Storybook imports `themes.css`, so its toolbar offers every theme.
 
+Beyond its colors a theme can give the frame's parts a look of their own, through tokens the parts
+read (`$parts` in `tokens.json` lists them): the heading face, a section head's ground, rule and
+ink and a page title's ink; a table's head (ground, rule, ink, case) and its zebra; a wash over the
+editor's and a code block's ground and over their gutter; the scroll area's thumb and track, which
+the browser's own scroll bars take where `--scrollbar` names them; the shell's foot strip; and the
+palette's insets. Each defaults to what the part drew before, so a theme that sets none looks as the
+default does. Corners go by role: controls (buttons, fields, selects, toggles, the composers) round
+by `--control-radius` and surfaces (cards, boxed sections, popovers, menus, dialogs, code blocks)
+by `--surface-radius`, each `var(--radius)` unless a theme derives another from it, so one theme
+has sharp surfaces and round controls and another the reverse. Ocean (deep sea blues, teal), indigo
+(an indigo primary on cool neutrals) and terminal (green on black in the code face, a light console
+by day) use them.
+
 Applying and keeping the look is the library's too, never an app's: `useAppearance` keeps the theme,
 scheme, density, corners, typeface and motion in `localStorage` and wears them on `<html>`,
 `useScheme` does the same for the scheme alone, and `appearanceScript` wears the kept look before
@@ -309,6 +322,16 @@ sort of form a card is, and `Segmented` options carry a count and a state's dot.
 `PaneHeader` and `Field` take a `description`, a field's between its label and its control.
 `DetailSheet` is one thing's detail in a sheet from the right, its chips and actions on one line
 under the title, its body the parts its own page draws; `SourceSheet` is one.
+
+`StatusChip` knows the nine run states without being told; an app names its own (`draft`,
+`review`, `published`) with their words and a color (good, critical, warning, info, neutral or a
+run state's) in a map, given to one chip as `statuses` or set once for the app by a
+`StatusProvider`, which adds to the run states and may reword or recolor them. `Dot`'s `status` and
+`Timeline`'s event `tone` read the same map, and `useStatus` gives a part that takes a CSS color
+(`Stat`'s and `Segmented`'s `dot`) the state's color as its raw token, never a `--color-*` name,
+which exists only once a class uses it. A state no map knows is said by its name and drawn neutral.
+`StatusProvider` and `useStatus` are a module of their own, so a part that draws a state's color
+carries no chip; `lib/status` holds the map's types, the run states and each color as a CSS color.
 
 A button that cannot be pressed now says why: `reason` on `Button`, `IconButton` and `SplitButton`
 disables it and shows the reason on hover and focus, the button kept in the tab order so a keyboard

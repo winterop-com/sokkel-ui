@@ -16,8 +16,9 @@ export interface CodeBlockWords {
 
 const COPY_WORDS: CodeBlockWords = { copy: 'Copy', copied: 'Copied' }
 
+// The editor's ground is laid as an image over the variant's own ground, so it washes it rather than replacing it.
 const codeBlockVariants = cva(
-    'group/code-block relative flex w-full min-w-0 flex-col overflow-hidden rounded-lg text-sm has-[>[data-slot=code-block-content]:focus-visible]:ring-1 has-[>[data-slot=code-block-content]:focus-visible]:ring-ring data-[size=sm]:text-xs',
+    'group/code-block relative flex w-full min-w-0 flex-col overflow-hidden rounded-surface bg-[image:linear-gradient(var(--editor-ground),var(--editor-ground))] text-sm has-[>[data-slot=code-block-content]:focus-visible]:ring-1 has-[>[data-slot=code-block-content]:focus-visible]:ring-ring data-[size=sm]:text-xs',
     {
         variants: {
             variant: {
@@ -173,8 +174,10 @@ function CodeBlockContent({
     )
 }
 
+// A numbered line's number stands on the gutter's wash, drawn as shadows out to the block's edge and into the gap after it,
+// so the wash never moves the number; the block's scrolling clips what reaches past its edge.
 const codeBlockLineVariants = cva(
-    "relative -mx-3 block min-h-lh px-3 group-data-[size=sm]/code-block:-mx-2.5 group-data-[size=sm]/code-block:px-2.5 before:min-w-6 before:text-end before:text-muted-foreground after:absolute after:start-1 after:top-0 after:text-muted-foreground after:select-none in-data-numbered:col-span-2 in-data-numbered:grid in-data-numbered:grid-cols-subgrid in-data-numbered:gap-x-3 in-data-numbered:[counter-increment:line] in-data-numbered:before:content-[counter(line)] in-data-numbered:before:select-none in-data-numbered:supports-[content:counter(line)_/_'']:before:content-[counter(line)_/_'']",
+    "relative -mx-3 block min-h-lh px-3 group-data-[size=sm]/code-block:-mx-2.5 group-data-[size=sm]/code-block:px-2.5 before:min-w-6 before:text-end before:text-muted-foreground after:absolute after:start-1 after:top-0 after:text-muted-foreground after:select-none in-data-numbered:col-span-2 in-data-numbered:grid in-data-numbered:grid-cols-subgrid in-data-numbered:gap-x-3 in-data-numbered:[counter-increment:line] in-data-numbered:before:bg-editor-gutter in-data-numbered:before:shadow-[-0.75rem_0_0_var(--editor-gutter),0.375rem_0_0_var(--editor-gutter)] in-data-numbered:before:content-[counter(line)] in-data-numbered:before:select-none in-data-numbered:supports-[content:counter(line)_/_'']:before:content-[counter(line)_/_'']",
     {
         variants: {
             variant: {

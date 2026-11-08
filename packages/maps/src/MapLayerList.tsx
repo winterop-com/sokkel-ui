@@ -129,7 +129,7 @@ export function MapLayerList({ layers, onVisibleChange, onOpacityChange, basemap
                     key={layer.id}
                     aria-label={layer.name}
                     className={cn(
-                        'rounded-lg bg-card px-3 py-2.5 text-card-foreground ring-1 ring-foreground/10',
+                        'rounded-surface bg-card px-3 py-2.5 text-card-foreground ring-1 ring-foreground/10',
                         !layer.visible && 'opacity-75',
                     )}
                 >
@@ -160,7 +160,7 @@ export function MapLayerList({ layers, onVisibleChange, onOpacityChange, basemap
             {basemap !== undefined && (
                 <section
                     aria-label={said.basemap}
-                    className="rounded-lg bg-card px-3 py-2.5 text-card-foreground ring-1 ring-foreground/10"
+                    className="rounded-surface bg-card px-3 py-2.5 text-card-foreground ring-1 ring-foreground/10"
                 >
                     <Head
                         title={said.basemap}

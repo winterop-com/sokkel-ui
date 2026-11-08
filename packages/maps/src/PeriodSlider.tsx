@@ -61,7 +61,7 @@ export function PeriodSlider({ label, periods, value, onValueChange, interval = 
     return (
         <div
             className={cn(
-                'flex w-full items-center gap-2 rounded-lg bg-card/95 px-2 py-1.5 shadow-xs ring-1 ring-foreground/10',
+                'flex w-full items-center gap-2 rounded-surface bg-card/95 px-2 py-1.5 shadow-xs ring-1 ring-foreground/10',
                 className,
             )}
         >

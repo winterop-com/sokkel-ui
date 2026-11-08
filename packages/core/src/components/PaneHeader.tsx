@@ -3,14 +3,15 @@ import type { ReactNode } from 'react'
 import { cn } from '../lib/cn'
 
 const GROUND = {
-    panel: 'border-border-strong bg-panel-ground',
+    panel: 'border-section-head-line bg-section-head-ground',
     plain: 'border-border',
 } as const
 
+// Every title is set in the heading face and the section heads' ink, which a theme may change.
 const TITLE = {
-    panel: 'truncate text-head',
-    plain: 'truncate text-section-title',
-    large: 'text-detail-title text-pretty break-words',
+    panel: 'truncate font-heading text-head text-section-head-ink',
+    plain: 'truncate font-heading text-section-title text-section-head-ink',
+    large: 'font-heading text-detail-title text-pretty break-words text-section-head-ink',
 } as const
 
 export interface PaneHeaderProps {
@@ -40,7 +41,7 @@ export interface PaneHeaderProps {
  * The strip across the top of a pane, with a rule under it: the pane's title, controls before it
  * such as a back button, and actions at its right end. A pane of tools alone leaves the title out.
  *
- * `panel`, the head of a boxed section, sits on the panel ground over a strong rule and sets its
+ * `panel`, the head of a boxed section, sits on the section heads' ground over their rule and sets its
  * title like a table's column heads; `plain` sits on the pane's own ground. `size="lg"` is the head
  * of one thing's detail: its code over a larger title that wraps, with `children` (chips, labels)
  * on a line under it. `inset={false}` drops the side padding, for a head on the page's own edge.

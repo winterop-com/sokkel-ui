@@ -462,6 +462,10 @@
             "types": "./dist/components/StatusLine.d.ts",
             "import": "./dist/components/StatusLine.js"
         },
+        "./StatusProvider": {
+            "types": "./dist/components/StatusProvider.d.ts",
+            "import": "./dist/components/StatusProvider.js"
+        },
         "./StepIndicator": {
             "types": "./dist/components/StepIndicator.d.ts",
             "import": "./dist/components/StepIndicator.js"
@@ -1073,6 +1077,10 @@
         "./lib/search": {
             "types": "./dist/lib/search.d.ts",
             "import": "./dist/lib/search.js"
+        },
+        "./lib/status": {
+            "types": "./dist/lib/status.d.ts",
+            "import": "./dist/lib/status.js"
         },
         "./lib/stored": {
             "types": "./dist/lib/stored.d.ts",

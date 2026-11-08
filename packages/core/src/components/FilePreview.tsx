@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { TABLE_HEAD_ROW } from '../lib/table'
 import { Code } from './Code'
 import { FileTypeIcon, type FileKind } from './FileList'
 import { JsonTree } from './JsonTree'
@@ -58,7 +59,7 @@ function CsvTable({ text, maxRows, words }: { text: string; maxRows: number; wor
             <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-xs">
                     <thead>
-                        <tr className="border-b border-border-strong bg-panel-ground text-left text-muted-foreground">
+                        <tr className={cn(TABLE_HEAD_ROW, 'text-left text-table-head-ink')}>
                             {head.map((cell, index) => (
                                 <th key={index} className="px-2.5 py-1.5 font-medium whitespace-nowrap">
                                     {cell}

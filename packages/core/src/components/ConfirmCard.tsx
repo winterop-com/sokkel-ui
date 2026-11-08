@@ -40,8 +40,8 @@ const WORDS: ConfirmWords = {
 
 const FRAME: Record<ConfirmAppearance, { pending: string; settled: string }> = {
     warning: {
-        pending: 'gap-2 rounded-lg border border-warning/50 bg-warning/10 px-3 py-2.5',
-        settled: 'gap-2 rounded-lg border border-border bg-card px-3 py-2.5',
+        pending: 'gap-2 rounded-surface border border-warning/50 bg-warning/10 px-3 py-2.5',
+        settled: 'gap-2 rounded-surface border border-border bg-card px-3 py-2.5',
     },
     card: {
         pending: 'gap-3 rounded-surface border border-border-strong bg-card p-4',

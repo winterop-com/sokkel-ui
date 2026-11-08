@@ -95,7 +95,7 @@ export function MapLegend({
             aria-label={title ?? description}
             className={cn(
                 'text-xs text-card-foreground',
-                framed && 'w-56 max-w-full rounded-lg bg-card/95 px-3 py-2.5 shadow-xs ring-1 ring-foreground/10',
+                framed && 'w-56 max-w-full rounded-surface bg-card/95 px-3 py-2.5 shadow-xs ring-1 ring-foreground/10',
                 className,
             )}
         >

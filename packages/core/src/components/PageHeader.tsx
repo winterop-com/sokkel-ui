@@ -108,7 +108,7 @@ export function PageHeader({
                     <h1
                         title={singleLine ? title : undefined}
                         className={cn(
-                            'min-w-0 text-page-title',
+                            'min-w-0 font-heading text-page-title text-page-title-ink',
                             singleLine ? 'truncate' : 'text-pretty break-words',
                             !showCode && code !== undefined && 'font-mono',
                         )}

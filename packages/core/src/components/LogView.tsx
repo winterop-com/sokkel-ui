@@ -58,7 +58,7 @@ export function LogView({ lines, follow = false, wrap = false, query = '', numbe
             }}
             className={cn(
                 'min-h-0 overflow-auto bg-terminal py-2 font-mono text-xs leading-5 text-terminal-foreground outline-none [--typeface-mono:var(--typeface-terminal)] focus-visible:ring-2 focus-visible:ring-ring',
-                framed && 'rounded-lg',
+                framed && 'rounded-surface',
                 className,
             )}
         >

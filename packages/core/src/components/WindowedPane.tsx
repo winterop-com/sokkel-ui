@@ -122,7 +122,7 @@ export function WindowedPane({
                 <div ref={place} data-slot="windowed-pane" className={cn('group/windowed relative min-h-0 min-w-0', className)}>
                     {open ? (
                         <div
-                            className="flex h-full min-h-24 items-center justify-center rounded-lg border border-dashed border-border px-4 text-center text-sm text-muted-foreground"
+                            className="flex h-full min-h-24 items-center justify-center rounded-surface border border-dashed border-border px-4 text-center text-sm text-muted-foreground"
                             style={height === undefined ? undefined : { height }}
                         >
                             {words.away}

@@ -342,7 +342,7 @@ export function Composer({
                 dictation.cancel()
             }}
             className={cn(
-                'relative flex flex-col rounded-lg border border-border-strong bg-field shadow-surface transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring',
+                'relative flex flex-col rounded-control border border-border-strong bg-field shadow-surface transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring',
                 over && 'border-primary ring-2 ring-primary/30',
                 disabled && 'opacity-60',
                 className,
@@ -361,7 +361,7 @@ export function Composer({
             }}
         >
             {over && (
-                <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-background/80 text-sm font-medium">
+                <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-control bg-background/80 text-sm font-medium">
                     {words.drop}
                 </div>
             )}

@@ -83,6 +83,30 @@ describe('the terminal', () => {
     }
 })
 
+/** The corner roles a theme may set apart from each other, each derived from `--radius`. */
+const CORNER_ROLES = ['control-radius', 'surface-radius'] as const
+
+describe('the corners', () => {
+    it('round controls and surfaces by roles a theme can set', () => {
+        const theme = (tokens as unknown as { theme: Record<string, string> }).theme
+        expect(theme['radius-control']).toBe('var(--control-radius)')
+        expect(theme['radius-surface']).toBe('var(--surface-radius)')
+    })
+    for (const [name, schemes] of Object.entries(tokens.themes)) {
+        it(`derive ${name}'s control and surface corners from --radius`, () => {
+            const wrong = (['light', 'dark'] as const).flatMap((scheme) =>
+                CORNER_ROLES.map((role) => [scheme, role, schemes[scheme]?.[role]] as const).filter(
+                    ([, , value]) => value !== undefined && !value.includes('var(--radius)'),
+                ),
+            )
+            expect(
+                wrong.map((entry) => entry.join(' ')),
+                'every corner derives from --radius',
+            ).toEqual([])
+        })
+    }
+})
+
 describe('the theme files', () => {
     const resolve = createRequire(import.meta.url).resolve
     const styles = join(__dirname, '..', 'packages', 'core', 'src', 'styles')

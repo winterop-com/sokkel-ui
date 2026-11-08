@@ -67,7 +67,7 @@ export function NavBar({
                         <Menu.Positioner side="bottom" align="start" sideOffset={6}>
                             <Menu.Popup
                                 data-slot="dropdown-menu-content"
-                                className="w-56 rounded-lg border border-border-strong bg-popover p-1 text-popover-foreground shadow-pop"
+                                className="w-56 rounded-surface border border-border-strong bg-popover p-1 text-popover-foreground shadow-pop"
                             >
                                 {links.map((link) => (
                                     <Menu.Item

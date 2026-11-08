@@ -372,10 +372,11 @@ export function Rail({
                     <div className="flex h-shell-foot shrink-0 items-stretch border-t border-border-strong">{foot}</div>
                 )}
             </aside>
+            {/* The corner cell is the foot strip's start, so it stands on the foot's ground. */}
             {foot !== undefined &&
                 footCell !== null &&
                 createPortal(
-                    <div className="flex h-shell-foot w-full items-stretch border-t border-r border-border-strong bg-sidebar text-sidebar-foreground">
+                    <div className="flex h-shell-foot w-full items-stretch border-t border-r border-t-page-foot-line border-r-border-strong bg-page-foot-ground text-sidebar-foreground">
                         {foot}
                     </div>,
                     footCell,

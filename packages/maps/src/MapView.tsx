@@ -744,7 +744,7 @@ export function MapView({
                         {corner === 'top-right' && supported && shown !== null && (
                             <>
                                 {(shown.zoom || shown.fit) && (
-                                    <ButtonGroup orientation="vertical" className="rounded-lg shadow-xs">
+                                    <ButtonGroup orientation="vertical" className="rounded-control shadow-xs">
                                         {shown.zoom && (
                                             <>
                                                 <ControlButton

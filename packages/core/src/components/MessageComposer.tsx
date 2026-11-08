@@ -418,7 +418,7 @@ export function MessageComposer({
     return (
         <div
             className={cn(
-                '@container/composer flex min-w-0 flex-col rounded-lg border border-border-strong bg-field text-sm focus-within:border-ring',
+                '@container/composer flex min-w-0 flex-col rounded-control border border-border-strong bg-field text-sm focus-within:border-ring',
                 disabled && 'opacity-60',
                 className,
             )}

@@ -151,22 +151,23 @@ const dot = (tone: keyof typeof TONES) => ({
 /**
  * The chrome in the theme's tokens, so a change of theme or scheme repaints it without a rebuild. The
  * text and its line numbers are mono, not adjusted to the sans: in an editor the code is the
- * content, not a word set in a sentence. The size comes from `SIZES`.
+ * content, not a word set in a sentence. The size comes from `SIZES`. The editor's ground and its
+ * gutter's are washes over the field's or the pane's own, transparent unless a theme sets them.
  */
 const THEME = EditorView.theme({
-    '&': { backgroundColor: 'transparent', color: 'var(--foreground)', height: '100%' },
+    '&': { backgroundColor: 'var(--editor-ground)', color: 'var(--foreground)', height: '100%' },
     '&.cm-focused': { outline: 'none' },
     '.cm-scroller': { fontFamily: 'var(--font-mono)', fontSizeAdjust: 'none' },
     '.cm-content': { padding: '0.5rem 0', caretColor: 'var(--foreground)' },
     '.cm-line': { padding: '0 0.75rem' },
-    '.cm-gutters': { backgroundColor: 'transparent', color: 'var(--faint)', border: 'none', fontSizeAdjust: 'none' },
+    '.cm-gutters': { backgroundColor: 'var(--editor-gutter)', color: 'var(--editor-gutter-ink)', border: 'none', fontSizeAdjust: 'none' },
     '.cm-lineNumbers .cm-gutterElement': { padding: '0 0.5rem 0 0.75rem', minWidth: '2.5rem' },
     '.cm-foldGutter .cm-gutterElement': { padding: '0 0.25rem', cursor: 'pointer' },
     '.cm-foldGutter .cm-gutterElement:hover': { color: 'var(--foreground)' },
     '.cm-foldPlaceholder': {
         backgroundColor: 'var(--muted)',
         border: 'none',
-        borderRadius: 'var(--radius-control)',
+        borderRadius: 'var(--control-radius)',
         color: 'var(--muted-foreground)',
         padding: '0 0.375rem',
     },
@@ -200,7 +201,7 @@ const THEME = EditorView.theme({
         backgroundColor: 'var(--popover)',
         color: 'var(--popover-foreground)',
         border: '1px solid var(--border)',
-        borderRadius: 'var(--radius-control)',
+        borderRadius: 'var(--control-radius)',
         boxShadow: 'var(--shadow-pop)',
         fontFamily: 'var(--font-sans)',
         fontSize: 'var(--text-xs)',
@@ -241,7 +242,7 @@ const THEME = EditorView.theme({
         backgroundColor: 'var(--field)',
         color: 'var(--foreground)',
         border: '1px solid var(--input)',
-        borderRadius: 'var(--radius-control)',
+        borderRadius: 'var(--control-radius)',
         padding: '0.125rem 0.5rem',
         margin: '0',
         fontSize: 'var(--text-xs)',
@@ -253,7 +254,7 @@ const THEME = EditorView.theme({
         backgroundColor: 'var(--background)',
         color: 'var(--foreground)',
         border: '1px solid var(--border)',
-        borderRadius: 'var(--radius-control)',
+        borderRadius: 'var(--control-radius)',
         padding: '0.125rem 0.5rem',
         margin: '0',
         fontSize: 'var(--text-xs)',
