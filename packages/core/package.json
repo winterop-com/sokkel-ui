@@ -134,6 +134,10 @@
             "types": "./dist/components/Composer.d.ts",
             "import": "./dist/components/Composer.js"
         },
+        "./ComputedField": {
+            "types": "./dist/components/ComputedField.d.ts",
+            "import": "./dist/components/ComputedField.js"
+        },
         "./ConfirmCard": {
             "types": "./dist/components/ConfirmCard.d.ts",
             "import": "./dist/components/ConfirmCard.js"
@@ -585,6 +589,10 @@
         "./WindowedPane": {
             "types": "./dist/components/WindowedPane.d.ts",
             "import": "./dist/components/WindowedPane.js"
+        },
+        "./YesNoField": {
+            "types": "./dist/components/YesNoField.d.ts",
+            "import": "./dist/components/YesNoField.js"
         },
         "./board/Board": {
             "types": "./dist/components/board/Board.d.ts",
