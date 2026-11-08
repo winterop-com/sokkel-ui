@@ -66,6 +66,9 @@ html[data-theme='paper'] {
     --code-inserted: oklch(0.5 0.123 150);
     --code-deleted: oklch(0.5 0.123 25);
     --code-invalid: oklch(0.5 0.123 25);
+    --code-bracket-1: oklch(0.5 0.112 85);
+    --code-bracket-2: oklch(0.5 0.112 320);
+    --code-bracket-3: oklch(0.5 0.112 230);
 }
 
 html.dark[data-theme='paper'] {
@@ -134,6 +137,9 @@ html.dark[data-theme='paper'] {
     --code-inserted: oklch(0.8 0.106 150);
     --code-deleted: oklch(0.8 0.106 25);
     --code-invalid: oklch(0.8 0.106 25);
+    --code-bracket-1: oklch(0.8 0.096 85);
+    --code-bracket-2: oklch(0.8 0.096 320);
+    --code-bracket-3: oklch(0.8 0.096 230);
 }
 
 [data-theme-scope='paper'] {
@@ -276,6 +282,9 @@ html.dark[data-theme='paper'] {
     --code-inserted: oklch(0.5 0.123 150);
     --code-deleted: oklch(0.5 0.123 25);
     --code-invalid: oklch(0.5 0.123 25);
+    --code-bracket-1: oklch(0.5 0.112 85);
+    --code-bracket-2: oklch(0.5 0.112 320);
+    --code-bracket-3: oklch(0.5 0.112 230);
 }
 
 .dark [data-theme-scope='paper'] {
@@ -418,5 +427,8 @@ html.dark[data-theme='paper'] {
     --code-inserted: oklch(0.8 0.106 150);
     --code-deleted: oklch(0.8 0.106 25);
     --code-invalid: oklch(0.8 0.106 25);
+    --code-bracket-1: oklch(0.8 0.096 85);
+    --code-bracket-2: oklch(0.8 0.096 320);
+    --code-bracket-3: oklch(0.8 0.096 230);
     --terminal-bar: oklch(0.21 0.013 255);
 }

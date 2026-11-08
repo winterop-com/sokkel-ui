@@ -22,6 +22,15 @@ describe('the highlighter', () => {
         expect(out).toContain('color:var(--code-comment)')
     })
 
+    it('colors bracket pairs by depth, but not brackets inside strings', async () => {
+        const out = html(await highlightCode('{"a": [1, "[x]"]}', 'json'))
+        expect(out).toContain('<span style="color:var(--code-bracket-1)">{</span>')
+        expect(out).toContain('<span style="color:var(--code-bracket-2)">[</span>')
+        expect(out).toContain('<span style="color:var(--code-bracket-2)">]</span>')
+        expect(out).toContain('<span style="color:var(--code-bracket-1)">}</span>')
+        expect(out).not.toContain('color:var(--code-bracket-3)')
+    })
+
     it('draws ANSI output as styled runs, line by line', async () => {
         const lines = await highlightCode('\u001b[31mfailed\u001b[0m\nok', 'ansi')
         expect(lines).toHaveLength(2)

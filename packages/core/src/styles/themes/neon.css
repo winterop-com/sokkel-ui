@@ -80,6 +80,9 @@ html[data-theme='neon'] {
     --code-inserted: oklch(0.5 0.193 150);
     --code-deleted: oklch(0.5 0.193 25);
     --code-invalid: oklch(0.5 0.193 25);
+    --code-bracket-1: oklch(0.5 0.175 85);
+    --code-bracket-2: oklch(0.5 0.175 320);
+    --code-bracket-3: oklch(0.5 0.175 230);
 }
 
 html.dark[data-theme='neon'] {
@@ -162,6 +165,9 @@ html.dark[data-theme='neon'] {
     --code-inserted: oklch(0.8 0.165 150);
     --code-deleted: oklch(0.8 0.165 25);
     --code-invalid: oklch(0.8 0.165 25);
+    --code-bracket-1: oklch(0.8 0.15 85);
+    --code-bracket-2: oklch(0.8 0.15 320);
+    --code-bracket-3: oklch(0.8 0.15 230);
 }
 
 [data-theme-scope='neon'] {
@@ -304,6 +310,9 @@ html.dark[data-theme='neon'] {
     --code-inserted: oklch(0.5 0.193 150);
     --code-deleted: oklch(0.5 0.193 25);
     --code-invalid: oklch(0.5 0.193 25);
+    --code-bracket-1: oklch(0.5 0.175 85);
+    --code-bracket-2: oklch(0.5 0.175 320);
+    --code-bracket-3: oklch(0.5 0.175 230);
 }
 
 .dark [data-theme-scope='neon'] {
@@ -446,5 +455,8 @@ html.dark[data-theme='neon'] {
     --code-inserted: oklch(0.8 0.165 150);
     --code-deleted: oklch(0.8 0.165 25);
     --code-invalid: oklch(0.8 0.165 25);
+    --code-bracket-1: oklch(0.8 0.15 85);
+    --code-bracket-2: oklch(0.8 0.15 320);
+    --code-bracket-3: oklch(0.8 0.15 230);
     --terminal-bar: oklch(0.21 0.013 255);
 }

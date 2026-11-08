@@ -168,12 +168,25 @@ function getLanguage(language: string): string | null {
     return aliases[name] ?? null
 }
 
-/** The highlighter's state after a piece of code: the grammar's, or for ANSI output the style in force. */
-export type HighlightState = GrammarState | AnsiStyle
+/** Where highlighted code left off: the grammar's state, and how deep in brackets it is. */
+export interface CodeState {
+    grammar: GrammarState
+    depth: number
+}
+
+/** The highlighter's state after a piece of code: the code's, or for ANSI output the style in force. */
+export type HighlightState = CodeState | AnsiStyle
+
+const isCode = (state: HighlightState | undefined): state is CodeState => state !== undefined && 'grammar' in state
+
+/** Text a bracket inside it is not a bracket of the code's. */
+const QUOTED = new Set([color('string'), color('comment'), color('regexp')])
+const OPENING = '([{'
+const CLOSING = ')]}'
 
 /** ANSI output, line by line, each run in the style its escapes set. */
 function highlightAnsi(code: string, state?: HighlightState) {
-    const { segments, style } = parseAnsi(code, state !== undefined && !('getScopes' in state) ? state : {})
+    const { segments, style } = parseAnsi(code, state !== undefined && !isCode(state) ? state : {})
     const lines: React.ReactNode[][] = [[]]
     for (const segment of segments) {
         segment.text.split('\n').forEach((part, index) => {
@@ -216,33 +229,59 @@ export async function loadHighlighter(language: string) {
     }
 
     return {
-        // Returns one React node per line, and the grammar state after the last
-        // line. Pass that state back to continue where the code left off.
+        // Returns one React node per line, and the state after the last line.
+        // Pass that state back to continue where the code left off. Bracket
+        // pairs take code-bracket-1 to 3 by how deeply they nest.
         highlight(code: string, state?: HighlightState) {
             const tokens = shiki.codeToTokens(code, {
                 lang,
                 theme: THEME_NAME,
-                grammarState: state !== undefined && 'getScopes' in state ? state : undefined,
+                grammarState: isCode(state) ? state.grammar : undefined,
             }).tokens
+            let depth = isCode(state) ? state.depth : 0
+            const bracket = (char: string, key: string) => {
+                const closing = CLOSING.includes(char)
+                if (closing) depth = Math.max(0, depth - 1)
+                const span = (
+                    <span key={key} style={{ color: color(`bracket-${String((depth % 3) + 1)}`) }}>
+                        {char}
+                    </span>
+                )
+                if (!closing) depth += 1
+                return span
+            }
 
-            return {
-                lines: tokens.map((line) =>
-                    line.map((token, index) => {
-                        const font = token.fontStyle ?? 0
-                        const style: React.CSSProperties = {}
-                        if (token.color !== undefined && token.color !== 'inherit') style.color = token.color
-                        if (font & FONT_STYLE.italic) style.fontStyle = 'italic'
-                        if (font & FONT_STYLE.bold) style.fontWeight = 600
-                        if (font & FONT_STYLE.underline) style.textDecorationLine = 'underline'
-                        return (
+            const lines = tokens.map((line) =>
+                line.flatMap((token, index) => {
+                    const font = token.fontStyle ?? 0
+                    const style: React.CSSProperties = {}
+                    if (token.color !== undefined && token.color !== 'inherit') style.color = token.color
+                    if (font & FONT_STYLE.italic) style.fontStyle = 'italic'
+                    if (font & FONT_STYLE.bold) style.fontWeight = 600
+                    if (font & FONT_STYLE.underline) style.textDecorationLine = 'underline'
+                    if (QUOTED.has(token.color ?? '') || !/[()[\]{}]/.test(token.content)) {
+                        return [
                             <span key={index} style={style}>
                                 {token.content}
-                            </span>
+                            </span>,
+                        ]
+                    }
+                    return token.content
+                        .split(/([()[\]{}])/)
+                        .filter((part) => part !== '')
+                        .map((part, at) =>
+                            OPENING.includes(part) || CLOSING.includes(part) ? (
+                                bracket(part, `${String(index)}.${String(at)}`)
+                            ) : (
+                                <span key={`${String(index)}.${String(at)}`} style={style}>
+                                    {part}
+                                </span>
+                            ),
                         )
-                    }),
-                ),
-                state: shiki.getLastGrammarState(tokens) as HighlightState,
-            }
+                }),
+            )
+
+            return { lines, state: { grammar: shiki.getLastGrammarState(tokens), depth } as HighlightState }
         },
     }
 }

@@ -39,4 +39,19 @@ describe('Markdown parts', () => {
         expect(html).not.toContain('missing')
         expect(html).toContain('<p>text</p>')
     })
+
+    it('takes another marker word and a function that draws each part', () => {
+        const content = [
+            'Filter the runs:',
+            '',
+            '<!-- snippet:failed-runs -->',
+            '',
+            '```jq',
+            '.runs[] | select(.state == "failed")',
+            '```',
+        ].join('\n')
+        const html = renderToStaticMarkup(<Markdown content={content} partMarker="snippet" parts={(id) => <b>{id}</b>} />)
+        expect(html).toContain('<div data-part="failed-runs" class="my-3"><b>failed-runs</b></div>')
+        expect(html).toContain('data-slot="code-block"')
+    })
 })

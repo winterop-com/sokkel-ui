@@ -7,8 +7,8 @@ import { THEMES } from '@winterop-com/sokkel-ui/lib/appearance'
 
 /**
  * Code in the `code-*` tokens: keyword, operator, punctuation, string, regexp, number, constant,
- * comment, function, variable, type, property, tag, attribute, heading, link, inserted, deleted and
- * invalid. Shiki colors `Code` and `Markdown`'s fences from them and CodeMirror colors
+ * comment, function, variable, type, property, tag, attribute, heading, link, inserted, deleted,
+ * invalid, and three bracket colors for pairs by depth. Shiki colors `Code` and `Markdown`'s fences from them and CodeMirror colors
  * `CodeEditor` from the same, so code follows the theme and scheme it stands in.
  */
 const meta: Meta = { title: 'Foundations/Code colors', parameters: { frame: 'padded' } }

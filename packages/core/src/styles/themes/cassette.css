@@ -80,6 +80,9 @@ html[data-theme='cassette'] {
     --code-inserted: oklch(0.5 0.146 150);
     --code-deleted: oklch(0.5 0.146 25);
     --code-invalid: oklch(0.5 0.146 25);
+    --code-bracket-1: oklch(0.5 0.133 85);
+    --code-bracket-2: oklch(0.5 0.133 320);
+    --code-bracket-3: oklch(0.5 0.133 230);
 }
 
 html.dark[data-theme='cassette'] {
@@ -162,6 +165,9 @@ html.dark[data-theme='cassette'] {
     --code-inserted: oklch(0.8 0.125 150);
     --code-deleted: oklch(0.8 0.125 25);
     --code-invalid: oklch(0.8 0.125 25);
+    --code-bracket-1: oklch(0.8 0.114 85);
+    --code-bracket-2: oklch(0.8 0.114 320);
+    --code-bracket-3: oklch(0.8 0.114 230);
 }
 
 [data-theme-scope='cassette'] {
@@ -304,6 +310,9 @@ html.dark[data-theme='cassette'] {
     --code-inserted: oklch(0.5 0.146 150);
     --code-deleted: oklch(0.5 0.146 25);
     --code-invalid: oklch(0.5 0.146 25);
+    --code-bracket-1: oklch(0.5 0.133 85);
+    --code-bracket-2: oklch(0.5 0.133 320);
+    --code-bracket-3: oklch(0.5 0.133 230);
 }
 
 .dark [data-theme-scope='cassette'] {
@@ -446,5 +455,8 @@ html.dark[data-theme='cassette'] {
     --code-inserted: oklch(0.8 0.125 150);
     --code-deleted: oklch(0.8 0.125 25);
     --code-invalid: oklch(0.8 0.125 25);
+    --code-bracket-1: oklch(0.8 0.114 85);
+    --code-bracket-2: oklch(0.8 0.114 320);
+    --code-bracket-3: oklch(0.8 0.114 230);
     --terminal-bar: oklch(0.21 0.013 255);
 }
