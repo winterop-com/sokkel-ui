@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
-import { hasTrafficLights, trafficLightsStyle, windowPressHandler, type DesktopWindow } from '../lib/desktop'
+import { trafficLightsStyle, useTrafficLights, windowPressHandler, type DesktopWindow } from '../lib/desktop'
 import { TopBar, type TopBarProps } from './TopBar'
 
 /**
@@ -22,6 +22,7 @@ export function AppBar({
     /** The desktop window the screen stands in, when its native title bar is hidden; leave it off in a browser. */
     desktop?: DesktopWindow
 }) {
+    const lights = useTrafficLights(desktop)
     return (
         <header
             data-window-drag={desktop === undefined ? undefined : ''}
@@ -29,7 +30,7 @@ export function AppBar({
             onMouseDown={windowPressHandler(desktop)}
             className={cn(
                 'relative flex h-shell-top shrink-0 items-center gap-2 border-b border-border-strong bg-sidebar px-3',
-                hasTrafficLights(desktop) && 'ps-(--spacing-traffic-lights)',
+                lights && 'ps-(--spacing-traffic-lights)',
                 className,
             )}
         >

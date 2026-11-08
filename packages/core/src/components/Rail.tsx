@@ -15,7 +15,7 @@ import {
 import { createPortal } from 'react-dom'
 
 import { cn } from '../lib/cn'
-import { hasTrafficLights } from '../lib/desktop'
+import { useTrafficLights } from '../lib/desktop'
 import { usePanelSize } from '../hooks/use-panel-size'
 import { ShellDesktop, ShellFootCell } from './shell-context'
 import { ResizeHandle } from './ResizeHandle'
@@ -168,7 +168,7 @@ export function Rail({
     const aside = useRef<HTMLElement>(null)
     const footCell = useContext(ShellFootCell)
     const desktop = useContext(ShellDesktop)
-    const lights = hasTrafficLights(desktop)
+    const lights = useTrafficLights(desktop)
     const drag = desktop === undefined ? undefined : ''
     const words = { ...WORDS, ...given }
     const unread = words.unread

@@ -1,4 +1,4 @@
-import type { CSSProperties, MouseEvent } from 'react'
+import { useSyncExternalStore, type CSSProperties, type MouseEvent } from 'react'
 
 /**
  * How a frame stands in a desktop window whose native title bar is hidden (Electron's
@@ -17,6 +17,11 @@ export interface DesktopWindow {
      * pixels. Leave it off in a browser and off macOS, where nothing is drawn there.
      */
     trafficLights?: boolean | number
+    /**
+     * The window is in the system's own full screen, where macOS hides its buttons, so no room is
+     * left for them. The browser's full screen (`document.fullscreenElement`) is noticed without it.
+     */
+    fullscreen?: boolean
     /**
      * Called when the strip is pressed outside its controls, for a webview that ignores
      * `app-region` (WKWebView, so Tauri on macOS): the app starts the window's own drag, such as
@@ -88,10 +93,30 @@ export function windowPressHandler(desktop: DesktopWindow | undefined): ((event:
     }
 }
 
-/** Whether the frame leaves room for the window's own buttons. */
-export function hasTrafficLights(desktop: DesktopWindow | undefined): boolean {
+/** Whether the frame leaves room for the window's own buttons: asked for, and not in full screen. */
+export function hasTrafficLights(desktop: DesktopWindow | undefined, fullscreen = false): boolean {
     const lights = desktop?.trafficLights
+    if (fullscreen || desktop?.fullscreen === true) return false
     return lights === true || (typeof lights === 'number' && lights > 0)
+}
+
+function onFullscreenChange(change: () => void): () => void {
+    document.addEventListener('fullscreenchange', change)
+    return () => document.removeEventListener('fullscreenchange', change)
+}
+
+/** Whether the page is in the browser's full screen, following it as it changes. */
+export function useFullscreen(): boolean {
+    return useSyncExternalStore(
+        onFullscreenChange,
+        () => document.fullscreenElement !== null,
+        () => false,
+    )
+}
+
+/** `hasTrafficLights`, dropping the room while the window is in full screen, the browser's or the system's. */
+export function useTrafficLights(desktop: DesktopWindow | undefined): boolean {
+    return hasTrafficLights(desktop, useFullscreen())
 }
 
 /** The style that sets the room for the window's buttons when the app gave it in pixels. */

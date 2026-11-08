@@ -3,7 +3,7 @@ import { useId, useRef, useState, type CSSProperties, type ReactNode } from 'rea
 
 import { useThemeName } from '../hooks/use-theme-name'
 import { cn } from '../lib/cn'
-import { hasTrafficLights, trafficLightsStyle, windowPressHandler, type DesktopWindow } from '../lib/desktop'
+import { trafficLightsStyle, useTrafficLights, windowPressHandler, type DesktopWindow } from '../lib/desktop'
 import { CheckboxField } from './CheckboxField'
 import { Field } from './Field'
 import { ResizeHandle } from './ResizeHandle'
@@ -274,6 +274,7 @@ export function SignIn({
     const firstFact = facts[0]
     const dark = brandScheme === 'dark'
     const drag = desktop === undefined ? undefined : ''
+    const lights = useTrafficLights(desktop)
     const maxBrand = () => Math.max(BRAND_MIN, (root.current?.offsetWidth ?? BRAND_MIN + FORM_ROOM) - FORM_ROOM)
 
     /** Each part of the form rises a beat after the one before. */
@@ -321,7 +322,7 @@ export function SignIn({
                         data-window-drag={drag}
                         className={cn(
                             'flex w-full items-center gap-3 border-b border-border px-5 py-4',
-                            hasTrafficLights(desktop) && 'ps-(--spacing-traffic-lights)',
+                            lights && 'ps-(--spacing-traffic-lights)',
                         )}
                     >
                         {markBox('small')}

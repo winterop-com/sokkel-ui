@@ -68,6 +68,12 @@ describe('traffic lights', () => {
         expect(trafficLightsStyle({ trafficLights: true })).toBeUndefined()
         expect(trafficLightsStyle({ trafficLights: 92 })).toEqual({ '--spacing-traffic-lights': '92px' })
     })
+
+    it('leave no room in full screen, the system one the app reports or the browser one', () => {
+        expect(hasTrafficLights({ trafficLights: true, fullscreen: true })).toBe(false)
+        expect(hasTrafficLights({ trafficLights: true }, true)).toBe(false)
+        expect(hasTrafficLights({ trafficLights: true, fullscreen: false }, false)).toBe(true)
+    })
 })
 
 describe('desktopShellOf', () => {
