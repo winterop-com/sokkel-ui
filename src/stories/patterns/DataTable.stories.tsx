@@ -123,10 +123,12 @@ function Runs({
     count,
     defaultSelection,
     defaultSort = null,
+    reorderable,
 }: {
     count: number
     defaultSelection?: ReadonlySet<string>
     defaultSort?: DataSort | null
+    reorderable?: boolean
 }) {
     const all = makeRuns(count)
     const [query, setQuery] = useState('')
@@ -147,6 +149,7 @@ function Runs({
                 selectable
                 defaultSelection={defaultSelection}
                 defaultSort={defaultSort}
+                reorderable={reorderable}
                 bulkActions={bulk}
                 rowActions={runActions}
                 onOpen={(run) => setOpened(run.id)}
@@ -237,6 +240,13 @@ function Picking() {
 /** A list that picks the row its detail shows: a click, Enter or Space picks it, and it is filled and marked selected. No boxes. */
 export const Pick: StoryObj = {
     render: () => <Picking />,
+}
+
+/** A table whose columns keep their order: its columns menu shows and hides them, with no moves. */
+export const FixedOrder: StoryObj = {
+    name: 'Fixed order',
+    parameters: { frame: 'none' },
+    render: () => <Runs count={100} reorderable={false} />,
 }
 
 /** The tint under the pointer turned off, for a listing that should stay still. */

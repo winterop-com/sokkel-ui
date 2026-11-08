@@ -562,6 +562,8 @@ export interface DataTableProps<T> {
     rowHeight?: 'fixed' | 'auto'
     /** Whether the column heads' edges resize the columns. */
     resizable?: boolean
+    /** Whether the columns menu moves columns up and down; `false` leaves only showing and hiding them. */
+    reorderable?: boolean
     /** Widths in pixels by column id; a column without one keeps its own `width`. */
     columnWidths?: Readonly<Record<string, number>>
     defaultColumnWidths?: Readonly<Record<string, number>>
@@ -601,7 +603,8 @@ export interface DataTableProps<T> {
  * Each column head's right edge resizes its column, as a panel's edge does: drag it, move it with
  * the arrows, or double-click it or press Enter to put it back. A column sized as a fraction
  * becomes pixels once dragged. `resizable={false}`, or `resizable: false` on a column, turns it
- * off; phones and stacked cards have no handles. A column with a `sortValue` sorts from
+ * off; phones and stacked cards have no handles. The columns menu shows, hides and moves the
+ * columns after the first; `reorderable={false}` leaves it showing and hiding only. A column with a `sortValue` sorts from
  * its head: up, down, then as the rows came. With `selectable`, each row gets a box; Shift picks
  * a range and Ctrl or Command a single row from anywhere on the row, and once anything is
  * selected the bar above says how many and holds `bulkActions`. With `childRows`, a row with
@@ -693,6 +696,7 @@ export function DataTable<T>({
     minWidth: ownMinWidth,
     rowHeight: rowSizing = 'fixed',
     resizable = true,
+    reorderable = true,
     columnWidths: widthsValue,
     defaultColumnWidths = NO_WIDTHS,
     onColumnWidthsChange,
@@ -1053,6 +1057,8 @@ export function DataTable<T>({
     // Every column but the first moves in the column menu; the hideable ones also hide there.
     const movable = ordered.slice(1)
     const hideable = movable.filter((column) => column.hideable !== false)
+    const reorder = reorderable && movable.length > 1
+    const menuColumns = reorder ? movable : hideable
     const move = (id: string, by: -1 | 1) => setColumnIds(movedColumn(ordered, id, by))
     const sortable = manualSort && onSortChange === undefined ? [] : columns.filter((column) => column.sortValue !== undefined)
     // A list pins nothing and sets its columns apart with a gap; a table pins its first and last columns and pads its cells.
@@ -1459,7 +1465,7 @@ export function DataTable<T>({
                                     ))}
                                 </div>
                             )}
-                            {!gridView && (hideable.length > 0 || movable.length > 1) && (
+                            {!gridView && (hideable.length > 0 || reorder) && (
                                 <Popover>
                                     <PopoverTrigger render={<Button variant="ghost" size="icon-sm" aria-label={words.columns} />}>
                                         <Columns3Icon />
@@ -1471,7 +1477,7 @@ export function DataTable<T>({
                                     >
                                         <p className="px-1.5 py-1 text-xs font-medium text-muted-foreground">{words.columns}</p>
                                         <ul className="flex flex-col">
-                                            {movable.map((column, index) => (
+                                            {menuColumns.map((column, index) => (
                                                 <li
                                                     key={column.id}
                                                     className="flex min-h-8 items-center gap-0.5 rounded-md pl-1.5 hover:bg-hover"
@@ -1489,7 +1495,7 @@ export function DataTable<T>({
                                                         />
                                                         <span className="min-w-0 truncate">{column.header}</span>
                                                     </label>
-                                                    {movable.length > 1 && (
+                                                    {reorder && (
                                                         <>
                                                             <IconButton
                                                                 label={words.moveUp(column.header)}
