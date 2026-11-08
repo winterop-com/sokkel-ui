@@ -128,7 +128,12 @@ by day) use them.
 Applying and keeping the look is the library's too, never an app's: `useAppearance` keeps the theme,
 scheme, density, corners, typeface and motion in `localStorage` and wears them on `<html>`,
 `useScheme` does the same for the scheme alone, and `appearanceScript` wears the kept look before
-the page draws. Storybook's toolbar wears its globals through the same `applyAppearance`. The
+the page draws. An app that keeps its settings elsewhere (an extension's storage, a desktop shell's
+settings file) hands `setAppearanceStorage` its `read` and `write`, which may answer later: the page
+wears the last known look until they do, kept as a copy in `localStorage` for the script. A page
+that refuses inline script loads the same script as a file, `@winterop-com/sokkel-ui/appearance.js`,
+which the core's build writes from `appearanceScriptFile()`, the defaults read from the script
+element's data attributes. Storybook's toolbar wears its globals through the same `applyAppearance`. The
 option lists a picker offers (`THEMES`, made from the tokens by `scripts/build-tokens.ts`,
 `CORNERS`, `TYPEFACES` and `FACES`) are in `lib/appearance`.
 
@@ -146,7 +151,11 @@ account menu offers Light, Dark and System in itself (`scheme`, `onSchemeChange`
 one is chosen; an app's own rows (`extra`) carry their icons, and where no one is signed in
 `onSignIn` stands in Sign out's place with an icon of its own. On a phone its rows are a finger's
 height and Keyboard shortcuts is left out. A new `contentKey` on `Shell` mounts the page afresh,
-as after the server has come back, without a wrapper of the app's.
+as after the server has come back, without a wrapper of the app's. A work page with list and detail
+panes of its own narrows the rail to its icons or hides it while it is shown, with `useRailMode`
+(or `Shell`'s `railMode`): the latest screen's ask wins, the rail is as the app holds it once none
+asks, a narrowed rail's mark still widens it for the reader with the account following, and a
+hidden rail opens as the drawer from the top bar at every width.
 
 A screen adds what only it can do to the palette with `useCommands(groups, deps)` while it is
 mounted and takes it away when it unmounts; the shell holds the registry and lists those groups with
@@ -212,6 +221,15 @@ draws there (`--spacing-traffic-lights`, 80px, or the app's pixels): in the rail
 bar where no rail shows, and where a collapsed rail is narrower than the room its head stays empty
 under the buttons, its mark below. `SignIn` and `AppBar` take the same `desktop`. The library
 imports no desktop shell; `isDesktopShell` in `lib/desktop` reads which one a page runs in.
+
+Every part that goes full screen (the player's fullscreen view, `VideoPlayer`, a map, a pane opened
+with `fullscreen`) goes through `lib/fullscreen`: the browser's full screen, unless the app handed
+the library its window's own as `desktop.setFullscreen` (Tauri's `setFullscreen`, which WKWebView
+needs since it has no full screen for an element). Then the window goes full screen through that
+call and the part's element covers it, in the top layer where the webview has one, Escape leaving
+as in a browser; `desktop.fullscreen` reported as it changes lets the element go when the window
+leaves by its own way. `useFullscreen` follows both, so the room for the window's buttons goes in
+either.
 
 ## Code
 
@@ -286,7 +304,7 @@ toggle-group, tooltip, trace.
 ## Patterns
 
 Shell, Rail, AppBar, SubNav, Page, PageHeader, PaneHeader, Toolbar, Section, Surface, the layout
-components (Stack, Row, Columns, Split, Fill), Field, TextField, InlineField, SliderField,
+components (Stack, Row, Columns, Split, Fill), SplitPane, Field, TextField, InlineField, SliderField,
 CheckboxField, CheckboxList, ChoiceList, CodeField, SwitchField, SearchField, FilterChip, FormBar,
 SelectionBar, DataTable, StatusChip, PersonAvatar, PersonRow, MetaLine, DueText, AttachmentList,
 IconButton, StarButton, SplitButton, DownloadButton, AccountMenu, SidePanel, DialogShell,
@@ -352,6 +370,16 @@ as when they last synced) and closes with Done. `onReset` adds Reset to defaults
 start, for the shown section or for every setting, asked once more before it runs. On a phone the
 dialog is a full-screen sheet with the footer at its foot, clear of the home indicator.
 
+`SettingsView` lays the same groups, search, reset and words out as a page inside `Shell`, on the
+parts the dialog draws with (`settings-parts`): the sections down the side in a `SubNav` with the
+search over them, the chosen section's rows under its title, and a `FormBar` across the foot with
+Reset to defaults at its start (`FormBar`'s `start`), the note, and Done when the app gives
+`onDone`. Below `lg` the search and a `ChipBar` of the sections stand on top of the page.
+`WizardView` lays `WizardDialog`'s steps out on a page the same way, the two sharing their moves
+(`wizardMoves`): the steps down the side, each with its description (`StepIndicator`'s `vertical`),
+or along the top with `layout="top"` and always below `lg`; the step's body under the page's title;
+and Cancel, Back and Next, or the finish, in a `FormBar`, Next shut with its reason.
+
 On a phone each part lays itself out by the room it has, so no example patches it. `DataTable`'s bar
 gives its `search` a line of its own, the tools wrapping across the width under it with the count
 and the sort after them, and its stacked cards set each column by its `stack`: a line, named or not,
@@ -365,11 +393,19 @@ a lane too narrow for the times its title alone, over as many lines as the block
 stand two to a row of a `DashboardGrid`, on shorter bodies with figures at `--chart-stat-size-small`.
 A `MermaidDiagram` shrinks to its box only until its labels reach `--text-2xs`, then scrolls sideways.
 
+`SplitPane` sets two panes across or down with a rule between them that drags, the first pane's
+share held within `minShare` and `maxShare`, the second's what is left. It holds its own share from
+`defaultShare` and keeps it by `id` in storage; `share` with `onShareChange` holds it from outside.
+Narrower than `narrowBelow`, measured on itself, it stacks its panes or shows the one `narrow` names,
+as a phone shows a list or the message opened from it, and `useSplitPane` tells a pane it is alone.
+Mail's list beside its reading pane, the query workbench and a chat's history are split by it.
+
 `WindowedPane` gives any pane an expand button that opens the same content near full screen, in a
 window with a margin, a title, a close button and Escape, the pane keeping its height in place
 until the content comes back; `MermaidDiagram`, an expandable `DashboardPanel` and `ChartFrame` open
-through it, so there is one way to open a pane near full screen. A map's own full screen control
-asks the browser for its full screen instead, keeping the same canvas and camera.
+through it, so there is one way to open a pane near full screen. `fullscreen` on the pane, the frame
+and the dashboard panels also puts the page in full screen while the window is open. A map's own
+full screen control puts the map itself in full screen instead, keeping the same canvas and camera.
 `useStored` keeps a value in `localStorage` as JSON under an app prefix (`setStoredPrefix`), in
 memory when storage is refused, refusing a kept value its `check` does not pass, and follows the
 same key in other hooks and other tabs; `useAppearance` keeps the look through the same store. A
@@ -420,6 +456,9 @@ areas or points draw and answer the cursor with no work per feature in React. `B
 simplifies heavy geometry once as it arrives (`simplify`) and names its areas (`label`) in a symbol
 layer that maplibre declutters, the larger areas placed first; names need a basemap with fonts.
 `PointLayer` gathers points into counted clusters, and the map fits whatever its layers draw.
+`GeoJsonLayer` draws any GeoJSON by its geometry, polygons as fills inside outlines, lines as lines
+and points as circles, a geometry collection part by part as one feature, in one color or a scale's
+by a property; `geoJsonEntry` keys it in a `MapLegend`, which draws a line's swatch as a stroke.
 
 A map beside a hierarchy (Apps/Sites, after an adopting app's own page of a tree, a map and a
 detail card) shares one selection with the tree: the selected feature in `--map-selection`, the
@@ -512,7 +551,24 @@ One sound is heard at a time: a player claims the sound as it starts to be heard
 is paused, through `claimSound` and `useOneSound` in `media/one-sound`. AudioPlayer, VideoPlayer and
 MediaBar claim it unless given `exclusive={false}`, MediaBar pausing through its `onPlayingChange`;
 a muted player takes no sound, so a muted preview never stops the music. An app's own element joins
-by claiming too. `Artwork` is a record's cover: its picture once loaded, or one drawn in the theme's
+by claiming too. `SpeakButton` reads a text aloud with audio the app fetches on demand: its `load`
+is called on the first press with an abort signal and answers with an address or a `Blob`, kept
+while the button is mounted so the next press plays at once. It goes from idle through loading (a
+press stops the fetch) to playing (a press stops it), or says the audio failed and fetches again on
+the next press, and it claims the one sound as the players do. `AssistantReply`'s `speak` puts it in
+the footer after Copy.
+
+Dictation has no engine of the library's own. `useDictation` either records the microphone with
+`MediaRecorder` and hands the recording to the app's `transcribe(audio, { signal })`, or, where the
+app opts in with `recognition`, uses the browser's own speech recognition, which some browsers run
+on their maker's servers; given both, the browser's is used where there is one. `Composer`'s
+`dictation` takes the same options and draws them: a microphone before Send; while it hears, a row
+with a pulsing mark, the voice's level (`BarVisualizer`, loaded with the first recording) or the
+words heard so far, the time and a cancel; then Transcribing, and the text put in at the caret.
+Escape cancels, a failure is said whole on a line of its own over the row, wrapping at any width,
+and Send waits meanwhile. `microphone`
+stands in for `getUserMedia` and `defaultState` draws a state still, so a story never touches the
+microphone. `Artwork` is a record's cover: its picture once loaded, or one drawn in the theme's
 hues (a motif over a gradient between two), chosen from a stable seed such as the record's id, so a
 shelf of records without pictures is not all alike and a record wears the same cover in the grid,
 the list and the player. MediaCard draws it from `placeholderSeed` (the title by default) when it
@@ -588,7 +644,7 @@ a full-width waveform that grows from 18 to 96 pixels), `panel` (the large now-p
 arithmetic in `bar-growth.ts`. The visualizer rises faintly behind the words from about 96 pixels,
 standing on the waveform. A corner button, or an app's own key through `fullscreen`, opens
 MediaFullscreen, a now-playing view arranged after the layout, with the visualizer at full strength
-and a picker of its kind; it asks the browser for its fullscreen and falls back to covering the
+and a picker of its kind; it goes full screen through `lib/fullscreen` and falls back to covering the
 window, and it is a dark room in every theme: `.dark` around an element scoped to the document's
 theme with `data-theme-scope`. Its title is never cut short: in `rows` the words take the head's
 room up to the transport and the volume at its end, and in every layout the title wraps onto as many

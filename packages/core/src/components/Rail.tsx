@@ -17,7 +17,7 @@ import { createPortal } from 'react-dom'
 import { cn } from '../lib/cn'
 import { useTrafficLights } from '../lib/desktop'
 import { usePanelSize } from '../hooks/use-panel-size'
-import { ShellDesktop, ShellDrawer, ShellFootCell } from './shell-context'
+import { RailCollapsed, ShellDesktop, ShellDrawer, ShellFootCell, ShellRailMode } from './shell-context'
 import { ResizeHandle } from './ResizeHandle'
 import { Count } from './Count'
 import { Dot } from './Dot'
@@ -151,6 +151,10 @@ export interface RailProps {
  * `renderLink` draws an entry's link, so an app passes its router's link; by default it is an
  * anchor.
  *
+ * A screen in a `Shell` may narrow the rail to its icons while it is shown (`useRailMode`, or the
+ * shell's `railMode`): the rail draws collapsed whatever the app holds, its mark and its edge still
+ * widen it for the reader until the ask changes, and the app's own `collapsed` is left as it was.
+ *
  * In a `Shell` with `desktop`, the rail's head is part of the window's title strip and drags the
  * window. With `trafficLights` the head leaves room at its start for the window's buttons; a
  * collapsed rail or a strip, narrower than that room, keeps its head empty under the buttons, its
@@ -186,7 +190,20 @@ export function Rail({
     const footCell = useContext(ShellFootCell)
     const desktop = useContext(ShellDesktop)
     const drawer = useContext(ShellDrawer)
-    const collapsed = kept && drawer === undefined
+    // A screen narrowing the rail through the shell holds it in place of the app, until the reader widens it.
+    const narrowed = useContext(ShellRailMode) === 'collapsed' && drawer === undefined
+    const [widened, setWidened] = useState(false)
+    const [narrowedBefore, setNarrowedBefore] = useState(narrowed)
+    if (narrowedBefore !== narrowed) {
+        setNarrowedBefore(narrowed)
+        setWidened(false)
+    }
+    const collapsed = narrowed ? !widened : kept && drawer === undefined
+    const setCollapsed = (next: boolean) => {
+        if (narrowed) setWidened(!next)
+        else onCollapsedChange?.(next)
+    }
+    const collapsible = narrowed || onCollapsedChange !== undefined
     const lights = useTrafficLights(desktop)
     const drag = desktop === undefined ? undefined : ''
     const words = { ...WORDS, ...given }
@@ -238,7 +255,7 @@ export function Rail({
             aria-label={words.expand}
             title={words.expand}
             className="group/mark relative mx-auto flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground"
-            onClick={() => onCollapsedChange?.(false)}
+            onClick={() => setCollapsed(false)}
         >
             {mark !== undefined && <span className="group-hover/mark:opacity-0">{mark}</span>}
             <PanelLeftOpen className={cn('absolute size-4', mark !== undefined && 'opacity-0 group-hover/mark:opacity-100')} aria-hidden />
@@ -255,7 +272,7 @@ export function Rail({
         </>
     )
     return (
-        <>
+        <RailCollapsed value={narrowed ? collapsed : undefined}>
             <aside
                 ref={aside}
                 data-collapsed={collapsed || undefined}
@@ -295,13 +312,13 @@ export function Rail({
                                     <X className="size-4" aria-hidden />
                                 </button>
                             ) : (
-                                onCollapsedChange !== undefined && (
+                                collapsible && (
                                     <button
                                         type="button"
                                         aria-label={words.collapse}
                                         title={words.collapse}
                                         className={HEAD_BUTTON}
-                                        onClick={() => onCollapsedChange(true)}
+                                        onClick={() => setCollapsed(true)}
                                     >
                                         <PanelLeftClose className="size-4" aria-hidden />
                                     </button>
@@ -364,7 +381,7 @@ export function Rail({
                     </div>,
                     footCell,
                 )}
-            {resizable && held.changeable && (!collapsed || onCollapsedChange !== undefined) && (
+            {resizable && held.changeable && (!collapsed || collapsible) && (
                 // One handle through the change, so a drag that expands a collapsed rail goes on sizing it.
                 <ResizeHandle
                     target={aside}
@@ -374,10 +391,10 @@ export function Rail({
                     min={minSize}
                     max={maxSize}
                     label={collapsed ? words.expand : words.resize}
-                    onExpand={collapsed ? () => onCollapsedChange?.(false) : undefined}
+                    onExpand={collapsed ? () => setCollapsed(false) : undefined}
                 />
             )}
-        </>
+        </RailCollapsed>
     )
 }
 

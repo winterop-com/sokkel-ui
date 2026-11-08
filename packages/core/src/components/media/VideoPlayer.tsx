@@ -12,6 +12,7 @@ import {
 } from 'react'
 
 import { cn } from '../../lib/cn'
+import { enterFullscreen, exitFullscreen, fullscreenElement, subscribeFullscreen } from '../../lib/fullscreen'
 import { Button } from '../ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '../ui/dropdown-menu'
 import { Spinner } from '../ui/spinner'
@@ -214,6 +215,8 @@ function rangesOf(video: HTMLVideoElement): MediaRange[] {
  * by a tenth, F toggles fullscreen and M toggles mute. A click on the picture plays or pauses,
  * a double click toggles fullscreen, and a tap on a touch screen first brings back the controls.
  * `keys={false}` leaves every key to the app, whose shortcuts drive the player through its handle.
+ * Fullscreen goes through `lib/fullscreen`, so in a desktop shell the window's own full screen
+ * stands in for the browser's once the app hands it over (`desktop.setFullscreen` on `Shell`).
  *
  * It plays `src`, or media an engine feeds through `source`, from `startAt` when given, and tells
  * where it is through `onTime`. A stall that outlasts `stallAfter`, or a network or decoding
@@ -524,16 +527,18 @@ export function VideoPlayer({
     }, [src, sourceKey])
 
     useEffect(() => {
+        const element = root.current
         const change = () => {
-            const next = document.fullscreenElement !== null && document.fullscreenElement === root.current
+            const next = element !== null && fullscreenElement() === element
             setFullscreen(next)
             if (filled.current === next) return
             filled.current = next
             latest.current.onFullscreenChange?.(next)
         }
-        document.addEventListener('fullscreenchange', change)
+        const stop = subscribeFullscreen(change)
         return () => {
-            document.removeEventListener('fullscreenchange', change)
+            stop()
+            if (element !== null) exitFullscreen(element)
         }
     }, [])
 
@@ -622,9 +627,9 @@ export function VideoPlayer({
         const container = root.current
         const element = video.current as (HTMLVideoElement & { webkitEnterFullscreen?: () => void }) | null
         if (container === null) return
-        if (document.fullscreenElement !== null) void document.exitFullscreen().catch(() => undefined)
-        else if (typeof container.requestFullscreen === 'function') void container.requestFullscreen().catch(() => undefined)
-        else element?.webkitEnterFullscreen?.()
+        if (fullscreenElement() === container) exitFullscreen(container)
+        // A phone with no full screen for an element still plays the video full screen itself.
+        else if (!enterFullscreen(container, { cover: element?.webkitEnterFullscreen === undefined })) element?.webkitEnterFullscreen?.()
     }
     const togglePictureInPicture = () => {
         const element = video.current

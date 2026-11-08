@@ -33,6 +33,7 @@
         "./motion.css": "./src/styles/motion.css",
         "./typography.css": "./src/styles/typography.css",
         "./tokens.json": "./tokens/tokens.json",
+        "./appearance.js": "./dist/appearance.js",
         "./AccountMenu": {
             "types": "./dist/components/AccountMenu.d.ts",
             "import": "./dist/components/AccountMenu.js"
@@ -401,6 +402,10 @@
             "types": "./dist/components/SettingsDialog.d.ts",
             "import": "./dist/components/SettingsDialog.js"
         },
+        "./SettingsView": {
+            "types": "./dist/components/SettingsView.d.ts",
+            "import": "./dist/components/SettingsView.js"
+        },
         "./Shell": {
             "types": "./dist/components/Shell.d.ts",
             "import": "./dist/components/Shell.js"
@@ -436,6 +441,10 @@
         "./SplitButton": {
             "types": "./dist/components/SplitButton.d.ts",
             "import": "./dist/components/SplitButton.js"
+        },
+        "./SplitPane": {
+            "types": "./dist/components/SplitPane.d.ts",
+            "import": "./dist/components/SplitPane.js"
         },
         "./StarButton": {
             "types": "./dist/components/StarButton.d.ts",
@@ -636,6 +645,10 @@
         "./media/SoundVisualizer": {
             "types": "./dist/components/media/SoundVisualizer.d.ts",
             "import": "./dist/components/media/SoundVisualizer.js"
+        },
+        "./media/SpeakButton": {
+            "types": "./dist/components/media/SpeakButton.d.ts",
+            "import": "./dist/components/media/SpeakButton.js"
         },
         "./media/time": {
             "types": "./dist/components/media/time.d.ts",
@@ -961,6 +974,10 @@
             "types": "./dist/hooks/use-dark.d.ts",
             "import": "./dist/hooks/use-dark.js"
         },
+        "./hooks/use-dictation": {
+            "types": "./dist/hooks/use-dictation.d.ts",
+            "import": "./dist/hooks/use-dictation.js"
+        },
         "./hooks/use-highlighted-code": {
             "types": "./dist/hooks/use-highlighted-code.d.ts",
             "import": "./dist/hooks/use-highlighted-code.js"
@@ -1040,6 +1057,10 @@
         "./lib/desktop": {
             "types": "./dist/lib/desktop.d.ts",
             "import": "./dist/lib/desktop.js"
+        },
+        "./lib/fullscreen": {
+            "types": "./dist/lib/fullscreen.d.ts",
+            "import": "./dist/lib/fullscreen.js"
         },
         "./lib/highlighter": {
             "types": "./dist/lib/highlighter.d.ts",

@@ -147,7 +147,7 @@ export function MapPopup({
                 )}
             </div>
             {rows.length > 0 && (
-                <dl className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1 px-3 pb-2.5 text-xs">
+                <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1 px-3 pb-2.5 text-xs">
                     {rows.map((row) => (
                         <div key={row.label} className="contents">
                             <dt className="text-muted-foreground">{row.label}</dt>

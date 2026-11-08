@@ -19,9 +19,13 @@ while it is mounted with `useCommands` (`hooks/use-commands`), and binds its key
 `useShortcuts` (`hooks/use-shortcuts`), which `ShortcutsDialog` lists; `useOverlay`,
 `useScrollMemory` and `useReducedMotion` are in `hooks/` too. In a desktop window with its title
 bar hidden, `Shell`'s `desktop` makes the top strip the window's drag region and leaves room for
-the window's buttons (`lib/desktop`).
+the window's buttons (`lib/desktop`); its `setFullscreen` stands in for the browser's full screen
+in every part that goes full screen, which all go through `lib/fullscreen`. A work page with panes
+of its own narrows or hides the rail while it is shown with `useRailMode` (`Shell`'s `railMode`).
 The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appearance`,
-`hooks/use-scheme`), with the option lists in `@winterop-com/sokkel-ui/lib/appearance`.
+`hooks/use-scheme`), with the option lists in `@winterop-com/sokkel-ui/lib/appearance`, where
+`setAppearanceStorage` keeps it in an app's own storage; the script that wears it before the page
+draws is `appearanceScript()` inline, or the file `@winterop-com/sokkel-ui/appearance.js`.
 Other state an app keeps across reloads goes through `useStored` (`hooks/use-stored`), and files
 being uploaded through `useUploads` (`hooks/use-uploads`), which feeds `AttachmentList`.
 What plays is told to the operating system (media keys, lock screen) by `useMediaSession`
@@ -31,9 +35,9 @@ over several files maps its timeline to a file with `timeline`, a position that 
 animation frame is read by `useFramePosition` (`use-frame-position`), and LRC lyrics are read by
 `parseLyrics` in `lrc`, all under `@winterop-com/sokkel-ui-media/`.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 215 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 218 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
-- [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 9 modules
+- [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 10 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 11 modules
 - [`@winterop-com/sokkel-ui-terminal`](#winterop-com-sokkel-ui-terminal): 2 modules
 - [`@winterop-com/sokkel-ui-media`](#winterop-com-sokkel-ui-media): 9 modules
@@ -196,6 +200,8 @@ animation frame is read by `useFramePosition` (`use-frame-position`), and LRC ly
 | **PageHeader** | `@winterop-com/sokkel-ui/PageHeader` | A page's title, its code under it in the code face, and its actions at the right with the primary one last. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-page-header--title) |
 | **PaneHeader** | `@winterop-com/sokkel-ui/PaneHeader` | The strip across the top of a pane, with a rule under it: the pane's title, controls before it such as a back button, and actions at its right end. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-pane-header--plain) |
 | **Section**, Surface | `@winterop-com/sokkel-ui/Section` | A titled part of a page. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-sections--flat) |
+| **SettingsView** | `@winterop-com/sokkel-ui/SettingsView` | Settings as a page of the app, inside `Shell`: the same groups, search, reset and words as `SettingsDialog`, laid out as a page. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/apps-settings--with-nav-bar) |
+| **SplitPane** | `@winterop-com/sokkel-ui/SplitPane` | Two panes side by side (`across`) or one over the other (`down`), filling the box they are given, with a rule between them. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-split-pane--across) |
 | **Stack**, Row, Center, Columns, Split, Fill | `@winterop-com/sokkel-ui/Layout` | Cells one under the other, each as wide as the stack. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-audio-player--slider) |
 | **Toolbar**, ToolbarTitle | `@winterop-com/sokkel-ui/Toolbar` | The row of tools above a page's or a pane's content: a search, filters, a `Segmented`, a sort, a count. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-toolbar--page) |
 | **Unfoldable** | `@winterop-com/sokkel-ui/Unfoldable` | A heading that opens what is under it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-states--read) |
@@ -215,7 +221,7 @@ animation frame is read by `useFramePosition` (`use-frame-position`), and LRC ly
 | **CronField** | `@winterop-com/sokkel-ui/CronField` | A cron expression typed in, read back in words under it, with the next runs it makes listed after a given time. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-dialogs--confirm) |
 | **Field** | `@winterop-com/sokkel-ui/Field` | A form control with its label, an optional hint beside the label, and help under the control. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-field--variants) |
 | **FilterChip** | `@winterop-com/sokkel-ui/FilterChip` | One filter in a toolbar: the facet it filters on, and what it is set to. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-filter-chip--unset) |
-| **FormBar** | `@winterop-com/sokkel-ui/FormBar` | A form's actions: a note at the start, such as when the draft was last saved, and the actions at the end, the main verb last. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-form-bar--end) |
+| **FormBar** | `@winterop-com/sokkel-ui/FormBar` | A form's actions: a note at the start, such as when the draft was last saved, and the actions at the end, the main verb last; `start` puts a control before the note, away from the verbs. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-form-bar--end) |
 | **InlineField** | `@winterop-com/sokkel-ui/InlineField` | A label and its control on one row: the label quiet at the start, never shrinking or wrapping, and the control taking the rest of the row. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-inline-field--compose) |
 | **LevelBars**, FlowLines | `@winterop-com/sokkel-ui/SignInArt` | Art for a sign-in screen's brand pane: a row of level bars, the run around the tallest peak lit in `color` (the theme's primary by default) and the rest in its muted ground, each breathing slowly at its own phase. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-sign-in--password) |
 | **PeopleFilter** | `@winterop-com/sokkel-ui/PeopleFilter` | People as overlapping avatars that filter a board or a list: pressing one shows only that person's items, more than one can be on, and once any is on the others fade until hovered. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-board--cards) |
@@ -262,7 +268,7 @@ animation frame is read by `useFramePosition` (`use-frame-position`), and LRC ly
 | **Stat**, Sparkline | `@winterop-com/sokkel-ui/Stat` | One number with what it counts: runs today, the failure rate, the median duration. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-data--description) |
 | **StatusChip** | `@winterop-com/sokkel-ui/StatusChip` | A state as a small chip: the state's own color on a faint wash of it, the word lowercase. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-status-chip--run-states) |
 | **StatusProvider** | `@winterop-com/sokkel-ui/StatusProvider` | Tells every status part inside it the app's own states, so a chip, a dot or a timeline says `draft` or `published` in the app's words and colors without being told each time. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-status-chip--run-states) |
-| **StepIndicator**, WizardDialog | `@winterop-com/sokkel-ui/StepIndicator` | Where a person is in a run of steps: each step numbered and named, the done ones checked and pressable to go back to, the current one filled. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-dialogs--confirm) |
+| **StepIndicator**, WizardDialog, WizardView | `@winterop-com/sokkel-ui/StepIndicator` | Where a person is in a run of steps: each step numbered and named, the done ones checked and pressable to go back to, the current one filled. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-dialogs--confirm) |
 | **TagChips** | `@winterop-com/sokkel-ui/TagChips` | A row of tags as chips that shows as many as fit the room it is given and a +N chip for the rest, which names them on hover and focus. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-tag-chips--fits) |
 | **Timeline** | `@winterop-com/sokkel-ui/Timeline` | Events in the order they happened, on a rail: a run's steps, a job's history, an audit trail. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-data--description) |
 | **Tree** | `@winterop-com/sokkel-ui/Tree` | A hierarchy a reader opens a level at a time: regions, folders, teams. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-tree--trees) |
@@ -370,6 +376,7 @@ animation frame is read by `useFramePosition` (`use-frame-position`), and LRC ly
 | **MediaSlider** | `@winterop-com/sokkel-ui/media/MediaSlider` | A horizontal slider for a media position or a level, with loaded stretches drawn under the played part. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-sound-visualizer--at-rest) (in PlayButton) |
 | **PlayButton**, TransportButton, Position, RateMenu, SkipGlyph, LiveMark, VolumeControl, VolumeGlyph | `@winterop-com/sokkel-ui/media/MediaControls` | The play button at the center of the transport, the one filled control. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-sound-visualizer--at-rest) |
 | **SoundVisualizer** | `@winterop-com/sokkel-ui/media/SoundVisualizer` | A live picture of what is playing, read from a media element or a stream through Web Audio and drawn on a canvas: a spectrum of bars, an area, a wave or a ring. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-sound-visualizer--at-rest) |
+| **SpeakButton** | `@winterop-com/sokkel-ui/media/SpeakButton` | A button that reads a text aloud with audio the app fetches on demand: the first press calls `load`, the button spins while it answers, and the audio plays; a press while it plays stops it, and a press while it loads stops the fetch. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-speak-button--icon) |
 | **VideoPlayer** | `@winterop-com/sokkel-ui/media/VideoPlayer` | A video with the library's controls over it: play and pause, a seek bar with what has loaded, the time, volume, playback speed, captions, picture in picture and fullscreen. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-video--paused-frame) |
 
 ### Schema
@@ -412,10 +419,11 @@ animation frame is read by `useFramePosition` (`use-frame-position`), and LRC ly
 | --- | --- | --- | --- |
 | **BasemapSwitcher**, BasemapPreview, BasemapGallery | `@winterop-com/sokkel-ui-maps/BasemapSwitcher` | A button that opens the choice of basemap: one entry per basemap, each with its preview. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-basemaps--by-scheme) |
 | **BoundaryLayer** | `@winterop-com/sokkel-ui-maps/BoundaryLayer` | Areas on the map: a choropleth when given a scale and a value, plain boundaries otherwise. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-basemaps--by-scheme) |
+| **GeoJsonLayer** | `@winterop-com/sokkel-ui-maps/GeoJsonLayer` | Any GeoJSON on the map, drawn by its geometry in the theme's colors: polygons as a light fill inside an outline, lines as lines over a casing in the card color, points as circles ringed in it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-geojson--one-color) |
 | **GridLayer** | `@winterop-com/sokkel-ui-maps/GridLayer` | Gridded values, such as rainfall or temperature, drawn as one image over the grid's bounds with every cell in its class color and cells without a value left clear. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-legends--all) |
-| **MapLayerList** | `@winterop-com/sokkel-ui-maps/MapLayerList` | The map's layers as a panel of cards, topmost first: each with its name and a button that shows or hides it, its legend on an inset ground, and its opacity under a rule. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-layers--layer-panel) |
+| **MapLayerList** | `@winterop-com/sokkel-ui-maps/MapLayerList` | The map's layers as a panel of cards, topmost first: each with its name and a button that shows or hides it, its legend on an inset ground, and its opacity under a rule. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-geojson--one-color) |
 | **MapLegend** | `@winterop-com/sokkel-ui-maps/MapLegend` | The key to a map's colors, in a card, or bare inside a panel that frames it already. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-legends--all) |
-| **MapPopup** | `@winterop-com/sokkel-ui-maps/MapPopup` | A card over the map, pointing at a feature or a position: a title, rows of names and values, and an optional action. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-at-scale--many-cells) |
+| **MapPopup** | `@winterop-com/sokkel-ui-maps/MapPopup` | A card over the map, pointing at a feature or a position: a title, rows of names and values, and an optional action. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-geojson--one-color) |
 | **MapView**, MapOverlay | `@winterop-com/sokkel-ui-maps/MapView` | A maplibre map over a basemap, with its layers and overlays as children. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-basemaps--by-scheme) |
 | **PeriodSlider** | `@winterop-com/sokkel-ui-maps/PeriodSlider` | Steps through a fixed run of periods, such as the months of a year: a slider with one stop per period, buttons for the period before and after, and a play button that advances one period at a time and stops at the last. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-layers--layer-panel) |
 | **PointLayer** | `@winterop-com/sokkel-ui-maps/PointLayer` | Points on the map, as circles colored by a scale or one color and sized by a value or one radius, each ringed in the card color so neighbors stay apart. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-at-scale--many-cells) |

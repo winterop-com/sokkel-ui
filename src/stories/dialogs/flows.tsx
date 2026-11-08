@@ -56,12 +56,12 @@ function useProgress(running: boolean, ms: number, onDone: () => void) {
     return progress
 }
 
-const WIZARD_STEPS = [
-    { id: 'basics', label: 'Basics' },
-    { id: 'source', label: 'Source' },
-    { id: 'schedule', label: 'Schedule' },
-    { id: 'notify', label: 'Notify' },
-    { id: 'review', label: 'Review' },
+export const NEW_JOB_STEPS = [
+    { id: 'basics', label: 'Basics', description: 'A code and a name' },
+    { id: 'source', label: 'Source', description: 'Where the rows come from' },
+    { id: 'schedule', label: 'Schedule', description: 'When it runs' },
+    { id: 'notify', label: 'Notify', description: 'Who hears of a run' },
+    { id: 'review', label: 'Review', description: 'Everything chosen' },
 ]
 
 const SOURCES = [
@@ -70,10 +70,13 @@ const SOURCES = [
     { value: 'sql', label: 'A database query', detail: 'Runs a query on a connection the project holds.' },
 ] as const
 
-/** A new job in five steps, ending on a review of everything chosen; a done step can be pressed to go back to it. */
-export function NewJobWizard() {
-    const [open, setOpen] = useState(true)
-    const [step, setStep] = useState(1)
+/**
+ * A new job in harbor, shared by the wizard's dialog and its page: what is chosen in each of five
+ * steps, the step the person is on, why it cannot be left forward yet, its issues and its body.
+ * `finish` makes the last step's verb, which works for a moment and then calls `onDone`.
+ */
+export function useNewJob(start: number) {
+    const [step, setStepNow] = useState(start)
     const [code, setCode] = useState('sync-inventory')
     const [name, setName] = useState('Sync inventory')
     const [source, setSource] = useState<(typeof SOURCES)[number]['value']>('http')
@@ -99,11 +102,167 @@ export function NewJobWizard() {
         undefined,
     ][step]
     const stepIssues = [codeIssues.length, urlIssues.length, cronValid ? 0 : 1, 0, 0][step]
+    const setStep = (next: number) => {
+        setIssueOpen(false)
+        setStepNow(next)
+    }
+    const count = (
+        <IssueCount
+            critical={stepIssues}
+            list={
+                [
+                    codeIssues.map((issue) => ({ label: 'Code', issue, onGo: () => setIssueOpen(true) })),
+                    urlIssues.map((issue) => ({ label: 'Address', issue, onGo: () => setIssueOpen(true) })),
+                    cronValid
+                        ? []
+                        : [
+                              {
+                                  label: 'Schedule',
+                                  issue: { tone: 'critical' as const, text: 'Not a schedule this field can read' },
+                                  onGo: () => setCronOpen(true),
+                              },
+                          ],
+                    [],
+                    [],
+                ][step]
+            }
+        />
+    )
+    const finish = (onDone: () => void) => ({
+        label: 'Create job',
+        busy,
+        busyLabel: 'Creating',
+        onFinish: () => {
+            setBusy(true)
+            setTimeout(() => {
+                setBusy(false)
+                onDone()
+            }, 1200)
+        },
+    })
+    const body = (
+        <>
+            {step === 0 && (
+                <>
+                    <TextField
+                        id="wizard-code"
+                        label="Code"
+                        required
+                        mono
+                        value={code}
+                        onChange={setCode}
+                        issues={codeIssues}
+                        issueOpen={issueOpen}
+                        onIssueOpenChange={setIssueOpen}
+                    />
+                    <TextField id="wizard-name" label="Name" value={name} onChange={setName} />
+                </>
+            )}
+            {step === 1 && (
+                <>
+                    <fieldset>
+                        <legend className="mb-1.5 text-sm font-medium">Where the rows come from</legend>
+                        <Row gap="sm" align="stretch" stackBelow="sm">
+                            {SOURCES.map((one) => (
+                                <button
+                                    key={one.value}
+                                    type="button"
+                                    aria-pressed={source === one.value}
+                                    onClick={() => setSource(one.value)}
+                                    className="min-w-0 flex-1 rounded-control border border-border p-3 text-left outline-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring/50 aria-pressed:border-primary/60 aria-pressed:bg-primary/6"
+                                >
+                                    <Stack as="span" gap="2xs" className="h-full">
+                                        <Row as="span" justify="between" className="text-sm font-medium">
+                                            {one.label}
+                                            {source === one.value && <Check className="size-4 text-primary-ink" aria-hidden />}
+                                        </Row>
+                                        <span className="text-xs text-muted-foreground">{one.detail}</span>
+                                    </Stack>
+                                </button>
+                            ))}
+                        </Row>
+                    </fieldset>
+                    {source === 'http' ? (
+                        <TextField
+                            id="wizard-url"
+                            label="Address"
+                            required
+                            mono
+                            value={url}
+                            onChange={setUrl}
+                            issues={urlIssues}
+                            issueOpen={issueOpen}
+                            onIssueOpenChange={setIssueOpen}
+                        />
+                    ) : (
+                        <Field id="wizard-where" label={source === 'file' ? 'Folder' : 'Connection'} required>
+                            <NativeSelect id="wizard-where" className="w-full">
+                                {(source === 'file' ? ['harbor/inbox', 'harbor/exports'] : ['warehouse', 'orders-replica']).map((one) => (
+                                    <NativeSelectOption key={one}>{one}</NativeSelectOption>
+                                ))}
+                            </NativeSelect>
+                        </Field>
+                    )}
+                </>
+            )}
+            {step === 2 && (
+                <CronField
+                    id="wizard-cron"
+                    value={cron}
+                    onChange={setCron}
+                    from={new Date('2026-11-05T10:17:00Z')}
+                    count={3}
+                    issueOpen={cronOpen}
+                    onIssueOpenChange={setCronOpen}
+                />
+            )}
+            {step === 3 && (
+                <>
+                    <SwitchField
+                        id="wizard-fail"
+                        label="When a run fails"
+                        explain="Mails the owner, ada."
+                        checked={onFail}
+                        onCheckedChange={setOnFail}
+                    />
+                    <SwitchField
+                        id="wizard-succeed"
+                        label="When a run succeeds"
+                        explain="A daily digest instead of a mail per run."
+                        checked={onSucceed}
+                        onCheckedChange={setOnSucceed}
+                    />
+                </>
+            )}
+            {step === 4 && (
+                <DescriptionList
+                    items={[
+                        { term: 'Code', value: code, code: true },
+                        { term: 'Name', value: name === '' ? '—' : name },
+                        { term: 'Source', value: SOURCES.find((one) => one.value === source)?.label },
+                        ...(source === 'http' ? [{ term: 'Address', value: url, code: true }] : []),
+                        { term: 'Schedule', value: cron, code: true },
+                        {
+                            term: 'Notify',
+                            value: [onFail && 'on failure', onSucceed && 'daily digest'].filter(Boolean).join(', ') || 'nobody',
+                        },
+                    ]}
+                />
+            )}
+        </>
+    )
+    return { step, setStep, why, count, finish, body }
+}
+
+/** A new job in five steps, ending on a review of everything chosen; a done step can be pressed to go back to it. */
+export function NewJobWizard() {
+    const [open, setOpen] = useState(true)
+    const job = useNewJob(1)
     return (
         <Behind
             action="New job"
             onAction={() => {
-                setStep(0)
+                job.setStep(0)
                 setOpen(true)
             }}
         >
@@ -111,157 +270,14 @@ export function NewJobWizard() {
                 open={open}
                 onOpenChange={setOpen}
                 title="New job in harbor"
-                steps={WIZARD_STEPS}
-                current={step}
-                onCurrentChange={(next) => {
-                    setIssueOpen(false)
-                    setStep(next)
-                }}
-                why={why}
-                count={
-                    <IssueCount
-                        critical={stepIssues}
-                        list={
-                            [
-                                codeIssues.map((issue) => ({ label: 'Code', issue, onGo: () => setIssueOpen(true) })),
-                                urlIssues.map((issue) => ({ label: 'Address', issue, onGo: () => setIssueOpen(true) })),
-                                cronValid
-                                    ? []
-                                    : [
-                                          {
-                                              label: 'Schedule',
-                                              issue: { tone: 'critical' as const, text: 'Not a schedule this field can read' },
-                                              onGo: () => setCronOpen(true),
-                                          },
-                                      ],
-                                [],
-                                [],
-                            ][step]
-                        }
-                    />
-                }
-                finish={{
-                    label: 'Create job',
-                    busy,
-                    busyLabel: 'Creating',
-                    onFinish: () => {
-                        setBusy(true)
-                        setTimeout(() => {
-                            setBusy(false)
-                            setOpen(false)
-                        }, 1200)
-                    },
-                }}
+                steps={NEW_JOB_STEPS}
+                current={job.step}
+                onCurrentChange={job.setStep}
+                why={job.why}
+                count={job.count}
+                finish={job.finish(() => setOpen(false))}
             >
-                {step === 0 && (
-                    <>
-                        <TextField
-                            id="wizard-code"
-                            label="Code"
-                            required
-                            mono
-                            value={code}
-                            onChange={setCode}
-                            issues={codeIssues}
-                            issueOpen={issueOpen}
-                            onIssueOpenChange={setIssueOpen}
-                        />
-                        <TextField id="wizard-name" label="Name" value={name} onChange={setName} />
-                    </>
-                )}
-                {step === 1 && (
-                    <>
-                        <fieldset>
-                            <legend className="mb-1.5 text-sm font-medium">Where the rows come from</legend>
-                            <Row gap="sm" align="stretch" stackBelow="sm">
-                                {SOURCES.map((one) => (
-                                    <button
-                                        key={one.value}
-                                        type="button"
-                                        aria-pressed={source === one.value}
-                                        onClick={() => setSource(one.value)}
-                                        className="min-w-0 flex-1 rounded-control border border-border p-3 text-left outline-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring/50 aria-pressed:border-primary/60 aria-pressed:bg-primary/6"
-                                    >
-                                        <Stack as="span" gap="2xs" className="h-full">
-                                            <Row as="span" justify="between" className="text-sm font-medium">
-                                                {one.label}
-                                                {source === one.value && <Check className="size-4 text-primary-ink" aria-hidden />}
-                                            </Row>
-                                            <span className="text-xs text-muted-foreground">{one.detail}</span>
-                                        </Stack>
-                                    </button>
-                                ))}
-                            </Row>
-                        </fieldset>
-                        {source === 'http' ? (
-                            <TextField
-                                id="wizard-url"
-                                label="Address"
-                                required
-                                mono
-                                value={url}
-                                onChange={setUrl}
-                                issues={urlIssues}
-                                issueOpen={issueOpen}
-                                onIssueOpenChange={setIssueOpen}
-                            />
-                        ) : (
-                            <Field id="wizard-where" label={source === 'file' ? 'Folder' : 'Connection'} required>
-                                <NativeSelect id="wizard-where" className="w-full">
-                                    {(source === 'file' ? ['harbor/inbox', 'harbor/exports'] : ['warehouse', 'orders-replica']).map(
-                                        (one) => (
-                                            <NativeSelectOption key={one}>{one}</NativeSelectOption>
-                                        ),
-                                    )}
-                                </NativeSelect>
-                            </Field>
-                        )}
-                    </>
-                )}
-                {step === 2 && (
-                    <CronField
-                        id="wizard-cron"
-                        value={cron}
-                        onChange={setCron}
-                        from={new Date('2026-11-05T10:17:00Z')}
-                        count={3}
-                        issueOpen={cronOpen}
-                        onIssueOpenChange={setCronOpen}
-                    />
-                )}
-                {step === 3 && (
-                    <>
-                        <SwitchField
-                            id="wizard-fail"
-                            label="When a run fails"
-                            explain="Mails the owner, ada."
-                            checked={onFail}
-                            onCheckedChange={setOnFail}
-                        />
-                        <SwitchField
-                            id="wizard-succeed"
-                            label="When a run succeeds"
-                            explain="A daily digest instead of a mail per run."
-                            checked={onSucceed}
-                            onCheckedChange={setOnSucceed}
-                        />
-                    </>
-                )}
-                {step === 4 && (
-                    <DescriptionList
-                        items={[
-                            { term: 'Code', value: code, code: true },
-                            { term: 'Name', value: name === '' ? '—' : name },
-                            { term: 'Source', value: SOURCES.find((one) => one.value === source)?.label },
-                            ...(source === 'http' ? [{ term: 'Address', value: url, code: true }] : []),
-                            { term: 'Schedule', value: cron, code: true },
-                            {
-                                term: 'Notify',
-                                value: [onFail && 'on failure', onSucceed && 'daily digest'].filter(Boolean).join(', ') || 'nobody',
-                            },
-                        ]}
-                    />
-                )}
+                {job.body}
             </WizardDialog>
         </Behind>
     )

@@ -1,14 +1,19 @@
 import { IconButton } from './IconButton'
-import { ArrowUp, FileText, Paperclip, Play, Square, X } from 'lucide-react'
-import { useRef, useState, type ReactNode } from 'react'
+import { ArrowUp, Check, CircleAlert, FileText, Mic, Paperclip, Play, Square, X } from 'lucide-react'
+import { lazy, Suspense, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { insertTranscript, useDictation, type Dictation, type DictationOptions } from '../hooks/use-dictation'
 import { DialogShell } from './DialogShell'
 import { AudioPlayer } from './media/AudioPlayer'
+import { formatTime } from './media/time'
 import { VIDEO_PLAYER_WORDS, VideoPlayer, type VideoPlayerWords } from './media/VideoPlayer'
 import { ProgressRing } from './ui/progress-ring'
 import { Spinner } from './ui/spinner'
 import { Textarea } from './ui/textarea'
+
+// The level a recording draws loads with the first recording, so a composer never dictated to carries none of it.
+const BarVisualizer = lazy(() => import('./ui/bar-visualizer').then((module) => ({ default: module.BarVisualizer })))
 
 /** A file waiting to go with the next message. */
 export interface ComposerAttachment {
@@ -36,6 +41,47 @@ export interface ComposerAttachment {
     duration?: number
 }
 
+/** The words dictation says in the composer. */
+export interface ComposerDictationWords {
+    /** The microphone button, which starts a dictation. */
+    dictate: string
+    /** The same button while it hears: a press stops and puts the text in. */
+    finish: string
+    /** The button that drops what was heard; Escape does the same. */
+    cancel: string
+    /** Said while it hears. */
+    recording: string
+    /** Said while what was heard is turned into text. */
+    transcribing: string
+    /** The level drawn while it hears. */
+    level: string
+    /** The microphone was refused. */
+    refused: string
+    /** There is no microphone, or nothing to record with. */
+    missing: string
+    /** What was heard could not be turned into text. */
+    failed: string
+}
+
+const DICTATION_WORDS: ComposerDictationWords = {
+    dictate: 'Dictate',
+    finish: 'Finish dictating',
+    cancel: 'Cancel dictation',
+    recording: 'Listening',
+    transcribing: 'Transcribing',
+    level: 'Voice level',
+    refused: 'The microphone is not allowed. Allow it for this site to dictate.',
+    missing: 'No microphone was found.',
+    failed: 'What was said could not be turned into text. Try again.',
+}
+
+/**
+ * How the composer takes dictation: `transcribe` turns a recording of the microphone into text, and
+ * `recognition` opts in to the browser's own speech recognition, used ahead of it where there is
+ * one. `useDictation` runs it.
+ */
+export type ComposerDictation = Omit<DictationOptions, 'onText'>
+
 export interface ComposerWords {
     placeholder: string
     send: string
@@ -53,6 +99,8 @@ export interface ComposerWords {
     player: Partial<VideoPlayerWords>
     /** The video dialog's way out. */
     close: string
+    /** Dictation's words: the microphone, its states and its failures. */
+    dictation: Partial<ComposerDictationWords>
 }
 
 const WORDS: ComposerWords = {
@@ -67,6 +115,47 @@ const WORDS: ComposerWords = {
     waiting: 'Waiting for files to upload',
     player: {},
     close: 'Close',
+    dictation: {},
+}
+
+/** How much of a long text heard is kept, from its end, so what was heard last stays in view. */
+const HEARD_TAIL = 160
+
+/** A dictation while it runs: a pulsing mark, the level or the words heard, and the time; or that it transcribes. */
+function DictationStrip({ dictation, words }: { dictation: Dictation; words: ComposerDictationWords }) {
+    if (dictation.state === 'transcribing') {
+        return (
+            <div role="status" className="flex h-8 min-w-0 flex-1 items-center gap-2 px-1 text-sm text-muted-foreground">
+                <Spinner aria-hidden role={undefined} aria-label={undefined} />
+                <span className="truncate">{words.transcribing}</span>
+            </div>
+        )
+    }
+    const heard = dictation.heard.length > HEARD_TAIL ? `…${dictation.heard.slice(-HEARD_TAIL)}` : dictation.heard
+    return (
+        <div role="status" aria-label={words.recording} className="flex h-8 min-w-0 flex-1 items-center gap-2 px-1">
+            <span className="size-2 shrink-0 rounded-full bg-critical motion-safe:animate-pulse" aria-hidden />
+            {dictation.mode === 'recognition' ? (
+                // Pinned to the end and cut at the start, so the latest words stay in view.
+                <span className="flex min-w-0 flex-1 justify-end overflow-hidden text-sm text-muted-foreground">
+                    <span className="shrink-0 whitespace-nowrap">{heard === '' ? words.recording : heard}</span>
+                </span>
+            ) : (
+                <Suspense fallback={<span className="min-w-0 flex-1" />}>
+                    <BarVisualizer
+                        source={dictation.stream}
+                        state="listening"
+                        barCount={32}
+                        minHeight={12}
+                        centerAlign
+                        label={words.level}
+                        className="h-6 min-w-0 flex-1 rounded-none bg-transparent p-0"
+                    />
+                </Suspense>
+            )}
+            <span className="shrink-0 font-mono text-xs text-muted-foreground tabular-nums">{formatTime(dictation.seconds)}</span>
+        </div>
+    )
 }
 
 /** A spinner, or a ring filled to the upload's progress when it is known. */
@@ -169,6 +258,8 @@ export interface ComposerProps {
     disabled?: boolean
     /** The file types the attach button offers, as an `accept` attribute. */
     accept?: string
+    /** Adds a microphone that dictates into the text, through the app's transcriber or the browser's recognition. */
+    dictation?: ComposerDictation
     words?: Partial<ComposerWords>
     className?: string
 }
@@ -182,6 +273,14 @@ export interface ComposerProps {
  * A file still uploading shows a spinner, or a ring when its progress is known. It has no remove
  * button then, unless `onCancel` is given, and Send waits until every file is up, so a message
  * never goes without its files. A recording plays in its chip, and a video opens in a dialog.
+ *
+ * `dictation` adds a microphone before Send. A press starts hearing: the row shows a pulsing mark,
+ * the voice's level (or, with the browser's recognition, the words heard so far) and the time, with
+ * a button to cancel; a second press stops, the row says it transcribes, and the text is put in
+ * where the caret was, or at the end. Escape cancels a dictation that is hearing or transcribing.
+ * A failure is said on a line of its own over the row, wrapping as far as it needs, until the next
+ * press or Escape. Send waits while a dictation runs.
+ * The microphone shows only where the page can dictate with what the app gave.
  */
 export function Composer({
     value,
@@ -196,20 +295,52 @@ export function Composer({
     tools,
     disabled = false,
     accept,
+    dictation: dictating,
     words: given,
     className,
 }: ComposerProps) {
     const words = { ...WORDS, ...given }
+    const said = { ...DICTATION_WORDS, ...words.dictation }
     const picker = useRef<HTMLInputElement>(null)
+    const root = useRef<HTMLDivElement>(null)
+    const text = useRef<HTMLTextAreaElement>(null)
+    const caret = useRef<number | undefined>(undefined)
+    const latest = useRef({ value, onChange })
+    useLayoutEffect(() => {
+        latest.current = { value, onChange }
+    })
     const [over, setOver] = useState(false)
     const [playing, setPlaying] = useState<ComposerAttachment>()
+    const dictation = useDictation({
+        ...dictating,
+        onText: (heard) => {
+            const next = insertTranscript(latest.current.value, heard, caret.current)
+            caret.current = next.caret
+            latest.current.onChange(next.value)
+            // Back to the text with the caret after what was put in, unless the person has moved on.
+            if (root.current?.contains(document.activeElement) !== true) return
+            requestAnimationFrame(() => {
+                text.current?.focus()
+                text.current?.setSelectionRange(next.caret, next.caret)
+            })
+        },
+    })
+    const hearing = dictation.state === 'recording' || dictation.state === 'transcribing'
+    const offered = dictating !== undefined && (dictation.mode !== null || dictation.state !== 'idle')
     const uploading = attachments.some((attachment) => attachment.uploading === true)
-    const ready = !disabled && !busy && !uploading && (value.trim() !== '' || attachments.length > 0)
+    const ready = !disabled && !busy && !uploading && !hearing && (value.trim() !== '' || attachments.length > 0)
     const files = (list: FileList | null) => {
         if (onAttach !== undefined && list !== null && list.length > 0) onAttach([...list])
     }
     return (
         <div
+            ref={root}
+            onKeyDown={(event) => {
+                if (event.key !== 'Escape' || (!hearing && dictation.state !== 'error')) return
+                event.preventDefault()
+                event.stopPropagation()
+                dictation.cancel()
+            }}
             className={cn(
                 'relative flex flex-col rounded-control border border-border-strong bg-field shadow-surface transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring',
                 over && 'border-primary ring-2 ring-primary/30',
@@ -258,6 +389,7 @@ export function Composer({
                 </ul>
             )}
             <Textarea
+                ref={text}
                 bare
                 value={value}
                 rows={1}
@@ -265,6 +397,9 @@ export function Composer({
                 placeholder={words.placeholder}
                 aria-label={words.placeholder}
                 onChange={(event) => onChange(event.target.value)}
+                onSelect={(event) => {
+                    caret.current = event.currentTarget.selectionStart
+                }}
                 onKeyDown={(event) => {
                     if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing) return
                     event.preventDefault()
@@ -282,27 +417,67 @@ export function Composer({
                 }}
                 className="max-h-60 min-h-12 px-3 pt-3 pb-1 text-sm"
             />
+            {offered && dictation.state === 'error' && dictation.problem !== undefined && (
+                // A line of its own over the row, wrapping as far as it needs, so the reason is read whole at any width.
+                <p role="alert" className="flex items-start gap-1.5 px-3 pb-1 text-xs text-critical-ink">
+                    <CircleAlert className="mt-0.75 size-3.5 shrink-0" aria-hidden />
+                    <span className="min-w-0">{said[dictation.problem]}</span>
+                </p>
+            )}
             <div className="flex items-center gap-1 px-2 pb-2">
-                {onAttach !== undefined && (
+                {hearing ? (
+                    <IconButton label={said.cancel} onClick={dictation.cancel}>
+                        <X aria-hidden />
+                    </IconButton>
+                ) : (
+                    onAttach !== undefined && (
+                        <>
+                            <input
+                                ref={picker}
+                                type="file"
+                                multiple
+                                accept={accept}
+                                hidden
+                                onChange={(event) => {
+                                    files(event.target.files)
+                                    event.target.value = ''
+                                }}
+                            />
+                            <IconButton label={words.attach} disabled={disabled} onClick={() => picker.current?.click()}>
+                                <Paperclip aria-hidden />
+                            </IconButton>
+                        </>
+                    )
+                )}
+                {hearing ? (
+                    <DictationStrip dictation={dictation} words={said} />
+                ) : (
                     <>
-                        <input
-                            ref={picker}
-                            type="file"
-                            multiple
-                            accept={accept}
-                            hidden
-                            onChange={(event) => {
-                                files(event.target.files)
-                                event.target.value = ''
-                            }}
-                        />
-                        <IconButton label={words.attach} disabled={disabled} onClick={() => picker.current?.click()}>
-                            <Paperclip aria-hidden />
-                        </IconButton>
+                        {tools}
+                        <div className="flex-1" />
                     </>
                 )}
-                {tools}
-                <div className="flex-1" />
+                {offered && (
+                    <IconButton
+                        label={
+                            dictation.state === 'recording'
+                                ? said.finish
+                                : dictation.state === 'transcribing'
+                                  ? said.transcribing
+                                  : said.dictate
+                        }
+                        variant={dictation.state === 'recording' ? 'secondary' : 'ghost'}
+                        disabled={disabled && !hearing}
+                        aria-disabled={dictation.state === 'transcribing' || undefined}
+                        data-state={dictation.state}
+                        onClick={() => {
+                            if (dictation.state === 'recording') dictation.stop()
+                            else if (dictation.state !== 'transcribing') dictation.start()
+                        }}
+                    >
+                        {dictation.state === 'recording' ? <Check aria-hidden /> : <Mic aria-hidden />}
+                    </IconButton>
+                )}
                 {busy && onStop !== undefined ? (
                     <IconButton label={words.stop} variant="secondary" onClick={onStop}>
                         <Square className="fill-current" aria-hidden />

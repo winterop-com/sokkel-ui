@@ -8,11 +8,15 @@ export interface MapLegendEntry {
     color: string
     /** The swatch's edge, for what the map draws with an outline of its own color. */
     edge?: string
-    /** A round swatch for points or a square one for areas; the legend's `shape` when not given. */
-    shape?: 'area' | 'point'
+    /** A round swatch for points, a square one for areas or a stroke for lines; the legend's `shape` when not given. */
+    shape?: MapLegendShape
 }
 
-function Swatch({ background, edge, shape }: { background: string; edge?: string; shape: 'area' | 'point' }) {
+/** What a legend's swatches stand for: areas, points or lines. */
+export type MapLegendShape = 'area' | 'point' | 'line'
+
+function Swatch({ background, edge, shape }: { background: string; edge?: string; shape: MapLegendShape }) {
+    if (shape === 'line') return <span aria-hidden className="h-0.75 w-3 shrink-0 rounded-mini" style={{ background }} />
     return (
         <span
             aria-hidden
@@ -42,8 +46,8 @@ export interface MapLegendProps {
     layout?: 'ramp' | 'list'
     /** Words under the two ends of a ramp, such as "Fewer" and "More". */
     captions?: [string, string]
-    /** Whether the swatches stand for areas or for points. */
-    shape?: 'area' | 'point'
+    /** Whether the swatches stand for areas, points or lines. */
+    shape?: MapLegendShape
     /** Shows the no-data swatch, with this label or "No data". */
     noData?: boolean | string
     /** How many features fall in each class (or each entry, without a scale), in order. */
@@ -59,7 +63,7 @@ export interface MapLegendProps {
  *
  * A categorical scale is a list of swatches. A sequential or diverging scale is a stepped ramp
  * with its breaks under it, or the same list with each class's range written out. `noData` adds
- * the swatch a feature without a value is drawn in: hatched for areas, gray for points. `counts`
+ * the swatch a feature without a value is drawn in: hatched for areas, gray for points and lines. `counts`
  * puts the number of features in each class beside it, in the list.
  *
  * Without a scale, `entries` lists what the map's colors mean line by line, each swatch with its
@@ -140,7 +144,7 @@ export function MapLegend({
             )}
             {noData !== false && (
                 <div className={cn('flex items-center gap-2', list ? 'mt-1' : 'mt-1.5')}>
-                    <Swatch background={shape === 'point' ? NO_DATA_POINT_COLOR : NO_DATA_BACKGROUND} shape={shape} />
+                    <Swatch background={shape === 'area' ? NO_DATA_BACKGROUND : NO_DATA_POINT_COLOR} shape={shape} />
                     <span>{noDataLabel}</span>
                     <Count value={noDataCount} />
                 </div>

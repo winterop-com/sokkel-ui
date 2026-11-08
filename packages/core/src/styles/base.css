@@ -70,6 +70,31 @@
         -webkit-app-region: no-drag;
         app-region: no-drag;
     }
+
+    /*
+     * An element held in full screen without the browser's (lib/fullscreen.ts: the desktop window's
+     * own, or a browser with none for it) covers the window, as `:fullscreen` covers the screen. It
+     * stands in the top layer where the webview has one; the ground and padding below only answer
+     * the top layer's own defaults, so the element's classes still win them.
+     */
+    [data-fullscreen='window'] {
+        position: fixed !important;
+        inset: 0 !important;
+        z-index: 50 !important;
+        width: auto !important;
+        height: auto !important;
+        min-width: 0 !important;
+        min-height: 0 !important;
+        max-width: none !important;
+        max-height: none !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        transform: none !important;
+        border: 0;
+        padding: 0;
+        color: inherit;
+        background-color: var(--background);
+    }
 }
 
 /* The delayed spinner fading in once its wait is over. */

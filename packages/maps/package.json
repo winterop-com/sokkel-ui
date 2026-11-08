@@ -38,6 +38,10 @@
             "types": "./dist/geometry.d.ts",
             "import": "./dist/geometry.js"
         },
+        "./GeoJsonLayer": {
+            "types": "./dist/GeoJsonLayer.d.ts",
+            "import": "./dist/GeoJsonLayer.js"
+        },
         "./GridLayer": {
             "types": "./dist/GridLayer.d.ts",
             "import": "./dist/GridLayer.js"

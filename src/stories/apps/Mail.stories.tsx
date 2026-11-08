@@ -37,6 +37,7 @@ import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { SelectionBar } from '@winterop-com/sokkel-ui/SelectionBar'
 import { Shell } from '@winterop-com/sokkel-ui/Shell'
+import { SplitPane, useSplitPane } from '@winterop-com/sokkel-ui/SplitPane'
 import { Toolbar } from '@winterop-com/sokkel-ui/Toolbar'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
 import { Avatar, AvatarFallback, AvatarImage } from '@winterop-com/sokkel-ui/primitives/avatar'
@@ -393,6 +394,7 @@ function LetterView({ letter, open, last, onToggle }: { letter: Letter; open: bo
 }
 
 function Reading({ mail, onBack }: { mail: Conversation; onBack: () => void }) {
+    const alone = useSplitPane()?.alone === 'second'
     const [open, setOpen] = useState<Set<string>>(() => new Set(['m3', 'm4']))
     const [reply, setReply] = useState('')
     const thread = mail.id === 't1' ? THREAD : [{ id: 'only', from: mail.from, to: [PEOPLE.ada], time: mail.time, body: mail.snippet }]
@@ -401,10 +403,12 @@ function Reading({ mail, onBack }: { mail: Conversation; onBack: () => void }) {
             <PaneHeader
                 start={
                     <>
-                        <Button variant="ghost" size="sm" className="lg:hidden" onClick={onBack}>
-                            <ArrowLeft aria-hidden />
-                            Back
-                        </Button>
+                        {alone && (
+                            <Button variant="ghost" size="sm" onClick={onBack}>
+                                <ArrowLeft aria-hidden />
+                                Back
+                            </Button>
+                        )}
                         <IconButton label="Archive">
                             <Archive aria-hidden />
                         </IconButton>
@@ -827,34 +831,35 @@ function MailApp({
                     />
                 }
             >
-                <Row gap="none" align="stretch" className="h-full min-h-0">
-                    <Stack
-                        as="section"
-                        gap="none"
-                        aria-label="Messages"
-                        className={cn(
-                            'flex-1 lg:w-88 lg:flex-none lg:border-r lg:border-border-strong xl:w-104',
-                            mail !== undefined && 'max-lg:hidden',
-                        )}
-                    >
-                        <List
-                            box={box}
-                            query={query}
-                            onQuery={setQuery}
-                            open={open}
-                            onOpen={setOpen}
-                            checked={checked}
-                            onChecked={setChecked}
-                        />
-                    </Stack>
-                    <section aria-label="Reading" className={cn('min-w-0 flex-1', mail === undefined && 'max-lg:hidden')}>
-                        {mail !== undefined ? (
-                            <Reading key={mail.id} mail={mail} onBack={() => setOpen(null)} />
-                        ) : (
-                            <Nothing checked={checked.length} onClear={() => setChecked([])} />
-                        )}
-                    </section>
-                </Row>
+                <SplitPane
+                    defaultShare={0.36}
+                    minShare={0.28}
+                    maxShare={0.6}
+                    narrow={mail === undefined ? 'first' : 'second'}
+                    narrowBelow={720}
+                    first={
+                        <section aria-label="Messages" className="h-full min-h-0">
+                            <List
+                                box={box}
+                                query={query}
+                                onQuery={setQuery}
+                                open={open}
+                                onOpen={setOpen}
+                                checked={checked}
+                                onChecked={setChecked}
+                            />
+                        </section>
+                    }
+                    second={
+                        <section aria-label="Reading" className="h-full min-h-0">
+                            {mail !== undefined ? (
+                                <Reading key={mail.id} mail={mail} onBack={() => setOpen(null)} />
+                            ) : (
+                                <Nothing checked={checked.length} onClear={() => setChecked([])} />
+                            )}
+                        </section>
+                    }
+                />
             </Shell>
             <ComposeDialog open={compose} onOpenChange={setCompose} />
         </TooltipProvider>

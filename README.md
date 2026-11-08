@@ -30,14 +30,14 @@ around in the app.
 - **Frame:** Shell, Rail, TopBar, NavBar, SidePanel, Dock, StatusLine, CommandPalette and
   AccountMenu. The rail, side panel, inspector, channel list and dock resize by
   default.
-- **Content:** Section, PageHeader, DataTable, DescriptionList, Stat, Timeline, Tree and
+- **Content:** Section, PageHeader, SplitPane, DataTable, DescriptionList, Stat, Timeline, Tree and
   TreeSelect, Field, Segmented, CodeEditor, LogView, JsonTree, DiffView and TableOfContents.
   DataTable is the one table, from a short listing to 50k rows or a tree loaded on demand; its
   columns resize by default.
 - **Files:** FileList, FileGrid and FileTile, FilePreview, UploadTray and DropZone.
 - **Chat:** Markdown, Code, MermaidDiagram, ToolCalls, ConfirmCard, Composer and audio
   waveforms.
-- **Maps:** MapView on maplibre, with boundary, point and grid layers, legends, popups,
+- **Maps:** MapView on maplibre, with boundary, point, grid and GeoJSON layers, legends, popups,
   basemaps, a layer panel and a period slider.
 - **Graphs:** PipelineGraph, RunGraph, DependencyGraph and StateMachine on React Flow, laid out
   by elk, with the canvas, node box, layout and hook they are built from.
@@ -304,6 +304,48 @@ const appearance = {
 
 An app rendered on a server puts `<script dangerouslySetInnerHTML={{ __html: appearanceScript() }} />`
 first in its `<head>`. Given the same defaults as `useAppearance`, it starts in the same look.
+
+A page that refuses inline script, such as a browser extension's pages or a page under a strict
+Content Security Policy, loads the same script from a file: the core package ships it built as
+`@winterop-com/sokkel-ui/appearance.js`, made from `appearanceScriptFile()`, the one script
+`appearanceScript()` also writes. It is a classic script, so it goes first in `<head>` with neither
+`async`, `defer` nor `type="module"`, and it takes `useAppearance`'s defaults from its own data
+attributes (`data-theme`, `data-scheme`, `data-density`, `data-corners`, `data-typeface`,
+`data-motion`). An extension copies the file beside its pages; a Vite app can let the bundler hand
+it a URL:
+
+```html
+<script src="appearance.js" data-theme="paper"></script>
+```
+
+```ts
+import appearance from '@winterop-com/sokkel-ui/appearance.js?url'
+// transformIndexHtml: () => [{ tag: 'script', attrs: { src: appearance }, injectTo: 'head-prepend' }]
+```
+
+The look is kept in `localStorage` unless the app keeps it elsewhere: `setAppearanceStorage` in
+`lib/appearance`, called once before the app draws, takes `{ read(key), write(key, value) }` and an
+optional `subscribe(change)` for changes made in another window, such as an extension's
+`chrome.storage` or a desktop shell's settings file. `read` may answer with a promise: until it
+does, the page wears the last known look, or the defaults, and it wears the kept one the moment it
+comes. The last known look is a copy in `localStorage`, which the script reads, so the next page
+still starts in it.
+
+```ts
+import { setAppearanceStorage } from '@winterop-com/sokkel-ui/lib/appearance'
+
+setAppearanceStorage({
+    read: async (key) => (await chrome.storage.local.get(key))[key],
+    write: (key, value) => chrome.storage.local.set({ [key]: value }),
+    subscribe: (change) => {
+        const heard = (changes: Record<string, { newValue?: string }>) => {
+            for (const [key, { newValue }] of Object.entries(changes)) change(key, newValue ?? null)
+        }
+        chrome.storage.local.onChanged.addListener(heard)
+        return () => chrome.storage.local.onChanged.removeListener(heard)
+    },
+})
+```
 
 Components import by path: `@winterop-com/sokkel-ui/DialogShell`,
 `@winterop-com/sokkel-ui/primitives/button`, `@winterop-com/sokkel-ui/dashboard/StatPanel`,

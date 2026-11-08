@@ -130,6 +130,8 @@ export interface TimeSeriesPanelProps {
     loading?: boolean
     empty?: boolean
     file?: string
+    /** Expanding also takes the screen, as `WindowedPane`'s `fullscreen` does. */
+    fullscreen?: boolean
     words?: Partial<ChartFrameWords>
     className?: string
 }
@@ -163,6 +165,7 @@ export function TimeSeriesPanel({
     loading,
     empty,
     file,
+    fullscreen,
     words,
     className,
 }: TimeSeriesPanelProps) {
@@ -183,6 +186,7 @@ export function TimeSeriesPanel({
             legendStats={legendStats}
             legendFormat={write}
             file={file}
+            fullscreen={fullscreen}
             loading={loading}
             empty={empty}
             bodyClassName={bodyClassName}

@@ -5,14 +5,20 @@ import { useMemo, useState, type ReactNode } from 'react'
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { Banner } from '@winterop-com/sokkel-ui/Banner'
 import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
+import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
+import { useIsMobile } from '@winterop-com/sokkel-ui/hooks/use-mobile'
+import { Fill, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { VideoPlayer } from '@winterop-com/sokkel-ui/media/VideoPlayer'
 import { placeCommands } from '@winterop-com/sokkel-ui/lib/commands'
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
+import { PaneHeader } from '@winterop-com/sokkel-ui/PaneHeader'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
-import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
+import { Page, Shell, useRailMode, type RailMode } from '@winterop-com/sokkel-ui/Shell'
 import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
+import { Timeline, type TimelineEvent } from '@winterop-com/sokkel-ui/Timeline'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import {
@@ -24,14 +30,16 @@ import {
     CommandItem,
     CommandList,
 } from '@winterop-com/sokkel-ui/primitives/command'
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@winterop-com/sokkel-ui/primitives/resizable'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
-import { JOBS, makeRuns, PROJECTS, startedAt, type TableRun } from '../fixtures/tableRuns'
+import { JOBS, makeRuns, PROJECTS, startedAt, STEPS, type TableRun } from '../fixtures/tableRuns'
 import { TidevannMark } from '../fixtures/TidevannMark'
+import clip from '../media/fixtures/clip.webm?url'
 
 /**
  * The app's frame: the rail, the top bar, the content that scrolls and the status foot, with a
- * banner between the top bar and the content, the rail's drawer on a phone, and the frame in a
- * desktop window whose native title bar is hidden.
+ * banner between the top bar and the content, the rail's drawer on a phone, a work page that
+ * narrows or hides the rail, and the frame in a desktop window whose native title bar is hidden.
  */
 const meta: Meta = { title: 'Patterns/Shell' }
 export default meta
@@ -102,11 +110,113 @@ function SearchOverlay({ open, onOpenChange }: { open: boolean; onOpenChange: (o
     )
 }
 
+/** The runs a work page lists. */
+const WORK_RUNS = makeRuns(40)
+
+const RUN_LIST: DataColumn<TableRun>[] = [
+    { id: 'id', header: 'Run', width: '8.5rem', cell: (run) => <span className="font-mono">{run.id}</span> },
+    { id: 'job', header: 'Job', width: 'minmax(8rem,1fr)', cell: (run) => <span className="font-mono">{run.job}</span> },
+    { id: 'state', header: 'State', width: '7.5rem', cell: (run) => <StatusChip status={run.state} /> },
+]
+
+/** A run's steps in order, up to the one it stopped at, each inked by how it went. */
+function stepsOf(run: TableRun): TimelineEvent[] {
+    const reached = STEPS.indexOf(run.step)
+    return STEPS.map((step, index) => {
+        const tone =
+            index < reached || run.state === 'succeeded'
+                ? 'succeeded'
+                : index > reached
+                  ? 'neutral'
+                  : run.state === 'failed'
+                    ? 'failed'
+                    : run.state === 'running'
+                      ? 'running'
+                      : run.state === 'queued'
+                        ? 'waiting'
+                        : 'skipped'
+        return { id: step, title: <span className="font-mono">{step}</span>, tone, detail: tone === 'neutral' ? 'Not reached' : undefined }
+    })
+}
+
+/** One run's detail, the work page's last pane. */
+function RunDetail({ run }: { run: TableRun }) {
+    return (
+        <Stack gap="none" className="h-full min-h-0">
+            <PaneHeader
+                size="lg"
+                code={run.id}
+                title={run.job}
+                actions={
+                    <Button size="sm" variant="outline">
+                        Retry
+                    </Button>
+                }
+            >
+                <StatusChip status={run.state} />
+            </PaneHeader>
+            <Fill scroll>
+                <Page>
+                    <DescriptionList
+                        columns={2}
+                        items={[
+                            { term: 'Project', value: run.project },
+                            { term: 'Started by', value: run.by },
+                            { term: 'Started', value: startedAt(run.ago) },
+                            { term: 'Took', value: `${String(run.duration)} s`, numeric: true },
+                            { term: 'Records', value: run.records.toLocaleString('en-US'), numeric: true },
+                            { term: 'Attempts', value: run.attempts, numeric: true },
+                        ]}
+                    />
+                    <Timeline events={stepsOf(run)} />
+                </Page>
+            </Fill>
+        </Stack>
+    )
+}
+
+/**
+ * Runs as a work page: the list of runs and the chosen run's detail, each a pane of the page's own,
+ * beside the rail. While it is shown it asks the shell for the rail in `mode`, which the shell gives
+ * back as the app holds it when the page goes. On a phone the panes stand one over the other.
+ */
+function WorkPage({ mode }: { mode: RailMode }) {
+    useRailMode(mode)
+    const mobile = useIsMobile()
+    const [chosen, setChosen] = useState(WORK_RUNS[1]?.id)
+    const run = WORK_RUNS.find((one) => one.id === chosen) ?? WORK_RUNS[0]
+    return (
+        <ResizablePanelGroup orientation={mobile ? 'vertical' : 'horizontal'} className="h-full min-h-0">
+            <ResizablePanel defaultSize="40%" minSize="25%">
+                <Stack gap="none" className="h-full min-h-0">
+                    <PaneHeader title="Runs" meta={`${String(WORK_RUNS.length)} in harbor`} />
+                    <DataTable
+                        variant="list"
+                        columns={RUN_LIST}
+                        rows={WORK_RUNS}
+                        rowKey={(one) => one.id}
+                        onOpen={(one) => setChosen(one.id)}
+                        opened={(one) => one.id === run.id}
+                        minWidth="auto"
+                        stackBelow={360}
+                        framed={false}
+                        className="min-h-0 flex-1"
+                    />
+                </Stack>
+            </ResizablePanel>
+            <ResizableHandle />
+            <ResizablePanel minSize="35%">{run !== undefined && <RunDetail run={run} />}</ResizablePanel>
+        </ResizablePanelGroup>
+    )
+}
+
 /**
  * Tidevann's frame. A press on a place in the rail, or a place chosen in the palette, moves to it
  * through the shell's `route`, which closes the drawer however the place was reached; the mark and
  * name lead to Runs, the app's home. `search` puts a field at the top bar's start, beside the
- * palette's button at its end; `overlay` gives the app a search of its own over the page.
+ * palette's button at its end; `overlay` gives the app a search of its own over the page. `work`
+ * draws Runs as a work page asking the shell for the rail in that mode; every other place is a
+ * plain page, so leaving Runs brings the rail back as the app holds it.
  */
 function Frame({
     banner,
@@ -115,6 +225,7 @@ function Frame({
     drawer = false,
     search = false,
     overlay = false,
+    work,
 }: {
     banner?: ReactNode
     contentKey?: number
@@ -122,6 +233,7 @@ function Frame({
     drawer?: boolean
     search?: boolean
     overlay?: boolean
+    work?: RailMode
 }) {
     const [collapsed, setCollapsed] = useState(start)
     const [drawerOpen, setDrawerOpen] = useState(drawer)
@@ -197,10 +309,14 @@ function Frame({
                     </StatusLine>
                 }
             >
-                <Page className="h-full">
-                    <PageHeader title={labelOf(place)} description="Every run of every job in harbor, newest first." />
-                    <DataTable columns={COLUMNS} rows={rows} rowKey={(run) => run.id} minWidth="36rem" className="min-h-0 flex-1" />
-                </Page>
+                {work !== undefined && place === 'runs' ? (
+                    <WorkPage mode={work} />
+                ) : (
+                    <Page className="h-full">
+                        <PageHeader title={labelOf(place)} description="Every run of every job in harbor, newest first." />
+                        <DataTable columns={COLUMNS} rows={rows} rowKey={(run) => run.id} minWidth="36rem" className="min-h-0 flex-1" />
+                    </Page>
+                )}
             </Shell>
             {overlay && <SearchOverlay open={searching} onOpenChange={setSearching} />}
         </TooltipProvider>
@@ -263,9 +379,25 @@ export const Drawer: StoryObj = { render: () => <Frame collapsed drawer /> }
  */
 export const OverSearch: StoryObj = { name: 'Over a search', render: () => <Frame overlay /> }
 
-function DesktopFrame({ collapsed: start = false }: { collapsed?: boolean }) {
+/**
+ * A work page with panes of its own, the runs and one run's detail, beside the rail. The app holds
+ * the rail expanded, and the page narrows it to its icons while it is shown, through `useRailMode`;
+ * the mark widens it again for as long as the page stands. Schedules, a plain page, gets the rail
+ * back as the app holds it.
+ */
+export const WorkPageStory: StoryObj = { name: 'Work page', render: () => <Frame work="collapsed" /> }
+
+/**
+ * The same work page with the rail hidden while it is shown: the panes take the window's whole
+ * width, and the top bar's menu button opens the rail as a drawer at every width.
+ */
+export const HiddenRail: StoryObj = { name: 'Hidden rail', render: () => <Frame work="hidden" /> }
+
+function DesktopFrame({ collapsed: start = false, player = false }: { collapsed?: boolean; player?: boolean }) {
     const [collapsed, setCollapsed] = useState(start)
     const [moves, setMoves] = useState({ drag: 0, zoom: 0 })
+    // The window's own full screen, as a desktop shell's call would put it, and as the app follows it.
+    const [windowFull, setWindowFull] = useState(false)
     return (
         <TooltipProvider>
             <Shell
@@ -273,6 +405,7 @@ function DesktopFrame({ collapsed: start = false }: { collapsed?: boolean }) {
                     trafficLights: true,
                     onWindowDrag: () => setMoves((old) => ({ ...old, drag: old.drag + 1 })),
                     onWindowZoom: () => setMoves((old) => ({ ...old, zoom: old.zoom + 1 })),
+                    ...(player ? { setFullscreen: setWindowFull, fullscreen: windowFull } : {}),
                 }}
                 palette={placeCommands(GROUPS, () => undefined)}
                 rail={
@@ -299,12 +432,20 @@ function DesktopFrame({ collapsed: start = false }: { collapsed?: boolean }) {
                     <StatusLine note="Connected to api.example.org">
                         <StatusItem label="moved">{moves.drag}</StatusItem>
                         <StatusItem label="zoomed">{moves.zoom}</StatusItem>
+                        {player && <StatusItem label="window">{windowFull ? 'full screen' : 'windowed'}</StatusItem>}
                     </StatusLine>
                 }
             >
-                <Page>
-                    <PageHeader title="Runs" description="Every run of every job in harbor, newest first." />
-                </Page>
+                {player ? (
+                    <Page>
+                        <PageHeader title="Recording" description="The nightly-export run of harbor, as the screen recorded it." />
+                        <VideoPlayer src={clip} title="nightly-export, harbor" />
+                    </Page>
+                ) : (
+                    <Page>
+                        <PageHeader title="Runs" description="Every run of every job in harbor, newest first." />
+                    </Page>
+                )}
             </Shell>
         </TooltipProvider>
     )
@@ -327,4 +468,16 @@ export const CollapsedRail: StoryObj = {
     name: 'Collapsed rail',
     parameters: { desktopWindow: true },
     render: () => <DesktopFrame collapsed />,
+}
+
+/**
+ * Full screen through the desktop shell: the shell's `desktop` hands the library the window's own
+ * full screen (`setFullscreen`), here a stand-in that only notes the window's state in the status
+ * line. The player's fullscreen button puts the window in its full screen through it in place of
+ * the browser's, and the player covers the window until Escape or the button again.
+ */
+export const DesktopFullscreen: StoryObj = {
+    name: 'Desktop full screen',
+    parameters: { desktopWindow: true },
+    render: () => <DesktopFrame player />,
 }

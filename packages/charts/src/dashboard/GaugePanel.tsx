@@ -70,6 +70,8 @@ export interface GaugePanelProps {
     bodyClassName?: string
     loading?: boolean
     file?: string
+    /** Expanding also takes the screen, as `WindowedPane`'s `fullscreen` does. */
+    fullscreen?: boolean
     words?: Partial<ChartFrameWords>
     className?: string
 }
@@ -98,6 +100,7 @@ export function GaugePanel({
     bodyClassName,
     loading,
     file,
+    fullscreen,
     words,
     className,
 }: GaugePanelProps) {
@@ -112,6 +115,7 @@ export function GaugePanel({
             info={info}
             actions={actions}
             file={file}
+            fullscreen={fullscreen}
             loading={loading}
             bodyClassName={cn('h-32 max-md:h-28', bodyClassName)}
             words={words}

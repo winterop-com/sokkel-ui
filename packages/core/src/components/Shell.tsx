@@ -1,5 +1,19 @@
 import { Menu, PanelRight } from 'lucide-react'
-import { Fragment, lazy, Suspense, useCallback, useContext, useEffect, useMemo, useRef, useState, type Key, type ReactNode } from 'react'
+import {
+    Fragment,
+    lazy,
+    Suspense,
+    useCallback,
+    useContext,
+    useEffect,
+    useId,
+    useLayoutEffect,
+    useMemo,
+    useRef,
+    useState,
+    type Key,
+    type ReactNode,
+} from 'react'
 
 import { cn } from '../lib/cn'
 import { CommandRegistry, useCommandRegistry } from '../hooks/use-commands'
@@ -7,12 +21,24 @@ import { useIsMobile } from '../hooks/use-mobile'
 import { useOverlay } from '../hooks/use-overlay'
 import { ShortcutRegistry } from '../hooks/use-shortcuts'
 import { trafficLightsStyle, useTrafficLights, windowPressHandler, type DesktopWindow } from '../lib/desktop'
+import { useDesktopFullscreen } from '../lib/fullscreen'
 import { createShortcutRegistry, topLayer, type KeyBinding, type ShortcutGroup } from '../lib/shortcuts'
 import type { CommandPaletteWords, PaletteFilter, PaletteGroup, PaletteSearch } from './CommandPalette'
 import type { ShortcutsDialogWords } from './ShortcutsDialog'
-import { ShellDesktop, ShellDrawer, ShellFootCell, ShellPalette, ShellScroller, ShellShortcuts } from './shell-context'
+import {
+    ShellDesktop,
+    ShellDrawer,
+    ShellFootCell,
+    ShellPalette,
+    ShellRailAsk,
+    ShellRailMode,
+    ShellScroller,
+    ShellShortcuts,
+    type RailMode,
+} from './shell-context'
 
 export type { ShortcutGroup } from '../lib/shortcuts'
+export type { RailMode } from './shell-context'
 
 // The palette and the shortcuts load when they first open, so an app's start carries neither.
 const CommandPalette = lazy(() => import('./CommandPalette').then((module) => ({ default: module.CommandPalette })))
@@ -20,6 +46,12 @@ const ShortcutsDialog = lazy(() => import('./ShortcutsDialog').then((module) => 
 
 export interface ShellProps {
     rail: ReactNode
+    /**
+     * Draws the rail narrowed to its icons (`collapsed`) or not at all (`hidden`), whatever the app
+     * holds, as a work page with list and detail panes of its own wants; a screen asks the same from
+     * inside with `useRailMode`. Left off, the rail is as the app holds it.
+     */
+    railMode?: RailMode
     /** What the top bar holds: a search, the version, the theme control. */
     top?: ReactNode
     /** What the foot strip holds to the right of the rail's foot cell, if anything. */
@@ -136,13 +168,22 @@ export interface ShellProps {
  * keeps the content's place per screen, and a new `contentKey` mounts the content afresh, as after
  * the server has come back.
  *
+ * `railMode` narrows the rail to its icons or hides it whatever the app holds, for a work page with
+ * list and detail panes of its own, and a screen asks the same while it is mounted with
+ * `useRailMode`, the latest screen's ask going before the prop; once nothing asks, the rail is as the
+ * app holds it again. Narrowed, its mark still widens it for the reader until the ask changes, and
+ * the account in its foot follows it. Hidden, the top bar's menu button opens it as the drawer at
+ * every width.
+ *
  * With `desktop`, the shell stands in a desktop window whose native title bar is hidden: its top
  * strip, the rail's head and the top bar (and an open panel's header), is the window's drag
  * region, and `trafficLights` leaves room at its start for the window's own buttons: in the
  * rail's head, or in the top bar where no rail shows or a collapsed rail is narrower than the room.
+ * `setFullscreen` hands every part that goes full screen the window's own (`lib/fullscreen`).
  */
 export function Shell({
     rail,
+    railMode: givenRailMode,
     top,
     foot,
     panel,
@@ -172,6 +213,14 @@ export function Shell({
     words: given,
 }: ShellProps) {
     const words = { ...WORDS, ...given }
+    // What screens ask of the rail while they are mounted, the latest last.
+    const [railAsks, setRailAsks] = useState<readonly { id: string; mode: RailMode }[]>([])
+    const askRail = useCallback((id: string, mode: RailMode) => {
+        setRailAsks((asks) => [...asks.filter((ask) => ask.id !== id), { id, mode }])
+        return () => setRailAsks((asks) => asks.filter((ask) => ask.id !== id))
+    }, [])
+    const railMode = railAsks.at(-1)?.mode ?? givenRailMode
+    const railHidden = railMode === 'hidden'
     const [ownDrawer, setOwnDrawer] = useState(false)
     const drawer = drawerOpen ?? ownDrawer
     const setDrawer = useCallback(
@@ -211,6 +260,7 @@ export function Shell({
     const screenGroups = commandRegistry.groups
     const groups = useMemo(() => (palette === undefined ? [] : [...screenGroups, ...palette]), [palette, screenGroups])
     const lights = useTrafficLights(desktop)
+    useDesktopFullscreen(desktop)
     const [shortcutRegistry] = useState(() => createShortcutRegistry())
     const [ownPaletteOpen, setOwnPaletteOpen] = useState(defaultPaletteOpen)
     const paletteIsOpen = paletteOpen ?? ownPaletteOpen
@@ -287,7 +337,8 @@ export function Shell({
         shortcutRegistry.set('shell', own, { fallback: true })
     }, [shortcutRegistry, hasPalette, hasShortcuts, words.openPalette, words.openShortcuts, togglePalette, openShortcuts])
     const mobile = useIsMobile()
-    const drawerRef = useOverlay(drawer && mobile, { onClose: closeDrawer })
+    // A hidden rail opens as the drawer at every width.
+    const drawerRef = useOverlay(drawer && (mobile || railHidden), { onClose: closeDrawer })
     const panelRef = useOverlay(panel !== undefined && !wide && open, { onClose: () => setOpen(false), inert: false })
     const [main, setMain] = useState<HTMLElement | null>(null)
 
@@ -308,7 +359,7 @@ export function Shell({
         </button>
     )
     const drawn = drawer && (
-        <div ref={drawerRef} className="fixed inset-0 z-40 outline-none md:hidden">
+        <div ref={drawerRef} className={cn('fixed inset-0 z-40 outline-none', !railHidden && 'md:hidden')}>
             <button type="button" aria-label={words.close} className="absolute inset-0 bg-scrim" onClick={closeDrawer} />
             <div
                 data-overlay
@@ -350,7 +401,10 @@ export function Shell({
                         aria-label={words.menu}
                         title={words.menu}
                         aria-expanded={drawer}
-                        className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-hover md:hidden"
+                        className={cn(
+                            'flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-hover',
+                            !railHidden && 'md:hidden',
+                        )}
                         onClick={() => setDrawer(true)}
                     >
                         <Menu className="size-4" aria-hidden />
@@ -417,9 +471,13 @@ export function Shell({
             <ShellPalette value={palette === undefined ? undefined : openPalette}>
                 <ShellShortcuts value={shortcuts === undefined ? undefined : openShortcuts}>
                     <ShellDesktop value={desktop}>
-                        <ShellScroller value={main}>
-                            <CommandRegistry value={commandRegistry.registry}>{node}</CommandRegistry>
-                        </ShellScroller>
+                        <ShellRailAsk value={askRail}>
+                            <ShellRailMode value={railMode}>
+                                <ShellScroller value={main}>
+                                    <CommandRegistry value={commandRegistry.registry}>{node}</CommandRegistry>
+                                </ShellScroller>
+                            </ShellRailMode>
+                        </ShellRailAsk>
                     </ShellDesktop>
                 </ShellShortcuts>
                 {commands}
@@ -436,9 +494,11 @@ export function Shell({
             >
                 {toggle}
                 <div className="flex min-h-0 flex-1">
-                    <div data-shell-rail className="hidden md:flex">
-                        {rail}
-                    </div>
+                    {!railHidden && (
+                        <div data-shell-rail className="hidden md:flex">
+                            {rail}
+                        </div>
+                    )}
                     {drawn}
                     {content}
                     {panels}
@@ -454,9 +514,11 @@ export function Shell({
             className="group/shell relative grid h-svh min-h-0 grid-cols-[auto_minmax(0,1fr)] grid-rows-[minmax(0,1fr)_auto_auto] overflow-hidden bg-background pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] text-foreground"
         >
             {toggle}
-            <div data-shell-rail className="col-start-1 row-start-1 hidden min-h-0 md:flex">
-                <ShellFootCell value={footCell}>{rail}</ShellFootCell>
-            </div>
+            {!railHidden && (
+                <div data-shell-rail className="col-start-1 row-start-1 hidden min-h-0 md:flex">
+                    <ShellFootCell value={footCell}>{rail}</ShellFootCell>
+                </div>
+            )}
             {drawn}
             <div className="col-start-2 row-start-1 flex min-h-0 min-w-0">
                 {content}
@@ -513,6 +575,24 @@ export function useShell(): ShellControls {
     const openPalette = useContext(ShellPalette)
     const openShortcuts = useContext(ShellShortcuts)
     return useMemo(() => ({ openPalette, openShortcuts }), [openPalette, openShortcuts])
+}
+
+/** A layout effect in the browser, so an asked rail is drawn before the page paints; a plain one on a server. */
+const useBeforePaint = typeof document === 'undefined' ? useEffect : useLayoutEffect
+
+/**
+ * Narrows the shell's rail to its icons (`collapsed`) or hides it (`hidden`) while the calling
+ * screen is mounted, as a work page with list and detail panes of its own wants; undefined asks
+ * nothing. The rail is back as the app holds it once the screen unmounts. The latest screen to ask
+ * goes before an earlier one and before `Shell`'s `railMode`. Outside a `Shell` it does nothing.
+ */
+export function useRailMode(mode: RailMode | undefined): void {
+    const ask = useContext(ShellRailAsk)
+    const id = useId()
+    useBeforePaint(() => {
+        if (ask === undefined || mode === undefined) return
+        return ask(id, mode)
+    }, [ask, id, mode])
 }
 
 /** The `lg` breakpoint, from which the panel is a column rather than a sheet. */

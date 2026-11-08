@@ -168,9 +168,31 @@ function polygonAnchor(polygon: Position[][]): LngLat {
     return widestAcross(polygon, centroid[1]) ?? centroid
 }
 
+/** How long a line is, in degrees. */
+function lineLength(line: Position[]): number {
+    let length = 0
+    for (let index = 1; index < line.length; index += 1) {
+        length += Math.hypot(line[index][0] - line[index - 1][0], line[index][1] - line[index - 1][1])
+    }
+    return length
+}
+
+/** The spot halfway along a line. */
+function lineMiddle(line: Position[]): LngLat {
+    let left = lineLength(line) / 2
+    for (let index = 1; index < line.length; index += 1) {
+        const [ax, ay] = line[index - 1]
+        const [bx, by] = line[index]
+        const step = Math.hypot(bx - ax, by - ay)
+        if (step >= left && step > 0) return [ax + ((bx - ax) * left) / step, ay + ((by - ay) * left) / step]
+        left -= step
+    }
+    return [line[0][0], line[0][1]]
+}
+
 /**
- * Where a popup about a feature points: a point's own position, or a spot inside the largest
- * part of a polygon, near its centroid.
+ * Where a popup about a feature points: a point's own position, a spot inside the largest
+ * part of a polygon, near its centroid, or halfway along the longest part of a line.
  */
 export function anchorOf(feature: Feature): LngLat | null {
     const geometry = feature.geometry
@@ -181,8 +203,94 @@ export function anchorOf(feature: Feature): LngLat | null {
         const largest = geometry.coordinates.reduce((best, polygon) => (ringArea(polygon[0]) > ringArea(best[0]) ? polygon : best))
         return polygonAnchor(largest)
     }
+    if (geometry.type === 'LineString') return lineMiddle(geometry.coordinates)
+    if (geometry.type === 'MultiLineString' && geometry.coordinates.length > 0) {
+        return lineMiddle(geometry.coordinates.reduce((best, line) => (lineLength(line) > lineLength(best) ? line : best)))
+    }
     const extent = boundsOf([{ type: 'FeatureCollection', features: [feature] }])
     return extent === null ? null : [(extent[0] + extent[2]) / 2, (extent[1] + extent[3]) / 2]
+}
+
+/** What a geometry is drawn as: a filled and outlined area, a line, or a point. */
+export type GeometryKind = 'area' | 'line' | 'point'
+
+/** The order a map draws the kinds in, bottom first, so lines lie over areas and points over both. */
+export const GEOMETRY_KINDS: readonly GeometryKind[] = ['area', 'line', 'point']
+
+/** What a single geometry is drawn as, or null for no geometry and for a collection of several. */
+export function kindOf(geometry: Geometry | null): GeometryKind | null {
+    switch (geometry?.type) {
+        case 'Polygon':
+        case 'MultiPolygon':
+            return 'area'
+        case 'LineString':
+        case 'MultiLineString':
+            return 'line'
+        case 'Point':
+        case 'MultiPoint':
+            return 'point'
+        default:
+            return null
+    }
+}
+
+/** One kind's part of a geometry, as `splitByKind` gives it. */
+export interface GeometryPart {
+    kind: GeometryKind
+    geometry: Geometry
+}
+
+/**
+ * A geometry split by what it is drawn as, one part per kind, in drawing order. A single geometry is
+ * its own one part. A collection's members, nested collections included, are gathered by kind, and
+ * several of a kind are joined into one multi geometry: points into a MultiPoint, lines into a
+ * MultiLineString, areas into a MultiPolygon. No geometry, or an empty collection, has no parts.
+ */
+export function splitByKind(geometry: Geometry | null): GeometryPart[] {
+    if (geometry === null) return []
+    const kind = kindOf(geometry)
+    if (kind !== null) return [{ kind, geometry }]
+    const members: Record<GeometryKind, Geometry[]> = { area: [], line: [], point: [] }
+    const gather = (part: Geometry) => {
+        if (part.type === 'GeometryCollection') part.geometries.forEach(gather)
+        else {
+            const each = kindOf(part)
+            if (each !== null) members[each].push(part)
+        }
+    }
+    gather(geometry)
+    return GEOMETRY_KINDS.flatMap((each): GeometryPart[] => {
+        const found = members[each]
+        if (found.length === 0) return []
+        if (found.length === 1) return [{ kind: each, geometry: found[0] }]
+        return [{ kind: each, geometry: joined(each, found) }]
+    })
+}
+
+/** Several geometries of one kind as one multi geometry. */
+function joined(kind: GeometryKind, parts: Geometry[]): Geometry {
+    if (kind === 'point') {
+        return {
+            type: 'MultiPoint',
+            coordinates: parts.flatMap((part) =>
+                part.type === 'Point' ? [part.coordinates] : part.type === 'MultiPoint' ? part.coordinates : [],
+            ),
+        }
+    }
+    if (kind === 'line') {
+        return {
+            type: 'MultiLineString',
+            coordinates: parts.flatMap((part) =>
+                part.type === 'LineString' ? [part.coordinates] : part.type === 'MultiLineString' ? part.coordinates : [],
+            ),
+        }
+    }
+    return {
+        type: 'MultiPolygon',
+        coordinates: parts.flatMap((part) =>
+            part.type === 'Polygon' ? [part.coordinates] : part.type === 'MultiPolygon' ? part.coordinates : [],
+        ),
+    }
 }
 
 /** The area of a polygon's or multipolygon's outer rings, in square degrees; zero for anything else. */
