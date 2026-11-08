@@ -626,6 +626,10 @@
             "types": "./dist/components/media/AudioPlayer.d.ts",
             "import": "./dist/components/media/AudioPlayer.js"
         },
+        "./media/captions": {
+            "types": "./dist/components/media/captions.d.ts",
+            "import": "./dist/components/media/captions.js"
+        },
         "./media/MediaControls": {
             "types": "./dist/components/media/MediaControls.d.ts",
             "import": "./dist/components/media/MediaControls.js"
@@ -657,6 +661,10 @@
         "./media/video-source": {
             "types": "./dist/components/media/video-source.d.ts",
             "import": "./dist/components/media/video-source.js"
+        },
+        "./media/video-stats": {
+            "types": "./dist/components/media/video-stats.d.ts",
+            "import": "./dist/components/media/video-stats.js"
         },
         "./media/VideoPlayer": {
             "types": "./dist/components/media/VideoPlayer.d.ts",

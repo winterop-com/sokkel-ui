@@ -1,18 +1,34 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { Maximize, Pause, Play, RotateCcw, RotateCw, Volume2 } from 'lucide-react'
+import { Activity, Maximize, Pause, Play, RotateCcw, RotateCw, Volume2 } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 
+import { createStore, useStore, type Store } from '@winterop-com/sokkel-ui/hooks/use-store'
 import { useShortcuts } from '@winterop-com/sokkel-ui/hooks/use-shortcuts'
 import { LogView, type LogLine } from '@winterop-com/sokkel-ui/LogView'
+import { captionSettings, type CaptionSettings, type CaptionStyle } from '@winterop-com/sokkel-ui/media/captions'
 import { formatTime } from '@winterop-com/sokkel-ui/media/time'
-import { VideoPlayer, type VideoError, type VideoPlayerHandle, type VideoSource } from '@winterop-com/sokkel-ui/media/VideoPlayer'
+import { useVideoStats, type VideoStats } from '@winterop-com/sokkel-ui/media/video-stats'
+import {
+    VideoPlayer,
+    type VideoError,
+    type VideoPlayerHandle,
+    type VideoSource,
+    type VideoTrack,
+} from '@winterop-com/sokkel-ui/media/VideoPlayer'
 import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { ButtonGroup } from '@winterop-com/sokkel-ui/primitives/button-group'
 import { hlsSource } from '@winterop-com/sokkel-ui-media/hls-source'
+import { VideoStatsOverlay } from '@winterop-com/sokkel-ui-media/VideoStatsOverlay'
 import captions from './fixtures/captions.vtt?url'
 import clip from './fixtures/clip.webm?url'
-import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
+
+/** The clip's English captions, on as it loads. */
+const ENGLISH: VideoTrack[] = [
+    { src: captions, label: 'English', lang: 'en', default: true },
+    { src: captions, label: 'English (plain)', lang: 'en-x-plain' },
+]
 
 /** A player in the middle of a plain page, with what plays under it. The clip is a local, silent gradient. */
 function Ground({ children, after }: { children: ReactNode; after?: ReactNode }) {
@@ -45,6 +61,9 @@ function useEventLog() {
             second.current = whole
             add({ source: 'onTime', text: formatTime(seconds) })
         },
+        onPlayingChange: (playing: boolean) => {
+            add({ source: 'onPlayingChange', text: playing ? 'playing' : 'paused' })
+        },
         onEnded: () => {
             add({ source: 'onEnded', text: 'played to the end' })
         },
@@ -70,11 +89,74 @@ function Resumed() {
                 defaultControlsVisible
                 title="Coastline, morning to evening"
                 onTime={log.onTime}
+                onPlayingChange={log.onPlayingChange}
                 onEnded={log.onEnded}
                 onError={log.onError}
             />
         </Ground>
     )
+}
+
+/** What the viewer has chosen for captions, as the store keeps it, one fact each. */
+function Kept({ store }: { store: Store<Partial<CaptionSettings>> }) {
+    const settings = captionSettings(useStore(store), { size: 0.5 })
+    const track = settings.track === undefined ? 'Default track' : settings.track === null ? 'Captions off' : `Track ${settings.track}`
+    return (
+        <MetaLine
+            items={[
+                `Size ${String(Math.round(settings.size * 100))}%`,
+                `Color ${settings.color}`,
+                `Background ${settings.background}`,
+                `Edge ${settings.edge}`,
+                track,
+            ]}
+        />
+    )
+}
+
+/** A player whose caption settings go to a store the screen holds, read back under it. */
+function CaptionsKept() {
+    const [store] = useState(() => createStore<Partial<CaptionSettings>>({}))
+    return (
+        <Ground after={<Kept store={store} />}>
+            <VideoPlayer
+                src={`${clip}#t=24`}
+                preload="auto"
+                defaultControlsVisible
+                title="Coastline, morning to evening"
+                tracks={ENGLISH}
+                captionDefaults={{ size: 0.5 }}
+                captionStore={store}
+            />
+        </Ground>
+    )
+}
+
+/** One player for each look, its settings held in a store of its own so no choice reaches another. */
+function Styled({ style, label }: { style: Partial<CaptionStyle>; label: string }) {
+    const [store] = useState(() => createStore<Partial<CaptionSettings>>(style))
+    return (
+        <Stack gap="sm">
+            <VideoPlayer src={`${clip}#t=24`} preload="auto" tracks={ENGLISH} captionStore={store} />
+            <p className="text-sm text-muted-foreground">{label}</p>
+        </Stack>
+    )
+}
+
+/** A reading as an engine playing an adaptive stream might give it. */
+const READING: VideoStats = {
+    resolution: { width: 1920, height: 1080 },
+    bitrate: 4_200_000,
+    bandwidth: 18_400_000,
+    bufferAhead: 12.6,
+    droppedFrames: 3,
+    totalFrames: 1204,
+    level: 2,
+    levels: 4,
+    engine: 'hls.js',
+    live: false,
+    playing: true,
+    readyState: 4,
 }
 
 /** A player whose keys and controls are the screen's, driving it through its handle. */
@@ -133,17 +215,35 @@ function DrivenFromOutside() {
     )
 }
 
-/** A player fed an HTTP live stream, with what its events tell written under it. */
+/** A player fed an HTTP live stream, with its stats a button away and what its events tell written under it. */
 function Streamed() {
     const log = useEventLog()
+    const player = useRef<VideoPlayerHandle>(null)
+    const [stats, setStats] = useState(false)
+    const reading = useVideoStats(player, { enabled: stats })
     return (
-        <Ground after={<LogView lines={log.lines} follow wrap numbered={false} className="max-h-48" />}>
+        <Ground
+            after={
+                <Stack>
+                    <Row>
+                        <Button variant="outline" aria-pressed={stats} onClick={() => setStats((shown) => !shown)}>
+                            <Activity aria-hidden />
+                            Stats
+                        </Button>
+                    </Row>
+                    <LogView lines={log.lines} follow wrap numbered={false} className="max-h-48" />
+                </Stack>
+            }
+        >
             <VideoPlayer
+                ref={player}
                 source={hlsSource('media/stream/stream.m3u8')}
                 startAt={24}
                 defaultControlsVisible
                 title="Coastline, morning to evening"
+                overlay={stats && <VideoStatsOverlay stats={reading} onClose={() => setStats(false)} />}
                 onTime={log.onTime}
+                onPlayingChange={log.onPlayingChange}
                 onEnded={log.onEnded}
                 onError={log.onError}
             />
@@ -193,12 +293,36 @@ export const ControlsShown: StoryObj = {
                 preload="auto"
                 defaultControlsVisible
                 title="Coastline, morning to evening"
-                tracks={[
-                    { src: captions, label: 'English', lang: 'en', default: true },
-                    { src: captions, label: 'English (plain)', lang: 'en-x-plain' },
-                ]}
+                tracks={ENGLISH}
             />
         </Ground>
+    ),
+}
+
+/**
+ * The captions menu: the tracks and Off, then the text's size, ink, background and edge, each a
+ * submenu. The app's `captionDefaults` start the text at half its usual size; what the viewer
+ * picks, and the track, go to the store the app hands as `captionStore` (by default `localStorage`
+ * through `useStored`), read back under the player.
+ */
+export const Captions: StoryObj = { render: () => <CaptionsKept /> }
+
+/**
+ * Captions are words on the picture: outlined with no box by default, or with a drop shadow, no
+ * edge on a see-through box, or a solid box in another ink and size, each drawn from the
+ * `--caption-*` tokens and sized against the player's width.
+ */
+export const CaptionStyles: StoryObj = {
+    name: 'Caption styles',
+    render: () => (
+        <div className="min-h-svh bg-background p-4 text-foreground sm:p-8">
+            <Columns count={2} min="lg">
+                <Styled style={{}} label="Outline, no background (the default)" />
+                <Styled style={{ edge: 'shadow' }} label="Drop shadow" />
+                <Styled style={{ edge: 'none', background: 'translucent' }} label="No edge, translucent background" />
+                <Styled style={{ edge: 'none', background: 'solid', color: 'yellow', size: 0.75 }} label="Solid background, yellow, 75%" />
+            </Columns>
+        </div>
     ),
 }
 
@@ -222,6 +346,25 @@ export const OutsideControls: StoryObj = { name: 'Outside controls', render: () 
  * stream is the clip cut into four segments and served with the stories.
  */
 export const HlsStream: StoryObj = { name: 'HLS stream', render: () => <Streamed /> }
+
+/**
+ * How it plays, over the picture: `VideoStatsOverlay` in the player's `overlay`, here with a fixed
+ * reading; an app reads one each second with `useVideoStats` from the player's handle, as the HLS
+ * stream's Stats button does.
+ */
+export const StatsOverlay: StoryObj = {
+    name: 'Stats overlay',
+    render: () => (
+        <Ground>
+            <VideoPlayer
+                src={`${clip}#t=24`}
+                preload="auto"
+                title="Coastline, morning to evening"
+                overlay={<VideoStatsOverlay stats={READING} onClose={() => undefined} />}
+            />
+        </Ground>
+    ),
+}
 
 /** Its tries spent: the player says the video could not be played, with a button to try again. */
 export const Failed: StoryObj = { render: () => <GaveUp /> }

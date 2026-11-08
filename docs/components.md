@@ -40,7 +40,7 @@ animation frame is read by `useFramePosition` (`use-frame-position`), and LRC ly
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 10 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 11 modules
 - [`@winterop-com/sokkel-ui-terminal`](#winterop-com-sokkel-ui-terminal): 2 modules
-- [`@winterop-com/sokkel-ui-media`](#winterop-com-sokkel-ui-media): 9 modules
+- [`@winterop-com/sokkel-ui-media`](#winterop-com-sokkel-ui-media): 10 modules
 
 ## @winterop-com/sokkel-ui
 
@@ -330,7 +330,7 @@ animation frame is read by `useFramePosition` (`use-frame-position`), and LRC ly
 | **CodeEditor** | `@winterop-com/sokkel-ui/CodeEditor` | A code editor on CodeMirror: JSON, YAML, jq or plain text by name, or any language given as a CodeMirror `LanguageSupport` or a stream parser (`defineLanguage` builds one). | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-editor--editors) |
 | **DiffView** | `@winterop-com/sokkel-ui/DiffView` | Two versions of a text as one list of lines, the removed ones marked `-` and the added ones `+`: a job definition before and after an edit, a config against the one it replaces. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-data--description) |
 | **EditPreview** | `@winterop-com/sokkel-ui/EditPreview` | A source and what it makes, as an editor beside its live preview: markdown and the page, a template and the message. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-edit-preview--markdown) |
-| **LogView** | `@winterop-com/sokkel-ui/LogView` | A log on the terminal ground: time, level, source and text in columns, levels inked, lines numbered. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-data--description) |
+| **LogView** | `@winterop-com/sokkel-ui/LogView` | A log on the terminal ground: time, level, source and text in columns, levels inked, lines numbered. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-zz-live-check--engine) |
 | **Markdown** | `@winterop-com/sokkel-ui/Markdown` | GitHub-flavored markdown, as an assistant or a description writes it: fenced code highlighted with a copy button, mermaid fences drawn as diagrams, links opening in a new tab, and a quote whose first line is `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]` or `[!CAUTION]` drawn as a callout. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-edit-preview--markdown) |
 | **MermaidDiagram** | `@winterop-com/sokkel-ui/MermaidDiagram` | A mermaid diagram, drawn in the current theme's colors and typeface and redrawn when the scheme, the theme or a token override changes. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-windowed-pane--closed) |
 | **ProseText** | `@winterop-com/sokkel-ui/ProseText` | A sentence whose machine parts are marked with backticks, drawn with those parts in the code face: "Set `base_url` in the service" shows `base_url` in mono. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-states--read) |
@@ -470,3 +470,4 @@ animation frame is read by `useFramePosition` (`use-frame-position`), and LRC ly
 | **MediaCard**, MediaGrid | `@winterop-com/sokkel-ui-media/MediaCard` | One album, film or episode in a grid: the cover first, then its title and a line under it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-media-card--albums) |
 | **MediaFullscreen** | `@winterop-com/sokkel-ui-media/MediaFullscreen` | The player's now-playing view over the whole screen, opened from the bar: what plays at full size, the visualizer at full strength, the waveform and the transport, arranged after the bar's layout. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-lyrics--timed) (in MediaBar) |
 | **TrackList** | `@winterop-com/sokkel-ui-media/TrackList` | A list of tracks or episodes: the number or a small picture, the title over an optional second line, a quiet meta column, and the length in the code face at the end. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-track-list--numbered) |
+| **VideoStatsOverlay** | `@winterop-com/sokkel-ui-media/VideoStatsOverlay` | How a video is playing, in a few lines over its picture: the picture's size, the rendition's bitrate, the link's bandwidth as the engine measures it, the seconds buffered ahead and the frames dropped. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-video--paused-frame) |

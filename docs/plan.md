@@ -20,8 +20,8 @@ The library is six packages, built from one Bun workspace and released together 
   xterm.js.
 - `@winterop-com/sokkel-ui-media` (`packages/media`): the music and video app parts, `MediaBar`
   with its layouts and fullscreen view, `TrackList`, `ChapterList`, `Lyrics`, `MediaCard`,
-  `Artwork`, `useMediaSession`, `useQueue`, and `hlsSource`, which plays an HTTP live stream in
-  `VideoPlayer` through hls.js, an optional peer.
+  `Artwork`, `useMediaSession`, `useQueue`, `VideoStatsOverlay`, and `hlsSource`, which plays an
+  HTTP live stream in `VideoPlayer` through hls.js, an optional peer.
 
 An app installs the core and the add-ons it draws with, so an engine is installed only by an app
 that uses it, and the music and video parts only by an app that plays music or video. Each add-on
@@ -507,8 +507,8 @@ app that plays nothing does not carry them: `MediaBar` with its layouts, parts a
 `MediaFullscreen`, `TrackList`, `ChapterList`, `Lyrics`, `MediaCard`, `Artwork` and its seeded
 covers (`cover-seed`), the arithmetic of chapters, of a timeline over several files and of the
 bar's growth, the queue (`queue`, `useQueue`), LRC lyrics (`lrc`), `useMediaSession` with its
-helpers in `media-session`, a position read on every animation frame (`useFramePosition`), and
-`hlsSource` in `hls-source`. It stands on the core by name, and its one engine, hls.js, is an
+helpers in `media-session`, a position read on every animation frame (`useFramePosition`),
+`VideoStatsOverlay`, and `hlsSource` in `hls-source`. It stands on the core by name, and its one engine, hls.js, is an
 optional peer it loads only when a stream plays. What a core part plays through
 stays in the core, under `@winterop-com/sokkel-ui/media/*`: `AudioPlayer` and `VideoPlayer`, which
 attachments, chat messages, the composer and a spoken answer use; the controls they share
@@ -528,24 +528,53 @@ an HTTP live stream, played natively where the browser plays HLS itself (Safari,
 Chromium) and otherwise through hls.js, loaded by a dynamic import the first time a stream plays (or
 always through hls.js with `native: false`). hls.js is an optional peer dependency of the media
 package, so only an app that plays streams installs it, and it never enters the core. hls.js draws
-every HTTP live stream. The source recovers from a fatal network error by loading again and from a
+every HTTP live stream. The player hands `attach` where playback picks up (`startAt`, or where a
+try resumes) and hls.js starts loading there (`startPosition`), so the first fragment fetched is
+the one played. The source recovers from a fatal network error by loading again and from a
 fatal media error by recovering the decoder (swapping the audio codec from the second time),
 `recoveries` times each, counting from zero once a fragment is buffered, and then leaves the next
-try to the player; every error goes on to `onError`. The Storybook serves a stream cut from the
-clip (`src/stories/media/fixtures/stream`, about 90 kB) as a static folder, and a fake hls.js in
-the tests drives the recoveries.
+try to the player; every error goes on to `onError`. A source's `stats(video)` tells what its
+engine knows: hls.js's bandwidth estimate, the rendition playing and its bitrate (weighed from the
+fragments loaded when a lone media playlist declares none), the buffer ahead and whether the
+stream is live. The Storybook serves a stream cut from the clip (`src/stories/media/fixtures/stream`,
+about 90 kB) as a static folder, and a fake hls.js in the tests drives the recoveries.
 
 The player starts at `startAt`, taken when the media has its length, for resuming; tells where it
-is through `onTime` and the end through `onEnded`; and meets a stall (waiting for data longer than
-`stallAfter` while playing) or a network or decoding error by loading the media again where it
-was, `retries` times, a second before the first try and twice as long before each next, saying
-"Trying again" over the picture meanwhile. Once the tries are spent it says the video could not be
-played, with Retry; media the browser cannot play is said at once. `onError` hears each with
-`fatal` false while it tries and true once it gives up. `keys={false}` leaves every key to the
-app, whose shortcuts drive it through the handle on `ref` (`play`, `pause`, `toggle`, `seekTo`,
-held until the media can take it, `seekBy`, `setVolume`, `toggleMute`, `toggleFullscreen`,
-`retry`, and what it plays, where and how loud); `onFullscreenChange` says when the picture fills
-the screen.
+is through `onTime`, whether it plays through `onPlayingChange` (once per change, however it was
+asked, never as it unmounts or while a try loads the media again, so an app can stop a server
+encoding ahead on a pause) and the end through `onEnded`. It reads the playhead once a second while
+playing, and one that stands longer than `stallAfter` is a stall, waiting for data or a seek that
+does not land (a stream whose encoder fell behind or stopped, a segment that is not there). It
+meets a stall, or a network or decoding error, by loading the media again where it was, or at a
+live stream's live edge once its window has moved past that point or it can seek nowhere,
+`retries` times, a second before the first try and twice as long before each next, saying "Trying
+again" over the picture meanwhile; tried against an event playlist ffmpeg was still writing, it
+picked the stream up again once the encoder wrote on. Once the tries are spent it says the video
+could not be played, with Retry; media the browser cannot play is said at once. `onError` hears
+each with `fatal` false while it tries and true once it gives up. When the page is shown again
+after being hidden, a video that was playing plays on (a browser pauses a page put away) and one
+whose buffer stalled while away is moved a hair to wake it, unless a pause was asked through the
+handle meanwhile. `keys={false}` leaves every key to the app, whose shortcuts drive it through the
+handle on `ref` (`play`, `pause`, `toggle`, `seekTo`, held until the media can take it, `seekBy`,
+`setVolume`, `toggleMute`, `toggleFullscreen`, `retry`, `stats`, and what it plays, where and how
+loud); `onFullscreenChange` says when the picture fills the screen.
+
+Captions are words on the picture, outlined with no box, in `--caption-*` tokens, sized against
+the player's width (`--caption-size`, never under `--caption-size-min`). The captions button opens
+the tracks and Off, and the text's size (50 to 200 percent), ink (white, yellow, green, cyan,
+magenta), background (none, see-through or solid) and edge (an outline, a drop shadow or none),
+each a submenu; the app's `captionDefaults` stand until the viewer chooses, such as half the usual
+size. What the viewer chooses, and the track, by its language so the next video's is chosen too,
+is kept in `localStorage` through `useStored` under `CAPTIONS_KEY`, or in a store the app hands as
+`captionStore` (a `createStore`, or its own over a settings file), field by field so a bad one
+falls back alone; `media/captions` holds the options and the shapes. The player's menus stay in it
+while it fills the screen and may reach past a small one otherwise.
+
+`useVideoStats(ref)` reads the handle's `stats` once a second while enabled: the picture's size,
+the rendition's bitrate, the bandwidth, the buffer ahead and the frames dropped of those shown
+(`getVideoPlaybackQuality`), each null where nobody can tell. `VideoStatsOverlay` in the media
+package draws a reading in a few lines, the app showing and hiding it through the player's
+`overlay`, which keeps it over the picture in full screen.
 
 One sound is heard at a time: a player claims the sound as it starts to be heard and whoever held it
 is paused, through `claimSound` and `useOneSound` in `media/one-sound`. AudioPlayer, VideoPlayer and
