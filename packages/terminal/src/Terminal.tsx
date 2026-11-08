@@ -43,7 +43,7 @@ export function Terminal({
     actions,
     rows,
     className,
-    words = WORDS,
+    words: given,
 }: {
     entries: readonly TerminalEntry[]
     /** What runs here, in the title bar: a host, a job, a shell. */
@@ -56,10 +56,11 @@ export function Terminal({
     /** A fixed number of rows, so the terminal is as tall as they are; without it, it fills the height it is given. */
     rows?: number
     className?: string
-    words?: TerminalWords
+    words?: Partial<TerminalWords>
 }) {
     const view = useRef<TerminalHandle>(null)
     const written = useRef('')
+    const words = { ...WORDS, ...given }
     const exited = words.exited
     const text = useMemo(() => sessionText(entries, prompt, exited), [entries, prompt, exited])
 

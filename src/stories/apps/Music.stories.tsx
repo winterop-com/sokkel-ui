@@ -279,7 +279,7 @@ function LibraryPage() {
                         <Segmented
                             label="Order"
                             value={order}
-                            onChoose={setOrder}
+                            onValueChange={setOrder}
                             options={[
                                 { value: 'recent', label: 'Recent' },
                                 { value: 'name', label: 'Name' },

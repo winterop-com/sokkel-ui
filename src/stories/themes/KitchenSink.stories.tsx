@@ -343,7 +343,7 @@ function Schedule() {
                         { value: 'daily', label: 'Daily' },
                         { value: 'weekly', label: 'Weekly' },
                     ]}
-                    onChoose={setEvery}
+                    onValueChange={setEvery}
                 />
                 <Row gap="xl" rowGap="md" wrap>
                     <CheckboxField label="Retry once on failure" checked={retry} onCheckedChange={setRetry} />

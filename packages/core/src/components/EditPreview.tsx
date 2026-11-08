@@ -84,7 +84,7 @@ export function EditPreview({
                             { value: 'edit', label: words.edit },
                             { value: 'preview', label: words.preview },
                         ]}
-                        onChoose={choose}
+                        onValueChange={choose}
                     />
                     <div className="flex items-center gap-1">{pane === 'edit' ? editActions : previewActions}</div>
                 </div>

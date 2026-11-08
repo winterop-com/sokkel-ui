@@ -1,3 +1,5 @@
+import { cn } from '../lib/cn'
+
 /** A span of a text by its character offsets: from `start`, up to but not including `end`. */
 export interface HighlightRange {
     start: number
@@ -39,16 +41,26 @@ export function highlightParts(text: string, ranges: readonly HighlightRange[]):
     return parts
 }
 
+/** How the marks are drawn: the accent's tint under its ink, or the terminal's accent on its ground. */
+export type HighlightTone = 'accent' | 'terminal'
+
+const MARK: Record<HighlightTone, string> = {
+    accent: 'bg-primary/15 text-primary-ink',
+    terminal: 'bg-terminal-accent/30 text-terminal-foreground',
+}
+
 /**
  * A text with spans of it marked, such as the words a search matched or the phrase a model picked
  * out. Give one span as `start` and `end`, or several as `ranges`; both are character offsets into
- * the text. The mark is the accent's tint under the accent's ink.
+ * the text. The mark is the accent's tint under the accent's ink; `tone="terminal"` marks a text on
+ * the terminal ground, such as a log.
  */
 export function Highlight({
     text,
     start,
     end,
     ranges = [],
+    tone = 'accent',
     className,
 }: {
     text: string
@@ -58,6 +70,7 @@ export function Highlight({
     end?: number
     /** Several marked spans, beside the one given by `start` and `end`. */
     ranges?: readonly HighlightRange[]
+    tone?: HighlightTone
     className?: string
 }) {
     const all = start !== undefined && end !== undefined ? [{ start, end }, ...ranges] : ranges
@@ -65,7 +78,7 @@ export function Highlight({
         <span className={className}>
             {highlightParts(text, all).map((part, index) =>
                 part.marked ? (
-                    <mark key={index} className="rounded-mini bg-primary/15 box-decoration-clone text-primary-ink">
+                    <mark key={index} className={cn('rounded-mini box-decoration-clone', MARK[tone])}>
                         {part.text}
                     </mark>
                 ) : (

@@ -622,7 +622,8 @@ function JobRuns({ loading = false, empty: none = false }: { loading?: boolean; 
                         rows={data.latest}
                         rowKey={(run) => run.job + run.at}
                         minWidth="24rem"
-                        className="flex-1 rounded-none border-0"
+                        framed={false}
+                        className="flex-1"
                     />
                 </DashboardPanel>
                 <DashboardPanel title="Activity" span="third" loading={busy} empty={empty}>

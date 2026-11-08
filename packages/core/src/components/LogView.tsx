@@ -1,6 +1,8 @@
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useRef } from 'react'
 
 import { cn } from '../lib/cn'
+import { literalRanges } from '../lib/search'
+import { Highlight } from './Highlight'
 
 export type LogLevel = 'debug' | 'info' | 'warning' | 'error'
 
@@ -21,31 +23,12 @@ const LEVEL: Record<LogLevel, string> = {
     error: 'text-terminal-critical',
 }
 
-/** The text with every case-insensitive match of the query marked. */
-function marked(text: string, query: string): ReactNode {
-    if (query === '') return text
-    const lower = text.toLowerCase()
-    const needle = query.toLowerCase()
-    const parts: ReactNode[] = []
-    let from = 0
-    for (let at = lower.indexOf(needle); at !== -1; at = lower.indexOf(needle, from)) {
-        if (at > from) parts.push(text.slice(from, at))
-        parts.push(
-            <mark key={at} className="rounded-sm bg-terminal-accent/30 text-terminal-foreground">
-                {text.slice(at, at + needle.length)}
-            </mark>,
-        )
-        from = at + needle.length
-    }
-    parts.push(text.slice(from))
-    return parts
-}
-
 /**
  * A log on the terminal ground: time, level, source and text in columns, levels inked, lines
  * numbered. `follow` keeps the newest line in view as lines arrive, until the reader scrolls up;
  * `query` marks its matches. Long lines wrap when `wrap` is set and scroll sideways otherwise.
  * It is set in the terminal face, `--typeface-terminal`, whose Nerd Font icons a line can carry.
+ * `framed={false}` drops its rounded corners, for a log set edge to edge in a dock or a panel.
  */
 export function LogView({
     lines,
@@ -53,6 +36,7 @@ export function LogView({
     wrap = false,
     query = '',
     numbered = true,
+    framed = true,
     className,
 }: {
     lines: readonly LogLine[]
@@ -60,6 +44,8 @@ export function LogView({
     wrap?: boolean
     query?: string
     numbered?: boolean
+    /** Rounds the log's corners; off for a log set edge to edge. */
+    framed?: boolean
     className?: string
 }) {
     const scroller = useRef<HTMLDivElement>(null)
@@ -77,7 +63,8 @@ export function LogView({
                 pinned.current = element.scrollHeight - element.scrollTop - element.clientHeight < 8
             }}
             className={cn(
-                'min-h-0 overflow-auto rounded-lg bg-terminal py-2 font-mono text-xs leading-5 text-terminal-foreground outline-none [--typeface-mono:var(--typeface-terminal)] focus-visible:ring-2 focus-visible:ring-ring',
+                'min-h-0 overflow-auto bg-terminal py-2 font-mono text-xs leading-5 text-terminal-foreground outline-none [--typeface-mono:var(--typeface-terminal)] focus-visible:ring-2 focus-visible:ring-ring',
+                framed && 'rounded-lg',
                 className,
             )}
         >
@@ -104,7 +91,7 @@ export function LogView({
                                     line.level === 'error' && 'text-terminal-critical',
                                 )}
                             >
-                                {marked(line.text, query)}
+                                <Highlight text={line.text} ranges={literalRanges(line.text, query)} tone="terminal" />
                             </td>
                         </tr>
                     ))}

@@ -71,7 +71,7 @@ function Picker({
                 <AsyncSelect
                     id="dataset"
                     value={value}
-                    onChange={setValue}
+                    onValueChange={setValue}
                     load={load}
                     itemKey={(dataset) => dataset.code}
                     itemLabel={(dataset) => dataset.name}

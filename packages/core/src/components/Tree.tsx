@@ -4,6 +4,8 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import { cn } from '../lib/cn'
 import { Checkbox } from './ui/checkbox'
 import { Spinner } from './ui/spinner'
+import { Highlight } from './Highlight'
+import { literalRanges } from '../lib/search'
 
 /** One node of a tree: what it answers with, what it is called, and what is under it. */
 export interface TreeNode {
@@ -153,16 +155,9 @@ function viewOf(list: HTMLElement, box: HTMLElement | null): { start: number; he
     return { start: top - list.getBoundingClientRect().top, height }
 }
 
+/** The text with every case-blind occurrence of the query marked. */
 function Marked({ text, query }: { text: string; query: string }) {
-    const at = query === '' ? -1 : text.toLowerCase().indexOf(query.toLowerCase())
-    if (at === -1) return <>{text}</>
-    return (
-        <>
-            {text.slice(0, at)}
-            <mark className="rounded-[2px] bg-primary/25 text-foreground">{text.slice(at, at + query.length)}</mark>
-            {text.slice(at + query.length)}
-        </>
-    )
+    return <Highlight text={text} ranges={literalRanges(text, query)} />
 }
 
 type Found = { query: string; state: 'loading' | 'done' | 'failed'; trails: readonly TreeTrail[] }
@@ -187,7 +182,7 @@ export function Tree({
     selected = [],
     onSelect,
     query = '',
-    defaultOpen = [],
+    defaultExpanded = [],
     loadChildren,
     search,
     trails = [],
@@ -200,7 +195,7 @@ export function Tree({
     selected?: readonly string[]
     onSelect?: (ids: string[]) => void
     query?: string
-    defaultOpen?: readonly string[]
+    defaultExpanded?: readonly string[]
     /** Brings the children of a node marked `hasChildren`; a rejection shows a row to try again. */
     loadChildren?: (node: TreeNode) => Promise<readonly TreeNode[]>
     /** Answers a query over the whole hierarchy with each match and its ancestors; without it the query searches the loaded nodes. */
@@ -213,7 +208,7 @@ export function Tree({
     className?: string
 }) {
     const words = { ...WORDS, ...given }
-    const [open, setOpen] = useState<Set<string>>(() => new Set(defaultOpen))
+    const [open, setOpen] = useState<Set<string>>(() => new Set(defaultExpanded))
     const [loads, setLoads] = useState<Map<string, TreeLoad>>(() => new Map())
     const asked = useRef(new Set<string>())
     const loader = useRef(loadChildren)
