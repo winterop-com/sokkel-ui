@@ -133,16 +133,7 @@ export const TableBar: StoryObj = {
                     columns={COLUMNS}
                     rows={rows}
                     rowKey={(run) => run.id}
-                    toolbar={
-                        <Search
-                            search={quick}
-                            onOpen={open}
-                            query={query}
-                            onQueryChange={setQuery}
-                            defaultOpen
-                            className="w-full max-w-md"
-                        />
-                    }
+                    search={<Search search={quick} onOpen={open} query={query} onQueryChange={setQuery} defaultOpen />}
                 />
             </Stack>
         )

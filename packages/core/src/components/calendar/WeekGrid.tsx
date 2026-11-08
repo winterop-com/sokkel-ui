@@ -1,5 +1,5 @@
 import { isSameDay } from 'date-fns'
-import { useLayoutEffect, useRef, type ReactNode } from 'react'
+import { useLayoutEffect, useRef, type CSSProperties, type ReactNode } from 'react'
 
 import { cn } from '../../lib/cn'
 import { KIND_EDGE, KIND_FILL, KIND_INK, KIND_WASH } from '../../lib/kind'
@@ -9,7 +9,9 @@ import { CALENDAR_WORDS, layoutDay, layoutSpans, type CalendarEvent, type Calend
 /**
  * Days side by side with the hours running down: the week view of a calendar, or any run of
  * days. Each timed event is a block from its start to its end, and events that overlap split the
- * day's width between them. All-day events lie in a strip on top, spanning their days. Today's
+ * day's width between them. A block says as much as its height and width allow: its title, then
+ * its times and its detail as it grows; a lane too narrow for the times shows the title alone,
+ * over as many lines as the block is tall, and the popover says the rest. All-day events lie in a strip on top, spanning their days. Today's
  * column carries a line at the current time, and the gutter says the time beside it.
  *
  * The hours scroll under the day heads, starting at `scrollToHour`. Pressing an event opens its
@@ -165,6 +167,8 @@ export function WeekGrid<E extends CalendarEvent>({
                                     {layoutDay(events, day).map(({ event, from, to, column, columns: share }) => {
                                         const height = Math.max(((to - from) / 60) * hourHeight, hourHeight / 2) - 2
                                         const roomy = height >= 40
+                                        // The lines of title a narrow lane has room for, at the block's 16px line height.
+                                        const titleLines = Math.max(1, Math.floor((height - (roomy ? 8 : 0)) / 16))
                                         return (
                                             <EventPopover
                                                 key={event.id}
@@ -174,7 +178,7 @@ export function WeekGrid<E extends CalendarEvent>({
                                                 detail={renderDetail}
                                                 onSelect={onSelectEvent}
                                                 className={cn(
-                                                    'absolute flex flex-col overflow-hidden rounded-md border-l-[3px] px-1.5 text-left text-xs leading-4 transition-[box-shadow]',
+                                                    '@container/event absolute flex flex-col overflow-hidden rounded-md border-l-[3px] px-1.5 text-left text-xs leading-4 transition-[box-shadow]',
                                                     roomy ? 'py-1' : 'justify-center',
                                                     KIND_INK[event.color ?? 'blue'],
                                                     KIND_EDGE[event.color ?? 'blue'],
@@ -192,16 +196,23 @@ export function WeekGrid<E extends CalendarEvent>({
                                                     aria-hidden
                                                     className={cn('absolute! inset-0 opacity-15', KIND_FILL[event.color ?? 'blue'])}
                                                 />
-                                                <span className={cn('truncate font-medium', event.muted === true && 'line-through')}>
+                                                <span
+                                                    className={cn(
+                                                        'truncate font-medium',
+                                                        '@max-[5rem]/event:line-clamp-(--title-lines) @max-[5rem]/event:wrap-break-word @max-[5rem]/event:whitespace-normal',
+                                                        event.muted === true && 'line-through',
+                                                    )}
+                                                    style={{ '--title-lines': titleLines } as CSSProperties}
+                                                >
                                                     {event.title}
                                                 </span>
                                                 {roomy && (
-                                                    <span className="truncate tabular-nums opacity-80">
+                                                    <span className="truncate tabular-nums opacity-80 @max-[5rem]/event:hidden">
                                                         {words.time(event.start)} - {words.time(event.end)}
                                                     </span>
                                                 )}
                                                 {roomy && height >= 60 && event.detail !== undefined && (
-                                                    <span className="truncate opacity-80">{event.detail}</span>
+                                                    <span className="truncate opacity-80 @max-[5rem]/event:hidden">{event.detail}</span>
                                                 )}
                                             </EventPopover>
                                         )

@@ -177,14 +177,9 @@ export function RunsPage() {
                     />
                     <Row gap="inspector" align="start" className="min-h-0 flex-1">
                         <DataTable
+                            search={<SearchField value={query} onChange={setQuery} placeholder="Search" />}
                             toolbar={
                                 <>
-                                    <SearchField
-                                        value={query}
-                                        onChange={setQuery}
-                                        placeholder="Search"
-                                        className="w-full max-w-64 min-w-40"
-                                    />
                                     <FilterChip facet="Status" options={STATUS_OPTIONS} selected={status} onSelectedChange={setStatus} />
                                     <FilterChip facet="Job" options={JOB_OPTIONS} multiple selected={jobs} onSelectedChange={setJobs} />
                                 </>

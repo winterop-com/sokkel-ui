@@ -107,8 +107,8 @@ change it.
 
 Text is 15px (`text-sm`) on the page and in the components alike, with inputs at 16px on a phone so
 a focused field does not zoom. Every size comes from a token: `text-xs`, `text-sm`, `text-title`,
-`text-page`, `text-stat` and `text-display` (a fullscreen view's title) in the interface, and `--chart-text-size`, `--chart-text-size-small`
-and `--chart-stat-size` for the text ECharts draws.
+`text-page`, `text-stat` and `text-display` (a fullscreen view's title) in the interface, and `--chart-text-size`, `--chart-text-size-small`,
+`--chart-stat-size` and `--chart-stat-size-small` (a gauge's figure on a phone) for the text ECharts draws.
 
 A component sets its text by role, never by a size and a weight of its own. Each role is a token
 in `tokens.json` and a class of the same name, carrying size, line height, weight and tracking, which
@@ -187,6 +187,19 @@ head and may carry a foot line. Rows gather under group heads by a field or a ke
 (`groupBy`), each head with its label, its count and a column's `aggregate`; a head folds its
 group, rows sort within their group, and a head's box selects the group, in the table, the list and
 the grid alike.
+
+On a phone each part lays itself out by the room it has, so no example patches it. `DataTable`'s bar
+gives its `search` a line of its own, the tools wrapping across the width under it with the count
+and the sort after them, and its stacked cards set each column by its `stack`: a line, named or not,
+a primary value over several lines under the title, or a secondary fact on the card's last line. A
+`ConfirmDialog` stays sized to its content (`phone="fit"` on `DialogShell`) while a form covers the
+screen, and a dialog's verbs stand in a row at the right while they fit, each on a full-width line,
+the confirm on top, once they do not. `MessageComposer` keeps the formatting groups it has room for
+and puts the rest behind More, Write and Preview becoming one Preview button. `EventPopover` keeps
+`--density-overlay-inset` from the window's edges and spans the window between them. `WeekGrid` shows
+a lane too narrow for the times its title alone, over as many lines as the block is tall. Gauges
+stand two to a row of a `DashboardGrid`, on shorter bodies with figures at `--chart-stat-size-small`.
+A `MermaidDiagram` shrinks to its box only until its labels reach `--text-2xs`, then scrolls sideways.
 
 `WindowedPane` gives any pane an expand button that opens the same content near full screen, in a
 window with a margin, a title, a close button and Escape, the pane keeping its height in place

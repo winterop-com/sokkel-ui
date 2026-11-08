@@ -5,6 +5,7 @@ import {
     ChevronDown,
     Code,
     Ellipsis,
+    Eye,
     Italic,
     Link,
     List,
@@ -17,12 +18,13 @@ import {
     Underline,
     type LucideIcon,
 } from 'lucide-react'
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { returnFocusOnKeyboard } from '../lib/focus'
 import { Markdown, type MarkdownWords } from './Markdown'
 import { Segmented } from './Segmented'
+import { fitCount } from './TagChips'
 import { Checkbox } from './ui/checkbox'
 import { Textarea } from './ui/textarea'
 import {
@@ -32,6 +34,9 @@ import {
     DropdownMenuItem,
     DropdownMenuLabel,
     DropdownMenuSeparator,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from './ui/dropdown-menu'
 
@@ -88,6 +93,8 @@ export interface MessageComposerWords {
     emoji: string
     mention: string
     more: string
+    /** The button that holds the formatting groups a narrow toolbar has no room for. */
+    moreFormatting: string
     /** What the Write and Preview toggle is called, for a screen reader. */
     mode: string
     write: string
@@ -114,6 +121,7 @@ const WORDS: MessageComposerWords = {
     emoji: 'Emoji',
     mention: 'Mention someone',
     more: 'More',
+    moreFormatting: 'More formatting',
     mode: 'Write or preview',
     write: 'Write',
     preview: 'Preview',
@@ -171,6 +179,9 @@ const MARK: Record<Exclude<MessageFormat, 'codeBlock'>, [string, string]> = {
     code: ['`', '`'],
 }
 
+/** The gap between formatting groups, in pixels; `gap-0.5` on the toolbar. */
+const GROUP_GAP = 2
+
 const ACTION =
     'flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-pressed:text-foreground data-popup-open:bg-hover data-popup-open:text-foreground [&_svg]:size-4'
 
@@ -213,9 +224,13 @@ export function MessageComposerAction({
  * button wraps the selection in markdown; the code block button opens a menu of languages and
  * puts the selection, or the cursor, inside a fence named for the one chosen.
  *
+ * The toolbar shows the formatting groups its width has room for, in order, and puts the rest
+ * behind a More button at its end, the code block's languages in a submenu there.
+ *
  * Write and Preview at the end of the toolbar flip between the text and the message it makes,
  * drawn by `Markdown` as a sent message is, at least as tall as the text was and scrolling past
- * its cap; Write returns to the text with its selection where it was.
+ * its cap; Write returns to the text with its selection where it was. In a narrow composer they
+ * are one Preview button that stays pressed while previewing.
  *
  * The chevron beside Send opens the times in `schedule`, with a last entry for `onSendLater`; with
  * no `schedule`, it calls `onSendLater` at once. A reply in a thread can also go to its channel,
@@ -280,7 +295,7 @@ export function MessageComposer({
     onModeChange?: (mode: MessageComposerMode) => void
     /** The languages the code block menu lists after Plain text. */
     codeLanguages?: readonly CodeLanguage[]
-    /** Opens the code block menu on the first render. */
+    /** Opens the code block menu on the first render, inside the More menu when the toolbar has put it there. */
     defaultCodeMenuOpen?: boolean
     disabled?: boolean
     className?: string
@@ -295,7 +310,6 @@ export function MessageComposer({
     const selection = useRef<[number, number] | null>(null)
     const wasPreviewing = useRef(previewing)
     const picked = useRef(false)
-    const codeButton = useRef<HTMLButtonElement>(null)
     const id = useId()
     const empty = value.trim() === ''
 
@@ -317,10 +331,36 @@ export function MessageComposer({
         wasPreviewing.current = previewing
     }, [previewing])
 
-    // A narrow toolbar scrolls, so a menu open from the start would hang from a button out of view.
-    useEffect(() => {
-        if (defaultCodeMenuOpen) codeButton.current?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
-    }, [defaultCodeMenuOpen])
+    // The groups the toolbar has room for, measured on a ruler of empty buttons of the same sizes.
+    const toolbar = useRef<HTMLDivElement>(null)
+    const ruler = useRef<HTMLDivElement>(null)
+    const [fit, setFit] = useState(GROUPS.length)
+    useLayoutEffect(() => {
+        const room = toolbar.current
+        const measure = ruler.current
+        if (!formatting || room === null || measure === null) return
+        const update = () => {
+            const boxes = [...measure.children] as HTMLElement[]
+            const more = boxes.pop()?.offsetWidth ?? 0
+            const style = getComputedStyle(room)
+            const inner = room.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
+            setFit(
+                fitCount(
+                    boxes.map((box) => box.offsetWidth),
+                    inner,
+                    GROUP_GAP,
+                    more,
+                ),
+            )
+        }
+        update()
+        if (typeof ResizeObserver === 'undefined') return
+        const observer = new ResizeObserver(update)
+        observer.observe(room)
+        return () => observer.disconnect()
+    }, [formatting])
+    const inline = GROUPS.slice(0, fit)
+    const overflow = GROUPS.slice(fit)
 
     const replace = (open: string, close: string) => {
         const area = text.current
@@ -352,6 +392,25 @@ export function MessageComposer({
         if (previewing) setMode('write')
     }
 
+    /** The code block menu's entries: plain text, then each language. */
+    const languages = (
+        <>
+            <DropdownMenuGroup>
+                <DropdownMenuLabel>{words.codeLanguage}</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => fence('')}>{words.plainText}</DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+                {codeLanguages.map((language) => (
+                    <DropdownMenuItem key={language.id} onClick={() => fence(language.id)}>
+                        {language.label}
+                        <span className="ml-auto font-mono text-xs text-muted-foreground">{language.id}</span>
+                    </DropdownMenuItem>
+                ))}
+            </DropdownMenuGroup>
+        </>
+    )
+
     const later = schedule !== undefined || onSendLater !== undefined
     const chevron = cn(
         'flex h-7 items-center justify-center rounded-r-md border-l px-1 outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
@@ -361,19 +420,34 @@ export function MessageComposer({
     return (
         <div
             className={cn(
-                'flex min-w-0 flex-col rounded-lg border border-border-strong bg-field text-sm focus-within:border-ring',
+                '@container/composer flex min-w-0 flex-col rounded-lg border border-border-strong bg-field text-sm focus-within:border-ring',
                 disabled && 'opacity-60',
                 className,
             )}
         >
             {formatting && (
-                <div className="flex items-center gap-2 px-1.5 pt-1">
+                <div className="relative flex items-center gap-2 px-1.5 pt-1">
+                    <div ref={ruler} aria-hidden className="pointer-events-none invisible absolute flex h-0 overflow-hidden">
+                        {GROUPS.map((group, index) => (
+                            <div key={group.id} className="flex shrink-0 items-center gap-0.5">
+                                {index > 0 && <span className="mx-1 w-px" />}
+                                {group.formats.map(([format]) => (
+                                    <span key={format} className="size-7 shrink-0" />
+                                ))}
+                            </div>
+                        ))}
+                        <div className="flex shrink-0 items-center gap-0.5">
+                            <span className="mx-1 w-px" />
+                            <span className="size-7 shrink-0" />
+                        </div>
+                    </div>
                     <div
+                        ref={toolbar}
                         role="toolbar"
                         aria-label={words.formatting}
-                        className="flex min-w-0 flex-1 scroll-fade-x scrollbar-none items-center gap-0.5 overflow-x-auto overscroll-x-contain p-0.5"
+                        className="flex min-w-0 flex-1 items-center gap-0.5 overflow-hidden p-0.5"
                     >
-                        {GROUPS.map((group, index) => (
+                        {inline.map((group, index) => (
                             <div key={group.id} className="flex shrink-0 items-center gap-0.5">
                                 {index > 0 && <span className="mx-1 h-4 w-px bg-border" aria-hidden />}
                                 {group.formats.map(([format, Icon]) =>
@@ -386,7 +460,6 @@ export function MessageComposer({
                                             }}
                                         >
                                             <DropdownMenuTrigger
-                                                ref={codeButton}
                                                 aria-label={words.format.codeBlock}
                                                 title={words.format.codeBlock}
                                                 disabled={disabled || previewing}
@@ -402,21 +475,7 @@ export function MessageComposer({
                                                     picked.current ? text.current : returnFocusOnKeyboard(closeType)
                                                 }
                                             >
-                                                <DropdownMenuGroup>
-                                                    <DropdownMenuLabel>{words.codeLanguage}</DropdownMenuLabel>
-                                                    <DropdownMenuItem onClick={() => fence('')}>{words.plainText}</DropdownMenuItem>
-                                                </DropdownMenuGroup>
-                                                <DropdownMenuSeparator />
-                                                <DropdownMenuGroup>
-                                                    {codeLanguages.map((language) => (
-                                                        <DropdownMenuItem key={language.id} onClick={() => fence(language.id)}>
-                                                            {language.label}
-                                                            <span className="ml-auto font-mono text-xs text-muted-foreground">
-                                                                {language.id}
-                                                            </span>
-                                                        </DropdownMenuItem>
-                                                    ))}
-                                                </DropdownMenuGroup>
+                                                {languages}
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     ) : (
@@ -432,19 +491,85 @@ export function MessageComposer({
                                 )}
                             </div>
                         ))}
+                        {overflow.length > 0 && (
+                            <div className="flex shrink-0 items-center gap-0.5">
+                                {inline.length > 0 && <span className="mx-1 h-4 w-px bg-border" aria-hidden />}
+                                <DropdownMenu
+                                    defaultOpen={defaultCodeMenuOpen && overflow.some((group) => group.id === 'code')}
+                                    onOpenChange={(open) => {
+                                        if (open) picked.current = false
+                                    }}
+                                >
+                                    <DropdownMenuTrigger
+                                        aria-label={words.moreFormatting}
+                                        title={words.moreFormatting}
+                                        disabled={disabled || previewing}
+                                        className={ACTION}
+                                    >
+                                        <Ellipsis aria-hidden />
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent
+                                        side="top"
+                                        align="end"
+                                        className="w-52"
+                                        finalFocus={(closeType) => (picked.current ? text.current : returnFocusOnKeyboard(closeType))}
+                                    >
+                                        {overflow.map((group, index) => (
+                                            <DropdownMenuGroup key={group.id}>
+                                                {index > 0 && <DropdownMenuSeparator />}
+                                                {group.formats.map(([format, Icon]) =>
+                                                    format === 'codeBlock' ? (
+                                                        <DropdownMenuSub key={format} defaultOpen={defaultCodeMenuOpen}>
+                                                            <DropdownMenuSubTrigger>
+                                                                <Icon aria-hidden />
+                                                                {words.format.codeBlock}
+                                                            </DropdownMenuSubTrigger>
+                                                            <DropdownMenuSubContent className="w-52">{languages}</DropdownMenuSubContent>
+                                                        </DropdownMenuSub>
+                                                    ) : (
+                                                        <DropdownMenuItem
+                                                            key={format}
+                                                            onClick={() => {
+                                                                picked.current = true
+                                                                wrap(format)
+                                                            }}
+                                                        >
+                                                            <Icon aria-hidden />
+                                                            {words.format[format]}
+                                                        </DropdownMenuItem>
+                                                    ),
+                                                )}
+                                            </DropdownMenuGroup>
+                                        ))}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
+                        )}
                     </div>
                     {preview && (
-                        <Segmented
-                            label={words.mode}
-                            value={mode}
-                            options={[
-                                { value: 'write', label: words.write },
-                                { value: 'preview', label: words.preview },
-                            ]}
-                            disabled={disabled}
-                            onValueChange={setMode}
-                            className="mr-0.5 h-7 min-h-0!"
-                        />
+                        <>
+                            <Segmented
+                                label={words.mode}
+                                value={mode}
+                                options={[
+                                    { value: 'write', label: words.write },
+                                    { value: 'preview', label: words.preview },
+                                ]}
+                                disabled={disabled}
+                                onValueChange={setMode}
+                                className="mr-0.5 hidden @md/composer:inline-flex"
+                            />
+                            <span className="mr-0.5 @md/composer:hidden">
+                                <MessageComposerAction
+                                    label={words.preview}
+                                    pressed={previewing}
+                                    disabled={disabled}
+                                    onClick={() => setMode(previewing ? 'write' : 'preview')}
+                                >
+                                    <Eye aria-hidden />
+                                </MessageComposerAction>
+                            </span>
+                        </>
                     )}
                 </div>
             )}

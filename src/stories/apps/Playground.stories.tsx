@@ -570,14 +570,9 @@ function HistoryPage() {
             <PageHeader title="History" count="1,284 runs" />
             <Row gap="inspector" align="start" className="min-h-0 flex-1">
                 <DataTable
+                    search={<SearchField value={query} onChange={setQuery} placeholder="Search prompts" />}
                     toolbar={
                         <>
-                            <SearchField
-                                value={query}
-                                onChange={setQuery}
-                                placeholder="Search prompts"
-                                className="w-full max-w-64 min-w-40"
-                            />
                             <FilterChip facet="Model" options={MODEL_OPTIONS} multiple selected={models} onSelectedChange={setModels} />
                             <FilterChip facet="State" options={STATUS_OPTIONS} multiple selected={states} onSelectedChange={setStates} />
                             <FilterChip facet="Project" options={PROJECT_OPTIONS} defaultSelected={['larkspur']} />

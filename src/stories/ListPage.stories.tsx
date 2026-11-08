@@ -262,9 +262,9 @@ function RunsListPage() {
             <Page>
                 <PageHeader title="Runs" count={`${RUNS.length} loaded`} actions={<Button>Run a job</Button>} />
                 <DataTable
+                    search={<SearchField value={query} onChange={setQuery} placeholder="Search" />}
                     toolbar={
                         <>
-                            <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-full max-w-64 min-w-40" />
                             <FilterChip facet="Status" options={STATUS_OPTIONS} selected={status} onSelectedChange={setStatus} />
                             <FilterChip facet="Job" options={JOB_OPTIONS} multiple selected={jobs} onSelectedChange={setJobs} />
                             <FilterChip facet="Started by" options={PEOPLE_OPTIONS} multiple />

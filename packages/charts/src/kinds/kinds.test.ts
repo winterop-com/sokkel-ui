@@ -20,7 +20,7 @@ const LOOK: ChartLook = {
     grid: 'grid',
     card: 'card',
     popover: 'popover',
-    size: { label: 11, small: 10, body: 13, stat: 24 },
+    size: { label: 11, small: 10, body: 13, stat: 24, statSmall: 18 },
     corner: 2,
     series: ['chart-2', 'chart-3', 'chart-4'],
     token: (name) => name,

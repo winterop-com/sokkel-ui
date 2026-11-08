@@ -341,9 +341,9 @@ function Records() {
             />
             <Row gap="inspector" align="start" className="min-h-0 flex-1">
                 <DataTable
+                    search={<SearchField value={query} onChange={setQuery} placeholder="Search" />}
                     toolbar={
                         <>
-                            <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-full max-w-64 min-w-40" />
                             <FilterChip facet="Period" options={PERIOD_OPTIONS} defaultSelected={['2026-11']} />
                             <FilterChip facet="State" options={STATE_OPTIONS} multiple selected={states} onSelectedChange={setStates} />
                             <FilterChip facet="Region" options={REGION_OPTIONS} multiple selected={places} onSelectedChange={setPlaces} />

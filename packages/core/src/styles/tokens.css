@@ -336,6 +336,7 @@
     --chart-text-size: 0.6875rem;
     --chart-text-size-small: 0.625rem;
     --chart-stat-size: 1.5rem;
+    --chart-stat-size-small: 1.125rem;
     --shade: oklch(0 0 0);
     --on-shade: oklch(1 0 0);
     --globe-space: #05080f;
@@ -601,6 +602,7 @@
     --chart-text-size: 0.6875rem;
     --chart-text-size-small: 0.625rem;
     --chart-stat-size: 1.5rem;
+    --chart-stat-size-small: 1.125rem;
     --shade: oklch(0 0 0);
     --on-shade: oklch(1 0 0);
     --globe-space: #05080f;
@@ -747,6 +749,7 @@
     --chart-text-size: 0.6875rem;
     --chart-text-size-small: 0.625rem;
     --chart-stat-size: 1.5rem;
+    --chart-stat-size-small: 1.125rem;
     --shade: oklch(0 0 0);
     --on-shade: oklch(1 0 0);
     --globe-space: #05080f;
@@ -780,6 +783,7 @@
 :root {
     --density-page-inset-wide: 2rem;
     --density-page-inset-narrow: 1rem;
+    --density-overlay-inset: var(--density-page-inset-narrow);
     --density-page-inset: clamp(var(--density-page-inset-narrow), (100cqi - 40rem) * 1000, var(--density-page-inset-wide));
     --density-page-top: 1.5rem;
     --density-page-gap: 1.5rem;
@@ -799,6 +803,7 @@
 html[data-density='regular'] {
     --density-page-inset-wide: 2rem;
     --density-page-inset-narrow: 1rem;
+    --density-overlay-inset: var(--density-page-inset-narrow);
     --density-page-inset: clamp(var(--density-page-inset-narrow), (100cqi - 40rem) * 1000, var(--density-page-inset-wide));
     --density-page-top: 1.5rem;
     --density-page-gap: 1.5rem;
@@ -818,6 +823,7 @@ html[data-density='regular'] {
 html[data-density='compact'] {
     --density-page-inset-wide: 1rem;
     --density-page-inset-narrow: 0.75rem;
+    --density-overlay-inset: var(--density-page-inset-narrow);
     --density-page-inset: clamp(var(--density-page-inset-narrow), (100cqi - 40rem) * 1000, var(--density-page-inset-wide));
     --density-page-top: 1rem;
     --density-page-gap: 1rem;

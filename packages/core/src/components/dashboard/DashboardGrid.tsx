@@ -9,7 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '../ui/dr
 
 /**
  * How much of the grid's width a panel takes on a wide screen. Every panel is full width on a
- * phone but a sixth, which takes half the width in a dense grid, as a stat tile does.
+ * phone but a sixth, which takes half, so stat tiles and gauges stand two to a row.
  */
 export type PanelSpan = 'sixth' | 'quarter' | 'third' | 'half' | 'two-thirds' | 'full'
 
@@ -24,18 +24,14 @@ export const SPAN: Record<PanelSpan, string> = {
 }
 
 /**
- * The grid a dashboard's panels sit in: twelve columns on a wide screen, six on a tablet, one on a
- * phone, with panels in a row stretched to the same height. A dense grid packs panels with small
- * gaps and puts two stat tiles side by side on a phone.
+ * The grid a dashboard's panels sit in: twelve columns on a wide screen, six on a tablet, two on a
+ * phone, with panels in a row stretched to the same height. On a phone a wide panel spans both
+ * columns while stat tiles and gauges stand two to a row. A dense grid packs panels with small gaps.
  */
 export function DashboardGrid({ dense = false, children, className }: { dense?: boolean; children: ReactNode; className?: string }) {
     return (
         <div
-            className={cn(
-                'grid md:grid-cols-6 xl:grid-cols-12',
-                dense ? 'grid-cols-2 gap-1.5' : 'grid-cols-1 gap-(--density-section-gap)',
-                className,
-            )}
+            className={cn('grid grid-cols-2 md:grid-cols-6 xl:grid-cols-12', dense ? 'gap-1.5' : 'gap-(--density-section-gap)', className)}
         >
             {children}
         </div>

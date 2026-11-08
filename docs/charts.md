@@ -183,7 +183,7 @@ outside it; `ring`, the same as a progress ring over a full circle; `half`, a ha
 enough for a stat tile, for a box about twice as wide as it is tall; `bands`, a graded arc in the
 steps' colors with a triangle pointing at the figure; and `needle`, a speedometer with ticks, round
 figures and a needle. `GaugePanel` draws its arc with the same dial, so a dashboard's gauges match
-the charts'.
+the charts'; on a phone gauges stand two to a row, their figures at `--chart-stat-size-small`.
 
 ### Linked
 

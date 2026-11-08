@@ -331,14 +331,9 @@ function Workspace({
                                 }
                             />
                             <DataTable
+                                search={<SearchField value={query} onChange={setQuery} placeholder="Search" />}
                                 toolbar={
                                     <>
-                                        <SearchField
-                                            value={query}
-                                            onChange={setQuery}
-                                            placeholder="Search"
-                                            className="w-full max-w-64 min-w-40"
-                                        />
                                         <FilterChip
                                             facet="State"
                                             options={STATUS_OPTIONS}

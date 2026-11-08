@@ -50,6 +50,7 @@ export function dial(
         write,
         label,
         shape = 'arc',
+        small = false,
     }: {
         value: number | null
         min: number
@@ -61,6 +62,8 @@ export function dial(
         write: (value: number) => string
         label?: string
         shape?: GaugeDial
+        /** Writes the figure at the small chart figure size, for a dial in a small box. */
+        small?: boolean
     },
 ) {
     const geometry = GEOMETRY[shape]
@@ -82,7 +85,7 @@ export function dial(
         anchor: { show: false },
     }
     const figure = {
-        fontSize: look.size.stat,
+        fontSize: small ? look.size.statSmall : look.size.stat,
         fontWeight: 600,
         fontFamily: look.font,
         color: tone,

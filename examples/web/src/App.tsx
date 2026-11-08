@@ -314,7 +314,7 @@ export function App() {
                         rowActions={actions}
                         onOpen={open}
                         opened={(run) => run.id === opened?.id}
-                        toolbar={<SearchField value={query} onChange={setQuery} placeholder="Search runs" className="w-full max-w-md" />}
+                        search={<SearchField value={query} onChange={setQuery} placeholder="Search runs" />}
                     />
                 </Page>
             </Shell>
