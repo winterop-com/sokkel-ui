@@ -33,14 +33,17 @@ What plays is told to the operating system (media keys, lock screen) by `useMedi
 shuffle and repeat are held by `useQueue` (`use-queue`) over the pure helpers in `queue`; a book
 over several files maps its timeline to a file with `timeline`, a position that moves every
 animation frame is read by `useFramePosition` (`use-frame-position`), and LRC lyrics are read by
-`parseLyrics` in `lrc`, all under `@winterop-com/sokkel-ui-media/`.
+`parseLyrics` in `lrc`, all under `@winterop-com/sokkel-ui-media/`. `VideoPlayer` keeps a
+viewer's caption settings through `useStored` or an app's store, with the options and the shapes
+in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second by `useVideoStats`
+(`@winterop-com/sokkel-ui/media/video-stats`) for `VideoStatsOverlay`.
 
 - [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 225 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 10 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 11 modules
 - [`@winterop-com/sokkel-ui-terminal`](#winterop-com-sokkel-ui-terminal): 2 modules
-- [`@winterop-com/sokkel-ui-media`](#winterop-com-sokkel-ui-media): 9 modules
+- [`@winterop-com/sokkel-ui-media`](#winterop-com-sokkel-ui-media): 10 modules
 
 ## @winterop-com/sokkel-ui
 
@@ -477,3 +480,4 @@ animation frame is read by `useFramePosition` (`use-frame-position`), and LRC ly
 | **MediaCard**, MediaGrid | `@winterop-com/sokkel-ui-media/MediaCard` | One album, film or episode in a grid: the cover first, then its title and a line under it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-media-card--albums) |
 | **MediaFullscreen** | `@winterop-com/sokkel-ui-media/MediaFullscreen` | The player's now-playing view over the whole screen, opened from the bar: what plays at full size, the visualizer at full strength, the waveform and the transport, arranged after the bar's layout. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-lyrics--timed) (in MediaBar) |
 | **TrackList** | `@winterop-com/sokkel-ui-media/TrackList` | A list of tracks or episodes: the number or a small picture, the title over an optional second line, a quiet meta column, and the length in the code face at the end. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-track-list--numbered) |
+| **VideoStatsOverlay** | `@winterop-com/sokkel-ui-media/VideoStatsOverlay` | How a video is playing, in a few lines over its picture: the picture's size, the rendition's bitrate, the link's bandwidth as the engine measures it, the seconds buffered ahead and the frames dropped. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-video--paused-frame) |

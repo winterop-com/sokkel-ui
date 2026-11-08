@@ -45,6 +45,8 @@ export const PRIVATE: Record<PackageDir, Record<string, string>> = {
             'the searchable list `FilterChip`, `FilterBar` and their menus draw values in; `FilterOption` is exported by `FilterChip`',
         'components/Mentions':
             'the suggestions at the caret both composers share; `ComposerMentions` and the types it names are exported by `Composer` and `MessageComposer`',
+        'components/media/CaptionsMenu':
+            "the captions button and menu `VideoPlayer` draws; its words are `VideoPlayer`'s and its options are in `media/captions`",
         'components/media/sound-delay': "how far `SoundVisualizer` holds its picture back behind the output's latency",
         'components/media/sound-source': 'what `SoundVisualizer` listens through; `SoundSource` is exported by `SoundVisualizer`',
         'components/pickers': 'the popup the date and time fields pick in, and the list of times',
@@ -644,7 +646,10 @@ export function render(entries: Entry[]): string {
         'shuffle and repeat are held by `useQueue` (`use-queue`) over the pure helpers in `queue`; a book',
         'over several files maps its timeline to a file with `timeline`, a position that moves every',
         'animation frame is read by `useFramePosition` (`use-frame-position`), and LRC lyrics are read by',
-        '`parseLyrics` in `lrc`, all under `@winterop-com/sokkel-ui-media/`.',
+        '`parseLyrics` in `lrc`, all under `@winterop-com/sokkel-ui-media/`. `VideoPlayer` keeps a',
+        "viewer's caption settings through `useStored` or an app's store, with the options and the shapes",
+        'in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second by `useVideoStats`',
+        '(`@winterop-com/sokkel-ui/media/video-stats`) for `VideoStatsOverlay`.',
         '',
     ]
     const packages = [...new Set(entries.map((entry) => entry.pkg))]

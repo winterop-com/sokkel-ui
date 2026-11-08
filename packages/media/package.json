@@ -89,6 +89,10 @@
         "./use-queue": {
             "types": "./dist/use-queue.d.ts",
             "import": "./dist/use-queue.js"
+        },
+        "./VideoStatsOverlay": {
+            "types": "./dist/VideoStatsOverlay.d.ts",
+            "import": "./dist/VideoStatsOverlay.js"
         }
     },
     "publishConfig": {

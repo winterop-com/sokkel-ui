@@ -1,7 +1,7 @@
 import type Hls from 'hls.js'
-import type { ErrorData, HlsConfig } from 'hls.js'
+import type { ErrorData, FragLoadedData, HlsConfig } from 'hls.js'
 
-import type { VideoErrorKind, VideoSource } from '@winterop-com/sokkel-ui/media/video-source'
+import type { VideoErrorKind, VideoSource, VideoSourceStats } from '@winterop-com/sokkel-ui/media/video-source'
 
 /** hls.js as its module hands it over. */
 export interface HlsModule {
@@ -47,24 +47,77 @@ function kindOf(type: string): VideoErrorKind {
 
 const loadHls = () => import('hls.js')
 
+/** A number hls.js reports, when it is one: its estimates are `NaN` until it has measured. */
+const measured = (value: number | undefined): number | undefined =>
+    value !== undefined && Number.isFinite(value) && value > 0 ? value : undefined
+
+/** What the fragments hls.js has loaded weigh and last, for a bitrate where the playlist declares none. */
+export interface HlsLoaded {
+    bytes: number
+    /** Seconds of media. */
+    duration: number
+}
+
+/**
+ * What hls.js knows of the playback it drives, for a stats overlay. A rendition's bitrate is what
+ * its playlist declares, or, for a lone media playlist that declares none (as an encoder writes
+ * one), what the fragments loaded so far weigh per second.
+ */
+export function hlsStats(
+    hls: Pick<Hls, 'bandwidthEstimate' | 'currentLevel' | 'levels' | 'mainForwardBufferInfo' | 'latestLevelDetails'>,
+    loaded?: HlsLoaded,
+): VideoSourceStats {
+    const index = hls.currentLevel
+    const level = index >= 0 ? hls.levels[index] : undefined
+    const weighed = loaded !== undefined && loaded.duration > 0 ? (loaded.bytes * 8) / loaded.duration : undefined
+    return {
+        engine: 'hls.js',
+        bandwidth: measured(hls.bandwidthEstimate),
+        level:
+            level === undefined
+                ? undefined
+                : {
+                      index,
+                      count: hls.levels.length,
+                      bitrate: measured(level.bitrate) ?? measured(weighed),
+                      width: measured(level.width),
+                      height: measured(level.height),
+                  },
+        bufferAhead: hls.mainForwardBufferInfo?.len,
+        live: hls.latestLevelDetails?.live,
+    }
+}
+
 /**
  * An HTTP live stream (HLS) for `VideoPlayer`'s `source`, from the URL of its playlist.
  *
  * A browser that plays HLS itself is given the URL; any other loads hls.js the first time a stream
  * plays, by a dynamic import, and plays it through Media Source Extensions. hls.js is an optional
- * peer dependency of this package, installed by the app that plays streams. A fatal network error
- * loads again and a fatal media error recovers the decoder, `recoveries` times each, before the
- * source gives up and the player's own tries take over; every error is told to the player's
- * `onError`.
+ * peer dependency of this package, installed by the app that plays streams. hls.js starts loading
+ * where the player picks up (`startAt`, or where a try resumes), so the first fragment fetched is
+ * the one played, and a live stream with no such point starts at its live edge. A fatal network
+ * error loads again and a fatal media error recovers the decoder, `recoveries` times each, before
+ * the source gives up and the player's own tries take over; every error is told to the player's
+ * `onError`. Its `stats` give the player's handle hls.js's bandwidth estimate, the rendition
+ * playing and the buffer ahead.
  */
 export function hlsSource(url: string, { config, native = true, recoveries = 3, load = loadHls }: HlsSourceOptions = {}): VideoSource {
+    // The engine playing each element this source is attached to, with what it has loaded, for its stats; `native` where the browser plays it.
+    const engines = new WeakMap<HTMLVideoElement, { hls: Hls; loaded: HlsLoaded } | 'native'>()
     return {
         id: url,
         canPlay: (video) => (native && playsHlsNatively(video)) || hasMediaSource(),
-        attach: (video, report) => {
+        stats: (video) => {
+            const engine = engines.get(video)
+            if (engine === undefined) return null
+            return engine === 'native' ? { engine: 'native' } : hlsStats(engine.hls, engine.loaded)
+        },
+        attach: (video, report, { startAt } = {}) => {
             if (native && playsHlsNatively(video)) {
                 video.src = url
+                engines.set(video, 'native')
                 return () => {
+                    if (engines.get(video) === 'native') engines.delete(video)
                     video.removeAttribute('src')
                     video.load()
                 }
@@ -74,10 +127,18 @@ export function hlsSource(url: string, { config, native = true, recoveries = 3, 
             void load().then(
                 ({ default: Engine }) => {
                     if (gone) return
-                    const hls = new Engine(config)
+                    const hls = new Engine(
+                        startAt === undefined || config?.startPosition !== undefined ? config : { ...config, startPosition: startAt },
+                    )
                     engine = hls
+                    const loaded: HlsLoaded = { bytes: 0, duration: 0 }
+                    engines.set(video, { hls, loaded })
                     let network = 0
                     let media = 0
+                    hls.on(Engine.Events.FRAG_LOADED, (_event: string, data: FragLoadedData) => {
+                        loaded.bytes += data.frag.stats.loaded
+                        loaded.duration += data.frag.duration
+                    })
                     hls.on(Engine.Events.FRAG_BUFFERED, () => {
                         network = 0
                         media = 0
@@ -109,6 +170,8 @@ export function hlsSource(url: string, { config, native = true, recoveries = 3, 
             )
             return () => {
                 gone = true
+                const held = engines.get(video)
+                if (held !== undefined && held !== 'native' && held.hls === engine) engines.delete(video)
                 engine?.destroy()
                 engine = null
             }

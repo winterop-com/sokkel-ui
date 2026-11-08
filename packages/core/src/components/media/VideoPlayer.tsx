@@ -1,27 +1,56 @@
-import { Captions, Maximize, Minimize, PictureInPicture2, Play, RefreshCw, RotateCcw, RotateCw } from 'lucide-react'
+import { Maximize, Minimize, PictureInPicture2, Play, RefreshCw, RotateCcw, RotateCw } from 'lucide-react'
 import {
     useCallback,
     useEffect,
     useImperativeHandle,
     useRef,
     useState,
+    useSyncExternalStore,
     type KeyboardEvent,
     type PointerEvent,
     type ReactNode,
     type Ref,
 } from 'react'
 
+import { useStored } from '../../hooks/use-stored'
 import { cn } from '../../lib/cn'
 import { enterFullscreen, exitFullscreen, fullscreenElement, subscribeFullscreen } from '../../lib/fullscreen'
+import type { Store } from '../../lib/stored'
 import { Button } from '../ui/button'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '../ui/dropdown-menu'
 import { Spinner } from '../ui/spinner'
+import {
+    CAPTIONS_KEY,
+    captionCss,
+    captionSettings,
+    captionTrackKey,
+    chosenCaptionTrack,
+    isCaptionChoice,
+    type CaptionBackground,
+    type CaptionColor,
+    type CaptionEdge,
+    type CaptionSettings,
+    type CaptionStyle,
+} from './captions'
+import { CaptionsMenu } from './CaptionsMenu'
 import { MEDIA_RATES, PlayButton, Position, RateMenu, TransportButton, VolumeControl } from './MediaControls'
 import { useOneSound } from './one-sound'
 import { type MediaRange } from './time'
-import { mediaError, nextTry, type VideoError, type VideoSource } from './video-source'
+import {
+    isStalled,
+    mediaError,
+    nextTry,
+    onReturn,
+    resumeAt,
+    trackProgress,
+    type Progress,
+    type VideoError,
+    type VideoSource,
+} from './video-source'
+import { readVideoStats, type VideoStats } from './video-stats'
 
-export type { VideoError, VideoErrorKind, VideoSource, VideoSourceReport } from './video-source'
+export type { VideoError, VideoErrorKind, VideoSource, VideoSourceAttach, VideoSourceReport, VideoSourceStats } from './video-source'
+export type { VideoStats } from './video-stats'
+export type { CaptionBackground, CaptionColor, CaptionEdge, CaptionSettings, CaptionStyle } from './captions'
 
 /** One text track the player offers. */
 export interface VideoTrack {
@@ -45,6 +74,14 @@ export interface VideoPlayerWords {
     speed: string
     captions: string
     captionsOff: string
+    /** The captions menu's settings, each a submenu. */
+    captionSize: string
+    captionColor: string
+    captionBackground: string
+    captionEdge: string
+    captionColors: Record<CaptionColor, string>
+    captionBackgrounds: Record<CaptionBackground, string>
+    captionEdges: Record<CaptionEdge, string>
     pictureInPicture: string
     exitPictureInPicture: string
     fullscreen: string
@@ -70,6 +107,13 @@ export const VIDEO_PLAYER_WORDS: VideoPlayerWords = {
     speed: 'Playback speed',
     captions: 'Captions',
     captionsOff: 'Off',
+    captionSize: 'Size',
+    captionColor: 'Color',
+    captionBackground: 'Background',
+    captionEdge: 'Edge',
+    captionColors: { white: 'White', yellow: 'Yellow', green: 'Green', cyan: 'Cyan', magenta: 'Magenta' },
+    captionBackgrounds: { none: 'None', translucent: 'Translucent', solid: 'Solid' },
+    captionEdges: { outline: 'Outline', shadow: 'Drop shadow', none: 'None' },
     pictureInPicture: 'Picture in picture',
     exitPictureInPicture: 'Exit picture in picture',
     fullscreen: 'Fullscreen',
@@ -105,6 +149,12 @@ export interface VideoPlayerHandle {
     /** Loads the media again where it was and plays, as the Retry button does. */
     retry: () => void
     focus: () => void
+    /**
+     * How it is playing now: the picture's size, what is buffered ahead, the frames dropped, and
+     * what the source's engine knows (bandwidth, the rendition and its bitrate), for a stats
+     * overlay; `useVideoStats` reads it once a second.
+     */
+    stats: () => VideoStats | null
 }
 
 /** How far the left and right arrows seek, in seconds, and how far up and down move the volume. */
@@ -116,6 +166,10 @@ const SKIP = 10
 const HAVE_METADATA = 1
 /** How far past the point a try resumed at playback must get before the tries count from zero again, in seconds. */
 const RECOVERED_AFTER = 5
+/** How often the playhead is read while playing, to tell a stall, in milliseconds. */
+const WATCH_EVERY = 1000
+/** How far a nudge moves a playhead whose buffer stalled while the page was hidden, in seconds. */
+const NUDGE = 0.01
 
 /** A control drawn over the picture, light on dark in either scheme. */
 const ON_PICTURE =
@@ -131,6 +185,19 @@ export interface VideoPlayerProps {
     /** A picture shown until the first frame is ready. */
     poster?: string
     tracks?: readonly VideoTrack[]
+    /**
+     * How captions look until the viewer chooses otherwise in the captions menu: words on the
+     * picture, outlined, with no box, at the usual size, unless given here, such as `{ size: 0.5 }`
+     * for half of it.
+     */
+    captionDefaults?: Partial<CaptionStyle>
+    /**
+     * Where the viewer's caption settings and chosen track are kept: a store the app holds (made
+     * with `createStore`, or its own over a settings file), so every player and the app's own
+     * settings share them. By default they are kept in `localStorage` under `CAPTIONS_KEY` and the
+     * app's prefix (`useStored`).
+     */
+    captionStore?: Store<Partial<CaptionSettings>>
     /** The playback speeds offered, as multiples of normal speed: `MEDIA_RATES` by default. */
     rates?: readonly number[]
     autoPlay?: boolean
@@ -145,6 +212,12 @@ export interface VideoPlayerProps {
     startAt?: number
     /** Where it is, in seconds, as it plays and after each seek: for keeping one's place. */
     onTime?: (seconds: number) => void
+    /**
+     * It started or stopped playing, however it was asked (its controls, the handle, another sound
+     * starting, the end), as a server encoding ahead is told to stop on a pause. Told once per
+     * change, never as it unmounts, and not for a try that loads the media again.
+     */
+    onPlayingChange?: (playing: boolean) => void
     /** It played to the end. */
     onEnded?: () => void
     /** An error it met: `fatal` once it has given up and says so over the picture, otherwise it is trying again. */
@@ -156,8 +229,16 @@ export interface VideoPlayerProps {
      * where it was. Media the browser cannot play is said at once.
      */
     retries?: number
-    /** How long it may wait for data while playing before it counts as a stall, in milliseconds. */
+    /**
+     * How long the playhead may stand while playing before it counts as a stall, in milliseconds:
+     * waiting for data, or a seek that does not land.
+     */
     stallAfter?: number
+    /**
+     * What the app draws over the picture's top corner, such as `VideoStatsOverlay`: kept over the
+     * picture in full screen, and pressed without playing or pausing the video.
+     */
+    overlay?: ReactNode
     /** Show the controls before the video is first played; otherwise only the play button is drawn until then. */
     defaultControlsVisible?: boolean
     /** How long the controls stay after the pointer stops while playing, in milliseconds. */
@@ -194,8 +275,11 @@ interface Playback {
 /** A stall or an error under way: a try waiting or loading, or the failure said once the tries are spent. */
 type Trouble = { phase: 'retrying' } | { phase: 'failed'; unsupported: boolean } | null
 
-/** A seek held until the media has its length: `startAt`, or a second to go to, playing after it or not. */
-type Held = 'start' | { at: number; play: boolean } | null
+/**
+ * A seek held until the media has its length: `startAt`, or a second to go to (none for a live
+ * stream's live edge), playing after it or not.
+ */
+type Held = 'start' | { at?: number; play: boolean } | null
 
 function rangesOf(video: HTMLVideoElement): MediaRange[] {
     const ranges: MediaRange[] = []
@@ -203,6 +287,28 @@ function rangesOf(video: HTMLVideoElement): MediaRange[] {
         ranges.push({ start: video.buffered.start(index), end: video.buffered.end(index) })
     }
     return ranges
+}
+
+/** The stretch a video can seek in, its last range, or null when it can seek nowhere yet. */
+function seekableOf(video: HTMLVideoElement): MediaRange | null {
+    const count = video.seekable.length
+    return count === 0 ? null : { start: video.seekable.start(count - 1), end: video.seekable.end(count - 1) }
+}
+
+/** What the viewer chose so far, as kept: an object of the fields they set, or none. */
+const chosenOf = (choice: unknown): Partial<CaptionSettings> => (isCaptionChoice(choice) ? choice : {})
+
+const noStore = () => () => undefined
+const nothing = () => undefined
+
+/**
+ * The viewer's caption choices and the way to change them: from the app's store when it hands one,
+ * else kept with `useStored`.
+ */
+function useCaptionChoice(store: Store<Partial<CaptionSettings>> | undefined): [unknown, (next: Partial<CaptionSettings>) => void] {
+    const [kept, keep] = useStored<Partial<CaptionSettings>>(CAPTIONS_KEY, {}, { check: isCaptionChoice })
+    const held = useSyncExternalStore(store?.subscribe ?? noStore, store?.get ?? nothing, store?.get ?? nothing)
+    return store === undefined ? [kept, keep] : [held, store.set]
 }
 
 /**
@@ -218,10 +324,20 @@ function rangesOf(video: HTMLVideoElement): MediaRange[] {
  * Fullscreen goes through `lib/fullscreen`, so in a desktop shell the window's own full screen
  * stands in for the browser's once the app hands it over (`desktop.setFullscreen` on `Shell`).
  *
+ * Captions are drawn as words on the picture, outlined, with no box, sized against the player's
+ * width. The captions menu picks the track and the text's size, ink, background (none, see-through
+ * or solid) and edge (an outline, a drop shadow or none); the choice and the track are kept for the
+ * next video, in the app's `captionStore` or in `localStorage`, and the app's `captionDefaults`
+ * stand until the viewer chooses.
+ *
  * It plays `src`, or media an engine feeds through `source`, from `startAt` when given, and tells
- * where it is through `onTime`. A stall that outlasts `stallAfter`, or a network or decoding
- * error, loads the media again where it was, `retries` times with a growing wait, before it says
- * over the picture that the video could not be played, with a button to try again.
+ * where it is through `onTime` and whether it plays through `onPlayingChange`. A playhead that
+ * stands longer than `stallAfter` while playing, or a network or decoding error, loads the media
+ * again where it was (a live stream's live edge once its window has moved past that point), the
+ * source's engine starting its load there, `retries` times with a growing wait, before it says over
+ * the picture that the video could not be played, with a button to try again. When the page is shown
+ * again after being hidden, a video that was playing plays on, and one whose buffer stalled while
+ * away is moved a hair to wake it; a pause asked through the handle while hidden stays.
  *
  * Once heard it pauses whatever else the library is playing, so one sound is heard at a time;
  * `exclusive={false}` lets it play alongside.
@@ -232,6 +348,8 @@ export function VideoPlayer({
     title,
     poster,
     tracks = [],
+    captionDefaults,
+    captionStore,
     rates = MEDIA_RATES,
     autoPlay = false,
     loop = false,
@@ -239,11 +357,13 @@ export function VideoPlayer({
     preload = 'metadata',
     startAt,
     onTime,
+    onPlayingChange,
     onEnded,
     onError,
     onFullscreenChange,
     retries = 3,
     stallAfter = 8000,
+    overlay,
     defaultControlsVisible = false,
     hideAfter = 2500,
     exclusive = true,
@@ -267,7 +387,9 @@ export function VideoPlayer({
         rate: 1,
     })
     const [scrub, setScrub] = useState<number | null>(null)
-    const [caption, setCaption] = useState(() => tracks.findIndex((track) => track.default === true))
+    const [choice, choose] = useCaptionChoice(captionStore)
+    const captions = captionSettings(choice, captionDefaults)
+    const caption = chosenCaptionTrack(tracks, captions.track)
     const [cue, setCue] = useState('')
     const [fullscreen, setFullscreen] = useState(false)
     const [pictureInPicture, setPictureInPicture] = useState(false)
@@ -277,13 +399,19 @@ export function VideoPlayer({
     const [menuOpen, setMenuOpen] = useState(false)
     const [trouble, setTrouble] = useState<Trouble>(null)
     const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-    useOneSound(video, state.playing && !state.muted && state.volume > 0, exclusive)
+    // Whether it was playing as the page was hidden, so it plays on when shown; a pause asked while hidden clears it.
+    const away = useRef(false)
+    const pauseAsked = () => {
+        if (document.visibilityState === 'hidden') away.current = false
+        video.current?.pause()
+    }
+    useOneSound(pauseAsked, state.playing && !state.muted && state.volume > 0, exclusive)
 
     // What the element's listeners read, set after each render so a parent that renders again
     // never has them taken off and put back.
-    const latest = useRef({ source, startAt, onTime, onEnded, onError, onFullscreenChange, retries, stallAfter })
+    const latest = useRef({ source, startAt, onTime, onPlayingChange, onEnded, onError, onFullscreenChange, retries, stallAfter })
     useEffect(() => {
-        latest.current = { source, startAt, onTime, onEnded, onError, onFullscreenChange, retries, stallAfter }
+        latest.current = { source, startAt, onTime, onPlayingChange, onEnded, onError, onFullscreenChange, retries, stallAfter }
     })
     const seek = useRef<Held>(null)
     const tries = useRef(0)
@@ -291,8 +419,17 @@ export function VideoPlayer({
     const failed = useRef(false)
     const started = useRef(false)
     const retryTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-    const stallTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+    const watch = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
+    const progress = useRef<Progress | null>(null)
+    // Whether a try is under way, from the stall or error it met until the media plays again or the tries are spent.
+    const trying = useRef(false)
+    // Whether a try has loaded the media again and waits for it to play, to note where it picked up.
+    const resuming = useRef(false)
+    // What `onPlayingChange` last said, so each change is told once.
+    const told = useRef<boolean | null>(null)
     const detach = useRef<(() => void) | null>(null)
+    // The source attached now, which the stats are read from: not the newest prop, which may be a copy made on a later render.
+    const attached = useRef<VideoSource | null>(null)
     const filled = useRef(false)
     const sourceKey = source === undefined ? undefined : (source.id ?? source)
 
@@ -308,9 +445,35 @@ export function VideoPlayer({
     // The functions below touch only refs and state setters, so the copies the element's
     // listeners hold from the first render do the same as the newest.
 
-    const clearStall = () => {
-        clearTimeout(stallTimer.current)
-        stallTimer.current = undefined
+    const stopWatch = () => {
+        clearInterval(watch.current)
+        watch.current = undefined
+        progress.current = null
+    }
+
+    /** Reads the playhead once a second while playing, and meets a stall once it has stood `stallAfter`. */
+    const startWatch = (element: HTMLVideoElement) => {
+        if (watch.current !== undefined) return
+        progress.current = null
+        watch.current = setInterval(() => {
+            if (element.paused || element.ended) {
+                stopWatch()
+                return
+            }
+            const now = Date.now()
+            progress.current = trackProgress(progress.current, element.currentTime, now)
+            const patience = latest.current.stallAfter
+            if (isStalled(progress.current, now, patience)) {
+                meet({ kind: 'stalled', message: `The playhead stood ${String(patience)} ms while playing` })
+            }
+        }, WATCH_EVERY)
+    }
+
+    /** Tells the app it started or stopped playing, once per change. */
+    const tell = (playing: boolean) => {
+        if (told.current === playing) return
+        told.current = playing
+        latest.current.onPlayingChange?.(playing)
     }
 
     const takeHeldSeek = (element: HTMLVideoElement) => {
@@ -325,15 +488,17 @@ export function VideoPlayer({
     }
 
     const fail = (error: Omit<VideoError, 'fatal'>, unsupported: boolean) => {
-        clearStall()
+        stopWatch()
         clearTimeout(retryTimer.current)
         retryTimer.current = undefined
         failed.current = true
+        trying.current = false
         setTrouble({ phase: 'failed', unsupported })
+        tell(false)
         latest.current.onError?.({ ...error, fatal: true })
     }
 
-    const connect = (element: HTMLVideoElement, feed: VideoSource) => {
+    const connect = (element: HTMLVideoElement, feed: VideoSource, startAt?: number) => {
         detach.current?.()
         detach.current = null
         if (feed.canPlay?.(element) === false) {
@@ -341,35 +506,53 @@ export function VideoPlayer({
             return
         }
         let live = true
-        const off = feed.attach(element, (error) => {
-            if (!live) return
-            if (error.fatal) meet(error)
-            else if (!failed.current) latest.current.onError?.(error)
-        })
+        const off = feed.attach(
+            element,
+            (error) => {
+                if (!live) return
+                if (error.fatal) meet(error)
+                else if (!failed.current) latest.current.onError?.(error)
+            },
+            { startAt: startAt !== undefined && startAt > 0 ? startAt : undefined },
+        )
+        attached.current = feed
         detach.current = () => {
             live = false
+            attached.current = null
             off()
         }
     }
 
-    /** Where a try goes back to: a seek still held from before the media had its length, or where it is. */
-    const resumePoint = (): Exclude<Held, null> => seek.current ?? { at: video.current?.currentTime ?? 0, play: started.current }
+    /**
+     * Where a try goes back to: a seek still held from before the media had its length, or where it
+     * is, or a live stream's live edge once its window has moved past where it is.
+     */
+    const resumePoint = (): Exclude<Held, null> => {
+        if (seek.current !== null) return seek.current
+        const element = video.current
+        if (element === null) return { at: 0, play: started.current }
+        const live = attached.current?.stats?.(element)?.live === true || element.duration === Number.POSITIVE_INFINITY
+        return { at: resumeAt(element.currentTime, seekableOf(element), live), play: started.current }
+    }
 
     const reload = (point: Exclude<Held, null>) => {
         const element = video.current
         if (element === null) return
-        clearStall()
+        stopWatch()
         failed.current = false
         seek.current = point
-        resumedFrom.current = point === 'start' ? (latest.current.startAt ?? 0) : point.at
+        resuming.current = true
+        const at = point === 'start' ? latest.current.startAt : point.at
+        // Until it plays, the tries count from the point asked for; a live edge is known only once it plays there.
+        resumedFrom.current = at ?? Number.POSITIVE_INFINITY
         const feed = latest.current.source
-        if (feed !== undefined) connect(element, feed)
+        if (feed !== undefined) connect(element, feed, at)
         else element.load()
     }
 
     const meet = (error: Omit<VideoError, 'fatal'>) => {
         if (retryTimer.current !== undefined || failed.current) return
-        clearStall()
+        stopWatch()
         const point = resumePoint()
         const next = nextTry(error.kind, tries.current, latest.current.retries)
         if (next === null) {
@@ -377,6 +560,7 @@ export function VideoPlayer({
             return
         }
         tries.current += 1
+        trying.current = true
         setTrouble({ phase: 'retrying' })
         latest.current.onError?.({ ...error, fatal: false })
         retryTimer.current = setTimeout(() => {
@@ -452,21 +636,30 @@ export function VideoPlayer({
             if (tries.current > 0 && element.currentTime > resumedFrom.current + RECOVERED_AFTER) tries.current = 0
             latest.current.onTime?.(element.currentTime)
         }
+        const played = () => {
+            startWatch(element)
+            tell(true)
+        }
+        const paused = () => {
+            stopWatch()
+            // A pause on the way out of the page, or while a try loads the media again, is not one to tell.
+            if (element.isConnected && !trying.current) tell(false)
+        }
         const ended = () => {
-            clearStall()
+            stopWatch()
             latest.current.onEnded?.()
         }
-        const recovered = () => {
-            clearStall()
-            if (retryTimer.current === undefined && !failed.current) setTrouble(null)
-        }
-        const waiting = () => {
-            if (element.paused || stallTimer.current !== undefined) return
-            const patience = latest.current.stallAfter
-            stallTimer.current = setTimeout(() => {
-                stallTimer.current = undefined
-                if (!element.paused) meet({ kind: 'stalled', message: `No data for ${String(patience)} ms while playing` })
-            }, patience)
+        const recovered = (event: Event) => {
+            // Where a try picked up is where it first plays, which an engine starting at a live edge settles only then.
+            if (resuming.current && event.type === 'playing') {
+                resuming.current = false
+                resumedFrom.current = element.currentTime
+            }
+            if (!element.paused) startWatch(element)
+            if (retryTimer.current === undefined && !failed.current) {
+                trying.current = false
+                setTrouble(null)
+            }
         }
         const error = () => {
             // An element emptied on purpose, as a source does when it lets go, has nothing to fail.
@@ -474,28 +667,41 @@ export function VideoPlayer({
             const found = mediaError(element.error)
             if (found !== null) meet(found)
         }
+        // A page shown again plays on where it was playing as it was hidden, or wakes a buffer that stalled while away.
+        const shown = () => {
+            if (document.visibilityState === 'hidden') {
+                away.current = !element.paused && !element.ended
+                return
+            }
+            const was = away.current
+            away.current = false
+            if (failed.current || retryTimer.current !== undefined) return
+            const step = onReturn(was, element.paused, element.readyState)
+            if (step === 'play') void element.play().catch(() => undefined)
+            else if (step === 'nudge') element.currentTime += NUDGE
+        }
         element.addEventListener('loadedmetadata', metadata)
         element.addEventListener('timeupdate', time)
+        element.addEventListener('play', played)
+        element.addEventListener('pause', paused)
         element.addEventListener('ended', ended)
         element.addEventListener('playing', recovered)
         element.addEventListener('loadeddata', recovered)
-        element.addEventListener('pause', clearStall)
-        element.addEventListener('seeking', clearStall)
-        element.addEventListener('emptied', clearStall)
-        element.addEventListener('waiting', waiting)
+        element.addEventListener('emptied', stopWatch)
         element.addEventListener('error', error)
+        document.addEventListener('visibilitychange', shown)
         return () => {
             element.removeEventListener('loadedmetadata', metadata)
             element.removeEventListener('timeupdate', time)
+            element.removeEventListener('play', played)
+            element.removeEventListener('pause', paused)
             element.removeEventListener('ended', ended)
             element.removeEventListener('playing', recovered)
             element.removeEventListener('loadeddata', recovered)
-            element.removeEventListener('pause', clearStall)
-            element.removeEventListener('seeking', clearStall)
-            element.removeEventListener('emptied', clearStall)
-            element.removeEventListener('waiting', waiting)
+            element.removeEventListener('emptied', stopWatch)
             element.removeEventListener('error', error)
-            clearStall()
+            document.removeEventListener('visibilitychange', shown)
+            stopWatch()
             clearTimeout(retryTimer.current)
             retryTimer.current = undefined
         }
@@ -505,12 +711,14 @@ export function VideoPlayer({
     useEffect(() => {
         const element = video.current
         if (element === null) return
-        clearStall()
+        stopWatch()
         clearTimeout(retryTimer.current)
         retryTimer.current = undefined
         tries.current = 0
         failed.current = false
+        trying.current = false
         started.current = false
+        resuming.current = false
         setTrouble(null)
         seek.current = 'start'
         const feed = latest.current.source
@@ -519,7 +727,7 @@ export function VideoPlayer({
             if (element.readyState >= HAVE_METADATA) takeHeldSeek(element)
             return
         }
-        connect(element, feed)
+        connect(element, feed, latest.current.startAt)
         return () => {
             detach.current?.()
             detach.current = null
@@ -596,7 +804,7 @@ export function VideoPlayer({
         const element = video.current
         if (element === null) return
         if (element.paused || element.ended) void element.play().catch(() => undefined)
-        else element.pause()
+        else pauseAsked()
     }
     const seekTo = (seconds: number) => {
         const element = video.current
@@ -642,9 +850,7 @@ export function VideoPlayer({
         play: () => {
             void video.current?.play().catch(() => undefined)
         },
-        pause: () => {
-            video.current?.pause()
-        },
+        pause: pauseAsked,
         toggle,
         playing: () => video.current !== null && !video.current.paused && !video.current.ended,
         time: () => video.current?.currentTime ?? 0,
@@ -654,7 +860,7 @@ export function VideoPlayer({
         },
         seekBy: (seconds) => {
             const pending = seek.current
-            seekTo((pending !== null && pending !== 'start' ? pending.at : (video.current?.currentTime ?? 0)) + seconds)
+            seekTo(((pending !== null && pending !== 'start' ? pending.at : undefined) ?? video.current?.currentTime ?? 0) + seconds)
             reveal()
         },
         volume: () => video.current?.volume ?? 1,
@@ -670,6 +876,11 @@ export function VideoPlayer({
         retry,
         focus: () => {
             root.current?.focus()
+        },
+        stats: () => {
+            const element = video.current
+            if (element === null) return null
+            return readVideoStats(element, attached.current?.stats?.(element) ?? null)
         },
     }))
 
@@ -724,6 +935,9 @@ export function VideoPlayer({
     }
 
     const shown = state.playing ? active || held || menuOpen : state.started || active || held || menuOpen
+    const cueCss = captionCss(captions)
+    // A menu stays inside the player while it fills the screen, and is free to reach past a small one otherwise.
+    const menuRoom = fullscreen ? root : undefined
     const at = scrub ?? state.time
     const level = state.muted ? 0 : state.volume
 
@@ -779,14 +993,20 @@ export function VideoPlayer({
             {cue !== '' && (
                 <div
                     className={cn(
-                        'pointer-events-none absolute inset-x-0 flex justify-center px-4 transition-[bottom] duration-200',
-                        shown ? 'bottom-16' : 'bottom-4',
+                        'pointer-events-none absolute inset-x-0 z-1 flex justify-center px-4 transition-[bottom] duration-200',
+                        shown ? 'bottom-16' : 'bottom-[max(1rem,2.5cqw)]',
                     )}
                 >
-                    <p className="max-w-[85%] rounded-mini bg-terminal/80 px-2 py-0.5 text-center text-xs whitespace-pre-line text-terminal-foreground @md:text-sm @2xl:text-base">
-                        {cue}
+                    <p className="max-w-[85%] text-center whitespace-pre-line" style={cueCss.text}>
+                        <span className="rounded-mini box-decoration-clone px-[0.3em] py-[0.05em]" style={cueCss.box}>
+                            {cue}
+                        </span>
                     </p>
                 </div>
+            )}
+
+            {overlay !== undefined && overlay !== null && overlay !== false && (
+                <div className="pointer-events-none absolute top-0 left-0 z-10 max-w-full p-2 *:pointer-events-auto @lg:p-3">{overlay}</div>
             )}
 
             {trouble === null && !state.started && !state.playing && !shown && (
@@ -893,12 +1113,18 @@ export function VideoPlayer({
                             />
                         </div>
                         {tracks.length > 0 && (
-                            <CaptionsControl
+                            <CaptionsMenu
                                 tracks={tracks}
-                                caption={caption}
-                                onCaption={setCaption}
+                                track={caption}
+                                onTrackChange={(index) => {
+                                    choose({ ...chosenOf(choice), track: index < 0 ? null : captionTrackKey(tracks[index]) })
+                                }}
+                                style={captions}
+                                onStyleChange={(change) => {
+                                    choose({ ...chosenOf(choice), ...change })
+                                }}
                                 words={words}
-                                container={root}
+                                container={menuRoom}
                                 onOpenChange={setMenuOpen}
                             />
                         )}
@@ -910,7 +1136,7 @@ export function VideoPlayer({
                                 rates={rates}
                                 onRateChange={setRate}
                                 label={words.speed}
-                                container={root}
+                                container={menuRoom}
                                 onOpenChange={setMenuOpen}
                                 className="hidden @md:inline-flex"
                             />
@@ -940,63 +1166,5 @@ export function VideoPlayer({
                 </div>
             </div>
         </div>
-    )
-}
-
-/** A toggle for a single track, and a menu of tracks and Off for several. */
-function CaptionsControl({
-    tracks,
-    caption,
-    onCaption,
-    words,
-    container,
-    onOpenChange,
-}: {
-    tracks: readonly VideoTrack[]
-    caption: number
-    onCaption: (index: number) => void
-    words: VideoPlayerWords
-    container: React.RefObject<HTMLDivElement | null>
-    onOpenChange: (open: boolean) => void
-}) {
-    const on = caption >= 0
-    const glyph = <Captions className={cn(on && 'text-primary')} aria-hidden />
-    if (tracks.length === 1) {
-        return (
-            <Button
-                variant="ghost"
-                size="icon"
-                aria-label={words.captions}
-                aria-pressed={on}
-                onClick={() => {
-                    onCaption(on ? -1 : 0)
-                }}
-                className={ON_PICTURE}
-            >
-                {glyph}
-            </Button>
-        )
-    }
-    return (
-        <DropdownMenu onOpenChange={onOpenChange}>
-            <DropdownMenuTrigger render={<Button variant="ghost" size="icon" aria-label={words.captions} className={ON_PICTURE} />}>
-                {glyph}
-            </DropdownMenuTrigger>
-            <DropdownMenuContent container={container} side="top" align="end" className="w-auto min-w-32">
-                <DropdownMenuRadioGroup
-                    value={String(caption)}
-                    onValueChange={(value: string) => {
-                        onCaption(Number(value))
-                    }}
-                >
-                    <DropdownMenuRadioItem value="-1">{words.captionsOff}</DropdownMenuRadioItem>
-                    {tracks.map((track, index) => (
-                        <DropdownMenuRadioItem key={`${String(index)}-${track.src}`} value={String(index)}>
-                            {track.label}
-                        </DropdownMenuRadioItem>
-                    ))}
-                </DropdownMenuRadioGroup>
-            </DropdownMenuContent>
-        </DropdownMenu>
     )
 }
