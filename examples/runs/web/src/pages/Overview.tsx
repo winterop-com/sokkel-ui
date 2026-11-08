@@ -124,12 +124,12 @@ export function Overview() {
         .slice(0, 5)
 
     const troubleColumns: DataColumn<LiveRun>[] = [
-        { id: 'job', header: 'Job', width: '9rem', cell: (run) => <span className="font-mono">{run.job}</span> },
+        { id: 'job', header: 'Job', width: '8.5rem', cell: (run) => <span className="font-mono">{run.job}</span> },
         { id: 'step', header: 'Failed at', width: '6.5rem', cell: (run) => <span className="font-mono">{run.at.step}</span> },
         {
             id: 'error',
             header: 'What it said',
-            width: 'minmax(10rem,1fr)',
+            width: 'minmax(6rem,1fr)',
             cell: (run) => <span className="truncate text-muted-foreground">{run.error}</span>,
         },
         { id: 'when', header: 'When', width: '6rem', align: 'end', cell: (run) => <When at={run.created} now={now} times={prefs.times} /> },
