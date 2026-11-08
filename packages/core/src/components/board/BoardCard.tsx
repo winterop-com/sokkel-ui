@@ -139,7 +139,7 @@ export function BoardCard({
                     <h4
                         ref={titleRef}
                         title={clamped && typeof title === 'string' ? title : undefined}
-                        className={cn('text-section-title', TITLE_LINES[titleLines])}
+                        className={cn('text-section-title leading-5', TITLE_LINES[titleLines])}
                     >
                         {title}
                     </h4>
