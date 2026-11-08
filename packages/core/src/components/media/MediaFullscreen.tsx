@@ -6,7 +6,19 @@ import { useThemeName } from '../../hooks/use-theme-name'
 import { cn } from '../../lib/cn'
 import { Segmented } from '../Segmented'
 import { PHONE, type MediaBarLayout } from './bar-growth'
-import { Cover, drawVisualizer, Extras, RepeatButton, ScreenWords, Scrub, ShuffleButton, Steps, Volume, type Deck } from './MediaBarParts'
+import {
+    Cover,
+    drawVisualizer,
+    Extras,
+    RepeatButton,
+    ScreenWords,
+    Scrub,
+    ShuffleButton,
+    Speed,
+    Steps,
+    Volume,
+    type Deck,
+} from './MediaBarParts'
 import { TransportButton } from './MediaControls'
 import { SOUND_KINDS, type SoundKind } from './sound'
 
@@ -89,7 +101,7 @@ function Room({ deck, layout, visualizer, pickable, kind, onKindChange, onLeave,
     }, [])
 
     const phone = box.width < PHONE
-    const view = { deck, visualizer, kind, phone }
+    const view = { deck, visualizer, kind, phone, room }
     return (
         <div
             ref={room}
@@ -106,6 +118,7 @@ function Room({ deck, layout, visualizer, pickable, kind, onKindChange, onLeave,
                 {layout === 'panel' && <PanelView {...view} />}
                 {layout === 'stage' && <StageView {...view} width={box.width} height={box.height} />}
                 <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
+                    {phone && <Speed deck={deck} container={room} />}
                     {pickable && visualizer !== undefined && visualizer !== null && (
                         <KindPicker words={deck.words} kind={kind} onKindChange={onKindChange} compact={phone} />
                     )}
@@ -157,6 +170,8 @@ interface ViewProps {
     visualizer?: ReactNode
     kind: SoundKind
     phone: boolean
+    /** The view's own element, which holds the speed menu while the browser shows only it. */
+    room: RefObject<HTMLDivElement | null>
 }
 
 /** Shuffle, the transport and repeat, at a screen's size. */
@@ -175,7 +190,7 @@ function Transport({ deck }: { deck: Deck }) {
  * transport and the volume across the head; the visualizer filling the middle; the waveform, tall
  * and as wide as the screen, along the foot. On a phone the transport moves under the waveform.
  */
-function RowsView({ deck, visualizer, kind, phone, width }: ViewProps & { width: number }) {
+function RowsView({ deck, visualizer, kind, phone, room, width }: ViewProps & { width: number }) {
     // Short of a laptop's width, the transport and the volume move to a row under what plays.
     const tablet = !phone && width < TABLET
     return (
@@ -200,6 +215,7 @@ function RowsView({ deck, visualizer, kind, phone, width }: ViewProps & { width:
                             <Transport deck={deck} />
                         </div>
                         <div className="flex h-14 min-w-0 items-center justify-end gap-2">
+                            <Speed deck={deck} size="md" container={room} />
                             <Volume deck={deck} />
                             <Extras deck={deck} />
                         </div>
@@ -224,7 +240,7 @@ function RowsView({ deck, visualizer, kind, phone, width }: ViewProps & { width:
  * screen and fades into the ground under the words, with the waveform and the transport along
  * the foot.
  */
-function PanelView({ deck, visualizer, kind, phone }: ViewProps) {
+function PanelView({ deck, visualizer, kind, phone, room }: ViewProps) {
     return (
         <>
             <div className="relative min-h-0 flex-1">
@@ -245,6 +261,7 @@ function PanelView({ deck, visualizer, kind, phone }: ViewProps) {
                     {!phone && (
                         <>
                             <div className="flex-1" />
+                            <Speed deck={deck} size="md" container={room} />
                             <Volume deck={deck} />
                             <Extras deck={deck} />
                         </>
@@ -260,7 +277,7 @@ function PanelView({ deck, visualizer, kind, phone }: ViewProps) {
  * which spreads to either side of it (or rings it, the cover set in the ring's middle), and the
  * words, the waveform, the transport and the volume follow under it, centered.
  */
-function StageView({ deck, visualizer, kind, phone, width, height }: ViewProps & { width: number; height: number }) {
+function StageView({ deck, visualizer, kind, phone, room, width, height }: ViewProps & { width: number; height: number }) {
     const band = Math.round(phone ? Math.min(width * 0.9, height * 0.4) : Math.min(height * 0.46, 440))
     const shown = visualizer !== undefined && visualizer !== null
     const ring = shown && kind === 'ring'
@@ -282,6 +299,7 @@ function StageView({ deck, visualizer, kind, phone, width, height }: ViewProps &
                 </div>
                 {!phone && (
                     <div className="flex items-center gap-2">
+                        <Speed deck={deck} size="md" container={room} />
                         <Volume deck={deck} />
                         <Extras deck={deck} />
                     </div>

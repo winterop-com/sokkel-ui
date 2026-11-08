@@ -1,16 +1,32 @@
 import { Maximize2, Music, Repeat, Repeat1, Shuffle, SkipBack, SkipForward } from 'lucide-react'
-import { cloneElement, isValidElement, type CSSProperties, type ReactElement, type ReactNode } from 'react'
+import { cloneElement, isValidElement, type ComponentProps, type CSSProperties, type ReactElement, type ReactNode } from 'react'
 
 import { cn } from '../../lib/cn'
 import { GroupLabel } from '../GroupLabel'
 import { MetaLine } from '../MetaLine'
 import type { Tier } from './bar-growth'
-import { PlayButton, Position, TransportButton, VolumeControl, type TransportSize } from './MediaControls'
+import {
+    LiveMark,
+    PlayButton,
+    Position,
+    RateMenu,
+    SkipGlyph,
+    TransportButton,
+    VolumeControl,
+    formatRate,
+    type TransportSize,
+} from './MediaControls'
 import { SoundVisualizer, type SoundKind, type SoundVisualizerProps } from './SoundVisualizer'
 import type { MediaRange } from './time'
 
 /** How a queue repeats: not at all, the whole queue, or the one item playing. */
 export type RepeatMode = 'off' | 'all' | 'one'
+
+/** What previous and next step between, and say: tracks, or the chapters of one long item. */
+export type MediaSteps = 'track' | 'chapter'
+
+/** What the scrubber and its times measure: the whole item, or the chapter playing. */
+export type MediaTimeline = 'whole' | 'chapter'
 
 /** The words the player says, each with an English default. */
 export interface MediaBarWords {
@@ -18,6 +34,17 @@ export interface MediaBarWords {
     pause: string
     previous: string
     next: string
+    /** Previous and next while they step through chapters. */
+    previousChapter: string
+    nextChapter: string
+    /** The skip buttons, given the interval in seconds. */
+    skipBack: (seconds: number) => string
+    skipForward: (seconds: number) => string
+    /** The speed menu's name, and a speed as it writes it, such as "1.25x". */
+    speed: string
+    rate: (rate: number) => string
+    /** The mark that stands for the position on a live stream. */
+    live: string
     shuffle: string
     repeatOff: string
     repeatAll: string
@@ -30,6 +57,8 @@ export interface MediaBarWords {
     resize: string
     /** The place in the line over the large title, such as "Track 13 of 16". */
     trackOf: (number: number, count?: number) => string
+    /** The place while previous and next step through chapters, such as "Chapter 3 of 12". */
+    chapterOf: (number: number, count?: number) => string
     /** The button that opens the fullscreen view, and the one that leaves it. */
     fullscreen: string
     exitFullscreen: string
@@ -48,6 +77,13 @@ export const MEDIA_BAR_WORDS: MediaBarWords = {
     pause: 'Pause',
     previous: 'Previous',
     next: 'Next',
+    previousChapter: 'Previous chapter',
+    nextChapter: 'Next chapter',
+    skipBack: (seconds) => `Back ${String(seconds)} seconds`,
+    skipForward: (seconds) => `Forward ${String(seconds)} seconds`,
+    speed: 'Playback speed',
+    rate: formatRate,
+    live: 'Live',
     shuffle: 'Shuffle',
     repeatOff: 'Repeat',
     repeatAll: 'Repeat all',
@@ -58,6 +94,7 @@ export const MEDIA_BAR_WORDS: MediaBarWords = {
     seek: 'Seek',
     resize: 'Resize the player',
     trackOf: (number, count) => (count === undefined ? `Track ${String(number)}` : `Track ${String(number)} of ${String(count)}`),
+    chapterOf: (number, count) => (count === undefined ? `Chapter ${String(number)}` : `Chapter ${String(number)} of ${String(count)}`),
     fullscreen: 'Fullscreen',
     exitFullscreen: 'Exit fullscreen',
     nowPlaying: 'Now playing',
@@ -78,15 +115,18 @@ export interface Deck {
     artist?: ReactNode
     album?: ReactNode
     year?: ReactNode
-    trackNumber?: number
-    trackCount?: number
+    /** The place in the line over the large title, such as "Track 13 of 16". */
+    place?: string
     artwork?: ReactNode
     playing: boolean
     onPlayingChange: (playing: boolean) => void
-    /** The position drawn: the one given, or the one under a dragging pointer. */
+    /** The position drawn: the one given, or the one under a dragging pointer; within the chapter on a chapter's timeline. */
     at: number
+    /** The length the scrubber spans: the whole item's, or the chapter's. */
     duration: number
     onSeek: (seconds: number) => void
+    /** A live stream: no scrubber, no length, no seeking or skipping. */
+    live: boolean
     onScrub: (seconds: number | null) => void
     buffered?: readonly MediaRange[]
     waveform?: readonly number[]
@@ -97,6 +137,14 @@ export interface Deck {
     onVolumeChange: (volume: number) => void
     onPrevious?: () => void
     onNext?: () => void
+    steps: MediaSteps
+    /** The interval the skip buttons move, in seconds, and what moves it; no skip buttons without one. */
+    skip?: number
+    onSkip?: (seconds: number) => void
+    rate: number
+    rates: readonly number[]
+    /** No speed menu without it. */
+    onRateChange?: (rate: number) => void
     shuffle: boolean
     onShuffleChange?: (shuffle: boolean) => void
     repeat: RepeatMode
@@ -123,11 +171,11 @@ export function Cover({ deck, size, flush = false, className }: { deck: Deck; si
 
 /** The line in the accent over a large title: the place, the album and the year. */
 export function Eyebrow({ deck, className }: { deck: Deck; className?: string }) {
-    const { words, trackNumber, trackCount, album, year } = deck
-    if (trackNumber === undefined && album === undefined && year === undefined) return null
+    const { place, album, year } = deck
+    if (place === undefined && album === undefined && year === undefined) return null
     return (
         <GroupLabel className={cn('truncate text-primary-ink', className)}>
-            <MetaLine inline items={[trackNumber === undefined ? undefined : words.trackOf(trackNumber, trackCount), album, year]} />
+            <MetaLine inline items={[place, album, year]} />
         </GroupLabel>
     )
 }
@@ -189,8 +237,9 @@ export function ScreenWords({
     )
 }
 
-/** The track's waveform as the scrubber, between the elapsed and the remaining time, `height` pixels tall. */
+/** The track's waveform as the scrubber, between the elapsed and the remaining time, `height` pixels tall; the live mark on a live stream. */
 export function Scrub({ deck, height, size, className }: { deck: Deck; height: number; size?: 'sm' | 'lg'; className?: string }) {
+    if (deck.live) return <LiveMark label={deck.words.live} size={size} className={className} />
     return (
         <Position
             at={deck.at}
@@ -207,19 +256,64 @@ export function Scrub({ deck, height, size, className }: { deck: Deck; height: n
     )
 }
 
-/** Previous, play and next. */
+/**
+ * Previous, play and next, named for chapters while they step through chapters, between the skip
+ * buttons when the deck has an interval. A live stream's skip buttons are drawn disabled.
+ */
 export function Steps({ deck, size = 'sm' }: { deck: Deck; size?: TransportSize }) {
-    const { words, playing, onPlayingChange, onPrevious, onNext } = deck
+    const { words, playing, onPlayingChange, onPrevious, onNext, skip, onSkip, live } = deck
+    const chapter = deck.steps === 'chapter'
+    const skipping = skip !== undefined && onSkip !== undefined
     return (
         <>
-            <TransportButton size={size} label={words.previous} onClick={onPrevious} disabled={onPrevious === undefined}>
+            {skipping && (
+                <TransportButton size={size} label={words.skipBack(skip)} onClick={() => onSkip(-skip)} disabled={live}>
+                    <SkipGlyph seconds={skip} back size={size} />
+                </TransportButton>
+            )}
+            <TransportButton
+                size={size}
+                label={chapter ? words.previousChapter : words.previous}
+                onClick={onPrevious}
+                disabled={onPrevious === undefined}
+            >
                 <SkipBack className="fill-current" aria-hidden />
             </TransportButton>
             <PlayButton size={size} playing={playing} onToggle={() => onPlayingChange(!playing)} words={words} />
-            <TransportButton size={size} label={words.next} onClick={onNext} disabled={onNext === undefined}>
+            <TransportButton size={size} label={chapter ? words.nextChapter : words.next} onClick={onNext} disabled={onNext === undefined}>
                 <SkipForward className="fill-current" aria-hidden />
             </TransportButton>
+            {skipping && (
+                <TransportButton size={size} label={words.skipForward(skip)} onClick={() => onSkip(skip)} disabled={live}>
+                    <SkipGlyph seconds={skip} back={false} size={size} />
+                </TransportButton>
+            )}
         </>
+    )
+}
+
+/** The speed menu, drawn only with a handler and never on a live stream. `container` holds its menu inside a fullscreen view. */
+export function Speed({
+    deck,
+    size,
+    container,
+}: {
+    deck: Deck
+    size?: TransportSize
+    container?: ComponentProps<typeof RateMenu>['container']
+}) {
+    const { words, rate, rates, onRateChange, live } = deck
+    if (onRateChange === undefined || live) return null
+    return (
+        <RateMenu
+            rate={rate}
+            rates={rates}
+            onRateChange={onRateChange}
+            label={words.speed}
+            format={words.rate}
+            size={size}
+            container={container}
+        />
     )
 }
 

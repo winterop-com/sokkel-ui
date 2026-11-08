@@ -2,10 +2,12 @@ import { TransportButton } from '@winterop-com/sokkel-ui/media/MediaControls'
 import { TrackList } from '@winterop-com/sokkel-ui/media/TrackList'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { ListMusic } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 
 import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
+import { useMediaSession } from '@winterop-com/sokkel-ui/hooks/use-media-session'
 import { MediaBar, type MediaBarLayout, type RepeatMode } from '@winterop-com/sokkel-ui/media/MediaBar'
+import { chapterIndex } from '@winterop-com/sokkel-ui/media/chapters'
 import { SoundVisualizer } from '@winterop-com/sokkel-ui/media/SoundVisualizer'
 import { Artwork, type Cover } from '../fixtures/Artwork'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
@@ -185,6 +187,117 @@ function Player({ queue = false, ...options }: BarOptions & { queue?: boolean })
     )
 }
 
+/** A book read aloud: its chapters, where each starts in seconds, and its length. */
+const BOOK = {
+    title: 'Tidewater Almanac',
+    author: 'Grace',
+    duration: 6 * 3600 + 12 * 60,
+    cover: { motif: 'bands', from: 'teal', to: 'jade' } satisfies Cover,
+    chapters: [
+        { title: 'Low Water', start: 0 },
+        { title: 'The Harbor Wall', start: 2_140 },
+        { title: 'Juniper Point', start: 4_310 },
+        { title: 'Larkspur Fields', start: 7_020 },
+        { title: 'Northern Coast', start: 9_480 },
+        { title: 'The Long Bay', start: 12_600 },
+        { title: 'Spring Tide', start: 15_900 },
+        { title: 'High Water', start: 19_200 },
+    ],
+}
+const BOOK_STARTS = BOOK.chapters.map((chapter) => chapter.start)
+
+/** A bar at the foot of an empty screen. */
+function Foot({ children }: { children: ReactNode }) {
+    return (
+        <Stack gap="none" justify="end" className="min-h-svh bg-background text-foreground">
+            {children}
+        </Stack>
+    )
+}
+
+/** The book playing 12:34 into its third chapter at 1.25x, told to the system as the chapter of the book. */
+function Book() {
+    const [playing, setPlaying] = useState(true)
+    const [position, setPosition] = useState(4_310 + 754)
+    const [rate, setRate] = useState(1.25)
+    const [volume, setVolume] = useState(0.8)
+    const [muted, setMuted] = useState(false)
+    const chapter = BOOK.chapters[Math.max(0, chapterIndex(BOOK_STARTS, position))]
+    const seek = (seconds: number) => setPosition(Math.min(BOOK.duration, Math.max(0, seconds)))
+    useMediaSession({
+        title: chapter.title,
+        artist: BOOK.author,
+        album: BOOK.title,
+        duration: BOOK.duration,
+        position,
+        rate,
+        playing,
+        handlers: {
+            play: () => setPlaying(true),
+            pause: () => setPlaying(false),
+            seekbackward: (seconds) => seek(position - seconds),
+            seekforward: (seconds) => seek(position + seconds),
+            seekto: seek,
+        },
+    })
+    return (
+        <Foot>
+            <MediaBar
+                title={chapter.title}
+                artist={BOOK.author}
+                album={BOOK.title}
+                artwork={<Artwork cover={BOOK.cover} />}
+                playing={playing}
+                onPlayingChange={setPlaying}
+                position={position}
+                duration={BOOK.duration}
+                onSeek={seek}
+                chapters={BOOK_STARTS}
+                timeline="chapter"
+                skip={15}
+                rate={rate}
+                onRateChange={setRate}
+                volume={volume}
+                onVolumeChange={setVolume}
+                muted={muted}
+                onMutedChange={setMuted}
+            />
+        </Foot>
+    )
+}
+
+/** A station on the air: what it says it plays, under its name. */
+function Radio() {
+    const [playing, setPlaying] = useState(true)
+    const [volume, setVolume] = useState(0.7)
+    const [muted, setMuted] = useState(false)
+    useMediaSession({
+        title: 'Morning on the coast',
+        artist: 'Harbor Radio',
+        playing,
+        handlers: { play: () => setPlaying(true), pause: () => setPlaying(false), stop: () => setPlaying(false) },
+    })
+    return (
+        <Foot>
+            <MediaBar
+                live
+                title="Morning on the coast"
+                artist="Harbor Radio"
+                artwork={<Artwork cover={{ motif: 'rings', from: 'violet', to: 'blue' }} />}
+                playing={playing}
+                onPlayingChange={setPlaying}
+                position={0}
+                duration={0}
+                onSeek={() => undefined}
+                volume={volume}
+                onVolumeChange={setVolume}
+                muted={muted}
+                onMutedChange={setMuted}
+            />
+        </Foot>
+    )
+}
+
 /** One layout at each height, from the one line up, each bar labeled with the height it starts at. */
 function Ladder({ layout }: { layout: MediaBarLayout }) {
     return (
@@ -212,6 +325,23 @@ export const Paused: StoryObj = { render: () => <Player startPlaying={false} /> 
 
 /** The queue opened from the bar's extra slot, with the playing track marked. */
 export const WithQueue: StoryObj = { name: 'With queue', render: () => <Player queue /> }
+
+/**
+ * A radio station with `live`: a Live mark where the position would be, no length, nothing to
+ * seek or skip, and previous and next drawn disabled, as the app gives no handler. It tells the
+ * system what plays through `useMediaSession`, with play, pause and stop.
+ */
+export const LiveRadio: StoryObj = { name: 'Live radio', render: () => <Radio /> }
+
+/**
+ * A book read aloud: `chapters` make previous and next step by chapter and say so, seeking to the
+ * chapter starts; `timeline="chapter"` measures the time within the chapter playing; `skip` adds
+ * the 15 second jumps around them, the interval on their glyphs; `onRateChange` the speed menu,
+ * at 1.25x. Dragged taller, the line over the title counts the chapter. `useMediaSession` tells the
+ * system the chapter, the book and the position at its speed, and answers its play, pause and
+ * seek controls.
+ */
+export const Audiobook: StoryObj = { render: () => <Book /> }
 
 /**
  * The default layout, `rows`, at each height. Up to 96 pixels it is the one line; from there the

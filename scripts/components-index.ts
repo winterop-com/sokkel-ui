@@ -477,6 +477,8 @@ export function render(entries: Entry[]): string {
         '`hooks/use-scheme`), with the option lists in `@winterop-com/sokkel-ui/lib/appearance`.',
         'Other state an app keeps across reloads goes through `useStored` (`hooks/use-stored`), and files',
         'being uploaded through `useUploads` (`hooks/use-uploads`), which feeds `AttachmentList`.',
+        'What plays is told to the operating system (media keys, lock screen) by `useMediaSession`',
+        '(`hooks/use-media-session`), beside `MediaBar`.',
         '',
     ]
     const packages = [...new Set(entries.map((entry) => entry.pkg))]
