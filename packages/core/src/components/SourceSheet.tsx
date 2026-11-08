@@ -29,7 +29,7 @@ export function SourceSheet({
         <Sheet open={open} onOpenChange={onOpenChange}>
             <SheetContent side="right" flush className="w-full sm:max-w-2xl">
                 <SheetHeader className="border-b border-border px-4 py-3 pr-12">
-                    <SheetTitle className="text-base font-medium">{title}</SheetTitle>
+                    <SheetTitle>{title}</SheetTitle>
                     {description !== undefined && <SheetDescription>{description}</SheetDescription>}
                 </SheetHeader>
                 <div className="min-h-0 flex-1 overflow-auto p-4">

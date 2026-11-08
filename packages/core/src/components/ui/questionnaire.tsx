@@ -37,10 +37,7 @@ function QuestionnaireTitle({ className, ...props }: React.ComponentProps<typeof
     return (
         <QuestionnairePrimitive.Title
             data-slot="questionnaire-title"
-            className={cn(
-                'text-base leading-snug font-medium text-pretty [&:not(:has(~[data-slot=questionnaire-description]))]:mb-4',
-                className,
-            )}
+            className={cn('text-detail-title text-pretty [&:not(:has(~[data-slot=questionnaire-description]))]:mb-4', className)}
             {...props}
         />
     )

@@ -201,7 +201,7 @@ export function Rail({
                                     {mark}
                                 </span>
                             )}
-                            <span className="truncate text-base font-semibold tracking-tight">{name}</span>
+                            <span className="truncate text-title font-semibold tracking-tight">{name}</span>
                             {onCollapsedChange !== undefined && (
                                 <button
                                     type="button"

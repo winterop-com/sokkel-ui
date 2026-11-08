@@ -1,5 +1,5 @@
 import { Code2, Image } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { CopyButton } from './CopyButton'
 
@@ -30,18 +30,24 @@ function tokenHex(name: string, probe: HTMLElement, context: CanvasRenderingCont
     return `#${[r, g, b].map((channel) => channel.toString(16).padStart(2, '0')).join('')}`
 }
 
-/** Mermaid's theme variables from the current theme's tokens and typeface. */
-function themeVariables(): Record<string, string> {
+/**
+ * Mermaid's theme variables from the tokens and typeface where the diagram sits, so a theme or face
+ * scoped to an element around it reaches it too. Its text is small text, `--text-xs`, in pixels.
+ */
+function themeVariables(host: HTMLElement): Record<string, string> {
     const probe = document.createElement('span')
-    document.body.append(probe)
+    probe.hidden = true
+    host.append(probe)
     const context = document.createElement('canvas').getContext('2d', { willReadFrequently: true })
     try {
         if (context === null) return {}
         const hex = (name: string) => tokenHex(name, probe, context)
-        const root = getComputedStyle(document.documentElement)
+        probe.style.fontFamily = 'var(--font-sans)'
+        probe.style.fontSize = 'var(--text-xs)'
+        const face = getComputedStyle(probe)
         return {
-            fontFamily: root.getPropertyValue('--typeface-sans').trim(),
-            fontSize: '13px',
+            fontFamily: face.fontFamily,
+            fontSize: face.fontSize,
             background: hex('card'),
             primaryColor: hex('secondary'),
             primaryTextColor: hex('foreground'),
@@ -74,13 +80,13 @@ function themeVariables(): Record<string, string> {
     }
 }
 
-async function render(code: string): Promise<string> {
+async function render(code: string, host: HTMLElement): Promise<string> {
     const mermaid = (await import('mermaid')).default
-    const radius = getComputedStyle(document.documentElement).getPropertyValue('--radius').trim() || '4px'
+    const radius = getComputedStyle(host).getPropertyValue('--radius').trim() || '4px'
     mermaid.initialize({
         startOnLoad: false,
         theme: 'base',
-        themeVariables: themeVariables(),
+        themeVariables: themeVariables(host),
         themeCSS: `.node rect, .node polygon, .node circle, .cluster rect { filter: none !important; } .node rect, .cluster rect { rx: ${radius}; ry: ${radius}; }`,
         securityLevel: 'strict',
         suppressErrorRendering: true,
@@ -108,14 +114,15 @@ export function MermaidDiagram({
     words?: { source: string; diagram: string; failed: string }
 }) {
     const look = useLook()
+    const host = useRef<HTMLDivElement>(null)
     const [svg, setSvg] = useState<string | null>(null)
     const [failed, setFailed] = useState(false)
     const [source, setSource] = useState(false)
 
     useEffect(() => {
-        if (streaming) return
+        if (streaming || host.current === null) return
         let cancelled = false
-        render(code).then(
+        render(code, host.current).then(
             (out) => {
                 if (cancelled) return
                 setFailed(false)
@@ -134,7 +141,7 @@ export function MermaidDiagram({
 
     const asSource = streaming || failed || source || svg === null
     return (
-        <div className="group/mermaid relative overflow-hidden rounded-lg border border-input dark:bg-input/30">
+        <div ref={host} className="group/mermaid relative overflow-hidden rounded-lg border border-input dark:bg-input/30">
             <div className="absolute top-2 right-2 z-10 flex items-center gap-1 opacity-0 transition-opacity group-focus-within/mermaid:opacity-100 group-hover/mermaid:opacity-100 pointer-coarse:opacity-100">
                 {!failed && !streaming && svg !== null && (
                     <button

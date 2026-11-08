@@ -35,7 +35,7 @@ function Editor({ pane }: { pane?: 'preview' }) {
             <EditPreview
                 defaultPane={pane}
                 edit={<CodeEditor value={value} onChange={setValue} wrap label="The page as markdown" />}
-                preview={<Markdown content={value} />}
+                preview={<Markdown content={value} scale="document" />}
                 words={{ edit: 'Markdown' }}
                 className="flex-1"
             />

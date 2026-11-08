@@ -100,7 +100,7 @@ export function IOCard({
         >
             <header className="flex items-start gap-2 border-b border-border p-4">
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
-                    <h3 className={cn('truncate text-base leading-6 font-semibold', title === undefined && 'font-mono')}>{heading}</h3>
+                    <h3 className={cn('truncate text-section-title', title === undefined && 'font-mono')}>{heading}</h3>
                     {title !== undefined && code !== undefined && (
                         <span className="truncate font-mono text-xs text-muted-foreground">{code}</span>
                     )}

@@ -247,7 +247,7 @@ function Reading({ content }: { content: string }) {
     return (
         <Row gap="3xl" align="stretch">
             <article ref={article} className="max-w-3xl min-w-0 flex-1">
-                <Markdown content={content} anchors />
+                <Markdown content={content} anchors scale="document" />
             </article>
             <TableOfContents entries={headings} active={active} className="sticky top-0 w-52 shrink-0 self-start max-xl:hidden" />
         </Row>
@@ -258,7 +258,7 @@ function Editing({ value, onChange }: { value: string; onChange: (value: string)
     return (
         <EditPreview
             edit={<CodeEditor value={value} onChange={onChange} wrap label="The page as markdown" />}
-            preview={<Markdown content={value} />}
+            preview={<Markdown content={value} scale="document" />}
             words={{ edit: 'Markdown' }}
             className="flex-1"
         />

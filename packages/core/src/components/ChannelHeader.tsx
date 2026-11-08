@@ -132,7 +132,7 @@ export function ChannelHeader({
     return (
         <header className={cn('@container shrink-0 border-b border-border bg-background', className)}>
             <div className="flex h-shell-top min-w-0 items-center gap-3 px-(--density-chat-inset)">
-                <h1 className="flex min-w-0 shrink items-center text-title font-semibold">
+                <h1 className="flex min-w-0 shrink items-center text-detail-title">
                     {onDetails !== undefined ? (
                         <button
                             type="button"

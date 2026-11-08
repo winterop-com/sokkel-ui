@@ -1,7 +1,9 @@
 import { Check, MoreHorizontal } from 'lucide-react'
 import type { ReactNode } from 'react'
 
+import { useClamped } from '../hooks/use-clamped'
 import { cn } from '../lib/cn'
+import { TITLE_LINES, type TitleLines } from '../lib/title-lines'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from './ui/dropdown-menu'
 
 /** A fact at a card's foot: what it is, and its value. */
@@ -18,6 +20,8 @@ export interface CardFact {
  * Given `href` or `onSelect` the whole card is one control, washing on hover and drawing the
  * focus outline when reached by keyboard; `selected` marks the chosen card of a set, as a plan
  * picker does. A `menu` sits at the head's right and stays its own control.
+ *
+ * The title takes up to `titleLines` lines, two by default; one cut short shows its whole text on hover.
  */
 export function ItemCard({
     title,
@@ -30,6 +34,7 @@ export function ItemCard({
     href,
     onSelect,
     selected,
+    titleLines = 2,
     className,
     words = { menu: 'More actions' },
 }: {
@@ -47,6 +52,8 @@ export function ItemCard({
     onSelect?: () => void
     /** Marks the chosen card when the cards are a set to choose from. */
     selected?: boolean
+    /** How many lines the title may take before it is cut short. */
+    titleLines?: TitleLines
     className?: string
     words?: { menu: string }
 }) {
@@ -54,6 +61,7 @@ export function ItemCard({
     const showCode = title !== undefined && code !== undefined
     const interactive = href !== undefined || onSelect !== undefined
     const Cover = href !== undefined ? 'a' : 'button'
+    const [titleRef, clamped] = useClamped<HTMLHeadingElement>()
     return (
         <article
             data-selected={selected || undefined}
@@ -78,7 +86,13 @@ export function ItemCard({
             <div className="pointer-events-none flex flex-1 flex-col gap-2 p-4">
                 <header className="flex items-start gap-2">
                     <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                        <h3 className={cn('truncate text-base leading-6 font-semibold', title === undefined && 'font-mono')}>{heading}</h3>
+                        <h3
+                            ref={titleRef}
+                            title={clamped && typeof heading === 'string' ? heading : undefined}
+                            className={cn('text-section-title', TITLE_LINES[titleLines], title === undefined && 'font-mono')}
+                        >
+                            {heading}
+                        </h3>
                         {showCode && <span className="truncate font-mono text-xs text-muted-foreground">{code}</span>}
                     </div>
                     {selected === true && (

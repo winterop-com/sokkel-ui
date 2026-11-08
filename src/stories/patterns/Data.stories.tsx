@@ -24,8 +24,8 @@ function Facts() {
                         { term: 'Job', value: 'import-orders', code: true },
                         { term: 'State', value: 'failed' },
                         { term: 'Started by', value: 'schedule, every hour' },
-                        { term: 'Started', value: '2026-11-04 14:02' },
-                        { term: 'Duration', value: '4.2s' },
+                        { term: 'Started', value: '2026-11-04 14:02', numeric: true },
+                        { term: 'Duration', value: '4.2s', numeric: true },
                         { term: 'Retried from', value: null },
                         { term: 'Run', value: 'run_01JCF8Q2T7W4M3', code: true, wide: true },
                     ]}
@@ -38,7 +38,7 @@ function Facts() {
                     items={[
                         { term: 'Base URL', value: 'https://api.example.org', code: true },
                         { term: 'Auth', value: 'API token' },
-                        { term: 'Timeout', value: '30s' },
+                        { term: 'Timeout', value: '30s', numeric: true },
                         { term: 'Verify TLS', value: 'on' },
                     ]}
                 />
