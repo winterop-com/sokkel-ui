@@ -426,6 +426,10 @@
             "types": "./dist/components/SelectionBar.d.ts",
             "import": "./dist/components/SelectionBar.js"
         },
+        "./ServerMenu": {
+            "types": "./dist/components/ServerMenu.d.ts",
+            "import": "./dist/components/ServerMenu.js"
+        },
         "./SettingRow": {
             "types": "./dist/components/SettingRow.d.ts",
             "import": "./dist/components/SettingRow.js"
