@@ -109,6 +109,10 @@ and ask before acting.
   `scripts/baselines.sh commit` pushes what it took. Both recompress with optipng, losslessly. Never push baselines taken on a Mac. A change that alters a story's
   look has its baselines retaken on its branch before the PR merges; bring the branch up to date
   with main before a full retake, so it does not undo baselines main has moved on.
+- Every agent shares one GitHub API limit. Wait on a run with `gh run watch <id> --interval 60
+  --exit-status`, one watch per run, never a loop that polls faster; a retake already starts the
+  CI run that follows it, so do not start or watch a second one. A newer CI run on a branch cancels
+  the older one.
 
 ## Design
 

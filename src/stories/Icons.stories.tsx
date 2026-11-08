@@ -12,9 +12,10 @@ import { Toolbar } from '@winterop-com/sokkel-ui/Toolbar'
 
 /**
  * The one icon set: Lucide, from `lucide-react`. Every icon in the library and its stories comes
- * from it. Press an icon to copy its import.
+ * from it. Press an icon to copy its import. Not screenshot: the gallery lists every icon the
+ * packages import, so it would change with any change that adds one.
  */
-const meta: Meta = { title: 'Foundations/Icons', parameters: { frame: 'padded' } }
+const meta: Meta = { title: 'Foundations/Icons', parameters: { frame: 'padded' }, tags: ['no-screenshot'] }
 export default meta
 
 const SOURCES = import.meta.glob(['../../packages/*/src/**/*.tsx', '!**/*.test.tsx'], {
