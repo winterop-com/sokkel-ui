@@ -360,7 +360,7 @@ export function FileTile({
             {onSelectedChange !== undefined && (
                 <span
                     className={cn(
-                        'absolute top-2 left-2 flex rounded-[5px] bg-card/90 p-0.5 shadow-sm transition-opacity',
+                        'absolute top-2 left-2 flex rounded-md bg-card/90 p-0.5 shadow-sm transition-opacity',
                         selected || selecting
                             ? 'opacity-100'
                             : 'opacity-0 group-focus-within/tile:opacity-100 group-hover/tile:opacity-100 pointer-coarse:opacity-100',

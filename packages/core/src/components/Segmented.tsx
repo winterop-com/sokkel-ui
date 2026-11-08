@@ -19,7 +19,7 @@ const FRAME: Record<SegmentedVariant, string> = {
 }
 
 const OPTION: Record<SegmentedVariant, string> = {
-    track: 'rounded-[calc(var(--radius)-2px)]',
+    track: 'rounded-mini',
     tint: 'rounded-control',
     outline: '',
     solid: '',
