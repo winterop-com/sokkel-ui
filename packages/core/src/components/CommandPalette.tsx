@@ -1,7 +1,11 @@
 import type { LucideIcon } from 'lucide-react'
 import { useState } from 'react'
 
+import { useSearch } from '../hooks/use-search'
+import type { SearchGroup, SearchResult, SearchSource } from '../lib/search'
+import { SearchResultBody } from './Search'
 import { Kbd, KbdGroup } from './ui/kbd'
+import { Spinner } from './ui/spinner'
 
 export { usePaletteShortcut } from '../hooks/use-palette-shortcut'
 import {
@@ -37,30 +41,50 @@ export interface PaletteGroup {
 }
 
 /**
+ * The app's own search in the palette: what it finds for the query is listed under the commands,
+ * grouped by kind as `Search` lists it, so one box finds both what to do and what there is.
+ */
+export interface PaletteSearch {
+    search: SearchSource
+    /** Opens a result the person chose; the palette closes first. */
+    onOpen: (result: SearchResult, group: SearchGroup) => void
+    /** Characters needed before the search is asked. */
+    minQuery?: number
+    words?: { searching: string }
+}
+
+/**
  * The command palette: one search over everything an app can do, grouped, each row with its
  * icon, a hint and the keys that run it directly. Choosing a row closes the palette and runs it.
+ * With `search` the app's own results for the query follow the commands, each with its thumbnail
+ * or icon and the query's words marked.
  */
 export function CommandPalette({
     open,
     onOpenChange,
     groups,
+    search,
     defaultQuery = '',
     words = { placeholder: 'Search or run a command', empty: 'No command matches.', title: 'Command palette' },
 }: {
     open: boolean
     onOpenChange: (open: boolean) => void
     groups: readonly PaletteGroup[]
+    /** The app's search, whose results are listed under the commands. */
+    search?: PaletteSearch
     /** What the search holds when the palette opens. */
     defaultQuery?: string
     words?: { placeholder: string; empty: string; title: string }
 }) {
     const [query, setQuery] = useState(defaultQuery)
+    const answer = useSearch(search?.search, query, { enabled: open, minQuery: search?.minQuery })
+    const found = answer.groups.filter((group) => group.results.length > 0)
     return (
         <CommandDialog open={open} onOpenChange={onOpenChange} title={words.title} description={words.placeholder}>
             <Command>
                 <CommandInput placeholder={words.placeholder} value={query} onValueChange={setQuery} />
                 <CommandList className="max-h-[min(24rem,60svh)] scroll-fade-b pb-1.5">
-                    <CommandEmpty>{words.empty}</CommandEmpty>
+                    {found.length === 0 && answer.state !== 'loading' && <CommandEmpty>{words.empty}</CommandEmpty>}
                     {groups.map((group, index) => (
                         <div key={group.title}>
                             {index > 0 && <CommandSeparator />}
@@ -97,6 +121,32 @@ export function CommandPalette({
                             </CommandGroup>
                         </div>
                     ))}
+                    {search !== undefined &&
+                        found.map((group) => (
+                            <div key={`search-${group.kind}`}>
+                                <CommandGroup heading={group.title} forceMount>
+                                    {group.results.map((result) => (
+                                        <CommandItem
+                                            key={result.id}
+                                            value={`search ${group.kind} ${result.id}`}
+                                            forceMount
+                                            onSelect={() => {
+                                                onOpenChange(false)
+                                                search.onOpen(result, group)
+                                            }}
+                                        >
+                                            <SearchResultBody result={result} query={query.trim()} />
+                                        </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                            </div>
+                        ))}
+                    {search !== undefined && found.length === 0 && answer.state === 'loading' && (
+                        <div role="status" className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
+                            <Spinner className="text-faint" />
+                            {search.words?.searching ?? 'Searching'}
+                        </div>
+                    )}
                 </CommandList>
             </Command>
         </CommandDialog>
