@@ -578,6 +578,10 @@
             "types": "./dist/components/UploadTray.d.ts",
             "import": "./dist/components/UploadTray.js"
         },
+        "./UptimeBar": {
+            "types": "./dist/components/UptimeBar.d.ts",
+            "import": "./dist/components/UptimeBar.js"
+        },
         "./WindowedPane": {
             "types": "./dist/components/WindowedPane.d.ts",
             "import": "./dist/components/WindowedPane.js"

@@ -263,6 +263,7 @@ const CORE_AREAS: Record<string, string> = {
     StepIndicator: 'Data display',
     Timeline: 'Data display',
     Tree: 'Data display',
+    UptimeBar: 'Data display',
     // Actions, dialogs and feedback.
     Banner: 'Actions, dialogs and feedback',
     ConfirmCard: 'Actions, dialogs and feedback',

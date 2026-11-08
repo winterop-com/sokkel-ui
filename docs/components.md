@@ -38,7 +38,7 @@ viewer's caption settings through `useStored` or an app's store, with the option
 in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second by `useVideoStats`
 (`@winterop-com/sokkel-ui/media/video-stats`) for `VideoStatsOverlay`.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 227 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 228 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 10 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 11 modules
@@ -279,11 +279,12 @@ in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second 
 | **SelectionBar** | `@winterop-com/sokkel-ui/SelectionBar` | What is selected and what can be done with it: the count, an optional `offer` after it (such as selecting every row on every page), a Clear button when `onClear` is given, and the actions as `children`. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-selection-bar--count) |
 | **Stat**, Sparkline | `@winterop-com/sokkel-ui/Stat` | One number with what it counts: runs today, the failure rate, the median duration. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-data--description) |
 | **StatusChip** | `@winterop-com/sokkel-ui/StatusChip` | A state as a small chip: the state's own color on a faint wash of it, the word lowercase. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-status-chip--run-states) |
-| **StatusProvider** | `@winterop-com/sokkel-ui/StatusProvider` | Tells every status part inside it the app's own states, so a chip, a dot or a timeline says `draft` or `published` in the app's words and colors without being told each time. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-status-chip--run-states) |
+| **StatusProvider** | `@winterop-com/sokkel-ui/StatusProvider` | Tells every status part inside it the app's own states, so a chip, a dot or a timeline says `draft` or `published` in the app's words and colors without being told each time. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-uptime-bar--steady) |
 | **StepIndicator**, WizardDialog, WizardView | `@winterop-com/sokkel-ui/StepIndicator` | Where a person is in a run of steps: each step numbered and named, the done ones checked and pressable to go back to, the current one filled. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-dialogs--confirm) |
 | **TagChips** | `@winterop-com/sokkel-ui/TagChips` | A row of tags as chips that shows as many as fit the room it is given and a +N chip for the rest, which names them on hover and focus. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-tag-chips--fits) |
 | **Timeline** | `@winterop-com/sokkel-ui/Timeline` | Events in the order they happened, on a rail: a run's steps, a job's history, an audit trail. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-data--description) |
 | **Tree** | `@winterop-com/sokkel-ui/Tree` | A hierarchy a reader opens a level at a time: regions, folders, teams. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-tree--trees) |
+| **UptimeBar** | `@winterop-com/sokkel-ui/UptimeBar` | A thing's record over the last days as a row of bars, one a day, oldest at the left and today at the right: a service's uptime on a status page. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-uptime-bar--steady) |
 
 ### Actions, dialogs and feedback
 
