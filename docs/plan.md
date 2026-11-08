@@ -160,6 +160,14 @@ panes of its own narrows the rail to its icons or hides it while it is shown, wi
 asks, a narrowed rail's mark still widens it for the reader with the account following, and a
 hidden rail opens as the drawer from the top bar at every width.
 
+A place whose content is a hierarchy to browse, such as a music library's artists and albums, puts
+it in the rail itself with `body`, so the app keeps one left column rather than a second beside the
+rail: a tree and its search in place of the places, under a row back to them (All places), with the
+same head, width, edge and foot. A place chosen from the places, or a body given anew, shows the
+body again; collapsed, the rail draws the places' icons, a body having no icon form, and expanding
+it shows the body as it was left; the drawer draws the body, and the palette still lists every
+place.
+
 A screen adds what only it can do to the palette with `useCommands(groups, deps)` while it is
 mounted and takes it away when it unmounts; the shell holds the registry and lists those groups with
 its own by each group's `rank`, a screen's first at equal rank, groups of one title as one. An app
