@@ -1395,7 +1395,8 @@ export function DataTable<T>({
                         </span>
                     )}
                     {tree && treeControl(entry)}
-                    <span className="min-w-0 flex-1 truncate text-sm font-medium">{title?.cell(entry.row)}</span>
+                    {/* The title keeps to its line: a cell of two lines, a name over its code, shows its first. */}
+                    <span className="h-6 min-w-0 flex-1 truncate text-sm leading-6 font-medium">{title?.cell(entry.row)}</span>
                     {menu}
                 </div>
                 {stackedLines(entry, false)}
