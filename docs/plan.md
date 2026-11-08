@@ -19,9 +19,9 @@ The library is six packages, built from one Bun workspace and released together 
 - `@winterop-com/sokkel-ui-terminal` (`packages/terminal`): `TerminalView` and `Terminal`, on
   xterm.js.
 - `@winterop-com/sokkel-ui-media` (`packages/media`): the music and video app parts, `MediaBar`
-  with its layouts and fullscreen view, `TrackList`, `MediaCard`, `Artwork`, `useMediaSession`,
-  and `hlsSource`, which plays an HTTP live stream in `VideoPlayer` through hls.js, an optional
-  peer.
+  with its layouts and fullscreen view, `TrackList`, `ChapterList`, `Lyrics`, `MediaCard`,
+  `Artwork`, `useMediaSession`, `useQueue`, and `hlsSource`, which plays an HTTP live stream in
+  `VideoPlayer` through hls.js, an optional peer.
 
 An app installs the core and the add-ons it draws with, so an engine is installed only by an app
 that uses it, and the music and video parts only by an app that plays music or video. Each add-on
@@ -122,6 +122,15 @@ key for the session (in session storage, in memory where that is refused) and pu
 return, the shell's content when no ref is given. `useReducedMotion()` says whether motion is
 reduced, from the look's own `motion` and else the system's, following both, for motion a script
 draws.
+
+On a phone the shell's drawer draws the rail expanded, its account with it, even where the app holds
+the rail `collapsed`; its head's end closes it, and a row chosen in the account menu closes it too.
+Besides a press on a link it closes when the app's `route` (a location's path or key) changes, so
+the palette and the app's own navigation leave it the same way; `drawerOpen` with
+`onDrawerOpenChange` holds it from outside. A `banner` (a `Banner` saying the server is not
+answering) stands between the top bar and the content, scrolling with neither. The shell's root pads
+the safe-area insets on all four sides, for a home-screen web app and a notch; they are zero unless
+the app's page sets `viewport-fit=cover` in its viewport meta.
 
 In a desktop window whose native title bar is hidden (Electron's `hiddenInset`, Tauri's
 `Overlay`), `Shell`'s `desktop` makes its top strip, the rail's head, the top bar and an open
@@ -369,10 +378,11 @@ theme's terminal ground and accent. SignIn's dark brand pane stands on the same 
 
 The music and video app parts have a package of their own, `@winterop-com/sokkel-ui-media`, so an
 app that plays nothing does not carry them: `MediaBar` with its layouts, parts and
-`MediaFullscreen`, `TrackList`, `MediaCard`, `Artwork` and its seeded covers (`cover-seed`), the
-arithmetic of chapters and of the bar's growth, `useMediaSession` with its helpers in
-`media-session`, and `hlsSource` in `hls-source`. It stands on the core by name, and its one
-engine, hls.js, is an optional peer it loads only when a stream plays. What a core part plays through
+`MediaFullscreen`, `TrackList`, `ChapterList`, `Lyrics`, `MediaCard`, `Artwork` and its seeded
+covers (`cover-seed`), the arithmetic of chapters, of a timeline over several files and of the
+bar's growth, the queue (`queue`, `useQueue`), LRC lyrics (`lrc`), `useMediaSession` with its
+helpers in `media-session`, and `hlsSource` in `hls-source`. It stands on the core by name, and its
+one engine, hls.js, is an optional peer it loads only when a stream plays. What a core part plays through
 stays in the core, under `@winterop-com/sokkel-ui/media/*`: `AudioPlayer` and `VideoPlayer`, which
 attachments, chat messages, the composer and a spoken answer use; the controls they share
 (`MediaControls`, `MediaSlider`), the times (`time`) and one sound at a time (`one-sound`); and
@@ -432,6 +442,35 @@ system what plays (title, artist, album, artwork), whether it plays and where al
 its speed, and answers its media keys and lock screen through the app's handlers. It tells the
 position again only when it strays from where the system runs it, takes everything away on unmount,
 and does nothing where the browser has no media session.
+
+A queue keeps its list and the order it plays in apart (`queue`, pure and tested): shuffle is an
+order of its own, drawn from a seed or given whole, with the item playing first, so turning it off
+carries on from that item's place in the list; repeat is off, all or one; next and previous follow
+the order and the repeat, a press of next moving on even while one item repeats and the end of that
+item playing it again; adding, removing and moving keep the current item current, and moving
+reorders the play order, as a view of what comes next draws it. `useQueue` holds a queue in state
+and tells the player what to do: play another item, the same one again, start this one over, or
+stop.
+
+A book or a long work over several files is one timeline (`timeline`): the listener scrubs and
+picks chapters on the whole while an element plays one file, and `fileAt` and `timelinePosition`
+turn a position on the whole into a file and an offset and back, a boundary belonging to the file
+it starts; `chaptersAcrossFiles` moves the chapters each file carries onto the whole, so a chapter
+may run from one file into the next. `ChapterList` lists the chapters with their starts and
+lengths, marks the one playing and seeks to a chapter's start on a press; it is drawn by
+`TrackList`, works with MediaBar's `chapters` (`chapterStarts`) and `timeline`, and shares its
+following: the current row is kept in view in the box that scrolls the list, or the page, brought
+to the middle on the first draw and on a change only when it is out of view, and left where the
+reader put it while they scroll and for four seconds after (`useFollow`, with the arithmetic in
+`follow`). TrackList's `progress` shows how far the playing row has played, the time left in place
+of its length or a line along its foot.
+
+Lyrics are read by `parseLyrics` in `lrc`: LRC's timed lines, several stamps on one line, the
+`offset` tag and the metadata tags, word stamps dropped; plain text, or LRC stamped all at zero,
+reads as untimed. `Lyrics` fills the box it is given: timed lines follow the position, the one sung
+inked in the middle and the rest faint, a press on a line seeking to it, and the same pause for a
+reader who scrolls; untimed lyrics read as a page in verses. MediaBar's `lyrics` gives the
+fullscreen view a lyrics button in its corner that shows them in the visualizer's place.
 
 MediaBar resizes from its top edge. Up to about 96 pixels every layout is the one-line bar; above
 it the bar grows by its `layout`, picked from the player growth research, continuously and with no

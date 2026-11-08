@@ -3,6 +3,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { ListEnd } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
+import { Fill, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { MediaBar } from '@winterop-com/sokkel-ui-media/MediaBar'
 import { TrackList, type Track } from '@winterop-com/sokkel-ui-media/TrackList'
 import { StarButton } from '@winterop-com/sokkel-ui/StarButton'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
@@ -58,6 +60,17 @@ const EPISODES: Track[] = [
     duration: episode.duration,
 }))
 
+const WORDS = ['Harbor', 'Tide', 'Coast', 'Valley', 'Morning', 'Ridge', 'Island', 'Ferry', 'Lantern', 'Current', 'Shore', 'Field']
+
+/** A long playlist of sixty songs, each title and length drawn from its place. */
+const PLAYLIST: Track[] = Array.from({ length: 60 }, (_, index) => ({
+    id: `p${String(index + 1)}`,
+    number: index + 1,
+    title: `${WORDS[index % WORDS.length]} ${WORDS[(index * 5 + 3) % WORDS.length].toLowerCase()}`,
+    subtitle: ['Ada', 'Grace', 'Linus', 'Margaret'][index % 4],
+    duration: 150 + ((index * 47) % 180),
+}))
+
 function Ground({ children, width = '' }: { children: ReactNode; width?: string }) {
     return (
         <div className="min-h-svh bg-background p-4 text-foreground sm:p-8">
@@ -105,6 +118,25 @@ export const Paused: StoryObj = {
     render: () => (
         <Ground>
             <TrackList tracks={ALBUM} current="4" onPlay={() => undefined} />
+        </Ground>
+    ),
+}
+
+/** The playing row 1:23 in, its length giving way to the time still to play. */
+export const TimeLeft: StoryObj = {
+    name: 'Time left',
+    render: () => (
+        <Ground>
+            <TrackList tracks={ALBUM} current="4" playing position={83} progress="left" onPlay={() => undefined} />
+        </Ground>
+    ),
+}
+
+/** The playing row 1:23 in, a line along its foot as long as it has played. */
+export const Progress: StoryObj = {
+    render: () => (
+        <Ground>
+            <TrackList tracks={ALBUM} current="4" playing position={83} progress="bar" onPlay={() => undefined} />
         </Ground>
     ),
 }
@@ -163,4 +195,54 @@ export const Episodes: StoryObj = {
             <TrackList tracks={EPISODES} current="e1" variant="plain" artwork="wide" onPlay={() => undefined} />
         </Ground>
     ),
+}
+
+/**
+ * A playlist of sixty songs in a pane that scrolls, the forty-first playing: brought to the middle
+ * on the first draw, and kept in view as next and previous in the bar move the playing row, but
+ * only when it is out of view, and never while the list is being scrolled or just after.
+ */
+export const LongList: StoryObj = {
+    name: 'Long list',
+    render: function Render() {
+        const [index, setIndex] = useState(40)
+        const [position, setPosition] = useState(83)
+        const [playing, setPlaying] = useState(true)
+        const [volume, setVolume] = useState(0.7)
+        const track = PLAYLIST[index]
+        const go = (to: number) => {
+            setIndex(Math.min(PLAYLIST.length - 1, Math.max(0, to)))
+            setPosition(0)
+        }
+        return (
+            <Stack gap="none" className="h-svh bg-background text-foreground">
+                <Fill scroll className="p-4 sm:p-6">
+                    <TrackList
+                        tracks={PLAYLIST}
+                        current={track.id}
+                        playing={playing}
+                        position={position}
+                        progress="left"
+                        onPlay={(chosen) => go(PLAYLIST.indexOf(chosen))}
+                    />
+                </Fill>
+                <MediaBar
+                    title={track.title}
+                    artist={track.subtitle}
+                    trackNumber={index + 1}
+                    trackCount={PLAYLIST.length}
+                    placeholderSeed={track.id}
+                    playing={playing}
+                    onPlayingChange={setPlaying}
+                    position={position}
+                    duration={track.duration}
+                    onSeek={setPosition}
+                    volume={volume}
+                    onVolumeChange={setVolume}
+                    onPrevious={index > 0 ? () => go(index - 1) : undefined}
+                    onNext={index < PLAYLIST.length - 1 ? () => go(index + 1) : undefined}
+                />
+            </Stack>
+        )
+    },
 }

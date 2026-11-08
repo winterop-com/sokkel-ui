@@ -1,5 +1,5 @@
 import { Tooltip } from '@base-ui/react/tooltip'
-import { ChevronRight, PanelLeftClose, PanelLeftOpen, type LucideIcon } from 'lucide-react'
+import { ChevronRight, PanelLeftClose, PanelLeftOpen, X, type LucideIcon } from 'lucide-react'
 import {
     Fragment,
     useContext,
@@ -17,7 +17,7 @@ import { createPortal } from 'react-dom'
 import { cn } from '../lib/cn'
 import { useTrafficLights } from '../lib/desktop'
 import { usePanelSize } from '../hooks/use-panel-size'
-import { ShellDesktop, ShellFootCell } from './shell-context'
+import { ShellDesktop, ShellDrawer, ShellFootCell } from './shell-context'
 import { ResizeHandle } from './ResizeHandle'
 import { Count } from './Count'
 import { Dot } from './Dot'
@@ -91,8 +91,10 @@ const WORDS: RailWords = {
  *
  * Expanded, its right edge drags to resize it, and a double click on the edge puts it back. Left
  * to itself it holds its own width, starting at `defaultSize`; `size` with `onSizeChange` holds
- * it from outside, and `resizable={false}` keeps it fixed. In the shell's drawer on a narrow window
- * the edge is not drawn.
+ * it from outside, and `resizable={false}` keeps it fixed.
+ *
+ * In the shell's drawer on a narrow window the rail is drawn expanded, even where the app holds it
+ * `collapsed`, its edge is not drawn, and the control at its head's end closes the drawer.
  *
  * An entry with `entries` is a parent. Expanded, a chevron at its row's end folds and unfolds its
  * entries, indented under it and lined up under its label; a parent without an `href` of its own
@@ -115,7 +117,7 @@ export function Rail({
     name,
     groups,
     variant = 'nav',
-    collapsed = false,
+    collapsed: kept = false,
     onCollapsedChange,
     foot,
     renderLink = (entry, children, className) => (
@@ -168,6 +170,8 @@ export function Rail({
     const aside = useRef<HTMLElement>(null)
     const footCell = useContext(ShellFootCell)
     const desktop = useContext(ShellDesktop)
+    const drawer = useContext(ShellDrawer)
+    const collapsed = kept && drawer === undefined
     const lights = useTrafficLights(desktop)
     const drag = desktop === undefined ? undefined : ''
     const words = { ...WORDS, ...given }
@@ -253,16 +257,28 @@ export function Rail({
                                 </span>
                             )}
                             <span className="truncate text-title font-semibold tracking-tight">{name}</span>
-                            {onCollapsedChange !== undefined && (
+                            {drawer !== undefined ? (
                                 <button
                                     type="button"
-                                    aria-label={words.collapse}
-                                    title={words.collapse}
-                                    className="ml-auto flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-hover hover:text-foreground"
-                                    onClick={() => onCollapsedChange(true)}
+                                    aria-label={drawer.label}
+                                    title={drawer.label}
+                                    className={HEAD_BUTTON}
+                                    onClick={drawer.close}
                                 >
-                                    <PanelLeftClose className="size-4" aria-hidden />
+                                    <X className="size-4" aria-hidden />
                                 </button>
+                            ) : (
+                                onCollapsedChange !== undefined && (
+                                    <button
+                                        type="button"
+                                        aria-label={words.collapse}
+                                        title={words.collapse}
+                                        className={HEAD_BUTTON}
+                                        onClick={() => onCollapsedChange(true)}
+                                    >
+                                        <PanelLeftClose className="size-4" aria-hidden />
+                                    </button>
+                                )
                             )}
                         </>
                     )}
@@ -336,6 +352,10 @@ export function Rail({
 }
 
 type RenderLink = (entry: RailEntry, children: ReactNode, className: string) => ReactNode
+
+/** The control at the end of the expanded rail's head: collapse, or close in the shell's drawer. */
+const HEAD_BUTTON =
+    'ml-auto flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid'
 
 /** Covers the rail's edge along its head, where the window's buttons straddle it, in the rail's own ground. */
 const UNDRAWN_EDGE = 'relative after:absolute after:inset-y-0 after:-right-px after:w-px after:bg-sidebar'

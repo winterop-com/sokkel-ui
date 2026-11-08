@@ -1,4 +1,4 @@
-import { AudioLines, Minimize2 } from 'lucide-react'
+import { AudioLines, MicVocal, Minimize2 } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
 
@@ -33,6 +33,11 @@ export interface MediaFullscreenProps {
     visualizer?: ReactNode
     /** Whether the kind can be picked: only a `SoundVisualizer` takes it. */
     pickable: boolean
+    /** The words of what plays, such as a `Lyrics`, drawn in the visualizer's place while `lyricsShown`. */
+    lyrics?: ReactNode
+    lyricsShown?: boolean
+    /** The corner's lyrics button, drawn with `lyrics`, shows and hides them through this. */
+    onLyricsShownChange?: (shown: boolean) => void
     kind: SoundKind
     onKindChange: (kind: SoundKind) => void
     onLeave: () => void
@@ -47,7 +52,8 @@ export interface MediaFullscreenProps {
  * The player's now-playing view over the whole screen, opened from the bar: what plays at full
  * size, the visualizer at full strength, the waveform and the transport, arranged after the
  * bar's layout. The corner holds the visualizer's kind picker and the button that leaves; Escape
- * leaves too.
+ * leaves too. Given `lyrics`, the corner's lyrics button shows them in the visualizer's place:
+ * between the head and the waveform, above the liner, or across the stage.
  *
  * It is a dark room in every scheme and theme: the `.dark` class around an element scoped to the
  * document's theme, so the theme's own dark tokens hold inside whatever the page wears.
@@ -61,7 +67,19 @@ export function MediaFullscreen(props: MediaFullscreenProps) {
     return createPortal(<Room {...props} />, document.body)
 }
 
-function Room({ deck, layout, visualizer, pickable, kind, onKindChange, onLeave, native }: MediaFullscreenProps) {
+function Room({
+    deck,
+    layout,
+    visualizer,
+    pickable,
+    kind,
+    onKindChange,
+    onLeave,
+    native,
+    lyrics,
+    lyricsShown = false,
+    onLyricsShownChange,
+}: MediaFullscreenProps) {
     const room = useRef<HTMLDivElement | null>(null)
     const box = useSize(room)
     const theme = useThemeName()
@@ -101,7 +119,8 @@ function Room({ deck, layout, visualizer, pickable, kind, onKindChange, onLeave,
     }, [])
 
     const phone = box.width < PHONE
-    const view = { deck, visualizer, kind, phone, room }
+    const worded = lyrics !== undefined && lyrics !== null
+    const view = { deck, visualizer, kind, phone, room, lyrics: worded && lyricsShown ? lyrics : undefined }
     return (
         <div
             ref={room}
@@ -119,7 +138,12 @@ function Room({ deck, layout, visualizer, pickable, kind, onKindChange, onLeave,
                 {layout === 'stage' && <StageView {...view} width={box.width} height={box.height} />}
                 <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
                     {phone && <Speed deck={deck} container={room} />}
-                    {pickable && visualizer !== undefined && visualizer !== null && (
+                    {worded && onLyricsShownChange !== undefined && (
+                        <TransportButton label={deck.words.lyrics} pressed={lyricsShown} onClick={() => onLyricsShownChange(!lyricsShown)}>
+                            <MicVocal aria-hidden />
+                        </TransportButton>
+                    )}
+                    {pickable && visualizer !== undefined && visualizer !== null && view.lyrics === undefined && (
                         <KindPicker words={deck.words} kind={kind} onKindChange={onKindChange} compact={phone} />
                     )}
                     <TransportButton label={deck.words.exitFullscreen} onClick={onLeave} className="text-muted-foreground">
@@ -172,6 +196,8 @@ interface ViewProps {
     phone: boolean
     /** The view's own element, which holds the speed menu while the browser shows only it. */
     room: RefObject<HTMLDivElement | null>
+    /** The lyrics while they are shown, in the visualizer's place. */
+    lyrics?: ReactNode
 }
 
 /** Shuffle, the transport and repeat, at a screen's size. */
@@ -190,7 +216,7 @@ function Transport({ deck }: { deck: Deck }) {
  * transport and the volume across the head; the visualizer filling the middle; the waveform, tall
  * and as wide as the screen, along the foot. On a phone the transport moves under the waveform.
  */
-function RowsView({ deck, visualizer, kind, phone, room, width }: ViewProps & { width: number }) {
+function RowsView({ deck, visualizer, kind, phone, room, lyrics, width }: ViewProps & { width: number }) {
     // Short of a laptop's width, the transport and the volume move to a row under what plays.
     const tablet = !phone && width < TABLET
     return (
@@ -222,7 +248,7 @@ function RowsView({ deck, visualizer, kind, phone, room, width }: ViewProps & { 
                     </>
                 )}
             </div>
-            <div className={cn('min-h-0 flex-1', phone ? 'px-5 py-5' : 'px-10 py-8')}>{drawVisualizer(visualizer, { kind })}</div>
+            <div className={cn('min-h-0 flex-1', phone ? 'px-5 py-5' : 'px-10 py-8')}>{lyrics ?? drawVisualizer(visualizer, { kind })}</div>
             <div className={cn('flex flex-col', phone ? 'gap-4 px-5 pb-6' : 'px-10 pb-10')}>
                 <Scrub deck={deck} height={phone ? 64 : 112} size={phone ? 'sm' : 'lg'} />
                 {phone && (
@@ -240,17 +266,28 @@ function RowsView({ deck, visualizer, kind, phone, room, width }: ViewProps & { 
  * screen and fades into the ground under the words, with the waveform and the transport along
  * the foot.
  */
-function PanelView({ deck, visualizer, kind, phone, room }: ViewProps) {
+function PanelView({ deck, visualizer, kind, phone, room, lyrics }: ViewProps) {
+    const cover = phone ? 88 : 208
     return (
         <>
             <div className="relative min-h-0 flex-1">
-                <div className={cn('absolute inset-0', phone ? 'px-3 pt-16' : 'px-8 pt-16')}>{drawVisualizer(visualizer, { kind })}</div>
-                <div
-                    aria-hidden
-                    className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-background via-background/80 to-transparent"
-                />
+                {lyrics === undefined ? (
+                    <>
+                        <div className={cn('absolute inset-0', phone ? 'px-3 pt-16' : 'px-8 pt-16')}>
+                            {drawVisualizer(visualizer, { kind })}
+                        </div>
+                        <div
+                            aria-hidden
+                            className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-background via-background/80 to-transparent"
+                        />
+                    </>
+                ) : (
+                    <div className={cn('absolute inset-x-0 top-0 pt-16', phone ? 'px-1' : 'px-4')} style={{ bottom: cover + 24 }}>
+                        {lyrics}
+                    </div>
+                )}
                 <div className={cn('absolute inset-x-0 bottom-0 flex min-w-0 items-end', phone ? 'gap-4 px-5' : 'gap-7 px-10')}>
-                    <Cover deck={deck} size={phone ? 88 : 208} className="rounded-surface shadow-pop" />
+                    <Cover deck={deck} size={cover} className="rounded-surface shadow-pop" />
                     <ScreenWords deck={deck} phone={phone} className="pb-1" />
                 </div>
             </div>
@@ -277,19 +314,22 @@ function PanelView({ deck, visualizer, kind, phone, room }: ViewProps) {
  * which spreads to either side of it (or rings it, the cover set in the ring's middle), and the
  * words, the waveform, the transport and the volume follow under it, centered.
  */
-function StageView({ deck, visualizer, kind, phone, room, width, height }: ViewProps & { width: number; height: number }) {
+function StageView({ deck, visualizer, kind, phone, room, lyrics, width, height }: ViewProps & { width: number; height: number }) {
     const band = Math.round(phone ? Math.min(width * 0.9, height * 0.4) : Math.min(height * 0.46, 440))
     const shown = visualizer !== undefined && visualizer !== null
     const ring = shown && kind === 'ring'
     return (
         <div className={cn('flex h-full flex-col items-center justify-center', phone ? 'gap-6 px-5 pt-14' : 'gap-8 px-10')}>
             <div className="relative flex w-full shrink-0 items-center justify-center" style={{ height: band }}>
-                {shown && (
+                {lyrics !== undefined && lyrics}
+                {lyrics === undefined && shown && (
                     <div className={cn('absolute inset-y-0', phone ? '-inset-x-5' : '-inset-x-10')}>
                         {drawVisualizer(visualizer, { kind, align: 'center', middle: ring ? <Cover deck={deck} flush /> : undefined })}
                     </div>
                 )}
-                {!ring && <Cover deck={deck} size={Math.round(band * 0.78)} className="relative rounded-surface shadow-pop" />}
+                {lyrics === undefined && !ring && (
+                    <Cover deck={deck} size={Math.round(band * 0.78)} className="relative rounded-surface shadow-pop" />
+                )}
             </div>
             <div className={cn('flex w-full flex-col items-center', phone ? 'gap-4' : 'max-w-3xl gap-5')}>
                 <ScreenWords deck={deck} phone={phone} center />

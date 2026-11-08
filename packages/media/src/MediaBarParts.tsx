@@ -19,9 +19,9 @@ import {
 } from '@winterop-com/sokkel-ui/media/MediaControls'
 import { SoundVisualizer, type SoundKind, type SoundVisualizerProps } from '@winterop-com/sokkel-ui/media/SoundVisualizer'
 import type { MediaRange } from '@winterop-com/sokkel-ui/media/time'
+import { nextRepeat, type RepeatMode } from './queue'
 
-/** How a queue repeats: not at all, the whole queue, or the one item playing. */
-export type RepeatMode = 'off' | 'all' | 'one'
+export type { RepeatMode } from './queue'
 
 /** What previous and next step between, and say: tracks, or the chapters of one long item. */
 export type MediaSteps = 'track' | 'chapter'
@@ -65,6 +65,8 @@ export interface MediaBarWords {
     exitFullscreen: string
     /** The fullscreen view's name. */
     nowPlaying: string
+    /** The fullscreen view's button that shows and hides the lyrics. */
+    lyrics: string
     /** The name of the picker of the visualizer's kind, and each kind's. */
     visualizerKind: string
     spectrum: string
@@ -99,14 +101,13 @@ export const MEDIA_BAR_WORDS: MediaBarWords = {
     fullscreen: 'Fullscreen',
     exitFullscreen: 'Exit fullscreen',
     nowPlaying: 'Now playing',
+    lyrics: 'Lyrics',
     visualizerKind: 'Visualizer',
     spectrum: 'Spectrum',
     area: 'Area',
     wave: 'Wave',
     ring: 'Ring',
 }
-
-const NEXT_REPEAT: Record<RepeatMode, RepeatMode> = { off: 'all', all: 'one', one: 'off' }
 
 /** What every arrangement of the player draws from: what plays, where it is, and the handlers. */
 export interface Deck {
@@ -341,7 +342,7 @@ export function RepeatButton({ deck, size }: { deck: Deck; size?: TransportSize 
     if (onRepeatChange === undefined) return null
     const label = repeat === 'one' ? words.repeatOne : repeat === 'all' ? words.repeatAll : words.repeatOff
     return (
-        <TransportButton size={size} label={label} pressed={repeat !== 'off'} onClick={() => onRepeatChange(NEXT_REPEAT[repeat])}>
+        <TransportButton size={size} label={label} pressed={repeat !== 'off'} onClick={() => onRepeatChange(nextRepeat(repeat))}>
             {repeat === 'one' ? <Repeat1 aria-hidden /> : <Repeat aria-hidden />}
         </TransportButton>
     )
