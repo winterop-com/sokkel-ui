@@ -74,6 +74,28 @@ html[data-theme='contrast'] {
     --kind-pink: oklch(0.48 0.13 340);
     --kind-pink-ink: oklch(0.38 0.12 340);
     --graph-edge: oklch(0.5 0 0);
+    --code-keyword: oklch(0.4 0.161 305);
+    --code-operator: oklch(0.4 0.161 215);
+    --code-punctuation: oklch(0.3 0 0);
+    --code-string: oklch(0.4 0.161 145);
+    --code-regexp: oklch(0.4 0.161 175);
+    --code-number: oklch(0.4 0.161 60);
+    --code-constant: oklch(0.4 0.161 350);
+    --code-comment: oklch(0.4 0 0);
+    --code-function: oklch(0.4 0.161 260);
+    --code-variable: oklch(0.4 0.161 30);
+    --code-type: oklch(0.4 0.161 195);
+    --code-property: oklch(0.4 0.161 240);
+    --code-tag: oklch(0.4 0.161 20);
+    --code-attribute: oklch(0.4 0.161 75);
+    --code-heading: oklch(0.4 0.161 260);
+    --code-link: oklch(0.4 0.161 240);
+    --code-inserted: oklch(0.4 0.177 150);
+    --code-deleted: oklch(0.4 0.177 25);
+    --code-invalid: oklch(0.4 0.177 25);
+    --code-bracket-1: oklch(0.4 0.161 85);
+    --code-bracket-2: oklch(0.4 0.161 320);
+    --code-bracket-3: oklch(0.4 0.161 230);
 }
 
 html.dark[data-theme='contrast'] {
@@ -150,6 +172,28 @@ html.dark[data-theme='contrast'] {
     --kind-pink: oklch(0.76 0.13 340);
     --kind-pink-ink: oklch(0.85 0.12 340);
     --graph-edge: oklch(0.6 0 0);
+    --code-keyword: oklch(0.86 0.138 305);
+    --code-operator: oklch(0.86 0.138 215);
+    --code-punctuation: oklch(0.85 0 0);
+    --code-string: oklch(0.86 0.138 145);
+    --code-regexp: oklch(0.86 0.138 175);
+    --code-number: oklch(0.86 0.138 60);
+    --code-constant: oklch(0.86 0.138 350);
+    --code-comment: oklch(0.78 0 0);
+    --code-function: oklch(0.86 0.138 260);
+    --code-variable: oklch(0.86 0.138 30);
+    --code-type: oklch(0.86 0.138 195);
+    --code-property: oklch(0.86 0.138 240);
+    --code-tag: oklch(0.86 0.138 20);
+    --code-attribute: oklch(0.86 0.138 75);
+    --code-heading: oklch(0.86 0.138 260);
+    --code-link: oklch(0.86 0.138 240);
+    --code-inserted: oklch(0.86 0.152 150);
+    --code-deleted: oklch(0.86 0.152 25);
+    --code-invalid: oklch(0.86 0.152 25);
+    --code-bracket-1: oklch(0.86 0.138 85);
+    --code-bracket-2: oklch(0.86 0.138 320);
+    --code-bracket-3: oklch(0.86 0.138 230);
 }
 
 [data-theme-scope='contrast'] {
@@ -274,6 +318,28 @@ html.dark[data-theme='contrast'] {
     --globe-space: #05080f;
     --globe-star: #dbe7ff;
     --hover: color-mix(in oklch, var(--foreground) 8%, transparent);
+    --code-keyword: oklch(0.4 0.161 305);
+    --code-operator: oklch(0.4 0.161 215);
+    --code-punctuation: oklch(0.3 0 0);
+    --code-string: oklch(0.4 0.161 145);
+    --code-regexp: oklch(0.4 0.161 175);
+    --code-number: oklch(0.4 0.161 60);
+    --code-constant: oklch(0.4 0.161 350);
+    --code-comment: oklch(0.4 0 0);
+    --code-function: oklch(0.4 0.161 260);
+    --code-variable: oklch(0.4 0.161 30);
+    --code-type: oklch(0.4 0.161 195);
+    --code-property: oklch(0.4 0.161 240);
+    --code-tag: oklch(0.4 0.161 20);
+    --code-attribute: oklch(0.4 0.161 75);
+    --code-heading: oklch(0.4 0.161 260);
+    --code-link: oklch(0.4 0.161 240);
+    --code-inserted: oklch(0.4 0.177 150);
+    --code-deleted: oklch(0.4 0.177 25);
+    --code-invalid: oklch(0.4 0.177 25);
+    --code-bracket-1: oklch(0.4 0.161 85);
+    --code-bracket-2: oklch(0.4 0.161 320);
+    --code-bracket-3: oklch(0.4 0.161 230);
 }
 
 .dark [data-theme-scope='contrast'] {
@@ -398,5 +464,27 @@ html.dark[data-theme='contrast'] {
     --globe-space: #05080f;
     --globe-star: #dbe7ff;
     --hover: color-mix(in oklch, var(--foreground) 12%, transparent);
+    --code-keyword: oklch(0.86 0.138 305);
+    --code-operator: oklch(0.86 0.138 215);
+    --code-punctuation: oklch(0.85 0 0);
+    --code-string: oklch(0.86 0.138 145);
+    --code-regexp: oklch(0.86 0.138 175);
+    --code-number: oklch(0.86 0.138 60);
+    --code-constant: oklch(0.86 0.138 350);
+    --code-comment: oklch(0.78 0 0);
+    --code-function: oklch(0.86 0.138 260);
+    --code-variable: oklch(0.86 0.138 30);
+    --code-type: oklch(0.86 0.138 195);
+    --code-property: oklch(0.86 0.138 240);
+    --code-tag: oklch(0.86 0.138 20);
+    --code-attribute: oklch(0.86 0.138 75);
+    --code-heading: oklch(0.86 0.138 260);
+    --code-link: oklch(0.86 0.138 240);
+    --code-inserted: oklch(0.86 0.152 150);
+    --code-deleted: oklch(0.86 0.152 25);
+    --code-invalid: oklch(0.86 0.152 25);
+    --code-bracket-1: oklch(0.86 0.138 85);
+    --code-bracket-2: oklch(0.86 0.138 320);
+    --code-bracket-3: oklch(0.86 0.138 230);
     --terminal-bar: oklch(0.21 0.013 255);
 }

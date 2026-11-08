@@ -33,20 +33,33 @@ const LANGUAGES: Record<CodeLanguage, () => Extension> = {
     text: () => [],
 }
 
+/** Code in the `code-*` tokens, the same colors Shiki draws highlighted code in. */
 const HIGHLIGHT = HighlightStyle.define([
-    { tag: [tags.keyword, tags.definitionKeyword], color: 'var(--kind-violet-ink)' },
-    { tag: [tags.string, tags.special(tags.string)], color: 'var(--kind-green-ink)' },
-    { tag: tags.number, color: 'var(--kind-blue-ink)' },
-    { tag: [tags.bool, tags.null, tags.atom], color: 'var(--kind-pink-ink)' },
-    { tag: [tags.propertyName, tags.definition(tags.propertyName)], color: 'var(--kind-teal-ink)' },
-    { tag: tags.comment, color: 'var(--muted-foreground)', fontStyle: 'italic' },
-    { tag: [tags.punctuation, tags.separator, tags.bracket], color: 'var(--muted-foreground)' },
-    { tag: tags.invalid, color: 'var(--destructive)' },
+    { tag: [tags.keyword, tags.definitionKeyword, tags.modifier, tags.controlKeyword, tags.moduleKeyword], color: 'var(--code-keyword)' },
+    { tag: [tags.operator, tags.operatorKeyword, tags.derefOperator], color: 'var(--code-operator)' },
+    { tag: [tags.punctuation, tags.separator, tags.bracket], color: 'var(--code-punctuation)' },
+    { tag: [tags.string, tags.special(tags.string), tags.character], color: 'var(--code-string)' },
+    { tag: [tags.regexp, tags.escape], color: 'var(--code-regexp)' },
+    { tag: tags.number, color: 'var(--code-number)' },
+    { tag: [tags.bool, tags.null, tags.atom, tags.constant(tags.name)], color: 'var(--code-constant)' },
+    { tag: tags.comment, color: 'var(--code-comment)', fontStyle: 'italic' },
+    { tag: [tags.function(tags.variableName), tags.function(tags.propertyName), tags.macroName], color: 'var(--code-function)' },
+    { tag: [tags.special(tags.variableName), tags.self], color: 'var(--code-variable)' },
+    { tag: [tags.typeName, tags.className, tags.namespace], color: 'var(--code-type)' },
+    { tag: [tags.propertyName, tags.definition(tags.propertyName)], color: 'var(--code-property)' },
+    { tag: tags.tagName, color: 'var(--code-tag)' },
+    { tag: tags.attributeName, color: 'var(--code-attribute)' },
+    { tag: tags.heading, color: 'var(--code-heading)', fontWeight: '600' },
+    { tag: [tags.link, tags.url], color: 'var(--code-link)' },
+    { tag: tags.inserted, color: 'var(--code-inserted)' },
+    { tag: tags.deleted, color: 'var(--code-deleted)' },
+    { tag: tags.invalid, color: 'var(--code-invalid)' },
 ])
 
 /**
  * The chrome in the theme's tokens, so a change of theme or scheme repaints it without a rebuild. The
- * text and its line numbers are mono at body size, adjusted to the sans beside them as all mono is.
+ * text and its line numbers are mono at body size and not adjusted to the sans: in an editor the code
+ * is the content, not a word set in a sentence.
  */
 const THEME = EditorView.theme({
     '&': { backgroundColor: 'transparent', color: 'var(--foreground)', fontSize: 'var(--text-sm)', height: '100%' },
@@ -54,11 +67,11 @@ const THEME = EditorView.theme({
     '.cm-scroller': {
         fontFamily: 'var(--font-mono)',
         lineHeight: 'var(--leading-code)',
-        fontSizeAdjust: 'var(--mono-x-height)',
+        fontSizeAdjust: 'none',
     },
     '.cm-content': { padding: '0.5rem 0', caretColor: 'var(--foreground)' },
     '.cm-line': { padding: '0 0.75rem' },
-    '.cm-gutters': { backgroundColor: 'transparent', color: 'var(--faint)', border: 'none', fontSizeAdjust: 'var(--mono-x-height)' },
+    '.cm-gutters': { backgroundColor: 'transparent', color: 'var(--faint)', border: 'none', fontSizeAdjust: 'none' },
     '.cm-lineNumbers .cm-gutterElement': { padding: '0 0.5rem 0 0.75rem', minWidth: '2.5rem' },
     '.cm-cursor': { borderLeftColor: 'var(--foreground)' },
     '.cm-placeholder': { color: 'var(--muted-foreground)' },

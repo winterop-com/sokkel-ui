@@ -267,6 +267,24 @@ export const TallRows: StoryObj = {
     ),
 }
 
+const STATE_NAMES: Record<string, string> = { running: 'Running', queued: 'Queued', failed: 'Failed', succeeded: 'Succeeded' }
+
+/** A short listing grouped by state, the runs still going first; each head folds its group. */
+export const GroupedList: StoryObj = {
+    name: 'Grouped list',
+    render: () => (
+        <DataTable
+            variant="list"
+            columns={LIST_COLUMNS.filter((column) => column.id !== 'state')}
+            rows={LIST_RUNS}
+            rowKey={(run) => run.id}
+            groupBy="state"
+            groupOrder={['running', 'queued', 'failed']}
+            groupLabel={(state) => STATE_NAMES[state] ?? state}
+        />
+    ),
+}
+
 /** A hundred runs: the whole table at a size that needs no scrolling to see its parts. */
 export const Hundred: StoryObj = { parameters: { frame: 'none' }, name: '100 rows', render: () => <Runs count={100} /> }
 
@@ -417,6 +435,45 @@ export const Selection: StoryObj = {
     parameters: { frame: 'none' },
     render: () => <Runs count={500} defaultSelection={new Set(['run_8f3a01', 'run_8f3a02', 'run_8f3a04'])} />,
 }
+
+/** The run columns with what each says for a group: the records and time summed, the most attempts. */
+const GROUP_COLUMNS: DataColumn<TableRun>[] = COLUMNS.map((column) =>
+    column.id === 'records'
+        ? { ...column, aggregate: (runs) => runs.reduce((sum, run) => sum + run.records, 0).toLocaleString('en-US') }
+        : column.id === 'duration'
+          ? { ...column, aggregate: (runs) => took(runs.reduce((sum, run) => sum + run.duration, 0)) }
+          : column.id === 'attempts'
+            ? { ...column, aggregate: (runs) => Math.max(...runs.map((run) => run.attempts)) }
+            : column,
+)
+
+function GroupedRuns() {
+    const rows = useMemo(() => makeRuns(300), [])
+    return (
+        <Stack gap="none" className="h-svh bg-background p-4 text-foreground">
+            <DataTable
+                className="flex-1"
+                columns={GROUP_COLUMNS.filter((column) => column.id !== 'project')}
+                rows={rows}
+                rowKey={(run) => run.id}
+                groupBy="project"
+                defaultFoldedGroups={new Set(['larkspur'])}
+                defaultSort={{ column: 'duration', direction: 'desc' }}
+                defaultSelection={new Set(rows.filter((run) => run.project === 'harbor').map((run) => run.id))}
+                selectable
+                bulkActions={bulk}
+                rowActions={runActions}
+            />
+        </Stack>
+    )
+}
+
+/**
+ * Runs under a head for each project, with its count and the records, time and attempts summed up
+ * in its columns. Pressing a head folds its group (larkspur is folded), rows sort within their
+ * group, and a head's box selects the group: harbor is selected whole.
+ */
+export const Groups: StoryObj = { parameters: { frame: 'none' }, render: () => <GroupedRuns /> }
 
 /** The same actions with the retry and cancel buttons on the row itself, shown on hover. */
 const quickActions = (run: TableRun): DataAction[] =>

@@ -11,7 +11,8 @@ import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
 import { DiffView } from '@winterop-com/sokkel-ui/DiffView'
 import { EditPreview } from '@winterop-com/sokkel-ui/EditPreview'
 import { InlineField } from '@winterop-com/sokkel-ui/InlineField'
-import { Markdown, markdownHeadings } from '@winterop-com/sokkel-ui/Markdown'
+import { Code } from '@winterop-com/sokkel-ui/Code'
+import { Markdown, markdownHeadings, type MarkdownParts } from '@winterop-com/sokkel-ui/Markdown'
 import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
 import { PersonAvatar } from '@winterop-com/sokkel-ui/PersonAvatar'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
@@ -59,6 +60,7 @@ const PAGES: TreeNode[] = [
             { id: 'welcome', label: 'Welcome' },
             { id: 'access', label: 'Accounts and access' },
             { id: 'glossary', label: 'Glossary' },
+            { id: 'querying-runs', label: 'Querying runs' },
         ],
     },
     {
@@ -237,7 +239,66 @@ const VERSIONS: Version[] = [
 
 const CURRENT = VERSIONS[0]
 
-function Reading({ content }: { content: string }) {
+/** A guide to the runs endpoint: jq fences, and a filter the reader runs in place where the text marks it. */
+const GUIDE = page(
+    `The runs endpoint at \`api.example.org/runs\` answers in JSON, one object per run. Every recipe here is a jq filter; pipe the answer into \`jq\` or try it below.`,
+    `## Picking runs
+
+${FENCE}jq
+.runs[] | select(.state == "failed")
+${FENCE}
+
+\`select\` keeps a run when its condition holds; the rest drop out of the stream.`,
+    `## Counting by job
+
+${FENCE}jq
+# Failed runs of each job, the most recent first
+[.runs[] | select(.state == "failed")]
+  | group_by(.job)
+  | map({job: .[0].job, count: length, last: (max_by(.finished_at) | .finished_at)})
+  | sort_by(.last) | reverse
+${FENCE}`,
+    `## Try it
+
+Run the filter against yesterday's runs in **harbor**:
+
+<!-- part:try-count -->
+
+The answer lists each job once, with how many of its runs failed.`,
+)
+
+const TRY_FILTER = `[.runs[] | select(.state == "failed")] | group_by(.job) | map({job: .[0].job, count: length})`
+
+const TRY_OUTPUT = `[
+  { "job": "nightly-export", "count": 2 },
+  { "job": "sync-inventory", "count": 1 }
+]`
+
+/** A filter the reader can run where the guide sets it: the filter, a run button, and the answer once run. */
+function TryFilter() {
+    const [ran, setRan] = useState(true)
+    return (
+        <Stack gap="sm">
+            <Code value={TRY_FILTER} language="jq" title="filter.jq" wrap />
+            <Row gap="sm">
+                <Button size="sm" onClick={() => setRan(true)}>
+                    <Play aria-hidden />
+                    Run
+                </Button>
+                {ran && (
+                    <Button variant="ghost" size="sm" onClick={() => setRan(false)}>
+                        Clear
+                    </Button>
+                )}
+            </Row>
+            {ran && <Code value={TRY_OUTPUT} language="json" title="Output" />}
+        </Stack>
+    )
+}
+
+const GUIDE_PARTS = { 'try-count': <TryFilter /> }
+
+function Reading({ content, parts }: { content: string; parts?: MarkdownParts }) {
     const article = useRef<HTMLDivElement>(null)
     const headings = markdownHeadings(content)
     const active = useActiveHeading(
@@ -247,7 +308,7 @@ function Reading({ content }: { content: string }) {
     return (
         <Row gap="3xl" align="stretch">
             <article ref={article} className="max-w-3xl min-w-0 flex-1">
-                <Markdown content={content} anchors scale="document" />
+                <Markdown content={content} parts={parts} anchors scale="document" />
             </article>
             <TableOfContents entries={headings} active={active} className="sticky top-0 w-52 shrink-0 self-start max-xl:hidden" />
         </Row>
@@ -332,11 +393,12 @@ function Compare({ chosen, against, onAgainst }: { chosen: number; against: numb
     )
 }
 
-function DocsApp({ mode: initialMode = 'read' }: { mode?: 'read' | 'edit' | 'history' }) {
+function DocsApp({ mode: initialMode = 'read', guide = false }: { mode?: 'read' | 'edit' | 'history'; guide?: boolean }) {
     const [dark, setDark] = useState(true)
     const [collapsed, setCollapsed] = useState(false)
     const [query, setQuery] = useState('')
-    const [pageId, setPageId] = useState('nightly-export')
+    const [pageId, setPageId] = useState(guide ? 'querying-runs' : 'nightly-export')
+    const title = guide ? 'Querying runs' : 'Nightly export'
     const [mode, setMode] = useState(initialMode)
     const [draft, setDraft] = useState(
         CURRENT.text.replace(
@@ -373,8 +435,8 @@ function DocsApp({ mode: initialMode = 'read' }: { mode?: 'read' | 'edit' | 'his
                     <TopBar
                         trail={[
                             { label: 'Docs', href: '#' },
-                            { label: 'Runbooks', href: '#' },
-                            { label: 'Nightly export', href: mode === 'read' ? undefined : '#' },
+                            { label: guide ? 'Getting started' : 'Runbooks', href: '#' },
+                            { label: title, href: mode === 'read' ? undefined : '#' },
                             ...(mode === 'edit' ? [{ label: 'Edit' }] : mode === 'history' ? [{ label: 'History' }] : []),
                         ]}
                         onSearch={() => undefined}
@@ -403,7 +465,7 @@ function DocsApp({ mode: initialMode = 'read' }: { mode?: 'read' | 'edit' | 'his
                             query={query}
                             selected={[pageId]}
                             onSelect={(ids) => setPageId(ids[0])}
-                            defaultExpanded={['runbooks', 'projects']}
+                            defaultExpanded={guide ? ['start'] : ['runbooks', 'projects']}
                         />
                     </SubNav>
                     <Stack gap="none" className="min-h-0 flex-1 overflow-y-auto">
@@ -416,7 +478,7 @@ function DocsApp({ mode: initialMode = 'read' }: { mode?: 'read' | 'edit' | 'his
                             )}
                         >
                             <PageHeader
-                                title="Nightly export"
+                                title={title}
                                 meta={
                                     <>
                                         <PersonAvatar name={CURRENT.by} image={pictureOf(CURRENT.by)} />
@@ -455,7 +517,8 @@ function DocsApp({ mode: initialMode = 'read' }: { mode?: 'read' | 'edit' | 'his
                                     </>
                                 }
                             />
-                            {mode === 'read' && <Reading content={CURRENT.text} />}
+                            {mode === 'read' &&
+                                (guide ? <Reading content={GUIDE} parts={GUIDE_PARTS} /> : <Reading content={CURRENT.text} />)}
                             {mode === 'edit' && <Editing value={draft} onChange={setDraft} />}
                             {mode === 'history' && (
                                 <Row gap="lg" align="start" stackBelow="lg">
@@ -485,6 +548,9 @@ export default meta
 
 /** A runbook as a reader sees it, the list of its headings beside it marking where the reader is. */
 export const Page: StoryObj = { render: () => <DocsApp /> }
+
+/** A guide with jq recipes in its text and a filter the reader runs in place, set in by its marker. */
+export const Guide: StoryObj = { render: () => <DocsApp guide /> }
 
 /** The same page being edited: its markdown beside the preview, which follows every keystroke. */
 export const Editing_: StoryObj = { name: 'Editing', render: () => <DocsApp mode="edit" /> }

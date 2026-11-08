@@ -1,6 +1,55 @@
 import { describe, expect, it } from 'vitest'
 
-import { branchKeys, findInTree, flattenRows, rangeKeys, sortRows, treeBranchKeys } from './DataTable'
+import { branchKeys, findInTree, flattenRows, groupLines, groupRows, isGroupHead, rangeKeys, sortRows, treeBranchKeys } from './DataTable'
+
+describe('row groups', () => {
+    const runs = [
+        { id: 'r1', project: 'juniper', took: 4 },
+        { id: 'r2', project: 'harbor', took: 9 },
+        { id: 'r3', project: 'juniper', took: 1 },
+        { id: 'r4', project: 'larkspur', took: 6 },
+    ]
+    type Run = (typeof runs)[number]
+    const byProject = (run: Run) => run.project
+
+    it('gathers rows by key, in the order their first row came, rows in their own order', () => {
+        const groups = groupRows(runs, byProject)
+        expect(groups.map((group) => [group.key, group.rows.map((run) => run.id)])).toEqual([
+            ['juniper', ['r1', 'r3']],
+            ['harbor', ['r2']],
+            ['larkspur', ['r4']],
+        ])
+    })
+
+    it('puts the keys an order names first', () => {
+        expect(groupRows(runs, byProject, ['larkspur', 'harbor']).map((group) => group.key)).toEqual(['larkspur', 'harbor', 'juniper'])
+    })
+
+    it('lays out each head before its rows, sorted within the group, and none under a folded head', () => {
+        const flatten = (level: readonly Run[]) =>
+            flattenRows({
+                rows: level,
+                rowKey: (run) => run.id,
+                expanded: new Set(),
+                order: (rows) => sortRows(rows, (run) => run.took, 'asc'),
+            })
+        const { heads, lines, rows } = groupLines(groupRows(runs, byProject), new Set(['harbor']), flatten)
+        expect(lines.map((line) => (isGroupHead(line) ? `#${line.key}` : line.key))).toEqual([
+            '#juniper',
+            'r3',
+            'r1',
+            '#harbor',
+            '#larkspur',
+            'r4',
+        ])
+        expect(rows.map((row) => row.key)).toEqual(['r3', 'r1', 'r4'])
+        expect(heads.map((head) => [head.key, head.folded, head.rows.length])).toEqual([
+            ['juniper', false, 2],
+            ['harbor', true, 1],
+            ['larkspur', false, 1],
+        ])
+    })
+})
 
 interface Node {
     id: string

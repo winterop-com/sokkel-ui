@@ -2,10 +2,12 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { CheckCircle2, CircleAlert } from 'lucide-react'
 import { useRef } from 'react'
 
+import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
 import { Dot } from '@winterop-com/sokkel-ui/Dot'
 import { Markdown, markdownHeadings } from '@winterop-com/sokkel-ui/Markdown'
 import { TableOfContents, useActiveHeading } from '@winterop-com/sokkel-ui/TableOfContents'
 import { Row } from '@winterop-com/sokkel-ui/Layout'
+import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 
 /** The parts of a long page: callouts in markdown, and the list of its headings that follows the reader. */
 const CALLOUTS = `> [!NOTE]
@@ -26,6 +28,34 @@ const CALLOUTS = `> [!NOTE]
 > A plain quote stays a quote.
 `
 
+const RUNBOOK = `## Finding failed runs
+
+The runs endpoint answers in JSON. This filter keeps the failed ones and counts them by job:
+
+\`\`\`jq
+# Failed runs of each job, newest first
+[.runs[] | select(.state == "failed") | {job, at: .finished_at}]
+  | group_by(.job)
+  | map({job: .[0].job, count: length, last: (max_by(.at) | .at // null)})
+\`\`\`
+
+The last run of nightly-export <!-- part:state --> at the upload step:
+
+<!-- part:run -->
+
+## What the worker printed
+
+\`\`\`ansi
+\u001b[32m✓\u001b[0m fetch      \u001b[2m1.2s\u001b[0m
+\u001b[32m✓\u001b[0m transform  \u001b[2m0.8s\u001b[0m
+\u001b[31m✗\u001b[0m upload     \u001b[1;31mconnection reset\u001b[0m
+\`\`\`
+
+## Retrying
+
+Start again from the step that failed with \`tidevann runs retry 4812 --from upload\`.
+`
+
 const BODY =
     'The scheduler starts nightly-export at 02:00 on the worker service. Each step hands its rows to the next, and a step that fails stops the run, so the steps after it are skipped.'
 
@@ -44,6 +74,32 @@ function Callouts() {
     return (
         <div className="max-w-2xl p-6">
             <Markdown content={CALLOUTS} />
+        </div>
+    )
+}
+
+/** A runbook with a jq fence, ANSI output, and the app's own parts set into the text by their markers. */
+function Runbook() {
+    return (
+        <div className="max-w-2xl p-6">
+            <Markdown
+                content={RUNBOOK}
+                anchors
+                scale="document"
+                parts={{
+                    state: <StatusChip status="failed" />,
+                    run: (
+                        <DescriptionList
+                            items={[
+                                { term: 'Run', value: '4812', numeric: true },
+                                { term: 'Project', value: 'harbor' },
+                                { term: 'Started by', value: 'ada' },
+                                { term: 'Step', value: 'upload', code: true },
+                            ]}
+                        />
+                    ),
+                }}
+            />
         </div>
     )
 }
@@ -100,6 +156,12 @@ export default meta
 
 /** Each kind of callout a quote becomes from its first line, and a plain quote. */
 export const Callout: StoryObj = { name: 'Callouts', render: () => <Callouts /> }
+
+/**
+ * Code and the app's own parts in one text: a jq fence, ANSI output, and a status and a run's
+ * details set in where the text has `<!-- part:state -->` and `<!-- part:run -->`.
+ */
+export const Parts: StoryObj = { name: 'Embedded parts', render: () => <Runbook /> }
 
 /** A long page with its headings beside it; scrolling moves the mark to the heading in view. */
 export const Contents_: StoryObj = { name: 'Table of contents', render: () => <Contents /> }

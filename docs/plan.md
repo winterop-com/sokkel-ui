@@ -77,6 +77,21 @@ Ctrl K through `Shell`'s `palette`, an `AccountMenu` in the rail's foot, `local`
 sign-in, and a `StatusLine` as the shell's `foot`, which the account sits level with as one bar
 across the window's bottom edge.
 
+## Code
+
+Code is colored from the `code-*` tokens (keyword, operator, punctuation, string, regexp, number,
+constant, comment, function, variable, type, property, tag, attribute, heading, link, inserted,
+deleted, invalid, and `code-bracket-1` to `-3` for bracket pairs by depth), set by every theme in
+light and dark. Shiki highlights `Code` and `Markdown`'s
+fences through one theme whose every scope is a `code-*` variable, and CodeMirror's highlight style
+in `CodeEditor` reads the same tokens, so code follows the theme and scheme with no second pass.
+The highlighter knows the common languages and `jq` (a grammar of the library's own), each loaded
+the first time it is drawn; an app adds more with `registerLanguage` from `lib/highlighter`. ANSI
+output is read by one parser, `lib/ansi`, which `AnsiText` and an `ansi` fence share: the sixteen
+colors in the kind and status inks, 256-color and 24-bit color as they are. `Markdown` embeds an
+app's own parts in a text where it has `<!-- part:ID -->` (another word through `partMarker`),
+through its `parts` map or function, so the text stays one document with its headings and anchors.
+
 ## Typefaces
 
 Plex Sans and Plex Mono are the default. Geist and Geist Mono are the one alternative a theme sets,
@@ -168,7 +183,25 @@ panels resize, pins its first column and its row menu, opens child rows of any d
 a branch first opens, if the app wants), and moves by the keyboard. It pages in the browser or
 from a server, loads more as its end comes near, and shows the same rows as a grid of cards (an
 album view) that keeps the selection, menus and sort. A short listing drops the bar above its
-head and may carry a foot line.
+head and may carry a foot line. Rows gather under group heads by a field or a key made from the row
+(`groupBy`), each head with its label, its count and a column's `aggregate`; a head folds its
+group, rows sort within their group, and a head's box selects the group, in the table, the list and
+the grid alike.
+
+`WindowedPane` gives any pane an expand button that opens the same content near full screen, in a
+window with a margin, a title, a close button and Escape, the pane keeping its height in place
+until the content comes back; `MermaidDiagram` and an expandable `DashboardPanel` open through it.
+`useStored` keeps a value in `localStorage` as JSON under an app prefix (`setStoredPrefix`), in
+memory when storage is refused, refusing a kept value its `check` does not pass, and follows the
+same key in other hooks and other tabs; `useAppearance` keeps the look through the same store. A
+fact several screens share lives in a `createStore` outside React (kept under a key when given
+one), read with `useStore`, or one fact of it with `useStoreValue` so a store that changes often
+draws again only what reads the changed fact. `useUploads` runs the app's
+`upload(file, { signal, onProgress })` for each file it accepts by type, size and count, says why
+it refuses the rest, cancels through the signal (and drops what an uploader that ignores it answers
+later), and hands `AttachmentList`, `Composer` and `UploadTray` their files. `ConversationHistory`, the list
+beside a chat, is a `DataTable` list grouped under Pinned, Today and Earlier, with rename in place,
+pin, and delete after a question.
 
 Tree and TreeSelect pick from a hierarchy of any depth and size. A node marked `hasChildren` loads
 its level through the app's `loadChildren` when first opened, with a loading row meanwhile and a row

@@ -89,27 +89,19 @@ to `plan.md` when it ships.
   labels optional); a short `ConfirmDialog` sized to its content, its actions in a row or full
   width; `MessageComposer`'s tools overflowing into a More menu; `EventPopover` with equal margins;
   `WeekGrid` showing only titles in narrow lanes; gauges two to a row; `MermaidDiagram` with a
-  smallest label size, sideways scrolling and an expand button.
+  smallest label size and sideways scrolling (its expand button is shipped).
 
 ## Gaps the apps found (2026-11-08)
 
 Mapping each app's own UI onto the library's parts found these, beyond the review's missing parts
 under Next. Each is a part or an option here, never a copy in an app. Roughly one release a round.
 
-- **Round 1, shared by several apps (core).** `WindowedPane`, any pane opened near full screen,
-  which `MermaidDiagram`'s expand uses; `useStored` (state kept in local storage, safe when storage
-  is refused, an app prefix); `useUploads` (accept by type, in flight, cancel while uploading),
-  feeding `AttachmentList` and `FileField`; `DataTable` row groups with group heads; a conversation
-  history list with rename, pin and delete beside a chat.
 - **Round 2, the code editor and code color.** `CodeEditor` gains: a `languages` extension point
   and a `jq` language; `completions` (label, detail, docs, kind) on CodeMirror's autocomplete; a
   `hover(word)` for docs; ranged marks with a message (from and to columns, an underline, a gutter
   dot, the message on hover); `onRun` on Cmd/Ctrl+Enter, or a general `keys` map; `search`,
   `folding` and a size option, responsive on a read-only document of a megabyte or more; JSON
-  Schema 2020-12 lint and completion for YAML and JSON. `Markdown` gains `jq` among its code
-  languages, a way for an app to register more, and a `components` map (or a marker hook) for
-  parts embedded in the text. `code-*` syntax tokens theme Shiki and CodeMirror alike, so code
-  follows the theme. An `AnsiText` in core draws ANSI color output as spans in the kind inks.
+  Schema 2020-12 lint and completion for YAML and JSON.
 - **Round 3, layout, maps and tokens.** A split of two panes, across or down, with bounds, that
   remembers its share by `id`; a `GeoJsonLayer` drawing fills, lines and circles by geometry type
   in the theme's colors; tokens for headers, table zebra and head, map selection, editor, scroll
