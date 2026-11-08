@@ -71,6 +71,8 @@ export interface ChartFrameProps {
     file?: string
     exportable?: boolean
     expandable?: boolean
+    /** Expanding also takes the screen: the page goes full screen while the window is open, as `WindowedPane`'s `fullscreen` does. */
+    fullscreen?: boolean
     /** Opens the chart in the window at first. */
     defaultExpanded?: boolean
     loading?: boolean
@@ -89,7 +91,7 @@ export interface ChartFrameProps {
  * actions, an Export menu (SVG and PNG, with the title and legend drawn into the image) and an
  * expand button, the legend, and the chart. Expanding opens the chart and its legend near full
  * screen through `WindowedPane`, as every expandable pane opens, with the frame keeping its place
- * until the window closes. The tools show on hover or focus where the pointer can hover.
+ * until the window closes; `fullscreen` makes the page take the screen while it is open. The tools show on hover or focus where the pointer can hover.
  * `children` draws the chart from the state.
  */
 export function ChartFrame({
@@ -104,6 +106,7 @@ export function ChartFrame({
     file = 'chart',
     exportable = true,
     expandable = true,
+    fullscreen = false,
     defaultExpanded = false,
     loading = false,
     empty = false,
@@ -236,6 +239,7 @@ export function ChartFrame({
                     open={expanded}
                     onOpenChange={setExpanded}
                     button="none"
+                    fullscreen={fullscreen}
                     words={{ expand: words.expand, close: words.close, away: words.away }}
                     className={cn('flex flex-col px-2 pb-2', !head && 'pt-2')}
                 >

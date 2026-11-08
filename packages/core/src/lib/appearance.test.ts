@@ -3,8 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
     APPEARANCE_KEY,
     appearanceScript,
+    appearanceScriptFile,
     applyAppearance,
     type AppearanceRoot,
+    type AppearanceStorage,
     CORNERS,
     DEFAULT_APPEARANCE,
     FACES,
@@ -14,6 +16,7 @@ import {
     readStoredScheme,
     resolveScheme,
     SCHEME_KEY,
+    setAppearanceStorage,
     storeAppearance,
     storeScheme,
     subscribeAppearance,
@@ -214,15 +217,16 @@ describe('the kept look', () => {
     })
 })
 
-describe('appearanceScript', () => {
-    /** Runs the script against a fake document, as the browser runs it in `<head>`. */
-    function run(script: string, dark = false): FakeRoot {
-        const root = new FakeRoot()
-        const window = { localStorage: storage, matchMedia: fakeMedia(dark).matchMedia }
-        new Function('document', 'window', script)({ documentElement: root }, window)
-        return root
-    }
+/** Runs a script against a fake document, as the browser runs it in `<head>`; `data` are its element's data attributes. */
+function run(script: string, dark = false, data?: Record<string, string>): FakeRoot {
+    const root = new FakeRoot()
+    const window = { localStorage: storage, matchMedia: fakeMedia(dark).matchMedia }
+    const currentScript = data === undefined ? null : { dataset: data }
+    new Function('document', 'window', script)({ documentElement: root, currentScript }, window)
+    return root
+}
 
+describe('appearanceScript', () => {
     it('wears the kept look as applyAppearance does', () => {
         storeAppearance(LOOK)
         const expected = new FakeRoot()
@@ -255,6 +259,153 @@ describe('appearanceScript', () => {
 
     it('cannot close the script element it sits in', () => {
         expect(appearanceScript({ theme: '</script><script>' })).not.toContain('</script>')
+    })
+})
+
+describe('appearanceScriptFile', () => {
+    it('is the inline script, taking the defaults from its own data attributes', () => {
+        const looks: (ThemeSettings | null)[] = [null, LOOK, { ...DEFAULT_APPEARANCE, scheme: 'light', density: 'compact' }]
+        const defaults = { theme: 'paper', scheme: 'dark', typeface: 'system' } as const
+        for (const look of looks) {
+            storage.items.clear()
+            if (look !== null) storeAppearance(look)
+            for (const dark of [false, true]) {
+                const inline = run(appearanceScript(defaults), dark)
+                const file = run(appearanceScriptFile(), dark, { ...defaults })
+                expect(file.classes).toEqual(inline.classes)
+                expect(file.attributes).toEqual(inline.attributes)
+                expect(file.properties).toEqual(inline.properties)
+            }
+        }
+    })
+
+    it("takes the library's defaults with no data attributes, or where the script cannot find itself", () => {
+        const expected = run(appearanceScript(), true)
+        expect(run(appearanceScriptFile(), true, {}).attributes).toEqual(expected.attributes)
+        expect(run(appearanceScriptFile(), true).classes).toEqual(expected.classes)
+    })
+})
+
+describe('setAppearanceStorage', () => {
+    afterEach(() => {
+        setAppearanceStorage(undefined)
+    })
+
+    const tick = () => new Promise((resolve) => setTimeout(resolve, 0))
+
+    /** An app's own storage that answers its reads when told to, as an extension's or a desktop shell's does. */
+    function laterStorage(kept: Record<string, string>) {
+        const pending: (() => void)[] = []
+        const written = new Map<string, string>()
+        let change: ((key: string, value: string | null) => void) | undefined
+        const own: AppearanceStorage = {
+            read: (key) => new Promise<string | null>((resolve) => pending.push(() => resolve(kept[key] ?? null))),
+            write: (key, value) => {
+                written.set(key, value)
+                return Promise.resolve()
+            },
+            subscribe: (listener) => {
+                change = listener
+                return () => {
+                    change = undefined
+                }
+            },
+        }
+        return {
+            own,
+            written,
+            answer: async () => {
+                for (const resolve of pending.splice(0)) resolve()
+                await tick()
+            },
+            change: (key: string, value: string | null) => change?.(key, value),
+        }
+    }
+
+    const keptText = (look: ThemeSettings): Record<string, string> => {
+        const { scheme, ...rest } = look
+        return { [SCHEME_KEY]: scheme, [APPEARANCE_KEY]: JSON.stringify(rest) }
+    }
+
+    it('reads a storage that answers at once before anything draws', () => {
+        const kept = keptText(LOOK)
+        setAppearanceStorage({ read: (key) => kept[key], write: () => undefined })
+        expect(readAppearance()).toEqual(LOOK)
+    })
+
+    it('draws the last known look until a later storage answers, then wears its own and keeps it for the script', async () => {
+        storeScheme('light')
+        const later = laterStorage(keptText(LOOK))
+        const listener = vi.fn()
+        const stop = subscribeAppearance(listener)
+        setAppearanceStorage(later.own)
+        expect(readAppearance().scheme).toBe('light')
+        expect(listener).not.toHaveBeenCalled()
+        await later.answer()
+        expect(readAppearance()).toEqual(LOOK)
+        expect(listener).toHaveBeenCalled()
+        // The copy the script reads before the next page draws.
+        expect(run(appearanceScript()).attributes.get('data-theme')).toBe('paper')
+        stop()
+    })
+
+    it("keeps a choice in the app's storage and in the copy", () => {
+        const later = laterStorage({})
+        setAppearanceStorage(later.own)
+        storeAppearance(LOOK)
+        expect(Object.fromEntries(later.written)).toEqual(keptText(LOOK))
+        expect(storage.items.get(SCHEME_KEY)).toBe('dark')
+    })
+
+    it('never lets an answer to an older read undo a choice made meanwhile', async () => {
+        const later = laterStorage(keptText(LOOK))
+        setAppearanceStorage(later.own)
+        storeScheme('light')
+        await later.answer()
+        expect(readStoredScheme()).toBe('light')
+        expect(readAppearance().theme).toBe('paper')
+    })
+
+    it('takes an answer of nothing as nothing kept', async () => {
+        storeScheme('dark')
+        const later = laterStorage({})
+        setAppearanceStorage(later.own)
+        await later.answer()
+        expect(readStoredScheme()).toBeNull()
+    })
+
+    it('wears a change made elsewhere until it is let go', () => {
+        const later = laterStorage({})
+        setAppearanceStorage(later.own)
+        const listener = vi.fn()
+        const stop = subscribeAppearance(listener)
+        later.change(SCHEME_KEY, 'dark')
+        later.change('another-key', 'x')
+        expect(readStoredScheme()).toBe('dark')
+        expect(listener).toHaveBeenCalledOnce()
+        setAppearanceStorage(undefined)
+        later.change(SCHEME_KEY, 'light')
+        expect(readStoredScheme()).toBe('dark')
+        stop()
+    })
+
+    it('stands at the last known look where the storage throws or refuses', async () => {
+        storeScheme('dark')
+        setAppearanceStorage({
+            read: () => {
+                throw new Error('gone')
+            },
+            write: () => {
+                throw new Error('gone')
+            },
+        })
+        expect(readStoredScheme()).toBe('dark')
+        expect(() => storeScheme('light')).not.toThrow()
+        expect(readStoredScheme()).toBe('light')
+        setAppearanceStorage({ read: () => Promise.reject(new Error('gone')), write: () => Promise.reject(new Error('gone')) })
+        storeScheme('dark')
+        await tick()
+        expect(readStoredScheme()).toBe('dark')
     })
 })
 

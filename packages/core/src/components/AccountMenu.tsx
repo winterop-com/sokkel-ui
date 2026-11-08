@@ -6,7 +6,7 @@ import { useContext } from 'react'
 import { ShortcutRegistry, useShortcuts } from '../hooks/use-shortcuts'
 import type { Scheme } from '../lib/appearance'
 import { cn } from '../lib/cn'
-import { ShellDrawer, ShellShortcuts } from './shell-context'
+import { RailCollapsed, ShellDrawer, ShellShortcuts } from './shell-context'
 
 /** A row an app adds to the account menu: its words, its icon and what choosing it does. */
 export interface AccountMenuRow {
@@ -86,7 +86,9 @@ export function AccountMenu({
 }: AccountMenuProps) {
     const words = { ...WORDS, ...given }
     const drawer = useContext(ShellDrawer)
-    const collapsed = kept && drawer === undefined
+    // A rail a screen narrows through the shell decides in place of the app's own.
+    const narrowed = useContext(RailCollapsed)
+    const collapsed = drawer === undefined && (narrowed ?? kept)
     const inShell = useContext(ShortcutRegistry) !== undefined
     const shellShortcuts = useContext(ShellShortcuts)
     // Outside a shell the menu binds `?` for the app's shortcuts; in one, the shell binds it.

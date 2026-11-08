@@ -4,6 +4,7 @@ import { useId, useRef, useState, type CSSProperties, type ReactNode } from 'rea
 import { useThemeName } from '../hooks/use-theme-name'
 import { cn } from '../lib/cn'
 import { trafficLightsStyle, useTrafficLights, windowPressHandler, type DesktopWindow } from '../lib/desktop'
+import { useDesktopFullscreen } from '../lib/fullscreen'
 import { CheckboxField } from './CheckboxField'
 import { Field } from './Field'
 import { ResizeHandle } from './ResizeHandle'
@@ -278,6 +279,7 @@ export function SignIn({
     const dark = brandScheme === 'dark'
     const drag = desktop === undefined ? undefined : ''
     const lights = useTrafficLights(desktop)
+    useDesktopFullscreen(desktop)
     const maxBrand = () => Math.max(BRAND_MIN, (root.current?.offsetWidth ?? BRAND_MIN + FORM_ROOM) - FORM_ROOM)
 
     /** Each part of the form rises a beat after the one before. */

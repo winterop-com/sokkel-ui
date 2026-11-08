@@ -27,3 +27,18 @@ export const ShellShortcuts = createContext<(() => void) | undefined>(undefined)
 
 /** The shell's content, the one thing that scrolls there, for `useScrollMemory`; null outside a shell. */
 export const ShellScroller = createContext<HTMLElement | null>(null)
+
+/** How the shell draws its rail against what the app holds: narrowed to its icons, or hidden. */
+export type RailMode = 'collapsed' | 'hidden'
+
+/** The rail mode asked of the shell now, by a screen or by `Shell`'s `railMode`; undefined where nothing is asked. */
+export const ShellRailMode = createContext<RailMode | undefined>(undefined)
+
+/** Asks the shell for a rail mode for one screen, answering with what takes the ask back; undefined outside a shell. */
+export const ShellRailAsk = createContext<((id: string, mode: RailMode) => () => void) | undefined>(undefined)
+
+/**
+ * Whether the rail is drawn collapsed while a screen narrows it against what the app holds, for the
+ * account in its foot, which follows the rail rather than the app; undefined while nothing is asked.
+ */
+export const RailCollapsed = createContext<boolean | undefined>(undefined)

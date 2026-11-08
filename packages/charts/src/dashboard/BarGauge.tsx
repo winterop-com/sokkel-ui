@@ -30,6 +30,8 @@ export interface BarGaugeProps {
     span?: PanelSpan
     loading?: boolean
     empty?: boolean
+    /** Expanding also takes the screen, as `WindowedPane`'s `fullscreen` does. */
+    fullscreen?: boolean
     words?: Partial<ChartFrameWords>
     className?: string
 }
@@ -56,6 +58,7 @@ export function BarGauge({
     span = 'third',
     loading,
     empty,
+    fullscreen,
     words,
     className,
 }: BarGaugeProps) {
@@ -67,6 +70,7 @@ export function BarGauge({
             info={info}
             actions={actions}
             exportable={false}
+            fullscreen={fullscreen}
             loading={loading}
             empty={empty}
             fit

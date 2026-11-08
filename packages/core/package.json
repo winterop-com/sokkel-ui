@@ -33,6 +33,7 @@
         "./motion.css": "./src/styles/motion.css",
         "./typography.css": "./src/styles/typography.css",
         "./tokens.json": "./tokens/tokens.json",
+        "./appearance.js": "./dist/appearance.js",
         "./AccountMenu": {
             "types": "./dist/components/AccountMenu.d.ts",
             "import": "./dist/components/AccountMenu.js"
@@ -1036,6 +1037,10 @@
         "./lib/desktop": {
             "types": "./dist/lib/desktop.d.ts",
             "import": "./dist/lib/desktop.js"
+        },
+        "./lib/fullscreen": {
+            "types": "./dist/lib/fullscreen.d.ts",
+            "import": "./dist/lib/fullscreen.js"
         },
         "./lib/highlighter": {
             "types": "./dist/lib/highlighter.d.ts",
