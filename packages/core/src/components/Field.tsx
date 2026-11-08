@@ -81,22 +81,23 @@ export function Field({
     const tone = worst(issues)
     const rows = useContext(FieldRows)
     const lined = rows !== null
-    const control =
-        tone === null ? (
-            children
-        ) : (
-            <div
-                className={cn(
-                    'relative min-w-0 [&>:first-child]:pr-9',
-                    tone === 'critical'
-                        ? '[&>:first-child]:border-critical/80 [&>:first-child]:focus-visible:border-critical [&>:first-child]:focus-visible:ring-critical/25'
-                        : '[&>:first-child]:border-warning/80 [&>:first-child]:focus-visible:border-warning [&>:first-child]:focus-visible:ring-warning/25',
-                )}
-            >
-                {children}
-                <IssueMark issues={issues} open={issueOpen} onOpenChange={onIssueOpenChange} />
-            </div>
-        )
+    // The control keeps one place in the tree whether or not it has issues, so an issue coming or
+    // going never mounts it afresh and loses what it holds.
+    const control = (
+        <div
+            className={cn(
+                'relative min-w-0',
+                tone !== null && '[&>:first-child]:pr-9',
+                tone === 'critical' &&
+                    '[&>:first-child]:border-critical/80 [&>:first-child]:focus-visible:border-critical [&>:first-child]:focus-visible:ring-critical/25',
+                tone === 'warning' &&
+                    '[&>:first-child]:border-warning/80 [&>:first-child]:focus-visible:border-warning [&>:first-child]:focus-visible:ring-warning/25',
+            )}
+        >
+            {children}
+            {tone !== null && <IssueMark issues={issues} open={issueOpen} onOpenChange={onIssueOpenChange} />}
+        </div>
+    )
     return (
         <div
             className={cn(lined ? 'grid min-w-0' : 'flex min-w-0 flex-col gap-1.5', className)}
