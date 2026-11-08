@@ -38,7 +38,7 @@ viewer's caption settings through `useStored` or an app's store, with the option
 in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second by `useVideoStats`
 (`@winterop-com/sokkel-ui/media/video-stats`) for `VideoStatsOverlay`.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 225 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 226 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 10 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 11 modules
@@ -229,6 +229,7 @@ in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second 
 | **FilterBar** | `@winterop-com/sokkel-ui/FilterBar` | Filters on a listing, each a chip that says what it keeps: the field, how it compares and the value. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-filter-bar--empty) |
 | **FilterChip** | `@winterop-com/sokkel-ui/FilterChip` | One filter in a toolbar: the facet it filters on, how it compares, and what it is set to. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-filter-chip--unset) |
 | **FormBar** | `@winterop-com/sokkel-ui/FormBar` | A form's actions: a note at the start, such as when the draft was last saved, and the actions at the end, the main verb last; `start` puts a control before the note, away from the verbs. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-form-bar--end) |
+| **InlineEdit** | `@winterop-com/sokkel-ui/InlineEdit` | A value shown as text that turns into an editor on a press, Enter or F2, and back once saved. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-inline-edit--field) |
 | **InlineField** | `@winterop-com/sokkel-ui/InlineField` | A label and its control on one row: the label quiet at the start, never shrinking or wrapping, and the control taking the rest of the row. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-inline-field--compose) |
 | **LevelBars**, FlowLines | `@winterop-com/sokkel-ui/SignInArt` | Art for a sign-in screen's brand pane: a row of level bars, the run around the tallest peak lit in `color` (the theme's primary by default) and the rest in its muted ground, each breathing slowly at its own phase. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-sign-in--password) |
 | **NumberField** | `@winterop-com/sokkel-ui/NumberField` | A number typed in, written in one format, with its unit before or after it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-number-field--plain) |

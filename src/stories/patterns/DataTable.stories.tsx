@@ -30,6 +30,8 @@ import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { type Album, makeAlbums } from '../fixtures/albums'
 import { Artwork } from '@winterop-com/sokkel-ui-media/Artwork'
 import { folderContents, type FolderRow, makeFolderTree, projectFolders } from '../fixtures/folders'
+import { JOB_OWNERS, JOB_SETTINGS, type JobSetting, saveJobSetting } from '../fixtures/jobs'
+import { tableEditing } from '@winterop-com/sokkel-ui/table-editing'
 import { makeRuns, makeRunTree, startedAt, type TableRun, took, type TreeRow } from '../fixtures/tableRuns'
 import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
@@ -535,6 +537,126 @@ export const RowMenus: StoryObj = {
         </Columns>
     ),
 }
+
+const OWNER_OPTIONS = JOB_OWNERS.map((owner) => ({ value: owner }))
+
+/** Tidevann's jobs with their settings edited in place, each cell saved on its own after a short wait. */
+function EditableJobs() {
+    const [jobs, setJobs] = useState(JOB_SETTINGS)
+    const change = <K extends keyof JobSetting>(job: JobSetting, field: K, value: JobSetting[K]) =>
+        saveJobSetting(field, value).then(() => setJobs((all) => all.map((one) => (one.id === job.id ? { ...one, [field]: value } : one))))
+    const columns: DataColumn<JobSetting>[] = [
+        {
+            id: 'job',
+            header: 'Job',
+            width: '10rem',
+            cell: (job) => <span className="font-mono">{job.job}</span>,
+            sortValue: (job) => job.job,
+        },
+        { id: 'project', header: 'Project', width: '6.5rem', cell: (job) => job.project, sortValue: (job) => job.project },
+        {
+            id: 'schedule',
+            header: 'Schedule',
+            width: '9rem',
+            cell: (job) => <span className="font-mono">{job.schedule}</span>,
+            sortValue: (job) => job.schedule,
+            edit: {
+                editor: 'text',
+                value: (job) => job.schedule,
+                save: (job, schedule) => change(job, 'schedule', schedule),
+                // A project's own schedule is set on the project, not here.
+                enabled: (job) => job.locked !== true,
+                display: (schedule) => <span className="font-mono">{schedule}</span>,
+            },
+        },
+        {
+            id: 'retries',
+            header: 'Retries',
+            width: '5.5rem',
+            align: 'end',
+            cell: (job) => job.retries,
+            sortValue: (job) => job.retries,
+            edit: {
+                editor: 'number',
+                value: (job) => job.retries,
+                validate: (retries) => (retries === null || retries < 0 || retries > 10 ? 'Retries go from 0 to 10.' : undefined),
+                save: (job, retries) => change(job, 'retries', retries ?? 0),
+            },
+        },
+        {
+            id: 'owner',
+            header: 'Owner',
+            width: '7rem',
+            cell: (job) => job.owner,
+            sortValue: (job) => job.owner,
+            edit: {
+                editor: 'select',
+                options: OWNER_OPTIONS,
+                value: (job) => job.owner,
+                save: (job, owner) => change(job, 'owner', owner as JobSetting['owner']),
+            },
+        },
+        {
+            id: 'timeout',
+            header: 'Timeout',
+            width: '6rem',
+            align: 'end',
+            cell: (job) => (job.timeout === null ? <span className="text-muted-foreground">None</span> : `${String(job.timeout)} min`),
+            sortValue: (job) => job.timeout ?? Number.POSITIVE_INFINITY,
+            edit: {
+                editor: 'number',
+                value: (job) => job.timeout,
+                display: (minutes) => (minutes === null ? 'None' : `${String(minutes)} min`),
+                save: (job, timeout) => change(job, 'timeout', timeout),
+            },
+        },
+        {
+            id: 'paused',
+            header: 'Paused until',
+            width: '9.5rem',
+            cell: (job) => job.pausedUntil ?? <span className="text-muted-foreground">Running</span>,
+            sortValue: (job) => job.pausedUntil ?? '',
+            edit: {
+                editor: 'date',
+                value: (job) => job.pausedUntil ?? null,
+                save: (job, day) => change(job, 'pausedUntil', day),
+            },
+        },
+        {
+            id: 'note',
+            header: 'Note',
+            width: 'minmax(12rem,1fr)',
+            cell: (job) => <span className="text-muted-foreground">{job.note}</span>,
+            edit: { editor: 'multiline', value: (job) => job.note, save: (job, note) => change(job, 'note', note) },
+        },
+        { id: 'last', header: 'Last run', width: '7.5rem', cell: (job) => <StatusChip status={job.last} />, stack: 'secondary' },
+    ]
+    return (
+        <Stack gap="none" className="h-svh bg-background p-4 text-foreground">
+            <DataTable
+                className="flex-1"
+                columns={columns}
+                rows={jobs}
+                rowKey={(job) => job.id}
+                selectable
+                bulkActions={bulk}
+                minWidth="68rem"
+                editing={tableEditing}
+            />
+        </Stack>
+    )
+}
+
+/**
+ * Cells edited in place: the schedule, retries, owner, timeout and note of each job. Press a cell
+ * to make it active and again (or double-click, Enter or F2) to edit; typing a figure opens a number
+ * cell on it. Enter saves and moves down, Tab saves and moves to the next editable cell, Escape drops
+ * the edit, and the arrows move between cells. Each save takes a moment, shown in its cell; the
+ * scheduler refuses a schedule without five fields, marking the cell with its reason, and retries
+ * past ten are refused before anything is sent. The send-digest jobs' schedules are their
+ * project's and cannot be edited here.
+ */
+export const EditableCells: StoryObj = { parameters: { frame: 'none' }, name: 'Editable cells', render: () => <EditableJobs /> }
 
 const children = (row: TreeRow) => (row.kind === 'run' ? undefined : row.children)
 const runOf = (row: TreeRow) => (row.kind === 'run' ? row.run : undefined)

@@ -50,6 +50,41 @@ import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { Skeleton } from './ui/skeleton'
 import { Spinner } from './ui/spinner'
 import { TABLE_HEAD_ROW, TABLE_HEAD_TEXT, columnOrder } from '../lib/table'
+import type { CellAt, EditedValue, EditOption, EditorKind, EditValue } from '../lib/edit'
+import type { CellEdit, OpenCell, TableEditing, TableEditingContext } from './table-editing'
+
+export type { CellAt, EditedValue, EditOption, EditorKind, EditValue, TableEditing }
+
+/** How one kind of editor reads and saves a column's cells. */
+type CellEditing<T, K extends EditorKind, V = EditedValue<K>> = {
+    /** Which control edits a cell: a line of text, several lines, a number, a date (`YYYY-MM-DD`), or one of `options`. */
+    editor: K
+    /** The value a cell's editor starts from. */
+    value: (row: T) => V
+    /**
+     * Saves one cell's new value. A promise holds the cell pending, the new value shown with a
+     * spinner, until it settles; a rejection marks the cell with its message and keeps what was
+     * typed, so opening the cell again goes on from it.
+     */
+    save: (row: T, value: V) => void | Promise<void>
+    /** Checks a value before it is saved: a message refuses it and keeps the editor open. */
+    validate?: (value: V, row: T) => string | null | undefined
+    /** Whether a row's cell may be edited; every row's by default. */
+    enabled?: (row: T) => boolean
+    /** How a value being saved, or refused, is drawn in its cell; its text, figures or option's label by default. */
+    display?: (value: V, row: T) => ReactNode
+}
+
+/** How a column's cells are edited: the editor, the value it starts from, how a value is checked, and the save. */
+export type DataCellEdit<T> =
+    | (CellEditing<T, 'text'> & { options?: undefined })
+    | (CellEditing<T, 'multiline'> & { options?: undefined })
+    | (CellEditing<T, 'number'> & { options?: undefined })
+    | (CellEditing<T, 'date'> & { options?: undefined })
+    | (CellEditing<T, 'select'> & {
+          /** The choices, the same for every row or a row's own. */
+          options: readonly EditOption[] | ((row: T) => readonly EditOption[])
+      })
 
 /** One column: its name, how wide it is, how a row draws its cell, and how it sorts. */
 export interface DataColumn<T> {
@@ -81,6 +116,12 @@ export interface DataColumn<T> {
     stackLines?: number
     /** Whether the column's line in a stacked card starts with its name; without it the value takes the whole line. */
     stackLabel?: boolean
+    /**
+     * Makes the column's cells editable, in a table given `editing`: the editor, the value it starts
+     * from and the save, which runs for each cell on its own. In a stacked card the column's line is a
+     * field to edit in.
+     */
+    edit?: DataCellEdit<T>
 }
 
 /** One thing a row's menu offers, or a line between groups of them. */
@@ -148,6 +189,12 @@ export interface DataTableWords {
     foldGroup: (folded: boolean) => string
     /** A group head's count of its rows: `12`, or `12 runs`. */
     groupCount: (count: number) => string
+    /** A cell's spinner while its save runs. */
+    saving: string
+    /** What a refused save says when the app's error carries no message. */
+    saveFailed: string
+    /** What a number cell says of text that is not a number. */
+    notNumber: string
 }
 
 const WORDS: DataTableWords = {
@@ -185,6 +232,9 @@ const WORDS: DataTableWords = {
     selectGroup: 'Select group',
     foldGroup: (folded) => (folded ? 'Show group' : 'Hide group'),
     groupCount: (count) => count.toLocaleString('en-US'),
+    saving: 'Saving',
+    saveFailed: 'Could not save',
+    notNumber: 'Enter a number',
 }
 
 /** A row as drawn: where it sits in the tree, and whether it has children and shows them. */
@@ -447,6 +497,9 @@ const STACK_LINE = 20
 const STACK_PRIMARY_LINE = 22
 /** The height of a stacked card's line of secondary facts, room for an avatar among them. */
 const STACK_FACTS = 24
+/** The height of a stacked card's line that holds a field to edit in, in pixels. */
+const STACK_EDIT_LINE = 36
+const NO_EDITS: ReadonlyMap<string, CellEdit> = new Map()
 
 export interface DataTableProps<T> {
     columns: DataColumn<T>[]
@@ -588,6 +641,11 @@ export interface DataTableProps<T> {
     onFoldedGroupsChange?: (folded: ReadonlySet<string>) => void
     /** Draws the table's own border and corners; off for a table set into a frame of its own. */
     framed?: boolean
+    /**
+     * Edits the cells of columns with `edit`: `tableEditing` from `@winterop-com/sokkel-ui/table-editing`.
+     * Without it no cell edits, and the table carries none of the editors.
+     */
+    editing?: TableEditing
     words?: Partial<DataTableWords>
     className?: string
 }
@@ -627,6 +685,18 @@ export interface DataTableProps<T> {
  *
  * The column menu in the bar hides columns and moves them earlier or later; the first column stays
  * first, as each row's title.
+ *
+ * Given `editing` (`tableEditing` from `@winterop-com/sokkel-ui/table-editing`), a column with
+ * `edit` has editable cells, each saved on its own through the column's `save`. The arrows then
+ * move between cells as well as rows, the active cell ringed while the table has the focus; Enter,
+ * F2, a double click or a press on the active cell opens its editor, and a typed character opens
+ * it on that character. In the editor Enter saves and moves down, Tab saves and moves to the next
+ * editable cell (Shift back), and Escape drops the edit. While a save runs the cell shows the new
+ * value with a spinner; a refusal marks the cell and keeps what was typed, and a value that is not
+ * one, or that `validate` refuses, keeps the editor open. Leaving the editor saves. Cells keep
+ * their edits across scrolling, sorting and pages, as each is held by its row's key. Stacked as
+ * cards, an editable column's line is a field that opens on a press. A table that edits nothing
+ * carries none of it.
  *
  * Sort, selection, open branches, folded groups, hidden columns, the columns' order and their
  * widths are each held by the table unless the app passes the value and hears the change; a saved
@@ -711,6 +781,7 @@ export function DataTable<T>({
     defaultFoldedGroups = EMPTY,
     onFoldedGroupsChange,
     framed = true,
+    editing,
     words: ownWords,
     className,
 }: DataTableProps<T>) {
@@ -870,7 +941,10 @@ export function DataTable<T>({
         ? STACK_PAD * 2 +
           24 +
           stackParts.primary.reduce((sum, column) => sum + (column.stackLines ?? 2) * STACK_PRIMARY_LINE, 0) +
-          stackParts.lines.length * STACK_LINE +
+          stackParts.lines.reduce(
+              (sum, column) => sum + (column.edit === undefined || editing === undefined ? STACK_LINE : STACK_EDIT_LINE),
+              0,
+          ) +
           (stackParts.facts.length > 0 ? STACK_FACTS : 0) +
           2
         : cardBox.height
@@ -1005,9 +1079,41 @@ export function DataTable<T>({
         else if (at + lineHeight > box.scrollTop + box.clientHeight - head) box.scrollTop = at + lineHeight - box.clientHeight + head
     }
     const activeIndex = active === undefined ? -1 : flat.findIndex((entry) => entry.key === active)
+
+    // Editable cells, given `editing`: the active cell, the open editor, and each cell's draft while it is open,
+    // saving or refused. The editing itself is the app's `editing`, so a table that edits nothing carries none of it.
+    const [activeColumn, setActiveColumn] = useState<string | undefined>(undefined)
+    const [cellEdits, setCellEdits] = useState(NO_EDITS)
+    const [openCell, setOpenCell] = useState<OpenCell | undefined>(undefined)
+    const held = useRef({ opening: undefined as OpenCell | undefined, attempts: 0, refocus: false })
+    const edits: TableEditingContext<T> | undefined =
+        editing === undefined || !shown.some((column) => column.edit !== undefined)
+            ? undefined
+            : {
+                  shown,
+                  flat,
+                  active,
+                  setActive,
+                  activeColumn,
+                  setActiveColumn,
+                  edits: cellEdits,
+                  setEdits: setCellEdits,
+                  open: openCell,
+                  setOpen: setOpenCell,
+                  held,
+                  moveTo,
+                  grid: gridView,
+                  step: gridView ? perLine : 1,
+                  words,
+              }
+    useEffect(() => {
+        if (edits !== undefined) editing?.settle(edits, scroller.current)
+    })
+
     const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
         const page = Math.max(1, Math.floor(view.height / lineHeight) - 1) * perLine
         const entry = flat[activeIndex]
+        if (edits !== undefined && editing?.keyDown(edits, event, entry) === true) return
         const moves: Record<string, () => void> = {
             ArrowDown: () => moveTo(activeIndex + perLine),
             ArrowUp: () => moveTo(Math.max(0, activeIndex - perLine)),
@@ -1209,6 +1315,7 @@ export function DataTable<T>({
                     )
                 })}
                 {stackParts.lines.map((column) => {
+                    if (column.edit !== undefined && edits !== undefined) return editing?.line(edits, entry, column, listed, indent)
                     const value = column.cell(entry.row)
                     if (!said(value)) return null
                     return (
@@ -1537,6 +1644,7 @@ export function DataTable<T>({
                 onFocus={() => {
                     if (active === undefined && flat.length > 0)
                         setActive(flat[Math.min(first + OVERSCAN, flat.length - 1)]?.key ?? flat[0].key)
+                    if (edits !== undefined) editing?.focus(edits)
                 }}
                 onScroll={(event) =>
                     setView({
@@ -1785,31 +1893,39 @@ export function DataTable<T>({
                                             />
                                         </span>
                                     )}
-                                    {shown.map((column, index) => (
-                                        <span
-                                            key={column.id}
-                                            role="gridcell"
-                                            className={cn(
-                                                'flex h-full min-w-0 items-center',
-                                                pad,
-                                                every && 'py-2',
-                                                column.align === 'end' && 'justify-end tabular-nums',
-                                                index === 0 && cn(pinned, selectable ? 'left-(--check)' : 'left-0'),
-                                            )}
-                                            style={index === 0 ? ({ '--check': CHECK } as React.CSSProperties) : undefined}
-                                        >
-                                            {index === 0 && tree && treeControl(entry)}
+                                    {shown.map((column, index) => {
+                                        const pinnedHere = index === 0 && pinned !== ''
+                                        const cellProps =
+                                            edits === undefined ? undefined : editing?.cellProps(edits, entry, column, pinnedHere)
+                                        return (
                                             <span
+                                                key={column.id}
+                                                role="gridcell"
+                                                data-pinned={pinnedHere || undefined}
+                                                {...cellProps}
                                                 className={cn(
-                                                    'min-w-0',
-                                                    every ? 'break-words' : 'truncate',
-                                                    column.align === 'end' && 'text-right',
+                                                    'flex h-full min-w-0 items-center',
+                                                    pad,
+                                                    every && 'py-2',
+                                                    column.align === 'end' && 'justify-end tabular-nums',
+                                                    index === 0 && cn(pinned, selectable ? 'left-(--check)' : 'left-0'),
+                                                    cellProps?.className,
                                                 )}
+                                                style={index === 0 ? ({ '--check': CHECK } as React.CSSProperties) : undefined}
                                             >
-                                                {column.cell(entry.row)}
+                                                {index === 0 && tree && treeControl(entry)}
+                                                <span
+                                                    className={cn(
+                                                        'min-w-0',
+                                                        every ? 'break-words' : 'truncate',
+                                                        column.align === 'end' && 'text-right',
+                                                    )}
+                                                >
+                                                    {edits === undefined ? column.cell(entry.row) : editing?.content(edits, entry, column)}
+                                                </span>
                                             </span>
-                                        </span>
-                                    ))}
+                                        )
+                                    })}
                                     {endWidth !== undefined && (
                                         <span
                                             role="gridcell"

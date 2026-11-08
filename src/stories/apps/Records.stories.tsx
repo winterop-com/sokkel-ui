@@ -14,6 +14,7 @@ import {
     Map as MapIcon,
     MapPin,
     Plus,
+    Sheet,
     Undo2,
 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
@@ -28,6 +29,7 @@ import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
 import { Badge } from '@winterop-com/sokkel-ui/primitives/badge'
 import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
 import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
+import { tableEditing } from '@winterop-com/sokkel-ui/table-editing'
 import { Field } from '@winterop-com/sokkel-ui/Field'
 import { FilterChip, type FilterOption } from '@winterop-com/sokkel-ui/FilterChip'
 import { FormBar } from '@winterop-com/sokkel-ui/FormBar'
@@ -77,7 +79,7 @@ import { TableOfContents } from '@winterop-com/sokkel-ui/TableOfContents'
  * fields that refuse their values, and the visits by region on a map with a legend and a month
  * slider. Each place in the rail says what it holds on a second line.
  */
-type View = 'overview' | 'records' | 'form' | 'map'
+type View = 'overview' | 'records' | 'form' | 'entry' | 'map'
 
 type State = 'draft' | 'submitted' | 'approved' | 'returned'
 
@@ -292,6 +294,14 @@ function groups(view: View): RailGroup[] {
                     active: view === 'records',
                 },
                 { id: 'new', label: 'New visit', description: 'Start a record', icon: FilePlus2, href: '#', active: view === 'form' },
+                {
+                    id: 'summary',
+                    label: 'Monthly summary',
+                    description: 'Counts by kind of site',
+                    icon: Sheet,
+                    href: '#',
+                    active: view === 'entry',
+                },
                 { id: 'sites', label: 'Sites', description: 'Where visits happen', icon: MapPin, href: '#' },
                 { id: 'map', label: 'Map', description: 'Visits by region', icon: MapIcon, href: '#', active: view === 'map' },
             ],
@@ -312,6 +322,7 @@ const TRAILS: Record<View, Crumb[]> = {
     overview: [{ label: 'juniper', href: '#', code: true }, { label: 'Overview' }],
     records: [{ label: 'juniper', href: '#', code: true }, { label: 'Visits' }],
     form: [{ label: 'juniper', href: '#', code: true }, { label: 'Visits', href: '#' }, { label: 'New visit' }],
+    entry: [{ label: 'juniper', href: '#', code: true }, { label: 'Monthly summary' }],
     map: [{ label: 'juniper', href: '#', code: true }, { label: 'Map' }],
 }
 
@@ -715,6 +726,115 @@ function regionColumns(counts: Record<string, number>): DataColumn<string>[] {
     ]
 }
 
+/** The kinds of site a monthly summary counts by, across the entry grid. */
+const SITE_KINDS = [
+    { id: 'river', label: 'River' },
+    { id: 'lake', label: 'Lake' },
+    { id: 'well', label: 'Well' },
+    { id: 'coast', label: 'Coast' },
+] as const
+type SiteKind = (typeof SITE_KINDS)[number]['id']
+
+/** One question of the monthly summary, under its part of the form, with its count for each kind of site. */
+interface SummaryRow {
+    id: string
+    part: string
+    question: string
+    counts: Record<SiteKind, number | null>
+}
+
+const SUMMARY: SummaryRow[] = [
+    { id: 'readings', part: 'Readings', question: 'Gauge readings taken', counts: { river: 124, lake: 62, well: 88, coast: 41 } },
+    { id: 'missed', part: 'Readings', question: 'Readings missed', counts: { river: 6, lake: 2, well: null, coast: 9 } },
+    { id: 'flagged', part: 'Readings', question: 'Readings flagged for review', counts: { river: 3, lake: 0, well: 1, coast: null } },
+    { id: 'samples', part: 'Samples', question: 'Water samples sent to the lab', counts: { river: 18, lake: 9, well: 22, coast: 7 } },
+    { id: 'refused', part: 'Samples', question: 'Samples the lab refused', counts: { river: 1, lake: null, well: 2, coast: 0 } },
+    { id: 'visits', part: 'Upkeep', question: 'Visits by observers', counts: { river: 31, lake: 14, well: 26, coast: 12 } },
+    { id: 'repairs', part: 'Upkeep', question: 'Repairs made', counts: { river: 2, lake: 1, well: 4, coast: 3 } },
+    { id: 'replaced', part: 'Upkeep', question: 'Gauges replaced', counts: { river: null, lake: 0, well: 1, coast: 1 } },
+]
+
+const countOf = (value: number | null) => (value === null ? '' : value.toLocaleString('en-US'))
+const sum = (values: readonly (number | null)[]) => values.reduce<number>((total, value) => total + (value ?? 0), 0)
+const rowTotal = (row: SummaryRow) => sum(SITE_KINDS.map((kind) => row.counts[kind.id]))
+
+/** A count the station's server keeps: whole, not below zero, and at most what a month can hold. */
+const wholeCount = (value: number | null) =>
+    value !== null && (!Number.isInteger(value) || value < 0) ? 'Counts are whole numbers, 0 or more.' : undefined
+
+/**
+ * The monthly summary as an entry grid: its questions down, the kinds of site across, each count a
+ * number cell saved on its own, a total for each question, and each part of the form a group whose
+ * head sums its counts. Narrower than the grid, it folds to a card per question, a field for each kind.
+ */
+function EntryGrid() {
+    const [rows, setRows] = useState(SUMMARY)
+    const entered = rows.reduce((count, row) => count + SITE_KINDS.filter((kind) => row.counts[kind.id] !== null).length, 0)
+    const columns: DataColumn<SummaryRow>[] = [
+        { id: 'question', header: 'Question', width: 'minmax(14rem,1fr)', cell: (row) => row.question },
+        ...SITE_KINDS.map((kind): DataColumn<SummaryRow> => ({
+            id: kind.id,
+            header: kind.label,
+            width: '6.5rem',
+            align: 'end',
+            cell: (row) => countOf(row.counts[kind.id]),
+            aggregate: (group) => countOf(sum(group.map((row) => row.counts[kind.id]))),
+            edit: {
+                editor: 'number',
+                value: (row) => row.counts[kind.id],
+                validate: wholeCount,
+                save: async (row, value) => {
+                    await new Promise((resolve) => setTimeout(resolve, 500))
+                    if (value !== null && value > 999) throw new Error('A month holds at most 999. Check the count with the station.')
+                    setRows((all) => all.map((one) => (one.id === row.id ? { ...one, counts: { ...one.counts, [kind.id]: value } } : one)))
+                },
+            },
+        })),
+        {
+            id: 'total',
+            header: 'Total',
+            width: '6.5rem',
+            align: 'end',
+            cell: (row) => <span className="font-medium">{countOf(rowTotal(row))}</span>,
+            aggregate: (group) => countOf(sum(group.map(rowTotal))),
+        },
+    ]
+    return (
+        <Stack gap="none" className="h-full">
+            <Page className="min-h-0 flex-1">
+                <PageHeader
+                    title="Monthly station summary"
+                    code="FRM-MONTH"
+                    description="October at Riverside station. Each count saves as it is entered; Tab moves to the next."
+                    actions={
+                        <Button size="sm" variant="outline">
+                            <Download aria-hidden />
+                            Export
+                        </Button>
+                    }
+                />
+                <DataTable
+                    className="min-h-0 flex-1"
+                    columns={columns}
+                    rows={rows}
+                    rowKey={(row) => row.id}
+                    groupBy="part"
+                    minWidth="auto"
+                    stackBelow={720}
+                    editing={tableEditing}
+                    hover={false}
+                />
+            </Page>
+            <FormBar note={`${String(entered)} of ${String(rows.length * SITE_KINDS.length)} counts entered`}>
+                <Button size="sm">
+                    <CheckCircle2 aria-hidden />
+                    Mark complete
+                </Button>
+            </FormBar>
+        </Stack>
+    )
+}
+
 function RegionsMap() {
     const [month, setMonth] = useState('2026-10')
     const [measure, setMeasure] = useState<'visits' | 'returned'>('visits')
@@ -1061,6 +1181,22 @@ export const Form: StoryObj = {
     render: () => (
         <RecordsApp view="form" foot={<StatusLine note="9 of 12 questions answered" />}>
             <VisitForm />
+        </RecordsApp>
+    ),
+}
+
+/**
+ * A month's counts entered in a grid: the questions down, the kinds of site across, a total for
+ * each question and a sum for each part of the form in its head. Each count saves on its own: type
+ * a figure on a cell to open it, Tab to the next, Enter to move down. A count over 999 is refused by
+ * the station's server and marked in its cell; one below zero or with a fraction is refused before
+ * it is sent. On a narrow screen each question is a card with a field for each kind of site.
+ */
+export const EntryGridStory: StoryObj = {
+    name: 'Entry grid',
+    render: () => (
+        <RecordsApp view="entry">
+            <EntryGrid />
         </RecordsApp>
     ),
 }

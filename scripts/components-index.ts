@@ -41,6 +41,7 @@ export const PRIVATE: Record<PackageDir, Record<string, string>> = {
         'components/day-pick': 'the calendar the date fields pick from, loaded on first use',
         'components/entry':
             'what the typed fields share: the value held as text, its issues and its frame; `EntryFieldProps` is exported by each field',
+        'components/inline-edit-parts': 'the editors `InlineEdit` and the cells `tableEditing` edits share',
         'components/option-list':
             'the searchable list `FilterChip`, `FilterBar` and their menus draw values in; `FilterOption` is exported by `FilterChip`',
         'components/Mentions':
@@ -58,6 +59,7 @@ export const PRIVATE: Record<PackageDir, Record<string, string>> = {
         'hooks/use-drag-size': "the drag on a resizable edge, for the library's own panels",
         'hooks/use-file-drop': 'files dragged onto `DropZone` and `FileField`, which take them',
         'lib/css-pixels': 'a length token in pixels, for a part that hands a size to an engine',
+        'lib/edit': "the edit cycle `InlineEdit` and `DataTable`'s editable cells share; their types are exported by both",
         'lib/focus': 'where focus goes when a popup closes',
         'lib/jq-grammar': 'the jq grammar the highlighter loads',
         'lib/katex': "`Markdown`'s math engine, loaded the first time a message holds math",
@@ -209,6 +211,7 @@ const CORE_AREAS: Record<string, string> = {
     FileField: 'Forms and inputs',
     FilterChip: 'Forms and inputs',
     FormBar: 'Forms and inputs',
+    InlineEdit: 'Forms and inputs',
     InlineField: 'Forms and inputs',
     NumberField: 'Forms and inputs',
     PeopleFilter: 'Forms and inputs',

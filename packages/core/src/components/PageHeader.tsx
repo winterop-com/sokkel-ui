@@ -15,7 +15,8 @@ export interface PageHeaderWords {
 const WORDS: PageHeaderWords = { back: 'Back', trail: 'Where you are' }
 
 export interface PageHeaderProps {
-    title: string
+    /** The page's title: its text, or a part drawn in its place, such as an `InlineEdit` with `variant="title"`. */
+    title: ReactNode
     /** The addressable code, shown under the title unless it is the title. */
     code?: string
     /** A short count beside the title, such as how many rows are loaded. */
@@ -106,7 +107,7 @@ export function PageHeader({
                 )}
                 <div className={cn('flex min-w-0 items-baseline gap-2', column)}>
                     <h1
-                        title={singleLine ? title : undefined}
+                        title={singleLine && typeof title === 'string' ? title : undefined}
                         className={cn(
                             'min-w-0 font-heading text-page-title text-page-title-ink',
                             singleLine ? 'truncate' : 'text-pretty break-words',
