@@ -543,6 +543,11 @@ export interface DataTableProps<T> {
     onOpen?: (row: T) => void
     /** The row shown elsewhere, drawn as chosen. */
     opened?: (row: T) => boolean
+    /**
+     * A chevron at the end of every row, saying that a press (`onOpen`) leaves the list for the
+     * row's own page rather than showing it beside the list.
+     */
+    chevron?: boolean
     /** What a row's menu offers: from the button at its end, and on a right-click anywhere on it. */
     rowActions?: (row: T) => DataAction[]
     /** When the menu button at a row's end shows: always, only while the pointer is over the row, or never (right-click only). */
@@ -738,6 +743,7 @@ export function DataTable<T>({
     onColumnOrderChange,
     onOpen,
     opened,
+    chevron = false,
     rowActions,
     actionButton = 'always',
     actionIcon = <EllipsisIcon />,
@@ -987,10 +993,11 @@ export function DataTable<T>({
         rowActions === undefined || rows.length === 0
             ? 0
             : rowActions(rows[0]).filter((action) => !('separator' in action) && action.inline === true).length
-    const endWidth =
+    const menuWidth =
         rowActions === undefined || (actionButton === 'none' && inlineSlots === 0)
             ? undefined
-            : `${String((actionButton === 'none' ? 0.5 : 2.5) + inlineSlots * 1.75)}rem`
+            : (actionButton === 'none' ? 0.5 : 2.5) + inlineSlots * 1.75
+    const endWidth = menuWidth === undefined && !chevron ? undefined : `${String((menuWidth ?? 0.5) + (chevron ? 1.5 : 0))}rem`
     const track = (column: DataColumn<T>) => (widths[column.id] === undefined ? column.width : `${String(widths[column.id])}px`)
     const template = [selectable ? CHECK : undefined, ...shown.map(track), endWidth].filter(Boolean).join(' ')
     // The rows are never narrower than their columns' least widths, so a widened column scrolls the table sideways.
@@ -1980,6 +1987,7 @@ export function DataTable<T>({
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
                                             )}
+                                            {chevron && <ChevronRightIcon aria-hidden className="size-4 shrink-0 text-faint" />}
                                         </span>
                                     )}
                                 </div>

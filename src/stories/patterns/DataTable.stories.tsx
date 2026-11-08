@@ -214,6 +214,14 @@ export const ShortList: StoryObj = {
     ),
 }
 
+/** A chevron at each row's end (`chevron`): a press opens the run's own page rather than a panel beside the list. */
+export const RowPages: StoryObj = {
+    name: 'Row pages',
+    render: () => (
+        <DataTable variant="list" columns={LIST_COLUMNS} rows={LIST_RUNS} rowKey={(run) => run.id} onOpen={() => undefined} chevron />
+    ),
+}
+
 /** Only a failed run can be retried; every other row's actions are empty. */
 const listActions = (run: ListRun): DataAction[] =>
     run.state === 'failed' ? [{ id: 'retry', label: 'Retry', icon: <RotateCcwIcon />, onSelect: () => undefined }] : []
