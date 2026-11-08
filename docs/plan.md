@@ -20,7 +20,8 @@ The library is six packages, built from one Bun workspace and released together 
   xterm.js.
 - `@winterop-com/sokkel-ui-media` (`packages/media`): the music and video app parts, `MediaBar`
   with its layouts and fullscreen view, `TrackList`, `ChapterList`, `Lyrics`, `MediaCard`,
-  `Artwork`, `useMediaSession` and `useQueue`.
+  `Artwork`, `useMediaSession`, `useQueue`, and `hlsSource`, which plays an HTTP live stream in
+  `VideoPlayer` through hls.js, an optional peer.
 
 An app installs the core and the add-ons it draws with, so an engine is installed only by an app
 that uses it, and the music and video parts only by an app that plays music or video. Each add-on
@@ -59,7 +60,7 @@ workflow builds all three, so a break in a package fails a check rather than an 
 built against the packages in CI and measured gzipped (the JavaScript at start, what loads later,
 the CSS). A check fails when one grows past its budget in `examples/sizes/budget.json` or bundles an
 engine it does not use, so a forms page never carries ECharts, maplibre, React Flow, xterm.js,
-CodeMirror, Mermaid or KaTeX. A change that grows an app on purpose raises its budget in the same
+hls.js, CodeMirror, Mermaid or KaTeX. A change that grows an app on purpose raises its budget in the same
 PR. The forms page imports only the core package, the dashboard adds the charts package, the map
 page the maps package and the music page the media package. `forms-lean` is the forms page on
 `styles-base.css` and its modules' lists of sources, so the lean path is measured too.
@@ -379,8 +380,9 @@ The music and video app parts have a package of their own, `@winterop-com/sokkel
 app that plays nothing does not carry them: `MediaBar` with its layouts, parts and
 `MediaFullscreen`, `TrackList`, `ChapterList`, `Lyrics`, `MediaCard`, `Artwork` and its seeded
 covers (`cover-seed`), the arithmetic of chapters, of a timeline over several files and of the
-bar's growth, the queue (`queue`, `useQueue`), LRC lyrics (`lrc`), and `useMediaSession` with its
-helpers in `media-session`. It has no engine and stands on the core by name. What a core part plays through
+bar's growth, the queue (`queue`, `useQueue`), LRC lyrics (`lrc`), `useMediaSession` with its
+helpers in `media-session`, and `hlsSource` in `hls-source`. It stands on the core by name, and its
+one engine, hls.js, is an optional peer it loads only when a stream plays. What a core part plays through
 stays in the core, under `@winterop-com/sokkel-ui/media/*`: `AudioPlayer` and `VideoPlayer`, which
 attachments, chat messages, the composer and a spoken answer use; the controls they share
 (`MediaControls`, `MediaSlider`), the times (`time`) and one sound at a time (`one-sound`); and
@@ -390,6 +392,33 @@ the `bar-visualizer` primitive draws with.
 VideoPlayer, MediaBar, MediaCard and TrackList carry video and music, and the `AudioScrubber`
 primitive draws a recording's waveform under its position. AudioPlayer plays a recording in one line
 (a clip or voice note in a message, an answer read aloud) from the same controls.
+
+VideoPlayer plays a URL in `src`, or a `source` (`VideoSource` in `media/video-source`): an object
+whose `attach(video, report)` gives the element its media and returns what takes it away, with an
+optional `canPlay(video)` and an `id` that says when it is a new source, so an add-on feeds the
+element and the core never knows the engine. `hlsSource(url, options)` in the media package is one:
+an HTTP live stream, played natively where the browser plays HLS itself (Safari, and recent
+Chromium) and otherwise through hls.js, loaded by a dynamic import the first time a stream plays (or
+always through hls.js with `native: false`). hls.js is an optional peer dependency of the media
+package, so only an app that plays streams installs it, and it never enters the core. hls.js draws
+every HTTP live stream. The source recovers from a fatal network error by loading again and from a
+fatal media error by recovering the decoder (swapping the audio codec from the second time),
+`recoveries` times each, counting from zero once a fragment is buffered, and then leaves the next
+try to the player; every error goes on to `onError`. The Storybook serves a stream cut from the
+clip (`src/stories/media/fixtures/stream`, about 90 kB) as a static folder, and a fake hls.js in
+the tests drives the recoveries.
+
+The player starts at `startAt`, taken when the media has its length, for resuming; tells where it
+is through `onTime` and the end through `onEnded`; and meets a stall (waiting for data longer than
+`stallAfter` while playing) or a network or decoding error by loading the media again where it
+was, `retries` times, a second before the first try and twice as long before each next, saying
+"Trying again" over the picture meanwhile. Once the tries are spent it says the video could not be
+played, with Retry; media the browser cannot play is said at once. `onError` hears each with
+`fatal` false while it tries and true once it gives up. `keys={false}` leaves every key to the
+app, whose shortcuts drive it through the handle on `ref` (`play`, `pause`, `toggle`, `seekTo`,
+held until the media can take it, `seekBy`, `setVolume`, `toggleMute`, `toggleFullscreen`,
+`retry`, and what it plays, where and how loud); `onFullscreenChange` says when the picture fills
+the screen.
 
 One sound is heard at a time: a player claims the sound as it starts to be heard and whoever held it
 is paused, through `claimSound` and `useOneSound` in `media/one-sound`. AudioPlayer, VideoPlayer and

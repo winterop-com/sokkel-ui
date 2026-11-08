@@ -296,7 +296,7 @@ Components import by path: `@winterop-com/sokkel-ui/DialogShell`,
 `@winterop-com/sokkel-ui-maps/MapView`, `@winterop-com/sokkel-ui-graph/PipelineGraph`,
 `@winterop-com/sokkel-ui-terminal/TerminalView` or `@winterop-com/sokkel-ui-media/MediaBar`.
 
-A few core parts load an engine the app installs only when it uses them, as optional peer
+A few parts load an engine the app installs only when it uses them, as optional peer
 dependencies:
 
 | The app uses                | It also installs                                                                                                                                                                                                                       |
@@ -305,6 +305,7 @@ dependencies:
 | `Markdown` (its math)       | `katex`, `remark-math` and `rehype-katex`                                                                                                                                                                                              |
 | `CodeEditor`                | `@codemirror/autocomplete`, `@codemirror/commands`, `@codemirror/lang-json`, `@codemirror/lang-yaml`, `@codemirror/language`, `@codemirror/lint`, `@codemirror/search`, `@codemirror/state`, `@codemirror/view` and `@lezer/highlight` |
 | Geist as a theme's typeface | `@fontsource-variable/geist` and `@fontsource-variable/geist-mono`                                                                                                                                                                     |
+| `hlsSource` (media package) | `hls.js`                                                                                                                                                                                                                               |
 
 ## Working on it
 

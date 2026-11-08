@@ -34,6 +34,7 @@
         "@winterop-com/sokkel-ui-media": "workspace:*",
         "@winterop-com/sokkel-ui-terminal": "workspace:*",
         "date-fns": "^4.4.0",
+        "hls.js": "1.7.3",
         "http-server": "^14.1.1",
         "katex": "^0.16.47",
         "lucide-react": "^1.68.0",
@@ -174,9 +175,13 @@
       },
       "peerDependencies": {
         "@winterop-com/sokkel-ui": "workspace:*",
+        "hls.js": "1.7.3",
         "react": "^19.2.0",
         "react-dom": "^19.2.0",
       },
+      "optionalPeers": [
+        "hls.js",
+      ],
     },
     "packages/terminal": {
       "name": "@winterop-com/sokkel-ui-terminal",
@@ -1190,6 +1195,8 @@
     "hastscript": ["hastscript@9.0.3", "", { "dependencies": { "@types/hast": "^3.0.0", "comma-separated-tokens": "^2.0.0", "hast-util-parse-selector": "^4.0.0", "property-information": "^7.0.0", "space-separated-tokens": "^2.0.0" } }, "sha512-1ALZXSmCGmW3h8AMz4R4+QKSKFi7sNgXLVwmwB8FYVtl1CwQ3WDkSAEY/d5tp1g/vbQgq2s1WlHgfO3jbw1TsA=="],
 
     "he": ["he@1.2.0", "", { "bin": { "he": "bin/he" } }, "sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw=="],
+
+    "hls.js": ["hls.js@1.7.3", "", {}, "sha512-MsPlx6yVW4Qv4C7mEVou4/gk/5cN2dVxOTnrNjPSmyH2f0Ln+/UkG10Ax1PE6OvrmTVPKgQYozTtBaPOuCzq7A=="],
 
     "html-encoding-sniffer": ["html-encoding-sniffer@3.0.0", "", { "dependencies": { "whatwg-encoding": "^2.0.0" } }, "sha512-oWv4T4yJ52iKrufjnyZPkrN0CH3QnrUqdB6In1g5Fe1mia8GmF36gnfNySxoZtxD5+NmYw1EElVXiBk93UeskA=="],
 

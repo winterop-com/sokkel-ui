@@ -126,10 +126,8 @@ under Next. Each is a part or an option here, never a copy in an app. Roughly on
   states, with kind colors; radius by role (control and surface); themes named for their look:
   `ocean`, `indigo` and `terminal`.
 - **Round 4, media**, landing in the media package, `@winterop-com/sokkel-ui-media`, beside
-  `MediaBar`; what chat plays through stays in the core. Video: HLS through hls.js as a lazy
-  optional peer of the media package, `startAt` to resume, `onTime`, `onEnded` and `onError`, retry
-  on a stall, and keys handled outside the player. `SpeakButton` (fetched on demand, one player)
-  and dictation in `Composer` go in the core, since chat uses them.
+  `MediaBar`; what chat plays through stays in the core. `SpeakButton` (fetched on demand, one
+  player) and dictation in `Composer` go in the core, since chat uses them.
 - **Round 5, the frame.** Fullscreen through a desktop shell (the app's own call in place of the
   browser's, for the player, the video, charts and maps); `useAppearance` with pluggable storage and
   `appearanceScript` as an external module for pages that refuse inline script (browser
@@ -192,6 +190,6 @@ Should:
 
 - Accessibility audits, axe gates in CI and contrast scoring.
 - A second engine for a job that already has one: ECharts draws every chart, maplibre every map,
-  React Flow every interactive graph, xterm.js every terminal, Mermaid every diagram written as text, KaTeX every formula.
+  React Flow every interactive graph, xterm.js every terminal, hls.js every HTTP live stream, Mermaid every diagram written as text, KaTeX every formula.
   Sparklines are plain SVG.
 - Copy-in distribution. Apps install the package; nothing is vendored.

@@ -71,7 +71,7 @@ export function LogView({
             <table className={cn('border-separate border-spacing-0', wrap ? 'w-full' : 'min-w-full')}>
                 <tbody>
                     {lines.map((line, index) => (
-                        <tr key={index} className="align-top hover:bg-terminal-bar">
+                        <tr key={index} className="align-top hover:bg-terminal-bar [&>td:first-child]:pl-3">
                             {numbered && (
                                 <td className="w-10 pr-3 pl-3 text-right text-terminal-faint tabular-nums select-none">{index + 1}</td>
                             )}

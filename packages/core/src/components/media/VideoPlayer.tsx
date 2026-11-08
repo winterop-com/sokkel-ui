@@ -1,12 +1,26 @@
-import { Captions, Maximize, Minimize, PictureInPicture2, Play, RotateCcw, RotateCw } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode, type Ref } from 'react'
+import { Captions, Maximize, Minimize, PictureInPicture2, Play, RefreshCw, RotateCcw, RotateCw } from 'lucide-react'
+import {
+    useCallback,
+    useEffect,
+    useImperativeHandle,
+    useRef,
+    useState,
+    type KeyboardEvent,
+    type PointerEvent,
+    type ReactNode,
+    type Ref,
+} from 'react'
 
 import { cn } from '../../lib/cn'
 import { Button } from '../ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '../ui/dropdown-menu'
+import { Spinner } from '../ui/spinner'
 import { MEDIA_RATES, PlayButton, Position, RateMenu, TransportButton, VolumeControl } from './MediaControls'
 import { useOneSound } from './one-sound'
 import { type MediaRange } from './time'
+import { mediaError, nextTry, type VideoError, type VideoSource } from './video-source'
+
+export type { VideoError, VideoErrorKind, VideoSource, VideoSourceReport } from './video-source'
 
 /** One text track the player offers. */
 export interface VideoTrack {
@@ -36,6 +50,13 @@ export interface VideoPlayerWords {
     exitFullscreen: string
     back: string
     forward: string
+    /** Said over the picture while it tries again after a stall or an error. */
+    retrying: string
+    /** Said over the picture once its tries are spent. */
+    failed: string
+    /** Said over the picture when the browser cannot play the source at all. */
+    unsupported: string
+    retry: string
 }
 
 export const VIDEO_PLAYER_WORDS: VideoPlayerWords = {
@@ -54,6 +75,35 @@ export const VIDEO_PLAYER_WORDS: VideoPlayerWords = {
     exitFullscreen: 'Exit fullscreen',
     back: 'Back 10 seconds',
     forward: 'Forward 10 seconds',
+    retrying: 'Trying again',
+    failed: 'The video could not be played',
+    unsupported: 'This video cannot be played in this browser',
+    retry: 'Retry',
+}
+
+/** What an app does to a player from outside, as its own shortcuts and controls drive it. */
+export interface VideoPlayerHandle {
+    play: () => void
+    pause: () => void
+    /** Plays when paused and pauses when playing. */
+    toggle: () => void
+    /** Whether it is playing. */
+    playing: () => boolean
+    /** Where it is, in seconds. */
+    time: () => number
+    /** Moves to a second, within the video's length, held until the media can take it. */
+    seekTo: (seconds: number) => void
+    /** Moves by a number of seconds, back when negative. */
+    seekBy: (seconds: number) => void
+    /** The volume, from 0 to 1. */
+    volume: () => number
+    /** Sets the volume, from 0 to 1, unmuting above 0. */
+    setVolume: (level: number) => void
+    toggleMute: () => void
+    toggleFullscreen: () => void
+    /** Loads the media again where it was and plays, as the Retry button does. */
+    retry: () => void
+    focus: () => void
 }
 
 /** How far the left and right arrows seek, in seconds, and how far up and down move the volume. */
@@ -61,13 +111,20 @@ const SEEK_STEP = 5
 const VOLUME_STEP = 0.1
 /** How far the back and forward buttons skip, in seconds. */
 const SKIP = 10
+/** `HTMLMediaElement.HAVE_METADATA`: from here a seek is taken rather than dropped. */
+const HAVE_METADATA = 1
+/** How far past the point a try resumed at playback must get before the tries count from zero again, in seconds. */
+const RECOVERED_AFTER = 5
 
 /** A control drawn over the picture, light on dark in either scheme. */
 const ON_PICTURE =
     'text-terminal-foreground hover:bg-terminal-foreground/15 hover:text-terminal-foreground dark:hover:bg-terminal-foreground/15 aria-expanded:bg-terminal-foreground/15 aria-expanded:text-terminal-foreground'
 
 export interface VideoPlayerProps {
-    src: string
+    /** The video's URL. Give `source` instead for media an engine feeds, such as an HTTP live stream. */
+    src?: string
+    /** What feeds the element in place of `src`, such as `hlsSource` from the media package. */
+    source?: VideoSource
     /** What is playing, shown at the controls' left. */
     title?: ReactNode
     /** A picture shown until the first frame is ready. */
@@ -80,6 +137,26 @@ export interface VideoPlayerProps {
     /** Start muted. */
     muted?: boolean
     preload?: 'none' | 'metadata' | 'auto'
+    /**
+     * Where to start, in seconds, as when resuming: taken when the media has its length, for each
+     * new `src` or `source`. To move it after that, use the handle's `seekTo`.
+     */
+    startAt?: number
+    /** Where it is, in seconds, as it plays and after each seek: for keeping one's place. */
+    onTime?: (seconds: number) => void
+    /** It played to the end. */
+    onEnded?: () => void
+    /** An error it met: `fatal` once it has given up and says so over the picture, otherwise it is trying again. */
+    onError?: (error: VideoError) => void
+    onFullscreenChange?: (fullscreen: boolean) => void
+    /**
+     * How many times it tries again after a stall or an error before it says it failed: it waits a
+     * second before the first try and twice as long before each next, and loads the media again
+     * where it was. Media the browser cannot play is said at once.
+     */
+    retries?: number
+    /** How long it may wait for data while playing before it counts as a stall, in milliseconds. */
+    stallAfter?: number
     /** Show the controls before the video is first played; otherwise only the play button is drawn until then. */
     defaultControlsVisible?: boolean
     /** How long the controls stay after the pointer stops while playing, in milliseconds. */
@@ -89,7 +166,14 @@ export interface VideoPlayerProps {
      * Only a video that is heard takes the sound: a muted one, such as a preview, never stops the music.
      */
     exclusive?: boolean
+    /**
+     * Whether it answers keys itself while focused. Off, an app's own shortcuts drive it through
+     * the handle on `ref`, and every key goes on to them.
+     */
+    keys?: boolean
     words?: Partial<VideoPlayerWords>
+    /** Play, pause, seek, the volume and fullscreen, for an app's own shortcuts and controls. */
+    ref?: Ref<VideoPlayerHandle>
     /** The `<video>` element, for whatever the screen around the player needs from it. */
     videoRef?: Ref<HTMLVideoElement>
     className?: string
@@ -105,6 +189,12 @@ interface Playback {
     muted: boolean
     rate: number
 }
+
+/** A stall or an error under way: a try waiting or loading, or the failure said once the tries are spent. */
+type Trouble = { phase: 'retrying' } | { phase: 'failed'; unsupported: boolean } | null
+
+/** A seek held until the media has its length: `startAt`, or a second to go to, playing after it or not. */
+type Held = 'start' | { at: number; play: boolean } | null
 
 function rangesOf(video: HTMLVideoElement): MediaRange[] {
     const ranges: MediaRange[] = []
@@ -123,12 +213,19 @@ function rangesOf(video: HTMLVideoElement): MediaRange[] {
  * pauses, the left and right arrows seek five seconds, the up and down arrows change the volume
  * by a tenth, F toggles fullscreen and M toggles mute. A click on the picture plays or pauses,
  * a double click toggles fullscreen, and a tap on a touch screen first brings back the controls.
+ * `keys={false}` leaves every key to the app, whose shortcuts drive the player through its handle.
+ *
+ * It plays `src`, or media an engine feeds through `source`, from `startAt` when given, and tells
+ * where it is through `onTime`. A stall that outlasts `stallAfter`, or a network or decoding
+ * error, loads the media again where it was, `retries` times with a growing wait, before it says
+ * over the picture that the video could not be played, with a button to try again.
  *
  * Once heard it pauses whatever else the library is playing, so one sound is heard at a time;
  * `exclusive={false}` lets it play alongside.
  */
 export function VideoPlayer({
     src,
+    source,
     title,
     poster,
     tracks = [],
@@ -137,10 +234,19 @@ export function VideoPlayer({
     loop = false,
     muted: startMuted = false,
     preload = 'metadata',
+    startAt,
+    onTime,
+    onEnded,
+    onError,
+    onFullscreenChange,
+    retries = 3,
+    stallAfter = 8000,
     defaultControlsVisible = false,
     hideAfter = 2500,
     exclusive = true,
+    keys = true,
     words: given,
+    ref,
     videoRef,
     className,
 }: VideoPlayerProps) {
@@ -166,8 +272,26 @@ export function VideoPlayer({
     const [active, setActive] = useState(defaultControlsVisible)
     const [held, setHeld] = useState(false)
     const [menuOpen, setMenuOpen] = useState(false)
+    const [trouble, setTrouble] = useState<Trouble>(null)
     const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
     useOneSound(video, state.playing && !state.muted && state.volume > 0, exclusive)
+
+    // What the element's listeners read, set after each render so a parent that renders again
+    // never has them taken off and put back.
+    const latest = useRef({ source, startAt, onTime, onEnded, onError, onFullscreenChange, retries, stallAfter })
+    useEffect(() => {
+        latest.current = { source, startAt, onTime, onEnded, onError, onFullscreenChange, retries, stallAfter }
+    })
+    const seek = useRef<Held>(null)
+    const tries = useRef(0)
+    const resumedFrom = useRef(0)
+    const failed = useRef(false)
+    const started = useRef(false)
+    const retryTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+    const stallTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+    const detach = useRef<(() => void) | null>(null)
+    const filled = useRef(false)
+    const sourceKey = source === undefined ? undefined : (source.id ?? source)
 
     const attach = useCallback(
         (element: HTMLVideoElement | null) => {
@@ -178,10 +302,100 @@ export function VideoPlayer({
         [videoRef],
     )
 
+    // The functions below touch only refs and state setters, so the copies the element's
+    // listeners hold from the first render do the same as the newest.
+
+    const clearStall = () => {
+        clearTimeout(stallTimer.current)
+        stallTimer.current = undefined
+    }
+
+    const takeHeldSeek = (element: HTMLVideoElement) => {
+        const next = seek.current
+        seek.current = null
+        if (next === null) return
+        const at = next === 'start' ? latest.current.startAt : next.at
+        if (at !== undefined && at > 0) {
+            element.currentTime = Number.isFinite(element.duration) ? Math.min(element.duration, at) : at
+        }
+        if (next !== 'start' && next.play) void element.play().catch(() => undefined)
+    }
+
+    const fail = (error: Omit<VideoError, 'fatal'>, unsupported: boolean) => {
+        clearStall()
+        clearTimeout(retryTimer.current)
+        retryTimer.current = undefined
+        failed.current = true
+        setTrouble({ phase: 'failed', unsupported })
+        latest.current.onError?.({ ...error, fatal: true })
+    }
+
+    const connect = (element: HTMLVideoElement, feed: VideoSource) => {
+        detach.current?.()
+        detach.current = null
+        if (feed.canPlay?.(element) === false) {
+            fail({ kind: 'unsupported', message: 'The source cannot be played in this browser' }, true)
+            return
+        }
+        let live = true
+        const off = feed.attach(element, (error) => {
+            if (!live) return
+            if (error.fatal) meet(error)
+            else if (!failed.current) latest.current.onError?.(error)
+        })
+        detach.current = () => {
+            live = false
+            off()
+        }
+    }
+
+    /** Where a try goes back to: a seek still held from before the media had its length, or where it is. */
+    const resumePoint = (): Exclude<Held, null> => seek.current ?? { at: video.current?.currentTime ?? 0, play: started.current }
+
+    const reload = (point: Exclude<Held, null>) => {
+        const element = video.current
+        if (element === null) return
+        clearStall()
+        failed.current = false
+        seek.current = point
+        resumedFrom.current = point === 'start' ? (latest.current.startAt ?? 0) : point.at
+        const feed = latest.current.source
+        if (feed !== undefined) connect(element, feed)
+        else element.load()
+    }
+
+    const meet = (error: Omit<VideoError, 'fatal'>) => {
+        if (retryTimer.current !== undefined || failed.current) return
+        clearStall()
+        const point = resumePoint()
+        const next = nextTry(error.kind, tries.current, latest.current.retries)
+        if (next === null) {
+            fail(error, false)
+            return
+        }
+        tries.current += 1
+        setTrouble({ phase: 'retrying' })
+        latest.current.onError?.({ ...error, fatal: false })
+        retryTimer.current = setTimeout(() => {
+            retryTimer.current = undefined
+            reload(point)
+        }, next.delay)
+    }
+
+    const retry = () => {
+        const point = resumePoint()
+        clearTimeout(retryTimer.current)
+        retryTimer.current = undefined
+        tries.current = 0
+        setTrouble(null)
+        reload({ at: point === 'start' ? (latest.current.startAt ?? 0) : point.at, play: true })
+    }
+
     useEffect(() => {
         const element = video.current
         if (element === null) return
         const read = () => {
+            started.current ||= !element.paused
             setState((previous) => ({
                 ...previous,
                 playing: !element.paused && !element.ended,
@@ -223,11 +437,99 @@ export function VideoPlayer({
             element.removeEventListener('enterpictureinpicture', enterPip)
             element.removeEventListener('leavepictureinpicture', leavePip)
         }
-    }, [src])
+    }, [src, sourceKey])
+
+    useEffect(() => {
+        const element = video.current
+        if (element === null) return
+        const metadata = () => {
+            takeHeldSeek(element)
+        }
+        const time = () => {
+            if (tries.current > 0 && element.currentTime > resumedFrom.current + RECOVERED_AFTER) tries.current = 0
+            latest.current.onTime?.(element.currentTime)
+        }
+        const ended = () => {
+            clearStall()
+            latest.current.onEnded?.()
+        }
+        const recovered = () => {
+            clearStall()
+            if (retryTimer.current === undefined && !failed.current) setTrouble(null)
+        }
+        const waiting = () => {
+            if (element.paused || stallTimer.current !== undefined) return
+            const patience = latest.current.stallAfter
+            stallTimer.current = setTimeout(() => {
+                stallTimer.current = undefined
+                if (!element.paused) meet({ kind: 'stalled', message: `No data for ${String(patience)} ms while playing` })
+            }, patience)
+        }
+        const error = () => {
+            // An element emptied on purpose, as a source does when it lets go, has nothing to fail.
+            if (!element.hasAttribute('src') && element.srcObject === null) return
+            const found = mediaError(element.error)
+            if (found !== null) meet(found)
+        }
+        element.addEventListener('loadedmetadata', metadata)
+        element.addEventListener('timeupdate', time)
+        element.addEventListener('ended', ended)
+        element.addEventListener('playing', recovered)
+        element.addEventListener('loadeddata', recovered)
+        element.addEventListener('pause', clearStall)
+        element.addEventListener('seeking', clearStall)
+        element.addEventListener('emptied', clearStall)
+        element.addEventListener('waiting', waiting)
+        element.addEventListener('error', error)
+        return () => {
+            element.removeEventListener('loadedmetadata', metadata)
+            element.removeEventListener('timeupdate', time)
+            element.removeEventListener('ended', ended)
+            element.removeEventListener('playing', recovered)
+            element.removeEventListener('loadeddata', recovered)
+            element.removeEventListener('pause', clearStall)
+            element.removeEventListener('seeking', clearStall)
+            element.removeEventListener('emptied', clearStall)
+            element.removeEventListener('waiting', waiting)
+            element.removeEventListener('error', error)
+            clearStall()
+            clearTimeout(retryTimer.current)
+            retryTimer.current = undefined
+        }
+    }, [])
+
+    // Each new media starts afresh: no tries spent, nothing failed, and `startAt` held for its length.
+    useEffect(() => {
+        const element = video.current
+        if (element === null) return
+        clearStall()
+        clearTimeout(retryTimer.current)
+        retryTimer.current = undefined
+        tries.current = 0
+        failed.current = false
+        started.current = false
+        setTrouble(null)
+        seek.current = 'start'
+        const feed = latest.current.source
+        if (feed === undefined) {
+            if (src !== undefined && element.getAttribute('src') !== src) element.setAttribute('src', src)
+            if (element.readyState >= HAVE_METADATA) takeHeldSeek(element)
+            return
+        }
+        connect(element, feed)
+        return () => {
+            detach.current?.()
+            detach.current = null
+        }
+    }, [src, sourceKey])
 
     useEffect(() => {
         const change = () => {
-            setFullscreen(document.fullscreenElement !== null && document.fullscreenElement === root.current)
+            const next = document.fullscreenElement !== null && document.fullscreenElement === root.current
+            setFullscreen(next)
+            if (filled.current === next) return
+            filled.current = next
+            latest.current.onFullscreenChange?.(next)
         }
         document.addEventListener('fullscreenchange', change)
         return () => {
@@ -294,8 +596,13 @@ export function VideoPlayer({
     const seekTo = (seconds: number) => {
         const element = video.current
         if (element === null) return
-        const end = Number.isFinite(element.duration) ? element.duration : seconds
-        element.currentTime = Math.min(end, Math.max(0, seconds))
+        const at = Math.max(0, seconds)
+        if (element.readyState < HAVE_METADATA) {
+            seek.current = { at, play: false }
+            return
+        }
+        const end = Number.isFinite(element.duration) ? element.duration : at
+        element.currentTime = Math.min(end, at)
     }
     const setVolume = (level: number) => {
         const element = video.current
@@ -326,8 +633,43 @@ export function VideoPlayer({
         else void element.requestPictureInPicture().catch(() => undefined)
     }
 
+    useImperativeHandle(ref, () => ({
+        play: () => {
+            void video.current?.play().catch(() => undefined)
+        },
+        pause: () => {
+            video.current?.pause()
+        },
+        toggle,
+        playing: () => video.current !== null && !video.current.paused && !video.current.ended,
+        time: () => video.current?.currentTime ?? 0,
+        seekTo: (seconds) => {
+            seekTo(seconds)
+            reveal()
+        },
+        seekBy: (seconds) => {
+            const pending = seek.current
+            seekTo((pending !== null && pending !== 'start' ? pending.at : (video.current?.currentTime ?? 0)) + seconds)
+            reveal()
+        },
+        volume: () => video.current?.volume ?? 1,
+        setVolume: (level) => {
+            setVolume(level)
+            reveal()
+        },
+        toggleMute: () => {
+            toggleMute()
+            reveal()
+        },
+        toggleFullscreen,
+        retry,
+        focus: () => {
+            root.current?.focus()
+        },
+    }))
+
     const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-        if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return
+        if (!keys || event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return
         const target = event.target as HTMLElement
         if (target.closest('[role=menu]') !== null) return
         const onSlider = target.closest('[role=slider]') !== null || target.getAttribute('type') === 'range'
@@ -386,6 +728,7 @@ export function VideoPlayer({
             data-slot="video-player"
             data-playing={state.playing || undefined}
             data-controls={shown ? 'shown' : 'hidden'}
+            data-trouble={trouble?.phase}
             tabIndex={0}
             onKeyDown={onKeyDown}
             onPointerMove={(event) => {
@@ -406,7 +749,7 @@ export function VideoPlayer({
         >
             <video
                 ref={attach}
-                src={src}
+                src={source === undefined ? src : undefined}
                 poster={poster}
                 autoPlay={autoPlay}
                 loop={loop}
@@ -441,7 +784,7 @@ export function VideoPlayer({
                 </div>
             )}
 
-            {!state.started && !state.playing && !shown && (
+            {trouble === null && !state.started && !state.playing && !shown && (
                 <Button
                     size="icon-lg"
                     aria-label={words.play}
@@ -450,6 +793,32 @@ export function VideoPlayer({
                 >
                     <Play className="translate-x-px fill-current" aria-hidden />
                 </Button>
+            )}
+
+            {trouble !== null && (
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-4">
+                    <div
+                        role={trouble.phase === 'failed' ? 'alert' : 'status'}
+                        className="pointer-events-auto flex max-w-full flex-col items-center gap-2 rounded-surface bg-terminal/75 px-4 py-3 text-center text-sm text-terminal-foreground shadow-md backdrop-blur-sm"
+                    >
+                        {trouble.phase === 'retrying' ? (
+                            <p className="flex items-center gap-2">
+                                <Spinner aria-hidden />
+                                {words.retrying}
+                            </p>
+                        ) : (
+                            <>
+                                <p>{trouble.unsupported ? words.unsupported : words.failed}</p>
+                                {!trouble.unsupported && (
+                                    <Button variant="ghost" size="sm" onClick={retry} className={ON_PICTURE}>
+                                        <RefreshCw aria-hidden />
+                                        {words.retry}
+                                    </Button>
+                                )}
+                            </>
+                        )}
+                    </div>
+                </div>
             )}
 
             <div

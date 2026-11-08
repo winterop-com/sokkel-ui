@@ -55,6 +55,7 @@
         "@winterop-com/sokkel-ui-media": "workspace:*",
         "@winterop-com/sokkel-ui-terminal": "workspace:*",
         "date-fns": "^4.4.0",
+        "hls.js": "1.7.3",
         "http-server": "^14.1.1",
         "katex": "^0.16.47",
         "lucide-react": "^1.68.0",
