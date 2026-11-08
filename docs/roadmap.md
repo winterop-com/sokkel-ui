@@ -81,6 +81,23 @@ to `plan.md` when it ships.
 - **Working demo apps outside Storybook.** In `examples/`, built against the package as an app would
   be: a data visualizer (a table of data with chart views to pick, saved and shared), and others to
   follow. Storybook stays the catalog of parts; the examples show them working together.
+- **The examples as they stand (run 2026-11-08).** `examples/web` in Chromium, the Electron 45
+  shell and the Tauri 2 shell on WebKit all start and draw with no errors, but they hold one page
+  (the runs table) on the core package alone, from before the palette existed. To bring them up
+  to the library:
+    - **Palette and search:** wire `palette`, `paletteSearch`, the top bar's search and the
+      appearance commands; ⌘K does nothing today.
+    - **Desktop frame:** both shells keep the system title bar. Use `desktop` on `Shell` (a hidden
+      title bar, the drag strip, room for the traffic lights) and full screen through
+      `setFullscreen`.
+    - **Wording:** words follow their context ("Search" and "New" on Runs, not "Search runs" and
+      "New run").
+    - **Electron install:** `bun install` did not fetch Electron's binary although it is a trusted
+      dependency; fix the install or say in the README how to fetch it.
+    - **CI:** it only compiles the shells. Start each once: Electron under Playwright with a virtual
+      display, Tauri as a built binary.
+    - **Room for the demos:** put the demo apps in `examples/web`, with the add-on packages, so each
+      runs in the browser, Electron and Tauri alike.
 
 ## Next
 
@@ -134,6 +151,19 @@ to `plan.md` when it ships.
   yes or no; fields in a row lined up when one has a description; a line saying what each theme
   is in `ThemePicker`. A `--color-*` name exists only once a class uses it, so a prop that takes a
   CSS color takes the raw token (`var(--status-running)`); decide whether every color is emitted.
+- **Gaps from a query app (2026-11-08)**, found moving an app with a jq editor onto 0.10.6:
+    - **Completions listed twice in `CodeEditor`.** An app's own `completions` (one per builtin,
+      with signatures as `detail` and a summary as `docs`) are offered beside the language's own
+      words, and nothing merges the two by label, so `has` is listed twice. An app's completion
+      with the same label as a language word should replace it, the app's detail and docs being
+      richer; or an option leaves the language's words out.
+    - **Diagrams and math in every Markdown build.** An app that renders `Markdown` with
+      `math={false}` and no diagram fences still gets chunks for Mermaid (with cytoscape and elk)
+      and KaTeX in its build. They are lazy and never fetched, but they grow its `dist/` from 8.7 MB
+      to 14 MB, which ships with every release of an app that packages its build. Give the app a
+      way the bundler can see, so neither enters its build: a `Markdown` entry point that never
+      names their imports, with diagrams and math as plug-ins the app passes in, or something like
+      it.
 - **Dashboard panels on the chart kinds.** `BarPanel`, `TimeSeriesPanel` and `ComboPanel` build
   ECharts options of their own and have drifted from the kinds (stack corners, for one); make them
   thin panels over the kinds, adding what the kinds lack first.
