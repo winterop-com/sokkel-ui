@@ -60,7 +60,7 @@ export interface TreeSelectProps {
     /** Whether the popover starts open when `open` is not given. */
     defaultOpen?: boolean
     onOpenChange?: (open: boolean) => void
-    /** The search the popover opens with, for a static view of it. */
+    /** The search the popover opens with, for a still view of it. */
     defaultQuery?: string
     /** Brings the children of a node marked `hasChildren` when it is first opened. */
     loadChildren?: (node: TreeNode) => Promise<readonly TreeNode[]>

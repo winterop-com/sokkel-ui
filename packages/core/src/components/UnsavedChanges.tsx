@@ -27,7 +27,7 @@ export function useUnsavedGuard({
 }: {
     dirty: boolean
     onClose: () => void
-    /** Starts with the question showing, for a static view of it. */
+    /** Starts with the question showing, for a still view of it. */
     defaultAsking?: boolean
 }): UnsavedGuard {
     const [asking, setAsking] = useState(defaultAsking)
