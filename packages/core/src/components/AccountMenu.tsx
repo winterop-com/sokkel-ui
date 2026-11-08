@@ -104,7 +104,7 @@ export function AccountMenu({
                 )}
             </Menu.Trigger>
             <Menu.Portal>
-                <Menu.Positioner side="top" align="start" sideOffset={4} alignOffset={4}>
+                <Menu.Positioner className="isolate z-50 outline-none" side="top" align="start" sideOffset={4} alignOffset={4}>
                     <Menu.Popup
                         data-slot="dropdown-menu-content"
                         className="w-64 rounded-lg border border-border-strong bg-popover p-1 text-popover-foreground shadow-pop"
