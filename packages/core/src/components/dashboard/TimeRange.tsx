@@ -225,7 +225,8 @@ export interface RefreshControlProps {
 
 /**
  * Refreshing a dashboard: a button that refreshes now and spins while it does, a menu choosing how
- * often it refreshes by itself, and when it last did, already written for a reader. With
+ * often it refreshes by itself, which closes on a choice, and when it last did, already written for
+ * a reader. With
  * `onPausedChange`, a pause button holds the refreshing a while without losing the interval, as
  * while reading a moment of a live dashboard.
  */
@@ -289,7 +290,7 @@ export function RefreshControl({
                     <DropdownMenuContent align="end" className="w-36">
                         <DropdownMenuRadioGroup value={String(interval)} onValueChange={(next) => onIntervalChange(Number(next))}>
                             {intervals.map((seconds) => (
-                                <DropdownMenuRadioItem key={seconds} value={String(seconds)}>
+                                <DropdownMenuRadioItem key={seconds} value={String(seconds)} closeOnClick>
                                     {seconds === 0 ? words.off : words.seconds(seconds)}
                                 </DropdownMenuRadioItem>
                             ))}
