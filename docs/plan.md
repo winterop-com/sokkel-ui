@@ -542,7 +542,8 @@ on their maker's servers; given both, the browser's is used where there is one. 
 `dictation` takes the same options and draws them: a microphone before Send; while it hears, a row
 with a pulsing mark, the voice's level (`BarVisualizer`, loaded with the first recording) or the
 words heard so far, the time and a cancel; then Transcribing, and the text put in at the caret.
-Escape cancels, a failure is said beside the microphone, and Send waits meanwhile. `microphone`
+Escape cancels, a failure is said whole on a line of its own over the row, wrapping at any width,
+and Send waits meanwhile. `microphone`
 stands in for `getUserMedia` and `defaultState` draws a state still, so a story never touches the
 microphone. `Artwork` is a record's cover: its picture once loaded, or one drawn in the theme's
 hues (a motif over a gradient between two), chosen from a stable seed such as the record's id, so a

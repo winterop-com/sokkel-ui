@@ -30,7 +30,7 @@ describe('Composer dictation', () => {
         expect(transcribing).toMatch(/aria-disabled="true" aria-label="Send"/)
     })
 
-    it('says a failure beside the microphone, in the words given', () => {
+    it('says a failure whole, in the words given, on a line of its own over the row', () => {
         const failed = renderToStaticMarkup(
             <Composer
                 value=""
@@ -40,8 +40,10 @@ describe('Composer dictation', () => {
                 words={{ dictation: { failed: 'Could not hear that' } }}
             />,
         )
-        expect(failed).toContain('role="alert"')
-        expect(failed).toContain('Could not hear that')
-        expect(failed).toContain('aria-label="Dictate"')
+        const alert = /<p role="alert" class="([^"]*)">.*?<\/p>/.exec(failed)
+        expect(alert?.[0]).toContain('Could not hear that')
+        // It wraps rather than being cut short, and stands before the row with the microphone.
+        expect(alert?.[1]).not.toMatch(/truncate|line-clamp|nowrap/)
+        expect(failed.indexOf('role="alert"')).toBeLessThan(failed.indexOf('aria-label="Dictate"'))
     })
 })
