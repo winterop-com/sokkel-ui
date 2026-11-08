@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 
-import { isBranch, treeHolding, treeMatches, visibleRows, type TreeLoad, type TreeNode } from './Tree'
+import { isBranch, treeAncestors, treeHolding, treeMatches, visibleRows, type TreeLoad, type TreeNode } from './Tree'
 
 const NODES: TreeNode[] = [
     {
@@ -15,6 +15,12 @@ const NODES: TreeNode[] = [
 ]
 
 describe('a tree', () => {
+    test('finds the levels above a node, to open the tree down to it', () => {
+        expect(treeAncestors(NODES, 'orders')).toEqual(['larkspur', 'exports'])
+        expect(treeAncestors(NODES, 'harbor')).toEqual([])
+        expect(treeAncestors(NODES, 'missing')).toBeNull()
+    })
+
     test('shows the top level until a node is opened', () => {
         expect(visibleRows(NODES, new Set(), null).map((row) => row.node.id)).toEqual(['larkspur', 'harbor'])
         expect(visibleRows(NODES, new Set(['larkspur']), null).map((row) => row.node.id)).toEqual([

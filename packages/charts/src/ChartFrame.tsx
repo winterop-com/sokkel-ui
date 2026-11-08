@@ -1,19 +1,21 @@
-import { Download, Info, Maximize2, Minimize2 } from 'lucide-react'
-import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
+import { Download, Info, Maximize2 } from 'lucide-react'
+import { useRef, useState, type ReactNode, type RefObject } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { LoadingOverlay } from '@winterop-com/sokkel-ui/Loaders'
+import { WINDOWED_PANE_WORDS, WindowedPane, useWindowedPane } from '@winterop-com/sokkel-ui/WindowedPane'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { ChartLegend, type LegendItem, type LegendStat, type LegendWords } from './ChartLegend'
 import type { ChartHandle } from './EChart'
 
-/** What the frame hands its chart: the legend's state and the handle the chart fills for export. */
+/** What the frame hands its chart: the legend's state, the handle the chart fills for export, and where it is drawn. */
 export interface ChartState {
     hidden: ReadonlySet<string>
     hovered: string | null
     handle: RefObject<ChartHandle | null>
-    fullscreen: boolean
+    /** Whether the chart is drawn in the expanded window rather than in the frame. */
+    windowed: boolean
 }
 
 export interface ChartFrameWords {
@@ -21,8 +23,12 @@ export interface ChartFrameWords {
     export: string
     svg: string
     png: string
-    fullscreen: string
-    exitFullscreen: string
+    /** The expand button's label. */
+    expand: string
+    /** The window's close button's label. */
+    close: string
+    /** Said in the frame's place while the chart is in the window. */
+    away: string
     empty: string
     loading: string
     legend?: Partial<LegendWords>
@@ -33,8 +39,9 @@ const WORDS: ChartFrameWords = {
     export: 'Export',
     svg: 'Export as SVG',
     png: 'Export as PNG',
-    fullscreen: 'Fullscreen',
-    exitFullscreen: 'Exit fullscreen',
+    expand: WINDOWED_PANE_WORDS.expand,
+    close: WINDOWED_PANE_WORDS.close,
+    away: WINDOWED_PANE_WORDS.away,
     empty: 'No data for this range.',
     loading: 'Loading',
 }
@@ -51,9 +58,11 @@ const TOOL =
 
 /**
  * The chrome around a chart: a small title with an optional info marker and subtitle, the panel's
- * actions, an Export menu (SVG and PNG, with the title and legend drawn into the image) and a
- * Fullscreen button, the legend, and the chart, which grows to the screen in fullscreen. The tools
- * show on hover or focus where the pointer can hover. `children` draws the chart from the state.
+ * actions, an Export menu (SVG and PNG, with the title and legend drawn into the image) and an
+ * expand button, the legend, and the chart. Expanding opens the chart and its legend near full
+ * screen through `WindowedPane`, as every expandable pane opens, with the frame keeping its place
+ * until the window closes. The tools show on hover or focus where the pointer can hover.
+ * `children` draws the chart from the state.
  */
 export function ChartFrame({
     title,
@@ -67,6 +76,7 @@ export function ChartFrame({
     file = 'chart',
     exportable = true,
     expandable = true,
+    defaultExpanded = false,
     loading = false,
     empty = false,
     bodyClassName = 'h-56',
@@ -89,9 +99,11 @@ export function ChartFrame({
     file?: string
     exportable?: boolean
     expandable?: boolean
+    /** Opens the chart in the window at first. */
+    defaultExpanded?: boolean
     loading?: boolean
     empty?: boolean
-    /** The chart area's size; it fills the screen in fullscreen. */
+    /** The chart area's size; it fills the window when expanded. */
     bodyClassName?: string
     /** The content sets the body's height, for content laid out in the page rather than drawn on a canvas. */
     fit?: boolean
@@ -104,13 +116,7 @@ export function ChartFrame({
     const [root, setRoot] = useState<HTMLElement | null>(null)
     const [hidden, setHidden] = useState<ReadonlySet<string>>(() => new Set())
     const [hovered, setHovered] = useState<string | null>(null)
-    const [full, setFull] = useState(false)
-
-    useEffect(() => {
-        const sync = () => setFull(document.fullscreenElement !== null && document.fullscreenElement === root)
-        document.addEventListener('fullscreenchange', sync)
-        return () => document.removeEventListener('fullscreenchange', sync)
-    }, [root])
+    const [expanded, setExpanded] = useState(defaultExpanded)
 
     const toggle = (key: string) => {
         const next = new Set(hidden)
@@ -139,12 +145,37 @@ export function ChartFrame({
 
     const head = title !== undefined || actions !== undefined || exportable || expandable
     const showLegend = legend !== undefined && legend.length > 0 && !empty
+    const content = (
+        <FrameBody
+            loading={loading}
+            empty={empty}
+            fit={fit}
+            bodyClassName={bodyClassName}
+            words={words}
+            legend={
+                showLegend ? (
+                    <ChartLegend
+                        items={legend}
+                        hidden={hidden}
+                        onToggle={toggle}
+                        onHover={setHovered}
+                        mode={legendMode}
+                        stats={legendStats}
+                        format={legendFormat}
+                        words={words.legend}
+                        className={cn('mt-1 shrink-0', legendMode === 'table' && 'max-h-40 overflow-y-auto')}
+                    />
+                ) : null
+            }
+        >
+            {(windowed) => children({ hidden, hovered, handle, windowed })}
+        </FrameBody>
+    )
     return (
         <section
             ref={setRoot}
             className={cn(
                 'group/frame flex min-w-0 flex-col overflow-hidden rounded-surface border border-border bg-card text-card-foreground',
-                full && 'h-screen w-screen rounded-none border-0 p-4',
                 className,
             )}
         >
@@ -180,48 +211,76 @@ export function ChartFrame({
                             {expandable && (
                                 <button
                                     type="button"
-                                    aria-label={full ? words.exitFullscreen : words.fullscreen}
-                                    title={full ? words.exitFullscreen : words.fullscreen}
+                                    aria-label={words.expand}
+                                    title={words.expand}
                                     className={TOOL}
-                                    onClick={() => void (full ? document.exitFullscreen() : root?.requestFullscreen())}
+                                    onClick={() => setExpanded(true)}
                                 >
-                                    {full ? <Minimize2 className="size-3.5" aria-hidden /> : <Maximize2 className="size-3.5" aria-hidden />}
+                                    <Maximize2 className="size-3.5" aria-hidden />
                                 </button>
                             )}
                         </div>
                     </div>
                 </header>
             )}
-            <div className={cn('flex min-h-0 flex-col px-2 pb-2', full && 'flex-1', !head && 'pt-2')}>
-                <LoadingOverlay
-                    loading={loading}
-                    label={words.loading}
-                    className={cn('min-h-0', full ? 'flex-1' : fit ? (empty ? 'h-24' : undefined) : bodyClassName)}
+            {expandable ? (
+                <WindowedPane
+                    title={
+                        <>
+                            {title}
+                            {subtitle !== undefined && <span className="ml-2 text-xs font-normal text-muted-foreground">{subtitle}</span>}
+                        </>
+                    }
+                    open={expanded}
+                    onOpenChange={setExpanded}
+                    button="none"
+                    words={{ expand: words.expand, close: words.close, away: words.away }}
+                    className={cn('flex flex-col px-2 pb-2', !head && 'pt-2')}
                 >
-                    {empty ? (
-                        <p className="absolute inset-0 flex items-center justify-center text-center text-xs text-muted-foreground">
-                            {words.empty}
-                        </p>
-                    ) : (
-                        <div className={fit ? undefined : 'absolute inset-0'}>
-                            {children({ hidden, hovered, handle, fullscreen: full })}
-                        </div>
-                    )}
-                </LoadingOverlay>
-                {showLegend && (
-                    <ChartLegend
-                        items={legend}
-                        hidden={hidden}
-                        onToggle={toggle}
-                        onHover={setHovered}
-                        mode={legendMode}
-                        stats={legendStats}
-                        format={legendFormat}
-                        words={words.legend}
-                        className={cn('mt-1 shrink-0', legendMode === 'table' && 'max-h-40 overflow-y-auto')}
-                    />
-                )}
-            </div>
+                    {content}
+                </WindowedPane>
+            ) : (
+                <div className={cn('flex min-h-0 flex-col px-2 pb-2', !head && 'pt-2')}>{content}</div>
+            )}
         </section>
+    )
+}
+
+/** The chart and its legend, in the frame or filling the window. */
+function FrameBody({
+    loading,
+    empty,
+    fit,
+    bodyClassName,
+    legend,
+    words,
+    children,
+}: {
+    loading: boolean
+    empty: boolean
+    fit: boolean
+    bodyClassName: string
+    legend: ReactNode
+    words: ChartFrameWords
+    children: (windowed: boolean) => ReactNode
+}) {
+    const windowed = useWindowedPane()?.windowed === true
+    return (
+        <div className={cn('flex min-h-0 flex-col', windowed && 'flex-1')}>
+            <LoadingOverlay
+                loading={loading}
+                label={words.loading}
+                className={cn('min-h-0', fit ? (empty ? 'h-24' : undefined) : windowed ? 'flex-1' : bodyClassName)}
+            >
+                {empty ? (
+                    <p className="absolute inset-0 flex items-center justify-center text-center text-xs text-muted-foreground">
+                        {words.empty}
+                    </p>
+                ) : (
+                    <div className={fit ? undefined : 'absolute inset-0'}>{children(windowed)}</div>
+                )}
+            </LoadingOverlay>
+            {legend}
+        </div>
     )
 }

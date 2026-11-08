@@ -12,7 +12,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { labelAnchor } from './basemap'
 import { resolveColors } from './color'
 import { ID_PROPERTY, useMapContext } from './context'
-import { boundsOf, type Bounds } from './geometry'
+import { boundsOf, isReadable, type Bounds } from './geometry'
 
 /** Where a value is read from a feature: a property's name, or a function of the feature. */
 export type FeatureAccessor = string | ((feature: Feature) => unknown)
@@ -35,6 +35,8 @@ export interface PreparedData {
     collection: FeatureCollection
     byId: ReadonlyMap<string, Feature>
     bounds: Bounds | null
+    /** How many features were left out because their geometry could not be read. */
+    unreadable: number
 }
 
 export function prepareData(
@@ -43,12 +45,18 @@ export function prepareData(
     derive: (feature: Feature) => Record<string, unknown>,
 ): PreparedData {
     const byId = new Map<string, Feature>()
-    const features = data.features.map((feature, index) => {
+    const readable = data.features.filter((feature) => isReadable(feature.geometry))
+    const features = readable.map((feature, index) => {
         const id = featureId(feature, idProperty) ?? `#${index}`
         byId.set(id, feature)
         return { ...feature, id: undefined, properties: { ...feature.properties, ...derive(feature), [ID_PROPERTY]: id } }
     })
-    return { collection: { type: 'FeatureCollection', features }, byId, bounds: boundsOf([data]) }
+    return {
+        collection: { type: 'FeatureCollection', features },
+        byId,
+        bounds: boundsOf([{ type: 'FeatureCollection', features: readable }]),
+        unreadable: data.features.length - readable.length,
+    }
 }
 
 /** A `match` on the class property: each class's color, and `fallback` for no data. */
@@ -70,7 +78,7 @@ export function setPaint(map: MapLibreMap, layer: string, paint: object): void {
 }
 
 /** True while a feature has the named feature state. */
-export function state(name: 'hover' | 'selected'): ExpressionSpecification {
+export function state(name: 'hover' | 'selected' | 'highlighted'): ExpressionSpecification {
     return ['boolean', ['feature-state', name], false]
 }
 
@@ -87,6 +95,8 @@ interface LayerOptions<C extends string> {
     images?: (colors: Record<C, string>) => Record<string, ImageData>
     interactive: boolean
     visible: boolean
+    /** The ids drawn at the middle emphasis, such as the features under the selected one. */
+    highlighted?: readonly string[]
     hitLayers: (source: string) => string[]
     tolerance: number
     click?: (feature: MapGeoJSONFeature, source: string) => boolean
@@ -95,7 +105,8 @@ interface LayerOptions<C extends string> {
 /**
  * Keeps a GeoJSON source and its style layers on the map for as long as the component is mounted:
  * new data is set in place, a theme change repaints in place, the layer registers for hits and
- * fitting, and the selected feature carries the `selected` feature state.
+ * fitting, the selected feature carries the `selected` feature state and the highlighted ones the
+ * `highlighted` state.
  */
 export function useGeoJsonLayer<C extends string>(options: LayerOptions<C>): { source: string } {
     const { map, scope, reading, selected, register } = useMapContext()
@@ -165,7 +176,7 @@ export function useGeoJsonLayer<C extends string>(options: LayerOptions<C>): { s
     }, [map, source, visible])
 
     const { interactive, tolerance } = options
-    const { byId, bounds } = options.data
+    const { byId, bounds, unreadable } = options.data
     useEffect(() => {
         const { hitLayers, click } = latest.current
         return register(source, {
@@ -174,9 +185,10 @@ export function useGeoJsonLayer<C extends string>(options: LayerOptions<C>): { s
             tolerance,
             features: byId,
             bounds,
+            unreadable,
             click: click === undefined ? undefined : (feature) => click(feature, source),
         })
-    }, [register, source, interactive, tolerance, byId, bounds])
+    }, [register, source, interactive, tolerance, byId, bounds, unreadable])
 
     useEffect(() => {
         if (selected === null || !byId.has(selected)) return
@@ -185,6 +197,16 @@ export function useGeoJsonLayer<C extends string>(options: LayerOptions<C>): { s
             if (map.getSource(source) !== undefined) map.setFeatureState({ source, id: selected }, { selected: false })
         }
     }, [map, source, selected, byId])
+
+    const highlightKey = (options.highlighted ?? []).join('\n')
+    useEffect(() => {
+        const ids = highlightKey === '' ? [] : highlightKey.split('\n').filter((id) => byId.has(id))
+        for (const id of ids) map.setFeatureState({ source, id }, { highlighted: true })
+        return () => {
+            if (map.getSource(source) === undefined) return
+            for (const id of ids) map.setFeatureState({ source, id }, { highlighted: false })
+        }
+    }, [map, source, highlightKey, byId])
 
     return { source }
 }

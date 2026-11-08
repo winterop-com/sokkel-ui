@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 
 import { useMapContext } from './context'
 import { CLASS_PROPERTY, classColor, prepareData, readValue, state, useGeoJsonLayer, type FeatureAccessor } from './layer'
-import { NO_DATA_POINT_COLOR, classOf, scaleColors, type ColorScale } from './scale'
+import { HIGHLIGHT_COLOR, NO_DATA_POINT_COLOR, SELECTION_COLOR, classOf, scaleColors, type ColorScale } from './scale'
 
 /** The feature property a layer stores each point's size value under. */
 const SIZE_PROPERTY = '__size'
@@ -41,6 +41,8 @@ export interface PointLayerProps {
     visible?: boolean
     /** Whether points answer hover and clicks. */
     interactive?: boolean
+    /** The ids of points drawn at the middle emphasis, such as the points under the selected area. */
+    highlighted?: readonly string[]
 }
 
 interface ClusterLabel {
@@ -55,7 +57,10 @@ const COMPACT = new Intl.NumberFormat('en-US', { notation: 'compact', maximumFra
 /**
  * Points on the map, as circles colored by a scale or one color and sized by a value or one
  * radius, each ringed in the card color so neighbors stay apart. Clustered points gather into
- * circles carrying their count.
+ * circles carrying their count. The selected point grows in the selection color and the
+ * `highlighted` ones take the highlight color: as their fill when the layer has one color, as
+ * their ring when a scale colors them. A point whose position cannot be read is left out and
+ * counted in the map's note.
  */
 export function PointLayer({
     id,
@@ -70,6 +75,7 @@ export function PointLayer({
     opacity = 1,
     visible = true,
     interactive = true,
+    highlighted,
 }: PointLayerProps) {
     const { map, overlay } = useMapContext()
     const prepared = useMemo(
@@ -84,13 +90,15 @@ export function PointLayer({
             }),
         [data, idProperty, scale, value, size],
     )
-    const classes = scale === undefined ? [color] : scaleColors(scale)
+    const plain = scale === undefined
+    const classes = plain ? [color] : scaleColors(scale)
     const clusterOptions = cluster === false ? undefined : cluster === true ? {} : cluster
     const colors = {
         ...Object.fromEntries(classes.map((css, index) => [`class${index}`, css])),
         noData: NO_DATA_POINT_COLOR,
-        ink: 'var(--foreground)',
         ring: 'var(--card)',
+        selection: SELECTION_COLOR,
+        highlight: HIGHLIGHT_COLOR,
         cluster: 'color-mix(in oklab, var(--foreground) 78%, var(--card))',
     }
 
@@ -117,6 +125,7 @@ export function PointLayer({
         colors,
         interactive,
         visible,
+        highlighted,
         tolerance: 4,
         hitLayers: (source) => [`${source}-circle`, `${source}-cluster`],
         click: (feature, source) => {
@@ -138,12 +147,18 @@ export function PointLayer({
                     filter: ['!', ['has', 'point_count']],
                     layout: { 'circle-sort-key': ['-', 0, ['to-number', ['get', SIZE_PROPERTY], 0]] },
                     paint: {
-                        'circle-color': classColor(fills, resolved.noData),
+                        'circle-color': plain
+                            ? ['case', state('selected'), resolved.selection, state('highlighted'), resolved.highlight, fills[0]]
+                            : classColor(fills, resolved.noData),
                         'circle-radius': ['+', base, ['case', state('selected'), 2.5, state('hover'), 1.5, 0]],
                         'circle-opacity': 0.95 * opacity,
                         'circle-stroke-opacity': opacity,
-                        'circle-stroke-color': ['case', state('selected'), resolved.ink, resolved.ring],
-                        'circle-stroke-width': ['case', state('selected'), 2, 1.25],
+                        'circle-stroke-color': plain
+                            ? resolved.ring
+                            : ['case', state('selected'), resolved.selection, state('highlighted'), resolved.highlight, resolved.ring],
+                        'circle-stroke-width': plain
+                            ? ['case', state('selected'), 2, 1.25]
+                            : ['case', state('selected'), 2.5, state('highlighted'), 2, 1.25],
                     },
                 },
             ]

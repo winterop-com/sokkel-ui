@@ -190,7 +190,9 @@ the grid alike.
 
 `WindowedPane` gives any pane an expand button that opens the same content near full screen, in a
 window with a margin, a title, a close button and Escape, the pane keeping its height in place
-until the content comes back; `MermaidDiagram` and an expandable `DashboardPanel` open through it.
+until the content comes back; `MermaidDiagram`, an expandable `DashboardPanel` and `ChartFrame` open
+through it, so there is one way to open a pane near full screen. A map's own full screen control
+asks the browser for its full screen instead, keeping the same canvas and camera.
 `useStored` keeps a value in `localStorage` as JSON under an app prefix (`setStoredPrefix`), in
 memory when storage is refused, refusing a kept value its `check` does not pass, and follows the
 same key in other hooks and other tabs; `useAppearance` keeps the look through the same store. A
@@ -203,7 +205,8 @@ later), and hands `AttachmentList`, `Composer` and `UploadTray` their files. `Co
 beside a chat, is a `DataTable` list grouped under Pinned, Today and Earlier, with rename in place,
 pin, and delete after a question.
 
-Tree and TreeSelect pick from a hierarchy of any depth and size. A node marked `hasChildren` loads
+Tree and TreeSelect pick from a hierarchy of any depth and size. A single choice made outside the
+tree, such as a place picked on a map beside it, opens the tree down to it and scrolls to it. A node marked `hasChildren` loads
 its level through the app's `loadChildren` when first opened, with a loading row meanwhile and a row
 to try again when it fails; the app's `search` looks through the whole hierarchy, loaded or not, and
 lists each match with its path, and choosing one opens the tree down to it. TreeSelect names its
@@ -240,6 +243,16 @@ areas or points draw and answer the cursor with no work per feature in React. `B
 simplifies heavy geometry once as it arrives (`simplify`) and names its areas (`label`) in a symbol
 layer that maplibre declutters, the larger areas placed first; names need a basemap with fonts.
 `PointLayer` gathers points into counted clusters, and the map fits whatever its layers draw.
+
+A map beside a hierarchy (Apps/Sites, after an adopting app's own page of a tree, a map and a
+detail card) shares one selection with the tree: the selected feature in `--map-selection`, the
+features under it in `--map-highlight` through the layers' `highlighted` ids, the rest plain, and a
+`MapLegend` whose `entries` key them from `AREA_EMPHASIS` in the colors the layers paint. `bounds`
+frames the selection, and new bounds are eased to even after the reader has moved the map.
+`controls` picks the map's own buttons (zoom, fit, full screen, and a toggle to the globe); an app
+that offers no basemap gets the ground alone and no network, and the map draws only a basemap it
+offers. Layers leave out features whose geometry cannot be read, and the map says how many in a
+note under it, after the app's own `notes`.
 
 ## Graphs
 

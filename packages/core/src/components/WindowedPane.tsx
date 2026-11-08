@@ -86,7 +86,11 @@ export function WindowedPane({
     const place = useRef<HTMLDivElement>(null)
     const [height, setHeight] = useState<number | undefined>(undefined)
     const setOpen = (next: boolean) => {
-        if (next && place.current !== null) setHeight(place.current.offsetHeight)
+        if (next && place.current !== null) {
+            // The content's own height, inside whatever padding the pane was given.
+            const style = getComputedStyle(place.current)
+            setHeight(place.current.clientHeight - Number.parseFloat(style.paddingTop) - Number.parseFloat(style.paddingBottom))
+        }
         if (heldOpen === undefined) setOwnOpen(next)
         onOpenChange?.(next)
     }

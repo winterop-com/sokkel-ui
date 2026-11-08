@@ -47,6 +47,56 @@ export function boundsOf(collections: readonly FeatureCollection[]): Bounds | nu
     return west === Infinity ? null : [west, south, east, north]
 }
 
+/** The extent of the features whose ids are given, or null when none of them has coordinates. */
+export function boundsOfIds(collection: FeatureCollection, ids: Iterable<string>): Bounds | null {
+    const wanted = new Set(ids)
+    const features = collection.features.filter((feature) => feature.id !== undefined && wanted.has(String(feature.id)))
+    return boundsOf([{ type: 'FeatureCollection', features }])
+}
+
+function isPosition(value: unknown): boolean {
+    if (!Array.isArray(value) || value.length < 2) return false
+    const [lng, lat] = value as unknown[]
+    return typeof lng === 'number' && typeof lat === 'number' && Number.isFinite(lng) && Number.isFinite(lat) && Math.abs(lat) <= 90
+}
+
+function isLine(value: unknown, least: number): boolean {
+    return Array.isArray(value) && value.length >= least && value.every(isPosition)
+}
+
+function isPolygon(value: unknown): boolean {
+    return Array.isArray(value) && value.length > 0 && value.every((ring) => isLine(ring, 4))
+}
+
+/**
+ * Whether a geometry can be drawn: a known type whose positions are finite numbers with a latitude
+ * a map has, whose lines have two positions and whose rings four. A missing geometry is a feature
+ * with no place, not one that cannot be read.
+ */
+export function isReadable(geometry: Geometry | null | undefined): boolean {
+    if (geometry === null || geometry === undefined) return true
+    const shape = geometry as { type?: unknown; coordinates?: unknown; geometries?: unknown }
+    const coordinates = shape.coordinates
+    switch (shape.type) {
+        case 'Point':
+            return isPosition(coordinates)
+        case 'MultiPoint':
+            return isLine(coordinates, 1)
+        case 'LineString':
+            return isLine(coordinates, 2)
+        case 'MultiLineString':
+            return Array.isArray(coordinates) && coordinates.every((line) => isLine(line, 2))
+        case 'Polygon':
+            return isPolygon(coordinates)
+        case 'MultiPolygon':
+            return Array.isArray(coordinates) && coordinates.length > 0 && coordinates.every(isPolygon)
+        case 'GeometryCollection':
+            return Array.isArray(shape.geometries) && (shape.geometries as Geometry[]).every((part) => part !== null && isReadable(part))
+        default:
+            return false
+    }
+}
+
 /** The union of extents, or null when there are none. */
 export function unionBounds(extents: readonly (Bounds | null)[]): Bounds | null {
     const present = extents.filter((extent): extent is Bounds => extent !== null)

@@ -106,7 +106,7 @@ under Next. Each is a part or an option here, never a copy in an app. Roughly on
 
 - **Round 3, layout, maps and tokens.** A split of two panes, across or down, with bounds, that
   remembers its share by `id`; a `GeoJsonLayer` drawing fills, lines and circles by geometry type
-  in the theme's colors; tokens for headers, table zebra and head, map selection, editor, scroll
+  in the theme's colors; tokens for headers, table zebra and head, editor, scroll
   track, page foot and palette insets; an app-defined status map for `StatusChip` beyond run
   states, with kind colors; radius by role (control and surface); themes named for their look:
   `ocean`, `indigo` and `terminal`.

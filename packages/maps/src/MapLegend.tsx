@@ -1,12 +1,27 @@
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { NO_DATA_BACKGROUND, NO_DATA_POINT_COLOR, classLabels, scaleColors, type ColorScale } from './scale'
 
-function Swatch({ background, shape }: { background: string; shape: 'area' | 'point' }) {
+/** One line of a legend that keys something other than a scale, such as the selection's emphasis. */
+export interface MapLegendEntry {
+    label: string
+    /** Any CSS color, a token included: the swatch's fill. */
+    color: string
+    /** The swatch's edge, for what the map draws with an outline of its own color. */
+    edge?: string
+    /** A round swatch for points or a square one for areas; the legend's `shape` when not given. */
+    shape?: 'area' | 'point'
+}
+
+function Swatch({ background, edge, shape }: { background: string; edge?: string; shape: 'area' | 'point' }) {
     return (
         <span
             aria-hidden
-            className={cn('size-3 shrink-0 ring-1 ring-foreground/15 ring-inset', shape === 'point' ? 'rounded-full' : 'rounded-mini')}
-            style={{ background }}
+            className={cn(
+                'size-3 shrink-0',
+                edge === undefined ? 'ring-1 ring-foreground/15 ring-inset' : 'border-2',
+                shape === 'point' ? 'rounded-full' : 'rounded-mini',
+            )}
+            style={{ background, borderColor: edge }}
         />
     )
 }
@@ -23,11 +38,15 @@ function Count({ value }: { value: number | undefined }) {
  * with its breaks under it, or the same list with each class's range written out. `noData` adds
  * the swatch a feature without a value is drawn in: hatched for areas, gray for points. `counts`
  * puts the number of features in each class beside it, in the list.
+ *
+ * Without a scale, `entries` lists what the map's colors mean line by line, each swatch with its
+ * own fill and edge: the selected area, the areas under it and the rest, from `AREA_EMPHASIS`.
  */
 export function MapLegend({
     title,
     description,
     scale,
+    entries = [],
     layout = 'ramp',
     captions,
     shape = 'area',
@@ -40,7 +59,9 @@ export function MapLegend({
     title?: string
     /** A line under the title, such as the period or the unit. */
     description?: string
-    scale: ColorScale
+    scale?: ColorScale
+    /** Lines keyed by their own colors, after the scale's classes or in place of a scale. */
+    entries?: readonly MapLegendEntry[]
     /** How a sequential or diverging scale is drawn; a categorical scale is always a list. */
     layout?: 'ramp' | 'list'
     /** Words under the two ends of a ramp, such as "Fewer" and "More". */
@@ -49,16 +70,18 @@ export function MapLegend({
     shape?: 'area' | 'point'
     /** Shows the no-data swatch, with this label or "No data". */
     noData?: boolean | string
-    /** How many features fall in each class, in class order. */
+    /** How many features fall in each class (or each entry, without a scale), in order. */
     counts?: number[]
     noDataCount?: number
     /** Draws the legend in its own card. */
     framed?: boolean
     className?: string
 }) {
-    const colors = scaleColors(scale)
-    const labels = classLabels(scale)
-    const list = scale.kind === 'categorical' || layout === 'list'
+    const colors = scale === undefined ? [] : scaleColors(scale)
+    const labels = scale === undefined ? [] : classLabels(scale)
+    const list = scale === undefined || scale.kind === 'categorical' || layout === 'list'
+    const classes: MapLegendEntry[] = colors.map((color, index) => ({ label: labels[index], color }))
+    const lines = list ? [...classes, ...entries] : entries
     const noDataLabel = typeof noData === 'string' ? noData : 'No data'
     const headed = title !== undefined || description !== undefined
     return (
@@ -72,17 +95,7 @@ export function MapLegend({
         >
             {title !== undefined && <h3 className="leading-snug font-medium">{title}</h3>}
             {description !== undefined && <p className="leading-snug text-muted-foreground">{description}</p>}
-            {list ? (
-                <ul className={cn('space-y-1', headed && 'mt-2')}>
-                    {colors.map((color, index) => (
-                        <li key={labels[index]} className="flex items-center gap-2">
-                            <Swatch background={color} shape={shape} />
-                            <span className="tabular-nums">{labels[index]}</span>
-                            <Count value={counts?.[index]} />
-                        </li>
-                    ))}
-                </ul>
-            ) : (
+            {scale !== undefined && !list && (
                 <div className={cn(headed && 'mt-2')}>
                     <div
                         className="flex h-2.5 overflow-hidden rounded-mini ring-1 ring-foreground/10"
@@ -111,6 +124,17 @@ export function MapLegend({
                         </div>
                     )}
                 </div>
+            )}
+            {lines.length > 0 && (
+                <ul className={cn('space-y-1', (headed || !list) && 'mt-2')}>
+                    {lines.map((line, index) => (
+                        <li key={line.label} className="flex items-center gap-2">
+                            <Swatch background={line.color} edge={line.edge} shape={line.shape ?? shape} />
+                            <span className="tabular-nums">{line.label}</span>
+                            <Count value={counts?.[index]} />
+                        </li>
+                    ))}
+                </ul>
             )}
             {noData !== false && (
                 <div className={cn('flex items-center gap-2', list ? 'mt-1' : 'mt-1.5')}>
