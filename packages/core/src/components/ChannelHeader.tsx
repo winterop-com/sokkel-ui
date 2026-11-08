@@ -45,33 +45,7 @@ const WORDS: ChannelHeaderWords = {
     tabs: 'Views',
 }
 
-/**
- * The head of a conversation, as a team chat draws it: `#` (a lock when `private`) and the
- * channel's name, its topic muted after it, then the members as a stack of faces with their count
- * and the header's icon actions. A direct conversation (`kind="direct"`) shows the person's
- * picture and whether they are around instead of the `#`. The name keeps its width; the topic
- * gives way first and hides when the header is narrow. `tabs` adds a row of views under it.
- */
-export function ChannelHeader({
-    name,
-    topic,
-    kind = 'channel',
-    private: locked = false,
-    avatar,
-    image,
-    presence,
-    onDetails,
-    members,
-    memberCount,
-    onMembers,
-    actions,
-    tabs,
-    tab,
-    onTabChange,
-    children,
-    className,
-    words: given,
-}: {
+export interface ChannelHeaderProps {
     /** The channel's name without the `#`, or the person's name. */
     name: string
     topic?: ReactNode
@@ -100,7 +74,35 @@ export function ChannelHeader({
     children?: ReactNode
     className?: string
     words?: Partial<ChannelHeaderWords>
-}) {
+}
+
+/**
+ * The head of a conversation, as a team chat draws it: `#` (a lock when `private`) and the
+ * channel's name, its topic muted after it, then the members as a stack of faces with their count
+ * and the header's icon actions. A direct conversation (`kind="direct"`) shows the person's
+ * picture and whether they are around instead of the `#`. The name keeps its width; the topic
+ * gives way first and hides when the header is narrow. `tabs` adds a row of views under it.
+ */
+export function ChannelHeader({
+    name,
+    topic,
+    kind = 'channel',
+    private: locked = false,
+    avatar,
+    image,
+    presence,
+    onDetails,
+    members,
+    memberCount,
+    onMembers,
+    actions,
+    tabs,
+    tab,
+    onTabChange,
+    children,
+    className,
+    words: given,
+}: ChannelHeaderProps) {
     const words = { ...WORDS, ...given }
     const mark =
         kind === 'direct' ? (

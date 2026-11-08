@@ -34,6 +34,23 @@ const SEPARATOR: Partial<Record<string, string>> = {
 
 const ICON_SIZE = { xs: 'icon-xs', sm: 'icon-sm', default: 'icon', lg: 'icon-lg' } as const
 
+export interface SplitButtonProps {
+    /** The main action's label, with an icon before it if wanted. */
+    children: ReactNode
+    onClick?: () => void
+    items: readonly SplitButtonItem[]
+    variant?: 'default' | 'outline' | 'secondary' | 'ghost' | 'destructive'
+    size?: 'xs' | 'sm' | 'default' | 'lg'
+    disabled?: boolean
+    reason?: ReactNode
+    /** The menu open, held by the app; leave it out and the control holds it. */
+    open?: boolean
+    defaultOpen?: boolean
+    onOpenChange?: (open: boolean) => void
+    className?: string
+    words?: Partial<SplitButtonWords>
+}
+
 /**
  * The main action and a menu of other ways to do it, joined as one control: Run now beside Run
  * with options and Run from a step. Pressing the main half does the action; the chevron opens the
@@ -53,22 +70,7 @@ export function SplitButton({
     onOpenChange,
     className,
     words: given,
-}: {
-    /** The main action's label, with an icon before it if wanted. */
-    children: ReactNode
-    onClick?: () => void
-    items: readonly SplitButtonItem[]
-    variant?: 'default' | 'outline' | 'secondary' | 'ghost' | 'destructive'
-    size?: 'xs' | 'sm' | 'default' | 'lg'
-    disabled?: boolean
-    reason?: ReactNode
-    /** The menu open, held by the app; leave it out and the control holds it. */
-    open?: boolean
-    defaultOpen?: boolean
-    onOpenChange?: (open: boolean) => void
-    className?: string
-    words?: Partial<SplitButtonWords>
-}) {
+}: SplitButtonProps) {
     const words = { ...WORDS, ...given }
     const group = useRef<HTMLDivElement>(null)
     const off = disabled || (reason !== undefined && reason !== null && reason !== false)

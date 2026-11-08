@@ -78,6 +78,33 @@ export function barOption({
     }
 }
 
+export interface BarPanelProps {
+    title: ReactNode
+    subtitle?: ReactNode
+    info?: ReactNode
+    actions?: ReactNode
+    /** The categories, written for a reader. */
+    x: readonly string[]
+    series: readonly PanelSeries[]
+    unit?: string
+    decimals?: number
+    format?: (value: number) => string
+    /** Stacks the series; `percent` stacks each category's share of its total, to 100%. */
+    stacked?: boolean | 'percent'
+    horizontal?: boolean
+    gap?: 'tight' | 'normal'
+    labelEvery?: number
+    legend?: 'list' | 'table' | 'none'
+    legendStats?: readonly LegendStat[]
+    span?: PanelSpan
+    bodyClassName?: string
+    loading?: boolean
+    empty?: boolean
+    file?: string
+    words?: Partial<ChartFrameWords>
+    className?: string
+}
+
 /**
  * A dashboard panel of bars: one or more series per category, side by side or stacked, upright or
  * lying down, or as each category's share of its total. A tight gap draws a histogram's tall touching bars. Keep `series` and `x` stable
@@ -106,32 +133,7 @@ export function BarPanel({
     file,
     words,
     className,
-}: {
-    title: ReactNode
-    subtitle?: ReactNode
-    info?: ReactNode
-    actions?: ReactNode
-    /** The categories, written for a reader. */
-    x: readonly string[]
-    series: readonly PanelSeries[]
-    unit?: string
-    decimals?: number
-    format?: (value: number) => string
-    /** Stacks the series; `percent` stacks each category's share of its total, to 100%. */
-    stacked?: boolean | 'percent'
-    horizontal?: boolean
-    gap?: 'tight' | 'normal'
-    labelEvery?: number
-    legend?: 'list' | 'table' | 'none'
-    legendStats?: readonly LegendStat[]
-    span?: PanelSpan
-    bodyClassName?: string
-    loading?: boolean
-    empty?: boolean
-    file?: string
-    words?: Partial<ChartFrameWords>
-    className?: string
-}) {
+}: BarPanelProps) {
     const option = useMemo(
         () => barOption({ x, series, unit, decimals, format, stacked, horizontal, gap, labelEvery }),
         [x, series, unit, decimals, format, stacked, horizontal, gap, labelEvery],

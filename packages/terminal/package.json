@@ -22,9 +22,13 @@
     "exports": {
         "./styles.css": "./src/styles.css",
         "./sources/*.css": "./dist/sources/*.css",
-        "./*": {
-            "types": "./dist/*.d.ts",
-            "import": "./dist/*.js"
+        "./Terminal": {
+            "types": "./dist/Terminal.d.ts",
+            "import": "./dist/Terminal.js"
+        },
+        "./TerminalView": {
+            "types": "./dist/TerminalView.d.ts",
+            "import": "./dist/TerminalView.js"
         }
     },
     "publishConfig": {

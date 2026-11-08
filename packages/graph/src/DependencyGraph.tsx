@@ -22,6 +22,8 @@ export interface LineageEdge {
     to: string
 }
 
+export type DependencyGraphProps = GraphViewProps & { nodes: LineageNode[]; edges: LineageEdge[] }
+
 /**
  * A lineage of datasets and jobs, each after what feeds it. A dataset is drawn with round corners and
  * a cylinder, a job as a plain box with a cog, so the two read apart without color.
@@ -35,7 +37,7 @@ export function DependencyGraph({
     frame = 'stage',
     words,
     className,
-}: GraphViewProps & { nodes: LineageNode[]; edges: LineageEdge[] }) {
+}: DependencyGraphProps) {
     const items = useMemo<GraphItem[]>(
         () =>
             nodes.map((node) => ({

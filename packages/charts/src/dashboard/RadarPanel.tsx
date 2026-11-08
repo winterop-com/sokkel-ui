@@ -56,6 +56,29 @@ export function radarOption({
     })
 }
 
+export interface RadarPanelProps {
+    title: ReactNode
+    subtitle?: ReactNode
+    info?: ReactNode
+    actions?: ReactNode
+    spokes: readonly RadarSpoke[]
+    series: readonly PanelSeries[]
+    unit?: string
+    decimals?: number
+    format?: (value: number) => string
+    shape?: 'polygon' | 'circle'
+    fill?: boolean
+    rings?: number
+    legend?: 'list' | 'none'
+    span?: PanelSpan
+    bodyClassName?: string
+    loading?: boolean
+    empty?: boolean
+    file?: string
+    words?: Partial<ChartFrameWords>
+    className?: string
+}
+
 /**
  * A dashboard panel comparing a few items on several measures at once: one spoke per measure,
  * each scaled to its own rim, and one polygon per item, faintly filled. A dashed series draws a
@@ -82,28 +105,7 @@ export function RadarPanel({
     file,
     words,
     className,
-}: {
-    title: ReactNode
-    subtitle?: ReactNode
-    info?: ReactNode
-    actions?: ReactNode
-    spokes: readonly RadarSpoke[]
-    series: readonly PanelSeries[]
-    unit?: string
-    decimals?: number
-    format?: (value: number) => string
-    shape?: 'polygon' | 'circle'
-    fill?: boolean
-    rings?: number
-    legend?: 'list' | 'none'
-    span?: PanelSpan
-    bodyClassName?: string
-    loading?: boolean
-    empty?: boolean
-    file?: string
-    words?: Partial<ChartFrameWords>
-    className?: string
-}) {
+}: RadarPanelProps) {
     const option = useMemo(
         () => radarOption({ spokes, series, unit, decimals, format, shape, fill, rings }),
         [spokes, series, unit, decimals, format, shape, fill, rings],

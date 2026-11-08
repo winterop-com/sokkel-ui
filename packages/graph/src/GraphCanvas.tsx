@@ -191,6 +191,32 @@ function placementKey(nodes: readonly Node[]): string {
         .join('|')
 }
 
+export interface GraphCanvasProps<N extends Node = Node, E extends Edge = Edge> {
+    nodes: N[]
+    edges: E[]
+    /** Node kinds beyond `box`, the node box. */
+    nodeTypes?: NodeTypes
+    /** Edge kinds beyond `graph`, the routed edge every edge is drawn as by default. */
+    edgeTypes?: EdgeTypes
+    direction?: GraphDirection
+    frame?: GraphFrame
+    settled?: boolean
+    /** Called with the node chosen, or null when the ground was clicked. */
+    onSelect?: (id: string | null) => void
+    /** Called with every chosen node when the choice changes; given this, several can be chosen at once. */
+    onSelectionChange?: (ids: string[]) => void
+    /** Makes the canvas an editor: ports to connect, boxes to drag, Delete to remove. Without it the canvas only selects. */
+    editing?: GraphEditing
+    /** False hides the zoom buttons, for a toolbar that carries them. */
+    controls?: boolean
+    /** A bar over the canvas's top-left corner; inside it, `useGraphControls` reaches the view. */
+    toolbar?: ReactNode
+    words?: Partial<GraphWords>
+    className?: string
+    /** What the canvas holds over the drawing. */
+    children?: ReactNode
+}
+
 /**
  * The canvas a graph is drawn on: React Flow in the library's tokens, in either scheme. It fits the
  * whole graph whenever its nodes or its own size change, until the reader pans or zooms it; the fit
@@ -217,31 +243,7 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
     words,
     className,
     children,
-}: {
-    nodes: N[]
-    edges: E[]
-    /** Node kinds beyond `box`, the node box. */
-    nodeTypes?: NodeTypes
-    /** Edge kinds beyond `graph`, the routed edge every edge is drawn as by default. */
-    edgeTypes?: EdgeTypes
-    direction?: GraphDirection
-    frame?: GraphFrame
-    settled?: boolean
-    /** Called with the node chosen, or null when the ground was clicked. */
-    onSelect?: (id: string | null) => void
-    /** Called with every chosen node when the choice changes; given this, several can be chosen at once. */
-    onSelectionChange?: (ids: string[]) => void
-    /** Makes the canvas an editor: ports to connect, boxes to drag, Delete to remove. Without it the canvas only selects. */
-    editing?: GraphEditing
-    /** False hides the zoom buttons, for a toolbar that carries them. */
-    controls?: boolean
-    /** A bar over the canvas's top-left corner; inside it, `useGraphControls` reaches the view. */
-    toolbar?: ReactNode
-    words?: Partial<GraphWords>
-    className?: string
-    /** What the canvas holds over the drawing. */
-    children?: ReactNode
-}) {
+}: GraphCanvasProps<N, E>) {
     const said = { ...GRAPH_WORDS, ...words }
     const box = useRef<HTMLDivElement | null>(null)
     const [width, setWidth] = useState(0)

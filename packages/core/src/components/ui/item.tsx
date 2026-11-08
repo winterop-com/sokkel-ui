@@ -6,8 +6,10 @@ import { cn } from '../../lib/cn'
 
 import { Separator } from './separator'
 
+export type ItemGroupProps = React.ComponentProps<'div'> & { flush?: boolean }
+
 /** `flush` sets the items against each other, for a list that draws separators between them. */
-function ItemGroup({ className, flush = false, ...props }: React.ComponentProps<'div'> & { flush?: boolean }) {
+function ItemGroup({ className, flush = false, ...props }: ItemGroupProps) {
     return (
         <div
             role="list"
@@ -22,7 +24,9 @@ function ItemGroup({ className, flush = false, ...props }: React.ComponentProps<
     )
 }
 
-function ItemSeparator({ className, ...props }: React.ComponentProps<typeof Separator>) {
+export type ItemSeparatorProps = React.ComponentProps<typeof Separator>
+
+function ItemSeparator({ className, ...props }: ItemSeparatorProps) {
     return <Separator data-slot="item-separator" orientation="horizontal" className={cn('my-2', className)} {...props} />
 }
 
@@ -48,13 +52,9 @@ const itemVariants = cva(
     },
 )
 
-function Item({
-    className,
-    variant = 'default',
-    size = 'default',
-    render,
-    ...props
-}: useRender.ComponentProps<'div'> & VariantProps<typeof itemVariants>) {
+export type ItemProps = useRender.ComponentProps<'div'> & VariantProps<typeof itemVariants>
+
+function Item({ className, variant = 'default', size = 'default', render, ...props }: ItemProps) {
     return useRender({
         defaultTagName: 'div',
         props: mergeProps<'div'>(
@@ -88,11 +88,15 @@ const itemMediaVariants = cva(
     },
 )
 
-function ItemMedia({ className, variant = 'default', ...props }: React.ComponentProps<'div'> & VariantProps<typeof itemMediaVariants>) {
+export type ItemMediaProps = React.ComponentProps<'div'> & VariantProps<typeof itemMediaVariants>
+
+function ItemMedia({ className, variant = 'default', ...props }: ItemMediaProps) {
     return <div data-slot="item-media" data-variant={variant} className={cn(itemMediaVariants({ variant, className }))} {...props} />
 }
 
-function ItemContent({ className, ...props }: React.ComponentProps<'div'>) {
+export type ItemContentProps = React.ComponentProps<'div'>
+
+function ItemContent({ className, ...props }: ItemContentProps) {
     return (
         <div
             data-slot="item-content"
@@ -102,7 +106,9 @@ function ItemContent({ className, ...props }: React.ComponentProps<'div'>) {
     )
 }
 
-function ItemTitle({ className, ...props }: React.ComponentProps<'div'>) {
+export type ItemTitleProps = React.ComponentProps<'div'>
+
+function ItemTitle({ className, ...props }: ItemTitleProps) {
     return (
         <div
             data-slot="item-title"
@@ -112,7 +118,9 @@ function ItemTitle({ className, ...props }: React.ComponentProps<'div'>) {
     )
 }
 
-function ItemDescription({ className, ...props }: React.ComponentProps<'p'>) {
+export type ItemDescriptionProps = React.ComponentProps<'p'>
+
+function ItemDescription({ className, ...props }: ItemDescriptionProps) {
     return (
         <p
             data-slot="item-description"
@@ -125,15 +133,21 @@ function ItemDescription({ className, ...props }: React.ComponentProps<'p'>) {
     )
 }
 
-function ItemActions({ className, ...props }: React.ComponentProps<'div'>) {
+export type ItemActionsProps = React.ComponentProps<'div'>
+
+function ItemActions({ className, ...props }: ItemActionsProps) {
     return <div data-slot="item-actions" className={cn('flex items-center gap-2', className)} {...props} />
 }
 
-function ItemHeader({ className, ...props }: React.ComponentProps<'div'>) {
+export type ItemHeaderProps = React.ComponentProps<'div'>
+
+function ItemHeader({ className, ...props }: ItemHeaderProps) {
     return <div data-slot="item-header" className={cn('flex basis-full items-center justify-between gap-2', className)} {...props} />
 }
 
-function ItemFooter({ className, ...props }: React.ComponentProps<'div'>) {
+export type ItemFooterProps = React.ComponentProps<'div'>
+
+function ItemFooter({ className, ...props }: ItemFooterProps) {
     return <div data-slot="item-footer" className={cn('flex basis-full items-center justify-between gap-2', className)} {...props} />
 }
 

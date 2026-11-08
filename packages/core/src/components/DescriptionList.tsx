@@ -13,6 +13,15 @@ export interface Description {
     wide?: boolean
 }
 
+export interface DescriptionListProps {
+    items: readonly Description[]
+    columns?: 1 | 2
+    layout?: 'side' | 'stacked' | 'row'
+    /** How wide the term column is in the side-by-side layout. */
+    termWidth?: string
+    className?: string
+}
+
 /**
  * Facts about one thing as terms and values: a run's state and duration, a service's base
  * URL. A value that is missing is drawn as a quiet dash, never as a blank. `layout` sets the pairs:
@@ -20,20 +29,7 @@ export interface Description {
  * value, and `row` the pairs one after another in a line that wraps, for a strip of facts under a
  * title. `columns={2}` sets the side and stacked pairs two to a row on wide screens.
  */
-export function DescriptionList({
-    items,
-    columns = 1,
-    layout = 'side',
-    termWidth = '6rem',
-    className,
-}: {
-    items: readonly Description[]
-    columns?: 1 | 2
-    layout?: 'side' | 'stacked' | 'row'
-    /** How wide the term column is in the side-by-side layout. */
-    termWidth?: string
-    className?: string
-}) {
+export function DescriptionList({ items, columns = 1, layout = 'side', termWidth = '6rem', className }: DescriptionListProps) {
     return (
         <dl
             className={cn(

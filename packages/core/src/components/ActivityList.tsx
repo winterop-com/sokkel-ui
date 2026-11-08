@@ -45,26 +45,22 @@ const INK: Record<NonNullable<ActivityItem['tone']>, string> = {
     quiet: 'text-muted-foreground',
 }
 
-/**
- * What happened while the person was away, or needs following up: newest first, in groups by
- * day when given, the unread ones drawn stronger with a dot. Each item carries its own way to act,
- * such as opening the failed job or restoring what was deleted; acting on one marks it read.
- * Items stay until read. Arriving items are not announced; the bell's name says the count.
- */
-export function ActivityList({
-    items,
-    onRead,
-    onReadAll,
-    className,
-    words: given,
-}: {
+export interface ActivityListProps {
     items: readonly ActivityItem[]
     /** An item was acted on, so it counts as read. */
     onRead?: (id: string) => void
     onReadAll?: () => void
     className?: string
     words?: Partial<ActivityWords>
-}) {
+}
+
+/**
+ * What happened while the person was away, or needs following up: newest first, in groups by
+ * day when given, the unread ones drawn stronger with a dot. Each item carries its own way to act,
+ * such as opening the failed job or restoring what was deleted; acting on one marks it read.
+ * Items stay until read. Arriving items are not announced; the bell's name says the count.
+ */
+export function ActivityList({ items, onRead, onReadAll, className, words: given }: ActivityListProps) {
     const words = { ...WORDS, ...given }
     const unread = items.filter((item) => item.unread === true).length
     let group: string | undefined
@@ -134,13 +130,10 @@ export function ActivityList({
     )
 }
 
+export type ActivityButtonProps = { unread: number; words?: Partial<ActivityWords> } & React.ComponentProps<typeof Button>
+
 /** The bell for the top bar, with the count of unread items on it. */
-export function ActivityButton({
-    unread,
-    className,
-    words: given,
-    ...props
-}: { unread: number; words?: Partial<ActivityWords> } & React.ComponentProps<typeof Button>) {
+export function ActivityButton({ unread, className, words: given, ...props }: ActivityButtonProps) {
     const words = { ...WORDS, ...given }
     return (
         <Button
@@ -157,16 +150,7 @@ export function ActivityButton({
     )
 }
 
-/** The bell opening the activity list in a popover, as a top bar carries it. */
-export function ActivityMenu({
-    items,
-    onRead,
-    onReadAll,
-    open,
-    onOpenChange,
-    defaultOpen,
-    words,
-}: {
+export interface ActivityMenuProps {
     items: readonly ActivityItem[]
     onRead?: (id: string) => void
     onReadAll?: () => void
@@ -174,7 +158,10 @@ export function ActivityMenu({
     onOpenChange?: (open: boolean) => void
     defaultOpen?: boolean
     words?: Partial<ActivityWords>
-}) {
+}
+
+/** The bell opening the activity list in a popover, as a top bar carries it. */
+export function ActivityMenu({ items, onRead, onReadAll, open, onOpenChange, defaultOpen, words }: ActivityMenuProps) {
     const unread = items.filter((item) => item.unread === true).length
     return (
         <Popover open={open} onOpenChange={onOpenChange} defaultOpen={defaultOpen}>

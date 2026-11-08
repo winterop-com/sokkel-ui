@@ -40,6 +40,8 @@ import { jq } from './code/jq'
 import { SCHEMA_WORDS, schemaCompletion, schemaDiagnostics, type CodeSchemaWords, type SchemaLanguage } from './code/schema'
 import type { JsonSchema } from './schema/read'
 
+export type { CodeSchemaWords } from './code/schema'
+
 /** The languages the editor carries by name. */
 export type CodeLanguageName = 'json' | 'yaml' | 'jq' | 'text'
 
@@ -358,45 +360,7 @@ function toCompletion(item: CodeCompletion): Completion {
     return { label: item.label, detail: item.detail, info: item.docs, type: item.kind, apply: item.apply }
 }
 
-/**
- * A code editor on CodeMirror: JSON, YAML, jq or plain text by name, or any language given as a
- * CodeMirror `LanguageSupport` or a stream parser (`defineLanguage` builds one). Highlighted in the
- * theme's colors, with line numbers, bracket matching, undo, and Tab indenting (Escape then Tab
- * leaves the editor). `marks` wash whole lines or underline ranges, a message on hover. `completions`
- * offers words while typing, `hover` says what a word is, `onRun` runs on Mod-Enter and `keys` binds
- * any other key. `search` opens a find and replace bar on Mod-f, `folding` adds a fold gutter,
- * `bracketColors` and `indentGuides` help read deep structure (the three off past a megabyte), and
- * `schema` checks JSON or YAML against a JSON Schema (2020-12) and completes its property names and
- * values. `wrap` folds long lines at the editor's edge, for prose such as a prompt. The value is
- * controlled: a new `value` replaces the document, and an edit is reported through `onChange`.
- */
-export function CodeEditor({
-    value,
-    onChange,
-    language = 'text',
-    readOnly = false,
-    lineNumbers: numbered = true,
-    wrap = false,
-    marks = NO_MARKS,
-    completions,
-    hover,
-    onRun,
-    keys,
-    search = false,
-    defaultSearch,
-    folding = false,
-    bracketColors = false,
-    indentGuides = false,
-    size = 'md',
-    variant = 'field',
-    schema,
-    words,
-    phrases,
-    placeholder,
-    label,
-    className,
-    invalid = false,
-}: {
+export interface CodeEditorProps {
     value: string
     onChange?: (value: string) => void
     language?: CodeLanguage
@@ -438,7 +402,47 @@ export function CodeEditor({
     label: string
     className?: string
     invalid?: boolean
-}) {
+}
+
+/**
+ * A code editor on CodeMirror: JSON, YAML, jq or plain text by name, or any language given as a
+ * CodeMirror `LanguageSupport` or a stream parser (`defineLanguage` builds one). Highlighted in the
+ * theme's colors, with line numbers, bracket matching, undo, and Tab indenting (Escape then Tab
+ * leaves the editor). `marks` wash whole lines or underline ranges, a message on hover. `completions`
+ * offers words while typing, `hover` says what a word is, `onRun` runs on Mod-Enter and `keys` binds
+ * any other key. `search` opens a find and replace bar on Mod-f, `folding` adds a fold gutter,
+ * `bracketColors` and `indentGuides` help read deep structure (the three off past a megabyte), and
+ * `schema` checks JSON or YAML against a JSON Schema (2020-12) and completes its property names and
+ * values. `wrap` folds long lines at the editor's edge, for prose such as a prompt. The value is
+ * controlled: a new `value` replaces the document, and an edit is reported through `onChange`.
+ */
+export function CodeEditor({
+    value,
+    onChange,
+    language = 'text',
+    readOnly = false,
+    lineNumbers: numbered = true,
+    wrap = false,
+    marks = NO_MARKS,
+    completions,
+    hover,
+    onRun,
+    keys,
+    search = false,
+    defaultSearch,
+    folding = false,
+    bracketColors = false,
+    indentGuides = false,
+    size = 'md',
+    variant = 'field',
+    schema,
+    words,
+    phrases,
+    placeholder,
+    label,
+    className,
+    invalid = false,
+}: CodeEditorProps) {
     const host = useRef<HTMLDivElement>(null)
     const view = useRef<EditorView | null>(null)
     const report = useRef(onChange)

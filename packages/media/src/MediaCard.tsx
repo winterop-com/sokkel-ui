@@ -21,36 +21,7 @@ const WORDS: MediaCardWords = {
     watched: (percent) => `${String(percent)}% watched`,
 }
 
-/**
- * One album, film or episode in a grid: the cover first, then its title and a line under it. The
- * whole card opens it; a play button rises over the cover on hover and on focus. A square cover is
- * an album, a wide one a video, which can carry its length on the frame and how much of it was
- * watched along the foot of the frame, and gets up to two lines for its title. The words take the
- * height they need, so a short title leaves no gap under a card alone in its row; cards sharing a
- * grid row still line up, the row as tall as its tallest card. The full title shows on
- * hover over the card. `layout="row"` sets the cover beside the words, as a list of
- * what plays next does, with the title on up to two lines. `titleLines` sets another limit. A
- * card with no `cover` wears one drawn from `placeholderSeed`, so a grid of records without
- * pictures does not look all alike.
- */
-export function MediaCard({
-    title,
-    subtitle,
-    cover,
-    placeholderSeed,
-    shape = 'square',
-    layout = 'stack',
-    href,
-    onSelect,
-    onPlay,
-    playing = false,
-    badge,
-    progress,
-    menu,
-    titleLines,
-    className,
-    words = WORDS,
-}: {
+export interface MediaCardProps {
     title: string
     /** Who made it, and when, or which episode it is. */
     subtitle?: ReactNode
@@ -80,7 +51,38 @@ export function MediaCard({
     titleLines?: TitleLines
     className?: string
     words?: MediaCardWords
-}) {
+}
+
+/**
+ * One album, film or episode in a grid: the cover first, then its title and a line under it. The
+ * whole card opens it; a play button rises over the cover on hover and on focus. A square cover is
+ * an album, a wide one a video, which can carry its length on the frame and how much of it was
+ * watched along the foot of the frame, and gets up to two lines for its title. The words take the
+ * height they need, so a short title leaves no gap under a card alone in its row; cards sharing a
+ * grid row still line up, the row as tall as its tallest card. The full title shows on
+ * hover over the card. `layout="row"` sets the cover beside the words, as a list of
+ * what plays next does, with the title on up to two lines. `titleLines` sets another limit. A
+ * card with no `cover` wears one drawn from `placeholderSeed`, so a grid of records without
+ * pictures does not look all alike.
+ */
+export function MediaCard({
+    title,
+    subtitle,
+    cover,
+    placeholderSeed,
+    shape = 'square',
+    layout = 'stack',
+    href,
+    onSelect,
+    onPlay,
+    playing = false,
+    badge,
+    progress,
+    menu,
+    titleLines,
+    className,
+    words = WORDS,
+}: MediaCardProps) {
     const Cover = href !== undefined ? 'a' : 'button'
     const interactive = href !== undefined || onSelect !== undefined
     const lines = titleLines ?? (layout === 'row' || shape === 'wide' ? 2 : 1)
@@ -186,14 +188,7 @@ export function MediaCard({
     )
 }
 
-/** Media cards in a grid that fills its width: as many columns as fit, covers at least `min` wide. */
-export function MediaGrid({
-    shape = 'square',
-    min,
-    label,
-    className,
-    children,
-}: {
+export interface MediaGridProps {
     shape?: 'square' | 'wide'
     /** The narrowest a card is drawn, as a CSS length. */
     min?: string
@@ -201,7 +196,10 @@ export function MediaGrid({
     label?: string
     className?: string
     children: ReactNode
-}) {
+}
+
+/** Media cards in a grid that fills its width: as many columns as fit, covers at least `min` wide. */
+export function MediaGrid({ shape = 'square', min, label, className, children }: MediaGridProps) {
     const narrowest = min ?? (shape === 'square' ? '9.5rem' : '15rem')
     return (
         <div

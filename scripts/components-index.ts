@@ -17,6 +17,134 @@ const STORYBOOK = 'https://winterop-com.github.io/sokkel-ui/'
 export const PACKAGES = ['core', 'charts', 'maps', 'graph', 'terminal', 'media'] as const
 export type PackageDir = (typeof PACKAGES)[number]
 
+/** The folders under a package's `src` its build makes a module of every file in, as its `vite.config.ts` names them. */
+const FOLDERS: Record<PackageDir, string[]> = {
+    core: ['components', 'hooks', 'lib'],
+    charts: [''],
+    maps: [''],
+    graph: [''],
+    terminal: [''],
+    media: [''],
+}
+
+const KIND_BUILDER = "a chart kind's builder, reached through the registry `kinds` exports"
+
+/**
+ * The modules a package builds but does not export, each with the reason, by their path under the
+ * package's `src`. Every other module is in the package's `exports` map, and a module is never in
+ * both. A type a public part's props name is exported beside that part, never from here.
+ */
+export const PRIVATE: Record<PackageDir, Record<string, string>> = {
+    core: {
+        'components/code/guides': "`CodeEditor`'s bracket colors and indent guides",
+        'components/code/schema': "`CodeEditor`'s JSON Schema checks and completion; `CodeSchemaWords` is exported by `CodeEditor`",
+        'components/media/sound-delay': "how far `SoundVisualizer` holds its picture back behind the output's latency",
+        'components/media/sound-source': 'what `SoundVisualizer` listens through; `SoundSource` is exported by `SoundVisualizer`',
+        'components/shell-context': 'the contexts `Shell` hands the parts drawn inside it',
+        'hooks/use-drag-size': "the drag on a resizable edge, for the library's own panels",
+        'lib/css-pixels': 'a length token in pixels, for a part that hands a size to an engine',
+        'lib/focus': 'where focus goes when a popup closes',
+        'lib/jq-grammar': 'the jq grammar the highlighter loads',
+        'lib/katex': "`Markdown`'s math engine, loaded the first time a message holds math",
+        'lib/math': 'how `Markdown` reads math',
+        'lib/overlay': 'the open overlays `useOverlay` keeps',
+        'lib/percent': 'how the library writes a share as a percent',
+        'lib/scroll-memory': "where `useScrollMemory` keeps a scroller's place",
+        'lib/shortcuts': 'the key registry `useShortcuts` binds in; its types are exported by `hooks/use-shortcuts` and `ShortcutsDialog`',
+        'lib/table': 'the head text every table shares, a layout constant',
+        'lib/theme-list': 'the theme list `lib/appearance` exports as `THEMES`',
+        'lib/uploads': 'the store behind `useUploads`, which exports its types',
+        'lib/utils': '`cn` under the name the primitives import it by; an app uses `lib/cn`',
+    },
+    charts: {
+        engine: 'the ECharts parts a chart loads on first use',
+        'kinds/boxplot': KIND_BUILDER,
+        'kinds/bullet': KIND_BUILDER,
+        'kinds/calendar': KIND_BUILDER,
+        'kinds/categories': KIND_BUILDER,
+        'kinds/dual': KIND_BUILDER,
+        'kinds/flows': KIND_BUILDER,
+        'kinds/funnel': KIND_BUILDER,
+        'kinds/gauge': KIND_BUILDER,
+        'kinds/hierarchy': KIND_BUILDER,
+        'kinds/histogram': KIND_BUILDER,
+        'kinds/linked': KIND_BUILDER,
+        'kinds/parallel': KIND_BUILDER,
+        'kinds/points': KIND_BUILDER,
+        'kinds/radar': KIND_BUILDER,
+        'kinds/rings': KIND_BUILDER,
+        'kinds/rose': KIND_BUILDER,
+        'kinds/spec': "the spec's types, exported by `kinds`, and the helpers the builders share",
+        'kinds/steps': KIND_BUILDER,
+        'kinds/stream': KIND_BUILDER,
+        'kinds/waterfall': KIND_BUILDER,
+        look: "the theme's colors and sizes a builder reads; `ChartLook` is exported by `EChart`",
+        scales: 'the scales the kinds share',
+        shapes: 'rows shaped for the kinds',
+        stats: 'the arithmetic the kinds share',
+        theme: 'the ECharts theme drawn from the tokens',
+        zoom: "the window a chart's zoom keeps",
+    },
+    maps: {
+        color: 'tokens resolved to colors maplibre can draw',
+        context: "the map's context its layers, legends and controls share; `MapCorner` is exported by `MapView`",
+        globe: "the globe's sky",
+        layer: 'what the layers share; `FeatureAccessor` is exported by each layer',
+    },
+    graph: {
+        context: "the canvas's context its nodes and edges share",
+        'use-graph-layout': 'the elk layout `GraphCanvas` waits on',
+    },
+    terminal: {
+        look: "the terminal's colors and type, read from the tokens",
+        session: "the text of `Terminal`'s entries; `TerminalEntry` is exported by `Terminal`",
+    },
+    media: {
+        'bar-growth': "the player bar's layout sizes and how it grows; `MediaBarLayout` is exported by `MediaBar`",
+        'cover-seed': 'the drawn covers, exported by `Artwork`',
+        follow: 'where a list scrolls to keep the playing row in view',
+        'media-session': 'the Media Session calls behind `useMediaSession`, which exports their types',
+        'use-follow': 'a list keeping the playing row in view, for `TrackList`, `ChapterList` and `Lyrics`',
+    },
+}
+
+/** Every module a package builds, by its path under the package's `src` without the extension. */
+export function modulesOf(pkg: PackageDir): string[] {
+    const src = join(ROOT, 'packages', pkg, 'src')
+    return FOLDERS[pkg]
+        .flatMap((folder) => files(join(src, folder)))
+        .filter((path) => /\.tsx?$/.test(path) && !/\.(test|d)\.tsx?$/.test(path))
+        .map((path) => relative(src, path).replace(/\.tsx?$/, ''))
+        .sort()
+}
+
+/** A package's name and its `exports` map, from its manifest. */
+export function manifestOf(pkg: PackageDir): { name: string; exports: Exports } {
+    return JSON.parse(readFileSync(join(ROOT, 'packages', pkg, 'package.json'), 'utf8')) as { name: string; exports: Exports }
+}
+
+/**
+ * What the exports maps get wrong: a module neither exported nor private, a private module that is
+ * exported, and a private module that no longer exists. Empty when every map is whole.
+ */
+export function exportProblems(): string[] {
+    const problems: string[] = []
+    for (const pkg of PACKAGES) {
+        const { name, exports } = manifestOf(pkg)
+        const modules = modulesOf(pkg)
+        for (const module of modules) {
+            const exported = importPath(name, exports, module) !== undefined
+            const hidden = PRIVATE[pkg][module] !== undefined
+            if (!exported && !hidden) problems.push(`${pkg}:${module} is in neither the exports map of ${name} nor PRIVATE`)
+            if (exported && hidden) problems.push(`${pkg}:${module} is private but the exports map of ${name} exports it`)
+        }
+        for (const module of Object.keys(PRIVATE[pkg])) {
+            if (!modules.includes(module)) problems.push(`${pkg}:${module} is listed in PRIVATE but is not a module`)
+        }
+    }
+    return problems
+}
+
 /** The area each core component outside a folder of its own belongs to, by module name. */
 const CORE_AREAS: Record<string, string> = {
     // Frame: the app's shell and navigation.
@@ -403,7 +531,7 @@ export function collect(): Entry[] {
     const entries: Entry[] = []
     for (const pkg of PACKAGES) {
         const dir = join(ROOT, 'packages', pkg)
-        const manifest = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')) as { name: string; exports: Exports }
+        const manifest = manifestOf(pkg)
         for (const file of files(join(dir, 'src')).sort()) {
             if (!file.endsWith('.tsx') || /\.(test|stories)\.tsx$/.test(file)) continue
             const module = relative(join(dir, 'src'), file).replace(/\.tsx$/, '')
@@ -411,6 +539,7 @@ export function collect(): Entry[] {
             const source = readFileSync(file, 'utf8')
             const components = exportedComponents(source)
             if (components.length === 0) continue
+            // A private module has no path; one neither exported nor private is named by `exportProblems`.
             const path = importPath(manifest.name, manifest.exports, module)
             if (path === undefined) continue
             const own = pascal(basename(module))
@@ -517,6 +646,13 @@ export function render(entries: Entry[]): string {
 }
 
 if (import.meta.main) {
+    const problems = exportProblems()
+    if (problems.length > 0) {
+        console.error(
+            `the exports maps are not whole:\n${problems.join('\n')}\nexport each module in its package.json, or name it in PRIVATE in scripts/components-index.ts`,
+        )
+        process.exit(1)
+    }
     const entries = collect()
     const markdown = render(entries)
     const unplaced = entries.filter((entry) => entry.area === 'Other').map((entry) => entry.module)

@@ -6,43 +6,7 @@ import { worst, type Issue } from './IssueMark'
 import { Input } from './ui/input'
 import { Textarea } from './ui/textarea'
 
-/**
- * A labeled text input: a `Field` with its input inside, wired together. The label names the
- * input, the help line describes it, and an issue marks it invalid and draws its edge, so a form
- * states each of these once. `multiline` makes it a text area; `mono` sets it in the code face for
- * keys and addresses, `numeric` in figures that line up.
- */
-export function TextField({
-    id,
-    label,
-    hint,
-    keyHint,
-    description,
-    help,
-    required,
-    error,
-    issues = [],
-    issueOpen,
-    onIssueOpenChange,
-    mono = false,
-    numeric = false,
-    multiline = false,
-    rows,
-    type,
-    value,
-    defaultValue,
-    placeholder,
-    inputMode,
-    autoFocus,
-    autoComplete,
-    readOnly,
-    disabled,
-    onChange,
-    onEnter,
-    onEscape,
-    onBlur,
-    className,
-}: {
+export interface TextFieldProps {
     id: string
     label: string
     /** A short note beside the label: a unit, a format, a default. */
@@ -81,7 +45,45 @@ export function TextField({
     onBlur?: () => void
     /** Classes for the field, such as its span in a grid. */
     className?: string
-}) {
+}
+
+/**
+ * A labeled text input: a `Field` with its input inside, wired together. The label names the
+ * input, the help line describes it, and an issue marks it invalid and draws its edge, so a form
+ * states each of these once. `multiline` makes it a text area; `mono` sets it in the code face for
+ * keys and addresses, `numeric` in figures that line up.
+ */
+export function TextField({
+    id,
+    label,
+    hint,
+    keyHint,
+    description,
+    help,
+    required,
+    error,
+    issues = [],
+    issueOpen,
+    onIssueOpenChange,
+    mono = false,
+    numeric = false,
+    multiline = false,
+    rows,
+    type,
+    value,
+    defaultValue,
+    placeholder,
+    inputMode,
+    autoFocus,
+    autoComplete,
+    readOnly,
+    disabled,
+    onChange,
+    onEnter,
+    onEscape,
+    onBlur,
+    className,
+}: TextFieldProps) {
     const all: Issue[] = [...(error === undefined || error === null ? [] : [{ tone: 'critical' as const, text: error }]), ...issues]
     const invalid = worst(all) === 'critical' || undefined
     const face = cn(mono && 'font-mono', numeric && 'tabular-nums')

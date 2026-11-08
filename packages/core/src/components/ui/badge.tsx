@@ -24,19 +24,15 @@ const badgeVariants = cva(
     },
 )
 
+export type BadgeProps = useRender.ComponentProps<'span'> & VariantProps<typeof badgeVariants> & { kind?: KindColor }
+
 /**
  * A short value as a chip. `kind` draws it in one of the kind colors, a wash edged faintly in the
  * color with its ink, for a categorical value a reader learns to tell apart at a glance: what sort
  * of form a card is, which domain a code belongs to. The same value wears the same color wherever
  * it is shown.
  */
-function Badge({
-    className,
-    variant = 'default',
-    kind,
-    render,
-    ...props
-}: useRender.ComponentProps<'span'> & VariantProps<typeof badgeVariants> & { kind?: KindColor }) {
+function Badge({ className, variant = 'default', kind, render, ...props }: BadgeProps) {
     return useRender({
         defaultTagName: 'span',
         props: mergeProps<'span'>(

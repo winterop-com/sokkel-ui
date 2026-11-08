@@ -3,6 +3,23 @@ import type { ReactNode } from 'react'
 import { cn } from '../lib/cn'
 import { PaneHeader } from './PaneHeader'
 
+export interface SectionProps {
+    title: ReactNode
+    /** A count or a short fact beside the title, drawn quieter than it. */
+    meta?: ReactNode
+    /** A sentence under the title: what this part of the page holds. */
+    description?: ReactNode
+    /** Controls at the right end of the heading. */
+    actions?: ReactNode
+    variant?: 'flat' | 'boxed'
+    /** Content that fills the box to its edges, such as a list or a graph, takes no padding. */
+    flush?: boolean
+    /** The box takes the height its container gives it and its body scrolls within it, as an editor or a preview pane wants. */
+    fill?: boolean
+    children: ReactNode
+    className?: string
+}
+
 /**
  * A titled part of a page.
  *
@@ -21,22 +38,7 @@ export function Section({
     fill = false,
     children,
     className,
-}: {
-    title: ReactNode
-    /** A count or a short fact beside the title, drawn quieter than it. */
-    meta?: ReactNode
-    /** A sentence under the title: what this part of the page holds. */
-    description?: ReactNode
-    /** Controls at the right end of the heading. */
-    actions?: ReactNode
-    variant?: 'flat' | 'boxed'
-    /** Content that fills the box to its edges, such as a list or a graph, takes no padding. */
-    flush?: boolean
-    /** The box takes the height its container gives it and its body scrolls within it, as an editor or a preview pane wants. */
-    fill?: boolean
-    children: ReactNode
-    className?: string
-}) {
+}: SectionProps) {
     if (variant === 'boxed') {
         return (
             <section
@@ -59,7 +61,12 @@ export function Section({
     )
 }
 
+export interface SurfaceProps {
+    children: ReactNode
+    className?: string
+}
+
 /** A bordered surface with no heading of its own, for content that is a surface: a graph, a list. */
-export function Surface({ children, className }: { children: ReactNode; className?: string }) {
+export function Surface({ children, className }: SurfaceProps) {
     return <div className={cn('overflow-hidden rounded-surface border border-border-strong bg-card', className)}>{children}</div>
 }

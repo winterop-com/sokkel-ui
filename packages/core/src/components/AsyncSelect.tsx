@@ -32,6 +32,27 @@ type Answer<T> =
     | { state: 'done'; items: T[] }
     | { state: 'failed'; reason: string; items: T[] }
 
+export interface AsyncSelectProps<T> {
+    id?: string
+    value: T | null
+    onValueChange: (value: T | null) => void
+    /** Answers a query with the options for it; the signal aborts when a newer query replaces it. */
+    load: (query: string, signal: AbortSignal) => Promise<T[]>
+    itemKey: (item: T) => string
+    itemLabel: (item: T) => string
+    /** How an option is drawn in the list; its label alone otherwise. */
+    renderItem?: (item: T) => ReactNode
+    /** Milliseconds of quiet typing before a load. */
+    debounce?: number
+    /** Characters needed before anything is loaded. */
+    minQuery?: number
+    defaultOpen?: boolean
+    defaultQuery?: string
+    invalid?: boolean
+    className?: string
+    words?: Partial<AsyncSelectWords>
+}
+
 /**
  * A select whose options come from a search: it reads like a select, and its popover holds a
  * search box whose text is sent to `load`, after a pause in typing. Older answers are dropped,
@@ -53,26 +74,7 @@ export function AsyncSelect<T>({
     invalid = false,
     className,
     words: given,
-}: {
-    id?: string
-    value: T | null
-    onValueChange: (value: T | null) => void
-    /** Answers a query with the options for it; the signal aborts when a newer query replaces it. */
-    load: (query: string, signal: AbortSignal) => Promise<T[]>
-    itemKey: (item: T) => string
-    itemLabel: (item: T) => string
-    /** How an option is drawn in the list; its label alone otherwise. */
-    renderItem?: (item: T) => ReactNode
-    /** Milliseconds of quiet typing before a load. */
-    debounce?: number
-    /** Characters needed before anything is loaded. */
-    minQuery?: number
-    defaultOpen?: boolean
-    defaultQuery?: string
-    invalid?: boolean
-    className?: string
-    words?: Partial<AsyncSelectWords>
-}) {
+}: AsyncSelectProps<T>) {
     const words = { ...WORDS, ...given }
     const [open, setOpen] = useState(defaultOpen)
     const [query, setQuery] = useState(defaultQuery)

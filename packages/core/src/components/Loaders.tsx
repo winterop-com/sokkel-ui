@@ -20,21 +20,18 @@ export function useLongWait(waiting: boolean, delay: number): boolean {
     return long
 }
 
-/**
- * A thin bar for a wait: filled to `value` (0 to 100) when the progress is known, a sliding segment
- * when it is not.
- */
-export function LoadingBar({
-    value = null,
-    label = 'Loading',
-    tone = 'primary',
-    className,
-}: {
+export interface LoadingBarProps {
     value?: number | null
     label?: string
     tone?: 'primary' | 'muted'
     className?: string
-}) {
+}
+
+/**
+ * A thin bar for a wait: filled to `value` (0 to 100) when the progress is known, a sliding segment
+ * when it is not.
+ */
+export function LoadingBar({ value = null, label = 'Loading', tone = 'primary', className }: LoadingBarProps) {
     const known = value !== null
     return (
         <div
@@ -57,24 +54,20 @@ export function LoadingBar({
     )
 }
 
-/**
- * The bar along the top of a page while it loads: shown only once the load has taken `delay`
- * milliseconds, it runs to the end and fades when the load is over. Placed in the shell's top bar
- * or at the top of a page; `fixed` pins it to the window's top edge instead.
- */
-export function PageProgress({
-    loading,
-    value = null,
-    delay = 200,
-    fixed = false,
-    label = 'Loading the page',
-}: {
+export interface PageProgressProps {
     loading: boolean
     value?: number | null
     delay?: number
     fixed?: boolean
     label?: string
-}) {
+}
+
+/**
+ * The bar along the top of a page while it loads: shown only once the load has taken `delay`
+ * milliseconds, it runs to the end and fades when the load is over. Placed in the shell's top bar
+ * or at the top of a page; `fixed` pins it to the window's top edge instead.
+ */
+export function PageProgress({ loading, value = null, delay = 200, fixed = false, label = 'Loading the page' }: PageProgressProps) {
     const long = useLongWait(loading, delay)
     const [finishing, setFinishing] = useState(false)
     const [shown, setShown] = useState(false)
@@ -106,24 +99,20 @@ export function PageProgress({
     )
 }
 
-/**
- * An element that is loading again: once the wait has taken `delay` milliseconds its content dims
- * and stops taking input, a bar runs along its top edge, and a screen reader hears that it is
- * busy. The content stays in place, so nothing jumps when it returns.
- */
-export function LoadingOverlay({
-    loading,
-    delay = 300,
-    label = 'Loading',
-    className,
-    children,
-}: {
+export interface LoadingOverlayProps {
     loading: boolean
     delay?: number
     label?: string
     className?: string
     children: ReactNode
-}) {
+}
+
+/**
+ * An element that is loading again: once the wait has taken `delay` milliseconds its content dims
+ * and stops taking input, a bar runs along its top edge, and a screen reader hears that it is
+ * busy. The content stays in place, so nothing jumps when it returns.
+ */
+export function LoadingOverlay({ loading, delay = 300, label = 'Loading', className, children }: LoadingOverlayProps) {
     const long = useLongWait(loading, delay)
     return (
         <div aria-busy={loading || undefined} className={cn('relative', className)}>

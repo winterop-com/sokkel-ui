@@ -38,6 +38,23 @@ export function stepLinks(steps: readonly PipelineStep[]): GraphLink[] {
     return steps.flatMap((step) => step.needs.map((need) => ({ source: need, target: step.code })))
 }
 
+export type PipelineGraphProps = GraphViewProps & {
+    steps: PipelineStep[]
+    /** Every chosen step, by code. */
+    selection?: readonly string[]
+    onSelectionChange?: (codes: string[]) => void
+    /** Makes the graph an editor; each gesture is reported and the steps change only when the app changes them. */
+    editing?: GraphEditing
+    /** Where steps were moved to, by code, over where the layout put them. */
+    positions?: Readonly<Record<string, { x: number; y: number }>>
+    /** False hides the zoom buttons, for a toolbar that carries them. */
+    controls?: boolean
+    /** A bar over the canvas's top-left corner, such as a `GraphToolbar`. */
+    toolbar?: ReactNode
+    /** What the canvas holds over the drawing, such as a `GraphOverlay`. */
+    children?: ReactNode
+}
+
 /**
  * A pipeline's steps as a graph, each step after the steps it needs. It selects only, unless given
  * `editing`. Given `selection` and `onSelectionChange` in place of `selected`, several steps are
@@ -58,22 +75,7 @@ export function PipelineGraph({
     words,
     className,
     children,
-}: GraphViewProps & {
-    steps: PipelineStep[]
-    /** Every chosen step, by code. */
-    selection?: readonly string[]
-    onSelectionChange?: (codes: string[]) => void
-    /** Makes the graph an editor; each gesture is reported and the steps change only when the app changes them. */
-    editing?: GraphEditing
-    /** Where steps were moved to, by code, over where the layout put them. */
-    positions?: Readonly<Record<string, { x: number; y: number }>>
-    /** False hides the zoom buttons, for a toolbar that carries them. */
-    controls?: boolean
-    /** A bar over the canvas's top-left corner, such as a `GraphToolbar`. */
-    toolbar?: ReactNode
-    /** What the canvas holds over the drawing, such as a `GraphOverlay`. */
-    children?: ReactNode
-}) {
+}: PipelineGraphProps) {
     const items = useMemo<GraphItem[]>(
         () =>
             steps.map((step) => ({

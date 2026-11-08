@@ -30,6 +30,31 @@ const WORDS: MessageRowWords = {
     thread: (count) => `${count} messages`,
 }
 
+export interface MessageRowProps {
+    from: string
+    subject: string
+    /** The start of the text, kept to one line. */
+    snippet?: string
+    /** When it came, already formatted: `09:42`, `Yesterday`, `Nov 3`. */
+    time: string
+    unread?: boolean
+    starred?: boolean
+    attachment?: boolean
+    /** How many messages the thread holds; shown from two. */
+    count?: number
+    labels?: readonly MessageLabel[]
+    /** This message is the one shown in the reading pane. */
+    open?: boolean
+    checked?: boolean
+    onCheckedChange?: (checked: boolean) => void
+    onStarredChange?: (starred: boolean) => void
+    onOpen?: () => void
+    /** A search term to mark wherever it occurs. */
+    highlight?: string
+    className?: string
+    words?: Partial<MessageRowWords>
+}
+
 /**
  * One message, or one conversation, in a list of them: who it is from, the subject, a line of the
  * text, and when it came, with marks for unread, starred, attachments and the number of messages
@@ -59,30 +84,7 @@ export function MessageRow({
     highlight,
     className,
     words: given,
-}: {
-    from: string
-    subject: string
-    /** The start of the text, kept to one line. */
-    snippet?: string
-    /** When it came, already formatted: `09:42`, `Yesterday`, `Nov 3`. */
-    time: string
-    unread?: boolean
-    starred?: boolean
-    attachment?: boolean
-    /** How many messages the thread holds; shown from two. */
-    count?: number
-    labels?: readonly MessageLabel[]
-    /** This message is the one shown in the reading pane. */
-    open?: boolean
-    checked?: boolean
-    onCheckedChange?: (checked: boolean) => void
-    onStarredChange?: (starred: boolean) => void
-    onOpen?: () => void
-    /** A search term to mark wherever it occurs. */
-    highlight?: string
-    className?: string
-    words?: Partial<MessageRowWords>
-}) {
+}: MessageRowProps) {
     const words = { ...WORDS, ...given }
     const gutter = onCheckedChange !== undefined || onStarredChange !== undefined
     return (

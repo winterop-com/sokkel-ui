@@ -63,6 +63,15 @@ function measure(anchor: HTMLElement, scroller: HTMLElement, list: readonly Issu
 
 const TONE = { critical: 'bg-critical', warning: 'bg-warning' } as const
 
+export interface IssueMarksProps {
+    list: readonly IssueEntry[]
+    /** The element that scrolls the form, when not the nearest one that does. */
+    scroller?: RefObject<HTMLElement | null>
+    /** The strip's accessible name. */
+    label?: string
+    className?: string
+}
+
 /**
  * A strip along the right edge of a long form's scroll area with a mark for each issue at its
  * field's place down the whole form, so a glance shows where the issues are and pressing one goes
@@ -71,19 +80,7 @@ const TONE = { critical: 'bg-critical', warning: 'bg-warning' } as const
  * `SchemaForm` draws it on its own; a hand-built form gives each entry the `target` id of its
  * field's control.
  */
-export function IssueMarks({
-    list,
-    scroller: given,
-    label = 'Issues in this form',
-    className,
-}: {
-    list: readonly IssueEntry[]
-    /** The element that scrolls the form, when not the nearest one that does. */
-    scroller?: RefObject<HTMLElement | null>
-    /** The strip's accessible name. */
-    label?: string
-    className?: string
-}) {
+export function IssueMarks({ list, scroller: given, label = 'Issues in this form', className }: IssueMarksProps) {
     const anchor = useRef<HTMLDivElement>(null)
     const [layout, setLayout] = useState<Layout | null>(null)
     useLayoutEffect(() => {

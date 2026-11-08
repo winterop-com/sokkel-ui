@@ -60,6 +60,9 @@ describe('importPath', () => {
 
     it('answers nothing for a module the map does not reach', () => {
         expect(importPath('@winterop-com/sokkel-ui', CORE_EXPORTS, 'stories/Thing')).toBeUndefined()
+        const explicit = { './Chart': { types: './dist/Chart.d.ts', import: './dist/Chart.js' } }
+        expect(importPath('@winterop-com/sokkel-ui-charts', explicit, 'Chart')).toBe('@winterop-com/sokkel-ui-charts/Chart')
+        expect(importPath('@winterop-com/sokkel-ui-charts', explicit, 'look')).toBeUndefined()
     })
 })
 

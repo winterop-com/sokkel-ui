@@ -3,20 +3,7 @@ import { CircleHelp } from 'lucide-react'
 
 import { Switch } from './ui/switch'
 
-/**
- * An on/off setting: its label and the switch at the row's right edge. What it does, where the
- * label alone does not say, is a tooltip on a help mark beside the label rather than a line under
- * it.
- */
-export function SwitchField({
-    id,
-    label,
-    explain,
-    checked,
-    defaultChecked,
-    onCheckedChange,
-    disabled,
-}: {
+export interface SwitchFieldProps {
     id: string
     label: string
     /** What turning it on does, shown on hover or focus of the help mark. */
@@ -25,7 +12,14 @@ export function SwitchField({
     defaultChecked?: boolean
     onCheckedChange?: (checked: boolean) => void
     disabled?: boolean
-}) {
+}
+
+/**
+ * An on/off setting: its label and the switch at the row's right edge. What it does, where the
+ * label alone does not say, is a tooltip on a help mark beside the label rather than a line under
+ * it.
+ */
+export function SwitchField({ id, label, explain, checked, defaultChecked, onCheckedChange, disabled }: SwitchFieldProps) {
     return (
         <div className="flex min-h-(--density-control) items-center justify-between gap-4 text-sm">
             <span className="flex items-center gap-1.5">

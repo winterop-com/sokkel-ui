@@ -152,6 +152,27 @@ function Chip({ attachment, words, onPlay }: { attachment: ComposerAttachment; w
     )
 }
 
+export interface ComposerProps {
+    value: string
+    onChange: (value: string) => void
+    onSend: () => void
+    onStop?: () => void
+    /** An answer is streaming. */
+    busy?: boolean
+    attachments?: readonly ComposerAttachment[]
+    /** Takes files from the button, a paste or a drop; the composer accepts none without it. */
+    onAttach?: (files: File[]) => void
+    onRemove?: (id: string) => void
+    /** Stops a file's upload and drops it; a file still uploading cannot be taken off without it. */
+    onCancel?: (id: string) => void
+    tools?: ReactNode
+    disabled?: boolean
+    /** The file types the attach button offers, as an `accept` attribute. */
+    accept?: string
+    words?: Partial<ComposerWords>
+    className?: string
+}
+
 /**
  * Where a message is written: the text grows with what is typed up to a limit, Enter sends and
  * Shift+Enter breaks the line, and files come in by the attach button, a paste or a drop. While an
@@ -177,26 +198,7 @@ export function Composer({
     accept,
     words: given,
     className,
-}: {
-    value: string
-    onChange: (value: string) => void
-    onSend: () => void
-    onStop?: () => void
-    /** An answer is streaming. */
-    busy?: boolean
-    attachments?: readonly ComposerAttachment[]
-    /** Takes files from the button, a paste or a drop; the composer accepts none without it. */
-    onAttach?: (files: File[]) => void
-    onRemove?: (id: string) => void
-    /** Stops a file's upload and drops it; a file still uploading cannot be taken off without it. */
-    onCancel?: (id: string) => void
-    tools?: ReactNode
-    disabled?: boolean
-    /** The file types the attach button offers, as an `accept` attribute. */
-    accept?: string
-    words?: Partial<ComposerWords>
-    className?: string
-}) {
+}: ComposerProps) {
     const words = { ...WORDS, ...given }
     const picker = useRef<HTMLInputElement>(null)
     const [over, setOver] = useState(false)

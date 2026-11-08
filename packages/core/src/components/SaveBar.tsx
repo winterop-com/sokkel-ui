@@ -15,21 +15,7 @@ const WORDS: SaveBarWords = {
     saving: 'Saving',
 }
 
-/**
- * The bar pinned to the foot of a page while its edits are not yet saved: how many there are at
- * the left, Discard and Save at the right. It is a `FormBar`, the last child of the page's
- * scrolling content, and stays at its bottom edge; with no changes it draws nothing, so the page
- * keeps its full height.
- */
-export function SaveBar({
-    count,
-    onSave,
-    onDiscard,
-    busy = false,
-    inset = 'page',
-    className,
-    words: given,
-}: {
+export interface SaveBarProps {
     /** How many edits are unsaved. */
     count: number
     onSave: () => void
@@ -39,7 +25,15 @@ export function SaveBar({
     inset?: 'page' | 'panel'
     className?: string
     words?: Partial<SaveBarWords>
-}) {
+}
+
+/**
+ * The bar pinned to the foot of a page while its edits are not yet saved: how many there are at
+ * the left, Discard and Save at the right. It is a `FormBar`, the last child of the page's
+ * scrolling content, and stays at its bottom edge; with no changes it draws nothing, so the page
+ * keeps its full height.
+ */
+export function SaveBar({ count, onSave, onDiscard, busy = false, inset = 'page', className, words: given }: SaveBarProps) {
     const words = { ...WORDS, ...given }
     if (count === 0) return null
     return (

@@ -15,20 +15,7 @@ const WORDS: BoardColumnWords = {
     over: (count, limit) => `${count - limit} over the limit of ${limit}`,
 }
 
-/**
- * A column's head: its title, how many cards it holds, and its limit when it has one. Past the
- * limit the count turns to a warning. The head of a board with swimlanes stands alone over the
- * lanes; a plain column carries its own.
- */
-export function BoardColumnHead({
-    title,
-    count,
-    limit,
-    icon,
-    actions,
-    className,
-    words: given,
-}: {
+export interface BoardColumnHeadProps {
     title: ReactNode
     count: number
     /** The most cards the column should hold; the count warns past it. */
@@ -37,7 +24,14 @@ export function BoardColumnHead({
     actions?: ReactNode
     className?: string
     words?: Partial<BoardColumnWords>
-}) {
+}
+
+/**
+ * A column's head: its title, how many cards it holds, and its limit when it has one. Past the
+ * limit the count turns to a warning. The head of a board with swimlanes stands alone over the
+ * lanes; a plain column carries its own.
+ */
+export function BoardColumnHead({ title, count, limit, icon, actions, className, words: given }: BoardColumnHeadProps) {
     const words = { ...WORDS, ...given }
     const over = limit !== undefined && count > limit
     return (
@@ -60,23 +54,7 @@ export function BoardColumnHead({
     )
 }
 
-/**
- * One column of a board: its head, then its cards in a list that scrolls on its own, then an
- * optional foot such as an "Add item" button. The column is a drop zone named by `id`.
- */
-export function BoardColumn({
-    id,
-    title,
-    count,
-    limit,
-    icon,
-    actions,
-    foot,
-    empty,
-    children,
-    className,
-    words,
-}: {
+export interface BoardColumnProps {
     id: string
     title: ReactNode
     count: number
@@ -89,7 +67,13 @@ export function BoardColumn({
     children?: ReactNode
     className?: string
     words?: Partial<BoardColumnWords>
-}) {
+}
+
+/**
+ * One column of a board: its head, then its cards in a list that scrolls on its own, then an
+ * optional foot such as an "Add item" button. The column is a drop zone named by `id`.
+ */
+export function BoardColumn({ id, title, count, limit, icon, actions, foot, empty, children, className, words }: BoardColumnProps) {
     return (
         <section
             className={cn('flex max-h-full w-(--board-column) shrink-0 flex-col rounded-surface bg-muted/50 dark:bg-muted/30', className)}

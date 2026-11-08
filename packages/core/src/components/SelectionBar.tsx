@@ -18,6 +18,20 @@ export const SELECTION_BAR_WORDS: SelectionBarWords = {
     label: 'Selection',
 }
 
+export interface SelectionBarProps {
+    count: number
+    /** Empties the selection; no Clear button without it. */
+    onClear?: () => void
+    /** Something to say or offer right after the count. */
+    offer?: ReactNode
+    /** The actions on the selection, after the Clear button. */
+    children?: ReactNode
+    framed?: boolean
+    size?: 'default' | 'sm'
+    words?: Partial<SelectionBarWords>
+    className?: string
+}
+
 /**
  * What is selected and what can be done with it: the count, an optional `offer` after it (such as
  * selecting every row on every page), a Clear button when `onClear` is given, and the actions as
@@ -35,19 +49,7 @@ export function SelectionBar({
     size = 'default',
     words: given,
     className,
-}: {
-    count: number
-    /** Empties the selection; no Clear button without it. */
-    onClear?: () => void
-    /** Something to say or offer right after the count. */
-    offer?: ReactNode
-    /** The actions on the selection, after the Clear button. */
-    children?: ReactNode
-    framed?: boolean
-    size?: 'default' | 'sm'
-    words?: Partial<SelectionBarWords>
-    className?: string
-}) {
+}: SelectionBarProps) {
     const words = { ...SELECTION_BAR_WORDS, ...given }
     return (
         <div

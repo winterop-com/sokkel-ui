@@ -23,6 +23,17 @@ const WORDS: NavBarWords = {
     navigation: 'Main',
 }
 
+export interface NavBarProps {
+    mark: ReactNode
+    name: string
+    links: readonly NavLink[]
+    /** What stands at the right end: a search, the theme toggle, the account. */
+    end?: ReactNode
+    renderLink?: (link: NavLink, className: string) => ReactNode
+    className?: string
+    words?: Partial<NavBarWords>
+}
+
 /**
  * The app's frame along the top, for an app with few places and no rail: the mark and name, the
  * places as links with the current one underlined, and the right-hand controls. On a phone the
@@ -40,16 +51,7 @@ export function NavBar({
     ),
     className,
     words: given,
-}: {
-    mark: ReactNode
-    name: string
-    links: readonly NavLink[]
-    /** What stands at the right end: a search, the theme toggle, the account. */
-    end?: ReactNode
-    renderLink?: (link: NavLink, className: string) => ReactNode
-    className?: string
-    words?: Partial<NavBarWords>
-}) {
+}: NavBarProps) {
     const words = { ...WORDS, ...given }
     return (
         <header className={cn('flex h-shell-top shrink-0 items-stretch gap-4 border-b border-border-strong bg-sidebar px-3', className)}>

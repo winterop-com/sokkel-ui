@@ -6,6 +6,27 @@ import { KIND_EDGE, KIND_FILL, KIND_INK, KIND_WASH } from '../../lib/kind'
 import { EventPopover, useOpenEvent } from './EventPopover'
 import { CALENDAR_WORDS, layoutDay, layoutSpans, type CalendarEvent, type CalendarWords } from './events'
 
+export interface WeekGridProps<E extends CalendarEvent> {
+    days: readonly Date[]
+    events: readonly E[]
+    /** The current time, for the line across today; no line without it. */
+    now?: Date
+    /** How tall an hour is, in pixels. */
+    hourHeight?: number
+    /** The hour at the top of the view when it first draws. */
+    scrollToHour?: number
+    /** What an event's popover holds. */
+    renderDetail?: (event: E) => ReactNode
+    /** The id of the event whose popover is open. */
+    openEvent?: string | null
+    onOpenEventChange?: (id: string | null) => void
+    onSelectEvent?: (event: E) => void
+    /** Called with a day whose head is pressed. */
+    onSelectDay?: (day: Date) => void
+    className?: string
+    words?: Partial<CalendarWords>
+}
+
 /**
  * Days side by side with the hours running down: the week view of a calendar, or any run of
  * days. Each timed event is a block from its start to its end, and events that overlap split the
@@ -31,26 +52,7 @@ export function WeekGrid<E extends CalendarEvent>({
     onSelectDay,
     className,
     words: given,
-}: {
-    days: readonly Date[]
-    events: readonly E[]
-    /** The current time, for the line across today; no line without it. */
-    now?: Date
-    /** How tall an hour is, in pixels. */
-    hourHeight?: number
-    /** The hour at the top of the view when it first draws. */
-    scrollToHour?: number
-    /** What an event's popover holds. */
-    renderDetail?: (event: E) => ReactNode
-    /** The id of the event whose popover is open. */
-    openEvent?: string | null
-    onOpenEventChange?: (id: string | null) => void
-    onSelectEvent?: (event: E) => void
-    /** Called with a day whose head is pressed. */
-    onSelectDay?: (day: Date) => void
-    className?: string
-    words?: Partial<CalendarWords>
-}) {
+}: WeekGridProps<E>) {
     const words = { ...CALENDAR_WORDS, ...given }
     const body = useRef<HTMLDivElement>(null)
     const [open, setOpen] = useOpenEvent(openEvent, onOpenEventChange)

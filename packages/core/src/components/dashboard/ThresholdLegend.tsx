@@ -32,6 +32,22 @@ export function thresholdBands(
     })
 }
 
+export interface ThresholdLegendProps {
+    thresholds: readonly Threshold[]
+    /** A name per band, in order. */
+    labels?: readonly string[]
+    title?: string
+    layout?: 'list' | 'bar'
+    /** Written after each value. */
+    unit?: string
+    decimals?: number
+    format?: (value: number) => string
+    /** Shows the no-data swatch, with this label or the default. */
+    noData?: boolean | string
+    words?: Partial<ThresholdWords>
+    className?: string
+}
+
 /**
  * The key to a threshold scale, the same one that colors a stat tile, a gauge or a scorecard's
  * cells. As a list, each band is a swatch with its name and the range it covers. As a bar, the
@@ -51,21 +67,7 @@ export function ThresholdLegend({
     noData = false,
     words: given,
     className,
-}: {
-    thresholds: readonly Threshold[]
-    /** A name per band, in order. */
-    labels?: readonly string[]
-    title?: string
-    layout?: 'list' | 'bar'
-    /** Written after each value. */
-    unit?: string
-    decimals?: number
-    format?: (value: number) => string
-    /** Shows the no-data swatch, with this label or the default. */
-    noData?: boolean | string
-    words?: Partial<ThresholdWords>
-    className?: string
-}) {
+}: ThresholdLegendProps) {
     const words = { ...WORDS, ...given }
     const write = (value: number) => (format !== undefined ? format(value) : `${formatValue(value, decimals)}${unit}`)
     const bands = thresholdBands(thresholds, write, words)

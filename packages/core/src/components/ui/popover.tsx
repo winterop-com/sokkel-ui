@@ -3,13 +3,20 @@ import { Popover as PopoverPrimitive } from '@base-ui/react/popover'
 import { cn } from '../../lib/cn'
 import { returnFocusOnKeyboard } from '../../lib/focus'
 
-function Popover({ ...props }: PopoverPrimitive.Root.Props) {
+export type PopoverProps = PopoverPrimitive.Root.Props
+
+function Popover({ ...props }: PopoverProps) {
     return <PopoverPrimitive.Root data-slot="popover" {...props} />
 }
 
-function PopoverTrigger({ ...props }: PopoverPrimitive.Trigger.Props) {
+export type PopoverTriggerProps = PopoverPrimitive.Trigger.Props
+
+function PopoverTrigger({ ...props }: PopoverTriggerProps) {
     return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />
 }
+
+export type PopoverContentProps = PopoverPrimitive.Popup.Props &
+    Pick<PopoverPrimitive.Positioner.Props, 'align' | 'alignOffset' | 'side' | 'sideOffset' | 'anchor' | 'collisionPadding'>
 
 function PopoverContent({
     className,
@@ -20,8 +27,7 @@ function PopoverContent({
     anchor,
     collisionPadding,
     ...props
-}: PopoverPrimitive.Popup.Props &
-    Pick<PopoverPrimitive.Positioner.Props, 'align' | 'alignOffset' | 'side' | 'sideOffset' | 'anchor' | 'collisionPadding'>) {
+}: PopoverContentProps) {
     return (
         <PopoverPrimitive.Portal>
             <PopoverPrimitive.Positioner
@@ -47,15 +53,21 @@ function PopoverContent({
     )
 }
 
-function PopoverHeader({ className, ...props }: React.ComponentProps<'div'>) {
+export type PopoverHeaderProps = React.ComponentProps<'div'>
+
+function PopoverHeader({ className, ...props }: PopoverHeaderProps) {
     return <div data-slot="popover-header" className={cn('flex flex-col gap-0.5 text-sm', className)} {...props} />
 }
 
-function PopoverTitle({ className, ...props }: PopoverPrimitive.Title.Props) {
+export type PopoverTitleProps = PopoverPrimitive.Title.Props
+
+function PopoverTitle({ className, ...props }: PopoverTitleProps) {
     return <PopoverPrimitive.Title data-slot="popover-title" className={cn('font-medium', className)} {...props} />
 }
 
-function PopoverDescription({ className, ...props }: PopoverPrimitive.Description.Props) {
+export type PopoverDescriptionProps = PopoverPrimitive.Description.Props
+
+function PopoverDescription({ className, ...props }: PopoverDescriptionProps) {
     return <PopoverPrimitive.Description data-slot="popover-description" className={cn('text-muted-foreground', className)} {...props} />
 }
 

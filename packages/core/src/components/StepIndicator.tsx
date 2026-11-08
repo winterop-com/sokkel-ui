@@ -17,17 +17,7 @@ export interface StepIndicatorWords {
 
 const STEP_WORDS: StepIndicatorWords = { step: (number, total) => `Step ${String(number)} of ${String(total)}` }
 
-/**
- * Where a person is in a run of steps: each step numbered and named, the done ones checked and
- * pressable to go back to, the current one filled. On a phone only the current step is named.
- */
-export function StepIndicator({
-    steps,
-    current,
-    onStep,
-    className,
-    words: given,
-}: {
+export interface StepIndicatorProps {
     steps: readonly Step[]
     /** The index of the current step. */
     current: number
@@ -35,7 +25,13 @@ export function StepIndicator({
     onStep?: (index: number) => void
     className?: string
     words?: Partial<StepIndicatorWords>
-}) {
+}
+
+/**
+ * Where a person is in a run of steps: each step numbered and named, the done ones checked and
+ * pressable to go back to, the current one filled. On a phone only the current step is named.
+ */
+export function StepIndicator({ steps, current, onStep, className, words: given }: StepIndicatorProps) {
     const words = { ...STEP_WORDS, ...given }
     return (
         <nav aria-label={words.step(current + 1, steps.length)} className={cn('flex flex-col gap-2', className)}>
@@ -105,6 +101,27 @@ export interface WizardDialogWords extends StepIndicatorWords {
 
 const WIZARD_WORDS: WizardDialogWords = { ...STEP_WORDS, next: 'Next', back: 'Back', cancel: 'Cancel' }
 
+export interface WizardDialogProps {
+    open: boolean
+    onOpenChange: (open: boolean) => void
+    title: ReactNode
+    description?: ReactNode
+    steps: readonly Step[]
+    current: number
+    onCurrentChange: (index: number) => void
+    /** The last step's verb. */
+    finish: { label: string; onFinish: () => void; busy?: boolean; busyLabel?: string }
+    /** Why the current step cannot be left forward yet. */
+    why?: string
+    width?: 'sm' | 'md' | 'lg' | 'xl'
+    footer?: ReactNode
+    /** The current step's `IssueCount`, beside the verbs. */
+    count?: ReactNode
+    /** The current step's body. */
+    children?: ReactNode
+    words?: Partial<WizardDialogWords>
+}
+
 /**
  * A dialog filled in a step at a time: the step indicator under the title, the current step's
  * body, and Back and Next in the footer. The last step's verb is the one that finishes. A step
@@ -125,26 +142,7 @@ export function WizardDialog({
     count,
     children,
     words: given,
-}: {
-    open: boolean
-    onOpenChange: (open: boolean) => void
-    title: ReactNode
-    description?: ReactNode
-    steps: readonly Step[]
-    current: number
-    onCurrentChange: (index: number) => void
-    /** The last step's verb. */
-    finish: { label: string; onFinish: () => void; busy?: boolean; busyLabel?: string }
-    /** Why the current step cannot be left forward yet. */
-    why?: string
-    width?: 'sm' | 'md' | 'lg' | 'xl'
-    footer?: ReactNode
-    /** The current step's `IssueCount`, beside the verbs. */
-    count?: ReactNode
-    /** The current step's body. */
-    children?: ReactNode
-    words?: Partial<WizardDialogWords>
-}) {
+}: WizardDialogProps) {
     const words = { ...WIZARD_WORDS, ...given }
     const last = current === steps.length - 1
     return (

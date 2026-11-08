@@ -129,6 +129,8 @@ function shown({ from, fromRoom, room }: Pick<Base, 'from' | 'fromRoom' | 'room'
     return cn(from !== undefined && FROM[from], fromRoom !== undefined && FROM_ROOM[fromRoom], room === true && '@container')
 }
 
+export type StackProps = Base & { align?: keyof typeof ALIGN; justify?: keyof typeof JUSTIFY; reverse?: boolean }
+
 /**
  * Cells one under the other, each as wide as the stack. The stack itself may shrink below its
  * content's width, so in a row or a grid it gives way instead of pushing its container wider.
@@ -147,7 +149,7 @@ export function Stack({
     room,
     className,
     ...props
-}: Base & { align?: keyof typeof ALIGN; justify?: keyof typeof JUSTIFY; reverse?: boolean }) {
+}: StackProps) {
     return (
         <Tag
             {...props}
@@ -164,6 +166,18 @@ export function Stack({
             {children}
         </Tag>
     )
+}
+
+export type RowProps = Base & {
+    align?: keyof typeof ALIGN
+    justify?: keyof typeof JUSTIFY
+    wrap?: boolean
+    rowGap?: Gap
+    inline?: boolean
+    /** Stacks the cells below this window width: for a page's own structure. */
+    stackBelow?: Breakpoint
+    /** Stacks the cells while the room the row sits in is narrower than this: for a part inside a component. */
+    stackBelowRoom?: RoomSize
 }
 
 /**
@@ -192,17 +206,7 @@ export function Row({
     room,
     className,
     ...props
-}: Base & {
-    align?: keyof typeof ALIGN
-    justify?: keyof typeof JUSTIFY
-    wrap?: boolean
-    rowGap?: Gap
-    inline?: boolean
-    /** Stacks the cells below this window width: for a page's own structure. */
-    stackBelow?: Breakpoint
-    /** Stacks the cells while the room the row sits in is narrower than this: for a part inside a component. */
-    stackBelowRoom?: RoomSize
-}) {
+}: RowProps) {
     return (
         <Tag
             {...props}
@@ -224,8 +228,10 @@ export function Row({
     )
 }
 
+export type CenterProps = Omit<Base, 'gap'>
+
 /** One cell centered both ways in the room it is given: an icon in its tile, a line in an empty area. */
-export function Center({ children, as: Tag = 'div', from, fromRoom, room, className, ...props }: Omit<Base, 'gap'>) {
+export function Center({ children, as: Tag = 'div', from, fromRoom, room, className, ...props }: CenterProps) {
     return (
         <Tag {...props} className={cn('flex items-center justify-center', shown({ from, fromRoom, room }), className)}>
             {children}
@@ -253,6 +259,8 @@ const GAP_LENGTH: Record<Gap, string> = {
     inspector: 'var(--density-inspector-gap)',
 }
 
+export type ColumnsProps = Base & { count?: 2 | 3 | 4 | 6 | 'fill'; min?: keyof typeof MIN; align?: 'start' | 'stretch'; rowGap?: Gap }
+
 /**
  * Cells in a grid of equal columns: up to `count` side by side, and fewer as the room narrows,
  * so no column gets narrower than `min`, down to one. `count="fill"` sets no limit: as many
@@ -274,7 +282,7 @@ export function Columns({
     className,
     style,
     ...props
-}: Base & { count?: 2 | 3 | 4 | 6 | 'fill'; min?: keyof typeof MIN; align?: 'start' | 'stretch'; rowGap?: Gap }) {
+}: ColumnsProps) {
     const track =
         count === 'fill'
             ? `minmax(min(${MIN[min]}, 100%), 1fr)`
@@ -312,21 +320,7 @@ const ASIDE_START = {
     third: '@3xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]',
 } as const
 
-/**
- * The main content with an aside beside it: details, help, a summary. When the container is too
- * narrow for both, the aside goes under the main content, or above it when it stands at the start.
- * Side by side the two keep their own heights, unless `align="stretch"` makes them as tall as each
- * other, as two boxes on a page want.
- */
-export function Split({
-    children,
-    aside,
-    side = 'end',
-    width = 'md',
-    gap = 'xl',
-    align = 'start',
-    className,
-}: {
+export interface SplitProps {
     children: ReactNode
     aside: ReactNode
     side?: 'start' | 'end'
@@ -334,7 +328,15 @@ export function Split({
     gap?: Gap
     align?: 'start' | 'stretch'
     className?: string
-}) {
+}
+
+/**
+ * The main content with an aside beside it: details, help, a summary. When the container is too
+ * narrow for both, the aside goes under the main content, or above it when it stands at the start.
+ * Side by side the two keep their own heights, unless `align="stretch"` makes them as tall as each
+ * other, as two boxes on a page want.
+ */
+export function Split({ children, aside, side = 'end', width = 'md', gap = 'xl', align = 'start', className }: SplitProps) {
     return (
         <div className="@container min-w-0">
             <div
@@ -354,20 +356,13 @@ export function Split({
     )
 }
 
+export type FillProps = Omit<Base, 'gap'> & { scroll?: boolean }
+
 /**
  * The cell that takes the room left in a stack or a row: a list under a header, an editor beside a
  * toolbar. `scroll` scrolls what does not fit inside it, so the page around it stays still.
  */
-export function Fill({
-    children,
-    scroll = false,
-    as: Tag = 'div',
-    from,
-    fromRoom,
-    room,
-    className,
-    ...props
-}: Omit<Base, 'gap'> & { scroll?: boolean }) {
+export function Fill({ children, scroll = false, as: Tag = 'div', from, fromRoom, room, className, ...props }: FillProps) {
     return (
         <Tag {...props} className={cn('min-h-0 min-w-0 flex-1', scroll && 'overflow-y-auto', shown({ from, fromRoom, room }), className)}>
             {children}

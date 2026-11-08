@@ -13,11 +13,17 @@ const WORDS: ThemeToggleWords = {
     toDark: 'Switch to dark',
 }
 
+export interface ThemeToggleProps {
+    dark: boolean
+    onToggle: () => void
+    words?: Partial<ThemeToggleWords>
+}
+
 /**
  * The light and dark switch for a top bar: the icon shows the scheme in use, and the name and
  * tooltip say what a press does.
  */
-export function ThemeToggle({ dark, onToggle, words: given }: { dark: boolean; onToggle: () => void; words?: Partial<ThemeToggleWords> }) {
+export function ThemeToggle({ dark, onToggle, words: given }: ThemeToggleProps) {
     const words = { ...WORDS, ...given }
     const label = dark ? words.toLight : words.toDark
     return (

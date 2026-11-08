@@ -13,6 +13,31 @@ const WORDS: FieldWords = {
     required: 'required',
 }
 
+export interface FieldProps {
+    id: string
+    label: string
+    /** A short note beside the label: a unit, a format, a default. */
+    hint?: string
+    required?: boolean
+    /** A sentence between the label and the control: what the question asks. */
+    description?: ReactNode
+    /** A sentence under the control. */
+    help?: ReactNode
+    /** Why the value is refused, as one critical issue; shown only once it is set. */
+    error?: string | null
+    issues?: readonly Issue[]
+    /** Whether the mark's message is open, for a form's count to open it. */
+    issueOpen?: boolean
+    onIssueOpenChange?: (open: boolean) => void
+    /** The label names a key, so it is drawn in the code face. */
+    mono?: boolean
+    /** The hint is the setting's key, as a document or a command line writes it: drawn in the code face, never translated. */
+    keyHint?: boolean
+    children: ReactNode
+    className?: string
+    words?: Partial<FieldWords>
+}
+
 /**
  * A form control with its label, an optional hint beside the label, and help under the control. A
  * required field is marked by a star after its label, and says "required" to a screen reader.
@@ -46,30 +71,7 @@ export function Field({
     children,
     className,
     words: given,
-}: {
-    id: string
-    label: string
-    /** A short note beside the label: a unit, a format, a default. */
-    hint?: string
-    required?: boolean
-    /** A sentence between the label and the control: what the question asks. */
-    description?: ReactNode
-    /** A sentence under the control. */
-    help?: ReactNode
-    /** Why the value is refused, as one critical issue; shown only once it is set. */
-    error?: string | null
-    issues?: readonly Issue[]
-    /** Whether the mark's message is open, for a form's count to open it. */
-    issueOpen?: boolean
-    onIssueOpenChange?: (open: boolean) => void
-    /** The label names a key, so it is drawn in the code face. */
-    mono?: boolean
-    /** The hint is the setting's key, as a document or a command line writes it: drawn in the code face, never translated. */
-    keyHint?: boolean
-    children: ReactNode
-    className?: string
-    words?: Partial<FieldWords>
-}) {
+}: FieldProps) {
     const words = { ...WORDS, ...given }
     const issues: Issue[] = [...(error === undefined || error === null ? [] : [{ tone: 'critical' as const, text: error }]), ...issuesGiven]
     const tone = worst(issues)

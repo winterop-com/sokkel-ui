@@ -42,6 +42,32 @@ const FIELD = [
     'select:not([disabled])',
 ].join(', ')
 
+export interface DialogShellProps {
+    open: boolean
+    onOpenChange: (open: boolean) => void
+    width?: keyof typeof WIDTHS
+    /** On a phone: `sheet` covers the screen, for a form; `fit` is sized to its content inside the screen's margins, for a short question. */
+    phone?: 'sheet' | 'fit'
+    title: ReactNode
+    description?: ReactNode
+    /** Held under the title, outside the scrolling body: a step indicator, a tab bar. */
+    header?: ReactNode
+    confirm?: DialogConfirm
+    /** Draws Back before the confirm, for a dialog of steps. */
+    back?: () => void
+    /** More buttons, between Cancel and the confirm: a second way to finish. */
+    actions?: ReactNode
+    /** When false there is no Cancel, and Escape and the backdrop leave the dialog open. */
+    dismissible?: boolean
+    /** Something at the footer's left: a note, a secondary link. */
+    footer?: ReactNode
+    /** The form's `IssueCount`, set just before the verbs it stops. */
+    count?: ReactNode
+    children?: ReactNode
+    className?: string
+    words?: Partial<DialogShellWords>
+}
+
 /**
  * Every dialog's frame: a title (and an optional line under it), the body that scrolls when it
  * is taller than the window, and a footer with Cancel and the one confirming verb at the right.
@@ -69,31 +95,7 @@ export function DialogShell({
     children,
     className,
     words: given,
-}: {
-    open: boolean
-    onOpenChange: (open: boolean) => void
-    width?: keyof typeof WIDTHS
-    /** On a phone: `sheet` covers the screen, for a form; `fit` is sized to its content inside the screen's margins, for a short question. */
-    phone?: 'sheet' | 'fit'
-    title: ReactNode
-    description?: ReactNode
-    /** Held under the title, outside the scrolling body: a step indicator, a tab bar. */
-    header?: ReactNode
-    confirm?: DialogConfirm
-    /** Draws Back before the confirm, for a dialog of steps. */
-    back?: () => void
-    /** More buttons, between Cancel and the confirm: a second way to finish. */
-    actions?: ReactNode
-    /** When false there is no Cancel, and Escape and the backdrop leave the dialog open. */
-    dismissible?: boolean
-    /** Something at the footer's left: a note, a secondary link. */
-    footer?: ReactNode
-    /** The form's `IssueCount`, set just before the verbs it stops. */
-    count?: ReactNode
-    children?: ReactNode
-    className?: string
-    words?: Partial<DialogShellWords>
-}) {
+}: DialogShellProps) {
     const words = { ...WORDS, ...given }
     const busy = confirm?.busy === true
     const shut = confirm?.why !== undefined || busy
@@ -169,20 +171,7 @@ export function DialogShell({
     )
 }
 
-/**
- * A question with one answer to confirm: the title is the question ("Delete import-orders?"),
- * there is no body unless one is given, and a destructive answer is drawn as one. On a phone it
- * stays sized to its content, never a full-screen sheet.
- */
-export function ConfirmDialog({
-    open,
-    onOpenChange,
-    question,
-    detail,
-    confirm,
-    children,
-    words,
-}: {
+export interface ConfirmDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     question: ReactNode
@@ -192,7 +181,14 @@ export function ConfirmDialog({
     /** What the answer touches, when one line cannot say it: a list of what goes with it. */
     children?: ReactNode
     words?: Partial<DialogShellWords>
-}) {
+}
+
+/**
+ * A question with one answer to confirm: the title is the question ("Delete import-orders?"),
+ * there is no body unless one is given, and a destructive answer is drawn as one. On a phone it
+ * stays sized to its content, never a full-screen sheet.
+ */
+export function ConfirmDialog({ open, onOpenChange, question, detail, confirm, children, words }: ConfirmDialogProps) {
     return (
         <DialogShell
             open={open}

@@ -46,6 +46,16 @@ function matches(item: PickerItem, chosen: ReadonlySet<string>, query: string): 
     return [item.code, item.name ?? '', item.description ?? ''].some((text) => text.toLowerCase().includes(q))
 }
 
+export interface CapabilityPickerProps {
+    items: readonly PickerItem[]
+    capabilities: readonly Capability[]
+    onChoose: (code: string) => void
+    defaultQuery?: string
+    defaultCapabilities?: readonly string[]
+    className?: string
+    words?: Partial<CapabilityPickerWords>
+}
+
 /**
  * A list to pick one thing from, narrowed two ways: a search over code, name and description, and
  * capability chips that keep only what has every chip chosen. Each chip counts what it would leave,
@@ -61,15 +71,7 @@ export function CapabilityPicker({
     defaultCapabilities = [],
     className,
     words: given,
-}: {
-    items: readonly PickerItem[]
-    capabilities: readonly Capability[]
-    onChoose: (code: string) => void
-    defaultQuery?: string
-    defaultCapabilities?: readonly string[]
-    className?: string
-    words?: Partial<CapabilityPickerWords>
-}) {
+}: CapabilityPickerProps) {
     const words = { ...WORDS, ...given }
     const [query, setQuery] = useState(defaultQuery)
     const [chosen, setChosen] = useState<ReadonlySet<string>>(new Set(defaultCapabilities))

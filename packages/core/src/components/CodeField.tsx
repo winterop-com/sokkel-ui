@@ -30,26 +30,21 @@ export function codeProblem(code: string, words: CodeWords = WORDS): string | nu
     return null
 }
 
-/**
- * The field a thing's code is typed in. It shapes what is typed into a code as it goes, says
- * nothing while the value is fine, and names the single thing to change when it is not. The code
- * face shows the value as it will be written in documents and addresses.
- */
-export function CodeField({
-    id,
-    label = 'Code',
-    value,
-    onChange,
-    required = true,
-    words: given,
-}: {
+export interface CodeFieldProps {
     id: string
     label?: string
     value: string
     onChange: (code: string) => void
     required?: boolean
     words?: Partial<CodeWords>
-}) {
+}
+
+/**
+ * The field a thing's code is typed in. It shapes what is typed into a code as it goes, says
+ * nothing while the value is fine, and names the single thing to change when it is not. The code
+ * face shows the value as it will be written in documents and addresses.
+ */
+export function CodeField({ id, label = 'Code', value, onChange, required = true, words: given }: CodeFieldProps) {
     const words = { ...WORDS, ...given }
     const problem = codeProblem(value, words)
     return (

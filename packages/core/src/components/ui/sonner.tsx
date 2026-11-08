@@ -38,3 +38,5 @@ const Toaster = ({ ...props }: ToasterProps) => {
 }
 
 export { Toaster }
+
+export type { ToasterProps } from 'sonner'

@@ -62,6 +62,21 @@ export interface Segment<T extends string> {
     dot?: string
 }
 
+export interface SegmentedProps<T extends string> {
+    /** The group's id, for a `Field` around it to point its label at. */
+    id?: string
+    /** What the group is called, for a screen reader. */
+    label: string
+    value: T
+    options: readonly Segment<T>[]
+    size?: 'sm' | 'md'
+    variant?: SegmentedVariant
+    disabled?: boolean
+    fill?: boolean
+    onValueChange: (value: T) => void
+    className?: string
+}
+
 /**
  * A choice from a small fixed set, drawn as one control with every option in view.
  *
@@ -89,20 +104,7 @@ export function Segmented<T extends string>({
     fill = false,
     onValueChange,
     className,
-}: {
-    /** The group's id, for a `Field` around it to point its label at. */
-    id?: string
-    /** What the group is called, for a screen reader. */
-    label: string
-    value: T
-    options: readonly Segment<T>[]
-    size?: 'sm' | 'md'
-    variant?: SegmentedVariant
-    disabled?: boolean
-    fill?: boolean
-    onValueChange: (value: T) => void
-    className?: string
-}) {
+}: SegmentedProps<T>) {
     return (
         <div
             id={id}

@@ -115,6 +115,20 @@ function Row({
     )
 }
 
+export interface UploadTrayProps {
+    uploads: readonly Upload[]
+    onRetry?: (id: string) => void
+    onCancel?: (id: string) => void
+    /** Clears the tray; offered once every upload has finished. */
+    onClose?: () => void
+    /** Whether the rows show; held inside the tray when not given. */
+    open?: boolean
+    defaultOpen?: boolean
+    onOpenChange?: (open: boolean) => void
+    className?: string
+    words?: Partial<UploadTrayWords>
+}
+
 /**
  * The files being uploaded, in a card that sits over the corner of the page: a head that counts
  * what is still going (or what finished, once nothing is), then a row per file with its progress,
@@ -131,19 +145,7 @@ export function UploadTray({
     onOpenChange,
     className,
     words: given,
-}: {
-    uploads: readonly Upload[]
-    onRetry?: (id: string) => void
-    onCancel?: (id: string) => void
-    /** Clears the tray; offered once every upload has finished. */
-    onClose?: () => void
-    /** Whether the rows show; held inside the tray when not given. */
-    open?: boolean
-    defaultOpen?: boolean
-    onOpenChange?: (open: boolean) => void
-    className?: string
-    words?: Partial<UploadTrayWords>
-}) {
+}: UploadTrayProps) {
     const words = { ...WORDS, ...given }
     const [ownOpen, setOwnOpen] = useState(defaultOpen)
     const unfolded = open ?? ownOpen
@@ -227,25 +229,21 @@ function carriesFiles(event: DragEvent<HTMLElement>): boolean {
     return [...event.dataTransfer.types].includes('Files')
 }
 
-/**
- * An area that takes files dragged onto it from the desktop. While files are over it, a dashed
- * frame and a line on where they go cover it; on the drop, `onFiles` gets them. `open` shows the
- * frame without a drag.
- */
-export function DropZone({
-    onFiles,
-    open,
-    children,
-    className,
-    words: given,
-}: {
+export interface DropZoneProps {
     onFiles: (files: File[]) => void
     /** Shows the drop frame whether or not files are being dragged. */
     open?: boolean
     children: ReactNode
     className?: string
     words?: Partial<DropZoneWords>
-}) {
+}
+
+/**
+ * An area that takes files dragged onto it from the desktop. While files are over it, a dashed
+ * frame and a line on where they go cover it; on the drop, `onFiles` gets them. `open` shows the
+ * frame without a drag.
+ */
+export function DropZone({ onFiles, open, children, className, words: given }: DropZoneProps) {
     const words = { ...DROP_WORDS, ...given }
     const [over, setOver] = useState(false)
     const depth = useRef(0)

@@ -12,23 +12,20 @@ const TONE: Record<StatusTone, string> = {
     error: 'text-destructive',
 }
 
-/**
- * What the shell's foot strip says for the screen: a short note at the left and identifiers at the
- * right, on one row of fixed height. It holds short facts, never a sentence, so it never grows.
- */
-export function StatusLine({
-    note,
-    tone = 'quiet',
-    live = false,
-    children,
-}: {
+export interface StatusLineProps {
     note?: ReactNode
     tone?: StatusTone
     /** A dot before the note that pulses, for something happening now. */
     live?: boolean
     /** Identifiers and counts at the right end, each a `StatusItem`. */
     children?: ReactNode
-}) {
+}
+
+/**
+ * What the shell's foot strip says for the screen: a short note at the left and identifiers at the
+ * right, on one row of fixed height. It holds short facts, never a sentence, so it never grows.
+ */
+export function StatusLine({ note, tone = 'quiet', live = false, children }: StatusLineProps) {
     return (
         <div className="flex h-full min-w-0 flex-1 items-center gap-3 text-xs">
             {note !== undefined && (
@@ -48,8 +45,14 @@ export function StatusLine({
     )
 }
 
+export interface StatusItemProps {
+    label?: string
+    children: ReactNode
+    code?: boolean
+}
+
 /** One fact at the foot strip's right end, an identifier in the code face when `code` is set. */
-export function StatusItem({ label, children, code = false }: { label?: string; children: ReactNode; code?: boolean }) {
+export function StatusItem({ label, children, code = false }: StatusItemProps) {
     return (
         <span className="flex items-center gap-1.5 whitespace-nowrap">
             {label !== undefined && <span className="text-faint">{label}</span>}

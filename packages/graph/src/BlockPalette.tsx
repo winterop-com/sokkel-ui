@@ -26,8 +26,13 @@ export const BLOCK_PALETTE_WORDS: BlockPaletteWords = {
     clear: 'Clear the search',
 }
 
+export interface BlockRowProps {
+    block: PipelineBlock
+    active?: boolean
+}
+
 /** One block as a row: its glyph, the title (the name, or else the kind in the code face), and the kind under a name. */
-export function BlockRow({ block, active = false }: { block: PipelineBlock; active?: boolean }) {
+export function BlockRow({ block, active = false }: BlockRowProps) {
     const Icon = block.icon ?? Box
     const named = block.name !== undefined && block.name !== ''
     return (
@@ -49,20 +54,7 @@ export function BlockRow({ block, active = false }: { block: PipelineBlock; acti
     )
 }
 
-/**
- * The blocks a pipeline is built from, listed under their groups with a search over them. A block
- * drags onto a canvas whose `editing` takes `onDropItem`, carrying its kind under
- * `GRAPH_DRAG_TYPE`; a click picks it. The palette fills its column and its list scrolls.
- */
-export function BlockPalette({
-    blocks,
-    groups,
-    onPick,
-    query: held,
-    onQueryChange,
-    words: given,
-    className,
-}: {
+export interface BlockPaletteProps {
     blocks: readonly PipelineBlock[]
     groups: readonly BlockGroup[]
     /** A block was clicked. */
@@ -72,7 +64,14 @@ export function BlockPalette({
     onQueryChange?: (query: string) => void
     words?: Partial<BlockPaletteWords>
     className?: string
-}) {
+}
+
+/**
+ * The blocks a pipeline is built from, listed under their groups with a search over them. A block
+ * drags onto a canvas whose `editing` takes `onDropItem`, carrying its kind under
+ * `GRAPH_DRAG_TYPE`; a click picks it. The palette fills its column and its list scrolls.
+ */
+export function BlockPalette({ blocks, groups, onPick, query: held, onQueryChange, words: given, className }: BlockPaletteProps) {
     const words = { ...BLOCK_PALETTE_WORDS, ...given }
     const [own, setOwn] = useState('')
     const query = held ?? own

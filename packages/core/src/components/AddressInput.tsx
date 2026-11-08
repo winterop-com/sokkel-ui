@@ -47,6 +47,26 @@ export function parseAddresses(text: string): Address[] {
         })
 }
 
+export interface AddressInputProps {
+    value: readonly Address[]
+    onChange: (value: Address[]) => void
+    /** The typing input's id, for a `Field`'s label to name it. */
+    id?: string
+    /** A short label inside the field before the chips: `To`, `Cc`. */
+    label?: ReactNode
+    bare?: boolean
+    /** Whether an address is acceptable; a chip that is not is marked. */
+    valid?: (address: string) => boolean
+    autoFocus?: boolean
+    /** Issues beyond the field's own, such as a server's refusal of an address. */
+    issues?: readonly Issue[]
+    /** Whether the issue mark's message is open, for a form's count to open it. */
+    issueOpen?: boolean
+    onIssueOpenChange?: (open: boolean) => void
+    className?: string
+    words?: Partial<AddressInputWords>
+}
+
 /**
  * A field of recipients: each one a chip, and the text after them where the next is typed. Enter,
  * a comma, a semicolon or leaving the field turns the text into chips; a paste of several
@@ -73,25 +93,7 @@ export function AddressInput({
     onIssueOpenChange,
     className,
     words: given,
-}: {
-    value: readonly Address[]
-    onChange: (value: Address[]) => void
-    /** The typing input's id, for a `Field`'s label to name it. */
-    id?: string
-    /** A short label inside the field before the chips: `To`, `Cc`. */
-    label?: ReactNode
-    bare?: boolean
-    /** Whether an address is acceptable; a chip that is not is marked. */
-    valid?: (address: string) => boolean
-    autoFocus?: boolean
-    /** Issues beyond the field's own, such as a server's refusal of an address. */
-    issues?: readonly Issue[]
-    /** Whether the issue mark's message is open, for a form's count to open it. */
-    issueOpen?: boolean
-    onIssueOpenChange?: (open: boolean) => void
-    className?: string
-    words?: Partial<AddressInputWords>
-}) {
+}: AddressInputProps) {
     const words = { ...WORDS, ...given }
     const [draft, setDraft] = useState('')
     const input = useRef<HTMLInputElement>(null)

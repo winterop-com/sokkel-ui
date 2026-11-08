@@ -7,6 +7,8 @@ import { useMapContext } from './context'
 import { CLASS_PROPERTY, classColor, prepareData, readValue, state, useGeoJsonLayer, type FeatureAccessor } from './layer'
 import { HIGHLIGHT_COLOR, NO_DATA_POINT_COLOR, SELECTION_COLOR, classOf, scaleColors, type ColorScale } from './scale'
 
+export type { FeatureAccessor } from './layer'
+
 /** The feature property a layer stores each point's size value under. */
 const SIZE_PROPERTY = '__size'
 

@@ -40,6 +40,14 @@ const buttonVariants = cva(
     },
 )
 
+export type ButtonProps = ButtonPrimitive.Props &
+    VariantProps<typeof buttonVariants> & {
+        /** Why the button cannot be pressed now; given, the button is disabled and shows it. */
+        reason?: ReactNode
+        /** Which side the reason opens on. */
+        reasonSide?: 'top' | 'bottom' | 'left' | 'right'
+    }
+
 /**
  * A button. `reason` disables it and says why: the reason shows on hover and on focus, and the
  * button stays in the tab order so a keyboard reaches the reason too.
@@ -53,13 +61,7 @@ function Button({
     disabled,
     focusableWhenDisabled,
     ...props
-}: ButtonPrimitive.Props &
-    VariantProps<typeof buttonVariants> & {
-        /** Why the button cannot be pressed now; given, the button is disabled and shows it. */
-        reason?: ReactNode
-        /** Which side the reason opens on. */
-        reasonSide?: 'top' | 'bottom' | 'left' | 'right'
-    }) {
+}: ButtonProps) {
     const held = reason !== undefined && reason !== null && reason !== false
     const button = (
         <ButtonPrimitive

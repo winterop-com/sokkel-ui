@@ -26,6 +26,22 @@ const WORDS: MiniMonthWords = {
     day: (date) => format(date, 'EEEE d MMMM yyyy'),
 }
 
+export interface MiniMonthProps {
+    month: Date
+    onMonthChange?: (month: Date) => void
+    /** The chosen day. */
+    value?: Date
+    onValueChange?: (day: Date) => void
+    now?: Date
+    /** The days in view in the main calendar, washed. */
+    range?: { start: Date; end: Date }
+    /** Days that carry a dot. */
+    marked?: readonly Date[]
+    weekStartsOn?: 0 | 1
+    className?: string
+    words?: Partial<MiniMonthWords>
+}
+
 /**
  * A small month for a calendar's sidebar: the month's title with back and forward, and its days
  * in whole weeks. Today wears the accent, the chosen day a ring, and the days in `range`, such as
@@ -43,21 +59,7 @@ export function MiniMonth({
     weekStartsOn = 1,
     className,
     words: given,
-}: {
-    month: Date
-    onMonthChange?: (month: Date) => void
-    /** The chosen day. */
-    value?: Date
-    onValueChange?: (day: Date) => void
-    now?: Date
-    /** The days in view in the main calendar, washed. */
-    range?: { start: Date; end: Date }
-    /** Days that carry a dot. */
-    marked?: readonly Date[]
-    weekStartsOn?: 0 | 1
-    className?: string
-    words?: Partial<MiniMonthWords>
-}) {
+}: MiniMonthProps) {
     const words = { ...WORDS, ...given }
     const days = monthDays(month, weekStartsOn)
     const inRange = (day: Date) =>

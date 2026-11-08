@@ -17,6 +17,22 @@ export interface ImageBox {
     confidence?: number
 }
 
+export interface ImageAnnotationsProps {
+    src: string
+    alt: string
+    boxes: readonly ImageBox[]
+    /** Each box's tag starts with its place in `boxes`, from 1. */
+    numbered?: boolean
+    /** How a confidence is written; a whole percent by default. */
+    format?: (value: number) => string
+    /** The id of the box to draw as active. */
+    active?: string
+    /** The box under the pointer, or `undefined` when the pointer leaves it. */
+    onActiveChange?: (id: string | undefined) => void
+    size?: 'fill' | 'screen'
+    className?: string
+}
+
 /**
  * An image with boxes drawn over it, such as what a detector found. The image keeps its aspect
  * ratio and the boxes move with it. Each box carries a tag at its top edge, inside the box when it
@@ -40,21 +56,7 @@ export function ImageAnnotations({
     onActiveChange,
     size = 'fill',
     className,
-}: {
-    src: string
-    alt: string
-    boxes: readonly ImageBox[]
-    /** Each box's tag starts with its place in `boxes`, from 1. */
-    numbered?: boolean
-    /** How a confidence is written; a whole percent by default. */
-    format?: (value: number) => string
-    /** The id of the box to draw as active. */
-    active?: string
-    /** The box under the pointer, or `undefined` when the pointer leaves it. */
-    onActiveChange?: (id: string | undefined) => void
-    size?: 'fill' | 'screen'
-    className?: string
-}) {
+}: ImageAnnotationsProps) {
     return (
         <span className={cn('relative', size === 'fill' ? 'block' : 'inline-block max-w-full', className)}>
             <img

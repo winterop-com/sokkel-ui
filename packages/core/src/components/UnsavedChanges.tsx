@@ -63,11 +63,16 @@ const WORDS: UnsavedChangesWords = {
     discard: 'Discard',
 }
 
+export interface UnsavedChangesDialogProps {
+    guard: UnsavedGuard
+    words?: Partial<UnsavedChangesWords>
+}
+
 /**
  * The question a guarded dialog asks before it closes with changes. Render it inside the dialog
  * it guards, so it opens on top of it, and pass it the guard from `useUnsavedGuard`.
  */
-export function UnsavedChangesDialog({ guard, words: given }: { guard: UnsavedGuard; words?: Partial<UnsavedChangesWords> }) {
+export function UnsavedChangesDialog({ guard, words: given }: UnsavedChangesDialogProps) {
     const words = { ...WORDS, ...given }
     return (
         <ConfirmDialog

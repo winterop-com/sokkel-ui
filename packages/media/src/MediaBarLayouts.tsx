@@ -37,13 +37,15 @@ function Expand({ deck, onFullscreen, corner = false }: { deck: Deck; onFullscre
     return <FullscreenButton label={deck.words.fullscreen} onClick={onFullscreen} className={cn(corner && 'absolute top-1.5 right-1.5')} />
 }
 
+export type LineBarProps = BarProps
+
 /**
  * The one-line bar, drawn by every layout until it grows: what plays at the left with the cover
  * growing with the height, the transport over the position in the middle, the speed, the volume
  * and the extra controls at the right. Under `WIDE` it folds into two rows, the title beside the
  * transport over the position, the speed at the position's end.
  */
-export function LineBar({ deck, height, width, onFullscreen }: BarProps) {
+export function LineBar({ deck, height, width, onFullscreen }: LineBarProps) {
     const wide = width >= WIDE
     const line =
         deck.subtitle ??
@@ -106,6 +108,8 @@ export function LineBar({ deck, height, width, onFullscreen }: BarProps) {
     )
 }
 
+export type RowsBarProps = BarProps
+
 /**
  * `rows`: the cover at the left across both rows; the words, the transport (centered) and the
  * volume in the top row; and the waveform, as wide as the rest of the bar, in the bottom row. The
@@ -113,7 +117,7 @@ export function LineBar({ deck, height, width, onFullscreen }: BarProps) {
  * top row until the row is tall enough to give it the corner. On a narrow bar the cover moves
  * into the top row beside the words, and the volume is left to the device.
  */
-export function RowsBar({ deck, height, width, visualizer, onFullscreen }: BarProps) {
+export function RowsBar({ deck, height, width, visualizer, onFullscreen }: RowsBarProps) {
     const narrow = width < WIDE
     const rows = rowsGrowth(height, width)
     return (
@@ -161,6 +165,8 @@ export function RowsBar({ deck, height, width, visualizer, onFullscreen }: BarPr
     )
 }
 
+export type PanelBarProps = BarProps
+
 /**
  * `panel`: the large now-playing panel. The cover is flush and as tall as the bar at its left
  * edge; the words and the waveform fill the room over the transport, the visualizer rising behind
@@ -169,7 +175,7 @@ export function RowsBar({ deck, height, width, visualizer, onFullscreen }: BarPr
  * right corner. On a narrow bar a smaller cover moves beside the words and the transport is
  * centered at the foot.
  */
-export function PanelBar({ deck, height, width, visualizer, onFullscreen }: BarProps) {
+export function PanelBar({ deck, height, width, visualizer, onFullscreen }: PanelBarProps) {
     const narrow = width < WIDE
     const panel = panelGrowth(height, width)
     return (
@@ -203,6 +209,8 @@ export function PanelBar({ deck, height, width, visualizer, onFullscreen }: BarP
     )
 }
 
+export type StageBarProps = BarProps
+
 /**
  * `stage`: three columns, the cover at the left, inset and growing; the stage in the middle,
  * centered on the bar, with the words over a wide waveform and the transport under it; the volume
@@ -210,7 +218,7 @@ export function PanelBar({ deck, height, width, visualizer, onFullscreen }: BarP
  * right corner. The visualizer rises behind the stage from the cover to the bar's end, standing
  * on the waveform. On a narrow bar the stage has the whole width.
  */
-export function StageBar({ deck, height, width, visualizer, onFullscreen }: BarProps) {
+export function StageBar({ deck, height, width, visualizer, onFullscreen }: StageBarProps) {
     const narrow = width < WIDE
     const stage = stageGrowth(height, width)
     return (

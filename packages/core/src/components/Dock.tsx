@@ -18,6 +18,27 @@ const WORDS: DockWords = {
     resize: 'Resize the panel',
 }
 
+export interface DockProps {
+    title: ReactNode
+    tools?: ReactNode
+    open?: boolean
+    onOpenChange?: (open: boolean) => void
+    /** A CSS height the dock starts at and returns to, when `defaultSize` is not given. */
+    height?: string
+    /** The height in pixels, held from outside with `onSizeChange`. */
+    size?: number
+    onSizeChange?: (size: number) => void
+    /** Whether the top edge drags to resize the dock. */
+    resizable?: boolean
+    minSize?: number
+    maxSize?: number
+    /** The height in pixels the dock starts at and a double click on the edge returns to: 256 unless `height` is given. */
+    defaultSize?: number
+    className?: string
+    words?: Partial<DockWords>
+    children: ReactNode
+}
+
 /**
  * A panel along the bottom of the content, for a log, a terminal or a result: a head bar with the
  * title, tools and a fold control, and its content scrolling under it. Folded, only the head bar
@@ -42,26 +63,7 @@ export function Dock({
     className,
     words: given,
     children,
-}: {
-    title: ReactNode
-    tools?: ReactNode
-    open?: boolean
-    onOpenChange?: (open: boolean) => void
-    /** A CSS height the dock starts at and returns to, when `defaultSize` is not given. */
-    height?: string
-    /** The height in pixels, held from outside with `onSizeChange`. */
-    size?: number
-    onSizeChange?: (size: number) => void
-    /** Whether the top edge drags to resize the dock. */
-    resizable?: boolean
-    minSize?: number
-    maxSize?: number
-    /** The height in pixels the dock starts at and a double click on the edge returns to: 256 unless `height` is given. */
-    defaultSize?: number
-    className?: string
-    words?: Partial<DockWords>
-    children: ReactNode
-}) {
+}: DockProps) {
     const words = { ...WORDS, ...given }
     const dock = useRef<HTMLElement>(null)
     const held = usePanelSize({

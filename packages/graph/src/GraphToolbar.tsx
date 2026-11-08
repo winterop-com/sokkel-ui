@@ -43,18 +43,15 @@ export const GRAPH_TOOLBAR_WORDS: GraphToolbarWords = {
 const BUTTON =
     'flex size-7 shrink-0 items-center justify-center rounded-chip text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-40 [&_svg]:size-3.5'
 
-/** A button of the app's in a graph toolbar, drawn as the toolbar's own: a glyph, named by `label`. */
-export function GraphToolbarButton({
-    label,
-    onClick,
-    disabled,
-    children,
-}: {
+export interface GraphToolbarButtonProps {
     label: string
     onClick?: () => void
     disabled?: boolean
     children: ReactNode
-}) {
+}
+
+/** A button of the app's in a graph toolbar, drawn as the toolbar's own: a glyph, named by `label`. */
+export function GraphToolbarButton({ label, onClick, disabled, children }: GraphToolbarButtonProps) {
     return (
         <button type="button" className={BUTTON} aria-label={label} title={label} disabled={disabled} onClick={onClick}>
             {children}
@@ -64,6 +61,23 @@ export function GraphToolbarButton({
 
 function Divider() {
     return <span className="mx-0.5 h-4 w-px shrink-0 bg-border" aria-hidden />
+}
+
+export interface GraphToolbarProps {
+    onUndo?: () => void
+    onRedo?: () => void
+    canUndo?: boolean
+    canRedo?: boolean
+    /** Lays the graph out again; no button without it. */
+    onLayout?: () => void
+    /** How many things have a problem; the count is not shown without it. */
+    issues?: number
+    /** The count was pressed, to go to the first problem. */
+    onIssues?: () => void
+    /** The app's own buttons, after the tools. */
+    children?: ReactNode
+    words?: Partial<GraphToolbarWords>
+    className?: string
 }
 
 /**
@@ -83,22 +97,7 @@ export function GraphToolbar({
     children,
     words: given,
     className,
-}: {
-    onUndo?: () => void
-    onRedo?: () => void
-    canUndo?: boolean
-    canRedo?: boolean
-    /** Lays the graph out again; no button without it. */
-    onLayout?: () => void
-    /** How many things have a problem; the count is not shown without it. */
-    issues?: number
-    /** The count was pressed, to go to the first problem. */
-    onIssues?: () => void
-    /** The app's own buttons, after the tools. */
-    children?: ReactNode
-    words?: Partial<GraphToolbarWords>
-    className?: string
-}) {
+}: GraphToolbarProps) {
     const words = { ...GRAPH_TOOLBAR_WORDS, ...given }
     const controls = useGraphControls()
     const history = onUndo !== undefined || onRedo !== undefined

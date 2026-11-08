@@ -5,21 +5,18 @@ import { cn } from '../lib/cn'
 const LENGTHS = ['w-full', 'w-4/5', 'w-2/3', 'w-3/4']
 const BAR = 'animate-pulse rounded-sm bg-muted motion-reduce:animate-none'
 
-/**
- * The shape of a list before its rows arrive: rows of uneven length with a short value at the
- * end, or a grid of cards. It holds the list's height, so the page does not jump when it fills.
- */
-export function ListSkeleton({
-    rows,
-    kind = 'row',
-    label = 'Loading',
-    className,
-}: {
+export interface ListSkeletonProps {
     rows: number
     kind?: 'row' | 'card'
     label?: string
     className?: string
-}) {
+}
+
+/**
+ * The shape of a list before its rows arrive: rows of uneven length with a short value at the
+ * end, or a grid of cards. It holds the list's height, so the page does not jump when it fills.
+ */
+export function ListSkeleton({ rows, kind = 'row', label = 'Loading', className }: ListSkeletonProps) {
     const places = Array.from({ length: rows }, (_, index) => index)
     if (kind === 'card') {
         return (
@@ -48,11 +45,16 @@ export function ListSkeleton({
     )
 }
 
+export interface PendingProps {
+    label?: string
+    className?: string
+}
+
 /**
  * A spinner for a wait of unknown length that appears only after a quarter second, so a fast
  * answer never flashes it. It centers itself in the space it is given.
  */
-export function Pending({ label = 'Loading', className }: { label?: string; className?: string }) {
+export function Pending({ label = 'Loading', className }: PendingProps) {
     return (
         <div role="status" aria-label={label} className={cn('flex h-full min-h-24 items-center justify-center p-8', className)}>
             <LoaderCircle

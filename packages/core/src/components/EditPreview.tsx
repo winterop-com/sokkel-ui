@@ -17,6 +17,23 @@ export interface EditPreviewWords {
 
 const WORDS: EditPreviewWords = { edit: 'Edit', preview: 'Preview', switch: 'Show' }
 
+export interface EditPreviewProps {
+    /** The editor, which fills its pane edge to edge. */
+    edit: ReactNode
+    /** What the source makes, padded in its pane. */
+    preview: ReactNode
+    /** Controls at the editing pane's head, such as a format menu. */
+    editActions?: ReactNode
+    previewActions?: ReactNode
+    pane?: EditPreviewPane
+    defaultPane?: EditPreviewPane
+    onPaneChange?: (pane: EditPreviewPane) => void
+    /** The preview fills its pane edge to edge too, as a frame or a canvas does. */
+    flushPreview?: boolean
+    className?: string
+    words?: Partial<EditPreviewWords>
+}
+
 /**
  * A source and what it makes, as an editor beside its live preview: markdown and the page, a
  * template and the message. Where its own box is wide (48rem and more) the two panes stand side by
@@ -38,22 +55,7 @@ export function EditPreview({
     flushPreview = false,
     className,
     words: given,
-}: {
-    /** The editor, which fills its pane edge to edge. */
-    edit: ReactNode
-    /** What the source makes, padded in its pane. */
-    preview: ReactNode
-    /** Controls at the editing pane's head, such as a format menu. */
-    editActions?: ReactNode
-    previewActions?: ReactNode
-    pane?: EditPreviewPane
-    defaultPane?: EditPreviewPane
-    onPaneChange?: (pane: EditPreviewPane) => void
-    /** The preview fills its pane edge to edge too, as a frame or a canvas does. */
-    flushPreview?: boolean
-    className?: string
-    words?: Partial<EditPreviewWords>
-}) {
+}: EditPreviewProps) {
     const words = { ...WORDS, ...given }
     const [own, setOwn] = useState<EditPreviewPane>(defaultPane)
     const pane = paneValue ?? own

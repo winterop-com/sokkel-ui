@@ -14,21 +14,7 @@ const WORDS: ProblemWords = {
     technical: 'Technical details',
 }
 
-/**
- * Something that went wrong, said for a person: what happened in one sentence, then where and what
- * a right value looks like, with machine words marked by backticks drawn in the code face. The raw
- * message a program produced, such as a validator's or a stack trace, is folded away under the
- * technical details, for whoever needs it.
- */
-export function Problem({
-    title,
-    detail,
-    technical,
-    actions,
-    tone = 'error',
-    className,
-    words: given,
-}: {
+export interface ProblemProps {
     title: ReactNode
     /** Where and how to fix it; a string's backticked parts are drawn as code. */
     detail?: ReactNode
@@ -38,7 +24,15 @@ export function Problem({
     tone?: 'error' | 'warning'
     className?: string
     words?: Partial<ProblemWords>
-}) {
+}
+
+/**
+ * Something that went wrong, said for a person: what happened in one sentence, then where and what
+ * a right value looks like, with machine words marked by backticks drawn in the code face. The raw
+ * message a program produced, such as a validator's or a stack trace, is folded away under the
+ * technical details, for whoever needs it.
+ */
+export function Problem({ title, detail, technical, actions, tone = 'error', className, words: given }: ProblemProps) {
     const words = { ...WORDS, ...given }
     const Icon = tone === 'error' ? CircleAlert : TriangleAlert
     return (

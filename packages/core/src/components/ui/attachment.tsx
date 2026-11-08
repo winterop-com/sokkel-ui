@@ -24,16 +24,12 @@ const attachmentVariants = cva(
     },
 )
 
-function Attachment({
-    className,
-    state = 'done',
-    size = 'default',
-    orientation = 'horizontal',
-    ...props
-}: React.ComponentProps<'div'> &
+export type AttachmentProps = React.ComponentProps<'div'> &
     VariantProps<typeof attachmentVariants> & {
         state?: 'idle' | 'uploading' | 'processing' | 'error' | 'done'
-    }) {
+    }
+
+function Attachment({ className, state = 'done', size = 'default', orientation = 'horizontal', ...props }: AttachmentProps) {
     return (
         <div
             data-slot="attachment"
@@ -61,11 +57,9 @@ const attachmentMediaVariants = cva(
     },
 )
 
-function AttachmentMedia({
-    className,
-    variant = 'icon',
-    ...props
-}: React.ComponentProps<'div'> & VariantProps<typeof attachmentMediaVariants>) {
+export type AttachmentMediaProps = React.ComponentProps<'div'> & VariantProps<typeof attachmentMediaVariants>
+
+function AttachmentMedia({ className, variant = 'icon', ...props }: AttachmentMediaProps) {
     return (
         <div
             data-slot="attachment-media"
@@ -76,7 +70,9 @@ function AttachmentMedia({
     )
 }
 
-function AttachmentContent({ className, ...props }: React.ComponentProps<'div'>) {
+export type AttachmentContentProps = React.ComponentProps<'div'>
+
+function AttachmentContent({ className, ...props }: AttachmentContentProps) {
     return (
         <div
             data-slot="attachment-content"
@@ -86,7 +82,9 @@ function AttachmentContent({ className, ...props }: React.ComponentProps<'div'>)
     )
 }
 
-function AttachmentTitle({ className, ...props }: React.ComponentProps<'span'>) {
+export type AttachmentTitleProps = React.ComponentProps<'span'>
+
+function AttachmentTitle({ className, ...props }: AttachmentTitleProps) {
     return (
         <span
             data-slot="attachment-title"
@@ -99,7 +97,9 @@ function AttachmentTitle({ className, ...props }: React.ComponentProps<'span'>) 
     )
 }
 
-function AttachmentDescription({ className, ...props }: React.ComponentProps<'span'>) {
+export type AttachmentDescriptionProps = React.ComponentProps<'span'>
+
+function AttachmentDescription({ className, ...props }: AttachmentDescriptionProps) {
     return (
         <span
             data-slot="attachment-description"
@@ -113,7 +113,9 @@ function AttachmentDescription({ className, ...props }: React.ComponentProps<'sp
     )
 }
 
-function AttachmentActions({ className, ...props }: React.ComponentProps<'div'>) {
+export type AttachmentActionsProps = React.ComponentProps<'div'>
+
+function AttachmentActions({ className, ...props }: AttachmentActionsProps) {
     return (
         <div
             data-slot="attachment-actions"
@@ -126,11 +128,15 @@ function AttachmentActions({ className, ...props }: React.ComponentProps<'div'>)
     )
 }
 
-function AttachmentAction({ className, variant, size = 'icon-xs', ...props }: React.ComponentProps<typeof Button>) {
+export type AttachmentActionProps = React.ComponentProps<typeof Button>
+
+function AttachmentAction({ className, variant, size = 'icon-xs', ...props }: AttachmentActionProps) {
     return <Button data-slot="attachment-action" variant={variant ?? 'ghost'} size={size} className={cn(className)} {...props} />
 }
 
-function AttachmentTrigger({ className, render, type, ...props }: useRender.ComponentProps<'button'>) {
+export type AttachmentTriggerProps = useRender.ComponentProps<'button'>
+
+function AttachmentTrigger({ className, render, type, ...props }: AttachmentTriggerProps) {
     return useRender({
         defaultTagName: 'button',
         props: mergeProps<'button'>(
@@ -147,7 +153,9 @@ function AttachmentTrigger({ className, render, type, ...props }: useRender.Comp
     })
 }
 
-function AttachmentGroup({ className, ...props }: React.ComponentProps<'div'>) {
+export type AttachmentGroupProps = React.ComponentProps<'div'>
+
+function AttachmentGroup({ className, ...props }: AttachmentGroupProps) {
     return (
         <div
             data-slot="attachment-group"

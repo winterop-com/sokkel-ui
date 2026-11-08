@@ -7,24 +7,7 @@ import { legendColor } from './kinds/spec'
 import type { LegendItem } from './ChartLegend'
 import { SERIES_ORDER, type ChartLook } from './look'
 
-/**
- * A chart drawn from rows: `kind` names how, and the spec's fields say which columns it reads, as
- * a table's columns would be picked. The same rows can be drawn as another kind by changing
- * `kind` and the fields alone, so a view of data is a choice, not code. Inside a `ChartFrame`,
- * pass the frame's state through so its legend hides and highlights series; `chartLegend` gives
- * the frame its legend for the same spec. Keep `rows` stable between renders, as the chart is
- * built again when they change.
- */
-export function Chart({
-    kind,
-    label,
-    hidden,
-    hovered,
-    handle,
-    animate,
-    className,
-    ...spec
-}: ChartSpec & {
+export type ChartProps = ChartSpec & {
     kind: ChartKind
     /** What the chart shows, for a screen reader. */
     label: string
@@ -33,7 +16,17 @@ export function Chart({
     handle?: Ref<ChartHandle | null>
     animate?: boolean
     className?: string
-}) {
+}
+
+/**
+ * A chart drawn from rows: `kind` names how, and the spec's fields say which columns it reads, as
+ * a table's columns would be picked. The same rows can be drawn as another kind by changing
+ * `kind` and the fields alone, so a view of data is a choice, not code. Inside a `ChartFrame`,
+ * pass the frame's state through so its legend hides and highlights series; `chartLegend` gives
+ * the frame its legend for the same spec. Keep `rows` stable between renders, as the chart is
+ * built again when they change.
+ */
+export function Chart({ kind, label, hidden, hovered, handle, animate, className, ...spec }: ChartProps) {
     const kept = useSpec(spec)
     const option = useMemo(() => (look: ChartLook) => KINDS[kind].build(kept, look, hidden), [kind, kept, hidden])
     return (

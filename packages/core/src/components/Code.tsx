@@ -13,6 +13,22 @@ import {
     type CodeBlockWords,
 } from './ui/code-block'
 
+export interface CodeProps {
+    value: string
+    language?: string
+    title?: ReactNode
+    lineNumbers?: boolean
+    startLine?: number
+    /** Line numbers, counted from `startLine`, drawn on a wash. */
+    highlight?: readonly number[]
+    wrap?: boolean
+    size?: 'default' | 'sm'
+    variant?: 'default' | 'destructive'
+    className?: string
+    /** The copy button's words. */
+    words?: Partial<CodeBlockWords>
+}
+
 /**
  * A block of code, highlighted for its language, with a copy button. A title (a file name, a
  * step) heads it when given; `highlight` marks lines by number, and `lineNumbers` counts them from
@@ -30,21 +46,7 @@ export function Code({
     variant = 'default',
     className,
     words,
-}: {
-    value: string
-    language?: string
-    title?: ReactNode
-    lineNumbers?: boolean
-    startLine?: number
-    /** Line numbers, counted from `startLine`, drawn on a wash. */
-    highlight?: readonly number[]
-    wrap?: boolean
-    size?: 'default' | 'sm'
-    variant?: 'default' | 'destructive'
-    className?: string
-    /** The copy button's words. */
-    words?: Partial<CodeBlockWords>
-}) {
+}: CodeProps) {
     const lines = useHighlightedCode(value, language)
     const marked = new Set(highlight)
     return (

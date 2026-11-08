@@ -20,6 +20,27 @@ export interface SidePanelWords {
 
 const WORDS: SidePanelWords = { resize: 'Resize the side panel' }
 
+export interface SidePanelProps {
+    tabs: SidePanelTab[]
+    active?: string
+    onActiveChange?: (id: string) => void
+    /** The tab shown at the start when `active` is not given. */
+    defaultActive?: string
+    /** A CSS width the panel starts at and returns to, when `defaultSize` is not given. */
+    width?: string
+    /** The width in pixels, held from outside with `onSizeChange`. */
+    size?: number
+    onSizeChange?: (size: number) => void
+    /** Whether the left edge drags to resize the panel. */
+    resizable?: boolean
+    minSize?: number
+    maxSize?: number
+    /** The width in pixels the panel starts at and a double click on the edge returns to: 352 unless `width` is given. */
+    defaultSize?: number
+    className?: string
+    words?: Partial<SidePanelWords>
+}
+
 /**
  * The right-hand panel beside a page: a header bar the height of the shell's top bar, with the
  * panel's tabs (or its title when it has one tab), then the content scrolling under it. The shell's
@@ -50,26 +71,7 @@ export function SidePanel({
     defaultSize,
     className,
     words: given,
-}: {
-    tabs: SidePanelTab[]
-    active?: string
-    onActiveChange?: (id: string) => void
-    /** The tab shown at the start when `active` is not given. */
-    defaultActive?: string
-    /** A CSS width the panel starts at and returns to, when `defaultSize` is not given. */
-    width?: string
-    /** The width in pixels, held from outside with `onSizeChange`. */
-    size?: number
-    onSizeChange?: (size: number) => void
-    /** Whether the left edge drags to resize the panel. */
-    resizable?: boolean
-    minSize?: number
-    maxSize?: number
-    /** The width in pixels the panel starts at and a double click on the edge returns to: 352 unless `width` is given. */
-    defaultSize?: number
-    className?: string
-    words?: Partial<SidePanelWords>
-}) {
+}: SidePanelProps) {
     const words = { ...WORDS, ...given }
     const [own, setOwn] = useState(defaultActive)
     const shown = active ?? own
@@ -141,8 +143,13 @@ export function SidePanel({
     )
 }
 
+export interface PanelSectionProps {
+    title: string
+    children: ReactNode
+}
+
 /** A titled block inside a side panel: a quiet uppercase heading over its content. */
-export function PanelSection({ title, children }: { title: string; children: ReactNode }) {
+export function PanelSection({ title, children }: PanelSectionProps) {
     return (
         <section className="flex flex-col gap-2 border-b border-border px-4 py-3 last:border-b-0">
             <GroupLabel as="h3">{title}</GroupLabel>

@@ -30,6 +30,8 @@ import {
     type ColorScale,
 } from './scale'
 
+export type { FeatureAccessor } from './layer'
+
 export interface BoundaryLayerProps {
     /** Unique among the map's layers. */
     id: string

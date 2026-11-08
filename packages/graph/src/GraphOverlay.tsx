@@ -42,26 +42,22 @@ function pointOf(state: ReactFlowState, anchor: GraphAnchor, direction: GraphDir
 /** How far an overlay keeps from the canvas's edges and from its anchor. */
 const MARGIN = 8
 
-/**
- * Something held over a canvas at a place in the graph, such as a `BlockPicker`: it follows the
- * place as the view pans and zooms, opens beside it on the side with room, and stays inside the
- * canvas, whose height it gives its content as `--graph-overlay-room`. Given `link`, a dashed line runs from that node's output to the place, for a step about
- * to be added there. Escape and a press outside close it. Render it as a child of the canvas.
- */
-export function GraphOverlay({
-    at,
-    link,
-    onClose,
-    children,
-    className,
-}: {
+export interface GraphOverlayProps {
     at: GraphAnchor
     /** The node a pending connection is drawn from. */
     link?: string
     onClose?: () => void
     children: ReactNode
     className?: string
-}) {
+}
+
+/**
+ * Something held over a canvas at a place in the graph, such as a `BlockPicker`: it follows the
+ * place as the view pans and zooms, opens beside it on the side with room, and stays inside the
+ * canvas, whose height it gives its content as `--graph-overlay-room`. Given `link`, a dashed line runs from that node's output to the place, for a step about
+ * to be added there. Escape and a press outside close it. Render it as a child of the canvas.
+ */
+export function GraphOverlay({ at, link, onClose, children, className }: GraphOverlayProps) {
     const direction = useGraphDirection()
     const view = useViewport()
     const point = useStore((state) => pointOf(state, at, direction), samePoint)
@@ -159,21 +155,18 @@ export interface GraphNoticeWords {
 
 const NOTICE_WORDS: GraphNoticeWords = { close: 'Dismiss' }
 
-/**
- * A short message across the foot of a canvas: why a connection was refused, or what a gesture
- * did. `critical` says a refusal; `info` says anything else. Render it as a child of the canvas.
- */
-export function GraphNotice({
-    tone = 'info',
-    onClose,
-    children,
-    words: given,
-}: {
+export interface GraphNoticeProps {
     tone?: 'critical' | 'info'
     onClose?: () => void
     children: ReactNode
     words?: Partial<GraphNoticeWords>
-}) {
+}
+
+/**
+ * A short message across the foot of a canvas: why a connection was refused, or what a gesture
+ * did. `critical` says a refusal; `info` says anything else. Render it as a child of the canvas.
+ */
+export function GraphNotice({ tone = 'info', onClose, children, words: given }: GraphNoticeProps) {
     const words = { ...NOTICE_WORDS, ...given }
     const Icon = tone === 'critical' ? CircleAlert : Info
     return (

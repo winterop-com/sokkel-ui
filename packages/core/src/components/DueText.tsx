@@ -29,6 +29,19 @@ export function dueState(date: Date, now: Date, nearDays = 0): DueState {
     return days <= nearDays ? 'near' : 'later'
 }
 
+export interface DueTextProps {
+    /** The date; without one the text says `words.none`. */
+    date: Date | undefined
+    now: Date
+    nearDays?: number
+    done?: boolean
+    quiet?: boolean
+    icon?: ReactNode
+    alert?: boolean
+    words?: Partial<DueTextWords>
+    className?: string
+}
+
 /**
  * A date toned by how near it is: one that has passed in the critical ink and one that is near in
  * the warning ink, both in medium weight, and any other in the muted ink (or the surrounding color
@@ -47,18 +60,7 @@ export function DueText({
     alert = false,
     words: given,
     className,
-}: {
-    /** The date; without one the text says `words.none`. */
-    date: Date | undefined
-    now: Date
-    nearDays?: number
-    done?: boolean
-    quiet?: boolean
-    icon?: ReactNode
-    alert?: boolean
-    words?: Partial<DueTextWords>
-    className?: string
-}) {
+}: DueTextProps) {
     const words = { ...DUE_TEXT_WORDS, ...given }
     const state = date === undefined || done ? 'later' : dueState(date, now, nearDays)
     const toned = state !== 'later'

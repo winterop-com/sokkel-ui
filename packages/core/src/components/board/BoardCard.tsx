@@ -17,8 +17,10 @@ export interface BoardLabelSpec {
     color?: KindColor
 }
 
+export type BoardLabelProps = BoardLabelSpec & { className?: string }
+
 /** A label as a small chip in its color. */
-export function BoardLabel({ name, color, className }: BoardLabelSpec & { className?: string }) {
+export function BoardLabel({ name, color, className }: BoardLabelProps) {
     return (
         <span
             className={cn(
@@ -52,6 +54,30 @@ const WORDS: BoardCardWords = {
     assignee: (name) => `Assigned to ${name}`,
 }
 
+export interface BoardCardProps {
+    /** What a move names the card by. */
+    id: string
+    code?: string
+    title: ReactNode
+    labels?: readonly BoardLabelSpec[]
+    assignee?: { name: string; color?: KindColor; image?: string }
+    due?: Date
+    /** Today, against which the due date is judged. */
+    now?: Date
+    /** A finished item's due date is never overdue. */
+    done?: boolean
+    comments?: number
+    checklist?: { done: number; total: number }
+    selected?: boolean
+    onSelect?: () => void
+    /** Dropdown menu items behind the head's more button. */
+    menu?: ReactNode
+    /** How many lines the title may take before it is cut short. */
+    titleLines?: TitleLines
+    className?: string
+    words?: Partial<BoardCardWords>
+}
+
 /**
  * One work item on a board: its code in the code face, its title, its labels, and a foot with
  * the due date, the counts of comments and checklist items, and the assignee. A due date that has
@@ -81,29 +107,7 @@ export function BoardCard({
     titleLines = 3,
     className,
     words: given,
-}: {
-    /** What a move names the card by. */
-    id: string
-    code?: string
-    title: ReactNode
-    labels?: readonly BoardLabelSpec[]
-    assignee?: { name: string; color?: KindColor; image?: string }
-    due?: Date
-    /** Today, against which the due date is judged. */
-    now?: Date
-    /** A finished item's due date is never overdue. */
-    done?: boolean
-    comments?: number
-    checklist?: { done: number; total: number }
-    selected?: boolean
-    onSelect?: () => void
-    /** Dropdown menu items behind the head's more button. */
-    menu?: ReactNode
-    /** How many lines the title may take before it is cut short. */
-    titleLines?: TitleLines
-    className?: string
-    words?: Partial<BoardCardWords>
-}) {
+}: BoardCardProps) {
     const words = { ...WORDS, ...given }
     const drag = useBoardDrag()
     const zone = useBoardZone()

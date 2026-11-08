@@ -32,12 +32,9 @@ const codeBlockVariants = cva(
     },
 )
 
-function CodeBlock({
-    className,
-    variant = 'default',
-    size = 'default',
-    ...props
-}: React.ComponentProps<'div'> & VariantProps<typeof codeBlockVariants> & { size?: 'default' | 'sm' }) {
+export type CodeBlockProps = React.ComponentProps<'div'> & VariantProps<typeof codeBlockVariants> & { size?: 'default' | 'sm' }
+
+function CodeBlock({ className, variant = 'default', size = 'default', ...props }: CodeBlockProps) {
     return (
         <div
             data-slot="code-block"
@@ -49,7 +46,9 @@ function CodeBlock({
     )
 }
 
-function CodeBlockHeader({ className, ...props }: React.ComponentProps<'div'>) {
+export type CodeBlockHeaderProps = React.ComponentProps<'div'>
+
+function CodeBlockHeader({ className, ...props }: CodeBlockHeaderProps) {
     return (
         <div
             data-slot="code-block-header"
@@ -62,7 +61,9 @@ function CodeBlockHeader({ className, ...props }: React.ComponentProps<'div'>) {
     )
 }
 
-function CodeBlockTitle({ className, ...props }: React.ComponentProps<'div'>) {
+export type CodeBlockTitleProps = React.ComponentProps<'div'>
+
+function CodeBlockTitle({ className, ...props }: CodeBlockTitleProps) {
     return (
         <div
             data-slot="code-block-title"
@@ -75,7 +76,9 @@ function CodeBlockTitle({ className, ...props }: React.ComponentProps<'div'>) {
     )
 }
 
-function CodeBlockActions({ className, ...props }: React.ComponentProps<'div'>) {
+export type CodeBlockActionsProps = React.ComponentProps<'div'>
+
+function CodeBlockActions({ className, ...props }: CodeBlockActionsProps) {
     return (
         <div
             data-slot="code-block-actions"
@@ -88,6 +91,8 @@ function CodeBlockActions({ className, ...props }: React.ComponentProps<'div'>) 
     )
 }
 
+export type CodeBlockCopyButtonProps = React.ComponentProps<typeof Button> & { value: string; words?: Partial<CodeBlockWords> }
+
 function CodeBlockCopyButton({
     value,
     variant = 'ghost',
@@ -96,7 +101,7 @@ function CodeBlockCopyButton({
     onClick,
     words: given,
     ...props
-}: React.ComponentProps<typeof Button> & { value: string; words?: Partial<CodeBlockWords> }) {
+}: CodeBlockCopyButtonProps) {
     const words = { ...COPY_WORDS, ...given }
     const { copied, copy } = useCopy()
 
@@ -124,6 +129,12 @@ function CodeBlockCopyButton({
     )
 }
 
+export type CodeBlockContentProps = React.ComponentProps<'pre'> & {
+    wrap?: boolean
+    lineNumbers?: boolean
+    startLine?: number
+}
+
 function CodeBlockContent({
     className,
     children,
@@ -132,11 +143,7 @@ function CodeBlockContent({
     lineNumbers = false,
     startLine = 1,
     ...props
-}: React.ComponentProps<'pre'> & {
-    wrap?: boolean
-    lineNumbers?: boolean
-    startLine?: number
-}) {
+}: CodeBlockContentProps) {
     return (
         <pre
             data-slot="code-block-content"
@@ -183,12 +190,9 @@ const codeBlockLineVariants = cva(
     },
 )
 
-function CodeBlockLine({
-    className,
-    variant = 'default',
-    children,
-    ...props
-}: React.ComponentProps<'span'> & VariantProps<typeof codeBlockLineVariants>) {
+export type CodeBlockLineProps = React.ComponentProps<'span'> & VariantProps<typeof codeBlockLineVariants>
+
+function CodeBlockLine({ className, variant = 'default', children, ...props }: CodeBlockLineProps) {
     // An empty line holds a newline so copying a selection keeps blank lines.
     const empty = children === undefined || children === null || children === '' || (Array.isArray(children) && children.length === 0)
 
@@ -201,7 +205,9 @@ function CodeBlockLine({
     )
 }
 
-function CodeBlockFooter({ className, ...props }: React.ComponentProps<'div'>) {
+export type CodeBlockFooterProps = React.ComponentProps<'div'>
+
+function CodeBlockFooter({ className, ...props }: CodeBlockFooterProps) {
     return (
         <div
             data-slot="code-block-footer"

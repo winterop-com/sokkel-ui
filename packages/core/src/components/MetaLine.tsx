@@ -2,6 +2,16 @@ import { Fragment, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 
+export interface MetaLineProps {
+    items: readonly ReactNode[]
+    separator?: ReactNode
+    size?: 'xs' | 'sm'
+    tone?: 'muted' | 'strong'
+    truncate?: boolean
+    inline?: boolean
+    className?: string
+}
+
 /**
  * Small facts about a thing on one line, joined by a separator: an artist and a year, a count of
  * views and an age. An item that is undefined, null, false or empty is left out, so an optional
@@ -18,15 +28,7 @@ export function MetaLine({
     truncate = false,
     inline = false,
     className,
-}: {
-    items: readonly ReactNode[]
-    separator?: ReactNode
-    size?: 'xs' | 'sm'
-    tone?: 'muted' | 'strong'
-    truncate?: boolean
-    inline?: boolean
-    className?: string
-}) {
+}: MetaLineProps) {
     const shown = items.filter((item) => item !== undefined && item !== null && item !== false && item !== '')
     return (
         <span

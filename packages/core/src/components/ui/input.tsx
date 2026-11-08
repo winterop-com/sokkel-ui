@@ -9,11 +9,13 @@ const FRAMED =
 /** No frame of its own: the input inherits its text size and takes its height and padding from `className`. */
 const BARE = 'w-full min-w-0 bg-transparent outline-none placeholder:text-muted-foreground'
 
+export type InputProps = React.ComponentProps<'input'> & { bare?: boolean }
+
 /**
  * A one-line text input. `bare` drops its border, background and focus ring, for an input that
  * sits inside another frame, such as a search box or a field of chips, which draws them instead.
  */
-function Input({ className, type, bare = false, ...props }: React.ComponentProps<'input'> & { bare?: boolean }) {
+function Input({ className, type, bare = false, ...props }: InputProps) {
     return <InputPrimitive type={type} data-slot="input" className={cn(bare ? BARE : FRAMED, className)} {...props} />
 }
 

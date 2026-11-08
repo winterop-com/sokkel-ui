@@ -45,6 +45,31 @@ export function downloadShare({ value, count, total }: { value?: number; count?:
     return Math.min(1, Math.max(0, count / total))
 }
 
+export interface DownloadButtonProps {
+    state: DownloadState
+    count?: number
+    total?: number
+    /** The share done, 0 to 1, when there are no parts to count. */
+    value?: number
+    onDownload?: () => void
+    onCancel?: () => void
+    onOpen?: () => void
+    /** Removes the kept copy, after a confirming second press. */
+    onRemove?: () => void
+    /** What the kept copy is, said on hover: its size, where it is kept. */
+    keptDetail?: string
+    /** Why the last download failed, said on hover of the idle button. */
+    error?: string
+    /** The icon alone: always, or only on a phone. */
+    compact?: boolean | 'narrow'
+    /** Starts armed to remove, waiting for the second press. */
+    defaultArmed?: boolean
+    variant?: 'default' | 'outline' | 'secondary' | 'ghost'
+    size?: 'sm' | 'default' | 'lg'
+    className?: string
+    words?: Partial<DownloadButtonWords>
+}
+
 /**
  * A button that downloads something for keeping, through its three states, which the app holds in
  * `state`: idle says Download; running fills a `ProgressRing` and says how many of how many parts
@@ -75,30 +100,7 @@ export function DownloadButton({
     size = 'default',
     className,
     words: given,
-}: {
-    state: DownloadState
-    count?: number
-    total?: number
-    /** The share done, 0 to 1, when there are no parts to count. */
-    value?: number
-    onDownload?: () => void
-    onCancel?: () => void
-    onOpen?: () => void
-    /** Removes the kept copy, after a confirming second press. */
-    onRemove?: () => void
-    /** What the kept copy is, said on hover: its size, where it is kept. */
-    keptDetail?: string
-    /** Why the last download failed, said on hover of the idle button. */
-    error?: string
-    /** The icon alone: always, or only on a phone. */
-    compact?: boolean | 'narrow'
-    /** Starts armed to remove, waiting for the second press. */
-    defaultArmed?: boolean
-    variant?: 'default' | 'outline' | 'secondary' | 'ghost'
-    size?: 'sm' | 'default' | 'lg'
-    className?: string
-    words?: Partial<DownloadButtonWords>
-}) {
+}: DownloadButtonProps) {
     const words = { ...WORDS, ...given }
     const [armed, setArmed] = useState(defaultArmed)
     useEffect(() => {

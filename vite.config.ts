@@ -8,7 +8,8 @@ const packages = fileURLToPath(new URL('./packages', import.meta.url))
 
 /**
  * Each package's modules by the names an app imports them by, read from their sources, so Storybook
- * and the tests run the code as written without a build. The same paths as each package's `exports`.
+ * and the tests run the code as written without a build. The same names as each package's `exports`
+ * gives them; a private module resolves here too, and `src/rules.test.ts` fails an import of one.
  */
 export const alias = [
     { find: /^@winterop-com\/sokkel-ui\/primitives\/(.+)$/, replacement: `${packages}/core/src/components/ui/$1` },

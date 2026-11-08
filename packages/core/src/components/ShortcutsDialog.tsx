@@ -22,24 +22,21 @@ const WORDS: ShortcutsDialogWords = {
 
 const NONE: readonly ShortcutGroup[] = []
 
+export interface ShortcutsDialogProps {
+    open: boolean
+    onOpenChange: (open: boolean) => void
+    /** Shortcuts the app answers itself, listed after the bound ones. */
+    groups?: readonly ShortcutGroup[]
+    words?: Partial<ShortcutsDialogWords>
+}
+
 /**
  * Every keyboard shortcut, grouped, each with its keys drawn as keys: the keys bound with
  * `useShortcuts` (in the nearest `Shell`, or the page's) that have a label, written as this device
  * writes them, then the `groups` given for keys the app answers itself. Groups of one title are one.
  * `Shell` holds one, opened on `?` and from the account menu, when given `shortcuts`.
  */
-export function ShortcutsDialog({
-    open,
-    onOpenChange,
-    groups = NONE,
-    words: given,
-}: {
-    open: boolean
-    onOpenChange: (open: boolean) => void
-    /** Shortcuts the app answers itself, listed after the bound ones. */
-    groups?: readonly ShortcutGroup[]
-    words?: Partial<ShortcutsDialogWords>
-}) {
+export function ShortcutsDialog({ open, onOpenChange, groups = NONE, words: given }: ShortcutsDialogProps) {
     const words = { ...WORDS, ...given }
     const registered = useRegisteredShortcuts()
     const shown = useMemo(() => shortcutGroups(registered, groups, words.general), [registered, groups, words.general])

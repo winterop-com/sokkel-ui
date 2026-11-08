@@ -43,6 +43,8 @@ import { ID_PROPERTY, MapContext, useMapContext, type MapContextValue, type MapC
 import { unionBounds, type Bounds, type LngLat } from './geometry'
 import { FLAT_SKY, globeSky, starfieldStyle } from './globe'
 
+export type { MapCorner } from './context'
+
 /** The words the map's own controls and messages say. */
 export interface MapWords {
     zoomIn: string
@@ -807,8 +809,13 @@ export function MapView({
     )
 }
 
+export interface MapOverlayProps {
+    corner: MapCorner
+    children: ReactNode
+}
+
 /** Puts its children in a corner of the map, stacked under whatever is there already. */
-export function MapOverlay({ corner, children }: { corner: MapCorner; children: ReactNode }) {
+export function MapOverlay({ corner, children }: MapOverlayProps) {
     const { corners } = useMapContext()
     return createPortal(children, corners[corner])
 }

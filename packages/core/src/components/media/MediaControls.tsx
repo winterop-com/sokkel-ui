@@ -42,20 +42,16 @@ const TRANSPORT_SIZE: Record<TransportSize, string | undefined> = {
     lg: "[&_svg:not([class*='size-'])]:size-5",
 }
 
-/** The play button at the center of the transport, the one filled control. */
-export function PlayButton({
-    playing,
-    onToggle,
-    tone = 'surface',
-    size = 'sm',
-    words,
-}: {
+export interface PlayButtonProps {
     playing: boolean
     onToggle: () => void
     tone?: MediaTone
     size?: TransportSize
     words: { play: string; pause: string }
-}) {
+}
+
+/** The play button at the center of the transport, the one filled control. */
+export function PlayButton({ playing, onToggle, tone = 'surface', size = 'sm', words }: PlayButtonProps) {
     return (
         <Button
             size={size === 'sm' ? 'icon' : 'icon-lg'}
@@ -71,6 +67,18 @@ export function PlayButton({
     )
 }
 
+export interface TransportButtonProps {
+    label: string
+    onClick?: () => void
+    disabled?: boolean
+    /** For a toggle such as shuffle; drawn in the accent while on. */
+    pressed?: boolean
+    tone?: MediaTone
+    size?: TransportSize
+    className?: string
+    children: ReactNode
+}
+
 /** A transport button beside the play button: previous, next, skip back or forward. */
 export function TransportButton({
     label,
@@ -81,17 +89,7 @@ export function TransportButton({
     size = 'sm',
     className,
     children,
-}: {
-    label: string
-    onClick?: () => void
-    disabled?: boolean
-    /** For a toggle such as shuffle; drawn in the accent while on. */
-    pressed?: boolean
-    tone?: MediaTone
-    size?: TransportSize
-    className?: string
-    children: ReactNode
-}) {
+}: TransportButtonProps) {
     return (
         <Button
             variant="ghost"
@@ -113,6 +111,22 @@ export function TransportButton({
     )
 }
 
+export interface PositionProps {
+    at: number
+    duration: number
+    buffered?: readonly MediaRange[]
+    label: string
+    onSeek: (seconds: number) => void
+    onScrub: (value: number | null) => void
+    tone?: MediaTone
+    /** The track's levels from start to end, each from 0 to 1. */
+    waveform?: readonly number[]
+    /** The waveform's height in pixels. */
+    height?: number
+    size?: 'sm' | 'lg'
+    className?: string
+}
+
 /**
  * The seek slider between the elapsed and the remaining time. Given the track's `waveform`, the
  * slider is drawn as that waveform with the played part filled, and the same keys move it; its
@@ -130,21 +144,7 @@ export function Position({
     height = 40,
     size = 'sm',
     className,
-}: {
-    at: number
-    duration: number
-    buffered?: readonly MediaRange[]
-    label: string
-    onSeek: (seconds: number) => void
-    onScrub: (value: number | null) => void
-    tone?: MediaTone
-    /** The track's levels from start to end, each from 0 to 1. */
-    waveform?: readonly number[]
-    /** The waveform's height in pixels. */
-    height?: number
-    size?: 'sm' | 'lg'
-    className?: string
-}) {
+}: PositionProps) {
     const valueText = (value: number) => `${formatTime(value)} / ${formatTime(duration)}`
     const broad = height >= 64
     const time = size === 'lg' ? 'w-14' : 'w-11'
@@ -203,6 +203,20 @@ export function formatRate(rate: number): string {
     return `${String(rate)}x`
 }
 
+export interface RateMenuProps {
+    rate: number
+    rates?: readonly number[]
+    onRateChange: (rate: number) => void
+    /** The menu's name, such as "Playback speed". */
+    label: string
+    format?: (rate: number) => string
+    tone?: MediaTone
+    size?: TransportSize
+    container?: ComponentProps<typeof DropdownMenuContent>['container']
+    onOpenChange?: (open: boolean) => void
+    className?: string
+}
+
 /**
  * The playback speed as a button that says it ("1.25x") and opens a menu of `rates`. `container`
  * holds the menu inside an element that may go fullscreen, where a menu on the body would not show.
@@ -218,19 +232,7 @@ export function RateMenu({
     container,
     onOpenChange,
     className,
-}: {
-    rate: number
-    rates?: readonly number[]
-    onRateChange: (rate: number) => void
-    /** The menu's name, such as "Playback speed". */
-    label: string
-    format?: (rate: number) => string
-    tone?: MediaTone
-    size?: TransportSize
-    container?: ComponentProps<typeof DropdownMenuContent>['container']
-    onOpenChange?: (open: boolean) => void
-    className?: string
-}) {
+}: RateMenuProps) {
     return (
         <DropdownMenu onOpenChange={onOpenChange}>
             <DropdownMenuTrigger
@@ -263,8 +265,14 @@ export function RateMenu({
     )
 }
 
+export interface SkipGlyphProps {
+    seconds: number
+    back: boolean
+    size?: TransportSize
+}
+
 /** The skip glyph: a turning arrow, back or forward, with the interval in seconds written inside it. */
-export function SkipGlyph({ seconds, back, size = 'sm' }: { seconds: number; back: boolean; size?: TransportSize }) {
+export function SkipGlyph({ seconds, back, size = 'sm' }: SkipGlyphProps) {
     const Arrow = back ? RotateCcw : RotateCw
     return (
         <span aria-hidden className="relative inline-flex items-center justify-center">
@@ -281,8 +289,14 @@ export function SkipGlyph({ seconds, back, size = 'sm' }: { seconds: number; bac
     )
 }
 
+export interface LiveMarkProps {
+    label: string
+    size?: 'sm' | 'lg'
+    className?: string
+}
+
 /** What stands where the position would on a live stream, which has no length to seek along: a dot and "Live". */
-export function LiveMark({ label, size = 'sm', className }: { label: string; size?: 'sm' | 'lg'; className?: string }) {
+export function LiveMark({ label, size = 'sm', className }: LiveMarkProps) {
     return (
         <div
             data-slot="media-live"
@@ -294,6 +308,17 @@ export function LiveMark({ label, size = 'sm', className }: { label: string; siz
     )
 }
 
+export interface VolumeControlProps {
+    /** From 0 to 1, as heard: zero while muted. */
+    level: number
+    muted: boolean
+    onMutedChange?: (muted: boolean) => void
+    onVolumeChange: (volume: number) => void
+    tone?: MediaTone
+    compact?: boolean
+    words: { mute: string; unmute: string; volume: string }
+}
+
 /** Mute and the volume slider, the slider hidden where `compact` says there is no room. */
 export function VolumeControl({
     level,
@@ -303,16 +328,7 @@ export function VolumeControl({
     tone = 'surface',
     compact = false,
     words,
-}: {
-    /** From 0 to 1, as heard: zero while muted. */
-    level: number
-    muted: boolean
-    onMutedChange?: (muted: boolean) => void
-    onVolumeChange: (volume: number) => void
-    tone?: MediaTone
-    compact?: boolean
-    words: { mute: string; unmute: string; volume: string }
-}) {
+}: VolumeControlProps) {
     return (
         <div className="flex items-center gap-1">
             <Button
@@ -347,8 +363,13 @@ export function VolumeControl({
     )
 }
 
+export interface VolumeGlyphProps {
+    level: number
+    className?: string
+}
+
 /** Loud, quiet or silent, in the glyph. */
-export function VolumeGlyph({ level, className }: { level: number; className?: string }) {
+export function VolumeGlyph({ level, className }: VolumeGlyphProps) {
     if (level <= 0) return <VolumeX className={className} aria-hidden />
     if (level < 0.5) return <Volume1 className={className} aria-hidden />
     return <Volume2 className={className} aria-hidden />

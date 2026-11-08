@@ -104,6 +104,36 @@ export function timeSeriesOption({
     }
 }
 
+export interface TimeSeriesPanelProps {
+    title: ReactNode
+    subtitle?: ReactNode
+    info?: ReactNode
+    actions?: ReactNode
+    /** The time of each value, written for a reader. */
+    x: readonly string[]
+    series: readonly PanelSeries[]
+    unit?: string
+    decimals?: number
+    format?: (value: number) => string
+    fill?: SeriesFill
+    stacked?: boolean
+    step?: boolean
+    thresholds?: readonly Threshold[]
+    min?: number
+    max?: number
+    /** Labels every nth time on the axis; ECharts picks when omitted. */
+    labelEvery?: number
+    legend?: 'list' | 'table' | 'none'
+    legendStats?: readonly LegendStat[]
+    span?: PanelSpan
+    bodyClassName?: string
+    loading?: boolean
+    empty?: boolean
+    file?: string
+    words?: Partial<ChartFrameWords>
+    className?: string
+}
+
 /**
  * A dashboard panel of values over time: lines, over a fading or solid area, alone or stacked,
  * with dashed threshold lines, and a legend under it as a row or a table of each series' min, max,
@@ -135,35 +165,7 @@ export function TimeSeriesPanel({
     file,
     words,
     className,
-}: {
-    title: ReactNode
-    subtitle?: ReactNode
-    info?: ReactNode
-    actions?: ReactNode
-    /** The time of each value, written for a reader. */
-    x: readonly string[]
-    series: readonly PanelSeries[]
-    unit?: string
-    decimals?: number
-    format?: (value: number) => string
-    fill?: SeriesFill
-    stacked?: boolean
-    step?: boolean
-    thresholds?: readonly Threshold[]
-    min?: number
-    max?: number
-    /** Labels every nth time on the axis; ECharts picks when omitted. */
-    labelEvery?: number
-    legend?: 'list' | 'table' | 'none'
-    legendStats?: readonly LegendStat[]
-    span?: PanelSpan
-    bodyClassName?: string
-    loading?: boolean
-    empty?: boolean
-    file?: string
-    words?: Partial<ChartFrameWords>
-    className?: string
-}) {
+}: TimeSeriesPanelProps) {
     const option = useMemo(
         () => timeSeriesOption({ x, series, unit, decimals, format, fill, stacked, step, thresholds, min, max, labelEvery }),
         [x, series, unit, decimals, format, fill, stacked, step, thresholds, min, max, labelEvery],

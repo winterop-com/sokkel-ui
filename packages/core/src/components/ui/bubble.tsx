@@ -4,7 +4,9 @@ import { useRender } from '@base-ui/react/use-render'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '../../lib/cn'
 
-function BubbleGroup({ className, ...props }: React.ComponentProps<'div'>) {
+export type BubbleGroupProps = React.ComponentProps<'div'>
+
+function BubbleGroup({ className, ...props }: BubbleGroupProps) {
     return <div data-slot="bubble-group" className={cn('flex min-w-0 flex-col gap-2', className)} {...props} />
 }
 
@@ -32,15 +34,12 @@ const bubbleVariants = cva(
     },
 )
 
-function Bubble({
-    variant = 'default',
-    align = 'start',
-    className,
-    ...props
-}: React.ComponentProps<'div'> &
+export type BubbleProps = React.ComponentProps<'div'> &
     VariantProps<typeof bubbleVariants> & {
         align?: 'start' | 'end'
-    }) {
+    }
+
+function Bubble({ variant = 'default', align = 'start', className, ...props }: BubbleProps) {
     return (
         <div
             data-slot="bubble"
@@ -52,7 +51,9 @@ function Bubble({
     )
 }
 
-function BubbleContent({ className, render, ...props }: useRender.ComponentProps<'div'>) {
+export type BubbleContentProps = useRender.ComponentProps<'div'>
+
+function BubbleContent({ className, render, ...props }: BubbleContentProps) {
     return useRender({
         defaultTagName: 'div',
         props: mergeProps<'div'>(
@@ -91,15 +92,12 @@ const bubbleReactionsVariants = cva(
     },
 )
 
-function BubbleReactions({
-    side = 'bottom',
-    align = 'end',
-    className,
-    ...props
-}: React.ComponentProps<'div'> & {
+export type BubbleReactionsProps = React.ComponentProps<'div'> & {
     align?: 'start' | 'end'
     side?: 'top' | 'bottom'
-}) {
+}
+
+function BubbleReactions({ side = 'bottom', align = 'end', className, ...props }: BubbleReactionsProps) {
     return (
         <div
             data-slot="bubble-reactions"

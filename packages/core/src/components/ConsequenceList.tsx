@@ -18,22 +18,19 @@ export interface ConsequenceListWords {
 
 const WORDS: ConsequenceListWords = { heading: 'Also deleted' }
 
-/**
- * What goes with the thing an action removes or changes, a row per kind with its count, under a
- * heading that says what happens to them. It sits in a confirm's body, before the verb.
- */
-export function ConsequenceList({
-    items,
-    tone = 'critical',
-    className,
-    words: given,
-}: {
+export interface ConsequenceListProps {
     items: readonly Consequence[]
     /** `critical` when they are lost, `neutral` when they are only moved or kept. */
     tone?: 'critical' | 'neutral'
     className?: string
     words?: Partial<ConsequenceListWords>
-}) {
+}
+
+/**
+ * What goes with the thing an action removes or changes, a row per kind with its count, under a
+ * heading that says what happens to them. It sits in a confirm's body, before the verb.
+ */
+export function ConsequenceList({ items, tone = 'critical', className, words: given }: ConsequenceListProps) {
     const words = { ...WORDS, ...given }
     if (items.length === 0) return null
     return (

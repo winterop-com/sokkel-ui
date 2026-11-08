@@ -24,20 +24,7 @@ const WORDS: BannerWords = {
     dismiss: 'Dismiss',
 }
 
-/**
- * A strip across the top of a screen or the app for a state that holds until it changes: the
- * server is not answering, a read-only instance, a pending upgrade. One line, truncated on a
- * phone, with its actions at the end and an optional dismiss.
- */
-export function Banner({
-    tone = 'info',
-    icon,
-    actions,
-    onDismiss,
-    className,
-    words: given,
-    children,
-}: {
+export interface BannerProps {
     tone?: BannerTone
     icon?: ReactNode
     actions?: ReactNode
@@ -45,7 +32,14 @@ export function Banner({
     className?: string
     words?: Partial<BannerWords>
     children: ReactNode
-}) {
+}
+
+/**
+ * A strip across the top of a screen or the app for a state that holds until it changes: the
+ * server is not answering, a read-only instance, a pending upgrade. One line, truncated on a
+ * phone, with its actions at the end and an optional dismiss.
+ */
+export function Banner({ tone = 'info', icon, actions, onDismiss, className, words: given, children }: BannerProps) {
     const words = { ...WORDS, ...given }
     const Icon = ICON[tone]
     return (

@@ -274,6 +274,28 @@ const CARET = cn(
     '[&>p:last-child]:after:ml-0.5 [&>p:last-child]:after:inline-block [&>p:last-child]:after:h-4 [&>p:last-child]:after:w-1.5 [&>p:last-child]:after:translate-y-0.5 [&>p:last-child]:after:animate-pulse [&>p:last-child]:after:bg-foreground motion-reduce:[&>p:last-child]:after:animate-none',
 )
 
+export interface MarkdownProps {
+    content: string
+    streaming?: boolean
+    allowHtml?: boolean
+    /** Gives every heading an id made from its text. */
+    anchors?: boolean
+    /** How code inside a sentence is drawn: filled chips by default. */
+    inlineCode?: InlineCode
+    /** A caret after the last words while `streaming`. */
+    caret?: boolean
+    /** Draws LaTeX math with KaTeX, loaded the first time a message holds math. On by default. */
+    math?: boolean
+    /** Heading sizes: within a message (the default), or a document's from a page title down. */
+    scale?: 'message' | 'document'
+    /** The app's own parts by ID, a map or a function, each drawn where the text has the marker `<!-- part:ID -->`. */
+    parts?: MarkdownParts
+    /** The word a part's marker starts with: `part` by default. */
+    partMarker?: string
+    className?: string
+    words?: Partial<MarkdownWords>
+}
+
 /**
  * GitHub-flavored markdown, as an assistant or a description writes it: fenced code highlighted
  * with a copy button, mermaid fences drawn as diagrams, links opening in a new tab, and a quote
@@ -318,27 +340,7 @@ export const Markdown = memo(function Markdown({
     partMarker: word = 'part',
     className,
     words: given,
-}: {
-    content: string
-    streaming?: boolean
-    allowHtml?: boolean
-    /** Gives every heading an id made from its text. */
-    anchors?: boolean
-    /** How code inside a sentence is drawn: filled chips by default. */
-    inlineCode?: InlineCode
-    /** A caret after the last words while `streaming`. */
-    caret?: boolean
-    /** Draws LaTeX math with KaTeX, loaded the first time a message holds math. On by default. */
-    math?: boolean
-    /** Heading sizes: within a message (the default), or a document's from a page title down. */
-    scale?: 'message' | 'document'
-    /** The app's own parts by ID, a map or a function, each drawn where the text has the marker `<!-- part:ID -->`. */
-    parts?: MarkdownParts
-    /** The word a part's marker starts with: `part` by default. */
-    partMarker?: string
-    className?: string
-    words?: Partial<MarkdownWords>
-}) {
+}: MarkdownProps) {
     // The words are held by their text, so an object made anew each render keeps the renderers.
     const said = JSON.stringify(given ?? null)
     const words = useMemo<MarkdownWords>(() => ({ ...WORDS, ...(JSON.parse(said) as Partial<MarkdownWords> | null) }), [said])

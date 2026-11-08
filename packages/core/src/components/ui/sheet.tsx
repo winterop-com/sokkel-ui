@@ -5,15 +5,21 @@ import { cn } from '../../lib/cn'
 import { Button } from './button'
 import { XIcon } from 'lucide-react'
 
-function Sheet({ ...props }: SheetPrimitive.Root.Props) {
+export type SheetProps = SheetPrimitive.Root.Props
+
+function Sheet({ ...props }: SheetProps) {
     return <SheetPrimitive.Root data-slot="sheet" {...props} />
 }
 
-function SheetTrigger({ ...props }: SheetPrimitive.Trigger.Props) {
+export type SheetTriggerProps = SheetPrimitive.Trigger.Props
+
+function SheetTrigger({ ...props }: SheetTriggerProps) {
     return <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />
 }
 
-function SheetClose({ ...props }: SheetPrimitive.Close.Props) {
+export type SheetCloseProps = SheetPrimitive.Close.Props
+
+function SheetClose({ ...props }: SheetCloseProps) {
     return <SheetPrimitive.Close data-slot="sheet-close" {...props} />
 }
 
@@ -34,6 +40,15 @@ function SheetOverlay({ className, ...props }: SheetPrimitive.Backdrop.Props) {
     )
 }
 
+export type SheetContentProps = SheetPrimitive.Popup.Props & {
+    side?: 'top' | 'right' | 'bottom' | 'left'
+    /** How wide a side sheet opens on a wide window; on a phone `md` and `lg` take the whole width. */
+    size?: 'sm' | 'md' | 'lg' | 'xl'
+    /** The parts sit against each other with no gap, for a header and a body that draw their own rule and padding. */
+    flush?: boolean
+    showCloseButton?: boolean
+}
+
 function SheetContent({
     className,
     children,
@@ -42,14 +57,7 @@ function SheetContent({
     flush = false,
     showCloseButton = true,
     ...props
-}: SheetPrimitive.Popup.Props & {
-    side?: 'top' | 'right' | 'bottom' | 'left'
-    /** How wide a side sheet opens on a wide window; on a phone `md` and `lg` take the whole width. */
-    size?: 'sm' | 'md' | 'lg' | 'xl'
-    /** The parts sit against each other with no gap, for a header and a body that draw their own rule and padding. */
-    flush?: boolean
-    showCloseButton?: boolean
-}) {
+}: SheetContentProps) {
     return (
         <SheetPortal>
             <SheetOverlay />
@@ -84,15 +92,21 @@ function SheetContent({
     )
 }
 
-function SheetHeader({ className, ...props }: React.ComponentProps<'div'>) {
+export type SheetHeaderProps = React.ComponentProps<'div'>
+
+function SheetHeader({ className, ...props }: SheetHeaderProps) {
     return <div data-slot="sheet-header" className={cn('flex flex-col gap-0.5 p-4', className)} {...props} />
 }
 
-function SheetFooter({ className, ...props }: React.ComponentProps<'div'>) {
+export type SheetFooterProps = React.ComponentProps<'div'>
+
+function SheetFooter({ className, ...props }: SheetFooterProps) {
     return <div data-slot="sheet-footer" className={cn('mt-auto flex flex-col gap-2 p-4', className)} {...props} />
 }
 
-function SheetTitle({ className, ...props }: SheetPrimitive.Title.Props) {
+export type SheetTitleProps = SheetPrimitive.Title.Props
+
+function SheetTitle({ className, ...props }: SheetTitleProps) {
     return (
         <SheetPrimitive.Title
             data-slot="sheet-title"
@@ -102,7 +116,9 @@ function SheetTitle({ className, ...props }: SheetPrimitive.Title.Props) {
     )
 }
 
-function SheetDescription({ className, ...props }: SheetPrimitive.Description.Props) {
+export type SheetDescriptionProps = SheetPrimitive.Description.Props
+
+function SheetDescription({ className, ...props }: SheetDescriptionProps) {
     return (
         <SheetPrimitive.Description data-slot="sheet-description" className={cn('text-sm text-muted-foreground', className)} {...props} />
     )
