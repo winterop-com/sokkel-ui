@@ -166,6 +166,14 @@
             "types": "./dist/components/DataTable.d.ts",
             "import": "./dist/components/DataTable.js"
         },
+        "./DateField": {
+            "types": "./dist/components/DateField.d.ts",
+            "import": "./dist/components/DateField.js"
+        },
+        "./DateTimeField": {
+            "types": "./dist/components/DateTimeField.d.ts",
+            "import": "./dist/components/DateTimeField.js"
+        },
         "./DescriptionList": {
             "types": "./dist/components/DescriptionList.d.ts",
             "import": "./dist/components/DescriptionList.js"
@@ -305,6 +313,10 @@
         "./NavBar": {
             "types": "./dist/components/NavBar.d.ts",
             "import": "./dist/components/NavBar.js"
+        },
+        "./NumberField": {
+            "types": "./dist/components/NumberField.d.ts",
+            "import": "./dist/components/NumberField.js"
         },
         "./PageHeader": {
             "types": "./dist/components/PageHeader.d.ts",
@@ -497,6 +509,10 @@
         "./ThemeToggle": {
             "types": "./dist/components/ThemeToggle.d.ts",
             "import": "./dist/components/ThemeToggle.js"
+        },
+        "./TimeField": {
+            "types": "./dist/components/TimeField.d.ts",
+            "import": "./dist/components/TimeField.js"
         },
         "./Timeline": {
             "types": "./dist/components/Timeline.d.ts",
@@ -1054,6 +1070,10 @@
             "types": "./dist/lib/cron.d.ts",
             "import": "./dist/lib/cron.js"
         },
+        "./lib/dates": {
+            "types": "./dist/lib/dates.d.ts",
+            "import": "./dist/lib/dates.js"
+        },
         "./lib/desktop": {
             "types": "./dist/lib/desktop.d.ts",
             "import": "./dist/lib/desktop.js"
@@ -1073,6 +1093,10 @@
         "./lib/kind": {
             "types": "./dist/lib/kind.d.ts",
             "import": "./dist/lib/kind.js"
+        },
+        "./lib/numbers": {
+            "types": "./dist/lib/numbers.d.ts",
+            "import": "./dist/lib/numbers.js"
         },
         "./lib/search": {
             "types": "./dist/lib/search.d.ts",
