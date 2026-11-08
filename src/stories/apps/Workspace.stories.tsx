@@ -40,6 +40,11 @@ import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { fromGlobals } from '../themes/themes'
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
+import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
+import { useStored } from '@winterop-com/sokkel-ui/hooks/use-stored'
+
+/** Where the stories keep what they remember, apart from an app's own keys. */
+const KEPT = { prefix: 'tidevann-stories.' }
 
 /**
  * A whole app in the library's frame: the rail with Projects unfolded to its projects, the top bar with the trail and search, a list page
@@ -221,17 +226,24 @@ function Workspace({
     globals,
     dock = false,
     palette = false,
+    grouped = false,
     tab = 'details',
 }: {
     tab?: string
     globals: Record<string, unknown>
     dock?: boolean
+    /** Runs grouped by job at first, from the Group choice the app remembers. */
+    grouped?: boolean
     /** Starts with the command palette open and no one signed in. */
     palette?: boolean
 }) {
     const defaults = fromGlobals(globals)
     const { settings, setSettings } = useAppearance(defaults)
-    const [dockOpen, setDockOpen] = useState(true)
+    const [dockOpen, setDockOpen] = useStored('runs.dock', true, KEPT)
+    const [group, setGroup] = useStored<'none' | 'job'>(grouped ? 'runs.group-job' : 'runs.group', grouped ? 'job' : 'none', {
+        ...KEPT,
+        check: (value) => value === 'none' || value === 'job',
+    })
     const [collapsed, setCollapsed] = useState(false)
     const [query, setQuery] = useState('')
     const [chosen, setChosen] = useState<Run>(RUNS[1])
@@ -335,6 +347,17 @@ function Workspace({
                                         />
                                         <FilterChip facet="Job" options={JOB_OPTIONS} multiple />
                                         <FilterChip facet="Started by" options={PEOPLE_OPTIONS} multiple />
+                                        <Segmented
+                                            label="Group"
+                                            value={group}
+                                            options={
+                                                [
+                                                    { value: 'none', label: 'No groups' },
+                                                    { value: 'job', label: 'By job' },
+                                                ] as const
+                                            }
+                                            onValueChange={setGroup}
+                                        />
                                     </>
                                 }
                                 columns={COLUMNS}
@@ -346,6 +369,8 @@ function Workspace({
                                 }}
                                 opened={(run) => run.id === chosen.id}
                                 total={248}
+                                groupBy={group === 'job' ? 'job' : undefined}
+                                words={{ groupCount: (count) => `${String(count)} ${count === 1 ? 'run' : 'runs'}` }}
                                 minWidth="36rem"
                             />
                         </Page>
@@ -369,6 +394,9 @@ export const ListAndPanel: StoryObj = { name: 'List and panel', render: (_, { gl
 export const Output: StoryObj = { name: 'Run output', render: (_, { globals }) => <Workspace globals={globals} tab="output" /> }
 
 export const WithDock: StoryObj = { name: 'Log dock', render: (_, { globals }) => <Workspace globals={globals} dock /> }
+
+/** The runs grouped by job, each head counting its runs; the Group choice and the dock's fold are kept for the next visit. */
+export const Grouped: StoryObj = { render: (_, { globals }) => <Workspace globals={globals} grouped dock /> }
 
 /**
  * The frame every app has, all at once: the rail of places, the command palette open on its

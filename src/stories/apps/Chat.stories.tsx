@@ -1,12 +1,16 @@
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { Bell, FileSpreadsheet, Folder, MessageSquare, PenSquare, Search } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import { Bell, FileSpreadsheet, Folder, History, MessageSquare, PenSquare, Search } from 'lucide-react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { AssistantReply, type AssistantReplyLayout } from '@winterop-com/sokkel-ui/AssistantReply'
 import { AttachmentList } from '@winterop-com/sokkel-ui/AttachmentList'
 import { Composer, type ComposerAttachment } from '@winterop-com/sokkel-ui/Composer'
+import { ConversationHistory, type ConversationEntry } from '@winterop-com/sokkel-ui/ConversationHistory'
+import { useStored } from '@winterop-com/sokkel-ui/hooks/use-stored'
+import { useUploads } from '@winterop-com/sokkel-ui/hooks/use-uploads'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import type { ConfirmState } from '@winterop-com/sokkel-ui/ConfirmCard'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { Shell } from '@winterop-com/sokkel-ui/Shell'
@@ -29,7 +33,8 @@ import { HARBOR_DUSK } from '../fixtures/photos'
 import { ModelPicker } from '../fixtures/models'
 import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
-import { Columns, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { PICKED_FILES, PICKED_LIMIT, useFakeUploader } from '../fixtures/uploader'
 import { tuneUrl } from '../media/fixtures/tune'
 import { waveformOf } from '../media/fixtures/waveform'
 
@@ -475,12 +480,29 @@ function Long() {
     )
 }
 
+/** The instant the history's times are read against, fixed so the story never changes. */
+const NOW = new Date(2026, 10, 8, 16, 30).getTime()
+const HOUR = 3_600_000
+
+const CONVERSATIONS: ConversationEntry[] = [
+    { id: 'c1', title: 'Why nightly-export failed', time: NOW - 0.4 * HOUR },
+    { id: 'c2', title: 'Retry policy for sync-inventory', time: NOW - 3 * HOUR, pinned: true },
+    { id: 'c3', title: "This week's runs", time: NOW - 5 * HOUR },
+    { id: 'c4', title: 'Rejected rows', time: NOW - 26 * HOUR },
+    { id: 'c5', title: 'Scheduler time zones', time: NOW - 9 * 24 * HOUR },
+]
+
+/** Where the stories keep what they remember, apart from an app's own keys. */
+const KEPT = { prefix: 'tidevann-stories.' }
+
 function ChatApp({
     title = 'Why nightly-export failed',
     children,
     scroll = true,
     busy = false,
     attachments = [],
+    history = false,
+    uploading = false,
 }: {
     title?: string
     children: ReactNode
@@ -488,10 +510,27 @@ function ChatApp({
     scroll?: boolean
     busy?: boolean
     attachments?: readonly ComposerAttachment[]
+    /** The conversation history beside the thread, shown or hidden by a button the app remembers. */
+    history?: boolean
+    /** Files attached through `useUploads` and a pretend uploader the top bar moves on. */
+    uploading?: boolean
 }) {
     const [collapsed, setCollapsed] = useState(false)
     const [draft, setDraft] = useState('')
     const [files, setFiles] = useState(attachments)
+    const [showHistory, setShowHistory] = useStored('chat.history', true, KEPT)
+    const [conversations, setConversations] = useState(CONVERSATIONS)
+    const [current, setCurrent] = useState('c1')
+    const fake = useFakeUploader()
+    const uploads = useUploads({ accept: '.csv,.yaml,.json,.log', maxSize: PICKED_LIMIT, upload: fake.upload })
+    // Two files are on their way up when the story opens, added once.
+    const started = useRef(false)
+    useEffect(() => {
+        if (!uploading || started.current) return
+        started.current = true
+        uploads.add(PICKED_FILES.slice(0, 2))
+        fake.step()
+    }, [uploading, uploads, fake])
     return (
         <TooltipProvider>
             <Shell
@@ -518,6 +557,25 @@ function ChatApp({
                         trail={[{ label: title }]}
                         actions={
                             <>
+                                {uploading && (
+                                    <>
+                                        <Button variant="outline" size="sm" onClick={() => uploads.add(PICKED_FILES)}>
+                                            Add files
+                                        </Button>
+                                        <Button variant="outline" size="sm" onClick={fake.step}>
+                                            Move uploads on
+                                        </Button>
+                                    </>
+                                )}
+                                {history && (
+                                    <IconButton
+                                        label={showHistory ? 'Hide history' : 'Show history'}
+                                        pressed={showHistory}
+                                        onClick={() => setShowHistory(!showHistory)}
+                                    >
+                                        <History aria-hidden />
+                                    </IconButton>
+                                )}
                                 <ModelPicker />
                                 <IconButton label="Notifications">
                                     <Bell aria-hidden />
@@ -527,28 +585,45 @@ function ChatApp({
                     />
                 }
             >
-                <Stack gap="none" className="h-full min-h-0">
-                    {scroll ? (
-                        <Stack gap="none" className="min-h-0 flex-1 overflow-y-auto">
-                            {children}
-                        </Stack>
-                    ) : (
-                        <div className="min-h-0 flex-1">{children}</div>
-                    )}
-                    <div className="mx-auto w-full max-w-3xl px-4 pb-4">
-                        <Composer
-                            value={draft}
-                            onChange={setDraft}
-                            onSend={() => setDraft('')}
-                            onStop={() => undefined}
-                            busy={busy}
-                            attachments={files}
-                            onAttach={() => undefined}
-                            onRemove={(id) => setFiles(files.filter((file) => file.id !== id))}
-                            onCancel={(id) => setFiles(files.filter((file) => file.id !== id))}
+                <Row gap="none" align="stretch" className="h-full min-h-0">
+                    {history && showHistory && (
+                        <ConversationHistory
+                            framed={false}
+                            className="w-72 shrink-0 max-md:hidden"
+                            conversations={conversations}
+                            current={current}
+                            now={NOW}
+                            onSelect={setCurrent}
+                            onRename={(id, name) =>
+                                setConversations((all) => all.map((one) => (one.id === id ? { ...one, title: name } : one)))
+                            }
+                            onPin={(id, pinned) => setConversations((all) => all.map((one) => (one.id === id ? { ...one, pinned } : one)))}
+                            onDelete={(id) => setConversations((all) => all.filter((one) => one.id !== id))}
                         />
-                    </div>
-                </Stack>
+                    )}
+                    <Stack gap="none" className="h-full min-h-0 min-w-0 flex-1">
+                        {scroll ? (
+                            <Stack gap="none" className="min-h-0 flex-1 overflow-y-auto">
+                                {children}
+                            </Stack>
+                        ) : (
+                            <div className="min-h-0 flex-1">{children}</div>
+                        )}
+                        <div className="mx-auto w-full max-w-3xl px-4 pb-4">
+                            <Composer
+                                value={draft}
+                                onChange={setDraft}
+                                onSend={() => setDraft('')}
+                                onStop={() => undefined}
+                                busy={busy}
+                                attachments={uploading ? uploads.composerFiles : files}
+                                onAttach={(picked) => (uploading ? uploads.add(picked) : undefined)}
+                                onRemove={(id) => (uploading ? uploads.onRemove(id) : setFiles(files.filter((file) => file.id !== id)))}
+                                onCancel={(id) => (uploading ? uploads.onCancel(id) : setFiles(files.filter((file) => file.id !== id)))}
+                            />
+                        </div>
+                    </Stack>
+                </Row>
             </Shell>
         </TooltipProvider>
     )
@@ -635,6 +710,32 @@ export const Attachments: StoryObj = {
     render: () => (
         <ChatApp title="Rejected rows" attachments={PENDING}>
             <Attached />
+        </ChatApp>
+    ),
+}
+
+/**
+ * Files attached through `useUploads`: two are on their way up as it opens, Move uploads on sends
+ * each a quarter further, Add files adds four (one refused by its type, one by its size), and a
+ * file going up cancels from its chip.
+ */
+export const Uploads: StoryObj = {
+    render: () => (
+        <ChatApp title="Rejected rows" uploading>
+            <Exchange />
+        </ChatApp>
+    ),
+}
+
+/**
+ * The conversations beside the thread, under Pinned, Today and Earlier, with rename, pin and
+ * delete in each one's menu. The button in the top bar hides it, and the app remembers which.
+ */
+export const WithHistory: StoryObj = {
+    name: 'History',
+    render: () => (
+        <ChatApp history>
+            <Exchange />
         </ChatApp>
     ),
 }
