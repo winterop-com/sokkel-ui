@@ -38,6 +38,8 @@ export interface AttachmentFile {
 export interface AttachmentListWords {
     /** The remove button's accessible name. */
     remove: (name: string) => string
+    /** The cancel button's accessible name, on a file still uploading when `onCancel` is given. */
+    cancel: (name: string) => string
     /** The players' buttons and scrubber, for a recording or a video. */
     play: string
     pause: string
@@ -48,6 +50,7 @@ export interface AttachmentListWords {
 
 export const ATTACHMENT_LIST_WORDS: AttachmentListWords = {
     remove: (name) => `Remove ${name}`,
+    cancel: (name) => `Cancel upload ${name}`,
     play: 'Play',
     pause: 'Pause',
     seek: 'Seek',
@@ -71,11 +74,13 @@ function uploadNote(file: AttachmentFile, words: AttachmentListWords): string {
  * be removed.
  *
  * A file with `uploading` shows a spinner in its tile, or a ring when its `progress` is known, and
- * says how far it has got under its name.
+ * says how far it has got under its name. It takes a cancel button only with `onCancel`, never
+ * the remove button.
  */
 export function AttachmentList({
     files,
     onRemove,
+    onCancel,
     size = 'sm',
     words: given,
     className,
@@ -83,6 +88,8 @@ export function AttachmentList({
     files: readonly AttachmentFile[]
     /** Removes a file by its id; no remove buttons without it. */
     onRemove?: (id: string) => void
+    /** Stops a file's upload and drops it; a file still uploading has no button without it. */
+    onCancel?: (id: string) => void
     size?: 'default' | 'sm' | 'xs'
     words?: Partial<AttachmentListWords>
     className?: string
@@ -92,6 +99,7 @@ export function AttachmentList({
         <ul data-slot="attachment-list" className={cn('flex min-w-0 flex-wrap items-stretch gap-2', className)}>
             {files.map((file) => {
                 const uploading = file.uploading === true
+                const drop = uploading ? onCancel : onRemove
                 const video = file.kind === 'video' && file.src !== undefined && onRemove === undefined && !uploading
                 const audio = file.kind === 'audio' && file.src !== undefined && !uploading
                 const glyph =
@@ -143,8 +151,11 @@ export function AttachmentList({
                                         file.detail !== undefined && <AttachmentDescription>{file.detail}</AttachmentDescription>
                                     )}
                                 </AttachmentContent>
-                                {onRemove !== undefined && (
-                                    <AttachmentAction aria-label={words.remove(file.name)} onClick={() => onRemove(file.id)}>
+                                {drop !== undefined && (
+                                    <AttachmentAction
+                                        aria-label={uploading ? words.cancel(file.name) : words.remove(file.name)}
+                                        onClick={() => drop(file.id)}
+                                    >
                                         <X aria-hidden />
                                     </AttachmentAction>
                                 )}
