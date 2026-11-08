@@ -1168,8 +1168,8 @@ export function DataTable<T>({
     const move = (id: string, by: -1 | 1) => setColumnIds(movedColumn(ordered, id, by))
     const sortable = manualSort && onSortChange === undefined ? [] : columns.filter((column) => column.sortValue !== undefined)
     // A list pins nothing and sets its columns apart with a gap; a table pins its first and last columns and pads its cells.
-    const pinned = list ? '' : 'sticky z-[1] bg-inherit shadow-[1px_0_0_var(--border)]'
-    const pinnedEnd = list ? '' : 'sticky z-[1] bg-inherit shadow-[-1px_0_0_var(--border)]'
+    const pinned = list ? '' : 'sticky z-1 bg-inherit shadow-[1px_0_0_var(--border)]'
+    const pinnedEnd = list ? '' : 'sticky z-1 bg-inherit shadow-[-1px_0_0_var(--border)]'
     const pad = list ? '' : 'px-3'
     const spaced = list && 'gap-3 px-(--density-panel-pad)'
 
