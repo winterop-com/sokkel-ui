@@ -6,7 +6,14 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.10.5** is the latest release (2026-11-08): the full-screen player never cuts its title
+- **0.10.6** is the latest release (2026-11-08), the last of the rounds the apps' own screens
+  asked for: `SplitPane` (two panes across or down, remembered by `id`), `GeoJsonLayer`, tokens a
+  theme sets for headers, tables, the editor, scroll bars, the page foot and the palette, corners by
+  role, an app's own states for `StatusChip` (`StatusProvider`), the themes `ocean`, `indigo` and
+  `terminal`; `SettingsView` and `WizardView` as pages, `SpeakButton` and dictation in `Composer`;
+  full screen through a desktop shell, a rail a work page narrows or hides, and appearance kept in
+  an app's own storage with its before-paint script as a file.
+- **0.10.5** (2026-11-08): the full-screen player never cuts its title
   short, app-defined visualizer options in its picker, a face filling the rows bar, and
   `SettingsDialog` ending in a footer with Done and an optional reset.
 - **0.10.4** (2026-11-08): explicit exports in every package and a
@@ -86,8 +93,8 @@ to `plan.md` when it ships.
 - **Adoption.** Apps adopt the library one pattern per PR, each pinning a published version. The
   app adds a check in the same PR that refuses its own hand-rolled version of that pattern, so it
   cannot come back. A part an app needs to differ becomes an option here, never a local edit. The
-  first app has adopted it; the next ones wait on the rounds below that carry their gaps (forms and
-  sign-in first, then the editor, then media and the frame).
+  first two apps have adopted it, and since 0.10.6 every gap the apps' own screens showed has a
+  part, so the rest can start: forms and sign-in first, then the editor, then media and the frame.
 - **Tauri on Chromium (discovery).** Tauri runs on each platform's own webview: WebKit on
   macOS and Linux. Once Tauri supports an embedded Chromium runtime, add that build beside the
   system-webview shell, so the library is checked in both. As of 2026-11-08 it does, in alpha only:
@@ -132,26 +139,6 @@ to `plan.md` when it ships.
   thin panels over the kinds, adding what the kinds lack first.
 - **The remaining hand-drawn tables.** `FilePreview` (CSV), `ScoreTable` and `ChartLegend` draw
   tables of their own; move them onto `DataTable`. `PermissionMatrix` may stay a matrix; decide.
-
-## Gaps the apps found (2026-11-08)
-
-Mapping each app's own UI onto the library's parts found these, beyond the review's missing parts
-under Next. Each is a part or an option here, never a copy in an app. Roughly one release a round.
-
-- **Round 3, layout, maps and tokens.** A split of two panes, across or down, with bounds, that
-  remembers its share by `id`; a `GeoJsonLayer` drawing fills, lines and circles by geometry type
-  in the theme's colors; tokens for headers, table zebra and head, editor, scroll
-  track, page foot and palette insets; an app-defined status map for `StatusChip` beyond run
-  states, with kind colors; radius by role (control and surface); themes named for their look:
-  `ocean`, `indigo` and `terminal`.
-- **Round 4, media**, landing in the media package, `@winterop-com/sokkel-ui-media`, beside
-  `MediaBar`; what chat plays through stays in the core. `SpeakButton` (fetched on demand, one
-  player) and dictation in `Composer` go in the core, since chat uses them.
-- **Round 5, the frame.** Fullscreen through a desktop shell (the app's own call in place of the
-  browser's, for the player, the video, charts and maps); `useAppearance` with pluggable storage and
-  `appearanceScript` as an external module for pages that refuse inline script (browser
-  extensions); a full-page `SettingsView` beside `SettingsDialog`, and a wizard's steps laid out on
-  a page; a way for a three-pane work page to hide or narrow the rail.
 
 ## 1.0
 
