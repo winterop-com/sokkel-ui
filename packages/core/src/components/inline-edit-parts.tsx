@@ -5,6 +5,7 @@ import { editKey, parseNumber, type EditMove, type EditOption, type EditorKind, 
 import { DateField } from './DateField'
 import { ISSUE_EDGE, IssueMark } from './IssueMark'
 import { NumberField } from './NumberField'
+import { TimeField } from './TimeField'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
@@ -44,7 +45,7 @@ export interface InlineEditorProps {
     /** Focus left the editor for somewhere outside it. */
     onLeave: () => void
     /**
-     * A save, or leaving, refused by the editor's own field: text a number or date field cannot
+     * A save, or leaving, refused by the editor's own field: text a number, date or time field cannot
      * read, or a value outside its bounds, with what the field says of it.
      */
     onRefuse: (message: string, leaving: boolean) => void
@@ -74,8 +75,8 @@ const REFUSED: Record<EditorLook, string> = {
 }
 
 /**
- * The control an edit types into: a text input, a text area, a `NumberField` or a `DateField`
- * drawn bare, or a select's list. It focuses itself as it opens, keeps every key and press inside
+ * The control an edit types into: a text input, a text area, a `NumberField`, a `DateField` or a
+ * `TimeField` drawn bare, or a select's list. It focuses itself as it opens, keeps every key and press inside
  * it from the row and the table around it, and tells its owner what a key, a choice or leaving it
  * asks for; the owner holds the draft and runs the save. Focus that moves into its list, its
  * calendar or its mark has not left it.
@@ -105,7 +106,7 @@ export function InlineEditor({
     const box = useRef<HTMLSpanElement>(null)
     const control = useRef<HTMLInputElement & HTMLTextAreaElement & HTMLButtonElement>(null)
     const chosen = useRef(false)
-    // What a number or date field finds wrong with what is typed, which refuses a save.
+    // What a number, date or time field finds wrong with what is typed, which refuses a save.
     const fieldIssue = useRef<string | null>(null)
     // A refusal opens its mark at once, so it is read without a second press; typing closes it.
     const [markOpen, setMarkOpen] = useState(error !== null)
@@ -149,7 +150,7 @@ export function InlineEditor({
 
     const edge = error !== null && REFUSED[look]
     const end = saving || error !== null
-    const typed = kind === 'number' || kind === 'date'
+    const typed = kind === 'number' || kind === 'date' || kind === 'time'
     const atEnd = align === 'end' || (look === 'cell' && kind === 'number')
     // The mark and the spinner sit at the side the text runs away from, so neither covers it, and clear of a field's buttons.
     const markLeft = (atEnd || typed) && kind !== 'select'
@@ -218,8 +219,10 @@ export function InlineEditor({
                     defaultValue={parseNumber(draft) ?? null}
                     onValueChange={(value) => onDraftChange(value === null ? '' : String(value))}
                 />
-            ) : (
+            ) : kind === 'date' ? (
                 <DateField {...shared} defaultValue={draft === '' ? null : draft} onValueChange={(value) => onDraftChange(value ?? '')} />
+            ) : (
+                <TimeField {...shared} defaultValue={draft === '' ? null : draft} onValueChange={(value) => onDraftChange(value ?? '')} />
             )
     } else if (kind === 'multiline') {
         field = (

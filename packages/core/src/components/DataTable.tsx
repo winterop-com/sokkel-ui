@@ -58,7 +58,7 @@ export type { CellAt, EditedValue, EditOption, EditorKind, EditValue, TableEditi
 
 /** How one kind of editor reads and saves a column's cells. */
 type CellEditing<T, K extends EditorKind, V = EditedValue<K>> = {
-    /** Which control edits a cell: a line of text, several lines, a number, a date (`YYYY-MM-DD`), or one of `options`. */
+    /** Which control edits a cell: a line of text, several lines, a number, a date (`YYYY-MM-DD`), a time of day (`HH:mm`), or one of `options`. */
     editor: K
     /** The value a cell's editor starts from. */
     value: (row: T) => V
@@ -82,6 +82,7 @@ export type DataCellEdit<T> =
     | (CellEditing<T, 'multiline'> & { options?: undefined })
     | (CellEditing<T, 'number'> & { options?: undefined })
     | (CellEditing<T, 'date'> & { options?: undefined })
+    | (CellEditing<T, 'time'> & { options?: undefined })
     | (CellEditing<T, 'select'> & {
           /** The choices, the same for every row or a row's own. */
           options: readonly EditOption[] | ((row: T) => readonly EditOption[])
@@ -1526,7 +1527,8 @@ export function DataTable<T>({
                             )}
                             {tree && treeControl(entry)}
                             {leadsOf(entry, false)}
-                            <span className="min-w-0 flex-1 truncate text-sm font-medium">{title?.cell(entry.row)}</span>
+                            {/* The title keeps to its line: a cell of two lines, a name over its code, shows its first. */}
+                            <span className="h-6 min-w-0 flex-1 truncate text-sm leading-6 font-medium">{title?.cell(entry.row)}</span>
                             {menu}
                         </div>
                         {stackedLines(entry, false)}
@@ -2246,7 +2248,11 @@ function MenuItems({ actions, kind }: { actions: DataAction[]; kind: 'dropdown' 
                 key={action.id}
                 variant={action.destructive === true ? 'destructive' : 'default'}
                 disabled={action.disabled}
-                onClick={action.onSelect}
+                // A press reaches the row through React's tree from the menu's portal; it does the item's work alone, never the row's open.
+                onClick={(event) => {
+                    event.stopPropagation()
+                    action.onSelect()
+                }}
             >
                 {action.icon}
                 {action.label}

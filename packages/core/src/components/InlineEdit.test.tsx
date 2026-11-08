@@ -22,6 +22,7 @@ describe('InlineEdit at rest', () => {
 
     it('draws a number in figures and a choice by its label', () => {
         expect(renderToStaticMarkup(<InlineEdit label="Records" editor="number" value={12500} onSave={save} />)).toContain('12,500')
+        expect(renderToStaticMarkup(<InlineEdit label="At" editor="time" value="02:30" onSave={save} />)).toContain('02:30')
         const owner = renderToStaticMarkup(
             <InlineEdit
                 label="Owner"
@@ -57,6 +58,13 @@ describe('InlineEdit editing', () => {
         expect(html).toMatch(/<input[^>]*aria-label="Schedule"/)
         expect(html).toContain('value="0 2 * * *"')
         expect(html).not.toContain('Edit Schedule')
+    })
+
+    it('types a time into a time field named for the value, the time as its field writes it', () => {
+        const html = renderToStaticMarkup(<InlineEdit label="At" editor="time" value="02:30" defaultEditing onSave={save} />)
+        expect(html).toMatch(/<input[^>]*aria-label="At"/)
+        expect(html).toContain('value="02:30"')
+        expect(html).not.toContain('Edit At')
     })
 
     it('holds the typed value read only with a spinner while it saves', () => {
