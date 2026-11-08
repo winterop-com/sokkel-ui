@@ -370,6 +370,10 @@
             "types": "./dist/components/ProseText.d.ts",
             "import": "./dist/components/ProseText.js"
         },
+        "./QuickAdd": {
+            "types": "./dist/components/QuickAdd.d.ts",
+            "import": "./dist/components/QuickAdd.js"
+        },
         "./Rail": {
             "types": "./dist/components/Rail.d.ts",
             "import": "./dist/components/Rail.js"
