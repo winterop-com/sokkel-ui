@@ -176,6 +176,7 @@ const CORE_AREAS: Record<string, string> = {
     PageHeader: 'Page layout',
     PaneHeader: 'Page layout',
     Section: 'Page layout',
+    SplitPane: 'Page layout',
     Toolbar: 'Page layout',
     Unfoldable: 'Page layout',
     WindowedPane: 'Page layout',

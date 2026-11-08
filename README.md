@@ -30,14 +30,14 @@ around in the app.
 - **Frame:** Shell, Rail, TopBar, NavBar, SidePanel, Dock, StatusLine, CommandPalette and
   AccountMenu. The rail, side panel, inspector, channel list and dock resize by
   default.
-- **Content:** Section, PageHeader, DataTable, DescriptionList, Stat, Timeline, Tree and
+- **Content:** Section, PageHeader, SplitPane, DataTable, DescriptionList, Stat, Timeline, Tree and
   TreeSelect, Field, Segmented, CodeEditor, LogView, JsonTree, DiffView and TableOfContents.
   DataTable is the one table, from a short listing to 50k rows or a tree loaded on demand; its
   columns resize by default.
 - **Files:** FileList, FileGrid and FileTile, FilePreview, UploadTray and DropZone.
 - **Chat:** Markdown, Code, MermaidDiagram, ToolCalls, ConfirmCard, Composer and audio
   waveforms.
-- **Maps:** MapView on maplibre, with boundary, point and grid layers, legends, popups,
+- **Maps:** MapView on maplibre, with boundary, point, grid and GeoJSON layers, legends, popups,
   basemaps, a layer panel and a period slider.
 - **Graphs:** PipelineGraph, RunGraph, DependencyGraph and StateMachine on React Flow, laid out
   by elk, with the canvas, node box, layout and hook they are built from.

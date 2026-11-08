@@ -31,9 +31,9 @@ over several files maps its timeline to a file with `timeline`, a position that 
 animation frame is read by `useFramePosition` (`use-frame-position`), and LRC lyrics are read by
 `parseLyrics` in `lrc`, all under `@winterop-com/sokkel-ui-media/`.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 214 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 215 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
-- [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 9 modules
+- [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 10 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 11 modules
 - [`@winterop-com/sokkel-ui-terminal`](#winterop-com-sokkel-ui-terminal): 2 modules
 - [`@winterop-com/sokkel-ui-media`](#winterop-com-sokkel-ui-media): 9 modules
@@ -196,6 +196,7 @@ animation frame is read by `useFramePosition` (`use-frame-position`), and LRC ly
 | **PageHeader** | `@winterop-com/sokkel-ui/PageHeader` | A page's title, its code under it in the code face, and its actions at the right with the primary one last. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-page-header--title) |
 | **PaneHeader** | `@winterop-com/sokkel-ui/PaneHeader` | The strip across the top of a pane, with a rule under it: the pane's title, controls before it such as a back button, and actions at its right end. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-pane-header--plain) |
 | **Section**, Surface | `@winterop-com/sokkel-ui/Section` | A titled part of a page. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-sections--flat) |
+| **SplitPane** | `@winterop-com/sokkel-ui/SplitPane` | Two panes side by side (`across`) or one over the other (`down`), filling the box they are given, with a rule between them. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-split-pane--across) |
 | **Stack**, Row, Center, Columns, Split, Fill | `@winterop-com/sokkel-ui/Layout` | Cells one under the other, each as wide as the stack. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-audio-player--slider) |
 | **Toolbar**, ToolbarTitle | `@winterop-com/sokkel-ui/Toolbar` | The row of tools above a page's or a pane's content: a search, filters, a `Segmented`, a sort, a count. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-toolbar--page) |
 | **Unfoldable** | `@winterop-com/sokkel-ui/Unfoldable` | A heading that opens what is under it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-states--read) |
@@ -411,10 +412,11 @@ animation frame is read by `useFramePosition` (`use-frame-position`), and LRC ly
 | --- | --- | --- | --- |
 | **BasemapSwitcher**, BasemapPreview, BasemapGallery | `@winterop-com/sokkel-ui-maps/BasemapSwitcher` | A button that opens the choice of basemap: one entry per basemap, each with its preview. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-basemaps--by-scheme) |
 | **BoundaryLayer** | `@winterop-com/sokkel-ui-maps/BoundaryLayer` | Areas on the map: a choropleth when given a scale and a value, plain boundaries otherwise. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-basemaps--by-scheme) |
+| **GeoJsonLayer** | `@winterop-com/sokkel-ui-maps/GeoJsonLayer` | Any GeoJSON on the map, drawn by its geometry in the theme's colors: polygons as a light fill inside an outline, lines as lines over a casing in the card color, points as circles ringed in it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-geojson--one-color) |
 | **GridLayer** | `@winterop-com/sokkel-ui-maps/GridLayer` | Gridded values, such as rainfall or temperature, drawn as one image over the grid's bounds with every cell in its class color and cells without a value left clear. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-legends--all) |
-| **MapLayerList** | `@winterop-com/sokkel-ui-maps/MapLayerList` | The map's layers as a panel of cards, topmost first: each with its name and a button that shows or hides it, its legend on an inset ground, and its opacity under a rule. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-layers--layer-panel) |
+| **MapLayerList** | `@winterop-com/sokkel-ui-maps/MapLayerList` | The map's layers as a panel of cards, topmost first: each with its name and a button that shows or hides it, its legend on an inset ground, and its opacity under a rule. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-geojson--one-color) |
 | **MapLegend** | `@winterop-com/sokkel-ui-maps/MapLegend` | The key to a map's colors, in a card, or bare inside a panel that frames it already. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-legends--all) |
-| **MapPopup** | `@winterop-com/sokkel-ui-maps/MapPopup` | A card over the map, pointing at a feature or a position: a title, rows of names and values, and an optional action. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-at-scale--many-cells) |
+| **MapPopup** | `@winterop-com/sokkel-ui-maps/MapPopup` | A card over the map, pointing at a feature or a position: a title, rows of names and values, and an optional action. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-geojson--one-color) |
 | **MapView**, MapOverlay | `@winterop-com/sokkel-ui-maps/MapView` | A maplibre map over a basemap, with its layers and overlays as children. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-basemaps--by-scheme) |
 | **PeriodSlider** | `@winterop-com/sokkel-ui-maps/PeriodSlider` | Steps through a fixed run of periods, such as the months of a year: a slider with one stop per period, buttons for the period before and after, and a play button that advances one period at a time and stops at the last. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-layers--layer-panel) |
 | **PointLayer** | `@winterop-com/sokkel-ui-maps/PointLayer` | Points on the map, as circles colored by a scale or one color and sized by a value or one radius, each ringed in the card color so neighbors stay apart. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/maps-at-scale--many-cells) |
