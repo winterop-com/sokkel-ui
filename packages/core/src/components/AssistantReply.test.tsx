@@ -24,3 +24,21 @@ describe('AssistantReply math', () => {
         expect(html).toContain('From $t_0$ to $t_1$.')
     })
 })
+
+describe('AssistantReply waiting', () => {
+    it('says Thinking when streaming with children React draws as nothing', () => {
+        for (const children of [undefined, false, null, '', [false, null]]) {
+            const html = renderToStaticMarkup(<AssistantReply state="streaming">{children}</AssistantReply>)
+            expect(html).toContain('Thinking')
+        }
+    })
+
+    it('draws the children instead once there are some', () => {
+        const html = renderToStaticMarkup(
+            <AssistantReply state="streaming">
+                <p>Partial</p>
+            </AssistantReply>,
+        )
+        expect(html).not.toContain('Thinking')
+    })
+})

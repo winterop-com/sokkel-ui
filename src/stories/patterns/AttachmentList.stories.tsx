@@ -31,6 +31,11 @@ export const Removable: StoryObj = {
     },
 }
 
+/** Files still on their way up: a spinner, or a ring with the share done when it is known. */
+export const Uploading: StoryObj = {
+    render: () => <AttachmentList files={[FILES[0], { ...FILES[1], uploading: true, progress: 0.42 }, { ...FILES[2], uploading: true }]} />,
+}
+
 /** A recording plays in one line under its name, and a video in the library's player. */
 export const Media: StoryObj = {
     render: () => (

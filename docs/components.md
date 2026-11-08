@@ -29,7 +29,7 @@ The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appeara
 
 | Component | Import | What it is | Story |
 | --- | --- | --- | --- |
-| **ProgressRing** | `@winterop-com/sokkel-ui/primitives/progress-ring` | How far a piece of work has come, drawn as a ring that fills clockwise from the top: an upload, a download. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-composer--states) (in Composer) |
+| **ProgressRing** | `@winterop-com/sokkel-ui/primitives/progress-ring` | How far a piece of work has come, drawn as a ring that fills clockwise from the top: an upload, a download. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-attachment-list--files) (in AttachmentList) |
 
 ### Primitives: Actions
 

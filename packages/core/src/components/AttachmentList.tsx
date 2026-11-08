@@ -4,6 +4,8 @@ import type { ReactNode } from 'react'
 import { cn } from '../lib/cn'
 import { AudioPlayer } from './media/AudioPlayer'
 import { VideoPlayer } from './media/VideoPlayer'
+import { ProgressRing } from './ui/progress-ring'
+import { Spinner } from './ui/spinner'
 import { Attachment, AttachmentAction, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from './ui/attachment'
 
 /** One file in an attachment list. */
@@ -24,6 +26,13 @@ export interface AttachmentFile {
     waveform?: readonly number[]
     /** A recording's length in seconds, shown before it has loaded. */
     duration?: number
+    /**
+     * Still on its way up: the tile takes a spinner, or a ring filled to `progress` when that is
+     * known, and the name dims. A recording or a video plays only once it is up.
+     */
+    uploading?: boolean
+    /** How much has gone up, from 0 to 1. */
+    progress?: number
 }
 
 export interface AttachmentListWords {
@@ -33,6 +42,8 @@ export interface AttachmentListWords {
     play: string
     pause: string
     seek: string
+    /** Said for a file still uploading. */
+    uploading: string
 }
 
 export const ATTACHMENT_LIST_WORDS: AttachmentListWords = {
@@ -40,6 +51,13 @@ export const ATTACHMENT_LIST_WORDS: AttachmentListWords = {
     play: 'Play',
     pause: 'Pause',
     seek: 'Seek',
+    uploading: 'Uploading',
+}
+
+/** What an uploading file says under its name: its share done, or Uploading. */
+function uploadNote(file: AttachmentFile, words: AttachmentListWords): string {
+    if (file.progress === undefined) return words.uploading
+    return `${words.uploading} · ${String(Math.round(Math.min(1, Math.max(0, file.progress)) * 100))}%`
 }
 
 /**
@@ -51,6 +69,9 @@ export const ATTACHMENT_LIST_WORDS: AttachmentListWords = {
  * A recording (`kind: 'audio'`) plays in place, in one line under its name, and a video in the
  * library's player, at the width of a message; a video waiting to be sent stays a tile, so it can
  * be removed.
+ *
+ * A file with `uploading` shows a spinner in its tile, or a ring when its `progress` is known, and
+ * says how far it has got under its name.
  */
 export function AttachmentList({
     files,
@@ -70,8 +91,9 @@ export function AttachmentList({
     return (
         <ul data-slot="attachment-list" className={cn('flex min-w-0 flex-wrap items-stretch gap-2', className)}>
             {files.map((file) => {
-                const video = file.kind === 'video' && file.src !== undefined && onRemove === undefined
-                const audio = file.kind === 'audio' && file.src !== undefined
+                const uploading = file.uploading === true
+                const video = file.kind === 'video' && file.src !== undefined && onRemove === undefined && !uploading
+                const audio = file.kind === 'audio' && file.src !== undefined && !uploading
                 const glyph =
                     file.kind === 'audio' ? (
                         <AudioLines aria-hidden />
@@ -91,12 +113,24 @@ export function AttachmentList({
                             />
                         ) : (
                             <Attachment size={size} className={cn('min-w-0', audio && 'w-80 max-w-full')}>
-                                <AttachmentMedia variant={file.image === undefined ? 'icon' : 'image'}>
-                                    {file.image === undefined ? (file.icon ?? glyph) : <img src={file.image} alt="" />}
+                                <AttachmentMedia variant={file.image === undefined || uploading ? 'icon' : 'image'}>
+                                    {uploading ? (
+                                        file.progress === undefined ? (
+                                            <Spinner aria-label={words.uploading} />
+                                        ) : (
+                                            <ProgressRing value={file.progress} label={words.uploading} />
+                                        )
+                                    ) : file.image === undefined ? (
+                                        (file.icon ?? glyph)
+                                    ) : (
+                                        <img src={file.image} alt="" />
+                                    )}
                                 </AttachmentMedia>
                                 <AttachmentContent>
-                                    <AttachmentTitle>{file.name}</AttachmentTitle>
-                                    {audio && file.src !== undefined ? (
+                                    <AttachmentTitle className={cn(uploading && 'text-muted-foreground')}>{file.name}</AttachmentTitle>
+                                    {uploading ? (
+                                        <AttachmentDescription className="tabular-nums">{uploadNote(file, words)}</AttachmentDescription>
+                                    ) : audio && file.src !== undefined ? (
                                         <AudioPlayer
                                             src={file.src}
                                             waveform={file.waveform}
