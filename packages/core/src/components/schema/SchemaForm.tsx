@@ -317,6 +317,7 @@ export function useSchemaForm(
             .map(({ at, issue }) => ({
                 label: titleAt(at),
                 issue,
+                target: `${base}-f${at.replace(/[^a-zA-Z0-9_-]/g, '_')}`,
                 onGo: () => {
                     focus(at)
                     setOpen(at)

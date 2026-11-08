@@ -83,6 +83,7 @@ const CORE_AREAS: Record<string, string> = {
     DueText: 'Data display',
     Highlight: 'Data display',
     IssueMark: 'Data display',
+    IssueMarks: 'Data display',
     ItemCard: 'Data display',
     JsonTree: 'Data display',
     MetaLine: 'Data display',

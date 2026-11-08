@@ -5,7 +5,7 @@ import { cn } from '../lib/cn'
 /**
  * A form's actions: a note at the start, such as when the draft was last saved, and the actions at
  * the end, the main verb last. When the row is too narrow for both, the actions move under the
- * note.
+ * note, and when it is too narrow for the actions alone, they wrap onto a second line.
  *
  * At the `foot` (the default) it is a bar pinned to the bottom edge of the page's scrolling
  * content, as the content's last child, so the verbs stay in reach down a long form; `inset`
@@ -44,7 +44,7 @@ export function FormBar({
                     {note}
                 </span>
             )}
-            <div className="ml-auto flex shrink-0 items-center gap-2">{children}</div>
+            <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2">{children}</div>
         </div>
     )
     if (placement === 'end') return row

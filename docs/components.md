@@ -18,7 +18,7 @@ app has sign-in, and a `StatusLine` as the shell's `foot`.
 The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appearance`,
 `hooks/use-scheme`), with the option lists in `@winterop-com/sokkel-ui/lib/appearance`.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 202 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 203 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 13 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 9 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 11 modules
@@ -230,6 +230,7 @@ The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appeara
 | **DueText** | `@winterop-com/sokkel-ui/DueText` | A date toned by how near it is: one that has passed in the critical ink and one that is near in the warning ink, both in medium weight, and any other in the muted ink (or the surrounding color with `quiet={false}`). | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-due-text--dates) |
 | **Highlight** | `@winterop-com/sokkel-ui/Highlight` | A text with spans of it marked, such as the words a search matched or the phrase a model picked out. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-highlight--one) |
 | **IssueMark**, IssueCount | `@winterop-com/sokkel-ui/IssueMark` | The mark at the end of an input whose value has issues: pressing it opens what is wrong, what to do, and the actions that put it right. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-form-bar--end) |
+| **IssueMarks** | `@winterop-com/sokkel-ui/IssueMarks` | A strip beside a long form's scroll area with a mark for each issue at its field's place down the whole form, so a glance shows where the issues are and pressing one goes there. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-dialogs--confirm) (in DialogShell) |
 | **ItemCard** | `@winterop-com/sokkel-ui/ItemCard` | The card for one thing: a project, a job, an album, a plan. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-cards--plain) |
 | **JsonTree** | `@winterop-com/sokkel-ui/JsonTree` | A JSON value as a tree that folds: objects and lists open to `open` levels deep, and a folded one shows how many entries it holds. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-data--description) |
 | **MetaLine** | `@winterop-com/sokkel-ui/MetaLine` | Small facts about a thing on one line, joined by a separator: an artist and a year, a count of views and an age. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-meta-line--facts) |

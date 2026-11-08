@@ -172,6 +172,7 @@ function NewPipeline() {
             width="lg"
             title="New pipeline"
             count={<SchemaIssueCount form={form} />}
+            marks={form.list}
             confirm={{ label: 'Create', onConfirm: () => form.submit() }}
         >
             <SchemaForm form={form} />
@@ -179,7 +180,7 @@ function NewPipeline() {
     )
 }
 
-/** A nested object, a set of choices, a list of values, a list of objects, and a map edited as JSON. */
+/** A nested object, a set of choices, a list of values, a list of objects, and a map edited as JSON; the strip beside the body marks where each issue sits down the form. */
 export const NestedAndLists: StoryObj = { name: 'Nested and lists', render: () => <NewPipeline /> }
 
 const BROKEN: JsonSchema = {

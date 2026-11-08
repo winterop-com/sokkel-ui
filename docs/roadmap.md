@@ -44,12 +44,6 @@ to `plan.md` when it ships.
 - **Adoption.** Apps adopt the library one pattern per PR, each pinning a published version. The
   app adds a check in the same PR that refuses its own hand-rolled version of that pattern, so it
   cannot come back. A part an app needs to differ becomes an option here, never a local edit.
-- **A second validation round.** The issue mark and the count beside the verb are in every form,
-  but the count still reads weak and its list is a first answer to where the issues show. Render
-  the options side by side (the count's look and place, the list at the count against a summary
-  at the top, how a long form leads from one issue to the next, warnings beside errors, a page
-  form's bar against a dialog's footer) and pick, then fold the pick into `IssueCount`, `Field`
-  and `SchemaForm` so every form takes it at once.
 - **Tauri on Chromium (discovery).** Tauri runs on each platform's own webview: WebKit on
   macOS and Linux. Once Tauri supports an embedded Chromium runtime, add that build beside the
   system-webview shell, so the library is checked in both. As of 2026-11-08 it does, in alpha only:
