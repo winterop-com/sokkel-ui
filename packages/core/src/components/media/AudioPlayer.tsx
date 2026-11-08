@@ -22,7 +22,7 @@ export type AudioPlayerVariant = 'plain' | 'card'
 
 const VARIANT: Record<AudioPlayerVariant, string> = {
     plain: '',
-    card: 'rounded-lg border border-border bg-card py-1 pr-3 pl-1',
+    card: 'rounded-surface border border-border bg-card py-1 pr-3 pl-1',
 }
 
 export interface AudioPlayerProps {

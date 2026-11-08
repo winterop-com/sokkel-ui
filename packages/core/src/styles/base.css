@@ -28,6 +28,11 @@
     body {
         @apply bg-background font-sans text-sm text-foreground antialiased;
     }
+    /* The browser's own scroll bars, as the browser draws them unless a theme sets `--scrollbar`. */
+    html,
+    [data-theme-scope] {
+        scrollbar-color: var(--scrollbar);
+    }
 
     /*
      * A desktop frame's top strip is the window's title bar: Electron's Chromium moves the window

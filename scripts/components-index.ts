@@ -234,6 +234,7 @@ const CORE_AREAS: Record<string, string> = {
     SelectionBar: 'Data display',
     Stat: 'Data display',
     StatusChip: 'Data display',
+    StatusProvider: 'Data display',
     StepIndicator: 'Data display',
     Timeline: 'Data display',
     Tree: 'Data display',

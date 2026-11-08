@@ -645,7 +645,7 @@ function Property({
 
     if (kind === 'object')
         return (
-            <fieldset className={cn('flex min-w-0 flex-col gap-3 rounded-lg border border-border p-3', '@lg:col-span-2')}>
+            <fieldset className={cn('flex min-w-0 flex-col gap-3 rounded-surface border border-border p-3', '@lg:col-span-2')}>
                 <legend className="px-1 text-sm font-medium">
                     <Title label={label} mono={mono} hint={hint} required={required} />
                 </legend>
@@ -741,7 +741,7 @@ function Property({
                             </IconButton>
                         </div>
                     ) : (
-                        <section key={index} className="flex min-w-0 flex-col gap-3 rounded-lg border border-border p-3">
+                        <section key={index} className="flex min-w-0 flex-col gap-3 rounded-surface border border-border p-3">
                             <div className="-my-1 flex items-center gap-2">
                                 <span className="text-xs font-medium text-muted-foreground">{form.words.item(index)}</span>
                                 <Button

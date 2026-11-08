@@ -6,7 +6,7 @@ import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 /** The foot strip's contents in each tone, at the strip's own height. */
 function Strip({ children }: { children: React.ReactNode }) {
     return (
-        <Row gap="none" className="h-shell-foot border-t border-border-strong bg-sidebar px-3">
+        <Row gap="none" className="h-shell-foot border-t border-page-foot-line bg-page-foot-ground px-3">
             {children}
         </Row>
     )

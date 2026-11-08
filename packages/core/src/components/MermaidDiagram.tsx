@@ -229,7 +229,7 @@ function Diagram({
     return (
         <div
             className={cn(
-                'group/mermaid relative overflow-hidden rounded-lg border border-input dark:bg-input/30',
+                'group/mermaid relative overflow-hidden rounded-surface border border-input dark:bg-input/30',
                 windowed && 'flex min-h-0 flex-1 flex-col',
             )}
         >

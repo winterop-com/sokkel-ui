@@ -10,4 +10,7 @@ export const THEME_LIST: readonly { value: string; label: string }[] = [
     { value: 'vinyl', label: 'Vinyl' },
     { value: 'cassette', label: 'Cassette' },
     { value: 'neon', label: 'Neon' },
+    { value: 'ocean', label: 'Ocean' },
+    { value: 'indigo', label: 'Indigo' },
+    { value: 'terminal', label: 'Terminal' },
 ]

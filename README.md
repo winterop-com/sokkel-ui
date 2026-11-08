@@ -51,11 +51,15 @@ around in the app.
   all.
   `bun scripts/build-tokens.ts --check` fails when the CSS and the JSON disagree.
 - Themes are named for how they look. `default` defines every token; the others (amber, paper,
-  contrast, tokyo, vinyl, cassette, neon) override what they change, which may be any token:
-  colors, typefaces, radius or density. An app picks its theme on `<html data-theme>`, `.dark`
+  contrast, tokyo, vinyl, cassette, neon, ocean, indigo, terminal) override what they change, which
+  may be any token: colors, typefaces, radius or density. An app picks its theme on `<html data-theme>`, `.dark`
   picks dark mode, and `data-theme-scope` draws one element in a theme of its own. A theme other
   than the default answers once its file is imported.
-- Every corner derives from `--radius` (4.5px by default), which a theme or an app sets.
+- Every corner derives from `--radius` (4.5px by default), which a theme or an app sets. A theme
+  may round controls and surfaces apart (`--control-radius`, `--surface-radius`), each from
+  `--radius`, and give the frame's parts their own look: section and page heads, a table's head and
+  zebra, the editor's ground and gutter, the scroll bars, the shell's foot and the palette's insets.
+  `$parts` in `tokens.json` lists each of those tokens and what it changes.
 
 ## Storybook
 

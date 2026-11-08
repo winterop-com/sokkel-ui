@@ -97,6 +97,12 @@ const WORDS: CommandPaletteWords = {
     close: 'Close',
 }
 
+/** A group's title, inset as its rows are, from the palette's row tokens. */
+const GROUP = '**:[[cmdk-group-heading]]:px-(--palette-row-inset-x)'
+
+/** A row's room at its ends and over and under its text, from the palette's row tokens. */
+const ROW = 'px-(--palette-row-inset-x) py-(--palette-row-inset-y)'
+
 export interface CommandPaletteProps {
     open: boolean
     onOpenChange: (open: boolean) => void
@@ -139,19 +145,20 @@ export function CommandPalette({
     const found = answer.groups.filter((group) => group.results.length > 0)
     return (
         <CommandDialog open={open} onOpenChange={onOpenChange} title={words.title} description={words.placeholder}>
-            <Command shouldFilter={score === undefined}>
+            <Command shouldFilter={score === undefined} className="p-(--palette-inset)">
                 <CommandInput placeholder={words.placeholder} value={query} onValueChange={setQuery} />
                 <CommandList className="max-h-[min(24rem,60svh)] scroll-fade-b pb-1.5">
                     {found.length === 0 && answer.state !== 'loading' && <CommandEmpty>{words.empty}</CommandEmpty>}
                     {listed.map((group, index) => (
                         <div key={group.title}>
-                            {index > 0 && <CommandSeparator />}
-                            <CommandGroup heading={group.title}>
+                            {index > 0 && <CommandSeparator className="-mx-(--palette-inset)" />}
+                            <CommandGroup heading={group.title} className={GROUP}>
                                 {group.commands.map((command) => {
                                     const Icon = command.icon
                                     return (
                                         <CommandItem
                                             key={command.id}
+                                            className={ROW}
                                             value={`${command.label} ${command.id}`}
                                             keywords={findBy(command)}
                                             onSelect={() => {
@@ -193,10 +200,11 @@ export function CommandPalette({
                     {search !== undefined &&
                         found.map((group) => (
                             <div key={`search-${group.kind}`}>
-                                <CommandGroup heading={group.title} forceMount>
+                                <CommandGroup heading={group.title} forceMount className={GROUP}>
                                     {group.results.map((result) => (
                                         <CommandItem
                                             key={result.id}
+                                            className={ROW}
                                             value={`search ${group.kind} ${result.id}`}
                                             forceMount
                                             onSelect={() => {

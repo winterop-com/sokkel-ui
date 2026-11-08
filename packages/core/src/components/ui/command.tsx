@@ -14,7 +14,7 @@ function Command({ className, ...props }: CommandProps) {
     return (
         <CommandPrimitive
             data-slot="command"
-            className={cn('flex size-full flex-col overflow-hidden rounded-xl! bg-popover p-1 text-popover-foreground', className)}
+            className={cn('flex size-full flex-col overflow-hidden rounded-surface! bg-popover p-1 text-popover-foreground', className)}
             {...props}
         />
     )
@@ -43,7 +43,7 @@ function CommandDialog({
                 <DialogDescription>{description}</DialogDescription>
             </DialogHeader>
             <DialogContent
-                className={cn('top-1/3 translate-y-0 overflow-hidden rounded-xl! p-0', className)}
+                className={cn('top-1/3 translate-y-0 overflow-hidden rounded-surface! p-0', className)}
                 showCloseButton={showCloseButton}
             >
                 {children}
@@ -57,7 +57,7 @@ export type CommandInputProps = React.ComponentProps<typeof CommandPrimitive.Inp
 function CommandInput({ className, ...props }: CommandInputProps) {
     return (
         <div data-slot="command-input-wrapper" className="p-1 pb-0">
-            <InputGroup className="h-8! rounded-lg! border-input/30 bg-input/30 shadow-none! *:data-[slot=input-group-addon]:pl-2!">
+            <InputGroup className="h-8! rounded-control! border-input/30 bg-input/30 shadow-none! *:data-[slot=input-group-addon]:pl-2!">
                 <CommandPrimitive.Input
                     data-slot="command-input"
                     className={cn('w-full text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50', className)}

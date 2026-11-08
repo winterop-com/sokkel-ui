@@ -5,8 +5,9 @@ import { cn } from '../lib/cn'
 /** How a note in the foot strip is inked. Something live is information, not a warning. */
 export type StatusTone = 'quiet' | 'live' | 'warn' | 'error'
 
+// A quiet note and the facts at the right take the foot's own ink, which a theme may set.
 const TONE: Record<StatusTone, string> = {
-    quiet: 'text-muted-foreground',
+    quiet: 'text-page-foot-ink',
     live: 'text-info',
     warn: 'text-warning',
     error: 'text-destructive',
@@ -40,7 +41,7 @@ export function StatusLine({ note, tone = 'quiet', live = false, children }: Sta
                 </span>
             )}
             <div className="flex-1" />
-            {children !== undefined && <div className="flex shrink-0 items-center gap-3 text-muted-foreground">{children}</div>}
+            {children !== undefined && <div className="flex shrink-0 items-center gap-3 text-page-foot-ink">{children}</div>}
         </div>
     )
 }

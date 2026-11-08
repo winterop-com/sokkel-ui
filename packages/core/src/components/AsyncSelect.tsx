@@ -152,7 +152,7 @@ export function AsyncSelect<T>({
                 <Combobox.Positioner side="bottom" align="start" sideOffset={6} className="isolate z-50">
                     <Combobox.Popup
                         initialFocus={inputRef}
-                        className="flex max-h-(--available-height) w-(--anchor-width) min-w-72 origin-(--transform-origin) flex-col overflow-hidden rounded-lg border border-border-strong bg-popover text-popover-foreground shadow-pop"
+                        className="flex max-h-(--available-height) w-(--anchor-width) min-w-72 origin-(--transform-origin) flex-col overflow-hidden rounded-surface border border-border-strong bg-popover text-popover-foreground shadow-pop"
                     >
                         <div className="flex items-center gap-2 border-b border-border px-2.5">
                             <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden />

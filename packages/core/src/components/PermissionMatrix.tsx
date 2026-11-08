@@ -2,7 +2,7 @@ import { Lock } from 'lucide-react'
 import { Fragment, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
-import { TABLE_HEAD_TEXT } from '../lib/table'
+import { TABLE_HEAD_ROW, TABLE_HEAD_TEXT } from '../lib/table'
 import { GroupLabel } from './GroupLabel'
 import { Checkbox } from './ui/checkbox'
 import { NativeSelect, NativeSelectOption } from './ui/native-select'
@@ -128,12 +128,12 @@ export function PermissionMatrix({ roles, groups, value, saved, onChange, classN
             <div className="relative overflow-x-auto">
                 <table className="w-full border-collapse text-sm">
                     <thead>
-                        <tr className="border-b border-border-strong bg-panel-ground">
+                        <tr className={TABLE_HEAD_ROW}>
                             <th
                                 scope="col"
                                 className={cn(
                                     stuck,
-                                    'bg-panel-ground px-(--density-panel-pad) py-2 text-left align-bottom',
+                                    'bg-table-head-ground px-(--density-panel-pad) py-2 text-left align-bottom',
                                     TABLE_HEAD_TEXT,
                                 )}
                             >

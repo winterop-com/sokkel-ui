@@ -32,6 +32,7 @@ import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
 import { SidePanel } from '@winterop-com/sokkel-ui/SidePanel'
 import { StatusChip, type Status } from '@winterop-com/sokkel-ui/StatusChip'
+import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
 import { ThemePicker, type ThemeSettings } from '@winterop-com/sokkel-ui/ThemePicker'
 import { ThemeToggle } from '@winterop-com/sokkel-ui/ThemeToggle'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
@@ -446,6 +447,14 @@ function App({ globals }: { globals: Record<string, unknown> }) {
                             />
                         }
                     />
+                }
+                foot={
+                    <StatusLine note="248 runs today, 12 failed">
+                        <StatusItem label="project" code>
+                            harbor
+                        </StatusItem>
+                        <StatusItem>1.4.0</StatusItem>
+                    </StatusLine>
                 }
                 panel={
                     <SidePanel

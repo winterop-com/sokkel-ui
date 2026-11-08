@@ -1,18 +1,19 @@
 import { cn } from '../lib/cn'
+import type { RunStatus, StatusColor, StatusMap } from '../lib/status'
+import { useStatus } from './StatusProvider'
 
-/** The states a status chip knows, each drawn in its own status color. */
-export type Status =
-    | 'succeeded'
-    | 'failed'
-    | 'running'
-    | 'queued'
-    | 'pending'
-    | 'waiting'
-    | 'cancelled'
-    | 'skipped'
-    | 'completed_with_errors'
+export type { RunStatus, StatusColor, StatusDefinition, StatusMap } from '../lib/status'
 
-const TONE: Record<Status, string> = {
+/** The states a status chip knows without being told: a run's, each drawn in its own status color. */
+export type Status = RunStatus
+
+/** Each color as a chip: a faint wash of it with its ink, a skip as a dashed edge. */
+const CHIP: Record<StatusColor, string> = {
+    good: 'bg-good/15 text-good-ink',
+    critical: 'bg-critical/15 text-critical-ink',
+    warning: 'bg-warning/15 text-warning-ink',
+    info: 'bg-info/15 text-info-ink',
+    neutral: 'bg-faint/15 text-muted-foreground',
     succeeded: 'bg-status-succeeded/15 text-status-succeeded-ink',
     failed: 'bg-status-failed/15 text-status-failed-ink',
     running: 'bg-status-running/15 text-status-running-ink',
@@ -25,20 +26,29 @@ const TONE: Record<Status, string> = {
 }
 
 export interface StatusChipProps {
-    status: Status
+    /** A run state, or any state the app names in `statuses` or a `StatusProvider`. */
+    status: Status | (string & {})
+    /** The words, over the map's. */
     label?: string
+    /** States for this chip alone, over the provider's. */
+    statuses?: StatusMap
     className?: string
 }
 
 /**
- * A state as a small chip: the status's own color on a faint wash of it, the word lowercase.
- * Status colors are the only color voice a chip has; `label` overrides the word, for an app
- * that says it in another language.
+ * A state as a small chip: the state's own color on a faint wash of it, the word lowercase. The
+ * run states are known as they are; an app's own states (`draft`, `review`, `published`) take
+ * their words and a color (good, critical, warning, info, neutral, or a run state's) from
+ * `statuses` or a `StatusProvider` around the app. `label` overrides the word, for one chip that
+ * says more, such as a count.
  */
-export function StatusChip({ status, label, className }: StatusChipProps) {
+export function StatusChip({ status, label, statuses, className }: StatusChipProps) {
+    const look = useStatus(status, statuses)
     return (
-        <span className={cn('inline-flex items-center rounded-chip px-1.5 py-0.5 text-badge whitespace-nowrap', TONE[status], className)}>
-            {label ?? status.replaceAll('_', ' ')}
+        <span
+            className={cn('inline-flex items-center rounded-chip px-1.5 py-0.5 text-badge whitespace-nowrap', CHIP[look.color], className)}
+        >
+            {label ?? look.label}
         </span>
     )
 }

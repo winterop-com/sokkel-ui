@@ -47,7 +47,7 @@ import {
 import { NativeSelect, NativeSelectOption } from './ui/native-select'
 import { Skeleton } from './ui/skeleton'
 import { Spinner } from './ui/spinner'
-import { TABLE_HEAD_TEXT } from '../lib/table'
+import { TABLE_HEAD_ROW, TABLE_HEAD_TEXT } from '../lib/table'
 
 /** One column: its name, how wide it is, how a row draws its cell, and how it sorts. */
 export interface DataColumn<T> {
@@ -1474,7 +1474,8 @@ export function DataTable<T>({
                         role="row"
                         aria-rowindex={1}
                         className={cn(
-                            'sticky top-0 z-[2] grid items-center border-b border-border-strong bg-panel-ground',
+                            'sticky top-0 z-[2] grid items-center',
+                            TABLE_HEAD_ROW,
                             list ? 'h-(--density-panel-head)' : 'h-(--density-row)',
                             spaced,
                             TABLE_HEAD_TEXT,
@@ -1518,7 +1519,8 @@ export function DataTable<T>({
                                             tabIndex={-1}
                                             onClick={() => nextSort(column)}
                                             className={cn(
-                                                'flex min-w-0 items-center gap-1 rounded-sm outline-none hover:text-foreground',
+                                                // A button keeps its own case unless told, so the head's case reaches the sortable ones.
+                                                'flex min-w-0 items-center gap-1 rounded-sm [text-transform:inherit] outline-none hover:text-foreground',
                                                 column.align === 'end' && 'flex-row-reverse',
                                                 sorted !== undefined && 'text-foreground',
                                             )}
@@ -1669,7 +1671,10 @@ export function DataTable<T>({
                                     data-active={entry.key === active || undefined}
                                     onClick={(event) => press(entry, event)}
                                     className={cn(
-                                        'group/row grid cursor-default items-center border-b border-border bg-card text-sm',
+                                        'group/row grid cursor-default items-center border-b border-border text-sm',
+                                        // Every other line on the zebra's ground, counted from the table's first line so a
+                                        // line keeps its stripe as the table scrolls.
+                                        (first + offset) % 2 === 1 ? 'bg-table-zebra' : 'bg-card',
                                         spaced,
                                         list && first + offset === drawn.length - 1 && 'border-b-0',
                                         every ? 'min-h-(--density-row) scroll-mt-(--density-row)' : 'h-(--density-row)',

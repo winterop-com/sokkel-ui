@@ -279,7 +279,7 @@ export function ChatMessage({
                             ) : (
                                 <div
                                     key={file.id}
-                                    className="flex w-[min(100%,18rem)] items-center gap-3 rounded-lg border border-border bg-card px-3 py-2"
+                                    className="flex w-[min(100%,18rem)] items-center gap-3 rounded-surface border border-border bg-card px-3 py-2"
                                 >
                                     <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/15 text-primary-ink">
                                         <FileText className="size-4.5" aria-hidden />
@@ -370,7 +370,7 @@ export function ChatMessage({
             {hasBar && (
                 <div
                     className={cn(
-                        'absolute -top-3.5 right-(--density-chat-inset) z-20 hidden items-center gap-px rounded-md border border-border bg-popover p-0.5 text-muted-foreground shadow-pop group-focus-within/chat:flex group-hover/chat:flex [&_button]:size-6',
+                        'absolute -top-3.5 right-(--density-chat-inset) z-20 hidden items-center gap-px rounded-surface border border-border bg-popover p-0.5 text-muted-foreground shadow-pop group-focus-within/chat:flex group-hover/chat:flex [&_button]:size-6',
                         lit && 'flex',
                     )}
                 >

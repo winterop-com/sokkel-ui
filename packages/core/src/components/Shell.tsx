@@ -324,7 +324,7 @@ export function Shell({
     const strip = foot !== undefined && (
         <footer
             className={cn(
-                'flex h-shell-foot shrink-0 items-center gap-3 border-t border-border-strong bg-sidebar px-3 text-xs text-muted-foreground',
+                'flex h-shell-foot shrink-0 items-center gap-3 border-t border-page-foot-line bg-page-foot-ground px-3 text-xs text-page-foot-ink',
                 docked && 'col-start-2 row-start-3 peer-empty:col-span-full',
             )}
         >
@@ -469,7 +469,7 @@ export function Shell({
             ) : (
                 <div
                     aria-hidden
-                    className="col-start-2 row-start-3 hidden h-shell-foot border-t border-border-strong bg-sidebar md:block md:peer-empty:hidden"
+                    className="col-start-2 row-start-3 hidden h-shell-foot border-t border-page-foot-line bg-page-foot-ground md:block md:peer-empty:hidden"
                 />
             )}
         </div>,
