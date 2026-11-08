@@ -1,6 +1,6 @@
 import { useId, useState } from 'react'
 
-import { cn } from '../../lib/cn'
+import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { ARTWORK_HUES, coverFor, type ArtworkCover, type ArtworkMotif } from './cover-seed'
 
 export { ARTWORK_HUES, ARTWORK_MOTIFS, coverFor, seedHash } from './cover-seed'

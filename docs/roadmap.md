@@ -125,13 +125,15 @@ under Next. Each is a part or an option here, never a copy in an app. Roughly on
   track, page foot and palette insets; an app-defined status map for `StatusChip` beyond run
   states, with kind colors; radius by role (control and surface); themes named for their look:
   `ocean`, `indigo` and `terminal`.
-- **Round 4, media.** `VideoPlayer`: HLS through hls.js as a lazy optional peer, `startAt` to
-  resume, `onTime`, `onEnded` and `onError`, retry on a stall, and keys handled outside it. Queue
-  helpers (shuffle as an order of its own, repeat, next and previous, pure and tested); several
-  files as one timeline with a `ChapterList` keeping the current row in view; LRC lyrics and a
-  `Lyrics` overlay (timed lines follow, untimed ones read as a page); `TrackList` keeping the
-  current row in view with time left or progress per row; `SpeakButton` (fetched on demand, one
-  player) and dictation in `Composer`.
+- **Round 4, media**, landing in the media package, `@winterop-com/sokkel-ui-media`, beside
+  `MediaBar`; what chat plays through stays in the core. Video: HLS through hls.js as a lazy
+  optional peer of the media package, `startAt` to resume, `onTime`, `onEnded` and `onError`, retry
+  on a stall, and keys handled outside the player. Queue helpers (shuffle as an order of its own,
+  repeat, next and previous, pure and tested); several files as one timeline with a `ChapterList`
+  keeping the current row in view; LRC lyrics and a `Lyrics` overlay (timed lines follow, untimed
+  ones read as a page); `TrackList` keeping the current row in view with time left or progress per
+  row. `SpeakButton` (fetched on demand, one player) and dictation in `Composer` go in the core,
+  since chat uses them.
 - **Round 5, the frame.** Fullscreen through a desktop shell (the app's own call in place of the
   browser's, for the player, the video, charts and maps); `useAppearance` with pluggable storage and
   `appearanceScript` as an external module for pages that refuse inline script (browser

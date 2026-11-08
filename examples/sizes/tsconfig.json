@@ -13,5 +13,5 @@
         "noEmit": true,
         "types": ["vite/client"]
     },
-    "include": ["forms", "dashboard", "map"]
+    "include": ["forms", "forms-lean", "dashboard", "map", "music"]
 }

@@ -1,0 +1,6 @@
+/*
+ * The classes of the music and video parts, for Tailwind to find. Import it after the core package's
+ * styles.css, in the same stylesheet, which carries Tailwind, the tokens and the themes.
+ */
+@source './';
+@source not './**/*.test.*';

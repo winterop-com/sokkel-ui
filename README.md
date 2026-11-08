@@ -73,19 +73,22 @@ stays (`make screenshots-ci`, `scripts/baselines.sh`) for when it returns near 1
 
 ## Using it
 
-The library is five packages on GitHub Packages, released together at one version:
+The library is six packages on GitHub Packages, released together at one version:
 
-| Package                            | Holds                                                                |
-| ---------------------------------- | -------------------------------------------------------------------- |
-| `@winterop-com/sokkel-ui`          | the tokens and themes, the primitives and every pattern below        |
-| `@winterop-com/sokkel-ui-charts`   | `Chart` and its kinds on ECharts, and the dashboard's chart panels   |
-| `@winterop-com/sokkel-ui-maps`     | `MapView` on maplibre, with its layers, legends, popups and basemaps |
-| `@winterop-com/sokkel-ui-graph`    | the graphs and the graph editor on React Flow, laid out by elk       |
-| `@winterop-com/sokkel-ui-terminal` | `TerminalView`, an interactive terminal, and `Terminal`, on xterm.js |
+| Package                            | Holds                                                                                      |
+| ---------------------------------- | ------------------------------------------------------------------------------------------ |
+| `@winterop-com/sokkel-ui`          | the tokens and themes, the primitives and every pattern below                              |
+| `@winterop-com/sokkel-ui-charts`   | `Chart` and its kinds on ECharts, and the dashboard's chart panels                         |
+| `@winterop-com/sokkel-ui-maps`     | `MapView` on maplibre, with its layers, legends, popups and basemaps                       |
+| `@winterop-com/sokkel-ui-graph`    | the graphs and the graph editor on React Flow, laid out by elk                             |
+| `@winterop-com/sokkel-ui-terminal` | `TerminalView`, an interactive terminal, and `Terminal`, on xterm.js                       |
+| `@winterop-com/sokkel-ui-media`    | `MediaBar` and its fullscreen view, `TrackList`, `MediaCard`, `Artwork`, `useMediaSession` |
 
-Every app installs the core package; an app that draws charts, maps, graphs or terminals adds that package too,
-which brings its engine with it. An app points the scope at the registry in its `.npmrc`, with a
-token that can read packages, and pins one version for all of them:
+Every app installs the core package; an app that draws charts, maps, graphs or terminals adds that
+package too, which brings its engine with it, and a music or video app adds the media package (the
+players chat uses, `AudioPlayer` and `VideoPlayer`, stay in the core). An app points the scope at
+the registry in its `.npmrc`, with a token that can read packages, and pins one version for all of
+them:
 
 ```
 @winterop-com:registry=https://npm.pkg.github.com
@@ -98,6 +101,7 @@ bun add @winterop-com/sokkel-ui-charts@0.10.2   # only for charts and chart pane
 bun add @winterop-com/sokkel-ui-maps@0.10.2     # only for maps
 bun add @winterop-com/sokkel-ui-graph@0.10.2    # only for graphs
 bun add @winterop-com/sokkel-ui-terminal@0.10.2 # only for terminals
+bun add @winterop-com/sokkel-ui-media@0.10.2    # only for the music and video parts
 ```
 
 The components are styled with Tailwind classes, so every app runs Tailwind CSS 4.1 or later and
@@ -143,6 +147,37 @@ document.documentElement.dataset.theme = 'paper'
 An app whose settings offer every theme imports `@winterop-com/sokkel-ui/themes.css`, which holds
 them all. `ThemePicker` draws its swatches from the same files, so it shows a theme's swatch only
 once that theme's file is imported.
+
+### Only the classes an app uses
+
+`styles.css` points Tailwind at every module of the core, so an app's CSS carries the classes of
+components it never imports: the forms page in `examples/sizes` ships 49 kB of CSS gzipped on it.
+An app that wants only its own imports `styles-base.css` instead, which is `styles.css` pointed at
+no module, and after it the list of sources of each module it imports, `sources/<module>.css`
+under the name it imports the module by. A list holds an `@source` for the module and for every
+module it draws on, however deep, so the app names only what it imports itself:
+
+```css
+/* app.css: a page with a form and a dialog, and nothing else of the core */
+@import '@winterop-com/sokkel-ui/styles-base.css';
+@import '@winterop-com/sokkel-ui/sources/Shell.css';
+@import '@winterop-com/sokkel-ui/sources/Rail.css';
+@import '@winterop-com/sokkel-ui/sources/TopBar.css';
+@import '@winterop-com/sokkel-ui/sources/TextField.css';
+@import '@winterop-com/sokkel-ui/sources/DialogShell.css';
+@import '@winterop-com/sokkel-ui/sources/primitives/button.css';
+@import '@winterop-com/sokkel-ui/themes/paper.css';
+```
+
+The app adds one line per module it imports, from any package: `import { Rail } from
+'@winterop-com/sokkel-ui/Rail'` is `@import '@winterop-com/sokkel-ui/sources/Rail.css'`, and
+`import { Chart } from '@winterop-com/sokkel-ui-charts/Chart'` is
+`@import '@winterop-com/sokkel-ui-charts/sources/Chart.css'`. An add-on's list brings the lists of
+the core modules it uses, and on this path it takes the place of the add-on's `styles.css`. A module
+the app starts importing needs its line, or its classes are missing. The same forms page built this
+way, `examples/sizes/forms-lean`, ships 20 kB of CSS gzipped.
+
+### An app's own Tailwind entry
 
 An app that brings its own Tailwind entry imports `@winterop-com/sokkel-ui/tokens.css` (the tokens,
 the default theme and the density levels) instead, with the theme files it offers, `motion.css`
@@ -258,8 +293,8 @@ first in its `<head>`. Given the same defaults as `useAppearance`, it starts in 
 Components import by path: `@winterop-com/sokkel-ui/DialogShell`,
 `@winterop-com/sokkel-ui/primitives/button`, `@winterop-com/sokkel-ui/dashboard/StatPanel`,
 `@winterop-com/sokkel-ui-charts/Chart`, `@winterop-com/sokkel-ui-charts/dashboard/BarPanel`,
-`@winterop-com/sokkel-ui-maps/MapView`, `@winterop-com/sokkel-ui-graph/PipelineGraph` or
-`@winterop-com/sokkel-ui-terminal/TerminalView`.
+`@winterop-com/sokkel-ui-maps/MapView`, `@winterop-com/sokkel-ui-graph/PipelineGraph`,
+`@winterop-com/sokkel-ui-terminal/TerminalView` or `@winterop-com/sokkel-ui-media/MediaBar`.
 
 A few core parts load an engine the app installs only when it uses them, as optional peer
 dependencies:
@@ -274,9 +309,10 @@ dependencies:
 ## Working on it
 
 The repository is a Bun workspace: the packages are in `packages/core`, `packages/charts`,
-`packages/maps`, `packages/graph` and `packages/terminal`, and the stories in `src/stories/` import them by their names,
-as an app does. `bun run build` builds all five, `bun run test` runs every package's tests and the
-library rules, and `bun run size` holds the apps in `examples/sizes` to their budgets.
+`packages/maps`, `packages/graph`, `packages/terminal` and `packages/media`, and the stories in
+`src/stories/` import them by their names, as an app does. `bun run build` builds all six,
+`bun run test` runs every package's tests and the library rules, and `bun run size` holds the apps
+in `examples/sizes` to their budgets.
 
 ## License
 

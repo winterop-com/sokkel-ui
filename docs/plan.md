@@ -5,11 +5,11 @@ with real-shaped data, rendered by CI at every narrow width, failing one that th
 
 ## Distribution
 
-The library is five packages, built from one Bun workspace and released together at one version:
+The library is six packages, built from one Bun workspace and released together at one version:
 
 - `@winterop-com/sokkel-ui` (`packages/core`): the tokens and themes, the primitives, the patterns,
-  layout, forms, tables, the shell, media, board, calendar, schema, `CodeEditor`, the
-  dashboard's frame and its panels with no chart, the hooks and helpers. Every app installs it.
+  layout, forms, tables, the shell, the players chat uses, board, calendar, schema, `CodeEditor`,
+  the dashboard's frame and its panels with no chart, the hooks and helpers. Every app installs it.
 - `@winterop-com/sokkel-ui-charts` (`packages/charts`): `Chart`, its kinds, the frame, legend and
   grid around it, and the dashboard panels drawn by ECharts, which it brings as a dependency.
 - `@winterop-com/sokkel-ui-maps` (`packages/maps`): `MapView` and its layers, legends, popups,
@@ -18,18 +18,21 @@ The library is five packages, built from one Bun workspace and released together
   Flow, laid out by elk.
 - `@winterop-com/sokkel-ui-terminal` (`packages/terminal`): `TerminalView` and `Terminal`, on
   xterm.js.
+- `@winterop-com/sokkel-ui-media` (`packages/media`): the music and video app parts, `MediaBar`
+  with its layouts and fullscreen view, `TrackList`, `MediaCard`, `Artwork` and `useMediaSession`.
 
 An app installs the core and the add-ons it draws with, so an engine is installed only by an app
-that uses it. Each add-on stands on the core as a peer dependency at the same version and imports it
-by its name; the core never imports an add-on and no add-on imports another, which
-`src/rules.test.ts` holds. A part that needs no engine belongs in the core. The engines left in the
-core (Mermaid, KaTeX, CodeMirror) and the Geist fonts are optional peer dependencies, loaded lazily, and the
-README lists which part needs which. Mermaid draws every diagram written as text and KaTeX every
+that uses it, and the music and video parts only by an app that plays music or video. Each add-on
+stands on the core as a peer dependency at the same version and imports it by its name; the core
+never imports an add-on and no add-on imports another, which `src/rules.test.ts` holds. A part that
+needs no engine belongs in the core, save the music and video app parts in the media package. The
+engines left in the core (Mermaid, KaTeX, CodeMirror) and the Geist fonts are optional peer
+dependencies, loaded lazily, and the README lists which part needs which. Mermaid draws every diagram written as text and KaTeX every
 formula, through remark-math and rehype-katex in `Markdown`, which loads it the first time a message
 holds math, its stylesheet with it.
 
 `dist/` is built, not committed, so an install from a repository URL gets no compiled code (bun also
-blocks such a dependency's install scripts). The tag workflow publishes the five packages to GitHub
+blocks such a dependency's install scripts). The tag workflow publishes the six packages to GitHub
 Packages, and apps pin that version.
 
 Each package carries the library alone: `dist/`, the sources beside it and its styles (the core
@@ -37,7 +40,11 @@ also its tokens), with no stories, story fixtures or tests. Each package's `styl
 source that scans only that package's components: the core's also carries Tailwind, the fonts, the
 tokens and the base styles, and an add-on's is imported after it in the same stylesheet. An app's
 CSS so carries the classes of the packages it uses and none of the stories'; every app runs Tailwind
-4.1 or later itself. The themes are in the core. Storybook gets every package's classes and the
+4.1 or later itself. For an app that wants the classes of its own imports alone, the core also
+exports `styles-base.css` (`styles.css` pointed at no module) and every package a list of sources
+per module, `sources/<module>.css`, written by the build from the module's imports: an `@source`
+for each of its package's modules it reaches and the core's list for each core module it uses. The
+app imports the list of each module it imports after `styles-base.css`. The themes are in the core. Storybook gets every package's classes and the
 stories' from its own entry, `.storybook/storybook.css`, which imports each package's styles and
 adds the stories as a source. The stories in `src/stories/` import the packages by their names; in
 Storybook and the tests those names resolve to the packages' sources, so neither needs a build.
@@ -47,12 +54,14 @@ installs the core package from `packages/core` and imports only its public entry
 Tauri shells in `examples/electron` and `examples/tauri` load that app's build. The examples
 workflow builds all three, so a break in a package fails a check rather than an app.
 
-`examples/sizes` holds the size budget: a forms page, a dashboard and a map page, each built against
-the packages in CI and measured gzipped (the JavaScript at start, what loads later, the CSS). A check
-fails when one grows past its budget in `examples/sizes/budget.json` or bundles an engine it does not
-use, so a forms page never carries ECharts, maplibre, React Flow, xterm.js, CodeMirror, Mermaid or KaTeX. A change
-that grows an app on purpose raises its budget in the same PR. The forms page imports only the core
-package, the dashboard adds the charts package and the map page the maps package.
+`examples/sizes` holds the size budget: a forms page, a dashboard, a map page and a music page, each
+built against the packages in CI and measured gzipped (the JavaScript at start, what loads later,
+the CSS). A check fails when one grows past its budget in `examples/sizes/budget.json` or bundles an
+engine it does not use, so a forms page never carries ECharts, maplibre, React Flow, xterm.js,
+CodeMirror, Mermaid or KaTeX. A change that grows an app on purpose raises its budget in the same
+PR. The forms page imports only the core package, the dashboard adds the charts package, the map
+page the maps package and the music page the media package. `forms-lean` is the forms page on
+`styles-base.css` and its modules' lists of sources, so the lean path is measured too.
 
 ## Themes
 
@@ -61,7 +70,9 @@ Every theme is defined in `packages/core/tokens/tokens.json`, and `scripts/build
 that picks no theme needs nothing more. Every other theme is a file of its own in
 `packages/core/src/styles/themes/`, exported as `@winterop-com/sokkel-ui/themes/<name>.css`, with its light and
 dark tokens on `html[data-theme]` for the whole app and on `[data-theme-scope]` for one element,
-such as a theme picker's swatch; `themes.css` imports them all. An app imports the files of the
+such as a theme picker's swatch, each written once for both; `themes.css` imports them all. Every
+scope first takes the default's whole set from `tokens.css`, at no specificity, so the page's theme
+never shows through a scope of another. An app imports the files of the
 themes it offers and sets one on `<html data-theme>`, so its CSS carries no theme it never shows.
 Storybook imports `themes.css`, so its toolbar offers every theme.
 
@@ -347,9 +358,23 @@ fixed number of rows) and reports its size in cells, sends keystrokes and paste 
 and takes output through its handle's `write`, with full emulation for programs that move the
 cursor or take the whole screen, a scrollback, selection and copy. The connection to the program
 stays the app's. `Terminal` shows commands and what they wrote on the same engine, read-only, with
-a title bar, copy and clear, writing only what was added while output streams in.
+a title bar, copy and clear, writing only what was added while output streams in. The terminal
+ground is dark in both schemes; every theme gives it an accent in its own hue (`--terminal-accent`,
+the ANSI blue and the selection), and the title bar ground, `--terminal-bar`, is mixed from the
+theme's terminal ground and accent. SignIn's dark brand pane stands on the same bar on a phone.
 
 ## Media
+
+The music and video app parts have a package of their own, `@winterop-com/sokkel-ui-media`, so an
+app that plays nothing does not carry them: `MediaBar` with its layouts, parts and
+`MediaFullscreen`, `TrackList`, `MediaCard`, `Artwork` and its seeded covers (`cover-seed`), the
+arithmetic of chapters and of the bar's growth, and `useMediaSession` with its helpers in
+`media-session`. It has no engine and stands on the core by name. What a core part plays through
+stays in the core, under `@winterop-com/sokkel-ui/media/*`: `AudioPlayer` and `VideoPlayer`, which
+attachments, chat messages, the composer and a spoken answer use; the controls they share
+(`MediaControls`, `MediaSlider`), the times (`time`) and one sound at a time (`one-sound`); and
+`SoundVisualizer` with what it reads sound through (`sound`, `sound-source`, `sound-delay`), which
+the `bar-visualizer` primitive draws with.
 
 VideoPlayer, MediaBar, MediaCard and TrackList carry video and music, and the `AudioScrubber`
 primitive draws a recording's waveform under its position. AudioPlayer plays a recording in one line
@@ -383,8 +408,8 @@ it the bar grows by its `layout`, picked from the player growth research, contin
 jump: `rows` (the default: the cover across two rows, what plays, the transport and the volume over
 a full-width waveform that grows from 18 to 96 pixels), `panel` (the large now-playing panel) or
 `stage` (a centered stage). The heights where things change and the sizes between them are pure
-arithmetic in `media/bar-growth.ts`. The visualizer rises faintly behind the words from about 96
-pixels, standing on the waveform. A corner button, or an app's own key through `fullscreen`, opens
+arithmetic in `bar-growth.ts`. The visualizer rises faintly behind the words from about 96 pixels,
+standing on the waveform. A corner button, or an app's own key through `fullscreen`, opens
 MediaFullscreen, a now-playing view arranged after the layout, with the visualizer at full strength
 and a picker of its kind; it asks the browser for its fullscreen and falls back to covering the
 window, and it is a dark room in every theme: `.dark` around an element scoped to the document's

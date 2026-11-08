@@ -1,9 +1,9 @@
 import { Maximize2, Music, Repeat, Repeat1, Shuffle, SkipBack, SkipForward } from 'lucide-react'
 import { cloneElement, isValidElement, type ComponentProps, type CSSProperties, type ReactElement, type ReactNode } from 'react'
 
-import { cn } from '../../lib/cn'
-import { GroupLabel } from '../GroupLabel'
-import { MetaLine } from '../MetaLine'
+import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
+import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
 import { Artwork } from './Artwork'
 import type { Tier } from './bar-growth'
 import {
@@ -16,9 +16,9 @@ import {
     VolumeControl,
     formatRate,
     type TransportSize,
-} from './MediaControls'
-import { SoundVisualizer, type SoundKind, type SoundVisualizerProps } from './SoundVisualizer'
-import type { MediaRange } from './time'
+} from '@winterop-com/sokkel-ui/media/MediaControls'
+import { SoundVisualizer, type SoundKind, type SoundVisualizerProps } from '@winterop-com/sokkel-ui/media/SoundVisualizer'
+import type { MediaRange } from '@winterop-com/sokkel-ui/media/time'
 
 /** How a queue repeats: not at all, the whole queue, or the one item playing. */
 export type RepeatMode = 'off' | 'all' | 'one'

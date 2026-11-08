@@ -20,7 +20,7 @@ import {
 import { useState } from 'react'
 
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
-import { MediaCard, MediaGrid } from '@winterop-com/sokkel-ui/media/MediaCard'
+import { MediaCard, MediaGrid } from '@winterop-com/sokkel-ui-media/MediaCard'
 import { formatTime } from '@winterop-com/sokkel-ui/media/time'
 import { RelativeTime } from '@winterop-com/sokkel-ui/RelativeTime'
 import { CommentComposer, CommentThread, type ThreadComment } from '@winterop-com/sokkel-ui/CommentThread'
@@ -39,7 +39,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@winterop-com/sokkel-ui/primitives/select'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import type { KindColor } from '@winterop-com/sokkel-ui/lib/kind'
-import { Artwork, type ArtworkCover } from '@winterop-com/sokkel-ui/media/Artwork'
+import { Artwork, type ArtworkCover } from '@winterop-com/sokkel-ui-media/Artwork'
 import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import captions from '../media/fixtures/captions.vtt?url'

@@ -8,7 +8,7 @@ import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
 import { Section, Surface } from '@winterop-com/sokkel-ui/Section'
 import { Segmented, type Segment } from '@winterop-com/sokkel-ui/Segmented'
 import { Toolbar } from '@winterop-com/sokkel-ui/Toolbar'
-import { Artwork } from '@winterop-com/sokkel-ui/media/Artwork'
+import { Artwork } from '@winterop-com/sokkel-ui-media/Artwork'
 import { FRAME } from './fixtures/sound'
 import { tuneUrl } from './fixtures/tune'
 

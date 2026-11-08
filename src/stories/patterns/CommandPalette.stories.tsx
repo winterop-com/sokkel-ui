@@ -31,7 +31,7 @@ import { Kbd } from '@winterop-com/sokkel-ui/primitives/kbd'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
 import { makeAlbums } from '../fixtures/albums'
-import { Artwork } from '@winterop-com/sokkel-ui/media/Artwork'
+import { Artwork } from '@winterop-com/sokkel-ui-media/Artwork'
 import { ADA, GRACE, LINUS } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 

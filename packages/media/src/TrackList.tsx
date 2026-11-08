@@ -1,8 +1,8 @@
 import { Play, Volume2 } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { cn } from '../../lib/cn'
-import { formatTime } from './time'
+import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { formatTime } from '@winterop-com/sokkel-ui/media/time'
 
 /** One row of a track list. */
 export interface Track {

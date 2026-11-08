@@ -6,7 +6,8 @@
  *
  * The apps import the packages by their names, which resolve through the workspace's links and each
  * package's own `exports`, so each bundles what an installed copy would give it. The forms app
- * imports only the core package. Every size is gzipped, in kB: `start` is the
+ * imports only the core package, on its styles.css; forms-lean is the same app on styles-base.css
+ * and its modules' lists of sources. Every size is gzipped, in kB: `start` is the
  * JavaScript loaded with the page, `lazy` what is fetched later by a dynamic import, and `css` the
  * stylesheet.
  */
@@ -40,7 +41,7 @@ type Budget = Record<Measure, number> & {
     engines: string[]
 }
 
-const unbuilt = ['core', 'charts', 'maps', 'graph', 'terminal'].filter((name) => !existsSync(join(ROOT, 'packages', name, 'dist')))
+const unbuilt = ['core', 'charts', 'maps', 'graph', 'terminal', 'media'].filter((name) => !existsSync(join(ROOT, 'packages', name, 'dist')))
 if (unbuilt.length > 0) {
     console.error(`No dist/ to build against in ${unbuilt.join(', ')}: run \`bun run build\` first.`)
     process.exit(1)
