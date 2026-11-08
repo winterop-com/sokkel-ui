@@ -73,19 +73,22 @@ stays (`make screenshots-ci`, `scripts/baselines.sh`) for when it returns near 1
 
 ## Using it
 
-The library is five packages on GitHub Packages, released together at one version:
+The library is six packages on GitHub Packages, released together at one version:
 
-| Package                            | Holds                                                                |
-| ---------------------------------- | -------------------------------------------------------------------- |
-| `@winterop-com/sokkel-ui`          | the tokens and themes, the primitives and every pattern below        |
-| `@winterop-com/sokkel-ui-charts`   | `Chart` and its kinds on ECharts, and the dashboard's chart panels   |
-| `@winterop-com/sokkel-ui-maps`     | `MapView` on maplibre, with its layers, legends, popups and basemaps |
-| `@winterop-com/sokkel-ui-graph`    | the graphs and the graph editor on React Flow, laid out by elk       |
-| `@winterop-com/sokkel-ui-terminal` | `TerminalView`, an interactive terminal, and `Terminal`, on xterm.js |
+| Package                            | Holds                                                                                      |
+| ---------------------------------- | ------------------------------------------------------------------------------------------ |
+| `@winterop-com/sokkel-ui`          | the tokens and themes, the primitives and every pattern below                              |
+| `@winterop-com/sokkel-ui-charts`   | `Chart` and its kinds on ECharts, and the dashboard's chart panels                         |
+| `@winterop-com/sokkel-ui-maps`     | `MapView` on maplibre, with its layers, legends, popups and basemaps                       |
+| `@winterop-com/sokkel-ui-graph`    | the graphs and the graph editor on React Flow, laid out by elk                             |
+| `@winterop-com/sokkel-ui-terminal` | `TerminalView`, an interactive terminal, and `Terminal`, on xterm.js                       |
+| `@winterop-com/sokkel-ui-media`    | `MediaBar` and its fullscreen view, `TrackList`, `MediaCard`, `Artwork`, `useMediaSession` |
 
-Every app installs the core package; an app that draws charts, maps, graphs or terminals adds that package too,
-which brings its engine with it. An app points the scope at the registry in its `.npmrc`, with a
-token that can read packages, and pins one version for all of them:
+Every app installs the core package; an app that draws charts, maps, graphs or terminals adds that
+package too, which brings its engine with it, and a music or video app adds the media package (the
+players chat uses, `AudioPlayer` and `VideoPlayer`, stay in the core). An app points the scope at
+the registry in its `.npmrc`, with a token that can read packages, and pins one version for all of
+them:
 
 ```
 @winterop-com:registry=https://npm.pkg.github.com
@@ -98,6 +101,7 @@ bun add @winterop-com/sokkel-ui-charts@0.10.2   # only for charts and chart pane
 bun add @winterop-com/sokkel-ui-maps@0.10.2     # only for maps
 bun add @winterop-com/sokkel-ui-graph@0.10.2    # only for graphs
 bun add @winterop-com/sokkel-ui-terminal@0.10.2 # only for terminals
+bun add @winterop-com/sokkel-ui-media@0.10.2    # only for the music and video parts
 ```
 
 The components are styled with Tailwind classes, so every app runs Tailwind CSS 4.1 or later and
@@ -258,8 +262,8 @@ first in its `<head>`. Given the same defaults as `useAppearance`, it starts in 
 Components import by path: `@winterop-com/sokkel-ui/DialogShell`,
 `@winterop-com/sokkel-ui/primitives/button`, `@winterop-com/sokkel-ui/dashboard/StatPanel`,
 `@winterop-com/sokkel-ui-charts/Chart`, `@winterop-com/sokkel-ui-charts/dashboard/BarPanel`,
-`@winterop-com/sokkel-ui-maps/MapView`, `@winterop-com/sokkel-ui-graph/PipelineGraph` or
-`@winterop-com/sokkel-ui-terminal/TerminalView`.
+`@winterop-com/sokkel-ui-maps/MapView`, `@winterop-com/sokkel-ui-graph/PipelineGraph`,
+`@winterop-com/sokkel-ui-terminal/TerminalView` or `@winterop-com/sokkel-ui-media/MediaBar`.
 
 A few core parts load an engine the app installs only when it uses them, as optional peer
 dependencies:
@@ -274,9 +278,10 @@ dependencies:
 ## Working on it
 
 The repository is a Bun workspace: the packages are in `packages/core`, `packages/charts`,
-`packages/maps`, `packages/graph` and `packages/terminal`, and the stories in `src/stories/` import them by their names,
-as an app does. `bun run build` builds all five, `bun run test` runs every package's tests and the
-library rules, and `bun run size` holds the apps in `examples/sizes` to their budgets.
+`packages/maps`, `packages/graph`, `packages/terminal` and `packages/media`, and the stories in
+`src/stories/` import them by their names, as an app does. `bun run build` builds all six,
+`bun run test` runs every package's tests and the library rules, and `bun run size` holds the apps
+in `examples/sizes` to their budgets.
 
 ## License
 

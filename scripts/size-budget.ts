@@ -40,7 +40,7 @@ type Budget = Record<Measure, number> & {
     engines: string[]
 }
 
-const unbuilt = ['core', 'charts', 'maps', 'graph', 'terminal'].filter((name) => !existsSync(join(ROOT, 'packages', name, 'dist')))
+const unbuilt = ['core', 'charts', 'maps', 'graph', 'terminal', 'media'].filter((name) => !existsSync(join(ROOT, 'packages', name, 'dist')))
 if (unbuilt.length > 0) {
     console.error(`No dist/ to build against in ${unbuilt.join(', ')}: run \`bun run build\` first.`)
     process.exit(1)

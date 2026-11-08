@@ -16,5 +16,11 @@
         "start": 475,
         "lazy": 25,
         "css": 63
+    },
+    "music": {
+        "engines": [],
+        "start": 175,
+        "lazy": 25,
+        "css": 52
     }
 }

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import { Columns } from '@winterop-com/sokkel-ui/Layout'
-import { ARTWORK_MOTIFS, Artwork, type ArtworkCover } from '@winterop-com/sokkel-ui/media/Artwork'
+import { ARTWORK_MOTIFS, Artwork, type ArtworkCover } from '@winterop-com/sokkel-ui-media/Artwork'
 import { Section } from '@winterop-com/sokkel-ui/Section'
 import { HARBOR_DUSK } from '../fixtures/photos'
 

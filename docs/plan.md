@@ -5,11 +5,11 @@ with real-shaped data, rendered by CI at every narrow width, failing one that th
 
 ## Distribution
 
-The library is five packages, built from one Bun workspace and released together at one version:
+The library is six packages, built from one Bun workspace and released together at one version:
 
 - `@winterop-com/sokkel-ui` (`packages/core`): the tokens and themes, the primitives, the patterns,
-  layout, forms, tables, the shell, media, board, calendar, schema, `CodeEditor`, the
-  dashboard's frame and its panels with no chart, the hooks and helpers. Every app installs it.
+  layout, forms, tables, the shell, the players chat uses, board, calendar, schema, `CodeEditor`,
+  the dashboard's frame and its panels with no chart, the hooks and helpers. Every app installs it.
 - `@winterop-com/sokkel-ui-charts` (`packages/charts`): `Chart`, its kinds, the frame, legend and
   grid around it, and the dashboard panels drawn by ECharts, which it brings as a dependency.
 - `@winterop-com/sokkel-ui-maps` (`packages/maps`): `MapView` and its layers, legends, popups,
@@ -18,18 +18,21 @@ The library is five packages, built from one Bun workspace and released together
   Flow, laid out by elk.
 - `@winterop-com/sokkel-ui-terminal` (`packages/terminal`): `TerminalView` and `Terminal`, on
   xterm.js.
+- `@winterop-com/sokkel-ui-media` (`packages/media`): the music and video app parts, `MediaBar`
+  with its layouts and fullscreen view, `TrackList`, `MediaCard`, `Artwork` and `useMediaSession`.
 
 An app installs the core and the add-ons it draws with, so an engine is installed only by an app
-that uses it. Each add-on stands on the core as a peer dependency at the same version and imports it
-by its name; the core never imports an add-on and no add-on imports another, which
-`src/rules.test.ts` holds. A part that needs no engine belongs in the core. The engines left in the
-core (Mermaid, KaTeX, CodeMirror) and the Geist fonts are optional peer dependencies, loaded lazily, and the
-README lists which part needs which. Mermaid draws every diagram written as text and KaTeX every
+that uses it, and the music and video parts only by an app that plays music or video. Each add-on
+stands on the core as a peer dependency at the same version and imports it by its name; the core
+never imports an add-on and no add-on imports another, which `src/rules.test.ts` holds. A part that
+needs no engine belongs in the core, save the music and video app parts in the media package. The
+engines left in the core (Mermaid, KaTeX, CodeMirror) and the Geist fonts are optional peer
+dependencies, loaded lazily, and the README lists which part needs which. Mermaid draws every diagram written as text and KaTeX every
 formula, through remark-math and rehype-katex in `Markdown`, which loads it the first time a message
 holds math, its stylesheet with it.
 
 `dist/` is built, not committed, so an install from a repository URL gets no compiled code (bun also
-blocks such a dependency's install scripts). The tag workflow publishes the five packages to GitHub
+blocks such a dependency's install scripts). The tag workflow publishes the six packages to GitHub
 Packages, and apps pin that version.
 
 Each package carries the library alone: `dist/`, the sources beside it and its styles (the core
@@ -47,12 +50,13 @@ installs the core package from `packages/core` and imports only its public entry
 Tauri shells in `examples/electron` and `examples/tauri` load that app's build. The examples
 workflow builds all three, so a break in a package fails a check rather than an app.
 
-`examples/sizes` holds the size budget: a forms page, a dashboard and a map page, each built against
-the packages in CI and measured gzipped (the JavaScript at start, what loads later, the CSS). A check
-fails when one grows past its budget in `examples/sizes/budget.json` or bundles an engine it does not
-use, so a forms page never carries ECharts, maplibre, React Flow, xterm.js, CodeMirror, Mermaid or KaTeX. A change
-that grows an app on purpose raises its budget in the same PR. The forms page imports only the core
-package, the dashboard adds the charts package and the map page the maps package.
+`examples/sizes` holds the size budget: a forms page, a dashboard, a map page and a music page, each
+built against the packages in CI and measured gzipped (the JavaScript at start, what loads later,
+the CSS). A check fails when one grows past its budget in `examples/sizes/budget.json` or bundles an
+engine it does not use, so a forms page never carries ECharts, maplibre, React Flow, xterm.js,
+CodeMirror, Mermaid or KaTeX. A change that grows an app on purpose raises its budget in the same
+PR. The forms page imports only the core package, the dashboard adds the charts package, the map
+page the maps package and the music page the media package.
 
 ## Themes
 
@@ -325,6 +329,17 @@ a title bar, copy and clear, writing only what was added while output streams in
 
 ## Media
 
+The music and video app parts have a package of their own, `@winterop-com/sokkel-ui-media`, so an
+app that plays nothing does not carry them: `MediaBar` with its layouts, parts and
+`MediaFullscreen`, `TrackList`, `MediaCard`, `Artwork` and its seeded covers (`cover-seed`), the
+arithmetic of chapters and of the bar's growth, and `useMediaSession` with its helpers in
+`media-session`. It has no engine and stands on the core by name. What a core part plays through
+stays in the core, under `@winterop-com/sokkel-ui/media/*`: `AudioPlayer` and `VideoPlayer`, which
+attachments, chat messages, the composer and a spoken answer use; the controls they share
+(`MediaControls`, `MediaSlider`), the times (`time`) and one sound at a time (`one-sound`); and
+`SoundVisualizer` with what it reads sound through (`sound`, `sound-source`, `sound-delay`), which
+the `bar-visualizer` primitive draws with.
+
 VideoPlayer, MediaBar, MediaCard and TrackList carry video and music, and the `AudioScrubber`
 primitive draws a recording's waveform under its position. AudioPlayer plays a recording in one line
 (a clip or voice note in a message, an answer read aloud) from the same controls.
@@ -357,8 +372,8 @@ it the bar grows by its `layout`, picked from the player growth research, contin
 jump: `rows` (the default: the cover across two rows, what plays, the transport and the volume over
 a full-width waveform that grows from 18 to 96 pixels), `panel` (the large now-playing panel) or
 `stage` (a centered stage). The heights where things change and the sizes between them are pure
-arithmetic in `media/bar-growth.ts`. The visualizer rises faintly behind the words from about 96
-pixels, standing on the waveform. A corner button, or an app's own key through `fullscreen`, opens
+arithmetic in `bar-growth.ts`. The visualizer rises faintly behind the words from about 96 pixels,
+standing on the waveform. A corner button, or an app's own key through `fullscreen`, opens
 MediaFullscreen, a now-playing view arranged after the layout, with the visualizer at full strength
 and a picker of its kind; it asks the browser for its fullscreen and falls back to covering the
 window, and it is a dark room in every theme: `.dark` around an element scoped to the document's

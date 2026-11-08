@@ -2,9 +2,9 @@ import { AudioLines, Minimize2 } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
 
-import { useThemeName } from '../../hooks/use-theme-name'
-import { cn } from '../../lib/cn'
-import { Segmented } from '../Segmented'
+import { useThemeName } from '@winterop-com/sokkel-ui/hooks/use-theme-name'
+import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { PHONE, type MediaBarLayout } from './bar-growth'
 import {
     Cover,
@@ -19,8 +19,8 @@ import {
     Volume,
     type Deck,
 } from './MediaBarParts'
-import { TransportButton } from './MediaControls'
-import { SOUND_KINDS, type SoundKind } from './sound'
+import { TransportButton } from '@winterop-com/sokkel-ui/media/MediaControls'
+import { SOUND_KINDS, type SoundKind } from '@winterop-com/sokkel-ui/media/sound'
 
 /** The view's width under which the rows view puts its transport under what plays. */
 const TABLET = 1280

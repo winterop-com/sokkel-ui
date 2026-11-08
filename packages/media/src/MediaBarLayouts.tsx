@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 
-import { cn } from '../../lib/cn'
-import { MetaLine } from '../MetaLine'
+import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
 import { TALL, WIDE, glow, panelGrowth, rowsGrowth, stageGrowth } from './bar-growth'
 import {
     Backdrop,
@@ -17,7 +17,7 @@ import {
     Words,
     type Deck,
 } from './MediaBarParts'
-import { LiveMark, Position } from './MediaControls'
+import { LiveMark, Position } from '@winterop-com/sokkel-ui/media/MediaControls'
 
 /** What every arrangement of the bar is given. */
 export interface BarProps {

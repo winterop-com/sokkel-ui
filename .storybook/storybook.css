@@ -6,6 +6,7 @@
 @import '../packages/maps/src/styles.css';
 @import '../packages/graph/src/styles.css';
 @import '../packages/terminal/src/styles.css';
+@import '../packages/media/src/styles.css';
 
 @source '../src/stories';
 
