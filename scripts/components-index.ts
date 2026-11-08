@@ -38,6 +38,8 @@ export const PRIVATE: Record<PackageDir, Record<string, string>> = {
     core: {
         'components/code/guides': "`CodeEditor`'s bracket colors and indent guides",
         'components/code/schema': "`CodeEditor`'s JSON Schema checks and completion; `CodeSchemaWords` is exported by `CodeEditor`",
+        'components/option-list':
+            'the searchable list `FilterChip`, `FilterBar` and their menus draw values in; `FilterOption` is exported by `FilterChip`',
         'components/media/sound-delay': "how far `SoundVisualizer` holds its picture back behind the output's latency",
         'components/media/sound-source': 'what `SoundVisualizer` listens through; `SoundSource` is exported by `SoundVisualizer`',
         'components/schema/checker':
@@ -55,7 +57,7 @@ export const PRIVATE: Record<PackageDir, Record<string, string>> = {
         'lib/percent': 'how the library writes a share as a percent',
         'lib/scroll-memory': "where `useScrollMemory` keeps a scroller's place",
         'lib/shortcuts': 'the key registry `useShortcuts` binds in; its types are exported by `hooks/use-shortcuts` and `ShortcutsDialog`',
-        'lib/table': 'the head text every table shares, a layout constant',
+        'lib/table': "the head text every table shares, a layout constant, and the columns' order, which `lib/list-views` exports",
         'lib/theme-list': 'the theme list `lib/appearance` exports as `THEMES`',
         'lib/uploads': 'the store behind `useUploads`, which exports its types',
         'lib/utils': '`cn` under the name the primitives import it by; an app uses `lib/cn`',
@@ -192,12 +194,14 @@ const CORE_AREAS: Record<string, string> = {
     CodeField: 'Forms and inputs',
     CronField: 'Forms and inputs',
     Field: 'Forms and inputs',
+    FilterBar: 'Forms and inputs',
     FilterChip: 'Forms and inputs',
     FormBar: 'Forms and inputs',
     InlineField: 'Forms and inputs',
     PeopleFilter: 'Forms and inputs',
     PermissionMatrix: 'Forms and inputs',
     SaveBar: 'Forms and inputs',
+    SavedViews: 'Forms and inputs',
     Search: 'Forms and inputs',
     SearchField: 'Forms and inputs',
     SearchResults: 'Forms and inputs',

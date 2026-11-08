@@ -4,3 +4,14 @@ export const TABLE_HEAD_TEXT =
 
 /** A table's head row: its ground and the rule under it, from the table-head tokens. */
 export const TABLE_HEAD_ROW = 'border-b border-table-head-line bg-table-head-ground'
+
+/**
+ * Column ids in the order a table draws them: those `order` names first, once each, then the rest
+ * in their given order, the first column staying first whatever the order says, as each row's title.
+ */
+export function columnOrder(order: readonly string[], columns: readonly string[]): string[] {
+    if (columns.length < 2) return [...columns]
+    const [first, ...rest] = columns
+    const named = order.filter((id, index) => id !== first && rest.includes(id) && order.indexOf(id) === index)
+    return [first, ...named, ...rest.filter((id) => !named.includes(id))]
+}

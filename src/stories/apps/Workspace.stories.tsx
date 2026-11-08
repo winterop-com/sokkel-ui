@@ -44,6 +44,8 @@ import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { WizardView } from '@winterop-com/sokkel-ui/StepIndicator'
 import { useStored } from '@winterop-com/sokkel-ui/hooks/use-stored'
 import { NEW_JOB_STEPS, useNewJob } from '../dialogs/flows'
+import { RunsListing } from '../RunsListing'
+import { RUN_FIELDS, WEEK_RUNS } from '../fixtures/weekRuns'
 
 /** Where the stories keep what they remember, apart from an app's own keys. */
 const KEPT = { prefix: 'tidevann-stories.' }
@@ -189,7 +191,13 @@ const OUTPUT = [
     `${E}1;31mfailed${E}0m after 4.2s · retry with ${E}36mtidevann runs retry 4812 --from validate${E}0m`,
 ].join('\n')
 
-function Details({ run }: { run: Run }) {
+/** The fields the week's runs filter on here: job, state, who started it, when and how long it took. */
+const LISTED = RUN_FIELDS.filter((field) => ['job', 'state', 'by', 'started', 'duration'].includes(field.id))
+
+/** What the side panel shows of a run, from the day's runs or the week's. */
+type Shown = Pick<Run, 'id' | 'job' | 'state' | 'by' | 'started' | 'duration'>
+
+function Details({ run }: { run: Shown }) {
     return (
         <>
             <PanelSection title="Run">
@@ -229,11 +237,14 @@ function Workspace({
     dock = false,
     palette = false,
     grouped = false,
+    views = false,
     tab = 'details',
 }: {
     tab?: string
     globals: Record<string, unknown>
     dock?: boolean
+    /** The week's runs with a filter bar and the saved views, in place of today's runs. */
+    views?: boolean
     /** Runs grouped by job at first, from the Group choice the app remembers. */
     grouped?: boolean
     /** Starts with the command palette open and no one signed in. */
@@ -248,7 +259,7 @@ function Workspace({
     })
     const [collapsed, setCollapsed] = useState(false)
     const [query, setQuery] = useState('')
-    const [chosen, setChosen] = useState<Run>(RUNS[1])
+    const [chosen, setChosen] = useState<Shown>(views ? WEEK_RUNS[0] : RUNS[1])
     const [panelOpen, setPanelOpen] = useState<boolean | undefined>(undefined)
     const rows = RUNS.filter((run) => run.job.includes(query.trim()))
     return (
@@ -321,56 +332,71 @@ function Workspace({
             >
                 <Stack gap="none" className="h-full min-h-0">
                     <div className="min-h-0 flex-1 overflow-y-auto">
-                        <Page>
-                            <PageHeader
-                                title="Runs"
-                                count="248 today"
-                                actions={
-                                    <Button size="sm">
-                                        <Plus aria-hidden />
-                                        New
-                                    </Button>
-                                }
-                            />
-                            <DataTable
-                                search={<SearchField value={query} onChange={setQuery} placeholder="Search" />}
-                                toolbar={
-                                    <>
-                                        <FilterChip
-                                            facet="State"
-                                            options={STATUS_OPTIONS}
-                                            multiple
-                                            defaultSelected={['failed', 'running']}
-                                        />
-                                        <FilterChip facet="Job" options={JOB_OPTIONS} multiple />
-                                        <FilterChip facet="Started by" options={PEOPLE_OPTIONS} multiple />
-                                        <Segmented
-                                            label="Group"
-                                            value={group}
-                                            options={
-                                                [
-                                                    { value: 'none', label: 'No groups' },
-                                                    { value: 'job', label: 'By job' },
-                                                ] as const
-                                            }
-                                            onValueChange={setGroup}
-                                        />
-                                    </>
-                                }
-                                columns={COLUMNS}
-                                rows={rows}
-                                rowKey={(run) => run.id}
-                                onOpen={(run) => {
-                                    setChosen(run)
-                                    setPanelOpen(true)
-                                }}
-                                opened={(run) => run.id === chosen.id}
-                                total={248}
-                                groupBy={group === 'job' ? 'job' : undefined}
-                                words={{ groupCount: (count) => `${String(count)} ${count === 1 ? 'run' : 'runs'}` }}
-                                minWidth="36rem"
-                            />
-                        </Page>
+                        {views ? (
+                            <Page className="h-full">
+                                <RunsListing
+                                    fields={LISTED}
+                                    view="failed-week"
+                                    page
+                                    onOpen={(run) => {
+                                        setChosen(run)
+                                        setPanelOpen(true)
+                                    }}
+                                    opened={(run) => run.id === chosen.id}
+                                />
+                            </Page>
+                        ) : (
+                            <Page>
+                                <PageHeader
+                                    title="Runs"
+                                    count="248 today"
+                                    actions={
+                                        <Button size="sm">
+                                            <Plus aria-hidden />
+                                            New
+                                        </Button>
+                                    }
+                                />
+                                <DataTable
+                                    search={<SearchField value={query} onChange={setQuery} placeholder="Search" />}
+                                    toolbar={
+                                        <>
+                                            <FilterChip
+                                                facet="State"
+                                                options={STATUS_OPTIONS}
+                                                multiple
+                                                defaultSelected={['failed', 'running']}
+                                            />
+                                            <FilterChip facet="Job" options={JOB_OPTIONS} multiple />
+                                            <FilterChip facet="Started by" options={PEOPLE_OPTIONS} multiple />
+                                            <Segmented
+                                                label="Group"
+                                                value={group}
+                                                options={
+                                                    [
+                                                        { value: 'none', label: 'No groups' },
+                                                        { value: 'job', label: 'By job' },
+                                                    ] as const
+                                                }
+                                                onValueChange={setGroup}
+                                            />
+                                        </>
+                                    }
+                                    columns={COLUMNS}
+                                    rows={rows}
+                                    rowKey={(run) => run.id}
+                                    onOpen={(run) => {
+                                        setChosen(run)
+                                        setPanelOpen(true)
+                                    }}
+                                    opened={(run) => run.id === chosen.id}
+                                    total={248}
+                                    groupBy={group === 'job' ? 'job' : undefined}
+                                    words={{ groupCount: (count) => `${String(count)} ${count === 1 ? 'run' : 'runs'}` }}
+                                    minWidth="36rem"
+                                />
+                            </Page>
+                        )}
                     </div>
                     {dock && (
                         <Dock title="Log, nightly-export" open={dockOpen} onOpenChange={setDockOpen} defaultSize={200}>
@@ -451,6 +477,14 @@ export const WithDock: StoryObj = { name: 'Log dock', render: (_, { globals }) =
 
 /** The runs grouped by job, each head counting its runs; the Group choice and the dock's fold are kept for the next visit. */
 export const Grouped: StoryObj = { render: (_, { globals }) => <Workspace globals={globals} grouped dock /> }
+
+/**
+ * The week's runs filtered from the table's bar (job, state, started by, the days they started
+ * between, how long they took at least) under the saved views Failed this week and Mine, kept by
+ * the app: picking a view sets the filters, the sort and the columns, and changing any of them
+ * marks the view changed until it is saved as it is now, saved as a new view, or reset.
+ */
+export const SavedViewsStory: StoryObj = { name: 'Saved views', render: (_, { globals }) => <Workspace globals={globals} views /> }
 
 /**
  * A new job on a page of its own, on its second step: the five steps down the side with what each
