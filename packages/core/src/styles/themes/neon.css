@@ -7,6 +7,7 @@ html[data-theme='neon'] {
     --critical-wash: color-mix(in oklab, var(--destructive) 12%, var(--card));
     --panel-line: color-mix(in oklab, var(--border-strong) 25%, var(--border));
     --panel-ground: color-mix(in oklab, var(--muted) 35%, var(--card));
+    --brand-ground: color-mix(in oklab, var(--foreground) 5%, var(--background));
     --background: oklch(0.96 0.014 300);
     --foreground: oklch(0.225 0.05 300);
     --card: oklch(0.995 0.003 300);
@@ -70,6 +71,7 @@ html.dark[data-theme='neon'] {
     --critical-wash: color-mix(in oklab, var(--destructive) 16%, var(--card));
     --panel-line: color-mix(in oklab, var(--border-strong) 50%, var(--border));
     --panel-ground: color-mix(in oklab, var(--muted) 35%, var(--card));
+    --brand-ground: color-mix(in oklab, var(--shade) 45%, var(--background));
     --background: oklch(0.134 0.045 296);
     --foreground: oklch(0.93 0.037 299);
     --card: oklch(0.197 0.063 297);
@@ -219,6 +221,7 @@ html.dark[data-theme='neon'] {
     --elevation-pop: 0 14px 44px #23333e2e;
     --panel-line: color-mix(in oklab, var(--border-strong) 25%, var(--border));
     --panel-ground: color-mix(in oklab, var(--muted) 35%, var(--card));
+    --brand-ground: color-mix(in oklab, var(--foreground) 5%, var(--background));
     --panel-dot: #202b3426;
     --terminal: oklch(0.24 0.012 255);
     --terminal-foreground: oklch(0.93 0.008 255);
@@ -342,6 +345,7 @@ html.dark[data-theme='neon'] {
     --elevation-pop: 0 14px 44px #00000059;
     --panel-line: color-mix(in oklab, var(--border-strong) 50%, var(--border));
     --panel-ground: color-mix(in oklab, var(--muted) 35%, var(--card));
+    --brand-ground: color-mix(in oklab, var(--shade) 45%, var(--background));
     --panel-dot: #ffffff1c;
     --terminal: oklch(0.105 0.012 255);
     --terminal-foreground: oklch(0.93 0.008 255);

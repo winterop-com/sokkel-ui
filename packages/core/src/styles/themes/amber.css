@@ -7,6 +7,7 @@ html[data-theme='amber'] {
     --critical-wash: color-mix(in oklab, var(--destructive) 12%, var(--card));
     --panel-line: color-mix(in oklab, var(--border-strong) 25%, var(--border));
     --panel-ground: color-mix(in oklab, var(--muted) 35%, var(--card));
+    --brand-ground: color-mix(in oklab, var(--foreground) 5%, var(--background));
     --primary: oklch(0.57 0.125 80);
     --primary-foreground: oklch(0.985 0.002 255);
     --primary-ink: oklch(0.52 0.13 80);
@@ -31,6 +32,7 @@ html.dark[data-theme='amber'] {
     --critical-wash: color-mix(in oklab, var(--destructive) 16%, var(--card));
     --panel-line: color-mix(in oklab, var(--border-strong) 50%, var(--border));
     --panel-ground: color-mix(in oklab, var(--muted) 35%, var(--card));
+    --brand-ground: color-mix(in oklab, var(--shade) 45%, var(--background));
     --primary: oklch(0.8 0.13 80);
     --primary-foreground: oklch(0.16 0.01 255);
     --primary-ink: var(--primary);
@@ -141,6 +143,7 @@ html.dark[data-theme='amber'] {
     --elevation-pop: 0 14px 44px #23333e2e;
     --panel-line: color-mix(in oklab, var(--border-strong) 25%, var(--border));
     --panel-ground: color-mix(in oklab, var(--muted) 35%, var(--card));
+    --brand-ground: color-mix(in oklab, var(--foreground) 5%, var(--background));
     --panel-dot: #202b3426;
     --terminal: oklch(0.24 0.012 255);
     --terminal-foreground: oklch(0.93 0.008 255);
@@ -264,6 +267,7 @@ html.dark[data-theme='amber'] {
     --elevation-pop: 0 14px 44px #00000059;
     --panel-line: color-mix(in oklab, var(--border-strong) 50%, var(--border));
     --panel-ground: color-mix(in oklab, var(--muted) 35%, var(--card));
+    --brand-ground: color-mix(in oklab, var(--shade) 45%, var(--background));
     --panel-dot: #ffffff1c;
     --terminal: oklch(0.105 0.012 255);
     --terminal-foreground: oklch(0.93 0.008 255);

@@ -18,7 +18,7 @@ app has sign-in, and a `StatusLine` as the shell's `foot`.
 The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appearance`,
 `hooks/use-scheme`), with the option lists in `@winterop-com/sokkel-ui/lib/appearance`.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 213 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 214 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 13 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 9 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 11 modules
@@ -200,6 +200,7 @@ The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appeara
 | **FilterChip** | `@winterop-com/sokkel-ui/FilterChip` | One filter in a toolbar: the facet it filters on, and what it is set to. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-filter-chip--unset) |
 | **FormBar** | `@winterop-com/sokkel-ui/FormBar` | A form's actions: a note at the start, such as when the draft was last saved, and the actions at the end, the main verb last. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-form-bar--end) |
 | **InlineField** | `@winterop-com/sokkel-ui/InlineField` | A label and its control on one row: the label quiet at the start, never shrinking or wrapping, and the control taking the rest of the row. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-inline-field--compose) |
+| **LevelBars**, FlowLines | `@winterop-com/sokkel-ui/SignInArt` | Art for a sign-in screen's brand pane: a row of level bars, the run around the tallest peak in the theme's primary ink and the rest in its muted ground, each breathing slowly at its own phase. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-sign-in--password) |
 | **PeopleFilter** | `@winterop-com/sokkel-ui/PeopleFilter` | People as overlapping avatars that filter a board or a list: pressing one shows only that person's items, more than one can be on, and once any is on the others fade until hovered. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-board--cards) |
 | **PermissionMatrix** | `@winterop-com/sokkel-ui/PermissionMatrix` | Roles against permissions as a grid of checkboxes: a column per role, a row per permission, the rows grouped by what they act on with each group's row counting what every role holds of it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-access--secret) |
 | **SaveBar** | `@winterop-com/sokkel-ui/SaveBar` | The bar pinned to the foot of a page while its edits are not yet saved: how many there are at the left, Discard and Save at the right. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-access--secret) |
@@ -209,7 +210,7 @@ The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appeara
 | **SecretReveal** | `@winterop-com/sokkel-ui/SecretReveal` | A secret shown once, as it is created: an API token, a signing key, a recovery code. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-access--secret) |
 | **Segmented** | `@winterop-com/sokkel-ui/Segmented` | A choice from a small fixed set, drawn as one control with every option in view. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/charts-linked--rain-and-flow) |
 | **SettingRow** | `@winterop-com/sokkel-ui/SettingRow` | One setting: its title and what it does, and its control, placed by `layout`. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-slider-field--plain) |
-| **SignIn** | `@winterop-com/sokkel-ui/SignIn` | A sign-in screen: a brand pane with the app's mark, name and a line about it beside a form of one or two fields, a user name and password or a token (`method`). | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-sign-in--password) |
+| **SignIn** | `@winterop-com/sokkel-ui/SignIn` | A sign-in screen in two panes the window's height. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-sign-in--password) |
 | **SliderField** | `@winterop-com/sokkel-ui/SliderField` | A number chosen on a slider, its value written out in figures so the setting reads without dragging. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-slider-field--plain) |
 | **SwitchField** | `@winterop-com/sokkel-ui/SwitchField` | An on/off setting: its label and the switch at the row's right edge. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-pages--runs-list) |
 | **TextField** | `@winterop-com/sokkel-ui/TextField` | A labeled text input: a `Field` with its input inside, wired together. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-text-field--plain) |

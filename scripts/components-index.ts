@@ -72,6 +72,7 @@ const CORE_AREAS: Record<string, string> = {
     TreeSelect: 'Forms and inputs',
     UnsavedChanges: 'Forms and inputs',
     SignIn: 'Forms and inputs',
+    SignInArt: 'Forms and inputs',
     // Data: tables, lists, trees and values.
     ActivityList: 'Data display',
     BarList: 'Data display',
