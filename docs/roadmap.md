@@ -6,11 +6,16 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.9.1** is the latest release (2026-11-08): the gaps the first app found. Math in `Markdown`,
+- **0.9.2** is the latest release (2026-11-08): a fifth package, `@winterop-com/sokkel-ui-terminal`,
+  with an interactive `TerminalView` on xterm.js and the read-only `Terminal` moved onto it; `Search`
+  with grouped results and a results page with facets; trees that load lazily, search the whole
+  hierarchy and scroll at scale; maps over thousands of areas with labels; a terminal face for
+  `LogView`; and the second app gaps (empty children wait, uploads in `AttachmentList`).
+- **0.9.1** (2026-11-08): the gaps the first app found. Math in `Markdown`,
   reasoning, waiting, uploads and audio in chat, `useAppearance` and `useScheme`, the palette on
   Cmd/Ctrl+K owned by `Shell`, a status foot level with the account, theme-tinted surfaces, and
   `Segmented` options, `Highlight`, `BarList` and `ImageAnnotations`.
-- **0.9.0** is the latest release (2026-11-07): four packages, ready for adoption. The core
+- **0.9.0** (2026-11-07): four packages, ready for adoption. The core
   `@winterop-com/sokkel-ui` holds everything without a heavy engine; `-charts`, `-maps` and
   `-graph` carry ECharts, maplibre and React Flow, each with its own styles. The player gains three
   layouts that grow without a jump and a fullscreen now-playing view. `llms.txt` and the generated
@@ -21,21 +26,8 @@ to `plan.md` when it ships.
   `winterop-com/sokkel-ui`, the package `@winterop-com/sokkel-ui`, the Storybook
   https://winterop-com.github.io/sokkel-ui/. 0.2.0 to 0.4.0 are republished under the new name, and
   the old `@winterop-com/ui` package is deleted.
-- No app uses it yet. Until one does, a PR merges as soon as the local gates pass and main's CI
-  catches the rest; a release still waits for green.
-
-## 0.9.0: packages
-
-- **The library splits into four packages**, released together at one version: the core
-  `@winterop-com/sokkel-ui` and an add-on per engine, `@winterop-com/sokkel-ui-charts` (ECharts),
-  `-maps` (maplibre) and `-graph` (React Flow and elk), each with its own styles. An app installs the
-  core and the add-ons it draws with. Move to `plan.md` once released.
-
-## 0.10: terminals (done on main)
-
-- **An interactive terminal**, in a fifth package, `@winterop-com/sokkel-ui-terminal`, on xterm.js:
-  `TerminalView` takes keystrokes and output, reports its size and emulates full-screen programs,
-  and the read-only `Terminal` moved onto the same engine. The core keeps no terminal of its own.
+- The first app has adopted it. A PR still merges as soon as the local gates pass and main's CI
+  catches the rest; a release waits for green.
 
 ## 0.10: example apps
 
@@ -52,10 +44,6 @@ to `plan.md` when it ships.
 - **Adoption.** Apps adopt the library one pattern per PR, each pinning a published version. The
   app adds a check in the same PR that refuses its own hand-rolled version of that pattern, so it
   cannot come back. A part an app needs to differ becomes an option here, never a local edit.
-- **Search.** One search component for any page, beyond the plain field: results as the words are
-  typed, grouped by kind (videos, people, jobs) with thumbnails and previews, moved through by the
-  keyboard, and a results page with facets and counts. A data table's bar, the top bar and the
-  command palette take it, each with the room it is given.
 - **A second validation round.** The issue mark and the count beside the verb are in every form,
   but the count still reads weak and its list is a first answer to where the issues show. Render
   the options side by side (the count's look and place, the list at the count against a summary
