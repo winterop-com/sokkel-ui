@@ -23,6 +23,7 @@ import {
     type SoundKind,
     type SoundRange,
 } from './sound'
+import { clampDelay, createDelay, outputDelay } from './sound-delay'
 import { isAnalyser, isStream, soundGraph, sounding, type SoundSource, type SoundTap } from './sound-source'
 
 export type { SoundAlign, SoundFrame, SoundKind, SoundRange } from './sound'
@@ -58,6 +59,16 @@ export interface SoundVisualizerProps {
     color?: string
     /** Drawn faint, to stand behind text such as a player's title. */
     backdrop?: boolean
+    /**
+     * How long the picture is held back behind the sound it reads, in milliseconds, so it moves
+     * with what is heard: an analyser reads the sound before the output plays it, and a Bluetooth
+     * output is 150 to 500 milliseconds behind. `auto` holds it back by the latency the browser
+     * reports for the source's audio context, and by nothing where it reports none. At most a
+     * second.
+     */
+    delay?: number | 'auto'
+    /** Milliseconds added to `delay`, such as a hand-set correction on top of `auto` for an output whose latency the browser under-reports. */
+    delayOffset?: number
     /** What the picture is called, for a screen reader. */
     label?: string
     /** Drawn over the picture in the same box, such as a title before a backdrop. */
@@ -92,6 +103,8 @@ export function SoundVisualizer({
     barWidth,
     color = 'primary',
     backdrop = false,
+    delay = 0,
+    delayOffset = 0,
     label = 'Sound',
     children,
     middle,
@@ -114,8 +127,21 @@ export function SoundVisualizer({
     const low = range.low
     const high = range.high
     useLayoutEffect(() => {
-        engine.current?.set({ kind, align, bands, range: { low, high }, floor, ceiling, barWidth, backdrop, frame, playing })
-    }, [kind, align, bands, low, high, floor, ceiling, barWidth, backdrop, frame, playing])
+        engine.current?.set({
+            kind,
+            align,
+            bands,
+            range: { low, high },
+            floor,
+            ceiling,
+            barWidth,
+            backdrop,
+            frame,
+            playing,
+            delay,
+            delayOffset,
+        })
+    }, [kind, align, bands, low, high, floor, ceiling, barWidth, backdrop, frame, playing, delay, delayOffset])
 
     useLayoutEffect(() => {
         engine.current?.restyle()
@@ -156,6 +182,8 @@ interface Look {
     frame: SoundFrame | undefined
     /** Whether an analyser source is playing; elements and streams say so themselves. */
     playing: boolean
+    delay: number | 'auto'
+    delayOffset: number
 }
 
 interface Engine {
@@ -174,6 +202,8 @@ const QUIET_INK = 0.55
 /** The shortest a bar or spoke is drawn, in pixels, so a silent one still shows as a tick. */
 const TICK = 2
 const FRAME_MS = 1000 / 60
+/** How often the latency the browser reports is read again while drawing, in milliseconds, as an output can change. */
+const REPORT_MS = 1000
 const ELEMENT_EVENTS = ['play', 'playing', 'pause', 'ended', 'emptied'] as const
 const STREAM_EVENTS = ['addtrack', 'removetrack'] as const
 
@@ -191,6 +221,8 @@ function createEngine(canvas: HTMLCanvasElement, box: HTMLDivElement): Engine {
         backdrop: false,
         frame: undefined,
         playing: true,
+        delay: 0,
+        delayOffset: 0,
     }
     let width = 0
     let height = 0
@@ -210,6 +242,12 @@ function createEngine(canvas: HTMLCanvasElement, box: HTMLDivElement): Engine {
     let request = 0
     let last = 0
     let quietPainted = false
+    // What was read lately, drawn as late as the output is behind.
+    const heldBins = createDelay((length) => new Uint8Array(length))
+    const heldWave = createDelay((length) => new Float32Array(length))
+    let reported = 0
+    let reportedAt = Number.NEGATIVE_INFINITY
+    let lastHeard = 0
 
     const count = () => look.bands ?? autoBands(look.kind, width, height)
 
@@ -217,6 +255,22 @@ function createEngine(canvas: HTMLCanvasElement, box: HTMLDivElement): Engine {
     const heard = (from: SoundSource) => (isAnalyser(from) ? look.playing : sounding(from))
     /** The events that say a source started or stopped; an analyser has none. */
     const eventsOf = (from: SoundSource): readonly string[] => (isAnalyser(from) ? [] : isStream(from) ? STREAM_EVENTS : ELEMENT_EVENTS)
+
+    /** How far the picture is held back now, in milliseconds, reading the reported latency again now and then. */
+    const holdBack = (time: number) => {
+        if (look.delay === 'auto' && tap !== null && time - reportedAt > REPORT_MS) {
+            reported = outputDelay(tap.analyser.context as Partial<AudioContext>)
+            reportedAt = time
+        }
+        return clampDelay((look.delay === 'auto' ? reported : look.delay) + look.delayOffset)
+    }
+
+    /** Forgets what was held back, so a picture that starts again never draws the sound from before. */
+    const forget = () => {
+        heldBins.clear()
+        heldWave.clear()
+        reportedAt = Number.NEGATIVE_INFINITY
+    }
 
     const setState = (state: 'still' | 'live' | 'unreadable') => {
         box.dataset.state = state
@@ -269,29 +323,45 @@ function createEngine(canvas: HTMLCanvasElement, box: HTMLDivElement): Engine {
         if (tap === null || source === null || !visible || destroyed) return
         const elapsed = last === 0 ? FRAME_MS : Math.min(100, time - last)
         last = time
+        const delay = holdBack(time)
+        const sounds = heard(source)
+        if (sounds) lastHeard = time
         let quiet: boolean
         if (look.kind === 'wave') {
             if (wave?.length !== tap.analyser.fftSize) wave = new Float32Array(tap.analyser.fftSize)
             tap.analyser.getFloatTimeDomainData(wave)
             const start = triggerAt(wave, WAVE_SPAN)
-            const heard = wave.subarray(start, start + WAVE_SPAN)
-            peak = holdPeak(peak, heard, elapsed)
+            let trace = wave.subarray(start, start + WAVE_SPAN)
+            heldBins.clear()
+            if (delay > 0) {
+                heldWave.push(trace, time)
+                trace = heldWave.read(delay) ?? trace
+            } else heldWave.clear()
+            peak = holdPeak(peak, trace, elapsed)
             const gain = waveGain(peak)
-            samples = heard.map((sample) => sample * gain)
-            quiet = isQuiet(heard)
+            samples = trace.map((sample) => sample * gain)
+            quiet = isQuiet(trace)
         } else {
             if (bins?.length !== tap.analyser.frequencyBinCount) bins = new Uint8Array(tap.analyser.frequencyBinCount)
             tap.analyser.getByteFrequencyData(bins)
-            levels = settle(levels, bandLevels(bins, count(), tap.sampleRate, look.range), elapsed)
+            let reading = bins
+            heldWave.clear()
+            if (delay > 0) {
+                heldBins.push(bins, time)
+                reading = heldBins.read(delay) ?? bins
+            } else heldBins.clear()
+            levels = settle(levels, bandLevels(reading, count(), tap.sampleRate, look.range), elapsed)
             quiet = isQuiet(levels)
         }
         if (!(quiet && quietPainted) && look.frame === undefined) paint()
         quietPainted = quiet
-        // After the sound stops the bands keep falling until they rest, then the loop ends.
-        if (heard(source) || !quiet) {
+        // After the sound stops the bands keep falling until they rest, and a held-back picture
+        // plays out what the output has still to play, then the loop ends.
+        if (sounds || !quiet || time - lastHeard < delay) {
             request = requestAnimationFrame(step)
         } else {
             last = 0
+            forget()
             setState('still')
         }
     }
@@ -309,6 +379,7 @@ function createEngine(canvas: HTMLCanvasElement, box: HTMLDivElement): Engine {
         }
         request = 0
         last = 0
+        forget()
     }
 
     const acquire = async (wanted: SoundSource) => {
@@ -366,6 +437,7 @@ function createEngine(canvas: HTMLCanvasElement, box: HTMLDivElement): Engine {
         set(next) {
             look = next
             quietPainted = false
+            reportedAt = Number.NEGATIVE_INFINITY
             if (look.frame !== undefined) stop()
             else if (source !== null) changed()
             paint()

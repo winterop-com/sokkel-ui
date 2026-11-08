@@ -5,7 +5,7 @@ import { ItemCard } from '@winterop-com/sokkel-ui/ItemCard'
 import { Columns } from '@winterop-com/sokkel-ui/Layout'
 import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 import { DropdownMenuItem } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
-import { Artwork } from '../fixtures/Artwork'
+import { Artwork } from '@winterop-com/sokkel-ui/media/Artwork'
 
 /**
  * The card for one thing, in its four uses: plain content, a card that leads somewhere, a set of

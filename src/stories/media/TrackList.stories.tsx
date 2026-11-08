@@ -6,9 +6,9 @@ import { useState, type ReactNode } from 'react'
 import { TrackList, type Track } from '@winterop-com/sokkel-ui/media/TrackList'
 import { StarButton } from '@winterop-com/sokkel-ui/StarButton'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
-import { Artwork, type Cover } from '../fixtures/Artwork'
+import { Artwork, type ArtworkCover } from '@winterop-com/sokkel-ui/media/Artwork'
 
-const COVER: Cover = { motif: 'wave', from: 'blue', to: 'teal' }
+const COVER: ArtworkCover = { motif: 'wave', from: 'blue', to: 'teal' }
 
 const ALBUM: Track[] = [
     { id: '1', number: 1, title: 'Leaving the Sound', duration: 214 },
@@ -44,7 +44,7 @@ const MIXED: Track[] = [
         duration: 256,
         cover: { motif: 'bands', from: 'green', to: 'jade' },
     },
-].map(({ cover, ...track }) => ({ ...track, artwork: <Artwork cover={cover as Cover} /> }))
+].map(({ cover, ...track }) => ({ ...track, artwork: <Artwork cover={cover as ArtworkCover} /> }))
 
 const EPISODES: Track[] = [
     { title: 'The First Light', cover: { motif: 'sun', from: 'amber', to: 'pink' }, duration: 96 },
@@ -54,7 +54,7 @@ const EPISODES: Track[] = [
     id: `e${String(index + 1)}`,
     title: episode.title,
     subtitle: `Episode ${String(index + 1)}`,
-    artwork: <Artwork cover={episode.cover as Cover} wide />,
+    artwork: <Artwork cover={episode.cover as ArtworkCover} wide />,
     duration: episode.duration,
 }))
 

@@ -7,7 +7,7 @@ import { useMemo, useState } from 'react'
 import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
 import { MediaBar, type MediaBarLayout, type RepeatMode } from '@winterop-com/sokkel-ui/media/MediaBar'
 import { SoundVisualizer } from '@winterop-com/sokkel-ui/media/SoundVisualizer'
-import { Artwork, type Cover } from '../fixtures/Artwork'
+import { Artwork, type ArtworkCover } from '@winterop-com/sokkel-ui/media/Artwork'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { PaneHeader } from '@winterop-com/sokkel-ui/PaneHeader'
 import { FRAME } from './fixtures/sound'
@@ -19,7 +19,7 @@ interface Track {
     album: string
     year: number
     duration: number
-    cover: Cover
+    cover: ArtworkCover
 }
 
 const QUEUE: Track[] = [

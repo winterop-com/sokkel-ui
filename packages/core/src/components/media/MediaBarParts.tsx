@@ -4,6 +4,7 @@ import { cloneElement, isValidElement, type CSSProperties, type ReactElement, ty
 import { cn } from '../../lib/cn'
 import { GroupLabel } from '../GroupLabel'
 import { MetaLine } from '../MetaLine'
+import { Artwork } from './Artwork'
 import type { Tier } from './bar-growth'
 import { PlayButton, Position, TransportButton, VolumeControl, type TransportSize } from './MediaControls'
 import { SoundVisualizer, type SoundKind, type SoundVisualizerProps } from './SoundVisualizer'
@@ -81,6 +82,7 @@ export interface Deck {
     trackNumber?: number
     trackCount?: number
     artwork?: ReactNode
+    placeholderSeed?: string
     playing: boolean
     onPlayingChange: (playing: boolean) => void
     /** The position drawn: the one given, or the one under a dragging pointer. */
@@ -104,7 +106,7 @@ export interface Deck {
     extra?: ReactNode
 }
 
-/** The cover, square and filled edge to edge; a note glyph stands in without artwork. `size` pixels across, or filling its box. */
+/** The cover, square and filled edge to edge; without artwork one drawn from the seed, or a note glyph. `size` pixels across, or filling its box. */
 export function Cover({ deck, size, flush = false, className }: { deck: Deck; size?: number; flush?: boolean; className?: string }) {
     return (
         <div
@@ -116,7 +118,12 @@ export function Cover({ deck, size, flush = false, className }: { deck: Deck; si
             )}
             style={size === undefined ? undefined : { width: size }}
         >
-            {deck.artwork ?? <Music className="size-2/5! max-h-12 max-w-12 p-0" aria-hidden />}
+            {deck.artwork ??
+                (deck.placeholderSeed === undefined ? (
+                    <Music className="size-2/5! max-h-12 max-w-12 p-0" aria-hidden />
+                ) : (
+                    <Artwork seed={deck.placeholderSeed} />
+                ))}
         </div>
     )
 }

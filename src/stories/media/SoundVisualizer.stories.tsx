@@ -8,7 +8,7 @@ import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
 import { Section, Surface } from '@winterop-com/sokkel-ui/Section'
 import { Segmented, type Segment } from '@winterop-com/sokkel-ui/Segmented'
 import { Toolbar } from '@winterop-com/sokkel-ui/Toolbar'
-import { Artwork } from '../fixtures/Artwork'
+import { Artwork } from '@winterop-com/sokkel-ui/media/Artwork'
 import { FRAME } from './fixtures/sound'
 import { tuneUrl } from './fixtures/tune'
 
@@ -113,11 +113,10 @@ export const Backdrop: StoryObj = {
     ),
 }
 
-/** A tune made in the page, played through an audio element the visualizer listens to. Still until played; the ring holds the cover in its middle. */
-function LiveTune() {
+/** A tune made in the page, played through an audio element; it is made on the first play. */
+function useTune() {
     const [audio, setAudio] = useState<HTMLAudioElement | null>(null)
     const [playing, setPlaying] = useState(false)
-    const [kind, setKind] = useState<SoundKind>('spectrum')
     const toggle = () => {
         if (audio === null) return
         if (!audio.paused) {
@@ -127,22 +126,63 @@ function LiveTune() {
         if (audio.getAttribute('src') === null) audio.src = tuneUrl()
         void audio.play()
     }
+    const element = <audio ref={setAudio} loop onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} />
+    return { audio, playing, toggle, element }
+}
+
+/** A tune made in the page, played through an audio element the visualizer listens to. Still until played; the ring holds the cover in its middle. */
+function LiveTune() {
+    const tune = useTune()
+    const [kind, setKind] = useState<SoundKind>('spectrum')
     return (
         <Stack gap="md" className="h-svh bg-background p-4 text-foreground sm:p-6">
             <Toolbar end={<Segmented label="Kind" value={kind} options={KINDS} onValueChange={setKind} />}>
-                <PlayButton playing={playing} onToggle={toggle} words={{ play: 'Play', pause: 'Pause' }} />
+                <PlayButton playing={tune.playing} onToggle={tune.toggle} words={{ play: 'Play', pause: 'Pause' }} />
                 <MetaLine items={['A tune made in the page', '0:08, looping']} />
             </Toolbar>
             <Surface className="min-h-0 flex-1">
                 <SoundVisualizer
-                    source={audio}
+                    source={tune.audio}
                     kind={kind}
                     middle={kind === 'ring' ? <Artwork cover={{ motif: 'wave', from: 'violet', to: 'pink' }} /> : undefined}
                 />
             </Surface>
-            <audio ref={setAudio} loop onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} />
+            {tune.element}
         </Stack>
     )
 }
 
 export const Live: StoryObj = { render: () => <LiveTune /> }
+
+const DELAYS: readonly Segment<string>[] = [
+    { value: '0', label: 'None' },
+    { value: '150', label: '150 ms' },
+    { value: '300', label: '300 ms' },
+    { value: '500', label: '500 ms' },
+    { value: 'auto', label: 'Auto' },
+]
+
+function DelayedTune() {
+    const tune = useTune()
+    const [delay, setDelay] = useState('300')
+    return (
+        <Stack gap="md" className="h-svh bg-background p-4 text-foreground sm:p-6">
+            <Toolbar end={<Segmented label="Delay" value={delay} options={DELAYS} onValueChange={setDelay} />}>
+                <PlayButton playing={tune.playing} onToggle={tune.toggle} words={{ play: 'Play', pause: 'Pause' }} />
+                <MetaLine items={['A tune made in the page', 'Held back']} />
+            </Toolbar>
+            <Surface className="min-h-0 flex-1">
+                <SoundVisualizer source={tune.audio} delay={delay === 'auto' ? 'auto' : Number(delay)} />
+            </Surface>
+            {tune.element}
+        </Stack>
+    )
+}
+
+/**
+ * The tune with its picture held back behind the sound, as an output's latency needs: by the
+ * milliseconds picked, or by what the browser reports for the audio context with Auto. On wired
+ * speakers a delay shows the bars trailing the sound; on a Bluetooth output (150 to 500 ms behind)
+ * the right one brings them in step with what is heard.
+ */
+export const Delayed: StoryObj = { render: () => <DelayedTune /> }

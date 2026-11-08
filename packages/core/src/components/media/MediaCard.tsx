@@ -5,6 +5,7 @@ import { useClamped } from '../../hooks/use-clamped'
 import { cn } from '../../lib/cn'
 import { TITLE_LINES, type TitleLines } from '../../lib/title-lines'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '../ui/dropdown-menu'
+import { Artwork } from './Artwork'
 
 export interface MediaCardWords {
     play: string
@@ -28,12 +29,15 @@ const WORDS: MediaCardWords = {
  * height they need, so a short title leaves no gap under a card alone in its row; cards sharing a
  * grid row still line up, the row as tall as its tallest card. The full title shows on
  * hover over the card. `layout="row"` sets the cover beside the words, as a list of
- * what plays next does, with the title on up to two lines. `titleLines` sets another limit.
+ * what plays next does, with the title on up to two lines. `titleLines` sets another limit. A
+ * card with no `cover` wears one drawn from `placeholderSeed`, so a grid of records without
+ * pictures does not look all alike.
  */
 export function MediaCard({
     title,
     subtitle,
     cover,
+    placeholderSeed,
     shape = 'square',
     layout = 'stack',
     href,
@@ -50,8 +54,13 @@ export function MediaCard({
     title: string
     /** Who made it, and when, or which episode it is. */
     subtitle?: ReactNode
-    /** The artwork, which fills the frame. */
-    cover: ReactNode
+    /** The artwork, which fills the frame; without it a cover is drawn from `placeholderSeed`. */
+    cover?: ReactNode
+    /**
+     * A stable id, such as the record's, that the drawn cover is chosen from when there is no
+     * `cover`, so cards without pictures each wear their own; the title by default.
+     */
+    placeholderSeed?: string
     shape?: 'square' | 'wide'
     /** The cover above the words, or beside them at `coverWidth`. */
     layout?: 'stack' | 'row'
@@ -102,7 +111,7 @@ export function MediaCard({
                     interactive && 'group-hover/media:shadow-pop',
                 )}
             >
-                {cover}
+                {cover ?? <Artwork seed={placeholderSeed ?? title} wide={shape === 'wide'} />}
                 {badge !== undefined && (
                     <span
                         className={cn(

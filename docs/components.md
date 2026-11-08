@@ -23,7 +23,7 @@ The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appeara
 Other state an app keeps across reloads goes through `useStored` (`hooks/use-stored`), and files
 being uploaded through `useUploads` (`hooks/use-uploads`), which feeds `AttachmentList`.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 220 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 221 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 13 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 9 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 11 modules
@@ -356,8 +356,9 @@ being uploaded through `useUploads` (`hooks/use-uploads`), which feeds `Attachme
 
 | Component | Import | What it is | Story |
 | --- | --- | --- | --- |
+| **Artwork** | `@winterop-com/sokkel-ui/media/Artwork` | A record's cover: its picture, or a cover drawn in the theme's hues, a gradient between two with one motif over it, chosen from a stable `seed` unless `cover` names it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-artwork--motifs) |
 | **AudioPlayer** | `@winterop-com/sokkel-ui/media/AudioPlayer` | A recording in one line: play and pause, the scrubber, and the time played and still to play. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-audio-player--slider) |
-| **Cover**, Eyebrow, Words, ScreenWords, Scrub, Steps, ShuffleButton, RepeatButton, Volume, Extras, FullscreenButton, Backdrop | `@winterop-com/sokkel-ui/media/MediaBarParts` | The cover, square and filled edge to edge; a note glyph stands in without artwork. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-audio-bar--playing) (in MediaBar) |
+| **Cover**, Eyebrow, Words, ScreenWords, Scrub, Steps, ShuffleButton, RepeatButton, Volume, Extras, FullscreenButton, Backdrop | `@winterop-com/sokkel-ui/media/MediaBarParts` | The cover, square and filled edge to edge; without artwork one drawn from the seed, or a note glyph. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-audio-bar--playing) (in MediaBar) |
 | **LineBar**, RowsBar, PanelBar, StageBar | `@winterop-com/sokkel-ui/media/MediaBarLayouts` | The one-line bar, drawn by every layout until it grows: what plays at the left with the cover growing with the height, the transport over the position in the middle, the volume and the extra controls at the right. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-audio-bar--playing) (in MediaBar) |
 | **MediaBar** | `@winterop-com/sokkel-ui/media/MediaBar` | The player along the foot of a screen, for audio. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-audio-bar--playing) |
 | **MediaCard**, MediaGrid | `@winterop-com/sokkel-ui/media/MediaCard` | One album, film or episode in a grid: the cover first, then its title and a line under it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-media-card--albums) |

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type Ref } from 'react'
 
 import { cn } from '../../lib/cn'
 import { PlayButton, Position } from './MediaControls'
+import { useOneSound } from './one-sound'
 
 /** The words the player says, each with an English default. */
 export interface AudioPlayerWords {
@@ -30,7 +31,9 @@ const VARIANT: Record<AudioPlayerVariant, string> = {
  * For a clip sent in a message, a voice note, or an answer read aloud; a track to listen to in full
  * belongs in `MediaBar`.
  *
- * It plays `src` through its own `<audio>`, so pausing one player never stops another.
+ * It plays `src` through its own `<audio>`. Starting it pauses whatever else the library is playing,
+ * another player, a video or the `MediaBar`, so one sound is heard at a time; `exclusive={false}`
+ * lets it play alongside.
  */
 export function AudioPlayer({
     src,
@@ -39,6 +42,7 @@ export function AudioPlayer({
     label,
     variant = 'plain',
     preload = 'metadata',
+    exclusive = true,
     words: given,
     audioRef,
     className,
@@ -52,6 +56,8 @@ export function AudioPlayer({
     label?: string
     variant?: AudioPlayerVariant
     preload?: 'none' | 'metadata' | 'auto'
+    /** Whether starting it pauses the other sounds the library plays, and another starting pauses it. */
+    exclusive?: boolean
     words?: Partial<AudioPlayerWords>
     /** The `<audio>` element, for whatever the screen around the player needs from it. */
     audioRef?: Ref<HTMLAudioElement>
@@ -64,6 +70,7 @@ export function AudioPlayer({
     const [loaded, setLoaded] = useState(0)
     const duration = loaded > 0 ? loaded : (givenDuration ?? 0)
     const [scrub, setScrub] = useState<number | null>(null)
+    useOneSound(element, playing, exclusive)
 
     const attach = useCallback(
         (node: HTMLAudioElement | null) => {
