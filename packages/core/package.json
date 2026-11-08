@@ -346,6 +346,10 @@
             "types": "./dist/components/PeopleFilter.d.ts",
             "import": "./dist/components/PeopleFilter.js"
         },
+        "./PeriodPicker": {
+            "types": "./dist/components/PeriodPicker.d.ts",
+            "import": "./dist/components/PeriodPicker.js"
+        },
         "./PermissionMatrix": {
             "types": "./dist/components/PermissionMatrix.d.ts",
             "import": "./dist/components/PermissionMatrix.js"
@@ -1137,6 +1141,10 @@
         "./lib/numbers": {
             "types": "./dist/lib/numbers.d.ts",
             "import": "./dist/lib/numbers.js"
+        },
+        "./lib/periods": {
+            "types": "./dist/lib/periods.d.ts",
+            "import": "./dist/lib/periods.js"
         },
         "./lib/search": {
             "types": "./dist/lib/search.d.ts",
