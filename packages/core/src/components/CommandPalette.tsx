@@ -2,7 +2,7 @@ import type { LucideIcon } from 'lucide-react'
 import { useMemo, useState, type ReactNode } from 'react'
 
 import { useSearch } from '../hooks/use-search'
-import { mergeCommands } from '../lib/commands'
+import { filterCommands, mergeCommands, termScore } from '../lib/commands'
 import type { SearchGroup, SearchResult, SearchSource } from '../lib/search'
 import { SearchResultBody } from './Search'
 import { Button } from './ui/button'
@@ -33,7 +33,7 @@ export interface PaletteCommand {
     code?: string
     /** The keys that run it outside the palette, shown at the row's end. */
     keys?: readonly string[]
-    /** More words it is found by, beyond its label. */
+    /** More words it is found by, beyond its label; never drawn. */
     keywords?: readonly string[]
     /** A second line under the label, such as who made it or where it lives; it is found by these words too. */
     detail?: string
@@ -72,6 +72,15 @@ export interface PaletteSearch {
     words?: { searching: string }
 }
 
+/**
+ * How the palette matches its commands to what is typed. `fuzzy` finds a command by the letters
+ * typed in their order, best match first. `terms` wants every word typed in the command's label,
+ * keywords, hint, code, second line or group title, and lists a label starting with what is typed
+ * first, then a label holding it, then a label holding every word, then the rest; each group keeps
+ * its best first. A function scores a command itself: 0 leaves it out, higher comes first.
+ */
+export type PaletteFilter = 'fuzzy' | 'terms' | ((command: PaletteCommand, query: string, group: string) => number)
+
 /** The words the command palette says. */
 export interface CommandPaletteWords {
     placeholder: string
@@ -96,6 +105,8 @@ export interface CommandPaletteProps {
     search?: PaletteSearch
     /** What the search holds when the palette opens. */
     defaultQuery?: string
+    /** How the commands are matched to what is typed; `fuzzy` when not given. */
+    filter?: PaletteFilter
     words?: Partial<CommandPaletteWords>
 }
 
@@ -106,17 +117,29 @@ export interface CommandPaletteProps {
  * on a tile at its start and its hint or code at its end, as a record found by a search is. The
  * groups are listed by their `rank`, one group to a title. With `search` the app's own results for
  * the query follow the commands, each with its thumbnail, artwork or icon and the query's words
- * marked. On a touch screen, which has no Escape, a Close button stands at its foot.
+ * marked. On a touch screen, which has no Escape, a Close button stands at its foot. `filter`
+ * chooses how the commands are matched: by their letters (`fuzzy`), by every word typed (`terms`),
+ * or by the app's own score.
  */
-export function CommandPalette({ open, onOpenChange, groups, search, defaultQuery = '', words: given }: CommandPaletteProps) {
+export function CommandPalette({
+    open,
+    onOpenChange,
+    groups,
+    search,
+    defaultQuery = '',
+    filter = 'fuzzy',
+    words: given,
+}: CommandPaletteProps) {
     const words = { ...WORDS, ...given }
-    const listed = useMemo(() => mergeCommands(groups), [groups])
+    const merged = useMemo(() => mergeCommands(groups), [groups])
     const [query, setQuery] = useState(defaultQuery)
+    const score = filter === 'fuzzy' ? undefined : filter === 'terms' ? termScore : filter
+    const listed = useMemo(() => (score === undefined ? merged : filterCommands(merged, query, score)), [merged, query, score])
     const answer = useSearch(search?.search, query, { enabled: open, minQuery: search?.minQuery })
     const found = answer.groups.filter((group) => group.results.length > 0)
     return (
         <CommandDialog open={open} onOpenChange={onOpenChange} title={words.title} description={words.placeholder}>
-            <Command>
+            <Command shouldFilter={score === undefined}>
                 <CommandInput placeholder={words.placeholder} value={query} onValueChange={setQuery} />
                 <CommandList className="max-h-[min(24rem,60svh)] scroll-fade-b pb-1.5">
                     {found.length === 0 && answer.state !== 'loading' && <CommandEmpty>{words.empty}</CommandEmpty>}

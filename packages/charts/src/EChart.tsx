@@ -116,7 +116,8 @@ function decorate(
 }
 
 export interface EChartProps {
-    option: ChartOption
+    /** What to draw; null while it is not known yet, which draws nothing. */
+    option: ChartOption | null
     /** What the chart shows, for a screen reader. */
     label: string
     hidden?: ReadonlySet<string>
@@ -141,7 +142,10 @@ export function EChart({ option, label, hidden = EMPTY, hovered = null, animate 
     // Whether the current option is drawn; marked on the element, so a screenshot waits for it.
     const [settled, setSettled] = useState(false)
     const [short, setShort] = useState(false)
-    const resolved = useMemo(() => (look === null ? null : typeof option === 'function' ? option(look) : option), [look, option])
+    const resolved = useMemo(
+        () => (look === null || option === null ? null : typeof option === 'function' ? option(look) : option),
+        [look, option],
+    )
 
     const themed = useRef<ChartLook | null>(null)
     // The engine's count of parts loaded on demand when the chart was made.

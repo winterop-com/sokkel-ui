@@ -26,6 +26,10 @@
             "types": "./dist/Chart.d.ts",
             "import": "./dist/Chart.js"
         },
+        "./chart-legend": {
+            "types": "./dist/chart-legend.d.ts",
+            "import": "./dist/chart-legend.js"
+        },
         "./ChartFrame": {
             "types": "./dist/ChartFrame.d.ts",
             "import": "./dist/ChartFrame.js"
@@ -41,10 +45,6 @@
         "./data": {
             "types": "./dist/data.d.ts",
             "import": "./dist/data.js"
-        },
-        "./EChart": {
-            "types": "./dist/EChart.d.ts",
-            "import": "./dist/EChart.js"
         },
         "./kinds": {
             "types": "./dist/kinds/index.d.ts",
@@ -96,8 +96,7 @@
     },
     "dependencies": {
         "echarts": "^6.1.0",
-        "lucide-react": "^1.68.0",
-        "react-day-picker": "^10.0.2"
+        "lucide-react": "^1.68.0"
     },
     "peerDependencies": {
         "@winterop-com/sokkel-ui": "workspace:*",

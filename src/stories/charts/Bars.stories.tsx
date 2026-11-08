@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { Chart, chartLegend } from '@winterop-com/sokkel-ui-charts/Chart'
+import { Chart } from '@winterop-com/sokkel-ui-charts/Chart'
+import { chartLegend } from '@winterop-com/sokkel-ui-charts/chart-legend'
 import { ChartFrame } from '@winterop-com/sokkel-ui-charts/ChartFrame'
 import type { ChartSpec } from '@winterop-com/sokkel-ui-charts/kinds'
 import { BarPanel } from '@winterop-com/sokkel-ui-charts/dashboard/BarPanel'

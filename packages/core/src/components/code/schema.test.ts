@@ -4,6 +4,7 @@ import { EditorState } from '@codemirror/state'
 import { describe, expect, it } from 'vitest'
 
 import type { JsonSchema } from '../schema/read'
+import { validate } from '../schema/validate'
 import { jsonSlot, readDocument, schemaDiagnostics, schemasAt, yamlScalar, yamlSlot } from './schema'
 
 const SCHEMA: JsonSchema = {
@@ -53,7 +54,7 @@ describe('schema diagnostics', () => {
     it('places each YAML issue on the text it is about', () => {
         const doc = 'code: nightly-export\nsteps:\n  - name: fetch\n    retries: many\n  - name: compress\nowner: ada\n'
         const state = yamlState(doc)
-        const found = schemaDiagnostics(state, 'yaml', SCHEMA).map((each) => [doc.slice(each.from, each.to), each.message])
+        const found = schemaDiagnostics(state, 'yaml', SCHEMA, validate).map((each) => [doc.slice(each.from, each.to), each.message])
         expect(found).toEqual(
             expect.arrayContaining([
                 ['many', 'Expected an integer'],
@@ -65,10 +66,10 @@ describe('schema diagnostics', () => {
 
     it('marks a missing property at its object and a broken document where it breaks', () => {
         const doc = '{\n  "code": "nightly-export"\n}'
-        const [missing] = schemaDiagnostics(jsonState(doc), 'json', SCHEMA)
+        const [missing] = schemaDiagnostics(jsonState(doc), 'json', SCHEMA, validate)
         expect(missing.message).toBe('Missing the property steps')
         expect(missing.from).toBe(0)
-        const [broken] = schemaDiagnostics(jsonState('{"code": }'), 'json', SCHEMA)
+        const [broken] = schemaDiagnostics(jsonState('{"code": }'), 'json', SCHEMA, validate)
         expect(broken.message).toBe('Not valid JSON')
     })
 })

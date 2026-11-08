@@ -18,9 +18,10 @@ import {
 } from 'lucide-react'
 import { useCallback, useState } from 'react'
 
-import { CommandPalette, usePaletteShortcut, type PaletteGroup } from '@winterop-com/sokkel-ui/CommandPalette'
+import { CommandPalette, usePaletteShortcut, type PaletteFilter, type PaletteGroup } from '@winterop-com/sokkel-ui/CommandPalette'
 import { useCommands } from '@winterop-com/sokkel-ui/hooks/use-commands'
-import { placeCommands } from '@winterop-com/sokkel-ui/lib/commands'
+import type { Scheme } from '@winterop-com/sokkel-ui/lib/appearance'
+import { appearanceCommands, placeCommands } from '@winterop-com/sokkel-ui/lib/commands'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
@@ -131,7 +132,17 @@ const TWO_LINES: PaletteGroup[] = [
     },
 ]
 
-function Palette({ initial, groups = GROUPS, query }: { initial: boolean; groups?: PaletteGroup[]; query?: string }) {
+function Palette({
+    initial,
+    groups = GROUPS,
+    query,
+    filter,
+}: {
+    initial: boolean
+    groups?: PaletteGroup[]
+    query?: string
+    filter?: PaletteFilter
+}) {
     const [open, setOpen] = useState(initial)
     const show = useCallback(() => setOpen(true), [])
     usePaletteShortcut(show)
@@ -140,7 +151,7 @@ function Palette({ initial, groups = GROUPS, query }: { initial: boolean; groups
             <Button variant="outline" size="sm" onClick={show}>
                 Open the palette <Kbd>⌘K</Kbd>
             </Button>
-            <CommandPalette open={open} onOpenChange={setOpen} groups={groups} defaultQuery={query} />
+            <CommandPalette open={open} onOpenChange={setOpen} groups={groups} defaultQuery={query} filter={filter} />
         </Stack>
     )
 }
@@ -155,10 +166,45 @@ export const Short: StoryObj = { render: () => <Palette initial groups={SHORT} /
 export const Open: StoryObj = { name: 'Long', render: () => <Palette initial /> }
 /** A search narrowing the long list to what matches. */
 export const Searching: StoryObj = { render: () => <Palette initial query="new" /> }
+/**
+ * Every word typed must match (`filter="terms"`), in a label, a hint or the words a command is found
+ * by: "run" lists Runs, whose label starts with it, first, then the labels holding it, then a job
+ * found by its hint.
+ */
+export const EveryWord: StoryObj = { name: 'Every word', render: () => <Palette initial query="run" filter="terms" /> }
 /** A search that matches nothing. */
 export const NoMatch: StoryObj = { name: 'No match', render: () => <Palette initial query="invoices" /> }
 /** Records as two lines, a drawn cover or a picture at the start, a person's round; one-line commands keep their height. */
 export const TwoLines: StoryObj = { name: 'Two lines', render: () => <Palette initial groups={TWO_LINES} /> }
+
+const LOOKS = [
+    { value: 'paper', label: 'Paper' },
+    { value: 'contrast', label: 'Contrast' },
+    { value: 'steel', label: 'Steel' },
+]
+
+/**
+ * The look's commands for an app that keeps its scheme and theme itself, under its own keys:
+ * `appearanceCommands` takes each part with its callback, the choice in use hinted, and changes
+ * nothing it was not given.
+ */
+function AppLook() {
+    const [open, setOpen] = useState(true)
+    const [scheme, setScheme] = useState<Scheme>('dark')
+    const [theme, setTheme] = useState('paper')
+    const groups = appearanceCommands({ scheme, onSchemeChange: setScheme, theme, onThemeChange: setTheme }, { themes: LOOKS })
+    return (
+        <Stack align="center" className="min-h-svh bg-background p-6 text-foreground">
+            <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+                Open the palette <Kbd>⌘K</Kbd>
+            </Button>
+            <CommandPalette open={open} onOpenChange={setOpen} groups={groups} />
+        </Stack>
+    )
+}
+
+/** The scheme and theme commands of an app that keeps its look itself, dark and Paper in use. */
+export const OwnLook: StoryObj = { name: 'Own look', render: () => <AppLook /> }
 
 const PLACES: RailGroup[] = [
     {

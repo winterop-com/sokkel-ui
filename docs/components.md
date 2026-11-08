@@ -32,7 +32,7 @@ animation frame is read by `useFramePosition` (`use-frame-position`), and LRC ly
 `parseLyrics` in `lrc`, all under `@winterop-com/sokkel-ui-media/`.
 
 - [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 214 modules
-- [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 13 modules
+- [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 9 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 11 modules
 - [`@winterop-com/sokkel-ui-terminal`](#winterop-com-sokkel-ui-terminal): 2 modules
@@ -169,7 +169,7 @@ animation frame is read by `useFramePosition` (`use-frame-position`), and LRC ly
 
 | Component | Import | What it is | Story |
 | --- | --- | --- | --- |
-| **AccountMenu** | `@winterop-com/sokkel-ui/AccountMenu` | The account control in the rail's foot cell: a full-cell row with the initial, the name and a chevron, opening upward into a menu headed by who is signed in and where. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-rail--strip) |
+| **AccountMenu** | `@winterop-com/sokkel-ui/AccountMenu` | The account control in the rail's foot cell: a full-cell row with the initial, the name and a chevron, opening upward into a menu headed by who is signed in and where. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-account-menu--signed-in) |
 | **AppBar** | `@winterop-com/sokkel-ui/AppBar` | The app's bar along the top of a screen drawn without `Shell`, such as a page a dialog opens over or a screen of its own: the app's mark, the trail to the screen, the search and the actions, in the bar the shell draws, so the screen reads as the same app. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-app-bar--bar) |
 | **CommandPalette** | `@winterop-com/sokkel-ui/CommandPalette` | The command palette: one search over everything an app can do, grouped, each row with its icon, a hint in words or a code, and the keys that run it directly. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-command-palette--closed) |
 | **Dock** | `@winterop-com/sokkel-ui/Dock` | A panel along the bottom of the content, for a log, a terminal or a result: a head bar with the title, tools and a fold control, and its content scrolling under it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/apps-workspace--list-and-panel) |
@@ -177,14 +177,14 @@ animation frame is read by `useFramePosition` (`use-frame-position`), and LRC ly
 | **Rail** | `@winterop-com/sokkel-ui/Rail` | The app's left navigation: a head with the app's mark and the collapse control, the groups, and a foot cell the shell's foot strip lines up with. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-rail--strip) |
 | **ResizeHandle** | `@winterop-com/sokkel-ui/ResizeHandle` | The edge a panel is resized by: dragged with a pointer, moved 16px a press with the arrows, sent to its limits with Home and End, and put back to `reset` with a double click or Enter. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-channel-list--channels) (in ChannelList) |
 | **SchemeToggle** | `@winterop-com/sokkel-ui/SchemeToggle` | The light and dark switch wired to `useScheme`: it shows the scheme the document wears, and a press chooses the other one and keeps it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/themes-appearance--scheme) |
-| **Shell**, Page | `@winterop-com/sokkel-ui/Shell` | The app's frame: the rail on the left, a thin top bar over the content, the content as the one thing that scrolls, and an optional foot strip. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-shell--with-banner) |
+| **Shell**, Page | `@winterop-com/sokkel-ui/Shell` | The app's frame: the rail on the left, a thin top bar over the content, the content as the one thing that scrolls, and an optional foot strip. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-shell--search-and-palette) |
 | **SidePanel**, PanelSection | `@winterop-com/sokkel-ui/SidePanel` | The right-hand panel beside a page: a header bar the height of the shell's top bar, with the panel's tabs (or its title when it has one tab), then the content scrolling under it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-pane-header--plain) |
 | **StatusLine**, StatusItem | `@winterop-com/sokkel-ui/StatusLine` | What the shell's foot strip says for the screen: a short note at the left and identifiers at the right, on one row of fixed height. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-status-line--tones) |
 | **SubNav** | `@winterop-com/sokkel-ui/SubNav` | The second column beside the rail: what the app's section holds, such as a tree of folders, a section's pages or a month to pick a day from. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-sub-nav--folders) |
 | **TableOfContents** | `@winterop-com/sokkel-ui/TableOfContents` | An "on this page" list beside a long page or form: its headings, the deeper ones indented, the one the reader is in marked with a bar, each with an optional mark such as a part's state. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-docs--callout) |
 | **ThemePicker** | `@winterop-com/sokkel-ui/ThemePicker` | The appearance controls an app's settings show: the named theme, dark or light, the density, the corners, the typeface and the motion. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/themes-theme-picker--basic) |
 | **ThemeToggle** | `@winterop-com/sokkel-ui/ThemeToggle` | The light and dark switch for a top bar: the icon shows the scheme in use, and the name and tooltip say what a press does. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-activity--top-bar-menu) |
-| **TopBar** | `@winterop-com/sokkel-ui/TopBar` | What the shell's top bar holds: the trail to the current screen at the left, the search that opens the command palette, and the screen's actions at the right. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/charts-area--single) |
+| **TopBar** | `@winterop-com/sokkel-ui/TopBar` | What the shell's top bar holds: a search field and the trail to the current screen at the left, the button that opens the command palette and the screen's actions at the right. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/charts-area--single) |
 
 ### Page layout
 
@@ -225,7 +225,7 @@ animation frame is read by `useFramePosition` (`use-frame-position`), and LRC ly
 | **SearchField** | `@winterop-com/sokkel-ui/SearchField` | The one search box: a glyph, the text, a clear button once there is text, and the `/` key that focuses it from anywhere on the page. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/foundations-icons--library) |
 | **SearchResults** | `@winterop-com/sokkel-ui/SearchResults` | The page of a search's results: the query in a `SearchField` over everything that matches, grouped by kind under headings with their counts, and the facets beside them (the kind and the app's own, such as the project) as checkboxes with how many results each keeps. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-search--open) |
 | **SecretReveal** | `@winterop-com/sokkel-ui/SecretReveal` | A secret shown once, as it is created: an API token, a signing key, a recovery code. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-access--secret) |
-| **Segmented** | `@winterop-com/sokkel-ui/Segmented` | A choice from a small fixed set, drawn as one control with every option in view. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/charts-linked--rain-and-flow) |
+| **Segmented** | `@winterop-com/sokkel-ui/Segmented` | A choice from a small fixed set, drawn as one control with every option in view. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-controls--playground) |
 | **SettingRow** | `@winterop-com/sokkel-ui/SettingRow` | One setting: its title and what it does, and its control, placed by `layout`. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-slider-field--plain) |
 | **SignIn** | `@winterop-com/sokkel-ui/SignIn` | A sign-in screen in two panes the window's height. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-sign-in--password) |
 | **SliderField** | `@winterop-com/sokkel-ui/SliderField` | A number chosen on a slider, its value written out in figures so the setting reads without dragging. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-slider-field--plain) |
@@ -389,7 +389,6 @@ animation frame is read by `useFramePosition` (`use-frame-position`), and LRC ly
 | **ChartFrame** | `@winterop-com/sokkel-ui-charts/ChartFrame` | The chrome around a chart: a small title with an optional info marker and subtitle, the panel's actions, an Export menu (SVG and PNG, with the title and legend drawn into the image) and an expand button, the legend, and the chart. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/charts-frame--legend-list) |
 | **ChartGrid** | `@winterop-com/sokkel-ui-charts/ChartGrid` | Small multiples: the same chart once per label of `facet`, each drawn from that label's rows, headed by the label and laid out in `Columns`. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/charts-multiples--bars) |
 | **ChartLegend** | `@winterop-com/sokkel-ui-charts/ChartLegend` | The legend for a chart drawn beside it rather than inside it: a swatch and label per series that a click or Enter hides or shows, and hover or focus emphasizes. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/charts-frame--legend-list) |
-| **EChart** | `@winterop-com/sokkel-ui-charts/EChart` | One ECharts chart, themed from the library's tokens and typeface, drawn again when the scheme, the theme or a token override changes, and resized with its box. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/charts-chart--stacked) (in Chart) |
 
 ### Dashboard chart panels
 

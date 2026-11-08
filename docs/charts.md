@@ -15,16 +15,20 @@ imports its `styles.css` after the core's, in the same stylesheet:
 @import '@winterop-com/sokkel-ui-charts/styles.css';
 ```
 
-It holds `Chart`, `ChartFrame`, `ChartGrid`, `ChartLegend`, `EChart`, the kinds
+It holds `Chart`, `ChartFrame`, `ChartGrid`, `ChartLegend`, the kinds
 (`@winterop-com/sokkel-ui-charts/kinds`) and the dashboard panels drawn by ECharts, under
-`@winterop-com/sokkel-ui-charts/dashboard/`. The dashboard's frame and the panels with no chart
+`@winterop-com/sokkel-ui-charts/dashboard/`. `EChart`, the raw ECharts wrapper they draw through, is
+private: an app draws with `Chart` and a kind, and a chart no kind draws becomes a new kind. The dashboard's frame and the panels with no chart
 (`DashboardGrid`, `DashboardRow`, `StatPanel`, `ScoreTable`, `ThresholdLegend`, `TimeRange`,
 `VariablesBar` and the thresholds) are in the core, under `@winterop-com/sokkel-ui/dashboard/`, so a
 dashboard of tiles needs no ECharts.
 
 The base set (lines, bars, heatmaps, gauges, pies, radars and scatters, with the grid, tooltip,
 legend, zoom, color scale and marks) loads with the first chart. Every other chart type and component loads the first
-time an option draws with it, so an app that draws only bars never downloads a sankey.
+time an option draws with it, so an app that draws only bars never downloads a sankey. The kinds'
+builders load with the first chart too, beside the engine, so a page carries none of the charts'
+code at start but `Chart`'s own; `chartLegend` reads every kind at once, so a page that imports it
+carries the kinds with the page.
 
 ## Drawing a chart
 
@@ -42,9 +46,9 @@ box a size.
 
 **In a frame.** `ChartFrame` puts a title, a subtitle, an Export menu (SVG and PNG), an expand
 button and a legend around a chart. Expanding opens the chart and its legend near full screen
-through core's `WindowedPane`, as every expandable pane opens. `chartLegend` gives the frame the
-legend for the same kind and spec, and the frame's state goes to the chart, so the legend hides and
-highlights what it lists:
+through core's `WindowedPane`, as every expandable pane opens. `chartLegend`
+(`@winterop-com/sokkel-ui-charts/chart-legend`) gives the frame the legend for the same kind and
+spec, and the frame's state goes to the chart, so the legend hides and highlights what it lists:
 
 ```tsx
 const SPEC: ChartSpec = { rows: RUNS, x: 'day', y: 'runs', series: 'project' }

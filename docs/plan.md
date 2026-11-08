@@ -28,10 +28,24 @@ that uses it, and the music and video parts only by an app that plays music or v
 stands on the core as a peer dependency at the same version and imports it by its name; the core
 never imports an add-on and no add-on imports another, which `src/rules.test.ts` holds. A part that
 needs no engine belongs in the core, save the music and video app parts in the media package. The
-engines left in the core (Mermaid, KaTeX, CodeMirror) and the Geist fonts are optional peer
-dependencies, loaded lazily, and the README lists which part needs which. Mermaid draws every diagram written as text and KaTeX every
-formula, through remark-math and rehype-katex in `Markdown`, which loads it the first time a message
-holds math, its stylesheet with it.
+core's own dependencies are what every app's frame draws with (Base UI, lucide, cmdk for the
+palette, the class helpers, the Plex fonts); every library only some parts need is an optional peer
+dependency: the engines left in the core (Mermaid, KaTeX, CodeMirror), Shiki, react-markdown and its
+plugins, ajv, react-day-picker, date-fns, embla, sonner, input-otp, react-resizable-panels,
+`@shadcn/react` and the Geist fonts. The README lists which part needs which. Mermaid draws every
+diagram written as text and KaTeX every formula, through remark-math and rehype-katex in `Markdown`,
+which loads it the first time a message holds math, its stylesheet with it.
+
+A part loads a heavy library on first use wherever it can draw before it arrives, so a page's
+start carries only what draws at once: `MapView` loads maplibre (`loadMapEngine` ahead) with a
+spinner after a moment, `Chart` and `ChartGrid` load the kinds' builders beside ECharts, a basemap's
+preview loads when the switcher shows it, `useSchemaForm` and `CodeEditor` load ajv (`loadSchemaChecks`
+ahead), the form taking input at once and refusing a submit until its checks are there,
+`TimeRangePicker` loads its calendar when the trigger is pointed at or focused, the highlighter
+loads Shiki with the first code drawn plain until then, and `MediaBar` loads its fullscreen view
+after the bar is drawn. A module that only asks whether a node is a part tells it by a mark, so it
+need not import the part (`isSoundVisualizer`), and `chartLegend` has a module of its own, since it
+reads every kind.
 
 `dist/` is built, not committed, so an install from a repository URL gets no compiled code (bun also
 blocks such a dependency's install scripts). The tag workflow publishes the six packages to GitHub
@@ -79,8 +93,9 @@ workflow builds all three, so a break in a package fails a check rather than an 
 built against the packages in CI and measured gzipped (the JavaScript at start, what loads later,
 the CSS). A check fails when one grows past its budget in `examples/sizes/budget.json` or bundles an
 engine it does not use, so a forms page never carries ECharts, maplibre, React Flow, xterm.js,
-hls.js, CodeMirror, Mermaid or KaTeX. A change that grows an app on purpose raises its budget in the same
-PR. The forms page imports only the core package, the dashboard adds the charts package, the map
+hls.js, CodeMirror, Mermaid or KaTeX. A budget is the app's size plus about 3 percent. A change that
+grows an app's start is cut first, by loading what it adds on first use; one that grows it on purpose
+raises its budget in the same PR. The forms page imports only the core package, the dashboard adds the charts package, the map
 page the maps package and the music page the media package. `forms-lean` is the forms page on
 `styles-base.css` and its modules' lists of sources, so the lean path is measured too.
 
@@ -109,12 +124,30 @@ Ctrl K through `Shell`'s `palette`, an `AccountMenu` in the rail's foot, `local`
 sign-in, and a `StatusLine` as the shell's `foot`, which the account sits level with as one bar
 across the window's bottom edge.
 
+The rail's mark and name lead home (`markHref`, drawn by `renderLink`); collapsed, the mark expands
+it, and so does its edge, pulled outward (the rail following the pointer and keeping the width it is
+let go at) or with Enter, Space or the right arrow. `TopBar` holds a search field at its start
+(`search`, a `SearchField` or a `Search`, which `/` focuses), the trail after it, and the palette's
+button at its end with the keys that open it; on a phone the field gives way to that button. The
+account menu offers Light, Dark and System in itself (`scheme`, `onSchemeChange`), staying open as
+one is chosen; an app's own rows (`extra`) carry their icons, and where no one is signed in
+`onSignIn` stands in Sign out's place with an icon of its own. On a phone its rows are a finger's
+height and Keyboard shortcuts is left out. A new `contentKey` on `Shell` mounts the page afresh,
+as after the server has come back, without a wrapper of the app's.
+
 A screen adds what only it can do to the palette with `useCommands(groups, deps)` while it is
 mounted and takes it away when it unmounts; the shell holds the registry and lists those groups with
 its own by each group's `rank`, a screen's first at equal rank, groups of one title as one. An app
 that draws its own palette holds a registry with `useCommandRegistry`. A palette row with a `detail`
 or `artwork` (an image's address or a node, round for a person) is two lines tall, drawn as a search
-result is, and the palette's search results take `artwork` too.
+result is, and the palette's search results take `artwork` too. The palette matches by letters in
+order unless its `filter` (`paletteFilter` on `Shell`) is `terms`, the library's own: every word
+typed must be found in a command's label, `keywords`, hint, code, second line or group, and a label
+starting with the query comes first. `keywords` on a command, and on a rail entry through
+`placeCommands`, are matched and never drawn. `appearanceCommands` takes `useAppearance`'s settings
+and setter, or the parts of a look an app keeps itself, each with its callback
+(`onSchemeChange`, `onThemeChange`, `onDensityChange`), so the palette never overrules the app's
+own keys.
 
 Keys go through one registry, which `Shell` holds as it holds the commands. A screen binds its keys
 with `useShortcuts(bindings, deps)` while it is mounted (outside a shell, in the page's own). A
@@ -130,9 +163,14 @@ A later screen's binding comes before an earlier one's, and the shell's own (the
 Ctrl K, which a second press closes; `?`) come last. `ShortcutsDialog` lists every binding with a
 `label` under its `group`, its keys written by `keyLabels` as the device writes them, then the
 groups an app gives for keys it answers itself; `Shell`'s `shortcuts` makes the shell hold it,
-opened on `?`, bound once, and from the account menu. `SearchField`'s `/` is a binding too. The
-palette can be held from outside (`paletteOpen`, `onPaletteOpenChange`) and refused over an app's
-own full-screen view (`mayOpenPalette`); on a touch screen it has a Close button.
+opened on `?`, bound once, and from the account menu, and `shortcutsOpen` with
+`onShortcutsOpenChange` holds it from outside, as for a palette row built beside the shell.
+`useShell()` gives a screen inside the shell `openPalette` and `openShortcuts`. `SearchField`'s `/`
+is a binding too. The palette can be held from outside (`paletteOpen`, `onPaletteOpenChange`). Left
+to itself it opens only where nothing stands over the page; `mayOpenPalette(over)` is asked first
+with the layer on top (a dialog, a sheet, a menu or an overlay from `useOverlay`, or null) and
+decides in its place: no over an app's own full-screen view, yes over an app's own search, which
+the app closes as the palette opens. On a touch screen the palette has a Close button.
 
 `useOverlay(open, { onClose })` makes an app's own overlay behave as a dialog: the page outside it
 inert, focus moved in, Escape closing the one on top, and focus back where it was; `Shell`'s drawer
@@ -536,6 +574,23 @@ reading goes into a short ring stamped with its time, and the one drawn is as ol
 `delay="auto"` reads the latency the browser reports for the audio context, and `delayOffset` adds
 a hand-set correction on top. The `bar-visualizer` primitive, a
 voice input's level bars, is drawn by it.
+
+In place of its one `color`, the visualizer draws along a `ramp` from quiet to loud: a named ramp
+made of the theme's tokens (`heat` from the warning ink to the critical one, `cool`, `lagoon`,
+`ink`, `primary`; `SOUND_RAMPS` in `media/sound`), or stops an app gives, each a token by name or a
+CSS color, such as `['warning', 'primary', 'critical']` for a spectrum from amber through the
+theme's primary to red. The stops are read in the canvas's own scope, so a ramp follows the theme, the scheme and a
+`data-theme-scope` around it, and mixed in oklab into a few dozen colors once per theme, never per
+frame. `rampBy="height"` (the default) runs the ramp up the box from the baseline as one gradient,
+out from the middle line for a centered drawing and a wave, and out from a ring's circle, so a tall
+bar passes through every color; `rampBy="level"` draws each bar and spoke in the one color its
+level reaches. `mirror` draws a spectrum's bars or an area's curve standing on the floor over a
+reflection that fades toward the foot. `effect` is `none`, `glow` or `trails`, both drawn on the
+same canvas at little cost: a glow is the picture shrunk by halves and stretched back behind itself,
+so what is lit blooms in its own colors; trails wipe only part of the last picture before drawing
+the next, a share set per sixtieth of a second so a fast screen trails as long as a slow one, and a
+quiet frame is drawn clean, so what rests is the floor. Trails also follow a `frame` the app
+changes, as one passing levels it holds. Both are off while motion is reduced (`useReducedMotion`).
 
 ## Validation
 
