@@ -2096,7 +2096,11 @@ function MenuItems({ actions, kind }: { actions: DataAction[]; kind: 'dropdown' 
                 key={action.id}
                 variant={action.destructive === true ? 'destructive' : 'default'}
                 disabled={action.disabled}
-                onClick={action.onSelect}
+                // A press reaches the row through React's tree from the menu's portal; it does the item's work alone, never the row's open.
+                onClick={(event) => {
+                    event.stopPropagation()
+                    action.onSelect()
+                }}
             >
                 {action.icon}
                 {action.label}
