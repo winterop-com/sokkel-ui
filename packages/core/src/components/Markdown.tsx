@@ -7,6 +7,7 @@ import remarkGfm from 'remark-gfm'
 
 import { cn } from '../lib/cn'
 import { hasMath, markdownSchema, normalizeMath } from '../lib/math'
+import { TABLE_HEAD_TEXT } from '../lib/table'
 import { Code } from './Code'
 import type { CodeBlockWords } from './ui/code-block'
 import { MermaidDiagram, type MermaidDiagramWords } from './MermaidDiagram'
@@ -175,18 +176,34 @@ function useMathEngine(needed: boolean): MathEngine | undefined {
     return loaded
 }
 
+/**
+ * Heading levels by where the text is read: a message keeps them within a reply's measure (the
+ * largest is a detail title), a document runs from a page title down.
+ */
+const HEADINGS = {
+    message: cn(
+        '[&_h1]:mt-5 [&_h1]:mb-2 [&_h1]:text-detail-title',
+        '[&_h2]:mt-4 [&_h2]:mb-2 [&_h2]:text-section-title [&_h2]:font-semibold',
+        '[&_h3]:mt-3 [&_h3]:mb-1.5 [&_h3]:text-section-title',
+        '[&_h4]:mt-3 [&_h4]:mb-1 [&_h4]:text-head',
+    ),
+    document: cn(
+        '[&_h1]:mt-6 [&_h1]:mb-3 [&_h1]:text-page-title',
+        '[&_h2]:mt-5 [&_h2]:mb-2 [&_h2]:text-detail-title',
+        '[&_h3]:mt-4 [&_h3]:mb-1.5 [&_h3]:text-section-title',
+        '[&_h4]:mt-3 [&_h4]:mb-1 [&_h4]:text-head',
+    ),
+} as const
+
 const PROSE = cn(
     'min-w-0 text-sm leading-relaxed break-words text-foreground',
     '[&>*:first-child]:mt-0 [&>*:last-child]:mb-0',
     '[&_li]:my-0.5 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-2 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5',
-    '[&_h1]:mt-4 [&_h1]:mb-2 [&_h1]:text-title [&_h1]:font-semibold',
-    '[&_h2]:mt-4 [&_h2]:mb-2 [&_h2]:text-base [&_h2]:font-semibold',
-    '[&_h3]:mt-3 [&_h3]:mb-1.5 [&_h3]:text-sm [&_h3]:font-semibold',
     '[&_a]:text-primary-ink [&_a]:underline [&_a]:underline-offset-2',
     '[&_blockquote]:my-2 [&_blockquote]:border-l-2 [&_blockquote]:border-border-strong [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground',
     '[&_hr]:my-4 [&_hr]:border-border',
     '[&_table]:my-2 [&_table]:block [&_table]:border-collapse [&_table]:overflow-x-auto',
-    '[&_th]:border [&_th]:border-border [&_th]:bg-muted [&_th]:px-2.5 [&_th]:py-1 [&_th]:text-left [&_th]:font-medium',
+    '[&_th]:border [&_th]:border-border [&_th]:bg-muted [&_th]:px-2.5 [&_th]:py-1 [&_th]:text-left',
     '[&_td]:border [&_td]:border-border [&_td]:px-2.5 [&_td]:py-1',
     '[&_:not(pre)>code]:font-mono',
     '[&_.mermaid-block]:my-3 [&_[data-slot=code-block]]:my-3',
@@ -243,6 +260,7 @@ export const Markdown = memo(function Markdown({
     inlineCode = 'chip',
     caret = false,
     math = true,
+    scale = 'message',
     className,
     words: given,
 }: {
@@ -257,6 +275,8 @@ export const Markdown = memo(function Markdown({
     caret?: boolean
     /** Draws LaTeX math with KaTeX, loaded the first time a message holds math. On by default. */
     math?: boolean
+    /** Heading sizes: within a message (the default), or a document's from a page title down. */
+    scale?: 'message' | 'document'
     className?: string
     words?: Partial<MarkdownWords>
 }) {
@@ -287,6 +307,11 @@ export const Markdown = memo(function Markdown({
                     </div>
                 )
             },
+            th: ({ children, node: _node, className, ...props }) => (
+                <th {...props} className={cn(TABLE_HEAD_TEXT, className)}>
+                    {children}
+                </th>
+            ),
             a: ({ children, node: _node, ...props }) => (
                 <a {...props} target="_blank" rel="noreferrer noopener">
                     {children}
@@ -324,7 +349,7 @@ export const Markdown = memo(function Markdown({
     return (
         <div
             data-settling={needsMath && katex === undefined ? '' : undefined}
-            className={cn(PROSE, INLINE_CODE[inlineCode], caret && streaming && CARET, className)}
+            className={cn(PROSE, HEADINGS[scale], INLINE_CODE[inlineCode], caret && streaming && CARET, className)}
         >
             <ReactMarkdown remarkPlugins={remark} rehypePlugins={rehype} components={components}>
                 {source}

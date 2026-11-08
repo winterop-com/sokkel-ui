@@ -186,7 +186,7 @@ const memberColumns: DataColumn<Member>[] = [
         width: 'minmax(10rem,1.2fr)',
         cell: (member) => (
             <Row as="span" className="min-w-0">
-                <PersonAvatar name={member.username || member.email} image={pictureOf(member.username)} />
+                <PersonAvatar name={member.username || member.email} image={pictureOf(member.username || member.email)} />
                 <span className="truncate">{member.name}</span>
             </Row>
         ),
@@ -235,7 +235,7 @@ const inviteColumns: DataColumn<Invite>[] = [
         width: 'minmax(12rem,1.4fr)',
         cell: (invite) => (
             <Row as="span" className="min-w-0">
-                <PersonAvatar name={invite.email} />
+                <PersonAvatar name={invite.email} image={pictureOf(invite.email)} />
                 <span className="truncate">{invite.email}</span>
             </Row>
         ),

@@ -31,7 +31,7 @@ const WORDS: InspectorWords = {
  *
  * Its left edge drags to resize it, and a double click on the edge puts it back. Left to itself it
  * holds its own width, starting at `defaultSize`; `size` with `onSizeChange` holds it from outside,
- * and `resizable={false}` keeps it fixed.
+ * and `resizable={false}` keeps it fixed. A long title wraps; `singleLine` keeps it to one line.
  */
 export function Inspector({
     title,
@@ -46,6 +46,7 @@ export function Inspector({
     minSize = 320,
     maxSize = 480,
     defaultSize = 360,
+    singleLine = false,
     className,
     words: given,
     children,
@@ -69,6 +70,8 @@ export function Inspector({
     maxSize?: number
     /** The width the panel starts at and a double click on the edge returns to. */
     defaultSize?: number
+    /** Keeps the title to one line, cut short with an ellipsis, rather than wrapping. */
+    singleLine?: boolean
     className?: string
     words?: Partial<InspectorWords>
     children: ReactNode
@@ -100,7 +103,12 @@ export function Inspector({
                 <header className="flex flex-col gap-3 border-b border-border p-(--density-inspector-pad)">
                     <div className="flex items-start gap-2">
                         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                            <h2 className="truncate text-base leading-6 font-semibold">{title}</h2>
+                            <h2
+                                title={singleLine && typeof title === 'string' ? title : undefined}
+                                className={cn('text-detail-title', singleLine ? 'truncate' : 'text-pretty break-words')}
+                            >
+                                {title}
+                            </h2>
                             {code !== undefined && (
                                 <div className="flex items-center gap-1">
                                     <span className="truncate font-mono text-xs text-muted-foreground">{code}</span>

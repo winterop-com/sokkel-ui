@@ -1,4 +1,3 @@
-import { Section } from '@winterop-com/sokkel-ui/Section'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import { Toggle } from '@winterop-com/sokkel-ui/primitives/toggle'
@@ -8,9 +7,13 @@ import { useRef, useState } from 'react'
 
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { CodeEditor } from '@winterop-com/sokkel-ui/CodeEditor'
+import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
 import { DiffView } from '@winterop-com/sokkel-ui/DiffView'
+import { EditPreview } from '@winterop-com/sokkel-ui/EditPreview'
 import { InlineField } from '@winterop-com/sokkel-ui/InlineField'
 import { Markdown, markdownHeadings } from '@winterop-com/sokkel-ui/Markdown'
+import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
+import { PersonAvatar } from '@winterop-com/sokkel-ui/PersonAvatar'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { Shell } from '@winterop-com/sokkel-ui/Shell'
@@ -20,7 +23,6 @@ import { TableOfContents, useActiveHeading } from '@winterop-com/sokkel-ui/Table
 import { ThemeToggle } from '@winterop-com/sokkel-ui/ThemeToggle'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
 import { Tree, type TreeNode } from '@winterop-com/sokkel-ui/Tree'
-import { PersonAvatar } from '@winterop-com/sokkel-ui/PersonAvatar'
 import { Badge } from '@winterop-com/sokkel-ui/primitives/badge'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { NativeSelect, NativeSelectOption } from '@winterop-com/sokkel-ui/primitives/native-select'
@@ -28,7 +30,7 @@ import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
-import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
 
 /**
@@ -245,7 +247,7 @@ function Reading({ content }: { content: string }) {
     return (
         <Row gap="3xl" align="stretch">
             <article ref={article} className="max-w-3xl min-w-0 flex-1">
-                <Markdown content={content} anchors />
+                <Markdown content={content} anchors scale="document" />
             </article>
             <TableOfContents entries={headings} active={active} className="sticky top-0 w-52 shrink-0 self-start max-xl:hidden" />
         </Row>
@@ -254,47 +256,47 @@ function Reading({ content }: { content: string }) {
 
 function Editing({ value, onChange }: { value: string; onChange: (value: string) => void }) {
     return (
-        <Columns gap="lg" className="min-h-0 flex-1">
-            <Section title="Markdown" flush fill className="min-h-[24rem] lg:min-h-0">
-                <CodeEditor value={value} onChange={onChange} wrap label="The page as markdown" />
-            </Section>
-            <Section title="Preview" fill className="min-h-[24rem] lg:min-h-0">
-                <Markdown content={value} />
-            </Section>
-        </Columns>
+        <EditPreview
+            edit={<CodeEditor value={value} onChange={onChange} wrap label="The page as markdown" />}
+            preview={<Markdown content={value} scale="document" />}
+            words={{ edit: 'Markdown' }}
+            className="flex-1"
+        />
     )
 }
 
+const VERSION_COLUMNS: DataColumn<Version>[] = [
+    {
+        id: 'version',
+        header: 'Version',
+        width: '1fr',
+        cell: (version) => (
+            <Row gap="md" align="start">
+                <PersonAvatar name={version.by} image={pictureOf(version.by)} />
+                <Stack gap="3xs" className="flex-1">
+                    <Row align="baseline">
+                        <span className="truncate font-medium">{version.note}</span>
+                        {version.number === CURRENT.number && <Badge variant="secondary">Current</Badge>}
+                    </Row>
+                    <MetaLine truncate items={[`Version ${String(version.number)}`, version.by, version.at]} />
+                </Stack>
+            </Row>
+        ),
+    },
+]
+
 function Versions({ chosen, onChoose }: { chosen: number; onChoose: (number: number) => void }) {
     return (
-        <Stack as="ol" gap="none" className="overflow-hidden rounded-surface border border-border-strong bg-card">
-            {VERSIONS.map((version) => (
-                <li key={version.number} className="border-b border-border last:border-b-0">
-                    <button
-                        type="button"
-                        aria-current={version.number === chosen || undefined}
-                        onClick={() => onChoose(version.number)}
-                        className={cn(
-                            'w-full px-3 py-2.5 text-left outline-none hover:bg-hover focus-visible:bg-hover',
-                            version.number === chosen && 'bg-secondary',
-                        )}
-                    >
-                        <Row as="span" gap="md" align="start">
-                            <PersonAvatar name={version.by} image={pictureOf(version.by)} />
-                            <Stack as="span" gap="3xs" className="flex-1">
-                                <Row as="span" align="baseline">
-                                    <span className="truncate text-sm font-medium">{version.note}</span>
-                                    {version.number === CURRENT.number && <Badge variant="secondary">Current</Badge>}
-                                </Row>
-                                <span className="truncate text-xs text-muted-foreground">
-                                    Version {version.number}, {version.by}, {version.at}
-                                </span>
-                            </Stack>
-                        </Row>
-                    </button>
-                </li>
-            ))}
-        </Stack>
+        <DataTable
+            variant="list"
+            columns={VERSION_COLUMNS}
+            rows={VERSIONS}
+            rowKey={(version) => String(version.number)}
+            rowHeight="auto"
+            onOpen={(version) => onChoose(version.number)}
+            opened={(version) => version.number === chosen}
+            resizable={false}
+        />
     )
 }
 

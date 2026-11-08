@@ -1,7 +1,9 @@
 import { MoreHorizontal, Play, Volume2 } from 'lucide-react'
 import type { ReactNode } from 'react'
 
+import { useClamped } from '../../hooks/use-clamped'
 import { cn } from '../../lib/cn'
+import { TITLE_LINES, type TitleLines } from '../../lib/title-lines'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '../ui/dropdown-menu'
 
 export interface MediaCardWords {
@@ -22,9 +24,11 @@ const WORDS: MediaCardWords = {
  * One album, film or episode in a grid: the cover first, then its title and a line under it. The
  * whole card opens it; a play button rises over the cover on hover and on focus. A square cover is
  * an album, a wide one a video, which can carry its length on the frame and how much of it was
- * watched along the foot of the frame, and gets two lines for its title. The full title shows on
+ * watched along the foot of the frame, and gets up to two lines for its title. The words take the
+ * height they need, so a short title leaves no gap under a card alone in its row; cards sharing a
+ * grid row still line up, the row as tall as its tallest card. The full title shows on
  * hover over the card. `layout="row"` sets the cover beside the words, as a list of
- * what plays next does, with the title on up to two lines.
+ * what plays next does, with the title on up to two lines. `titleLines` sets another limit.
  */
 export function MediaCard({
     title,
@@ -39,6 +43,7 @@ export function MediaCard({
     badge,
     progress,
     menu,
+    titleLines,
     className,
     words = WORDS,
 }: {
@@ -62,11 +67,15 @@ export function MediaCard({
     progress?: number
     /** Items for the card's menu. */
     menu?: ReactNode
+    /** How many lines the title may take: two for a wide cover or a row, one otherwise. */
+    titleLines?: TitleLines
     className?: string
     words?: MediaCardWords
 }) {
     const Cover = href !== undefined ? 'a' : 'button'
     const interactive = href !== undefined || onSelect !== undefined
+    const lines = titleLines ?? (layout === 'row' || shape === 'wide' ? 2 : 1)
+    const [titleRef, clamped] = useClamped<HTMLHeadingElement>()
     const watched = progress === undefined ? undefined : Math.round(Math.min(1, Math.max(0, progress)) * 100)
     return (
         <article
@@ -135,14 +144,11 @@ export function MediaCard({
                 )}
             </div>
             <div className={cn('pointer-events-none flex min-w-0 items-start gap-1', layout === 'row' && 'flex-1')}>
-                <div className={cn('flex min-w-0 flex-1 flex-col', layout === 'stack' && (shape === 'wide' ? 'h-15' : 'h-[2.75rem]'))}>
+                <div className="flex min-w-0 flex-1 flex-col">
                     <h3
-                        className={cn(
-                            'text-sm leading-5 font-medium',
-                            layout === 'row' || shape === 'wide' ? 'line-clamp-2' : 'truncate',
-                            playing && 'text-primary-ink',
-                        )}
-                        title={title}
+                        ref={titleRef}
+                        className={cn('text-sm leading-5 font-medium', TITLE_LINES[lines], playing && 'text-primary-ink')}
+                        title={clamped ? title : undefined}
                     >
                         {title}
                     </h3>

@@ -8,9 +8,9 @@ const GROUND = {
 } as const
 
 const TITLE = {
-    panel: 'truncate text-[length:var(--table-head-size)] font-[number:var(--table-head-weight)]',
-    plain: 'truncate text-sm font-medium',
-    large: 'text-title font-semibold text-pretty',
+    panel: 'truncate text-head',
+    plain: 'truncate text-section-title',
+    large: 'text-detail-title text-pretty break-words',
 } as const
 
 /**

@@ -402,22 +402,24 @@ export function ChatMessage({
 }
 
 /**
- * The date between a day's messages and the previous day's: a pill on a rule. In a `ChatDay` the
- * pill is sticky, so the day in view stays named at the top of the list and leaves with its last
- * message. A `sticky` divider outside one stays stuck to the end of the list, under the later ones.
+ * The date between a day's messages and the previous day's: a pill on a rule, on an opaque strip
+ * across the list's width. In a `ChatDay` the strip is sticky, so the day in view stays named at
+ * the top of the list, with no message showing behind it, and leaves with its last message. A `sticky` divider outside one stays stuck to the end of the list, under the later ones.
  */
 export function ChatDayDivider({ children, sticky = false }: { children: ReactNode; sticky?: boolean }) {
     return (
-        <>
-            <div aria-hidden className="relative mt-2 h-0">
-                <span className="absolute inset-x-(--density-chat-inset) top-4 h-px bg-border" />
-            </div>
-            <div role="separator" className={cn('pointer-events-none z-10 flex h-8 items-center justify-center', sticky && 'sticky top-0')}>
-                <span className="flex h-6 items-center rounded-control border border-border bg-background px-3 text-xs font-semibold whitespace-nowrap shadow-surface">
-                    {children}
-                </span>
-            </div>
-        </>
+        <div
+            role="separator"
+            className={cn(
+                'pointer-events-none relative z-10 mt-1 flex h-10 items-center justify-center bg-background',
+                sticky && 'sticky top-0',
+            )}
+        >
+            <span aria-hidden className="absolute inset-x-(--density-chat-inset) top-1/2 h-px bg-border" />
+            <span className="relative flex h-6 items-center rounded-control border border-border bg-background px-3 text-xs font-semibold whitespace-nowrap shadow-surface">
+                {children}
+            </span>
+        </div>
     )
 }
 

@@ -7,6 +7,8 @@ export interface Description {
     term: ReactNode
     value: ReactNode
     code?: boolean
+    /** A number, time or duration, its figures set at one width so values line up down the list. */
+    numeric?: boolean
     /** Spans the full width in a two-column list. */
     wide?: boolean
 }
@@ -47,7 +49,14 @@ export function DescriptionList({
                         )}
                     >
                         <dt className="text-xs leading-5 text-muted-foreground">{item.term}</dt>
-                        <dd className={cn('min-w-0 break-words', item.code === true && !empty && 'font-mono', empty && 'text-faint')}>
+                        <dd
+                            className={cn(
+                                'min-w-0 break-words',
+                                item.code === true && !empty && 'font-mono',
+                                item.numeric === true && 'tabular-nums',
+                                empty && 'text-faint',
+                            )}
+                        >
                             {empty ? '-' : item.value}
                         </dd>
                     </div>

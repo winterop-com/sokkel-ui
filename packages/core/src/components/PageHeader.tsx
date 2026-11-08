@@ -16,8 +16,9 @@ const WORDS: PageHeaderWords = { back: 'Back', trail: 'Where you are' }
 
 /**
  * A page's title, its code under it in the code face, and its actions at the right with the
- * primary one last. On a narrow screen the actions move under the title rather than squeezing
- * beside it.
+ * primary one last. The actions stay on the title's row while the header has room for both, so one
+ * compact action keeps its place beside a short title on a phone; a group too wide for that wraps
+ * under the title rather than squeezing it.
  *
  * The title is the thing's name where it has one and its code otherwise; a code shown as the
  * title is not repeated under it. `description` is a sentence under the title saying what the
@@ -26,6 +27,8 @@ const WORDS: PageHeaderWords = { back: 'Back', trail: 'Where you are' }
  * A page reached from another can say where it sits: `trail` draws the places above it small over
  * the title, nearest last, each a link back up, and `onBack` draws a back button level with the
  * title, the rest of the header lined up after it.
+ *
+ * A long title wraps; `singleLine` keeps it to one line, cut short with the whole of it on hover.
  */
 export function PageHeader({
     title,
@@ -36,6 +39,7 @@ export function PageHeader({
     actions,
     trail,
     onBack,
+    singleLine = false,
     renderLink = (crumb, className) => (
         <a href={crumb.href} className={className}>
             {crumb.label}
@@ -58,6 +62,8 @@ export function PageHeader({
     trail?: readonly Crumb[]
     /** Draws a back button before the title. */
     onBack?: () => void
+    /** Keeps the title to one line, cut short with an ellipsis, rather than wrapping. */
+    singleLine?: boolean
     /** Draws a step of the trail that has an `href`, for an app's own router link. */
     renderLink?: (crumb: Crumb, className: string) => ReactNode
     words?: Partial<PageHeaderWords>
@@ -70,8 +76,8 @@ export function PageHeader({
     // other line in the second column so it starts where the title starts.
     const column = back && 'col-start-2'
     return (
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div className={cn('min-w-0', back && 'grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2')}>
+        <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
+            <div className={cn('min-w-0 flex-[1_1_12rem]', back && 'grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2')}>
                 {back && (
                     <IconButton label={said.back} onClick={onBack} className={cn('col-start-1', trailed ? 'row-start-2' : 'row-start-1')}>
                         <ChevronLeft aria-hidden />
@@ -98,11 +104,12 @@ export function PageHeader({
                 )}
                 <div className={cn('flex min-w-0 items-baseline gap-2', column)}>
                     <h1
-                        className={
-                            showCode || code === undefined
-                                ? 'truncate text-page font-medium tracking-tight'
-                                : 'truncate font-mono text-page font-medium tracking-tight'
-                        }
+                        title={singleLine ? title : undefined}
+                        className={cn(
+                            'min-w-0 text-page-title',
+                            singleLine ? 'truncate' : 'text-pretty break-words',
+                            !showCode && code !== undefined && 'font-mono',
+                        )}
                     >
                         {title}
                     </h1>

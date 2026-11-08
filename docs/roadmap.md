@@ -47,7 +47,9 @@ to `plan.md` when it ships.
   move `CodeEditor` and its CodeMirror into a `sokkel-ui-editor` package if the core stays too broad.
 - **Adoption.** Apps adopt the library one pattern per PR, each pinning a published version. The
   app adds a check in the same PR that refuses its own hand-rolled version of that pattern, so it
-  cannot come back. A part an app needs to differ becomes an option here, never a local edit.
+  cannot come back. A part an app needs to differ becomes an option here, never a local edit. The
+  first app has adopted it; the next ones wait on the rounds below that carry their gaps (forms and
+  sign-in first, then the editor, then media and the frame).
 - **Tauri on Chromium (discovery).** Tauri runs on each platform's own webview: WebKit on
   macOS and Linux. Once Tauri supports an embedded Chromium runtime, add that build beside the
   system-webview shell, so the library is checked in both. As of 2026-11-08 it does, in alpha only:
@@ -68,6 +70,13 @@ to `plan.md` when it ships.
   in both composers; `FileField` (picker and drop zone with accepted types, size and count limits,
   and refused files said); an unsaved-changes guard for navigation and closing the tab; `Toolbar`
   overflow into a More menu; next, previous, zoom and pan in `ImageLightbox`. All in core.
+- **Parts the app stories still build.** A letter header (avatar, sender, address, time, the
+  attachment mark, folding over its body) for Mail; a usage line (tokens, latency, time to first
+  token) and a model's answer column for Playground, with a streaming caret as a `Markdown` option;
+  a state map onto `StatusChip`; one detail sheet for the Workspace, Files and Admin detail panes;
+  the board item's panel with its checklist; a sideways-scrolling chip row with one chosen; a
+  channel row (avatar, name, followers, Follow) and an action cluster for a watch page; checkboxes
+  with a color dot for calendar toggles.
 - **Dashboard panels on the chart kinds.** `BarPanel`, `TimeSeriesPanel` and `ComboPanel` build
   ECharts options of their own and have drifted from the kinds (stack corners, for one); make them
   thin panels over the kinds, adding what the kinds lack first.
@@ -77,13 +86,86 @@ to `plan.md` when it ships.
 - **Phone layouts, from the 2026-11-08 review** (the app stories at 390px), each fixed in its
   component by container width: `DataTable`'s toolbar (search on its own row, count and sort
   compact, filters wrapping) and its cards (a primary value over several lines, secondary facts,
-  labels optional); `FilterChip` labels on one line; a short `ConfirmDialog` sized to its content,
-  its actions in a row or full width; one `PageHeader` action beside the title; a phone page inset
-  of 12 to 16px; `SettingRow` with a trailing toggle or a control under the description; `MediaCard`
-  without a fixed two-line title in one column; `MessageComposer`'s tools overflowing into a More
-  menu; an opaque sticky day divider in chat; `EventPopover` with equal margins; `WeekGrid` showing
-  only titles in narrow lanes; gauges two to a row; `MermaidDiagram` with a smallest label size,
-  sideways scrolling and an expand button.
+  labels optional); a short `ConfirmDialog` sized to its content, its actions in a row or full
+  width; `MessageComposer`'s tools overflowing into a More menu; `EventPopover` with equal margins;
+  `WeekGrid` showing only titles in narrow lanes; gauges two to a row; `MermaidDiagram` with a
+  smallest label size, sideways scrolling and an expand button.
+
+## Gaps the apps found (2026-11-08)
+
+Mapping each app's own UI onto the library's parts found these, beyond the review's missing parts
+under Next. Each is a part or an option here, never a copy in an app. Roughly one release a round.
+
+- **Round 1, shared by several apps (core).** A `SignIn` layout (a brand pane and a form of one or
+  two fields, an optional server address); a `reason` on `Button` and `IconButton`, disabled with
+  the reason on hover; `SplitButton` (the main action and other ways); `RelativeTime` (relative,
+  the exact instant on hover, ticking); `WindowedPane`, any pane opened near full screen, which
+  `MermaidDiagram`'s expand uses; an `ApiLink` chip naming the request behind a screen;
+  `useStored` (state kept in local storage, safe when storage is refused, an app prefix);
+  `useUploads` (accept by type, in flight, cancel while uploading), feeding `AttachmentList` and
+  `FileField`; `DownloadButton` (idle, n of m, cancel, kept) on `ProgressRing`; `DataTable` row
+  groups with group heads; a `row` layout for `DescriptionList` and `TagChips` that fit the room a
+  row has left; a conversation history list with rename, pin and delete beside a chat.
+- **Round 2, the code editor and code color.** `CodeEditor` gains: a `languages` extension point
+  and a `jq` language; `completions` (label, detail, docs, kind) on CodeMirror's autocomplete; a
+  `hover(word)` for docs; ranged marks with a message (from and to columns, an underline, a gutter
+  dot, the message on hover); `onRun` on Cmd/Ctrl+Enter, or a general `keys` map; `search`,
+  `folding` and a size option, responsive on a read-only document of a megabyte or more; JSON
+  Schema 2020-12 lint and completion for YAML and JSON. `Markdown` gains `jq` among its code
+  languages, a way for an app to register more, and a `components` map (or a marker hook) for
+  parts embedded in the text. `code-*` syntax tokens theme Shiki and CodeMirror alike, so code
+  follows the theme. An `AnsiText` in core draws ANSI color output as spans in the kind inks.
+- **Round 3, layout, maps and tokens.** A split of two panes, across or down, with bounds, that
+  remembers its share by `id`; a `GeoJsonLayer` drawing fills, lines and circles by geometry type
+  in the theme's colors; tokens for headers, table zebra and head, map selection, editor, scroll
+  track, page foot and palette insets; an app-defined status map for `StatusChip` beyond run
+  states, with kind colors; radius by role (control and surface); themes named for their look:
+  `ocean`, `indigo` and `terminal`.
+- **Round 4, media.** `MediaBar`: a speed menu, a skip interval (15 seconds each way), chapter
+  wording, and a live mode without a scrubber. `VideoPlayer`: HLS through hls.js as a lazy optional
+  peer, `startAt` to resume, `onTime`, `onEnded` and `onError`, retry on a stall, and keys handled
+  outside it. `useMediaSession` (metadata, artwork, position, handlers); one sound at a time
+  beside `sound-source`; queue helpers (shuffle as an order of its own, repeat, next and previous,
+  pure and tested); several files as one timeline with a `ChapterList` keeping the current row in
+  view; LRC lyrics and a `Lyrics` overlay (timed lines follow, untimed ones read as a page);
+  `TrackList` keeping the current row in view with time left or progress per row; a seeded cover
+  placeholder stable per record; a `delay` on `SoundVisualizer` to match output latency (150 to
+  500ms on Bluetooth); `SpeakButton` (fetched on demand, one player) and dictation in `Composer`.
+- **Round 5, the frame and keys.** A shortcut registry matched by the typed character (so it works
+  on any keyboard layout), keys scoped to a screen and quiet under a dialog, read by
+  `ShortcutsDialog`; palette entries a screen adds while mounted (`useCommands`) and two-line rows
+  with artwork; `useOverlay` (inert, focus return, Escape), `useScrollMemory` and
+  `useReducedMotion`; desktop shells (a drag region on `TopBar`, fullscreen through the shell,
+  `isDesktopShell`); `useAppearance` with pluggable storage and `appearanceScript` as an external
+  module for pages that refuse inline script (browser extensions); `Shell`'s `bottom` spanning
+  under the rail; a full-page `SettingsView` beside `SettingsDialog`, and a wizard's steps laid out
+  on a page; a way for a three-pane work page to hide or narrow the rail.
+
+## 1.0
+
+Settle before 1.0:
+
+- **Exports.** An explicit `exports` list per package instead of `./*`; internals and layout
+  constants go private.
+- **Types.** A `*Props` type exported from every component.
+- **A changelog.** `CHANGELOG.md` with each release's breaking changes, from 1.0 on.
+
+Should:
+
+- **Locale.** A `locale` (provider and prop) for number formats, collation and dates, replacing the
+  fixed `en-US` in `DataTable`, `SelectionBar`, `SearchResults`, charts, maps and the calendar; words
+  for the primitives' fixed strings (Close, the spinner, pagination, the carousel).
+- **Overlaps merged.** One toast (sonner or ours), one loading part, `ThemeToggle` renamed for the
+  scheme it toggles, `Composer` and `MessageComposer` sharing attachments, sending and mentions,
+  and the roles of `Banner`, `Problem`, `PageState` and the alert written down.
+- **One naming.** One value callback, one selection callback, one dismissal (`onOpenChange`), one
+  size scale, finished in the 1.0 window.
+- **`'use client'`** on the components that use hooks.
+- **Tests** for the parts heavy in logic: `DataTable` paging, server mode, selection and keys,
+  `MediaBar`, `SchemaForm`, `Search`, the board's drag, the core hooks.
+- **CI installs the packed tarballs** into `examples/web`, not the workspace link.
+- **Stories** for parts no story shows directly (`ProgressRing`, `ChatTyping`, `PresenceDot`).
+- **Logical sides** (start and end, not left and right) and a right-to-left story, if wanted.
 
 ## Later
 

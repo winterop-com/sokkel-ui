@@ -1,4 +1,3 @@
-import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import {
     Bookmark,
@@ -9,7 +8,6 @@ import {
     ListPlus,
     ListVideo,
     MoreHorizontal,
-    Pin,
     Plus,
     Share2,
     SlidersHorizontal,
@@ -24,7 +22,9 @@ import { useState } from 'react'
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { MediaCard, MediaGrid } from '@winterop-com/sokkel-ui/media/MediaCard'
 import { formatTime } from '@winterop-com/sokkel-ui/media/time'
+import { CommentComposer, CommentThread, type ThreadComment } from '@winterop-com/sokkel-ui/CommentThread'
 import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
+import { ShowMore } from '@winterop-com/sokkel-ui/ShowMore'
 import { VideoPlayer } from '@winterop-com/sokkel-ui/media/VideoPlayer'
 import { PersonAvatar } from '@winterop-com/sokkel-ui/PersonAvatar'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
@@ -34,7 +34,6 @@ import { TopBar, type Crumb } from '@winterop-com/sokkel-ui/TopBar'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { ButtonGroup } from '@winterop-com/sokkel-ui/primitives/button-group'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
-import { Input } from '@winterop-com/sokkel-ui/primitives/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@winterop-com/sokkel-ui/primitives/select'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import type { KindColor } from '@winterop-com/sokkel-ui/lib/kind'
@@ -323,86 +322,39 @@ function HomePage() {
     )
 }
 
-/** One comment: who and when, what they said, its likes, and a reply button; replies fold under it. */
-function CommentItem({ comment, reply = false }: { comment: Comment; reply?: boolean }) {
-    const [open, setOpen] = useState(false)
-    const channel = CHANNELS[comment.by]
-    return (
-        <Row as="li" gap="md" align="stretch">
-            <PersonAvatar name={comment.by} color={channel.color} image={pictureOf(comment.by)} size={reply ? 'sm' : 'md'} />
-            <Stack gap="2xs" className="flex-1">
-                {comment.pinned === true && (
-                    <Row as="span" gap="2xs" className="text-xs text-muted-foreground">
-                        <Pin className="size-3" aria-hidden />
-                        Pinned by {WATCHING.channel}
-                    </Row>
-                )}
-                <p className="text-xs">
-                    <span className="font-medium">{comment.by}</span>
-                    {comment.by === WATCHING.channel && (
-                        <span className="ml-1.5 rounded-mini bg-muted px-1 text-muted-foreground">creator</span>
-                    )}
-                    <span className="ml-1.5 text-muted-foreground">{comment.ago}</span>
-                </p>
-                <p className="text-sm leading-relaxed">{comment.text}</p>
-                <Row gap="2xs" className="-ml-2 text-xs text-muted-foreground">
-                    <Button variant="ghost" size="xs" aria-label="Like">
-                        <ThumbsUp aria-hidden />
-                        {comment.likes}
-                    </Button>
-                    <IconButton label="Dislike" size="icon-xs">
-                        <ThumbsDown aria-hidden />
-                    </IconButton>
-                    <Button variant="ghost" size="xs">
-                        Reply
-                    </Button>
-                </Row>
-                {comment.replies !== undefined && (
-                    <>
-                        <Button
-                            variant="ghost"
-                            size="xs"
-                            className="-ml-2 self-start text-primary-ink"
-                            aria-expanded={open}
-                            onClick={() => setOpen(!open)}
-                        >
-                            {open ? 'Hide replies' : `${String(comment.replies.length)} replies`}
-                        </Button>
-                        {open && (
-                            <Stack as="ul" gap="lg" className="mt-2">
-                                {comment.replies.map((one) => (
-                                    <CommentItem key={one.id} comment={one} reply />
-                                ))}
-                            </Stack>
-                        )}
-                    </>
-                )}
-            </Stack>
-            <DropdownMenu>
-                <DropdownMenuTrigger
-                    render={<Button variant="ghost" size="icon-sm" aria-label="Comment actions" className="text-muted-foreground" />}
-                >
-                    <MoreHorizontal aria-hidden />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-40">
-                    <DropdownMenuItem>
-                        <Flag aria-hidden />
-                        Report
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
-        </Row>
-    )
-}
-
 const ORDERS = [
     { value: 'top', label: 'Top comments' },
     { value: 'new', label: 'Newest first' },
 ]
 
+/** A comment from the fixtures as the thread draws it: the channel's color and picture, the creator marked. */
+function threadComment(comment: Comment): ThreadComment {
+    return {
+        id: comment.id,
+        author: comment.by,
+        color: CHANNELS[comment.by].color,
+        image: pictureOf(comment.by),
+        time: comment.ago,
+        body: comment.text,
+        likes: comment.likes,
+        pinned: comment.pinned,
+        creator: comment.by === WATCHING.channel,
+        replies: comment.replies?.map(threadComment),
+    }
+}
+
+/** Turns a comment's like or dislike on or off, wherever in the thread it is. */
+function toggle(list: readonly ThreadComment[], id: string, field: 'liked' | 'disliked'): ThreadComment[] {
+    return list.map((one) =>
+        one.id === id ? { ...one, [field]: one[field] !== true } : { ...one, replies: one.replies && toggle(one.replies, id, field) },
+    )
+}
+
+const ME = { name: 'ada', color: CHANNELS.ada.color, image: pictureOf('ada') }
+
 function Comments() {
     const [order, setOrder] = useState('top')
-    const [draft, setDraft] = useState('')
+    const [comments, setComments] = useState(() => COMMENTS.map(threadComment))
     return (
         <Stack as="section" gap="lg">
             <Toolbar
@@ -424,38 +376,26 @@ function Comments() {
             >
                 <ToolbarTitle>1,204 comments</ToolbarTitle>
             </Toolbar>
-            <Row gap="md" align="stretch">
-                <PersonAvatar name="ada" color={CHANNELS.ada.color} image={pictureOf('ada')} size="md" />
-                <Stack gap="sm" className="flex-1">
-                    <Input
-                        value={draft}
-                        onChange={(event) => setDraft(event.target.value)}
-                        placeholder="Add a comment"
-                        aria-label="Add a comment"
-                    />
-                    {draft !== '' && (
-                        <Row align="stretch" justify="end">
-                            <Button variant="ghost" size="sm" onClick={() => setDraft('')}>
-                                Cancel
-                            </Button>
-                            <Button size="sm" onClick={() => setDraft('')}>
-                                Comment
-                            </Button>
-                        </Row>
-                    )}
-                </Stack>
-            </Row>
-            <Stack as="ul" gap="xl">
-                {COMMENTS.map((comment) => (
-                    <CommentItem key={comment.id} comment={comment} />
-                ))}
-            </Stack>
+            <CommentComposer author={ME.name} color={ME.color} image={ME.image} />
+            <CommentThread
+                comments={comments}
+                viewer={ME}
+                pinnedBy={WATCHING.channel}
+                onLike={(comment) => setComments((list) => toggle(list, comment.id, 'liked'))}
+                onDislike={(comment) => setComments((list) => toggle(list, comment.id, 'disliked'))}
+                onReply={() => undefined}
+                menu={() => (
+                    <DropdownMenuItem>
+                        <Flag aria-hidden />
+                        Report
+                    </DropdownMenuItem>
+                )}
+            />
         </Stack>
     )
 }
 
 function WatchPage() {
-    const [more, setMore] = useState(false)
     const [following, setFollowing] = useState(false)
     const channel = CHANNELS[WATCHING.channel]
     return (
@@ -515,17 +455,11 @@ function WatchPage() {
                             </DropdownMenu>
                         </Row>
                     </Row>
-                    <Stack gap="2xs" className="rounded-surface bg-muted p-3 text-sm">
-                        <MetaLine size="sm" tone="strong" items={[WATCHING.views, WATCHING.ago]} />
-                        <p className={more ? 'leading-relaxed' : 'line-clamp-2 leading-relaxed'}>
-                            Four mornings on one headland of the northern coast, cut into one: the first light on the water, the harbor
-                            waking up, and the boats leaving one by one. Filmed from the same spot each day, with nothing added but the
-                            sound of the place. The next part follows the boats back in.
-                        </p>
-                        <button type="button" className="self-start text-sm font-medium" onClick={() => setMore(!more)}>
-                            {more ? 'Show less' : 'Show more'}
-                        </button>
-                    </Stack>
+                    <ShowMore variant="well" head={<MetaLine size="sm" tone="strong" items={[WATCHING.views, WATCHING.ago]} />}>
+                        Four mornings on one headland of the northern coast, cut into one: the first light on the water, the harbor waking
+                        up, and the boats leaving one by one. Filmed from the same spot each day, with nothing added but the sound of the
+                        place. The next part follows the boats back in.
+                    </ShowMore>
                     <Comments />
                 </Stack>
                 <Stack as="aside" className="shrink-0 xl:w-96">

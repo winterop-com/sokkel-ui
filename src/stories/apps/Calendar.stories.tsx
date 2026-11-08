@@ -1,12 +1,12 @@
 import { CheckboxField } from '@winterop-com/sokkel-ui/CheckboxField'
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { addMonths, addWeeks, format, getDay, isSameDay, isSameMonth } from 'date-fns'
+import { addMonths, addWeeks, format, getDay, isSameMonth } from 'date-fns'
 import {
+    Activity,
     CalendarDays,
     ChevronLeft,
     ChevronRight,
-    Clock,
     KanbanSquare,
     LayoutDashboard,
     ListChecks,
@@ -14,17 +14,16 @@ import {
     Plus,
     Server,
     Settings,
-    Users,
 } from 'lucide-react'
 import { useState } from 'react'
 
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { DayAgenda } from '@winterop-com/sokkel-ui/calendar/DayAgenda'
+import { EventDetails, type EventFact } from '@winterop-com/sokkel-ui/calendar/EventDetails'
 import { weekOf, type CalendarEvent } from '@winterop-com/sokkel-ui/calendar/events'
 import { MiniMonth } from '@winterop-com/sokkel-ui/calendar/MiniMonth'
 import { MonthGrid } from '@winterop-com/sokkel-ui/calendar/MonthGrid'
 import { WeekGrid } from '@winterop-com/sokkel-ui/calendar/WeekGrid'
-import { PersonAvatar } from '@winterop-com/sokkel-ui/PersonAvatar'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { Shell } from '@winterop-com/sokkel-ui/Shell'
@@ -37,7 +36,7 @@ import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { useIsMobile } from '@winterop-com/sokkel-ui/hooks/use-mobile'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
-import { KIND_FILL, type KindColor } from '@winterop-com/sokkel-ui/lib/kind'
+import type { KindColor } from '@winterop-com/sokkel-ui/lib/kind'
 import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { DayStrip } from '@winterop-com/sokkel-ui/calendar/DayStrip'
@@ -226,62 +225,25 @@ const EVENTS = build()
 
 function Detail({ event }: { event: Entry }) {
     const calendar = CALENDARS.find((item) => item.id === event.calendar)
-    const when = event.allDay
-        ? isSameDay(event.start, event.end)
-            ? format(event.start, 'EEEE d MMMM')
-            : `${format(event.start, 'EEEE d')} to ${format(event.end, 'EEEE d MMMM')}`
-        : `${format(event.start, 'EEEE d MMMM')}, ${format(event.start, 'HH:mm')} - ${format(event.end, 'HH:mm')}`
+    const facts: EventFact[] = [{ id: 'calendar', icon: <CalendarDays />, content: calendar?.name }]
+    if (event.state !== undefined) facts.push({ id: 'state', icon: <Activity />, content: <StatusChip status={event.state} /> })
+    if (event.host !== undefined) {
+        facts.push({ id: 'host', icon: <Server />, content: <span className="font-mono text-xs">{event.host}</span> })
+    }
     return (
-        <>
-            <Row align="start">
-                <span className={cn('mt-1.5 size-2.5 shrink-0 rounded-sm', KIND_FILL[event.color ?? 'blue'])} aria-hidden />
-                <Stack gap="3xs">
-                    <h3 className={cn('text-title font-semibold', event.job !== undefined && 'font-mono')}>{event.title}</h3>
-                    <span className="text-sm text-muted-foreground">{when}</span>
-                </Stack>
-            </Row>
-            <Stack as="ul" gap="xs" className="text-sm">
-                <Row as="li">
-                    <CalendarDays className="size-4 shrink-0 text-faint" aria-hidden />
-                    {calendar?.name}
-                </Row>
-                {event.state !== undefined && (
-                    <Row as="li">
-                        <Clock className="size-4 shrink-0 text-faint" aria-hidden />
-                        <StatusChip status={event.state} />
-                    </Row>
-                )}
-                {event.host !== undefined && (
-                    <Row as="li">
-                        <Server className="size-4 shrink-0 text-faint" aria-hidden />
-                        <span className="font-mono text-xs">{event.host}</span>
-                    </Row>
-                )}
-                {event.people !== undefined && (
-                    <Row as="li">
-                        <Users className="size-4 shrink-0 text-faint" aria-hidden />
-                        <Row as="span" gap="2xs">
-                            {event.people.map((person) => (
-                                <PersonAvatar key={person} name={person} image={pictureOf(person)} size="xs" />
-                            ))}
-                        </Row>
-                        <span className="truncate text-muted-foreground">{event.people.join(', ')}</span>
-                    </Row>
-                )}
-            </Stack>
-            {event.notes !== undefined && <p className="text-sm leading-5 text-pretty">{event.notes}</p>}
-            <Row align="stretch" justify="end" className="border-t border-border pt-3">
-                {event.job !== undefined ? (
-                    <Button size="sm" variant="outline">
-                        Open run
-                    </Button>
-                ) : (
-                    <Button size="sm" variant="outline">
-                        Edit
-                    </Button>
-                )}
-            </Row>
-        </>
+        <EventDetails
+            event={event}
+            code={event.job !== undefined}
+            facts={facts}
+            location={event.job === undefined && event.host === undefined ? event.detail : undefined}
+            people={event.people?.map((name) => ({ name, image: pictureOf(name) }))}
+            notes={event.notes}
+            actions={
+                <Button size="sm" variant="outline">
+                    {event.job !== undefined ? 'Open run' : 'Edit'}
+                </Button>
+            }
+        />
     )
 }
 

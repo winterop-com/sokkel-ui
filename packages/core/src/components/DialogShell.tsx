@@ -115,7 +115,7 @@ export function DialogShell({
                 )}
             >
                 <DialogHeader className={confirm === undefined && dismissible ? 'pr-8' : undefined}>
-                    <DialogTitle className="text-base leading-6 font-medium">{title}</DialogTitle>
+                    <DialogTitle>{title}</DialogTitle>
                     {description !== undefined && <DialogDescription>{description}</DialogDescription>}
                 </DialogHeader>
                 {header}

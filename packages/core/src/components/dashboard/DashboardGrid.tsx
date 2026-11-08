@@ -132,7 +132,7 @@ export function DashboardPanel({
                 <Dialog open={expanded} onOpenChange={setExpanded}>
                     <DialogContent className="flex h-[calc(100svh-4rem)] max-w-[calc(100vw-4rem)] flex-col gap-3 sm:max-w-[calc(100vw-4rem)]">
                         <DialogHeader>
-                            <DialogTitle className="flex items-baseline gap-2 text-base font-medium">
+                            <DialogTitle className="flex items-baseline gap-2">
                                 {title}
                                 {subtitle !== undefined && <span className="text-xs font-normal text-muted-foreground">{subtitle}</span>}
                             </DialogTitle>

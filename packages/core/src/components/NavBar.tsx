@@ -83,7 +83,7 @@ export function NavBar({
                     </Menu.Portal>
                 </Menu.Root>
                 <span className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">{mark}</span>
-                <span className="truncate text-base font-semibold tracking-tight">{name}</span>
+                <span className="truncate text-title font-semibold tracking-tight">{name}</span>
             </div>
             <nav aria-label={words.navigation} className="hidden min-w-0 items-stretch gap-1 md:flex">
                 {links.map((link) => (
