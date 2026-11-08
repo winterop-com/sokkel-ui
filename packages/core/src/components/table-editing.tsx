@@ -85,8 +85,22 @@ export interface TableEditing {
     cellProps<T>(table: TableEditingContext<T>, entry: FlatRow<T>, column: DataColumn<T>, pinned: boolean): EditingCellProps
     /** A table cell's content: its editor, its draft while saving or refused, or the column's own. */
     content<T>(table: TableEditingContext<T>, entry: FlatRow<T>, column: DataColumn<T>): ReactNode
-    /** An editable column's line in a stacked card: its name and a field that opens on a press. */
-    line<T>(table: TableEditingContext<T>, entry: FlatRow<T>, column: DataColumn<T>, listed: boolean, indent?: CSSProperties): ReactNode
+    /**
+     * An editable column's line in a stacked card: its name (unless `label` is false) and a field
+     * that opens on a press, or the open editor in the field's place.
+     */
+    line<T>(
+        table: TableEditingContext<T>,
+        entry: FlatRow<T>,
+        column: DataColumn<T>,
+        listed: boolean,
+        indent?: CSSProperties,
+        label?: boolean,
+    ): ReactNode
+    /** An editable value as a compact stacked row draws it: its own content, opening its editor on a press. */
+    value<T>(table: TableEditingContext<T>, entry: FlatRow<T>, column: DataColumn<T>): ReactNode
+    /** Whether a cell's editor is open. */
+    isOpen<T>(table: TableEditingContext<T>, entry: FlatRow<T>, column: DataColumn<T>): boolean
     /** After the table has drawn: the focus back from a closed editor, and the active cell in view. */
     settle<T>(table: TableEditingContext<T>, box: HTMLElement | null): void
 }
@@ -387,7 +401,7 @@ export const tableEditing: TableEditing = {
 
     content: (table, entry, column) => contentOf(table, entry, column, 'cell'),
 
-    line(table, entry, column, listed, indent) {
+    line(table, entry, column, listed, indent, label = column.stackLabel !== false) {
         const edit = table.edits.get(cellId(entry.key, column.id))
         const opens = canEdit(column, entry.row)
         return (
@@ -398,9 +412,7 @@ export const tableEditing: TableEditing = {
                 className={cn('flex min-w-0 items-center gap-2 text-xs', !listed && 'h-9')}
                 style={indent}
             >
-                {column.stackLabel !== false && (
-                    <span className={cn('shrink-0 truncate text-muted-foreground', listed ? 'w-20' : 'w-24')}>{column.header}</span>
-                )}
+                {label && <span className={cn('shrink-0 truncate text-muted-foreground', listed ? 'w-20' : 'w-24')}>{column.header}</span>}
                 {isOpen(table, entry, column) ? (
                     // The open editor takes the field's place at the field's size, so the card does not move.
                     <span className="relative flex h-8 min-w-0 flex-1 text-sm" onClick={(event) => event.stopPropagation()}>
@@ -430,6 +442,28 @@ export const tableEditing: TableEditing = {
             </div>
         )
     },
+
+    value(table, entry, column) {
+        const edit = table.edits.get(cellId(entry.key, column.id))
+        if (!canEdit(column, entry.row)) return contentOf(table, entry, column, 'field')
+        return (
+            <span
+                role="button"
+                tabIndex={-1}
+                aria-invalid={edit?.error != null || undefined}
+                aria-busy={edit?.saving === true || undefined}
+                onClick={(event) => {
+                    event.stopPropagation()
+                    openEdit(table, entry, column)
+                }}
+                className="min-w-0 cursor-text truncate"
+            >
+                {contentOf(table, entry, column, 'field')}
+            </span>
+        )
+    },
+
+    isOpen,
 
     settle(table, box) {
         if (box === null) return
