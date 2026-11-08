@@ -6,12 +6,15 @@ import { useMemo, useState, type ReactNode } from 'react'
 
 import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
 import { useMediaSession } from '@winterop-com/sokkel-ui-media/use-media-session'
-import { MediaBar, type MediaBarLayout, type RepeatMode } from '@winterop-com/sokkel-ui-media/MediaBar'
+import { MediaBar, rowsHeightFor, type MediaBarLayout, type RepeatMode } from '@winterop-com/sokkel-ui-media/MediaBar'
 import { chapterIndex } from '@winterop-com/sokkel-ui-media/chapters'
 import { SoundVisualizer } from '@winterop-com/sokkel-ui/media/SoundVisualizer'
+import { formatRemaining, formatTime } from '@winterop-com/sokkel-ui/media/time'
 import { Artwork, type ArtworkCover } from '@winterop-com/sokkel-ui-media/Artwork'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { PaneHeader } from '@winterop-com/sokkel-ui/PaneHeader'
+import { StarButton } from '@winterop-com/sokkel-ui/StarButton'
+import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { FRAME } from './fixtures/sound'
 import { waveformOf } from './fixtures/waveform'
 
@@ -78,6 +81,45 @@ interface BarOptions {
     /** Whether the faint visualizer rises behind the words once the bar grows. */
     visualizer?: boolean
     fullscreen?: boolean
+    /** Whether the bar draws the app's own deck face in place of the words and the scrubber. */
+    face?: boolean
+    /** Whether the fullscreen view has a star for what plays beside its title. */
+    star?: boolean
+    /** Whether the app holds the bar's height, as it holds one it kept to restore. */
+    held?: boolean
+}
+
+/**
+ * The app's own now-playing face, a deck's readout: what plays in the code face, the two clocks
+ * and a still spectrum, each readout leaving as the room narrows.
+ */
+function DeckFace({ track, position }: { track: Track; position: number }) {
+    return (
+        <Row
+            room
+            gap="lg"
+            align="center"
+            className="h-full min-w-0 rounded-control border border-border bg-background px-3 py-1.5 font-mono"
+        >
+            <Stack gap="none" className="min-w-0 flex-1">
+                <span className="truncate text-sm text-primary-ink uppercase">{track.title}</span>
+                <span className="truncate text-xs text-muted-foreground uppercase">
+                    {track.artist} / {track.album}
+                </span>
+            </Stack>
+            <Stack gap="none" fromRoom="md" className="shrink-0">
+                <GroupLabel as="span">Elapsed</GroupLabel>
+                <span className="text-sm text-foreground tabular-nums">{formatTime(position)}</span>
+            </Stack>
+            <Stack gap="none" fromRoom="md" className="shrink-0">
+                <GroupLabel as="span">Remain</GroupLabel>
+                <span className="text-sm text-foreground tabular-nums">{formatRemaining(position, track.duration)}</span>
+            </Stack>
+            <Stack gap="none" fromRoom="lg" className="h-full w-36 shrink-0">
+                <SoundVisualizer frame={FRAME} label="What is playing" />
+            </Stack>
+        </Row>
+    )
 }
 
 /** Which track of the queue plays and how far in, held where the queue can change it too. */
@@ -94,6 +136,9 @@ function Bar({
     size,
     visualizer = false,
     fullscreen = false,
+    face = false,
+    star = false,
+    held = false,
     queueOpen = false,
     onQueue,
     playback,
@@ -105,6 +150,8 @@ function Bar({
     const [muted, setMuted] = useState(false)
     const [shuffle, setShuffle] = useState(false)
     const [repeat, setRepeat] = useState<RepeatMode>('all')
+    const [starred, setStarred] = useState(true)
+    const [height, setHeight] = useState(size ?? 64)
     const track = QUEUE[index]
     const waveform = useMemo(() => waveformOf(index + 1), [index])
     const step = (by: number) => {
@@ -140,7 +187,11 @@ function Bar({
             repeat={repeat}
             onRepeatChange={setRepeat}
             defaultSize={size}
+            size={held ? height : undefined}
+            onSizeChange={held ? setHeight : undefined}
             defaultFullscreen={fullscreen}
+            face={face ? <DeckFace track={track} position={position} /> : undefined}
+            fullscreenActions={star ? <StarButton starred={starred} onStarredChange={setStarred} /> : undefined}
             extra={
                 <TransportButton label="Queue" pressed={queueOpen} onClick={onQueue}>
                     <ListMusic aria-hidden />
@@ -299,20 +350,23 @@ function Radio() {
 }
 
 /** One layout at each height, from the one line up, each bar labeled with the height it starts at. */
-function Ladder({ layout }: { layout: MediaBarLayout }) {
+function Ladder({ layout, heights = HEIGHTS, face = false }: { layout: MediaBarLayout; heights?: readonly number[]; face?: boolean }) {
     return (
         <Stack gap="xl" className="min-h-svh bg-background py-6 text-foreground">
-            {HEIGHTS.map((height) => (
+            {heights.map((height) => (
                 <Stack key={height} as="section" gap="sm">
                     <GroupLabel as="h2" className="px-4">
                         {height} px
                     </GroupLabel>
-                    <Bar layout={layout} size={height} visualizer />
+                    <Bar layout={layout} size={height} visualizer face={face} />
                 </Stack>
             ))}
         </Stack>
     )
 }
+
+/** The height at which `rows` draws a 158 pixel cover. */
+const TALL_START = rowsHeightFor(158)
 
 const meta: Meta = { title: 'Media/Audio bar' }
 export default meta
@@ -366,6 +420,27 @@ export const Panel: StoryObj = { render: () => <Ladder layout="panel" /> }
 export const Stage: StoryObj = { render: () => <Ladder layout="stage" /> }
 
 /**
+ * `rows` starting grown, at the height that draws a 158 pixel cover (`rowsHeightFor(158)`, 182
+ * pixels): the app holds the height through `size` and `onSizeChange`, as it restores one it kept,
+ * and a drag or a double click on the top edge changes it there.
+ */
+export const TallerStart: StoryObj = {
+    name: 'Taller start',
+    render: () => <Player layout="rows" size={TALL_START} visualizer held />,
+}
+
+/**
+ * The app's own now-playing face, a deck's readout, in place of the words and the scrubber: in
+ * the one line, where it stands between the cover and the transport, and grown in `rows` at the
+ * height of a 158 pixel cover. The face says what plays and how far itself; the transport, the
+ * volume and the fullscreen view stay the bar's.
+ */
+export const CustomFace: StoryObj = {
+    name: 'Custom face',
+    render: () => <Ladder layout="rows" heights={[64, TALL_START]} face />,
+}
+
+/**
  * The fullscreen view of `rows`, as the bar's corner button opens it: the head and the waveform
  * pulled apart with the visualizer between them, its kind picked in the corner. Drawn open over
  * the window here; the button asks the browser for its fullscreen.
@@ -373,6 +448,16 @@ export const Stage: StoryObj = { render: () => <Ladder layout="stage" /> }
 export const RowsFullscreen: StoryObj = {
     name: 'Rows fullscreen',
     render: () => <Player layout="rows" size={200} visualizer fullscreen />,
+}
+
+/** The fullscreen view with `fullscreenActions`: a star for what plays, starred, at the end of its title. */
+export const FullscreenActions: StoryObj = {
+    name: 'Fullscreen actions',
+    render: () => (
+        <TooltipProvider>
+            <Player layout="rows" size={200} visualizer fullscreen star />
+        </TooltipProvider>
+    ),
 }
 
 /** The fullscreen view of `panel`: the liner large at the lower left over the visualizer, the transport along the foot. */

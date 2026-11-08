@@ -400,8 +400,9 @@ app that plays nothing does not carry them: `MediaBar` with its layouts, parts a
 `MediaFullscreen`, `TrackList`, `ChapterList`, `Lyrics`, `MediaCard`, `Artwork` and its seeded
 covers (`cover-seed`), the arithmetic of chapters, of a timeline over several files and of the
 bar's growth, the queue (`queue`, `useQueue`), LRC lyrics (`lrc`), `useMediaSession` with its
-helpers in `media-session`, and `hlsSource` in `hls-source`. It stands on the core by name, and its
-one engine, hls.js, is an optional peer it loads only when a stream plays. What a core part plays through
+helpers in `media-session`, a position read on every animation frame (`useFramePosition`), and
+`hlsSource` in `hls-source`. It stands on the core by name, and its one engine, hls.js, is an
+optional peer it loads only when a stream plays. What a core part plays through
 stays in the core, under `@winterop-com/sokkel-ui/media/*`: `AudioPlayer` and `VideoPlayer`, which
 attachments, chat messages, the composer and a spoken answer use; the controls they share
 (`MediaControls`, `MediaSlider`), the times (`time`) and one sound at a time (`one-sound`); and
@@ -465,9 +466,12 @@ and does nothing where the browser has no media session.
 A queue keeps its list and the order it plays in apart (`queue`, pure and tested): shuffle is an
 order of its own, drawn from a seed or given whole, with the item playing first, so turning it off
 carries on from that item's place in the list; repeat is off, all or one; next and previous follow
-the order and the repeat, a press of next moving on even while one item repeats and the end of that
-item playing it again; adding, removing and moving keep the current item current, and moving
-reorders the play order, as a view of what comes next draws it. `useQueue` holds a queue in state
+the order and the repeat, a press of next moving on even while one item repeats (going round from
+the last, so the listener is never held in the loop) and the end of that item playing it again;
+previous goes round from the first item only while the whole queue repeats, and otherwise, one item
+repeating or none, has nowhere to go, which `useQueue` answers by starting the first item over;
+adding, removing and moving keep the current item current, and moving reorders the play order, as
+a view of what comes next draws it. `useQueue` holds a queue in state
 and tells the player what to do: play another item, the same one again, start this one over, or
 stop.
 
@@ -482,7 +486,9 @@ following: the current row is kept in view in the box that scrolls the list, or 
 to the middle on the first draw and on a change only when it is out of view, and left where the
 reader put it while they scroll and for four seconds after (`useFollow`, with the arithmetic in
 `follow`). TrackList's `progress` shows how far the playing row has played, the time left in place
-of its length or a line along its foot.
+of its length or a line along its foot. An album over several discs gives each track its `disc`, and
+the list heads each disc where its tracks begin ("Disc 1", "Disc 2", from `words.disc`); a list on
+one disc draws no head.
 
 Lyrics are read by `parseLyrics` in `lrc`: LRC's timed lines, several stamps on one line, the
 `offset` tag and the metadata tags, word stamps dropped; plain text, or LRC stamped all at zero,
@@ -490,6 +496,20 @@ reads as untimed. `Lyrics` fills the box it is given: timed lines follow the pos
 inked in the middle and the rest faint, a press on a line seeking to it, and the same pause for a
 reader who scrolls; untimed lyrics read as a page in verses. MediaBar's `lyrics` gives the
 fullscreen view a lyrics button in its corner that shows them in the visualizer's place.
+
+The bar draws the `position` the app gives it, which a media element reports about four times a
+second on `timeupdate`. Given the playing element in `media`, or `getPosition` for a clock that is
+not one element's (a timeline over several files), the scrubber and its times read the position on
+every animation frame while it plays, so they move smoothly; only they draw again each frame, the
+rest of the bar keeps to the app's `position`, which still counts the chapters, and a paused bar
+holds the last frame read until the reported position moves. `useFramePosition` is the same clock
+for an app's own readout. `face` puts the app's own now-playing display, such as a deck's readout,
+in place of the words and the scrubber in the one line and in `rows`, beside the cover and before
+the transport, the face then saying what plays and how far; `panel`, `stage` and the fullscreen
+view keep their own. The bar starts at `defaultSize`, grown if it is tall enough (`rowsHeightFor`
+gives the height at which `rows` draws a cover of a given size, 182 pixels for 158), and `size`
+with `onSizeChange` restores a height the app kept. `fullscreenActions`, such as a star for what
+plays, end the line under its title in the fullscreen view, so they never take the title's room.
 
 MediaBar resizes from its top edge. Up to about 96 pixels every layout is the one-line bar; above
 it the bar grows by its `layout`, picked from the player growth research, continuously and with no

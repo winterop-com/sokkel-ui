@@ -20,6 +20,7 @@ import {
 import { SoundVisualizer, type SoundKind, type SoundVisualizerProps } from '@winterop-com/sokkel-ui/media/SoundVisualizer'
 import type { MediaRange } from '@winterop-com/sokkel-ui/media/time'
 import { nextRepeat, type RepeatMode } from './queue'
+import { useFramePosition } from './use-frame-position'
 
 export type { RepeatMode } from './queue'
 export type { Tier } from './bar-growth'
@@ -126,6 +127,11 @@ export interface Deck {
     onPlayingChange: (playing: boolean) => void
     /** The position drawn: the one given, or the one under a dragging pointer; within the chapter on a chapter's timeline. */
     at: number
+    /**
+     * Reads the position drawn, in the same seconds as `at`, on every animation frame while it
+     * plays, so the scrubber and its times move smoothly; none while a pointer drags.
+     */
+    clock?: () => number
     /** The length the scrubber spans: the whole item's, or the chapter's. */
     duration: number
     onSeek: (seconds: number) => void
@@ -154,6 +160,18 @@ export interface Deck {
     repeat: RepeatMode
     onRepeatChange?: (repeat: RepeatMode) => void
     extra?: ReactNode
+    /** The app's own now-playing display, in place of the words and the scrubber in the one-line bar and `rows`. */
+    face?: ReactNode
+}
+
+/**
+ * The position the scrubber and its times draw: the deck's, read from its clock on every
+ * animation frame while it plays, and kept within the length the scrubber spans.
+ */
+export function useDeckAt(deck: Deck): number {
+    const at = useFramePosition(deck.at, deck.clock, deck.playing && !deck.live)
+    if (at === deck.at) return at
+    return deck.duration > 0 ? Math.min(Math.max(0, at), deck.duration) : Math.max(0, at)
 }
 
 export interface CoverProps {
@@ -245,19 +263,35 @@ export interface ScreenWordsProps {
     deck: Deck
     phone: boolean
     center?: boolean
+    /** Controls for what plays, such as a star for it, at the end of the line under the title. */
+    actions?: ReactNode
     className?: string
 }
 
-/** What plays at the size of a screen of its own: the liner, its title in the display size, or the page's on a phone. */
-export function ScreenWords({ deck, phone, center = false, className }: ScreenWordsProps) {
+/**
+ * What plays at the size of a screen of its own: the liner, its title in the display size, or the
+ * page's on a phone. `actions` end the line under the title, so they never take the title's room.
+ */
+export function ScreenWords({ deck, phone, center = false, actions, className }: ScreenWordsProps) {
     const by = deck.artist ?? deck.subtitle
+    const line = by !== undefined && <p className={cn('truncate text-muted-foreground', phone ? 'text-sm' : 'text-page')}>{by}</p>
+    const acting = actions !== undefined && actions !== null && actions !== false
     return (
         <div className={cn('min-w-0', center && 'w-full text-center', className)}>
             <Eyebrow deck={deck} className={cn(!phone && 'text-sm')} />
             <p className={cn('truncate text-foreground', phone ? 'text-page font-semibold tracking-tight' : 'text-media-title')}>
                 {deck.title}
             </p>
-            {by !== undefined && <p className={cn('truncate text-muted-foreground', phone ? 'text-sm' : 'text-page')}>{by}</p>}
+            {acting ? (
+                <div className={cn('flex min-w-0 items-center gap-2', center && 'justify-center')}>
+                    {line}
+                    <div data-slot="media-fullscreen-actions" className="flex shrink-0 items-center gap-1">
+                        {actions}
+                    </div>
+                </div>
+            ) : (
+                line
+            )}
         </div>
     )
 }
@@ -271,10 +305,11 @@ export interface ScrubProps {
 
 /** The track's waveform as the scrubber, between the elapsed and the remaining time, `height` pixels tall; the live mark on a live stream. */
 export function Scrub({ deck, height, size, className }: ScrubProps) {
+    const at = useDeckAt(deck)
     if (deck.live) return <LiveMark label={deck.words.live} size={size} className={className} />
     return (
         <Position
-            at={deck.at}
+            at={at}
             duration={deck.duration}
             buffered={deck.buffered}
             label={deck.words.seek}
@@ -284,6 +319,26 @@ export function Scrub({ deck, height, size, className }: ScrubProps) {
             height={height}
             size={size}
             className={className}
+        />
+    )
+}
+
+export interface LinePositionProps {
+    deck: Deck
+}
+
+/** The one-line bar's position: a slider between the elapsed and the remaining time; the live mark on a live stream. */
+export function LinePosition({ deck }: LinePositionProps) {
+    const at = useDeckAt(deck)
+    if (deck.live) return <LiveMark label={deck.words.live} />
+    return (
+        <Position
+            at={at}
+            duration={deck.duration}
+            buffered={deck.buffered}
+            label={deck.words.seek}
+            onSeek={deck.onSeek}
+            onScrub={deck.onScrub}
         />
     )
 }

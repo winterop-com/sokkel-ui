@@ -78,6 +78,10 @@
             "types": "./dist/TrackList.d.ts",
             "import": "./dist/TrackList.js"
         },
+        "./use-frame-position": {
+            "types": "./dist/use-frame-position.d.ts",
+            "import": "./dist/use-frame-position.js"
+        },
         "./use-media-session": {
             "types": "./dist/use-media-session.d.ts",
             "import": "./dist/use-media-session.js"
