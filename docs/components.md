@@ -20,7 +20,7 @@ The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appeara
 Other state an app keeps across reloads goes through `useStored` (`hooks/use-stored`), and files
 being uploaded through `useUploads` (`hooks/use-uploads`), which feeds `AttachmentList`.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 209 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 211 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 13 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 9 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 11 modules
