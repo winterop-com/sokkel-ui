@@ -3,8 +3,10 @@ import {
     ArrowDownIcon,
     ArrowUpDownIcon,
     ArrowUpIcon,
+    ChevronDownIcon,
     ChevronLeftIcon,
     ChevronRightIcon,
+    ChevronUpIcon,
     ChevronsLeftIcon,
     ChevronsRightIcon,
     Columns3Icon,
@@ -34,7 +36,6 @@ import { Checkbox } from './ui/checkbox'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from './ui/context-menu'
 import {
     DropdownMenu,
-    DropdownMenuCheckboxItem,
     DropdownMenuContent,
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -45,9 +46,10 @@ import {
     DropdownMenuTrigger,
 } from './ui/dropdown-menu'
 import { NativeSelect, NativeSelectOption } from './ui/native-select'
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { Skeleton } from './ui/skeleton'
 import { Spinner } from './ui/spinner'
-import { TABLE_HEAD_ROW, TABLE_HEAD_TEXT } from '../lib/table'
+import { TABLE_HEAD_ROW, TABLE_HEAD_TEXT, columnOrder } from '../lib/table'
 
 /** One column: its name, how wide it is, how a row draws its cell, and how it sorts. */
 export interface DataColumn<T> {
@@ -136,6 +138,9 @@ export interface DataTableWords {
     loadingChildren: string
     /** A column's resize handle. */
     resize: (column: string) => string
+    /** The column menu's buttons that move a column earlier or later in the table. */
+    moveUp: (column: string) => string
+    moveDown: (column: string) => string
     empty: string
     /** A group head's box, which selects every row in the group. */
     selectGroup: string
@@ -174,6 +179,8 @@ const WORDS: DataTableWords = {
     collapse: 'Collapse',
     loadingChildren: 'Loading',
     resize: (column) => `Resize ${column}`,
+    moveUp: (column) => `Move ${column} up`,
+    moveDown: (column) => `Move ${column} down`,
     empty: 'Nothing here.',
     selectGroup: 'Select group',
     foldGroup: (folded) => (folded ? 'Show group' : 'Hide group'),
@@ -376,6 +383,26 @@ export function findInTree<T>({
     }
 }
 
+/** The columns in the order drawn, by `columnOrder`: those `order` names first, the first column staying first. */
+export function orderColumns<C extends { id: string }>(columns: readonly C[], order: readonly string[]): C[] {
+    if (order.length === 0) return [...columns]
+    const byId = new Map(columns.map((column) => [column.id, column]))
+    return columnOrder(
+        order,
+        columns.map((column) => column.id),
+    ).flatMap((id) => byId.get(id) ?? [])
+}
+
+/** The column ids in order after moving one a place earlier or later; the first column never moves, nor does another past it. */
+export function movedColumn(columns: readonly { id: string }[], id: string, by: -1 | 1): string[] {
+    const ids = columns.map((column) => column.id)
+    const at = ids.indexOf(id)
+    const to = at + by
+    if (at < 1 || to < 1 || to >= ids.length) return ids
+    ;[ids[at], ids[to]] = [ids[to], ids[at]]
+    return ids
+}
+
 /** The least width of a grid track: its own length, a `minmax` floor, or nothing for a fraction or `auto`. */
 function trackMin(width: string): string {
     const floor = /^minmax\(\s*([^,]+?)\s*,/.exec(width)?.[1] ?? width
@@ -407,6 +434,7 @@ function useHeld<V>(value: V | undefined, initial: V, onChange?: (value: V) => v
 
 const EMPTY: ReadonlySet<string> = new Set()
 const NO_WIDTHS: Readonly<Record<string, number>> = {}
+const NO_ORDER: readonly string[] = []
 const NO_CHILDREN: ReadonlyMap<string, readonly unknown[]> = new Map()
 const CHECK = '2.5rem'
 /** Rows drawn above and below the visible ones, so a quick scroll does not show blank space. */
@@ -451,6 +479,13 @@ export interface DataTableProps<T> {
     hiddenColumns?: ReadonlySet<string>
     defaultHiddenColumns?: ReadonlySet<string>
     onHiddenColumnsChange?: (hidden: ReadonlySet<string>) => void
+    /**
+     * The columns' ids in the order drawn, set from the column menu: a column not named follows in
+     * its given order, and the first column stays first.
+     */
+    columnOrder?: readonly string[]
+    defaultColumnOrder?: readonly string[]
+    onColumnOrderChange?: (order: readonly string[]) => void
     /** Pressing a row or Enter on it, such as to show it in a side panel. */
     onOpen?: (row: T) => void
     /** The row shown elsewhere, drawn as chosen. */
@@ -527,6 +562,8 @@ export interface DataTableProps<T> {
     rowHeight?: 'fixed' | 'auto'
     /** Whether the column heads' edges resize the columns. */
     resizable?: boolean
+    /** Whether the columns menu moves columns up and down; `false` leaves only showing and hiding them. */
+    reorderable?: boolean
     /** Widths in pixels by column id; a column without one keeps its own `width`. */
     columnWidths?: Readonly<Record<string, number>>
     defaultColumnWidths?: Readonly<Record<string, number>>
@@ -566,7 +603,8 @@ export interface DataTableProps<T> {
  * Each column head's right edge resizes its column, as a panel's edge does: drag it, move it with
  * the arrows, or double-click it or press Enter to put it back. A column sized as a fraction
  * becomes pixels once dragged. `resizable={false}`, or `resizable: false` on a column, turns it
- * off; phones and stacked cards have no handles. A column with a `sortValue` sorts from
+ * off; phones and stacked cards have no handles. The columns menu shows, hides and moves the
+ * columns after the first; `reorderable={false}` leaves it showing and hiding only. A column with a `sortValue` sorts from
  * its head: up, down, then as the rows came. With `selectable`, each row gets a box; Shift picks
  * a range and Ctrl or Command a single row from anywhere on the row, and once anything is
  * selected the bar above says how many and holds `bulkActions`. With `childRows`, a row with
@@ -587,8 +625,12 @@ export interface DataTableProps<T> {
  * group, and a head's box selects the whole group. Groups apply to a table drawn whole or scrolled,
  * not paged; in the grid view each group's cards sit under their head.
  *
- * Sort, selection, open branches, folded groups, hidden columns and column widths are each held by
- * the table unless the app passes the value and hears the change.
+ * The column menu in the bar hides columns and moves them earlier or later; the first column stays
+ * first, as each row's title.
+ *
+ * Sort, selection, open branches, folded groups, hidden columns, the columns' order and their
+ * widths are each held by the table unless the app passes the value and hears the change; a saved
+ * view (`SavedViews`) holds them from outside.
  *
  * The bar above the head holds `search` and the `toolbar`'s tools, then the count, the sort and the
  * view switch. On a narrow table the search takes a line of its own and the tools wrap across the
@@ -621,6 +663,9 @@ export function DataTable<T>({
     hiddenColumns: hiddenValue,
     defaultHiddenColumns = EMPTY,
     onHiddenColumnsChange,
+    columnOrder: orderValue,
+    defaultColumnOrder = NO_ORDER,
+    onColumnOrderChange,
     onOpen,
     opened,
     rowActions,
@@ -651,6 +696,7 @@ export function DataTable<T>({
     minWidth: ownMinWidth,
     rowHeight: rowSizing = 'fixed',
     resizable = true,
+    reorderable = true,
     columnWidths: widthsValue,
     defaultColumnWidths = NO_WIDTHS,
     onColumnWidthsChange,
@@ -674,6 +720,8 @@ export function DataTable<T>({
     const [expanded, setExpanded] = useHeld(expandedValue, defaultExpanded, onExpandedChange)
     const [hidden, setHidden] = useHeld(hiddenValue, defaultHiddenColumns, onHiddenColumnsChange)
     const [widths, setWidths] = useHeld(widthsValue, defaultColumnWidths, onColumnWidthsChange)
+    const [columnIds, setColumnIds] = useHeld(orderValue, defaultColumnOrder, onColumnOrderChange)
+    const ordered = useMemo(() => orderColumns(columns, columnIds), [columns, columnIds])
     const auto = rowSizing === 'auto'
     const list = variant === 'list'
     const minWidth = ownMinWidth ?? (list ? 'auto' : '48rem')
@@ -685,7 +733,7 @@ export function DataTable<T>({
     const tree = childRows !== undefined || loadChildren !== undefined
     const treeKids = tree ? kids : undefined
 
-    const shown = columns.filter((column, index) => index === 0 || !hidden.has(column.id))
+    const shown = ordered.filter((column, index) => index === 0 || !hidden.has(column.id))
     const sortColumn = sort === null ? undefined : columns.find((column) => column.id === sort.column)
     const order = useCallback(
         (level: readonly T[]) =>
@@ -1006,7 +1054,12 @@ export function DataTable<T>({
         return branchKeys(entry.row, rowKey, treeKids).some((key) => selection.has(key)) ? 'some' : 'none'
     }
 
-    const hideable = columns.filter((column, index) => index > 0 && column.hideable !== false)
+    // Every column but the first moves in the column menu; the hideable ones also hide there.
+    const movable = ordered.slice(1)
+    const hideable = movable.filter((column) => column.hideable !== false)
+    const reorder = reorderable && movable.length > 1
+    const menuColumns = reorder ? movable : hideable
+    const move = (id: string, by: -1 | 1) => setColumnIds(movedColumn(ordered, id, by))
     const sortable = manualSort && onSortChange === undefined ? [] : columns.filter((column) => column.sortValue !== undefined)
     // A list pins nothing and sets its columns apart with a gap; a table pins its first and last columns and pads its cells.
     const pinned = list ? '' : 'sticky z-[1] bg-inherit shadow-[1px_0_0_var(--border)]'
@@ -1412,31 +1465,63 @@ export function DataTable<T>({
                                     ))}
                                 </div>
                             )}
-                            {!gridView && hideable.length > 0 && (
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" aria-label={words.columns} />}>
+                            {!gridView && (hideable.length > 0 || reorder) && (
+                                <Popover>
+                                    <PopoverTrigger render={<Button variant="ghost" size="icon-sm" aria-label={words.columns} />}>
                                         <Columns3Icon />
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="w-48">
-                                        <DropdownMenuGroup>
-                                            <DropdownMenuLabel>{words.columns}</DropdownMenuLabel>
-                                            {hideable.map((column) => (
-                                                <DropdownMenuCheckboxItem
+                                    </PopoverTrigger>
+                                    <PopoverContent
+                                        align="end"
+                                        aria-label={words.columns}
+                                        className="w-64 max-w-(--available-width) gap-0 p-1"
+                                    >
+                                        <p className="px-1.5 py-1 text-xs font-medium text-muted-foreground">{words.columns}</p>
+                                        <ul className="flex flex-col">
+                                            {menuColumns.map((column, index) => (
+                                                <li
                                                     key={column.id}
-                                                    checked={!hidden.has(column.id)}
-                                                    onCheckedChange={(on) => {
-                                                        const next = new Set(hidden)
-                                                        if (on) next.delete(column.id)
-                                                        else next.add(column.id)
-                                                        setHidden(next)
-                                                    }}
+                                                    className="flex min-h-8 items-center gap-0.5 rounded-md pl-1.5 hover:bg-hover"
                                                 >
-                                                    {column.header}
-                                                </DropdownMenuCheckboxItem>
+                                                    <label className="flex min-w-0 flex-1 cursor-default items-center gap-2 py-1">
+                                                        <Checkbox
+                                                            checked={!hidden.has(column.id)}
+                                                            disabled={column.hideable === false}
+                                                            onCheckedChange={(on) => {
+                                                                const next = new Set(hidden)
+                                                                if (on) next.delete(column.id)
+                                                                else next.add(column.id)
+                                                                setHidden(next)
+                                                            }}
+                                                        />
+                                                        <span className="min-w-0 truncate">{column.header}</span>
+                                                    </label>
+                                                    {reorder && (
+                                                        <>
+                                                            <IconButton
+                                                                label={words.moveUp(column.header)}
+                                                                size="icon-xs"
+                                                                side="left"
+                                                                disabled={index === 0}
+                                                                onClick={() => move(column.id, -1)}
+                                                            >
+                                                                <ChevronUpIcon />
+                                                            </IconButton>
+                                                            <IconButton
+                                                                label={words.moveDown(column.header)}
+                                                                size="icon-xs"
+                                                                side="left"
+                                                                disabled={index === movable.length - 1}
+                                                                onClick={() => move(column.id, 1)}
+                                                            >
+                                                                <ChevronDownIcon />
+                                                            </IconButton>
+                                                        </>
+                                                    )}
+                                                </li>
                                             ))}
-                                        </DropdownMenuGroup>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                        </ul>
+                                    </PopoverContent>
+                                </Popover>
                             )}
                         </div>
                     </div>

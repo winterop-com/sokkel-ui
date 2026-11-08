@@ -19,7 +19,7 @@ export interface SignInValues {
     user: string
     password: string
     token: string
-    /** Whether to keep the username for next time, when the form offers it. */
+    /** Whether the person asked to be remembered: the app keeps the session longer, and with `rememberKey` the form fills in the username next time. */
     remember: boolean
 }
 
@@ -28,6 +28,19 @@ export interface SignInFact {
     label: ReactNode
     value: ReactNode
 }
+
+/** What asking a server address found, for the brand pane to say before anyone signs in. */
+export interface SignInProbe {
+    /** The address asked: the one typed, or the one found. */
+    server: string
+    /** `asking` until an answer comes, `answered` once the server has, `silent` when nothing answered at the address. */
+    state: 'asking' | 'answered' | 'silent'
+    /** The version the server answered with. */
+    version?: ReactNode
+}
+
+/** What may be left empty: the password alone, or the credentials altogether, for a server that needs none. */
+export type SignInOptional = 'password' | 'credentials'
 
 export interface SignInWords {
     title: string
@@ -41,6 +54,8 @@ export interface SignInWords {
     passwordHint: string
     token: string
     tokenHint: string
+    /** Beside the label of a field that may be left empty. */
+    optional: string
     show: string
     hide: string
     remember: string
@@ -48,6 +63,18 @@ export interface SignInWords {
     busy: string
     or: string
     seam: string
+    /** The server line while a server is looked for. */
+    looking: string
+    /** The server line's link once a server is found, which brings the field back. */
+    changeServer: string
+    /** The brand pane's label for the address a probe asked. */
+    probeServer: string
+    /** The brand pane's label for what the server answered. */
+    probeVersion: string
+    /** What the brand pane says while the address is asked. */
+    asking: string
+    /** What the brand pane says when nothing answered at the address. */
+    noAnswer: string
 }
 
 const WORDS: SignInWords = {
@@ -60,13 +87,20 @@ const WORDS: SignInWords = {
     passwordHint: '',
     token: 'Access token',
     tokenHint: 'Paste your token',
+    optional: 'optional',
     show: 'Show the password',
     hide: 'Hide the password',
-    remember: 'Remember my username',
+    remember: 'Remember me',
     submit: 'Sign in',
     busy: 'Signing in',
     or: 'or',
     seam: 'Brand pane width',
+    looking: 'Looking for a server',
+    changeServer: 'Connect to a different server',
+    probeServer: 'server',
+    probeVersion: 'version',
+    asking: 'asking',
+    noAnswer: 'no answer',
 }
 
 const EMPTY: SignInValues = { server: '', user: '', password: '', token: '', remember: false }
@@ -75,11 +109,20 @@ const EMPTY: SignInValues = { server: '', user: '', password: '', token: '', rem
 const BRAND_MIN = 320
 const FORM_ROOM = 480
 
-/** Whether the fields `method` asks for are all filled, so the form can be sent. */
-export function signInReady(values: SignInValues, method: 'password' | 'token', server: boolean): boolean {
+/** What the form asks for: the way in, whether a server address is typed, and what may be left empty. */
+export interface SignInAsks {
+    method: 'password' | 'token'
+    /** The server field is shown, so an address must be typed. */
+    server: boolean
+    optional?: SignInOptional
+}
+
+/** Whether the fields the form asks for are filled, so it can be sent. */
+export function signInReady(values: SignInValues, { method, server, optional }: SignInAsks): boolean {
     if (server && values.server.trim() === '') return false
+    if (optional === 'credentials') return true
     if (method === 'token') return values.token.trim() !== ''
-    return values.user.trim() !== '' && values.password !== ''
+    return values.user.trim() !== '' && (optional === 'password' || values.password !== '')
 }
 
 /** The username kept under `key` in this browser, or empty; storage that refuses answers empty. */
@@ -101,7 +144,7 @@ export function rememberUser(key: string, user: string): void {
     }
 }
 
-/** A text input with an icon at its start and, for a secret, a button at its end that shows it. */
+/** A text input with an icon at its start, when given, and, for a secret, a button at its end that shows it. */
 function IconInput({
     id,
     label,
@@ -112,6 +155,8 @@ function IconInput({
     type = 'text',
     secret = false,
     mono = false,
+    optional = false,
+    autoFocus,
     autoComplete,
     disabled,
     words,
@@ -125,24 +170,27 @@ function IconInput({
     type?: string
     secret?: boolean
     mono?: boolean
+    optional?: boolean
+    autoFocus?: boolean
     autoComplete?: string
     disabled: boolean
     words: SignInWords
 }) {
     const [shown, setShown] = useState(false)
     return (
-        <Field id={id} label={label}>
+        <Field id={id} label={label} hint={optional ? words.optional : undefined}>
             <InputGroup className="h-11">
-                <InputGroupAddon className="pl-3.5">{icon}</InputGroupAddon>
+                {icon !== null && <InputGroupAddon className="pl-3.5">{icon}</InputGroupAddon>}
                 <InputGroupInput
                     id={id}
                     type={secret && !shown ? 'password' : type}
                     value={value}
                     placeholder={placeholder}
+                    autoFocus={autoFocus}
                     autoComplete={autoComplete}
                     disabled={disabled}
                     spellCheck={mono || secret ? false : undefined}
-                    className={cn('h-full pl-2', mono && 'font-mono')}
+                    className={cn('h-full', icon === null ? 'pl-3.5' : 'pl-2', mono && 'font-mono')}
                     onChange={(event) => onChange(event.target.value)}
                 />
                 {secret && (
@@ -183,16 +231,37 @@ export interface SignInProps {
     /** A line under the title. */
     description?: ReactNode
     method?: 'password' | 'token'
-    server?: boolean
-    /** Offers a box to keep the username for next time; with `rememberKey` the form keeps it itself. */
+    /**
+     * The server's address over the credentials: `true` asks for it in a field; `looking` says a
+     * server is being looked for in the field's place and holds the submit; `found` puts a link to
+     * connect to a different server there, which brings the field back.
+     */
+    server?: boolean | 'looking' | 'found'
+    /** Called as the link to a different server is pressed, the field shown either way. */
+    onChangeServer?: () => void
+    /** What asking the server's address found, said at the top of the brand pane's facts and in the phone's bar. */
+    probe?: SignInProbe
+    /** What may be left empty, marked so beside its label: the password, or the credentials altogether. */
+    optional?: SignInOptional
+    /** Draws an icon at the start of each field: a globe, a person, a lock or a key. */
+    icons?: boolean
+    /** Offers a "Remember me" box. Its answer reaches `onSubmit` as `values.remember`, for the app to keep the session longer; with `rememberKey` the form also keeps the username. */
     remember?: boolean
-    /** The local storage key the username is kept under in this browser. */
+    /** The local storage key the username is kept under in this browser; it fills the form's own values, never `values`. */
     rememberKey?: string
     /** The app's own fields, in place of the username and password or the token. */
     children?: ReactNode
-    /** Whether the app's own fields are filled, so the form can be sent; read only with `children`. */
+    /**
+     * Whether the form may be sent besides the fields it asks for being filled, such as once a typed
+     * address has answered; with `children`, whether the app's own fields are filled.
+     */
     ready?: boolean
+    /** The values the form starts with when it holds its own. */
     defaultValues?: Partial<SignInValues>
+    /** The values, held by the app with `onValuesChange`; the form holds its own when absent. */
+    values?: SignInValues
+    /** Called with every change to the values, held by the app or by the form, such as to ask a server address as it is typed. */
+    onValuesChange?: (values: SignInValues) => void
     error?: ReactNode
     busy?: boolean
     onSubmit: (values: SignInValues) => void
@@ -213,13 +282,23 @@ export interface SignInProps {
  * version. It is dark in every scheme, in the theme's own dark tokens, unless `brandScheme` is
  * `page`. The form pane, centered, opens with an `eyebrow` in the primary ink, the title and a
  * `description`, then the fields: a username and password with the password's show button, or one
- * token field (`method`), or the app's own fields as `children`, with an optional `server` address
- * above them. `error` says why the last try was refused, over the submit; `busy` holds the form
+ * token field (`method`), or the app's own fields as `children`, each field led by an icon unless
+ * `icons` is off. `optional` lets the password, or every credential, be left empty, for a server
+ * that needs none. `error` says why the last try was refused, over the submit; `busy` holds the form
  * while a try is under way. `alternatives` are other ways in, under a rule with "or", drawn full
  * width.
  *
- * `rememberKey` keeps the username in this browser under that key and fills it in next time;
- * `remember` adds a box to choose whether to. `resizable` puts a seam between the panes to drag
+ * A `server` address stands above the credentials. Where the app finds the server itself, the
+ * field's place says it is looking (`server="looking"`), and once found (`found`) offers a link to
+ * connect to a different server instead, which brings the field back. `values` with
+ * `onValuesChange` hold the fields from outside, or `onValuesChange` alone follows them, so the app
+ * can ask an address as it is typed; `probe` says what answered there, the server's version or
+ * that nothing did, in the brand pane, and `ready` can hold the submit until it has.
+ *
+ * `remember` adds a "Remember me" box whose answer reaches `onSubmit`, for the app to keep the
+ * session longer than the browser's. `rememberKey` keeps the username in this browser under that
+ * key and fills it in next time, only when the box is ticked if there is one. The password is never
+ * kept by the form: the fields name themselves for the browser's password manager, which keeps it. `resizable` puts a seam between the panes to drag
  * the brand pane's width, from `brandWidth` (half by default), double click putting it back.
  * `reveal` lets the form's parts rise into place as the screen opens, held still when motion is
  * reduced.
@@ -246,11 +325,17 @@ export function SignIn({
     description,
     method = 'password',
     server = false,
+    onChangeServer,
+    probe,
+    optional,
+    icons = true,
     remember = false,
     rememberKey,
     children,
     ready: readyGiven,
     defaultValues,
+    values: valuesGiven,
+    onValuesChange,
     error,
     busy = false,
     onSubmit,
@@ -266,16 +351,55 @@ export function SignIn({
     const root = useRef<HTMLDivElement>(null)
     const brand = useRef<HTMLElement>(null)
     const [dragged, setDragged] = useState<number | null>(null)
-    const [values, setValues] = useState<SignInValues>(() => {
+    const [own, setOwn] = useState<SignInValues>(() => {
         const kept = rememberKey === undefined ? '' : rememberedUser(rememberKey)
         return { ...EMPTY, ...(kept === '' ? {} : { user: kept, remember: true }), ...defaultValues }
     })
-    const set = (key: 'server' | 'user' | 'password' | 'token') => (value: string) => setValues((old) => ({ ...old, [key]: value }))
+    const values = valuesGiven ?? own
+    const change = (next: Partial<SignInValues>) => {
+        const changed = { ...values, ...next }
+        if (valuesGiven === undefined) setOwn(changed)
+        onValuesChange?.(changed)
+    }
+    const set = (key: 'server' | 'user' | 'password' | 'token') => (value: string) => change({ [key]: value })
+    /** The link to a different server was pressed; a new `server` from the app starts over. */
+    const [asked, setAsked] = useState(false)
+    const [askedFor, setAskedFor] = useState(server)
+    if (askedFor !== server) {
+        setAskedFor(server)
+        setAsked(false)
+    }
+    const serverField = server === true || (server === 'found' && asked)
+    const credentialsOptional = optional === 'credentials'
     const filled =
-        children === undefined ? signInReady(values, method, server) : (readyGiven ?? true) && (!server || values.server.trim() !== '')
-    const ready = filled && !busy
+        (children === undefined
+            ? signInReady(values, { method, server: serverField, optional })
+            : !serverField || values.server.trim() !== '') &&
+        (readyGiven ?? true)
+    const ready = filled && server !== 'looking' && !busy
     const failed = error !== undefined && error !== null && error !== false
     const firstFact = facts[0]
+    const icon = (node: ReactNode) => (icons ? node : null)
+    /** What the probe heard, as the brand pane and the phone's bar say it. */
+    const heard =
+        probe === undefined ? undefined : probe.state === 'asking' ? (
+            <span className="inline-flex items-center gap-1.5">
+                <Spinner className="size-3" aria-hidden />
+                {words.asking}
+            </span>
+        ) : probe.state === 'silent' ? (
+            <span className="text-critical-ink">{words.noAnswer}</span>
+        ) : (
+            probe.version
+        )
+    const shownFacts: SignInFact[] =
+        probe === undefined
+            ? [...facts]
+            : [
+                  { label: words.probeServer, value: probe.server },
+                  ...(heard === undefined || heard === null ? [] : [{ label: words.probeVersion, value: heard }]),
+                  ...facts,
+              ]
     const dark = brandScheme === 'dark'
     const drag = desktop === undefined ? undefined : ''
     const lights = useTrafficLights(desktop)
@@ -332,8 +456,18 @@ export function SignIn({
                     >
                         {markBox('small')}
                         <span className="min-w-0 truncate text-detail-title">{name}</span>
-                        {firstFact !== undefined && (
-                            <span className="ml-auto min-w-0 truncate font-mono text-xs text-muted-foreground">{firstFact.value}</span>
+                        {/* The fact takes only the room the name leaves, so the name is cut short last. */}
+                        {probe !== undefined ? (
+                            <span className="flex min-w-0 flex-1 basis-0 items-baseline justify-end gap-2 font-mono text-xs text-muted-foreground">
+                                <span className="min-w-0 truncate">{probe.server}</span>
+                                {heard !== undefined && heard !== null && <span className="shrink-0">{heard}</span>}
+                            </span>
+                        ) : (
+                            firstFact !== undefined && (
+                                <span className="min-w-0 flex-1 basis-0 truncate text-right font-mono text-xs text-muted-foreground">
+                                    {firstFact.value}
+                                </span>
+                            )
                         )}
                     </header>,
                     'shrink-0 @3xl:hidden',
@@ -351,9 +485,9 @@ export function SignIn({
                                     {markBox('large')}
                                     <span className="min-w-0 text-brand-name wrap-break-word">{name}</span>
                                 </div>
-                                {facts.length > 0 && (
+                                {shownFacts.length > 0 && (
                                     <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-10 gap-y-1">
-                                        {facts.map((fact, index) => (
+                                        {shownFacts.map((fact, index) => (
                                             <div key={index} className="contents">
                                                 <dt className="text-help text-muted-foreground">{fact.label}</dt>
                                                 <dd className="min-w-0 truncate font-mono text-xs leading-5">{fact.value}</dd>
@@ -395,13 +529,14 @@ export function SignIn({
                             {description !== undefined && <p className="text-sm text-muted-foreground">{description}</p>}
                         </div>
                         <div className={cn('flex flex-col gap-4', rise(1).className)} style={rise(1).style}>
-                            {server && (
+                            {serverField && (
                                 <IconInput
                                     id={`${id}-server`}
                                     label={words.server}
-                                    icon={<Globe aria-hidden />}
+                                    icon={icon(<Globe aria-hidden />)}
                                     type="url"
                                     mono
+                                    autoFocus={asked}
                                     autoComplete="url"
                                     placeholder={words.serverHint}
                                     value={values.server}
@@ -410,14 +545,36 @@ export function SignIn({
                                     words={words}
                                 />
                             )}
+                            {server === 'looking' && (
+                                <p role="status" className="flex items-center gap-2 text-help text-muted-foreground">
+                                    <Spinner className="size-3.5" aria-hidden />
+                                    {words.looking}
+                                </p>
+                            )}
+                            {server === 'found' && !asked && (
+                                <p className="flex text-help">
+                                    <button
+                                        type="button"
+                                        disabled={busy}
+                                        className="rounded-mini text-primary-ink underline-offset-2 outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
+                                        onClick={() => {
+                                            setAsked(true)
+                                            onChangeServer?.()
+                                        }}
+                                    >
+                                        {words.changeServer}
+                                    </button>
+                                </p>
+                            )}
                             {children ??
                                 (method === 'token' ? (
                                     <IconInput
                                         id={`${id}-token`}
                                         label={words.token}
-                                        icon={<KeyRound aria-hidden />}
+                                        icon={icon(<KeyRound aria-hidden />)}
                                         secret
                                         mono
+                                        optional={credentialsOptional}
                                         autoComplete="current-password"
                                         placeholder={words.tokenHint}
                                         value={values.token}
@@ -430,7 +587,8 @@ export function SignIn({
                                         <IconInput
                                             id={`${id}-user`}
                                             label={words.user}
-                                            icon={<User aria-hidden />}
+                                            icon={icon(<User aria-hidden />)}
+                                            optional={credentialsOptional}
                                             autoComplete="username"
                                             placeholder={words.userHint}
                                             value={values.user}
@@ -441,8 +599,9 @@ export function SignIn({
                                         <IconInput
                                             id={`${id}-password`}
                                             label={words.password}
-                                            icon={<Lock aria-hidden />}
+                                            icon={icon(<Lock aria-hidden />)}
                                             secret
+                                            optional={optional !== undefined}
                                             autoComplete="current-password"
                                             placeholder={words.passwordHint}
                                             value={values.password}
@@ -456,7 +615,7 @@ export function SignIn({
                                 <CheckboxField
                                     label={words.remember}
                                     checked={values.remember}
-                                    onCheckedChange={(checked) => setValues((old) => ({ ...old, remember: checked }))}
+                                    onCheckedChange={(checked) => change({ remember: checked })}
                                     disabled={busy}
                                 />
                             )}

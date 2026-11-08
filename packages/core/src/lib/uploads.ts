@@ -99,6 +99,33 @@ export function refusal(
     return undefined
 }
 
+/** Files sorted into those taken and those refused, each refused one with why. */
+export interface CheckedFiles<F> {
+    taken: F[]
+    refused: { file: F; reason: RefusalReason }[]
+}
+
+/**
+ * Sorts files into those taken and those refused: by type and size first, then by count, `held`
+ * being how many are held already, so the first that fit are taken and those past the count are
+ * refused in their order.
+ */
+export function checkFiles<F extends { name: string; type: string; size: number }>(
+    files: Iterable<F>,
+    options: Pick<UploadOptions, 'accept' | 'maxSize' | 'maxFiles'>,
+    held = 0,
+): CheckedFiles<F> {
+    const taken: F[] = []
+    const refused: CheckedFiles<F>['refused'] = []
+    for (const file of files) {
+        const reason =
+            refusal(file, options) ?? (options.maxFiles !== undefined && held + taken.length >= options.maxFiles ? 'count' : undefined)
+        if (reason === undefined) taken.push(file)
+        else refused.push({ file, reason })
+    }
+    return { taken, refused }
+}
+
 export interface UploadsSnapshot<R = unknown> {
     uploads: readonly Upload<R>[]
     refused: readonly RefusedFile[]
@@ -134,25 +161,21 @@ export class UploadStore<R = unknown> {
     add = (files: Iterable<File>): RefusedFile[] => {
         const words = { ...UPLOAD_WORDS, ...this.options.words }
         const { maxSize, maxFiles } = this.options
-        const refused: RefusedFile[] = []
-        const taken: Upload<R>[] = []
-        for (const file of files) {
-            const held = this.snapshot.uploads.length + taken.length
-            const reason = refusal(file, this.options) ?? (maxFiles !== undefined && held >= maxFiles ? 'count' : undefined)
-            if (reason !== undefined) {
-                const message =
-                    reason === 'type'
-                        ? words.type(file.name)
-                        : reason === 'size'
-                          ? words.size(file.name, formatSize(maxSize ?? 0))
-                          : words.count(file.name, maxFiles ?? 0)
-                this.count += 1
-                refused.push({ id: `refused-${String(this.count)}`, file, reason, message })
-                continue
-            }
+        const checked = checkFiles(files, this.options, this.snapshot.uploads.length)
+        const refused: RefusedFile[] = checked.refused.map(({ file, reason }) => {
+            const message =
+                reason === 'type'
+                    ? words.type(file.name)
+                    : reason === 'size'
+                      ? words.size(file.name, formatSize(maxSize ?? 0))
+                      : words.count(file.name, maxFiles ?? 0)
             this.count += 1
-            taken.push({ id: `upload-${String(this.count)}`, file, state: 'uploading' })
-        }
+            return { id: `refused-${String(this.count)}`, file, reason, message }
+        })
+        const taken: Upload<R>[] = checked.taken.map((file) => {
+            this.count += 1
+            return { id: `upload-${String(this.count)}`, file, state: 'uploading' }
+        })
         this.set({ uploads: [...this.snapshot.uploads, ...taken], refused: [...this.snapshot.refused, ...refused] })
         for (const upload of taken) this.start(upload)
         return refused

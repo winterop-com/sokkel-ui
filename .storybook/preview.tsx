@@ -179,7 +179,7 @@ const preview: Preview = {
             },
         },
     },
-    initialGlobals: { theme: 'dark', look: 'default', density: 'regular', corners: 'theme', typeface: 'theme', motion: 'system' },
+    initialGlobals: { theme: 'dark', look: 'tidevann', density: 'regular', corners: 'theme', typeface: 'theme', motion: 'system' },
     decorators: [withDesktopWindow, withFrame, withLook],
 }
 

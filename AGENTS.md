@@ -23,7 +23,8 @@ and ask before acting.
     - services api, worker and scheduler;
     - places by plain geography: continents, countries, cities, regions, sites;
     - hosts on example.org.
-- Themes are named for how they look (paper, contrast, steel), never for where they came from.
+- Themes are named for how they look (paper, contrast, steel), never for where they came from,
+  except `tidevann`, the base theme, named for the examples app that wears it.
 - Before committing, search the change for app and product names and remove every hit.
 
 ## Building components

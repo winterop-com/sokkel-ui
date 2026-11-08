@@ -19,7 +19,10 @@ export interface SearchWords {
     searching: string
     /** Says that nothing matches the query. */
     empty: (query: string) => string
-    failed: string
+    /** Says the search failed, given the message the app's search threw or rejected with. */
+    failed: (reason: string) => string
+    /** Says how many characters a search needs, shown once something shorter is typed. */
+    tooShort: (minQuery: number) => string
     /** The way to the results page for the query. */
     seeAll: (query: string) => string
     clear: string
@@ -30,7 +33,8 @@ const WORDS: SearchWords = {
     results: 'Results',
     searching: 'Searching',
     empty: (query) => `Nothing matches “${query}”.`,
-    failed: 'The search did not answer.',
+    failed: () => 'The search did not answer.',
+    tooShort: (minQuery) => `Type ${String(minQuery)} characters or more to search.`,
     seeAll: (query) => `See all results for “${query}”`,
     clear: 'Clear the search',
 }
@@ -237,6 +241,7 @@ export function Search({
     const move = (index: number) => setHighlight({ groups: answer.groups, index })
 
     const shown = open && trimmed.length >= minQuery
+    const short = open && trimmed.length > 0 && !shown
 
     useEffect(() => {
         if (!shown || highlighted < 0) return
@@ -261,7 +266,7 @@ export function Search({
 
     return (
         <Popover
-            open={shown}
+            open={shown || short}
             onOpenChange={(next, details) => {
                 if (next) return
                 const target = details.event?.target
@@ -313,64 +318,73 @@ export function Search({
                 sideOffset={6}
                 initialFocus={false}
                 finalFocus={false}
+                data-slot="search-results"
                 className={cn(
                     '@container max-h-[min(30rem,var(--available-height))] min-w-(--anchor-width) gap-0 overflow-hidden p-0',
                     renderPreview === undefined ? 'w-[min(32rem,calc(100vw-2rem))]' : 'w-[min(46rem,calc(100vw-2rem))]',
                 )}
             >
-                <div className="flex min-h-0 flex-1">
-                    <div
-                        id={listId}
-                        role="listbox"
-                        aria-label={words.results}
-                        className="flex min-w-0 flex-1 scroll-fade-b flex-col gap-1 overflow-y-auto p-1.5"
-                    >
-                        {answer.groups
-                            .filter((group) => group.results.length > 0)
-                            .map((group) => (
-                                <div key={group.kind} role="group" aria-label={group.title} className="flex flex-col">
-                                    <SearchGroupHeading group={group} className="px-2 pt-1.5 pb-1" />
-                                    {group.results.map((result) => {
-                                        const index = entries.findIndex((entry) => entry.result === result)
-                                        return (
-                                            <div
-                                                key={result.id}
-                                                id={optionId(index)}
-                                                role="option"
-                                                aria-selected={index === highlighted}
-                                                className="flex cursor-default items-center rounded-md px-2 py-1.5 text-sm select-none aria-selected:bg-muted"
-                                                onMouseDown={(event) => event.preventDefault()}
-                                                onMouseMove={() => {
-                                                    if (index !== highlighted) move(index)
-                                                }}
-                                                onClick={() => choose(index)}
-                                            >
-                                                <SearchResultBody result={result} query={trimmed} />
-                                            </div>
-                                        )
-                                    })}
+                {short ? (
+                    <p role="status" className="px-3 py-2.5 text-sm text-muted-foreground">
+                        {words.tooShort(minQuery)}
+                    </p>
+                ) : (
+                    <div className="flex min-h-0 flex-1">
+                        <div
+                            id={listId}
+                            role="listbox"
+                            aria-label={words.results}
+                            className="flex min-w-0 flex-1 scroll-fade-b flex-col gap-1 overflow-y-auto p-1.5"
+                        >
+                            {answer.groups
+                                .filter((group) => group.results.length > 0)
+                                .map((group) => (
+                                    <div key={group.kind} role="group" aria-label={group.title} className="flex flex-col">
+                                        <SearchGroupHeading group={group} className="px-2 pt-1.5 pb-1" />
+                                        {group.results.map((result) => {
+                                            const index = entries.findIndex((entry) => entry.result === result)
+                                            return (
+                                                <div
+                                                    key={result.id}
+                                                    id={optionId(index)}
+                                                    role="option"
+                                                    aria-selected={index === highlighted}
+                                                    className="flex cursor-default items-center rounded-md px-2 py-1.5 text-sm select-none aria-selected:bg-muted"
+                                                    onMouseDown={(event) => event.preventDefault()}
+                                                    onMouseMove={() => {
+                                                        if (index !== highlighted) move(index)
+                                                    }}
+                                                    onClick={() => choose(index)}
+                                                >
+                                                    <SearchResultBody result={result} query={trimmed} />
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                ))}
+                            {entries.length === 0 && (
+                                <div className="flex items-center justify-center gap-2 px-3 py-6 text-sm text-muted-foreground">
+                                    {answer.state === 'loading' || answer.state === 'idle' ? (
+                                        <>
+                                            <Spinner className="text-faint" />
+                                            {words.searching}
+                                        </>
+                                    ) : answer.state === 'failed' ? (
+                                        words.failed(answer.reason)
+                                    ) : (
+                                        words.empty(trimmed)
+                                    )}
                                 </div>
-                            ))}
-                        {entries.length === 0 && (
-                            <div className="flex items-center justify-center gap-2 px-3 py-6 text-sm text-muted-foreground">
-                                {answer.state === 'loading' || answer.state === 'idle' ? (
-                                    <>
-                                        <Spinner className="text-faint" />
-                                        {words.searching}
-                                    </>
-                                ) : answer.state === 'failed' ? (
-                                    words.failed
-                                ) : (
-                                    words.empty(trimmed)
-                                )}
-                            </div>
+                            )}
+                        </div>
+                        {hasPreview && (
+                            <aside className="hidden w-[45%] shrink-0 overflow-y-auto border-l border-border p-3 @xl:block">
+                                {preview}
+                            </aside>
                         )}
                     </div>
-                    {hasPreview && (
-                        <aside className="hidden w-[45%] shrink-0 overflow-y-auto border-l border-border p-3 @xl:block">{preview}</aside>
-                    )}
-                </div>
-                {seeAll && (
+                )}
+                {seeAll && !short && (
                     <div className="border-t border-border p-1.5">
                         <div
                             id={optionId(entries.length)}

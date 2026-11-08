@@ -54,9 +54,9 @@ export interface SettingsDialogProps {
  * and the sections under their group titles, and the chosen section's rows on the right, which
  * scroll on their own.
  *
- * A search narrows the rows to those whose title or description match, and the navigation to the
- * sections that still have one. When the chosen section has none left, the first section that does
- * is shown.
+ * A search narrows the rows to those whose title, description or `keywords` match, or whose
+ * section's name does, and the navigation to the sections that still have one. When the chosen
+ * section has none left, the first section that does is shown.
  *
  * A footer under both, outside the scrolling, says that changes are kept as they are made (or
  * the app's own `footer`) and ends with Done, which closes the dialog. `onReset` adds Reset to

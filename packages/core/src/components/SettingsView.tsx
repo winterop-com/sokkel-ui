@@ -62,8 +62,9 @@ export interface SettingsViewProps {
  * `footer`), with Reset to defaults at its start when `onReset` is given and Done at its end when
  * `onDone` is.
  *
- * A search narrows the rows to those whose title or description match, and the sections to those
- * that still have one; when the chosen section has none left, the first that does is shown.
+ * A search narrows the rows to those whose title, description or `keywords` match, or whose
+ * section's name does, and the sections to those that still have one; when the chosen section has
+ * none left, the first that does is shown.
  *
  * Below the `lg` breakpoint the side column gives way to the search and a row of the sections on
  * top of the page, which scrolls sideways when they do not fit and keeps the chosen one in view.

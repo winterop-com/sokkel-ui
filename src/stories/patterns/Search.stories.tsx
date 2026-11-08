@@ -79,6 +79,28 @@ export const NoMatch: StoryObj = {
     render: () => <Search search={quick} onOpen={open} onSeeAll={open} defaultQuery="invoices" defaultOpen className="max-w-md" />,
 }
 
+/** Fewer characters than `minQuery` typed: the search is not asked yet, and the popover says how many it needs. */
+export const TooShort: StoryObj = {
+    name: 'Too short',
+    parameters: { frame: 'padded' },
+    render: () => <Search search={quick} onOpen={open} minQuery={2} defaultQuery="h" defaultOpen className="max-w-md" />,
+}
+
+/** The app's search failed: the list says so in the server's own words, through `words.failed`. */
+export const Failed: StoryObj = {
+    parameters: { frame: 'padded' },
+    render: () => (
+        <Search
+            search={() => Promise.reject(new Error('The index for harbor is being rebuilt; try again in a minute.'))}
+            onOpen={open}
+            defaultQuery="harbor"
+            defaultOpen
+            words={{ failed: (reason) => reason }}
+            className="max-w-md"
+        />
+    ),
+}
+
 /** Where the popover has room, the pane beside the list previews the highlighted result; the list ends in the way to every result. */
 export const Preview: StoryObj = {
     parameters: { frame: 'padded' },
