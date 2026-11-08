@@ -42,6 +42,8 @@ export const PRIVATE: Record<PackageDir, Record<string, string>> = {
         'components/media/sound-source': 'what `SoundVisualizer` listens through; `SoundSource` is exported by `SoundVisualizer`',
         'components/schema/checker':
             '`validate` loaded on first use, for `SchemaForm` and `CodeEditor`; an app preloads it with `loadSchemaChecks`',
+        'components/settings-parts':
+            'what `SettingsDialog` and `SettingsView` share: the search, the sections, the rows and the reset; their types are exported by both',
         'components/shell-context': 'the contexts `Shell` hands the parts drawn inside it',
         'hooks/use-drag-size': "the drag on a resizable edge, for the library's own panels",
         'lib/css-pixels': 'a length token in pixels, for a part that hands a size to an engine',
@@ -250,6 +252,7 @@ const CORE_AREAS: Record<string, string> = {
     PageState: 'Actions, dialogs and feedback',
     Problem: 'Actions, dialogs and feedback',
     SettingsDialog: 'Actions, dialogs and feedback',
+    SettingsView: 'Page layout',
     ShortcutsDialog: 'Actions, dialogs and feedback',
     StarButton: 'Actions, dialogs and feedback',
     TypedConfirmDialog: 'Actions, dialogs and feedback',

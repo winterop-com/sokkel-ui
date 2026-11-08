@@ -31,6 +31,7 @@ import { MessageFooter, MessageHeader } from './ui/message'
 import { Spinner } from './ui/spinner'
 import { Trace, TraceCollapsible, TraceCollapsibleContent, TraceCollapsibleTrigger, TraceIcon, TraceLine, TraceTitle } from './ui/trace'
 import { AudioPlayer, type AudioPlayerWords } from './media/AudioPlayer'
+import { SpeakButton, type SpeakAudio, type SpeakButtonWords } from './media/SpeakButton'
 
 /**
  * How the turn is drawn: `card` holds it in one quiet card, header to footer; `steps` sets it on a
@@ -84,6 +85,8 @@ export interface AssistantReplyWords {
     speech: string
     /** The read-back player's words: play, pause and seek. */
     player: Partial<AudioPlayerWords>
+    /** Read aloud's words in the footer, when `speak` is given. */
+    speak: Partial<SpeakButtonWords>
     /** The words the answer's markdown says: its callouts, code blocks and diagrams. */
     markdown: Partial<MarkdownWords>
 }
@@ -116,6 +119,7 @@ const WORDS: AssistantReplyWords = {
     thinking: 'Thinking',
     speech: 'Read aloud',
     player: {},
+    speak: {},
     markdown: {},
 }
 
@@ -204,6 +208,11 @@ export interface AssistantReplyProps {
     content?: string
     /** The answer read aloud, played in one line under it. */
     speech?: AssistantReplySpeech
+    /**
+     * Adds Read aloud to the footer, after Copy: a `SpeakButton` that fetches the answer's audio
+     * through this on its first press and plays it, one sound at a time.
+     */
+    speak?: (options: { signal: AbortSignal }) => Promise<SpeakAudio>
     /** Draws the answer's LaTeX math, as `Markdown` does: on by default; off where every `$` is a dollar. */
     math?: boolean
     /** More under the answer, such as a chart or files it made. */
@@ -243,7 +252,8 @@ export interface AssistantReplyProps {
  * `reasoning`, the model's thinking, folds between the tools and the answer behind a line that
  * counts its words; while it streams with no answer yet it stands open and grows. A streaming reply
  * with nothing to show yet, no thinking, no calls and no answer, says Thinking with a shimmer
- * instead of an empty card. `speech` puts the answer read aloud in a player under it.
+ * instead of an empty card. `speech` puts the answer read aloud in a player under it; `speak`
+ * instead fetches it on demand from Read aloud in the footer.
  *
  * The `card` layout (the default) holds the turn in one quiet card, inline code washed and the
  * held change as a section of it. The `steps` layout sets it on a rail: Checked holds the tools,
@@ -260,6 +270,7 @@ export function AssistantReply({
     reasoning,
     content,
     speech,
+    speak,
     math = true,
     children,
     state = 'done',
@@ -390,6 +401,7 @@ export function AssistantReply({
                     </span>
                 )}
                 <CopyAction value={content} onCopy={onCopy} words={words} />
+                {speak !== undefined && <SpeakButton load={speak} variant="labeled" words={words.speak} />}
                 {onRetry !== undefined && (
                     <Button variant="ghost" disabled={waiting} onClick={onRetry}>
                         <RotateCcw aria-hidden />

@@ -1,16 +1,18 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { Composer, type ComposerAttachment } from '@winterop-com/sokkel-ui/Composer'
+import { Composer, type ComposerAttachment, type ComposerDictation } from '@winterop-com/sokkel-ui/Composer'
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
 import { ModelPicker } from '../fixtures/models'
 import clip from '../media/fixtures/clip.webm?url'
 import { tuneUrl } from '../media/fixtures/tune'
 import { waveformOf } from '../media/fixtures/waveform'
+import { fakeMicrophone, transcribeLater } from '../fixtures/speech'
 
 /**
  * The message composer: empty, with a draft and attachments, while an answer streams, and shut;
- * then files on their way up, and a recording and a video that play before they are sent.
+ * then files on their way up, a recording and a video that play before they are sent, and
+ * dictation into the text.
  */
 function Ground({ children }: { children: React.ReactNode }) {
     return (
@@ -31,11 +33,13 @@ function Live({
     files = [],
     busy = false,
     disabled = false,
+    dictation,
 }: {
     initial: string
     files?: ComposerAttachment[]
     busy?: boolean
     disabled?: boolean
+    dictation?: ComposerDictation
 }) {
     const [value, setValue] = useState(initial)
     const [attachments, setAttachments] = useState(files)
@@ -67,6 +71,7 @@ function Live({
             onRemove={(id) => setAttachments((current) => current.filter((attachment) => attachment.id !== id))}
             onCancel={(id) => setAttachments((current) => current.filter((attachment) => attachment.id !== id))}
             tools={<ModelPicker />}
+            dictation={dictation}
         />
     )
 }
@@ -117,6 +122,26 @@ export const Uploads: StoryObj = {
                     { id: 'e', name: 'coastline.webm', kind: 'video', url: clip },
                 ]}
             />
+        </Ground>
+    ),
+}
+
+/** Dictation through the app's transcriber, here a stand-in that answers with one sentence after a moment, recording a hum made in the page instead of the microphone. */
+const DICTATION: ComposerDictation = { transcribe: transcribeLater, microphone: fakeMicrophone }
+
+/**
+ * A microphone before Send. The first composer dictates on a press: the row shows a pulsing mark,
+ * the level and the time, with a button to cancel; a second press stops, it transcribes, and the
+ * text goes in at the caret. Escape cancels. Under it, held still: hearing, transcribing, and a
+ * failure said beside the microphone.
+ */
+export const Dictation: StoryObj = {
+    render: () => (
+        <Ground>
+            <Live initial="Why did nightly-export fail last night?" dictation={DICTATION} />
+            <Live initial="Why did nightly-export fail last night?" dictation={{ ...DICTATION, defaultState: 'recording' }} />
+            <Live initial="Why did nightly-export fail last night?" dictation={{ ...DICTATION, defaultState: 'transcribing' }} />
+            <Live initial="Why did nightly-export fail last night?" dictation={{ ...DICTATION, defaultState: 'error' }} />
         </Ground>
     ),
 }

@@ -347,6 +347,16 @@ as when they last synced) and closes with Done. `onReset` adds Reset to defaults
 start, for the shown section or for every setting, asked once more before it runs. On a phone the
 dialog is a full-screen sheet with the footer at its foot, clear of the home indicator.
 
+`SettingsView` lays the same groups, search, reset and words out as a page inside `Shell`, on the
+parts the dialog draws with (`settings-parts`): the sections down the side in a `SubNav` with the
+search over them, the chosen section's rows under its title, and a `FormBar` across the foot with
+Reset to defaults at its start (`FormBar`'s `start`), the note, and Done when the app gives
+`onDone`. Below `lg` the search and a `ChipBar` of the sections stand on top of the page.
+`WizardView` lays `WizardDialog`'s steps out on a page the same way, the two sharing their moves
+(`wizardMoves`): the steps down the side, each with its description (`StepIndicator`'s `vertical`),
+or along the top with `layout="top"` and always below `lg`; the step's body under the page's title;
+and Cancel, Back and Next, or the finish, in a `FormBar`, Next shut with its reason.
+
 On a phone each part lays itself out by the room it has, so no example patches it. `DataTable`'s bar
 gives its `search` a line of its own, the tools wrapping across the width under it with the count
 and the sort after them, and its stacked cards set each column by its `stack`: a line, named or not,
@@ -508,7 +518,23 @@ One sound is heard at a time: a player claims the sound as it starts to be heard
 is paused, through `claimSound` and `useOneSound` in `media/one-sound`. AudioPlayer, VideoPlayer and
 MediaBar claim it unless given `exclusive={false}`, MediaBar pausing through its `onPlayingChange`;
 a muted player takes no sound, so a muted preview never stops the music. An app's own element joins
-by claiming too. `Artwork` is a record's cover: its picture once loaded, or one drawn in the theme's
+by claiming too. `SpeakButton` reads a text aloud with audio the app fetches on demand: its `load`
+is called on the first press with an abort signal and answers with an address or a `Blob`, kept
+while the button is mounted so the next press plays at once. It goes from idle through loading (a
+press stops the fetch) to playing (a press stops it), or says the audio failed and fetches again on
+the next press, and it claims the one sound as the players do. `AssistantReply`'s `speak` puts it in
+the footer after Copy.
+
+Dictation has no engine of the library's own. `useDictation` either records the microphone with
+`MediaRecorder` and hands the recording to the app's `transcribe(audio, { signal })`, or, where the
+app opts in with `recognition`, uses the browser's own speech recognition, which some browsers run
+on their maker's servers; given both, the browser's is used where there is one. `Composer`'s
+`dictation` takes the same options and draws them: a microphone before Send; while it hears, a row
+with a pulsing mark, the voice's level (`BarVisualizer`, loaded with the first recording) or the
+words heard so far, the time and a cancel; then Transcribing, and the text put in at the caret.
+Escape cancels, a failure is said beside the microphone, and Send waits meanwhile. `microphone`
+stands in for `getUserMedia` and `defaultState` draws a state still, so a story never touches the
+microphone. `Artwork` is a record's cover: its picture once loaded, or one drawn in the theme's
 hues (a motif over a gradient between two), chosen from a stable seed such as the record's id, so a
 shelf of records without pictures is not all alike and a record wears the same cover in the grid,
 the list and the player. MediaCard draws it from `placeholderSeed` (the title by default) when it

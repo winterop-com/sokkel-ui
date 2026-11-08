@@ -402,6 +402,10 @@
             "types": "./dist/components/SettingsDialog.d.ts",
             "import": "./dist/components/SettingsDialog.js"
         },
+        "./SettingsView": {
+            "types": "./dist/components/SettingsView.d.ts",
+            "import": "./dist/components/SettingsView.js"
+        },
         "./Shell": {
             "types": "./dist/components/Shell.d.ts",
             "import": "./dist/components/Shell.js"
@@ -633,6 +637,10 @@
         "./media/SoundVisualizer": {
             "types": "./dist/components/media/SoundVisualizer.d.ts",
             "import": "./dist/components/media/SoundVisualizer.js"
+        },
+        "./media/SpeakButton": {
+            "types": "./dist/components/media/SpeakButton.d.ts",
+            "import": "./dist/components/media/SpeakButton.js"
         },
         "./media/time": {
             "types": "./dist/components/media/time.d.ts",
@@ -957,6 +965,10 @@
         "./hooks/use-dark": {
             "types": "./dist/hooks/use-dark.d.ts",
             "import": "./dist/hooks/use-dark.js"
+        },
+        "./hooks/use-dictation": {
+            "types": "./dist/hooks/use-dictation.d.ts",
+            "import": "./dist/hooks/use-dictation.js"
         },
         "./hooks/use-highlighted-code": {
             "types": "./dist/hooks/use-highlighted-code.d.ts",
