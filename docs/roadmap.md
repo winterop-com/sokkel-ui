@@ -6,7 +6,10 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.10.4** is the latest release (2026-11-08): explicit exports in every package and a
+- **0.10.5** is the latest release (2026-11-08): the full-screen player never cuts its title
+  short, app-defined visualizer options in its picker, a face filling the rows bar, and
+  `SettingsDialog` ending in a footer with Done and an optional reset.
+- **0.10.4** (2026-11-08): explicit exports in every package and a
   `<Component>Props` type from every component; smaller start bundles, the heavy dependencies loaded
   on first use and made optional peers; `EChart` private; the frame's round 5 (a search field beside
   the palette, `useShell`, `contentKey`, the rail mark as a home link, a collapsed rail dragged open,
