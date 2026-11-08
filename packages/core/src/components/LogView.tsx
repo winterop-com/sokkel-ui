@@ -45,6 +45,7 @@ function marked(text: string, query: string): ReactNode {
  * A log on the terminal ground: time, level, source and text in columns, levels inked, lines
  * numbered. `follow` keeps the newest line in view as lines arrive, until the reader scrolls up;
  * `query` marks its matches. Long lines wrap when `wrap` is set and scroll sideways otherwise.
+ * It is set in the terminal face, `--typeface-terminal`, whose Nerd Font icons a line can carry.
  */
 export function LogView({
     lines,
@@ -76,7 +77,7 @@ export function LogView({
                 pinned.current = element.scrollHeight - element.scrollTop - element.clientHeight < 8
             }}
             className={cn(
-                'min-h-0 overflow-auto rounded-lg bg-terminal py-2 font-mono text-xs leading-5 text-terminal-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                'min-h-0 overflow-auto rounded-lg bg-terminal py-2 font-mono text-xs leading-5 text-terminal-foreground outline-none [--typeface-mono:var(--typeface-terminal)] focus-visible:ring-2 focus-visible:ring-ring',
                 className,
             )}
         >
