@@ -6,7 +6,14 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.10.0** is the latest release (2026-11-08), built from the apps: each app's own screens laid
+- **0.10.1** is the latest release (2026-11-08): the frame for desktop shells (a drag strip, room
+  for the window's buttons) and `useCommands` with two-line palette rows; map selection with what
+  lies under it, a selection legend, chosen controls, a globe, notes under the map, no basemap
+  fetched unless offered, and a sites page; `ChartFrame` expanding through `WindowedPane`; rail
+  descriptions, stat tiles, kind badges, counts on `Segmented` options, descriptions on sections
+  and fields, and `DetailSheet`; phone layouts for tables, dialogs, the composer, the calendar,
+  gauges and diagrams.
+- **0.10.0** (2026-11-08), built from the apps: each app's own screens laid
   beside the library. `SignIn`; the code editor with languages, jq, completion, hover, ranged marks,
   keys, search, folding and JSON Schema checks; code colors for every theme; `Markdown` parts;
   `AnsiText`; `WindowedPane`, `useStored`, `useUploads`, `DataTable` row groups and
