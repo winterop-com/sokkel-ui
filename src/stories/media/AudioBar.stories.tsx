@@ -9,7 +9,7 @@ import { useMediaSession } from '@winterop-com/sokkel-ui/hooks/use-media-session
 import { MediaBar, type MediaBarLayout, type RepeatMode } from '@winterop-com/sokkel-ui/media/MediaBar'
 import { chapterIndex } from '@winterop-com/sokkel-ui/media/chapters'
 import { SoundVisualizer } from '@winterop-com/sokkel-ui/media/SoundVisualizer'
-import { Artwork, type Cover } from '../fixtures/Artwork'
+import { Artwork, type ArtworkCover } from '@winterop-com/sokkel-ui/media/Artwork'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { PaneHeader } from '@winterop-com/sokkel-ui/PaneHeader'
 import { FRAME } from './fixtures/sound'
@@ -21,7 +21,7 @@ interface Track {
     album: string
     year: number
     duration: number
-    cover: Cover
+    cover: ArtworkCover
 }
 
 const QUEUE: Track[] = [
@@ -192,7 +192,7 @@ const BOOK = {
     title: 'Tidewater Almanac',
     author: 'Grace',
     duration: 6 * 3600 + 12 * 60,
-    cover: { motif: 'bands', from: 'teal', to: 'jade' } satisfies Cover,
+    cover: { motif: 'bands', from: 'teal', to: 'jade' } satisfies ArtworkCover,
     chapters: [
         { title: 'Low Water', start: 0 },
         { title: 'The Harbor Wall', start: 2_140 },

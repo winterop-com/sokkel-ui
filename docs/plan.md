@@ -329,6 +329,16 @@ VideoPlayer, MediaBar, MediaCard and TrackList carry video and music, and the `A
 primitive draws a recording's waveform under its position. AudioPlayer plays a recording in one line
 (a clip or voice note in a message, an answer read aloud) from the same controls.
 
+One sound is heard at a time: a player claims the sound as it starts to be heard and whoever held it
+is paused, through `claimSound` and `useOneSound` in `media/one-sound`. AudioPlayer, VideoPlayer and
+MediaBar claim it unless given `exclusive={false}`, MediaBar pausing through its `onPlayingChange`;
+a muted player takes no sound, so a muted preview never stops the music. An app's own element joins
+by claiming too. `Artwork` is a record's cover: its picture once loaded, or one drawn in the theme's
+hues (a motif over a gradient between two), chosen from a stable seed such as the record's id, so a
+shelf of records without pictures is not all alike and a record wears the same cover in the grid,
+the list and the player. MediaCard draws it from `placeholderSeed` (the title by default) when it
+has no `cover`, and MediaBar from its `placeholderSeed` when it has no `artwork`.
+
 A long listen, a book or a podcast, gets what it needs from MediaBar's options: `skip` (or `onSkip`)
 adds buttons that jump back and forward by an interval written on their glyphs, 15 seconds unless
 told; `onRateChange` a speed menu written as "1.25x", from `rates` (`MEDIA_RATES`, 0.5x to 2x),
@@ -361,7 +371,11 @@ of levels or samples draws without any audio. Each element is wired to the page'
 once, on its first play, and is heard through it from then on, so cross-origin media needs CORS; a
 source Web Audio cannot read is never wired and draws at rest. An app that wires its element into
 its own audio graph passes an `AnalyserNode` from it instead, with `playing`, since an element can
-be wired only once. The `bar-visualizer` primitive, a
+be wired only once. An analyser reads the sound before the output plays it, so `delay` holds the
+picture back by the output's latency (a Bluetooth output is 150 to 500 milliseconds behind): each
+reading goes into a short ring stamped with its time, and the one drawn is as old as the delay.
+`delay="auto"` reads the latency the browser reports for the audio context, and `delayOffset` adds
+a hand-set correction on top. The `bar-visualizer` primitive, a
 voice input's level bars, is drawn by it.
 
 ## Validation

@@ -1,6 +1,6 @@
 /** Fixed, neutral albums for the grid stories: as many as a story asks for, the same every time, each with a drawn cover. */
 
-import type { Cover, Hue, Motif } from './Artwork'
+import type { ArtworkCover, ArtworkHue, ArtworkMotif } from '@winterop-com/sokkel-ui/media/Artwork'
 
 function seeded(seed: number): () => number {
     let state = seed >>> 0
@@ -56,8 +56,8 @@ const ARTISTS = [
     'Open Water',
     'The Keepers',
 ]
-const MOTIFS: Motif[] = ['sun', 'rings', 'bands', 'dots', 'wave', 'peaks']
-const HUES: Hue[] = ['blue', 'teal', 'green', 'jade', 'violet', 'pink', 'amber', 'coral']
+const MOTIFS: ArtworkMotif[] = ['sun', 'rings', 'bands', 'dots', 'wave', 'peaks']
+const HUES: ArtworkHue[] = ['blue', 'teal', 'green', 'jade', 'violet', 'pink', 'amber', 'coral']
 
 export interface Album {
     id: string
@@ -68,7 +68,7 @@ export interface Album {
     /** Seconds. */
     length: number
     plays: number
-    cover: Cover
+    cover: ArtworkCover
 }
 
 const pick = <V>(values: readonly V[], random: () => number) => values[Math.floor(random() * values.length) % values.length]

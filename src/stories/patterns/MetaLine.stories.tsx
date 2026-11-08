@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
 import { MediaCard } from '@winterop-com/sokkel-ui/media/MediaCard'
 import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
-import { Artwork } from '../fixtures/Artwork'
+import { Artwork } from '@winterop-com/sokkel-ui/media/Artwork'
 
 const meta: Meta = { title: 'Patterns/Meta line', parameters: { frame: 'column' } }
 export default meta
