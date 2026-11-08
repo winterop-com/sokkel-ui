@@ -120,6 +120,28 @@ function rootElement(): AppearanceRoot | undefined {
     return typeof document === 'undefined' ? undefined : document.documentElement
 }
 
+/** The media query the system's reduced-motion setting answers. */
+export const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)'
+
+/** Whether the system asks for reduced motion, false where nothing can tell. */
+export function systemReducedMotion(): boolean {
+    try {
+        return typeof globalThis.matchMedia === 'function' && globalThis.matchMedia(REDUCED_MOTION_QUERY).matches
+    } catch {
+        return false
+    }
+}
+
+/**
+ * Whether motion is reduced, from the `data-motion` the look wears on `<html>` (`off` reduces it,
+ * `on` keeps it) and else the system's setting, as `motion.css` decides.
+ */
+export function motionReduced(attribute: string | null | undefined, system: boolean): boolean {
+    if (attribute === 'off') return true
+    if (attribute === 'on') return false
+    return system
+}
+
 /** Puts `.dark` on `<html>` for the dark scheme and takes it off for the light one. */
 export function applyScheme(resolved: ResolvedScheme, root: AppearanceRoot | undefined = rootElement()): void {
     root?.classList.toggle('dark', resolved === 'dark')

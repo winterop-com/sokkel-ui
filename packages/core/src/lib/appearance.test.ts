@@ -8,6 +8,7 @@ import {
     CORNERS,
     DEFAULT_APPEARANCE,
     FACES,
+    motionReduced,
     parseAppearance,
     readAppearance,
     readStoredScheme,
@@ -254,5 +255,15 @@ describe('appearanceScript', () => {
 
     it('cannot close the script element it sits in', () => {
         expect(appearanceScript({ theme: '</script><script>' })).not.toContain('</script>')
+    })
+})
+
+describe('motionReduced', () => {
+    it("follows the look's own motion where it says, and the system's otherwise", () => {
+        expect(motionReduced('off', false)).toBe(true)
+        expect(motionReduced('on', true)).toBe(false)
+        expect(motionReduced(null, true)).toBe(true)
+        expect(motionReduced(null, false)).toBe(false)
+        expect(motionReduced('system', true)).toBe(true)
     })
 })

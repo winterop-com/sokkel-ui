@@ -1,15 +1,9 @@
-import { useEffect } from 'react'
+import { useShortcuts } from './use-shortcuts'
 
-/** Opens the palette on ⌘K or Ctrl+K, wherever focus is. */
+/**
+ * Opens a palette an app draws itself on ⌘K on a Mac and Ctrl+K elsewhere, from a field too, bound
+ * through `useShortcuts`. `Shell`'s own palette binds it already.
+ */
 export function usePaletteShortcut(onOpen: () => void, key = 'k') {
-    useEffect(() => {
-        const listen = (event: KeyboardEvent) => {
-            if (event.key.toLowerCase() === key && (event.metaKey || event.ctrlKey) && !event.altKey) {
-                event.preventDefault()
-                onOpen()
-            }
-        }
-        window.addEventListener('keydown', listen)
-        return () => window.removeEventListener('keydown', listen)
-    }, [onOpen, key])
+    useShortcuts([{ id: 'palette', key, mod: true, inFields: true, run: onOpen }], [onOpen, key])
 }

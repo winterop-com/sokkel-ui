@@ -61,6 +61,16 @@ place. It has four parts, and an app has all four from its first screen:
   scheme, density and theme commands, so an app's places and look come for free. A screen adds
   its own groups while it is mounted with `useCommands(groups, deps)` from `hooks/use-commands`,
   placed by each group's `rank`; a command with a `detail` or `artwork` is a two-line row.
+  A second ⌘K closes it; `paletteOpen` with `onPaletteOpenChange` holds it from outside, and
+  `mayOpenPalette` refuses it over the app's own full-screen views.
+- **Keys, one registry**: a screen binds its keys with `useShortcuts(bindings, deps)` from
+  `hooks/use-shortcuts`, each `{ id, key, mod?, shift?, alt?, label?, group?, scope?, inFields?,
+  inDialogs?, run }`, the key named by the character it types (`event.key`), so it works on any
+  layout; quiet while typing in a field and while a dialog, a menu or the palette is open.
+  `Shell`'s `shortcuts` (the keys the app answers itself, or `[]`) makes it hold the shortcuts
+  dialog, opened on `?` and from the account menu, listing every bound key with a `label`. Never
+  add a `keydown` listener of the app's own for a shortcut. `useOverlay`, `useScrollMemory` and
+  `useReducedMotion` (all in `hooks/`) give the app's own overlays, lists and motion the same.
 - **An `AccountMenu`** in the rail's foot, always there, before the app has sign-in too: then it is
   `local`, named for the local user or "Local", with a neutral avatar, settings and appearance, and
   no sign-out. The place is held, and the frame looks the same in every app.

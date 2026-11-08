@@ -1,10 +1,11 @@
 import { Avatar } from '@base-ui/react/avatar'
 import { Menu } from '@base-ui/react/menu'
 import { ChevronsUpDown, Keyboard, LogOut, Palette, Settings, User } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useContext, type ReactNode } from 'react'
 
-import { useShortcutsKey } from '../hooks/use-shortcuts-key'
+import { ShortcutRegistry, useShortcuts } from '../hooks/use-shortcuts'
 import { cn } from '../lib/cn'
+import { ShellShortcuts } from './shell-context'
 
 /**
  * The account control in the rail's foot cell: a full-cell row with the initial, the name and a
@@ -42,7 +43,11 @@ export function AccountMenu({
     onSettings?: () => void
     /** Opens the appearance settings: the theme, the scheme, the density. */
     onAppearance?: () => void
-    /** Opens the keyboard shortcuts, from the menu and on `?` outside a field. */
+    /**
+     * Opens the app's own keyboard shortcuts from the menu, and outside a `Shell` on `?` outside a
+     * field too. In a `Shell` given `shortcuts`, the menu opens the shell's without it, and the shell
+     * binds `?` once, however many account menus the frame draws.
+     */
     onShortcuts?: () => void
     onSignOut?: () => void
     /** More rows, placed before Sign out. */
@@ -50,8 +55,17 @@ export function AccountMenu({
     words?: Partial<AccountMenuWords>
 }) {
     const words = { ...WORDS, ...given }
-    // The `?` beside Keyboard shortcuts works: it opens them from anywhere outside a field.
-    useShortcutsKey(onShortcuts)
+    const inShell = useContext(ShortcutRegistry) !== undefined
+    const shellShortcuts = useContext(ShellShortcuts)
+    // Outside a shell the menu binds `?` for the app's shortcuts; in one, the shell binds it.
+    useShortcuts(!inShell && onShortcuts !== undefined ? [{ id: 'shortcuts', key: '?', label: words.shortcuts, run: onShortcuts }] : [], [
+        inShell,
+        onShortcuts,
+        words.shortcuts,
+    ])
+    const openShortcuts = onShortcuts ?? shellShortcuts
+    // The `?` beside Keyboard shortcuts is drawn only where the key works.
+    const keyed = inShell ? shellShortcuts !== undefined : onShortcuts !== undefined
     const initial = name.slice(0, 1).toUpperCase()
     const avatar = (size: string) => (
         <Avatar.Root
@@ -82,7 +96,10 @@ export function AccountMenu({
             </Menu.Trigger>
             <Menu.Portal>
                 <Menu.Positioner side="top" align="start" sideOffset={4} alignOffset={4}>
-                    <Menu.Popup className="w-64 rounded-lg border border-border-strong bg-popover p-1 text-popover-foreground shadow-pop">
+                    <Menu.Popup
+                        data-slot="dropdown-menu-content"
+                        className="w-64 rounded-lg border border-border-strong bg-popover p-1 text-popover-foreground shadow-pop"
+                    >
                         <div className="flex items-center gap-2.5 px-2 py-2">
                             {avatar('size-8')}
                             <div className="min-w-0">
@@ -103,11 +120,11 @@ export function AccountMenu({
                                 {words.appearance}
                             </Menu.Item>
                         )}
-                        {onShortcuts !== undefined && (
-                            <Menu.Item className={item} onClick={onShortcuts}>
+                        {openShortcuts !== undefined && (
+                            <Menu.Item className={item} onClick={openShortcuts}>
                                 <Keyboard className="size-4 text-muted-foreground" aria-hidden />
                                 {words.shortcuts}
-                                <kbd className="ml-auto font-mono text-xs text-faint">?</kbd>
+                                {keyed && <kbd className="ml-auto font-mono text-xs text-faint">?</kbd>}
                             </Menu.Item>
                         )}
                         {extra}
