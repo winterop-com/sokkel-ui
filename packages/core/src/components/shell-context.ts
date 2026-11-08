@@ -14,3 +14,9 @@ export const ShellPalette = createContext<(() => void) | undefined>(undefined)
 
 /** The desktop window the shell stands in, for the parts drawn in its top strip; undefined in a browser. */
 export const ShellDesktop = createContext<DesktopWindow | undefined>(undefined)
+
+/** Opens the shell's keyboard shortcuts, for the account menu; undefined where the shell holds none. */
+export const ShellShortcuts = createContext<(() => void) | undefined>(undefined)
+
+/** The shell's content, the one thing that scrolls there, for `useScrollMemory`; null outside a shell. */
+export const ShellScroller = createContext<HTMLElement | null>(null)

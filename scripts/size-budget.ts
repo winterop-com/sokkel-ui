@@ -6,7 +6,8 @@
  *
  * The apps import the packages by their names, which resolve through the workspace's links and each
  * package's own `exports`, so each bundles what an installed copy would give it. The forms app
- * imports only the core package. Every size is gzipped, in kB: `start` is the
+ * imports only the core package, on its styles.css; forms-lean is the same app on styles-base.css
+ * and its modules' lists of sources. Every size is gzipped, in kB: `start` is the
  * JavaScript loaded with the page, `lazy` what is fetched later by a dynamic import, and `css` the
  * stylesheet.
  */

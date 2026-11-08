@@ -42,7 +42,11 @@ also its tokens), with no stories, story fixtures or tests. Each package's `styl
 source that scans only that package's components: the core's also carries Tailwind, the fonts, the
 tokens and the base styles, and an add-on's is imported after it in the same stylesheet. An app's
 CSS so carries the classes of the packages it uses and none of the stories'; every app runs Tailwind
-4.1 or later itself. The themes are in the core. Storybook gets every package's classes and the
+4.1 or later itself. For an app that wants the classes of its own imports alone, the core also
+exports `styles-base.css` (`styles.css` pointed at no module) and every package a list of sources
+per module, `sources/<module>.css`, written by the build from the module's imports: an `@source`
+for each of its package's modules it reaches and the core's list for each core module it uses. The
+app imports the list of each module it imports after `styles-base.css`. The themes are in the core. Storybook gets every package's classes and the
 stories' from its own entry, `.storybook/storybook.css`, which imports each package's styles and
 adds the stories as a source. The stories in `src/stories/` import the packages by their names; in
 Storybook and the tests those names resolve to the packages' sources, so neither needs a build.
@@ -58,7 +62,8 @@ the CSS). A check fails when one grows past its budget in `examples/sizes/budget
 engine it does not use, so a forms page never carries ECharts, maplibre, React Flow, xterm.js,
 hls.js, CodeMirror, Mermaid or KaTeX. A change that grows an app on purpose raises its budget in the same
 PR. The forms page imports only the core package, the dashboard adds the charts package, the map
-page the maps package and the music page the media package.
+page the maps package and the music page the media package. `forms-lean` is the forms page on
+`styles-base.css` and its modules' lists of sources, so the lean path is measured too.
 
 ## Themes
 
@@ -67,7 +72,9 @@ Every theme is defined in `packages/core/tokens/tokens.json`, and `scripts/build
 that picks no theme needs nothing more. Every other theme is a file of its own in
 `packages/core/src/styles/themes/`, exported as `@winterop-com/sokkel-ui/themes/<name>.css`, with its light and
 dark tokens on `html[data-theme]` for the whole app and on `[data-theme-scope]` for one element,
-such as a theme picker's swatch; `themes.css` imports them all. An app imports the files of the
+such as a theme picker's swatch, each written once for both; `themes.css` imports them all. Every
+scope first takes the default's whole set from `tokens.css`, at no specificity, so the page's theme
+never shows through a scope of another. An app imports the files of the
 themes it offers and sets one on `<html data-theme>`, so its CSS carries no theme it never shows.
 Storybook imports `themes.css`, so its toolbar offers every theme.
 
@@ -89,6 +96,32 @@ its own by each group's `rank`, a screen's first at equal rank, groups of one ti
 that draws its own palette holds a registry with `useCommandRegistry`. A palette row with a `detail`
 or `artwork` (an image's address or a node, round for a person) is two lines tall, drawn as a search
 result is, and the palette's search results take `artwork` too.
+
+Keys go through one registry, which `Shell` holds as it holds the commands. A screen binds its keys
+with `useShortcuts(bindings, deps)` while it is mounted (outside a shell, in the page's own). A
+binding names its key by the character it types (`KeyboardEvent.key`), so `?`, `/` and `*` work on
+a Norwegian keyboard as on an American one: a character that is not a letter is matched as itself
+whatever Shift, Option or AltGr the layout took, a letter by its case with `shift` saying so, and a
+letter key that Option or a non-Latin layout turned into another character by its place. `mod` is
+⌘ on a Mac and Ctrl elsewhere, the other one refusing the press. Keys are quiet while typing in a
+field, where a slider keeps its arrows and a button its Space, and while a dialog, a sheet, a menu,
+an overlay or the shell's palette is open, unless a binding asks (`inFields`, `inDialogs`); `scope`
+hears a binding only inside an element marked `data-shortcut-scope`, before the same key outside it.
+A later screen's binding comes before an earlier one's, and the shell's own (the palette's ⌘K or
+Ctrl K, which a second press closes; `?`) come last. `ShortcutsDialog` lists every binding with a
+`label` under its `group`, its keys written by `keyLabels` as the device writes them, then the
+groups an app gives for keys it answers itself; `Shell`'s `shortcuts` makes the shell hold it,
+opened on `?`, bound once, and from the account menu. `SearchField`'s `/` is a binding too. The
+palette can be held from outside (`paletteOpen`, `onPaletteOpenChange`) and refused over an app's
+own full-screen view (`mayOpenPalette`); on a touch screen it has a Close button.
+
+`useOverlay(open, { onClose })` makes an app's own overlay behave as a dialog: the page outside it
+inert, focus moved in, Escape closing the one on top, and focus back where it was; `Shell`'s drawer
+and its panel over a narrow window use it. `useScrollMemory(key, ref)` keeps a scroller's place per
+key for the session (in session storage, in memory where that is refused) and puts it back on
+return, the shell's content when no ref is given. `useReducedMotion()` says whether motion is
+reduced, from the look's own `motion` and else the system's, following both, for motion a script
+draws.
 
 In a desktop window whose native title bar is hidden (Electron's `hiddenInset`, Tauri's
 `Overlay`), `Shell`'s `desktop` makes its top strip, the rail's head, the top bar and an open
@@ -327,7 +360,10 @@ fixed number of rows) and reports its size in cells, sends keystrokes and paste 
 and takes output through its handle's `write`, with full emulation for programs that move the
 cursor or take the whole screen, a scrollback, selection and copy. The connection to the program
 stays the app's. `Terminal` shows commands and what they wrote on the same engine, read-only, with
-a title bar, copy and clear, writing only what was added while output streams in.
+a title bar, copy and clear, writing only what was added while output streams in. The terminal
+ground is dark in both schemes; every theme gives it an accent in its own hue (`--terminal-accent`,
+the ANSI blue and the selection), and the title bar ground, `--terminal-bar`, is mixed from the
+theme's terminal ground and accent. SignIn's dark brand pane stands on the same bar on a phone.
 
 ## Media
 

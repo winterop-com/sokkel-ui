@@ -63,7 +63,10 @@ export function NavBar({
                     </Menu.Trigger>
                     <Menu.Portal>
                         <Menu.Positioner side="bottom" align="start" sideOffset={6}>
-                            <Menu.Popup className="w-56 rounded-lg border border-border-strong bg-popover p-1 text-popover-foreground shadow-pop">
+                            <Menu.Popup
+                                data-slot="dropdown-menu-content"
+                                className="w-56 rounded-lg border border-border-strong bg-popover p-1 text-popover-foreground shadow-pop"
+                            >
                                 {links.map((link) => (
                                     <Menu.Item
                                         key={link.id}
