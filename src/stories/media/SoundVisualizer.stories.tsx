@@ -113,7 +113,7 @@ export const Backdrop: StoryObj = {
     ),
 }
 
-/** A tune made in the page, played through an audio element the visualizer listens to. Still until played. */
+/** A tune made in the page, played through an audio element the visualizer listens to. Still until played; the ring holds the cover in its middle. */
 function LiveTune() {
     const [audio, setAudio] = useState<HTMLAudioElement | null>(null)
     const [playing, setPlaying] = useState(false)
@@ -134,7 +134,11 @@ function LiveTune() {
                 <MetaLine items={['A tune made in the page', '0:08, looping']} />
             </Toolbar>
             <Surface className="min-h-0 flex-1">
-                <SoundVisualizer source={audio} kind={kind} />
+                <SoundVisualizer
+                    source={audio}
+                    kind={kind}
+                    middle={kind === 'ring' ? <Artwork cover={{ motif: 'wave', from: 'violet', to: 'pink' }} /> : undefined}
+                />
             </Surface>
             <audio ref={setAudio} loop onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} />
         </Stack>
