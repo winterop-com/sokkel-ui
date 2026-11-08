@@ -154,9 +154,20 @@ components (Stack, Row, Columns, Split, Fill), Field, TextField, InlineField, Sl
 CheckboxField, CheckboxList, ChoiceList, CodeField, SwitchField, SearchField, FilterChip, FormBar,
 SelectionBar, DataTable, StatusChip, PersonAvatar, PersonRow, MetaLine, DueText, AttachmentList,
 IconButton, StarButton, SplitButton, DownloadButton, AccountMenu, SidePanel, DialogShell,
-ConfirmDialog, TreeSelect, AsyncSelect, CapabilityPicker, SignIn, RelativeTime, ApiLink, TagChips.
+ConfirmDialog, TreeSelect, AsyncSelect, CapabilityPicker, SignIn, RelativeTime, ApiLink, TagChips,
+DetailSheet.
 Every example arranges and builds its screens from these, never by hand, so a fix in one reaches
 them all.
+
+A records app is built from the same parts (Apps/Records). A `Rail` entry says what its
+place holds on a second line (`description`), which the palette's Go to rows repeat; a palette row's
+`hint` is words and its `code` an id in the code face. `Stat` as a `tile` is a count on a card of its
+own, a state's dot before its label and a note under it, leading to what it counts, and `emphasis`
+edges the one that asks for work. `Badge` takes a `kind` color for a categorical value, such as the
+sort of form a card is, and `Segmented` options carry a count and a state's dot. `Section`,
+`PaneHeader` and `Field` take a `description`, a field's between its label and its control.
+`DetailSheet` is one thing's detail in a sheet from the right, its chips and actions on one line
+under the title, its body the parts its own page draws; `SourceSheet` is one.
 
 A button that cannot be pressed now says why: `reason` on `Button`, `IconButton` and `SplitButton`
 disables it and shows the reason on hover and focus, the button kept in the tab order so a keyboard

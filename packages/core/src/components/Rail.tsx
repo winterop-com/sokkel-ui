@@ -27,6 +27,12 @@ import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 export interface RailEntry {
     id: string
     label: string
+    /**
+     * A second line under the label in the expanded rail, saying what the place holds: "Every run,
+     * newest first" under Runs. The collapsed rail's tooltip says it after the label, and
+     * `placeCommands` gives it to the palette as the row's hint.
+     */
+    description?: string
     /** The entry's icon. Entries without one read as text, their labels lined up at the row's start. */
     icon?: LucideIcon
     /** Where the entry leads. A parent may have none; then its row folds and unfolds its entries. */
@@ -72,8 +78,8 @@ const WORDS: RailWords = {
  * and a foot cell the shell's foot strip lines up with. In a shell with a `bottom` strip, such as
  * a player, the foot cell is drawn at the window's bottom edge under that strip, as wide as the rail.
  *
- * Expanded, an entry is its icon and its label, and the active one wears a slim accent bar on
- * its left edge over a faint wash. Collapsed, the rail is icons alone, each naming itself in a
+ * Expanded, an entry is its icon and its label, with its `description` on a quieter line under the
+ * label when it has one, and the active one wears a slim accent bar on its left edge over a faint wash. Collapsed, the rail is icons alone, each naming itself in a
  * tooltip, the groups divided by a rule, and the mark itself is the control that expands it.
  *
  * As a `strip`, it is the narrow column a team chat keeps on its far left, beside its own list of
@@ -330,10 +336,51 @@ function EntryMark({ entry, initial = false, className = 'size-4' }: { entry: Ra
     )
 }
 
-/** An expanded row's look: `active` wears the accent bar over a wash, `holding` sets a parent's label apart. */
-function rowClass(state: 'active' | 'holding' | 'idle', inset: 'none' | 'icon' | 'text' = 'none'): string {
+/** An entry's words in an expanded row: its label, and its description on a quieter line under it. */
+function EntryText({ entry, active = false }: { entry: RailEntry; active?: boolean }) {
+    if (entry.description === undefined) return <span className="truncate">{entry.label}</span>
+    return (
+        <span className="flex min-w-0 flex-col">
+            <span className="truncate">{entry.label}</span>
+            <span
+                className={cn('text-help text-pretty break-words', active ? 'text-sidebar-accent-foreground/75' : 'text-muted-foreground')}
+            >
+                {entry.description}
+            </span>
+        </span>
+    )
+}
+
+/** An expanded row's contents: the entry's mark, its words, and what waits at its end. */
+function RowFace({ entry, active, unread, end = true }: { entry: RailEntry; active: boolean; unread: string; end?: boolean }) {
+    const described = entry.description !== undefined
+    return (
+        <>
+            <EntryMark entry={entry} className={cn('size-4', described && 'mt-0.75')} />
+            <EntryText entry={entry} active={active} />
+            {end && <RowEnd entry={entry} unread={unread} />}
+        </>
+    )
+}
+
+/** What a collapsed rail's tooltip says for an entry: its label, then its description. */
+function TipText({ entry }: { entry: RailEntry }) {
+    return (
+        <>
+            {entry.label}
+            {entry.description !== undefined && <span className="text-muted-foreground"> {entry.description}</span>}
+        </>
+    )
+}
+
+/**
+ * An expanded row's look: `active` wears the accent bar over a wash, `holding` sets a parent's label
+ * apart. A `described` row grows to hold the description under its label, its icon level with the label.
+ */
+function rowClass(state: 'active' | 'holding' | 'idle', inset: 'none' | 'icon' | 'text' = 'none', described = false): string {
     return cn(
-        'flex h-(--density-row) w-full items-center gap-3 rounded-l-sm rounded-r-md border-l-2 pr-3 text-left text-sm',
+        'flex w-full gap-3 rounded-l-sm rounded-r-md border-l-2 pr-3 text-left text-sm',
+        described ? 'min-h-(--density-row) items-start py-1.5' : 'h-(--density-row) items-center',
         inset === 'none' ? 'pl-2.5' : inset === 'icon' ? 'pl-9.5' : 'pl-5.5',
         state === 'active'
             ? 'border-sidebar-primary bg-sidebar-accent font-medium text-sidebar-accent-foreground'
@@ -345,9 +392,10 @@ function rowClass(state: 'active' | 'holding' | 'idle', inset: 'none' | 'icon' |
 
 /** What waits at an expanded row's end: its count, or its unread dot. */
 function RowEnd({ entry, unread }: { entry: RailEntry; unread: string }) {
+    const described = entry.description !== undefined
     if (entry.count !== undefined && entry.count > 0)
-        return <span className="ml-auto text-xs font-semibold text-foreground tabular-nums">{entry.count}</span>
-    if (entry.unread === true) return <UnreadDot label={unread} className="ml-auto ring-0" />
+        return <span className={cn('ml-auto text-xs font-semibold text-foreground tabular-nums', described && 'mt-px')}>{entry.count}</span>
+    if (entry.unread === true) return <UnreadDot label={unread} className={cn('ml-auto ring-0', described && 'mt-1.75')} />
     return null
 }
 
@@ -370,6 +418,7 @@ function RailParent({
     const holds = holdsActive(entry)
     const state = entry.active === true || (holds && !open) ? 'active' : holds ? 'holding' : 'idle'
     const marked = entry.icon !== undefined || entry.dot !== undefined
+    const described = entry.description !== undefined
     const chevron = (
         <ChevronRight className={cn('size-4 shrink-0 text-muted-foreground transition-transform', open && 'rotate-90')} aria-hidden />
     )
@@ -391,10 +440,16 @@ function RailParent({
     return (
         <div className="flex flex-col gap-1" onKeyDown={keys}>
             {entry.href === undefined ? (
-                <button ref={control} type="button" aria-expanded={open} aria-controls={id} className={rowClass(state)} onClick={toggle}>
-                    <EntryMark entry={entry} />
-                    <span className="truncate">{entry.label}</span>
-                    <span className="ml-auto flex items-center gap-2">
+                <button
+                    ref={control}
+                    type="button"
+                    aria-expanded={open}
+                    aria-controls={id}
+                    className={rowClass(state, 'none', described)}
+                    onClick={toggle}
+                >
+                    <RowFace entry={entry} active={state === 'active'} unread={unread} end={false} />
+                    <span className={cn('ml-auto flex items-center gap-2', described && 'mt-0.75')}>
                         <RowEnd entry={entry} unread={unread} />
                         {chevron}
                     </span>
@@ -403,12 +458,8 @@ function RailParent({
                 <div className="relative">
                     {renderLink(
                         entry,
-                        <>
-                            <EntryMark entry={entry} />
-                            <span className="truncate">{entry.label}</span>
-                            <RowEnd entry={entry} unread={unread} />
-                        </>,
-                        cn(rowClass(state), 'pr-9'),
+                        <RowFace entry={entry} active={state === 'active'} unread={unread} />,
+                        cn(rowClass(state, 'none', described), 'pr-9'),
                     )}
                     <button
                         ref={control}
@@ -416,7 +467,10 @@ function RailParent({
                         aria-label={entry.label}
                         aria-expanded={open}
                         aria-controls={id}
-                        className="absolute inset-y-0 right-1 my-auto flex size-7 items-center justify-center rounded-md hover:bg-hover"
+                        className={cn(
+                            'absolute right-1 flex size-7 items-center justify-center rounded-md hover:bg-hover',
+                            described ? 'top-1' : 'inset-y-0 my-auto',
+                        )}
                         onClick={toggle}
                     >
                         {chevron}
@@ -429,12 +483,12 @@ function RailParent({
                         <Fragment key={child.id}>
                             {renderLink(
                                 child,
-                                <>
-                                    <EntryMark entry={child} />
-                                    <span className="truncate">{child.label}</span>
-                                    <RowEnd entry={child} unread={unread} />
-                                </>,
-                                rowClass(child.active === true ? 'active' : 'idle', marked ? 'icon' : 'text'),
+                                <RowFace entry={child} active={child.active === true} unread={unread} />,
+                                rowClass(
+                                    child.active === true ? 'active' : 'idle',
+                                    marked ? 'icon' : 'text',
+                                    child.description !== undefined,
+                                ),
                             )}
                         </Fragment>
                     ))}
@@ -479,12 +533,8 @@ function Flyout({
                     <Fragment key={child.id}>
                         {renderLink(
                             child,
-                            <>
-                                <EntryMark entry={child} />
-                                <span className="truncate">{child.label}</span>
-                                <RowEnd entry={child} unread={unread} />
-                            </>,
-                            rowClass(child.active === true ? 'active' : 'idle'),
+                            <RowFace entry={child} active={child.active === true} unread={unread} />,
+                            rowClass(child.active === true ? 'active' : 'idle', 'none', child.description !== undefined),
                         )}
                     </Fragment>
                 ))}
@@ -546,7 +596,7 @@ function RailFlyout({
                     <Tooltip.Portal>
                         <Tooltip.Positioner side="right" sideOffset={8}>
                             <Tooltip.Popup className="rounded-md bg-popover px-2 py-1 text-xs text-popover-foreground shadow-pop">
-                                {entry.label}
+                                <TipText entry={entry} />
                             </Tooltip.Popup>
                         </Tooltip.Positioner>
                     </Tooltip.Portal>
@@ -703,7 +753,7 @@ function RailLink({
                 <Tooltip.Portal>
                     <Tooltip.Positioner side="right" sideOffset={8}>
                         <Tooltip.Popup className="rounded-md bg-popover px-2 py-1 text-xs text-popover-foreground shadow-pop">
-                            {entry.label}
+                            <TipText entry={entry} />
                         </Tooltip.Popup>
                     </Tooltip.Positioner>
                 </Tooltip.Portal>
@@ -712,11 +762,7 @@ function RailLink({
     }
     return renderLink(
         entry,
-        <>
-            <EntryMark entry={entry} />
-            <span className="truncate">{entry.label}</span>
-            <RowEnd entry={entry} unread={unread} />
-        </>,
-        rowClass(entry.active === true ? 'active' : 'idle'),
+        <RowFace entry={entry} active={entry.active === true} unread={unread} />,
+        rowClass(entry.active === true ? 'active' : 'idle', 'none', entry.description !== undefined),
     )
 }

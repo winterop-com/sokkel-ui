@@ -16,6 +16,8 @@ const WORDS: FieldWords = {
 /**
  * A form control with its label, an optional hint beside the label, and help under the control. A
  * required field is marked by a star after its label, and says "required" to a screen reader.
+ * `description` is a sentence between the label and the control saying what the question asks, as a
+ * long form explains its questions; `help` under the control says what a right answer looks like.
  *
  * A problem with the value is the library's issue mark at the control's end, with the control's
  * edge in the issue's color: `error` for one refusal, `issues` for several or for a warning. The
@@ -23,7 +25,7 @@ const WORDS: FieldWords = {
  * height; a form counts its issues beside its verb with `IssueCount`.
  *
  * The control is passed as children and takes `id` itself; `describedBy(id, …)` gives it the
- * `aria-describedby` that points at the help.
+ * `aria-describedby` that points at the description and the help.
  *
  * A setting a document names by key is labeled in words, with the key beside the label as a
  * `keyHint`: the words can be translated, the key never is.
@@ -33,6 +35,7 @@ export function Field({
     label,
     hint,
     required,
+    description,
     help,
     error,
     issues: issuesGiven = [],
@@ -49,6 +52,8 @@ export function Field({
     /** A short note beside the label: a unit, a format, a default. */
     hint?: string
     required?: boolean
+    /** A sentence between the label and the control: what the question asks. */
+    description?: ReactNode
     /** A sentence under the control. */
     help?: ReactNode
     /** Why the value is refused, as one critical issue; shown only once it is set. */
@@ -86,6 +91,11 @@ export function Field({
                     <span className={cn('text-xs', keyHint ? 'font-mono text-muted-foreground' : 'text-faint')}>{hint}</span>
                 )}
             </div>
+            {description !== undefined && (
+                <p id={`${id}-description`} className="text-body text-pretty text-muted-foreground">
+                    {description}
+                </p>
+            )}
             {tone === null ? (
                 children
             ) : (
@@ -110,7 +120,13 @@ export function Field({
     )
 }
 
-/** The `aria-describedby` a control in a `Field` takes, naming its help; an issue speaks from its mark. */
-export function describedBy(id: string, { help }: { help?: unknown; error?: string | null }): string | undefined {
-    return help === undefined ? undefined : `${id}-help`
+/** The `aria-describedby` a control in a `Field` takes, naming its description and its help; an issue speaks from its mark. */
+export function describedBy(
+    id: string,
+    { help, description }: { help?: unknown; description?: unknown; error?: string | null },
+): string | undefined {
+    const ids = [description === undefined ? null : `${id}-description`, help === undefined ? null : `${id}-help`].filter(
+        (one) => one !== null,
+    )
+    return ids.length === 0 ? undefined : ids.join(' ')
 }

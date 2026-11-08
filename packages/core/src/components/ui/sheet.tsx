@@ -45,7 +45,7 @@ function SheetContent({
 }: SheetPrimitive.Popup.Props & {
     side?: 'top' | 'right' | 'bottom' | 'left'
     /** How wide a side sheet opens on a wide window; on a phone `md` and `lg` take the whole width. */
-    size?: 'sm' | 'md' | 'lg'
+    size?: 'sm' | 'md' | 'lg' | 'xl'
     /** The parts sit against each other with no gap, for a header and a body that draw their own rule and padding. */
     flush?: boolean
     showCloseButton?: boolean
@@ -62,6 +62,8 @@ function SheetContent({
                         'data-[side=left]:w-full data-[side=right]:w-full data-[side=left]:sm:max-w-md data-[side=right]:sm:max-w-md',
                     size === 'lg' &&
                         'data-[side=left]:w-full data-[side=right]:w-full data-[side=left]:sm:max-w-xl data-[side=right]:sm:max-w-xl',
+                    size === 'xl' &&
+                        'data-[side=left]:w-full data-[side=right]:w-full data-[side=left]:sm:max-w-4xl data-[side=right]:sm:max-w-4xl',
                     flush && 'gap-0',
                     className,
                 )}

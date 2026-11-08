@@ -6,7 +6,8 @@ import { THEMES, type ThemeOption, type ThemeSettings } from './appearance'
 
 /**
  * A "Go to" group for the command palette, made from the rail's groups: every entry that leads
- * somewhere, the entries folded under a parent included, with the parent's label as their hint.
+ * somewhere, the entries folded under a parent included, hinted by its description, or else by its
+ * parent's label.
  * `navigate` is called with the entry's `href` and the entry.
  */
 export function placeCommands(
@@ -22,7 +23,7 @@ export function placeCommands(
                 id: `place-${entry.id}`,
                 label: entry.label,
                 icon: entry.icon ?? parent?.icon,
-                hint: parent?.label,
+                hint: entry.description ?? parent?.label,
                 onSelect: () => navigate(href, entry),
             })
         for (const child of entry.entries ?? []) add(child, entry)

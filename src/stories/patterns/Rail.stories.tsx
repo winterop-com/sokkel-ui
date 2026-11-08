@@ -103,6 +103,27 @@ const NAV: RailGroup[] = [
     { id: 'learn', title: 'Learn', entries: [{ id: 'docs', label: 'Docs', icon: BookOpen, href: '#' }] },
 ]
 
+/** The navigation with a line under each place saying what it holds. */
+const DESCRIBED: RailGroup[] = [
+    {
+        id: 'places',
+        entries: [
+            { id: 'overview', label: 'Overview', description: 'What needs a look today', icon: LayoutDashboard, href: '#' },
+            { id: 'runs', label: 'Runs', description: 'Every run, newest first', icon: Play, href: '#', active: true, count: 3 },
+            { id: 'schedules', label: 'Schedules', description: 'When each job starts', icon: CalendarClock, href: '#' },
+            { id: 'jobs', label: 'Jobs', description: 'Steps and their settings', icon: Workflow, href: '#', unread: true },
+            {
+                id: 'services',
+                label: 'Services',
+                description: 'The api, the worker and the scheduler, and how each one answers',
+                icon: Server,
+                href: '#',
+            },
+            { id: 'docs', label: 'Docs', description: 'How Tidevann works', icon: BookOpen, href: '#' },
+        ],
+    },
+]
+
 /** The navigation with parents: Evaluate folds its pages with Compare active, and Services leads to its own page beside its fold. */
 const NESTED: RailGroup[] = [
     {
@@ -227,6 +248,21 @@ export const Expanded: StoryObj = {
                 mark={<TidevannMark />}
                 name="Tidevann"
                 groups={NAV}
+                onCollapsedChange={() => undefined}
+                foot={<AccountMenu name="ada" where="tidevann.example.org" onSettings={() => undefined} />}
+            />
+        </Frame>
+    ),
+}
+
+/** Each place with a second line saying what it holds, Runs active with its count level with the label, and Services' line wrapping in a narrow rail. */
+export const Described: StoryObj = {
+    render: () => (
+        <Frame>
+            <Rail
+                mark={<TidevannMark />}
+                name="Tidevann"
+                groups={DESCRIBED}
                 onCollapsedChange={() => undefined}
                 foot={<AccountMenu name="ada" where="tidevann.example.org" onSettings={() => undefined} />}
             />

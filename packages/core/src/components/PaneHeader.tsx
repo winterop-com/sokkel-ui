@@ -21,11 +21,13 @@ const TITLE = {
  * title like a table's column heads; `plain` sits on the pane's own ground. `size="lg"` is the head
  * of one thing's detail: its code over a larger title that wraps, with `children` (chips, labels)
  * on a line under it. `inset={false}` drops the side padding, for a head on the page's own edge.
+ * `description` is a sentence under the title saying what the pane holds; the strip grows to hold it.
  */
 export function PaneHeader({
     title,
     as: Heading = 'h2',
     meta,
+    description,
     code,
     start,
     actions,
@@ -40,6 +42,8 @@ export function PaneHeader({
     as?: 'h1' | 'h2' | 'h3' | 'p'
     /** A count or a short fact beside the title, drawn quieter than it. */
     meta?: ReactNode
+    /** A sentence under the title: what the pane holds. */
+    description?: ReactNode
     /** An addressable code over the title, in the code face. */
     code?: ReactNode
     /** Controls before the title, such as a back button or a pane's own tools. */
@@ -56,6 +60,7 @@ export function PaneHeader({
 }) {
     const large = size === 'lg'
     const titled = title !== undefined || code !== undefined || children !== undefined
+    const described = description !== undefined
     return (
         <header
             className={cn(
@@ -63,6 +68,7 @@ export function PaneHeader({
                 GROUND[variant],
                 inset && (large ? 'px-4' : 'px-(--density-panel-pad)'),
                 large && 'items-start py-3',
+                described && !large && 'items-start py-2',
                 className,
             )}
         >
@@ -76,6 +82,7 @@ export function PaneHeader({
                             {meta !== undefined && <span className="shrink-0 font-mono text-xs text-muted-foreground">{meta}</span>}
                         </div>
                     )}
+                    {described && <p className="text-help text-pretty text-muted-foreground">{description}</p>}
                     {children !== undefined && <div className="flex flex-wrap items-center gap-1.5">{children}</div>}
                 </div>
             )}
