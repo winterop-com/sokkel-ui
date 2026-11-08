@@ -1,11 +1,22 @@
 import { Avatar } from '@base-ui/react/avatar'
 import { Menu } from '@base-ui/react/menu'
-import { ChevronsUpDown, Keyboard, LogOut, Palette, Settings, User } from 'lucide-react'
-import { useContext, type ReactNode } from 'react'
+import { Check, ChevronsUpDown, Keyboard, LogIn, LogOut, Monitor, Moon, Palette, Settings, Sun, User, type LucideIcon } from 'lucide-react'
+import { useContext } from 'react'
 
 import { ShortcutRegistry, useShortcuts } from '../hooks/use-shortcuts'
+import type { Scheme } from '../lib/appearance'
 import { cn } from '../lib/cn'
 import { ShellDrawer, ShellShortcuts } from './shell-context'
+
+/** A row an app adds to the account menu: its words, its icon and what choosing it does. */
+export interface AccountMenuRow {
+    id: string
+    label: string
+    icon?: LucideIcon
+    /** The keys that do the same outside the menu, drawn at the row's end. */
+    keys?: string
+    onSelect: () => void
+}
 
 export interface AccountMenuProps {
     name: string
@@ -19,6 +30,9 @@ export interface AccountMenuProps {
     onSettings?: () => void
     /** Opens the appearance settings: the theme, the scheme, the density. */
     onAppearance?: () => void
+    /** The scheme in use; with `onSchemeChange` the menu offers Light, Dark and System in itself. */
+    scheme?: Scheme
+    onSchemeChange?: (scheme: Scheme) => void
     /**
      * Opens the app's own keyboard shortcuts from the menu, and outside a `Shell` on `?` outside a
      * field too. In a `Shell` given `shortcuts`, the menu opens the shell's without it, and the shell
@@ -26,8 +40,12 @@ export interface AccountMenuProps {
      */
     onShortcuts?: () => void
     onSignOut?: () => void
-    /** More rows, placed before Sign out. */
-    extra?: ReactNode
+    /** Signing in, offered in Sign out's place where no one is signed in: `local`, or where there is no `onSignOut`. */
+    onSignIn?: () => void
+    /** More rows, each with its icon, placed before Sign out. */
+    extra?: readonly AccountMenuRow[]
+    /** Whether the menu starts open. */
+    defaultOpen?: boolean
     words?: Partial<AccountMenuWords>
 }
 
@@ -41,9 +59,13 @@ export interface AccountMenuProps {
  * the shell's drawer on a narrow window it is drawn expanded, as the rail there is, and a row
  * chosen in its menu closes the drawer as well.
  *
+ * With `scheme` and `onSchemeChange` the menu offers Light, Dark and System as rows of its own, the
+ * one in use checked, and stays open as one is chosen, so the change is seen. On a phone its rows
+ * are as tall as a finger needs, and Keyboard shortcuts is left out, a phone having no keyboard.
+ *
  * Every app has it in the rail's foot, before it has sign-in too: then it is `local`, named for
  * the local user or as "Local", with a neutral figure for the avatar and no sign-out, so the place
- * is held and the frame looks the same in every app.
+ * is held and the frame looks the same in every app; `onSignIn` offers Sign in there.
  */
 export function AccountMenu({
     name,
@@ -53,9 +75,13 @@ export function AccountMenu({
     local = false,
     onSettings,
     onAppearance,
+    scheme,
+    onSchemeChange,
     onShortcuts,
     onSignOut,
-    extra,
+    onSignIn,
+    extra = [],
+    defaultOpen = false,
     words: given,
 }: AccountMenuProps) {
     const words = { ...WORDS, ...given }
@@ -84,10 +110,20 @@ export function AccountMenu({
             <Avatar.Fallback>{local ? <User className="size-[62%]" aria-hidden /> : initial}</Avatar.Fallback>
         </Avatar.Root>
     )
-    const item =
-        'flex h-8 cursor-default items-center gap-2.5 rounded-md px-2 text-sm outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground'
+    const signedIn = !local && onSignOut !== undefined
+    const leave = signedIn
+        ? { label: words.signOut, icon: LogOut, run: onSignOut }
+        : onSignIn !== undefined && (local || onSignOut === undefined)
+          ? { label: words.signIn, icon: LogIn, run: onSignIn }
+          : undefined
+    const schemes = [
+        { value: 'light', label: words.light, icon: Sun },
+        { value: 'dark', label: words.dark, icon: Moon },
+        { value: 'system', label: words.system, icon: Monitor },
+    ] as const
     return (
         <Menu.Root
+            defaultOpen={defaultOpen}
             // A row chosen in the shell's drawer closes the drawer too, so what it opens is not drawn under it.
             onOpenChange={(open, details) => {
                 if (!open && details.reason === 'item-press') drawer?.close()
@@ -118,34 +154,46 @@ export function AccountMenu({
                                 {where !== undefined && <p className="truncate font-mono text-xs text-muted-foreground">{where}</p>}
                             </div>
                         </div>
-                        <div className="my-1 h-px bg-border" />
-                        {onSettings !== undefined && (
-                            <Menu.Item className={item} onClick={onSettings}>
-                                <Settings className="size-4 text-muted-foreground" aria-hidden />
-                                {words.settings}
-                            </Menu.Item>
-                        )}
-                        {onAppearance !== undefined && (
-                            <Menu.Item className={item} onClick={onAppearance}>
-                                <Palette className="size-4 text-muted-foreground" aria-hidden />
-                                {words.appearance}
-                            </Menu.Item>
-                        )}
+                        <Separator />
+                        {onSettings !== undefined && <Row icon={Settings} label={words.settings} onSelect={onSettings} />}
+                        {onAppearance !== undefined && <Row icon={Palette} label={words.appearance} onSelect={onAppearance} />}
                         {openShortcuts !== undefined && (
-                            <Menu.Item className={item} onClick={openShortcuts}>
-                                <Keyboard className="size-4 text-muted-foreground" aria-hidden />
-                                {words.shortcuts}
-                                {keyed && <kbd className="ml-auto font-mono text-xs text-faint">?</kbd>}
-                            </Menu.Item>
+                            <Row
+                                icon={Keyboard}
+                                label={words.shortcuts}
+                                keys={keyed ? '?' : undefined}
+                                onSelect={openShortcuts}
+                                className="max-md:hidden"
+                            />
                         )}
-                        {extra}
-                        {!local && onSignOut !== undefined && (
+                        {extra.map((row) => (
+                            <Row key={row.id} icon={row.icon} label={row.label} keys={row.keys} onSelect={row.onSelect} />
+                        ))}
+                        {scheme !== undefined && onSchemeChange !== undefined && (
                             <>
-                                <div className="my-1 h-px bg-border" />
-                                <Menu.Item className={item} onClick={onSignOut}>
-                                    <LogOut className="size-4 text-muted-foreground" aria-hidden />
-                                    {words.signOut}
-                                </Menu.Item>
+                                <Separator />
+                                <Menu.Group>
+                                    <Menu.GroupLabel className="px-2 pt-1 pb-1 text-xs font-medium text-muted-foreground">
+                                        {words.scheme}
+                                    </Menu.GroupLabel>
+                                    <Menu.RadioGroup value={scheme} onValueChange={(value: Scheme) => onSchemeChange(value)}>
+                                        {schemes.map((one) => (
+                                            <Menu.RadioItem key={one.value} value={one.value} className={ITEM}>
+                                                <one.icon className="size-4 text-muted-foreground" aria-hidden />
+                                                {one.label}
+                                                <Menu.RadioItemIndicator className="ml-auto flex">
+                                                    <Check className="size-4" aria-hidden />
+                                                </Menu.RadioItemIndicator>
+                                            </Menu.RadioItem>
+                                        ))}
+                                    </Menu.RadioGroup>
+                                </Menu.Group>
+                            </>
+                        )}
+                        {leave !== undefined && (
+                            <>
+                                <Separator />
+                                <Row icon={leave.icon} label={leave.label} onSelect={leave.run} />
                             </>
                         )}
                     </Menu.Popup>
@@ -155,11 +203,51 @@ export function AccountMenu({
     )
 }
 
+/** A row of the menu: a finger's height on a phone, its icon, its words and the keys that do the same. */
+const ITEM =
+    'flex h-8 cursor-default items-center gap-2.5 rounded-md px-2 text-sm outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground max-md:h-finger'
+
+function Row({
+    icon: Icon,
+    label,
+    keys,
+    onSelect,
+    className,
+}: {
+    icon?: LucideIcon
+    label: string
+    keys?: string
+    onSelect: () => void
+    className?: string
+}) {
+    return (
+        <Menu.Item className={cn(ITEM, className)} onClick={onSelect}>
+            {Icon === undefined ? (
+                <span className="size-4 shrink-0" aria-hidden />
+            ) : (
+                <Icon className="size-4 text-muted-foreground" aria-hidden />
+            )}
+            {label}
+            {keys !== undefined && <kbd className="ml-auto font-mono text-xs text-faint">{keys}</kbd>}
+        </Menu.Item>
+    )
+}
+
+function Separator() {
+    return <div className="my-1 h-px bg-border" />
+}
+
 export interface AccountMenuWords {
     settings: string
     appearance: string
     shortcuts: string
+    /** The heading over Light, Dark and System. */
+    scheme: string
+    light: string
+    dark: string
+    system: string
     signOut: string
+    signIn: string
     account: string
 }
 
@@ -167,6 +255,11 @@ const WORDS: AccountMenuWords = {
     settings: 'Settings',
     appearance: 'Appearance',
     shortcuts: 'Keyboard shortcuts',
+    scheme: 'Scheme',
+    light: 'Light',
+    dark: 'Dark',
+    system: 'System',
     signOut: 'Sign out',
+    signIn: 'Sign in',
     account: 'Account',
 }

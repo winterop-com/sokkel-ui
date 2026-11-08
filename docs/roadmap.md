@@ -139,15 +139,7 @@ under Next. Each is a part or an option here, never a copy in an app. Roughly on
   browser's, for the player, the video, charts and maps); `useAppearance` with pluggable storage and
   `appearanceScript` as an external module for pages that refuse inline script (browser
   extensions); a full-page `SettingsView` beside `SettingsDialog`, and a wizard's steps laid out on
-  a page; a way for a three-pane work page to hide or narrow the rail. Later frame items an app
-  moving onto `Shell` reported, none blocking it: a palette filter of the library's own (every term
-  must match, a title starting with the query first); `keywords` on palette commands and rail
-  entries, matched but not drawn; the rail's mark as a link home; a collapsed rail expanded by
-  dragging its edge, or by Enter or the right arrow on its handle; a Light, Dark and System choice
-  inline in `AccountMenu`, and a phone variant of it with rows sized for a finger; `TopBar` with a
-  search field at its start and the palette button both, `/` focusing the field; and
-  `appearanceCommands` taking scheme and theme callbacks (or `useAppearance` taking the app's
-  storage key and theme names), so an app that keeps its look under its own key is not overruled.
+  a page; a way for a three-pane work page to hide or narrow the rail.
 
 ## 1.0
 

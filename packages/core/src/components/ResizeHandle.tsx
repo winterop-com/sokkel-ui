@@ -21,6 +21,12 @@ export interface ResizeHandleProps {
     /** Whether the drag sets the target's own width or height as it moves; off when the size takes effect elsewhere, such as a grid's column. */
     follow?: boolean
     label: string
+    /**
+     * Given, the panel is collapsed and the edge is the way to expand it: pulled outward a few
+     * pixels it calls this and goes on sizing the panel under the pointer, and Enter, Space or the
+     * arrow that grows the panel call it too. It carries no size meanwhile.
+     */
+    onExpand?: () => void
     className?: string
 }
 
@@ -29,6 +35,7 @@ export interface ResizeHandleProps {
  * to its limits with Home and End, and put back to `reset` with a double click or Enter. It draws a
  * line in the accent while it is hovered, focused or dragged, and nothing otherwise. Inside an
  * element marked `data-overlay`, such as the shell's drawer and its panel sheet, it is not drawn.
+ * With `onExpand` it is a collapsed panel's edge, which a drag outward or a key expands.
  */
 export function ResizeHandle({
     target,
@@ -42,15 +49,16 @@ export function ResizeHandle({
     grows = 1,
     follow = true,
     label,
+    onExpand,
     className,
 }: ResizeHandleProps) {
     const clamp = (value: number) => Math.round(Math.min(max, Math.max(min, value)))
     const now = () => {
-        if (size !== undefined) return size
+        if (size !== undefined && onExpand === undefined) return size
         const element = target.current
         return element === null ? min : axis === 'x' ? element.offsetWidth : element.offsetHeight
     }
-    const { dragging, begin } = useDragSize(axis, now, grows, onSize, clamp, target, follow)
+    const { dragging, begin } = useDragSize(axis, now, grows, onSize, clamp, target, follow, onExpand)
     const step = (by: number) => onSize(clamp(now() + by))
     const restore = () => {
         if (onReset !== undefined) onReset()
@@ -63,14 +71,20 @@ export function ResizeHandle({
             role="separator"
             aria-orientation={axis === 'x' ? 'vertical' : 'horizontal'}
             aria-label={label}
-            aria-valuenow={size}
-            aria-valuemin={min}
-            aria-valuemax={max}
+            aria-valuenow={onExpand === undefined ? size : undefined}
+            aria-valuemin={onExpand === undefined ? min : undefined}
+            aria-valuemax={onExpand === undefined ? max : undefined}
             tabIndex={0}
             data-dragging={dragging || undefined}
             onPointerDown={begin}
-            onDoubleClick={restore}
+            onDoubleClick={onExpand === undefined ? restore : undefined}
             onKeyDown={(event) => {
+                if (onExpand !== undefined) {
+                    if (event.key !== 'Enter' && event.key !== ' ' && event.key !== forward) return
+                    event.preventDefault()
+                    onExpand()
+                    return
+                }
                 if (event.key === forward) step(16)
                 else if (event.key === back) step(-16)
                 else if (event.key === 'Home') onSize(min)

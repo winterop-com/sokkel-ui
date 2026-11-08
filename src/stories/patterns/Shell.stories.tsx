@@ -1,20 +1,31 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { BookOpen, CalendarClock, Play, Server, Workflow } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import { BookOpen, CalendarClock, FolderGit2, Play, Search, Server, Workflow } from 'lucide-react'
+import { useMemo, useState, type ReactNode } from 'react'
 
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { Banner } from '@winterop-com/sokkel-ui/Banner'
 import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
 import { placeCommands } from '@winterop-com/sokkel-ui/lib/commands'
+import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
-import { Rail, type RailEntry, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
+import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
+import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
 import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import {
+    Command,
+    CommandDialog,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from '@winterop-com/sokkel-ui/primitives/command'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
-import { makeRuns, startedAt, type TableRun } from '../fixtures/tableRuns'
+import { JOBS, makeRuns, PROJECTS, startedAt, type TableRun } from '../fixtures/tableRuns'
 import { TidevannMark } from '../fixtures/TidevannMark'
 
 /**
@@ -30,8 +41,8 @@ const GROUPS: RailGroup[] = [
         id: 'operate',
         title: 'Operate',
         entries: [
-            { id: 'runs', label: 'Runs', icon: Play, href: '#runs' },
-            { id: 'schedules', label: 'Schedules', icon: CalendarClock, href: '#schedules' },
+            { id: 'runs', label: 'Runs', icon: Play, href: '#runs', keywords: ['history'] },
+            { id: 'schedules', label: 'Schedules', icon: CalendarClock, href: '#schedules', keywords: ['cron', 'timer'] },
         ],
     },
     {
@@ -39,7 +50,7 @@ const GROUPS: RailGroup[] = [
         title: 'Build',
         entries: [
             { id: 'jobs', label: 'Jobs', icon: Workflow, href: '#jobs' },
-            { id: 'services', label: 'Services', icon: Server, href: '#services' },
+            { id: 'services', label: 'Services', icon: Server, href: '#services', keywords: ['api', 'worker', 'scheduler'] },
         ],
     },
     { id: 'reference', title: 'Reference', entries: [{ id: 'docs', label: 'Docs', icon: BookOpen, href: '#docs' }] },
@@ -59,15 +70,69 @@ const COLUMNS: DataColumn<TableRun>[] = [
     { id: 'started', header: 'Started', width: '8rem', cell: (run) => startedAt(run.ago) },
 ]
 
+const RUNS = makeRuns(60)
+
+/** The app's own search: an overlay of its own over the page, which the palette replaces. */
+function SearchOverlay({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+    return (
+        <CommandDialog open={open} onOpenChange={onOpenChange} title="Search" description="Search the jobs and projects">
+            <Command>
+                <CommandInput placeholder="Search the jobs and projects" />
+                <CommandList>
+                    <CommandEmpty>Nothing matches.</CommandEmpty>
+                    <CommandGroup heading="Jobs">
+                        {JOBS.map((job) => (
+                            <CommandItem key={job} value={job}>
+                                <Workflow aria-hidden />
+                                <span className="font-mono text-xs">{job}</span>
+                            </CommandItem>
+                        ))}
+                    </CommandGroup>
+                    <CommandGroup heading="Projects">
+                        {PROJECTS.map((project) => (
+                            <CommandItem key={project} value={project}>
+                                <FolderGit2 aria-hidden />
+                                {project}
+                            </CommandItem>
+                        ))}
+                    </CommandGroup>
+                </CommandList>
+            </Command>
+        </CommandDialog>
+    )
+}
+
 /**
  * Tidevann's frame. A press on a place in the rail, or a place chosen in the palette, moves to it
- * through the shell's `route`, which closes the drawer however the place was reached.
+ * through the shell's `route`, which closes the drawer however the place was reached; the mark and
+ * name lead to Runs, the app's home. `search` puts a field at the top bar's start, beside the
+ * palette's button at its end; `overlay` gives the app a search of its own over the page.
  */
-function Frame({ banner, collapsed: start = false, drawer = false }: { banner?: ReactNode; collapsed?: boolean; drawer?: boolean }) {
+function Frame({
+    banner,
+    contentKey,
+    collapsed: start = false,
+    drawer = false,
+    search = false,
+    overlay = false,
+}: {
+    banner?: ReactNode
+    contentKey?: number
+    collapsed?: boolean
+    drawer?: boolean
+    search?: boolean
+    overlay?: boolean
+}) {
     const [collapsed, setCollapsed] = useState(start)
     const [drawerOpen, setDrawerOpen] = useState(drawer)
     const [place, setPlace] = useState('runs')
-    const go = (entry: RailEntry) => setPlace(entry.id)
+    const [query, setQuery] = useState('')
+    const [searching, setSearching] = useState(overlay)
+    const go = (href: string) => setPlace(href.slice(1))
+    const rows = useMemo(() => {
+        const asked = query.trim()
+        return asked === '' ? RUNS : RUNS.filter((run) => run.job.includes(asked) || run.id.includes(asked))
+    }, [query])
     return (
         <TooltipProvider>
             <Shell
@@ -75,11 +140,16 @@ function Frame({ banner, collapsed: start = false, drawer = false }: { banner?: 
                 drawerOpen={drawerOpen}
                 onDrawerOpenChange={setDrawerOpen}
                 banner={banner}
-                palette={placeCommands(GROUPS, (_, entry) => go(entry))}
+                contentKey={contentKey}
+                palette={placeCommands(GROUPS, (href) => go(href))}
+                // The palette opens where nothing stands over the page, and over the app's own search, which it replaces.
+                mayOpenPalette={overlay ? (over) => over === null || searching : undefined}
+                onPaletteOpenChange={overlay ? (open) => open && setSearching(false) : undefined}
                 rail={
                     <Rail
                         mark={<TidevannMark />}
                         name="Tidevann"
+                        markHref="#runs"
                         groups={placesAt(place)}
                         collapsed={collapsed}
                         onCollapsedChange={setCollapsed}
@@ -90,7 +160,7 @@ function Frame({ banner, collapsed: start = false, drawer = false }: { banner?: 
                                 className={className}
                                 onClick={(event) => {
                                     event.preventDefault()
-                                    go(entry)
+                                    if (entry.href !== undefined) go(entry.href)
                                 }}
                             >
                                 {children}
@@ -107,7 +177,19 @@ function Frame({ banner, collapsed: start = false, drawer = false }: { banner?: 
                         }
                     />
                 }
-                top={<TopBar trail={[{ label: 'harbor', href: '#' }, { label: labelOf(place) }]} />}
+                top={
+                    <TopBar
+                        search={search ? <SearchField value={query} onChange={setQuery} placeholder="Search" /> : undefined}
+                        trail={[{ label: 'harbor', href: '#' }, { label: labelOf(place) }]}
+                        actions={
+                            overlay ? (
+                                <IconButton label="Search" onClick={() => setSearching(true)}>
+                                    <Search aria-hidden />
+                                </IconButton>
+                            ) : undefined
+                        }
+                    />
+                }
                 foot={
                     <StatusLine note="api.example.org">
                         <StatusItem label="project">harbor</StatusItem>
@@ -117,30 +199,42 @@ function Frame({ banner, collapsed: start = false, drawer = false }: { banner?: 
             >
                 <Page className="h-full">
                     <PageHeader title={labelOf(place)} description="Every run of every job in harbor, newest first." />
-                    <DataTable columns={COLUMNS} rows={makeRuns(60)} rowKey={(run) => run.id} minWidth="36rem" className="min-h-0 flex-1" />
+                    <DataTable columns={COLUMNS} rows={rows} rowKey={(run) => run.id} minWidth="36rem" className="min-h-0 flex-1" />
                 </Page>
             </Shell>
+            {overlay && <SearchOverlay open={searching} onOpenChange={setSearching} />}
         </TooltipProvider>
     )
 }
 
 /**
+ * A search field at the top bar's start, which `/` focuses, and the palette's button at its end,
+ * showing the keys that open it. The field narrows the runs as words are typed. On a phone the
+ * field gives way to the palette's button, drawn as an icon.
+ */
+export const SearchAndPalette: StoryObj = { name: 'Search field', render: () => <Frame search /> }
+
+/**
  * A banner between the top bar and the content, for the app's news rather than one screen's: the
- * server has stopped answering. It does not scroll with the content and covers none of it.
+ * server has stopped answering. It does not scroll with the content and covers none of it. Retry
+ * changes the shell's `contentKey`, which mounts the page afresh, as an app does once the server is
+ * back.
  */
 export const WithBanner: StoryObj = {
     name: 'Banner',
     render: function Render() {
         const [shown, setShown] = useState(true)
+        const [tries, setTries] = useState(0)
         return (
             <Frame
+                contentKey={tries}
                 banner={
                     shown && (
                         <Banner
                             tone="critical"
                             onDismiss={() => setShown(false)}
                             actions={
-                                <Button size="sm" variant="outline">
+                                <Button size="sm" variant="outline" onClick={() => setTries(tries + 1)}>
                                     Retry
                                 </Button>
                             }
@@ -161,6 +255,13 @@ export const WithBanner: StoryObj = {
  * the palette close it, and the focus goes back to the menu button.
  */
 export const Drawer: StoryObj = { render: () => <Frame collapsed drawer /> }
+
+/**
+ * The app's own search open over the page. ⌘K or Ctrl+K opens the palette in its place:
+ * `mayOpenPalette` lets the palette open over the search, and the app closes its search as the
+ * palette opens. Over any other dialog the keys leave the palette closed.
+ */
+export const OverSearch: StoryObj = { name: 'Over a search', render: () => <Frame overlay /> }
 
 function DesktopFrame({ collapsed: start = false }: { collapsed?: boolean }) {
     const [collapsed, setCollapsed] = useState(start)

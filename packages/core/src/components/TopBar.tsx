@@ -18,15 +18,19 @@ export interface TopBarProps {
     trail?: readonly Crumb[]
     /** The app's mark before the trail, for a screen without the rail that carries it. */
     mark?: ReactNode
-    /** Opens the command palette; in a `Shell` with a `palette` it opens the shell's. No search is drawn without either. */
+    /**
+     * Opens the command palette from the button at the bar's end; in a `Shell` with a `palette` the
+     * button opens the shell's. No button is drawn without either.
+     */
     onSearch?: () => void
     /**
-     * A search drawn in the bar itself, such as `Search` with its results under it, in place of
-     * the button that opens the palette. It takes the room the trail leaves, up to a field's width.
+     * A search field drawn at the bar's start, before the trail, such as `SearchField` or `Search`
+     * with its results under it, which `/` focuses. The palette's button stays at the bar's end;
+     * on a phone, where that button is an icon, the field gives way to it.
      */
     search?: ReactNode
     /**
-     * The keys that open the palette, shown in the search. Shown only when bound: given here by an
+     * The keys that open the palette, shown in its button. Shown only when bound: given here by an
      * app that binds them itself, or as `shortcutLabel('k')` (⌘K on a Mac, Ctrl K elsewhere) in a
      * `Shell` that holds the palette.
      */
@@ -38,17 +42,21 @@ export interface TopBarProps {
 
 /** The words a top bar says. */
 export interface TopBarWords {
+    /** The palette's button, where no search field stands beside it. */
     search: string
+    /** The palette's button beside a search field. */
+    palette: string
     trail: string
 }
 
-const WORDS: TopBarWords = { search: 'Search', trail: 'Where you are' }
+const WORDS: TopBarWords = { search: 'Search', palette: 'Open the command palette', trail: 'Where you are' }
 
 /**
- * What the shell's top bar holds: the trail to the current screen at the left, the search that
- * opens the command palette, and the screen's actions at the right. On a phone the trail keeps
- * only its last step and the search becomes an icon. `mark` puts the app's mark before the trail
- * where no rail shows it; `AppBar` is the bar itself for a screen drawn without `Shell`.
+ * What the shell's top bar holds: a search field and the trail to the current screen at the left,
+ * the button that opens the command palette and the screen's actions at the right. The field
+ * stands first, so it stays in one place from screen to screen. On a phone the trail keeps only
+ * its last step and the palette's button becomes an icon. `mark` puts the app's mark before the
+ * rest where no rail shows it; `AppBar` is the bar itself for a screen drawn without `Shell`.
  */
 export function TopBar({
     trail = [],
@@ -74,6 +82,9 @@ export function TopBar({
                 <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
                     {mark}
                 </span>
+            )}
+            {field !== undefined && (
+                <div className={cn('w-56 max-w-80 min-w-0 shrink lg:w-64', search !== undefined && 'max-md:hidden')}>{field}</div>
             )}
             {trail.length > 0 && (
                 <nav aria-label={words.trail} className="min-w-0 flex-1">
@@ -107,17 +118,25 @@ export function TopBar({
                 </nav>
             )}
             {trail.length === 0 && <div className="flex-1" />}
-            {field !== undefined && <div className="ml-auto max-w-80 min-w-0 flex-1 md:min-w-56">{field}</div>}
-            {field === undefined && search !== undefined && (
+            {search !== undefined && (
                 <button
                     type="button"
                     onClick={search}
-                    aria-label={words.search}
-                    className="ml-auto flex h-8 shrink-0 items-center gap-2 rounded-control border border-border bg-field px-2.5 text-sm text-muted-foreground outline-none hover:border-border-strong hover:text-foreground focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring max-md:size-8 max-md:justify-center max-md:border-transparent max-md:bg-transparent max-md:px-0 md:w-56"
+                    aria-label={field === undefined ? words.search : words.palette}
+                    title={field === undefined ? undefined : words.palette}
+                    className={cn(
+                        'flex h-8 shrink-0 items-center gap-2 rounded-control border border-border bg-field px-2.5 text-sm text-muted-foreground outline-none hover:border-border-strong hover:text-foreground focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring max-md:size-8 max-md:justify-center max-md:border-transparent max-md:bg-transparent max-md:px-0',
+                        field === undefined ? 'md:w-56' : 'md:px-2',
+                    )}
                 >
-                    <Search className="size-4 shrink-0" aria-hidden />
-                    <span className="flex-1 text-left max-md:hidden">{words.search}</span>
-                    {shortcut !== undefined && <Kbd className="max-md:hidden">{shortcut}</Kbd>}
+                    <Search className={cn('size-4 shrink-0', field !== undefined && shortcut !== undefined && 'md:hidden')} aria-hidden />
+                    {field === undefined && <span className="flex-1 text-left max-md:hidden">{words.search}</span>}
+                    {shortcut !== undefined &&
+                        (field === undefined ? (
+                            <Kbd className="max-md:hidden">{shortcut}</Kbd>
+                        ) : (
+                            <kbd className="font-mono text-xs max-md:hidden">{shortcut}</kbd>
+                        ))}
                 </button>
             )}
             {actions !== undefined && <div className="flex shrink-0 items-center gap-1.5">{actions}</div>}
