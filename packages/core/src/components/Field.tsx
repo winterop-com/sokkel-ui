@@ -61,7 +61,7 @@ export function Field({
     return (
         <div className={cn('flex min-w-0 flex-col gap-1.5', className)}>
             <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                <Label htmlFor={id} className={cn('leading-5', mono && 'font-mono')}>
+                <Label htmlFor={id} className={cn(mono && 'font-mono')}>
                     {label}
                     {required === true && (
                         <>
@@ -92,7 +92,7 @@ export function Field({
                 </div>
             )}
             {help !== undefined && (
-                <p id={`${id}-help`} className="text-xs text-muted-foreground">
+                <p id={`${id}-help`} className="text-help text-muted-foreground">
                     {help}
                 </p>
             )}

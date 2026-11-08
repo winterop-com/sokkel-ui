@@ -27,6 +27,8 @@ const WORDS: PageHeaderWords = { back: 'Back', trail: 'Where you are' }
  * A page reached from another can say where it sits: `trail` draws the places above it small over
  * the title, nearest last, each a link back up, and `onBack` draws a back button level with the
  * title, the rest of the header lined up after it.
+ *
+ * A long title wraps; `singleLine` keeps it to one line, cut short with the whole of it on hover.
  */
 export function PageHeader({
     title,
@@ -37,6 +39,7 @@ export function PageHeader({
     actions,
     trail,
     onBack,
+    singleLine = false,
     renderLink = (crumb, className) => (
         <a href={crumb.href} className={className}>
             {crumb.label}
@@ -59,6 +62,8 @@ export function PageHeader({
     trail?: readonly Crumb[]
     /** Draws a back button before the title. */
     onBack?: () => void
+    /** Keeps the title to one line, cut short with an ellipsis, rather than wrapping. */
+    singleLine?: boolean
     /** Draws a step of the trail that has an `href`, for an app's own router link. */
     renderLink?: (crumb: Crumb, className: string) => ReactNode
     words?: Partial<PageHeaderWords>
@@ -99,11 +104,12 @@ export function PageHeader({
                 )}
                 <div className={cn('flex min-w-0 items-baseline gap-2', column)}>
                     <h1
-                        className={
-                            showCode || code === undefined
-                                ? 'truncate text-page font-medium tracking-tight'
-                                : 'truncate font-mono text-page font-medium tracking-tight'
-                        }
+                        title={singleLine ? title : undefined}
+                        className={cn(
+                            'min-w-0 text-page-title',
+                            singleLine ? 'truncate' : 'text-pretty break-words',
+                            !showCode && code !== undefined && 'font-mono',
+                        )}
                     >
                         {title}
                     </h1>

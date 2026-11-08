@@ -162,7 +162,13 @@ function DrawerFooter({ className, ...props }: React.ComponentProps<'div'>) {
 }
 
 function DrawerTitle({ className, ...props }: DrawerPrimitive.Title.Props) {
-    return <DrawerPrimitive.Title data-slot="drawer-title" className={cn('text-base font-medium text-foreground', className)} {...props} />
+    return (
+        <DrawerPrimitive.Title
+            data-slot="drawer-title"
+            className={cn('font-heading text-detail-title text-foreground', className)}
+            {...props}
+        />
+    )
 }
 
 function DrawerDescription({ className, ...props }: DrawerPrimitive.Description.Props) {

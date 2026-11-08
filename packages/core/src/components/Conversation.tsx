@@ -73,7 +73,7 @@ export function ConversationStart({
                     </span>
                 ))}
             <div className="flex flex-col gap-1">
-                <h2 className="text-page font-semibold">{title}</h2>
+                <h2 className="text-page-title">{title}</h2>
                 {children !== undefined && <p className="text-sm text-muted-foreground">{children}</p>}
             </div>
             {actions !== undefined && <div className="flex flex-wrap gap-2">{actions}</div>}

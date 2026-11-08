@@ -46,5 +46,5 @@ export function Toolbar({
 
 /** The title a toolbar names its content by, such as the month a calendar shows; it takes the room the tools leave and truncates. */
 export function ToolbarTitle({ as: Heading = 'h2', children }: { as?: 'h1' | 'h2' | 'h3'; children: ReactNode }) {
-    return <Heading className="min-w-0 flex-1 truncate text-title font-semibold">{children}</Heading>
+    return <Heading className="min-w-0 flex-1 truncate text-detail-title">{children}</Heading>
 }
