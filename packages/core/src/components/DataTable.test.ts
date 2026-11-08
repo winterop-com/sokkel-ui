@@ -1,6 +1,18 @@
 import { describe, expect, it } from 'vitest'
 
-import { branchKeys, findInTree, flattenRows, groupLines, groupRows, isGroupHead, rangeKeys, sortRows, treeBranchKeys } from './DataTable'
+import {
+    branchKeys,
+    findInTree,
+    flattenRows,
+    groupLines,
+    groupRows,
+    isGroupHead,
+    movedColumn,
+    orderColumns,
+    rangeKeys,
+    sortRows,
+    treeBranchKeys,
+} from './DataTable'
 
 describe('row groups', () => {
     const runs = [
@@ -145,5 +157,24 @@ describe('branchKeys and rangeKeys', () => {
         const flat = flattenRows({ rows: tree, rowKey: key, childRows: kids, expanded: new Set(['b']), order: (level) => level })
         expect(rangeKeys(flat, 'b1', 'b')).toEqual(['b', 'b2', 'b1'])
         expect(rangeKeys(flat, 'b2', 'c')).toEqual(['b2', 'b1', 'a', 'c'])
+    })
+})
+
+describe('column order', () => {
+    const columns = ['job', 'state', 'by', 'started', 'duration'].map((id) => ({ id }))
+    const ids = (list: readonly { id: string }[]) => list.map((column) => column.id)
+
+    it('draws the named columns first, then the rest in their own order, the first column staying first', () => {
+        expect(ids(orderColumns(columns, []))).toEqual(['job', 'state', 'by', 'started', 'duration'])
+        expect(ids(orderColumns(columns, ['duration', 'state']))).toEqual(['job', 'duration', 'state', 'by', 'started'])
+        expect(ids(orderColumns(columns, ['started', 'job', 'gone', 'started']))).toEqual(['job', 'started', 'state', 'by', 'duration'])
+    })
+
+    it('moves a column a place either way, never the first nor past it', () => {
+        expect(movedColumn(columns, 'by', -1)).toEqual(['job', 'by', 'state', 'started', 'duration'])
+        expect(movedColumn(columns, 'by', 1)).toEqual(['job', 'state', 'started', 'by', 'duration'])
+        expect(movedColumn(columns, 'state', -1)).toEqual(['job', 'state', 'by', 'started', 'duration'])
+        expect(movedColumn(columns, 'duration', 1)).toEqual(['job', 'state', 'by', 'started', 'duration'])
+        expect(movedColumn(columns, 'job', 1)).toEqual(['job', 'state', 'by', 'started', 'duration'])
     })
 })

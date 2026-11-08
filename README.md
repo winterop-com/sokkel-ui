@@ -30,10 +30,11 @@ around in the app.
 - **Frame:** Shell, Rail, TopBar, NavBar, SidePanel, Dock, StatusLine, CommandPalette and
   AccountMenu. The rail, side panel, inspector, channel list and dock resize by
   default.
-- **Content:** Section, PageHeader, SplitPane, DataTable, DescriptionList, Stat, Timeline, Tree and
-  TreeSelect, Field, Segmented, CodeEditor, LogView, JsonTree, DiffView and TableOfContents.
-  DataTable is the one table, from a short listing to 50k rows or a tree loaded on demand; its
-  columns resize by default.
+- **Content:** Section, PageHeader, SplitPane, DataTable, FilterBar, SavedViews, DescriptionList,
+  Stat, Timeline, Tree and TreeSelect, Field, Segmented, AsyncSelect, CodeEditor, LogView, JsonTree,
+  DiffView and TableOfContents. DataTable is the one table, from a short listing to 50k rows or a
+  tree loaded on demand; its columns resize by default. A listing filters from a FilterBar in its
+  bar and keeps its setups as SavedViews, which the app stores.
 - **Files:** FileList, FileGrid and FileTile, FilePreview, UploadTray and DropZone.
 - **Chat:** Markdown, Code, MermaidDiagram, ToolCalls, ConfirmCard, Composer and audio
   waveforms.

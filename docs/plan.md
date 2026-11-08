@@ -305,8 +305,8 @@ toggle-group, tooltip, trace.
 
 Shell, Rail, AppBar, SubNav, Page, PageHeader, PaneHeader, Toolbar, Section, Surface, the layout
 components (Stack, Row, Columns, Split, Fill), SplitPane, Field, TextField, InlineField, SliderField,
-CheckboxField, CheckboxList, ChoiceList, CodeField, SwitchField, SearchField, FileField, FilterChip, FormBar,
-SelectionBar, DataTable, StatusChip, PersonAvatar, PersonRow, MetaLine, DueText, AttachmentList,
+CheckboxField, CheckboxList, ChoiceList, CodeField, SwitchField, SearchField, FileField, FilterChip, FilterBar,
+SavedViews, FormBar, SelectionBar, DataTable, StatusChip, PersonAvatar, PersonRow, MetaLine, DueText, AttachmentList,
 IconButton, StarButton, SplitButton, DownloadButton, AccountMenu, SidePanel, DialogShell,
 ConfirmDialog, TreeSelect, AsyncSelect, CapabilityPicker, SignIn, RelativeTime, ApiLink, TagChips,
 DetailSheet.
@@ -366,7 +366,29 @@ album view) that keeps the selection, menus and sort. A short listing drops the 
 head and may carry a foot line. Rows gather under group heads by a field or a key made from the row
 (`groupBy`), each head with its label, its count and a column's `aggregate`; a head folds its
 group, rows sort within their group, and a head's box selects the group, in the table, the list and
-the grid alike.
+the grid alike. Its column menu hides columns and moves them a place earlier or later, the first
+column staying first as each row's title, and the order is held like the widths (`columnOrder`).
+
+A listing filters from a `FilterBar` in its table's bar: Filter adds a filter from a menu of the
+fields with a search over them, each filter is a chip saying its field, how it compares and its
+value, the chip opens the field's operators over its value (is, is not and contains for text; any
+of and none of for a set, its values ticked from a list with a search; between, at least and at most
+for a number; between, after and before for a day), and Clear all removes them. A filter applies as
+it is changed, and one closed with nothing filled in goes away. Filters are data (`lib/filters`): a
+field, an operator and values as strings, so they keep and travel as they are. The bar holds no
+rows: a listing filtered in the browser passes its rows through `filterRows` with the same fields,
+and one filtered on a server sends it `activeFilters`. `FilterChip`'s own menu holds a search past
+eight values, the ticked ones leading it, and takes an `editor` in place of options. `SavedViews`
+keeps a listing's setups under names: a view holds the filters, the sort and the columns (hidden,
+order, widths) as `ListViewState` (`lib/list-views`), the part lists the views to pick, saves the
+listing as a new view, saves it into the chosen one, renames and deletes it, and says when the
+listing differs from the chosen view (`viewChanges`), with Reset and Save beside it. The app stores
+the views; the part takes them and its callbacks and keeps nothing itself.
+
+`AsyncSelect` takes several values with `multiple`: chips in the field, each with its remove button,
+the search typed after them and the list open while values are picked. A loader that answers a page
+at a time (`{ items, next }`) gets the next page as the list nears its end, and `onCreate` offers
+typed text no option is called as a new one at the list's end.
 
 `SettingsDialog` holds an app's preferences: its sections in a navigation with a search over every
 setting (its title, description and `keywords`, which are never drawn, and its section's name, so a

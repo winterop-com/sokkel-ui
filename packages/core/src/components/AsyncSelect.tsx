@@ -1,6 +1,6 @@
 import { Combobox } from '@base-ui/react'
-import { Check, ChevronsUpDown, RotateCw, Search } from 'lucide-react'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { Check, ChevronsUpDown, Plus, RotateCw, Search, X } from 'lucide-react'
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type UIEvent } from 'react'
 
 import { cn } from '../lib/cn'
 import { Spinner } from './ui/spinner'
@@ -14,6 +14,14 @@ export interface AsyncSelectWords {
     typeMore: (characters: number) => string
     failed: string
     retry: string
+    /** The line under the list while the next page loads. */
+    loadingMore: string
+    /** The row that makes an option of the typed text. */
+    create: (text: string) => string
+    /** Said when the app could not make the option. */
+    createFailed: string
+    /** A chosen value's remove button, with several values. */
+    remove: (label: string) => string
 }
 
 const WORDS: AsyncSelectWords = {
@@ -24,24 +32,101 @@ const WORDS: AsyncSelectWords = {
     typeMore: (characters) => `Type ${String(characters)} or more characters to search.`,
     failed: 'The search did not answer.',
     retry: 'Try again',
+    loadingMore: 'Loading more',
+    create: (text) => `Create "${text}"`,
+    createFailed: 'It could not be created.',
+    remove: (label) => `Remove ${label}`,
 }
 
-type Answer<T> =
-    | { state: 'idle' }
-    | { state: 'loading'; items: T[] }
-    | { state: 'done'; items: T[] }
-    | { state: 'failed'; reason: string; items: T[] }
+/** Where the next page of options starts, as the app's loader names it: a page number, an offset, a token. */
+export type AsyncCursor = string | number
 
-export interface AsyncSelectProps<T> {
+/** One page of options, and where the next one starts. */
+export interface AsyncPage<T> {
+    items: readonly T[]
+    /** Handed back to `load` for the next page; none when this page is the last. */
+    next?: AsyncCursor | null
+}
+
+/**
+ * Answers a query with its options: all of them, or a page and where the next starts. `cursor` is
+ * absent for the first page. The signal aborts when a newer query replaces this one.
+ */
+export type AsyncLoad<T> = (query: string, signal: AbortSignal, cursor?: AsyncCursor) => Promise<readonly T[] | AsyncPage<T>>
+
+/** Where the options for a query stand: those loaded, where the next page starts, and what runs or failed. */
+export interface AsyncAnswer<T> {
+    items: readonly T[]
+    next: AsyncCursor | undefined
+    /** What is loading now: the first page, the next one, or nothing. */
+    loading: 'first' | 'more' | null
+    /** What failed and why. */
+    failed: { at: 'first' | 'more'; reason: string } | null
+    /** Whether the first page has answered. */
+    answered: boolean
+}
+
+export const NO_ANSWER: AsyncAnswer<never> = { items: [], next: undefined, loading: null, failed: null, answered: false }
+
+/** A loader's answer as a page: a plain list is the one and last page. */
+export function pageOf<T>(answer: readonly T[] | AsyncPage<T>): AsyncPage<T> {
+    return Array.isArray(answer) ? { items: answer as readonly T[] } : (answer as AsyncPage<T>)
+}
+
+/** A page landed: the first replaces the options, a later one adds those not listed yet. */
+export function withPage<T>(answer: AsyncAnswer<T>, page: AsyncPage<T>, at: 'first' | 'more', key: (item: T) => string): AsyncAnswer<T> {
+    const known = new Set(at === 'more' ? answer.items.map(key) : [])
+    const added = page.items.filter((item) => {
+        const id = key(item)
+        if (known.has(id)) return false
+        known.add(id)
+        return true
+    })
+    return {
+        items: at === 'more' ? [...answer.items, ...added] : added,
+        next: page.next ?? undefined,
+        loading: null,
+        failed: null,
+        answered: true,
+    }
+}
+
+/** Whether the next page should load: there is one, nothing runs, and the first page did not fail. */
+export function wantsMore(answer: AsyncAnswer<unknown>): boolean {
+    return answer.answered && answer.next !== undefined && answer.loading === null && answer.failed === null
+}
+
+/** Whether a list is scrolled within `margin` pixels of its end, or is too short to scroll at all. */
+export function nearEnd(list: { scrollTop: number; clientHeight: number; scrollHeight: number }, margin = 48): boolean {
+    return list.scrollTop + list.clientHeight >= list.scrollHeight - margin
+}
+
+/** Whether to offer making an option of the typed text: there is text, and no option is called that. */
+export function offersCreate<T>(text: string, items: readonly T[], label: (item: T) => string): boolean {
+    const wanted = text.trim().toLocaleLowerCase('en-US')
+    return wanted !== '' && !items.some((item) => label(item).trim().toLocaleLowerCase('en-US') === wanted)
+}
+
+const said = (reason: unknown) => (reason instanceof Error ? reason.message : String(reason))
+
+/** The row that makes an option of the typed text. */
+class Creation {
+    constructor(readonly text: string) {}
+}
+
+interface AsyncSelectBase<T> {
     id?: string
-    value: T | null
-    onValueChange: (value: T | null) => void
-    /** Answers a query with the options for it; the signal aborts when a newer query replaces it. */
-    load: (query: string, signal: AbortSignal) => Promise<T[]>
+    /** Answers a query with its options, or a page of them; scrolling near the list's end loads the next. */
+    load: AsyncLoad<T>
     itemKey: (item: T) => string
     itemLabel: (item: T) => string
     /** How an option is drawn in the list; its label alone otherwise. */
     renderItem?: (item: T) => ReactNode
+    /**
+     * Makes an option of the typed text, given when the app allows it: the list then ends in a row
+     * that offers it while no option is called that, and the option made is chosen.
+     */
+    onCreate?: (text: string) => T | Promise<T>
     /** Milliseconds of quiet typing before a load. */
     debounce?: number
     /** Characters needed before anything is loaded. */
@@ -53,38 +138,69 @@ export interface AsyncSelectProps<T> {
     words?: Partial<AsyncSelectWords>
 }
 
+export interface AsyncSelectOneProps<T> extends AsyncSelectBase<T> {
+    multiple?: false
+    value: T | null
+    onValueChange: (value: T | null) => void
+}
+
+export interface AsyncSelectManyProps<T> extends AsyncSelectBase<T> {
+    /** Chooses several values, each shown as a chip in the field with its remove button. */
+    multiple: true
+    value: readonly T[]
+    onValueChange: (value: T[]) => void
+}
+
+export type AsyncSelectProps<T> = AsyncSelectOneProps<T> | AsyncSelectManyProps<T>
+
 /**
- * A select whose options come from a search: it reads like a select, and its popover holds a
- * search box whose text is sent to `load`, after a pause in typing. Older answers are dropped,
- * a request still in flight is aborted, and the last options stay listed while the next load
- * runs. A failed load says so with a way to try again.
+ * A select whose options come from a search: its text is sent to `load` after a pause in typing.
+ * Older answers are dropped, a request still in flight is aborted, and the last options stay listed
+ * while the next load runs. A failed load says so with a way to try again.
+ *
+ * One value reads like a select whose popover holds the search box. With `multiple`, the chosen
+ * values are chips in the field, each with its remove button (Backspace takes the last), the search
+ * is typed in the field itself, and the list stays open while values are picked.
+ *
+ * A loader that answers a page at a time (`{ items, next }`) gets the next page as the list is
+ * scrolled near its end, the line under it saying so. With `onCreate`, typed text that names no
+ * option is offered as a new one at the list's end.
  */
-export function AsyncSelect<T>({
-    id,
-    value,
-    onValueChange,
-    load,
-    itemKey,
-    itemLabel,
-    renderItem,
-    debounce = 250,
-    minQuery = 0,
-    defaultOpen = false,
-    defaultQuery = '',
-    invalid = false,
-    className,
-    words: given,
-}: AsyncSelectProps<T>) {
+export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
+    const {
+        id,
+        load,
+        itemKey,
+        itemLabel,
+        renderItem,
+        onCreate,
+        debounce = 250,
+        minQuery = 0,
+        defaultOpen = false,
+        defaultQuery = '',
+        invalid = false,
+        className,
+        words: given,
+    } = props
     const words = { ...WORDS, ...given }
     const [open, setOpen] = useState(defaultOpen)
     const [query, setQuery] = useState(defaultQuery)
-    const [answer, setAnswer] = useState<Answer<T>>({ state: 'idle' })
+    const [answer, setAnswer] = useState<AsyncAnswer<T>>(NO_ANSWER)
     const [attempt, setAttempt] = useState(0)
+    const [creating, setCreating] = useState<'busy' | 'failed' | null>(null)
     const loadRef = useRef(load)
+    const answerRef = useRef(answer)
+    const asked = useRef('')
+    const more = useRef<AbortController | null>(null)
+    const listRef = useRef<HTMLDivElement | null>(null)
     const inputRef = useRef<HTMLInputElement | null>(null)
+    const anchorRef = useRef<HTMLDivElement | null>(null)
     useEffect(() => {
         loadRef.current = load
     }, [load])
+    useLayoutEffect(() => {
+        answerRef.current = answer
+    }, [answer])
 
     const short = query.trim().length < minQuery
 
@@ -93,18 +209,16 @@ export function AsyncSelect<T>({
         const controller = new AbortController()
         const timer = setTimeout(
             () => {
-                setAnswer((last) => ({ state: 'loading', items: 'items' in last ? last.items : [] }))
+                more.current?.abort()
+                asked.current = query.trim()
+                setAnswer((last) => ({ ...last, loading: 'first', failed: null }))
                 loadRef.current(query.trim(), controller.signal).then(
-                    (items) => {
-                        if (!controller.signal.aborted) setAnswer({ state: 'done', items })
+                    (page) => {
+                        if (!controller.signal.aborted) setAnswer((last) => withPage(last, pageOf(page), 'first', itemKey))
                     },
                     (reason: unknown) => {
                         if (controller.signal.aborted) return
-                        setAnswer((last) => ({
-                            state: 'failed',
-                            reason: reason instanceof Error ? reason.message : String(reason),
-                            items: 'items' in last ? last.items : [],
-                        }))
+                        setAnswer((last) => ({ ...last, loading: null, failed: { at: 'first', reason: said(reason) } }))
                     },
                 )
             },
@@ -114,26 +228,216 @@ export function AsyncSelect<T>({
             clearTimeout(timer)
             controller.abort()
         }
+        // oxlint-disable-next-line react-hooks/exhaustive-deps -- the key is read as a page lands; a new key function must not search again
     }, [open, query, short, debounce, attempt])
 
-    const items = short || answer.state === 'idle' ? [] : answer.items
+    const loadMore = () => {
+        const now = answerRef.current
+        if (!wantsMore(now) || now.next === undefined) return
+        const controller = new AbortController()
+        more.current?.abort()
+        more.current = controller
+        const cursor = now.next
+        setAnswer((last) => ({ ...last, loading: 'more', failed: null }))
+        loadRef.current(asked.current, controller.signal, cursor).then(
+            (page) => {
+                if (!controller.signal.aborted) setAnswer((last) => withPage(last, pageOf(page), 'more', itemKey))
+            },
+            (reason: unknown) => {
+                if (controller.signal.aborted) return
+                setAnswer((last) => ({ ...last, loading: null, failed: { at: 'more', reason: said(reason) } }))
+            },
+        )
+    }
 
+    // A page too short to scroll asks for the next at once, so a long list is never stuck at its first page.
+    useEffect(() => {
+        const list = listRef.current
+        if (open && list !== null && wantsMore(answer) && nearEnd(list)) loadMore()
+    })
+
+    const options = short || !answer.answered ? [] : answer.items
+    const offered =
+        onCreate !== undefined && !short && answer.answered && answer.loading !== 'first' && offersCreate(query, options, itemLabel)
+    const items: (T | Creation)[] = offered ? [...options, new Creation(query.trim())] : [...options]
+    const keyOf = (item: T | Creation) => (item instanceof Creation ? `create:${item.text}` : itemKey(item))
+    const labelOf = (item: T | Creation) => (item instanceof Creation ? item.text : itemLabel(item))
+
+    /** Makes the typed option through the app and hands it on, or says it could not. */
+    const create = (text: string, then: (made: T) => void) => {
+        if (onCreate === undefined) return
+        setCreating('busy')
+        Promise.resolve()
+            .then(() => onCreate(text))
+            .then(
+                (made) => {
+                    setCreating(null)
+                    setQuery('')
+                    then(made)
+                },
+                () => setCreating('failed'),
+            )
+    }
+
+    const retry = () => {
+        if (answer.failed?.at === 'more') {
+            setAnswer((last) => ({ ...last, failed: null }))
+            loadMore()
+        } else setAttempt((count) => count + 1)
+    }
+
+    const list = (
+        <Combobox.List
+            ref={listRef}
+            onScroll={(event: UIEvent<HTMLDivElement>) => {
+                if (nearEnd(event.currentTarget)) loadMore()
+            }}
+            className="max-h-80 overflow-y-auto overscroll-contain p-1 empty:hidden"
+        >
+            {(item: T | Creation) => (
+                <Combobox.Item
+                    key={keyOf(item)}
+                    value={item}
+                    className="relative flex min-h-8 w-full cursor-default items-center gap-2 rounded-md py-1 pr-8 pl-2 text-sm outline-none select-none data-highlighted:bg-hover pointer-coarse:min-h-finger"
+                >
+                    {item instanceof Creation ? (
+                        <>
+                            <Plus className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                            <span className="min-w-0 flex-1 truncate">{words.create(item.text)}</span>
+                        </>
+                    ) : (
+                        <>
+                            <span className="min-w-0 flex-1">{renderItem === undefined ? itemLabel(item) : renderItem(item)}</span>
+                            <Combobox.ItemIndicator className="absolute right-2 flex size-4 items-center justify-center">
+                                <Check className="size-4" aria-hidden />
+                            </Combobox.ItemIndicator>
+                        </>
+                    )}
+                </Combobox.Item>
+            )}
+        </Combobox.List>
+    )
+    const note = (
+        <Combobox.Status className="empty:hidden">
+            <Note
+                answer={answer}
+                short={short}
+                empty={items.length === 0}
+                minQuery={minQuery}
+                creating={creating}
+                words={words}
+                onRetry={retry}
+            />
+        </Combobox.Status>
+    )
+    const popup =
+        'flex max-h-(--available-height) w-(--anchor-width) min-w-72 origin-(--transform-origin) flex-col overflow-hidden rounded-surface border border-border-strong bg-popover text-popover-foreground shadow-pop'
+    const spinning = (answer.loading === 'first' && !short) || creating === 'busy'
+
+    const shared = {
+        items,
+        filter: null,
+        autoHighlight: true,
+        inputValue: query,
+        onInputValueChange: (next: string) => {
+            setQuery(next)
+            setAttempt(0)
+            setCreating(null)
+        },
+        open,
+        itemToStringLabel: (item: unknown) => labelOf(item as T | Creation),
+        isItemEqualToValue: (item: unknown, other: unknown) => keyOf(item as T | Creation) === keyOf(other as T | Creation),
+    }
+
+    if (props.multiple === true) {
+        const chosen = props.value
+        const onChange = props.onValueChange
+        return (
+            <Combobox.Root
+                {...shared}
+                multiple
+                openOnInputClick
+                value={[...chosen]}
+                onValueChange={(next, details) => {
+                    // Escape in a shut field would drop every chosen value at once; each chip's remove button and Backspace take them one by one.
+                    if (details.reason === 'escape-key') return details.cancel()
+                    const picked = next as (T | Creation)[]
+                    const made = picked.find((item): item is Creation => item instanceof Creation)
+                    const kept = picked.filter((item): item is T => !(item instanceof Creation))
+                    if (made === undefined) return onChange(kept)
+                    create(made.text, (option) => onChange([...kept, option]))
+                }}
+                onOpenChange={(next, details) => {
+                    // Picking keeps the list open, so several values are picked in a row.
+                    if (!next && details.reason === 'item-press') return details.cancel()
+                    setOpen(next)
+                }}
+            >
+                <Combobox.InputGroup
+                    ref={anchorRef}
+                    aria-invalid={invalid || undefined}
+                    className={cn(
+                        'flex min-h-8 w-full min-w-0 flex-wrap items-center gap-1 rounded-control border border-input bg-field py-0.5 pr-1 pl-1 text-sm focus-within:border-ring focus-within:ring-1 focus-within:ring-ring aria-invalid:border-destructive',
+                        className,
+                    )}
+                >
+                    <Combobox.Chips className="contents">
+                        {chosen.map((item) => (
+                            <Combobox.Chip
+                                key={itemKey(item)}
+                                aria-label={itemLabel(item)}
+                                className="flex h-6 max-w-full min-w-0 items-center gap-0.5 rounded-sm bg-muted pr-0.5 pl-2 outline-none focus-within:bg-accent data-highlighted:bg-accent"
+                            >
+                                <span className="min-w-0 truncate">{itemLabel(item)}</span>
+                                <Combobox.ChipRemove
+                                    aria-label={words.remove(itemLabel(item))}
+                                    className="flex size-5 shrink-0 items-center justify-center rounded-sm text-muted-foreground hover:bg-hover hover:text-foreground"
+                                >
+                                    <X className="size-3.5" aria-hidden />
+                                </Combobox.ChipRemove>
+                            </Combobox.Chip>
+                        ))}
+                        {/* Inside the chips, so Backspace in the empty field takes the last of them. */}
+                        <Combobox.Input
+                            id={id}
+                            ref={inputRef}
+                            placeholder={chosen.length === 0 ? words.placeholder : undefined}
+                            aria-label={chosen.length === 0 ? undefined : words.search}
+                            className="h-6 min-w-24 flex-1 bg-transparent px-1.5 text-base outline-none placeholder:text-muted-foreground md:text-sm"
+                        />
+                    </Combobox.Chips>
+                    {spinning && <Spinner className="size-3.5 shrink-0 text-muted-foreground" />}
+                    <Combobox.Trigger
+                        aria-label={words.search}
+                        className="flex size-6 shrink-0 items-center justify-center rounded-sm text-muted-foreground hover:bg-hover"
+                    >
+                        <ChevronsUpDown className="size-4" aria-hidden />
+                    </Combobox.Trigger>
+                </Combobox.InputGroup>
+                <Combobox.Portal>
+                    <Combobox.Positioner anchor={anchorRef} side="bottom" align="start" sideOffset={6} className="isolate z-50">
+                        <Combobox.Popup initialFocus={false} className={popup}>
+                            {list}
+                            {note}
+                        </Combobox.Popup>
+                    </Combobox.Positioner>
+                </Combobox.Portal>
+            </Combobox.Root>
+        )
+    }
+
+    const value = props.value
+    const onChange = props.onValueChange
     return (
         <Combobox.Root
-            items={items}
-            filter={null}
-            autoHighlight
+            {...shared}
             value={value}
-            onValueChange={(next) => onValueChange(next as T | null)}
-            inputValue={query}
-            onInputValueChange={(next) => {
-                setQuery(next)
-                setAttempt(0)
+            onValueChange={(next) => {
+                const picked = next as T | Creation | null
+                if (picked instanceof Creation) return create(picked.text, (option) => onChange(option))
+                onChange(picked)
             }}
-            open={open}
             onOpenChange={setOpen}
-            itemToStringLabel={(item) => itemLabel(item as T)}
-            isItemEqualToValue={(item, other) => itemKey(item as T) === itemKey(other as T)}
         >
             <Combobox.Trigger
                 id={id}
@@ -150,44 +454,19 @@ export function AsyncSelect<T>({
             </Combobox.Trigger>
             <Combobox.Portal>
                 <Combobox.Positioner side="bottom" align="start" sideOffset={6} className="isolate z-50">
-                    <Combobox.Popup
-                        initialFocus={inputRef}
-                        className="flex max-h-(--available-height) w-(--anchor-width) min-w-72 origin-(--transform-origin) flex-col overflow-hidden rounded-surface border border-border-strong bg-popover text-popover-foreground shadow-pop"
-                    >
+                    <Combobox.Popup initialFocus={inputRef} className={popup}>
                         <div className="flex items-center gap-2 border-b border-border px-2.5">
                             <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden />
                             <Combobox.Input
                                 ref={inputRef}
                                 placeholder={words.search}
                                 aria-label={words.search}
-                                className="h-9 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                                className="h-9 min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground md:text-sm"
                             />
-                            {answer.state === 'loading' && !short && <Spinner className="size-3.5 text-muted-foreground" />}
+                            {spinning && <Spinner className="size-3.5 text-muted-foreground" />}
                         </div>
-                        <Combobox.List className="max-h-80 overflow-y-auto p-1 empty:hidden">
-                            {(item: T) => (
-                                <Combobox.Item
-                                    key={itemKey(item)}
-                                    value={item}
-                                    className="relative flex min-h-8 w-full cursor-default items-center gap-2 rounded-md py-1 pr-8 pl-2 text-sm outline-none select-none data-highlighted:bg-hover"
-                                >
-                                    <span className="min-w-0 flex-1">{renderItem === undefined ? itemLabel(item) : renderItem(item)}</span>
-                                    <Combobox.ItemIndicator className="absolute right-2 flex size-4 items-center justify-center">
-                                        <Check className="size-4" aria-hidden />
-                                    </Combobox.ItemIndicator>
-                                </Combobox.Item>
-                            )}
-                        </Combobox.List>
-                        <Combobox.Status className="empty:hidden">
-                            <Note
-                                answer={answer}
-                                short={short}
-                                empty={items.length === 0}
-                                minQuery={minQuery}
-                                words={words}
-                                onRetry={() => setAttempt((count) => count + 1)}
-                            />
-                        </Combobox.Status>
+                        {list}
+                        {note}
                     </Combobox.Popup>
                 </Combobox.Positioner>
             </Combobox.Portal>
@@ -195,25 +474,28 @@ export function AsyncSelect<T>({
     )
 }
 
-/** The line under the list: what to type, that a search runs, that nothing matched, or that it failed. */
+/** The line under the list: what to type, that a search runs, that nothing matched, that more load, or that it failed. */
 function Note<T>({
     answer,
     short,
     empty,
     minQuery,
+    creating,
     words,
     onRetry,
 }: {
-    answer: Answer<T>
+    answer: AsyncAnswer<T>
     short: boolean
     empty: boolean
     minQuery: number
+    creating: 'busy' | 'failed' | null
     words: AsyncSelectWords
     onRetry: () => void
 }) {
     const line = 'flex min-h-9 items-center gap-2 px-3 py-2 text-sm text-muted-foreground'
     if (short) return <p className={line}>{words.typeMore(minQuery)}</p>
-    if (answer.state === 'failed')
+    if (creating === 'failed') return <p className={cn(line, 'border-t border-border text-critical')}>{words.createFailed}</p>
+    if (answer.failed !== null)
         return (
             <div className={cn(line, 'border-t border-border')}>
                 <span className="min-w-0 flex-1 text-critical">{words.failed}</span>
@@ -227,7 +509,14 @@ function Note<T>({
                 </button>
             </div>
         )
-    if (answer.state === 'loading' && empty) return <p className={line}>{words.loading}</p>
-    if (answer.state === 'done' && empty) return <p className={line}>{words.empty}</p>
+    if (answer.loading === 'more')
+        return (
+            <p className={cn(line, 'border-t border-border')}>
+                <Spinner className="size-3.5" />
+                {words.loadingMore}
+            </p>
+        )
+    if ((answer.loading === 'first' || !answer.answered) && empty) return <p className={line}>{words.loading}</p>
+    if (answer.answered && answer.loading === null && empty) return <p className={line}>{words.empty}</p>
     return null
 }

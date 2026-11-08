@@ -218,6 +218,10 @@
             "types": "./dist/components/FilePreview.d.ts",
             "import": "./dist/components/FilePreview.js"
         },
+        "./FilterBar": {
+            "types": "./dist/components/FilterBar.d.ts",
+            "import": "./dist/components/FilterBar.js"
+        },
         "./FilterChip": {
             "types": "./dist/components/FilterChip.d.ts",
             "import": "./dist/components/FilterChip.js"
@@ -365,6 +369,10 @@
         "./SaveBar": {
             "types": "./dist/components/SaveBar.d.ts",
             "import": "./dist/components/SaveBar.js"
+        },
+        "./SavedViews": {
+            "types": "./dist/components/SavedViews.d.ts",
+            "import": "./dist/components/SavedViews.js"
         },
         "./SchemeToggle": {
             "types": "./dist/components/SchemeToggle.d.ts",
@@ -1062,6 +1070,10 @@
             "types": "./dist/lib/desktop.d.ts",
             "import": "./dist/lib/desktop.js"
         },
+        "./lib/filters": {
+            "types": "./dist/lib/filters.d.ts",
+            "import": "./dist/lib/filters.js"
+        },
         "./lib/fullscreen": {
             "types": "./dist/lib/fullscreen.d.ts",
             "import": "./dist/lib/fullscreen.js"
@@ -1077,6 +1089,10 @@
         "./lib/kind": {
             "types": "./dist/lib/kind.d.ts",
             "import": "./dist/lib/kind.js"
+        },
+        "./lib/list-views": {
+            "types": "./dist/lib/list-views.d.ts",
+            "import": "./dist/lib/list-views.js"
         },
         "./lib/mentions": {
             "types": "./dist/lib/mentions.d.ts",
