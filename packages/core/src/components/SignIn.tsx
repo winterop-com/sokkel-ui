@@ -32,8 +32,10 @@ export interface SignInWords {
     server: string
     serverHint: string
     user: string
+    /** A placeholder in the username field; none by default, as the label names it. */
     userHint: string
     password: string
+    /** A placeholder in the password field; none by default. */
     passwordHint: string
     token: string
     tokenHint: string
@@ -51,9 +53,9 @@ const WORDS: SignInWords = {
     server: 'Server',
     serverHint: 'https://example.org',
     user: 'Username',
-    userHint: 'Your username',
+    userHint: '',
     password: 'Password',
-    passwordHint: 'Your password',
+    passwordHint: '',
     token: 'Access token',
     tokenHint: 'Paste your token',
     show: 'Show the password',
