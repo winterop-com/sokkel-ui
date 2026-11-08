@@ -110,6 +110,7 @@ function usePreferences(): { groups: SettingsGroup[]; reset: (section?: string) 
                             id: 'start',
                             title: 'Start page',
                             description: 'What Tidevann opens on after you sign in.',
+                            keywords: ['home', 'landing'],
                             control: (
                                 <Segmented
                                     label="Start page"
@@ -127,6 +128,7 @@ function usePreferences(): { groups: SettingsGroup[]; reset: (section?: string) 
                             id: 'clock',
                             title: 'Time format',
                             description: 'How times are written in run lists and logs.',
+                            keywords: ['12-hour', '24-hour', 'clock', 'am', 'pm'],
                             control: (
                                 <Segmented
                                     label="Time format"
@@ -143,6 +145,7 @@ function usePreferences(): { groups: SettingsGroup[]; reset: (section?: string) 
                             id: 'new-tab',
                             title: 'Open runs in a new tab',
                             description: 'A run opened from a list keeps the list where it was.',
+                            keywords: ['window', 'link'],
                             layout: 'trailing',
                             control: (
                                 <Switch
@@ -156,6 +159,7 @@ function usePreferences(): { groups: SettingsGroup[]; reset: (section?: string) 
                             id: 'delay',
                             title: 'Live update delay',
                             description: 'How long a running job waits before its log is redrawn.',
+                            keywords: ['refresh', 'slow', 'latency'],
                             note: 'Raise it on a slow connection; the log still arrives whole.',
                             control: (
                                 <SliderField
@@ -175,6 +179,7 @@ function usePreferences(): { groups: SettingsGroup[]; reset: (section?: string) 
                             id: 'confirm-cancel',
                             title: 'Confirm before cancelling a run',
                             description: 'Ask once more before a running job is stopped.',
+                            keywords: ['stop', 'ask', 'prompt'],
                             note: 'Runs the scheduler cancels are never asked about.',
                             layout: 'trailing',
                             control: (
@@ -189,6 +194,7 @@ function usePreferences(): { groups: SettingsGroup[]; reset: (section?: string) 
                             id: 'recent',
                             title: 'Recent searches',
                             description: 'The searches offered when the search box opens.',
+                            keywords: ['clear', 'forget', 'privacy'],
                             layout: 'trailing',
                             control: (
                                 <Button variant="outline" size="sm">
@@ -207,6 +213,7 @@ function usePreferences(): { groups: SettingsGroup[]; reset: (section?: string) 
                             id: 'scheme',
                             title: 'Scheme',
                             description: 'Light, dark, or whichever the system uses.',
+                            keywords: ['dark mode', 'light mode', 'night', 'appearance', 'color'],
                             control: (
                                 <Segmented
                                     label="Scheme"
@@ -224,6 +231,7 @@ function usePreferences(): { groups: SettingsGroup[]; reset: (section?: string) 
                             id: 'density',
                             title: 'Density',
                             description: 'Compact fits more rows in a table.',
+                            keywords: ['compact', 'spacing', 'tight'],
                             control: (
                                 <Segmented
                                     label="Density"
@@ -240,6 +248,7 @@ function usePreferences(): { groups: SettingsGroup[]; reset: (section?: string) 
                             id: 'motion',
                             title: 'Reduce motion',
                             description: 'Panels and dialogs appear without moving.',
+                            keywords: ['animation', 'transitions'],
                             layout: 'trailing',
                             control: <Switch aria-label="Reduce motion" checked={motion} onCheckedChange={(motion) => set({ motion })} />,
                         },
@@ -247,6 +256,7 @@ function usePreferences(): { groups: SettingsGroup[]; reset: (section?: string) 
                             id: 'code-size',
                             title: 'Code size',
                             description: 'The size of logs and step definitions.',
+                            keywords: ['font', 'text size', 'zoom', 'monospace'],
                             control: (
                                 <SliderField
                                     id="code-size"
@@ -272,6 +282,7 @@ function usePreferences(): { groups: SettingsGroup[]; reset: (section?: string) 
                             id: 'hints',
                             title: 'Show key hints',
                             description: 'Buttons name their shortcut on hover.',
+                            keywords: ['tooltip', 'keyboard'],
                             layout: 'trailing',
                             control: <Switch aria-label="Show key hints" checked={hints} onCheckedChange={(hints) => set({ hints })} />,
                         },
@@ -279,6 +290,7 @@ function usePreferences(): { groups: SettingsGroup[]; reset: (section?: string) 
                             id: 'single-key',
                             title: 'Single-key shortcuts',
                             description: 'Keys such as / and ? act without a modifier.',
+                            keywords: ['hotkeys', 'keyboard', 'modifier'],
                             layout: 'trailing',
                             control: (
                                 <Switch
@@ -292,6 +304,7 @@ function usePreferences(): { groups: SettingsGroup[]; reset: (section?: string) 
                             id: 'list',
                             title: 'Every shortcut',
                             description: 'The full list, grouped by where it works.',
+                            keywords: ['keyboard', 'hotkeys', 'cheat sheet'],
                             layout: 'trailing',
                             control: (
                                 <Button variant="outline" size="sm">
@@ -316,6 +329,7 @@ function usePreferences(): { groups: SettingsGroup[]; reset: (section?: string) 
                             id: 'name',
                             title: 'Name',
                             description: 'How you appear on runs you start.',
+                            keywords: ['display name', 'profile'],
                             control: (
                                 <Input
                                     aria-label="Name"
@@ -329,6 +343,7 @@ function usePreferences(): { groups: SettingsGroup[]; reset: (section?: string) 
                             id: 'email',
                             title: 'Email',
                             description: 'Where failed-run alerts are sent.',
+                            keywords: ['mail', 'alerts', 'notifications'],
                             control: (
                                 <Input
                                     aria-label="Email"
@@ -342,6 +357,7 @@ function usePreferences(): { groups: SettingsGroup[]; reset: (section?: string) 
                             id: 'sessions',
                             title: 'Other sessions',
                             description: 'Sign out everywhere but this browser.',
+                            keywords: ['logout', 'log out', 'devices', 'browsers'],
                             layout: 'trailing',
                             control: (
                                 <Button variant="outline" size="sm">
@@ -366,12 +382,14 @@ function usePreferences(): { groups: SettingsGroup[]; reset: (section?: string) 
                             id: 'address',
                             title: 'Address',
                             description: 'The address links in emails point at.',
+                            keywords: ['url', 'host', 'domain'],
                             control: <span className="font-mono text-sm">https://tidevann.example.org</span>,
                         },
                         {
                             id: 'history',
                             title: 'Run history',
                             description: 'How long a finished run and its logs are kept.',
+                            keywords: ['retention', 'logs', 'delete'],
                             control: (
                                 <Segmented
                                     label="Run history"
@@ -389,6 +407,7 @@ function usePreferences(): { groups: SettingsGroup[]; reset: (section?: string) 
                             id: 'maintenance',
                             title: 'Maintenance mode',
                             description: 'Queued jobs wait and no new run starts.',
+                            keywords: ['pause', 'downtime'],
                             note: 'Running jobs finish first; ada and linus are told by email.',
                             layout: 'trailing',
                             control: (
@@ -640,6 +659,15 @@ export const Search: StoryObj = {
 }
 
 /**
+ * The preferences dialog with "logout" typed into its search: no setting says it, but Other sessions
+ * lists it among its keywords, so Account is shown with that row alone.
+ */
+export const KeywordSearch: StoryObj = {
+    name: 'Keyword search',
+    render: () => <SettingsApp opening={{ active: 'general', search: 'logout', phoneStart: 'section' }} />,
+}
+
+/**
  * The preferences dialog with the app's own note in its footer, when the preferences last synced,
  * and a reset that puts back every setting rather than the shown section, so it shows on a phone's
  * list of sections too.
@@ -658,6 +686,9 @@ export const Page: StoryObj = { render: () => <SettingsPage /> }
 
 /** The page with "run" typed into its search: the sections narrowed to those with a matching setting, and General to its matching rows. */
 export const PageSearch: StoryObj = { name: 'Page search', render: () => <SettingsPage search="run" /> }
+
+/** The page with "theme" typed into its search: the section's own name, so Theme is shown whole. */
+export const SectionSearch: StoryObj = { name: 'Section search', render: () => <SettingsPage search="theme" /> }
 
 /** The page with the app's own note in its footer and a reset that puts back every setting. */
 export const PageSynced: StoryObj = { name: 'Page synced', render: () => <SettingsPage synced /> }

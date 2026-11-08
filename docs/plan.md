@@ -305,7 +305,7 @@ toggle-group, tooltip, trace.
 
 Shell, Rail, AppBar, SubNav, Page, PageHeader, PaneHeader, Toolbar, Section, Surface, the layout
 components (Stack, Row, Columns, Split, Fill), SplitPane, Field, TextField, InlineField, SliderField,
-CheckboxField, CheckboxList, ChoiceList, CodeField, SwitchField, SearchField, FilterChip, FilterBar,
+CheckboxField, CheckboxList, ChoiceList, CodeField, SwitchField, SearchField, FileField, FilterChip, FilterBar,
 SavedViews, FormBar, SelectionBar, DataTable, StatusChip, PersonAvatar, PersonRow, MetaLine, DueText, AttachmentList,
 IconButton, StarButton, SplitButton, DownloadButton, AccountMenu, SidePanel, DialogShell,
 ConfirmDialog, TreeSelect, AsyncSelect, CapabilityPicker, SignIn, RelativeTime, ApiLink, TagChips,
@@ -346,8 +346,13 @@ for the rest, and `DescriptionList`'s `row` layout sets its facts in one wrappin
 its upper part and the mark, the name and a few facts at its foot, beside a centered form of a
 username and password (or a token, or the app's own fields), an optional server address, an error
 over the submit and other ways in under a rule. The seam between the panes drags, the form rises
-into place as it opens, and the username can be kept in the browser. On a phone the brand pane is a
-bar over the form. The art that ships, `LevelBars` and `FlowLines`, is drawn from a seed in the
+into place as it opens, and the username can be kept in the browser. Each field is led by an icon
+unless `icons` is off, and `optional` lets the password, or every credential, be left empty for a
+server that needs none. An app that finds its server itself says so in the server field's place
+(`looking`), then offers a link to a different server (`found`) that brings the field back; with the
+values held from outside (`values`, `onValuesChange`) it asks a typed address as it is typed, and
+`probe` says in the brand pane what answered there, its version or no answer. On a phone the brand
+pane is a bar over the form. The art that ships, `LevelBars` and `FlowLines`, is drawn from a seed in the
 theme's primary and muted inks and holds still when motion is reduced; an app may pass its own.
 
 DataTable is the one table, for five rows or fifty thousand: only the rows in view are drawn, at
@@ -386,7 +391,8 @@ at a time (`{ items, next }`) gets the next page as the list nears its end, and 
 typed text no option is called as a new one at the list's end.
 
 `SettingsDialog` holds an app's preferences: its sections in a navigation with a search over every
-setting, the chosen section's rows beside it, and under both a footer drawn as `DialogShell`'s,
+setting (its title, description and `keywords`, which are never drawn, and its section's name, so a
+search for a section keeps it whole), the chosen section's rows beside it, and under both a footer drawn as `DialogShell`'s,
 outside the scrolling, that says changes are kept as they are made (or the app's own `footer`, such
 as when they last synced) and closes with Done. `onReset` adds Reset to defaults at the footer's
 start, for the shown section or for every setting, asked once more before it runs. On a phone the
@@ -439,6 +445,26 @@ it refuses the rest, cancels through the signal (and drops what an uploader that
 later), and hands `AttachmentList`, `Composer` and `UploadTray` their files. `ConversationHistory`, the list
 beside a chat, is a `DataTable` list grouped under Pinned, Today and Earlier, with rename in place,
 pin, and delete after a question.
+
+`FileField` takes files in a form, in a `Field` as the other inputs are: a zone they are dropped on
+(the drag `DropZone`'s, from `use-file-drop`) with a button that opens the picker, the limits under
+it (the types in `accept`, `maxSize`, `maxFiles`), each file refused said with why ("too large: 12
+MB, at most 10 MB"), sorted by `checkFiles`, which `useUploads` shares, and the files taken listed
+by `AttachmentList`, an image with its picture and a file the app says is going up (`progress`) with
+its ring. With `maxFiles` of 1 a file chosen takes the place of the one held. `useUnsavedChanges`
+guards a page: while it is `dirty`, closing the tab or reloading asks through the browser's own
+warning, and since the library has no router, the app's blocker awaits `confirmLeave()`, which asks
+through `ConfirmDialog` (the hook's `dialog`, drawn once in the page) and answers whether to leave;
+`useUnsavedGuard` does the same for a dialog's form. `Toolbar`'s `items` give way as it narrows,
+measured on the toolbar itself: those it has no room for move, in order, into a More menu at their
+end, a toggle checked there. `ImageLightbox` moves between its `images` by the arrow keys, the
+buttons at its sides and a swipe, saying "3 of 12"; it zooms by the wheel, a pinch and its buttons
+about the pointer, from the fit to four times it or twice the image's own pixels, a zoomed image
+moves by a drag without leaving a gap at an edge, and a double press goes between the fit and 100%.
+Both composers take `mentions`: an `@` typed (or put in by `MessageComposer`'s mention button)
+suggests people at the caret from the app's list or its search, the arrow keys and Enter or Tab put
+one in as `@handle`, Escape closes them, and `onChange` hears the ids the text mentions;
+`mentionsIn` in `lib/mentions` reads them from a text the app holds.
 
 Tree and TreeSelect pick from a hierarchy of any depth and size. A single choice made outside the
 tree, such as a place picked on a map beside it, opens the tree down to it and scrolls to it. A node marked `hasChildren` loads

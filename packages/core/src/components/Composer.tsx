@@ -5,12 +5,15 @@ import { lazy, Suspense, useLayoutEffect, useRef, useState, type ReactNode } fro
 import { cn } from '../lib/cn'
 import { insertTranscript, useDictation, type Dictation, type DictationOptions } from '../hooks/use-dictation'
 import { DialogShell } from './DialogShell'
+import { MENTION_WORDS, MentionList, useMentions, type ComposerMentions, type MentionWords } from './Mentions'
 import { AudioPlayer } from './media/AudioPlayer'
 import { formatTime } from './media/time'
 import { VIDEO_PLAYER_WORDS, VideoPlayer, type VideoPlayerWords } from './media/VideoPlayer'
 import { ProgressRing } from './ui/progress-ring'
 import { Spinner } from './ui/spinner'
 import { Textarea } from './ui/textarea'
+
+export type { ComposerMentions, MentionPerson, MentionSearch, MentionWords } from './Mentions'
 
 // The level a recording draws loads with the first recording, so a composer never dictated to carries none of it.
 const BarVisualizer = lazy(() => import('./ui/bar-visualizer').then((module) => ({ default: module.BarVisualizer })))
@@ -101,6 +104,8 @@ export interface ComposerWords {
     close: string
     /** Dictation's words: the microphone, its states and its failures. */
     dictation: Partial<ComposerDictationWords>
+    /** The words of the people a mention suggests. */
+    mentions: Partial<MentionWords>
 }
 
 const WORDS: ComposerWords = {
@@ -116,6 +121,7 @@ const WORDS: ComposerWords = {
     player: {},
     close: 'Close',
     dictation: {},
+    mentions: {},
 }
 
 /** How much of a long text heard is kept, from its end, so what was heard last stays in view. */
@@ -260,6 +266,8 @@ export interface ComposerProps {
     accept?: string
     /** Adds a microphone that dictates into the text, through the app's transcriber or the browser's recognition. */
     dictation?: ComposerDictation
+    /** Suggests people at the caret as an `@` is typed, from the app's list or its search, and puts the one picked in as `@handle`. */
+    mentions?: ComposerMentions
     words?: Partial<ComposerWords>
     className?: string
 }
@@ -281,6 +289,11 @@ export interface ComposerProps {
  * A failure is said on a line of its own over the row, wrapping as far as it needs, until the next
  * press or Escape. Send waits while a dictation runs.
  * The microphone shows only where the page can dictate with what the app gave.
+ *
+ * `mentions` suggests people at the caret as an `@` is typed: the arrow keys move through them,
+ * Enter or Tab puts the one chosen in as `@handle` (Enter then does not send), and Escape closes
+ * them. `mentions.onChange` hears the ids the text mentions; `mentionsIn` from `lib/mentions` reads
+ * them from a text the app holds.
  */
 export function Composer({
     value,
@@ -296,6 +309,7 @@ export function Composer({
     disabled = false,
     accept,
     dictation: dictating,
+    mentions,
     words: given,
     className,
 }: ComposerProps) {
@@ -311,6 +325,14 @@ export function Composer({
     })
     const [over, setOver] = useState(false)
     const [playing, setPlaying] = useState<ComposerAttachment>()
+    const mention = useMentions({
+        options: mentions,
+        value,
+        onChange,
+        area: text,
+        root,
+        words: { ...MENTION_WORDS, ...words.mentions },
+    })
     const dictation = useDictation({
         ...dictating,
         onText: (heard) => {
@@ -396,11 +418,17 @@ export function Composer({
                 disabled={disabled}
                 placeholder={words.placeholder}
                 aria-label={words.placeholder}
-                onChange={(event) => onChange(event.target.value)}
+                {...mention.areaProps}
+                onChange={(event) => {
+                    onChange(event.target.value)
+                    mention.onInput(event.target.value, event.target.selectionStart)
+                }}
                 onSelect={(event) => {
                     caret.current = event.currentTarget.selectionStart
+                    mention.onSelect(event.currentTarget.value, event.currentTarget.selectionStart)
                 }}
                 onKeyDown={(event) => {
+                    if (mention.onKeyDown(event)) return
                     if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing) return
                     event.preventDefault()
                     if (ready) onSend()
@@ -417,6 +445,7 @@ export function Composer({
                 }}
                 className="max-h-60 min-h-12 px-3 pt-3 pb-1 text-sm"
             />
+            {mention.list !== null && <MentionList {...mention.list} />}
             {offered && dictation.state === 'error' && dictation.problem !== undefined && (
                 // A line of its own over the row, wrapping as far as it needs, so the reason is read whole at any width.
                 <p role="alert" className="flex items-start gap-1.5 px-3 pb-1 text-xs text-critical-ink">

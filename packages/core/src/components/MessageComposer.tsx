@@ -23,6 +23,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } f
 import { cn } from '../lib/cn'
 import { returnFocusOnKeyboard } from '../lib/focus'
 import { Markdown, type MarkdownWords } from './Markdown'
+import { MENTION_WORDS, MentionList, useMentions, type ComposerMentions, type MentionWords } from './Mentions'
 import { Segmented } from './Segmented'
 import { fitCount } from './TagChips'
 import { Checkbox } from './ui/checkbox'
@@ -39,6 +40,8 @@ import {
     DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from './ui/dropdown-menu'
+
+export type { ComposerMentions, MentionPerson, MentionSearch, MentionWords } from './Mentions'
 
 /** A formatting a composer offers in its toolbar. */
 export type MessageFormat = 'bold' | 'italic' | 'underline' | 'strike' | 'link' | 'ordered' | 'bullets' | 'code' | 'codeBlock'
@@ -108,6 +111,8 @@ export interface MessageComposerWords {
     format: Record<MessageFormat, string>
     /** The words the preview's markdown says, such as the titles of its callouts. */
     markdown?: Partial<MarkdownWords>
+    /** The words of the people a mention suggests. */
+    mentions?: Partial<MentionWords>
 }
 
 const WORDS: MessageComposerWords = {
@@ -219,7 +224,10 @@ export interface MessageComposerProps {
     onSend: () => void
     onAttach?: () => void
     onEmoji?: () => void
+    /** Called by the mention button; with `mentions` the button puts an `@` in and opens the suggestions instead. */
     onMention?: () => void
+    /** Suggests people at the caret as an `@` is typed, from the app's list or its search, and puts the one picked in as `@handle`. */
+    mentions?: ComposerMentions
     /** Shows the More button after `actions`. */
     onMore?: () => void
     /** More buttons after the mention button, such as `MessageComposerAction`s. */
@@ -271,6 +279,11 @@ export interface MessageComposerProps {
  * The chevron beside Send opens the times in `schedule`, with a last entry for `onSendLater`; with
  * no `schedule`, it calls `onSendLater` at once. A reply in a thread can also go to its channel,
  * by `alsoSendTo`.
+ *
+ * `mentions` suggests people at the caret as an `@` is typed or the mention button is pressed:
+ * the arrow keys move through them, Enter or Tab puts the one chosen in as `@handle` (Enter then
+ * does not send), and Escape closes them. `mentions.onChange` hears the ids the text mentions;
+ * `mentionsIn` from `lib/mentions` reads them from a text the app holds.
  */
 export function MessageComposer({
     value,
@@ -279,6 +292,7 @@ export function MessageComposer({
     onAttach,
     onEmoji,
     onMention,
+    mentions,
     onMore,
     actions,
     onSendLater,
@@ -305,6 +319,15 @@ export function MessageComposer({
     const mode = preview ? (givenMode ?? ownMode) : 'write'
     const previewing = mode === 'preview'
     const text = useRef<HTMLTextAreaElement>(null)
+    const root = useRef<HTMLDivElement>(null)
+    const mention = useMentions({
+        options: mentions,
+        value,
+        onChange,
+        area: text,
+        root,
+        words: { ...MENTION_WORDS, ...words.mentions },
+    })
     const selection = useRef<[number, number] | null>(null)
     const wasPreviewing = useRef(previewing)
     const picked = useRef(false)
@@ -417,8 +440,9 @@ export function MessageComposer({
 
     return (
         <div
+            ref={root}
             className={cn(
-                '@container/composer flex min-w-0 flex-col rounded-control border border-border-strong bg-field text-sm focus-within:border-ring',
+                '@container/composer relative flex min-w-0 flex-col rounded-control border border-border-strong bg-field text-sm focus-within:border-ring',
                 disabled && 'opacity-60',
                 className,
             )}
@@ -581,8 +605,14 @@ export function MessageComposer({
                     placeholder={words.placeholder}
                     aria-label={words.placeholder}
                     aria-hidden={previewing || undefined}
-                    onChange={(event) => onChange(event.target.value)}
+                    {...mention.areaProps}
+                    onChange={(event) => {
+                        onChange(event.target.value)
+                        mention.onInput(event.target.value, event.target.selectionStart)
+                    }}
+                    onSelect={(event) => mention.onSelect(event.currentTarget.value, event.currentTarget.selectionStart)}
                     onKeyDown={(event) => {
+                        if (mention.onKeyDown(event)) return
                         if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
                             event.preventDefault()
                             if (!empty) send()
@@ -600,6 +630,7 @@ export function MessageComposer({
                     </div>
                 )}
             </div>
+            {mention.list !== null && !previewing && <MentionList {...mention.list} />}
             {alsoSendTo !== undefined && (
                 <label htmlFor={`${id}-also`} className="flex items-center gap-2 px-3 pb-1 text-xs text-muted-foreground">
                     <Checkbox id={`${id}-also`} checked={alsoSend} onCheckedChange={(checked) => onAlsoSendChange?.(checked)} />
@@ -635,8 +666,12 @@ export function MessageComposer({
                         <Smile aria-hidden />
                     </MessageComposerAction>
                 )}
-                {onMention !== undefined && (
-                    <MessageComposerAction label={words.mention} onClick={onMention}>
+                {(onMention !== undefined || mentions !== undefined) && (
+                    <MessageComposerAction
+                        label={words.mention}
+                        disabled={mentions !== undefined && (disabled || previewing)}
+                        onClick={mentions === undefined ? onMention : mention.start}
+                    >
                         <AtSign aria-hidden />
                     </MessageComposerAction>
                 )}

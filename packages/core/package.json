@@ -206,6 +206,10 @@
             "types": "./dist/components/Field.d.ts",
             "import": "./dist/components/Field.js"
         },
+        "./FileField": {
+            "types": "./dist/components/FileField.d.ts",
+            "import": "./dist/components/FileField.js"
+        },
         "./FileList": {
             "types": "./dist/components/FileList.d.ts",
             "import": "./dist/components/FileList.js"
@@ -1089,6 +1093,10 @@
         "./lib/list-views": {
             "types": "./dist/lib/list-views.d.ts",
             "import": "./dist/lib/list-views.js"
+        },
+        "./lib/mentions": {
+            "types": "./dist/lib/mentions.d.ts",
+            "import": "./dist/lib/mentions.js"
         },
         "./lib/search": {
             "types": "./dist/lib/search.d.ts",
