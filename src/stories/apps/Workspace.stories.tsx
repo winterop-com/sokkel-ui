@@ -19,6 +19,7 @@ import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
 import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
 import { Dock } from '@winterop-com/sokkel-ui/Dock'
 import { FilterChip } from '@winterop-com/sokkel-ui/FilterChip'
+import { AnsiText } from '@winterop-com/sokkel-ui/AnsiText'
 import { LogView, type LogLine } from '@winterop-com/sokkel-ui/LogView'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
@@ -172,6 +173,20 @@ const LOG: LogLine[] = [
     { at: '02:00:08.245', level: 'info', source: 'run', text: 'failed after 4.2s' },
 ]
 
+const E = '\u001b['
+
+/** What the run's command printed, colored as the program wrote it. */
+const OUTPUT = [
+    `${E}2m$${E}0m ${E}1mtidevann run nightly-export --project harbor${E}0m`,
+    `${E}32m✓${E}0m fetch      ${E}2m0.9s${E}0m  2,184 rows from ${E}4mapi.example.org${E}24m`,
+    `${E}33m!${E}0m transform  ${E}2m1.3s${E}0m  ${E}33mcurrency missing on 12 rows${E}0m, assumed EUR`,
+    `${E}31m✗${E}0m validate   ${E}2m1.9s${E}0m  ${E}1;31m37 rows rejected${E}0m: amount must be a number`,
+    `${E}90m-${E}0m upload     ${E}2mskipped${E}0m`,
+    `${E}90m-${E}0m notify     ${E}2mskipped${E}0m`,
+    '',
+    `${E}1;31mfailed${E}0m after 4.2s · retry with ${E}36mtidevann runs retry 4812 --from validate${E}0m`,
+].join('\n')
+
 function Details({ run }: { run: Run }) {
     return (
         <>
@@ -212,7 +227,9 @@ function Workspace({
     dock = false,
     palette = false,
     grouped = false,
+    tab = 'details',
 }: {
+    tab?: string
     globals: Record<string, unknown>
     dock?: boolean
     /** Runs grouped by job at first, from the Group choice the app remembers. */
@@ -285,9 +302,18 @@ function Workspace({
                     <SidePanel
                         tabs={[
                             { id: 'details', label: 'Details', content: <Details run={chosen} /> },
+                            {
+                                id: 'output',
+                                label: 'Output',
+                                content: (
+                                    <PanelSection title="Command output">
+                                        <AnsiText block wrap text={OUTPUT} />
+                                    </PanelSection>
+                                ),
+                            },
                             { id: 'log', label: 'Log', content: <LogView lines={LOG} wrap numbered={false} className="m-3" /> },
                         ]}
-                        defaultActive="details"
+                        defaultActive={tab}
                     />
                 }
             >
@@ -364,6 +390,9 @@ const meta: Meta = { title: 'Apps/Workspace' }
 export default meta
 
 export const ListAndPanel: StoryObj = { name: 'List and panel', render: (_, { globals }) => <Workspace globals={globals} /> }
+/** The chosen run's command output in the side panel, colored as the program printed it. */
+export const Output: StoryObj = { name: 'Run output', render: (_, { globals }) => <Workspace globals={globals} tab="output" /> }
+
 export const WithDock: StoryObj = { name: 'Log dock', render: (_, { globals }) => <Workspace globals={globals} dock /> }
 
 /** The runs grouped by job, each head counting its runs; the Group choice and the dock's fold are kept for the next visit. */

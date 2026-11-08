@@ -62,6 +62,7 @@ export const CODE_LANGUAGES: readonly CodeLanguage[] = [
     { id: 'json', label: 'JSON' },
     { id: 'yaml', label: 'YAML' },
     { id: 'sql', label: 'SQL' },
+    { id: 'jq', label: 'jq' },
     { id: 'bash', label: 'Shell' },
     { id: 'typescript', label: 'TypeScript' },
     { id: 'python', label: 'Python' },
