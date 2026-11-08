@@ -58,6 +58,118 @@ function useEventLog() {
     }
 }
 
+/** A player given `startAt`, with what its events tell written under it. */
+function Resumed() {
+    const log = useEventLog()
+    return (
+        <Ground after={<LogView lines={log.lines} follow wrap numbered={false} className="max-h-48" />}>
+            <VideoPlayer
+                src={clip}
+                preload="auto"
+                startAt={72}
+                defaultControlsVisible
+                title="Coastline, morning to evening"
+                onTime={log.onTime}
+                onEnded={log.onEnded}
+                onError={log.onError}
+            />
+        </Ground>
+    )
+}
+
+/** A player whose keys and controls are the screen's, driving it through its handle. */
+function DrivenFromOutside() {
+    const player = useRef<VideoPlayerHandle>(null)
+    useShortcuts(
+        [
+            { id: 'video-toggle', key: 'k', label: 'Play or pause', group: 'Video', run: () => player.current?.toggle() },
+            { id: 'video-back', key: 'j', label: 'Back 10 seconds', group: 'Video', repeat: true, run: () => player.current?.seekBy(-10) },
+            {
+                id: 'video-forward',
+                key: 'l',
+                label: 'Forward 10 seconds',
+                group: 'Video',
+                repeat: true,
+                run: () => player.current?.seekBy(10),
+            },
+            { id: 'video-mute', key: 'm', label: 'Mute', group: 'Video', run: () => player.current?.toggleMute() },
+            { id: 'video-fullscreen', key: 'f', label: 'Fullscreen', group: 'Video', run: () => player.current?.toggleFullscreen() },
+        ],
+        [],
+    )
+    return (
+        <Ground
+            after={
+                <Row wrap>
+                    <ButtonGroup>
+                        <Button variant="outline" aria-label="Back 10 seconds" onClick={() => player.current?.seekBy(-10)}>
+                            <RotateCcw aria-hidden />
+                        </Button>
+                        <Button variant="outline" onClick={() => player.current?.play()}>
+                            <Play aria-hidden />
+                            Play
+                        </Button>
+                        <Button variant="outline" onClick={() => player.current?.pause()}>
+                            <Pause aria-hidden />
+                            Pause
+                        </Button>
+                        <Button variant="outline" aria-label="Forward 10 seconds" onClick={() => player.current?.seekBy(10)}>
+                            <RotateCw aria-hidden />
+                        </Button>
+                    </ButtonGroup>
+                    <Button variant="outline" onClick={() => player.current?.toggleMute()}>
+                        <Volume2 aria-hidden />
+                        Mute
+                    </Button>
+                    <Button variant="outline" onClick={() => player.current?.toggleFullscreen()}>
+                        <Maximize aria-hidden />
+                        Fullscreen
+                    </Button>
+                </Row>
+            }
+        >
+            <VideoPlayer ref={player} src={`${clip}#t=24`} preload="auto" keys={false} title="Coastline, morning to evening" />
+        </Ground>
+    )
+}
+
+/** A player fed an HTTP live stream, with what its events tell written under it. */
+function Streamed() {
+    const log = useEventLog()
+    return (
+        <Ground after={<LogView lines={log.lines} follow wrap numbered={false} className="max-h-48" />}>
+            <VideoPlayer
+                source={hlsSource('media/stream/stream.m3u8')}
+                startAt={24}
+                defaultControlsVisible
+                title="Coastline, morning to evening"
+                onTime={log.onTime}
+                onEnded={log.onEnded}
+                onError={log.onError}
+            />
+        </Ground>
+    )
+}
+
+/** A source that fails at once, for the failure as the player says it. */
+const BROKEN: VideoSource = {
+    id: 'broken',
+    attach: (_video, report) => {
+        report({ kind: 'network', message: 'The stream answered 503', fatal: true })
+        return () => undefined
+    },
+}
+
+/** A player whose source fails, with its tries spent at once. */
+function GaveUp() {
+    const log = useEventLog()
+    return (
+        <Ground after={<LogView lines={log.lines} wrap numbered={false} />}>
+            <VideoPlayer source={BROKEN} retries={0} title="Coastline, morning to evening" onError={log.onError} />
+        </Ground>
+    )
+}
+
 const meta: Meta = { title: 'Media/Video' }
 export default meta
 
@@ -95,138 +207,21 @@ export const ControlsShown: StoryObj = {
  * log under it shows what `onTime` (once a second here), `onEnded` and `onError` tell the screen
  * around it, as an app keeps the viewer's place.
  */
-export const Resume: StoryObj = {
-    render: function Render() {
-        const log = useEventLog()
-        return (
-            <Ground after={<LogView lines={log.lines} follow wrap numbered={false} className="max-h-48" />}>
-                <VideoPlayer
-                    src={clip}
-                    preload="auto"
-                    startAt={72}
-                    defaultControlsVisible
-                    title="Coastline, morning to evening"
-                    onTime={log.onTime}
-                    onEnded={log.onEnded}
-                    onError={log.onError}
-                />
-            </Ground>
-        )
-    },
-}
+export const Resume: StoryObj = { render: () => <Resumed /> }
 
 /**
  * Driven from outside: `keys={false}` leaves every key to the app, whose own controls and keys, bound
  * with `useShortcuts` (K plays and pauses, J and L skip ten seconds, M mutes, F fills the screen),
  * drive the player through the handle on `ref`.
  */
-export const OutsideControls: StoryObj = {
-    name: 'Outside controls',
-    render: function Render() {
-        const player = useRef<VideoPlayerHandle>(null)
-        useShortcuts(
-            [
-                { id: 'video-toggle', key: 'k', label: 'Play or pause', group: 'Video', run: () => player.current?.toggle() },
-                {
-                    id: 'video-back',
-                    key: 'j',
-                    label: 'Back 10 seconds',
-                    group: 'Video',
-                    repeat: true,
-                    run: () => player.current?.seekBy(-10),
-                },
-                {
-                    id: 'video-forward',
-                    key: 'l',
-                    label: 'Forward 10 seconds',
-                    group: 'Video',
-                    repeat: true,
-                    run: () => player.current?.seekBy(10),
-                },
-                { id: 'video-mute', key: 'm', label: 'Mute', group: 'Video', run: () => player.current?.toggleMute() },
-                { id: 'video-fullscreen', key: 'f', label: 'Fullscreen', group: 'Video', run: () => player.current?.toggleFullscreen() },
-            ],
-            [],
-        )
-        return (
-            <Ground
-                after={
-                    <Row wrap>
-                        <ButtonGroup>
-                            <Button variant="outline" aria-label="Back 10 seconds" onClick={() => player.current?.seekBy(-10)}>
-                                <RotateCcw aria-hidden />
-                            </Button>
-                            <Button variant="outline" onClick={() => player.current?.play()}>
-                                <Play aria-hidden />
-                                Play
-                            </Button>
-                            <Button variant="outline" onClick={() => player.current?.pause()}>
-                                <Pause aria-hidden />
-                                Pause
-                            </Button>
-                            <Button variant="outline" aria-label="Forward 10 seconds" onClick={() => player.current?.seekBy(10)}>
-                                <RotateCw aria-hidden />
-                            </Button>
-                        </ButtonGroup>
-                        <Button variant="outline" onClick={() => player.current?.toggleMute()}>
-                            <Volume2 aria-hidden />
-                            Mute
-                        </Button>
-                        <Button variant="outline" onClick={() => player.current?.toggleFullscreen()}>
-                            <Maximize aria-hidden />
-                            Fullscreen
-                        </Button>
-                    </Row>
-                }
-            >
-                <VideoPlayer ref={player} src={`${clip}#t=24`} preload="auto" keys={false} title="Coastline, morning to evening" />
-            </Ground>
-        )
-    },
-}
+export const OutsideControls: StoryObj = { name: 'Outside controls', render: () => <DrivenFromOutside /> }
 
 /**
  * An HTTP live stream through `hlsSource` from the media package: played natively where the browser
  * plays HLS itself, as Safari does, and otherwise through hls.js, loaded the first time it plays. The
  * stream is the clip cut into four segments and served with the stories.
  */
-export const HlsStream: StoryObj = {
-    name: 'HLS stream',
-    render: function Render() {
-        const log = useEventLog()
-        return (
-            <Ground after={<LogView lines={log.lines} follow wrap numbered={false} className="max-h-48" />}>
-                <VideoPlayer
-                    source={hlsSource('media/stream/stream.m3u8')}
-                    startAt={24}
-                    defaultControlsVisible
-                    title="Coastline, morning to evening"
-                    onTime={log.onTime}
-                    onEnded={log.onEnded}
-                    onError={log.onError}
-                />
-            </Ground>
-        )
-    },
-}
-
-/** A source that fails at once, for the failure as the player says it. */
-const BROKEN: VideoSource = {
-    id: 'broken',
-    attach: (_video, report) => {
-        report({ kind: 'network', message: 'The stream answered 503', fatal: true })
-        return () => undefined
-    },
-}
+export const HlsStream: StoryObj = { name: 'HLS stream', render: () => <Streamed /> }
 
 /** Its tries spent: the player says the video could not be played, with a button to try again. */
-export const Failed: StoryObj = {
-    render: function Render() {
-        const log = useEventLog()
-        return (
-            <Ground after={<LogView lines={log.lines} wrap numbered={false} />}>
-                <VideoPlayer source={BROKEN} retries={0} title="Coastline, morning to evening" onError={log.onError} />
-            </Ground>
-        )
-    },
-}
+export const Failed: StoryObj = { render: () => <GaveUp /> }
