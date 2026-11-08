@@ -264,12 +264,12 @@ Components import by path: `@winterop-com/sokkel-ui/DialogShell`,
 A few core parts load an engine the app installs only when it uses them, as optional peer
 dependencies:
 
-| The app uses                | It also installs                                                                                                                                                 |
-| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `MermaidDiagram`            | `mermaid`                                                                                                                                                        |
-| `Markdown` (its math)       | `katex`, `remark-math` and `rehype-katex`                                                                                                                        |
-| `CodeEditor`                | `@codemirror/commands`, `@codemirror/lang-json`, `@codemirror/lang-yaml`, `@codemirror/language`, `@codemirror/state`, `@codemirror/view` and `@lezer/highlight` |
-| Geist as a theme's typeface | `@fontsource-variable/geist` and `@fontsource-variable/geist-mono`                                                                                               |
+| The app uses                | It also installs                                                                                                                                                                                                                       |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `MermaidDiagram`            | `mermaid`                                                                                                                                                                                                                              |
+| `Markdown` (its math)       | `katex`, `remark-math` and `rehype-katex`                                                                                                                                                                                              |
+| `CodeEditor`                | `@codemirror/autocomplete`, `@codemirror/commands`, `@codemirror/lang-json`, `@codemirror/lang-yaml`, `@codemirror/language`, `@codemirror/lint`, `@codemirror/search`, `@codemirror/state`, `@codemirror/view` and `@lezer/highlight` |
+| Geist as a theme's typeface | `@fontsource-variable/geist` and `@fontsource-variable/geist-mono`                                                                                                                                                                     |
 
 ## Working on it
 

@@ -89,6 +89,8 @@ function say(issue: SchemaIssue, schema: JsonSchema): { text: string; detail?: s
             return { text: 'Each value only once' }
         case 'deprecated':
             return { text: 'Deprecated', detail: 'Still accepted, and may be removed in a later version.' }
+        case 'additional':
+            return { text: `No field ${issue.property} is allowed here` }
         case 'unchecked':
             return { text: 'The values cannot be checked, so the form cannot be sent', detail: issue.reason }
         case 'other':

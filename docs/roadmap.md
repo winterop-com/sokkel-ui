@@ -96,12 +96,6 @@ to `plan.md` when it ships.
 Mapping each app's own UI onto the library's parts found these, beyond the review's missing parts
 under Next. Each is a part or an option here, never a copy in an app. Roughly one release a round.
 
-- **Round 2, the code editor and code color.** `CodeEditor` gains: a `languages` extension point
-  and a `jq` language; `completions` (label, detail, docs, kind) on CodeMirror's autocomplete; a
-  `hover(word)` for docs; ranged marks with a message (from and to columns, an underline, a gutter
-  dot, the message on hover); `onRun` on Cmd/Ctrl+Enter, or a general `keys` map; `search`,
-  `folding` and a size option, responsive on a read-only document of a megabyte or more; JSON
-  Schema 2020-12 lint and completion for YAML and JSON.
 - **Round 3, layout, maps and tokens.** A split of two panes, across or down, with bounds, that
   remembers its share by `id`; a `GeoJsonLayer` drawing fills, lines and circles by geometry type
   in the theme's colors; tokens for headers, table zebra and head, map selection, editor, scroll
