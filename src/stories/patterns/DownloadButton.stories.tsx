@@ -46,6 +46,29 @@ export const Sizes: StoryObj = {
     ),
 }
 
+/** A kept copy that can be removed: what is kept on hover, armed after a first press, and a failed try with its reason; compact draws the icon alone. */
+export const Removing: StoryObj = {
+    render: () => (
+        <Row gap="lg" align="start" wrap>
+            <Specimen label="kept, removable">
+                <DownloadButton state="kept" keptDetail="On this device, 48.2 MB" onRemove={() => undefined} />
+            </Specimen>
+            <Specimen label="armed">
+                <DownloadButton state="kept" onRemove={() => undefined} defaultArmed />
+            </Specimen>
+            <Specimen label="failed">
+                <DownloadButton state="idle" error="The server stopped answering." />
+            </Specimen>
+            <Specimen label="compact">
+                <Row gap="sm">
+                    <DownloadButton state="idle" compact />
+                    <DownloadButton state="kept" compact onRemove={() => undefined} />
+                </Row>
+            </Specimen>
+        </Row>
+    ),
+}
+
 /** Press to download an album's twelve tracks, one every half second; cancel while it runs, and it is kept once done. */
 export const Live: StoryObj = {
     render: function Render() {

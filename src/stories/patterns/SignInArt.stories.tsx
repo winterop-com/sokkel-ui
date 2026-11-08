@@ -33,3 +33,23 @@ export const Lines: StoryObj = {
         </Columns>
     ),
 }
+
+/** The options: still bars in another ink, flow lines as dots with no rings, a wider graph that holds still, and one with nothing lit. */
+export const Options: StoryObj = {
+    render: () => (
+        <Columns count={2} min="xs" gap="lg">
+            <Surface className="h-72 p-6">
+                <LevelBars seed={12} breathe={false} color="var(--kind-teal-ink)" />
+            </Surface>
+            <Surface className="h-72 p-6">
+                <FlowLines seed={8} nodes="dot" rings={0} />
+            </Surface>
+            <Surface className="h-72 p-6">
+                <FlowLines seed={15} columns={8} rows={[3, 5]} flow={false} color="var(--kind-violet-ink)" />
+            </Surface>
+            <Surface className="h-72 p-6">
+                <FlowLines seed={3} lit={false} glow={false} rings={3} />
+            </Surface>
+        </Columns>
+    ),
+}
