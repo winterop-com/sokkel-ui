@@ -18,7 +18,7 @@
         "test:visual:update": "scripts/baselines.sh checkout && bun run build-storybook && playwright test --update-snapshots",
         "test:visual:tiles": "node e2e/record-tiles.ts",
         "build": "bun run --cwd packages/core build && bun run --cwd packages/charts build && bun run --cwd packages/maps build && bun run --cwd packages/graph build && bun run --cwd packages/terminal build && bun run --cwd packages/media build",
-        "size": "tsc -p examples/sizes && bun scripts/size-budget.ts",
+        "size": "tsc -p size && bun scripts/size-budget.ts",
         "lint": "oxlint --deny-warnings",
         "fmt": "oxfmt",
         "fmt:check": "oxfmt --check",

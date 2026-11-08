@@ -1,0 +1,30 @@
+{
+    "$schema": "https://schema.tauri.app/config/2",
+    "productName": "Tasks",
+    "version": "0.0.0",
+    "identifier": "org.example.tidevann.tasks",
+    "build": {
+        "frontendDist": "../../web/dist",
+        "beforeBuildCommand": "cd ../web && bun install && bun run build",
+        "beforeDevCommand": "cd ../web && bun install && bun run build"
+    },
+    "app": {
+        "windows": [
+            {
+                "title": "Tasks",
+                "width": 1440,
+                "height": 900,
+                "minWidth": 360,
+                "titleBarStyle": "Overlay",
+                "hiddenTitle": true
+            }
+        ],
+        "security": {
+            "csp": null
+        }
+    },
+    "bundle": {
+        "active": false,
+        "icon": ["icons/icon.png"]
+    }
+}

@@ -2,83 +2,70 @@
 
 Apps that consume the sokkel-ui packages exactly as an app does: they install them and import only
 their public entry points (`@winterop-com/sokkel-ui/<Component>`,
-`@winterop-com/sokkel-ui/primitives/<name>`, `@winterop-com/sokkel-ui-charts/<Chart>`, each
-package's `styles.css`). None copies a component or reaches into a package's `src/`. `.github/workflows/examples.yaml` builds the web app and its two
-shells on every pull request that touches them; the size apps are built by `ci.yaml` on every one.
+`@winterop-com/sokkel-ui/primitives/<name>`, each package's `styles.css`). None copies a component or
+reaches into a package's `src/`. Each is a Tidevann product, in a folder of its own:
 
-Every example needs the packages built first, from the repository root:
-
-```sh
-bun install
-bun run build
+```
+examples/
+  shared/        the fake backend, the window frame, the hash route and the Tidevann mark
+  tasks/         lists, a quick add and tasks edited in place
+  runs/          job runs in a table, with a run opened beside it
+  example.mk     the targets every example's Makefile includes
 ```
 
-## web
+and inside each example:
 
-A small Tidevann app in the library's frame: the shell with its rail and top bar, the runs page as
-a data table with sortable columns and row menus, a run opened in the side panel, and the settings
-dialog.
-
-It uses only the core package, through `file:../../packages/core`, which bun installs as a copy of
-that package, with its own dependencies in the app's `node_modules`. Run `bun install` again after
-rebuilding the packages to refresh the copy. The package's `styles.css` is Tailwind source, so the
-app runs Tailwind v4 through `@tailwindcss/vite`.
-
-```sh
-cd examples/web
-bun install
-bun run build     # typecheck and build into dist/
-bun run preview   # serve dist/
-bun run dev       # or the dev server
+```
+  web/           the Vite app
+  electron/      a thin Electron shell that opens web/dist, under the example's name
+  tauri/         a thin Tauri shell that does the same
+  Makefile
 ```
 
-## electron
+`.github/workflows/examples.yaml` builds every web app and checks every shell on each pull request
+that touches them. The size budget's apps are not examples; they live in `size/` at the root.
 
-A thin Electron shell: one main process file that opens `examples/web/dist/index.html` in a
-window. The web build uses relative asset paths, so it loads from a file URL.
+## Running one
 
-```sh
-cd examples/electron
-bun install       # downloads Electron's binary (it is a trusted dependency)
-bun run build     # builds the web example, then typechecks and bundles src/main.ts
-bun run start     # builds, then opens the window
-```
-
-## tauri
-
-A thin Tauri v2 shell around the same build: `src-tauri/` with `tauri.conf.json` pointing
-`frontendDist` at `../../web/dist`. It needs Rust and, on Linux, the system libraries Tauri lists
-(webkit2gtk 4.1 and others; see the workflow).
+From the repository root, after `make build` builds the packages, every example has the same
+targets as `make <example>-<target>`; `make examples-list` names them:
 
 ```sh
-cd examples/tauri
-bun install
-bun run check     # builds the web example, then runs cargo check in src-tauri
-bun run dev       # opens the window
-bun run build     # a release binary, without installers
+make tasks-web          # build the web app and serve it (Tasks on port 4180, Runs on 4181)
+make tasks-dev          # the web app's dev server
+make tasks-electron     # open it in Electron
+make tasks-tauri        # open it in Tauri
+make tasks-tauri-build  # a Tauri release binary, without installers
+make examples           # build every web app and check every shell, as CI does
 ```
 
-## sizes
+Inside an example's folder, the same targets run without the prefix: `make tauri`, `make web`.
+Each runs `bun install` in its folder first. The Tauri shells share one Cargo target folder,
+`examples/.cargo-target/`, so Rust builds its crates once for all of them. Tauri needs Rust and, on
+Linux, the system libraries it lists (webkit2gtk 4.1 and others; see the workflow). Electron's
+binary is fetched in its `postinstall`.
 
-Four small Tidevann apps that hold the library to a size budget: `forms` (a settings page and a
-dialog with a schema form, and no engine), `dashboard` (stat and chart panels on ECharts, the range
-controls and a table), `map` (regions and sites on maplibre with a legend and a popup) and `music`
-(an album's tracks and the player bar). `forms-lean` is the forms app on the core's
-`styles-base.css` with the list of sources of each module it imports, where `forms` takes
-`styles.css`, so the CSS of an app that carries only its own modules' classes is measured too.
-`scripts/size-budget.ts` builds each with Vite against the built packages and measures it gzipped:
-the JavaScript loaded with the page (`start`), what a dynamic import fetches later (`lazy`) and the
-CSS. It fails when one grows past its budget in `sizes/budget.json`, or bundles an engine (ECharts,
-maplibre, React Flow, CodeMirror, Mermaid) its budget does not list. CI runs it after building the
-packages.
+## How an example is built
 
-The apps have no install of their own: they import the packages by their names from inside the
-repository, which resolve through the workspace's links and each package's own `exports` to its
-`dist/`, as an installed copy does. `forms` imports only the core package; `dashboard` adds the
-charts package, `map` the maps package and `music` the media package, each importing the add-on's `styles.css` after the
-core's in its own stylesheet. A change that makes an app bigger on purpose raises that app's budget in the same PR.
+- **The packages:** each `web/` installs the core package through `file:../../../packages/core`,
+  which bun installs as a copy, with its own dependencies in the app's `node_modules`. Run
+  `bun install` again after rebuilding the packages to refresh the copy. `styles.css` is Tailwind
+  source, so the app runs Tailwind v4 through `@tailwindcss/vite`, and its `app.css` adds
+  `examples/shared` as a source.
+- **What they share:** `examples/shared/` is the local package `tidevann-shared`, installed the same
+  way: `tidevann-shared/backend` (typed collections kept in localStorage, answering promises after a
+  short delay as a server would), `tidevann-shared/frame` (`useFrame`: the look, the window, the
+  route and the palette's shared groups, Reset demo data among them), `tidevann-shared/router`
+  (a hash route of its own) and `tidevann-shared/mark`.
+- **The desktop frame:** inside a shell the app passes `desktop` to `Shell`, so its top strip is the
+  window's title bar, with room for the macOS window buttons. Electron uses `hiddenInset`; Tauri an
+  overlay title bar with the title hidden, and `capabilities/default.json` lets the page drag, zoom
+  and fill the window, since WebKit ignores the CSS drag region.
+- **Assets:** the web build uses relative asset paths, so the shells load it from a file URL.
 
-```sh
-bun run build
-bun run size      # typecheck the apps, build them and compare each with its budget
-```
+## Adding one
+
+Copy an example's folder, rename it, and change its name in `web/index.html`, the two
+`package.json` files, `electron/src/main.ts`'s title, and `tauri/src-tauri/Cargo.toml` and
+`tauri.conf.json` (`productName`, `identifier`, the window's title). Give its `Makefile` a port of its
+own. The root Makefile and the workflow pick it up by its folder.

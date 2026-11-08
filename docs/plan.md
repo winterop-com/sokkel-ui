@@ -84,14 +84,17 @@ stories' from its own entry, `.storybook/storybook.css`, which imports each pack
 adds the stories as a source. The stories in `src/stories/` import the packages by their names; in
 Storybook and the tests those names resolve to the packages' sources, so neither needs a build.
 
-`examples/` consumes the packages as an app does: `examples/web` is a small Tidevann app that
-installs the core package from `packages/core` and imports only its public entry points, and the Electron and
-Tauri shells in `examples/electron` and `examples/tauri` load that app's build. The examples
-workflow builds all three, so a break in a package fails a check rather than an app.
+`examples/` holds apps that consume the packages as an app does. Each example is a Tidevann
+product in a folder of its own, `examples/<name>/`: `web/` is its Vite app, which installs the
+packages from `packages/` and imports only their public entry points, and `electron/` and `tauri/`
+are thin desktop shells that load that app's build under the example's own name. What the examples
+share (the fake backend, the window frame, the hash route and the mark) is `examples/shared/`, which
+each app installs as a local package. The examples workflow builds every app and checks every
+shell, so a break in a package fails a check rather than an app.
 
-`examples/sizes` holds the size budget: a forms page, a dashboard, a map page and a music page, each
+`size/` holds the size budget: a forms page, a dashboard, a map page and a music page, each
 built against the packages in CI and measured gzipped (the JavaScript at start, what loads later,
-the CSS). A check fails when one grows past its budget in `examples/sizes/budget.json` or bundles an
+the CSS). A check fails when one grows past its budget in `size/budget.json` or bundles an
 engine it does not use, so a forms page never carries ECharts, maplibre, React Flow, xterm.js,
 hls.js, CodeMirror, Mermaid or KaTeX. A budget is the app's size plus about 3 percent. A change that
 grows an app's start is cut first, by loading what it adds on first use; one that grows it on purpose

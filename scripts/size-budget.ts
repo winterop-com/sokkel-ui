@@ -1,6 +1,6 @@
 /**
- * Builds the apps in examples/sizes against the built packages and fails when one grows past its
- * budget in examples/sizes/budget.json, or bundles an engine its budget does not list.
+ * Builds the apps in size/ against the built packages and fails when one grows past its
+ * budget in size/budget.json, or bundles an engine its budget does not list.
  *
  *   bun run build && bun run size
  *
@@ -20,7 +20,7 @@ import react from '@vitejs/plugin-react'
 import { build, type Rolldown } from 'vite'
 
 const ROOT = join(import.meta.dirname, '..')
-const APPS = join(ROOT, 'examples/sizes')
+const APPS = join(ROOT, 'size')
 
 /** The engines an app pays for only when it uses them, each known by the packages it is built from. */
 const ENGINES: Record<string, RegExp> = {
@@ -99,6 +99,6 @@ for (const [name, budget] of Object.entries(budgets)) {
 }
 
 if (failures.length > 0) {
-    console.error(`\n${failures.join('\n')}\n\nShrink the change, or raise the budget in examples/sizes/budget.json on purpose.`)
+    console.error(`\n${failures.join('\n')}\n\nShrink the change, or raise the budget in size/budget.json on purpose.`)
     process.exit(1)
 }

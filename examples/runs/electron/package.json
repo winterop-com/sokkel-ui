@@ -1,0 +1,22 @@
+{
+    "name": "sokkel-ui-example-runs-electron",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "main": "dist/main.js",
+    "scripts": {
+        "postinstall": "node node_modules/electron/install.js",
+        "build:web": "cd ../web && bun install && bun run build",
+        "build:main": "tsc --noEmit && bun build src/main.ts --target=node --format=esm --external electron --outdir dist",
+        "build": "bun run build:web && bun run build:main",
+        "start": "bun run build && electron ."
+    },
+    "devDependencies": {
+        "@types/node": "^26.6.6",
+        "electron": "^45.2.3",
+        "typescript": "^7.0.2"
+    },
+    "trustedDependencies": [
+        "electron"
+    ]
+}

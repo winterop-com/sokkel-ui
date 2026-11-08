@@ -88,7 +88,7 @@ to `plan.md` when it ships.
 - **Working demo apps outside Storybook.** In `examples/`, built against the package as an app would
   be: a data visualizer (a table of data with chart views to pick, saved and shared), and others to
   follow. Storybook stays the catalog of parts; the examples show them working together.
-- **The examples as they stand (run 2026-11-08).** `examples/web` in Chromium, the Electron 45
+- **The examples as they stand (run 2026-11-08).** the one example then, a runs page, in Chromium, the Electron 45
   shell and the Tauri 2 shell on WebKit all start and draw with no errors, but they hold one page
   (the runs table) on the core package alone, from before the palette existed. To bring them up
   to the library:
@@ -103,8 +103,8 @@ to `plan.md` when it ships.
       dependency; fix the install or say in the README how to fetch it.
     - **CI:** it only compiles the shells. Start each once: Electron under Playwright with a virtual
       display, Tauri as a built binary.
-    - **Room for the demos:** put the demo apps in `examples/web`, with the add-on packages, so each
-      runs in the browser, Electron and Tauri alike.
+    - **Room for the demos:** each example is its own app, `examples/<name>/` with `web/`,
+      `electron/` and `tauri/`, sharing `examples/shared/`; the first two are Tasks and Runs.
 
 ## Next
 
@@ -131,7 +131,7 @@ to `plan.md` when it ships.
   [3.0.0-alpha.7](https://github.com/tauri-apps/tauri/releases/tag/tauri-runtime-cef-v3.0.0-alpha.7)
   since 2026-11-06, with open CEF bugs (Linux keyboard focus, idle CPU, fullscreen sizing) and no
   blog post yet; stable Tauri is 2.12 on the system webview. Next: once Tauri 3 reaches beta, add
-  an `examples/tauri-cef` shell on `tauri-runtime-cef` beside `examples/tauri`, built by the
+  an `examples/tauri-cef` shell on `tauri-runtime-cef` beside the examples' Tauri shells, built by the
   examples workflow; until then, nothing to build.
 
 - **Parts the app stories still build.** A letter header (avatar, sender, address, time, the
@@ -195,7 +195,7 @@ Should:
 - **`'use client'`** on the components that use hooks.
 - **Tests** for the parts heavy in logic: `DataTable` paging, server mode, selection and keys,
   `MediaBar`, `SchemaForm`, `Search`, the board's drag, the core hooks.
-- **CI installs the packed tarballs** into `examples/web`, not the workspace link.
+- **CI installs the packed tarballs** into each example's `web/`, not the workspace link.
 - **Stories** for parts no story shows directly (`ProgressRing`, `ChatTyping`, `PresenceDot`).
 - **Logical sides** (start and end, not left and right) and a right-to-left story, if wanted.
 

@@ -1,7 +1,7 @@
 # The common commands, as `make <target>`. Everything runs through bun; `make help` lists them.
 
 .DEFAULT_GOAL := help
-.PHONY: help install tokens storybook build size typecheck lint fmt fmt-check test check storybook-build baselines visual visual-update screenshots-ci layout clean
+.PHONY: help install tokens storybook build size typecheck lint fmt fmt-check test check storybook-build baselines visual visual-update screenshots-ci layout examples examples-list clean
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "} {printf "  %-16s %s\n", $$1, $$2}'
@@ -55,6 +55,20 @@ screenshots-ci: ## Retake the screenshots on GitHub into the current branch's ba
 
 layout: storybook-build ## Check that no story scrolls sideways at the narrow widths
 	bunx playwright test e2e/layout.spec.ts
+
+# Every folder in examples/ with a Makefile is an example: a web app and its Electron and Tauri shells.
+EXAMPLES := $(sort $(patsubst examples/%/Makefile,%,$(wildcard examples/*/Makefile)))
+EXAMPLE_TARGETS := web dev electron tauri tauri-build
+
+examples: build ## Build every example's web app and check its desktop shells, as CI does
+	@for name in $(EXAMPLES); do $(MAKE) -C examples/$$name check || exit 1; done
+
+examples-list: ## List the examples and what make runs for each, e.g. make tasks-tauri
+	@for name in $(EXAMPLES); do printf '  %-10s make %s-{%s}\n' $$name $$name "$$(echo $(EXAMPLE_TARGETS) | tr ' ' ,)"; done
+
+# make <example>-<target>, e.g. make tasks-web or make runs-tauri-build, after building the packages.
+$(foreach target,$(EXAMPLE_TARGETS),$(addsuffix -$(target),$(EXAMPLES))): build
+	$(MAKE) -C examples/$(firstword $(subst -, ,$@)) $(patsubst $(firstword $(subst -, ,$@))-%,%,$@)
 
 clean: ## Remove what the builds made
 	rm -rf packages/*/dist storybook-static test-results
