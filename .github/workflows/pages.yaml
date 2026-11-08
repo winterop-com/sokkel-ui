@@ -1,10 +1,8 @@
 name: storybook
 
-# Publishes only a commit on main whose CI passed.
+# Publishes main's Storybook on every push to main, without waiting for CI (as merges do not).
 on:
-    workflow_run:
-        workflows: [ci]
-        types: [completed]
+    push:
         branches: [main]
     workflow_dispatch:
 
@@ -13,47 +11,27 @@ permissions:
     pages: write
     id-token: write
 
-# Runs queue rather than cancel one another, so a run for an older commit cannot cancel a newer one.
+# A newer push cancels the build of an older one, so the newest commit is the one published.
 concurrency:
     group: pages
-    cancel-in-progress: false
+    cancel-in-progress: true
 
 jobs:
     deploy:
         # Runs once GitHub Pages is enabled for the repository with GitHub Actions as its source.
-        if: github.event.repository.has_pages && (github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'))
+        if: github.event.repository.has_pages
         runs-on: ubuntu-latest
         environment:
             name: github-pages
             url: ${{ steps.deployment.outputs.page_url }}
         steps:
             - uses: actions/checkout@v5
-              with:
-                  ref: ${{ github.event.workflow_run.head_sha || github.sha }}
-            # A commit main has moved past is not published: the newer commit's own CI publishes it.
-            - id: latest
-              env:
-                  EVENT: ${{ github.event_name }}
-                  BUILT: ${{ github.event.workflow_run.head_sha }}
-              run: |
-                  head=$(git ls-remote origin refs/heads/main | cut -f1)
-                  if [ "$EVENT" = workflow_run ] && [ "$head" != "$BUILT" ]; then
-                      echo "main is at $head, past $BUILT; not publishing"
-                      echo "stale=true" >> "$GITHUB_OUTPUT"
-                      echo "Not published: main has moved past $BUILT to $head, whose own run publishes it." >> "$GITHUB_STEP_SUMMARY"
-                  fi
-            - if: steps.latest.outputs.stale != 'true'
-              run: npm install -g bun
-            - if: steps.latest.outputs.stale != 'true'
-              run: bun install --frozen-lockfile
-            - if: steps.latest.outputs.stale != 'true'
-              run: bun run build-storybook
-            - if: steps.latest.outputs.stale != 'true'
-              uses: actions/configure-pages@v5
-            - if: steps.latest.outputs.stale != 'true'
-              uses: actions/upload-pages-artifact@v4
+            - run: npm install -g bun
+            - run: bun install --frozen-lockfile
+            - run: bun run build-storybook
+            - uses: actions/configure-pages@v5
+            - uses: actions/upload-pages-artifact@v4
               with:
                   path: storybook-static
-            - if: steps.latest.outputs.stale != 'true'
-              id: deployment
+            - id: deployment
               uses: actions/deploy-pages@v4
