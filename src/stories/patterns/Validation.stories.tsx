@@ -190,6 +190,7 @@ export const LongPage: StoryObj = {
 /** The same form in a dialog: the strip runs along the body's edge and the count sits before the verbs. */
 export const LongDialog: StoryObj = {
     name: 'Long dialog',
+    parameters: { frame: 'padded' },
     render: function Render() {
         const form = useSchemaForm(LONG, { initial: TYPED, defaultSubmitted: true })
         return (
