@@ -38,6 +38,7 @@ import { cn } from '../lib/cn'
 import { bracketColors as colorBrackets, indentGuides as drawGuides } from './code/guides'
 import { jq } from './code/jq'
 import { SCHEMA_WORDS, schemaCompletion, schemaDiagnostics, type CodeSchemaWords, type SchemaLanguage } from './code/schema'
+import { loadedValidate, loadValidate } from './schema/checker'
 import type { JsonSchema } from './schema/read'
 
 export type { CodeSchemaWords } from './code/schema'
@@ -469,12 +470,16 @@ export function CodeEditor({
     const diagnosing = schemaLanguage !== undefined || marks.some((mark) => mark.message !== undefined)
     const keyNames = [...(onRun === undefined ? [] : ['Mod-Enter']), ...Object.keys(keys ?? {})].join(' ')
 
-    /** Every diagnostic the editor shows: the marks with a message and what the schema finds. */
+    /**
+     * Every diagnostic the editor shows: the marks with a message and what the schema finds, once
+     * the schema checker has loaded.
+     */
     const diagnose = (state: EditorState): Diagnostic[] => {
         const { marks: given, schema: against, words, language: lang } = props.current
         const found = markDiagnostics(state, given)
-        if (against === undefined || (lang !== 'json' && lang !== 'yaml')) return found
-        return [...found, ...schemaDiagnostics(state, lang, against, { ...SCHEMA_WORDS, ...words })]
+        const check = loadedValidate()
+        if (against === undefined || (lang !== 'json' && lang !== 'yaml') || check === undefined) return found
+        return [...found, ...schemaDiagnostics(state, lang, against, check, { ...SCHEMA_WORDS, ...words })]
     }
 
     const extensions = {
@@ -650,6 +655,22 @@ export function CodeEditor({
 
     useEffect(() => {
         view.current?.dispatch({ effects: compartments.current.schema.reconfigure(extensions.schema()) })
+    }, [schemaLanguage])
+
+    // The schema checker loads with the first schema; what it finds is drawn as soon as it is there.
+    useEffect(() => {
+        if (schemaLanguage === undefined || loadedValidate() !== undefined) return
+        let live = true
+        loadValidate().then(
+            () => {
+                const editor = view.current
+                if (live && editor !== null) editor.dispatch(setDiagnostics(editor.state, diagnose(editor.state)))
+            },
+            () => undefined,
+        )
+        return () => {
+            live = false
+        }
     }, [schemaLanguage])
 
     useEffect(() => {

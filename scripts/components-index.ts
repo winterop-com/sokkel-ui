@@ -40,6 +40,8 @@ export const PRIVATE: Record<PackageDir, Record<string, string>> = {
         'components/code/schema': "`CodeEditor`'s JSON Schema checks and completion; `CodeSchemaWords` is exported by `CodeEditor`",
         'components/media/sound-delay': "how far `SoundVisualizer` holds its picture back behind the output's latency",
         'components/media/sound-source': 'what `SoundVisualizer` listens through; `SoundSource` is exported by `SoundVisualizer`',
+        'components/schema/checker':
+            '`validate` loaded on first use, for `SchemaForm` and `CodeEditor`; an app preloads it with `loadSchemaChecks`',
         'components/shell-context': 'the contexts `Shell` hands the parts drawn inside it',
         'hooks/use-drag-size': "the drag on a resizable edge, for the library's own panels",
         'lib/css-pixels': 'a length token in pixels, for a part that hands a size to an engine',
@@ -83,11 +85,13 @@ export const PRIVATE: Record<PackageDir, Record<string, string>> = {
         shapes: 'rows shaped for the kinds',
         stats: 'the arithmetic the kinds share',
         theme: 'the ECharts theme drawn from the tokens',
+        'use-kinds': "the kinds' builders, loaded with the first chart",
         zoom: "the window a chart's zoom keeps",
     },
     maps: {
         color: 'tokens resolved to colors maplibre can draw',
         context: "the map's context its layers, legends and controls share; `MapCorner` is exported by `MapView`",
+        engine: 'maplibre, its stylesheet and its worker, loaded the first time a map is drawn; `loadMapEngine` in `MapView` fetches it ahead',
         globe: "the globe's sky",
         layer: 'what the layers share; `FeatureAccessor` is exported by each layer',
     },

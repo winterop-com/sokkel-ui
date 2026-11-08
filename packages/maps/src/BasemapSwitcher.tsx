@@ -1,4 +1,5 @@
 import { Layers } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
@@ -26,9 +27,39 @@ export interface BasemapPreviewProps {
     className?: string
 }
 
-/** A basemap's preview image, or the card color for one without tiles. */
+type PreviewLoader = () => Promise<string>
+
+/** Each preview fetched so far, by the function that fetches it. */
+const fetched = new WeakMap<PreviewLoader, string>()
+
+/** The address of a basemap's preview: given, fetched, or undefined while it is fetched or when it fails. */
+function usePreview(preview: Basemap['preview']): string | undefined {
+    const known = typeof preview === 'function' ? fetched.get(preview) : preview
+    const [loaded, setLoaded] = useState<{ from: PreviewLoader; src: string } | null>(null)
+    useEffect(() => {
+        if (typeof preview !== 'function' || fetched.has(preview)) return
+        let live = true
+        preview().then(
+            (src) => {
+                fetched.set(preview, src)
+                if (live) setLoaded({ from: preview, src })
+            },
+            () => undefined,
+        )
+        return () => {
+            live = false
+        }
+    }, [preview])
+    return known ?? (loaded !== null && loaded.from === preview ? loaded.src : undefined)
+}
+
+/** A basemap's preview image, a muted tile while it is fetched, or the card color for one without tiles. */
 export function BasemapPreview({ basemap, className }: BasemapPreviewProps) {
-    if (basemap.preview === undefined) {
+    const src = usePreview(basemap.preview)
+    if (basemap.preview !== undefined && src === undefined) {
+        return <span aria-hidden className={cn('block shrink-0 rounded-mini bg-muted ring-1 ring-foreground/15', className)} />
+    }
+    if (src === undefined) {
         return (
             <span
                 aria-hidden
@@ -41,7 +72,7 @@ export function BasemapPreview({ basemap, className }: BasemapPreviewProps) {
     }
     return (
         <img
-            src={basemap.preview}
+            src={src}
             alt=""
             draggable={false}
             className={cn('block shrink-0 rounded-mini object-cover ring-1 ring-foreground/15', className)}

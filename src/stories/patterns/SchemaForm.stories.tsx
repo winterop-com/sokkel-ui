@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { DialogShell } from '@winterop-com/sokkel-ui/DialogShell'
 import type { JsonSchema } from '@winterop-com/sokkel-ui/schema/read'
 import { SchemaForm, SchemaIssueCount, useSchemaForm, type ServerIssue } from '@winterop-com/sokkel-ui/schema/SchemaForm'
-import type { Path } from '@winterop-com/sokkel-ui/schema/validate'
+import type { Path } from '@winterop-com/sokkel-ui/schema/issues'
 
 /**
  * A form drawn from a JSON Schema: a field per property, checked against the schema as it is

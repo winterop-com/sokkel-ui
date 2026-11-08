@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { chartLegend } from '../Chart'
+import { chartLegend } from '../chart-legend'
 import type { ChartLook } from '../look'
 import { dialSplits } from './gauge'
 import { linkedLayout, SHARED_SCALE } from './linked'

@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
 
 import { usePanelSize } from '@winterop-com/sokkel-ui/hooks/use-panel-size'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
@@ -16,10 +16,13 @@ import {
     type RepeatMode,
 } from './MediaBarParts'
 import { MEDIA_RATES } from '@winterop-com/sokkel-ui/media/MediaControls'
-import { MediaFullscreen } from './MediaFullscreen'
 import { useOneSound } from '@winterop-com/sokkel-ui/media/one-sound'
 import type { SoundKind } from '@winterop-com/sokkel-ui/media/SoundVisualizer'
 import type { MediaRange } from '@winterop-com/sokkel-ui/media/time'
+
+/** The fullscreen view and its visualizer, fetched once a bar that opens it is drawn, after the page. */
+const loadFullscreen = () => import('./MediaFullscreen')
+const MediaFullscreen = lazy(() => loadFullscreen().then((module) => ({ default: module.MediaFullscreen })))
 
 export type { MediaBarLayout } from './bar-growth'
 export type { MediaBarWords, MediaSteps, MediaTimeline, RepeatMode } from './MediaBarParts'
@@ -181,7 +184,7 @@ export interface MediaBarProps {
  * The corner button opens the fullscreen now-playing view (`MediaFullscreen`), arranged after the
  * layout, a dark room in every theme with the visualizer at full strength and a picker of its
  * kind; Escape leaves it. Given `lyrics`, a button in its corner shows them in the visualizer's
- * place.
+ * place. The view is fetched after the bar is first drawn, so it is there when the button is pressed.
  *
  * Its top edge drags to resize it and a double click on the edge puts it back. Left to itself it
  * holds its own height, starting at `defaultSize`; `size` with `onSizeChange` holds it from
@@ -278,6 +281,10 @@ export function MediaBar({
         if (fullscreen === undefined) setOwnOpen(next)
         onFullscreenChange?.(next)
     }
+    // Fetched after the first paint, so the browser's fullscreen is asked for within the press that opens it.
+    useEffect(() => {
+        if (expandable) void loadFullscreen()
+    }, [expandable])
 
     const [ownLyrics, setOwnLyrics] = useState(defaultLyricsShown)
     const setLyrics = (next: boolean) => {
@@ -398,19 +405,21 @@ export function MediaBar({
                 </div>
             </div>
             {open && (
-                <MediaFullscreen
-                    deck={deck}
-                    layout={layout}
-                    visualizer={visualizer}
-                    pickable={slotKind !== undefined}
-                    kind={kind}
-                    onKindChange={setKind}
-                    onLeave={() => setOpen(false)}
-                    native={!first}
-                    lyrics={lyrics}
-                    lyricsShown={lyricsShown ?? ownLyrics}
-                    onLyricsShownChange={setLyrics}
-                />
+                <Suspense fallback={null}>
+                    <MediaFullscreen
+                        deck={deck}
+                        layout={layout}
+                        visualizer={visualizer}
+                        pickable={slotKind !== undefined}
+                        kind={kind}
+                        onKindChange={setKind}
+                        onLeave={() => setOpen(false)}
+                        native={!first}
+                        lyrics={lyrics}
+                        lyricsShown={lyricsShown ?? ownLyrics}
+                        onLyricsShownChange={setLyrics}
+                    />
+                </Suspense>
             )}
         </>
     )

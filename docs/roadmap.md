@@ -67,10 +67,12 @@ to `plan.md` when it ships.
 
 ## Next
 
-- **A lighter core install (not urgent).** Charts, maps and graphs are packages of their own from
-  0.9.0. Still installed with the core for everyone: `shiki`, `react-markdown` with its rehype and
-  remark plugins, `ajv`, `embla`, `cmdk` and `react-day-picker`; make them optional peers too, or
-  move `CodeEditor` and its CodeMirror into a `sokkel-ui-editor` package if the core stays too broad.
+- **Smaller start bundles, what is left.** Every library only some parts need is an optional peer,
+  and the heavy ones load on first use. Left in every page's start: React and the frame (`Shell`,
+  `Rail`, `AccountMenu`, with Base UI's menu, popover and tooltip on floating-ui), which the menu's
+  popup could load on first open. On a dashboard `chartLegend` still brings every kind with the page: split each kind's
+  shaping of rows, which the legend needs, from its option builder, which can load with ECharts.
+  `cmdk` stays a dependency while `Shell`'s palette is drawn with it.
 - **Adoption.** Apps adopt the library one pattern per PR, each pinning a published version. The
   app adds a check in the same PR that refuses its own hand-rolled version of that pattern, so it
   cannot come back. A part an app needs to differ becomes an option here, never a local edit. The

@@ -1,7 +1,8 @@
 import { useMemo, type ReactNode } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
-import { Chart, chartLegend, useSpec } from '../Chart'
+import { Chart, useSpec } from '../Chart'
+import { chartLegend } from '../chart-legend'
 import { ChartFrame, type ChartFrameWords } from '../ChartFrame'
 import type { LegendStat } from '../ChartLegend'
 import type { ChartKind, ChartSpec } from '../kinds'
