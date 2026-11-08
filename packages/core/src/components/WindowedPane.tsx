@@ -1,0 +1,132 @@
+import { Maximize2, X } from 'lucide-react'
+import { createContext, useContext, useRef, useState, type ReactNode } from 'react'
+
+import { cn } from '../lib/cn'
+import { IconButton } from './IconButton'
+import { Dialog, DialogContent, DialogTitle } from './ui/dialog'
+
+export interface WindowedPaneWords {
+    /** The expand button's label. */
+    expand: string
+    /** The window's close button's label. */
+    close: string
+    /** Said in the pane's place while its content is in the window. */
+    away: string
+}
+
+export const WINDOWED_PANE_WORDS: WindowedPaneWords = {
+    expand: 'Expand',
+    close: 'Close',
+    away: 'Shown in a window.',
+}
+
+interface Windowed {
+    /** Whether the content is drawn in the window now. */
+    windowed: boolean
+    setOpen: (open: boolean) => void
+    words: WindowedPaneWords
+}
+
+const WindowedContext = createContext<Windowed | null>(null)
+
+/** Whether the content around is drawn in a `WindowedPane`'s window, and the way to open or close it. */
+export function useWindowedPane(): Windowed | null {
+    return useContext(WindowedContext)
+}
+
+/**
+ * The expand button of the `WindowedPane` around it, for a pane that sets it in a toolbar of its
+ * own (with `button="none"` on the pane). Draws nothing outside a pane or inside the window.
+ */
+export function WindowedPaneButton({ className }: { className?: string }) {
+    const pane = useWindowedPane()
+    if (pane === null || pane.windowed) return null
+    return (
+        <IconButton label={pane.words.expand} size="icon-xs" onClick={() => pane.setOpen(true)} className={className}>
+            <Maximize2 />
+        </IconButton>
+    )
+}
+
+/**
+ * Any pane, with a way to open the same content near full screen: an expand button at its top
+ * right corner (shown while the pointer is over it, always on touch) opens a window with a margin
+ * all round, a title and a close button; Escape closes it too. While the content is in the window,
+ * the pane keeps its height in place and says so, and the content comes back when the window
+ * closes. The content is drawn once, in one place or the other, so it fills the room it is given.
+ *
+ * `button="none"` leaves the button to the content, which places `WindowedPaneButton` in its own
+ * toolbar; `useWindowedPane` tells it whether it is in the window. Open or closed is held by the
+ * pane unless `open` and `onOpenChange` hold it.
+ */
+export function WindowedPane({
+    title,
+    children,
+    open: heldOpen,
+    defaultOpen = false,
+    onOpenChange,
+    button = 'corner',
+    className,
+    words: given,
+}: {
+    /** The window's title, and the name of what the pane holds. */
+    title: ReactNode
+    children: ReactNode
+    open?: boolean
+    defaultOpen?: boolean
+    onOpenChange?: (open: boolean) => void
+    /** `corner`: the pane draws the expand button over its top right corner; `none`: the content does. */
+    button?: 'corner' | 'none'
+    className?: string
+    words?: Partial<WindowedPaneWords>
+}) {
+    const words = { ...WINDOWED_PANE_WORDS, ...given }
+    const [ownOpen, setOwnOpen] = useState(defaultOpen)
+    const open = heldOpen ?? ownOpen
+    const place = useRef<HTMLDivElement>(null)
+    const [height, setHeight] = useState<number | undefined>(undefined)
+    const setOpen = (next: boolean) => {
+        if (next && place.current !== null) setHeight(place.current.offsetHeight)
+        if (heldOpen === undefined) setOwnOpen(next)
+        onOpenChange?.(next)
+    }
+    return (
+        <>
+            <WindowedContext.Provider value={{ windowed: false, setOpen, words }}>
+                <div ref={place} data-slot="windowed-pane" className={cn('group/windowed relative min-h-0 min-w-0', className)}>
+                    {open ? (
+                        <div
+                            className="flex h-full min-h-24 items-center justify-center rounded-lg border border-dashed border-border px-4 text-center text-sm text-muted-foreground"
+                            style={height === undefined ? undefined : { height }}
+                        >
+                            {words.away}
+                        </div>
+                    ) : (
+                        children
+                    )}
+                    {!open && button === 'corner' && (
+                        <span className="absolute top-2 right-2 z-10 rounded-md bg-background opacity-0 ring-1 ring-foreground/10 transition-opacity group-focus-within/windowed:opacity-100 group-hover/windowed:opacity-100 pointer-coarse:opacity-100">
+                            <WindowedPaneButton />
+                        </span>
+                    )}
+                </div>
+            </WindowedContext.Provider>
+            <Dialog open={open} onOpenChange={setOpen}>
+                <DialogContent
+                    showCloseButton={false}
+                    className="inset-3 flex w-auto max-w-none translate-x-0 translate-y-0 flex-col gap-0 p-0 sm:inset-6 sm:max-w-none"
+                >
+                    <div className="flex min-h-(--density-panel-head) shrink-0 items-center gap-2 border-b border-border px-(--density-panel-pad)">
+                        <DialogTitle className="min-w-0 flex-1 truncate text-section-title">{title}</DialogTitle>
+                        <IconButton label={words.close} size="icon-sm" onClick={() => setOpen(false)}>
+                            <X />
+                        </IconButton>
+                    </div>
+                    <WindowedContext.Provider value={{ windowed: true, setOpen, words }}>
+                        <div className="flex min-h-0 flex-1 flex-col overflow-auto p-4">{children}</div>
+                    </WindowedContext.Provider>
+                </DialogContent>
+            </Dialog>
+        </>
+    )
+}

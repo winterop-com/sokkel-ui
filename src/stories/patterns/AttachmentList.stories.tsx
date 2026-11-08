@@ -3,6 +3,11 @@ import { FileJson, FileSpreadsheet } from 'lucide-react'
 import { useState } from 'react'
 
 import { AttachmentList, type AttachmentFile } from '@winterop-com/sokkel-ui/AttachmentList'
+import { Banner } from '@winterop-com/sokkel-ui/Banner'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { useUploads } from '@winterop-com/sokkel-ui/hooks/use-uploads'
+import { PICKED_FILES, PICKED_LIMIT, useFakeUploader } from '../fixtures/uploader'
 import { HARBOR_DUSK } from '../fixtures/photos'
 import clip from '../media/fixtures/clip.webm?url'
 import { tuneUrl } from '../media/fixtures/tune'
@@ -47,3 +52,36 @@ export const Media: StoryObj = {
         />
     ),
 }
+
+function UploadQueue() {
+    const fake = useFakeUploader()
+    const uploads = useUploads({ accept: '.csv,.yaml,.json', maxSize: PICKED_LIMIT, upload: fake.upload })
+    return (
+        <Stack gap="sm">
+            <Row gap="sm" wrap>
+                <Button variant="outline" size="sm" onClick={() => uploads.add(PICKED_FILES)}>
+                    Add files
+                </Button>
+                <Button variant="outline" size="sm" onClick={fake.step}>
+                    Progress
+                </Button>
+                <Button variant="outline" size="sm" onClick={fake.failOne}>
+                    Fail one
+                </Button>
+            </Row>
+            {uploads.refused.map((refused) => (
+                <Banner key={refused.id} tone="warning" onDismiss={uploads.clearRefused}>
+                    {refused.message}
+                </Banner>
+            ))}
+            <AttachmentList files={uploads.files} onRemove={uploads.onRemove} onCancel={uploads.onCancel} />
+        </Stack>
+    )
+}
+
+/**
+ * `useUploads` feeding the list: Add files takes two files and refuses one by its type and one by
+ * its size, Progress moves every upload on a quarter, and Fail one fails the first still going. A
+ * file going up cancels, one that is up removes.
+ */
+export const WithUploads: StoryObj = { name: 'With uploads', render: () => <UploadQueue /> }

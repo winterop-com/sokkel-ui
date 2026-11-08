@@ -64,6 +64,8 @@ export interface DataColumn<T> {
     resizable?: boolean
     /** The narrowest a drag takes it, in pixels. */
     minSize?: number
+    /** What the column says for a group of rows, in the group's head: a sum, a range, a count. */
+    aggregate?: (rows: readonly T[]) => ReactNode
 }
 
 /** One thing a row's menu offers, or a line between groups of them. */
@@ -122,6 +124,12 @@ export interface DataTableWords {
     /** A column's resize handle. */
     resize: (column: string) => string
     empty: string
+    /** A group head's box, which selects every row in the group. */
+    selectGroup: string
+    /** A group head's fold button, by whether the group is folded now. */
+    foldGroup: (folded: boolean) => string
+    /** A group head's count of its rows: `12`, or `12 runs`. */
+    groupCount: (count: number) => string
 }
 
 const WORDS: DataTableWords = {
@@ -154,6 +162,9 @@ const WORDS: DataTableWords = {
     loadingChildren: 'Loading',
     resize: (column) => `Resize ${column}`,
     empty: 'Nothing here.',
+    selectGroup: 'Select group',
+    foldGroup: (folded) => (folded ? 'Show group' : 'Hide group'),
+    groupCount: (count) => count.toLocaleString('en-US'),
 }
 
 /** A row as drawn: where it sits in the tree, and whether it has children and shows them. */
@@ -214,6 +225,69 @@ export function flattenRows<T>({
     }
     walk(rows, 0, undefined)
     return flat
+}
+
+/** The top-level rows that share a group key, in the order they came. */
+export interface RowGroup<T> {
+    key: string
+    rows: readonly T[]
+}
+
+/** A group's head as drawn: its rows, whether it is folded, and its rows as drawn when it is not. */
+export interface GroupHead<T> extends RowGroup<T> {
+    head: true
+    folded: boolean
+    entries: FlatRow<T>[]
+}
+
+/** A line of a grouped table: a group's head or a row. */
+export type TableLine<T> = GroupHead<T> | FlatRow<T>
+
+export function isGroupHead<T>(line: TableLine<T>): line is GroupHead<T> {
+    return 'head' in line
+}
+
+/**
+ * The rows gathered by their group key: the keys `order` names first, in its order, then the rest
+ * in the order their first row came. Rows keep their order inside a group.
+ */
+export function groupRows<T>(rows: readonly T[], groupOf: (row: T) => string, order: readonly string[] = []): RowGroup<T>[] {
+    const byKey = new Map<string, T[]>()
+    for (const row of rows) {
+        const key = groupOf(row)
+        const list = byKey.get(key)
+        if (list === undefined) byKey.set(key, [row])
+        else list.push(row)
+    }
+    const rank = (key: string) => {
+        const at = order.indexOf(key)
+        return at < 0 ? order.length : at
+    }
+    // Map keeps first-appearance order; a stable sort puts the named keys ahead of it.
+    return [...byKey.entries()].map(([key, list]) => ({ key, rows: list })).sort((a, b) => rank(a.key) - rank(b.key))
+}
+
+/**
+ * A grouped table's lines, top to bottom: each group's head, then its rows as `flatten` draws them
+ * unless it is folded; and the rows alone, for selection and the keyboard.
+ */
+export function groupLines<T>(
+    groups: readonly RowGroup<T>[],
+    folded: ReadonlySet<string>,
+    flatten: (rows: readonly T[]) => FlatRow<T>[],
+): { heads: GroupHead<T>[]; lines: TableLine<T>[]; rows: FlatRow<T>[] } {
+    const heads: GroupHead<T>[] = []
+    const lines: TableLine<T>[] = []
+    const rows: FlatRow<T>[] = []
+    for (const group of groups) {
+        const shut = folded.has(group.key)
+        const entries = shut ? [] : flatten(group.rows)
+        const head: GroupHead<T> = { ...group, head: true, folded: shut, entries }
+        heads.push(head)
+        lines.push(head, ...entries)
+        rows.push(...entries)
+    }
+    return { heads, lines, rows }
 }
 
 /** A row's key and every key under it. */
@@ -357,8 +431,13 @@ const STACK_LINE = 20
  * narrow, a plain divided list of rows each as tall as its lines; a `foot` line says what the bar
  * would have.
  *
- * Sort, selection, open branches, hidden columns and column widths are each held by the table
- * unless the app passes the value and hears the change.
+ * With `groupBy`, the rows gather under group heads, each with its label, its count and what each
+ * column's `aggregate` says for its rows; pressing a head folds the group. Rows sort within their
+ * group, and a head's box selects the whole group. Groups apply to a table drawn whole or scrolled,
+ * not paged; in the grid view each group's cards sit under their head.
+ *
+ * Sort, selection, open branches, folded groups, hidden columns and column widths are each held by
+ * the table unless the app passes the value and hears the change.
  *
  * The table draws its own box, a border with rounded corners; `framed={false}` drops both, for a
  * table set into a panel or a card that already frames it.
@@ -420,6 +499,13 @@ export function DataTable<T>({
     variant = 'table',
     foot,
     hover = true,
+    columnHeads = true,
+    groupBy,
+    groupLabel,
+    groupOrder,
+    foldedGroups: foldedValue,
+    defaultFoldedGroups = EMPTY,
+    onFoldedGroupsChange,
     framed = true,
     words: ownWords,
     className,
@@ -532,6 +618,18 @@ export function DataTable<T>({
     foot?: ReactNode
     /** Tints the row under the pointer. */
     hover?: boolean
+    /** Draws the column names over the rows; off for a listing whose rows say what they are. */
+    columnHeads?: boolean
+    /** Gathers the top-level rows under group heads, by a field of the row or a key made from it. */
+    groupBy?: (keyof T & string) | ((row: T) => string)
+    /** A group head's label; the group's key by default. */
+    groupLabel?: (key: string, rows: readonly T[]) => ReactNode
+    /** The group keys drawn first, in this order; the rest follow in the order their first row came. */
+    groupOrder?: readonly string[]
+    /** The keys of the folded groups. */
+    foldedGroups?: ReadonlySet<string>
+    defaultFoldedGroups?: ReadonlySet<string>
+    onFoldedGroupsChange?: (folded: ReadonlySet<string>) => void
     /** Draws the table's own border and corners; off for a table set into a frame of its own. */
     framed?: boolean
     words?: Partial<DataTableWords>
@@ -563,18 +661,41 @@ export function DataTable<T>({
                 : sortRows(level, sortColumn.sortValue, sort.direction),
         [manualSort, sort, sortColumn],
     )
-    const all = useMemo(
-        () =>
+    const [folded, setFolded] = useHeld(foldedValue, defaultFoldedGroups, onFoldedGroupsChange)
+    const grouped = groupBy !== undefined && paging === undefined
+    const groupOf = useMemo(
+        () => (groupBy === undefined ? undefined : typeof groupBy === 'function' ? groupBy : (row: T) => String(row[groupBy])),
+        [groupBy],
+    )
+    const groups = useMemo(
+        () => (grouped && groupOf !== undefined ? groupRows(rows, groupOf, groupOrder) : undefined),
+        [grouped, groupOf, rows, groupOrder],
+    )
+    // Every row as drawn, and with groups the heads among them.
+    const {
+        all,
+        heads: groupHeads,
+        lines: groupedLines,
+    } = useMemo(() => {
+        const flatten = (level: readonly T[]) =>
             flattenRows({
-                rows,
+                rows: level,
                 rowKey,
                 childRows: treeKids,
                 hasChildren: loadChildren === undefined ? undefined : hasChildren,
                 expanded,
                 order,
-            }),
-        [rows, rowKey, treeKids, hasChildren, loadChildren, expanded, order],
-    )
+            })
+        if (groups === undefined) return { all: flatten(rows), heads: undefined, lines: undefined }
+        const laid = groupLines(groups, folded, flatten)
+        return { all: laid.rows, heads: laid.heads, lines: laid.lines }
+    }, [rows, rowKey, treeKids, hasChildren, loadChildren, expanded, order, groups, folded])
+    const foldGroup = (key: string) => {
+        const next = new Set(folded)
+        if (next.has(key)) next.delete(key)
+        else next.add(key)
+        setFolded(next)
+    }
     const latestExpanded = useRef({ expanded, setExpanded })
     useEffect(() => {
         latestExpanded.current = { expanded, setExpanded }
@@ -611,6 +732,8 @@ export function DataTable<T>({
         () => (paging === 'client' ? all.slice(current * pageSize, (current + 1) * pageSize) : all),
         [paging, all, current, pageSize],
     )
+    // The table's lines: the rows, with the group heads among them when grouped.
+    const drawn: TableLine<T>[] = groupedLines ?? flat
     const allKeys = useMemo(
         () => (selectable ? rows.flatMap((row) => branchKeys(row, rowKey, treeKids)) : []),
         [selectable, rows, rowKey, treeKids],
@@ -657,7 +780,7 @@ export function DataTable<T>({
     // The grid is drawn a line of cards at a time; the table's line is one row.
     const perLine = stacked ? 1 : gridView ? Math.max(1, Math.floor((view.width - 2 * GAP + GAP) / (cardBox.width + GAP))) : 1
     const lineHeight = gridView ? cardPixels + GAP : rowHeight
-    const lines = Math.ceil(flat.length / perLine)
+    const lines = gridView ? Math.ceil(flat.length / perLine) : drawn.length
     const over = gridView ? 2 : OVERSCAN
     useLayoutEffect(() => {
         if (scroller.current !== null) scroller.current.scrollTop = 0
@@ -672,11 +795,12 @@ export function DataTable<T>({
     // Rows that grow are all drawn, as their heights are not known before they are.
     // A narrow list is a plain list of rows as tall as their lines.
     const listed = list && stacked
-    const every = (auto && !gridView) || listed
+    // Grouped cards are drawn group by group, every one of them.
+    const every = (auto && !gridView) || listed || (gridView && groupHeads !== undefined)
     const firstLine = every ? 0 : Math.max(0, Math.floor(view.top / lineHeight) - over)
     const lastLine = every ? lines : Math.min(lines, Math.ceil((view.top + view.height) / lineHeight) + over)
     const first = firstLine * perLine
-    const last = Math.min(flat.length, lastLine * perLine)
+    const last = Math.min(gridView ? flat.length : drawn.length, lastLine * perLine)
 
     const [active, setActive] = useState<string | undefined>(undefined)
     const anchor = useRef<string | undefined>(undefined)
@@ -778,8 +902,8 @@ export function DataTable<T>({
             box.querySelector(`[data-row="${CSS.escape(entry.key)}"]`)?.scrollIntoView({ block: 'nearest' })
             return
         }
-        const at = Math.floor(flat.indexOf(entry) / perLine) * lineHeight
-        const head = gridView ? 0 : rowHeight
+        const at = Math.floor((gridView ? flat.indexOf(entry) : drawn.indexOf(entry)) / perLine) * lineHeight
+        const head = gridView || !columnHeads ? 0 : rowHeight
         if (at < box.scrollTop) box.scrollTop = at
         else if (at + lineHeight > box.scrollTop + box.clientHeight - head) box.scrollTop = at + lineHeight - box.clientHeight + head
     }
@@ -866,6 +990,95 @@ export function DataTable<T>({
                 <span className="mr-1 size-5" />
             )}
         </span>
+    )
+
+    /** A group head's fold control, label and count, the same in every view. */
+    const groupTitle = (head: GroupHead<T>) => (
+        <>
+            <button
+                type="button"
+                aria-label={words.foldGroup(head.folded)}
+                aria-expanded={!head.folded}
+                onClick={(event) => {
+                    event.stopPropagation()
+                    foldGroup(head.key)
+                }}
+                // The button's own keys press it rather than moving the active row.
+                onKeyDown={(event) => event.stopPropagation()}
+                className="mr-1 flex size-5 shrink-0 items-center justify-center rounded-sm text-muted-foreground outline-none hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+            >
+                <ChevronRightIcon className={cn('size-3.5 transition-transform', !head.folded && 'rotate-90')} />
+            </button>
+            <span className="min-w-0 truncate">{groupLabel?.(head.key, head.rows) ?? head.key}</span>
+            <span className="ml-2 shrink-0 font-mono text-xs font-normal text-muted-foreground tabular-nums">
+                {words.groupCount(head.rows.length)}
+            </span>
+        </>
+    )
+
+    /** A group's selection: every row in it, at any depth, folded or not. */
+    const groupKeysOf = (head: GroupHead<T>) => head.rows.flatMap((row) => branchKeys(row, rowKey, treeKids))
+    const groupBox = (head: GroupHead<T>) => {
+        const keys = groupKeysOf(head)
+        const all = keys.length > 0 && keys.every((key) => selection.has(key))
+        const some = !all && keys.some((key) => selection.has(key))
+        return (
+            <Checkbox
+                aria-label={words.selectGroup}
+                tabIndex={-1}
+                checked={all}
+                indeterminate={some}
+                onClick={(event) => event.stopPropagation()}
+                onCheckedChange={() => {
+                    const next = new Set(selection)
+                    for (const key of keys) {
+                        if (all) next.delete(key)
+                        else next.add(key)
+                    }
+                    setSelection(next)
+                }}
+            />
+        )
+    }
+
+    /** A group's head as a line of the table, on the table's columns. */
+    const groupRow = (head: GroupHead<T>, index: number) => (
+        <div
+            key={`group:${head.key}`}
+            role="row"
+            aria-rowindex={index + 2}
+            aria-expanded={!head.folded}
+            data-group={head.key}
+            onClick={() => foldGroup(head.key)}
+            className={cn(
+                'grid cursor-pointer items-center border-b border-border bg-panel-ground text-sm font-medium',
+                spaced,
+                every ? 'min-h-(--density-row)' : 'h-(--density-row)',
+            )}
+            style={grid}
+        >
+            {selectable && (
+                <span role="gridcell" className={cn(pinned, 'left-0 flex h-full items-center justify-center')}>
+                    {groupBox(head)}
+                </span>
+            )}
+            {shown.map((column, at) => (
+                <span
+                    key={column.id}
+                    role="gridcell"
+                    className={cn(
+                        'flex h-full min-w-0 items-center',
+                        pad,
+                        column.align === 'end' && 'justify-end tabular-nums',
+                        at === 0 && cn(pinned, selectable ? 'left-(--check)' : 'left-0'),
+                    )}
+                    style={at === 0 ? ({ '--check': CHECK } as React.CSSProperties) : undefined}
+                >
+                    {at === 0 ? groupTitle(head) : <span className="min-w-0 truncate">{column.aggregate?.(head.rows)}</span>}
+                </span>
+            ))}
+            {endWidth !== undefined && <span role="gridcell" className={cn(pinnedEnd, 'right-0 h-full')} />}
+        </div>
     )
 
     /** A row as a card: the app's card, with the selection box and the menu laid over its top corners. */
@@ -1102,7 +1315,7 @@ export function DataTable<T>({
             <div
                 ref={scroller}
                 role="grid"
-                aria-rowcount={flat.length + 1}
+                aria-rowcount={drawn.length + 1}
                 aria-multiselectable={selectable || undefined}
                 tabIndex={0}
                 onKeyDown={onKeyDown}
@@ -1126,7 +1339,7 @@ export function DataTable<T>({
                     <div ref={cardProbe} style={{ width: cardWidth, height: cardHeight }} />
                     <div ref={widthProbe} style={{ width: rowMin }} />
                 </div>
-                {!gridView && (
+                {!gridView && columnHeads && (
                     <div
                         role="row"
                         aria-rowindex={1}
@@ -1213,11 +1426,29 @@ export function DataTable<T>({
                         )}
                     </div>
                 )}
-                {flat.length === 0 && !loading ? (
+                {drawn.length === 0 && !loading ? (
                     <p className="px-(--density-panel-pad) py-3 text-sm text-muted-foreground">{words.empty}</p>
                 ) : listed ? (
                     <ul className="divide-y divide-border">
-                        {flat.map((entry) => {
+                        {drawn.map((entry) => {
+                            if (isGroupHead(entry))
+                                return (
+                                    <li
+                                        key={`group:${entry.key}`}
+                                        role="row"
+                                        aria-expanded={!entry.folded}
+                                        data-group={entry.key}
+                                        onClick={() => foldGroup(entry.key)}
+                                        className="flex min-w-0 cursor-pointer items-center bg-panel-ground px-(--density-panel-pad) py-1.5 text-sm font-medium"
+                                    >
+                                        {selectable && (
+                                            <span className="mr-2 flex" onClick={(event) => event.stopPropagation()}>
+                                                {groupBox(entry)}
+                                            </span>
+                                        )}
+                                        {groupTitle(entry)}
+                                    </li>
+                                )
                             const isOpened = opened?.(entry.row) === true
                             const [title, ...rest] = shown
                             return (
@@ -1264,6 +1495,25 @@ export function DataTable<T>({
                             )
                         })}
                     </ul>
+                ) : gridView && groupHeads !== undefined ? (
+                    <div className="flex flex-col gap-4 p-4">
+                        {groupHeads.map((head) => (
+                            <section key={head.key} data-group={head.key} aria-expanded={!head.folded}>
+                                <div className="flex min-w-0 items-center text-sm font-medium">
+                                    {selectable && <span className="mr-2 flex">{groupBox(head)}</span>}
+                                    {groupTitle(head)}
+                                </div>
+                                {!head.folded && (
+                                    <div
+                                        className="mt-2 grid gap-4"
+                                        style={{ gridTemplateColumns: `repeat(${String(perLine)}, minmax(0, 1fr))` }}
+                                    >
+                                        {head.entries.map((entry) => cardFor(entry))}
+                                    </div>
+                                )}
+                            </section>
+                        ))}
+                    </div>
                 ) : gridView ? (
                     <div className="px-4 pt-4" style={{ minHeight: lines * lineHeight + GAP }}>
                         <div style={{ height: firstLine * lineHeight }} />
@@ -1283,9 +1533,10 @@ export function DataTable<T>({
                         </div>
                     </div>
                 ) : (
-                    <div style={every ? { minWidth: rowMin } : { height: flat.length * rowHeight, minWidth: rowMin }} className="relative">
+                    <div style={every ? { minWidth: rowMin } : { height: drawn.length * rowHeight, minWidth: rowMin }} className="relative">
                         {!every && <div style={{ height: first * rowHeight }} />}
-                        {flat.slice(first, last).map((entry, offset) => {
+                        {drawn.slice(first, last).map((entry, offset) => {
+                            if (isGroupHead(entry)) return groupRow(entry, first + offset)
                             const chosen = selection.has(entry.key)
                             const isOpened = opened?.(entry.row) === true
                             const state = selectable ? branchState(entry) : 'none'
@@ -1305,7 +1556,7 @@ export function DataTable<T>({
                                     className={cn(
                                         'group/row grid cursor-default items-center border-b border-border bg-card text-sm',
                                         spaced,
-                                        list && first + offset === flat.length - 1 && 'border-b-0',
+                                        list && first + offset === drawn.length - 1 && 'border-b-0',
                                         every ? 'min-h-(--density-row) scroll-mt-(--density-row)' : 'h-(--density-row)',
                                         hover && 'hover:bg-hover',
                                         onOpen !== undefined && 'cursor-pointer',

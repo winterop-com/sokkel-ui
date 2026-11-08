@@ -1,3 +1,4 @@
+import { forgetStored, readStored as load, writeStored as save } from './stored'
 import { THEME_LIST } from './theme-list'
 
 /** Light, dark, or whichever the system uses. */
@@ -153,29 +154,6 @@ export function applyAppearance(settings: ThemeSettings, root: AppearanceRoot | 
     }
 }
 
-// What could not be kept in `localStorage` (a private window, blocked site data), so the choice
-// holds until the page is left.
-const memory = new Map<string, string | null>()
-
-function load(key: string): string | null {
-    if (memory.has(key)) return memory.get(key) ?? null
-    try {
-        return globalThis.localStorage?.getItem(key) ?? null
-    } catch {
-        return null
-    }
-}
-
-function save(key: string, value: string | null): void {
-    try {
-        if (value === null) globalThis.localStorage.removeItem(key)
-        else globalThis.localStorage.setItem(key, value)
-        memory.delete(key)
-    } catch {
-        memory.set(key, value)
-    }
-}
-
 const listeners = new Set<() => void>()
 
 function notify(): void {
@@ -190,8 +168,7 @@ export function subscribeAppearance(listener: () => void): () => void {
     listeners.add(listener)
     const onStorage = (event: StorageEvent) => {
         if (event.key !== null && event.key !== SCHEME_KEY && event.key !== APPEARANCE_KEY) return
-        if (event.key === null) memory.clear()
-        else memory.delete(event.key)
+        forgetStored(event.key)
         listener()
     }
     globalThis.addEventListener?.('storage', onStorage)

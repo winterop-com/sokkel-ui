@@ -44,6 +44,7 @@ const CORE_AREAS: Record<string, string> = {
     Section: 'Page layout',
     Toolbar: 'Page layout',
     Unfoldable: 'Page layout',
+    WindowedPane: 'Page layout',
     GroupLabel: 'Page layout',
     // Forms and inputs.
     AddressInput: 'Forms and inputs',
@@ -119,6 +120,7 @@ const CORE_AREAS: Record<string, string> = {
     CommentThread: 'Chat and messaging',
     Composer: 'Chat and messaging',
     Conversation: 'Chat and messaging',
+    ConversationHistory: 'Chat and messaging',
     MessageComposer: 'Chat and messaging',
     MessageRow: 'Chat and messaging',
     ToolCall: 'Chat and messaging',
@@ -462,6 +464,8 @@ export function render(entries: Entry[]): string {
         "app has sign-in, and a `StatusLine` as the shell's `foot`.",
         'The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appearance`,',
         '`hooks/use-scheme`), with the option lists in `@winterop-com/sokkel-ui/lib/appearance`.',
+        'Other state an app keeps across reloads goes through `useStored` (`hooks/use-stored`), and files',
+        'being uploaded through `useUploads` (`hooks/use-uploads`), which feeds `AttachmentList`.',
         '',
     ]
     const packages = [...new Set(entries.map((entry) => entry.pkg))]

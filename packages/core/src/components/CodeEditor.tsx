@@ -147,16 +147,16 @@ const dot = (tone: keyof typeof TONES) => ({
 
 /**
  * The chrome in the theme's tokens, so a change of theme or scheme repaints it without a rebuild. The
- * text and its line numbers are mono, adjusted to the sans beside them as all mono is; the size
- * comes from `SIZES`.
+ * text and its line numbers are mono, not adjusted to the sans: in an editor the code is the
+ * content, not a word set in a sentence. The size comes from `SIZES`.
  */
 const THEME = EditorView.theme({
     '&': { backgroundColor: 'transparent', color: 'var(--foreground)', height: '100%' },
     '&.cm-focused': { outline: 'none' },
-    '.cm-scroller': { fontFamily: 'var(--font-mono)', fontSizeAdjust: 'var(--mono-x-height)' },
+    '.cm-scroller': { fontFamily: 'var(--font-mono)', fontSizeAdjust: 'none' },
     '.cm-content': { padding: '0.5rem 0', caretColor: 'var(--foreground)' },
     '.cm-line': { padding: '0 0.75rem' },
-    '.cm-gutters': { backgroundColor: 'transparent', color: 'var(--faint)', border: 'none', fontSizeAdjust: 'var(--mono-x-height)' },
+    '.cm-gutters': { backgroundColor: 'transparent', color: 'var(--faint)', border: 'none', fontSizeAdjust: 'none' },
     '.cm-lineNumbers .cm-gutterElement': { padding: '0 0.5rem 0 0.75rem', minWidth: '2.5rem' },
     '.cm-foldGutter .cm-gutterElement': { padding: '0 0.25rem', cursor: 'pointer' },
     '.cm-foldGutter .cm-gutterElement:hover': { color: 'var(--foreground)' },
