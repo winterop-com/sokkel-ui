@@ -45,6 +45,9 @@ Each runs `bun install` in its folder first. The Tauri shells share one Cargo ta
 Linux, the system libraries it lists (webkit2gtk 4.1 and others; see the workflow). Electron's
 binary is fetched in its `postinstall`.
 
+Nothing needs Node: every script runs its tools under bun (`bun --bun tsc`, `vite`, `electron`,
+`tauri`), and Electron's main process runs on the Node built into Electron itself.
+
 ## How an example is built
 
 - **The packages:** each `web/` installs the core package through `file:../../../packages/core`,

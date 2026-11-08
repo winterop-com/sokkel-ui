@@ -5,11 +5,11 @@
     "type": "module",
     "main": "dist/main.js",
     "scripts": {
-        "postinstall": "node node_modules/electron/install.js",
+        "postinstall": "bun node_modules/electron/install.js",
         "build:web": "cd ../web && bun install && bun run build",
-        "build:main": "tsc --noEmit && bun build src/main.ts --target=node --format=esm --external electron --outdir dist",
+        "build:main": "bun --bun tsc --noEmit && bun build src/main.ts --target=node --format=esm --external electron --outdir dist",
         "build": "bun run build:web && bun run build:main",
-        "start": "bun run build && electron ."
+        "start": "bun run build && bun --bun electron ."
     },
     "devDependencies": {
         "@types/node": "^26.6.6",

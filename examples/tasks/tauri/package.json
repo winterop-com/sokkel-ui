@@ -5,8 +5,8 @@
     "type": "module",
     "scripts": {
         "check": "cd ../web && bun install && bun run build && cd ../tauri/src-tauri && cargo check",
-        "dev": "tauri dev",
-        "build": "tauri build"
+        "dev": "bun --bun tauri dev",
+        "build": "bun --bun tauri build"
     },
     "devDependencies": {
         "@tauri-apps/cli": "^2"

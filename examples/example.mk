@@ -17,7 +17,7 @@ check: ## Build the web app, bundle the Electron main file and cargo check the T
 	cd tauri && bun install && cd src-tauri && cargo check
 
 web: ## Build the web app and serve it with vite preview
-	cd web && bun install && bun run build && bunx vite preview --port $(PORT) --strictPort
+	cd web && bun install && bun run build && bun run preview -- --port $(PORT) --strictPort
 
 dev: ## Run the web app's dev server
 	cd web && bun install && bun run dev -- --port $(PORT)
