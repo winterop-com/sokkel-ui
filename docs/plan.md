@@ -170,6 +170,16 @@ icon's corner), ChannelList, ChannelHeader, Conversation and ThreadView (the col
 conversation and of a thread), ConversationStart, ChatMessage with ChatDay, and MessageComposer.
 An app's own navigation strip is the library's `Rail`, with no hand-drawn badge.
 
+CodeEditor is the one code editor, on CodeMirror 6. It carries JSON, YAML and jq (a stream language
+written from the jq manual) by name and takes any other language as a CodeMirror `LanguageSupport` or
+a stream parser (`defineLanguage`). An app adds words to complete (a list or a function of the word,
+each with a detail, docs and a kind), docs on hover, ranged marks drawn as lint (an underline, a
+gutter dot, the message on hover), `onRun` on Mod-Enter and any other `keys`, a themed find bar, a
+fold gutter, bracket colors by depth and indent guides; the last three turn off past a megabyte. Given
+a JSON Schema (2020-12), JSON and YAML are checked by the same ajv rules as SchemaForm, each issue
+placed on the key or value it is about, and the schema's property names and enum values complete as
+they are typed. `variant="pane"` fills a pane edge to edge; the Query app shows it in panes.
+
 ## Maps at scale
 
 Each map layer is one GeoJSON source with hover and selection as feature state, so thousands of

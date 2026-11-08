@@ -106,12 +106,7 @@ under Next. Each is a part or an option here, never a copy in an app. Roughly on
   `FileField`; `DownloadButton` (idle, n of m, cancel, kept) on `ProgressRing`; `DataTable` row
   groups with group heads; a `row` layout for `DescriptionList` and `TagChips` that fit the room a
   row has left; a conversation history list with rename, pin and delete beside a chat.
-- **Round 2, the code editor and code color.** `CodeEditor` gains: a `languages` extension point
-  and a `jq` language; `completions` (label, detail, docs, kind) on CodeMirror's autocomplete; a
-  `hover(word)` for docs; ranged marks with a message (from and to columns, an underline, a gutter
-  dot, the message on hover); `onRun` on Cmd/Ctrl+Enter, or a general `keys` map; `search`,
-  `folding` and a size option, responsive on a read-only document of a megabyte or more; JSON
-  Schema 2020-12 lint and completion for YAML and JSON. `Markdown` gains `jq` among its code
+- **Round 2, code color.** `Markdown` gains `jq` among its code
   languages, a way for an app to register more, and a `components` map (or a marker hook) for
   parts embedded in the text. `code-*` syntax tokens theme Shiki and CodeMirror alike, so code
   follows the theme. An `AnsiText` in core draws ANSI color output as spans in the kind inks.

@@ -27,6 +27,8 @@ export type SchemaIssueKind =
     | { kind: 'maxItems'; limit: number }
     | { kind: 'uniqueItems' }
     | { kind: 'deprecated' }
+    /** The object has a property the schema does not allow; the issue sits at the object. */
+    | { kind: 'additional'; property: string }
     /** The schema could not be compiled, so nothing can be checked and nothing passes. */
     | { kind: 'unchecked'; reason: string }
     /** A rule without words of its own, said as the validator says it. */
@@ -196,6 +198,9 @@ function read(error: ErrorObject, document: unknown): SchemaIssue {
                 Array.isArray(value) ? value.filter((_, index) => seen.indexOf(seen[index]) === index) : undefined,
             )
         }
+        case 'additionalProperties':
+        case 'unevaluatedProperties':
+            return at({ kind: 'additional', property: String(params.additionalProperty ?? params.unevaluatedProperty) })
         default:
             return at({ kind: 'other', keyword: error.keyword, message: error.message ?? error.keyword })
     }
