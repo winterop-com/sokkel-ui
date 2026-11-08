@@ -13,11 +13,27 @@ bun install
 bun run build
 ```
 
+The root `Makefile` runs them too, each after `make build` and a `bun install` in its folder:
+`make examples` builds the web app, bundles the Electron main file and checks the Tauri shell as CI
+does; `make web` serves the build on port 4180, `make web-dev` runs the dev server, `make electron`
+and `make tauri` open the shells, and `make tauri-build` builds Tauri's release binary.
+
 ## web
 
-A small Tidevann app in the library's frame: the shell with its rail and top bar, the runs page as
-a data table with sortable columns and row menus, a run opened in the side panel, and the settings
-dialog.
+Tidevann's demo apps behind one launcher, on a hash router of its own: `#/` lists the demos as
+cards, and `#/<demo>` opens one, each in its own `Shell` with the command palette on ⌘K (the
+demos, each list or place, and the look) and the rail's mark leading back to the launcher.
+
+- `tasks`: lists in the rail with counts (Inbox, Today, Upcoming and one per project), a quick add,
+  tasks in a `DataTable` list with the title, due date, assignee and project edited in place, done
+  tasks behind Show done, a row menu, and an empty state.
+- `runs`: the runs page as a data table with sortable columns and row menus, a run opened in the
+  side panel, and the settings dialog.
+
+`src/backend/` is a small fake backend: typed collections kept in localStorage, answering promises
+after a short delay as a server would. The launcher's Reset demo data puts them back to their seed.
+Inside a desktop shell the app passes `desktop` to the frame, so its top strip is the window's
+title bar, with room for the macOS window buttons.
 
 It uses only the core package, through `file:../../packages/core`, which bun installs as a copy of
 that package, with its own dependencies in the app's `node_modules`. Run `bun install` again after
@@ -35,11 +51,13 @@ bun run dev       # or the dev server
 ## electron
 
 A thin Electron shell: one main process file that opens `examples/web/dist/index.html` in a
-window. The web build uses relative asset paths, so it loads from a file URL.
+window with the title bar hidden (`hiddenInset` on macOS). The web build uses relative asset paths,
+so it loads from a file URL. Its `postinstall` fetches Electron's binary, which a plain
+`bun install` may skip (`node node_modules/electron/install.js` fetches it by hand).
 
 ```sh
 cd examples/electron
-bun install       # downloads Electron's binary (it is a trusted dependency)
+bun install       # downloads Electron's binary in postinstall
 bun run build     # builds the web example, then typechecks and bundles src/main.ts
 bun run start     # builds, then opens the window
 ```
@@ -47,7 +65,8 @@ bun run start     # builds, then opens the window
 ## tauri
 
 A thin Tauri v2 shell around the same build: `src-tauri/` with `tauri.conf.json` pointing
-`frontendDist` at `../../web/dist`. It needs Rust and, on Linux, the system libraries Tauri lists
+`frontendDist` at `../../web/dist`, the title bar an overlay with the title hidden, and
+`capabilities/default.json` letting the page drag, zoom and fill the window. It needs Rust and, on Linux, the system libraries Tauri lists
 (webkit2gtk 4.1 and others; see the workflow).
 
 ```sh

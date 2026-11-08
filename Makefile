@@ -1,7 +1,7 @@
 # The common commands, as `make <target>`. Everything runs through bun; `make help` lists them.
 
 .DEFAULT_GOAL := help
-.PHONY: help install tokens storybook build size typecheck lint fmt fmt-check test check storybook-build baselines visual visual-update screenshots-ci layout clean
+.PHONY: help install tokens storybook build size typecheck lint fmt fmt-check test check storybook-build baselines visual visual-update screenshots-ci layout examples web web-dev electron tauri tauri-build clean
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "} {printf "  %-16s %s\n", $$1, $$2}'
@@ -55,6 +55,26 @@ screenshots-ci: ## Retake the screenshots on GitHub into the current branch's ba
 
 layout: storybook-build ## Check that no story scrolls sideways at the narrow widths
 	bunx playwright test e2e/layout.spec.ts
+
+examples: build ## Build the web example, bundle the Electron main file and cargo check the Tauri shell, as CI does
+	cd examples/web && bun install && bun run build
+	cd examples/electron && bun install && bun run build:main
+	cd examples/tauri && bun install && cd src-tauri && cargo check
+
+web: build ## Build the web example and serve it with vite preview on port 4180
+	cd examples/web && bun install && bun run build && bunx vite preview --port 4180 --strictPort
+
+web-dev: build ## Run the web example's dev server
+	cd examples/web && bun install && bun run dev
+
+electron: build ## Build the web example and open it in the Electron shell
+	cd examples/electron && bun install && bun run start
+
+tauri: build ## Open the web example in the Tauri shell
+	cd examples/tauri && bun install && bun run dev
+
+tauri-build: build ## Build the Tauri shell's release binary
+	cd examples/tauri && bun install && bun run build
 
 clean: ## Remove what the builds made
 	rm -rf packages/*/dist storybook-static test-results

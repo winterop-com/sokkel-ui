@@ -11,6 +11,8 @@ function open(): void {
         height: 900,
         minWidth: 360,
         title: 'Tidevann',
+        // The page draws the title strip itself; macOS keeps its window buttons over it.
+        titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
         webPreferences: { contextIsolation: true, sandbox: true },
     })
     // Links that leave the app open in the system browser, not in a second app window.
