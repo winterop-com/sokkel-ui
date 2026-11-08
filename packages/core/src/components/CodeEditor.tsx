@@ -378,7 +378,7 @@ export function CodeEditor({
     size = 'md',
     variant = 'field',
     schema,
-    schemaWords,
+    words,
     phrases,
     placeholder,
     label,
@@ -417,8 +417,8 @@ export function CodeEditor({
     variant?: 'field' | 'pane'
     /** A JSON Schema (2020-12) a JSON or YAML document is checked against and completed from. */
     schema?: JsonSchema
-    /** The words the schema check says. */
-    schemaWords?: Partial<CodeSchemaWords>
+    /** The words the schema check says, in English unless given. */
+    words?: Partial<CodeSchemaWords>
     /** CodeMirror's own words (the find bar, the fold marks), by their English text, to translate them. */
     phrases?: Readonly<Record<string, string>>
     placeholder?: string
@@ -431,8 +431,8 @@ export function CodeEditor({
     const view = useRef<EditorView | null>(null)
     const report = useRef(onChange)
     report.current = onChange
-    const props = useRef({ marks, completions, hover, onRun, keys, schema, schemaWords, language })
-    props.current = { marks, completions, hover, onRun, keys, schema, schemaWords, language }
+    const props = useRef({ marks, completions, hover, onRun, keys, schema, words, language })
+    props.current = { marks, completions, hover, onRun, keys, schema, words, language }
     const compartments = useRef({
         language: new Compartment(),
         readOnly: new Compartment(),
@@ -455,7 +455,7 @@ export function CodeEditor({
 
     /** Every diagnostic the editor shows: the marks with a message and what the schema finds. */
     const diagnose = (state: EditorState): Diagnostic[] => {
-        const { marks: given, schema: against, schemaWords: words, language: lang } = props.current
+        const { marks: given, schema: against, words, language: lang } = props.current
         const found = markDiagnostics(state, given)
         if (against === undefined || (lang !== 'json' && lang !== 'yaml')) return found
         return [...found, ...schemaDiagnostics(state, lang, against, { ...SCHEMA_WORDS, ...words })]
@@ -646,7 +646,7 @@ export function CodeEditor({
         editor.dispatch({ effects: setMarks.of(marks) })
         if (diagnosing) editor.dispatch(setDiagnostics(editor.state, diagnose(editor.state)))
         else if (diagnosticCount(editor.state) > 0) editor.dispatch(setDiagnostics(editor.state, []))
-    }, [marks, schema, schemaWords, language])
+    }, [marks, schema, words, language])
 
     return (
         <div

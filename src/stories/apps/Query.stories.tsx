@@ -307,7 +307,7 @@ function QueryApp({ view }: { view: View }) {
                         mark={<TidevannMark />}
                         name="Tidevann"
                         groups={groups(view)}
-                        defaultOpen={['queries']}
+                        defaultExpanded={['queries']}
                         collapsed={collapsed}
                         onCollapsedChange={setCollapsed}
                         foot={
