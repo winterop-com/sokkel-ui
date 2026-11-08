@@ -120,6 +120,11 @@ const COMPONENTS = Object.values(SOURCES)
 /** A package's `exports` map, by the package's folder name. */
 const EXPORTS = Object.fromEntries(PACKAGES.map((name) => [name, manifestOf(name as PackageDir).exports]))
 
+/** Files a package's build writes from one of its modules rather than building the module into them, by the module. */
+const WRITTEN: Record<string, string> = {
+    '@winterop-com/sokkel-ui/appearance.js': 'lib/appearance',
+}
+
 /** The name an app imports a package's module by, as the package's `exports` map gives it; a private module keeps its path. */
 function specifier(path: string): string {
     const [, name, rest] = /\/packages\/([^/]+)\/src\/(.+)\.tsx?$/.exec(path) ?? []
@@ -128,12 +133,13 @@ function specifier(path: string): string {
 
 /**
  * Where an import of a package's path lands under its `exports` map: the target of an exact entry
- * or of a pattern whose `*` the path fills, or undefined when the map does not export the path.
+ * or of a pattern whose `*` the path fills, or undefined when the map does not export the path. A
+ * bundler's query after the path (`?url`) names the same file.
  */
 function exported(path: string): string | undefined {
     const name = Object.entries(NAMES).find(([, full]) => path.startsWith(`${full}/`))?.[0]
     if (name === undefined) return undefined
-    const subpath = `.${path.slice(NAMES[name].length)}`
+    const subpath = `.${path.slice(NAMES[name].length).replace(/\?.*$/, '')}`
     for (const [key, target] of Object.entries(EXPORTS[name])) {
         const built = typeof target === 'string' ? target : target.import
         if (built === undefined) continue
@@ -198,8 +204,8 @@ describe('the exports maps', () => {
             for (const [key, target] of Object.entries(EXPORTS[name])) {
                 const built = typeof target === 'string' ? target : target.import
                 if (built === undefined || built.includes('*')) continue
-                // A built module is there when its source is; the build writes the rest of `dist`.
-                const source = /^\.\/dist\/(.+)\.js$/.exec(built)?.[1]
+                // A built module is there when its source is, as is a file the build writes from a module; the build writes the rest of `dist`.
+                const source = WRITTEN[`${NAMES[name]}/${key.slice(2)}`] ?? /^\.\/dist\/(.+)\.js$/.exec(built)?.[1]
                 const there =
                     source === undefined
                         ? existsSync(join(own, built))

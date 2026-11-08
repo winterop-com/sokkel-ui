@@ -1,5 +1,7 @@
 import { useSyncExternalStore, type CSSProperties, type MouseEvent } from 'react'
 
+import { isFullscreen, subscribeFullscreen } from './fullscreen'
+
 /**
  * How a frame stands in a desktop window whose native title bar is hidden (Electron's
  * `hiddenInset`, Tauri's `Overlay`), so the frame's top strip is the window's only title bar.
@@ -19,9 +21,20 @@ export interface DesktopWindow {
     trafficLights?: boolean | number
     /**
      * The window is in the system's own full screen, where macOS hides its buttons, so no room is
-     * left for them. The browser's full screen (`document.fullscreenElement`) is noticed without it.
+     * left for them. The browser's full screen (`document.fullscreenElement`) is noticed without it,
+     * and so is the window's own entered through `setFullscreen`; reported as it changes, the window
+     * leaving it by its own way lets go of the part that put it there.
      */
     fullscreen?: boolean
+    /**
+     * The window's own full screen, called in place of the browser's wherever a part goes full
+     * screen (the player's fullscreen view, `VideoPlayer`, a map, a pane expanded with
+     * `fullscreen`): `true` to enter, `false` to leave. The part's element then covers the window.
+     * Tauri's is `(on) => getCurrentWindow().setFullscreen(on)`; Electron's webview has the
+     * browser's own, so an Electron app needs it only to go through its own call. See
+     * `lib/fullscreen`.
+     */
+    setFullscreen?: (on: boolean) => unknown
     /**
      * Called when the strip is pressed outside its controls, for a webview that ignores
      * `app-region` (WKWebView, so Tauri on macOS): the app starts the window's own drag, such as
@@ -100,18 +113,9 @@ export function hasTrafficLights(desktop: DesktopWindow | undefined, fullscreen 
     return lights === true || (typeof lights === 'number' && lights > 0)
 }
 
-function onFullscreenChange(change: () => void): () => void {
-    document.addEventListener('fullscreenchange', change)
-    return () => document.removeEventListener('fullscreenchange', change)
-}
-
-/** Whether the page is in the browser's full screen, following it as it changes. */
+/** Whether the page is in full screen, the browser's or the desktop window's own, following it as it changes. */
 export function useFullscreen(): boolean {
-    return useSyncExternalStore(
-        onFullscreenChange,
-        () => document.fullscreenElement !== null,
-        () => false,
-    )
+    return useSyncExternalStore(subscribeFullscreen, isFullscreen, () => false)
 }
 
 /** `hasTrafficLights`, dropping the room while the window is in full screen, the browser's or the system's. */

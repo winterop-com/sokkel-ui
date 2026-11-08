@@ -25,9 +25,10 @@ export interface SchemeState {
 }
 
 /**
- * Light, dark or the system's: the scheme kept in `localStorage`, following the system until one is
- * chosen, worn as `.dark` on `<html>`. Every component using it, in every tab, follows the same
- * choice, and the system's changes as they come.
+ * Light, dark or the system's: the scheme kept in `localStorage` (or the app's own storage, given to
+ * `setAppearanceStorage`), following the system until one is chosen, worn as `.dark` on `<html>`.
+ * Every component using it, in every tab, follows the same choice, and the system's changes as they
+ * come.
  */
 export function useScheme(fallback: Scheme = 'system'): SchemeState {
     const stored = useSyncExternalStore(subscribeAppearance, readStoredScheme, () => null)

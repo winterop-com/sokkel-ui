@@ -1,7 +1,8 @@
 import { Maximize2, X } from 'lucide-react'
-import { createContext, useContext, useRef, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { enterFullscreen, exitFullscreen } from '../lib/fullscreen'
 import { IconButton } from './IconButton'
 import { Dialog, DialogContent, DialogTitle } from './ui/dialog'
 
@@ -61,6 +62,12 @@ export interface WindowedPaneProps {
     onOpenChange?: (open: boolean) => void
     /** `corner`: the pane draws the expand button over its top right corner; `none`: the content does. */
     button?: 'corner' | 'none'
+    /**
+     * Opening the window also takes the screen: the page goes full screen through `lib/fullscreen`
+     * (the browser's, or a desktop shell's own once the app hands it over), and leaves it as the
+     * window closes.
+     */
+    fullscreen?: boolean
     className?: string
     words?: Partial<WindowedPaneWords>
 }
@@ -74,7 +81,8 @@ export interface WindowedPaneProps {
  *
  * `button="none"` leaves the button to the content, which places `WindowedPaneButton` in its own
  * toolbar; `useWindowedPane` tells it whether it is in the window. Open or closed is held by the
- * pane unless `open` and `onOpenChange` hold it.
+ * pane unless `open` and `onOpenChange` hold it. `fullscreen` puts the page in full screen while
+ * the window is open, so the window fills the screen less its margin.
  */
 export function WindowedPane({
     title,
@@ -83,12 +91,20 @@ export function WindowedPane({
     defaultOpen = false,
     onOpenChange,
     button = 'corner',
+    fullscreen = false,
     className,
     words: given,
 }: WindowedPaneProps) {
     const words = { ...WINDOWED_PANE_WORDS, ...given }
     const [ownOpen, setOwnOpen] = useState(defaultOpen)
     const open = heldOpen ?? ownOpen
+    // The whole page takes the screen, so whatever the window's content opens over it still shows.
+    useEffect(() => {
+        if (!open || !fullscreen) return
+        const page = document.documentElement
+        enterFullscreen(page)
+        return () => exitFullscreen(page)
+    }, [open, fullscreen])
     const place = useRef<HTMLDivElement>(null)
     const [height, setHeight] = useState<number | undefined>(undefined)
     const setOpen = (next: boolean) => {

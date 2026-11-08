@@ -24,6 +24,8 @@ export type ChartPanelProps = ChartSpec & {
     loading?: boolean
     empty?: boolean
     file?: string
+    /** Expanding also takes the screen, as `WindowedPane`'s `fullscreen` does. */
+    fullscreen?: boolean
     /** The frame's words; the chart's own are the spec's `words`. */
     frameWords?: Partial<ChartFrameWords>
     className?: string
@@ -49,6 +51,7 @@ export function ChartPanel({
     loading,
     empty,
     file,
+    fullscreen,
     frameWords,
     className,
     ...rest
@@ -67,6 +70,7 @@ export function ChartPanel({
             legendStats={legendStats}
             legendFormat={write}
             file={file}
+            fullscreen={fullscreen}
             loading={loading}
             empty={empty}
             bodyClassName={bodyClassName}
