@@ -1,7 +1,7 @@
 # Plan
 
 The library comes first; apps adopt it once it is whole. Every component has a story in Storybook
-with real-shaped data, held to screenshot baselines in both schemes at desktop and phone width.
+with real-shaped data, rendered by CI at every narrow width, failing one that throws or scrolls sideways.
 
 ## Distribution
 

@@ -61,6 +61,10 @@ to `plan.md` when it ships.
 
 ## Later
 
+- **Screenshot comparison back in CI.** Off since 0.9.3 while the looks still move; the
+  baselines branch, the screenshots workflow and `scripts/baselines.sh` stay. Turn it back on near
+  1.0, and add the render check in WebKit and Firefox for the platforms Chromium does not cover.
+
 - **A design system for decks and mockups.** Built from the repo itself (the tokens, the
   component screenshots and `docs/components.md`), so slides and mockups made with AI design tools
   match the apps. Never a hand-kept copy.
