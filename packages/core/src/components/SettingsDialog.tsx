@@ -1,109 +1,31 @@
-import { IconButton } from './IconButton'
-import { ChevronLeft, ChevronRight, XIcon, type LucideIcon } from 'lucide-react'
+import { ChevronLeft, XIcon } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
-import { ConfirmDialog, NESTED } from './DialogShell'
+import { NESTED } from './DialogShell'
+import { IconButton } from './IconButton'
 import { SearchField } from './SearchField'
-import { SettingRow, type SettingRowLayout } from './SettingRow'
+import {
+    SETTINGS_WORDS,
+    SettingRows,
+    SettingsNavList,
+    SettingsReset,
+    shownSettings,
+    type SettingsGroup,
+    type SettingsWords,
+} from './settings-parts'
 import { Button } from './ui/button'
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogTitle } from './ui/dialog'
 
-/** One setting in a section: what it is called, what it does, and the control that sets it. */
-export interface Setting {
-    id: string
-    title: string
-    description?: string
-    /** A line under the description: what the setting needs, or what it changes elsewhere. */
-    note?: ReactNode
-    control: ReactNode
-    /** Where the control sits: `trailing` for a switch or a small button, `below` for a wide control; by the row's width when absent. */
-    layout?: SettingRowLayout
-}
-
-/** A page of settings, reached from the dialog's navigation. */
-export interface SettingsSection {
-    id: string
-    label: string
-    icon?: LucideIcon
-    /** The heading over the section's rows; the label when absent. */
-    heading?: string
-    settings: readonly Setting[]
-}
-
-/** Sections under a title in the navigation: Preferences, You, This server. */
-export interface SettingsGroup {
-    id: string
-    title?: string
-    sections: readonly SettingsSection[]
-}
+export { filterSettings, type Setting, type SettingsGroup, type SettingsSection, type SettingsWords } from './settings-parts'
 
 /** The words a settings dialog says. */
-export interface SettingsDialogWords {
-    title: string
-    search: string
-    clear: string
+export interface SettingsDialogWords extends SettingsWords {
     close: string
     back: string
-    noMatch: string
-    /** The footer's note, unless the app gives its own `footer`. */
-    saved: string
-    /** The footer's button that closes the dialog. */
-    done: string
-    /** The footer's button that asks to reset. */
-    reset: string
-    /** The question asked before the shown section is reset, given its label. */
-    resetSection: (section: string) => string
-    /** The line under that question. */
-    resetSectionDetail: (section: string) => string
-    /** The question asked before every setting is reset. */
-    resetAll: string
-    /** The line under that question. */
-    resetAllDetail: string
-    /** The verb that answers either question. */
-    resetConfirm: string
-    cancel: string
 }
 
-const WORDS: SettingsDialogWords = {
-    title: 'Settings',
-    search: 'Search settings',
-    clear: 'Clear the search',
-    close: 'Close',
-    back: 'Back',
-    noMatch: 'No setting matches the search.',
-    saved: 'Changes are saved as you make them',
-    done: 'Done',
-    reset: 'Reset to defaults',
-    resetSection: (section) => `Reset ${section} to its defaults?`,
-    resetSectionDetail: (section) => `Every setting in ${section} goes back to its default.`,
-    resetAll: 'Reset every setting to its default?',
-    resetAllDetail: 'Every setting in every section goes back to its default.',
-    resetConfirm: 'Reset',
-    cancel: 'Cancel',
-}
-
-/**
- * The groups as a search leaves them: each section keeps the settings whose title or description
- * holds every word of the search, and a section or group left empty is dropped. An empty search
- * leaves everything.
- */
-export function filterSettings(groups: readonly SettingsGroup[], search: string): SettingsGroup[] {
-    const words = search.toLowerCase().split(/\s+/).filter(Boolean)
-    if (words.length === 0) return [...groups]
-    const matches = (setting: Setting) => {
-        const text = `${setting.title} ${setting.description ?? ''}`.toLowerCase()
-        return words.every((word) => text.includes(word))
-    }
-    return groups
-        .map((group) => ({
-            ...group,
-            sections: group.sections
-                .map((section) => ({ ...section, settings: section.settings.filter(matches) }))
-                .filter((section) => section.settings.length > 0),
-        }))
-        .filter((group) => group.sections.length > 0)
-}
+const WORDS: SettingsDialogWords = { ...SETTINGS_WORDS, close: 'Close', back: 'Back' }
 
 export interface SettingsDialogProps {
     open: boolean
@@ -161,15 +83,11 @@ export function SettingsDialog({
 }: SettingsDialogProps) {
     const say = { ...WORDS, ...words }
     const [phoneView, setPhoneView] = useState(phoneStart)
-    const [resetting, setResetting] = useState(false)
     const nav = useRef<HTMLElement | null>(null)
     const pane = useRef<HTMLDivElement | null>(null)
-    const visible = filterSettings(groups, search)
-    const sections = visible.flatMap((group) => group.sections)
-    const shown = sections.find((section) => section.id === active) ?? sections[0]
+    const { visible, shown } = shownSettings(groups, search, active)
     const inSection = phoneView === 'section'
     const all = resetScope === 'all'
-    const resettable = onReset !== undefined && (all || shown !== undefined)
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -214,38 +132,15 @@ export function SettingsDialog({
                             shortcut={false}
                             words={{ clear: say.clear }}
                         />
-                        {visible.map((group) => (
-                            <div key={group.id} className="flex flex-col gap-0.5">
-                                {group.title !== undefined && (
-                                    <div className="px-2 pb-1 text-xs font-medium text-muted-foreground">{group.title}</div>
-                                )}
-                                {group.sections.map((section) => {
-                                    const chosen = section.id === shown?.id
-                                    const Icon = section.icon
-                                    return (
-                                        <button
-                                            key={section.id}
-                                            type="button"
-                                            aria-current={chosen ? 'page' : undefined}
-                                            className={cn(
-                                                'flex min-h-finger items-center gap-2.5 rounded-md px-2 text-left text-sm transition-colors outline-none focus-visible:outline-2 focus-visible:outline-ring sm:min-h-0 sm:py-1.5',
-                                                chosen
-                                                    ? 'sm:bg-secondary sm:font-medium sm:text-foreground'
-                                                    : 'sm:text-muted-foreground sm:hover:bg-hover sm:hover:text-foreground',
-                                            )}
-                                            onClick={() => {
-                                                onActiveChange(section.id)
-                                                setPhoneView('section')
-                                            }}
-                                        >
-                                            {Icon !== undefined && <Icon className="size-4 shrink-0" aria-hidden />}
-                                            <span className="min-w-0 flex-1 truncate">{section.label}</span>
-                                            <ChevronRight className="size-4 shrink-0 text-faint sm:hidden" aria-hidden />
-                                        </button>
-                                    )
-                                })}
-                            </div>
-                        ))}
+                        <SettingsNavList
+                            groups={visible}
+                            shown={shown?.id}
+                            ground="dialog"
+                            onChoose={(id) => {
+                                onActiveChange(id)
+                                setPhoneView('section')
+                            }}
+                        />
                         {visible.length === 0 && <p className="px-2 text-sm text-muted-foreground sm:hidden">{say.noMatch}</p>}
                     </nav>
                     <div
@@ -259,50 +154,26 @@ export function SettingsDialog({
                         ) : (
                             <section className="flex flex-col">
                                 <h2 className="pb-1 text-detail-title">{shown.heading ?? shown.label}</h2>
-                                <div className="flex flex-col divide-y divide-border">
-                                    {shown.settings.map((setting) => (
-                                        <SettingRow
-                                            key={setting.id}
-                                            title={setting.title}
-                                            description={setting.description}
-                                            note={setting.note}
-                                            control={setting.control}
-                                            layout={setting.layout}
-                                        />
-                                    ))}
-                                </div>
+                                <SettingRows section={shown} />
                             </section>
                         )}
                     </div>
                 </div>
                 <DialogFooter className="m-0 shrink-0 flex-nowrap max-sm:rounded-none max-sm:pb-[calc(--spacing(4)+env(safe-area-inset-bottom))]">
-                    {resettable && (
-                        <Button variant="ghost" className={cn(!all && !inSection && 'max-sm:hidden')} onClick={() => setResetting(true)}>
-                            {say.reset}
-                        </Button>
+                    {onReset !== undefined && (
+                        <SettingsReset
+                            onReset={onReset}
+                            all={all}
+                            section={shown}
+                            say={say}
+                            className={cn(!all && !inSection && 'max-sm:hidden')}
+                        />
                     )}
                     <div role="status" className="min-w-0 flex-1 text-xs text-muted-foreground">
                         {footer ?? say.saved}
                     </div>
                     <DialogClose render={<Button />}>{say.done}</DialogClose>
                 </DialogFooter>
-                {onReset !== undefined && (
-                    <ConfirmDialog
-                        open={resetting}
-                        onOpenChange={setResetting}
-                        question={all ? say.resetAll : say.resetSection(shown?.label ?? '')}
-                        detail={all ? say.resetAllDetail : say.resetSectionDetail(shown?.label ?? '')}
-                        confirm={{
-                            label: say.resetConfirm,
-                            destructive: true,
-                            onConfirm: () => {
-                                onReset(all ? undefined : shown?.id)
-                                setResetting(false)
-                            },
-                        }}
-                        words={{ cancel: say.cancel }}
-                    />
-                )}
             </DialogContent>
         </Dialog>
     )

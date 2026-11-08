@@ -41,7 +41,9 @@ import { TidevannMark } from '../fixtures/TidevannMark'
 import { fromGlobals } from '../themes/themes'
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
+import { WizardView } from '@winterop-com/sokkel-ui/StepIndicator'
 import { useStored } from '@winterop-com/sokkel-ui/hooks/use-stored'
+import { NEW_JOB_STEPS, useNewJob } from '../dialogs/flows'
 
 /** Where the stories keep what they remember, apart from an app's own keys. */
 const KEPT = { prefix: 'tidevann-stories.' }
@@ -381,6 +383,63 @@ function Workspace({
     )
 }
 
+/** The rail with one place marked as where the page is. */
+function railAt(place: string): RailGroup[] {
+    return GROUPS.map((group) => ({ ...group, entries: group.entries.map((entry) => ({ ...entry, active: entry.id === place })) }))
+}
+
+/**
+ * A new job made on a page of its own rather than in a dialog: the same five steps as the wizard
+ * dialog, down the side (or along the top), the step's body under the page's title, and Cancel,
+ * Back and Next across the foot, Next shut with its reason while the step is not ready.
+ */
+function NewJobPage({ layout }: { layout?: 'side' | 'top' }) {
+    const [collapsed, setCollapsed] = useState(false)
+    const job = useNewJob(1)
+    return (
+        <TooltipProvider>
+            <Shell
+                rail={
+                    <Rail
+                        mark={<TidevannMark />}
+                        name="Tidevann"
+                        groups={railAt('jobs')}
+                        defaultExpanded={['projects']}
+                        collapsed={collapsed}
+                        onCollapsedChange={setCollapsed}
+                        foot={
+                            <AccountMenu
+                                name="ada"
+                                image={pictureOf('ada')}
+                                where="tidevann.example.org"
+                                collapsed={collapsed}
+                                onSignOut={() => undefined}
+                            />
+                        }
+                    />
+                }
+                top={<TopBar trail={[{ label: 'Jobs', href: '#' }, { label: 'New job' }]} />}
+            >
+                <WizardView
+                    title="New job in harbor"
+                    description="A job runs its steps on a schedule and keeps every run."
+                    layout={layout}
+                    steps={NEW_JOB_STEPS}
+                    current={job.step}
+                    onCurrentChange={job.setStep}
+                    why={job.why}
+                    count={job.count}
+                    finish={job.finish(() => job.setStep(0))}
+                    onCancel={() => job.setStep(0)}
+                    footer="Draft kept in this browser"
+                >
+                    {job.body}
+                </WizardView>
+            </Shell>
+        </TooltipProvider>
+    )
+}
+
 const meta: Meta = { title: 'Apps/Workspace' }
 export default meta
 
@@ -392,6 +451,16 @@ export const WithDock: StoryObj = { name: 'Log dock', render: (_, { globals }) =
 
 /** The runs grouped by job, each head counting its runs; the Group choice and the dock's fold are kept for the next visit. */
 export const Grouped: StoryObj = { render: (_, { globals }) => <Workspace globals={globals} grouped dock /> }
+
+/**
+ * A new job on a page of its own, on its second step: the five steps down the side with what each
+ * asks, the done one pressable to go back to, the source to choose under the page's title, and
+ * Cancel, Back and Next across the foot. Below the `lg` breakpoint the steps move along the top.
+ */
+export const NewJob: StoryObj = { name: 'New job', render: () => <NewJobPage /> }
+
+/** The same page with its steps along the top, over the step's body. */
+export const NewJobTop: StoryObj = { name: 'Steps on top', render: () => <NewJobPage layout="top" /> }
 
 /**
  * The frame every app has, all at once: the rail of places, the command palette open on its

@@ -9,6 +9,7 @@ import { TidevannMark } from '../fixtures/TidevannMark'
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
 import { tuneUrl } from '../media/fixtures/tune'
 import { waveformOf } from '../media/fixtures/waveform'
+import { speakLater } from '../fixtures/speech'
 
 /**
  * The assistant's side of a turn: who speaks, the tools it called folded behind one line, the
@@ -200,6 +201,21 @@ export const ReadAloud: StoryObj = {
                 {...SPEAKER}
                 content="Two jobs failed this week: **nightly-export** on Tuesday and Wednesday, and **sync-inventory** once on Monday."
                 speech={{ src: tuneUrl(), waveform: waveformOf(11, 64), duration: 8 }}
+                onFeedback={() => undefined}
+            />
+        </Ground>
+    ),
+}
+
+/** Read aloud in the footer, after Copy: the first press fetches the answer's audio, spinning while it comes, and plays it; a press while it plays stops it. */
+export const ReadOnPress: StoryObj = {
+    name: 'Read on press',
+    render: () => (
+        <Ground>
+            <AssistantReply
+                {...SPEAKER}
+                content="Two jobs failed this week: **nightly-export** on Tuesday and Wednesday, and **sync-inventory** once on Monday."
+                speak={speakLater}
                 onFeedback={() => undefined}
             />
         </Ground>
