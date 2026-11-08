@@ -126,9 +126,7 @@ under Next. Each is a part or an option here, never a copy in an app. Roughly on
   states, with kind colors; radius by role (control and surface); themes named for their look:
   `ocean`, `indigo` and `terminal`.
 - **Round 4, media**, landing in the media package, `@winterop-com/sokkel-ui-media`, beside
-  `MediaBar`; what chat plays through stays in the core. Video: HLS through hls.js as a lazy
-  optional peer of the media package, `startAt` to resume, `onTime`, `onEnded` and `onError`, retry
-  on a stall, and keys handled outside the player. Queue helpers (shuffle as an order of its own,
+  `MediaBar`; what chat plays through stays in the core. Queue helpers (shuffle as an order of its own,
   repeat, next and previous, pure and tested); several files as one timeline with a `ChapterList`
   keeping the current row in view; LRC lyrics and a `Lyrics` overlay (timed lines follow, untimed
   ones read as a page); `TrackList` keeping the current row in view with time left or progress per
@@ -191,6 +189,6 @@ Should:
 
 - Accessibility audits, axe gates in CI and contrast scoring.
 - A second engine for a job that already has one: ECharts draws every chart, maplibre every map,
-  React Flow every interactive graph, xterm.js every terminal, Mermaid every diagram written as text, KaTeX every formula.
+  React Flow every interactive graph, xterm.js every terminal, hls.js every HTTP live stream, Mermaid every diagram written as text, KaTeX every formula.
   Sparklines are plain SVG.
 - Copy-in distribution. Apps install the package; nothing is vendored.

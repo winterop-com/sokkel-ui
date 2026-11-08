@@ -27,6 +27,7 @@ const ENGINES: Record<string, RegExp> = {
     maplibre: /\/node_modules\/maplibre-gl\//,
     'react-flow': /\/node_modules\/(@xyflow|elkjs)\//,
     xterm: /\/node_modules\/@xterm\//,
+    'hls.js': /\/node_modules\/hls\.js\//,
     codemirror: /\/node_modules\/(@codemirror|@lezer)\//,
     mermaid: /\/node_modules\/mermaid\//,
     katex: /\/node_modules\/(katex|rehype-katex|remark-math)\//,
