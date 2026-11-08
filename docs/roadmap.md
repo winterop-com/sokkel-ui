@@ -59,6 +59,21 @@ to `plan.md` when it ships.
   an `examples/tauri-cef` shell on `tauri-runtime-cef` beside `examples/tauri`, built by the
   examples workflow; until then, nothing to build.
 
+- **Missing parts, from the 2026-11-08 review**, most valuable first: `DateField`, `TimeField` and
+  `DateTimeField` (typed entry with a picker, bounds and one format); `NumberField` (bounds, step,
+  units, explicit parse and format); `InlineEdit` with a save, cancel, pending and error cycle, and
+  editable `DataTable` cells; `AsyncSelect` with several values, creating an option and loading more;
+  search inside filter menus and a `FilterBar` (add a filter, clear all, range operators); saved
+  views for a listing (filters, sort, columns; the app stores them); mentions suggested at the caret
+  in both composers; `FileField` (picker and drop zone with accepted types, size and count limits,
+  and refused files said); an unsaved-changes guard for navigation and closing the tab; `Toolbar`
+  overflow into a More menu; next, previous, zoom and pan in `ImageLightbox`. All in core.
+- **Dashboard panels on the chart kinds.** `BarPanel`, `TimeSeriesPanel` and `ComboPanel` build
+  ECharts options of their own and have drifted from the kinds (stack corners, for one); make them
+  thin panels over the kinds, adding what the kinds lack first.
+- **The remaining hand-drawn tables.** `FilePreview` (CSV), `ScoreTable` and `ChartLegend` draw
+  tables of their own; move them onto `DataTable`. `PermissionMatrix` may stay a matrix; decide.
+
 ## Later
 
 - **Screenshot comparison back in CI.** Off since 0.9.3 while the looks still move; the
