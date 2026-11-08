@@ -61,7 +61,14 @@ to `plan.md` when it ships.
   and `SchemaForm` so every form takes it at once.
 - **Tauri on Chromium (discovery).** Tauri runs on each platform's own webview: WebKit on
   macOS and Linux. Once Tauri supports an embedded Chromium runtime, add that build beside the
-  system-webview shell, so the library is checked in both.
+  system-webview shell, so the library is checked in both. As of 2026-11-08 it does, in alpha only:
+  Tauri 3 splits the runtime out, and `tauri-runtime-cef` (Chromium Embedded Framework, Linux,
+  macOS and Windows) ships beside `tauri-runtime-wry` on the `v3` branch, at
+  [3.0.0-alpha.7](https://github.com/tauri-apps/tauri/releases/tag/tauri-runtime-cef-v3.0.0-alpha.7)
+  since 2026-11-06, with open CEF bugs (Linux keyboard focus, idle CPU, fullscreen sizing) and no
+  blog post yet; stable Tauri is 2.12 on the system webview. Next: once Tauri 3 reaches beta, add
+  an `examples/tauri-cef` shell on `tauri-runtime-cef` beside `examples/tauri`, built by the
+  examples workflow; until then, nothing to build.
 - **An interactive terminal.** `Terminal` shows commands and their output; a shell needs a real
   terminal: keystrokes and paste sent to the app (which carries them to a remote shell over its own
   connection), full emulation for programs that move the cursor or take the whole screen (an
@@ -69,12 +76,14 @@ to `plan.md` when it ships.
   terminal emulator as its engine; pick one, likely xterm.js, and move the read-only `Terminal` onto
   the same engine so there is one per job. The library draws it and hands the bytes over; the
   connection stays the app's.
-- **A Nerd Font for terminals (discovery).** Try JetBrains Mono NL patched as a Nerd Font for
-  `Terminal` and `LogView` only, through their own `--typeface-mono`: the prompt icons it carries,
-  its size and a subset of only the icons used, and its license (SIL OFL, listed in
-  `THIRD_PARTY_NOTICES.md`) before shipping a font file.
-- **Mono size grid.** A story that sets mono text at every size beside its sans neighbor, in Plex
-  and in Geist, to check the `font-size-adjust` rule.
+- **The terminal face in `Terminal`.** `LogView` wears `--typeface-terminal` (JetBrains Mono NL
+  Nerd Font Mono, subset to Latin, box drawing and the Powerline and Octicons glyphs, about 22 KB
+  per weight). The interactive terminal takes the same face, read from `--typeface-terminal`, and
+  any icon it needs beyond the subset is added to it.
+- **Mono at `text-2xs`.** The mono size grid (Foundations/Typography) shows the rule holding:
+  mono's x-height is 0.87 of sans's at every size and 0.95 inside `text-xs`, in Plex and in Geist,
+  while mono words still run about 20 percent wider. `text-2xs` takes the body share, so its mono
+  draws at 9.6px, smaller than mono inside `text-xs`; decide whether it takes the small share.
 
 ## Later
 

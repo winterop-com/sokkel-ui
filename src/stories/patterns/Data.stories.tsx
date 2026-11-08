@@ -143,6 +143,17 @@ const LOG: LogLine[] = [
     { at: '14:02:13.421', level: 'info', source: 'run', text: 'failed after 2.2s' },
 ]
 
+/** Lines that carry the terminal face's icons: a Powerline prompt, a branch and a commit, and run states. */
+const ICON_LOG: LogLine[] = [
+    { at: '14:02:10.880', level: 'info', source: 'shell', text: 'ada@harbor  ~/juniper   main  3f2a9c1' },
+    { at: '14:02:11.204', level: 'info', source: 'fetch', text: ' fetch succeeded, 2,184 rows' },
+    { at: '14:02:12.115', level: 'info', source: 'transform', text: ' transform running' },
+    { at: '14:02:13.420', level: 'error', source: 'validate', text: ' validate failed: field amount must be a number' },
+    { at: '14:02:13.421', level: 'warning', source: 'upload', text: ' upload skipped after a failure' },
+    { at: '14:02:13.422', level: 'info', source: 'notify', text: ' notify queued for grace' },
+    { at: '14:02:13.430', level: 'debug', source: 'run', text: ' main  merged  v2.4.0  sync-inventory  worker' },
+]
+
 function Logs() {
     return (
         <Ground>
@@ -214,5 +225,7 @@ export const Description: StoryObj = { name: 'Description list', render: () => <
 export const Stats: StoryObj = { name: 'Stats', render: () => <Numbers /> }
 export const Timelines: StoryObj = { name: 'Timeline', render: () => <Events /> }
 export const Log: StoryObj = { name: 'Log view', render: () => <Logs /> }
+/** A log in the terminal face, its lines carrying Nerd Font icons: a Powerline prompt, git and run states. */
+export const LogIcons: StoryObj = { name: 'Log icons', render: () => <LogView lines={ICON_LOG} /> }
 export const Tree: StoryObj = { name: 'JSON tree', render: () => <Json /> }
 export const Diffs: StoryObj = { name: 'Diff view', render: () => <Diff /> }

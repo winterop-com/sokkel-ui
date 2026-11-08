@@ -129,6 +129,7 @@ html.dark[data-theme='cassette'] {
 [data-theme-scope='cassette'] {
     --typeface-sans: 'IBM Plex Sans Variable', 'IBM Plex Sans', system-ui, sans-serif;
     --typeface-mono: 'IBM Plex Mono', 'SF Mono', Menlo, Consolas, monospace;
+    --typeface-terminal: 'JetBrainsMonoNL Nerd Font Mono', var(--typeface-mono);
     --background: oklch(0.945 0.003 286);
     --foreground: oklch(0.235 0.02 80);
     --card: oklch(0.985 0.002 286);
@@ -251,6 +252,7 @@ html.dark[data-theme='cassette'] {
 .dark [data-theme-scope='cassette'] {
     --typeface-sans: 'IBM Plex Sans Variable', 'IBM Plex Sans', system-ui, sans-serif;
     --typeface-mono: 'IBM Plex Mono', 'SF Mono', Menlo, Consolas, monospace;
+    --typeface-terminal: 'JetBrainsMonoNL Nerd Font Mono', var(--typeface-mono);
     --background: oklch(0.145 0.003 286);
     --foreground: oklch(0.875 0.025 86);
     --card: oklch(0.207 0.006 286);

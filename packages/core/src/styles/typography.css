@@ -3,6 +3,26 @@
  * an equal size it reads larger. `font-size-adjust` sets every mono face's x-height to a share of the
  * text size instead: `--mono-x-height` at body size, `--mono-x-height-small` inside small text.
  */
+/*
+ * The terminal face: JetBrains Mono NL patched as a Nerd Font Mono, subset to Latin, box drawing,
+ * blocks and shapes, the Powerline glyphs and the Octicons a prompt or a run state shows. Its icons
+ * are one cell wide. `--typeface-terminal` names it, falling back to `--typeface-mono`.
+ */
+@font-face {
+    font-family: 'JetBrainsMonoNL Nerd Font Mono';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('./fonts/jetbrains-mono-nl-nerd-font-mono-400.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'JetBrainsMonoNL Nerd Font Mono';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('./fonts/jetbrains-mono-nl-nerd-font-mono-700.woff2') format('woff2');
+}
+
 @layer base {
     :where(.font-mono, code, kbd, samp, pre) {
         font-size-adjust: var(--mono-x-height);
