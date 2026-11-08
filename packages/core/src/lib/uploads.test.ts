@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { acceptList, accepts, refusal, UploadStore, type UploadContext } from './uploads'
+import { acceptList, accepts, checkFiles, refusal, UploadStore, type UploadContext } from './uploads'
 
 const file = (name: string, type: string, size = 10) => new File([new Uint8Array(size)], name, { type })
 
@@ -35,6 +35,39 @@ describe('accept', () => {
         expect(refusal({ name: 'a.exe', type: '', size: 5 }, { accept: '.csv', maxSize: 1 })).toBe('type')
         expect(refusal({ name: 'a.csv', type: '', size: 5 }, { accept: '.csv', maxSize: 1 })).toBe('size')
         expect(refusal({ name: 'a.csv', type: '', size: 1 }, { accept: '.csv', maxSize: 1 })).toBeUndefined()
+    })
+})
+
+describe('checkFiles', () => {
+    const limits = { accept: '.csv,image/*', maxSize: 1000, maxFiles: 3 }
+
+    it('takes what fits and refuses the rest with why, in order', () => {
+        const checked = checkFiles(
+            [file('a.csv', 'text/csv'), file('setup.exe', ''), file('big.csv', 'text/csv', 2000), file('dusk.png', 'image/png')],
+            limits,
+        )
+        expect(checked.taken.map((one) => one.name)).toEqual(['a.csv', 'dusk.png'])
+        expect(checked.refused.map((one) => [one.file.name, one.reason])).toEqual([
+            ['setup.exe', 'type'],
+            ['big.csv', 'size'],
+        ])
+    })
+
+    it('counts the files held already and refuses those past the count', () => {
+        const checked = checkFiles([file('a.csv', ''), file('b.csv', ''), file('c.csv', '')], limits, 2)
+        expect(checked.taken.map((one) => one.name)).toEqual(['a.csv'])
+        expect(checked.refused.map((one) => [one.file.name, one.reason])).toEqual([
+            ['b.csv', 'count'],
+            ['c.csv', 'count'],
+        ])
+    })
+
+    it('refuses a file of the wrong type by its type before the count', () => {
+        expect(checkFiles([file('a.exe', '')], limits, 3).refused[0].reason).toBe('type')
+    })
+
+    it('takes everything without limits', () => {
+        expect(checkFiles([file('a.bin', '', 9_000_000)], {}).taken).toHaveLength(1)
     })
 })
 

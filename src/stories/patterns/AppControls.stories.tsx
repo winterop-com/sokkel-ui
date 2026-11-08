@@ -6,7 +6,7 @@ import { ShortcutsDialog } from '@winterop-com/sokkel-ui/ShortcutsDialog'
 import { ThemeToggle } from '@winterop-com/sokkel-ui/ThemeToggle'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
-import { HARBOR_DUSK } from '../fixtures/photos'
+import { CHART as PHOTO_CHART, FIELD, HARBOR_DUSK, LIGHTHOUSE, PINES } from '../fixtures/photos'
 
 /** The app-level controls: the scheme switch, the shortcuts dialog, an image that opens full screen. */
 function Ground({ children }: { children: React.ReactNode }) {
@@ -100,6 +100,36 @@ function BoxedLightbox({ open }: { open: boolean }) {
     )
 }
 
+const GALLERY = [
+    { src: HARBOR_DUSK, alt: 'A harbor at dusk' },
+    { src: LIGHTHOUSE, alt: 'A lighthouse on the coast' },
+    { src: PINES, alt: 'Pines in the fog' },
+    { src: FIELD, alt: 'A field at noon' },
+    { src: PHOTO_CHART, alt: 'Rows loaded per run' },
+]
+
+/** Each photo opens the gallery at itself, and the arrows, the side buttons or a swipe move through them all. */
+function Gallery({ open }: { open?: number }) {
+    return (
+        <Ground>
+            <p className="text-sm">Photos from the site visit:</p>
+            <Row gap="sm" wrap>
+                {GALLERY.map((image, index) => (
+                    <ImageLightbox
+                        key={image.alt}
+                        src={image.src}
+                        alt={image.alt}
+                        images={GALLERY}
+                        index={index}
+                        defaultOpen={open === index}
+                        className="w-32"
+                    />
+                ))}
+            </Row>
+        </Ground>
+    )
+}
+
 const meta: Meta = { title: 'Patterns/App controls', parameters: { frame: 'padded' } }
 export default meta
 
@@ -111,3 +141,11 @@ export const ImageOpen: StoryObj = { name: 'Image lightbox, open', render: () =>
 export const ImageBoxes: StoryObj = { name: 'Image lightbox, boxes', render: () => <BoxedLightbox open={false} /> }
 /** The boxed image opened full screen. */
 export const ImageBoxesOpen: StoryObj = { name: 'Image lightbox, boxes open', render: () => <BoxedLightbox open /> }
+/** Several photos, each opening the gallery at itself. */
+export const ImageGallery: StoryObj = { name: 'Image gallery', render: () => <Gallery /> }
+/**
+ * The gallery open at the third photo, "3 of 5": the arrows and the side buttons move, the wheel, a
+ * pinch or the buttons zoom, a drag moves the zoomed photo, and a double press goes between the fit
+ * and the photo's own pixels.
+ */
+export const ImageGalleryOpen: StoryObj = { name: 'Image gallery, open', render: () => <Gallery open={2} /> }
