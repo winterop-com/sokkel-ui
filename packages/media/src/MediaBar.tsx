@@ -25,6 +25,7 @@ const loadFullscreen = () => import('./MediaFullscreen')
 const MediaFullscreen = lazy(() => loadFullscreen().then((module) => ({ default: module.MediaFullscreen })))
 
 export type { MediaBarLayout } from './bar-growth'
+export { rowsHeightFor } from './bar-growth'
 export type { MediaBarWords, MediaSteps, MediaTimeline, RepeatMode } from './MediaBarParts'
 export { MEDIA_RATES } from '@winterop-com/sokkel-ui/media/MediaControls'
 
@@ -64,8 +65,23 @@ export interface MediaBarProps {
      * one through `onPlayingChange(false)`, so one sound is heard at a time. A muted bar takes no sound.
      */
     exclusive?: boolean
-    /** Seconds from the start. */
+    /**
+     * Seconds from the start, as the app last heard it, such as on the element's `timeupdate`: what
+     * the bar counts chapters by and draws while paused, and all it draws without `media` or
+     * `getPosition`.
+     */
     position: number
+    /**
+     * The element that plays. While playing, the scrubber and its times read its `currentTime` on
+     * every animation frame, so they move smoothly rather than in the quarter-second steps
+     * `timeupdate` reports.
+     */
+    media?: HTMLMediaElement | null
+    /**
+     * Reads the position in seconds from the start, in place of `media`: read on every animation
+     * frame while playing, for a clock that is not one element's, such as a timeline over several files.
+     */
+    getPosition?: () => number
     /** Length in seconds; zero when unknown, which disables seeking. */
     duration: number
     onSeek: (seconds: number) => void
@@ -124,6 +140,13 @@ export interface MediaBarProps {
     onRepeatChange?: (repeat: RepeatMode) => void
     /** Controls at the bar's end, such as a queue button. */
     extra?: ReactNode
+    /**
+     * The app's own now-playing display, such as a deck's readout, in place of the words and the
+     * scrubber in the one-line bar and the `rows` layout, beside the cover and before the
+     * transport; it says what plays and how far itself. `panel`, `stage` and the fullscreen view
+     * keep their own words and scrubber.
+     */
+    face?: ReactNode
     /** How the bar grows once dragged taller than its one line: `rows` by default. */
     layout?: MediaBarLayout
     /** The height in pixels, held from outside with `onSizeChange`. */
@@ -157,6 +180,8 @@ export interface MediaBarProps {
     onLyricsShownChange?: (shown: boolean) => void
     /** Whether the fullscreen view starts with the lyrics shown. */
     defaultLyricsShown?: boolean
+    /** Controls for what plays in the fullscreen view, such as a star for it, at the end of the line under its title. */
+    fullscreenActions?: ReactNode
     /** The visualizer's kind in the fullscreen view, held from outside with `onVisualizerKindChange`; the slot's own by default. */
     visualizerKind?: SoundKind
     onVisualizerKindChange?: (kind: SoundKind) => void
@@ -197,10 +222,15 @@ export interface MediaBarProps {
  * chapter. `live` is for a stream with no length, such as a radio station: a Live mark stands
  * where the position would, and nothing seeks.
  *
- * It is controlled: it holds no clock, and draws the `position` it is given until a seek is
- * reported through `onSeek`. Under 672 pixels of its own width the one line folds into two rows,
- * the title beside the transport over the position, and every layout leaves shuffle, repeat and
- * volume to the device.
+ * It is controlled: it draws the `position` it is given until a seek is reported through
+ * `onSeek`, and given the playing `media` element (or `getPosition`) it reads the position on every
+ * animation frame while playing, so the scrubber and its times move smoothly. `face` puts the
+ * app's own now-playing display in place of the words and the scrubber in the one line and
+ * `rows`; `fullscreenActions` put controls such as a star under the title in the fullscreen view.
+ * `defaultSize` starts the bar grown (`rowsHeightFor` gives the height for a cover's size), and
+ * `size` with `onSizeChange` restores a height the app kept. Under 672 pixels of its own width
+ * the one line folds into two rows, the title beside the transport over the position, and every
+ * layout leaves shuffle, repeat and volume to the device.
  */
 export function MediaBar({
     title,
@@ -216,6 +246,8 @@ export function MediaBar({
     onPlayingChange,
     exclusive = true,
     position,
+    media,
+    getPosition,
     duration,
     onSeek,
     live = false,
@@ -241,6 +273,7 @@ export function MediaBar({
     repeat = 'off',
     onRepeatChange,
     extra,
+    face,
     layout = 'rows',
     size,
     onSizeChange,
@@ -256,6 +289,7 @@ export function MediaBar({
     lyricsShown,
     onLyricsShownChange,
     defaultLyricsShown = false,
+    fullscreenActions,
     visualizerKind,
     onVisualizerKindChange,
     words: given,
@@ -317,6 +351,7 @@ export function MediaBar({
     const interval = skip ?? (onSkip === undefined ? undefined : MEDIA_SKIP)
     const seekWithin = (seconds: number) => onSeek(Math.min(duration, Math.max(0, seconds)))
     const nextStart = byChapter ? nextChapterStart(marked, position) : undefined
+    const read = getPosition ?? (media === undefined || media === null ? undefined : () => media.currentTime)
 
     const deck: Deck = {
         words,
@@ -331,6 +366,7 @@ export function MediaBar({
         playing,
         onPlayingChange,
         at: scrub ?? position - span.start,
+        clock: read === undefined || scrub !== null ? undefined : () => read() - span.start,
         duration: span.end - span.start,
         onSeek: (seconds) => onSeek(span.start + seconds),
         onScrub: setScrub,
@@ -361,6 +397,7 @@ export function MediaBar({
         repeat,
         onRepeatChange,
         extra,
+        face: face === null || face === false ? undefined : face,
     }
     const Bar = grown ? BARS[layout] : LineBar
 
@@ -418,6 +455,7 @@ export function MediaBar({
                         lyrics={lyrics}
                         lyricsShown={lyricsShown ?? ownLyrics}
                         onLyricsShownChange={setLyrics}
+                        actions={fullscreenActions}
                     />
                 </Suspense>
             )}

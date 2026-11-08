@@ -27,7 +27,8 @@ being uploaded through `useUploads` (`hooks/use-uploads`), which feeds `Attachme
 What plays is told to the operating system (media keys, lock screen) by `useMediaSession`
 (`@winterop-com/sokkel-ui-media/use-media-session`), beside `MediaBar`. A queue, its play order,
 shuffle and repeat are held by `useQueue` (`use-queue`) over the pure helpers in `queue`; a book
-over several files maps its timeline to a file with `timeline`, and LRC lyrics are read by
+over several files maps its timeline to a file with `timeline`, a position that moves every
+animation frame is read by `useFramePosition` (`use-frame-position`), and LRC lyrics are read by
 `parseLyrics` in `lrc`, all under `@winterop-com/sokkel-ui-media/`.
 
 - [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 214 modules
@@ -365,8 +366,8 @@ over several files maps its timeline to a file with `timeline`, and LRC lyrics a
 | Component | Import | What it is | Story |
 | --- | --- | --- | --- |
 | **AudioPlayer** | `@winterop-com/sokkel-ui/media/AudioPlayer` | A recording in one line: play and pause, the scrubber, and the time played and still to play. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-audio-player--slider) |
-| **MediaSlider** | `@winterop-com/sokkel-ui/media/MediaSlider` | A horizontal slider for a media position or a level, with loaded stretches drawn under the played part. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-audio-bar--playing) (in PlayButton) |
-| **PlayButton**, TransportButton, Position, RateMenu, SkipGlyph, LiveMark, VolumeControl, VolumeGlyph | `@winterop-com/sokkel-ui/media/MediaControls` | The play button at the center of the transport, the one filled control. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-audio-bar--playing) |
+| **MediaSlider** | `@winterop-com/sokkel-ui/media/MediaSlider` | A horizontal slider for a media position or a level, with loaded stretches drawn under the played part. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-sound-visualizer--at-rest) (in PlayButton) |
+| **PlayButton**, TransportButton, Position, RateMenu, SkipGlyph, LiveMark, VolumeControl, VolumeGlyph | `@winterop-com/sokkel-ui/media/MediaControls` | The play button at the center of the transport, the one filled control. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-sound-visualizer--at-rest) |
 | **SoundVisualizer** | `@winterop-com/sokkel-ui/media/SoundVisualizer` | A live picture of what is playing, read from a media element or a stream through Web Audio and drawn on a canvas: a spectrum of bars, an area, a wave or a ring. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-sound-visualizer--at-rest) |
 | **VideoPlayer** | `@winterop-com/sokkel-ui/media/VideoPlayer` | A video with the library's controls over it: play and pause, a seek bar with what has loaded, the time, volume, playback speed, captions, picture in picture and fullscreen. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-video--paused-frame) |
 
@@ -453,7 +454,7 @@ over several files maps its timeline to a file with `timeline`, and LRC lyrics a
 | --- | --- | --- | --- |
 | **Artwork** | `@winterop-com/sokkel-ui-media/Artwork` | A record's cover: its picture, or a cover drawn in the theme's hues, a gradient between two with one motif over it, chosen from a stable `seed` unless `cover` names it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-artwork--motifs) |
 | **ChapterList** | `@winterop-com/sokkel-ui-media/ChapterList` | The chapters of a book, a podcast or a long work, in order: each one's number, its title over where it starts, and its length at the end, the last one's running to `duration`. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-chapter-list--chapters) |
-| **Cover**, Eyebrow, Words, ScreenWords, Scrub, Steps, Speed, ShuffleButton, RepeatButton, Volume, Extras, FullscreenButton, Backdrop | `@winterop-com/sokkel-ui-media/MediaBarParts` | The cover, square and filled edge to edge; without artwork one drawn from the seed, or a note glyph. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-lyrics--timed) (in MediaBar) |
+| **Cover**, Eyebrow, Words, ScreenWords, Scrub, LinePosition, Steps, Speed, ShuffleButton, RepeatButton, Volume, Extras, FullscreenButton, Backdrop | `@winterop-com/sokkel-ui-media/MediaBarParts` | The cover, square and filled edge to edge; without artwork one drawn from the seed, or a note glyph. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-lyrics--timed) (in MediaBar) |
 | **LineBar**, RowsBar, PanelBar, StageBar | `@winterop-com/sokkel-ui-media/MediaBarLayouts` | The one-line bar, drawn by every layout until it grows: what plays at the left with the cover growing with the height, the transport over the position in the middle, the speed, the volume and the extra controls at the right. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-lyrics--timed) (in MediaBar) |
 | **Lyrics** | `@winterop-com/sokkel-ui-media/Lyrics` | The lyrics of what plays, filling the box it is given and scrolling within it, as a panel beside the player or the fullscreen view in the visualizer's place (`MediaBar`'s `lyrics`). | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-lyrics--timed) |
 | **MediaBar** | `@winterop-com/sokkel-ui-media/MediaBar` | The player along the foot of a screen, for audio. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-lyrics--timed) |

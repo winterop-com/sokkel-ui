@@ -617,7 +617,8 @@ export function render(entries: Entry[]): string {
         'What plays is told to the operating system (media keys, lock screen) by `useMediaSession`',
         '(`@winterop-com/sokkel-ui-media/use-media-session`), beside `MediaBar`. A queue, its play order,',
         'shuffle and repeat are held by `useQueue` (`use-queue`) over the pure helpers in `queue`; a book',
-        'over several files maps its timeline to a file with `timeline`, and LRC lyrics are read by',
+        'over several files maps its timeline to a file with `timeline`, a position that moves every',
+        'animation frame is read by `useFramePosition` (`use-frame-position`), and LRC lyrics are read by',
         '`parseLyrics` in `lrc`, all under `@winterop-com/sokkel-ui-media/`.',
         '',
     ]

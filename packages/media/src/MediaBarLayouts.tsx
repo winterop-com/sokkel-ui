@@ -8,6 +8,7 @@ import {
     Cover,
     Extras,
     FullscreenButton,
+    LinePosition,
     RepeatButton,
     Scrub,
     ShuffleButton,
@@ -17,7 +18,6 @@ import {
     Words,
     type Deck,
 } from './MediaBarParts'
-import { LiveMark, Position } from '@winterop-com/sokkel-ui/media/MediaControls'
 
 /** What every arrangement of the bar is given. */
 export interface BarProps {
@@ -43,26 +43,17 @@ export type LineBarProps = BarProps
  * The one-line bar, drawn by every layout until it grows: what plays at the left with the cover
  * growing with the height, the transport over the position in the middle, the speed, the volume
  * and the extra controls at the right. Under `WIDE` it folds into two rows, the title beside the
- * transport over the position, the speed at the position's end.
+ * transport over the position, the speed at the position's end. The deck's face takes the place of
+ * the words and the position.
  */
 export function LineBar({ deck, height, width, onFullscreen }: LineBarProps) {
+    if (deck.face !== undefined) return <FaceBar deck={deck} height={height} width={width} onFullscreen={onFullscreen} />
     const wide = width >= WIDE
     const line =
         deck.subtitle ??
         (deck.artist !== undefined || deck.album !== undefined ? <MetaLine inline items={[deck.artist, deck.album]} /> : undefined)
     const cover = height - 17
-    const position = deck.live ? (
-        <LiveMark label={deck.words.live} />
-    ) : (
-        <Position
-            at={deck.at}
-            duration={deck.duration}
-            buffered={deck.buffered}
-            label={deck.words.seek}
-            onSeek={deck.onSeek}
-            onScrub={deck.onScrub}
-        />
-    )
+    const position = <LinePosition deck={deck} />
     return (
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1.5 px-3 py-2.5 @2xl:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)_minmax(0,1fr)] @2xl:gap-x-6 @2xl:py-2">
             <div className="flex min-w-0 items-center gap-3">
@@ -108,6 +99,68 @@ export function LineBar({ deck, height, width, onFullscreen }: LineBarProps) {
     )
 }
 
+/** The height of a row of transport buttons. */
+const CONTROLS = 36
+
+/** The app's face, as wide as the room left and as tall as its row. */
+function Face({ deck }: { deck: Deck }) {
+    return (
+        <div data-slot="media-bar-face" className="flex min-w-0 flex-1 flex-col justify-center self-stretch">
+            {deck.face}
+        </div>
+    )
+}
+
+/**
+ * The bar around an app's own face, as the one line and, `grown`, as `rows`: the cover and the
+ * face at the left, the face taking the room the words and the scrubber had, then the transport,
+ * and the speed, the volume and the extra controls at the right. The visualizer is left to the
+ * fullscreen view, as the face is the app's own display. On a narrow bar the cover and the face
+ * have a row of their own over the transport, centered.
+ */
+function FaceBar({ deck, height, width, onFullscreen, grown = false }: BarProps & { grown?: boolean }) {
+    const narrow = width < WIDE
+    const rows = rowsGrowth(height, width)
+    const pad = grown ? rows.pad : narrow ? 10 : 8
+    const cover = narrow ? (grown ? Math.min(72, height - 2 * pad - CONTROLS - 8) : 40) : grown ? rows.cover : Math.max(48, height - 17)
+    const sleeve = cover >= 32 && <Cover deck={deck} size={cover} className={cn('self-center', cover >= 160 && 'rounded-surface')} />
+    if (narrow) {
+        return (
+            <div className={cn('flex flex-col gap-2 px-3', grown && 'h-full')} style={{ paddingBlock: pad }}>
+                <div className="flex min-h-0 min-w-0 flex-1 items-center gap-3">
+                    {sleeve}
+                    <Face deck={deck} />
+                </div>
+                <div className="flex shrink-0 items-center justify-center gap-1">
+                    <Steps deck={deck} />
+                    <Speed deck={deck} />
+                    <Extras deck={deck} />
+                    <Expand deck={deck} onFullscreen={onFullscreen} />
+                </div>
+            </div>
+        )
+    }
+    return (
+        <div className={cn('flex items-center gap-6 px-3', grown && 'h-full')} style={{ paddingBlock: pad }}>
+            <div className="flex min-w-0 flex-1 items-center gap-4 self-stretch">
+                {sleeve}
+                <Face deck={deck} />
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+                <ShuffleButton deck={deck} />
+                <Steps deck={deck} size={height >= TALL ? 'md' : 'sm'} />
+                <RepeatButton deck={deck} />
+            </div>
+            <div className="flex shrink-0 items-center justify-end gap-2">
+                <Speed deck={deck} />
+                <Volume deck={deck} compact={grown && rows.compactVolume} />
+                <Extras deck={deck} />
+                <Expand deck={deck} onFullscreen={onFullscreen} />
+            </div>
+        </div>
+    )
+}
+
 export type RowsBarProps = BarProps
 
 /**
@@ -115,9 +168,11 @@ export type RowsBarProps = BarProps
  * volume in the top row; and the waveform, as wide as the rest of the bar, in the bottom row. The
  * visualizer rises behind the top row and stands on the waveform. The fullscreen button ends the
  * top row until the row is tall enough to give it the corner. On a narrow bar the cover moves
- * into the top row beside the words, and the volume is left to the device.
+ * into the top row beside the words, and the volume is left to the device. The deck's face takes
+ * the place of the words and the waveform.
  */
 export function RowsBar({ deck, height, width, visualizer, onFullscreen }: RowsBarProps) {
+    if (deck.face !== undefined) return <FaceBar deck={deck} height={height} width={width} onFullscreen={onFullscreen} grown />
     const narrow = width < WIDE
     const rows = rowsGrowth(height, width)
     return (

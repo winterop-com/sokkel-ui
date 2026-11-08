@@ -118,6 +118,13 @@ describe('next, previous and the end of an item', () => {
         expect(queueIndex(queueNext(createQueue(ITEMS, { start: 4, repeat: 'one' }))!)).toBe(0)
     })
 
+    it('repeating one, steps back within the order but not round from the first item', () => {
+        expect(queueIndex(queuePrevious(createQueue(ITEMS, { start: 2, repeat: 'one' }))!)).toBe(1)
+        expect(queuePrevious(createQueue(ITEMS, { repeat: 'one' }))).toBeUndefined()
+        const shuffled = createQueue(ITEMS, { order: [2, 0, 4, 1, 3], start: 2, repeat: 'one' })
+        expect(queuePrevious(shuffled)).toBeUndefined()
+    })
+
     it('jumps to an item where it stands in the play order', () => {
         const queue = createQueue(ITEMS, { order: [2, 0, 4, 1, 3] })
         const jumped = queuePlay(queue, 1)

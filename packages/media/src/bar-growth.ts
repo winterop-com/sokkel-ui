@@ -158,6 +158,18 @@ export function rowsGrowth(height: number, width: number): RowsGrowth {
     }
 }
 
+/**
+ * The least height at which a wide `rows` bar draws its cover `cover` pixels across, such as a
+ * height to start at; the bar's width must be at least four times the cover. Under the height the
+ * layout grows from, it is that height.
+ */
+export function rowsHeightFor(cover: number): number {
+    if (!Number.isFinite(cover)) return GROWS_FROM.rows
+    let height = Math.max(GROWS_FROM.rows, Math.ceil(cover))
+    while (rowsGrowth(height, Number.POSITIVE_INFINITY).cover < cover) height += 1
+    return height
+}
+
 /** What `panel` is at one height and width. */
 export interface PanelGrowth {
     /** The waveform's height. */

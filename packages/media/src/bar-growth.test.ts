@@ -11,6 +11,7 @@ import {
     panelGrowth,
     ramp,
     rowsGrowth,
+    rowsHeightFor,
     stageGrowth,
     tierFor,
     type MediaBarLayout,
@@ -169,6 +170,17 @@ describe('rows', () => {
         expect(rowsGrowth(200, DESKTOP).compactVolume).toBe(false)
         expect(rowsGrowth(200, 700).compactVolume).toBe(true)
         expect(rowsGrowth(300, 700).tier).toBe('liner')
+    })
+
+    it('say the least height that draws a cover of a given size', () => {
+        expect(rowsHeightFor(158)).toBe(182)
+        for (const cover of [80, 120, 158, 200, 300]) {
+            const height = rowsHeightFor(cover)
+            expect(rowsGrowth(height, DESKTOP).cover).toBe(cover)
+            expect(rowsGrowth(height - 1, DESKTOP).cover).toBeLessThan(cover)
+        }
+        expect(rowsHeightFor(20)).toBe(GROWS_FROM.rows)
+        expect(rowsHeightFor(Number.NaN)).toBe(GROWS_FROM.rows)
     })
 })
 

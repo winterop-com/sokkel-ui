@@ -20,6 +20,17 @@ const ALBUM: Track[] = [
     { id: '5', number: 5, title: 'Salt Air', duration: 189 },
 ]
 
+/** An album over two discs, each numbered from one. */
+const SET: Track[] = [
+    { id: 's1', disc: 1, number: 1, title: 'Low Water', duration: 214 },
+    { id: 's2', disc: 1, number: 2, title: 'The Harbor Wall', duration: 247 },
+    { id: 's3', disc: 1, number: 3, title: 'Juniper Point', duration: 198 },
+    { id: 's4', disc: 1, number: 4, title: 'Larkspur Fields', duration: 263 },
+    { id: 's5', disc: 2, number: 1, title: 'Spring Tide', duration: 189 },
+    { id: 's6', disc: 2, number: 2, title: 'The Long Bay', duration: 312 },
+    { id: 's7', disc: 2, number: 3, title: 'High Water', duration: 236 },
+]
+
 const MIXED: Track[] = [
     { id: 'a', title: 'Harbor at Dusk', subtitle: 'Grace', meta: 'Open Water', duration: 312, cover: COVER },
     {
@@ -137,6 +148,18 @@ export const Progress: StoryObj = {
     render: () => (
         <Ground>
             <TrackList tracks={ALBUM} current="4" playing position={83} progress="bar" onPlay={() => undefined} />
+        </Ground>
+    ),
+}
+
+/**
+ * An album over two discs, each track given its `disc`: a head over the first track of each, the
+ * numbers starting over on the second, its second track playing.
+ */
+export const Discs: StoryObj = {
+    render: () => (
+        <Ground>
+            <TrackList tracks={SET} current="s6" playing onPlay={() => undefined} />
         </Ground>
     ),
 }

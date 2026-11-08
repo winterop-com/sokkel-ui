@@ -138,8 +138,9 @@ export function queuePlay<T>(queue: Queue<T>, index: number): Queue<T> {
 
 /**
  * The queue after a press of next: the item after this one in the play order. At its end the
- * order starts over while it repeats, and there is nowhere to go when it does not. Repeating one
- * item does not hold next on it: a press means enough of this one.
+ * order starts over while it repeats all or one, and there is nowhere to go when it does not.
+ * Repeating one item does not hold next on it: a press means enough of this one, and at the end
+ * of the order it goes round rather than leave the listener in the loop.
  */
 export function queueNext<T>(queue: Queue<T>): Queue<T> | undefined {
     const { at, order, repeat } = queue
@@ -150,14 +151,15 @@ export function queueNext<T>(queue: Queue<T>): Queue<T> | undefined {
 
 /**
  * The queue after a press of previous: the item before this one in the play order. At its start
- * the order goes round to its end while it repeats, and there is nowhere to go when it does not,
- * which a player takes as starting this item again.
+ * the order goes round to its end only while it repeats all, as a queue that repeats has no first
+ * item; otherwise, repeating one item or none, there is nowhere to go, which a player takes as
+ * starting this item again.
  */
 export function queuePrevious<T>(queue: Queue<T>): Queue<T> | undefined {
     const { at, order, repeat } = queue
     if (at < 0) return undefined
     if (at > 0) return { ...queue, at: at - 1 }
-    return repeat === 'off' ? undefined : { ...queue, at: order.length - 1 }
+    return repeat === 'all' ? { ...queue, at: order.length - 1 } : undefined
 }
 
 /**

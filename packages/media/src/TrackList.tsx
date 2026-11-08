@@ -1,6 +1,7 @@
 import { Play, Volume2 } from 'lucide-react'
-import { useRef, type ReactNode } from 'react'
+import { Fragment, useRef, type ReactNode } from 'react'
 
+import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { formatRemaining, formatTime } from '@winterop-com/sokkel-ui/media/time'
 import { useFollow } from './use-follow'
@@ -19,15 +20,24 @@ export interface Track {
     meta?: ReactNode
     /** Length in seconds. */
     duration: number
+    /** The disc of a set it is on, counted from 1; a list over more than one disc is headed by each. */
+    disc?: number
 }
 
 /** The words the list says, each with an English default. */
 export interface TrackListWords {
     play: (title: string) => string
     playing: string
+    /** The head over a disc's tracks, such as "Disc 2". */
+    disc: (disc: number) => string
 }
 
-const WORDS: TrackListWords = { play: (title) => `Play ${title}`, playing: 'Now playing' }
+const WORDS: TrackListWords = { play: (title) => `Play ${title}`, playing: 'Now playing', disc: (disc) => `Disc ${String(disc)}` }
+
+/** Whether the tracks lie on more than one disc, a track without one being on the first. */
+function manyDiscs(tracks: readonly Track[]): boolean {
+    return new Set(tracks.map((track) => track.disc ?? 1)).size > 1
+}
 
 /** What the current row shows of how far it has played: the time left in place of its length, or a line along its foot. */
 export type TrackProgress = 'left' | 'bar'
@@ -69,6 +79,10 @@ export interface TrackListProps {
  * the reader is scrolling or just after; `follow={false}` leaves the scrolling to the reader. With
  * the `position` played into it, `progress` shows how far the current row has played: `left` the
  * time still to play in place of its length, `bar` a line along its foot.
+ *
+ * An album of several discs gives each track its `disc`: the list then puts a head ("Disc 1",
+ * "Disc 2") over the first track of each disc it reaches, in the order the tracks are given. A
+ * list on one disc draws no head.
  */
 export function TrackList({
     tracks,
@@ -87,6 +101,7 @@ export function TrackList({
     const said = { ...WORDS, ...words }
     const row = useRef<HTMLLIElement | null>(null)
     useFollow(row, current, { enabled: follow && current !== undefined })
+    const discs = manyDiscs(tracks)
     return (
         <ol
             className={cn(
@@ -95,64 +110,80 @@ export function TrackList({
                 className,
             )}
         >
-            {tracks.map((track) => {
+            {tracks.map((track, index) => {
                 const now = track.id === current
+                const disc = track.disc ?? 1
+                const opens = discs && (index === 0 || (tracks[index - 1].disc ?? 1) !== disc)
                 const label = typeof track.title === 'string' ? said.play(track.title) : undefined
                 const played = now && position !== undefined ? position : undefined
                 const bar = progress === 'bar' && played !== undefined && track.duration > 0
                 return (
-                    <li
-                        key={track.id}
-                        ref={now ? row : undefined}
-                        className={cn(
-                            'flex min-w-0 items-center gap-1 pr-2',
-                            bar && 'relative overflow-hidden',
-                            variant === 'boxed' && 'border-b border-border last:border-b-0',
-                            variant === 'plain' && 'rounded-control',
-                            now ? 'bg-secondary' : onPlay !== undefined && 'has-[>button:hover]:bg-hover',
+                    <Fragment key={track.id}>
+                        {opens && (
+                            <li
+                                role="presentation"
+                                data-slot="track-list-disc"
+                                className={cn(
+                                    'pt-2.5 pr-2 pb-1.5',
+                                    variant === 'boxed' ? 'border-b border-border pl-(--density-panel-pad)' : 'pl-2',
+                                    index > 0 && variant === 'plain' && 'pt-4',
+                                )}
+                            >
+                                <GroupLabel as="span">{said.disc(disc)}</GroupLabel>
+                            </li>
                         )}
-                    >
-                        <button
-                            type="button"
-                            aria-current={now || undefined}
-                            aria-label={label}
-                            onClick={onPlay === undefined ? undefined : () => onPlay(track)}
+                        <li
+                            ref={now ? row : undefined}
                             className={cn(
-                                'flex min-h-(--density-row) min-w-0 flex-1 items-center gap-3 py-1.5 text-left text-sm outline-none focus-visible:bg-hover',
-                                variant === 'boxed' ? 'pl-(--density-panel-pad)' : 'pl-2',
-                                onPlay !== undefined && 'cursor-pointer',
+                                'flex min-w-0 items-center gap-1 pr-2',
+                                bar && 'relative overflow-hidden',
+                                variant === 'boxed' && 'border-b border-border last:border-b-0',
+                                variant === 'plain' && 'rounded-control',
+                                now ? 'bg-secondary' : onPlay !== undefined && 'has-[>button:hover]:bg-hover',
                             )}
                         >
-                            <Lead track={track} now={now} playing={playing} shape={artwork} label={said.playing} />
-                            <span className="min-w-0 flex-1">
-                                <span className={cn('block truncate', now ? 'font-medium text-primary-ink' : 'text-foreground')}>
-                                    {track.title}
-                                </span>
-                                {track.subtitle !== undefined && (
-                                    <span className="block truncate text-xs text-muted-foreground">{track.subtitle}</span>
+                            <button
+                                type="button"
+                                aria-current={now || undefined}
+                                aria-label={label}
+                                onClick={onPlay === undefined ? undefined : () => onPlay(track)}
+                                className={cn(
+                                    'flex min-h-(--density-row) min-w-0 flex-1 items-center gap-3 py-1.5 text-left text-sm outline-none focus-visible:bg-hover',
+                                    variant === 'boxed' ? 'pl-(--density-panel-pad)' : 'pl-2',
+                                    onPlay !== undefined && 'cursor-pointer',
                                 )}
-                            </span>
-                            {track.meta !== undefined && (
-                                <span className="hidden w-[28%] min-w-0 truncate text-sm text-muted-foreground @xl:block">
-                                    {track.meta}
+                            >
+                                <Lead track={track} now={now} playing={playing} shape={artwork} label={said.playing} />
+                                <span className="min-w-0 flex-1">
+                                    <span className={cn('block truncate', now ? 'font-medium text-primary-ink' : 'text-foreground')}>
+                                        {track.title}
+                                    </span>
+                                    {track.subtitle !== undefined && (
+                                        <span className="block truncate text-xs text-muted-foreground">{track.subtitle}</span>
+                                    )}
                                 </span>
+                                {track.meta !== undefined && (
+                                    <span className="hidden w-[28%] min-w-0 truncate text-sm text-muted-foreground @xl:block">
+                                        {track.meta}
+                                    </span>
+                                )}
+                                <span className="min-w-12 shrink-0 text-right font-mono text-xs text-muted-foreground tabular-nums">
+                                    {progress === 'left' && played !== undefined
+                                        ? formatRemaining(played, track.duration)
+                                        : formatTime(track.duration)}
+                                </span>
+                            </button>
+                            {actions !== undefined && <span className="flex shrink-0 items-center gap-0.5 pl-1">{actions(track)}</span>}
+                            {bar && (
+                                <span
+                                    aria-hidden
+                                    data-slot="track-progress"
+                                    className="pointer-events-none absolute inset-x-0 bottom-0 h-0.5 origin-left bg-primary"
+                                    style={{ transform: `scaleX(${String(Math.min(1, Math.max(0, played / track.duration)))})` }}
+                                />
                             )}
-                            <span className="min-w-12 shrink-0 text-right font-mono text-xs text-muted-foreground tabular-nums">
-                                {progress === 'left' && played !== undefined
-                                    ? formatRemaining(played, track.duration)
-                                    : formatTime(track.duration)}
-                            </span>
-                        </button>
-                        {actions !== undefined && <span className="flex shrink-0 items-center gap-0.5 pl-1">{actions(track)}</span>}
-                        {bar && (
-                            <span
-                                aria-hidden
-                                data-slot="track-progress"
-                                className="pointer-events-none absolute inset-x-0 bottom-0 h-0.5 origin-left bg-primary"
-                                style={{ transform: `scaleX(${String(Math.min(1, Math.max(0, played / track.duration)))})` }}
-                            />
-                        )}
-                    </li>
+                        </li>
+                    </Fragment>
                 )
             })}
         </ol>

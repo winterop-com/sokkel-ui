@@ -40,6 +40,8 @@ export interface MediaFullscreenProps {
     lyricsShown?: boolean
     /** The corner's lyrics button, drawn with `lyrics`, shows and hides them through this. */
     onLyricsShownChange?: (shown: boolean) => void
+    /** Controls for what plays, such as a star for it, at the end of the line under its title. */
+    actions?: ReactNode
     kind: SoundKind
     onKindChange: (kind: SoundKind) => void
     onLeave: () => void
@@ -55,7 +57,8 @@ export interface MediaFullscreenProps {
  * size, the visualizer at full strength, the waveform and the transport, arranged after the
  * bar's layout. The corner holds the visualizer's kind picker and the button that leaves; Escape
  * leaves too. Given `lyrics`, the corner's lyrics button shows them in the visualizer's place:
- * between the head and the waveform, above the liner, or across the stage.
+ * between the head and the waveform, above the liner, or across the stage. `actions`, such as a
+ * star for what plays, end the line under its title.
  *
  * It is a dark room in every scheme and theme: the `.dark` class around an element scoped to the
  * document's theme, so the theme's own dark tokens hold inside whatever the page wears.
@@ -81,6 +84,7 @@ function Room({
     lyrics,
     lyricsShown = false,
     onLyricsShownChange,
+    actions,
 }: MediaFullscreenProps) {
     const room = useRef<HTMLDivElement | null>(null)
     const box = useSize(room)
@@ -122,7 +126,7 @@ function Room({
 
     const phone = box.width < PHONE
     const worded = lyrics !== undefined && lyrics !== null
-    const view = { deck, visualizer, kind, phone, room, lyrics: worded && lyricsShown ? lyrics : undefined }
+    const view = { deck, visualizer, kind, phone, room, lyrics: worded && lyricsShown ? lyrics : undefined, actions }
     return (
         <div
             ref={room}
@@ -200,6 +204,7 @@ interface ViewProps {
     room: RefObject<HTMLDivElement | null>
     /** The lyrics while they are shown, in the visualizer's place. */
     lyrics?: ReactNode
+    actions?: ReactNode
 }
 
 /** Shuffle, the transport and repeat, at a screen's size. */
@@ -218,7 +223,7 @@ function Transport({ deck }: { deck: Deck }) {
  * transport and the volume across the head; the visualizer filling the middle; the waveform, tall
  * and as wide as the screen, along the foot. On a phone the transport moves under the waveform.
  */
-function RowsView({ deck, visualizer, kind, phone, room, lyrics, width }: ViewProps & { width: number }) {
+function RowsView({ deck, visualizer, kind, phone, room, lyrics, actions, width }: ViewProps & { width: number }) {
     // Short of a laptop's width, the transport and the volume move to a row under what plays.
     const tablet = !phone && width < TABLET
     return (
@@ -235,7 +240,7 @@ function RowsView({ deck, visualizer, kind, phone, room, lyrics, width }: ViewPr
             >
                 <div className={cn('flex min-w-0 items-end', phone ? 'gap-4' : 'gap-6', tablet && 'col-span-2')}>
                     <Cover deck={deck} size={phone ? 72 : 144} className="rounded-surface shadow-pop" />
-                    <ScreenWords deck={deck} phone={phone} className="pb-0.5" />
+                    <ScreenWords deck={deck} phone={phone} actions={actions} className="pb-0.5" />
                 </div>
                 {!phone && (
                     <>
@@ -268,7 +273,7 @@ function RowsView({ deck, visualizer, kind, phone, room, lyrics, width }: ViewPr
  * screen and fades into the ground under the words, with the waveform and the transport along
  * the foot.
  */
-function PanelView({ deck, visualizer, kind, phone, room, lyrics }: ViewProps) {
+function PanelView({ deck, visualizer, kind, phone, room, lyrics, actions }: ViewProps) {
     const cover = phone ? 88 : 208
     return (
         <>
@@ -290,7 +295,7 @@ function PanelView({ deck, visualizer, kind, phone, room, lyrics }: ViewProps) {
                 )}
                 <div className={cn('absolute inset-x-0 bottom-0 flex min-w-0 items-end', phone ? 'gap-4 px-5' : 'gap-7 px-10')}>
                     <Cover deck={deck} size={cover} className="rounded-surface shadow-pop" />
-                    <ScreenWords deck={deck} phone={phone} className="pb-1" />
+                    <ScreenWords deck={deck} phone={phone} actions={actions} className="pb-1" />
                 </div>
             </div>
             <div className={cn('relative flex flex-col', phone ? 'gap-5 px-5 pt-5 pb-6' : 'gap-7 px-10 pt-7 pb-8')}>
@@ -316,7 +321,7 @@ function PanelView({ deck, visualizer, kind, phone, room, lyrics }: ViewProps) {
  * which spreads to either side of it (or rings it, the cover set in the ring's middle), and the
  * words, the waveform, the transport and the volume follow under it, centered.
  */
-function StageView({ deck, visualizer, kind, phone, room, lyrics, width, height }: ViewProps & { width: number; height: number }) {
+function StageView({ deck, visualizer, kind, phone, room, lyrics, actions, width, height }: ViewProps & { width: number; height: number }) {
     const band = Math.round(phone ? Math.min(width * 0.9, height * 0.4) : Math.min(height * 0.46, 440))
     const shown = visualizer !== undefined && visualizer !== null
     const ring = shown && kind === 'ring'
@@ -334,7 +339,7 @@ function StageView({ deck, visualizer, kind, phone, room, lyrics, width, height 
                 )}
             </div>
             <div className={cn('flex w-full flex-col items-center', phone ? 'gap-4' : 'max-w-3xl gap-5')}>
-                <ScreenWords deck={deck} phone={phone} center />
+                <ScreenWords deck={deck} phone={phone} actions={actions} center />
                 <Scrub deck={deck} height={phone ? 44 : 56} size={phone ? 'sm' : 'lg'} className="w-full" />
                 <div className="flex items-center justify-center gap-3">
                     <Transport deck={deck} />
