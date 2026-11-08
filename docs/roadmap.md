@@ -6,7 +6,11 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.9.2** is the latest release (2026-11-08): a fifth package, `@winterop-com/sokkel-ui-terminal`,
+- **0.9.3** is the latest release (2026-11-08): the validation round (`IssueCount` with a figure
+  per kind, `IssueMarks` along a long form's scroll area, `FormBar` verbs that wrap), Patterns/Validation,
+  a cancel button only with `onCancel` for an uploading file in `AttachmentList`, and mono in
+  `text-2xs` at the small share.
+- **0.9.2** (2026-11-08): a fifth package, `@winterop-com/sokkel-ui-terminal`,
   with an interactive `TerminalView` on xterm.js and the read-only `Terminal` moved onto it; `Search`
   with grouped results and a results page with facets; trees that load lazily, search the whole
   hierarchy and scroll at scale; maps over thousands of areas with labels; a terminal face for
