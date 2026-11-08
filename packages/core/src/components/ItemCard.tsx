@@ -26,6 +26,8 @@ export interface ItemCardProps {
     title?: ReactNode
     code?: string
     description?: ReactNode
+    /** A glyph on a tile of its own before the title, saying what kind of thing the card is. */
+    icon?: ReactNode
     /** Drawn edge to edge at the top: artwork, a preview. */
     media?: ReactNode
     status?: ReactNode
@@ -44,8 +46,9 @@ export interface ItemCardProps {
 
 /**
  * The card for one thing: a project, a job, an album, a plan. Its title is the thing's name, or its
- * code when it has none; the code is drawn once, in the code face. A description, a status and
- * facts at the foot follow, and media, such as artwork, may sit on top.
+ * code when it has none; the code is drawn once, in the code face. An icon on a tile may lead the
+ * title; a description, a status and facts at the foot follow, and media, such as artwork, may sit
+ * on top.
  *
  * Given `href` or `onSelect` the whole card is one control, washing on hover and drawing the
  * focus outline when reached by keyboard; `selected` marks the chosen card of a set, as a plan
@@ -57,6 +60,7 @@ export function ItemCard({
     title,
     code,
     description,
+    icon,
     media,
     status,
     facts,
@@ -97,6 +101,14 @@ export function ItemCard({
             )}
             <div className="pointer-events-none flex flex-1 flex-col gap-2 p-4">
                 <header className="flex items-start gap-2">
+                    {icon !== undefined && (
+                        <span
+                            aria-hidden
+                            className="mr-1 flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground [&_svg:not([class*='size-'])]:size-4"
+                        >
+                            {icon}
+                        </span>
+                    )}
                     <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                         <h3
                             ref={titleRef}

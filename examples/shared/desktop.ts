@@ -1,9 +1,31 @@
 import { desktopShell, type DesktopWindow } from '@winterop-com/sokkel-ui/lib/desktop'
+import { useMemo, useSyncExternalStore } from 'react'
 
 /** What Tauri v2 puts on every window, enough to call its window plugin without its API package. */
 interface TauriInternals {
     invoke: (command: string, args?: Record<string, unknown>) => Promise<unknown>
     metadata?: { currentWindow?: { label?: string } }
+}
+
+/** What the Electron shell's preload hands the page: the window's own full screen, as it changes. */
+interface ElectronWindow {
+    fullscreen: () => boolean
+    onFullscreen: (listener: (on: boolean) => void) => () => void
+}
+
+const electronWindow = () => (window as unknown as { tidevannWindow?: ElectronWindow }).tidevannWindow
+const followFullscreen = (listener: () => void) => electronWindow()?.onFullscreen(() => listener()) ?? (() => undefined)
+const inFullscreen = () => electronWindow()?.fullscreen() ?? false
+
+/**
+ * `desktopWindow()` followed as the window enters and leaves the system's full screen, which the
+ * Electron shell's preload reports (its green button or ⌃⌘F), so the room for the window's buttons
+ * goes while macOS hides them.
+ */
+export function useDesktopWindow(): DesktopWindow | undefined {
+    const base = useMemo(desktopWindow, [])
+    const fullscreen = useSyncExternalStore(followFullscreen, inFullscreen, () => false)
+    return useMemo(() => (base === undefined || electronWindow() === undefined ? base : { ...base, fullscreen }), [base, fullscreen])
 }
 
 /**

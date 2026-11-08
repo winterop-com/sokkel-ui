@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import { CalendarClock, ListChecks, Play } from 'lucide-react'
 import { useState } from 'react'
 
 import { ItemCard } from '@winterop-com/sokkel-ui/ItemCard'
@@ -57,6 +58,44 @@ function Plain() {
                 code="juniper"
                 description="A project with no name of its own shows its code as the title."
                 facts={[{ label: 'Jobs', value: '0' }]}
+            />
+        </Ground>
+    )
+}
+
+function Icons() {
+    return (
+        <Ground>
+            <ItemCard
+                icon={<ListChecks />}
+                title="Tasks"
+                code="tidevann-tasks"
+                href="#"
+                description="Lists, a quick add, and tasks edited in place."
+                facts={[
+                    { label: 'Open', value: '11' },
+                    { label: 'Due today', value: '4' },
+                ]}
+            />
+            <ItemCard
+                icon={<Play />}
+                title="Runs"
+                code="tidevann-runs"
+                href="#"
+                description="Job runs in a table, with a run opened beside it."
+                status={<StatusChip status="running" label="3 running" />}
+                facts={[
+                    { label: 'Today', value: '312' },
+                    { label: 'Failed', value: '2' },
+                ]}
+            />
+            <ItemCard
+                icon={<CalendarClock />}
+                title="Schedules"
+                code="tidevann-schedules"
+                href="#"
+                description="When each job runs next, and the runs it skipped."
+                facts={[{ label: 'Jobs', value: '18' }]}
             />
         </Ground>
     )
@@ -153,6 +192,8 @@ const meta: Meta = { title: 'Patterns/Cards', parameters: { frame: 'padded' } }
 export default meta
 
 export const Plain_: StoryObj = { name: 'Plain', render: () => <Plain /> }
+/** Cards led by an icon on a tile, saying what kind of thing each is; each leads to its app. */
+export const Icon_: StoryObj = { name: 'With icon', render: () => <Icons /> }
 export const Linked_: StoryObj = { name: 'Interactive', render: () => <Linked /> }
 export const Choose_: StoryObj = { name: 'Selectable', render: () => <Choose /> }
 export const Media_: StoryObj = { name: 'With media', render: () => <Media /> }

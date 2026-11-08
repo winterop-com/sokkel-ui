@@ -309,7 +309,7 @@ toggle-group, tooltip, trace.
 Shell, Rail, AppBar, SubNav, Page, PageHeader, PaneHeader, Toolbar, Section, Surface, the layout
 components (Stack, Row, Columns, Split, Fill), SplitPane, Field, TextField, DateField, TimeField,
 DateTimeField, NumberField, InlineField, SliderField, CheckboxField, CheckboxList, ChoiceList,
-CodeField, SwitchField, SearchField, FileField, FilterChip, FilterBar, SavedViews, FormBar, InlineEdit,
+CodeField, SwitchField, SearchField, QuickAdd, FileField, FilterChip, FilterBar, SavedViews, FormBar, InlineEdit,
 SelectionBar, DataTable, StatusChip, PersonAvatar, PersonRow, MetaLine, DueText, AttachmentList,
 IconButton, StarButton, SplitButton, DownloadButton, AccountMenu, SidePanel, DialogShell,
 ConfirmDialog, TreeSelect, AsyncSelect, CapabilityPicker, SignIn, RelativeTime, ApiLink, TagChips,
@@ -382,7 +382,12 @@ album view) that keeps the selection, menus and sort. A short listing drops the 
 head and may carry a foot line. Rows gather under group heads by a field or a key made from the row
 (`groupBy`), each head with its label, its count and a column's `aggregate`; a head folds its
 group, rows sort within their group, and a head's box selects the group, in the table, the list and
-the grid alike. Its column menu hides columns and moves them a place earlier or later, the first
+the grid alike. Below its stack width a row becomes a card of labeled lines, or with `stackLayout="compact"` a
+row of its leads (a done box) and its title over one quiet line of the other columns, its values
+edited on a press rather than drawn as fields; a stacked list keeps each row's box and menu. With no
+rows it says `empty`, a sentence or a node such as an `Empty` with an action. `QuickAdd` is the
+field at a list's top that adds a row on Enter, holding the text with a spinner while the app's
+promise runs and with the reason in its issue mark when it is refused. Its column menu hides columns and moves them a place earlier or later, the first
 column staying first as each row's title, and the order is held like the widths (`columnOrder`).
 
 A listing filters from a `FilterBar` in its table's bar: Filter adds a filter from a menu of the
