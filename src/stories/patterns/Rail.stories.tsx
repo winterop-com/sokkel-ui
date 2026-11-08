@@ -22,6 +22,8 @@ import { useState, type ReactNode } from 'react'
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { PersonAvatar } from '@winterop-com/sokkel-ui/PersonAvatar'
 import { Rail, type RailEntry, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
+import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
+import { Tree, type TreeNode } from '@winterop-com/sokkel-ui/Tree'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
@@ -189,6 +191,80 @@ const TEXT: RailGroup[] = [
     },
 ]
 
+/** Each project with its jobs under it, as the rail's body draws them on Jobs. */
+const PROJECT_JOBS: TreeNode[] = [
+    { id: 'harbor', label: 'harbor', jobs: ['nightly-export', 'sync-inventory', 'rebuild-index'] },
+    { id: 'juniper', label: 'juniper', jobs: ['send-digest', 'import-orders', 'nightly-export'] },
+    { id: 'larkspur', label: 'larkspur', jobs: ['rebuild-index', 'send-digest'] },
+].map((project) => ({
+    id: project.id,
+    label: project.label,
+    meta: project.jobs.length,
+    children: project.jobs.map((job) => ({ id: `${project.id}/${job}`, label: job })),
+}))
+
+/** The navigation with its places marked by the one shown. */
+const navAt = (place: string): RailGroup[] =>
+    NAV.map((group) => ({
+        ...group,
+        entries: group.entries.map((entry) => ({ ...entry, href: `#${entry.id}`, active: entry.id === place })),
+    }))
+
+/**
+ * The rail holding content of the app's own on Jobs: a tree of the projects and their jobs with its
+ * search, in place of the places, under All places, which shows the places again. A place chosen
+ * there leaves Jobs, and Jobs brings the tree back.
+ */
+function BodyRail() {
+    const [place, setPlace] = useState('jobs')
+    const [query, setQuery] = useState('')
+    const [job, setJob] = useState('harbor/rebuild-index')
+    return (
+        <Frame>
+            <Rail
+                mark={<TidevannMark />}
+                name="Tidevann"
+                groups={navAt(place)}
+                onCollapsedChange={() => undefined}
+                renderLink={(entry, children, className) => (
+                    <a
+                        href={entry.href}
+                        aria-current={entry.active ? 'page' : undefined}
+                        className={className}
+                        onClick={(event) => {
+                            event.preventDefault()
+                            setPlace(entry.id)
+                        }}
+                    >
+                        {children}
+                    </a>
+                )}
+                body={
+                    place === 'jobs'
+                        ? {
+                              title: 'Jobs',
+                              search: <SearchField value={query} onChange={setQuery} />,
+                              content: (
+                                  <Tree
+                                      label="Jobs"
+                                      nodes={PROJECT_JOBS}
+                                      query={query}
+                                      selected={[job]}
+                                      onSelect={([id]) => {
+                                          if (id !== undefined) setJob(id)
+                                      }}
+                                      defaultExpanded={['harbor', 'juniper']}
+                                  />
+                              ),
+                          }
+                        : undefined
+                }
+                foot={<AccountMenu name="ada" where="tidevann.example.org" onSettings={() => undefined} />}
+            />
+        </Frame>
+    )
+}
+
 /** The labeled strip: the workspace's tile at the top, each place an icon over its label with Home on a soft wash, and the foot's create button and account. */
 export const Strip: StoryObj = {
     render: () => (
@@ -320,3 +396,11 @@ export const NestedCollapsed: StoryObj = {
         </Frame>
     ),
 }
+
+/**
+ * Content of the app's own in the rail's body: on Jobs the rail holds a tree of the projects and
+ * their jobs, its search standing still over it, under All places, the row that shows every place
+ * again. The head, the width, the edge and the foot stay; collapsed, the rail draws the places'
+ * icons, since a tree has no icon form.
+ */
+export const Body: StoryObj = { render: () => <BodyRail /> }

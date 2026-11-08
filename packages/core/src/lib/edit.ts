@@ -4,8 +4,8 @@
  * and the keys are tested without a page.
  */
 
-/** Which control edits a value: a line of text, several lines, a number, a date, or one of a list. */
-export type EditorKind = 'text' | 'multiline' | 'number' | 'date' | 'select'
+/** Which control edits a value: a line of text, several lines, a number, a date, a time of day, or one of a list. */
+export type EditorKind = 'text' | 'multiline' | 'number' | 'date' | 'time' | 'select'
 
 /** One choice a select editor offers. */
 export interface EditOption {
@@ -17,8 +17,11 @@ export interface EditOption {
 /** A value an editor edits: text, a number, or null for none. */
 export type EditValue = string | number | null
 
-/** The value an editor of a kind gives: a number from `number` and a day (`YYYY-MM-DD`) from `date`, each null for none; text from the rest. */
-export type EditedValue<K extends EditorKind> = K extends 'number' ? number | null : K extends 'date' ? string | null : string
+/**
+ * The value an editor of a kind gives: a number from `number`, a day (`YYYY-MM-DD`) from `date` and
+ * a time of day (`HH:mm`) from `time`, each null for none; text from the rest.
+ */
+export type EditedValue<K extends EditorKind> = K extends 'number' ? number | null : K extends 'date' | 'time' ? string | null : string
 
 /** The words an editor says, in English unless an app passes its own. */
 export interface EditWords {
@@ -58,13 +61,13 @@ export function parseNumber(text: string): number | null | undefined {
     return Number.isFinite(value) ? value : undefined
 }
 
-/** The value a draft stands for, or why it cannot be one. A date's draft is the day its field read, or empty. */
+/** The value a draft stands for, or why it cannot be one. A date's or a time's draft is what its field read, or empty. */
 export function readDraft(
     draft: string,
     kind: EditorKind,
     words: Pick<EditWords, 'notNumber'> = EDIT_WORDS,
 ): { value: EditValue } | { error: string } {
-    if (kind === 'date') return { value: draft === '' ? null : draft }
+    if (kind === 'date' || kind === 'time') return { value: draft === '' ? null : draft }
     if (kind !== 'number') return { value: draft }
     const value = parseNumber(draft)
     return value === undefined ? { error: words.notNumber } : { value }

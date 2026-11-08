@@ -4,7 +4,9 @@ import { type DataAction, type DataColumn, DataTable } from '@winterop-com/sokke
 import { DueText } from '@winterop-com/sokkel-ui/DueText'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import { PageState } from '@winterop-com/sokkel-ui/PageState'
+import { Row } from '@winterop-com/sokkel-ui/Layout'
 import { PersonAvatar } from '@winterop-com/sokkel-ui/PersonAvatar'
+import { QuickAdd } from '@winterop-com/sokkel-ui/QuickAdd'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
@@ -15,8 +17,8 @@ import { Toolbar } from '@winterop-com/sokkel-ui/Toolbar'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
 import { placeCommands } from '@winterop-com/sokkel-ui/lib/commands'
 import { Checkbox } from '@winterop-com/sokkel-ui/primitives/checkbox'
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@winterop-com/sokkel-ui/primitives/empty'
-import { Input } from '@winterop-com/sokkel-ui/primitives/input'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@winterop-com/sokkel-ui/primitives/empty'
 import { CalendarDays, CheckIcon, Folder, Inbox, type LucideIcon, Plus, Sun, Trash2, Undo2 } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 
@@ -81,6 +83,8 @@ function columns(now: Date): DataColumn<Task>[] {
             header: 'Done',
             width: '3rem',
             resizable: false,
+            // Stacked on a phone, the box leads each row's title.
+            stack: 'lead',
             cell: (task) => (
                 <Checkbox
                     aria-label={task.done ? `Reopen ${task.title}` : `Mark ${task.title} done`}
@@ -93,7 +97,7 @@ function columns(now: Date): DataColumn<Task>[] {
             id: 'title',
             header: 'Title',
             width: 'minmax(14rem,1fr)',
-            cell: (task) => task.title,
+            cell: (task) => <span className={task.done ? 'text-muted-foreground line-through' : undefined}>{task.title}</span>,
             sortValue: (task) => task.title,
             edit: {
                 editor: 'text',
@@ -114,7 +118,12 @@ function columns(now: Date): DataColumn<Task>[] {
             id: 'assignee',
             header: 'Assignee',
             width: '8.5rem',
-            cell: (task) => <PersonAvatar name={task.assignee} label={task.assignee} size="sm" />,
+            cell: (task) => (
+                <Row gap="2xs" inline>
+                    <PersonAvatar name={task.assignee} size="2xs" />
+                    {task.assignee}
+                </Row>
+            ),
             sortValue: (task) => task.assignee,
             edit: {
                 editor: 'select',
@@ -139,7 +148,7 @@ function columns(now: Date): DataColumn<Task>[] {
     ]
 }
 
-/** Tasks: lists in the rail, a quick add, and tasks edited in place. */
+/** Tasks: lists in the rail, a quick add, and tasks edited in place, each a compact row on a phone. */
 export function TasksDemo({ frame }: { frame: Frame }) {
     const { settings, setSettings, resolved } = frame.appearance
     const dark = resolved === 'dark'
@@ -148,7 +157,6 @@ export function TasksDemo({ frame }: { frame: Frame }) {
     const list = LISTS.find((one) => one.id === frame.route[0]) ?? LISTS[0]
     const { rows, error } = useCollection(tasks)
     const [showDone, setShowDone] = useState(false)
-    const [draft, setDraft] = useState('')
     const quickAdd = useRef<HTMLInputElement>(null)
 
     const all = rows ?? []
@@ -182,12 +190,8 @@ export function TasksDemo({ frame }: { frame: Frame }) {
         ...frame.palette,
     ]
 
-    const add = () => {
-        const title = draft.trim()
-        if (title === '' || list === undefined) return
-        setDraft('')
-        void tasks.create({ title, assignee: 'ada', done: false, ...list.adds(today) })
-    }
+    const add = (title: string) =>
+        list === undefined ? undefined : tasks.create({ title, assignee: 'ada', done: false, ...list.adds(today) }).then(() => undefined)
 
     const actions = (task: Task): DataAction[] => [
         {
@@ -231,47 +235,40 @@ export function TasksDemo({ frame }: { frame: Frame }) {
             <Page className="h-full">
                 <PageHeader title={label} count={`${String(open)} open`} />
                 <Toolbar
-                    search={
-                        <Input
-                            ref={quickAdd}
-                            aria-label="Add a task"
-                            placeholder="Add a task and press Enter"
-                            value={draft}
-                            onChange={(event) => setDraft(event.target.value)}
-                            onKeyDown={(event) => {
-                                if (event.key === 'Enter') add()
-                            }}
-                        />
-                    }
+                    search={<QuickAdd inputRef={quickAdd} placeholder="Add a task" onAdd={add} />}
                     end={<SwitchField id="show-done" label="Show done" checked={showDone} onCheckedChange={setShowDone} />}
                 />
-                <PageState
-                    loading={rows === undefined && error === undefined}
-                    error={error}
-                    empty={shown.length === 0}
-                    emptyRender={
-                        <Empty>
-                            <EmptyHeader>
-                                <EmptyMedia variant="icon">{list === undefined ? null : <list.icon aria-hidden />}</EmptyMedia>
-                                <EmptyTitle>Nothing in {label}</EmptyTitle>
-                                <EmptyDescription>
-                                    {hiddenDone > 0
-                                        ? `${String(hiddenDone)} done ${hiddenDone === 1 ? 'task is' : 'tasks are'} hidden. Add one above, or show the done ones.`
-                                        : 'Add one above, and it lands here.'}
-                                </EmptyDescription>
-                            </EmptyHeader>
-                        </Empty>
-                    }
-                >
+                <PageState loading={rows === undefined && error === undefined} error={error}>
                     <DataTable
                         className="min-h-0 flex-1"
                         variant="list"
                         minWidth="auto"
+                        stackLayout="compact"
                         columns={columns(now)}
                         rows={shown}
                         rowKey={(task) => task.id}
                         rowActions={actions}
                         editing={tableEditing}
+                        empty={
+                            <Empty>
+                                <EmptyHeader>
+                                    <EmptyMedia variant="icon">{list === undefined ? null : <list.icon aria-hidden />}</EmptyMedia>
+                                    <EmptyTitle>Nothing in {label}</EmptyTitle>
+                                    <EmptyDescription>
+                                        {hiddenDone > 0
+                                            ? `${String(hiddenDone)} done ${hiddenDone === 1 ? 'task is' : 'tasks are'} hidden. Add one above, or show the done ones.`
+                                            : 'Add one above, and it lands here.'}
+                                    </EmptyDescription>
+                                </EmptyHeader>
+                                {hiddenDone > 0 && (
+                                    <EmptyContent>
+                                        <Button variant="outline" size="sm" onClick={() => setShowDone(true)}>
+                                            Show done
+                                        </Button>
+                                    </EmptyContent>
+                                )}
+                            </Empty>
+                        }
                     />
                 </PageState>
             </Page>

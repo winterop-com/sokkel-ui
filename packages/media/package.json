@@ -78,6 +78,10 @@
             "types": "./dist/TrackList.d.ts",
             "import": "./dist/TrackList.js"
         },
+        "./UpNext": {
+            "types": "./dist/UpNext.d.ts",
+            "import": "./dist/UpNext.js"
+        },
         "./use-frame-position": {
             "types": "./dist/use-frame-position.d.ts",
             "import": "./dist/use-frame-position.js"

@@ -18,7 +18,7 @@ export type StatusColor = 'good' | 'critical' | 'warning' | 'info' | 'neutral' |
 
 /** One state an app names: the words it is said in and the color it is drawn in. */
 export interface StatusDefinition {
-    /** The words, lowercase as a chip says them. Without it the state's own name is said, underscores as spaces. */
+    /** The words, in lower case as a chip says them. Without it the state's own name is said, underscores as spaces. */
     label?: string
     color: StatusColor
 }

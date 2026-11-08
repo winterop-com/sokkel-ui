@@ -15,7 +15,10 @@ export interface Row {
 
 export interface Collection<T extends Row> {
     list(): Promise<T[]>
-    create(fields: Omit<T, 'id'>): Promise<T>
+    /** Adds a row under `id`, or under an id the backend makes. */
+    create(fields: Omit<T, 'id'>, id?: string): Promise<T>
+    /** Adds several rows at once, each under its own id, as one change. */
+    insert(rows: readonly T[]): Promise<T[]>
     update(id: string, patch: Partial<Omit<T, 'id'>>): Promise<T>
     remove(id: string): Promise<void>
     /** Hears every change, with the rows as they now are; returns the call that stops it. */
@@ -71,12 +74,17 @@ export function collection<T extends Row>(name: string, seed: () => T[]): Collec
     collections.push({ reset: () => save(seed()) })
     return {
         list: () => later(() => [...rows()]),
-        create: (fields) =>
+        create: (fields, id) =>
             later(() => {
                 made += 1
-                const row = { ...fields, id: `${name}-${Date.now().toString(36)}-${String(made)}` } as T
+                const row = { ...fields, id: id ?? `${name}-${Date.now().toString(36)}-${String(made)}` } as T
                 save([row, ...rows()])
                 return row
+            }),
+        insert: (added) =>
+            later(() => {
+                save([...added, ...rows()])
+                return [...added]
             }),
         update: (id, patch) =>
             later(() => {

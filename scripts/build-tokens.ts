@@ -83,12 +83,10 @@ files.set(
         HEADER,
         '@custom-variant dark (&:is(.dark *));\n',
         block(['@theme inline'], tokens.theme),
-        block([':root'], base.light),
-        block(['.dark'], base.dark),
         // Every scope, of whichever theme, starts from tidevann's whole set, so no token of the
         // page's theme reaches into it; `:where` keeps these under any theme's own scope rule.
-        block([':where([data-theme-scope])'], base.light),
-        block([':where(.dark [data-theme-scope])'], base.dark),
+        block([':root', ':where([data-theme-scope])'], base.light),
+        block(['.dark', ':where(.dark [data-theme-scope])'], base.dark),
         block([':root'], prefixed(tokens.density[tokens.density.default] as Vars)),
         ...levels.map((level) => block([`html[data-density='${level}']`], prefixed(tokens.density[level] as Vars))),
     ].join('\n'),

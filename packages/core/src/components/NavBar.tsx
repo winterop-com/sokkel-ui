@@ -76,7 +76,7 @@ export function NavBar({
                                             renderLink(
                                                 link,
                                                 cn(
-                                                    'flex h-9 items-center rounded-md px-2 text-sm outline-none data-[highlighted]:bg-hover',
+                                                    'flex h-9 items-center rounded-md px-2 text-sm outline-none data-highlighted:bg-hover',
                                                     link.active === true && 'font-medium text-primary-ink',
                                                 ),
                                             ) as React.ReactElement

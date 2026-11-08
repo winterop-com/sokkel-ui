@@ -38,12 +38,12 @@ viewer's caption settings through `useStored` or an app's store, with the option
 in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second by `useVideoStats`
 (`@winterop-com/sokkel-ui/media/video-stats`) for `VideoStatsOverlay`.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 231 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 232 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 10 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 11 modules
 - [`@winterop-com/sokkel-ui-terminal`](#winterop-com-sokkel-ui-terminal): 2 modules
-- [`@winterop-com/sokkel-ui-media`](#winterop-com-sokkel-ui-media): 10 modules
+- [`@winterop-com/sokkel-ui-media`](#winterop-com-sokkel-ui-media): 11 modules
 
 ## @winterop-com/sokkel-ui
 
@@ -238,6 +238,7 @@ in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second 
 | **PeopleFilter** | `@winterop-com/sokkel-ui/PeopleFilter` | People as overlapping avatars that filter a board or a list: pressing one shows only that person's items, more than one can be on, and once any is on the others fade until hovered. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-board--cards) |
 | **PeriodPicker** | `@winterop-com/sokkel-ui/PeriodPicker` | The period a report is made for: the recent periods of its type, newest first, each with its id in the code face, and Other period last, which opens a field where any id is typed. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-period-picker--empty) |
 | **PermissionMatrix** | `@winterop-com/sokkel-ui/PermissionMatrix` | Roles against permissions as a grid of checkboxes: a column per role, a row per permission, the rows grouped by what they act on with each group's row counting what every role holds of it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-access--secret) |
+| **QuickAdd** | `@winterop-com/sokkel-ui/QuickAdd` | The field at the top of a list that adds a row: type, press Enter, and the field empties for the next one. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-quick-add--field) |
 | **SaveBar** | `@winterop-com/sokkel-ui/SaveBar` | The bar pinned to the foot of a page while its edits are not yet saved: how many there are at the left, Discard and Save at the right. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-access--secret) |
 | **SavedViews** | `@winterop-com/sokkel-ui/SavedViews` | The saved views of a listing: a menu that names the chosen view, lists the others to pick, and saves the listing now as a new view, renames the chosen one or deletes it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-saved-views--chosen) |
 | **Search**, SearchResultBody, SearchPreview, SearchGroupHeading | `@winterop-com/sokkel-ui/Search` | The one search for a page, built on `SearchField`: as words are typed the app's `search` is asked, and its results open in a popover under the field, grouped by kind, each with its thumbnail or icon, its title with the query's words marked and a line under it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-search--open) |
@@ -486,4 +487,5 @@ in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second 
 | **MediaCard**, MediaGrid | `@winterop-com/sokkel-ui-media/MediaCard` | One album, film or episode in a grid: the cover first, then its title and a line under it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-media-card--albums) |
 | **MediaFullscreen** | `@winterop-com/sokkel-ui-media/MediaFullscreen` | The player's now-playing view over the whole screen, opened from the bar: what plays at full size, the visualizer at full strength, the waveform and the transport, arranged after the bar's layout. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-lyrics--timed) (in MediaBar) |
 | **TrackList** | `@winterop-com/sokkel-ui-media/TrackList` | A list of tracks or episodes: the number or a small picture, the title over an optional second line, a quiet meta column, and the length in the code face at the end. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-track-list--numbered) |
+| **UpNext** | `@winterop-com/sokkel-ui-media/UpNext` | What plays next, offered over the picture as a video ends: its artwork, its title and a line under it, a countdown to playing it by itself, Play now and Cancel. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-video--paused-frame) |
 | **VideoStatsOverlay** | `@winterop-com/sokkel-ui-media/VideoStatsOverlay` | How a video is playing, in a few lines over its picture: the picture's size, the rendition's bitrate, the link's bandwidth as the engine measures it, the seconds buffered ahead and the frames dropped. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-video--paused-frame) |
