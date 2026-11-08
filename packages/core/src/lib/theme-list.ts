@@ -2,7 +2,7 @@
 
 /** Every theme in the tokens, by the name `data-theme` takes and the label a picker shows. */
 export const THEME_LIST: readonly { value: string; label: string }[] = [
-    { value: 'default', label: 'Default' },
+    { value: 'tidevann', label: 'Tidevann' },
     { value: 'amber', label: 'Amber' },
     { value: 'paper', label: 'Paper' },
     { value: 'contrast', label: 'Contrast' },

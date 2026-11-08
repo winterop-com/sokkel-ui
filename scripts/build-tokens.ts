@@ -2,21 +2,22 @@
  * Write the core package's token CSS from its tokens/tokens.json, the one place a token is defined.
  * Under packages/core:
  *
- *   src/styles/tokens.css           the default theme and the density levels, which styles.css carries
+ *   src/styles/tokens.css           tidevann, the base theme, and the density levels, which styles.css carries
  *   src/styles/themes/<name>.css    every other theme, one file each, so an app carries only the themes it imports
  *   src/styles/themes.css           every theme's file, for an app that offers them all
  *   src/lib/theme-list.ts           every theme's name and label, for a theme picker
  *
- * `default` answers on `:root` and `.dark`. Every other theme answers on `html[data-theme]` for
- * the whole app, overriding what it changes; a token it sets in light but not in dark takes the
- * default's dark value, so a theme never carries a light value into dark mode. Every theme also
- * answers on `[data-theme-scope]` for one element and what is inside it, as a theme picker's
- * preview swatch is, in the same rule as its `html` one: every scope first takes the default's
- * whole set, at no specificity, so a scope shows its own theme whatever the page around it wears,
- * and its theme's overrides go over that. A theme may override any token, the density levels'
- * included.
+ * `tidevann`, the base theme, answers on `:root` and `.dark`, so a page with no `data-theme` wears
+ * it, and so do `html[data-theme='tidevann']` and `[data-theme-scope='tidevann']`. Every other theme
+ * answers on `html[data-theme]` for the whole app, overriding what it changes; a token it sets in
+ * light but not in dark takes tidevann's dark value, so a theme never carries a light value into
+ * dark mode. Every theme also answers on `[data-theme-scope]` for one element and what is inside
+ * it, as a theme picker's preview swatch is, in the same rule as its `html` one: every scope first
+ * takes tidevann's whole set, at no specificity, so a scope shows its own theme whatever the page
+ * around it wears, and its theme's overrides go over that. A theme may override any token, the
+ * density levels' included.
  *
- * The default sets its surfaces (canvas, node, panel ground and line, critical wash) as fixed
+ * Tidevann sets its surfaces (canvas, node, panel ground and line, critical wash) as fixed
  * colors; every other theme takes them from `derived`, mixed from its own colors, unless it sets
  * one itself.
  *
@@ -46,10 +47,12 @@ function block(selectors: string[], vars: Vars): string {
     return `${selectors.join(',\n')} {\n${lines.join('\n')}\n}\n`
 }
 
-const base = tokens.themes.default
-if (base === undefined) throw new Error('tokens.json has no default theme')
+/** The base theme, which defines every token. */
+const BASE = 'tidevann'
+const base = tokens.themes[BASE]
+if (base === undefined) throw new Error(`tokens.json has no ${BASE} theme`)
 const others = Object.entries(tokens.themes)
-    .filter(([name]) => name !== 'default')
+    .filter(([name]) => name !== BASE)
     .map(([name, theme]) => [name, withDerived(theme)] as const)
 
 /** A theme with the derived surfaces under what it sets itself. */
@@ -58,7 +61,7 @@ function withDerived(theme: { light: Vars; dark: Vars }): { light: Vars; dark: V
     return { light: { ...own(tokens.derived.light), ...theme.light }, dark: { ...own(tokens.derived.dark), ...theme.dark } }
 }
 
-/** A theme's dark tokens, with the default's dark value for every token it sets in light alone. */
+/** A theme's dark tokens, with tidevann's dark value for every token it sets in light alone. */
 function darkOf(theme: { light: Vars; dark: Vars }): Vars {
     const dark: Vars = { ...theme.dark }
     for (const key of Object.keys(theme.light)) {
@@ -82,7 +85,7 @@ files.set(
         block(['@theme inline'], tokens.theme),
         block([':root'], base.light),
         block(['.dark'], base.dark),
-        // Every scope, of whichever theme, starts from the default's whole set, so no token of the
+        // Every scope, of whichever theme, starts from tidevann's whole set, so no token of the
         // page's theme reaches into it; `:where` keeps these under any theme's own scope rule.
         block([':where([data-theme-scope])'], base.light),
         block([':where(.dark [data-theme-scope])'], base.dark),
@@ -92,7 +95,7 @@ files.set(
 )
 
 // A theme's overrides, once for light and once for dark, each on the whole app's `html` and on one
-// element's scope. Its selectors outrank the default on `:root` and the scopes' default set
+// element's scope. Its selectors outrank tidevann on `:root` and the scopes' tidevann set
 // wherever the file is imported.
 for (const [name, theme] of others) {
     files.set(
@@ -107,7 +110,7 @@ for (const [name, theme] of others) {
 
 files.set(join(STYLES, 'themes.css'), [HEADER, ...others.map(([name]) => `@import './themes/${name}.css';\n`)].join(''))
 
-// Every theme by name and label, the default first, as a picker offers them. A theme's label is its
+// Every theme by name and label, tidevann first, as a picker offers them. A theme's label is its
 // `$label`, or its name with a capital.
 const label = (name: string, theme: { $label?: string }) => theme.$label ?? name.charAt(0).toUpperCase() + name.slice(1)
 const quote = (text: string) => `'${text.replaceAll('\\', '\\\\').replaceAll("'", "\\'")}'`

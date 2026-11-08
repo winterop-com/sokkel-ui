@@ -37,7 +37,7 @@ export interface Face {
     monoXSmall?: string
 }
 
-/** Every theme in the tokens, the default first, each drawn with its swatch. */
+/** Every theme in the tokens, tidevann first, each drawn with its swatch. */
 export const THEMES: readonly ThemeOption[] = THEME_LIST.map((theme) => ({ ...theme, swatch: true }))
 
 /** The corner radii offered over the theme's own. */
@@ -75,9 +75,12 @@ export const TYPEFACES: readonly ThemeOption[] = [
     ...Object.entries(FACES).map(([value, face]) => ({ value, label: face.label })),
 ]
 
-/** The look before anything is chosen: the default theme, following the system's scheme and motion. */
+/** The base theme, which `<html>` wears without a `data-theme`. */
+const BASE_THEME = 'tidevann'
+
+/** The look before anything is chosen: tidevann, the base theme, following the system's scheme and motion. */
 export const DEFAULT_APPEARANCE: Readonly<ThemeSettings> = {
-    theme: 'default',
+    theme: BASE_THEME,
     scheme: 'system',
     density: 'regular',
     corners: 'theme',
@@ -149,14 +152,14 @@ export function applyScheme(resolved: ResolvedScheme, root: AppearanceRoot | und
 
 /**
  * Writes the whole look on `<html>`: `.dark` for the scheme (the system's for `system`), `data-theme`
- * unless the default, `data-density`, `data-motion` unless the system's, `--radius` unless the
- * theme's, and the typeface's variables unless the theme's. Whatever it does not set it clears, so
- * the look before leaves nothing behind.
+ * unless tidevann, the base theme, `data-density`, `data-motion` unless the system's, `--radius`
+ * unless the theme's, and the typeface's variables unless the theme's. Whatever it does not set it
+ * clears, so the look before leaves nothing behind.
  */
 export function applyAppearance(settings: ThemeSettings, root: AppearanceRoot | undefined = rootElement()): void {
     if (root === undefined) return
     applyScheme(resolveScheme(settings.scheme), root)
-    if (settings.theme === 'default') root.removeAttribute('data-theme')
+    if (settings.theme === BASE_THEME) root.removeAttribute('data-theme')
     else root.setAttribute('data-theme', settings.theme)
     root.setAttribute('data-density', settings.density)
     if (settings.motion === undefined || settings.motion === 'system') root.removeAttribute('data-motion')
@@ -372,7 +375,7 @@ function scriptWith(defaults: string): string {
         `f=${scriptJson(FACES)},`,
         `d=s==='dark'||(s!=='light'&&window.matchMedia(${scriptJson(DARK_QUERY)}).matches);`,
         "r.classList.toggle('dark',d);",
-        "if(typeof a.theme==='string'&&a.theme!=='default')r.setAttribute('data-theme',a.theme);",
+        `if(typeof a.theme==='string'&&a.theme!==${scriptJson(BASE_THEME)})r.setAttribute('data-theme',a.theme);`,
         "if(typeof a.density==='string')r.setAttribute('data-density',a.density);",
         "if(a.motion==='on'||a.motion==='off')r.setAttribute('data-motion',a.motion);",
         "if(typeof a.corners==='string'&&a.corners!=='theme')r.style.setProperty('--radius',a.corners);",
