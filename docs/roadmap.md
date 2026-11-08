@@ -149,6 +149,11 @@ Settle before 1.0:
   constants go private.
 - **Types.** A `*Props` type exported from every component.
 - **A changelog.** `CHANGELOG.md` with each release's breaking changes, from 1.0 on.
+- **Open source.** The library is open source from 1.0: an open license in `LICENSE` and every
+  `package.json`, published where anyone can install it without a token (the npm registry, or
+  public GitHub Packages with that said plainly), a contributing guide built from `AGENTS.md`, and
+  a last sweep of the code, the stories, the fixtures and the history for anything private or any
+  app's name.
 
 Should:
 
