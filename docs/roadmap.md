@@ -74,6 +74,17 @@ to `plan.md` when it ships.
 - **The remaining hand-drawn tables.** `FilePreview` (CSV), `ScoreTable` and `ChartLegend` draw
   tables of their own; move them onto `DataTable`. `PermissionMatrix` may stay a matrix; decide.
 
+- **Phone layouts, from the 2026-11-08 review** (the app stories at 390px), each fixed in its
+  component by container width: `DataTable`'s toolbar (search on its own row, count and sort
+  compact, filters wrapping) and its cards (a primary value over several lines, secondary facts,
+  labels optional); `FilterChip` labels on one line; a short `ConfirmDialog` sized to its content,
+  its actions in a row or full width; one `PageHeader` action beside the title; a phone page inset
+  of 12 to 16px; `SettingRow` with a trailing toggle or a control under the description; `MediaCard`
+  without a fixed two-line title in one column; `MessageComposer`'s tools overflowing into a More
+  menu; an opaque sticky day divider in chat; `EventPopover` with equal margins; `WeekGrid` showing
+  only titles in narrow lanes; gauges two to a row; `MermaidDiagram` with a smallest label size,
+  sideways scrolling and an expand button.
+
 ## Later
 
 - **Screenshot comparison back in CI.** Off since 0.9.3 while the looks still move; the
