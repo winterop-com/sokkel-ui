@@ -4,7 +4,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type ReactNo
 import { cn } from '../lib/cn'
 import { CommandRegistry, useCommandRegistry } from '../hooks/use-commands'
 import { usePaletteShortcut } from '../hooks/use-palette-shortcut'
-import { hasTrafficLights, trafficLightsStyle, windowPressHandler, type DesktopWindow } from '../lib/desktop'
+import { trafficLightsStyle, useTrafficLights, windowPressHandler, type DesktopWindow } from '../lib/desktop'
 import type { PaletteGroup, PaletteSearch } from './CommandPalette'
 import { ShellDesktop, ShellFootCell, ShellPalette } from './shell-context'
 
@@ -110,7 +110,7 @@ export function Shell({
     const commandRegistry = useCommandRegistry()
     const screenGroups = commandRegistry.groups
     const groups = useMemo(() => (palette === undefined ? [] : [...screenGroups, ...palette]), [palette, screenGroups])
-    const lights = hasTrafficLights(desktop)
+    const lights = useTrafficLights(desktop)
     const [paletteOpen, setPaletteOpen] = useState(defaultPaletteOpen)
     // Drawn from its first opening on, so it can close with its own animation.
     const [paletteShown, setPaletteShown] = useState(defaultPaletteOpen)
