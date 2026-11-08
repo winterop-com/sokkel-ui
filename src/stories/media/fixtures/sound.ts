@@ -19,3 +19,18 @@ export const WAVE_SAMPLES: readonly number[] = Array.from({ length: 640 }, (_, i
 
 /** The still frame the stories draw. */
 export const FRAME: SoundFrame = { levels: SPECTRUM_LEVELS, samples: WAVE_SAMPLES }
+
+/** How many frames a hit takes to fall away. */
+const FALL = 8
+
+/**
+ * A hit falling away, one frame per sixtieth of a second: the moment of music lifted at first and
+ * settling a little lower each frame, the highs faster than the lows, the wave shrinking with it.
+ */
+export const FALLING: readonly SoundFrame[] = Array.from({ length: FALL }, (_, step) => {
+    const fallen = step / (FALL - 1)
+    return {
+        levels: SPECTRUM_LEVELS.map((level, index) => unit(level * (1.12 - fallen * (0.3 + 0.25 * (index / 63))))),
+        samples: WAVE_SAMPLES.map((sample) => sample * (1.25 - 0.45 * fallen)),
+    }
+})
