@@ -15,8 +15,12 @@ describe('Shell', () => {
     })
 
     it('clips both of its roots, so nothing inside can make the page scroll', () => {
-        const roots = SOURCE.match(/className="relative (flex|grid) h-svh[^"]*"/g) ?? []
+        const roots = SOURCE.match(/className="(?:group\/shell )?relative (flex|grid) h-svh[^"]*"/g) ?? []
         expect(roots).toHaveLength(2)
         for (const root of roots) expect(root).toContain('overflow-hidden')
+    })
+
+    it('marks the column its rail stands in, which the top bar reads to leave the room for the window buttons', () => {
+        expect(SOURCE.match(/<div data-shell-rail /g) ?? []).toHaveLength(2)
     })
 })

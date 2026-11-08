@@ -77,6 +77,24 @@ Ctrl K through `Shell`'s `palette`, an `AccountMenu` in the rail's foot, `local`
 sign-in, and a `StatusLine` as the shell's `foot`, which the account sits level with as one bar
 across the window's bottom edge.
 
+A screen adds what only it can do to the palette with `useCommands(groups, deps)` while it is
+mounted and takes it away when it unmounts; the shell holds the registry and lists those groups with
+its own by each group's `rank`, a screen's first at equal rank, groups of one title as one. An app
+that draws its own palette holds a registry with `useCommandRegistry`. A palette row with a `detail`
+or `artwork` (an image's address or a node, round for a person) is two lines tall, drawn as a search
+result is, and the palette's search results take `artwork` too.
+
+In a desktop window whose native title bar is hidden (Electron's `hiddenInset`, Tauri's
+`Overlay`), `Shell`'s `desktop` makes its top strip, the rail's head, the top bar and an open
+panel's header, the window's title bar. Electron moves the window from it through
+`-webkit-app-region: drag`, every control in it opted out; WKWebView ignores that, so a press on the
+strip outside its controls calls the app's `onWindowDrag` (Tauri's `startDragging`) and a double
+click its `onWindowZoom`. `trafficLights` leaves room at the strip's start for the buttons macOS
+draws there (`--spacing-traffic-lights`, 80px, or the app's pixels): in the rail's head, in the top
+bar where no rail shows, and where a collapsed rail is narrower than the room its head stays empty
+under the buttons, its mark below. `SignIn` and `AppBar` take the same `desktop`. The library
+imports no desktop shell; `isDesktopShell` in `lib/desktop` reads which one a page runs in.
+
 ## Code
 
 Code is colored from the `code-*` tokens (keyword, operator, punctuation, string, regexp, number,

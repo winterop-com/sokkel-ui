@@ -58,7 +58,9 @@ place. It has four parts, and an app has all four from its first screen:
 - **The command palette**, always there: `Shell`'s `palette` takes its groups and opens it on ⌘K
   (Ctrl K off a Mac) and from `TopBar`'s search in the top right corner, which shows the key.
   `placeCommands` makes its "Go to" group from the rail's groups, and `appearanceCommands` its
-  scheme, density and theme commands, so an app's places and look come for free.
+  scheme, density and theme commands, so an app's places and look come for free. A screen adds
+  its own groups while it is mounted with `useCommands(groups, deps)` from `hooks/use-commands`,
+  placed by each group's `rank`; a command with a `detail` or `artwork` is a two-line row.
 - **An `AccountMenu`** in the rail's foot, always there, before the app has sign-in too: then it is
   `local`, named for the local user or "Local", with a neutral avatar, settings and appearance, and
   no sign-out. The place is held, and the frame looks the same in every app.
@@ -66,6 +68,13 @@ place. It has four parts, and an app has all four from its first screen:
   or the server's state, the active model or project, background work, the version. With it, the
   `AccountMenu` sits in the bottom-left corner level with the strip, so the account and the status
   read as one bar across the window. An app without a foot looks unfinished.
+
+In a desktop shell (Electron or Tauri) with the native title bar hidden, give `Shell` (and `SignIn`
+or `AppBar`) `desktop`: the top strip becomes the window's drag region (`-webkit-app-region` for
+Electron), `trafficLights: true` on macOS leaves room for the window's buttons, and where the
+webview ignores `app-region` (Tauri on macOS) `onWindowDrag` and `onWindowZoom` call the app's own
+window API, such as `getCurrentWindow().startDragging()`. `isDesktopShell()` in `lib/desktop` says
+whether the page runs in one. The library never imports the shell.
 
 The look is kept by `useAppearance`, called in the app's root: it reads the theme, scheme,
 density, corners, typeface and motion from `localStorage`, follows the system's scheme until one is

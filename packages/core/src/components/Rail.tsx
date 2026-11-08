@@ -15,8 +15,9 @@ import {
 import { createPortal } from 'react-dom'
 
 import { cn } from '../lib/cn'
+import { hasTrafficLights } from '../lib/desktop'
 import { usePanelSize } from '../hooks/use-panel-size'
-import { ShellFootCell } from './shell-context'
+import { ShellDesktop, ShellFootCell } from './shell-context'
 import { ResizeHandle } from './ResizeHandle'
 import { Count } from './Count'
 import { Dot } from './Dot'
@@ -103,6 +104,11 @@ const WORDS: RailWords = {
  *
  * `renderLink` draws an entry's link, so an app passes its router's link; by default it is an
  * anchor.
+ *
+ * In a `Shell` with `desktop`, the rail's head is part of the window's title strip and drags the
+ * window. With `trafficLights` the head leaves room at its start for the window's buttons; a
+ * collapsed rail or a strip, narrower than that room, keeps its head empty under the buttons, its
+ * mark just below it and its edge undrawn between them.
  */
 export function Rail({
     mark,
@@ -161,6 +167,9 @@ export function Rail({
 }) {
     const aside = useRef<HTMLElement>(null)
     const footCell = useContext(ShellFootCell)
+    const desktop = useContext(ShellDesktop)
+    const lights = hasTrafficLights(desktop)
+    const drag = desktop === undefined ? undefined : ''
     const words = { ...WORDS, ...given }
     const unread = words.unread
     const [ownOpen, setOwnOpen] = useState<string[]>(() => [
@@ -188,7 +197,33 @@ export function Rail({
         max: maxSize,
     })
     if (variant === 'strip')
-        return <Strip mark={mark} name={name} groups={groups} foot={foot} renderLink={renderLink} unread={unread} flyout={defaultFlyout} />
+        return (
+            <Strip
+                mark={mark}
+                name={name}
+                groups={groups}
+                foot={foot}
+                renderLink={renderLink}
+                unread={unread}
+                flyout={defaultFlyout}
+                drag={drag}
+                lights={lights}
+            />
+        )
+    // Collapsed, the rail is narrower than the window's buttons: its mark stands under the strip.
+    const under = collapsed && lights
+    const expand = (
+        <button
+            type="button"
+            aria-label={words.expand}
+            title={words.expand}
+            className="group/mark relative mx-auto flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground"
+            onClick={() => onCollapsedChange?.(false)}
+        >
+            {mark !== undefined && <span className="group-hover/mark:opacity-0">{mark}</span>}
+            <PanelLeftOpen className={cn('absolute size-4', mark !== undefined && 'opacity-0 group-hover/mark:opacity-100')} aria-hidden />
+        </button>
+    )
     return (
         <>
             <aside
@@ -200,21 +235,16 @@ export function Rail({
                     collapsed && 'w-[calc(3.5rem+1px)]',
                 )}
             >
-                <div className="flex h-shell-top shrink-0 items-center gap-2 px-3">
+                <div
+                    data-window-drag={drag}
+                    className={cn(
+                        'flex h-shell-top shrink-0 items-center gap-2 px-3',
+                        lights && !collapsed && 'ps-(--spacing-traffic-lights)',
+                        under && UNDRAWN_EDGE,
+                    )}
+                >
                     {collapsed ? (
-                        <button
-                            type="button"
-                            aria-label={words.expand}
-                            title={words.expand}
-                            className="group/mark relative mx-auto flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground"
-                            onClick={() => onCollapsedChange?.(false)}
-                        >
-                            {mark !== undefined && <span className="group-hover/mark:opacity-0">{mark}</span>}
-                            <PanelLeftOpen
-                                className={cn('absolute size-4', mark !== undefined && 'opacity-0 group-hover/mark:opacity-100')}
-                                aria-hidden
-                            />
-                        </button>
+                        !under && expand
                     ) : (
                         <>
                             {mark !== undefined && (
@@ -237,6 +267,7 @@ export function Rail({
                         </>
                     )}
                 </div>
+                {under && <div className="flex shrink-0 justify-center py-1">{expand}</div>}
                 <div className="min-h-0 flex-1 overflow-y-auto pb-3">
                     {groups.map((group) => (
                         <nav key={group.id} aria-label={group.title ?? name} className="flex flex-col gap-1 px-2">
@@ -305,6 +336,9 @@ export function Rail({
 }
 
 type RenderLink = (entry: RailEntry, children: ReactNode, className: string) => ReactNode
+
+/** Covers the rail's edge along its head, where the window's buttons straddle it, in the rail's own ground. */
+const UNDRAWN_EDGE = 'relative after:absolute after:inset-y-0 after:-right-px after:w-px after:bg-sidebar'
 
 /** Whether one of a parent's entries is the active one. */
 function holdsActive(entry: RailEntry): boolean {
@@ -614,6 +648,8 @@ function Strip({
     renderLink,
     unread,
     flyout,
+    drag,
+    lights,
 }: {
     mark?: ReactNode
     name: string
@@ -622,19 +658,28 @@ function Strip({
     renderLink: RenderLink
     unread: string
     flyout?: string
+    drag?: string
+    lights: boolean
 }) {
+    const tile = mark !== undefined && (
+        <span title={name} className="flex size-9 items-center justify-center rounded-md bg-primary text-primary-foreground">
+            {mark}
+        </span>
+    )
     return (
         <aside
             data-variant="strip"
             className="flex h-full w-18 shrink-0 flex-col border-r border-border-strong bg-sidebar text-sidebar-foreground [--avatar-ring:var(--color-sidebar)]"
         >
-            {mark !== undefined && (
-                <div className="flex h-shell-top shrink-0 items-center justify-center">
-                    <span title={name} className="flex size-9 items-center justify-center rounded-md bg-primary text-primary-foreground">
-                        {mark}
-                    </span>
+            {(mark !== undefined || lights) && (
+                <div
+                    data-window-drag={drag}
+                    className={cn('flex h-shell-top shrink-0 items-center justify-center', lights && UNDRAWN_EDGE)}
+                >
+                    {!lights && tile}
                 </div>
             )}
+            {lights && tile !== false && <div className="flex shrink-0 justify-center py-1">{tile}</div>}
             <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-1 py-2">
                 {groups.map((group, index) => (
                     <nav key={group.id} aria-label={group.title ?? name} className="flex flex-col gap-3">
