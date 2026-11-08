@@ -39,7 +39,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@winterop-com/sokkel-ui/primitives/select'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import type { KindColor } from '@winterop-com/sokkel-ui/lib/kind'
-import { Artwork, type Cover } from '../fixtures/Artwork'
+import { Artwork, type ArtworkCover } from '@winterop-com/sokkel-ui/media/Artwork'
 import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import captions from '../media/fixtures/captions.vtt?url'
@@ -71,7 +71,7 @@ interface Video {
     views: string
     ago: string
     length: number
-    cover: Cover
+    cover: ArtworkCover
     watched?: number
 }
 

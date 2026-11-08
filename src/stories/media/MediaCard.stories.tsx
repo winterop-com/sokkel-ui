@@ -4,8 +4,9 @@ import { MediaCard, MediaGrid } from '@winterop-com/sokkel-ui/media/MediaCard'
 import { formatTime } from '@winterop-com/sokkel-ui/media/time'
 import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
 import { DropdownMenuItem } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
-import { Artwork, type Cover } from '../fixtures/Artwork'
+import { Artwork, type ArtworkCover } from '@winterop-com/sokkel-ui/media/Artwork'
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
+import { makeAlbums } from '../fixtures/albums'
 
 /**
  * Albums and videos as a grid of covers: square for an album, wide for a film or an episode, with
@@ -14,7 +15,7 @@ import { Stack } from '@winterop-com/sokkel-ui/Layout'
 const meta: Meta = { title: 'Media/Media card', parameters: { frame: 'padded' } }
 export default meta
 
-const ALBUMS: { title: string; artist: string; year: number; cover: Cover }[] = [
+const ALBUMS: { title: string; artist: string; year: number; cover: ArtworkCover }[] = [
     { title: 'Open Water', artist: 'Grace', year: 2025, cover: { motif: 'wave', from: 'blue', to: 'teal' } },
     { title: 'Northern Coast', artist: 'Ada', year: 2024, cover: { motif: 'sun', from: 'violet', to: 'pink' } },
     { title: 'High Desert', artist: 'Linus', year: 2024, cover: { motif: 'peaks', from: 'amber', to: 'coral' } },
@@ -56,7 +57,7 @@ export const Albums: StoryObj = {
     ),
 }
 
-const EPISODES: { title: string; length: number; watched?: number; cover: Cover }[] = [
+const EPISODES: { title: string; length: number; watched?: number; cover: ArtworkCover }[] = [
     { title: 'The First Light', length: 96, watched: 1, cover: { motif: 'sun', from: 'amber', to: 'pink' } },
     { title: 'Fishing Villages', length: 1712, watched: 0.42, cover: { motif: 'wave', from: 'blue', to: 'jade' } },
     { title: 'The Island Ferry', length: 1498, cover: { motif: 'rings', from: 'teal', to: 'blue' } },
@@ -133,5 +134,29 @@ export const Compact: StoryObj = {
                 ))}
             </MediaGrid>
         </div>
+    ),
+}
+
+const SHELF = makeAlbums(18)
+
+/**
+ * Albums with no picture, each wearing a cover drawn from its id: a motif and two of the theme's
+ * hues, the same for an album wherever it is drawn, so the shelf can still be told apart.
+ */
+export const WithoutCovers: StoryObj = {
+    name: 'Without covers',
+    render: () => (
+        <MediaGrid label="Albums">
+            {SHELF.map((album) => (
+                <MediaCard
+                    key={album.id}
+                    title={album.title}
+                    subtitle={<MetaLine inline items={[album.artist, album.year]} />}
+                    placeholderSeed={album.id}
+                    href="#"
+                    onPlay={() => undefined}
+                />
+            ))}
+        </MediaGrid>
     ),
 }

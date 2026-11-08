@@ -1,59 +1,82 @@
-import { useId } from 'react'
+import { useId, useState } from 'react'
 
-import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { cn } from '../../lib/cn'
+import { ARTWORK_HUES, coverFor, type ArtworkCover, type ArtworkMotif } from './cover-seed'
 
-/** The shapes a cover is drawn with. */
-export type Motif = 'sun' | 'rings' | 'bands' | 'dots' | 'wave' | 'peaks'
+export { ARTWORK_HUES, ARTWORK_MOTIFS, coverFor, seedHash } from './cover-seed'
+export type { ArtworkCover, ArtworkHue, ArtworkMotif } from './cover-seed'
 
-/** The hues a cover is painted in, each a token. */
-export const HUES = {
-    blue: 'var(--kind-blue)',
-    teal: 'var(--kind-teal)',
-    green: 'var(--kind-green)',
-    jade: 'var(--kind-jade)',
-    violet: 'var(--kind-violet)',
-    pink: 'var(--kind-pink)',
-    amber: 'var(--chart-4)',
-    coral: 'var(--chart-5)',
-} as const
-
-export type Hue = keyof typeof HUES
-
-/** What a cover is drawn from: a motif over a gradient between two hues. */
-export interface Cover {
-    motif: Motif
-    from: Hue
-    to: Hue
+export interface ArtworkProps {
+    /** The picture's address. The drawn cover shows until it has loaded, and stays when it fails. */
+    src?: string
+    /** What the picture shows, for a screen reader; without it the artwork is hidden from one, as the title beside it says what it is. */
+    alt?: string
+    /** The motif and the two hues to draw. Without it they are chosen from `seed`. */
+    cover?: ArtworkCover
+    /**
+     * A stable id the drawn cover is chosen from, such as the record's id: the same seed wears the
+     * same cover everywhere and in every session, and a grid of records without pictures does not
+     * look all alike.
+     */
+    seed?: string
+    /** Drawn for a wide frame, as a video's, rather than a square. */
+    wide?: boolean
+    className?: string
 }
 
 /**
- * A cover drawn as a gradient between two token hues with one motif over it, square by default and
- * wide for a video frame. It fills whatever box it is placed in.
+ * A record's cover: its picture, or a cover drawn in the theme's hues, a gradient between two with
+ * one motif over it, chosen from a stable `seed` unless `cover` names it. A picture takes the drawn
+ * cover's place only once it has loaded, so nothing moves while it loads and a broken one never
+ * shows. It fills whatever box it is placed in.
  */
-export function Artwork({ cover, wide = false, className }: { cover: Cover; wide?: boolean; className?: string }) {
+export function Artwork({ src, alt, cover, seed = '', wide = false, className }: ArtworkProps) {
     const id = useId()
+    const [loaded, setLoaded] = useState<string | null>(null)
+    const drawn = cover ?? coverFor(seed)
     const width = wide ? 160 : 100
-    const fill = `url(#${id})`
+    const shown = src !== undefined && loaded === src
     return (
-        <svg
-            viewBox={`0 0 ${String(width)} 100`}
-            preserveAspectRatio="xMidYMid slice"
-            aria-hidden
-            className={cn('block size-full', className)}
+        <span
+            data-slot="artwork"
+            aria-hidden={alt === undefined || undefined}
+            className={cn('relative block size-full overflow-hidden', className)}
         >
-            <defs>
-                <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0" stopColor={HUES[cover.from]} />
-                    <stop offset="1" stopColor={HUES[cover.to]} />
-                </linearGradient>
-            </defs>
-            <rect width={width} height="100" fill={fill} />
-            <Shapes motif={cover.motif} width={width} />
-        </svg>
+            {!shown && (
+                <svg
+                    viewBox={`0 0 ${String(width)} 100`}
+                    preserveAspectRatio="xMidYMid slice"
+                    aria-hidden
+                    data-motif={drawn.motif}
+                    className="absolute inset-0 block size-full"
+                >
+                    <defs>
+                        <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0" stopColor={ARTWORK_HUES[drawn.from]} />
+                            <stop offset="1" stopColor={ARTWORK_HUES[drawn.to]} />
+                        </linearGradient>
+                    </defs>
+                    <rect width={width} height="100" fill={`url(#${id})`} />
+                    <Motif motif={drawn.motif} width={width} />
+                </svg>
+            )}
+            {src !== undefined && (
+                <img
+                    src={src}
+                    alt={alt ?? ''}
+                    loading="lazy"
+                    decoding="async"
+                    onLoad={() => setLoaded(src)}
+                    onError={() => setLoaded(null)}
+                    className={cn('absolute inset-0 block size-full object-cover', !shown && 'invisible')}
+                />
+            )}
+        </span>
     )
 }
 
-function Shapes({ motif, width }: { motif: Motif; width: number }) {
+/** The motif's shapes, in the light and dark inks over the gradient. */
+function Motif({ motif, width }: { motif: ArtworkMotif; width: number }) {
     const middle = width / 2
     switch (motif) {
         case 'sun':

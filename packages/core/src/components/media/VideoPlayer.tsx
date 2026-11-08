@@ -5,6 +5,7 @@ import { cn } from '../../lib/cn'
 import { Button } from '../ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '../ui/dropdown-menu'
 import { PlayButton, Position, TransportButton, VolumeControl } from './MediaControls'
+import { useOneSound } from './one-sound'
 import { type MediaRange } from './time'
 
 /** One text track the player offers. */
@@ -85,6 +86,11 @@ export interface VideoPlayerProps {
     defaultControlsVisible?: boolean
     /** How long the controls stay after the pointer stops while playing, in milliseconds. */
     hideAfter?: number
+    /**
+     * Whether its sound pauses the other sounds the library plays, and another starting pauses it.
+     * Only a video that is heard takes the sound: a muted one, such as a preview, never stops the music.
+     */
+    exclusive?: boolean
     words?: Partial<VideoPlayerWords>
     /** The `<video>` element, for whatever the screen around the player needs from it. */
     videoRef?: Ref<HTMLVideoElement>
@@ -119,6 +125,9 @@ function rangesOf(video: HTMLVideoElement): MediaRange[] {
  * pauses, the left and right arrows seek five seconds, the up and down arrows change the volume
  * by a tenth, F toggles fullscreen and M toggles mute. A click on the picture plays or pauses,
  * a double click toggles fullscreen, and a tap on a touch screen first brings back the controls.
+ *
+ * Once heard it pauses whatever else the library is playing, so one sound is heard at a time;
+ * `exclusive={false}` lets it play alongside.
  */
 export function VideoPlayer({
     src,
@@ -132,6 +141,7 @@ export function VideoPlayer({
     preload = 'metadata',
     defaultControlsVisible = false,
     hideAfter = 2500,
+    exclusive = true,
     words: given,
     videoRef,
     className,
@@ -159,6 +169,7 @@ export function VideoPlayer({
     const [held, setHeld] = useState(false)
     const [menuOpen, setMenuOpen] = useState(false)
     const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+    useOneSound(video, state.playing && !state.muted && state.volume > 0, exclusive)
 
     const attach = useCallback(
         (element: HTMLVideoElement | null) => {

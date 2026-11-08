@@ -42,7 +42,7 @@ import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { DropdownMenuItem } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
 import { Toaster } from '@winterop-com/sokkel-ui/primitives/sonner'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
-import { Artwork, type Cover } from '../fixtures/Artwork'
+import { Artwork, type ArtworkCover } from '@winterop-com/sokkel-ui/media/Artwork'
 import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import captions from '../media/fixtures/captions.vtt?url'
@@ -65,7 +65,7 @@ interface Release {
     title: string
     artist: string
     year: number
-    cover: Cover
+    cover: ArtworkCover
 }
 
 const ALBUMS: Release[] = [
@@ -169,7 +169,7 @@ const EPISODES: Track[] = [
     id: `e${String(index + 1)}`,
     title: episode.title,
     subtitle: `Episode ${String(index + 1)}`,
-    artwork: <Artwork cover={episode.cover as Cover} wide />,
+    artwork: <Artwork cover={episode.cover as ArtworkCover} wide />,
     duration: episode.duration,
 }))
 

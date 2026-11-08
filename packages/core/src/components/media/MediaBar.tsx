@@ -7,6 +7,7 @@ import { grows, LINE, WIDE, type MediaBarLayout } from './bar-growth'
 import { LineBar, PanelBar, RowsBar, StageBar, type BarProps } from './MediaBarLayouts'
 import { kindOf, MEDIA_BAR_WORDS, type Deck, type MediaBarWords, type RepeatMode } from './MediaBarParts'
 import { MediaFullscreen } from './MediaFullscreen'
+import { useOneSound } from './one-sound'
 import type { SoundKind } from './SoundVisualizer'
 import type { MediaRange } from './time'
 
@@ -31,10 +32,17 @@ export interface MediaBarProps {
     /** Its place in what is playing, said as "Track 13 of 16" in the line over the large title. */
     trackNumber?: number
     trackCount?: number
-    /** A square picture for what is playing, filled edge to edge; a note glyph stands in without one. */
+    /** A square picture for what is playing, filled edge to edge; without one, a cover drawn from `placeholderSeed`, or a note glyph. */
     artwork?: ReactNode
+    /** A stable id, such as the album's, that a cover is drawn from when there is no `artwork`: the same one `Artwork` draws for it elsewhere. */
+    placeholderSeed?: string
     playing: boolean
     onPlayingChange: (playing: boolean) => void
+    /**
+     * Whether playing pauses the other sounds the library plays, and another starting pauses this
+     * one through `onPlayingChange(false)`, so one sound is heard at a time. A muted bar takes no sound.
+     */
+    exclusive?: boolean
     /** Seconds from the start. */
     position: number
     /** Length in seconds; zero when unknown, which disables seeking. */
@@ -137,8 +145,10 @@ export function MediaBar({
     trackNumber,
     trackCount,
     artwork,
+    placeholderSeed,
     playing,
     onPlayingChange,
+    exclusive = true,
     position,
     duration,
     onSeek,
@@ -173,6 +183,7 @@ export function MediaBar({
     className,
 }: MediaBarProps) {
     const words = { ...MEDIA_BAR_WORDS, ...given }
+    useOneSound(() => onPlayingChange(false), playing && !muted && volume > 0, exclusive)
     const [scrub, setScrub] = useState<number | null>(null)
     const bar = useRef<HTMLDivElement | null>(null)
     const box = useBox(bar)
@@ -210,6 +221,7 @@ export function MediaBar({
         trackNumber,
         trackCount,
         artwork,
+        placeholderSeed,
         playing,
         onPlayingChange,
         at: scrub ?? position,
