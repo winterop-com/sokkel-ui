@@ -1,5 +1,5 @@
 import { IconButton } from './IconButton'
-import { ArrowUp, Check, FileText, Mic, Paperclip, Play, Square, X } from 'lucide-react'
+import { ArrowUp, Check, CircleAlert, FileText, Mic, Paperclip, Play, Square, X } from 'lucide-react'
 import { lazy, Suspense, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
@@ -70,9 +70,9 @@ const DICTATION_WORDS: ComposerDictationWords = {
     recording: 'Listening',
     transcribing: 'Transcribing',
     level: 'Voice level',
-    refused: 'Microphone not allowed',
-    missing: 'No microphone found',
-    failed: 'Could not transcribe',
+    refused: 'The microphone is not allowed. Allow it for this site to dictate.',
+    missing: 'No microphone was found.',
+    failed: 'What was said could not be turned into text. Try again.',
 }
 
 /**
@@ -278,7 +278,8 @@ export interface ComposerProps {
  * the voice's level (or, with the browser's recognition, the words heard so far) and the time, with
  * a button to cancel; a second press stops, the row says it transcribes, and the text is put in
  * where the caret was, or at the end. Escape cancels a dictation that is hearing or transcribing.
- * A failure is said beside the microphone until the next press. Send waits while a dictation runs.
+ * A failure is said on a line of its own over the row, wrapping as far as it needs, until the next
+ * press or Escape. Send waits while a dictation runs.
  * The microphone shows only where the page can dictate with what the app gave.
  */
 export function Composer({
@@ -416,6 +417,13 @@ export function Composer({
                 }}
                 className="max-h-60 min-h-12 px-3 pt-3 pb-1 text-sm"
             />
+            {offered && dictation.state === 'error' && dictation.problem !== undefined && (
+                // A line of its own over the row, wrapping as far as it needs, so the reason is read whole at any width.
+                <p role="alert" className="flex items-start gap-1.5 px-3 pb-1 text-xs text-critical-ink">
+                    <CircleAlert className="mt-0.75 size-3.5 shrink-0" aria-hidden />
+                    <span className="min-w-0">{said[dictation.problem]}</span>
+                </p>
+            )}
             <div className="flex items-center gap-1 px-2 pb-2">
                 {hearing ? (
                     <IconButton label={said.cancel} onClick={dictation.cancel}>
@@ -448,11 +456,6 @@ export function Composer({
                         {tools}
                         <div className="flex-1" />
                     </>
-                )}
-                {offered && dictation.state === 'error' && dictation.problem !== undefined && (
-                    <span role="alert" title={said[dictation.problem]} className="min-w-0 truncate px-1 text-xs text-critical-ink">
-                        {said[dictation.problem]}
-                    </span>
                 )}
                 {offered && (
                     <IconButton
