@@ -1,6 +1,8 @@
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useRef } from 'react'
 
 import { cn } from '../lib/cn'
+import { literalRanges } from '../lib/search'
+import { Highlight } from './Highlight'
 
 export type LogLevel = 'debug' | 'info' | 'warning' | 'error'
 
@@ -19,26 +21,6 @@ const LEVEL: Record<LogLevel, string> = {
     info: 'text-terminal-muted',
     warning: 'text-terminal-warning',
     error: 'text-terminal-critical',
-}
-
-/** The text with every case-insensitive match of the query marked. */
-function marked(text: string, query: string): ReactNode {
-    if (query === '') return text
-    const lower = text.toLowerCase()
-    const needle = query.toLowerCase()
-    const parts: ReactNode[] = []
-    let from = 0
-    for (let at = lower.indexOf(needle); at !== -1; at = lower.indexOf(needle, from)) {
-        if (at > from) parts.push(text.slice(from, at))
-        parts.push(
-            <mark key={at} className="rounded-sm bg-terminal-accent/30 text-terminal-foreground">
-                {text.slice(at, at + needle.length)}
-            </mark>,
-        )
-        from = at + needle.length
-    }
-    parts.push(text.slice(from))
-    return parts
 }
 
 /**
@@ -104,7 +86,7 @@ export function LogView({
                                     line.level === 'error' && 'text-terminal-critical',
                                 )}
                             >
-                                {marked(line.text, query)}
+                                <Highlight text={line.text} ranges={literalRanges(line.text, query)} tone="terminal" />
                             </td>
                         </tr>
                     ))}

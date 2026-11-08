@@ -1,9 +1,18 @@
 import { Check, Copy } from 'lucide-react'
-import { useEffect, useState, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { useCopy } from '../hooks/use-copy'
 import { Button } from './ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
+
+/** The words a copy button says: its name, and its name for a moment after a press. */
+export interface CopyButtonWords {
+    copy: string
+    copied: string
+}
+
+const WORDS: CopyButtonWords = { copy: 'Copy', copied: 'Copied' }
 
 /**
  * A button that copies a value. Its name and its tooltip turn to the copied word for a moment after
@@ -15,30 +24,21 @@ export function CopyButton({
     value,
     size = 'icon-sm',
     className,
-    words = { copy: 'Copy', copied: 'Copied' },
+    words: given,
     showLabel = false,
     icon,
 }: {
     value: string
     size?: 'icon-xs' | 'icon-sm' | 'icon'
     className?: string
-    words?: { copy: string; copied: string }
+    words?: Partial<CopyButtonWords>
     showLabel?: boolean
     icon?: ReactNode
 }) {
-    const [copied, setCopied] = useState(false)
-    useEffect(() => {
-        if (!copied) return
-        const timer = setTimeout(() => setCopied(false), 1500)
-        return () => clearTimeout(timer)
-    }, [copied])
+    const words = { ...WORDS, ...given }
+    const { copied, copy: write } = useCopy()
     const word = copied ? words.copied : words.copy
-    const copy = () => {
-        navigator.clipboard.writeText(value).then(
-            () => setCopied(true),
-            () => undefined,
-        )
-    }
+    const copy = () => write(value)
     if (showLabel)
         return (
             <Button variant="ghost" size="sm" className={className} onClick={copy}>
