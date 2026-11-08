@@ -6,7 +6,7 @@ import { RotateCcw } from 'lucide-react'
 import { useMemo } from 'react'
 
 import { resetAll } from './backend'
-import { desktopWindow } from './desktop'
+import { useDesktopWindow } from './desktop'
 import { useRoute } from './router'
 
 /** What every example's page is drawn with: the palette's shared groups, the window, the look and the route. */
@@ -23,7 +23,7 @@ export interface Frame {
 export function useFrame(): Frame {
     const route = useRoute()
     const appearance = useAppearance()
-    const desktop = useMemo(desktopWindow, [])
+    const desktop = useDesktopWindow()
     const { settings, setSettings } = appearance
     const palette = useMemo(
         (): PaletteGroup[] => [
