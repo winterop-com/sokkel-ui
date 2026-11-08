@@ -1,11 +1,6 @@
 import type { FeatureCollection, LineString } from 'geojson'
 import type { LayerSpecification, RasterLayerSpecification, RasterSourceSpecification, StyleSpecification } from 'maplibre-gl'
 
-import darkPreview from './previews/dark.jpg'
-import lightPreview from './previews/light.jpg'
-import satellitePreview from './previews/satellite.jpg'
-import streetsPreview from './previews/streets.jpg'
-
 /** One credit a tile host requires: its words, and the page they link to. */
 export interface Credit {
     label: string
@@ -25,8 +20,11 @@ export interface Basemap {
     style?: string
     /** Raster tile url templates in `{z}/{x}/{y}` form. */
     tiles?: string[]
-    /** A small image of the basemap, shown in the switcher. */
-    preview?: string
+    /**
+     * A small image of the basemap, shown in the switcher: its address, or a function that fetches
+     * it, so a page that never opens the switcher fetches no preview.
+     */
+    preview?: string | (() => Promise<string>)
     /** Whether raster tiles are light or dark; light tiles are dimmed in the dark scheme. */
     tone?: 'light' | 'dark'
     /** The credits the hosts require, shown in the map's corner while the basemap is drawn. */
@@ -55,7 +53,7 @@ export const LIGHT_BASEMAP: Basemap = {
     id: 'light',
     name: 'Light',
     style: 'https://tiles.openfreemap.org/styles/positron',
-    preview: lightPreview,
+    preview: () => import('./previews/light.jpg').then((image) => image.default),
     attribution: OPENFREEMAP_CREDITS,
 }
 
@@ -64,7 +62,7 @@ export const DARK_BASEMAP: Basemap = {
     id: 'dark',
     name: 'Dark',
     style: 'https://tiles.openfreemap.org/styles/dark',
-    preview: darkPreview,
+    preview: () => import('./previews/dark.jpg').then((image) => image.default),
     attribution: OPENFREEMAP_CREDITS,
 }
 
@@ -73,7 +71,7 @@ export const STREETS_BASEMAP: Basemap = {
     id: 'streets',
     name: 'Streets',
     style: 'https://tiles.openfreemap.org/styles/liberty',
-    preview: streetsPreview,
+    preview: () => import('./previews/streets.jpg').then((image) => image.default),
     attribution: OPENFREEMAP_CREDITS,
 }
 
@@ -84,7 +82,7 @@ export const SATELLITE_BASEMAP: Basemap = {
     tiles: [
         'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/BlueMarble_NextGeneration/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpeg',
     ],
-    preview: satellitePreview,
+    preview: () => import('./previews/satellite.jpg').then((image) => image.default),
     attribution: [
         { label: 'NASA Blue Marble', href: 'https://earthobservatory.nasa.gov/features/BlueMarble' },
         {
