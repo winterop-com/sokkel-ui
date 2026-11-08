@@ -14,3 +14,10 @@ export const ShellPalette = createContext<(() => void) | undefined>(undefined)
 
 /** The desktop window the shell stands in, for the parts drawn in its top strip; undefined in a browser. */
 export const ShellDesktop = createContext<DesktopWindow | undefined>(undefined)
+
+/**
+ * The shell's drawer on a narrow window, for the rail and its foot drawn in it: they draw
+ * expanded there whatever the app holds, and the rail's head closes the drawer with `label` in
+ * place of collapsing; undefined outside the drawer.
+ */
+export const ShellDrawer = createContext<{ close: () => void; label: string } | undefined>(undefined)

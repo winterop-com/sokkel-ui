@@ -1,10 +1,11 @@
 import { Avatar } from '@base-ui/react/avatar'
 import { Menu } from '@base-ui/react/menu'
 import { ChevronsUpDown, Keyboard, LogOut, Palette, Settings, User } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useContext, type ReactNode } from 'react'
 
 import { useShortcutsKey } from '../hooks/use-shortcuts-key'
 import { cn } from '../lib/cn'
+import { ShellDrawer } from './shell-context'
 
 /**
  * The account control in the rail's foot cell: a full-cell row with the initial, the name and a
@@ -12,7 +13,9 @@ import { cn } from '../lib/cn'
  * picture takes the initial's place once it has loaded; until then, or when it fails, the initial
  * stays.
  *
- * Expanded, it fills the cell edge to edge; collapsed, it is the picture or the initial alone.
+ * Expanded, it fills the cell edge to edge; collapsed, it is the picture or the initial alone. In
+ * the shell's drawer on a narrow window it is drawn expanded, as the rail there is, and a row
+ * chosen in its menu closes the drawer before it runs.
  *
  * Every app has it in the rail's foot, before it has sign-in too: then it is `local`, named for
  * the local user or as "Local", with a neutral figure for the avatar and no sign-out, so the place
@@ -22,7 +25,7 @@ export function AccountMenu({
     name,
     image,
     where,
-    collapsed = false,
+    collapsed: kept = false,
     local = false,
     onSettings,
     onAppearance,
@@ -50,6 +53,8 @@ export function AccountMenu({
     words?: Partial<AccountMenuWords>
 }) {
     const words = { ...WORDS, ...given }
+    const drawer = useContext(ShellDrawer)
+    const collapsed = kept && drawer === undefined
     // The `?` beside Keyboard shortcuts works: it opens them from anywhere outside a field.
     useShortcutsKey(onShortcuts)
     const initial = name.slice(0, 1).toUpperCase()
@@ -67,7 +72,12 @@ export function AccountMenu({
     const item =
         'flex h-8 cursor-default items-center gap-2.5 rounded-md px-2 text-sm outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground'
     return (
-        <Menu.Root>
+        <Menu.Root
+            // A row chosen in the shell's drawer closes the drawer too, so what it opens is not drawn under it.
+            onOpenChange={(open, details) => {
+                if (!open && details.reason === 'item-press') drawer?.close()
+            }}
+        >
             <Menu.Trigger
                 aria-label={words.account}
                 className="mx-1.5 my-1 flex h-[calc(100%-0.5rem)] w-[calc(100%-0.75rem)] items-center gap-2.5 rounded-md pr-1.5 pl-2.5 text-sm outline-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring/50 data-[popup-open]:bg-hover"

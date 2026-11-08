@@ -23,4 +23,25 @@ describe('Shell', () => {
     it('marks the column its rail stands in, which the top bar reads to leave the room for the window buttons', () => {
         expect(SOURCE.match(/<div data-shell-rail /g) ?? []).toHaveLength(2)
     })
+
+    it('keeps both of its roots clear of the safe areas on all four sides', () => {
+        const roots = SOURCE.match(/className="(?:group\/shell )?relative (flex|grid) h-svh[^"]*"/g) ?? []
+        expect(roots).toHaveLength(2)
+        for (const root of roots)
+            for (const side of [
+                'pt-[env(safe-area-inset-top)]',
+                'pr-[env(safe-area-inset-right)]',
+                'pb-[env(safe-area-inset-bottom)]',
+                'pl-[env(safe-area-inset-left)]',
+            ])
+                expect(root).toContain(side)
+    })
+
+    it('draws the banner between the top bar and the content, outside what scrolls', () => {
+        expect(SOURCE).toMatch(/<\/header>\s*\)\}\s*\{banner [^\n]*\{banner\}<\/div>\}\s*<main /)
+    })
+
+    it('draws the rail in its drawer under the drawer context, so it draws expanded there', () => {
+        expect(SOURCE).toContain('<ShellDrawer value={drawerContext}>{rail}</ShellDrawer>')
+    })
 })
