@@ -7,6 +7,7 @@ import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import { Section } from '@winterop-com/sokkel-ui/Section'
 import { Page } from '@winterop-com/sokkel-ui/Shell'
 import { Stat } from '@winterop-com/sokkel-ui/Stat'
+import { TextField } from '@winterop-com/sokkel-ui/TextField'
 import { StatusChip, type Status } from '@winterop-com/sokkel-ui/StatusChip'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 
@@ -92,6 +93,51 @@ export const FourColumns: StoryObj = {
             <Stat label="Median duration" value="4.2" unit="min" />
             <Stat label="Queued" value="7" />
         </Columns>
+    ),
+}
+
+function VisitFields({ fields }: { fields: boolean }) {
+    return (
+        <Columns count={3} min="sm" gap="lg" fields={fields}>
+            <TextField
+                id={`level-${String(fields)}`}
+                label="Water level"
+                hint="m"
+                description="Read off the gauge board before the sample is taken."
+                defaultValue="1.42"
+                numeric
+            />
+            <TextField id={`temperature-${String(fields)}`} label="Water temperature" hint="°C" defaultValue="26.1" numeric />
+            <TextField id={`ph-${String(fields)}`} label="pH" hint="0 to 14" defaultValue="7.2" help="Read after a minute." numeric />
+            <TextField id={`turbidity-${String(fields)}`} label="Turbidity" hint="NTU" defaultValue="12" numeric />
+            <TextField
+                id={`rain-${String(fields)}`}
+                label="Rainfall, last 24 hours"
+                hint="mm"
+                description="From the station's own gauge."
+                defaultValue="0.4"
+                numeric
+            />
+        </Columns>
+    )
+}
+
+/**
+ * Fields lined up (`fields`): each field shares its label, description, control and help rows with
+ * the fields beside it, so a row's inputs stand level when one field explains itself and its
+ * neighbor does not. Above, the same fields without it, each control under its own description.
+ */
+export const LinedUpFields: StoryObj = {
+    name: 'Lined-up fields',
+    render: () => (
+        <Stack gap="2xl">
+            <Section title="Each on its own" variant="flat">
+                <VisitFields fields={false} />
+            </Section>
+            <Section title="Lined up" variant="flat">
+                <VisitFields fields />
+            </Section>
+        </Stack>
     ),
 }
 

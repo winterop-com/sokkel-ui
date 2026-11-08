@@ -1,6 +1,7 @@
-import type { ReactNode } from 'react'
+import { useContext, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { FieldRows } from './field-rows'
 import { IssueMark, worst, type Issue } from './IssueMark'
 import { Label } from './ui/label'
 
@@ -54,6 +55,9 @@ export interface FieldProps {
  *
  * A setting a document names by key is labeled in words, with the key beside the label as a
  * `keyHint`: the words can be translated, the key never is.
+ *
+ * In `Columns` with `fields`, the field shares its four rows with the fields beside it, so a row's
+ * controls stand level whichever of them has a description or help.
  */
 export function Field({
     id,
@@ -75,8 +79,30 @@ export function Field({
     const words = { ...WORDS, ...given }
     const issues: Issue[] = [...(error === undefined || error === null ? [] : [{ tone: 'critical' as const, text: error }]), ...issuesGiven]
     const tone = worst(issues)
+    const rows = useContext(FieldRows)
+    const lined = rows !== null
+    const control =
+        tone === null ? (
+            children
+        ) : (
+            <div
+                className={cn(
+                    'relative min-w-0 [&>:first-child]:pr-9',
+                    tone === 'critical'
+                        ? '[&>:first-child]:border-critical/80 [&>:first-child]:focus-visible:border-critical [&>:first-child]:focus-visible:ring-critical/25'
+                        : '[&>:first-child]:border-warning/80 [&>:first-child]:focus-visible:border-warning [&>:first-child]:focus-visible:ring-warning/25',
+                )}
+            >
+                {children}
+                <IssueMark issues={issues} open={issueOpen} onOpenChange={onIssueOpenChange} />
+            </div>
+        )
     return (
-        <div className={cn('flex min-w-0 flex-col gap-1.5', className)}>
+        <div
+            className={cn(lined ? 'grid min-w-0' : 'flex min-w-0 flex-col gap-1.5', className)}
+            // Four rows shared with the fields beside it, and the room before the next row of fields as its own foot.
+            style={lined ? { gridRow: 'span 4', gridTemplateRows: 'subgrid', rowGap: 0, paddingBottom: rows } : undefined}
+        >
             <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
                 <Label htmlFor={id} className={cn(mono && 'font-mono')}>
                     {label}
@@ -93,30 +119,20 @@ export function Field({
                     <span className={cn('text-xs', keyHint ? 'font-mono text-muted-foreground' : 'text-faint')}>{hint}</span>
                 )}
             </div>
-            {description !== undefined && (
-                <p id={`${id}-description`} className="text-body text-pretty text-muted-foreground">
+            {description !== undefined ? (
+                <p id={`${id}-description`} className={cn('text-body text-pretty text-muted-foreground', lined && 'pt-1.5')}>
                     {description}
                 </p>
-            )}
-            {tone === null ? (
-                children
             ) : (
-                <div
-                    className={cn(
-                        'relative min-w-0 [&>:first-child]:pr-9',
-                        tone === 'critical'
-                            ? '[&>:first-child]:border-critical/80 [&>:first-child]:focus-visible:border-critical [&>:first-child]:focus-visible:ring-critical/25'
-                            : '[&>:first-child]:border-warning/80 [&>:first-child]:focus-visible:border-warning [&>:first-child]:focus-visible:ring-warning/25',
-                    )}
-                >
-                    {children}
-                    <IssueMark issues={issues} open={issueOpen} onOpenChange={onIssueOpenChange} />
-                </div>
+                lined && <span aria-hidden />
             )}
-            {help !== undefined && (
-                <p id={`${id}-help`} className="text-help text-muted-foreground">
+            {lined ? <div className="min-w-0 pt-1.5">{control}</div> : control}
+            {help !== undefined ? (
+                <p id={`${id}-help`} className={cn('text-help text-muted-foreground', lined && 'pt-1.5')}>
                     {help}
                 </p>
+            ) : (
+                lined && <span aria-hidden />
             )}
         </div>
     )
