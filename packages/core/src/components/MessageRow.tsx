@@ -1,8 +1,9 @@
 import { Paperclip, Star } from 'lucide-react'
-import { Fragment, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { Checkbox } from './ui/checkbox'
+import { Highlight } from './Highlight'
+import { literalRanges } from '../lib/search'
 
 /** A label a message carries: its name, and the color of its dot as any CSS color. */
 export interface MessageLabel {
@@ -180,23 +181,6 @@ export function excerpt(text: string, term?: string, lead = 24): string {
 }
 
 /** The text with every case-blind occurrence of the term marked. */
-function Marked({ text, term }: { text: string; term?: string }): ReactNode {
-    const needle = term?.trim().toLowerCase() ?? ''
-    if (needle === '') return text
-    const parts: ReactNode[] = []
-    const lower = text.toLowerCase()
-    let from = 0
-    let at = lower.indexOf(needle)
-    while (at !== -1) {
-        if (at > from) parts.push(text.slice(from, at))
-        parts.push(
-            <mark key={at} className="rounded-xs bg-primary/20 text-foreground">
-                {text.slice(at, at + needle.length)}
-            </mark>,
-        )
-        from = at + needle.length
-        at = lower.indexOf(needle, from)
-    }
-    if (from < text.length) parts.push(text.slice(from))
-    return <Fragment>{parts}</Fragment>
+function Marked({ text, term = '' }: { text: string; term?: string }) {
+    return <Highlight text={text} ranges={literalRanges(text, term)} />
 }

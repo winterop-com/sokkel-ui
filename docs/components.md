@@ -119,7 +119,7 @@ The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appeara
 | Component | Import | What it is | Story |
 | --- | --- | --- | --- |
 | **BarVisualizer** | `@winterop-com/sokkel-ui/primitives/bar-visualizer` | The level bars a voice input draws while it listens, in a muted well by default. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-media-audio--waveforms) |
-| **Waveform**, ScrollingWaveform, AudioScrubber, MicrophoneWaveform, StaticWaveform, LiveMicrophoneWaveform, RecordingWaveform | `@winterop-com/sokkel-ui/primitives/waveform` |  | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-media-audio--waveforms) |
+| **Waveform**, ScrollingWaveform, AudioScrubber, StaticWaveform | `@winterop-com/sokkel-ui/primitives/waveform` |  | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-media-audio--waveforms) |
 
 ### Primitives: Menus
 

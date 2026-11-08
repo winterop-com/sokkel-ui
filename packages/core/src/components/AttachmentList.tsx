@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { AudioPlayer } from './media/AudioPlayer'
-import { VideoPlayer } from './media/VideoPlayer'
+import { VideoPlayer, type VideoPlayerWords } from './media/VideoPlayer'
 import { ProgressRing } from './ui/progress-ring'
 import { Spinner } from './ui/spinner'
 import { Attachment, AttachmentAction, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from './ui/attachment'
@@ -40,10 +40,8 @@ export interface AttachmentListWords {
     remove: (name: string) => string
     /** The cancel button's accessible name, on a file still uploading when `onCancel` is given. */
     cancel: (name: string) => string
-    /** The players' buttons and scrubber, for a recording or a video. */
-    play: string
-    pause: string
-    seek: string
+    /** The players' words, for a recording or a video: play, pause, seek, speed, captions, fullscreen and the rest. */
+    player: Partial<VideoPlayerWords>
     /** Said for a file still uploading. */
     uploading: string
 }
@@ -51,9 +49,7 @@ export interface AttachmentListWords {
 export const ATTACHMENT_LIST_WORDS: AttachmentListWords = {
     remove: (name) => `Remove ${name}`,
     cancel: (name) => `Cancel upload ${name}`,
-    play: 'Play',
-    pause: 'Pause',
-    seek: 'Seek',
+    player: {},
     uploading: 'Uploading',
 }
 
@@ -113,12 +109,7 @@ export function AttachmentList({
                 return (
                     <li key={file.id} className={cn('flex min-w-0', video && 'w-full max-w-sm')}>
                         {video && file.src !== undefined ? (
-                            <VideoPlayer
-                                src={file.src}
-                                title={file.name}
-                                preload="metadata"
-                                labels={{ play: words.play, pause: words.pause, seek: words.seek }}
-                            />
+                            <VideoPlayer src={file.src} title={file.name} preload="metadata" words={words.player} />
                         ) : (
                             <Attachment size={size} className={cn('min-w-0', audio && 'w-80 max-w-full')}>
                                 <AttachmentMedia variant={file.image === undefined || uploading ? 'icon' : 'image'}>
@@ -144,7 +135,7 @@ export function AttachmentList({
                                             waveform={file.waveform}
                                             duration={file.duration}
                                             label={file.name}
-                                            labels={{ play: words.play, pause: words.pause, seek: words.seek }}
+                                            words={words.player}
                                             className="mt-1 -ml-1"
                                         />
                                     ) : (

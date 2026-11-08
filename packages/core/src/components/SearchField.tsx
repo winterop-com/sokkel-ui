@@ -4,6 +4,15 @@ import { useEffect, useRef, type ComponentProps, type Ref } from 'react'
 import { cn } from '../lib/cn'
 import { Input } from './ui/input'
 
+/** The words a search field says. */
+export interface SearchFieldWords {
+    clear: string
+}
+
+const WORDS: SearchFieldWords = {
+    clear: 'Clear the search',
+}
+
 /**
  * The one search box: a glyph, the text, a clear button once there is text, and the `/` key that
  * focuses it from anywhere on the page. Escape clears it, then leaves it.
@@ -17,7 +26,7 @@ export function SearchField({
     placeholder = 'Search',
     shortcut = true,
     className,
-    words = { clear: 'Clear the search' },
+    words: given,
     inputRef,
     inputProps,
 }: {
@@ -27,7 +36,7 @@ export function SearchField({
     /** Whether `/` focuses this field. Only one field on a page should take it. */
     shortcut?: boolean
     className?: string
-    words?: { clear: string }
+    words?: Partial<SearchFieldWords>
     /** The text input itself, for a part built on the field that moves focus to it. */
     inputRef?: Ref<HTMLInputElement>
     /**
@@ -49,6 +58,7 @@ export function SearchField({
         | 'onKeyDown'
     >
 }) {
+    const words = { ...WORDS, ...given }
     const input = useRef<HTMLInputElement | null>(null)
     const { onKeyDown, ...rest } = inputProps ?? {}
 

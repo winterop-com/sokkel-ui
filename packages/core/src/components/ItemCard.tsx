@@ -12,6 +12,15 @@ export interface CardFact {
     value: ReactNode
 }
 
+/** The words an item card says. */
+export interface ItemCardWords {
+    menu: string
+}
+
+const WORDS: ItemCardWords = {
+    menu: 'More actions',
+}
+
 /**
  * The card for one thing: a project, a job, an album, a plan. Its title is the thing's name, or its
  * code when it has none; the code is drawn once, in the code face. A description, a status and
@@ -36,7 +45,7 @@ export function ItemCard({
     selected,
     titleLines = 2,
     className,
-    words = { menu: 'More actions' },
+    words: given,
 }: {
     /** The name; with none, the code is the title. */
     title?: ReactNode
@@ -55,8 +64,9 @@ export function ItemCard({
     /** How many lines the title may take before it is cut short. */
     titleLines?: TitleLines
     className?: string
-    words?: { menu: string }
+    words?: Partial<ItemCardWords>
 }) {
+    const words = { ...WORDS, ...given }
     const heading = title ?? code
     const showCode = title !== undefined && code !== undefined
     const interactive = href !== undefined || onSelect !== undefined

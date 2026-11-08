@@ -9,7 +9,8 @@ import { cn } from '../lib/cn'
 import { hasMath, markdownSchema, normalizeMath } from '../lib/math'
 import { TABLE_HEAD_TEXT } from '../lib/table'
 import { Code } from './Code'
-import { MermaidDiagram } from './MermaidDiagram'
+import type { CodeBlockWords } from './ui/code-block'
+import { MermaidDiagram, type MermaidDiagramWords } from './MermaidDiagram'
 
 /** The text inside a node, through any wrapping elements. */
 function text(node: ReactNode): string {
@@ -67,9 +68,23 @@ export function markdownHeadings(content: string, levels: readonly number[] = [2
 /** The kinds of callout a quote becomes when its first line is `[!NOTE]`, `[!TIP]` and so on. */
 export type CalloutKind = 'note' | 'tip' | 'important' | 'warning' | 'caution'
 
-export type MarkdownWords = Record<CalloutKind, string>
+/** The words markdown says: each callout's title, and the words of its code blocks and diagrams. */
+export interface MarkdownWords extends Record<CalloutKind, string> {
+    /** The words of each code block's copy button. */
+    code: Partial<CodeBlockWords>
+    /** The words of each diagram. */
+    diagram: Partial<MermaidDiagramWords>
+}
 
-const WORDS: MarkdownWords = { note: 'Note', tip: 'Tip', important: 'Important', warning: 'Warning', caution: 'Caution' }
+const WORDS: MarkdownWords = {
+    note: 'Note',
+    tip: 'Tip',
+    important: 'Important',
+    warning: 'Warning',
+    caution: 'Caution',
+    code: {},
+    diagram: {},
+}
 
 const CALLOUTS: Record<CalloutKind, { icon: LucideIcon; frame: string; ink: string }> = {
     note: { icon: Info, frame: 'border-info/45 bg-info/8', ink: 'text-info-ink' },
@@ -265,18 +280,16 @@ export const Markdown = memo(function Markdown({
     className?: string
     words?: Partial<MarkdownWords>
 }) {
-    const note = given?.note
-    const tip = given?.tip
-    const important = given?.important
-    const warning = given?.warning
-    const caution = given?.caution
+    // The words are held by their text, so an object made anew each render keeps the renderers.
+    const said = JSON.stringify(given ?? null)
+    const words = useMemo<MarkdownWords>(() => ({ ...WORDS, ...(JSON.parse(said) as Partial<MarkdownWords> | null) }), [said])
     const components = useMemo<Components>(
         () => ({
             blockquote: ({ children, node: _node, ...props }) => {
                 const kind = (props as Record<string, unknown>)['data-callout'] as CalloutKind | undefined
                 const callout = kind === undefined ? undefined : CALLOUTS[kind]
                 if (kind === undefined || callout === undefined) return <blockquote {...props}>{children}</blockquote>
-                const label = { note, tip, important, warning, caution }[kind] ?? WORDS[kind]
+                const label = words[kind]
                 const Icon = callout.icon
                 return (
                     <div
@@ -309,14 +322,14 @@ export const Markdown = memo(function Markdown({
                 if (language === 'mermaid') {
                     return (
                         <div className="mermaid-block">
-                            <MermaidDiagram code={value} streaming={streaming} />
+                            <MermaidDiagram code={value} streaming={streaming} words={words.diagram} />
                         </div>
                     )
                 }
-                return <Code value={value} language={language} />
+                return <Code value={value} language={language} words={words.code} />
             },
         }),
-        [streaming, note, tip, important, warning, caution],
+        [streaming, words],
     )
     const needsMath = useMemo(() => math && hasMath(content), [math, content])
     const katex = useMathEngine(needsMath)

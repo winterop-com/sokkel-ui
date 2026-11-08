@@ -87,7 +87,7 @@ export function GaugePanel({
     bodyClassName?: string
     loading?: boolean
     file?: string
-    words?: ChartFrameWords
+    words?: Partial<ChartFrameWords>
     className?: string
 }) {
     const option = useMemo(

@@ -5,7 +5,7 @@ function Swatch({ background, shape }: { background: string; shape: 'area' | 'po
     return (
         <span
             aria-hidden
-            className={cn('size-3 shrink-0 ring-1 ring-foreground/15 ring-inset', shape === 'point' ? 'rounded-full' : 'rounded-[3px]')}
+            className={cn('size-3 shrink-0 ring-1 ring-foreground/15 ring-inset', shape === 'point' ? 'rounded-full' : 'rounded-mini')}
             style={{ background }}
         />
     )
@@ -85,7 +85,7 @@ export function MapLegend({
             ) : (
                 <div className={cn(headed && 'mt-2')}>
                     <div
-                        className="flex h-2.5 overflow-hidden rounded-[2px] ring-1 ring-foreground/10"
+                        className="flex h-2.5 overflow-hidden rounded-mini ring-1 ring-foreground/10"
                         role="img"
                         aria-label={labels.join(', ')}
                     >

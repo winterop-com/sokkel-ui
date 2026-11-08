@@ -104,7 +104,7 @@ export function comboOption({
                     barCategoryGap: '28%',
                     barMaxWidth: 32,
                     itemStyle: {
-                        borderRadius: top ? [2, 2, 0, 0] : 0,
+                        borderRadius: top ? [look.corner, look.corner, 0, 0] : 0,
                         borderColor: stacked ? look.card : undefined,
                         borderWidth: stacked ? 1 : 0,
                     },
@@ -159,7 +159,7 @@ export function ComboPanel({
     loading?: boolean
     empty?: boolean
     file?: string
-    words?: ChartFrameWords
+    words?: Partial<ChartFrameWords>
     className?: string
 }) {
     const option = useMemo(

@@ -11,6 +11,8 @@ export interface MiniMonthWords {
     title: (month: Date) => string
     /** A weekday's one-letter name over its column. */
     weekday: (date: Date) => string
+    /** A day's number in its month. */
+    dayNumber: (date: Date) => string
     /** A day's full name, for a screen reader. */
     day: (date: Date) => string
 }
@@ -20,6 +22,7 @@ const WORDS: MiniMonthWords = {
     next: 'Next month',
     title: (month) => format(month, 'MMMM yyyy'),
     weekday: (date) => format(date, 'EEEEE'),
+    dayNumber: (date) => format(date, 'd'),
     day: (date) => format(date, 'EEEE d MMMM yyyy'),
 }
 
@@ -32,8 +35,8 @@ const WORDS: MiniMonthWords = {
 export function MiniMonth({
     month,
     onMonthChange,
-    selected,
-    onSelect,
+    value,
+    onValueChange,
     now,
     range,
     marked = [],
@@ -43,8 +46,9 @@ export function MiniMonth({
 }: {
     month: Date
     onMonthChange?: (month: Date) => void
-    selected?: Date
-    onSelect?: (day: Date) => void
+    /** The chosen day. */
+    value?: Date
+    onValueChange?: (day: Date) => void
     now?: Date
     /** The days in view in the main calendar, washed. */
     range?: { start: Date; end: Date }
@@ -89,7 +93,7 @@ export function MiniMonth({
                 ))}
                 {days.map((day, index) => {
                     const today = now !== undefined && isSameDay(day, now)
-                    const chosen = selected !== undefined && isSameDay(day, selected)
+                    const chosen = value !== undefined && isSameDay(day, value)
                     const washed = inRange(day)
                     const startOfRow = index % 7 === 0 || (index > 0 && !inRange(days[index - 1]))
                     const endOfRow = index % 7 === 6 || (index < days.length - 1 && !inRange(days[index + 1]))
@@ -114,9 +118,9 @@ export function MiniMonth({
                                     chosen && !today && 'ring-1 ring-primary',
                                     today && 'bg-primary font-medium text-primary-foreground hover:bg-primary',
                                 )}
-                                onClick={() => onSelect?.(day)}
+                                onClick={() => onValueChange?.(day)}
                             >
-                                {format(day, 'd')}
+                                {words.dayNumber(day)}
                                 {marked.some((mark) => isSameDay(mark, day)) && (
                                     <span
                                         aria-hidden

@@ -23,12 +23,12 @@ export interface ConfirmWords {
     denied: string
     expired: string
     /** The heading over the action, in the `card` and `section` appearances. */
-    heading?: string
+    heading: string
     /** The control that opens the call, when `details` folds it away. */
-    details?: string
+    details: string
 }
 
-const WORDS: Required<ConfirmWords> = {
+const WORDS: ConfirmWords = {
     approve: 'Approve',
     deny: 'Deny',
     approved: 'Approved',
@@ -62,7 +62,7 @@ export interface ConfirmCardProps {
     appearance?: ConfirmAppearance
     /** Folds the call away behind a control that opens it in full. */
     details?: boolean
-    words?: ConfirmWords
+    words?: Partial<ConfirmWords>
 }
 
 /**
@@ -82,7 +82,7 @@ export function ConfirmCard({
     onDeny,
     appearance = 'warning',
     details = false,
-    words: given = WORDS,
+    words: given,
 }: ConfirmCardProps) {
     const words = { ...WORDS, ...given }
     const pending = state === 'pending'

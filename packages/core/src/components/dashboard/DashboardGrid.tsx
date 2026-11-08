@@ -67,7 +67,7 @@ export function DashboardPanel({
     empty = false,
     flush = false,
     footer,
-    words = WORDS,
+    words: given,
     className,
     children,
 }: {
@@ -83,10 +83,11 @@ export function DashboardPanel({
     /** Content that fills the panel to its edges, such as a list, takes no padding. */
     flush?: boolean
     footer?: ReactNode
-    words?: PanelWords
+    words?: Partial<PanelWords>
     className?: string
     children?: ReactNode
 }) {
+    const words = { ...WORDS, ...given }
     const [expanded, setExpanded] = useState(false)
     const body = empty ? <p className="px-4 py-8 text-center text-sm text-muted-foreground">{words.empty}</p> : children
     const tool =

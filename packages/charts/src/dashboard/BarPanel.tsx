@@ -58,7 +58,7 @@ export function barOption({
             yAxis: horizontal ? { ...category, inverse: true, splitLine: { show: false } } : value,
             series: series.map((entry, index) => {
                 const top = stacked === false || index === series.length - 1
-                const radius = top ? (horizontal ? [0, 2, 2, 0] : [2, 2, 0, 0]) : 0
+                const radius = top ? (horizontal ? [0, look.corner, look.corner, 0] : [look.corner, look.corner, 0, 0]) : 0
                 return {
                     name: entry.name,
                     type: 'bar',
@@ -129,7 +129,7 @@ export function BarPanel({
     loading?: boolean
     empty?: boolean
     file?: string
-    words?: ChartFrameWords
+    words?: Partial<ChartFrameWords>
     className?: string
 }) {
     const option = useMemo(

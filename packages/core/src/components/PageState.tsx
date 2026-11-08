@@ -55,7 +55,7 @@ export function PageState({
     empty = false,
     emptyMessage,
     emptyRender,
-    words = WORDS,
+    words: given,
     children,
 }: {
     loading: boolean
@@ -67,9 +67,10 @@ export function PageState({
     emptyMessage?: ReactNode
     /** An empty state that is more than a sentence, such as a way to make the first one. */
     emptyRender?: ReactNode
-    words?: PageStateWords
+    words?: Partial<PageStateWords>
     children: ReactNode
 }) {
+    const words = { ...WORDS, ...given }
     if (loading) {
         return (
             <Frame className="items-center text-muted-foreground">

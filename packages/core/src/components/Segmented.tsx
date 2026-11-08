@@ -19,7 +19,7 @@ const FRAME: Record<SegmentedVariant, string> = {
 }
 
 const OPTION: Record<SegmentedVariant, string> = {
-    track: 'rounded-[calc(var(--radius)-2px)]',
+    track: 'rounded-mini',
     tint: 'rounded-control',
     outline: '',
     solid: '',
@@ -80,7 +80,7 @@ export function Segmented<T extends string>({
     variant = 'track',
     disabled = false,
     fill = false,
-    onChoose,
+    onValueChange,
     className,
 }: {
     /** The group's id, for a `Field` around it to point its label at. */
@@ -93,7 +93,7 @@ export function Segmented<T extends string>({
     variant?: SegmentedVariant
     disabled?: boolean
     fill?: boolean
-    onChoose: (value: T) => void
+    onValueChange: (value: T) => void
     className?: string
 }) {
     return (
@@ -134,7 +134,7 @@ export function Segmented<T extends string>({
                             (disabled || off) && 'cursor-not-allowed',
                         )}
                         onClick={() => {
-                            if (!off) onChoose(option.value)
+                            if (!off) onValueChange(option.value)
                         }}
                     >
                         {size === 'md' ? option.label : <Widest options={options} shown={option} />}

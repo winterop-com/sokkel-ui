@@ -30,7 +30,7 @@ export const Page: StoryObj = {
                         <Segmented
                             label="View"
                             value={view}
-                            onChoose={setView}
+                            onValueChange={setView}
                             options={[
                                 { value: 'list', label: 'List' },
                                 { value: 'grid', label: 'Grid' },
@@ -61,7 +61,7 @@ export const Titled: StoryObj = {
                         <Segmented
                             label="View"
                             value={view}
-                            onChoose={setView}
+                            onValueChange={setView}
                             options={[
                                 { value: 'week', label: 'Week' },
                                 { value: 'month', label: 'Month' },
@@ -101,7 +101,7 @@ export const Pane: StoryObj = {
                 <Tree
                     label="Projects"
                     query={query}
-                    defaultOpen={['harbor']}
+                    defaultExpanded={['harbor']}
                     nodes={[
                         {
                             id: 'harbor',

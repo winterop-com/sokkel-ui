@@ -2,7 +2,7 @@ import { distinct, labelOf } from '../data'
 import { SERIES_ORDER, tooltipMarkup, type ChartLook } from '../look'
 import { nest, type TreeNode } from '../shapes'
 import { written } from './categories'
-import { colorOf, legendColor, type ChartBuilder, type ChartSpec } from './spec'
+import { colorOf, legendColor, measureName, type ChartBuilder, type ChartSpec } from './spec'
 import type { LegendItem } from '../ChartLegend'
 
 /** The fields a nesting kind reads, outermost first. */
@@ -66,7 +66,7 @@ function treeTooltip(spec: ChartSpec, total: number) {
                     .join(' / ') || point.name,
                 [
                     {
-                        label: sizeOf(spec) ?? 'Count',
+                        label: measureName(spec, sizeOf(spec)),
                         value: `${written(spec, point.value)} (${total === 0 ? '0' : ((point.value / total) * 100).toFixed(1)}%)`,
                         color: point.color,
                     },

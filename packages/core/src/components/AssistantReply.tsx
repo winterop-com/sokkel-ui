@@ -14,11 +14,12 @@ import {
     ThumbsDown,
     ThumbsUp,
 } from 'lucide-react'
-import { Children, useEffect, useState, type ReactNode } from 'react'
+import { Children, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { ConfirmCard, type ConfirmCardProps } from './ConfirmCard'
-import { Markdown, type InlineCode } from './Markdown'
+import { Markdown, type InlineCode, type MarkdownWords } from './Markdown'
+import { useCopy } from '../hooks/use-copy'
 import { Problem } from './Problem'
 import { Timeline, type TimelineEvent } from './Timeline'
 import { ToolCalls, type ToolCallEntry } from './ToolCall'
@@ -29,7 +30,7 @@ import { Marker, MarkerContent, MarkerIcon } from './ui/marker'
 import { MessageFooter, MessageHeader } from './ui/message'
 import { Spinner } from './ui/spinner'
 import { Trace, TraceCollapsible, TraceCollapsibleContent, TraceCollapsibleTrigger, TraceIcon, TraceLine, TraceTitle } from './ui/trace'
-import { AudioPlayer, type AudioPlayerLabels } from './media/AudioPlayer'
+import { AudioPlayer, type AudioPlayerWords } from './media/AudioPlayer'
 
 /**
  * How the turn is drawn: `card` holds it in one quiet card, header to footer; `steps` sets it on a
@@ -81,6 +82,10 @@ export interface AssistantReplyWords {
     thinking: string
     /** The read-back player's name. */
     speech: string
+    /** The read-back player's words: play, pause and seek. */
+    player: Partial<AudioPlayerWords>
+    /** The words the answer's markdown says: its callouts, code blocks and diagrams. */
+    markdown: Partial<MarkdownWords>
 }
 
 const plural = (count: number, word: string) => `${String(count)} ${word}${count === 1 ? '' : 's'}`
@@ -110,6 +115,8 @@ const WORDS: AssistantReplyWords = {
     thoughtFor: (count) => `Thought for ${plural(count, 'word')}`,
     thinking: 'Thinking',
     speech: 'Read aloud',
+    player: {},
+    markdown: {},
 }
 
 /** How many words a text holds, markdown marks and all. */
@@ -124,8 +131,6 @@ export interface AssistantReplySpeech {
     waveform?: readonly number[]
     /** Its length in seconds, shown before it has loaded. */
     duration?: number
-    /** The player's words: play, pause and seek. */
-    labels?: Partial<AudioPlayerLabels>
 }
 
 /** Whether React would draw anything for a node: `false`, `null`, `undefined` and `''` draw nothing. */
@@ -152,7 +157,7 @@ function Reasoning({ text, thinking, math, words }: { text: string; thinking: bo
                     </TraceLine>
                 </TraceCollapsibleTrigger>
                 <TraceCollapsibleContent>
-                    <Markdown content={text} streaming={thinking} math={math} className="text-muted-foreground" />
+                    <Markdown content={text} streaming={thinking} math={math} className="text-muted-foreground" words={words.markdown} />
                 </TraceCollapsibleContent>
             </TraceCollapsible>
         </Trace>
@@ -164,22 +169,13 @@ const INLINE: Record<AssistantReplyLayout, InlineCode> = { card: 'wash', steps: 
 
 /** A labeled Copy that says Copied for a moment after a press. */
 function CopyAction({ value, onCopy, words }: { value?: string; onCopy?: () => void; words: AssistantReplyWords }) {
-    const [copied, setCopied] = useState(false)
-    useEffect(() => {
-        if (!copied) return
-        const timer = setTimeout(() => setCopied(false), 1500)
-        return () => clearTimeout(timer)
-    }, [copied])
+    const { copied, copy } = useCopy()
     return (
         <Button
             variant="ghost"
             onClick={() => {
                 onCopy?.()
-                if (value === undefined) return
-                navigator.clipboard.writeText(value).then(
-                    () => setCopied(true),
-                    () => undefined,
-                )
+                if (value !== undefined) copy(value)
             }}
         >
             {copied ? <Check aria-hidden /> : <Copy aria-hidden />}
@@ -316,14 +312,23 @@ export function AssistantReply({
                 </Trace>
             )}
             {thought && <Reasoning text={reasoning} thinking={streaming && !written} math={math} words={words} />}
-            {written && <Markdown content={content} inlineCode={INLINE[layout]} streaming={streaming} caret={streaming} math={math} />}
+            {written && (
+                <Markdown
+                    content={content}
+                    inlineCode={INLINE[layout]}
+                    streaming={streaming}
+                    caret={streaming}
+                    math={math}
+                    words={words.markdown}
+                />
+            )}
             {speech !== undefined && (
                 <AudioPlayer
                     src={speech.src}
                     waveform={speech.waveform}
                     duration={speech.duration}
                     label={words.speech}
-                    labels={speech.labels}
+                    words={words.player}
                     variant="card"
                     className="max-w-sm"
                 />
