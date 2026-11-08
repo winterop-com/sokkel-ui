@@ -17,6 +17,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { type DataColumn, DataTable, findInTree } from '@winterop-com/sokkel-ui/DataTable'
+import { DownloadButton, type DownloadState } from '@winterop-com/sokkel-ui/DownloadButton'
 import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
 import { ConfirmDialog, DialogShell } from '@winterop-com/sokkel-ui/DialogShell'
 import { FileGrid, FileList, FileTypeIcon, formatSize, sortFiles, type FileEntry, type FileSort } from '@winterop-com/sokkel-ui/FileList'
@@ -366,7 +367,32 @@ const PATHS: Record<string, string[]> = {
     'harbor/shared/archive': ['harbor', 'shared', 'archive'],
 }
 
+/** A download of a file in eight parts, one every 400ms once pressed, held by the story. */
+function useDownload() {
+    const [state, setState] = useState<DownloadState>('idle')
+    const [count, setCount] = useState(0)
+    useEffect(() => {
+        if (state !== 'running') return
+        if (count >= 8) {
+            setState('kept')
+            return
+        }
+        const timer = setTimeout(() => setCount(count + 1), 400)
+        return () => clearTimeout(timer)
+    }, [state, count])
+    return {
+        state,
+        count,
+        start: () => {
+            setCount(0)
+            setState('running')
+        },
+        cancel: () => setState('idle'),
+    }
+}
+
 function Details({ file, folder }: { file: StoredFile; folder: string }) {
+    const download = useDownload()
     return (
         <>
             <PanelSection title="Preview">
@@ -385,10 +411,14 @@ function Details({ file, folder }: { file: StoredFile; folder: string }) {
                 />
             </PanelSection>
             <Row align="stretch" className="px-4 py-3">
-                <Button variant="outline" size="sm">
-                    <Download aria-hidden />
-                    Download
-                </Button>
+                <DownloadButton
+                    size="sm"
+                    state={download.state}
+                    count={download.count}
+                    total={8}
+                    onDownload={download.start}
+                    onCancel={download.cancel}
+                />
                 <Button variant="ghost" size="sm">
                     <Pencil aria-hidden />
                     Rename

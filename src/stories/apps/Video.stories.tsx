@@ -22,6 +22,7 @@ import { useState } from 'react'
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { MediaCard, MediaGrid } from '@winterop-com/sokkel-ui/media/MediaCard'
 import { formatTime } from '@winterop-com/sokkel-ui/media/time'
+import { RelativeTime } from '@winterop-com/sokkel-ui/RelativeTime'
 import { CommentComposer, CommentThread, type ThreadComment } from '@winterop-com/sokkel-ui/CommentThread'
 import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
 import { ShowMore } from '@winterop-com/sokkel-ui/ShowMore'
@@ -192,10 +193,15 @@ const NEXT = VIDEOS.slice(1)
 
 const TOPICS = ['All', 'From grace', 'Coasts', 'Trains', 'Islands', 'Recently uploaded', 'Watched']
 
+/** The moment the story is drawn at, so the comments' ages never depend on the clock. */
+const NOW = new Date('2026-11-04T14:02:00Z')
+const DAY = 24 * 60 * 60 * 1000
+
 interface Comment {
     id: string
     by: Channel
-    ago: string
+    /** How many days before the story's fixed now it was written. */
+    days: number
     text: string
     likes: string
     pinned?: boolean
@@ -206,7 +212,7 @@ const COMMENTS: Comment[] = [
     {
         id: 'c1',
         by: 'grace',
-        ago: '3 weeks ago',
+        days: 21,
         text: 'Filmed over four mornings from the same headland. The boats in the last minute are the ones that come back first in the next video.',
         likes: '1.2k',
         pinned: true,
@@ -214,22 +220,22 @@ const COMMENTS: Comment[] = [
     {
         id: 'c2',
         by: 'ada',
-        ago: '2 weeks ago',
+        days: 14,
         text: 'The moment the light reaches the breakwater at 4:12 is worth the whole thing.',
         likes: '348',
         replies: [
-            { id: 'c2r1', by: 'grace', ago: '2 weeks ago', text: 'That was the only clear morning of the four.', likes: '96' },
-            { id: 'c2r2', by: 'linus', ago: '1 week ago', text: 'Went back to it three times.', likes: '12' },
+            { id: 'c2r1', by: 'grace', days: 14, text: 'That was the only clear morning of the four.', likes: '96' },
+            { id: 'c2r2', by: 'linus', days: 8, text: 'Went back to it three times.', likes: '12' },
         ],
     },
     {
         id: 'c3',
         by: 'margaret',
-        ago: '10 days ago',
+        days: 10,
         text: 'Which harbor is this? It looks like the one on the far side of the bay, but the breakwater is longer than I remember.',
         likes: '57',
     },
-    { id: 'c4', by: 'linus', ago: '4 days ago', text: 'Quiet, slow and exactly right for an early start.', likes: '21' },
+    { id: 'c4', by: 'linus', days: 4, text: 'Quiet, slow and exactly right for an early start.', likes: '21' },
 ]
 
 function groups(view: 'home' | 'watch'): RailGroup[] {
@@ -321,7 +327,7 @@ function threadComment(comment: Comment): ThreadComment {
         author: comment.by,
         color: CHANNELS[comment.by].color,
         image: pictureOf(comment.by),
-        time: comment.ago,
+        time: <RelativeTime date={new Date(NOW.getTime() - comment.days * DAY)} now={NOW} timeZone="UTC" />,
         body: comment.text,
         likes: comment.likes,
         pinned: comment.pinned,

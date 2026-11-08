@@ -38,6 +38,32 @@
     }
 }
 
+/* A level bar of the sign-in art breathing; it starts and ends at rest, so stopped motion shows it still. */
+@keyframes level-breathe {
+    0%,
+    100% {
+        transform: scaleY(1);
+    }
+    50% {
+        transform: scaleY(0.62);
+    }
+}
+
+/* A lit line of the sign-in art flowing along its dashes; one cycle is one dash period, so it rests seamlessly. */
+@keyframes line-flow {
+    to {
+        stroke-dashoffset: -24;
+    }
+}
+
+/* A part of a screen rising into place as the screen opens. */
+@keyframes rise-in {
+    from {
+        opacity: 0;
+        transform: translateY(0.5rem);
+    }
+}
+
 /* The segment of a loading bar whose progress is unknown, sliding across its track. */
 @keyframes loading-slide {
     0% {

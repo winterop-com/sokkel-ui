@@ -1,6 +1,20 @@
-import { BookOpen, CalendarClock, Library, Play, RotateCcw, Server, ScrollText, Webhook, Workflow } from 'lucide-react'
+import {
+    BookOpen,
+    CalendarClock,
+    CircleStop,
+    Library,
+    ListStart,
+    Play,
+    RotateCcw,
+    Server,
+    ScrollText,
+    SlidersHorizontal,
+    Webhook,
+    Workflow,
+} from 'lucide-react'
 import { useState } from 'react'
 
+import { ApiLink } from '@winterop-com/sokkel-ui/ApiLink'
 import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
 import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
 import { FilterChip } from '@winterop-com/sokkel-ui/FilterChip'
@@ -8,10 +22,13 @@ import { Inspector, InspectorSection } from '@winterop-com/sokkel-ui/Inspector'
 import { Row } from '@winterop-com/sokkel-ui/Layout'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import { Problem } from '@winterop-com/sokkel-ui/Problem'
+import { RelativeTime } from '@winterop-com/sokkel-ui/RelativeTime'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
+import { SplitButton } from '@winterop-com/sokkel-ui/SplitButton'
 import { StatusChip, type Status } from '@winterop-com/sokkel-ui/StatusChip'
+import { TagChips } from '@winterop-com/sokkel-ui/TagChips'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { DropdownMenuItem } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
@@ -29,19 +46,32 @@ interface Run {
     job: string
     status: Status
     step: string | null
-    at: string
+    /** Minutes before the page's fixed now that it started. */
+    minutes: number
     took: string
 }
 
+/** The moment the page is drawn at, so run times never depend on the clock. */
+const NOW = new Date('2026-11-04T14:02:00Z')
+const startOf = (run: Run) => new Date(NOW.getTime() - run.minutes * 60_000)
+
+const TAGS: Record<string, string[]> = {
+    'nightly-export': ['nightly', 'export', 'harbor', 'warehouse', 'csv'],
+    'import-orders': ['orders', 'hourly', 'juniper', 'retry-on-failure', 'owner: ada'],
+    'sync-inventory': ['inventory', 'larkspur', 'every 15 min'],
+    'rebuild-index': ['search', 'index', 'harbor', 'weekly'],
+    'send-digest': ['email', 'digest', 'daily', 'owner: grace'],
+}
+
 const RUNS: Run[] = [
-    { id: '01a1a5c6', job: 'nightly-export', status: 'succeeded', step: null, at: '2 min ago', took: '1.4s' },
-    { id: '01a1a5c2', job: 'import-orders', status: 'failed', step: 'validate', at: '6 min ago', took: '0.3s' },
-    { id: '01a1a5b9', job: 'sync-inventory', status: 'running', step: 'transform', at: '7 min ago', took: '-' },
-    { id: '01a1a5b1', job: 'rebuild-index', status: 'succeeded', step: null, at: '12 min ago', took: '8.2s' },
-    { id: '01a1a5a7', job: 'send-digest', status: 'completed_with_errors', step: 'notify', at: '14 min ago', took: '2.9s' },
-    { id: '01a1a59e', job: 'rebuild-index', status: 'queued', step: null, at: '15 min ago', took: '-' },
-    { id: '01a1a591', job: 'nightly-export', status: 'cancelled', step: 'upload', at: '21 min ago', took: '4.0s' },
-    { id: '01a1a588', job: 'sync-inventory', status: 'succeeded', step: null, at: '33 min ago', took: '19.5s' },
+    { id: '01a1a5c6', job: 'nightly-export', status: 'succeeded', step: null, minutes: 2, took: '1.4s' },
+    { id: '01a1a5c2', job: 'import-orders', status: 'failed', step: 'validate', minutes: 6, took: '0.3s' },
+    { id: '01a1a5b9', job: 'sync-inventory', status: 'running', step: 'transform', minutes: 7, took: '-' },
+    { id: '01a1a5b1', job: 'rebuild-index', status: 'succeeded', step: null, minutes: 12, took: '8.2s' },
+    { id: '01a1a5a7', job: 'send-digest', status: 'completed_with_errors', step: 'notify', minutes: 14, took: '2.9s' },
+    { id: '01a1a59e', job: 'rebuild-index', status: 'queued', step: null, minutes: 15, took: '-' },
+    { id: '01a1a591', job: 'nightly-export', status: 'cancelled', step: 'upload', minutes: 21, took: '4.0s' },
+    { id: '01a1a588', job: 'sync-inventory', status: 'succeeded', step: null, minutes: 33, took: '19.5s' },
 ]
 
 const GROUPS: RailGroup[] = [
@@ -95,8 +125,10 @@ const COLUMNS: DataColumn<Run>[] = [
         id: 'started',
         header: 'Started',
         width: '6.5rem',
-        cell: (run) => <span className="text-xs text-muted-foreground">{run.at}</span>,
-        sortValue: (run) => Number.parseInt(run.at, 10),
+        cell: (run) => (
+            <RelativeTime date={startOf(run)} now={NOW} timeZone="UTC" length="short" className="text-xs text-muted-foreground" />
+        ),
+        sortValue: (run) => run.minutes,
     },
     {
         id: 'took',
@@ -127,7 +159,22 @@ export function RunsPage() {
                 top={<TopBar trail={[{ label: 'Tidevann', href: '#' }, { label: 'Runs' }]} />}
             >
                 <Page className="h-full">
-                    <PageHeader title="Runs" count="8 today" actions={<Button size="sm">Run a job</Button>} />
+                    <PageHeader
+                        title="Runs"
+                        count="8 today"
+                        description={<ApiLink path="/api/runs?since=2026-11-04" href="https://api.example.org/api/runs?since=2026-11-04" />}
+                        actions={
+                            <SplitButton
+                                size="sm"
+                                items={[
+                                    { label: 'Run with options', icon: <SlidersHorizontal aria-hidden />, onSelect: () => undefined },
+                                    { label: 'Run from a step', icon: <ListStart aria-hidden />, onSelect: () => undefined },
+                                ]}
+                            >
+                                Run a job
+                            </SplitButton>
+                        }
+                    />
                     <Row gap="inspector" align="start" className="min-h-0 flex-1">
                         <DataTable
                             toolbar={
@@ -167,9 +214,25 @@ export function RunsPage() {
                             }
                             actions={
                                 <>
-                                    <Button size="sm" variant="outline">
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        reason={
+                                            chosen.status === 'running' || chosen.status === 'queued'
+                                                ? 'The run has not finished yet.'
+                                                : undefined
+                                        }
+                                    >
                                         <RotateCcw aria-hidden />
                                         Retry
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        reason={chosen.status === 'running' ? undefined : 'Only a running run can be stopped.'}
+                                    >
+                                        <CircleStop aria-hidden />
+                                        Stop
                                     </Button>
                                     <Button size="sm" variant="ghost">
                                         <ScrollText aria-hidden />
@@ -193,13 +256,24 @@ export function RunsPage() {
                                     />
                                 </InspectorSection>
                             )}
+                            <InspectorSection title="Summary">
+                                <DescriptionList
+                                    layout="row"
+                                    items={[
+                                        { term: 'Took', value: chosen.took, numeric: true },
+                                        { term: 'By', value: 'ada' },
+                                        { term: 'Project', value: 'juniper' },
+                                    ]}
+                                />
+                            </InspectorSection>
                             <InspectorSection title="Details">
                                 <DescriptionList
                                     items={[
                                         { term: 'Job', value: chosen.job, code: true },
+                                        { term: 'Tags', value: <TagChips tags={TAGS[chosen.job] ?? []} /> },
                                         { term: 'Started by', value: 'ada, with an API token' },
-                                        { term: 'Started', value: `2026-11-04 14:02, ${chosen.at}` },
-                                        { term: 'Duration', value: chosen.took, code: true },
+                                        { term: 'Started', value: <RelativeTime date={startOf(chosen)} now={NOW} timeZone="UTC" /> },
+                                        { term: 'Request', value: <ApiLink path={`/api/runs/${chosen.id}`} /> },
                                     ]}
                                 />
                             </InspectorSection>

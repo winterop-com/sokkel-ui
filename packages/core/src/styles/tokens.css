@@ -63,6 +63,18 @@
     --text-media-title--line-height: var(--text-display--line-height);
     --text-media-title--font-weight: 600;
     --text-media-title--letter-spacing: -0.025em;
+    --text-brand-name: var(--text-display);
+    --text-brand-name--line-height: var(--text-display--line-height);
+    --text-brand-name--font-weight: 700;
+    --text-brand-name--letter-spacing: -0.03em;
+    --text-welcome-title: var(--text-stat);
+    --text-welcome-title--line-height: var(--text-stat--line-height);
+    --text-welcome-title--font-weight: 700;
+    --text-welcome-title--letter-spacing: -0.025em;
+    --text-eyebrow: var(--text-sm);
+    --text-eyebrow--line-height: var(--text-sm--line-height);
+    --text-eyebrow--font-weight: 500;
+    --text-eyebrow--letter-spacing: 0.18em;
     --leading-code: 1.5rem;
     --spacing-shell-top: 46px;
     --spacing-finger: 44px;
@@ -124,6 +136,7 @@
     --color-critical-wash: var(--critical-wash);
     --color-panel-line: var(--panel-line);
     --color-panel-ground: var(--panel-ground);
+    --color-brand-ground: var(--brand-ground);
     --color-scrim: var(--scrim);
     --color-faint: var(--faint);
     --color-good: var(--good);
@@ -299,6 +312,7 @@
     --elevation-pop: 0 14px 44px #23333e2e;
     --panel-line: #d3dbe0;
     --panel-ground: #f4f6f7;
+    --brand-ground: color-mix(in oklab, var(--foreground) 5%, var(--background));
     --panel-dot: #202b3426;
     --terminal: oklch(0.24 0.012 255);
     --terminal-foreground: oklch(0.93 0.008 255);
@@ -443,6 +457,7 @@
     --elevation-pop: 0 14px 44px #00000059;
     --panel-line: #34414c;
     --panel-ground: #171e24;
+    --brand-ground: color-mix(in oklab, var(--shade) 45%, var(--background));
     --panel-dot: #ffffff1c;
     --hover: color-mix(in oklch, var(--foreground) 12%, transparent);
     --code-keyword: oklch(0.8 0.12 305);
@@ -562,6 +577,7 @@
     --elevation-pop: 0 14px 44px #23333e2e;
     --panel-line: #d3dbe0;
     --panel-ground: #f4f6f7;
+    --brand-ground: color-mix(in oklab, var(--foreground) 5%, var(--background));
     --panel-dot: #202b3426;
     --terminal: oklch(0.24 0.012 255);
     --terminal-foreground: oklch(0.93 0.008 255);
@@ -707,6 +723,7 @@
     --elevation-pop: 0 14px 44px #00000059;
     --panel-line: #34414c;
     --panel-ground: #171e24;
+    --brand-ground: color-mix(in oklab, var(--shade) 45%, var(--background));
     --panel-dot: #ffffff1c;
     --terminal: oklch(0.105 0.012 255);
     --terminal-foreground: oklch(0.93 0.008 255);

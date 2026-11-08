@@ -104,6 +104,26 @@ export const States: StoryObj = {
     ),
 }
 
+/** Buttons that cannot be pressed now and say why on hover and focus; they stay in the tab order. */
+export const Reason: StoryObj = {
+    render: () => (
+        <Row gap="md" align="stretch" wrap>
+            <Specimen label="reason">
+                <Button reason="A run of nightly-export is already under way.">
+                    <Play data-icon="inline-start" />
+                    Run now
+                </Button>
+            </Specimen>
+            <Specimen label="reason outline">
+                <Button variant="outline" reason="Only an owner of harbor can delete it.">
+                    <Trash2 data-icon="inline-start" />
+                    Delete
+                </Button>
+            </Specimen>
+        </Row>
+    ),
+}
+
 export const RunActions: StoryObj = {
     render: () => (
         <Stack gap="lg" className="rounded-lg border border-border p-4">

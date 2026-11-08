@@ -1,10 +1,13 @@
 import { Button as ButtonPrimitive } from '@base-ui/react/button'
 import { cva, type VariantProps } from 'class-variance-authority'
 
+import type { ReactNode } from 'react'
+
 import { cn } from '../../lib/utils'
+import { Tooltip, TooltipContent, TooltipTrigger } from './tooltip'
 
 const buttonVariants = cva(
-    "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+    "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 aria-disabled:active:translate-y-0 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
     {
         variants: {
             variant: {
@@ -37,19 +40,43 @@ const buttonVariants = cva(
     },
 )
 
+/**
+ * A button. `reason` disables it and says why: the reason shows on hover and on focus, and the
+ * button stays in the tab order so a keyboard reaches the reason too.
+ */
 function Button({
     className,
     variant = 'default',
     size = 'default',
+    reason,
+    reasonSide = 'top',
+    disabled,
+    focusableWhenDisabled,
     ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
-    return (
+}: ButtonPrimitive.Props &
+    VariantProps<typeof buttonVariants> & {
+        /** Why the button cannot be pressed now; given, the button is disabled and shows it. */
+        reason?: ReactNode
+        /** Which side the reason opens on. */
+        reasonSide?: 'top' | 'bottom' | 'left' | 'right'
+    }) {
+    const held = reason !== undefined && reason !== null && reason !== false
+    const button = (
         <ButtonPrimitive
             data-slot="button"
             data-button-size={size ?? 'default'}
             className={cn(buttonVariants({ variant, size, className }))}
+            disabled={held || disabled}
+            focusableWhenDisabled={held || focusableWhenDisabled}
             {...props}
         />
+    )
+    if (!held) return button
+    return (
+        <Tooltip>
+            <TooltipTrigger render={button} />
+            <TooltipContent side={reasonSide}>{reason}</TooltipContent>
+        </Tooltip>
     )
 }
 
