@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { inertOutside, openOverlay, overlaysOpen, type InertNode } from './overlay'
+import { inertOutside, openOverlay, overlaysOpen, topOverlay, type InertNode } from './overlay'
 
 interface Node extends InertNode {
     name: string
@@ -54,5 +54,18 @@ describe('openOverlay', () => {
         expect(first.top()).toBe(true)
         first.close()
         expect(overlaysOpen()).toBe(false)
+    })
+
+    it('gives the element of the overlay on top, and null where none is open', () => {
+        const drawer = {} as Element
+        const sheet = {} as Element
+        expect(topOverlay()).toBeNull()
+        const first = openOverlay(drawer)
+        const second = openOverlay(sheet)
+        expect(topOverlay()).toBe(sheet)
+        second.close()
+        expect(topOverlay()).toBe(drawer)
+        first.close()
+        expect(topOverlay()).toBeNull()
     })
 })

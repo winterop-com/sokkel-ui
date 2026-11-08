@@ -34,7 +34,7 @@ export function useOverlay<T extends HTMLElement = HTMLDivElement>(
     useEffect(() => {
         if (!open) return undefined
         const element = ref.current
-        const layer = openOverlay()
+        const layer = openOverlay(element)
         const opener =
             document.activeElement instanceof HTMLElement && document.activeElement !== document.body ? document.activeElement : null
         const undo = inert && element !== null ? inertOutside(element) : undefined

@@ -124,12 +124,30 @@ Ctrl K through `Shell`'s `palette`, an `AccountMenu` in the rail's foot, `local`
 sign-in, and a `StatusLine` as the shell's `foot`, which the account sits level with as one bar
 across the window's bottom edge.
 
+The rail's mark and name lead home (`markHref`, drawn by `renderLink`); collapsed, the mark expands
+it, and so does its edge, pulled outward (the rail following the pointer and keeping the width it is
+let go at) or with Enter, Space or the right arrow. `TopBar` holds a search field at its start
+(`search`, a `SearchField` or a `Search`, which `/` focuses), the trail after it, and the palette's
+button at its end with the keys that open it; on a phone the field gives way to that button. The
+account menu offers Light, Dark and System in itself (`scheme`, `onSchemeChange`), staying open as
+one is chosen; an app's own rows (`extra`) carry their icons, and where no one is signed in
+`onSignIn` stands in Sign out's place with an icon of its own. On a phone its rows are a finger's
+height and Keyboard shortcuts is left out. A new `contentKey` on `Shell` mounts the page afresh,
+as after the server has come back, without a wrapper of the app's.
+
 A screen adds what only it can do to the palette with `useCommands(groups, deps)` while it is
 mounted and takes it away when it unmounts; the shell holds the registry and lists those groups with
 its own by each group's `rank`, a screen's first at equal rank, groups of one title as one. An app
 that draws its own palette holds a registry with `useCommandRegistry`. A palette row with a `detail`
 or `artwork` (an image's address or a node, round for a person) is two lines tall, drawn as a search
-result is, and the palette's search results take `artwork` too.
+result is, and the palette's search results take `artwork` too. The palette matches by letters in
+order unless its `filter` (`paletteFilter` on `Shell`) is `terms`, the library's own: every word
+typed must be found in a command's label, `keywords`, hint, code, second line or group, and a label
+starting with the query comes first. `keywords` on a command, and on a rail entry through
+`placeCommands`, are matched and never drawn. `appearanceCommands` takes `useAppearance`'s settings
+and setter, or the parts of a look an app keeps itself, each with its callback
+(`onSchemeChange`, `onThemeChange`, `onDensityChange`), so the palette never overrules the app's
+own keys.
 
 Keys go through one registry, which `Shell` holds as it holds the commands. A screen binds its keys
 with `useShortcuts(bindings, deps)` while it is mounted (outside a shell, in the page's own). A
@@ -145,9 +163,14 @@ A later screen's binding comes before an earlier one's, and the shell's own (the
 Ctrl K, which a second press closes; `?`) come last. `ShortcutsDialog` lists every binding with a
 `label` under its `group`, its keys written by `keyLabels` as the device writes them, then the
 groups an app gives for keys it answers itself; `Shell`'s `shortcuts` makes the shell hold it,
-opened on `?`, bound once, and from the account menu. `SearchField`'s `/` is a binding too. The
-palette can be held from outside (`paletteOpen`, `onPaletteOpenChange`) and refused over an app's
-own full-screen view (`mayOpenPalette`); on a touch screen it has a Close button.
+opened on `?`, bound once, and from the account menu, and `shortcutsOpen` with
+`onShortcutsOpenChange` holds it from outside, as for a palette row built beside the shell.
+`useShell()` gives a screen inside the shell `openPalette` and `openShortcuts`. `SearchField`'s `/`
+is a binding too. The palette can be held from outside (`paletteOpen`, `onPaletteOpenChange`). Left
+to itself it opens only where nothing stands over the page; `mayOpenPalette(over)` is asked first
+with the layer on top (a dialog, a sheet, a menu or an overlay from `useOverlay`, or null) and
+decides in its place: no over an app's own full-screen view, yes over an app's own search, which
+the app closes as the palette opens. On a touch screen the palette has a Close button.
 
 `useOverlay(open, { onClose })` makes an app's own overlay behave as a dialog: the page outside it
 inert, focus moved in, Escape closing the one on top, and focus back where it was; `Shell`'s drawer

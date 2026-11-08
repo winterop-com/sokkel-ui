@@ -1,5 +1,5 @@
 import { Menu, PanelRight } from 'lucide-react'
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { Fragment, lazy, Suspense, useCallback, useContext, useEffect, useMemo, useRef, useState, type Key, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { CommandRegistry, useCommandRegistry } from '../hooks/use-commands'
@@ -7,8 +7,8 @@ import { useIsMobile } from '../hooks/use-mobile'
 import { useOverlay } from '../hooks/use-overlay'
 import { ShortcutRegistry } from '../hooks/use-shortcuts'
 import { trafficLightsStyle, useTrafficLights, windowPressHandler, type DesktopWindow } from '../lib/desktop'
-import { createShortcutRegistry, type KeyBinding, type ShortcutGroup } from '../lib/shortcuts'
-import type { CommandPaletteWords, PaletteGroup, PaletteSearch } from './CommandPalette'
+import { createShortcutRegistry, topLayer, type KeyBinding, type ShortcutGroup } from '../lib/shortcuts'
+import type { CommandPaletteWords, PaletteFilter, PaletteGroup, PaletteSearch } from './CommandPalette'
 import type { ShortcutsDialogWords } from './ShortcutsDialog'
 import { ShellDesktop, ShellDrawer, ShellFootCell, ShellPalette, ShellScroller, ShellShortcuts } from './shell-context'
 
@@ -46,23 +46,33 @@ export interface ShellProps {
     defaultPaletteOpen?: boolean
     onPaletteOpenChange?: (open: boolean) => void
     /**
-     * Asked before the palette opens, from the keys or the top bar's search; false keeps it closed,
-     * as over an app's own full-screen view.
+     * Asked first whenever the palette would open (its keys, the top bar, `useShell`'s
+     * `openPalette`), with the layer standing over the page: the dialog, sheet or menu open on top,
+     * or an overlay from `useOverlay`, and null where nothing does. True opens it, over that layer
+     * too, as over an app's own search the palette replaces; false keeps it closed, as over an app's
+     * own full-screen view. Without it the palette opens only where nothing stands over the page.
      */
-    mayOpenPalette?: () => boolean
+    mayOpenPalette?: (over: Element | null) => boolean
     paletteWords?: Partial<CommandPaletteWords>
     /** The app's search, whose results the palette lists under its commands. */
     paletteSearch?: PaletteSearch
+    /** How the palette matches its commands to what is typed, as `CommandPalette`'s `filter`. */
+    paletteFilter?: PaletteFilter
     /**
      * The keys the app answers itself, listed in the shortcuts dialog after the keys bound with
      * `useShortcuts`; given, even empty, the shell holds the dialog and opens it on `?`.
      */
     shortcuts?: readonly ShortcutGroup[]
+    /** Whether the shortcuts dialog is open; held inside the shell when not given. */
+    shortcutsOpen?: boolean
     /** Whether the shortcuts dialog starts open. */
     defaultShortcutsOpen?: boolean
+    onShortcutsOpenChange?: (open: boolean) => void
     shortcutsWords?: Partial<ShortcutsDialogWords>
     /** The desktop window the shell stands in, when its native title bar is hidden; leave it off in a browser. */
     desktop?: DesktopWindow
+    /** Keys the content: a new value mounts the page afresh, its state let go, as after a reconnect. */
+    contentKey?: Key
     children: ReactNode
     words?: Partial<ShellWords>
 }
@@ -106,19 +116,25 @@ export interface ShellProps {
  * button closes it.
  *
  * With `palette`, the shell holds the app's command palette: ⌘K on a Mac and Ctrl+K elsewhere open
- * it, from a field too, and close it again; so does the top bar's search, unless the app gives
- * `TopBar` its own `onSearch`. The keys do not open it over a dialog or a menu, nor where
- * `mayOpenPalette` says no, such as over an app's own full-screen view; `paletteOpen` with
- * `onPaletteOpenChange` holds it from outside. `placeCommands` makes its places from the rail's
- * groups and `appearanceCommands` its scheme, density and theme from `useAppearance`. A screen adds
- * its own groups while it is mounted with `useCommands`, listed with the shell's by their `rank`.
+ * it, from a field too, and close it again; so does the top bar's palette button, unless the app
+ * gives `TopBar` its own `onSearch`. Left to itself it does not open over a dialog, a menu or an
+ * overlay; `mayOpenPalette`, asked first with the layer on top, decides in its place: no over an
+ * app's own full-screen view, yes over an app's own search that the palette replaces (the app
+ * closes that in `onPaletteOpenChange`). `paletteOpen` with `onPaletteOpenChange` holds it from
+ * outside, and `paletteFilter` chooses how it matches its commands. `placeCommands` makes its
+ * places from the rail's groups and `appearanceCommands` its scheme, density and theme, from
+ * `useAppearance` or from callbacks of an app that keeps its look itself. A screen adds its own
+ * groups while it is mounted with `useCommands`, listed with the shell's by their `rank`.
  *
  * The shell answers the keys screens bind with `useShortcuts` while they are mounted, its own (the
  * palette's, the shortcuts') yielding to theirs, and keeps them quiet while the palette or the
  * shortcuts dialog is open. With `shortcuts`, it holds the shortcuts dialog: `?` outside a field
  * opens it, bound once here however many account menus the frame draws, and so does the account
  * menu's Keyboard shortcuts, listing every key bound with a label and the groups given for keys the
- * app answers itself. `useScrollMemory` keeps the content's place per screen.
+ * app answers itself; `shortcutsOpen` with `onShortcutsOpenChange` holds it from outside, as a
+ * palette row that opens it does. A screen inside opens either with `useShell`. `useScrollMemory`
+ * keeps the content's place per screen, and a new `contentKey` mounts the content afresh, as after
+ * the server has come back.
  *
  * With `desktop`, the shell stands in a desktop window whose native title bar is hidden: its top
  * strip, the rail's head and the top bar (and an open panel's header), is the window's drag
@@ -144,10 +160,14 @@ export function Shell({
     mayOpenPalette,
     paletteWords,
     paletteSearch,
+    paletteFilter,
     shortcuts,
+    shortcutsOpen,
     defaultShortcutsOpen = false,
+    onShortcutsOpenChange,
     shortcutsWords,
     desktop,
+    contentKey,
     children,
     words: given,
 }: ShellProps) {
@@ -197,42 +217,66 @@ export function Shell({
     // Drawn from its first opening on, so it can close with its own animation.
     const [paletteShown, setPaletteShown] = useState(defaultPaletteOpen)
     if (paletteIsOpen && !paletteShown) setPaletteShown(true)
-    const latest = useRef({ held: paletteOpen !== undefined, isOpen: paletteIsOpen, onPaletteOpenChange, mayOpenPalette })
+    const [ownShortcutsOpen, setOwnShortcutsOpen] = useState(defaultShortcutsOpen)
+    const shortcutsIsOpen = shortcutsOpen ?? ownShortcutsOpen
+    // Drawn from its first opening on, as the palette is.
+    const [shortcutsShown, setShortcutsShown] = useState(defaultShortcutsOpen)
+    if (shortcutsIsOpen && !shortcutsShown) setShortcutsShown(true)
+    const held = {
+        palette: paletteOpen !== undefined,
+        isOpen: paletteIsOpen,
+        onPaletteOpenChange,
+        mayOpenPalette,
+        shortcuts: shortcutsOpen !== undefined,
+        onShortcutsOpenChange,
+    }
+    const latest = useRef(held)
     useEffect(() => {
-        latest.current = { held: paletteOpen !== undefined, isOpen: paletteIsOpen, onPaletteOpenChange, mayOpenPalette }
+        latest.current = held
     })
-    const setPalette = useCallback((next: boolean) => {
-        if (next && latest.current.mayOpenPalette?.() === false) return
-        if (!latest.current.held) setOwnPaletteOpen(next)
-        latest.current.onPaletteOpenChange?.(next)
-    }, [])
+    // Opening asks `mayOpenPalette` with the layer on top, or else opens only where nothing stands over the page.
+    const setPalette = useCallback(
+        (next: boolean) => {
+            if (next) {
+                if (latest.current.isOpen) return
+                const may = latest.current.mayOpenPalette
+                if (may === undefined ? shortcutRegistry.covered() : !may(topLayer())) return
+            }
+            if (!latest.current.palette) setOwnPaletteOpen(next)
+            latest.current.onPaletteOpenChange?.(next)
+        },
+        [shortcutRegistry],
+    )
     const openPalette = useCallback(() => setPalette(true), [setPalette])
-    // The keys close an open palette, and open one only where nothing stands over the page.
-    const togglePalette = useCallback(() => {
-        if (latest.current.isOpen) setPalette(false)
-        else if (!shortcutRegistry.covered()) setPalette(true)
-    }, [setPalette, shortcutRegistry])
+    // The keys close an open palette and open a closed one.
+    const togglePalette = useCallback(() => setPalette(!latest.current.isOpen), [setPalette])
     const commands = palette !== undefined && paletteShown && (
         <Suspense fallback={null}>
-            <CommandPalette open={paletteIsOpen} onOpenChange={setPalette} groups={groups} search={paletteSearch} words={paletteWords} />
+            <CommandPalette
+                open={paletteIsOpen}
+                onOpenChange={setPalette}
+                groups={groups}
+                search={paletteSearch}
+                filter={paletteFilter}
+                words={paletteWords}
+            />
         </Suspense>
     )
-    const [shortcutsOpen, setShortcutsOpen] = useState(defaultShortcutsOpen)
-    const [shortcutsShown, setShortcutsShown] = useState(defaultShortcutsOpen)
-    const openShortcuts = useCallback(() => {
-        setShortcutsShown(true)
-        setShortcutsOpen(true)
+    const setShortcuts = useCallback((next: boolean) => {
+        if (!latest.current.shortcuts) setOwnShortcutsOpen(next)
+        latest.current.onShortcutsOpenChange?.(next)
     }, [])
+    const openShortcuts = useCallback(() => setShortcuts(true), [setShortcuts])
     const keys = shortcuts !== undefined && shortcutsShown && (
         <Suspense fallback={null}>
-            <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} groups={shortcuts} words={shortcutsWords} />
+            <ShortcutsDialog open={shortcutsIsOpen} onOpenChange={setShortcuts} groups={shortcuts} words={shortcutsWords} />
         </Suspense>
     )
     useEffect(() => shortcutRegistry.listen(window), [shortcutRegistry])
     useEffect(() => {
         shortcutRegistry.surface('palette', paletteIsOpen)
-        shortcutRegistry.surface('shortcuts', shortcutsOpen)
-    }, [shortcutRegistry, paletteIsOpen, shortcutsOpen])
+        shortcutRegistry.surface('shortcuts', shortcutsIsOpen)
+    }, [shortcutRegistry, paletteIsOpen, shortcutsIsOpen])
     const hasPalette = palette !== undefined
     const hasShortcuts = shortcuts !== undefined
     useEffect(() => {
@@ -316,7 +360,7 @@ export function Shell({
             )}
             {banner !== undefined && banner !== null && banner !== false && <div className="shrink-0">{banner}</div>}
             <main className="@container relative min-h-0 flex-1 overflow-y-auto" ref={setMain}>
-                {children}
+                <Fragment key={contentKey}>{children}</Fragment>
             </main>
             {!docked && strip}
         </div>
@@ -450,6 +494,25 @@ const WORDS: ShellWords = {
     hidePanel: 'Hide the panel',
     openPalette: 'Open the command palette',
     openShortcuts: 'Show the keyboard shortcuts',
+}
+
+/** What a screen inside a `Shell` can open of the shell's. */
+export interface ShellControls {
+    /** Opens the command palette, asking `mayOpenPalette` as its keys do; undefined where the shell holds no palette. */
+    openPalette: (() => void) | undefined
+    /** Opens the keyboard shortcuts dialog; undefined where the shell holds none. */
+    openShortcuts: (() => void) | undefined
+}
+
+/**
+ * The shell around a screen, for what the screen opens of it: the command palette and the
+ * keyboard shortcuts, from a button or a command of the screen's own. Outside a `Shell` both are
+ * undefined.
+ */
+export function useShell(): ShellControls {
+    const openPalette = useContext(ShellPalette)
+    const openShortcuts = useContext(ShellShortcuts)
+    return useMemo(() => ({ openPalette, openShortcuts }), [openPalette, openShortcuts])
 }
 
 /** The `lg` breakpoint, from which the panel is a column rather than a sheet. */

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { CalendarClock, Play, Workflow } from 'lucide-react'
+import { CalendarClock, Keyboard, Play, Workflow } from 'lucide-react'
 import { useState } from 'react'
 
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
@@ -10,7 +10,7 @@ import { LogView, type LogLine } from '@winterop-com/sokkel-ui/LogView'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
-import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
+import { Page, Shell, useShell } from '@winterop-com/sokkel-ui/Shell'
 import type { ShortcutGroup } from '@winterop-com/sokkel-ui/ShortcutsDialog'
 import { StatusChip, type Status } from '@winterop-com/sokkel-ui/StatusChip'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
@@ -79,6 +79,7 @@ function RunScreen() {
     const [status, setStatus] = useState<Status>('failed')
     const [log, setLog] = useState(false)
     const [query, setQuery] = useState('')
+    const { openShortcuts } = useShell()
     useShortcuts(
         [
             { id: 'rerun', key: 'r', label: 'Run again', group: 'This run', run: () => setStatus('queued') },
@@ -103,6 +104,9 @@ function RunScreen() {
                 meta={<StatusChip status={status} />}
                 actions={
                     <>
+                        <Button size="sm" variant="ghost" onClick={openShortcuts}>
+                            Shortcuts <Kbd>?</Kbd>
+                        </Button>
                         <Button size="sm" variant="outline" onClick={() => setLog(!log)}>
                             {log ? 'Hide the log' : 'Show the log'} <Kbd>L</Kbd>
                         </Button>
@@ -124,13 +128,30 @@ function RunScreen() {
     )
 }
 
-function KeysFrame({ dialog = false }: { dialog?: boolean }) {
+function KeysFrame({ dialog = false, palette = false }: { dialog?: boolean; palette?: boolean }) {
+    const [keysOpen, setKeysOpen] = useState(dialog)
     return (
         <TooltipProvider>
             <Shell
-                palette={placeCommands(PLACES, () => undefined)}
+                palette={[
+                    ...placeCommands(PLACES, () => undefined),
+                    {
+                        title: 'Help',
+                        commands: [
+                            {
+                                id: 'shortcuts',
+                                label: 'Keyboard shortcuts',
+                                icon: Keyboard,
+                                keys: ['?'],
+                                onSelect: () => setKeysOpen(true),
+                            },
+                        ],
+                    },
+                ]}
+                defaultPaletteOpen={palette}
                 shortcuts={APP_KEYS}
-                defaultShortcutsOpen={dialog}
+                shortcutsOpen={keysOpen}
+                onShortcutsOpenChange={setKeysOpen}
                 rail={
                     <Rail
                         mark={<TidevannMark />}
@@ -157,7 +178,7 @@ function KeysFrame({ dialog = false }: { dialog?: boolean }) {
 /**
  * A run's page binds R (run again), Shift+R (from the failed step) and L (the log); its search takes
  * `/`. None of them fires while typing in the search. `?` opens the shortcuts, as the account menu's
- * Keyboard shortcuts does.
+ * Keyboard shortcuts does, and the page's Shortcuts button through `useShell`.
  */
 export const ScreenKeys: StoryObj = { name: 'Screen keys', render: () => <KeysFrame /> }
 
@@ -167,3 +188,9 @@ export const ScreenKeys: StoryObj = { name: 'Screen keys', render: () => <KeysFr
  * writes it.
  */
 export const Dialog: StoryObj = { name: 'Shortcuts dialog', render: () => <KeysFrame dialog /> }
+
+/**
+ * The palette's own row for the shortcuts: the app holds the dialog's state with `shortcutsOpen`
+ * and `onShortcutsOpenChange`, so a row built beside the shell opens it.
+ */
+export const FromPalette: StoryObj = { name: 'From the palette', render: () => <KeysFrame palette /> }

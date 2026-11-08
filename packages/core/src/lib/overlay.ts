@@ -1,5 +1,5 @@
-/** The overlays of an app's own that are open, the last opened on top. */
-const open: object[] = []
+/** The overlays of an app's own that are open, the last opened on top, each with its element. */
+const open: { element: Element | null }[] = []
 
 /** Whether an overlay opened through `useOverlay` is open, so the keys behind it stay quiet. */
 export function overlaysOpen(): boolean {
@@ -12,9 +12,14 @@ export interface OverlayLayer {
     close: () => void
 }
 
+/** The element of the overlay on top, or null where none is open or it has no element. */
+export function topOverlay(): Element | null {
+    return open.at(-1)?.element ?? null
+}
+
 /** Puts an overlay on top of those open; `close` takes it away wherever it is. */
-export function openOverlay(): OverlayLayer {
-    const layer = {}
+export function openOverlay(element: Element | null = null): OverlayLayer {
+    const layer = { element }
     open.push(layer)
     return {
         top: () => open[open.length - 1] === layer,

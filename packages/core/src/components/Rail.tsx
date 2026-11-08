@@ -45,6 +45,8 @@ export interface RailEntry {
     unread?: boolean
     /** A color drawn as a dot in place of the icon, for a label or a tag: a CSS color such as a token. */
     dot?: string
+    /** More words the palette finds the place by, beyond its label, through `placeCommands`; never drawn. */
+    keywords?: readonly string[]
     /**
      * The entries under this one, one level deep. Expanded, the row folds them under it behind a
      * chevron at its end; collapsed or in a strip, the entry opens them in a small flyout.
@@ -79,6 +81,12 @@ export interface RailProps {
     mark?: ReactNode
     /** The app's name beside the mark; in a strip, the workspace tile's name. */
     name: string
+    /**
+     * Where the mark leads, the app's home: the expanded rail's mark and name, and a strip's tile,
+     * are a link there, drawn by `renderLink`. A collapsed rail's mark stays the control that
+     * expands it.
+     */
+    markHref?: string
     groups: RailGroup[]
     /** `nav` is the app's navigation, expanded or collapsed; `strip` is a team chat's narrow column of labeled icons. */
     variant?: 'nav' | 'strip'
@@ -90,7 +98,7 @@ export interface RailProps {
     /** The expanded width in pixels, held from outside with `onSizeChange`. */
     size?: number
     onSizeChange?: (size: number) => void
-    /** Whether the expanded rail's edge drags to resize it. */
+    /** Whether the expanded rail's edge drags to resize it, and a collapsed rail's to expand it. */
     resizable?: boolean
     minSize?: number
     maxSize?: number
@@ -123,7 +131,11 @@ export interface RailProps {
  *
  * Expanded, its right edge drags to resize it, and a double click on the edge puts it back. Left
  * to itself it holds its own width, starting at `defaultSize`; `size` with `onSizeChange` holds
- * it from outside, and `resizable={false}` keeps it fixed.
+ * it from outside, and `resizable={false}` keeps it fixed. Collapsed, with `onCollapsedChange`,
+ * its edge pulled outward expands it under the pointer, the width at release kept, and Enter, Space
+ * or the right arrow on the edge expand it too.
+ *
+ * `markHref` makes the expanded rail's mark and name, and a strip's tile, a link to the app's home.
  *
  * In the shell's drawer on a narrow window the rail is drawn expanded, even where the app holds it
  * `collapsed`, its edge is not drawn, and the control at its head's end closes the drawer.
@@ -147,6 +159,7 @@ export interface RailProps {
 export function Rail({
     mark,
     name,
+    markHref,
     groups,
     variant = 'nav',
     collapsed: kept = false,
@@ -207,6 +220,7 @@ export function Rail({
             <Strip
                 mark={mark}
                 name={name}
+                markHref={markHref}
                 groups={groups}
                 foot={foot}
                 renderLink={renderLink}
@@ -229,6 +243,16 @@ export function Rail({
             {mark !== undefined && <span className="group-hover/mark:opacity-0">{mark}</span>}
             <PanelLeftOpen className={cn('absolute size-4', mark !== undefined && 'opacity-0 group-hover/mark:opacity-100')} aria-hidden />
         </button>
+    )
+    const head = (
+        <>
+            {mark !== undefined && (
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
+                    {mark}
+                </span>
+            )}
+            <span className="truncate text-title font-semibold tracking-tight">{name}</span>
+        </>
     )
     return (
         <>
@@ -253,12 +277,13 @@ export function Rail({
                         !under && expand
                     ) : (
                         <>
-                            {mark !== undefined && (
-                                <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
-                                    {mark}
-                                </span>
-                            )}
-                            <span className="truncate text-title font-semibold tracking-tight">{name}</span>
+                            {markHref === undefined
+                                ? head
+                                : renderLink(
+                                      { id: 'home', label: name, href: markHref },
+                                      head,
+                                      'flex min-w-0 items-center gap-2 rounded-md pe-1.5 outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+                                  )}
                             {drawer !== undefined ? (
                                 <button
                                     type="button"
@@ -338,7 +363,8 @@ export function Rail({
                     </div>,
                     footCell,
                 )}
-            {!collapsed && resizable && held.changeable && (
+            {resizable && held.changeable && (!collapsed || onCollapsedChange !== undefined) && (
+                // One handle through the change, so a drag that expands a collapsed rail goes on sizing it.
                 <ResizeHandle
                     target={aside}
                     size={held.size}
@@ -346,7 +372,8 @@ export function Rail({
                     onReset={held.reset}
                     min={minSize}
                     max={maxSize}
-                    label={words.resize}
+                    label={collapsed ? words.expand : words.resize}
+                    onExpand={collapsed ? () => onCollapsedChange?.(false) : undefined}
                 />
             )}
         </>
@@ -665,6 +692,7 @@ function RailFlyout({
 function Strip({
     mark,
     name,
+    markHref,
     groups,
     foot,
     renderLink,
@@ -675,6 +703,7 @@ function Strip({
 }: {
     mark?: ReactNode
     name: string
+    markHref?: string
     groups: RailGroup[]
     foot?: ReactNode
     renderLink: RenderLink
@@ -683,11 +712,19 @@ function Strip({
     drag?: string
     lights: boolean
 }) {
-    const tile = mark !== undefined && (
+    const face = mark !== undefined && (
         <span title={name} className="flex size-9 items-center justify-center rounded-md bg-primary text-primary-foreground">
             {mark}
         </span>
     )
+    const tile =
+        face !== false && markHref !== undefined
+            ? renderLink(
+                  { id: 'home', label: name, href: markHref },
+                  face,
+                  'rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+              )
+            : face
     return (
         <aside
             data-variant="strip"

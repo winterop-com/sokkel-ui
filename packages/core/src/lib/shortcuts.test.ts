@@ -10,6 +10,7 @@ import {
     pickBinding,
     pressPlace,
     shortcutGroups,
+    topLayer,
     type KeyBinding,
     type KeyPress,
     type PressPlace,
@@ -285,6 +286,21 @@ describe('layerOpen', () => {
         expect(layerOpen(page(['[role="dialog"][data-open]:not([aria-modal="false"])']))).toBe(true)
         expect(layerOpen(page([]))).toBe(false)
         expect(layerOpen(undefined)).toBe(false)
+    })
+})
+
+describe('topLayer', () => {
+    it('gives the dialog or menu opened last, else the overlay on top, else null', () => {
+        const settings = {} as Element
+        const menu = {} as Element
+        const drawer = {} as Element
+        const page = (open: Element[]) => ({ querySelectorAll: () => open as unknown as NodeListOf<Element> })
+        expect(topLayer(page([settings, menu]))).toBe(menu)
+        expect(topLayer(page([]))).toBeNull()
+        const layer = openOverlay(drawer)
+        expect(topLayer(page([]))).toBe(drawer)
+        expect(topLayer(page([settings]))).toBe(settings)
+        layer.close()
     })
 })
 

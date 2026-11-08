@@ -1,5 +1,5 @@
 import { isApple, keyLabels, keyName, textEntry, type KeyChord, type KeyTarget } from './keys'
-import { overlaysOpen } from './overlay'
+import { overlaysOpen, topOverlay } from './overlay'
 
 /**
  * A key a screen answers while it is mounted: the chord, what it does, and where it is heard.
@@ -280,6 +280,17 @@ export function layerOpen(
     doc: Pick<Document, 'querySelector'> | undefined = typeof document === 'undefined' ? undefined : document,
 ): boolean {
     return doc !== undefined && doc.querySelector(OPEN_LAYERS) !== null
+}
+
+/**
+ * The layer standing on top of the page: the dialog, sheet or menu opened last in `doc`, or else the
+ * overlay from `useOverlay` on top; null where nothing stands over the page.
+ */
+export function topLayer(
+    doc: Pick<Document, 'querySelectorAll'> | undefined = typeof document === 'undefined' ? undefined : document,
+): Element | null {
+    const layers = doc === undefined ? [] : Array.from(doc.querySelectorAll(OPEN_LAYERS))
+    return layers.at(-1) ?? topOverlay()
 }
 
 /** Where the keys screens bind are kept, and the one listener that answers them. */

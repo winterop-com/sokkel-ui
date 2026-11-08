@@ -17,7 +17,7 @@ import {
     Webhook,
     Workflow,
 } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { PersonAvatar } from '@winterop-com/sokkel-ui/PersonAvatar'
@@ -224,36 +224,37 @@ export const StripFlyout: StoryObj = {
     ),
 }
 
-/** The navigation collapsed to icons, for comparison: counts over the icons and a dot on Jobs, each entry named in a tooltip. */
-export const Collapsed: StoryObj = {
-    render: () => (
+/** The navigation, collapsing and expanding as it is asked to, its mark and name a link home. */
+function Navigation({ collapsed: start }: { collapsed: boolean }) {
+    const [collapsed, setCollapsed] = useState(start)
+    return (
         <Frame>
             <Rail
                 mark={<TidevannMark />}
                 name="Tidevann"
+                markHref="#"
                 groups={NAV}
-                collapsed
-                onCollapsedChange={() => undefined}
-                foot={<AccountMenu name="ada" where="tidevann.example.org" collapsed onSettings={() => undefined} />}
+                collapsed={collapsed}
+                onCollapsedChange={setCollapsed}
+                foot={<AccountMenu name="ada" where="tidevann.example.org" collapsed={collapsed} onSettings={() => undefined} />}
             />
         </Frame>
-    ),
+    )
 }
 
-/** The navigation expanded, for comparison: titled groups, the active entry's accent bar, counts at the rows' ends and a dot on Jobs. */
-export const Expanded: StoryObj = {
-    render: () => (
-        <Frame>
-            <Rail
-                mark={<TidevannMark />}
-                name="Tidevann"
-                groups={NAV}
-                onCollapsedChange={() => undefined}
-                foot={<AccountMenu name="ada" where="tidevann.example.org" onSettings={() => undefined} />}
-            />
-        </Frame>
-    ),
-}
+/**
+ * The navigation collapsed to icons, for comparison: counts over the icons and a dot on Jobs, each
+ * entry named in a tooltip. The mark expands it; so does pulling its right edge outward, the rail
+ * following the pointer and keeping the width it is let go at, and Enter or the right arrow on the
+ * edge.
+ */
+export const Collapsed: StoryObj = { render: () => <Navigation collapsed /> }
+
+/**
+ * The navigation expanded, for comparison: titled groups, the active entry's accent bar, counts at
+ * the rows' ends and a dot on Jobs. The mark and the name are a link to the app's home.
+ */
+export const Expanded: StoryObj = { render: () => <Navigation collapsed={false} /> }
 
 /** Each place with a second line saying what it holds, Runs active with its count level with the label, and Services' line wrapping in a narrow rail. */
 export const Described: StoryObj = {
