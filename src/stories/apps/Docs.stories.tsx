@@ -20,7 +20,7 @@ import { TableOfContents, useActiveHeading } from '@winterop-com/sokkel-ui/Table
 import { ThemeToggle } from '@winterop-com/sokkel-ui/ThemeToggle'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
 import { Tree, type TreeNode } from '@winterop-com/sokkel-ui/Tree'
-import { Avatar, AvatarFallback, AvatarImage } from '@winterop-com/sokkel-ui/primitives/avatar'
+import { PersonAvatar } from '@winterop-com/sokkel-ui/PersonAvatar'
 import { Badge } from '@winterop-com/sokkel-ui/primitives/badge'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { NativeSelect, NativeSelectOption } from '@winterop-com/sokkel-ui/primitives/native-select'
@@ -235,16 +235,6 @@ const VERSIONS: Version[] = [
 
 const CURRENT = VERSIONS[0]
 
-function Person({ name, size = 'sm' }: { name: string; size?: 'sm' | 'default' }) {
-    const picture = pictureOf(name)
-    return (
-        <Avatar size={size}>
-            {picture !== undefined && <AvatarImage src={picture} alt={name} />}
-            <AvatarFallback className="bg-primary/15 font-medium text-primary-ink uppercase">{name.slice(0, 1)}</AvatarFallback>
-        </Avatar>
-    )
-}
-
 function Reading({ content }: { content: string }) {
     const article = useRef<HTMLDivElement>(null)
     const headings = markdownHeadings(content)
@@ -290,7 +280,7 @@ function Versions({ chosen, onChoose }: { chosen: number; onChoose: (number: num
                         )}
                     >
                         <Row as="span" gap="md" align="start">
-                            <Person name={version.by} />
+                            <PersonAvatar name={version.by} image={pictureOf(version.by)} />
                             <Stack as="span" gap="3xs" className="flex-1">
                                 <Row as="span" align="baseline">
                                     <span className="truncate text-sm font-medium">{version.note}</span>
@@ -427,7 +417,7 @@ function DocsApp({ mode: initialMode = 'read' }: { mode?: 'read' | 'edit' | 'his
                                 title="Nightly export"
                                 meta={
                                     <>
-                                        <Person name={CURRENT.by} />
+                                        <PersonAvatar name={CURRENT.by} image={pictureOf(CURRENT.by)} />
                                         <span className="truncate">
                                             Last edited by <span className="font-medium text-foreground">{CURRENT.by}</span> on {CURRENT.at}
                                         </span>

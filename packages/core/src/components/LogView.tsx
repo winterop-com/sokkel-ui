@@ -28,6 +28,7 @@ const LEVEL: Record<LogLevel, string> = {
  * numbered. `follow` keeps the newest line in view as lines arrive, until the reader scrolls up;
  * `query` marks its matches. Long lines wrap when `wrap` is set and scroll sideways otherwise.
  * It is set in the terminal face, `--typeface-terminal`, whose Nerd Font icons a line can carry.
+ * `framed={false}` drops its rounded corners, for a log set edge to edge in a dock or a panel.
  */
 export function LogView({
     lines,
@@ -35,6 +36,7 @@ export function LogView({
     wrap = false,
     query = '',
     numbered = true,
+    framed = true,
     className,
 }: {
     lines: readonly LogLine[]
@@ -42,6 +44,8 @@ export function LogView({
     wrap?: boolean
     query?: string
     numbered?: boolean
+    /** Rounds the log's corners; off for a log set edge to edge. */
+    framed?: boolean
     className?: string
 }) {
     const scroller = useRef<HTMLDivElement>(null)
@@ -59,7 +63,8 @@ export function LogView({
                 pinned.current = element.scrollHeight - element.scrollTop - element.clientHeight < 8
             }}
             className={cn(
-                'min-h-0 overflow-auto rounded-lg bg-terminal py-2 font-mono text-xs leading-5 text-terminal-foreground outline-none [--typeface-mono:var(--typeface-terminal)] focus-visible:ring-2 focus-visible:ring-ring',
+                'min-h-0 overflow-auto bg-terminal py-2 font-mono text-xs leading-5 text-terminal-foreground outline-none [--typeface-mono:var(--typeface-terminal)] focus-visible:ring-2 focus-visible:ring-ring',
+                framed && 'rounded-lg',
                 className,
             )}
         >

@@ -326,7 +326,7 @@ function Workspace({
                     </div>
                     {dock && (
                         <Dock title="Log, nightly-export" open={dockOpen} onOpenChange={setDockOpen} defaultSize={200}>
-                            <LogView lines={LOG} className="rounded-none" />
+                            <LogView lines={LOG} framed={false} />
                         </Dock>
                     )}
                 </Stack>
