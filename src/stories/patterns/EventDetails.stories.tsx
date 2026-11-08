@@ -105,11 +105,24 @@ function InGrid() {
 /** The details as a week's popover, opened from the board review. */
 export const Popover: StoryObj = { parameters: { layout: 'fullscreen' }, render: () => <InGrid /> }
 
-/** The same details in a dialog, as a phone or a list of events opens them. */
-export const Dialog: StoryObj = {
-    render: () => (
-        <DialogShell open onOpenChange={() => undefined} width="sm" title="Event">
-            {review}
-        </DialogShell>
-    ),
+function InDialog() {
+    const [open, setOpen] = useState(true)
+    return (
+        <>
+            <WeekGrid
+                days={weekOf(NOW)}
+                events={[REVIEW, EXPORT]}
+                now={NOW}
+                scrollToHour={11}
+                onSelectEvent={() => setOpen(true)}
+                className="h-dvh"
+            />
+            <DialogShell open={open} onOpenChange={setOpen} width="sm" title="Event">
+                {review}
+            </DialogShell>
+        </>
+    )
 }
+
+/** The same details in a dialog over the week, as a phone or a list of events opens them; pressing an event opens it again. */
+export const Dialog: StoryObj = { parameters: { layout: 'fullscreen' }, render: () => <InDialog /> }
