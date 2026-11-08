@@ -51,6 +51,26 @@ const withFrame: Decorator = (Story, context) => {
     )
 }
 
+/**
+ * `desktopWindow: true` draws a story as a desktop window with its title bar hidden shows it: the
+ * window's three buttons over the top-left corner, where macOS draws them, and every strip that
+ * moves the window (`data-window-drag`) outlined, so the room left for the buttons and the drag
+ * region can be seen. It changes nothing in the components.
+ */
+const withDesktopWindow: Decorator = (Story, context) => {
+    if (context.parameters.desktopWindow !== true) return <Story />
+    return (
+        <div data-desktop-window className="contents">
+            <Story />
+            <div aria-hidden className="desktop-window-buttons">
+                <span />
+                <span />
+                <span />
+            </div>
+        </div>
+    )
+}
+
 const preview: Preview = {
     parameters: {
         layout: 'fullscreen',
@@ -158,7 +178,7 @@ const preview: Preview = {
         },
     },
     initialGlobals: { theme: 'dark', look: 'default', density: 'regular', corners: 'theme', typeface: 'theme', motion: 'system' },
-    decorators: [withFrame, withLook],
+    decorators: [withDesktopWindow, withFrame, withLook],
 }
 
 export default preview

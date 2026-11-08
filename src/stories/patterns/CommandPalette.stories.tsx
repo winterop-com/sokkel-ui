@@ -1,11 +1,39 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { CalendarClock, FileText, FolderGit2, ListChecks, Moon, Play, Plus, Settings, Users } from 'lucide-react'
+import {
+    CalendarClock,
+    CircleStop,
+    FileText,
+    FolderGit2,
+    ListChecks,
+    ListMusic,
+    Moon,
+    Play,
+    Plus,
+    RotateCcw,
+    ScrollText,
+    Settings,
+    Shuffle,
+    Users,
+    Workflow,
+} from 'lucide-react'
 import { useCallback, useState } from 'react'
 
 import { CommandPalette, usePaletteShortcut, type PaletteGroup } from '@winterop-com/sokkel-ui/CommandPalette'
+import { useCommands } from '@winterop-com/sokkel-ui/hooks/use-commands'
+import { placeCommands } from '@winterop-com/sokkel-ui/lib/commands'
+import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
+import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
+import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
+import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
+import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Kbd } from '@winterop-com/sokkel-ui/primitives/kbd'
+import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
+import { makeAlbums } from '../fixtures/albums'
+import { Artwork } from '../fixtures/Artwork'
+import { ADA, GRACE, LINUS } from '../fixtures/portraits'
+import { TidevannMark } from '../fixtures/TidevannMark'
 
 /** The palette open over an app, with places, actions and recent records. */
 const GROUPS: PaletteGroup[] = [
@@ -31,6 +59,7 @@ const GROUPS: PaletteGroup[] = [
         commands: [
             { id: 'r-export', label: 'nightly-export', icon: FileText, hint: 'job, failed 02:00', onSelect: () => undefined },
             { id: 'r-import', label: 'import-orders', icon: FileText, hint: 'job, running', onSelect: () => undefined },
+            { id: 'r-run', label: 'Last sync-inventory run', icon: FileText, code: '01a1a5c6', onSelect: () => undefined },
         ],
     },
     {
@@ -49,6 +78,55 @@ const SHORT: PaletteGroup[] = [
             { id: 'runs', label: 'Runs', icon: Play, keys: ['G', 'R'], onSelect: () => undefined },
             { id: 'jobs', label: 'Jobs', icon: ListChecks, keys: ['G', 'J'], onSelect: () => undefined },
             { id: 'settings', label: 'Settings', icon: Settings, keys: ['⌘', ','], onSelect: () => undefined },
+        ],
+    },
+]
+
+/** Records as two-line rows: albums with a drawn cover, people with their picture, among one-line commands. */
+const TWO_LINES: PaletteGroup[] = [
+    {
+        title: 'Albums',
+        commands: makeAlbums(4).map((album) => ({
+            id: album.id,
+            label: album.title,
+            detail: `${album.artist} · ${String(album.year)}`,
+            hint: `${String(album.tracks)} tracks`,
+            artwork: <Artwork cover={album.cover} />,
+            onSelect: () => undefined,
+        })),
+    },
+    {
+        title: 'People',
+        commands: [
+            {
+                id: 'ada',
+                label: 'ada',
+                detail: 'Owner of nightly-export and import-orders',
+                artwork: ADA,
+                round: true,
+                onSelect: () => undefined,
+            },
+            { id: 'grace', label: 'grace', detail: 'Owner of rebuild-index', artwork: GRACE, round: true, onSelect: () => undefined },
+            { id: 'linus', label: 'linus', detail: 'Owner of sync-inventory', artwork: LINUS, round: true, onSelect: () => undefined },
+        ],
+    },
+    {
+        title: 'Jobs',
+        commands: [
+            {
+                id: 'export',
+                label: 'nightly-export',
+                detail: 'harbor · every night at 02:00 UTC',
+                icon: Workflow,
+                onSelect: () => undefined,
+            },
+        ],
+    },
+    {
+        title: 'Play',
+        commands: [
+            { id: 'shuffle', label: 'Shuffle all', icon: Shuffle, keys: ['S'], onSelect: () => undefined },
+            { id: 'queue', label: 'Show the queue', icon: ListMusic, keys: ['Q'], onSelect: () => undefined },
         ],
     },
 ]
@@ -79,3 +157,69 @@ export const Open: StoryObj = { name: 'Long', render: () => <Palette initial /> 
 export const Searching: StoryObj = { render: () => <Palette initial query="new" /> }
 /** A search that matches nothing. */
 export const NoMatch: StoryObj = { name: 'No match', render: () => <Palette initial query="invoices" /> }
+/** Records as two lines, a drawn cover or a picture at the start, a person's round; one-line commands keep their height. */
+export const TwoLines: StoryObj = { name: 'Two lines', render: () => <Palette initial groups={TWO_LINES} /> }
+
+const PLACES: RailGroup[] = [
+    {
+        id: 'operate',
+        title: 'Operate',
+        entries: [
+            { id: 'runs', label: 'Runs', icon: Play, href: '#', active: true },
+            { id: 'schedules', label: 'Schedules', icon: CalendarClock, href: '#' },
+            { id: 'jobs', label: 'Jobs', icon: Workflow, href: '#' },
+        ],
+    },
+]
+
+/** A run's page: while it is shown, the palette offers what can be done with the run, before the app's own places. */
+function RunPage() {
+    const [state, setState] = useState<'failed' | 'queued' | 'cancelled'>('failed')
+    useCommands(
+        [
+            {
+                title: 'This run',
+                commands: [
+                    { id: 'rerun', label: 'Run again', icon: RotateCcw, keys: ['R'], onSelect: () => setState('queued') },
+                    { id: 'log', label: 'Open the log', icon: ScrollText, keys: ['L'], onSelect: () => undefined },
+                    ...(state === 'queued'
+                        ? [{ id: 'cancel', label: 'Cancel', icon: CircleStop, onSelect: () => setState('cancelled') }]
+                        : []),
+                ],
+            },
+        ],
+        [state],
+    )
+    return (
+        <Page>
+            <PageHeader title="nightly-export" code="01a1a5c2" meta={<StatusChip status={state} />} />
+        </Page>
+    )
+}
+
+/**
+ * A screen adds its own commands with `useCommands` while it is mounted, listed before the app's
+ * own, and takes them away when it unmounts.
+ */
+export const ScreenCommands: StoryObj = {
+    name: 'Screen commands',
+    render: () => (
+        <TooltipProvider>
+            <Shell
+                defaultPaletteOpen
+                palette={placeCommands(PLACES, () => undefined)}
+                rail={<Rail mark={<TidevannMark />} name="Tidevann" groups={PLACES} />}
+                top={
+                    <TopBar
+                        trail={[
+                            { label: 'Runs', href: '#' },
+                            { label: '01a1a5c2', code: true },
+                        ]}
+                    />
+                }
+            >
+                <RunPage />
+            </Shell>
+        </TooltipProvider>
+    ),
+}

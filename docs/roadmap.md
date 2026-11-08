@@ -85,6 +85,18 @@ to `plan.md` when it ships.
   the board item's panel with its checklist; a sideways-scrolling chip row with one chosen; a
   channel row (avatar, name, followers, Follow) and an action cluster for a watch page; checkboxes
   with a color dot for calendar toggles.
+- **Gaps from a records app (2026-11-08)**, its screens laid beside Apps/Records: a
+  period picker (the recent periods of a type with their ids, newest first, and any other id typed
+  in); an entry grid (questions down, categories across, number cells with row totals, folding to a
+  card per question on a narrow screen), on `DataTable`'s editable cells; an API playground
+  composition (method, path, query parameters, send, the answer's status, time and body, copy as
+  curl, the server's own requests as presets in a side panel); a grouped list of examples in tabs
+  beside an editor; the palette's foot (the app's mark, the keys that open a row and the palette); a
+  server's state for the top bar (a dot, its name and version, a menu); a chevron at the end of a
+  row that opens a page; a computed answer drawn read only with why, and a clear for an optional
+  yes or no; fields in a row lined up when one has a description; a line saying what each theme
+  is in `ThemePicker`. A `--color-*` name exists only once a class uses it, so a prop that takes a
+  CSS color takes the raw token (`var(--status-running)`); decide whether every color is emitted.
 - **Dashboard panels on the chart kinds.** `BarPanel`, `TimeSeriesPanel` and `ComboPanel` build
   ECharts options of their own and have drifted from the kinds (stack corners, for one); make them
   thin panels over the kinds, adding what the kinds lack first.
@@ -122,13 +134,12 @@ under Next. Each is a part or an option here, never a copy in an app. Roughly on
   500ms on Bluetooth); `SpeakButton` (fetched on demand, one player) and dictation in `Composer`.
 - **Round 5, the frame and keys.** A shortcut registry matched by the typed character (so it works
   on any keyboard layout), keys scoped to a screen and quiet under a dialog, read by
-  `ShortcutsDialog`; palette entries a screen adds while mounted (`useCommands`) and two-line rows
-  with artwork; `useOverlay` (inert, focus return, Escape), `useScrollMemory` and
-  `useReducedMotion`; desktop shells (a drag region on `TopBar`, fullscreen through the shell,
-  `isDesktopShell`); `useAppearance` with pluggable storage and `appearanceScript` as an external
-  module for pages that refuse inline script (browser extensions); `Shell`'s `bottom` spanning
-  under the rail; a full-page `SettingsView` beside `SettingsDialog`, and a wizard's steps laid out
-  on a page; a way for a three-pane work page to hide or narrow the rail.
+  `ShortcutsDialog`; `useOverlay` (inert, focus return, Escape), `useScrollMemory` and
+  `useReducedMotion`; fullscreen through a desktop shell (the app's own call in place of the
+  browser's, for the player, the video, charts and maps); `useAppearance` with pluggable storage and
+  `appearanceScript` as an external module for pages that refuse inline script (browser
+  extensions); a full-page `SettingsView` beside `SettingsDialog`, and a wizard's steps laid out on
+  a page; a way for a three-pane work page to hide or narrow the rail.
 
 ## 1.0
 

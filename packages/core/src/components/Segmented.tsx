@@ -1,4 +1,5 @@
 import { cn } from '../lib/cn'
+import { Dot } from './Dot'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 
 /**
@@ -55,6 +56,10 @@ export interface Segment<T extends string> {
     disabled?: boolean
     /** A tooltip on hover and focus, such as why the option is off. */
     hint?: string
+    /** How many the option holds, after its label in figures: the rows in a state, the codes of a sort. */
+    count?: number
+    /** A CSS color drawn as a dot before the label, such as `var(--status-failed)`: the state the option filters to. */
+    dot?: string
 }
 
 /**
@@ -70,6 +75,8 @@ export interface Segment<T extends string> {
  * tall.
  *
  * An option can be off on its own (`disabled`) with a `hint` saying why, shown on hover and focus.
+ * An option that filters a list says how many it holds with `count`, and the state it filters to
+ * with a `dot` in that state's color.
  */
 export function Segmented<T extends string>({
     id,
@@ -105,7 +112,7 @@ export function Segmented<T extends string>({
                 FRAME[variant],
                 size === 'md'
                     ? cn('grid w-full grid-cols-2 md:flex md:min-h-8 md:flex-wrap', !fill && 'md:w-auto')
-                    : cn('max-w-full flex-wrap', fill ? 'flex w-full' : 'inline-flex shrink-0'),
+                    : cn('max-w-full flex-wrap', fill ? 'flex w-full' : 'inline-flex w-fit shrink-0'),
                 disabled && 'opacity-50',
                 className,
             )}
@@ -137,7 +144,7 @@ export function Segmented<T extends string>({
                             if (!off) onValueChange(option.value)
                         }}
                     >
-                        {size === 'md' ? option.label : <Widest options={options} shown={option} />}
+                        {size === 'md' ? <Face option={option} /> : <Widest options={options} shown={option} />}
                     </button>
                 )
                 if (option.hint === undefined) return button
@@ -165,9 +172,21 @@ function Widest<T extends string>({ options, shown }: { options: readonly Segmen
                     aria-hidden={other === shown ? undefined : true}
                     className={cn('col-start-1 row-start-1', other !== shown && 'invisible')}
                 >
-                    {other.label}
+                    <Face option={other} />
                 </span>
             ))}
+        </span>
+    )
+}
+
+/** An option's face: its dot, its label and its count. */
+function Face<T extends string>({ option }: { option: Segment<T> }) {
+    if (option.dot === undefined && option.count === undefined) return option.label
+    return (
+        <span className="inline-flex items-center justify-center gap-1.5">
+            {option.dot !== undefined && <Dot color={option.dot} size="sm" />}
+            {option.label}
+            {option.count !== undefined && <span className="font-mono font-normal tabular-nums opacity-70">{option.count}</span>}
         </span>
     )
 }

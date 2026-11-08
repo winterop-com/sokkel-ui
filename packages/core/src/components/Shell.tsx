@@ -1,10 +1,12 @@
 import { Menu, PanelRight } from 'lucide-react'
-import { lazy, Suspense, useCallback, useEffect, useState, type ReactNode } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { CommandRegistry, useCommandRegistry } from '../hooks/use-commands'
 import { usePaletteShortcut } from '../hooks/use-palette-shortcut'
+import { hasTrafficLights, trafficLightsStyle, windowPressHandler, type DesktopWindow } from '../lib/desktop'
 import type { PaletteGroup, PaletteSearch } from './CommandPalette'
-import { ShellFootCell, ShellPalette } from './shell-context'
+import { ShellDesktop, ShellFootCell, ShellPalette } from './shell-context'
 
 // The palette loads when it first opens, so an app's start carries none of it.
 const CommandPalette = lazy(() => import('./CommandPalette').then((module) => ({ default: module.CommandPalette })))
@@ -38,7 +40,13 @@ const CommandPalette = lazy(() => import('./CommandPalette').then((module) => ({
  * With `palette`, the shell holds the app's command palette: ⌘K or Ctrl+K opens it wherever focus
  * is, and so does the top bar's search, unless the app gives `TopBar` its own `onSearch`.
  * `placeCommands` makes its places from the rail's groups and `appearanceCommands` its scheme,
- * density and theme from `useAppearance`.
+ * density and theme from `useAppearance`. A screen adds its own groups while it is mounted with
+ * `useCommands`, listed with the shell's by their `rank`.
+ *
+ * With `desktop`, the shell stands in a desktop window whose native title bar is hidden: its top
+ * strip, the rail's head and the top bar (and an open panel's header), is the window's drag
+ * region, and `trafficLights` leaves room at its start for the window's own buttons: in the
+ * rail's head, or in the top bar where no rail shows or a collapsed rail is narrower than the room.
  */
 export function Shell({
     rail,
@@ -52,6 +60,7 @@ export function Shell({
     defaultPaletteOpen = false,
     paletteWords,
     paletteSearch,
+    desktop,
     children,
     words: given,
 }: {
@@ -74,6 +83,8 @@ export function Shell({
     paletteWords?: { placeholder: string; empty: string; title: string }
     /** The app's search, whose results the palette lists under its commands. */
     paletteSearch?: PaletteSearch
+    /** The desktop window the shell stands in, when its native title bar is hidden; leave it off in a browser. */
+    desktop?: DesktopWindow
     children: ReactNode
     words?: Partial<ShellWords>
 }) {
@@ -96,6 +107,10 @@ export function Shell({
     }
     // With a foot or a bottom strip the frame is a grid, so the rail's foot can sit in the corner cell.
     const docked = bottom !== undefined || foot !== undefined
+    const commandRegistry = useCommandRegistry()
+    const screenGroups = commandRegistry.groups
+    const groups = useMemo(() => (palette === undefined ? [] : [...screenGroups, ...palette]), [palette, screenGroups])
+    const lights = hasTrafficLights(desktop)
     const [paletteOpen, setPaletteOpen] = useState(defaultPaletteOpen)
     // Drawn from its first opening on, so it can close with its own animation.
     const [paletteShown, setPaletteShown] = useState(defaultPaletteOpen)
@@ -111,7 +126,7 @@ export function Shell({
                     <CommandPalette
                         open={paletteOpen}
                         onOpenChange={setPaletteOpen}
-                        groups={palette}
+                        groups={groups}
                         search={paletteSearch}
                         words={paletteWords}
                     />
@@ -126,6 +141,7 @@ export function Shell({
             aria-label={open ? words.hidePanel : words.showPanel}
             aria-pressed={open}
             title={open ? words.hidePanel : words.showPanel}
+            data-window-no-drag
             className={cn(
                 'absolute top-[calc((var(--spacing-shell-top)-2rem)/2)] right-2 z-50 flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid',
                 open && 'text-foreground',
@@ -163,9 +179,14 @@ export function Shell({
         <div className="flex min-w-0 flex-1 flex-col">
             {top !== undefined && (
                 <header
+                    data-window-drag={desktop === undefined ? undefined : ''}
                     className={cn(
                         'flex h-shell-top shrink-0 items-center gap-2 border-b border-border-strong bg-sidebar px-3',
                         panel !== undefined && !(open && wide) && 'pr-12',
+                        // The room for the window's buttons is the rail's to leave where a rail shows, and
+                        // the top bar's where none does or a collapsed rail or a strip is narrower than it.
+                        lights &&
+                            'ps-(--spacing-traffic-lights) md:group-has-[[data-shell-rail]>aside]/shell:ps-3 md:group-has-[[data-shell-rail]>aside[data-collapsed]]/shell:ps-[max(0.75rem,calc(var(--spacing-traffic-lights)-3.5rem-1px))] md:group-has-[[data-shell-rail]>aside[data-variant=strip]]/shell:ps-[max(0.75rem,calc(var(--spacing-traffic-lights)-4.5rem))]',
                     )}
                 >
                     <button
@@ -224,49 +245,59 @@ export function Shell({
         </>
     )
 
+    // A press anywhere in the frame is handed to the window when it lands in the top strip.
+    const frame = { style: trafficLightsStyle(desktop), onMouseDown: windowPressHandler(desktop) }
+    const provide = (node: ReactNode) => (
+        <ShellPalette value={palette === undefined ? undefined : openPalette}>
+            <ShellDesktop value={desktop}>
+                <CommandRegistry value={commandRegistry.registry}>{node}</CommandRegistry>
+            </ShellDesktop>
+            {commands}
+        </ShellPalette>
+    )
+
     if (!docked)
-        return (
-            <ShellPalette value={palette === undefined ? undefined : openPalette}>
-                <div className="relative flex h-svh min-h-0 flex-col overflow-hidden bg-background text-foreground">
-                    {toggle}
-                    <div className="flex min-h-0 flex-1">
-                        <div className="hidden md:flex">{rail}</div>
-                        {drawn}
-                        {content}
-                        {panels}
+        return provide(
+            <div {...frame} className="group/shell relative flex h-svh min-h-0 flex-col overflow-hidden bg-background text-foreground">
+                {toggle}
+                <div className="flex min-h-0 flex-1">
+                    <div data-shell-rail className="hidden md:flex">
+                        {rail}
                     </div>
+                    {drawn}
+                    {content}
+                    {panels}
                 </div>
-                {commands}
-            </ShellPalette>
+            </div>,
         )
 
     // The rail's column is as wide as the rail, so the foot cell under the bottom strip follows the
     // rail's width as it is dragged or collapsed; the cell hides while the rail has no foot in it.
-    return (
-        <ShellPalette value={palette === undefined ? undefined : openPalette}>
-            <div className="relative grid h-svh min-h-0 grid-cols-[auto_minmax(0,1fr)] grid-rows-[minmax(0,1fr)_auto_auto] overflow-hidden bg-background text-foreground">
-                {toggle}
-                <div className="col-start-1 row-start-1 hidden min-h-0 md:flex">
-                    <ShellFootCell value={footCell}>{rail}</ShellFootCell>
-                </div>
-                {drawn}
-                <div className="col-start-2 row-start-1 flex min-h-0 min-w-0">
-                    {content}
-                    {panels}
-                </div>
-                <div className="col-span-full row-start-2 min-w-0">{bottom}</div>
-                <div ref={setFootCell} className="peer col-start-1 row-start-3 hidden w-0 min-w-full md:flex md:empty:hidden" />
-                {strip !== false ? (
-                    strip
-                ) : (
-                    <div
-                        aria-hidden
-                        className="col-start-2 row-start-3 hidden h-shell-foot border-t border-border-strong bg-sidebar md:block md:peer-empty:hidden"
-                    />
-                )}
+    return provide(
+        <div
+            {...frame}
+            className="group/shell relative grid h-svh min-h-0 grid-cols-[auto_minmax(0,1fr)] grid-rows-[minmax(0,1fr)_auto_auto] overflow-hidden bg-background text-foreground"
+        >
+            {toggle}
+            <div data-shell-rail className="col-start-1 row-start-1 hidden min-h-0 md:flex">
+                <ShellFootCell value={footCell}>{rail}</ShellFootCell>
             </div>
-            {commands}
-        </ShellPalette>
+            {drawn}
+            <div className="col-start-2 row-start-1 flex min-h-0 min-w-0">
+                {content}
+                {panels}
+            </div>
+            <div className="col-span-full row-start-2 min-w-0">{bottom}</div>
+            <div ref={setFootCell} className="peer col-start-1 row-start-3 hidden w-0 min-w-full md:flex md:empty:hidden" />
+            {strip !== false ? (
+                strip
+            ) : (
+                <div
+                    aria-hidden
+                    className="col-start-2 row-start-3 hidden h-shell-foot border-t border-border-strong bg-sidebar md:block md:peer-empty:hidden"
+                />
+            )}
+        </div>,
     )
 }
 
