@@ -75,4 +75,14 @@ describe('the sign-in art', () => {
             for (let index = 1; index < lit.length; index += 1) expect(lit[index].from).toBe(lit[index - 1].to)
         }
     })
+
+    it('takes its shape from columns and rows', () => {
+        const { nodes } = flowGraph(4, { columns: 8, rows: [3, 3] })
+        const columns = new Map<number, number>()
+        for (const node of nodes) columns.set(node.column, (columns.get(node.column) ?? 0) + 1)
+        expect(columns.size).toBe(8)
+        expect(columns.get(0)).toBe(1)
+        expect(columns.get(7)).toBe(1)
+        for (let column = 1; column < 7; column += 1) expect(columns.get(column)).toBe(3)
+    })
 })
