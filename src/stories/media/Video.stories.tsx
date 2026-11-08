@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Maximize, Pause, Play, RotateCcw, RotateCw, Volume2 } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 
+import { useShortcuts } from '@winterop-com/sokkel-ui/hooks/use-shortcuts'
 import { LogView, type LogLine } from '@winterop-com/sokkel-ui/LogView'
 import { formatTime } from '@winterop-com/sokkel-ui/media/time'
 import { VideoPlayer, type VideoError, type VideoPlayerHandle, type VideoSource } from '@winterop-com/sokkel-ui/media/VideoPlayer'
@@ -115,13 +116,38 @@ export const Resume: StoryObj = {
 }
 
 /**
- * Driven from outside: `keys={false}` leaves every key to the app, and the app's own controls and
- * shortcuts play, seek, mute and fill the screen through the handle on `ref`.
+ * Driven from outside: `keys={false}` leaves every key to the app, whose own controls and keys, bound
+ * with `useShortcuts` (K plays and pauses, J and L skip ten seconds, M mutes, F fills the screen),
+ * drive the player through the handle on `ref`.
  */
 export const OutsideControls: StoryObj = {
     name: 'Outside controls',
     render: function Render() {
         const player = useRef<VideoPlayerHandle>(null)
+        useShortcuts(
+            [
+                { id: 'video-toggle', key: 'k', label: 'Play or pause', group: 'Video', run: () => player.current?.toggle() },
+                {
+                    id: 'video-back',
+                    key: 'j',
+                    label: 'Back 10 seconds',
+                    group: 'Video',
+                    repeat: true,
+                    run: () => player.current?.seekBy(-10),
+                },
+                {
+                    id: 'video-forward',
+                    key: 'l',
+                    label: 'Forward 10 seconds',
+                    group: 'Video',
+                    repeat: true,
+                    run: () => player.current?.seekBy(10),
+                },
+                { id: 'video-mute', key: 'm', label: 'Mute', group: 'Video', run: () => player.current?.toggleMute() },
+                { id: 'video-fullscreen', key: 'f', label: 'Fullscreen', group: 'Video', run: () => player.current?.toggleFullscreen() },
+            ],
+            [],
+        )
         return (
             <Ground
                 after={
