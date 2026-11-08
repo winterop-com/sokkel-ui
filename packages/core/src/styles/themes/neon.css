@@ -253,6 +253,8 @@ html.dark[data-theme='neon'] {
     --on-fill: oklch(0.99 0.003 255);
     --graph-edge: oklch(0.74 0.05 300);
     --binding-ink: oklch(0.48 0.17 305);
+    --map-selection: var(--warning);
+    --map-highlight: var(--chart-2);
     --brand: #2f74a8;
     --brand-foreground: #f3f7fa;
     --canvas: color-mix(in oklab, var(--muted) 78%, var(--background));
@@ -399,6 +401,8 @@ html.dark[data-theme='neon'] {
     --on-fill: oklch(0.99 0.003 255);
     --graph-edge: oklch(0.47 0.1 296);
     --binding-ink: oklch(0.7 0.18 305);
+    --map-selection: var(--warning);
+    --map-highlight: var(--chart-2);
     --brand: #2f74a8;
     --brand-foreground: #f3f7fa;
     --canvas: color-mix(in oklab, var(--muted) 78%, var(--background));

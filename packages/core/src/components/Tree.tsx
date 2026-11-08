@@ -93,6 +93,19 @@ export function treeMatches(nodes: readonly TreeNode[], query: string, loads: Tr
     return keep
 }
 
+/** The ids of a node's ancestors, from the top level down to its parent, or null when the loaded tree does not hold it. */
+export function treeAncestors(nodes: readonly TreeNode[], id: string, loads: TreeLoads = NO_LOADS): string[] | null {
+    const visit = (list: readonly TreeNode[], path: string[]): string[] | null => {
+        for (const node of list) {
+            if (node.id === id) return path
+            const found = visit(childrenOf(node, loads) ?? [], [...path, node.id])
+            if (found !== null) return found
+        }
+        return null
+    }
+    return visit(nodes, [])
+}
+
 /** The ids of every node with a chosen node somewhere under it. */
 export function treeHolding(nodes: readonly TreeNode[], chosen: ReadonlySet<string>, loads: TreeLoads = NO_LOADS): Set<string> {
     const out = new Set<string>()
@@ -175,6 +188,9 @@ type Found = { query: string; state: 'loading' | 'done' | 'failed'; trails: read
  * loaded or not: each match is listed with its path, and choosing one opens the tree down to it.
  * Past a few hundred visible rows, only those in view of the nearest scrolling box are drawn, so
  * tens of thousands stay smooth.
+ *
+ * A single choice made outside the tree, such as a place picked on a map beside it, opens the tree
+ * down to the chosen node and scrolls to it.
  */
 export function Tree({
     nodes,
@@ -369,6 +385,19 @@ export function Tree({
         const tall = drawn?.offsetHeight ?? rowHeight
         if (top < start || top + tall > start + height) box.scrollTop += top - start - (height - tall) / 2
     }, [reveal, remote, rows, rowHeight])
+
+    // A choice that changes from outside opens the levels above it and is scrolled to.
+    const choice = selection === 'single' ? (selected[0] ?? null) : null
+    const lastChoice = useRef(choice)
+    useEffect(() => {
+        if (choice === lastChoice.current) return
+        lastChoice.current = choice
+        if (choice === null) return
+        const above = treeAncestors(nodes, choice, loads)
+        if (above === null) return
+        setOpen((now) => (above.every((id) => now.has(id)) ? now : new Set([...now, ...above])))
+        setReveal(choice)
+    }, [choice, nodes, loads])
 
     const toggle = (id: string, to?: boolean) =>
         setOpen((now) => {

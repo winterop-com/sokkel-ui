@@ -253,6 +253,8 @@ html.dark[data-theme='vinyl'] {
     --on-fill: oklch(0.99 0.003 255);
     --graph-edge: oklch(0.72 0.032 88);
     --binding-ink: oklch(0.48 0.17 305);
+    --map-selection: var(--warning);
+    --map-highlight: var(--chart-2);
     --brand: #2f74a8;
     --brand-foreground: #f3f7fa;
     --canvas: color-mix(in oklab, var(--muted) 78%, var(--background));
@@ -399,6 +401,8 @@ html.dark[data-theme='vinyl'] {
     --on-fill: oklch(0.99 0.003 255);
     --graph-edge: oklch(0.5 0.03 60);
     --binding-ink: oklch(0.7 0.18 305);
+    --map-selection: var(--warning);
+    --map-highlight: var(--chart-2);
     --brand: #2f74a8;
     --brand-foreground: #f3f7fa;
     --canvas: color-mix(in oklab, var(--muted) 78%, var(--background));

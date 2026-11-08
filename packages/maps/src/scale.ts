@@ -46,6 +46,37 @@ export const NO_DATA_BACKGROUND = `repeating-linear-gradient(135deg, ${NO_DATA_H
 /** The color of a point with no value. */
 export const NO_DATA_POINT_COLOR = 'color-mix(in oklab, var(--muted-foreground) 60%, var(--card))'
 
+/** The selected feature's color: a hue of its own, apart from any data color. */
+export const SELECTION_COLOR = 'var(--map-selection)'
+
+/** The color of what is highlighted with the selection, such as the areas and points under it. */
+export const HIGHLIGHT_COLOR = 'var(--map-highlight)'
+
+/** The ground plain areas are filled toward, and the line between them. */
+export const AREA_COLOR = 'var(--muted-foreground)'
+export const AREA_LINE = 'color-mix(in oklab, var(--muted-foreground) 70%, var(--card))'
+
+/** How much of its color a plain area's fill carries at each emphasis, over whatever lies under it. */
+export const AREA_FILL = { selected: 0.3, highlighted: 0.16, plain: 0.07 } as const
+
+/** One emphasis as a legend draws it: the fill over the card and the edge around it. */
+export interface Emphasis {
+    color: string
+    edge: string
+}
+
+const over = (color: string, share: number) => `color-mix(in oklab, ${color} ${Math.round(share * 100)}%, var(--card))`
+
+/**
+ * How plain boundaries draw the selected area, the areas highlighted with it and the rest, for a
+ * `MapLegend` whose `entries` key them in the same colors the map paints.
+ */
+export const AREA_EMPHASIS: Record<'selected' | 'highlighted' | 'plain', Emphasis> = {
+    selected: { color: over(SELECTION_COLOR, AREA_FILL.selected), edge: SELECTION_COLOR },
+    highlighted: { color: over(HIGHLIGHT_COLOR, AREA_FILL.highlighted), edge: HIGHLIGHT_COLOR },
+    plain: { color: over(AREA_COLOR, AREA_FILL.plain), edge: AREA_LINE },
+}
+
 /** The categorical colors, in the order categories take them. */
 export const CATEGORY_COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)']
 

@@ -31,6 +31,17 @@ function Over({ title, basemap }: { title: string; basemap?: Basemap }) {
     )
 }
 
+/** The regions with no basemap offered: the ground alone, no switcher, and no network. */
+function Unoffered() {
+    return (
+        <Page title="No basemap" period="None offered">
+            <MapView label="Regions with no basemap offered" basemaps={[]} className="flex-1">
+                <BoundaryLayer id="regions" data={regions} />
+            </MapView>
+        </Page>
+    )
+}
+
 /** The switcher open over the map, every basemap with its preview and the drawn one checked. */
 function SwitcherOpen() {
     const dark = useDark()
@@ -90,6 +101,8 @@ export const Blank: StoryObj = {
     name: 'Blank',
     render: () => <Over title="Blank" basemap={BLANK_BASEMAP} />,
 }
+/** An app that offers no basemap: whatever the default, the map draws the ground alone and reaches no network. */
+export const NoneOffered: StoryObj = { parameters: { frame: 'none' }, name: 'None offered', render: () => <Unoffered /> }
 export const Switcher: StoryObj = { parameters: { frame: 'none' }, name: 'Switcher', render: () => <SwitcherOpen /> }
 /** The previews laid out in a panel, as the layer panel's basemap card shows them. */
 export const Previews: StoryObj = { name: 'Gallery', render: () => <Gallery /> }

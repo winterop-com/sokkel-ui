@@ -17,7 +17,18 @@ import {
     useGeoJsonLayer,
     type FeatureAccessor,
 } from './layer'
-import { NO_DATA_COLOR, NO_DATA_HATCH, classOf, scaleColors, type ColorScale } from './scale'
+import {
+    AREA_COLOR,
+    AREA_FILL,
+    AREA_LINE,
+    HIGHLIGHT_COLOR,
+    NO_DATA_COLOR,
+    NO_DATA_HATCH,
+    SELECTION_COLOR,
+    classOf,
+    scaleColors,
+    type ColorScale,
+} from './scale'
 
 export interface BoundaryLayerProps {
     /** Unique among the map's layers. */
@@ -38,6 +49,11 @@ export interface BoundaryLayerProps {
     /** Whether areas answer hover and clicks. */
     interactive?: boolean
     /**
+     * The ids of areas drawn at the middle emphasis, between the selected area and the rest: the
+     * areas under the selected one in a hierarchy, or any set the selection brings with it.
+     */
+    highlighted?: readonly string[]
+    /**
      * The name drawn inside each area. Names that would collide are left out, the smaller areas'
      * first, and come back as the map zooms in. Drawn over a basemap with fonts (a vector style).
      */
@@ -56,8 +72,11 @@ const RANK_PROPERTY = '__rank'
 
 /**
  * Areas on the map: a choropleth when given a scale and a value, plain boundaries otherwise. An
- * area without a value is hatched. The area under the cursor is outlined, and the selected one is
- * outlined heavier over a halo in the card color.
+ * area without a value is hatched. The area under the cursor is outlined; the selected one is
+ * outlined heavier in the selection color over a halo in the card color, and the `highlighted`
+ * ones in the highlight color. Plain boundaries also fill the selected area and the highlighted
+ * ones in those colors, as `AREA_EMPHASIS` keys them for a legend. A feature whose geometry cannot
+ * be read is left out and counted in the map's note.
  *
  * Every area is one feature of a single source, and hover and selection are feature state, so
  * thousands of areas draw and answer the cursor without any work per area in React.
@@ -68,10 +87,11 @@ export function BoundaryLayer({
     scale,
     value,
     idProperty,
-    color = 'var(--muted-foreground)',
+    color = AREA_COLOR,
     opacity = 1,
     visible = true,
     interactive = true,
+    highlighted,
     label,
     simplify = false,
 }: BoundaryLayerProps) {
@@ -110,11 +130,10 @@ export function BoundaryLayer({
     const classes = scale === undefined ? [color] : scaleColors(scale)
     const colors = {
         ...Object.fromEntries(classes.map((css, index) => [`class${index}`, css])),
-        line:
-            scale === undefined
-                ? 'color-mix(in oklab, var(--muted-foreground) 70%, var(--card))'
-                : 'color-mix(in oklab, var(--foreground) 22%, var(--card))',
+        line: scale === undefined ? AREA_LINE : 'color-mix(in oklab, var(--foreground) 22%, var(--card))',
         ink: 'var(--foreground)',
+        selection: SELECTION_COLOR,
+        highlight: HIGHLIGHT_COLOR,
         halo: 'var(--card)',
         noData: NO_DATA_COLOR,
         hatch: NO_DATA_HATCH,
@@ -128,6 +147,7 @@ export function BoundaryLayer({
         images: (resolved) => ({ 'wui-no-data': hatchImage(resolved.noData, resolved.hatch) }),
         interactive,
         visible,
+        highlighted,
         tolerance: 0,
         hitLayers: (source) => [`${source}-fill`, `${source}-no-data`],
         layers: (source, resolved): LayerSpecification[] => {
@@ -139,9 +159,24 @@ export function BoundaryLayer({
                     source,
                     filter: ['>=', ['get', CLASS_PROPERTY], 0],
                     paint: {
-                        'fill-color': classColor(fills, resolved.noData),
+                        'fill-color': plain
+                            ? ['case', state('selected'), resolved.selection, state('highlighted'), resolved.highlight, fills[0]]
+                            : classColor(fills, resolved.noData),
                         'fill-opacity': plain
-                            ? ['*', ['case', state('selected'), 0.22, state('hover'), 0.16, 0.07], opacity]
+                            ? [
+                                  '*',
+                                  [
+                                      'case',
+                                      state('selected'),
+                                      AREA_FILL.selected,
+                                      state('highlighted'),
+                                      ['case', state('hover'), AREA_FILL.highlighted + 0.08, AREA_FILL.highlighted],
+                                      state('hover'),
+                                      AREA_FILL.plain + 0.09,
+                                      AREA_FILL.plain,
+                                  ],
+                                  opacity,
+                              ]
                             : 0.88 * opacity,
                     },
                 },
@@ -160,6 +195,17 @@ export function BoundaryLayer({
                     paint: { 'line-color': resolved.line, 'line-width': plain ? 1 : 0.8, 'line-opacity': opacity },
                 },
                 {
+                    id: `${source}-outline`,
+                    type: 'line',
+                    source,
+                    layout: { 'line-join': 'round' },
+                    paint: {
+                        'line-color': ['case', state('hover'), resolved.ink, resolved.highlight],
+                        'line-width': ['case', state('selected'), 0, state('hover'), 1.25, state('highlighted'), 1.25, 0],
+                        'line-opacity': ['*', ['case', state('hover'), 0.75, 0.9], opacity],
+                    },
+                },
+                {
                     id: `${source}-halo`,
                     type: 'line',
                     source,
@@ -167,15 +213,11 @@ export function BoundaryLayer({
                     paint: { 'line-color': resolved.halo, 'line-width': ['case', state('selected'), 5, 0], 'line-opacity': opacity },
                 },
                 {
-                    id: `${source}-outline`,
+                    id: `${source}-selected`,
                     type: 'line',
                     source,
                     layout: { 'line-join': 'round' },
-                    paint: {
-                        'line-color': resolved.ink,
-                        'line-width': ['case', state('selected'), 2.25, state('hover'), 1.25, 0],
-                        'line-opacity': ['*', ['case', state('selected'), 1, 0.75], opacity],
-                    },
+                    paint: { 'line-color': resolved.selection, 'line-width': ['case', state('selected'), 2.5, 0], 'line-opacity': opacity },
                 },
             ]
         },

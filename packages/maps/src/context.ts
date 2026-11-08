@@ -22,6 +22,8 @@ export interface MapLayerEntry {
     features: ReadonlyMap<string, Feature>
     /** The extent of what the layer draws, which the map fits to. */
     bounds: Bounds | null
+    /** How many of the layer's features have a geometry it could not read, and so does not draw. */
+    unreadable: number
     /** Takes a click on a feature the layer handles itself; true when it did. */
     click?: (feature: MapGeoJSONFeature) => boolean
 }
