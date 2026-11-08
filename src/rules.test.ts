@@ -22,7 +22,7 @@ function files(dir: string): string[] {
 
 /** The packages: the core one, and an add-on per engine that stands on it. */
 const CORE = 'core'
-const ADDONS = ['charts', 'maps', 'graph']
+const ADDONS = ['charts', 'maps', 'graph', 'terminal']
 const PACKAGES = [CORE, ...ADDONS]
 const NAMES: Record<string, string> = Object.fromEntries(
     PACKAGES.map((name) => [name, name === CORE ? '@winterop-com/sokkel-ui' : `@winterop-com/sokkel-ui-${name}`]),

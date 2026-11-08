@@ -31,6 +31,12 @@ to `plan.md` when it ships.
   `-maps` (maplibre) and `-graph` (React Flow and elk), each with its own styles. An app installs the
   core and the add-ons it draws with. Move to `plan.md` once released.
 
+## 0.10: terminals (done on main)
+
+- **An interactive terminal**, in a fifth package, `@winterop-com/sokkel-ui-terminal`, on xterm.js:
+  `TerminalView` takes keystrokes and output, reports its size and emulates full-screen programs,
+  and the read-only `Terminal` moved onto the same engine. The core keeps no terminal of its own.
+
 ## 0.10: example apps
 
 - **Working demo apps outside Storybook.** In `examples/`, built against the package as an app would
@@ -62,13 +68,6 @@ to `plan.md` when it ships.
 - **Tauri on Chromium (discovery).** Tauri runs on each platform's own webview: WebKit on
   macOS and Linux. Once Tauri supports an embedded Chromium runtime, add that build beside the
   system-webview shell, so the library is checked in both.
-- **An interactive terminal.** `Terminal` shows commands and their output; a shell needs a real
-  terminal: keystrokes and paste sent to the app (which carries them to a remote shell over its own
-  connection), full emulation for programs that move the cursor or take the whole screen (an
-  editor, `top`), the size reported as it changes, a scrollback, selection and copy. That needs a
-  terminal emulator as its engine; pick one, likely xterm.js, and move the read-only `Terminal` onto
-  the same engine so there is one per job. The library draws it and hands the bytes over; the
-  connection stays the app's.
 - **A Nerd Font for terminals (discovery).** Try JetBrains Mono NL patched as a Nerd Font for
   `Terminal` and `LogView` only, through their own `--typeface-mono`: the prompt icons it carries,
   its size and a subset of only the icons used, and its license (SIL OFL, listed in
@@ -89,6 +88,6 @@ to `plan.md` when it ships.
 
 - Accessibility audits, axe gates in CI and contrast scoring.
 - A second engine for a job that already has one: ECharts draws every chart, maplibre every map,
-  React Flow every interactive graph, Mermaid every diagram written as text, KaTeX every formula.
+  React Flow every interactive graph, xterm.js every terminal, Mermaid every diagram written as text, KaTeX every formula.
   Sparklines are plain SVG.
 - Copy-in distribution. Apps install the package; nothing is vendored.

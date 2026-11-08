@@ -30,9 +30,10 @@ and ask before acting.
 
 - Apps install these packages and never copy from them. A component an app needs to differ gets an
   option here, never a local edit in the app.
-- Four packages in `packages/`: `core` (`@winterop-com/sokkel-ui`, everything without an engine of
+- Five packages in `packages/`: `core` (`@winterop-com/sokkel-ui`, everything without an engine of
   its own, the tokens and the themes) and an add-on per engine: `charts` (ECharts: `Chart`, its
-  kinds and the dashboard's chart panels), `maps` (maplibre) and `graph` (React Flow and elk). An
+  kinds and the dashboard's chart panels), `maps` (maplibre), `graph` (React Flow and elk) and
+  `terminal` (xterm.js: `Terminal` and `TerminalView`). An
   add-on imports the core by its name (`@winterop-com/sokkel-ui/...`), never by a path; the core
   never imports an add-on, and no add-on imports another. A part that needs no engine goes in the
   core. `src/rules.test.ts` holds those lines.
@@ -49,7 +50,8 @@ and ask before acting.
 - One table: DataTable draws every listing and table, short or long, flat or a tree. Its columns
   resize by default, as panels do; `resizable={false}` turns that off.
 - One engine per job: ECharts draws every chart, maplibre every map, React Flow every interactive
-  graph, Mermaid every diagram written as text, KaTeX every formula, and sparklines are plain SVG. Never add a second.
+  graph, xterm.js every terminal, Mermaid every diagram written as text, KaTeX every formula, and
+  sparklines are plain SVG. Never add a second.
 - Charts are drawn with `Chart` and a kind (or `ChartGrid`, `ChartPanel` and the dashboard panels),
   never with an ECharts option built in a story. A chart the kinds cannot draw becomes a new kind or
   an option on one. `docs/charts.md` lists the kinds, the fields they read and how to add one.
@@ -123,7 +125,7 @@ and ask before acting.
 - No tags and no releases unless the owner asks for one. A release is a PR that moves the version
   in every `packages/*/package.json` to the same one; once it is merged, the tag `vX.Y.Z` on that
   commit runs `.github/workflows/release.yaml`, which checks the tag against each package's version,
-  runs the gates, builds, and publishes all four packages to GitHub Packages. Then a GitHub release
+  runs the gates, builds, and publishes all five packages to GitHub Packages. Then a GitHub release
   with the notes.
 - Ask before any outward or hard-to-undo action: publishing, changing repository settings,
   rewriting history, force-pushing, deleting.

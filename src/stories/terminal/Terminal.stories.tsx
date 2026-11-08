@@ -1,13 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useEffect, useState } from 'react'
 
-import { Terminal, type TerminalEntry } from '@winterop-com/sokkel-ui/terminal/Terminal'
+import { Terminal, type TerminalEntry } from '@winterop-com/sokkel-ui-terminal/Terminal'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /**
- * A terminal: commands and what they wrote, escape codes drawn as colors, and output that streams
- * in, follows the newest line, and redraws a progress bar in place.
+ * A read-only terminal: commands and what they wrote, escape codes drawn as colors, and output that
+ * streams in, follows the newest line, and redraws a progress bar in place.
  */
 function Ground({ children }: { children: React.ReactNode }) {
     return (
@@ -115,7 +115,7 @@ function Live() {
     )
 }
 
-const meta: Meta = { title: 'Patterns/Terminal' }
+const meta: Meta = { title: 'Terminal/Terminal' }
 export default meta
 
 export const Session_: StoryObj = { name: 'Session', render: () => <Session /> }

@@ -26,6 +26,7 @@ const ENGINES: Record<string, RegExp> = {
     echarts: /\/node_modules\/(echarts|zrender)\//,
     maplibre: /\/node_modules\/maplibre-gl\//,
     'react-flow': /\/node_modules\/(@xyflow|elkjs)\//,
+    xterm: /\/node_modules\/@xterm\//,
     codemirror: /\/node_modules\/(@codemirror|@lezer)\//,
     mermaid: /\/node_modules\/mermaid\//,
     katex: /\/node_modules\/(katex|rehype-katex|remark-math)\//,
@@ -39,7 +40,7 @@ type Budget = Record<Measure, number> & {
     engines: string[]
 }
 
-const unbuilt = ['core', 'charts', 'maps', 'graph'].filter((name) => !existsSync(join(ROOT, 'packages', name, 'dist')))
+const unbuilt = ['core', 'charts', 'maps', 'graph', 'terminal'].filter((name) => !existsSync(join(ROOT, 'packages', name, 'dist')))
 if (unbuilt.length > 0) {
     console.error(`No dist/ to build against in ${unbuilt.join(', ')}: run \`bun run build\` first.`)
     process.exit(1)
