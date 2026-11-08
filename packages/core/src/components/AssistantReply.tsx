@@ -14,7 +14,7 @@ import {
     ThumbsDown,
     ThumbsUp,
 } from 'lucide-react'
-import { useEffect, useState, type ReactNode } from 'react'
+import { Children, useEffect, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { ConfirmCard, type ConfirmCardProps } from './ConfirmCard'
@@ -126,6 +126,11 @@ export interface AssistantReplySpeech {
     duration?: number
     /** The player's words: play, pause and seek. */
     labels?: Partial<AudioPlayerLabels>
+}
+
+/** Whether React would draw anything for a node: `false`, `null`, `undefined` and `''` draw nothing. */
+function shown(node: ReactNode): boolean {
+    return Children.toArray(node).some((child) => child !== '')
 }
 
 /**
@@ -299,7 +304,7 @@ export function AssistantReply({
 
     const written = content !== undefined && content !== ''
     const thought = reasoning !== undefined && reasoning !== ''
-    const empty = streaming && !written && !thought && tools === undefined && children === undefined
+    const empty = streaming && !written && !thought && tools === undefined && !shown(children)
 
     const answer = (
         <>
