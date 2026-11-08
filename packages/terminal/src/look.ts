@@ -6,6 +6,8 @@ export interface TerminalLook {
     theme: ITheme
     fontFamily: string
     fontSize: number
+    /** The weight bold text is drawn in: the medium weight the core ships for its mono face, so bold never stands wider than its cell. */
+    fontWeightBold: 500
     /** The line's height as a share of the glyph's height, as xterm takes it. */
     lineHeight: number
 }
@@ -72,6 +74,7 @@ export function readTerminalLook(element: HTMLElement): TerminalLook {
         theme: Object.fromEntries(Object.entries(TERMINAL_COLORS).map(([key, css]) => [key, resolve(css)])) as ITheme,
         fontFamily: style.fontFamily,
         fontSize,
+        fontWeightBold: 500,
         // xterm multiplies the glyph's own height, about 1.3 times the text size for a mono face, not the size.
         lineHeight: Number.isFinite(line) && fontSize > 0 ? Math.max(1, line / Math.ceil(fontSize * 1.3)) : 1.2,
     }

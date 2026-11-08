@@ -8,7 +8,7 @@ import { useEffect, useImperativeHandle, useRef, useState, type ReactNode, type 
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 
-import { readTerminalLook, useLookKey } from './look'
+import { readTerminalLook, useLookKey, type TerminalLook } from './look'
 
 /** A terminal's size in character cells. */
 export interface TerminalSize {
@@ -65,6 +65,12 @@ export interface TerminalViewProps {
     autoFocus?: boolean
     className?: string
     words?: TerminalViewWords
+}
+
+/** Resolves once the look's typeface has loaded in the plain and bold weights the terminal draws with. */
+function fontsLoaded(look: TerminalLook): Promise<unknown> {
+    const font = `${look.fontSize}px ${look.fontFamily}`
+    return Promise.all([document.fonts.load(font), document.fonts.load(`${look.fontWeightBold} ${font}`)]).catch(() => undefined)
 }
 
 /** The buffer's text, each line wrapped to the width joined back to the line it continues. */
@@ -223,23 +229,20 @@ export function TerminalView({
             frameId = requestAnimationFrame(fitNow)
         })
         // xterm measures a cell once, when it opens, so it opens once the typeface has loaded.
-        void document.fonts
-            .load(`${look.fontSize}px ${look.fontFamily}`)
-            .catch(() => undefined)
-            .then(() => {
-                if (!alive) return
-                current.open(element)
-                const before = { cols: current.cols, rows: current.rows }
-                fitNow()
-                // A fit that kept xterm's starting size fires no resize, so the first size is reported here.
-                if (current.cols === before.cols && current.rows === before.rows) {
-                    handlers.current.onResize?.({ cols: current.cols, rows: current.rows })
-                }
-                observer.observe(element)
-                if (autoFocus) current.focus()
-                busy.current.open = true
-                settle()
-            })
+        void fontsLoaded(look).then(() => {
+            if (!alive) return
+            current.open(element)
+            const before = { cols: current.cols, rows: current.rows }
+            fitNow()
+            // A fit that kept xterm's starting size fires no resize, so the first size is reported here.
+            if (current.cols === before.cols && current.rows === before.rows) {
+                handlers.current.onResize?.({ cols: current.cols, rows: current.rows })
+            }
+            observer.observe(element)
+            if (autoFocus) current.focus()
+            busy.current.open = true
+            settle()
+        })
 
         return () => {
             alive = false
@@ -277,17 +280,14 @@ export function TerminalView({
         if (element === null || current === null) return
         const look = readTerminalLook(element)
         let alive = true
-        void document.fonts
-            .load(`${look.fontSize}px ${look.fontFamily}`)
-            .catch(() => undefined)
-            .then(() => {
-                if (!alive) return
-                current.options.theme = look.theme
-                current.options.fontFamily = look.fontFamily
-                current.options.fontSize = look.fontSize
-                current.options.lineHeight = look.lineHeight
-                fitNow()
-            })
+        void fontsLoaded(look).then(() => {
+            if (!alive) return
+            current.options.theme = look.theme
+            current.options.fontFamily = look.fontFamily
+            current.options.fontSize = look.fontSize
+            current.options.lineHeight = look.lineHeight
+            fitNow()
+        })
         return () => {
             alive = false
         }
