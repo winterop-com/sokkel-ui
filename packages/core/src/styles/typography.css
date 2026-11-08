@@ -1,7 +1,8 @@
 /*
- * Mono beside sans: Plex Mono is as tall as Plex Sans but its words run about 30 percent wider, so at
+ * Mono beside sans: Plex Mono is as tall as Plex Sans but its words run about 20 percent wider, so at
  * an equal size it reads larger. `font-size-adjust` sets every mono face's x-height to a share of the
- * text size instead: `--mono-x-height` at body size, `--mono-x-height-small` inside small text.
+ * text size instead: `--mono-x-height` at body size, `--mono-x-height-small` inside small text (`text-xs` and
+ * `text-2xs`).
  */
 /*
  * The terminal face: JetBrains Mono NL patched as a Nerd Font Mono, subset to Latin, box drawing,
@@ -28,7 +29,12 @@
         font-size-adjust: var(--mono-x-height);
     }
     /* Small text keeps more of its size, so mono beside it stays readable. */
-    :where(.text-xs:where(.font-mono, code), .text-xs :where(.font-mono, code)) {
+    :where(
+        .text-xs:where(.font-mono, code),
+        .text-xs :where(.font-mono, code),
+        .text-2xs:where(.font-mono, code),
+        .text-2xs :where(.font-mono, code)
+    ) {
         font-size-adjust: var(--mono-x-height-small);
     }
     /* A graph is zoomed as a whole and sets its own small sizes. */
