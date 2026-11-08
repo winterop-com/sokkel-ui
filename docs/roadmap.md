@@ -54,10 +54,6 @@ to `plan.md` when it ships.
   blog post yet; stable Tauri is 2.12 on the system webview. Next: once Tauri 3 reaches beta, add
   an `examples/tauri-cef` shell on `tauri-runtime-cef` beside `examples/tauri`, built by the
   examples workflow; until then, nothing to build.
-- **Mono at `text-2xs`.** The mono size grid (Foundations/Typography) shows the rule holding:
-  mono's x-height is 0.87 of sans's at every size and 0.95 inside `text-xs`, in Plex and in Geist,
-  while mono words still run about 20 percent wider. `text-2xs` takes the body share, so its mono
-  draws at 9.6px, smaller than mono inside `text-xs`; decide whether it takes the small share.
 
 ## Later
 
