@@ -68,18 +68,22 @@ export function queryWords(query: string): string[] {
     return words.filter((word) => !words.some((other) => other !== word && other.includes(word)))
 }
 
-/** Where the query's words occur in a text, in any case, for `Highlight`. */
-export function queryRanges(text: string, query: string): HighlightRange[] {
+/** Where a term occurs in a text, every time and in any case, for `Highlight`; a blank term occurs nowhere. */
+export function literalRanges(text: string, term: string): HighlightRange[] {
+    const needle = term.trim().toLowerCase()
+    if (needle === '') return []
     const lower = text.toLowerCase()
     const ranges: HighlightRange[] = []
-    for (const word of queryWords(query)) {
-        let from = lower.indexOf(word)
-        while (from !== -1) {
-            ranges.push({ start: from, end: from + word.length })
-            from = lower.indexOf(word, from + word.length)
-        }
-    }
-    return ranges.sort((a, b) => a.start - b.start)
+    for (let from = lower.indexOf(needle); from !== -1; from = lower.indexOf(needle, from + needle.length))
+        ranges.push({ start: from, end: from + needle.length })
+    return ranges
+}
+
+/** Where the query's words occur in a text, in any case, for `Highlight`. */
+export function queryRanges(text: string, query: string): HighlightRange[] {
+    return queryWords(query)
+        .flatMap((word) => literalRanges(text, word))
+        .sort((a, b) => a.start - b.start)
 }
 
 /** What a key does in a search's list: move the highlight, open the highlighted entry, or close the list. */

@@ -5,6 +5,15 @@ import { cn } from '../lib/cn'
 import { ProseText } from './ProseText'
 import { Unfoldable } from './Unfoldable'
 
+/** The words a problem says. */
+export interface ProblemWords {
+    technical: string
+}
+
+const WORDS: ProblemWords = {
+    technical: 'Technical details',
+}
+
 /**
  * Something that went wrong, said for a person: what happened in one sentence, then where and what
  * a right value looks like, with machine words marked by backticks drawn in the code face. The raw
@@ -18,7 +27,7 @@ export function Problem({
     actions,
     tone = 'error',
     className,
-    words = { technical: 'Technical details' },
+    words: given,
 }: {
     title: ReactNode
     /** Where and how to fix it; a string's backticked parts are drawn as code. */
@@ -28,8 +37,9 @@ export function Problem({
     actions?: ReactNode
     tone?: 'error' | 'warning'
     className?: string
-    words?: { technical: string }
+    words?: Partial<ProblemWords>
 }) {
+    const words = { ...WORDS, ...given }
     const Icon = tone === 'error' ? CircleAlert : TriangleAlert
     return (
         <div

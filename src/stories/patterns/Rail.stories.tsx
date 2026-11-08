@@ -258,7 +258,7 @@ export const TextOnly: StoryObj = {
                 mark={<TidevannMark />}
                 name="Tidevann"
                 groups={TEXT}
-                defaultOpen={['evaluate']}
+                defaultExpanded={['evaluate']}
                 onCollapsedChange={() => undefined}
                 foot={<AccountMenu name="ada" where="tidevann.example.org" onSettings={() => undefined} />}
             />

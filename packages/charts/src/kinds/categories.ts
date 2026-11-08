@@ -1,6 +1,6 @@
 import { asShares, formatNumber, pivot, type Series } from '../data'
 import { SERIES_ORDER, tooltipMarkup, type ChartLook } from '../look'
-import { colorOf, legendColor, unitAt, type ChartBuilder, type ChartSpec } from './spec'
+import { colorOf, legendColor, measureName, unitAt, type ChartBuilder, type ChartSpec } from './spec'
 import type { LegendItem } from '../ChartLegend'
 
 /** The figure as a tooltip or a label writes it, with the spec's unit, or the unit of the `field`th `y` field. */
@@ -229,7 +229,10 @@ export const heatmap: ChartBuilder = (spec, look) => {
             trigger: 'item',
             formatter: (point: { value: [number, number, number | null] }) =>
                 tooltipMarkup(`${categories[point.value[0]]}, ${series[point.value[1]].name}`, [
-                    { label: spec.y === undefined ? 'Count' : String(spec.y), value: written(spec, point.value[2]) },
+                    {
+                        label: spec.y === undefined ? measureName(spec, undefined) : measureName(spec, String(spec.y)),
+                        value: written(spec, point.value[2]),
+                    },
                 ]),
         },
         grid: { left: 4, right: spec.showScale === true ? 56 : 10, top: 10, bottom: 4 },

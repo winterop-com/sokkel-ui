@@ -684,7 +684,7 @@ function RegionsMap() {
                     <Segmented
                         label="Measure"
                         value={measure}
-                        onChoose={setMeasure}
+                        onValueChange={setMeasure}
                         options={[
                             { value: 'visits', label: 'Visits' },
                             { value: 'returned', label: 'Returned' },

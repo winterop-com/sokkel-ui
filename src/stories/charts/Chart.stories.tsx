@@ -191,7 +191,7 @@ export const Explore: StoryObj = {
         return (
             <Ground title="Explore runs" columns={1}>
                 <Stack gap="lg">
-                    <Segmented label="Kind" value={kind} options={KIND_OPTIONS} onChoose={setKind} />
+                    <Segmented label="Kind" value={kind} options={KIND_OPTIONS} onValueChange={setKind} />
                     <Columns count={4} min="sm" gap="md">
                         <Picker id="explore-x" label="Along" value={x} items={GROUPS} onChange={setX} />
                         <Picker id="explore-measure" label="Measure" value={measure} items={MEASURES} onChange={setMeasure} />

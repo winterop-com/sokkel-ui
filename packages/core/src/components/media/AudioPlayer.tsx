@@ -4,13 +4,13 @@ import { cn } from '../../lib/cn'
 import { PlayButton, Position } from './MediaControls'
 
 /** The words the player says, each with an English default. */
-export interface AudioPlayerLabels {
+export interface AudioPlayerWords {
     play: string
     pause: string
     seek: string
 }
 
-const LABELS: AudioPlayerLabels = {
+const WORDS: AudioPlayerWords = {
     play: 'Play',
     pause: 'Pause',
     seek: 'Seek',
@@ -39,7 +39,7 @@ export function AudioPlayer({
     label,
     variant = 'plain',
     preload = 'metadata',
-    labels: given,
+    words: given,
     audioRef,
     className,
 }: {
@@ -52,12 +52,12 @@ export function AudioPlayer({
     label?: string
     variant?: AudioPlayerVariant
     preload?: 'none' | 'metadata' | 'auto'
-    labels?: Partial<AudioPlayerLabels>
+    words?: Partial<AudioPlayerWords>
     /** The `<audio>` element, for whatever the screen around the player needs from it. */
     audioRef?: Ref<HTMLAudioElement>
     className?: string
 }) {
-    const labels = { ...LABELS, ...given }
+    const words = { ...WORDS, ...given }
     const element = useRef<HTMLAudioElement | null>(null)
     const [playing, setPlaying] = useState(false)
     const [at, setAt] = useState(0)
@@ -108,7 +108,7 @@ export function AudioPlayer({
             />
             <PlayButton
                 playing={playing}
-                words={labels}
+                words={words}
                 onToggle={() => {
                     const audio = element.current
                     if (audio === null) return
@@ -119,7 +119,7 @@ export function AudioPlayer({
             <Position
                 at={scrub ?? at}
                 duration={duration}
-                label={labels.seek}
+                label={words.seek}
                 waveform={waveform}
                 height={24}
                 onScrub={setScrub}

@@ -1,4 +1,4 @@
-import { useRef, type ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { usePanelSize } from '../hooks/use-panel-size'
@@ -12,6 +12,13 @@ export interface SidePanelTab {
     content: ReactNode
 }
 
+/** The words a side panel says. */
+export interface SidePanelWords {
+    resize: string
+}
+
+const WORDS: SidePanelWords = { resize: 'Resize the side panel' }
+
 /**
  * The right-hand panel beside a page: a header bar the height of the shell's top bar, with the
  * panel's tabs (or its title when it has one tab), then the content scrolling under it. The shell's
@@ -19,6 +26,9 @@ export interface SidePanelTab {
  *
  * The header lines up with the shell's top bar, so the panel reads as a column of the shell, not
  * as a card dropped beside the page.
+ *
+ * Left to itself the panel holds which tab is shown, starting at `defaultActive` or the first tab;
+ * `active` with `onActiveChange` holds it from outside.
  *
  * Its left edge drags to resize it, and a double click on the edge puts it back. Left to itself it
  * holds its own width, starting at `defaultSize`, or at `width` when that is given alone; `size`
@@ -29,6 +39,7 @@ export function SidePanel({
     tabs,
     active,
     onActiveChange,
+    defaultActive,
     width,
     size,
     onSizeChange,
@@ -37,11 +48,13 @@ export function SidePanel({
     maxSize = 640,
     defaultSize,
     className,
-    words = { resize: 'Resize the side panel' },
+    words: given,
 }: {
     tabs: SidePanelTab[]
     active?: string
     onActiveChange?: (id: string) => void
+    /** The tab shown at the start when `active` is not given. */
+    defaultActive?: string
     /** A CSS width the panel starts at and returns to, when `defaultSize` is not given. */
     width?: string
     /** The width in pixels, held from outside with `onSizeChange`. */
@@ -54,9 +67,16 @@ export function SidePanel({
     /** The width in pixels the panel starts at and a double click on the edge returns to: 352 unless `width` is given. */
     defaultSize?: number
     className?: string
-    words?: { resize: string }
+    words?: Partial<SidePanelWords>
 }) {
-    const current = tabs.find((tab) => tab.id === active) ?? tabs[0]
+    const words = { ...WORDS, ...given }
+    const [own, setOwn] = useState(defaultActive)
+    const shown = active ?? own
+    const current = tabs.find((tab) => tab.id === shown) ?? tabs[0]
+    const choose = (id: string) => {
+        if (active === undefined) setOwn(id)
+        onActiveChange?.(id)
+    }
     const panel = useRef<HTMLElement>(null)
     const held = usePanelSize({
         size,
@@ -102,7 +122,7 @@ export function SidePanel({
                                             ? 'bg-secondary font-medium text-foreground'
                                             : 'text-muted-foreground hover:bg-hover hover:text-foreground',
                                     )}
-                                    onClick={() => onActiveChange?.(tab.id)}
+                                    onClick={() => choose(tab.id)}
                                 >
                                     {tab.label}
                                 </button>

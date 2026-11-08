@@ -53,6 +53,19 @@ export interface PaletteSearch {
     words?: { searching: string }
 }
 
+/** The words the command palette says. */
+export interface CommandPaletteWords {
+    placeholder: string
+    empty: string
+    title: string
+}
+
+const WORDS: CommandPaletteWords = {
+    placeholder: 'Search or run a command',
+    empty: 'No command matches.',
+    title: 'Command palette',
+}
+
 /**
  * The command palette: one search over everything an app can do, grouped, each row with its
  * icon, a hint and the keys that run it directly. Choosing a row closes the palette and runs it.
@@ -65,7 +78,7 @@ export function CommandPalette({
     groups,
     search,
     defaultQuery = '',
-    words = { placeholder: 'Search or run a command', empty: 'No command matches.', title: 'Command palette' },
+    words: given,
 }: {
     open: boolean
     onOpenChange: (open: boolean) => void
@@ -74,8 +87,9 @@ export function CommandPalette({
     search?: PaletteSearch
     /** What the search holds when the palette opens. */
     defaultQuery?: string
-    words?: { placeholder: string; empty: string; title: string }
+    words?: Partial<CommandPaletteWords>
 }) {
+    const words = { ...WORDS, ...given }
     const [query, setQuery] = useState(defaultQuery)
     const answer = useSearch(search?.search, query, { enabled: open, minQuery: search?.minQuery })
     const found = answer.groups.filter((group) => group.results.length > 0)

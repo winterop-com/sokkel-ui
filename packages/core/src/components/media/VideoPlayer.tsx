@@ -19,7 +19,7 @@ export interface VideoTrack {
 }
 
 /** The words the player says, each with an English default. */
-export interface VideoPlayerLabels {
+export interface VideoPlayerWords {
     play: string
     pause: string
     mute: string
@@ -37,7 +37,7 @@ export interface VideoPlayerLabels {
     forward: string
 }
 
-const LABELS: VideoPlayerLabels = {
+export const VIDEO_PLAYER_WORDS: VideoPlayerWords = {
     play: 'Play',
     pause: 'Pause',
     mute: 'Mute',
@@ -85,7 +85,7 @@ export interface VideoPlayerProps {
     defaultControlsVisible?: boolean
     /** How long the controls stay after the pointer stops while playing, in milliseconds. */
     hideAfter?: number
-    labels?: Partial<VideoPlayerLabels>
+    words?: Partial<VideoPlayerWords>
     /** The `<video>` element, for whatever the screen around the player needs from it. */
     videoRef?: Ref<HTMLVideoElement>
     className?: string
@@ -132,11 +132,11 @@ export function VideoPlayer({
     preload = 'metadata',
     defaultControlsVisible = false,
     hideAfter = 2500,
-    labels,
+    words: given,
     videoRef,
     className,
 }: VideoPlayerProps) {
-    const words = { ...LABELS, ...labels }
+    const words = { ...VIDEO_PLAYER_WORDS, ...given }
     const root = useRef<HTMLDivElement | null>(null)
     const video = useRef<HTMLVideoElement | null>(null)
     const [state, setState] = useState<Playback>({
@@ -592,7 +592,7 @@ function CaptionsControl({
     tracks: readonly VideoTrack[]
     caption: number
     onCaption: (index: number) => void
-    words: VideoPlayerLabels
+    words: VideoPlayerWords
     container: React.RefObject<HTMLDivElement | null>
     onOpenChange: (open: boolean) => void
 }) {

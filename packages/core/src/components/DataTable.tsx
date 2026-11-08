@@ -359,6 +359,9 @@ const STACK_LINE = 20
  *
  * Sort, selection, open branches, hidden columns and column widths are each held by the table
  * unless the app passes the value and hears the change.
+ *
+ * The table draws its own box, a border with rounded corners; `framed={false}` drops both, for a
+ * table set into a panel or a card that already frames it.
  */
 export function DataTable<T>({
     columns,
@@ -417,6 +420,7 @@ export function DataTable<T>({
     variant = 'table',
     foot,
     hover = true,
+    framed = true,
     words: ownWords,
     className,
 }: {
@@ -528,6 +532,8 @@ export function DataTable<T>({
     foot?: ReactNode
     /** Tints the row under the pointer. */
     hover?: boolean
+    /** Draws the table's own border and corners; off for a table set into a frame of its own. */
+    framed?: boolean
     words?: Partial<DataTableWords>
     className?: string
 }) {
@@ -963,7 +969,8 @@ export function DataTable<T>({
         // at least 15rem, so a container that sizes itself to its content still gets a readable table.
         <div
             className={cn(
-                'flex min-h-0 min-w-60 flex-col overflow-hidden rounded-surface border border-border-strong bg-card [contain:inline-size]',
+                'flex min-h-0 min-w-60 flex-col overflow-hidden bg-card [contain:inline-size]',
+                framed && 'rounded-surface border border-border-strong',
                 className,
             )}
         >

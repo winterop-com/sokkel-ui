@@ -10,6 +10,7 @@ import {
     CodeBlockHeader,
     CodeBlockLine,
     CodeBlockTitle,
+    type CodeBlockWords,
 } from './ui/code-block'
 
 /**
@@ -28,6 +29,7 @@ export function Code({
     size = 'default',
     variant = 'default',
     className,
+    words,
 }: {
     value: string
     language?: string
@@ -40,6 +42,8 @@ export function Code({
     size?: 'default' | 'sm'
     variant?: 'default' | 'destructive'
     className?: string
+    /** The copy button's words. */
+    words?: Partial<CodeBlockWords>
 }) {
     const lines = useHighlightedCode(value, language)
     const marked = new Set(highlight)
@@ -49,12 +53,12 @@ export function Code({
                 <CodeBlockHeader>
                     <CodeBlockTitle>{title}</CodeBlockTitle>
                     <CodeBlockActions>
-                        <CodeBlockCopyButton value={value} />
+                        <CodeBlockCopyButton value={value} words={words} />
                     </CodeBlockActions>
                 </CodeBlockHeader>
             ) : (
                 <CodeBlockActions>
-                    <CodeBlockCopyButton value={value} />
+                    <CodeBlockCopyButton value={value} words={words} />
                 </CodeBlockActions>
             )}
             <CodeBlockContent wrap={wrap} lineNumbers={lineNumbers} startLine={startLine}>

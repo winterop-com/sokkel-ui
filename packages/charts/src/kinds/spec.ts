@@ -172,6 +172,10 @@ const WORDS: ChartWords = {
 /** The spec's words over the English defaults. */
 export const wordsOf = (spec: ChartSpec): ChartWords => ({ ...WORDS, ...spec.words })
 
+/** What a measured field is called in a tooltip: its name from `fieldNames`, the field itself, or the count word where rows are counted. */
+export const measureName = (spec: ChartSpec, field: string | undefined): string =>
+    field === undefined ? wordsOf(spec).count : (spec.fieldNames?.[field] ?? field)
+
 /** The unit written after the `index`th `y` field's figures. */
 export function unitAt(spec: ChartSpec, index = 0): string {
     if (spec.unit === undefined) return ''

@@ -43,7 +43,7 @@ function Swatch({ color, off }: { color: string; off: boolean }) {
     return (
         <span
             aria-hidden
-            className={cn('size-2.5 shrink-0 rounded-[2px]', off && 'bg-transparent ring-1 ring-current ring-inset')}
+            className={cn('size-2.5 shrink-0 rounded-mini', off && 'bg-transparent ring-1 ring-current ring-inset')}
             style={off ? undefined : { background: color }}
         />
     )
@@ -65,7 +65,7 @@ export function ChartLegend({
     mode = 'list',
     stats = ['min', 'max', 'avg', 'current'],
     format = defaultFormat,
-    words = WORDS,
+    words: given,
     className,
 }: {
     items: readonly LegendItem[]
@@ -76,9 +76,10 @@ export function ChartLegend({
     /** The figures table mode shows, in order. */
     stats?: readonly LegendStat[]
     format?: (value: number) => string
-    words?: LegendWords
+    words?: Partial<LegendWords>
     className?: string
 }) {
+    const words = { ...WORDS, ...given }
     const handlers = (key: string, off: boolean) => ({
         onClick: () => onToggle?.(key),
         onMouseEnter: () => onHover?.(off ? null : key),

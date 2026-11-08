@@ -2,7 +2,7 @@ import { aggregateAt } from '../data'
 import { tooltipMarkup } from '../look'
 import { byDay, calendarRange } from '../shapes'
 import { written } from './categories'
-import type { ChartBuilder } from './spec'
+import { measureName, type ChartBuilder } from './spec'
 
 /** Every day from `start` to `end`, both `YYYY-MM-DD`. */
 function everyDay(start: string, end: string): string[] {
@@ -33,7 +33,7 @@ export const calendar: ChartBuilder = (spec, look) => {
         tooltip: {
             trigger: 'item',
             formatter: (point: { value: [string, number] }) =>
-                tooltipMarkup(point.value[0], [{ label: y ?? 'Count', value: written(spec, point.value[1]) }]),
+                tooltipMarkup(point.value[0], [{ label: measureName(spec, y), value: written(spec, point.value[1]) }]),
         },
         calendar: {
             range: [range.start, range.end],

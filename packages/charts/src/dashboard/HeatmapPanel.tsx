@@ -75,7 +75,7 @@ export function heatmapOption({
                 name: 'cells',
                 type: 'heatmap',
                 data: cells,
-                itemStyle: { borderColor: look.card, borderWidth: 1, borderRadius: 1 },
+                itemStyle: { borderColor: look.card, borderWidth: 1, borderRadius: look.corner },
                 emphasis: { itemStyle: { borderColor: look.foreground } },
             },
         ],
@@ -127,7 +127,7 @@ export function HeatmapPanel({
     loading?: boolean
     empty?: boolean
     file?: string
-    words?: ChartFrameWords
+    words?: Partial<ChartFrameWords>
     className?: string
 }) {
     const option = useMemo(

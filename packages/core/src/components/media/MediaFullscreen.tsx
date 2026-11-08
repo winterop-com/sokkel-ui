@@ -8,9 +8,7 @@ import { Segmented } from '../Segmented'
 import { PHONE, type MediaBarLayout } from './bar-growth'
 import { Cover, drawVisualizer, Extras, RepeatButton, ScreenWords, Scrub, ShuffleButton, Steps, Volume, type Deck } from './MediaBarParts'
 import { TransportButton } from './MediaControls'
-import type { SoundKind } from './SoundVisualizer'
-
-const KINDS: readonly SoundKind[] = ['spectrum', 'area', 'wave', 'ring']
+import { SOUND_KINDS, type SoundKind } from './sound'
 
 /** The view's width under which the rows view puts its transport under what plays. */
 const TABLET = 1280
@@ -133,7 +131,7 @@ function KindPicker({
     compact: boolean
 }) {
     if (compact) {
-        const next = KINDS[(KINDS.indexOf(kind) + 1) % KINDS.length]
+        const next = SOUND_KINDS[(SOUND_KINDS.indexOf(kind) + 1) % SOUND_KINDS.length]
         return (
             <TransportButton
                 label={`${words.visualizerKind}: ${words[kind]}`}
@@ -148,8 +146,8 @@ function KindPicker({
         <Segmented
             label={words.visualizerKind}
             value={kind}
-            options={KINDS.map((value) => ({ value, label: words[value] }))}
-            onChoose={onKindChange}
+            options={SOUND_KINDS.map((value) => ({ value, label: words[value] }))}
+            onValueChange={onKindChange}
         />
     )
 }

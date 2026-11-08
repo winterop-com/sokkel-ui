@@ -5,7 +5,7 @@ import { useRef, useState, type ReactNode } from 'react'
 import { cn } from '../lib/cn'
 import { DialogShell } from './DialogShell'
 import { AudioPlayer } from './media/AudioPlayer'
-import { VideoPlayer } from './media/VideoPlayer'
+import { VIDEO_PLAYER_WORDS, VideoPlayer, type VideoPlayerWords } from './media/VideoPlayer'
 import { ProgressRing } from './ui/progress-ring'
 import { Spinner } from './ui/spinner'
 import { Textarea } from './ui/textarea'
@@ -49,10 +49,8 @@ export interface ComposerWords {
     uploading: string
     /** The send button's name while a file is still uploading. */
     waiting: string
-    /** The players' buttons and scrubber, for a recording or a video. */
-    play: string
-    pause: string
-    seek: string
+    /** The players' words, for a recording or a video: play, pause, seek, speed, captions, fullscreen and the rest. */
+    player: Partial<VideoPlayerWords>
     /** The video dialog's way out. */
     close: string
 }
@@ -67,9 +65,7 @@ const WORDS: ComposerWords = {
     cancel: 'Cancel upload',
     uploading: 'Uploading',
     waiting: 'Waiting for files to upload',
-    play: 'Play',
-    pause: 'Pause',
-    seek: 'Seek',
+    player: {},
     close: 'Close',
 }
 
@@ -113,7 +109,7 @@ function Chip({ attachment, words, onPlay }: { attachment: ComposerAttachment; w
         return (
             <button
                 type="button"
-                aria-label={`${words.play} ${name}`}
+                aria-label={`${words.player.play ?? VIDEO_PLAYER_WORDS.play} ${name}`}
                 title={name}
                 onClick={onPlay}
                 className="relative block size-14 overflow-hidden rounded-md border border-border bg-terminal outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
@@ -131,13 +127,7 @@ function Chip({ attachment, words, onPlay }: { attachment: ComposerAttachment; w
                 <span className="truncate pl-1.5 text-xs font-medium" title={name}>
                     {name}
                 </span>
-                <AudioPlayer
-                    src={url}
-                    waveform={attachment.waveform}
-                    duration={attachment.duration}
-                    label={name}
-                    labels={{ play: words.play, pause: words.pause, seek: words.seek }}
-                />
+                <AudioPlayer src={url} waveform={attachment.waveform} duration={attachment.duration} label={name} words={words.player} />
             </div>
         )
     }
@@ -337,7 +327,7 @@ export function Composer({
                     title={playing.name}
                     words={{ cancel: words.close }}
                 >
-                    <VideoPlayer src={playing.url} autoPlay labels={{ play: words.play, pause: words.pause, seek: words.seek }} />
+                    <VideoPlayer src={playing.url} autoPlay words={words.player} />
                 </DialogShell>
             )}
         </div>

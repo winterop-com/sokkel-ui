@@ -150,14 +150,12 @@ function sections(active: string): ChannelSection[] {
 
 function Sidebar({ active, onSelect }: { active: string; onSelect: (id: string) => void }) {
     const [query, setQuery] = useState('')
-    const [size, setSize] = useState(256)
     return (
         <Row gap="none" align="stretch" className="h-full">
             <Rail variant="strip" mark={<TidevannMark className="size-5" />} name="Tidevann" groups={STRIP} foot={STRIP_FOOT} />
             <ChannelList
                 className="border-r border-border-strong"
-                size={size}
-                onSizeChange={setSize}
+                defaultSize={256}
                 sections={sections(active)}
                 active={active}
                 onSelect={onSelect}

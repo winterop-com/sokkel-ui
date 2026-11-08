@@ -182,7 +182,7 @@ export function MapLayerList({
                         basemaps={basemap.basemaps}
                         value={basemap.value}
                         onValueChange={basemap.onValueChange}
-                        label={said.basemap}
+                        words={{ label: said.basemap }}
                         className="-mx-1 mt-2"
                     />
                     <OpacityControl
