@@ -179,6 +179,25 @@
     --color-kind-violet-ink: var(--kind-violet-ink);
     --color-kind-pink: var(--kind-pink);
     --color-kind-pink-ink: var(--kind-pink-ink);
+    --color-code-keyword: var(--code-keyword);
+    --color-code-operator: var(--code-operator);
+    --color-code-punctuation: var(--code-punctuation);
+    --color-code-string: var(--code-string);
+    --color-code-regexp: var(--code-regexp);
+    --color-code-number: var(--code-number);
+    --color-code-constant: var(--code-constant);
+    --color-code-comment: var(--code-comment);
+    --color-code-function: var(--code-function);
+    --color-code-variable: var(--code-variable);
+    --color-code-type: var(--code-type);
+    --color-code-property: var(--code-property);
+    --color-code-tag: var(--code-tag);
+    --color-code-attribute: var(--code-attribute);
+    --color-code-heading: var(--code-heading);
+    --color-code-link: var(--code-link);
+    --color-code-inserted: var(--code-inserted);
+    --color-code-deleted: var(--code-deleted);
+    --color-code-invalid: var(--code-invalid);
     --color-binding-ink: var(--binding-ink);
     --spacing-shell-foot: 46px;
     --color-terminal-bar: var(--terminal-bar);
@@ -305,6 +324,25 @@
     --globe-space: #05080f;
     --globe-star: #dbe7ff;
     --hover: color-mix(in oklch, var(--foreground) 8%, transparent);
+    --code-keyword: oklch(0.5 0.14 305);
+    --code-operator: oklch(0.5 0.14 215);
+    --code-punctuation: oklch(0.45 0.015 255);
+    --code-string: oklch(0.5 0.14 145);
+    --code-regexp: oklch(0.5 0.14 175);
+    --code-number: oklch(0.5 0.14 60);
+    --code-constant: oklch(0.5 0.14 350);
+    --code-comment: oklch(0.56 0.015 255);
+    --code-function: oklch(0.5 0.14 260);
+    --code-variable: oklch(0.5 0.14 30);
+    --code-type: oklch(0.5 0.14 195);
+    --code-property: oklch(0.5 0.14 240);
+    --code-tag: oklch(0.5 0.14 20);
+    --code-attribute: oklch(0.5 0.14 75);
+    --code-heading: oklch(0.5 0.14 260);
+    --code-link: oklch(0.5 0.14 240);
+    --code-inserted: oklch(0.5 0.154 150);
+    --code-deleted: oklch(0.5 0.154 25);
+    --code-invalid: oklch(0.5 0.154 25);
 }
 
 .dark {
@@ -401,6 +439,25 @@
     --panel-ground: #171e24;
     --panel-dot: #ffffff1c;
     --hover: color-mix(in oklch, var(--foreground) 12%, transparent);
+    --code-keyword: oklch(0.8 0.12 305);
+    --code-operator: oklch(0.8 0.12 215);
+    --code-punctuation: oklch(0.72 0.015 255);
+    --code-string: oklch(0.8 0.12 145);
+    --code-regexp: oklch(0.8 0.12 175);
+    --code-number: oklch(0.8 0.12 60);
+    --code-constant: oklch(0.8 0.12 350);
+    --code-comment: oklch(0.64 0.015 255);
+    --code-function: oklch(0.8 0.12 260);
+    --code-variable: oklch(0.8 0.12 30);
+    --code-type: oklch(0.8 0.12 195);
+    --code-property: oklch(0.8 0.12 240);
+    --code-tag: oklch(0.8 0.12 20);
+    --code-attribute: oklch(0.8 0.12 75);
+    --code-heading: oklch(0.8 0.12 260);
+    --code-link: oklch(0.8 0.12 240);
+    --code-inserted: oklch(0.8 0.132 150);
+    --code-deleted: oklch(0.8 0.132 25);
+    --code-invalid: oklch(0.8 0.132 25);
 }
 
 [data-theme-scope='default'] {
@@ -524,6 +581,25 @@
     --globe-space: #05080f;
     --globe-star: #dbe7ff;
     --hover: color-mix(in oklch, var(--foreground) 8%, transparent);
+    --code-keyword: oklch(0.5 0.14 305);
+    --code-operator: oklch(0.5 0.14 215);
+    --code-punctuation: oklch(0.45 0.015 255);
+    --code-string: oklch(0.5 0.14 145);
+    --code-regexp: oklch(0.5 0.14 175);
+    --code-number: oklch(0.5 0.14 60);
+    --code-constant: oklch(0.5 0.14 350);
+    --code-comment: oklch(0.56 0.015 255);
+    --code-function: oklch(0.5 0.14 260);
+    --code-variable: oklch(0.5 0.14 30);
+    --code-type: oklch(0.5 0.14 195);
+    --code-property: oklch(0.5 0.14 240);
+    --code-tag: oklch(0.5 0.14 20);
+    --code-attribute: oklch(0.5 0.14 75);
+    --code-heading: oklch(0.5 0.14 260);
+    --code-link: oklch(0.5 0.14 240);
+    --code-inserted: oklch(0.5 0.154 150);
+    --code-deleted: oklch(0.5 0.154 25);
+    --code-invalid: oklch(0.5 0.154 25);
 }
 
 .dark [data-theme-scope='default'] {
@@ -647,6 +723,25 @@
     --globe-space: #05080f;
     --globe-star: #dbe7ff;
     --hover: color-mix(in oklch, var(--foreground) 12%, transparent);
+    --code-keyword: oklch(0.8 0.12 305);
+    --code-operator: oklch(0.8 0.12 215);
+    --code-punctuation: oklch(0.72 0.015 255);
+    --code-string: oklch(0.8 0.12 145);
+    --code-regexp: oklch(0.8 0.12 175);
+    --code-number: oklch(0.8 0.12 60);
+    --code-constant: oklch(0.8 0.12 350);
+    --code-comment: oklch(0.64 0.015 255);
+    --code-function: oklch(0.8 0.12 260);
+    --code-variable: oklch(0.8 0.12 30);
+    --code-type: oklch(0.8 0.12 195);
+    --code-property: oklch(0.8 0.12 240);
+    --code-tag: oklch(0.8 0.12 20);
+    --code-attribute: oklch(0.8 0.12 75);
+    --code-heading: oklch(0.8 0.12 260);
+    --code-link: oklch(0.8 0.12 240);
+    --code-inserted: oklch(0.8 0.132 150);
+    --code-deleted: oklch(0.8 0.132 25);
+    --code-invalid: oklch(0.8 0.132 25);
     --terminal-bar: oklch(0.21 0.013 255);
 }
 

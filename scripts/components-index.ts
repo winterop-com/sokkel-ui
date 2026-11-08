@@ -129,6 +129,7 @@ const CORE_AREAS: Record<string, string> = {
     SourceSheet: 'Files and attachments',
     UploadTray: 'Files and attachments',
     // Code, text and documents.
+    AnsiText: 'Code, text and documents',
     Code: 'Code, text and documents',
     CodeEditor: 'Code, text and documents',
     DiffView: 'Code, text and documents',

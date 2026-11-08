@@ -207,5 +207,8 @@ export const markdownSchema: SanitizeSchema = {
     attributes: {
         ...defaultSchema.attributes,
         code: [...codeClasses, ['className', /^language-./, 'math-inline', 'math-display']],
+        // The placeholder of a part an app embeds, which Markdown fills.
+        div: [...(defaultSchema.attributes?.div ?? []), 'dataPart'],
+        span: [...(defaultSchema.attributes?.span ?? []), 'dataPart'],
     },
 }

@@ -93,6 +93,38 @@ function hastText(node: HastNode): string {
     return (node.children ?? []).map(hastText).join('')
 }
 
+/** The slice of an mdast node the plugin below reads and writes. */
+interface MdastNode {
+    type: string
+    value?: string
+    data?: Record<string, unknown>
+    children?: MdastNode[]
+}
+
+/** The marker of a part an app embeds: `<!-- part:ID -->`, where the ID is letters, digits, `-`, `_`, `.` and `:`. */
+const PART = /^<!--\s*part:([\w.:-]+)\s*-->$/
+
+/**
+ * Turns each part marker into a placeholder element the `parts` map fills: a block where the
+ * marker stands on a line of its own, inline where it sits inside a paragraph.
+ */
+function remarkParts() {
+    return (tree: MdastNode) => {
+        const visit = (node: MdastNode, inline: boolean) => {
+            if (node.children === undefined) return
+            node.children = node.children.map((child) => {
+                const match = child.type === 'html' ? PART.exec((child.value ?? '').trim()) : null
+                if (match === null) {
+                    visit(child, inline || child.type === 'paragraph' || child.type === 'heading')
+                    return child
+                }
+                return { type: 'part', children: [], data: { hName: inline ? 'span' : 'div', hProperties: { dataPart: match[1] } } }
+            })
+        }
+        visit(tree, false)
+    }
+}
+
 /** Marks `[!KIND]` quotes as callouts with the marker removed, and gives headings ids when `anchors` is set. */
 function rehypeDocument(anchors: boolean) {
     return () => (tree: HastNode) => {
@@ -234,6 +266,16 @@ const CARET = cn(
  * `anchors` gives each heading the id `headingId` makes of its text, for a table of contents to
  * link to; `markdownHeadings` lists the same ids from the source.
  *
+ * `parts` embeds an app's own parts in the text without splitting it, so headings, anchors and
+ * the flow stay one document's. The text marks where each goes with an HTML comment,
+ * `<!-- part:ID -->` (letters, digits, `-`, `_`, `.` and `:` in the ID), and `parts[ID]` is drawn
+ * there: as a block when the marker stands on a line of its own between blank lines, inline when it
+ * sits in a sentence. The marker works with `allowHtml` off, and a reader of the raw text sees
+ * nothing; a marker whose ID `parts` lacks draws nothing.
+ *
+ * Fences are highlighted by Shiki in the `code-*` tokens: the common languages, `jq`, `ansi` output,
+ * and any an app adds with `registerLanguage` from `lib/highlighter`.
+ *
  * `inlineCode` picks how code inside a sentence is drawn, and `caret` marks where a streaming
  * answer's next words will land.
  */
@@ -246,6 +288,7 @@ export const Markdown = memo(function Markdown({
     caret = false,
     math = true,
     scale = 'message',
+    parts,
     className,
     words: given,
 }: {
@@ -262,6 +305,8 @@ export const Markdown = memo(function Markdown({
     math?: boolean
     /** Heading sizes: within a message (the default), or a document's from a page title down. */
     scale?: 'message' | 'document'
+    /** The app's own parts by ID, each drawn where the text has the marker `<!-- part:ID -->`. */
+    parts?: Readonly<Record<string, ReactNode>>
     className?: string
     words?: Partial<MarkdownWords>
 }) {
@@ -294,6 +339,22 @@ export const Markdown = memo(function Markdown({
                     </div>
                 )
             },
+            div: ({ children, node: _node, ...props }) => {
+                const part = (props as Record<string, unknown>)['data-part'] as string | undefined
+                if (part === undefined) return <div {...props}>{children}</div>
+                if (parts?.[part] === undefined) return null
+                return (
+                    <div data-part={part} className="my-3">
+                        {parts?.[part]}
+                    </div>
+                )
+            },
+            span: ({ children, node: _node, ...props }) => {
+                const part = (props as Record<string, unknown>)['data-part'] as string | undefined
+                if (part === undefined) return <span {...props}>{children}</span>
+                if (parts?.[part] === undefined) return null
+                return <span data-part={part}>{parts?.[part]}</span>
+            },
             th: ({ children, node: _node, className, ...props }) => (
                 <th {...props} className={cn(TABLE_HEAD_TEXT, className)}>
                     {children}
@@ -316,13 +377,13 @@ export const Markdown = memo(function Markdown({
                 return <Code value={value} language={language} />
             },
         }),
-        [streaming, note, tip, important, warning, caution],
+        [streaming, note, tip, important, warning, caution, parts],
     )
     const needsMath = useMemo(() => math && hasMath(content), [math, content])
     const katex = useMathEngine(needsMath)
     const source = useMemo(() => (math ? normalizeMath(content) : content), [math, content])
     const remark: Options['remarkPlugins'] = useMemo(
-        () => (katex === undefined || !math ? [remarkGfm] : [remarkGfm, katex.remarkMath]),
+        () => (katex === undefined || !math ? [remarkGfm, remarkParts] : [remarkGfm, remarkParts, katex.remarkMath]),
         [katex, math],
     )
     const rehype = useMemo(() => {

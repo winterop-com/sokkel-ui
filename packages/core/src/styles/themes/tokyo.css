@@ -61,6 +61,25 @@ html[data-theme='tokyo'] {
     --status-skipped: oklch(0.565 0.04 268);
     --status-skipped-ink: oklch(0.45 0.04 268);
     --graph-edge: oklch(0.735 0.022 268);
+    --code-keyword: oklch(0.5 0.147 300);
+    --code-operator: oklch(0.5 0.147 220);
+    --code-punctuation: oklch(0.45 0.05 270);
+    --code-string: oklch(0.5 0.147 130);
+    --code-regexp: oklch(0.5 0.147 180);
+    --code-number: oklch(0.5 0.147 50);
+    --code-constant: oklch(0.5 0.147 50);
+    --code-comment: oklch(0.56 0.05 270);
+    --code-function: oklch(0.5 0.147 265);
+    --code-variable: oklch(0.5 0.147 15);
+    --code-type: oklch(0.5 0.147 210);
+    --code-property: oklch(0.5 0.147 180);
+    --code-tag: oklch(0.5 0.147 15);
+    --code-attribute: oklch(0.5 0.147 300);
+    --code-heading: oklch(0.5 0.147 265);
+    --code-link: oklch(0.5 0.147 265);
+    --code-inserted: oklch(0.5 0.162 150);
+    --code-deleted: oklch(0.5 0.162 25);
+    --code-invalid: oklch(0.5 0.162 25);
 }
 
 html.dark[data-theme='tokyo'] {
@@ -124,6 +143,25 @@ html.dark[data-theme='tokyo'] {
     --status-skipped: oklch(0.555 0.034 268);
     --status-skipped-ink: oklch(0.7 0.034 268);
     --graph-edge: oklch(0.5 0.035 268);
+    --code-keyword: oklch(0.8 0.126 300);
+    --code-operator: oklch(0.8 0.126 220);
+    --code-punctuation: oklch(0.72 0.05 270);
+    --code-string: oklch(0.8 0.126 130);
+    --code-regexp: oklch(0.8 0.126 180);
+    --code-number: oklch(0.8 0.126 50);
+    --code-constant: oklch(0.8 0.126 50);
+    --code-comment: oklch(0.64 0.05 270);
+    --code-function: oklch(0.8 0.126 265);
+    --code-variable: oklch(0.8 0.126 15);
+    --code-type: oklch(0.8 0.126 210);
+    --code-property: oklch(0.8 0.126 180);
+    --code-tag: oklch(0.8 0.126 15);
+    --code-attribute: oklch(0.8 0.126 300);
+    --code-heading: oklch(0.8 0.126 265);
+    --code-link: oklch(0.8 0.126 265);
+    --code-inserted: oklch(0.8 0.139 150);
+    --code-deleted: oklch(0.8 0.139 25);
+    --code-invalid: oklch(0.8 0.139 25);
 }
 
 [data-theme-scope='tokyo'] {
@@ -247,6 +285,25 @@ html.dark[data-theme='tokyo'] {
     --globe-space: #05080f;
     --globe-star: #dbe7ff;
     --hover: color-mix(in oklch, var(--foreground) 8%, transparent);
+    --code-keyword: oklch(0.5 0.147 300);
+    --code-operator: oklch(0.5 0.147 220);
+    --code-punctuation: oklch(0.45 0.05 270);
+    --code-string: oklch(0.5 0.147 130);
+    --code-regexp: oklch(0.5 0.147 180);
+    --code-number: oklch(0.5 0.147 50);
+    --code-constant: oklch(0.5 0.147 50);
+    --code-comment: oklch(0.56 0.05 270);
+    --code-function: oklch(0.5 0.147 265);
+    --code-variable: oklch(0.5 0.147 15);
+    --code-type: oklch(0.5 0.147 210);
+    --code-property: oklch(0.5 0.147 180);
+    --code-tag: oklch(0.5 0.147 15);
+    --code-attribute: oklch(0.5 0.147 300);
+    --code-heading: oklch(0.5 0.147 265);
+    --code-link: oklch(0.5 0.147 265);
+    --code-inserted: oklch(0.5 0.162 150);
+    --code-deleted: oklch(0.5 0.162 25);
+    --code-invalid: oklch(0.5 0.162 25);
 }
 
 .dark [data-theme-scope='tokyo'] {
@@ -370,5 +427,24 @@ html.dark[data-theme='tokyo'] {
     --globe-space: #05080f;
     --globe-star: #dbe7ff;
     --hover: color-mix(in oklch, var(--foreground) 12%, transparent);
+    --code-keyword: oklch(0.8 0.126 300);
+    --code-operator: oklch(0.8 0.126 220);
+    --code-punctuation: oklch(0.72 0.05 270);
+    --code-string: oklch(0.8 0.126 130);
+    --code-regexp: oklch(0.8 0.126 180);
+    --code-number: oklch(0.8 0.126 50);
+    --code-constant: oklch(0.8 0.126 50);
+    --code-comment: oklch(0.64 0.05 270);
+    --code-function: oklch(0.8 0.126 265);
+    --code-variable: oklch(0.8 0.126 15);
+    --code-type: oklch(0.8 0.126 210);
+    --code-property: oklch(0.8 0.126 180);
+    --code-tag: oklch(0.8 0.126 15);
+    --code-attribute: oklch(0.8 0.126 300);
+    --code-heading: oklch(0.8 0.126 265);
+    --code-link: oklch(0.8 0.126 265);
+    --code-inserted: oklch(0.8 0.139 150);
+    --code-deleted: oklch(0.8 0.139 25);
+    --code-invalid: oklch(0.8 0.139 25);
     --terminal-bar: oklch(0.21 0.013 255);
 }

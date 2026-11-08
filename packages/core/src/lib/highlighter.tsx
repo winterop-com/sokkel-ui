@@ -1,14 +1,17 @@
 import * as React from 'react'
-import { createHighlighterCore, type GrammarState, type HighlighterCore } from 'shiki/core'
+import { createHighlighterCore, type GrammarState, type HighlighterCore, type LanguageInput, type ThemeRegistration } from 'shiki/core'
 import { createJavaScriptRegexEngine } from 'shiki/engine/javascript'
 
-// Add the languages you need. Each one loads the first time it is used.
-const languages = {
+import { ansiCss, parseAnsi, type AnsiStyle } from './ansi'
+
+// The languages the highlighter knows. Each one loads the first time it is used.
+const languages: Record<string, LanguageInput> = {
     bash: () => import('shiki/langs/shellscript.mjs'),
     css: () => import('shiki/langs/css.mjs'),
     diff: () => import('shiki/langs/diff.mjs'),
     html: () => import('shiki/langs/html.mjs'),
     javascript: () => import('shiki/langs/javascript.mjs'),
+    jq: () => import('./jq-grammar'),
     json: () => import('shiki/langs/json.mjs'),
     jsx: () => import('shiki/langs/jsx.mjs'),
     markdown: () => import('shiki/langs/markdown.mjs'),
@@ -19,7 +22,7 @@ const languages = {
     yaml: () => import('shiki/langs/yaml.mjs'),
 }
 
-const aliases: Record<string, keyof typeof languages> = {
+const aliases: Record<string, string> = {
     js: 'javascript',
     md: 'markdown',
     py: 'python',
@@ -31,11 +34,123 @@ const aliases: Record<string, keyof typeof languages> = {
     zsh: 'bash',
 }
 
+/**
+ * Adds a language the highlighter colors in `Code`, `Markdown`'s fences and everything else that
+ * highlights, under `name` and any `aliases`. `grammar` is a Shiki language (a TextMate grammar):
+ * a function that imports it, such as `() => import('shiki/langs/rust.mjs')`, so it loads the
+ * first time code in it is drawn, or the grammar itself. Its `name` must be `name` or one of its own
+ * aliases. Registering a name again replaces it for code not yet drawn in it.
+ */
+export function registerLanguage(name: string, grammar: LanguageInput, options: { aliases?: readonly string[] } = {}): void {
+    const key = name.toLowerCase()
+    languages[key] = grammar
+    for (const alias of options.aliases ?? []) aliases[alias.toLowerCase()] = key
+}
+
+const color = (role: string) => `var(--code-${role})`
+
+/**
+ * The one theme: every TextMate scope drawn in a `code-*` token, so code follows the theme and
+ * scheme around it with no second pass. Text no scope names takes the color around it.
+ */
+const THEME_NAME = 'sokkel'
+
+const THEME: ThemeRegistration = {
+    name: THEME_NAME,
+    type: 'light',
+    fg: 'inherit',
+    bg: 'transparent',
+    settings: [
+        { settings: { foreground: 'inherit', background: 'transparent' } },
+        {
+            scope: ['comment', 'punctuation.definition.comment', 'string.comment'],
+            settings: { foreground: color('comment'), fontStyle: 'italic' },
+        },
+        {
+            scope: ['keyword', 'storage', 'storage.type', 'storage.modifier', 'keyword.control'],
+            settings: { foreground: color('keyword') },
+        },
+        {
+            scope: ['keyword.operator', 'keyword.operator.word', 'punctuation.accessor', 'punctuation.separator.key-value'],
+            settings: { foreground: color('operator') },
+        },
+        {
+            scope: ['punctuation', 'meta.brace', 'punctuation.definition.tag', 'punctuation.section.embedded'],
+            settings: { foreground: color('punctuation') },
+        },
+        {
+            scope: ['string', 'punctuation.definition.string', 'string.quoted', 'string.unquoted', 'markup.inline.raw', 'markup.raw'],
+            settings: { foreground: color('string') },
+        },
+        { scope: ['string.regexp', 'constant.character.escape', 'constant.other.placeholder'], settings: { foreground: color('regexp') } },
+        { scope: ['constant.numeric', 'keyword.other.unit'], settings: { foreground: color('number') } },
+        {
+            scope: ['constant.language', 'constant.other', 'support.constant', 'variable.other.constant', 'variable.other.enummember'],
+            settings: { foreground: color('constant') },
+        },
+        {
+            scope: ['entity.name.function', 'support.function', 'meta.function-call entity.name.function', 'variable.function'],
+            settings: { foreground: color('function') },
+        },
+        {
+            scope: [
+                'variable.parameter',
+                'variable.language',
+                'variable.other.normal',
+                'variable.other.special',
+                'variable.other.positional',
+                'variable.other.bracket',
+                'variable.other.jq',
+                'punctuation.definition.variable',
+            ],
+            settings: { foreground: color('variable') },
+        },
+        {
+            scope: [
+                'entity.name.type',
+                'entity.name.class',
+                'entity.name.namespace',
+                'entity.other.inherited-class',
+                'support.type',
+                'support.class',
+                'storage.type.primitive',
+                'meta.type.annotation entity.name.type',
+            ],
+            settings: { foreground: color('type') },
+        },
+        {
+            scope: [
+                'variable.other.property',
+                'variable.other.object.property',
+                'meta.object-literal.key',
+                'support.type.property-name',
+                'entity.name.tag.yaml',
+                'meta.mapping.key string',
+                'support.variable.property',
+            ],
+            settings: { foreground: color('property') },
+        },
+        { scope: ['entity.name.tag', 'meta.tag.sgml'], settings: { foreground: color('tag') } },
+        { scope: ['entity.other.attribute-name'], settings: { foreground: color('attribute') } },
+        {
+            scope: ['markup.heading', 'entity.name.section', 'markup.heading entity.name'],
+            settings: { foreground: color('heading'), fontStyle: 'bold' },
+        },
+        { scope: ['markup.underline.link', 'string.other.link', 'markup.link'], settings: { foreground: color('link') } },
+        { scope: ['markup.inserted', 'punctuation.definition.inserted'], settings: { foreground: color('inserted') } },
+        { scope: ['markup.deleted', 'punctuation.definition.deleted'], settings: { foreground: color('deleted') } },
+        { scope: ['meta.diff.range', 'meta.diff.header', 'meta.diff.index'], settings: { foreground: color('type') } },
+        { scope: ['markup.bold', 'strong'], settings: { fontStyle: 'bold' } },
+        { scope: ['markup.italic', 'emphasis'], settings: { fontStyle: 'italic' } },
+        { scope: ['invalid', 'invalid.illegal'], settings: { foreground: color('invalid') } },
+    ],
+}
+
 let highlighter: Promise<HighlighterCore> | undefined
 
 function getHighlighter() {
     highlighter ??= createHighlighterCore({
-        themes: [import('shiki/themes/github-light.mjs'), import('shiki/themes/github-dark.mjs')],
+        themes: [THEME],
         langs: [],
         engine: createJavaScriptRegexEngine({ forgiving: true }),
     })
@@ -43,19 +158,39 @@ function getHighlighter() {
     return highlighter
 }
 
-function getLanguage(language: string) {
+function getLanguage(language: string): string | null {
     const name = language.toLowerCase()
 
-    if (name === 'ansi') {
+    if (name === 'ansi' || name in languages) {
         return name
-    }
-
-    if (name in languages) {
-        return name as keyof typeof languages
     }
 
     return aliases[name] ?? null
 }
+
+/** The highlighter's state after a piece of code: the grammar's, or for ANSI output the style in force. */
+export type HighlightState = GrammarState | AnsiStyle
+
+/** ANSI output, line by line, each run in the style its escapes set. */
+function highlightAnsi(code: string, state?: HighlightState) {
+    const { segments, style } = parseAnsi(code, state !== undefined && !('getScopes' in state) ? state : {})
+    const lines: React.ReactNode[][] = [[]]
+    for (const segment of segments) {
+        segment.text.split('\n').forEach((part, index) => {
+            if (index > 0) lines.push([])
+            if (part === '') return
+            const line = lines[lines.length - 1]
+            line.push(
+                <span key={line.length} style={ansiCss(segment.style) as React.CSSProperties}>
+                    {part}
+                </span>,
+            )
+        })
+    }
+    return { lines: lines as React.ReactNode[], state: style as HighlightState }
+}
+
+const FONT_STYLE = { italic: 1, bold: 2, underline: 4 } as const
 
 // Loads a language and returns a highlighter for it, or null for a language
 // that is not listed.
@@ -66,41 +201,47 @@ export async function loadHighlighter(language: string) {
         return null
     }
 
+    if (lang === 'ansi') {
+        return { highlight: highlightAnsi }
+    }
+
     const shiki = await getHighlighter()
 
-    if (lang !== 'ansi' && !shiki.getLoadedLanguages().includes(lang)) {
+    if (!shiki.getLoadedLanguages().includes(lang)) {
         await shiki.loadLanguage(languages[lang])
+    }
+
+    if (!shiki.getLoadedLanguages().includes(lang)) {
+        return null
     }
 
     return {
         // Returns one React node per line, and the grammar state after the last
         // line. Pass that state back to continue where the code left off.
-        highlight(code: string, state?: GrammarState) {
-            const tokenize = (text: string) =>
-                shiki.codeToTokens(text, {
-                    lang,
-                    themes: { light: 'github-light', dark: 'github-dark' },
-                    defaultColor: false,
-                    grammarState: state,
-                }).tokens
-
-            // ANSI has no grammar state, so each line is tokenized on its own and
-            // gets the same colors whether it arrives in one piece or streams.
-            const tokens = lang === 'ansi' ? code.split('\n').flatMap((line) => tokenize(line)) : tokenize(code)
+        highlight(code: string, state?: HighlightState) {
+            const tokens = shiki.codeToTokens(code, {
+                lang,
+                theme: THEME_NAME,
+                grammarState: state !== undefined && 'getScopes' in state ? state : undefined,
+            }).tokens
 
             return {
                 lines: tokens.map((line) =>
-                    line.map((token, index) => (
-                        <span
-                            key={index}
-                            style={token.htmlStyle as React.CSSProperties}
-                            className="text-(--shiki-light) dark:text-(--shiki-dark)"
-                        >
-                            {token.content}
-                        </span>
-                    )),
+                    line.map((token, index) => {
+                        const font = token.fontStyle ?? 0
+                        const style: React.CSSProperties = {}
+                        if (token.color !== undefined && token.color !== 'inherit') style.color = token.color
+                        if (font & FONT_STYLE.italic) style.fontStyle = 'italic'
+                        if (font & FONT_STYLE.bold) style.fontWeight = 600
+                        if (font & FONT_STYLE.underline) style.textDecorationLine = 'underline'
+                        return (
+                            <span key={index} style={style}>
+                                {token.content}
+                            </span>
+                        )
+                    }),
                 ),
-                state: shiki.getLastGrammarState(tokens),
+                state: shiki.getLastGrammarState(tokens) as HighlightState,
             }
         },
     }
