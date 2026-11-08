@@ -1,5 +1,14 @@
 import { Maximize2, Music, Repeat, Repeat1, Shuffle, SkipBack, SkipForward } from 'lucide-react'
-import { cloneElement, type ComponentProps, type CSSProperties, type ReactNode } from 'react'
+import {
+    cloneElement,
+    useCallback,
+    useLayoutEffect,
+    useRef,
+    useState,
+    type ComponentProps,
+    type CSSProperties,
+    type ReactNode,
+} from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
@@ -70,7 +79,7 @@ export interface MediaBarWords {
     nowPlaying: string
     /** The fullscreen view's button that shows and hides the lyrics. */
     lyrics: string
-    /** The name of the picker of the visualizer's kind, and each kind's. */
+    /** The name of the visualizer's picker, and each of the library's kinds it offers. */
     visualizerKind: string
     spectrum: string
     area: string
@@ -110,6 +119,12 @@ export const MEDIA_BAR_WORDS: MediaBarWords = {
     area: 'Area',
     wave: 'Wave',
     ring: 'Ring',
+}
+
+/** A look for the visualizer an app offers in the fullscreen view's picker, by its own id and name. */
+export interface MediaVisualizerOption {
+    id: string
+    label: string
 }
 
 /** What every arrangement of the player draws from: what plays, where it is, and the handlers. */
@@ -271,7 +286,9 @@ export interface ScreenWordsProps {
 
 /**
  * What plays at the size of a screen of its own: the liner, its title in the display size, or the
- * page's on a phone. `actions` end the line under the title, so they never take the title's room.
+ * page's on a phone. The title is never cut short: it wraps onto as many lines as it needs, a size
+ * smaller when it would run past two lines (three on a phone). `actions` end the line under the
+ * title, so they never take the title's room.
  */
 export function ScreenWords({ deck, phone, center = false, actions, className }: ScreenWordsProps) {
     const by = deck.artist ?? deck.subtitle
@@ -280,9 +297,7 @@ export function ScreenWords({ deck, phone, center = false, actions, className }:
     return (
         <div className={cn('min-w-0', center && 'w-full text-center', className)}>
             <Eyebrow deck={deck} className={cn(!phone && 'text-sm')} />
-            <p className={cn('truncate text-foreground', phone ? 'text-page font-semibold tracking-tight' : 'text-media-title')}>
-                {deck.title}
-            </p>
+            <ScreenTitle title={deck.title} phone={phone} />
             {acting ? (
                 <div className={cn('flex min-w-0 items-center gap-2', center && 'justify-center')}>
                     {line}
@@ -293,6 +308,67 @@ export function ScreenWords({ deck, phone, center = false, actions, className }:
             ) : (
                 line
             )}
+        </div>
+    )
+}
+
+/** A screen title's sizes, largest first; it takes the largest at which it runs onto no more than the lines below. */
+const SCREEN_TITLE = ['text-media-title', 'text-stat font-semibold tracking-tight', 'text-page font-semibold tracking-tight'] as const
+const PHONE_TITLE = ['text-page font-semibold tracking-tight', 'text-detail-title'] as const
+
+/** The most lines a screen title runs onto at a size before it steps down to the next. */
+const SCREEN_TITLE_LINES = 2
+const PHONE_TITLE_LINES = 3
+
+/** How many lines an element's text runs onto, by its height and its line height. */
+function linesOf(element: HTMLElement): number {
+    const line = Number.parseFloat(getComputedStyle(element).lineHeight)
+    return line > 0 ? Math.round(element.offsetHeight / line) : 1
+}
+
+/**
+ * The title at a screen's size, wrapping onto as many lines as it needs and never cut short. Hidden
+ * copies at each size, as wide as the title, tell how many lines it runs onto at each, measured
+ * again as the width or the typeface changes.
+ */
+function ScreenTitle({ title, phone }: { title: ReactNode; phone: boolean }) {
+    const sizes = phone ? PHONE_TITLE : SCREEN_TITLE
+    const most = phone ? PHONE_TITLE_LINES : SCREEN_TITLE_LINES
+    const probes = useRef<(HTMLParagraphElement | null)[]>([])
+    const [step, setStep] = useState(0)
+    const measure = useCallback(() => {
+        const fits = sizes.findIndex((_, index) => {
+            const probe = probes.current[index]
+            return probe !== null && probe !== undefined && linesOf(probe) <= most
+        })
+        setStep(fits === -1 ? sizes.length - 1 : fits)
+    }, [sizes, most])
+    useLayoutEffect(measure, [measure, title])
+    useLayoutEffect(() => {
+        if (typeof ResizeObserver === 'undefined') return
+        const observer = new ResizeObserver(measure)
+        for (const probe of probes.current.slice(0, sizes.length)) if (probe !== null) observer.observe(probe)
+        return () => observer.disconnect()
+    }, [measure, sizes])
+    const wrap = 'text-balance wrap-break-word'
+    return (
+        <div className="relative">
+            <p data-slot="media-fullscreen-title" className={cn(wrap, 'text-foreground', sizes[Math.min(step, sizes.length - 1)])}>
+                {title}
+            </p>
+            <div aria-hidden className="pointer-events-none invisible absolute inset-x-0 top-0 h-0 overflow-hidden">
+                {sizes.map((size, index) => (
+                    <p
+                        key={size}
+                        ref={(node) => {
+                            probes.current[index] = node
+                        }}
+                        className={cn(wrap, size)}
+                    >
+                        {title}
+                    </p>
+                ))}
+            </div>
         </div>
     )
 }

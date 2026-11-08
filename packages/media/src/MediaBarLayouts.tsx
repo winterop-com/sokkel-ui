@@ -102,10 +102,16 @@ export function LineBar({ deck, height, width, onFullscreen }: LineBarProps) {
 /** The height of a row of transport buttons. */
 const CONTROLS = 36
 
-/** The app's face, as wide as the room left and as tall as its row. */
-function Face({ deck }: { deck: Deck }) {
+/**
+ * The app's face, as wide as the room left and as tall as its row. `fill` stretches the face's own
+ * element to the whole block, so a face of any height takes the room the words and the scrubber had.
+ */
+function Face({ deck, fill = false, className }: { deck: Deck; fill?: boolean; className?: string }) {
     return (
-        <div data-slot="media-bar-face" className="flex min-w-0 flex-1 flex-col justify-center self-stretch">
+        <div
+            data-slot="media-bar-face"
+            className={cn('flex min-w-0 flex-1 flex-col justify-center self-stretch', fill && '[&>*]:min-h-0 [&>*]:flex-1', className)}
+        >
             {deck.face}
         </div>
     )
@@ -120,16 +126,16 @@ function Face({ deck }: { deck: Deck }) {
  */
 function FaceBar({ deck, height, width, onFullscreen, grown = false }: BarProps & { grown?: boolean }) {
     const narrow = width < WIDE
-    const rows = rowsGrowth(height, width)
-    const pad = grown ? rows.pad : narrow ? 10 : 8
-    const cover = narrow ? (grown ? Math.min(72, height - 2 * pad - CONTROLS - 8) : 40) : grown ? rows.cover : Math.max(48, height - 17)
+    if (grown && !narrow) return <FaceRows deck={deck} height={height} width={width} onFullscreen={onFullscreen} />
+    const pad = grown ? rowsGrowth(height, width).pad : narrow ? 10 : 8
+    const cover = narrow ? (grown ? Math.min(72, height - 2 * pad - CONTROLS - 8) : 40) : Math.max(48, height - 17)
     const sleeve = cover >= 32 && <Cover deck={deck} size={cover} className={cn('self-center', cover >= 160 && 'rounded-surface')} />
     if (narrow) {
         return (
             <div className={cn('flex flex-col gap-2 px-3', grown && 'h-full')} style={{ paddingBlock: pad }}>
                 <div className="flex min-h-0 min-w-0 flex-1 items-center gap-3">
                     {sleeve}
-                    <Face deck={deck} />
+                    <Face deck={deck} fill={grown} />
                 </div>
                 <div className="flex shrink-0 items-center justify-center gap-1">
                     <Steps deck={deck} />
@@ -141,22 +147,57 @@ function FaceBar({ deck, height, width, onFullscreen, grown = false }: BarProps 
         )
     }
     return (
-        <div className={cn('flex items-center gap-6 px-3', grown && 'h-full')} style={{ paddingBlock: pad }}>
+        <div className="flex items-center gap-6 px-3" style={{ paddingBlock: pad }}>
             <div className="flex min-w-0 flex-1 items-center gap-4 self-stretch">
                 {sleeve}
                 <Face deck={deck} />
             </div>
             <div className="flex shrink-0 items-center gap-2">
                 <ShuffleButton deck={deck} />
-                <Steps deck={deck} size={height >= TALL ? 'md' : 'sm'} />
+                <Steps deck={deck} />
                 <RepeatButton deck={deck} />
             </div>
             <div className="flex shrink-0 items-center justify-end gap-2">
                 <Speed deck={deck} />
-                <Volume deck={deck} compact={grown && rows.compactVolume} />
+                <Volume deck={deck} />
                 <Extras deck={deck} />
                 <Expand deck={deck} onFullscreen={onFullscreen} />
             </div>
+        </div>
+    )
+}
+
+/**
+ * `rows` around an app's face on a wide bar: the face takes the whole block the words and the
+ * waveform had, as tall as the cover beside it, and the transport and the volume stay where they
+ * sit without a face, at the foot of the top row, over the room the waveform would have.
+ */
+function FaceRows({ deck, height, width, onFullscreen }: BarProps) {
+    const rows = rowsGrowth(height, width)
+    return (
+        <div className="relative flex h-full gap-4 px-3" style={{ paddingBlock: rows.pad }}>
+            <Cover deck={deck} size={rows.cover} className={cn('self-center', rows.cover >= 160 && 'rounded-surface')} />
+            <div
+                className={cn(
+                    'grid min-w-0 flex-1 items-end gap-x-6',
+                    rows.compactVolume ? 'grid-cols-[minmax(0,1fr)_auto_auto]' : 'grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]',
+                )}
+                style={{ gridTemplateRows: `minmax(0,1fr) ${String(rows.wave)}px`, rowGap: rows.gap }}
+            >
+                <Face deck={deck} fill className="row-span-2" />
+                <div className="flex items-center gap-2">
+                    <ShuffleButton deck={deck} />
+                    <Steps deck={deck} size={height >= TALL ? 'md' : 'sm'} />
+                    <RepeatButton deck={deck} />
+                </div>
+                <div className="flex min-w-0 items-center justify-end gap-2">
+                    <Speed deck={deck} />
+                    <Volume deck={deck} compact={rows.compactVolume} />
+                    <Extras deck={deck} />
+                    {!rows.corner && <Expand deck={deck} onFullscreen={onFullscreen} />}
+                </div>
+            </div>
+            {rows.corner && <Expand deck={deck} onFullscreen={onFullscreen} corner />}
         </div>
     )
 }
