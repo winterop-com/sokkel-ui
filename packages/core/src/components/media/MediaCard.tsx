@@ -13,9 +13,6 @@ export interface MediaCardWords {
     watched: (percent: number) => string
 }
 
-/** The height of a stacked card's words, by its title's lines: the title's lines and the subtitle's one. */
-const WORDS_HEIGHT: Record<TitleLines, string> = { 1: 'h-11', 2: 'h-15', 3: 'h-20' }
-
 const WORDS: MediaCardWords = {
     play: 'Play',
     playing: 'Now playing',
@@ -27,7 +24,9 @@ const WORDS: MediaCardWords = {
  * One album, film or episode in a grid: the cover first, then its title and a line under it. The
  * whole card opens it; a play button rises over the cover on hover and on focus. A square cover is
  * an album, a wide one a video, which can carry its length on the frame and how much of it was
- * watched along the foot of the frame, and gets two lines for its title. The full title shows on
+ * watched along the foot of the frame, and gets up to two lines for its title. The words take the
+ * height they need, so a short title leaves no gap under a card alone in its row; cards sharing a
+ * grid row still line up, the row as tall as its tallest card. The full title shows on
  * hover over the card. `layout="row"` sets the cover beside the words, as a list of
  * what plays next does, with the title on up to two lines. `titleLines` sets another limit.
  */
@@ -145,7 +144,7 @@ export function MediaCard({
                 )}
             </div>
             <div className={cn('pointer-events-none flex min-w-0 items-start gap-1', layout === 'row' && 'flex-1')}>
-                <div className={cn('flex min-w-0 flex-1 flex-col', layout === 'stack' && WORDS_HEIGHT[lines])}>
+                <div className="flex min-w-0 flex-1 flex-col">
                     <h3
                         ref={titleRef}
                         className={cn('text-sm leading-5 font-medium', TITLE_LINES[lines], playing && 'text-primary-ink')}

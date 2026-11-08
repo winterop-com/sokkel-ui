@@ -7,7 +7,11 @@ const SOURCE = readFileSync(join(import.meta.dirname, 'Shell.tsx'), 'utf8')
 
 describe('Shell', () => {
     it('places what is positioned inside the content against the content, not the window', () => {
-        expect(SOURCE).toMatch(/<main className="relative [^"]*overflow-y-auto/)
+        expect(SOURCE).toMatch(/<main className="(?:[^"]* )?relative [^"]*overflow-y-auto/)
+    })
+
+    it('is the container its pages size their inset against', () => {
+        expect(SOURCE).toMatch(/<main className="[^"]*@container[ "]/)
     })
 
     it('clips both of its roots, so nothing inside can make the page scroll', () => {
