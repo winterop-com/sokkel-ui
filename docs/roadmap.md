@@ -6,7 +6,14 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.10.3** is the latest release (2026-11-08): a sixth package, `@winterop-com/sokkel-ui-media`,
+- **0.10.4** is the latest release (2026-11-08): explicit exports in every package and a
+  `<Component>Props` type from every component; smaller start bundles, the heavy dependencies loaded
+  on first use and made optional peers; `EChart` private; the frame's round 5 (a search field beside
+  the palette, `useShell`, `contentKey`, the rail mark as a home link, a collapsed rail dragged open,
+  the account menu's scheme rows and sign-in, a palette `filter` and `keywords`); `SoundVisualizer`
+  ramps, mirror, glow and trails; `MediaBar` `face`, a frame clock and fullscreen actions;
+  `TrackList` discs.
+- **0.10.3** (2026-11-08): a sixth package, `@winterop-com/sokkel-ui-media`,
   with the music and video app parts (the players chat uses stay in the core); queues, chapters
   across files, LRC lyrics and a following track list; `VideoPlayer` resuming, reporting, retrying
   and driven from outside, and `hlsSource` for HTTP live streams; a shortcut registry matched by
