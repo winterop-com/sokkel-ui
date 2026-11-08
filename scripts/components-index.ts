@@ -59,6 +59,7 @@ export const PRIVATE: Record<PackageDir, Record<string, string>> = {
         'lib/utils': '`cn` under the name the primitives import it by; an app uses `lib/cn`',
     },
     charts: {
+        EChart: 'the raw ECharts wrapper `Chart` and the panels draw through; an app draws a chart with `Chart` and a kind, never with an ECharts option it builds',
         engine: 'the ECharts parts a chart loads on first use',
         'kinds/boxplot': KIND_BUILDER,
         'kinds/bullet': KIND_BUILDER,
