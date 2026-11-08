@@ -1114,7 +1114,7 @@ export function VideoPlayer({
                         </TransportButton>
                     </div>
                     <div className="flex min-w-0 items-center justify-end gap-0.5">
-                        <div className="hidden @md:block">
+                        <div className="hidden @3xl:block">
                             <VolumeControl
                                 tone="overlay"
                                 level={level}
@@ -1124,7 +1124,7 @@ export function VideoPlayer({
                                 words={words}
                             />
                         </div>
-                        <div className="@md:hidden">
+                        <div className="@3xl:hidden">
                             <VolumeControl
                                 tone="overlay"
                                 compact
