@@ -20,8 +20,8 @@ The library is six packages, built from one Bun workspace and released together 
   xterm.js.
 - `@winterop-com/sokkel-ui-media` (`packages/media`): the music and video app parts, `MediaBar`
   with its layouts and fullscreen view, `TrackList`, `ChapterList`, `Lyrics`, `MediaCard`,
-  `Artwork`, `useMediaSession`, `useQueue`, `VideoStatsOverlay`, and `hlsSource`, which plays an
-  HTTP live stream in `VideoPlayer` through hls.js, an optional peer.
+  `Artwork`, `useMediaSession`, `useQueue`, `VideoStatsOverlay`, `UpNext`, and `hlsSource`, which
+  plays an HTTP live stream in `VideoPlayer` through hls.js, an optional peer.
 
 An app installs the core and the add-ons it draws with, so an engine is installed only by an app
 that uses it, and the music and video parts only by an app that plays music or video. Each add-on
@@ -309,7 +309,7 @@ toggle-group, tooltip, trace.
 Shell, Rail, AppBar, SubNav, Page, PageHeader, PaneHeader, Toolbar, Section, Surface, the layout
 components (Stack, Row, Columns, Split, Fill), SplitPane, Field, TextField, DateField, TimeField,
 DateTimeField, NumberField, InlineField, SliderField, CheckboxField, CheckboxList, ChoiceList,
-CodeField, SwitchField, SearchField, FileField, FilterChip, FilterBar, SavedViews, FormBar, InlineEdit,
+CodeField, SwitchField, SearchField, QuickAdd, FileField, FilterChip, FilterBar, SavedViews, FormBar, InlineEdit,
 SelectionBar, DataTable, StatusChip, PersonAvatar, PersonRow, MetaLine, DueText, AttachmentList,
 IconButton, StarButton, SplitButton, DownloadButton, AccountMenu, SidePanel, DialogShell,
 ConfirmDialog, TreeSelect, AsyncSelect, CapabilityPicker, SignIn, RelativeTime, ApiLink, TagChips,
@@ -382,7 +382,12 @@ album view) that keeps the selection, menus and sort. A short listing drops the 
 head and may carry a foot line. Rows gather under group heads by a field or a key made from the row
 (`groupBy`), each head with its label, its count and a column's `aggregate`; a head folds its
 group, rows sort within their group, and a head's box selects the group, in the table, the list and
-the grid alike. Its column menu hides columns and moves them a place earlier or later, the first
+the grid alike. Below its stack width a row becomes a card of labeled lines, or with `stackLayout="compact"` a
+row of its leads (a done box) and its title over one quiet line of the other columns, its values
+edited on a press rather than drawn as fields; a stacked list keeps each row's box and menu. With no
+rows it says `empty`, a sentence or a node such as an `Empty` with an action. `QuickAdd` is the
+field at a list's top that adds a row on Enter, holding the text with a spinner while the app's
+promise runs and with the reason in its issue mark when it is refused. Its column menu hides columns and moves them a place earlier or later, the first
 column staying first as each row's title, and the order is held like the widths (`columnOrder`).
 
 A listing filters from a `FilterBar` in its table's bar: Filter adds a filter from a menu of the
@@ -591,7 +596,7 @@ app that plays nothing does not carry them: `MediaBar` with its layouts, parts a
 covers (`cover-seed`), the arithmetic of chapters, of a timeline over several files and of the
 bar's growth, the queue (`queue`, `useQueue`), LRC lyrics (`lrc`), `useMediaSession` with its
 helpers in `media-session`, a position read on every animation frame (`useFramePosition`),
-`VideoStatsOverlay`, and `hlsSource` in `hls-source`. It stands on the core by name, and its one engine, hls.js, is an
+`VideoStatsOverlay`, `UpNext`, and `hlsSource` in `hls-source`. It stands on the core by name, and its one engine, hls.js, is an
 optional peer it loads only when a stream plays. What a core part plays through
 stays in the core, under `@winterop-com/sokkel-ui/media/*`: `AudioPlayer` and `VideoPlayer`, which
 attachments, chat messages, the composer and a spoken answer use; the controls they share
@@ -640,7 +645,20 @@ whose buffer stalled while away is moved a hair to wake it, unless a pause was a
 handle meanwhile. `keys={false}` leaves every key to the app, whose shortcuts drive it through the
 handle on `ref` (`play`, `pause`, `toggle`, `seekTo`, held until the media can take it, `seekBy`,
 `setVolume`, `toggleMute`, `toggleFullscreen`, `retry`, `stats`, and what it plays, where and how
-loud); `onFullscreenChange` says when the picture fills the screen.
+loud); `onFullscreenChange` says when the picture fills the screen. `crossOrigin` is the video
+element's `crossorigin`, so captions served from another origin load, the media then fetched with
+CORS too.
+
+Over the picture an app draws in two places, both kept in full screen: `overlay` in the top corner,
+such as the stats, scrolling when taller than the picture, and `cover` over the whole of it, dimmed
+behind, such as what plays next as a video ends. They are two slots, not one with a placement, since
+both can stand at once (the stats stay over a cover) and a cover takes the player over: its controls
+hidden and out of reach (their focus handed to the player), no play button over the picture, and none
+of the player's own keys while it stands, so the cover's buttons are what the viewer does next.
+`UpNext` in the media package is the cover every video app with a queue needs: the next title, a line
+under it and its artwork, which shows once the player is wide enough, a countdown that calls `onPlay`
+at zero (held by `paused`, absent when the app's autoplay is off), Play now, and Cancel, its words
+props.
 
 Captions are words on the picture, outlined with no box, in `--caption-*` tokens, sized against
 the player's width (`--caption-size`, never under `--caption-size-min`). The captions button opens
@@ -657,7 +675,11 @@ while it fills the screen and may reach past a small one otherwise.
 the rendition's bitrate, the bandwidth, the buffer ahead and the frames dropped of those shown
 (`getVideoPlaybackQuality`), each null where nobody can tell. `VideoStatsOverlay` in the media
 package draws a reading in a few lines, the app showing and hiding it through the player's
-`overlay`, which keeps it over the picture in full screen.
+`overlay`, which keeps it over the picture in full screen. What the app knows beside the player
+goes in it too, so it needs no overlay of its own: a `headline`, the verdict in a sentence ("Playing
+smoothly", "Buffering often"), in the title's place in its `tone`'s ink, and `rows` of its own facts
+under the player's (the server's encoding speed, its encoder and load, the segments ready, the other
+streams), shown before the first reading too.
 
 One sound is heard at a time: a player claims the sound as it starts to be heard and whoever held it
 is paused, through `claimSound` and `useOneSound` in `media/one-sound`. AudioPlayer, VideoPlayer and

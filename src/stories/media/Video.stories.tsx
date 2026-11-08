@@ -19,7 +19,8 @@ import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { ButtonGroup } from '@winterop-com/sokkel-ui/primitives/button-group'
 import { hlsSource } from '@winterop-com/sokkel-ui-media/hls-source'
-import { VideoStatsOverlay } from '@winterop-com/sokkel-ui-media/VideoStatsOverlay'
+import { UpNext } from '@winterop-com/sokkel-ui-media/UpNext'
+import { VideoStatsOverlay, type VideoStatsRow } from '@winterop-com/sokkel-ui-media/VideoStatsOverlay'
 import captions from './fixtures/captions.vtt?url'
 import clip from './fixtures/clip.webm?url'
 import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
@@ -31,14 +32,24 @@ const ENGLISH: VideoTrack[] = [
 ]
 
 /** A player in the middle of a plain page, with what plays under it. The clip is a local, silent gradient. */
-function Ground({ children, after }: { children: ReactNode; after?: ReactNode }) {
+function Ground({
+    children,
+    after,
+    title = 'Coastline, morning to evening',
+    meta = ['Margaret', '1:36'],
+}: {
+    children: ReactNode
+    after?: ReactNode
+    title?: string
+    meta?: string[]
+}) {
     return (
         <div className="min-h-svh bg-background p-4 text-foreground sm:p-8">
             <Stack>
                 {children}
                 <div>
-                    <p className="text-sm font-medium">Coastline, morning to evening</p>
-                    <MetaLine items={['Margaret', '1:36']} />
+                    <p className="text-sm font-medium">{title}</p>
+                    <MetaLine items={meta} />
                 </div>
                 {after}
             </Stack>
@@ -122,6 +133,7 @@ function CaptionsKept() {
             <VideoPlayer
                 src={`${clip}#t=24`}
                 preload="auto"
+                crossOrigin="anonymous"
                 defaultControlsVisible
                 title="Coastline, morning to evening"
                 tracks={ENGLISH}
@@ -157,6 +169,75 @@ const READING: VideoStats = {
     live: false,
     playing: true,
     readyState: 4,
+}
+
+/** What a server that encodes the stream as it plays knows beside the player's own reading. */
+const SERVER_ROWS: VideoStatsRow[] = [
+    { label: 'Transcode', value: '0.92x realtime' },
+    { label: 'Encoder', value: 'h264, hardware' },
+    { label: 'Encoder load', value: '2 of 4 workers' },
+    { label: 'Segments', value: '38 of 412' },
+    { label: 'Other streams', value: '1' },
+]
+
+/** A reading with little buffered ahead, as when the encoder falls behind. */
+const THIN: VideoStats = { ...READING, bufferAhead: 1.4, droppedFrames: 41 }
+
+/** An episode in a queue, as a series plays them one after another. */
+interface Episode {
+    id: string
+    title: string
+    subtitle: string
+}
+
+const EPISODES: Episode[] = [
+    { id: 'e1', title: 'Coastline, morning to evening', subtitle: 'Harbor, episode 1' },
+    { id: 'e2', title: 'The long quay at low tide', subtitle: 'Harbor, episode 2' },
+    { id: 'e3', title: 'Lighthouses of the western cape, from the first lamp to the last', subtitle: 'Harbor, episode 3' },
+]
+
+/**
+ * A queue of episodes, each started near its end: as one ends, `UpNext` covers the picture and
+ * counts down to the next, which Play now starts at once and Cancel turns down.
+ */
+function Queued() {
+    const [index, setIndex] = useState(0)
+    const [ended, setEnded] = useState(false)
+    const episode = EPISODES[index]
+    const next = EPISODES.at(index + 1)
+    return (
+        <Ground title={episode.title} meta={[episode.subtitle, `${String(index + 1)} of ${String(EPISODES.length)} in the queue`]}>
+            <VideoPlayer
+                key={episode.id}
+                src={clip}
+                preload="auto"
+                startAt={88}
+                autoPlay={index > 0}
+                defaultControlsVisible
+                title={episode.title}
+                onEnded={() => setEnded(true)}
+                onPlayingChange={(playing) => {
+                    if (playing) setEnded(false)
+                }}
+                cover={
+                    ended &&
+                    next !== undefined && (
+                        <UpNext
+                            title={next.title}
+                            subtitle={next.subtitle}
+                            placeholderSeed={next.id}
+                            countdown={5}
+                            onPlay={() => {
+                                setEnded(false)
+                                setIndex(index + 1)
+                            }}
+                            onCancel={() => setEnded(false)}
+                        />
+                    )
+                }
+            />
+        </Ground>
+    )
 }
 
 /** A player whose keys and controls are the screen's, driving it through its handle. */
@@ -303,7 +384,8 @@ export const ControlsShown: StoryObj = {
  * The captions menu: the tracks and Off, then the text's size, ink, background and edge, each a
  * submenu. The app's `captionDefaults` start the text at half its usual size; what the viewer
  * picks, and the track, go to the store the app hands as `captionStore` (by default `localStorage`
- * through `useStored`), read back under the player.
+ * through `useStored`), read back under the player. `crossOrigin` fetches the tracks with CORS, as
+ * captions served from another origin need.
  */
 export const Captions: StoryObj = { render: () => <CaptionsKept /> }
 
@@ -365,6 +447,71 @@ export const StatsOverlay: StoryObj = {
         </Ground>
     ),
 }
+
+/**
+ * The stats with the app's verdict and its own facts: `headline` says in one sentence how it plays,
+ * in `tone`'s ink, and `rows` add what the app's server knows (how fast it encodes, its encoder and
+ * load, the segments ready, the other streams) under the player's reading, so the app needs no
+ * overlay of its own.
+ */
+export const StatsVerdict: StoryObj = {
+    name: 'Stats verdict',
+    render: () => (
+        <Ground>
+            <VideoPlayer
+                src={`${clip}#t=24`}
+                preload="auto"
+                title="Coastline, morning to evening"
+                overlay={
+                    <VideoStatsOverlay
+                        stats={THIN}
+                        headline="Buffering often: the encoder runs slower than the video plays"
+                        tone="warning"
+                        rows={SERVER_ROWS}
+                        onClose={() => undefined}
+                    />
+                }
+            />
+        </Ground>
+    ),
+}
+
+/**
+ * What plays next, over the whole picture as a video ends: the player's `cover` dims the picture
+ * and holds `UpNext` in its middle, the controls out of reach under it, all of it kept in full
+ * screen. The countdown is held here with `paused`, so the story stays still; an app lets it run
+ * and plays the next one at zero.
+ */
+export const UpNextCover: StoryObj = {
+    name: 'Up next',
+    render: () => (
+        <Ground>
+            <VideoPlayer
+                src={`${clip}#t=95.9`}
+                preload="auto"
+                title="Coastline, morning to evening"
+                cover={
+                    <UpNext
+                        title="The long quay at low tide"
+                        subtitle="Harbor, episode 2"
+                        placeholderSeed="e2"
+                        countdown={8}
+                        paused
+                        onPlay={() => undefined}
+                        onCancel={() => undefined}
+                    />
+                }
+            />
+        </Ground>
+    ),
+}
+
+/**
+ * A queue played through: each episode starts eight seconds from its end, and as it ends `UpNext`
+ * counts down five seconds to the next, which Play now starts at once and Cancel turns down,
+ * bringing the controls back.
+ */
+export const AutoplayNext: StoryObj = { name: 'Autoplay next', render: () => <Queued /> }
 
 /** Its tries spent: the player says the video could not be played, with a button to try again. */
 export const Failed: StoryObj = { render: () => <GaveUp /> }

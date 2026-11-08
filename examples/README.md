@@ -66,7 +66,11 @@ Nothing needs Node: every script runs its tools under bun (`bun --bun tsc`, `vit
 - **The desktop frame:** inside a shell the app passes `desktop` to `Shell`, so its top strip is the
   window's title bar, with room for the macOS window buttons. Electron uses `hiddenInset`; Tauri an
   overlay title bar with the title hidden, and `capabilities/default.json` lets the page drag, zoom
-  and fill the window, since WebKit ignores the CSS drag region.
+  and fill the window, since WebKit ignores the CSS drag region. Both place the buttons on the
+  strip's middle with `trafficLightPosition` (Electron `{ x: 12, y: 16 }`, Tauri `{ x: 12, y: 25 }`,
+  which each reads its own way). Electron's preload (`src/preload.ts`) tells the page when the window
+  enters or leaves full screen, which `useFrame` passes on as `desktop.fullscreen`, so the room for
+  the buttons goes while macOS hides them.
 - **Assets:** the web build uses relative asset paths, so the shells load it from a file URL.
 
 ## Adding one
