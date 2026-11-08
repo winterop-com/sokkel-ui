@@ -181,8 +181,8 @@ function IconInput({
  * reduced.
  *
  * It answers to its own width: in a narrow room, as on a phone, the brand pane becomes a bar over
- * the form with the mark, the name and the first fact's value, and the art is left out; a dark
- * pane's bar stands on the title bar ground, `--terminal-bar`, as a terminal's title bar does.
+ * the form with the mark, the name and the first fact's value, and the art is left out; the bar
+ * stands on the same ground as the wide pane, so the brand reads alike at every width.
  *
  * With `desktop`, in a desktop window whose native title bar is hidden, the brand pane (or the
  * bar) drags the window, and `trafficLights` leaves room at the bar's start for the window's
@@ -295,14 +295,11 @@ export function SignIn({
             </span>
         )
 
-    /**
-     * The brand's ground, dark in every scheme when asked, in the document's theme. The bar a phone
-     * shows stands on the theme's title bar ground when dark.
-     */
-    const ground = (node: ReactNode, wrap: string, bar = false) =>
+    /** The brand's ground, dark in every scheme when asked, in the document's theme; the wide pane and the phone's bar alike. */
+    const ground = (node: ReactNode, wrap: string) =>
         dark ? (
             <div className={cn('dark scheme-dark', wrap)}>
-                <div data-theme-scope={theme} className={cn('flex size-full text-foreground', bar ? 'bg-terminal-bar' : 'bg-brand-ground')}>
+                <div data-theme-scope={theme} className="flex size-full bg-brand-ground text-foreground">
                     {node}
                 </div>
             </div>
@@ -336,7 +333,6 @@ export function SignIn({
                         )}
                     </header>,
                     'shrink-0 @3xl:hidden',
-                    true,
                 )}
                 <aside
                     ref={brand}
