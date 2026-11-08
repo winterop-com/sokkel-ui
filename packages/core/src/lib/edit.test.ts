@@ -98,6 +98,11 @@ describe('drafts and values', () => {
         expect(readDraft('', 'date')).toEqual({ value: null })
     })
 
+    it("takes a time's draft as the time its field read, and nothing as none", () => {
+        expect(readDraft('02:30', 'time')).toEqual({ value: '02:30' })
+        expect(readDraft('', 'time')).toEqual({ value: null })
+    })
+
     it('draws a number in figures and a choice by its label', () => {
         expect(shownValue(12345, 'number')).toBe('12,345')
         expect(shownValue('ada', 'select', [{ value: 'ada', label: 'Ada' }])).toBe('Ada')

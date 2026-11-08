@@ -220,6 +220,7 @@ const CORE_AREAS: Record<string, string> = {
     SavedViews: 'Forms and inputs',
     Search: 'Forms and inputs',
     SearchField: 'Forms and inputs',
+    QuickAdd: 'Forms and inputs',
     SearchResults: 'Forms and inputs',
     SecretReveal: 'Forms and inputs',
     Segmented: 'Forms and inputs',

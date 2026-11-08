@@ -9,7 +9,7 @@ reaches into a package's `src/`. Each is a Tidevann product, in a folder of its 
 examples/
   shared/        the fake backend, the window frame, the hash route and the Tidevann mark
   tasks/         lists, a quick add and tasks edited in place
-  runs/          job runs in a table, with a run opened beside it
+  runs/          a jobs console: an overview, runs, a run's page, jobs, schedules and settings
   example.mk     the targets every example's Makefile includes
 ```
 
@@ -52,7 +52,10 @@ Nothing needs Node: every script runs its tools under bun (`bun --bun tsc`, `vit
 
 - **The packages:** each `web/` installs the core package through `file:../../../packages/core`,
   which bun installs as a copy, with its own dependencies in the app's `node_modules`. Run
-  `bun install` again after rebuilding the packages to refresh the copy. `styles.css` is Tailwind
+  `bun install` again after rebuilding the packages to refresh the copy. An add-on is installed the
+  same way (`file:../../../packages/charts`), with an `overrides` entry pointing the core at the
+  same folder, since an add-on names the core as a `workspace:*` peer, which bun cannot find outside
+  the workspace; the add-on's `styles.css` is imported after the core's in `app.css`. `styles.css` is Tailwind
   source, so the app runs Tailwind v4 through `@tailwindcss/vite`, and its `app.css` adds
   `examples/shared` as a source.
 - **What they share:** `examples/shared/` is the local package `tidevann-shared`, installed the same
@@ -63,7 +66,11 @@ Nothing needs Node: every script runs its tools under bun (`bun --bun tsc`, `vit
 - **The desktop frame:** inside a shell the app passes `desktop` to `Shell`, so its top strip is the
   window's title bar, with room for the macOS window buttons. Electron uses `hiddenInset`; Tauri an
   overlay title bar with the title hidden, and `capabilities/default.json` lets the page drag, zoom
-  and fill the window, since WebKit ignores the CSS drag region.
+  and fill the window, since WebKit ignores the CSS drag region. Both place the buttons on the
+  strip's middle with `trafficLightPosition` (Electron `{ x: 12, y: 16 }`, Tauri `{ x: 12, y: 25 }`,
+  which each reads its own way). Electron's preload (`src/preload.ts`) tells the page when the window
+  enters or leaves full screen, which `useFrame` passes on as `desktop.fullscreen`, so the room for
+  the buttons goes while macOS hides them.
 - **Assets:** the web build uses relative asset paths, so the shells load it from a file URL.
 
 ## Adding one

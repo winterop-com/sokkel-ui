@@ -19,6 +19,7 @@ import {
     type CSSProperties,
     type KeyboardEvent,
     type MouseEvent,
+    type ReactElement,
     type ReactNode,
     useCallback,
     useEffect,
@@ -57,7 +58,7 @@ export type { CellAt, EditedValue, EditOption, EditorKind, EditValue, TableEditi
 
 /** How one kind of editor reads and saves a column's cells. */
 type CellEditing<T, K extends EditorKind, V = EditedValue<K>> = {
-    /** Which control edits a cell: a line of text, several lines, a number, a date (`YYYY-MM-DD`), or one of `options`. */
+    /** Which control edits a cell: a line of text, several lines, a number, a date (`YYYY-MM-DD`), a time of day (`HH:mm`), or one of `options`. */
     editor: K
     /** The value a cell's editor starts from. */
     value: (row: T) => V
@@ -81,6 +82,7 @@ export type DataCellEdit<T> =
     | (CellEditing<T, 'multiline'> & { options?: undefined })
     | (CellEditing<T, 'number'> & { options?: undefined })
     | (CellEditing<T, 'date'> & { options?: undefined })
+    | (CellEditing<T, 'time'> & { options?: undefined })
     | (CellEditing<T, 'select'> & {
           /** The choices, the same for every row or a row's own. */
           options: readonly EditOption[] | ((row: T) => readonly EditOption[])
@@ -108,10 +110,11 @@ export interface DataColumn<T> {
     /**
      * How the column shows once the table stacks its rows as cards on a narrow box: `line` (the
      * default) a line of its own, `primary` the value in body text under the title over up to
-     * `stackLines` lines, `secondary` among the muted facts that share the card's last line, and
-     * `none` not at all. The first column is always the title.
+     * `stackLines` lines, `secondary` among the muted facts that share the card's last line, `lead`
+     * before the title, such as a box that marks a row done, and `none` not at all. The first
+     * column that is not `lead` is the title.
      */
-    stack?: 'line' | 'primary' | 'secondary' | 'none'
+    stack?: 'lead' | 'line' | 'primary' | 'secondary' | 'none'
     /** The most lines a `primary` value takes in a stacked card; 2 by default. */
     stackLines?: number
     /** Whether the column's line in a stacked card starts with its name; without it the value takes the whole line. */
@@ -454,6 +457,24 @@ export function movedColumn(columns: readonly { id: string }[], id: string, by: 
 }
 
 /** The least width of a grid track: its own length, a `minmax` floor, or nothing for a fraction or `auto`. */
+/**
+ * The columns of a stacked row by where they go: the leads before the title, the title (the first
+ * column that is not a lead), the primary values under it, the labeled lines, and the facts that
+ * share one quiet line. Compact, every line is a fact.
+ */
+export function stackColumns<C extends { stack?: DataColumn<unknown>['stack'] }>(shown: readonly C[], layout: 'labeled' | 'compact') {
+    const title = shown.find((column) => column.stack !== 'lead')
+    const rest = shown.filter((column) => column !== title && column.stack !== 'lead' && column.stack !== 'none')
+    const line = (column: C) => (column.stack ?? 'line') === 'line'
+    return {
+        lead: shown.filter((column) => column.stack === 'lead'),
+        title,
+        primary: rest.filter((column) => column.stack === 'primary'),
+        lines: layout === 'compact' ? [] : rest.filter(line),
+        facts: rest.filter((column) => column.stack === 'secondary' || (layout === 'compact' && line(column))),
+    }
+}
+
 function trackMin(width: string): string {
     const floor = /^minmax\(\s*([^,]+?)\s*,/.exec(width)?.[1] ?? width
     return /^\d*\.?\d+(px|rem|em|ch)$/.test(floor) ? floor : '0px'
@@ -499,6 +520,8 @@ const STACK_PRIMARY_LINE = 22
 const STACK_FACTS = 24
 /** The height of a stacked card's line that holds a field to edit in, in pixels. */
 const STACK_EDIT_LINE = 36
+/** The height of a stacked card's title line. */
+const STACK_TITLE = 24
 const NO_EDITS: ReadonlyMap<string, CellEdit> = new Map()
 
 export interface DataTableProps<T> {
@@ -611,6 +634,14 @@ export interface DataTableProps<T> {
      * `stackBelow` alone, for a short listing in a narrow place. `48rem` for a table, `auto` for a list.
      */
     minWidth?: string
+    /**
+     * How stacked rows draw their columns. `labeled`: each column on a line of its own after its
+     * name, an editable one as a field to edit in. `compact`: the title as the main line, any `lead`
+     * columns before it, and every other column in one quiet line of details under it, an editable
+     * value opening its editor on a press, in its line's place while open. For a list of short
+     * things on a phone, such as tasks.
+     */
+    stackLayout?: 'labeled' | 'compact'
     /** `auto` lets a row grow to fit its tallest cell; every row is then drawn, not only those in view. */
     rowHeight?: 'fixed' | 'auto'
     /** Whether the column heads' edges resize the columns. */
@@ -625,6 +656,11 @@ export interface DataTableProps<T> {
     variant?: 'table' | 'list'
     /** A line at the foot, such as how many rows are loaded. */
     foot?: ReactNode
+    /**
+     * What the table shows with no rows: a sentence, drawn as the table's own line, or a node such
+     * as an `Empty` with an icon and an action, drawn under the column heads. `words.empty` by default.
+     */
+    empty?: ReactNode
     /** Tints the row under the pointer. */
     hover?: boolean
     /** Draws the column names over the rows; off for a listing whose rows say what they are. */
@@ -706,7 +742,14 @@ export interface DataTableProps<T> {
  * view switch. On a narrow table the search takes a line of its own and the tools wrap across the
  * whole width, the count and the sort after them. Once the rows stack as cards, each column's
  * `stack` says how it shows: a line (named, or not with `stackLabel: false`), a primary value over
- * several lines under the title, or a secondary fact on the card's last line.
+ * several lines under the title, a secondary fact on the card's last line, or a lead before the
+ * title, such as a box that marks a row done. `stackLayout="compact"` draws a stacked row as its
+ * leads and its title over one quiet line of every other column, for a list of short things on a
+ * phone; an editable value there opens its editor on a press, in its line's place. A stacked list's
+ * rows keep their selection box and their menu.
+ *
+ * With no rows the table says `empty`: a sentence, or a node such as an `Empty` with an icon and
+ * an action.
  *
  * The table draws its own box, a border with rounded corners; `framed={false}` drops both, for a
  * table set into a panel or a card that already frames it.
@@ -763,6 +806,7 @@ export function DataTable<T>({
     cardWidth = '12rem',
     cardHeight = '16rem',
     stackBelow = 576,
+    stackLayout = 'labeled',
     minWidth: ownMinWidth,
     rowHeight: rowSizing = 'fixed',
     resizable = true,
@@ -772,6 +816,7 @@ export function DataTable<T>({
     onColumnWidthsChange,
     variant = 'table',
     foot,
+    empty,
     hover = true,
     columnHeads = true,
     groupBy,
@@ -928,24 +973,19 @@ export function DataTable<T>({
         view.width > 0 &&
         view.width < (minWidth === 'auto' ? stackBelow : Math.min(stackBelow, columnsWidth))
     const gridView = chosenGrid || stacked
-    // A stacked card: the first column its title, then the primary values, the lines, and the secondary facts on one line.
-    const stackParts = useMemo(() => {
-        const rest = shown.slice(1)
-        return {
-            primary: rest.filter((column) => column.stack === 'primary'),
-            lines: rest.filter((column) => (column.stack ?? 'line') === 'line'),
-            facts: rest.filter((column) => column.stack === 'secondary'),
-        }
-    }, [shown])
+    // A stacked card: the leads and the title, then the primary values, the lines, and the secondary facts on one line.
+    const compact = stackLayout === 'compact'
+    const stackParts = useMemo(() => stackColumns(shown, stackLayout), [shown, stackLayout])
+    const editable = (column: DataColumn<T> | undefined) => column?.edit !== undefined && editing !== undefined
+    // Compact, an editable title or line of facts is as tall as the editor that opens in its place.
+    const titleEdits = compact && editable(stackParts.title)
+    const factsEdit = compact && stackParts.facts.some(editable)
     const cardPixels = stacked
         ? STACK_PAD * 2 +
-          24 +
+          (titleEdits ? STACK_EDIT_LINE : STACK_TITLE) +
           stackParts.primary.reduce((sum, column) => sum + (column.stackLines ?? 2) * STACK_PRIMARY_LINE, 0) +
-          stackParts.lines.reduce(
-              (sum, column) => sum + (column.edit === undefined || editing === undefined ? STACK_LINE : STACK_EDIT_LINE),
-              0,
-          ) +
-          (stackParts.facts.length > 0 ? STACK_FACTS : 0) +
+          stackParts.lines.reduce((sum, column) => sum + (editable(column) ? STACK_EDIT_LINE : STACK_LINE), 0) +
+          (stackParts.facts.length > 0 ? (factsEdit ? STACK_EDIT_LINE : STACK_FACTS) : 0) +
           2
         : cardBox.height
     // The grid is drawn a line of cards at a time; the table's line is one row.
@@ -1168,8 +1208,8 @@ export function DataTable<T>({
     const move = (id: string, by: -1 | 1) => setColumnIds(movedColumn(ordered, id, by))
     const sortable = manualSort && onSortChange === undefined ? [] : columns.filter((column) => column.sortValue !== undefined)
     // A list pins nothing and sets its columns apart with a gap; a table pins its first and last columns and pads its cells.
-    const pinned = list ? '' : 'sticky z-[1] bg-inherit shadow-[1px_0_0_var(--border)]'
-    const pinnedEnd = list ? '' : 'sticky z-[1] bg-inherit shadow-[-1px_0_0_var(--border)]'
+    const pinned = list ? '' : 'sticky z-1 bg-inherit shadow-[1px_0_0_var(--border)]'
+    const pinnedEnd = list ? '' : 'sticky z-1 bg-inherit shadow-[-1px_0_0_var(--border)]'
     const pad = list ? '' : 'px-3'
     const spaced = list && 'gap-3 px-(--density-panel-pad)'
 
@@ -1289,6 +1329,85 @@ export function DataTable<T>({
         </div>
     )
 
+    /** A press on a part of a stacked row that is its own control, kept from opening the row. */
+    const keep = (event: MouseEvent) => event.stopPropagation()
+
+    /** A row's menu button, or nothing for a row without actions or a table with the button off. */
+    const menuFor = (actions: DataAction[] | undefined, variant: 'ghost' | 'secondary') =>
+        actions === undefined || actionButton === 'none' ? null : (
+            <DropdownMenu>
+                <DropdownMenuTrigger
+                    render={<Button variant={variant} size="icon-xs" tabIndex={-1} aria-label={words.actions} />}
+                    onClick={keep}
+                >
+                    {actionIcon}
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                    <MenuItems actions={actions} kind="dropdown" />
+                </DropdownMenuContent>
+            </DropdownMenu>
+        )
+
+    /** A row's selection box in a stacked row or a card, or nothing when rows are not selected. */
+    const boxFor = (entry: FlatRow<T>) =>
+        selectable ? (
+            <Checkbox
+                aria-label={words.selectRow}
+                tabIndex={-1}
+                checked={selection.has(entry.key)}
+                onCheckedChange={() => toggle(entry, false)}
+            />
+        ) : null
+
+    /** A stacked row's lead columns before its title, each its own control. */
+    const leadsOf = (entry: FlatRow<T>, listed: boolean) =>
+        stackParts.lead.map((column) => (
+            <span key={column.id} role={listed ? 'gridcell' : undefined} className="flex h-6 shrink-0 items-center" onClick={keep}>
+                {column.cell(entry.row)}
+            </span>
+        ))
+
+    /** Whether a stacked row draws a value; a card keeps every line, so all cards are one height. */
+    const saidIn = (listed: boolean) => (value: ReactNode) =>
+        !listed || (value !== null && value !== undefined && value !== false && value !== '')
+
+    /** The secondary facts in one muted line, the last of them giving way when the line is short. */
+    const factsLine = (facts: { column: DataColumn<T>; value: ReactNode }[], listed: boolean, height: string, indent?: CSSProperties) => (
+        <div
+            role={listed ? 'gridcell' : undefined}
+            className={cn('flex min-w-0 items-center gap-1.5 text-xs whitespace-nowrap text-muted-foreground', !listed && height)}
+            style={indent}
+        >
+            {facts.map(({ column, value }, index) => (
+                <Fragment key={column.id}>
+                    {index > 0 && (
+                        <span aria-hidden className="shrink-0 text-faint">
+                            ·
+                        </span>
+                    )}
+                    <span className={cn('min-w-0 truncate', index === facts.length - 1 ? 'shrink' : 'shrink-0')}>{value}</span>
+                </Fragment>
+            ))}
+        </div>
+    )
+
+    /** Each primary value in body text over up to its `stackLines` lines. */
+    const primaryLines = (entry: FlatRow<T>, listed: boolean, indent?: CSSProperties) =>
+        stackParts.primary.map((column) => {
+            const value = column.cell(entry.row)
+            if (!saidIn(listed)(value)) return null
+            return (
+                <div
+                    key={column.id}
+                    role={listed ? 'gridcell' : undefined}
+                    className="line-clamp-(--stack-lines) min-w-0 text-sm font-normal"
+                    style={{ ...indent, '--stack-lines': column.stackLines ?? 2 } as CSSProperties}
+                >
+                    {value}
+                </div>
+            )
+        })
+
     /**
      * What a stacked row shows under its title: each primary value over its lines, each line with its
      * column's name unless the column drops it, and the secondary facts in one muted line. A card
@@ -1296,24 +1415,11 @@ export function DataTable<T>({
      */
     const stackedLines = (entry: FlatRow<T>, listed: boolean) => {
         const indent: CSSProperties | undefined = listed && tree ? { paddingLeft: `${String(entry.depth * 1.25 + 1.5)}rem` } : undefined
-        const said = (value: ReactNode) => !listed || (value !== null && value !== undefined && value !== false && value !== '')
+        const said = saidIn(listed)
         const facts = stackParts.facts.map((column) => ({ column, value: column.cell(entry.row) })).filter(({ value }) => said(value))
         return (
             <>
-                {stackParts.primary.map((column) => {
-                    const value = column.cell(entry.row)
-                    if (!said(value)) return null
-                    return (
-                        <div
-                            key={column.id}
-                            role={listed ? 'gridcell' : undefined}
-                            className="line-clamp-(--stack-lines) min-w-0 text-sm font-normal"
-                            style={{ ...indent, '--stack-lines': column.stackLines ?? 2 } as CSSProperties}
-                        >
-                            {value}
-                        </div>
-                    )
-                })}
+                {primaryLines(entry, listed, indent)}
                 {stackParts.lines.map((column) => {
                     if (column.edit !== undefined && edits !== undefined) return editing?.line(edits, entry, column, listed, indent)
                     const value = column.cell(entry.row)
@@ -1334,70 +1440,100 @@ export function DataTable<T>({
                         </div>
                     )
                 })}
-                {facts.length > 0 && (
-                    <div
-                        role={listed ? 'gridcell' : undefined}
-                        className={cn(
-                            'flex min-w-0 items-center gap-1.5 text-xs whitespace-nowrap text-muted-foreground',
-                            !listed && 'h-6',
-                        )}
-                        style={indent}
-                    >
-                        {facts.map(({ column, value }, index) => (
-                            <Fragment key={column.id}>
-                                {index > 0 && (
-                                    <span aria-hidden className="shrink-0 text-faint">
-                                        ·
-                                    </span>
-                                )}
-                                <span className={cn('min-w-0 truncate', index === facts.length - 1 ? 'shrink' : 'shrink-0')}>{value}</span>
-                            </Fragment>
-                        ))}
-                    </div>
-                )}
+                {facts.length > 0 && factsLine(facts, listed, 'h-6', indent)}
             </>
         )
     }
+
+    /**
+     * A compact stacked row: the selection box, the tree's control and the leads, then the title
+     * over the primary values and one quiet line of facts, and the menu. An editable value opens on
+     * a press, its editor taking its line's place while open.
+     */
+    const compactRow = (entry: FlatRow<T>, listed: boolean, box: ReactNode, menu: ReactNode) => {
+        const title = stackParts.title
+        const isOpen = (column: DataColumn<T>) => edits !== undefined && editing?.isOpen(edits, entry, column) === true
+        const valueOf = (column: DataColumn<T>) =>
+            column.edit !== undefined && edits !== undefined ? editing?.value(edits, entry, column) : column.cell(entry.row)
+        const said = saidIn(listed)
+        const facts = stackParts.facts
+            .filter((column) => said(column.cell(entry.row)))
+            .map((column) => ({ column, value: valueOf(column) }))
+        const open = stackParts.facts.find(isOpen)
+        return (
+            <div className="flex min-w-0 items-start gap-2 text-sm">
+                {box !== null && (
+                    <span className="flex h-6 items-center" onClick={keep}>
+                        {box}
+                    </span>
+                )}
+                {tree && <span className="flex h-6 items-center">{treeControl(entry)}</span>}
+                {leadsOf(entry, listed)}
+                <div className="flex min-w-0 flex-1 flex-col">
+                    {title !== undefined &&
+                        (edits !== undefined && isOpen(title) ? (
+                            editing?.line(edits, entry, title, listed, undefined, false)
+                        ) : (
+                            <div
+                                role={listed ? 'gridcell' : undefined}
+                                className={cn('flex min-w-0 items-center', titleEdits && !listed ? 'h-9' : 'h-6')}
+                            >
+                                <span className="min-w-0 truncate">{valueOf(title)}</span>
+                            </div>
+                        ))}
+                    {primaryLines(entry, listed)}
+                    {open !== undefined && edits !== undefined
+                        ? editing?.line(edits, entry, open, listed)
+                        : facts.length > 0 && factsLine(facts, listed, factsEdit ? 'h-9' : 'h-6')}
+                </div>
+                {menu !== null && <span className="flex h-6 items-center">{menu}</span>}
+            </div>
+        )
+    }
+
+    /** A row with actions, with its right-click menu around it. */
+    const withMenu = (entry: FlatRow<T>, actions: DataAction[] | undefined, body: ReactElement) =>
+        actions === undefined ? (
+            body
+        ) : (
+            <ContextMenu key={entry.key} onOpenChange={(open) => open && setActive(entry.key)}>
+                <ContextMenuTrigger render={body} />
+                <ContextMenuContent className="w-48">
+                    <MenuItems actions={actions} kind="context" />
+                </ContextMenuContent>
+            </ContextMenu>
+        )
 
     /** A row as a card: the app's card, with the selection box and the menu laid over its top corners. */
     const cardFor = (entry: FlatRow<T>) => {
         const chosen = selection.has(entry.key)
         const isOpened = opened?.(entry.row) === true
         const actions = actionsOf(entry.row)
-        const box = selectable ? (
-            <Checkbox aria-label={words.selectRow} tabIndex={-1} checked={chosen} onCheckedChange={() => toggle(entry, false)} />
-        ) : null
-        const menu =
-            actions === undefined || actionButton === 'none' ? null : (
-                <DropdownMenu>
-                    <DropdownMenuTrigger
-                        render={
-                            <Button variant={stacked ? 'ghost' : 'secondary'} size="icon-xs" tabIndex={-1} aria-label={words.actions} />
-                        }
-                        onClick={(event) => event.stopPropagation()}
-                    >
-                        {actionIcon}
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                        <MenuItems actions={actions} kind="dropdown" />
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            )
-        const title = shown[0]
+        const box = boxFor(entry)
+        const menu = menuFor(actions, stacked ? 'ghost' : 'secondary')
+        const title = stackParts.title
         // Stacked, the box, the title and the menu share the first line, and every line starts at the box's edge.
         const stackedCard = (
             <div className="flex h-full flex-col rounded-surface border border-border bg-card px-3 py-2 group-hover/card:bg-hover">
-                <div className="flex h-6 min-w-0 items-center gap-2">
-                    {box !== null && (
-                        <span className="flex" onClick={(event) => event.stopPropagation()}>
-                            {box}
-                        </span>
-                    )}
-                    {tree && treeControl(entry)}
-                    <span className="min-w-0 flex-1 truncate text-sm font-medium">{title?.cell(entry.row)}</span>
-                    {menu}
-                </div>
-                {stackedLines(entry, false)}
+                {compact ? (
+                    compactRow(entry, false, box, menu)
+                ) : (
+                    <>
+                        <div className="flex h-6 min-w-0 items-center gap-2">
+                            {box !== null && (
+                                <span className="flex" onClick={keep}>
+                                    {box}
+                                </span>
+                            )}
+                            {tree && treeControl(entry)}
+                            {leadsOf(entry, false)}
+                            {/* The title keeps to its line: a cell of two lines, a name over its code, shows its first. */}
+                            <span className="h-6 min-w-0 flex-1 truncate text-sm leading-6 font-medium">{title?.cell(entry.row)}</span>
+                            {menu}
+                        </div>
+                        {stackedLines(entry, false)}
+                    </>
+                )}
             </div>
         )
         const body = (
@@ -1418,7 +1554,7 @@ export function DataTable<T>({
                 {stacked ? stackedCard : card?.(entry.row)}
                 {!stacked && box !== null && (
                     <span
-                        onClick={(event) => event.stopPropagation()}
+                        onClick={keep}
                         className={cn(
                             'absolute top-2 left-2 flex rounded-md bg-background/85 p-1 opacity-0 group-hover/card:opacity-100',
                             (chosen || selection.size > 0) && 'opacity-100',
@@ -1439,15 +1575,7 @@ export function DataTable<T>({
                 )}
             </div>
         )
-        if (actions === undefined) return body
-        return (
-            <ContextMenu key={entry.key} onOpenChange={(open) => open && setActive(entry.key)}>
-                <ContextMenuTrigger render={body} />
-                <ContextMenuContent className="w-48">
-                    <MenuItems actions={actions} kind="context" />
-                </ContextMenuContent>
-            </ContextMenu>
-        )
+        return withMenu(entry, actions, body)
     }
 
     return (
@@ -1752,7 +1880,11 @@ export function DataTable<T>({
                     </div>
                 )}
                 {drawn.length === 0 && !loading ? (
-                    <p className="px-(--density-panel-pad) py-3 text-sm text-muted-foreground">{words.empty}</p>
+                    empty === undefined || typeof empty === 'string' ? (
+                        <p className="px-(--density-panel-pad) py-3 text-sm text-muted-foreground">{empty ?? words.empty}</p>
+                    ) : (
+                        empty
+                    )
                 ) : listed ? (
                     <ul className="divide-y divide-border">
                         {drawn.map((entry) => {
@@ -1774,34 +1906,56 @@ export function DataTable<T>({
                                         {groupTitle(entry)}
                                     </li>
                                 )
+                            const chosen = selection.has(entry.key)
                             const isOpened = opened?.(entry.row) === true
-                            const title = shown[0]
-                            return (
+                            const title = stackParts.title
+                            const actions = actionsOf(entry.row)
+                            const box = boxFor(entry)
+                            const menu = menuFor(actions, 'ghost')
+                            return withMenu(
+                                entry,
+                                actions,
                                 <li
                                     key={entry.key}
                                     role="row"
-                                    aria-selected={opened === undefined ? undefined : isOpened}
+                                    aria-selected={selectable ? chosen : opened === undefined ? undefined : isOpened}
                                     aria-expanded={entry.branch ? entry.open : undefined}
                                     aria-level={tree ? entry.depth + 1 : undefined}
                                     data-row={entry.key}
                                     data-active={entry.key === active || undefined}
                                     onClick={(event) => press(entry, event)}
                                     className={cn(
-                                        'flex flex-col gap-1 px-(--density-panel-pad) py-2.5 text-sm',
+                                        'flex flex-col gap-1 px-(--density-panel-pad) text-sm',
+                                        compact ? 'py-2' : 'py-2.5',
                                         hover && 'hover:bg-hover',
                                         onOpen !== undefined && 'cursor-pointer',
-                                        isOpened && 'bg-secondary hover:bg-secondary',
+                                        (chosen || isOpened) && 'bg-secondary hover:bg-secondary',
                                         'group-focus-visible/table:data-active:shadow-[inset_2px_0_0_var(--ring)]',
                                     )}
                                 >
-                                    {title !== undefined && (
-                                        <div role="gridcell" className="flex min-w-0 items-center font-medium">
-                                            {tree && treeControl(entry)}
-                                            <span className="min-w-0 truncate">{title.cell(entry.row)}</span>
-                                        </div>
+                                    {compact ? (
+                                        compactRow(entry, true, box, menu)
+                                    ) : (
+                                        <>
+                                            <div className="flex min-w-0 items-center gap-2">
+                                                {box !== null && (
+                                                    <span className="flex" onClick={keep}>
+                                                        {box}
+                                                    </span>
+                                                )}
+                                                {leadsOf(entry, true)}
+                                                {title !== undefined && (
+                                                    <div role="gridcell" className="flex min-w-0 flex-1 items-center font-medium">
+                                                        {tree && treeControl(entry)}
+                                                        <span className="min-w-0 truncate">{title.cell(entry.row)}</span>
+                                                    </div>
+                                                )}
+                                                {menu}
+                                            </div>
+                                            {stackedLines(entry, true)}
+                                        </>
                                     )}
-                                    {stackedLines(entry, true)}
-                                </li>
+                                </li>,
                             )
                         })}
                     </ul>
@@ -2094,7 +2248,11 @@ function MenuItems({ actions, kind }: { actions: DataAction[]; kind: 'dropdown' 
                 key={action.id}
                 variant={action.destructive === true ? 'destructive' : 'default'}
                 disabled={action.disabled}
-                onClick={action.onSelect}
+                // A press reaches the row through React's tree from the menu's portal; it does the item's work alone, never the row's open.
+                onClick={(event) => {
+                    event.stopPropagation()
+                    action.onSelect()
+                }}
             >
                 {action.icon}
                 {action.label}

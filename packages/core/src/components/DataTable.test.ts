@@ -11,6 +11,7 @@ import {
     orderColumns,
     rangeKeys,
     sortRows,
+    stackColumns,
     treeBranchKeys,
 } from './DataTable'
 
@@ -176,5 +177,38 @@ describe('column order', () => {
         expect(movedColumn(columns, 'state', -1)).toEqual(['job', 'state', 'by', 'started', 'duration'])
         expect(movedColumn(columns, 'duration', 1)).toEqual(['job', 'state', 'by', 'started', 'duration'])
         expect(movedColumn(columns, 'job', 1)).toEqual(['job', 'state', 'by', 'started', 'duration'])
+    })
+})
+
+describe('stackColumns', () => {
+    const columns = [
+        { id: 'done', stack: 'lead' as const },
+        { id: 'title' },
+        { id: 'due' },
+        { id: 'note', stack: 'primary' as const },
+        { id: 'state', stack: 'secondary' as const },
+        { id: 'secret', stack: 'none' as const },
+    ]
+    const ids = (list: readonly { id: string }[]) => list.map((column) => column.id)
+
+    it('takes the first column that is not a lead as the title, the leads before it', () => {
+        const parts = stackColumns(columns, 'labeled')
+        expect(ids(parts.lead)).toEqual(['done'])
+        expect(parts.title?.id).toBe('title')
+        expect(ids(parts.primary)).toEqual(['note'])
+        expect(ids(parts.lines)).toEqual(['due'])
+        expect(ids(parts.facts)).toEqual(['state'])
+    })
+
+    it('puts every line among the facts when compact, in the columns’ order', () => {
+        const parts = stackColumns(columns, 'compact')
+        expect(ids(parts.lines)).toEqual([])
+        expect(ids(parts.facts)).toEqual(['due', 'state'])
+        expect(ids(parts.primary)).toEqual(['note'])
+    })
+
+    it('keeps the first column as the title when nothing leads', () => {
+        const plain: { id: string; stack?: 'line' }[] = [{ id: 'job' }, { id: 'state' }]
+        expect(stackColumns(plain, 'compact').title?.id).toBe('job')
     })
 })
