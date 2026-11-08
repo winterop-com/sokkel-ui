@@ -1,32 +1,32 @@
 {
     "forms": {
         "engines": [],
-        "start": 225,
-        "lazy": 21,
+        "start": 230,
+        "lazy": 23,
         "css": 52
     },
     "forms-lean": {
         "engines": [],
-        "start": 225,
-        "lazy": 21,
+        "start": 230,
+        "lazy": 23,
         "css": 22
     },
     "dashboard": {
         "engines": ["echarts"],
-        "start": 225,
+        "start": 230,
         "lazy": 360,
         "css": 52
     },
     "map": {
         "engines": ["maplibre"],
         "start": 475,
-        "lazy": 25,
+        "lazy": 27,
         "css": 63
     },
     "music": {
         "engines": [],
-        "start": 175,
-        "lazy": 25,
+        "start": 180,
+        "lazy": 27,
         "css": 52
     }
 }
