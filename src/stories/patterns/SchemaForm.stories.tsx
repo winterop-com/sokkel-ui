@@ -179,7 +179,7 @@ function NewPipeline() {
     )
 }
 
-/** A nested object, a set of choices, a list of values, a list of objects, and a map edited as JSON. */
+/** A nested object, a set of choices, a list of values, a list of objects, and a map edited as JSON; the strip beside the body marks where each issue sits down the form. */
 export const NestedAndLists: StoryObj = { name: 'Nested and lists', render: () => <NewPipeline /> }
 
 const BROKEN: JsonSchema = {

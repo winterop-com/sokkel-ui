@@ -219,8 +219,14 @@ the count opens the first. Nothing is inserted between fields, so a form never c
 Issues show once a field is left with a value, or once the form is submitted, and go the moment the
 value is put right. A server's refusal lands on its field until that field is changed.
 
-`IssueMark` and `IssueCount` carry it for any form; SchemaForm is built on them, and checks values
-with ajv against JSON Schema 2020-12.
+The second round (2026-11-08) settled the rest. The count is one tinted control beside the verbs, in
+a page's bar and a dialog's footer alike, with a figure for each kind: errors in the critical ink,
+warnings in the warning ink. Pressing it lists the issues above it. A long form that scrolls gets a
+strip beside its scroll bar with a mark at each issue's place, which goes there when pressed. The
+bar's verbs wrap rather than run past its edge.
+
+`IssueMark`, `IssueCount` and `IssueMarks` carry it for any form (`DialogShell` takes `marks`);
+SchemaForm is built on them, and checks values with ajv against JSON Schema 2020-12.
 
 For what happens outside a form, the activity list was picked from the notification research: what
 happened while a person was away, newest first, unread drawn stronger, each item with its own way to

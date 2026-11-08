@@ -128,13 +128,15 @@ export function IssueMark({
 }
 
 export interface IssueCountWords {
-    toFix: (count: number) => string
-    toLookAt: (count: number) => string
+    /** How many issues stop the submit, said to a screen reader: `2 errors`. */
+    errors: (count: number) => string
+    /** How many warnings, said to a screen reader: `1 warning`. */
+    warnings: (count: number) => string
 }
 
 const COUNT_WORDS: IssueCountWords = {
-    toFix: (count) => `${String(count)} to fix`,
-    toLookAt: (count) => `${String(count)} to look at`,
+    errors: (count) => `${String(count)} ${count === 1 ? 'error' : 'errors'}`,
+    warnings: (count) => `${String(count)} ${count === 1 ? 'warning' : 'warnings'}`,
 }
 
 /** One issue in a form's list: the field it belongs to, what it says, and how to go to it. */
@@ -143,6 +145,8 @@ export interface IssueEntry {
     issue: Issue
     /** Takes the person to the field and opens its mark. */
     onGo: () => void
+    /** The id of the field's control, so `IssueMarks` can place the issue beside the scroll bar. */
+    target?: string
 }
 
 const EDGE = {
@@ -151,43 +155,61 @@ const EDGE = {
 } as const
 
 /**
- * How many issues stop the submit, as a control beside the verb, or how many warnings when nothing
- * stops it. Pressing it opens the issues right there, each naming its field, and choosing one
- * goes to that field and opens its mark. Nothing renders at zero. A dialog takes it in its `count` slot, beside its verbs.
+ * A form's issues as one control beside the verb: a figure for each kind, the errors that stop the
+ * submit in the critical ink and the warnings in the warning ink, on the tint of the worst. Pressing
+ * it opens the issues right there, each naming its field, and choosing one goes to that field and
+ * opens its mark. Nothing renders at zero. A dialog takes it in its `count` slot, beside its verbs.
  */
 export function IssueCount({
     critical,
     warning = 0,
     list,
+    defaultOpen = false,
     words: given,
 }: {
     critical: number
     warning?: number
     list: readonly IssueEntry[]
+    /** Starts with the list open. */
+    defaultOpen?: boolean
     words?: Partial<IssueCountWords>
 }) {
     const words = { ...COUNT_WORDS, ...given }
-    const [open, setOpen] = useState(false)
+    const [open, setOpen] = useState(defaultOpen)
     const tone = critical > 0 ? 'critical' : warning > 0 ? 'warning' : null
     if (tone === null) return null
-    const Icon = ICON[tone]
+    const label = [critical > 0 && words.errors(critical), warning > 0 && words.warnings(warning)].filter(Boolean).join(', ')
     const face = cn(
-        'flex h-7 min-w-0 items-center gap-1.5 rounded-control border px-2 text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
-        INK[tone],
+        'flex h-7 min-w-0 items-center rounded-control border text-xs font-medium tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
         EDGE[tone],
     )
-    const said = (
-        <>
-            <Icon className="size-3.5 shrink-0" aria-hidden />
-            <span className="truncate">{tone === 'critical' ? words.toFix(critical) : words.toLookAt(warning)}</span>
-        </>
+    const figures = (
+        [
+            ['critical', critical],
+            ['warning', warning],
+        ] as const
     )
+        .filter(([, count]) => count > 0)
+        .map(([kind, count], index) => {
+            const Icon = ICON[kind]
+            return (
+                <span key={kind} className={cn('flex items-center gap-1 px-2', INK[kind], index > 0 && 'border-l border-current/25')}>
+                    <Icon className="size-3.5 shrink-0" aria-hidden />
+                    {count}
+                </span>
+            )
+        })
+    const said = <span className="flex items-center">{figures}</span>
     if (list.length === 0) {
-        return <span className={face}>{said}</span>
+        return (
+            <span role="status" aria-label={label} className={face}>
+                {said}
+            </span>
+        )
     }
     return (
         <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger render={<button type="button" className={face} />}>{said}</PopoverTrigger>
+            <PopoverTrigger render={<button type="button" aria-label={label} className={face} />}>{said}</PopoverTrigger>
             <PopoverContent side="top" align="start" sideOffset={6} className="w-[min(22rem,calc(100vw-2rem))] gap-1 p-1.5">
                 {list.map((entry, index) => {
                     const Mark = ICON[entry.issue.tone]
