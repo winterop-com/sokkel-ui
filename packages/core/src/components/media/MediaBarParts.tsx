@@ -13,7 +13,7 @@ import type { MediaRange } from './time'
 export type RepeatMode = 'off' | 'all' | 'one'
 
 /** The words the player says, each with an English default. */
-export interface MediaBarLabels {
+export interface MediaBarWords {
     play: string
     pause: string
     previous: string
@@ -43,7 +43,7 @@ export interface MediaBarLabels {
     ring: string
 }
 
-export const MEDIA_BAR_LABELS: MediaBarLabels = {
+export const MEDIA_BAR_WORDS: MediaBarWords = {
     play: 'Play',
     pause: 'Pause',
     previous: 'Previous',
@@ -72,7 +72,7 @@ const NEXT_REPEAT: Record<RepeatMode, RepeatMode> = { off: 'all', all: 'one', on
 
 /** What every arrangement of the player draws from: what plays, where it is, and the handlers. */
 export interface Deck {
-    words: MediaBarLabels
+    words: MediaBarWords
     title: ReactNode
     subtitle?: ReactNode
     artist?: ReactNode

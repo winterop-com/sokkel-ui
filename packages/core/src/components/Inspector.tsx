@@ -7,6 +7,23 @@ import { usePanelSize } from '../hooks/use-panel-size'
 import { ResizeHandle } from './ResizeHandle'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from './ui/dropdown-menu'
 
+/** The words an inspector says. */
+export interface InspectorWords {
+    menu: string
+    close: string
+    resize: string
+    copy: string
+    copied: string
+}
+
+const WORDS: InspectorWords = {
+    menu: 'More actions',
+    close: 'Close',
+    resize: 'Resize the panel',
+    copy: 'Copy',
+    copied: 'Copied',
+}
+
 /**
  * The panel beside a list that shows the chosen row: a header naming the thing (its name, then its
  * code in the code face with a copy button), the thing's actions, then titled sections. It starts
@@ -30,7 +47,7 @@ export function Inspector({
     maxSize = 480,
     defaultSize = 360,
     className,
-    words = { menu: 'More actions', close: 'Close', resize: 'Resize the panel', copy: 'Copy', copied: 'Copied' },
+    words: given,
     children,
 }: {
     title: ReactNode
@@ -53,9 +70,10 @@ export function Inspector({
     /** The width the panel starts at and a double click on the edge returns to. */
     defaultSize?: number
     className?: string
-    words?: { menu: string; close: string; resize: string; copy: string; copied: string }
+    words?: Partial<InspectorWords>
     children: ReactNode
 }) {
+    const words = { ...WORDS, ...given }
     const panel = useRef<HTMLElement>(null)
     const held = usePanelSize({ size, onSizeChange, rest: defaultSize, fallback: defaultSize, min: minSize, max: maxSize })
     const tool =

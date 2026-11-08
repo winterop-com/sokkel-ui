@@ -12,6 +12,17 @@ export interface NavLink {
     active?: boolean
 }
 
+/** The words a nav bar says. */
+export interface NavBarWords {
+    menu: string
+    navigation: string
+}
+
+const WORDS: NavBarWords = {
+    menu: 'Open the navigation',
+    navigation: 'Main',
+}
+
 /**
  * The app's frame along the top, for an app with few places and no rail: the mark and name, the
  * places as links with the current one underlined, and the right-hand controls. On a phone the
@@ -28,7 +39,7 @@ export function NavBar({
         </a>
     ),
     className,
-    words = { menu: 'Open the navigation', navigation: 'Main' },
+    words: given,
 }: {
     mark: ReactNode
     name: string
@@ -37,8 +48,9 @@ export function NavBar({
     end?: ReactNode
     renderLink?: (link: NavLink, className: string) => ReactNode
     className?: string
-    words?: { menu: string; navigation: string }
+    words?: Partial<NavBarWords>
 }) {
+    const words = { ...WORDS, ...given }
     return (
         <header className={cn('flex h-shell-top shrink-0 items-stretch gap-4 border-b border-border-strong bg-sidebar px-3', className)}>
             <div className="flex shrink-0 items-center gap-2">

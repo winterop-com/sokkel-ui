@@ -305,6 +305,17 @@ export function DropLine() {
     return <span aria-hidden className="pointer-events-none absolute inset-x-0 -top-[5px] h-0.5 rounded-full bg-primary" />
 }
 
+/** The words a board lane says. */
+export interface BoardLaneWords {
+    collapse: string
+    expand: string
+}
+
+const LANE_WORDS: BoardLaneWords = {
+    collapse: 'Fold the lane',
+    expand: 'Unfold the lane',
+}
+
 /**
  * One lane of a board with swimlanes: a header across the board with the lane's title and how
  * many cards it holds, then its cells, one `BoardDrop` per column. The header stays in view as
@@ -317,7 +328,7 @@ export function BoardLane({
     collapsed = false,
     onCollapsedChange,
     children,
-    words = { collapse: 'Fold the lane', expand: 'Unfold the lane' },
+    words: given,
 }: {
     title: ReactNode
     count?: number
@@ -326,8 +337,9 @@ export function BoardLane({
     collapsed?: boolean
     onCollapsedChange?: (collapsed: boolean) => void
     children: ReactNode
-    words?: { collapse: string; expand: string }
+    words?: Partial<BoardLaneWords>
 }) {
+    const words = { ...LANE_WORDS, ...given }
     return (
         <section className="flex flex-col">
             <div className="sticky left-0 z-10 flex w-max items-center gap-2 py-2 pr-3">

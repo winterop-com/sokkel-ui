@@ -78,7 +78,7 @@ export function IOCard({
     input,
     output,
     className,
-    words = WORDS,
+    words: given,
 }: {
     title?: ReactNode
     code?: string
@@ -88,8 +88,9 @@ export function IOCard({
     input?: IOSide
     output?: IOSide
     className?: string
-    words?: IOCardWords
+    words?: Partial<IOCardWords>
 }) {
+    const words = { ...WORDS, ...given }
     const heading = title ?? code
     return (
         <article

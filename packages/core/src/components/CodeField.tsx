@@ -41,15 +41,16 @@ export function CodeField({
     value,
     onChange,
     required = true,
-    words = WORDS,
+    words: given,
 }: {
     id: string
     label?: string
     value: string
     onChange: (code: string) => void
     required?: boolean
-    words?: CodeWords
+    words?: Partial<CodeWords>
 }) {
+    const words = { ...WORDS, ...given }
     const problem = codeProblem(value, words)
     return (
         <Field id={id} label={label} required={required} error={problem} words={{ required: words.required }}>

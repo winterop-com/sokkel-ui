@@ -12,6 +12,15 @@ const SHOWN = {
     xl: 'hidden xl:flex',
 } as const
 
+/** The words a sub navigation column says. */
+export interface SubNavWords {
+    resize: string
+}
+
+const WORDS: SubNavWords = {
+    resize: 'Resize the column',
+}
+
 /**
  * The second column beside the rail: what the app's section holds, such as a tree of folders, a
  * section's pages or a month to pick a day from. It sits on the rail's ground with a strong rule
@@ -37,7 +46,7 @@ export function SubNav({
     maxSize = 400,
     defaultSize = 240,
     className,
-    words = { resize: 'Resize the column' },
+    words: given,
 }: {
     /** A group label over the content, such as "Folders". */
     title?: string
@@ -60,8 +69,9 @@ export function SubNav({
     /** The width in pixels the column starts at and a double click on the edge returns to. */
     defaultSize?: number
     className?: string
-    words?: { resize: string }
+    words?: Partial<SubNavWords>
 }) {
+    const words = { ...WORDS, ...given }
     const column = useRef<HTMLElement>(null)
     const held = usePanelSize({ size, onSizeChange, rest: defaultSize, fallback: 240, min: minSize, max: maxSize })
     const top = title !== undefined || search !== undefined || actions !== undefined

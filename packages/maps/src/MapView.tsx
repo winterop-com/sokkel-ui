@@ -657,7 +657,12 @@ export function MapView({
                         </>
                     )}
                     {corner === 'top-right' && supported && offered && (
-                        <BasemapSwitcher basemaps={basemaps} value={shownBasemap.id} onValueChange={chooseBasemap} label={said.basemap} />
+                        <BasemapSwitcher
+                            basemaps={basemaps}
+                            value={shownBasemap.id}
+                            onValueChange={chooseBasemap}
+                            words={{ label: said.basemap }}
+                        />
                     )}
                 </div>
             ))}

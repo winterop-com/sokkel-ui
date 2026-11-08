@@ -73,7 +73,7 @@ export function FilterChip({
     onClear,
     icon,
     className,
-    words = WORDS,
+    words: given,
 }: {
     facet: string
     /** What the chip says it is set to, in place of the chosen labels; unset when absent and nothing is chosen. */
@@ -96,8 +96,9 @@ export function FilterChip({
     onClear?: () => void
     icon?: ReactNode
     className?: string
-    words?: FilterChipWords
+    words?: Partial<FilterChipWords>
 }) {
+    const words = { ...WORDS, ...given }
     const chipRef = useRef<HTMLSpanElement>(null)
     const [own, setOwn] = useState<readonly string[]>(defaultSelected ?? [])
     const chosen = selected ?? own

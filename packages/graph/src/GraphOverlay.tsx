@@ -152,6 +152,13 @@ function sameSize(a: { width: number; height: number }, b: { width: number; heig
     return a.width === b.width && a.height === b.height
 }
 
+/** The words a graph notice says. */
+export interface GraphNoticeWords {
+    close: string
+}
+
+const NOTICE_WORDS: GraphNoticeWords = { close: 'Dismiss' }
+
 /**
  * A short message across the foot of a canvas: why a connection was refused, or what a gesture
  * did. `critical` says a refusal; `info` says anything else. Render it as a child of the canvas.
@@ -160,13 +167,14 @@ export function GraphNotice({
     tone = 'info',
     onClose,
     children,
-    words = { close: 'Dismiss' },
+    words: given,
 }: {
     tone?: 'critical' | 'info'
     onClose?: () => void
     children: ReactNode
-    words?: { close: string }
+    words?: Partial<GraphNoticeWords>
 }) {
+    const words = { ...NOTICE_WORDS, ...given }
     const Icon = tone === 'critical' ? CircleAlert : Info
     return (
         <Panel position="bottom-center" className="m-3! w-max max-w-[calc(100%-1.5rem)]">

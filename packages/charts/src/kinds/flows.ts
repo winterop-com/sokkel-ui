@@ -2,7 +2,7 @@ import { distinct, labelOf } from '../data'
 import { SERIES_ORDER, tooltipMarkup } from '../look'
 import { flows } from '../shapes'
 import { written } from './categories'
-import { colorOf, legendColor, type ChartBuilder, type ChartSpec } from './spec'
+import { colorOf, legendColor, measureName, type ChartBuilder, type ChartSpec } from './spec'
 import type { LegendItem } from '../ChartLegend'
 
 /** The stages a flow runs through, first to last. */
@@ -55,10 +55,10 @@ export const sankey: ChartBuilder = (spec, look, hidden) => {
             }) =>
                 point.dataType === 'edge'
                     ? tooltipMarkup(`${names.get(point.data.source ?? '') ?? ''} → ${names.get(point.data.target ?? '') ?? ''}`, [
-                          { label: weightOf(spec) ?? 'Count', value: written(spec, point.value) },
+                          { label: measureName(spec, weightOf(spec)), value: written(spec, point.value) },
                       ])
                     : tooltipMarkup(names.get(point.name) ?? point.name, [
-                          { label: weightOf(spec) ?? 'Count', value: written(spec, point.value), color: point.color },
+                          { label: measureName(spec, weightOf(spec)), value: written(spec, point.value), color: point.color },
                       ]),
         },
         series: [
