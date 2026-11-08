@@ -59,7 +59,7 @@ function Contents() {
         <div className="h-svh overflow-y-auto">
             <Row gap="3xl" align="stretch" className="p-6">
                 <article ref={article} className="max-w-2xl min-w-0 flex-1">
-                    <Markdown content={PAGE} anchors />
+                    <Markdown content={PAGE} anchors scale="document" />
                 </article>
                 <TableOfContents entries={headings} active={active} className="sticky top-6 w-52 shrink-0 self-start max-md:hidden" />
             </Row>

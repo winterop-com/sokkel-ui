@@ -161,14 +161,29 @@ function useMathEngine(needed: boolean): MathEngine | undefined {
     return loaded
 }
 
+/**
+ * Heading levels by where the text is read: a message keeps them within a reply's measure (the
+ * largest is a detail title), a document runs from a page title down.
+ */
+const HEADINGS = {
+    message: cn(
+        '[&_h1]:mt-5 [&_h1]:mb-2 [&_h1]:text-detail-title',
+        '[&_h2]:mt-4 [&_h2]:mb-2 [&_h2]:text-section-title [&_h2]:font-semibold',
+        '[&_h3]:mt-3 [&_h3]:mb-1.5 [&_h3]:text-section-title',
+        '[&_h4]:mt-3 [&_h4]:mb-1 [&_h4]:text-head',
+    ),
+    document: cn(
+        '[&_h1]:mt-6 [&_h1]:mb-3 [&_h1]:text-page-title',
+        '[&_h2]:mt-5 [&_h2]:mb-2 [&_h2]:text-detail-title',
+        '[&_h3]:mt-4 [&_h3]:mb-1.5 [&_h3]:text-section-title',
+        '[&_h4]:mt-3 [&_h4]:mb-1 [&_h4]:text-head',
+    ),
+} as const
+
 const PROSE = cn(
     'min-w-0 text-sm leading-relaxed break-words text-foreground',
     '[&>*:first-child]:mt-0 [&>*:last-child]:mb-0',
     '[&_li]:my-0.5 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-2 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5',
-    '[&_h1]:mt-6 [&_h1]:mb-3 [&_h1]:text-page-title',
-    '[&_h2]:mt-5 [&_h2]:mb-2 [&_h2]:text-detail-title',
-    '[&_h3]:mt-4 [&_h3]:mb-1.5 [&_h3]:text-section-title',
-    '[&_h4]:mt-3 [&_h4]:mb-1 [&_h4]:text-head',
     '[&_a]:text-primary-ink [&_a]:underline [&_a]:underline-offset-2',
     '[&_blockquote]:my-2 [&_blockquote]:border-l-2 [&_blockquote]:border-border-strong [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground',
     '[&_hr]:my-4 [&_hr]:border-border',
@@ -230,6 +245,7 @@ export const Markdown = memo(function Markdown({
     inlineCode = 'chip',
     caret = false,
     math = true,
+    scale = 'message',
     className,
     words: given,
 }: {
@@ -244,6 +260,8 @@ export const Markdown = memo(function Markdown({
     caret?: boolean
     /** Draws LaTeX math with KaTeX, loaded the first time a message holds math. On by default. */
     math?: boolean
+    /** Heading sizes: within a message (the default), or a document's from a page title down. */
+    scale?: 'message' | 'document'
     className?: string
     words?: Partial<MarkdownWords>
 }) {
@@ -318,7 +336,7 @@ export const Markdown = memo(function Markdown({
     return (
         <div
             data-settling={needsMath && katex === undefined ? '' : undefined}
-            className={cn(PROSE, INLINE_CODE[inlineCode], caret && streaming && CARET, className)}
+            className={cn(PROSE, HEADINGS[scale], INLINE_CODE[inlineCode], caret && streaming && CARET, className)}
         >
             <ReactMarkdown remarkPlugins={remark} rehypePlugins={rehype} components={components}>
                 {source}
