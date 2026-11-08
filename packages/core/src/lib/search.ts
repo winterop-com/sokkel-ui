@@ -1,4 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
+import type { ReactNode } from 'react'
 
 import type { HighlightRange } from '../components/Highlight'
 
@@ -12,7 +13,9 @@ export interface SearchResult {
     meta?: string
     /** The address of a small picture drawn before the title. */
     thumbnail?: string
-    /** Draws the thumbnail round, as a person's picture. */
+    /** A picture drawn in the thumbnail's place, such as a drawn cover or a placeholder made from the record. */
+    artwork?: ReactNode
+    /** Draws the thumbnail or the artwork round, as a person's picture. */
     round?: boolean
     /** An icon before the title where there is no thumbnail. */
     icon?: LucideIcon

@@ -8,3 +8,30 @@
 @import '../packages/terminal/src/styles.css';
 
 @source '../src/stories';
+
+/* A story drawn as a desktop window (the `desktopWindow` parameter): its drag regions outlined, the window's buttons where macOS draws them. */
+[data-desktop-window] [data-window-drag] {
+    outline: 1px dashed var(--primary);
+    outline-offset: -3px;
+}
+.desktop-window-buttons {
+    position: fixed;
+    z-index: 60;
+    top: calc((var(--spacing-shell-top) - 0.75rem) / 2);
+    left: 0.875rem;
+    display: flex;
+    gap: 0.5rem;
+    pointer-events: none;
+}
+.desktop-window-buttons > span {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 9999px;
+    background: var(--critical);
+}
+.desktop-window-buttons > span:nth-child(2) {
+    background: var(--warning);
+}
+.desktop-window-buttons > span:nth-child(3) {
+    background: var(--good);
+}

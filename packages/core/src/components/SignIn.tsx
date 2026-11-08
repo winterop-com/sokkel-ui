@@ -3,6 +3,7 @@ import { useId, useRef, useState, type CSSProperties, type ReactNode } from 'rea
 
 import { useThemeName } from '../hooks/use-theme-name'
 import { cn } from '../lib/cn'
+import { hasTrafficLights, trafficLightsStyle, windowPressHandler, type DesktopWindow } from '../lib/desktop'
 import { CheckboxField } from './CheckboxField'
 import { Field } from './Field'
 import { ResizeHandle } from './ResizeHandle'
@@ -181,6 +182,10 @@ function IconInput({
  *
  * It answers to its own width: in a narrow room, as on a phone, the brand pane becomes a bar over
  * the form with the mark, the name and the first fact's value, and the art is left out.
+ *
+ * With `desktop`, in a desktop window whose native title bar is hidden, the brand pane (or the
+ * bar) drags the window, and `trafficLights` leaves room at the bar's start for the window's
+ * buttons; the wide pane's own inset already clears them.
  */
 export function SignIn({
     mark,
@@ -206,6 +211,7 @@ export function SignIn({
     onSubmit,
     alternatives,
     footer,
+    desktop,
     className,
     words: given,
 }: {
@@ -245,6 +251,8 @@ export function SignIn({
     alternatives?: ReactNode
     /** A line under the form, such as who to ask for an account. */
     footer?: ReactNode
+    /** The desktop window the screen stands in, when its native title bar is hidden; leave it off in a browser. */
+    desktop?: DesktopWindow
     className?: string
     words?: Partial<SignInWords>
 }) {
@@ -265,6 +273,7 @@ export function SignIn({
     const failed = error !== undefined && error !== null && error !== false
     const firstFact = facts[0]
     const dark = brandScheme === 'dark'
+    const drag = desktop === undefined ? undefined : ''
     const maxBrand = () => Math.max(BRAND_MIN, (root.current?.offsetWidth ?? BRAND_MIN + FORM_ROOM) - FORM_ROOM)
 
     /** Each part of the form rises a beat after the one before. */
@@ -301,11 +310,20 @@ export function SignIn({
             ref={root}
             data-slot="sign-in"
             className={cn('@container flex min-h-svh w-full bg-background text-foreground', className)}
-            style={{ '--brand-width': dragged === null ? brandWidth : `${String(dragged)}px` } as CSSProperties}
+            style={
+                { ...trafficLightsStyle(desktop), '--brand-width': dragged === null ? brandWidth : `${String(dragged)}px` } as CSSProperties
+            }
+            onMouseDown={windowPressHandler(desktop)}
         >
             <div className="flex w-full flex-1 flex-col @3xl:flex-row">
                 {ground(
-                    <header className="flex w-full items-center gap-3 border-b border-border px-5 py-4">
+                    <header
+                        data-window-drag={drag}
+                        className={cn(
+                            'flex w-full items-center gap-3 border-b border-border px-5 py-4',
+                            hasTrafficLights(desktop) && 'ps-(--spacing-traffic-lights)',
+                        )}
+                    >
                         {markBox('small')}
                         <span className="min-w-0 truncate text-detail-title">{name}</span>
                         {firstFact !== undefined && (
@@ -314,7 +332,11 @@ export function SignIn({
                     </header>,
                     'shrink-0 @3xl:hidden',
                 )}
-                <aside ref={brand} className="hidden shrink-0 @3xl:flex @3xl:w-(--brand-width) @3xl:max-w-[calc(100%-30rem)] @3xl:min-w-80">
+                <aside
+                    ref={brand}
+                    data-window-drag={drag}
+                    className="hidden shrink-0 @3xl:flex @3xl:w-(--brand-width) @3xl:max-w-[calc(100%-30rem)] @3xl:min-w-80"
+                >
                     {ground(
                         <div className="flex size-full flex-col gap-10 p-12">
                             <div className="flex min-h-0 flex-1 items-end">{art}</div>

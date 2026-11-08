@@ -9,11 +9,12 @@ import { PaneHeader } from './PaneHeader'
  * `boxed`, the default, is a bordered surface whose head is a bar of its own, its title set like a table's
  * column heads but in the text color, so every box's head reads alike. `flat` is a heading
  * over a rule with the content on the page's own ground, for the rare page that wants it. Either takes actions at the right end of its
- * heading, and a count or a fact beside the title.
+ * heading, a count or a fact beside the title, and a `description` under it saying what the part holds.
  */
 export function Section({
     title,
     meta,
+    description,
     actions,
     variant = 'boxed',
     flush = false,
@@ -24,6 +25,8 @@ export function Section({
     title: ReactNode
     /** A count or a short fact beside the title, drawn quieter than it. */
     meta?: ReactNode
+    /** A sentence under the title: what this part of the page holds. */
+    description?: ReactNode
     /** Controls at the right end of the heading. */
     actions?: ReactNode
     variant?: 'flat' | 'boxed'
@@ -43,14 +46,14 @@ export function Section({
                     className,
                 )}
             >
-                <PaneHeader variant="panel" title={title} meta={meta} actions={actions} />
+                <PaneHeader variant="panel" title={title} meta={meta} description={description} actions={actions} />
                 <div className={cn(!flush && 'p-(--density-panel-pad)', fill && 'min-h-0 flex-1 overflow-auto')}>{children}</div>
             </section>
         )
     }
     return (
         <section className={cn('flex flex-col gap-(--density-section-gap)', className)}>
-            <PaneHeader title={title} meta={meta} actions={actions} inset={false} />
+            <PaneHeader title={title} meta={meta} description={description} actions={actions} inset={false} />
             <div>{children}</div>
         </section>
     )

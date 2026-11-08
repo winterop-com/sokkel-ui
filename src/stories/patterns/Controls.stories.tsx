@@ -4,7 +4,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
 import { CopyButton } from '@winterop-com/sokkel-ui/CopyButton'
-import { Segmented, type SegmentedVariant } from '@winterop-com/sokkel-ui/Segmented'
+import { Segmented, type Segment, type SegmentedVariant } from '@winterop-com/sokkel-ui/Segmented'
 import { Card, CardContent, CardHeader, CardTitle } from '@winterop-com/sokkel-ui/primitives/card'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
@@ -182,6 +182,37 @@ function SegmentedOff() {
     )
 }
 
+type RunState = 'all' | 'succeeded' | 'failed' | 'running' | 'cancelled'
+
+const RUN_STATES: Segment<RunState>[] = [
+    { value: 'all', label: 'All', count: 42 },
+    { value: 'succeeded', label: 'Succeeded', count: 31, dot: 'var(--status-succeeded)' },
+    { value: 'failed', label: 'Failed', count: 4, dot: 'var(--status-failed)' },
+    { value: 'running', label: 'Running', count: 7, dot: 'var(--status-running)' },
+    { value: 'cancelled', label: 'Cancelled', count: 0, dot: 'var(--status-cancelled)' },
+]
+
+function SegmentedCounts() {
+    const [state, setState] = useState<RunState>('all')
+    const [sort, setSort] = useState<'jobs' | 'steps' | 'services'>('jobs')
+    return (
+        <Ground>
+            <Segmented label="Run state" value={state} onValueChange={setState} options={RUN_STATES} />
+            <Segmented
+                label="Sort"
+                variant="tint"
+                value={sort}
+                onValueChange={setSort}
+                options={[
+                    { value: 'jobs', label: 'Jobs', count: 18 },
+                    { value: 'steps', label: 'Steps', count: 64 },
+                    { value: 'services', label: 'Services', count: 3 },
+                ]}
+            />
+        </Ground>
+    )
+}
+
 const STEPS = [
     { value: 'all', label: 'All' },
     { value: 'fetch', label: 'Fetch' },
@@ -310,6 +341,8 @@ export const SegmentedAligned: StoryObj = { name: 'Segmented, aligned', render: 
 export const SegmentedChoice: StoryObj = { name: 'Segmented, natural width', render: () => <SegmentedSettings fill={false} /> }
 /** Two options off on their own, each with a tooltip on hover and focus that says why. */
 export const SegmentedOffOptions: StoryObj = { name: 'Segmented, off options', render: () => <SegmentedOff /> }
+/** Options that filter a list: each says how many it holds, and a state's option wears that state's dot. */
+export const SegmentedCountsStory: StoryObj = { name: 'Segmented, counts', render: () => <SegmentedCounts /> }
 /** Eight options in cards a third of the width: they wrap onto more lines rather than overflow, each line shared out evenly. */
 export const SegmentedWrap: StoryObj = { name: 'Segmented, wrapping', render: () => <SegmentedWrapping /> }
 export const SegmentedField: StoryObj = { name: 'Form field', render: () => <SegmentedInForm /> }

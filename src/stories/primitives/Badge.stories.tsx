@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { CircleCheck, Clock, Repeat } from 'lucide-react'
 
 import { Badge } from '@winterop-com/sokkel-ui/primitives/badge'
+import type { KindColor } from '@winterop-com/sokkel-ui/lib/kind'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
 
@@ -17,6 +18,15 @@ export const Playground: StoryObj<{ label: string; variant: 'default' | 'seconda
 }
 
 const VARIANTS = ['default', 'secondary', 'destructive', 'outline', 'ghost', 'link'] as const
+
+const KINDS: [KindColor, string][] = [
+    ['teal', 'Monthly report'],
+    ['pink', 'Single record'],
+    ['blue', 'Registration'],
+    ['green', 'Follow-up'],
+    ['violet', 'Register'],
+    ['jade', 'Survey'],
+]
 
 export const Variants: StoryObj = {
     render: () => (
@@ -46,6 +56,19 @@ export const Variants: StoryObj = {
                 </Specimen>
             </Row>
         </>
+    ),
+}
+
+/** A categorical value in each of the kind colors, as a listing tells sorts of things apart: every form of one sort wears its color. */
+export const Kinds: StoryObj = {
+    render: () => (
+        <Row gap="xl" align="stretch" wrap>
+            {KINDS.map(([kind, label]) => (
+                <Specimen below key={kind} label={kind}>
+                    <Badge kind={kind}>{label}</Badge>
+                </Specimen>
+            ))}
+        </Row>
     ),
 }
 
