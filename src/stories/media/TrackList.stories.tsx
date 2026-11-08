@@ -3,10 +3,10 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { ListEnd } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
-import { TrackList, type Track } from '@winterop-com/sokkel-ui/media/TrackList'
+import { TrackList, type Track } from '@winterop-com/sokkel-ui-media/TrackList'
 import { StarButton } from '@winterop-com/sokkel-ui/StarButton'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
-import { Artwork, type ArtworkCover } from '@winterop-com/sokkel-ui/media/Artwork'
+import { Artwork, type ArtworkCover } from '@winterop-com/sokkel-ui-media/Artwork'
 
 const COVER: ArtworkCover = { motif: 'wave', from: 'blue', to: 'teal' }
 

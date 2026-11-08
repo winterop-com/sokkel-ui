@@ -31,6 +31,7 @@
         "@winterop-com/sokkel-ui-charts": "workspace:*",
         "@winterop-com/sokkel-ui-graph": "workspace:*",
         "@winterop-com/sokkel-ui-maps": "workspace:*",
+        "@winterop-com/sokkel-ui-media": "workspace:*",
         "@winterop-com/sokkel-ui-terminal": "workspace:*",
         "date-fns": "^4.4.0",
         "http-server": "^14.1.1",
@@ -158,6 +159,18 @@
         "@types/geojson": "^7946.0.16",
         "lucide-react": "^1.68.0",
         "maplibre-gl": "^6.7.0",
+      },
+      "peerDependencies": {
+        "@winterop-com/sokkel-ui": "workspace:*",
+        "react": "^19.2.0",
+        "react-dom": "^19.2.0",
+      },
+    },
+    "packages/media": {
+      "name": "@winterop-com/sokkel-ui-media",
+      "version": "0.10.2",
+      "dependencies": {
+        "lucide-react": "^1.68.0",
       },
       "peerDependencies": {
         "@winterop-com/sokkel-ui": "workspace:*",
@@ -853,6 +866,8 @@
     "@winterop-com/sokkel-ui-graph": ["@winterop-com/sokkel-ui-graph@workspace:packages/graph"],
 
     "@winterop-com/sokkel-ui-maps": ["@winterop-com/sokkel-ui-maps@workspace:packages/maps"],
+
+    "@winterop-com/sokkel-ui-media": ["@winterop-com/sokkel-ui-media@workspace:packages/media"],
 
     "@winterop-com/sokkel-ui-terminal": ["@winterop-com/sokkel-ui-terminal@workspace:packages/terminal"],
 

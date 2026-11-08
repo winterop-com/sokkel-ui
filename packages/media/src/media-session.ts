@@ -1,7 +1,7 @@
 /**
  * What plays, told to the operating system through the Media Session API: the media keys, the
  * now-playing widget and the lock screen. Every function here is safe where the API is missing,
- * and `useMediaSession` (`hooks/use-media-session`) is built on them.
+ * and `useMediaSession` (`use-media-session`) is built on them.
  */
 
 /** The system's controls an app can answer, by the API's own names. */

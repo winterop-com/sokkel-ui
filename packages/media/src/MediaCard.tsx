@@ -1,10 +1,10 @@
 import { MoreHorizontal, Play, Volume2 } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { useClamped } from '../../hooks/use-clamped'
-import { cn } from '../../lib/cn'
-import { TITLE_LINES, type TitleLines } from '../../lib/title-lines'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '../ui/dropdown-menu'
+import { useClamped } from '@winterop-com/sokkel-ui/hooks/use-clamped'
+import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { TITLE_LINES, type TitleLines } from '@winterop-com/sokkel-ui/lib/title-lines'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
 import { Artwork } from './Artwork'
 
 export interface MediaCardWords {

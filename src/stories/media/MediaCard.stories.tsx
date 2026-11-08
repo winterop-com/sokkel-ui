@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
-import { MediaCard, MediaGrid } from '@winterop-com/sokkel-ui/media/MediaCard'
+import { MediaCard, MediaGrid } from '@winterop-com/sokkel-ui-media/MediaCard'
 import { formatTime } from '@winterop-com/sokkel-ui/media/time'
 import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
 import { DropdownMenuItem } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
-import { Artwork, type ArtworkCover } from '@winterop-com/sokkel-ui/media/Artwork'
+import { Artwork, type ArtworkCover } from '@winterop-com/sokkel-ui-media/Artwork'
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
 import { makeAlbums } from '../fixtures/albums'
 

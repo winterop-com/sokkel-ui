@@ -1,6 +1,6 @@
 /** Fixed, neutral albums for the grid stories: as many as a story asks for, the same every time, each with a drawn cover. */
 
-import type { ArtworkCover, ArtworkHue, ArtworkMotif } from '@winterop-com/sokkel-ui/media/Artwork'
+import type { ArtworkCover, ArtworkHue, ArtworkMotif } from '@winterop-com/sokkel-ui-media/Artwork'
 
 function seeded(seed: number): () => number {
     let state = seed >>> 0
