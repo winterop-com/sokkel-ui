@@ -18,7 +18,7 @@ app has sign-in, and a `StatusLine` as the shell's `foot`.
 The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appearance`,
 `hooks/use-scheme`), with the option lists in `@winterop-com/sokkel-ui/lib/appearance`.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 208 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 210 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 13 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 9 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 11 modules
@@ -193,6 +193,7 @@ The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appeara
 | **AsyncSelect** | `@winterop-com/sokkel-ui/AsyncSelect` | A select whose options come from a search: it reads like a select, and its popover holds a search box whose text is sent to `load`, after a pause in typing. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-async-select--closed) |
 | **CapabilityPicker** | `@winterop-com/sokkel-ui/CapabilityPicker` | A list to pick one thing from, narrowed two ways: a search over code, name and description, and capability chips that keep only what has every chip chosen. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-capability-picker--catalog) |
 | **CheckboxField**, CheckboxList | `@winterop-com/sokkel-ui/CheckboxField` | A checkbox with its label beside it and, where the label alone does not say enough, a line under it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-checkbox-field--plain) |
+| **ChipBar** | `@winterop-com/sokkel-ui/ChipBar` | A row of chips with one chosen, such as topics over a feed. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-chip-bar--few) |
 | **ChoiceList** | `@winterop-com/sokkel-ui/ChoiceList` | Pick one of a few choices, each a row with its radio, its name and a line saying what it means. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-choice-list--described) |
 | **CodeField** | `@winterop-com/sokkel-ui/CodeField` | The field a thing's code is typed in. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-pages--runs-list) |
 | **CronField** | `@winterop-com/sokkel-ui/CronField` | A cron expression typed in, read back in words under it, with the next runs it makes listed after a given time. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-dialogs--confirm) |
@@ -236,6 +237,7 @@ The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appeara
 | **MetaLine** | `@winterop-com/sokkel-ui/MetaLine` | Small facts about a thing on one line, joined by a separator: an artist and a year, a count of views and an age. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-meta-line--facts) |
 | **PersonAvatar**, PresenceDot | `@winterop-com/sokkel-ui/PersonAvatar` | A person as a badge of their picture, or of their initials on a wash of their color: an assignee, an attendee, an author. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-person-avatar--sizes) |
 | **PersonRow** | `@winterop-com/sokkel-ui/PersonRow` | A person as a row names them: their picture, their username in the code face over a second line (an email, a team), and an optional `aside` at the row's end, such as their role or a control that changes it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-person-row--people) |
+| **ProfileRow** | `@winterop-com/sokkel-ui/ProfileRow` | Someone a page is about, in one line: their picture, their name over a short fact (followers, a team, a role) and an action beside them, such as Follow. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-profile-row--person) |
 | **SelectionBar** | `@winterop-com/sokkel-ui/SelectionBar` | What is selected and what can be done with it: the count, an optional `offer` after it (such as selecting every row on every page), a Clear button when `onClear` is given, and the actions as `children`. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-selection-bar--count) |
 | **Stat**, Sparkline | `@winterop-com/sokkel-ui/Stat` | One number with what it counts: runs today, the failure rate, the median duration. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-data--description) |
 | **StatusChip** | `@winterop-com/sokkel-ui/StatusChip` | A state as a small chip: the status's own color on a faint wash of it, the word lowercase. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-display-table--variants) |
