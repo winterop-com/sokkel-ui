@@ -32,10 +32,26 @@ export function rangeLabel(from: Date, to: Date, locale = 'en-US'): string {
     return `${short.format(from)} to ${year.format(to)}`
 }
 
+/** The words a time range picker says; `range` writes a custom span for a reader. */
+export interface TimeRangeWords {
+    custom: string
+    apply: string
+    range: (from: Date, to: Date) => string
+}
+
+const TIME_RANGE_WORDS: TimeRangeWords = {
+    custom: 'Custom range',
+    apply: 'Apply',
+    range: (from, to) => rangeLabel(from, to),
+}
+
 /**
  * The range a dashboard covers: a trigger naming the current range, opening a list of presets
  * beside a calendar for a custom span. Choosing a preset applies it at once; a custom span applies
  * with the Apply button.
+ *
+ * Left to itself the popover opens and closes on its own, starting at `defaultOpen`; `open` with
+ * `onOpenChange` holds it from outside.
  */
 export function TimeRangePicker({
     value,
@@ -44,7 +60,9 @@ export function TimeRangePicker({
     defaultMonth,
     today,
     open: openProp,
-    words = { custom: 'Custom range', apply: 'Apply' },
+    defaultOpen = false,
+    onOpenChange,
+    words: given,
     className,
 }: {
     value: TimeRangeValue
@@ -54,18 +72,29 @@ export function TimeRangePicker({
     defaultMonth?: Date
     /** The day the calendar marks as today; the clock's day when omitted. */
     today?: Date
-    /** Holds the popover open, for a static view of it. */
+    /** Whether the popover is open, held from outside with `onOpenChange`. */
     open?: boolean
-    words?: { custom: string; apply: string }
+    /** Whether the popover starts open when `open` is not given. */
+    defaultOpen?: boolean
+    onOpenChange?: (open: boolean) => void
+    words?: Partial<TimeRangeWords>
     className?: string
 }) {
-    const [open, setOpen] = useState(openProp ?? false)
+    const words = { ...TIME_RANGE_WORDS, ...given }
+    const [ownOpen, setOwnOpen] = useState(defaultOpen)
+    const open = openProp ?? ownOpen
+    const setOpen = (next: boolean) => {
+        if (openProp === undefined) setOwnOpen(next)
+        onOpenChange?.(next)
+    }
     const chosenRef = useRef<HTMLButtonElement>(null)
     const [draft, setDraft] = useState<DateRange | undefined>('from' in value ? { from: value.from, to: value.to } : undefined)
     const label =
-        'preset' in value ? (presets.find((preset) => preset.id === value.preset)?.label ?? value.preset) : rangeLabel(value.from, value.to)
+        'preset' in value
+            ? (presets.find((preset) => preset.id === value.preset)?.label ?? value.preset)
+            : words.range(value.from, value.to)
     return (
-        <Popover open={openProp ?? open} onOpenChange={setOpen}>
+        <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger render={<Button variant="outline" size="sm" className={cn('gap-1.5', className)} />}>
                 <CalendarRange aria-hidden />
                 {label}
@@ -129,6 +158,21 @@ export function TimeRangePicker({
 /** How often a dashboard refreshes itself, in seconds; 0 is never. */
 export const REFRESH_INTERVALS = [0, 10, 30, 60, 300] as const
 
+/** The words a refresh control says; `seconds` writes an interval. */
+export interface RefreshWords {
+    refresh: string
+    every: string
+    off: string
+    seconds: (count: number) => string
+}
+
+const REFRESH_WORDS: RefreshWords = {
+    refresh: 'Refresh',
+    every: 'Refresh every',
+    off: 'Off',
+    seconds: (count) => (count < 60 ? `${count}s` : `${count / 60}m`),
+}
+
 /**
  * Refreshing a dashboard: a button that refreshes now and spins while it does, a menu choosing how
  * often it refreshes by itself, and when it last did, already written for a reader.
@@ -139,12 +183,7 @@ export function RefreshControl({
     interval,
     onIntervalChange,
     updated,
-    words = {
-        refresh: 'Refresh',
-        every: 'Refresh every',
-        off: 'Off',
-        seconds: (count: number) => (count < 60 ? `${count}s` : `${count / 60}m`),
-    },
+    words: given,
 }: {
     onRefresh: () => void
     refreshing?: boolean
@@ -153,8 +192,9 @@ export function RefreshControl({
     onIntervalChange: (seconds: number) => void
     /** When it last refreshed: `updated 2 min ago`. */
     updated?: string
-    words?: { refresh: string; every: string; off: string; seconds: (count: number) => string }
+    words?: Partial<RefreshWords>
 }) {
+    const words = { ...REFRESH_WORDS, ...given }
     return (
         <div className="flex items-center gap-2">
             {updated !== undefined && <span className="text-xs text-muted-foreground max-sm:hidden">{updated}</span>}

@@ -147,7 +147,7 @@ export function tooltipMarkup(title: string, rows: readonly TooltipRow[]): strin
     const lines = rows
         .map(
             (row) =>
-                `<div class="flex items-center gap-2">${row.color === undefined ? '' : `<span class="size-2.5 shrink-0 rounded-[2px]" style="background:${row.color}"></span>`}<span class="text-muted-foreground">${escape(row.label)}</span><span class="ml-auto pl-4 font-mono font-medium tabular-nums text-popover-foreground">${escape(row.value)}</span></div>`,
+                `<div class="flex items-center gap-2">${row.color === undefined ? '' : `<span class="size-2.5 shrink-0 rounded-mini" style="background:${row.color}"></span>`}<span class="text-muted-foreground">${escape(row.label)}</span><span class="ml-auto pl-4 font-mono font-medium tabular-nums text-popover-foreground">${escape(row.value)}</span></div>`,
         )
         .join('')
     return `<div class="grid min-w-36 gap-1 rounded-md border border-border bg-popover px-2.5 py-1.5 font-sans text-xs text-popover-foreground shadow-(--elevation-pop)">${title === '' ? '' : `<div class="font-medium">${escape(title)}</div>`}${lines}</div>`

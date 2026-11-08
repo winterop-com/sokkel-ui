@@ -441,7 +441,7 @@ export function MessageComposer({
                                 { value: 'preview', label: words.preview },
                             ]}
                             disabled={disabled}
-                            onChoose={setMode}
+                            onValueChange={setMode}
                             className="mr-0.5 h-7 min-h-0!"
                         />
                     )}

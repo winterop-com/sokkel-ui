@@ -29,7 +29,7 @@ function Settings({ id }: { id: string }) {
     return (
         <Surface className="p-(--density-panel-pad)">
             <Stack gap="sm">
-                <Segmented label="View" value={view} options={VIEWS} onChoose={setView} />
+                <Segmented label="View" value={view} options={VIEWS} onValueChange={setView} />
                 <SwitchField id={`${id}-follow`} label="Follow new runs" checked={follow} onCheckedChange={setFollow} />
                 <Button
                     variant="ghost"

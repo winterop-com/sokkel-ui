@@ -613,7 +613,7 @@ function BoardApp({
                                             { value: 'none', label: 'None' },
                                             { value: 'project', label: 'Project' },
                                         ]}
-                                        onChoose={(value) => setLanes(value === 'project')}
+                                        onValueChange={(value) => setLanes(value === 'project')}
                                     />
                                 </Row>
                             }

@@ -4,7 +4,7 @@ import { isValidElement, useState, type CSSProperties, type ReactNode } from 're
 
 import { cn } from '../lib/cn'
 import { AudioPlayer } from './media/AudioPlayer'
-import { VideoPlayer } from './media/VideoPlayer'
+import { VideoPlayer, type VideoPlayerWords } from './media/VideoPlayer'
 import { PersonAvatar } from './PersonAvatar'
 import { Button } from './ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from './ui/dropdown-menu'
@@ -66,10 +66,8 @@ export interface ChatMessageWords {
     lastReply: (when: string) => string
     /** Takes the last reply's place while the thread line is hovered. */
     viewThread: string
-    /** The players' buttons and scrubber, for a recording or a video. */
-    play: string
-    pause: string
-    seek: string
+    /** The players' words, for a recording or a video: play, pause, seek, speed, captions, fullscreen and the rest. */
+    player: Partial<VideoPlayerWords>
 }
 
 const WORDS: ChatMessageWords = {
@@ -81,9 +79,7 @@ const WORDS: ChatMessageWords = {
     replies: (count) => `${String(count)} ${count === 1 ? 'reply' : 'replies'}`,
     lastReply: (when) => `Last reply ${when}`,
     viewThread: 'View thread',
-    play: 'Play',
-    pause: 'Pause',
-    seek: 'Seek',
+    player: {},
 }
 
 /** The link glyph drawn before every link in a body, as a mask so it takes the link's color. */
@@ -253,7 +249,7 @@ export function ChatMessage({
                                     waveform={file.waveform}
                                     duration={file.duration}
                                     label={file.name}
-                                    labels={{ play: words.play, pause: words.pause, seek: words.seek }}
+                                    words={words.player}
                                     variant="card"
                                     className="w-[min(100%,20rem)]"
                                 />
@@ -263,7 +259,7 @@ export function ChatMessage({
                                     src={file.url}
                                     title={file.name}
                                     preload="metadata"
-                                    labels={{ play: words.play, pause: words.pause, seek: words.seek }}
+                                    words={words.player}
                                     className="w-[min(100%,24rem)]"
                                 />
                             ) : file.kind === 'image' && file.url !== undefined ? (

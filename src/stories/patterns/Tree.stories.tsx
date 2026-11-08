@@ -89,7 +89,7 @@ function Trees() {
         <Ground>
             <Section title="Choose one" flush>
                 <div className="p-1">
-                    <Tree label="Places" nodes={PLACES} selected={one} onSelect={setOne} defaultOpen={['europe', 'norway']} />
+                    <Tree label="Places" nodes={PLACES} selected={one} onSelect={setOne} defaultExpanded={['europe', 'norway']} />
                 </div>
             </Section>
             <Section title="Choose several" meta={`${many.length}`} flush>
@@ -100,7 +100,7 @@ function Trees() {
                         selection="multiple"
                         selected={many}
                         onSelect={setMany}
-                        defaultOpen={['europe', 'norway', 'portugal', 'africa', 'kenya']}
+                        defaultExpanded={['europe', 'norway', 'portugal', 'africa', 'kenya']}
                     />
                 </div>
             </Section>
@@ -124,9 +124,9 @@ function Picker({ open }: { open?: 'one' | 'several' }) {
                     id="city"
                     nodes={PLACES}
                     value={value}
-                    onChange={setValue}
-                    defaultOpen={['europe', 'norway']}
-                    open={open === 'one' || undefined}
+                    onValueChange={setValue}
+                    defaultExpanded={['europe', 'norway']}
+                    defaultOpen={open === 'one'}
                 />
             </Field>
             {open !== 'one' && (
@@ -135,9 +135,9 @@ function Picker({ open }: { open?: 'one' | 'several' }) {
                         id="cover"
                         nodes={PLACES}
                         value={several}
-                        onChange={setSeveral}
+                        onValueChange={setSeveral}
                         multiple
-                        open={open === 'several' || undefined}
+                        defaultOpen={open === 'several'}
                     />
                 </Field>
             )}
@@ -171,18 +171,18 @@ function Lazy() {
                         loadChildren={loadPlace}
                         selected={one}
                         onSelect={setOne}
-                        defaultOpen={['europe', 'europe/norway', 'europe/norway/west']}
+                        defaultExpanded={['europe', 'europe/norway', 'europe/norway/west']}
                     />
                 </div>
             </Section>
             <Section title="Still loading" flush>
                 <div className="p-1">
-                    <Tree label="Places" nodes={GEOGRAPHY_TOP} loadChildren={neverAnswers} selection="none" defaultOpen={['asia']} />
+                    <Tree label="Places" nodes={GEOGRAPHY_TOP} loadChildren={neverAnswers} selection="none" defaultExpanded={['asia']} />
                 </div>
             </Section>
             <Section title="Refused" flush>
                 <div className="p-1">
-                    <Tree label="Places" nodes={GEOGRAPHY_TOP} loadChildren={refusing} selection="none" defaultOpen={['oceania']} />
+                    <Tree label="Places" nodes={GEOGRAPHY_TOP} loadChildren={refusing} selection="none" defaultExpanded={['oceania']} />
                 </div>
             </Section>
         </Ground>
@@ -198,11 +198,11 @@ function LazyPicker({ open, query }: { open?: boolean; query?: string }) {
                     id="site"
                     nodes={GEOGRAPHY_TOP}
                     value={value}
-                    onChange={setValue}
+                    onValueChange={setValue}
                     loadChildren={loadPlace}
                     search={searchPlaces}
                     trails={[trailOf('south-america/peru/highlands/d4/s12')]}
-                    open={open}
+                    defaultOpen={open}
                     defaultQuery={query}
                 />
             </Field>
@@ -219,7 +219,7 @@ function Large() {
         <Stack className="h-svh bg-background p-4 text-foreground sm:p-6">
             <Section title="Sites" meta={NUMBER.format(SITE_COUNT)} flush fill className="flex-1">
                 <div className="p-1">
-                    <Tree label="Sites" nodes={geography()} selected={one} onSelect={setOne} defaultOpen={EVERY_BRANCH} />
+                    <Tree label="Sites" nodes={geography()} selected={one} onSelect={setOne} defaultExpanded={EVERY_BRANCH} />
                 </div>
             </Section>
         </Stack>

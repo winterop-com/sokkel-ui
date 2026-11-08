@@ -342,8 +342,8 @@ function CalendarApp({ view: initialView = 'week', open = null }: { view?: View;
                             <MiniMonth
                                 month={mini}
                                 onMonthChange={setMini}
-                                selected={anchor}
-                                onSelect={go}
+                                value={anchor}
+                                onValueChange={go}
                                 now={NOW}
                                 range={view === 'week' ? { start: week[0], end: week[6] } : undefined}
                                 marked={EVENTS.filter((event) => event.calendar !== 'runs' && shown.includes(event.calendar)).map(
@@ -364,7 +364,7 @@ function CalendarApp({ view: initialView = 'week', open = null }: { view?: View;
                                         { value: 'week', label: phone ? 'Day' : 'Week' },
                                         { value: 'month', label: 'Month' },
                                     ]}
-                                    onChoose={setView}
+                                    onValueChange={setView}
                                 />
                             }
                         >
@@ -388,9 +388,9 @@ function CalendarApp({ view: initialView = 'week', open = null }: { view?: View;
                                 {view === 'week' ? (
                                     <DayStrip
                                         days={week}
-                                        chosen={anchor}
+                                        value={anchor}
                                         today={NOW}
-                                        onChoose={go}
+                                        onValueChange={go}
                                         className="shrink-0 border-b border-border px-2 py-2"
                                     />
                                 ) : (

@@ -56,15 +56,20 @@ const WORDS: TreeSelectWords = {
  * For a large hierarchy, `loadChildren` brings a level when it is first opened (kept for the next
  * time the popover opens), and `search` looks through the whole of it, listing each match with its
  * path. A choice not loaded yet is named by its path from `trails`, or from the search that found it.
+ *
+ * Left to itself the popover opens and closes on its own, starting at `defaultOpen`; `open` with
+ * `onOpenChange` holds it from outside.
  */
 export function TreeSelect({
     id,
     nodes,
     value,
-    onChange,
+    onValueChange,
     multiple = false,
-    defaultOpen = [],
+    defaultExpanded = [],
     open: openProp,
+    defaultOpen = false,
+    onOpenChange,
     defaultQuery = '',
     loadChildren,
     search,
@@ -76,12 +81,15 @@ export function TreeSelect({
     id?: string
     nodes: readonly TreeNode[]
     value: readonly string[]
-    onChange: (ids: string[]) => void
+    onValueChange: (ids: string[]) => void
     multiple?: boolean
-    /** The nodes open when the popover first opens. */
-    defaultOpen?: readonly string[]
-    /** Holds the popover open, for a static view of it. */
+    /** The branches unfolded when the popover first opens. */
+    defaultExpanded?: readonly string[]
+    /** Whether the popover is open, held from outside with `onOpenChange`. */
     open?: boolean
+    /** Whether the popover starts open when `open` is not given. */
+    defaultOpen?: boolean
+    onOpenChange?: (open: boolean) => void
     /** The search the popover opens with, for a static view of it. */
     defaultQuery?: string
     /** Brings the children of a node marked `hasChildren` when it is first opened. */
@@ -95,7 +103,12 @@ export function TreeSelect({
     invalid?: boolean
 }) {
     const words = { ...WORDS, ...given }
-    const [open, setOpen] = useState(openProp ?? false)
+    const [ownOpen, setOwnOpen] = useState(defaultOpen)
+    const open = openProp ?? ownOpen
+    const setOpen = (next: boolean) => {
+        if (openProp === undefined) setOwnOpen(next)
+        onOpenChange?.(next)
+    }
     const [query, setQuery] = useState(defaultQuery)
     const [loaded, setLoaded] = useState<ReadonlyMap<string, readonly TreeNode[]>>(() => new Map())
     const [picked, setPicked] = useState<ReadonlyMap<string, TreeTrail>>(() => new Map())
@@ -136,14 +149,14 @@ export function TreeSelect({
     const chosen = new Set(value)
     const unfolded = [
         ...new Set([
-            ...defaultOpen,
+            ...defaultExpanded,
             ...treeHolding(nodes, chosen, loads),
             ...known.filter((trail) => chosen.has(trail.node.id)).flatMap((trail) => trail.ancestors.map((each) => each.id)),
         ]),
     ]
 
     return (
-        <Popover open={openProp ?? open} onOpenChange={setOpen}>
+        <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger
                 id={id}
                 aria-invalid={invalid || undefined}
@@ -189,7 +202,7 @@ export function TreeSelect({
                     {value.length > 0 && (
                         <button
                             type="button"
-                            onClick={() => onChange([])}
+                            onClick={() => onValueChange([])}
                             className="flex items-center gap-1 rounded-sm text-xs text-muted-foreground hover:text-foreground"
                         >
                             <X className="size-3.5" aria-hidden />
@@ -202,7 +215,7 @@ export function TreeSelect({
                         label={words.search}
                         nodes={nodes}
                         query={query}
-                        defaultOpen={unfolded}
+                        defaultExpanded={unfolded}
                         selection={multiple ? 'multiple' : 'single'}
                         selected={value}
                         loadChildren={loadChildren === undefined ? undefined : load}
@@ -216,8 +229,8 @@ export function TreeSelect({
                             })
                             if (trailed.length > 0)
                                 setPicked((now) => new Map([...now, ...trailed.map((trail) => [trail.node.id, trail] as const)]))
-                            onChange(ids)
-                            if (!multiple && openProp === undefined) {
+                            onValueChange(ids)
+                            if (!multiple) {
                                 setOpen(false)
                                 setQuery('')
                             }

@@ -6,6 +6,15 @@ import { cn } from '../../lib/cn'
 
 import { Button } from './button'
 import { CheckIcon, CopyIcon } from 'lucide-react'
+import { useCopy } from '../../hooks/use-copy'
+
+/** The words of a code block's copy button: its name, and its name for a moment after a press. */
+export interface CodeBlockWords {
+    copy: string
+    copied: string
+}
+
+const COPY_WORDS: CodeBlockWords = { copy: 'Copy', copied: 'Copied' }
 
 const codeBlockVariants = cva(
     'group/code-block relative flex w-full min-w-0 flex-col overflow-hidden rounded-lg text-sm has-[>[data-slot=code-block-content]:focus-visible]:ring-1 has-[>[data-slot=code-block-content]:focus-visible]:ring-ring data-[size=sm]:text-xs',
@@ -85,18 +94,11 @@ function CodeBlockCopyButton({
     size = 'icon-xs',
     className,
     onClick,
+    words: given,
     ...props
-}: React.ComponentProps<typeof Button> & { value: string }) {
-    const [copied, setCopied] = React.useState(false)
-
-    React.useEffect(() => {
-        if (!copied) {
-            return
-        }
-
-        const timeout = setTimeout(() => setCopied(false), 2000)
-        return () => clearTimeout(timeout)
-    }, [copied])
+}: React.ComponentProps<typeof Button> & { value: string; words?: Partial<CodeBlockWords> }) {
+    const words = { ...COPY_WORDS, ...given }
+    const { copied, copy } = useCopy()
 
     return (
         <>
@@ -105,21 +107,18 @@ function CodeBlockCopyButton({
                 data-copied={copied || undefined}
                 variant={variant}
                 size={size}
-                aria-label={copied ? 'Copied' : 'Copy'}
+                aria-label={copied ? words.copied : words.copy}
                 className={cn(className)}
                 onClick={(event) => {
                     onClick?.(event)
-                    navigator.clipboard
-                        .writeText(value)
-                        .then(() => setCopied(true))
-                        .catch(() => {})
+                    copy(value)
                 }}
                 {...props}
             >
                 {copied ? <CheckIcon /> : <CopyIcon />}
             </Button>
             <span aria-live="polite" className="sr-only">
-                {copied ? 'Copied' : ''}
+                {copied ? words.copied : ''}
             </span>
         </>
     )

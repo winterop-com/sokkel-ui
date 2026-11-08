@@ -222,9 +222,6 @@ function Workspace({
 }) {
     const defaults = fromGlobals(globals)
     const { settings, setSettings } = useAppearance(defaults)
-    const [rail, setRail] = useState(240)
-    const [panel, setPanel] = useState(352)
-    const [dockSize, setDockSize] = useState(200)
     const [dockOpen, setDockOpen] = useStored('runs.dock', true, KEPT)
     const [group, setGroup] = useStored<'none' | 'job'>(grouped ? 'runs.group-job' : 'runs.group', grouped ? 'job' : 'none', {
         ...KEPT,
@@ -245,11 +242,9 @@ function Workspace({
                         mark={<TidevannMark />}
                         name="Tidevann"
                         groups={GROUPS}
-                        defaultOpen={['projects']}
+                        defaultExpanded={['projects']}
                         collapsed={collapsed}
                         onCollapsedChange={setCollapsed}
-                        width={rail}
-                        onWidthChange={setRail}
                         foot={
                             palette ? (
                                 <AccountMenu
@@ -292,9 +287,7 @@ function Workspace({
                             { id: 'details', label: 'Details', content: <Details run={chosen} /> },
                             { id: 'log', label: 'Log', content: <LogView lines={LOG} wrap numbered={false} className="m-3" /> },
                         ]}
-                        active="details"
-                        size={panel}
-                        onSizeChange={setPanel}
+                        defaultActive="details"
                     />
                 }
             >
@@ -331,11 +324,13 @@ function Workspace({
                                         <Segmented
                                             label="Group"
                                             value={group}
-                                            options={[
-                                                { value: 'none', label: 'No groups' },
-                                                { value: 'job', label: 'By job' },
-                                            ]}
-                                            onChoose={setGroup}
+                                            options={
+                                                [
+                                                    { value: 'none', label: 'No groups' },
+                                                    { value: 'job', label: 'By job' },
+                                                ] as const
+                                            }
+                                            onValueChange={setGroup}
                                         />
                                     </>
                                 }
@@ -355,14 +350,8 @@ function Workspace({
                         </Page>
                     </div>
                     {dock && (
-                        <Dock
-                            title="Log, nightly-export"
-                            open={dockOpen}
-                            onOpenChange={setDockOpen}
-                            size={dockSize}
-                            onSizeChange={setDockSize}
-                        >
-                            <LogView lines={LOG} className="rounded-none" />
+                        <Dock title="Log, nightly-export" open={dockOpen} onOpenChange={setDockOpen} defaultSize={200}>
+                            <LogView lines={LOG} framed={false} />
                         </Dock>
                     )}
                 </Stack>

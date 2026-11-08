@@ -177,7 +177,6 @@ const TITLES: Record<View, string> = { members: 'Members', roles: 'Roles', token
 
 const trail = (view: View): Crumb[] => [{ label: 'Tidevann', href: '#' }, { label: 'Admin', href: '#' }, { label: TITLES[view] }]
 
-/** A person's round mark: their picture, or the first letter of their username or address. */
 /* Members */
 
 const memberColumns: DataColumn<Member>[] = [
@@ -283,7 +282,7 @@ function RoleChoice({ id, label, value, onChange }: { id: string; label: string;
                 labelledBy={id}
                 value={value}
                 onValueChange={onChange}
-                choices={ROLE_IDS.filter((role) => role !== 'owner').map((role) => ({
+                options={ROLE_IDS.filter((role) => role !== 'owner').map((role) => ({
                     value: role,
                     label: ROLE_LABEL[role],
                     description: ROLE_ABOUT[role],
@@ -858,7 +857,7 @@ function TokenDialog({
                     size="md"
                     fill
                     value={expires}
-                    onChoose={setExpires}
+                    onValueChange={setExpires}
                     options={[
                         { value: '30', label: '30 days' },
                         { value: '90', label: '90 days' },

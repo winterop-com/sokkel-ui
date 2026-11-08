@@ -3,6 +3,17 @@ import { Dialog } from '@base-ui/react/dialog'
 import { cn } from '../lib/cn'
 import { ImageAnnotations, type ImageBox } from './ImageAnnotations'
 
+/** The words an image lightbox says. */
+export interface ImageLightboxWords {
+    open: string
+    close: string
+}
+
+const WORDS: ImageLightboxWords = {
+    open: 'Open the image full screen',
+    close: 'Close',
+}
+
 /**
  * An image that opens full screen when pressed: a chart an assistant drew, a screenshot someone
  * attached. A press anywhere or Escape closes it, and focus returns to the image.
@@ -17,7 +28,7 @@ export function ImageLightbox({
     boxes,
     numbered = false,
     format,
-    words = { open: 'Open the image full screen', close: 'Close' },
+    words: given,
 }: {
     src: string
     alt: string
@@ -29,8 +40,9 @@ export function ImageLightbox({
     numbered?: boolean
     /** How a box's confidence is written; a whole percent by default. */
     format?: (value: number) => string
-    words?: { open: string; close: string }
+    words?: Partial<ImageLightboxWords>
 }) {
+    const words = { ...WORDS, ...given }
     return (
         <Dialog.Root defaultOpen={defaultOpen}>
             <Dialog.Trigger

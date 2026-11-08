@@ -129,7 +129,7 @@ function LiveTune() {
     }
     return (
         <Stack gap="md" className="h-svh bg-background p-4 text-foreground sm:p-6">
-            <Toolbar end={<Segmented label="Kind" value={kind} options={KINDS} onChoose={setKind} />}>
+            <Toolbar end={<Segmented label="Kind" value={kind} options={KINDS} onValueChange={setKind} />}>
                 <PlayButton playing={playing} onToggle={toggle} words={{ play: 'Play', pause: 'Pause' }} />
                 <MetaLine items={['A tune made in the page', '0:08, looping']} />
             </Toolbar>

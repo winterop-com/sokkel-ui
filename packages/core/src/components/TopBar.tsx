@@ -33,8 +33,16 @@ export interface TopBarProps {
     shortcut?: string
     actions?: ReactNode
     renderLink?: (crumb: Crumb, className: string) => ReactNode
-    words?: { search: string; trail: string }
+    words?: Partial<TopBarWords>
 }
+
+/** The words a top bar says. */
+export interface TopBarWords {
+    search: string
+    trail: string
+}
+
+const WORDS: TopBarWords = { search: 'Search', trail: 'Where you are' }
 
 /**
  * What the shell's top bar holds: the trail to the current screen at the left, the search that
@@ -47,18 +55,19 @@ export function TopBar({
     mark,
     onSearch,
     search: field,
-    shortcut: given,
+    shortcut: shortcutGiven,
     actions,
     renderLink = (crumb, className) => (
         <a href={crumb.href} className={className}>
             {crumb.label}
         </a>
     ),
-    words = { search: 'Search', trail: 'Where you are' },
+    words: given,
 }: TopBarProps) {
+    const words = { ...WORDS, ...given }
     const shellPalette = useContext(ShellPalette)
     const search = onSearch ?? shellPalette
-    const shortcut = given ?? (shellPalette === undefined ? undefined : shortcutLabel('k'))
+    const shortcut = shortcutGiven ?? (shellPalette === undefined ? undefined : shortcutLabel('k'))
     return (
         <div className="flex h-full min-w-0 flex-1 items-center gap-3">
             {mark !== undefined && (

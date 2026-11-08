@@ -375,7 +375,13 @@ export function MoveTo() {
                     </p>
                 </Field>
                 <Field id="move-to" label="To" required help="A job in another project takes on that project’s secrets and access.">
-                    <TreeSelect id="move-to" nodes={FOLDERS} value={to} onChange={setTo} defaultOpen={['harbor', 'harbor/imports']} />
+                    <TreeSelect
+                        id="move-to"
+                        nodes={FOLDERS}
+                        value={to}
+                        onValueChange={setTo}
+                        defaultExpanded={['harbor', 'harbor/imports']}
+                    />
                 </Field>
             </DialogShell>
         </Behind>

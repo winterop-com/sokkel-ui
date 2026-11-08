@@ -155,12 +155,16 @@ the grid alike.
 
 `WindowedPane` gives any pane an expand button that opens the same content near full screen, in a
 window with a margin, a title, a close button and Escape, the pane keeping its height in place
-until the content comes back; `MermaidDiagram` sets the button in its own toolbar. `useStored` keeps
-a value in `localStorage` as JSON under an app prefix (`setStoredPrefix`), in memory when storage
-is refused, and follows the same key in other hooks and other tabs; `useAppearance` keeps the look
-through the same store. `useUploads` runs the app's `upload(file, { signal, onProgress })` for each
-file it accepts by type, size and count, says why it refuses the rest, cancels through the signal,
-and hands `AttachmentList` its files, `onRemove` and `onCancel`. `ConversationHistory`, the list
+until the content comes back; `MermaidDiagram` and an expandable `DashboardPanel` open through it.
+`useStored` keeps a value in `localStorage` as JSON under an app prefix (`setStoredPrefix`), in
+memory when storage is refused, refusing a kept value its `check` does not pass, and follows the
+same key in other hooks and other tabs; `useAppearance` keeps the look through the same store. A
+fact several screens share lives in a `createStore` outside React (kept under a key when given
+one), read with `useStore`, or one fact of it with `useStoreValue` so a store that changes often
+draws again only what reads the changed fact. `useUploads` runs the app's
+`upload(file, { signal, onProgress })` for each file it accepts by type, size and count, says why
+it refuses the rest, cancels through the signal (and drops what an uploader that ignores it answers
+later), and hands `AttachmentList`, `Composer` and `UploadTray` their files. `ConversationHistory`, the list
 beside a chat, is a `DataTable` list grouped under Pinned, Today and Earlier, with rename in place,
 pin, and delete after a question.
 

@@ -54,7 +54,7 @@ export function BarGauge({
     span?: PanelSpan
     loading?: boolean
     empty?: boolean
-    words?: ChartFrameWords
+    words?: Partial<ChartFrameWords>
     className?: string
 }) {
     const write = valueWriter(unit, decimals, format)

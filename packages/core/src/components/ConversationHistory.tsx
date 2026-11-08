@@ -204,7 +204,8 @@ export function ConversationHistory({
                 columnHeads={false}
                 stackBelow={false}
                 resizable={false}
-                className={cn(!framed && 'rounded-none border-y-0 border-l-0', className)}
+                framed={framed}
+                className={cn(!framed && 'border-r border-border-strong', className)}
                 columns={columns}
                 rows={rows}
                 rowKey={(entry) => entry.id}

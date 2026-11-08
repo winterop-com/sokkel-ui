@@ -12,7 +12,7 @@ export interface StatWords {
     info: string
     loading: string
     /** Written before the target's value. */
-    target?: string
+    target: string
 }
 
 const WORDS: StatWords = { noData: 'No data', info: 'About this panel', loading: 'Loading', target: 'Target' }
@@ -117,7 +117,7 @@ export function StatPanel({
     info,
     span = 'sixth',
     loading = false,
-    words = WORDS,
+    words: given,
     className,
 }: {
     title: ReactNode
@@ -145,9 +145,10 @@ export function StatPanel({
     info?: ReactNode
     span?: PanelSpan
     loading?: boolean
-    words?: StatWords
+    words?: Partial<StatWords>
     className?: string
 }) {
+    const words = { ...WORDS, ...given }
     const tone = value === null ? undefined : (thresholdColor(value, thresholds) ?? color)
     const filled = colorMode === 'background' && tone !== undefined
     const inked = colorMode === 'value' && tone !== undefined
@@ -235,7 +236,7 @@ export function StatPanel({
                             target={target}
                             range={targetRange}
                             written={`${format !== undefined ? format(target) : formatValue(target, decimals)}${typeof unit === 'string' ? unit : ''}`}
-                            label={words.target ?? 'Target'}
+                            label={words.target}
                             filled={filled}
                         />
                     )}

@@ -41,7 +41,7 @@ type Answer<T> =
 export function AsyncSelect<T>({
     id,
     value,
-    onChange,
+    onValueChange,
     load,
     itemKey,
     itemLabel,
@@ -56,7 +56,7 @@ export function AsyncSelect<T>({
 }: {
     id?: string
     value: T | null
-    onChange: (value: T | null) => void
+    onValueChange: (value: T | null) => void
     /** Answers a query with the options for it; the signal aborts when a newer query replaces it. */
     load: (query: string, signal: AbortSignal) => Promise<T[]>
     itemKey: (item: T) => string
@@ -122,7 +122,7 @@ export function AsyncSelect<T>({
             filter={null}
             autoHighlight
             value={value}
-            onValueChange={(next) => onChange(next as T | null)}
+            onValueChange={(next) => onValueChange(next as T | null)}
             inputValue={query}
             onInputValueChange={(next) => {
                 setQuery(next)

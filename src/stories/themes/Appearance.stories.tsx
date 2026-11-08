@@ -34,7 +34,7 @@ function SchemeDemo({ globals }: { globals: Record<string, unknown> }) {
                 <Segmented
                     label="Scheme"
                     value={scheme}
-                    onChoose={setScheme}
+                    onValueChange={setScheme}
                     options={[
                         { value: 'system', label: 'System' },
                         { value: 'light', label: 'Light' },
