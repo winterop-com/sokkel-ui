@@ -122,6 +122,7 @@ function CaptionsKept() {
             <VideoPlayer
                 src={`${clip}#t=24`}
                 preload="auto"
+                crossOrigin="anonymous"
                 defaultControlsVisible
                 title="Coastline, morning to evening"
                 tracks={ENGLISH}
@@ -303,7 +304,8 @@ export const ControlsShown: StoryObj = {
  * The captions menu: the tracks and Off, then the text's size, ink, background and edge, each a
  * submenu. The app's `captionDefaults` start the text at half its usual size; what the viewer
  * picks, and the track, go to the store the app hands as `captionStore` (by default `localStorage`
- * through `useStored`), read back under the player.
+ * through `useStored`), read back under the player. `crossOrigin` fetches the tracks with CORS, as
+ * captions served from another origin need.
  */
 export const Captions: StoryObj = { render: () => <CaptionsKept /> }
 

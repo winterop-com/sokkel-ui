@@ -186,6 +186,12 @@ export interface VideoPlayerProps {
     poster?: string
     tracks?: readonly VideoTrack[]
     /**
+     * Fetches the media and its tracks with CORS, as the `<video>` element's `crossorigin`: needed for
+     * captions served from another origin, whose server must then allow it, and the media's too.
+     * `use-credentials` sends the viewer's cookies with each request.
+     */
+    crossOrigin?: 'anonymous' | 'use-credentials'
+    /**
      * How captions look until the viewer chooses otherwise in the captions menu: words on the
      * picture, outlined, with no box, at the usual size, unless given here, such as `{ size: 0.5 }`
      * for half of it.
@@ -348,6 +354,7 @@ export function VideoPlayer({
     title,
     poster,
     tracks = [],
+    crossOrigin,
     captionDefaults,
     captionStore,
     rates = MEDIA_RATES,
@@ -974,6 +981,7 @@ export function VideoPlayer({
                 loop={loop}
                 muted={startMuted}
                 preload={preload}
+                crossOrigin={crossOrigin}
                 playsInline
                 className="absolute inset-0 size-full object-contain"
             >

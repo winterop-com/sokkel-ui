@@ -640,7 +640,9 @@ whose buffer stalled while away is moved a hair to wake it, unless a pause was a
 handle meanwhile. `keys={false}` leaves every key to the app, whose shortcuts drive it through the
 handle on `ref` (`play`, `pause`, `toggle`, `seekTo`, held until the media can take it, `seekBy`,
 `setVolume`, `toggleMute`, `toggleFullscreen`, `retry`, `stats`, and what it plays, where and how
-loud); `onFullscreenChange` says when the picture fills the screen.
+loud); `onFullscreenChange` says when the picture fills the screen. `crossOrigin` is the video
+element's `crossorigin`, so captions served from another origin load, the media then fetched with
+CORS too.
 
 Captions are words on the picture, outlined with no box, in `--caption-*` tokens, sized against
 the player's width (`--caption-size`, never under `--caption-size-min`). The captions button opens
