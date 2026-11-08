@@ -84,7 +84,7 @@ export function ThemePicker({
     return (
         <div data-slot="theme-picker" className={cn('flex flex-col gap-4', className)}>
             <Row label={words.theme}>
-                <Choice label={words.theme} value={value.theme} options={themes} onChoose={(next) => set('theme', next)} />
+                <Choice label={words.theme} value={value.theme} options={themes} onValueChange={(next) => set('theme', next)} />
             </Row>
             <Row label={words.scheme}>
                 <Segmented
@@ -96,7 +96,7 @@ export function ThemePicker({
                         ...(system ? [{ value: 'system' as const, label: words.system }] : []),
                     ]}
                     fill
-                    onChoose={(next) => set('scheme', next)}
+                    onValueChange={(next) => set('scheme', next)}
                 />
             </Row>
             {levels.length > 0 && (
@@ -106,18 +106,23 @@ export function ThemePicker({
                         value={value.density}
                         options={levels}
                         fill
-                        onChoose={(next) => set('density', next)}
+                        onValueChange={(next) => set('density', next)}
                     />
                 </Row>
             )}
             {corners !== undefined && corners.length > 0 && (
                 <Row label={words.corners}>
-                    <Choice label={words.corners} value={value.corners} options={corners} onChoose={(next) => set('corners', next)} />
+                    <Choice label={words.corners} value={value.corners} options={corners} onValueChange={(next) => set('corners', next)} />
                 </Row>
             )}
             {typefaces !== undefined && typefaces.length > 0 && (
                 <Row label={words.typeface}>
-                    <Choice label={words.typeface} value={value.typeface} options={typefaces} onChoose={(next) => set('typeface', next)} />
+                    <Choice
+                        label={words.typeface}
+                        value={value.typeface}
+                        options={typefaces}
+                        onValueChange={(next) => set('typeface', next)}
+                    />
                 </Row>
             )}
             {value.motion !== undefined && (
@@ -131,7 +136,7 @@ export function ThemePicker({
                             { value: 'off', label: words.motionOff },
                         ]}
                         fill
-                        onChoose={(next) => set('motion', next)}
+                        onValueChange={(next) => set('motion', next)}
                     />
                 </Row>
             )}
@@ -154,19 +159,19 @@ function Choice({
     label,
     value,
     options,
-    onChoose,
+    onValueChange,
 }: {
     label: string
     value: string
     options: readonly ThemeOption[]
-    onChoose: (value: string) => void
+    onValueChange: (value: string) => void
 }) {
     const swatches = options.some((option) => option.swatch === true)
     return (
         <Select
             items={options.map((option) => ({ value: option.value, label: option.label }))}
             value={value}
-            onValueChange={(next) => next !== null && onChoose(next)}
+            onValueChange={(next) => next !== null && onValueChange(next)}
         >
             <SelectTrigger className="w-full" aria-label={label}>
                 <SelectValue>

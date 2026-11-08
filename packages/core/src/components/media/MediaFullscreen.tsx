@@ -149,7 +149,7 @@ function KindPicker({
             label={words.visualizerKind}
             value={kind}
             options={KINDS.map((value) => ({ value, label: words[value] }))}
-            onChoose={onKindChange}
+            onValueChange={onKindChange}
         />
     )
 }

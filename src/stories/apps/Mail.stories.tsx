@@ -621,7 +621,7 @@ function List({
                             { value: 'all', label: 'All' },
                             { value: 'unread', label: 'Unread' },
                         ]}
-                        onChoose={setOnly}
+                        onValueChange={setOnly}
                     />
                 )}
             </Toolbar>

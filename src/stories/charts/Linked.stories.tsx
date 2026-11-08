@@ -104,7 +104,7 @@ export const Zoomed: StoryObj = {
                     subtitle="per day, August in view"
                     label="Each region's river flow per day, zoomed in to August"
                     bodyClassName="h-96"
-                    actions={<Segmented label="Scale" value={scales} options={SCALES} onChoose={setScales} />}
+                    actions={<Segmented label="Scale" value={scales} options={SCALES} onValueChange={setScales} />}
                 />
             </Ground>
         )

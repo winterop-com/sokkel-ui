@@ -273,7 +273,7 @@ export function DetailsSheet() {
                                         { value: 'normal', label: 'Normal' },
                                         { value: 'high', label: 'High' },
                                     ]}
-                                    onChoose={(priority) => setDraft({ ...draft, priority })}
+                                    onValueChange={(priority) => setDraft({ ...draft, priority })}
                                     fill
                                 />
                             </Field>
@@ -429,7 +429,7 @@ export function BulkEdit() {
                             { value: 'normal', label: 'Normal' },
                             { value: 'high', label: 'High' },
                         ]}
-                        onChoose={setPriority}
+                        onValueChange={setPriority}
                         fill
                     />
                 </Field>
@@ -442,7 +442,7 @@ export function BulkEdit() {
                             { value: 'paused', label: 'Paused' },
                             { value: 'running', label: 'Running' },
                         ]}
-                        onChoose={setPaused}
+                        onValueChange={setPaused}
                         fill
                     />
                 </Field>

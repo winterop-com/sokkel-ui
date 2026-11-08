@@ -52,6 +52,21 @@ export interface RailGroup {
     entries: RailEntry[]
 }
 
+/** The words the rail says; `unread` names the dot of an entry with something new and no count. */
+export interface RailWords {
+    collapse: string
+    expand: string
+    resize: string
+    unread: string
+}
+
+const WORDS: RailWords = {
+    collapse: 'Collapse the navigation',
+    expand: 'Expand the navigation',
+    resize: 'Resize the navigation',
+    unread: 'Unread',
+}
+
 /**
  * The app's left navigation: a head with the app's mark and the collapse control, the groups,
  * and a foot cell the shell's foot strip lines up with. In a shell with a `bottom` strip, such as
@@ -68,7 +83,7 @@ export interface RailGroup {
  * the bottom, such as an add button and the account's avatar. A strip neither collapses nor resizes.
  *
  * Expanded, its right edge drags to resize it, and a double click on the edge puts it back. Left
- * to itself it holds its own width, starting at `defaultWidth`; `width` with `onWidthChange` holds
+ * to itself it holds its own width, starting at `defaultSize`; `size` with `onSizeChange` holds
  * it from outside, and `resizable={false}` keeps it fixed. In the shell's drawer on a narrow window
  * the edge is not drawn.
  *
@@ -76,8 +91,8 @@ export interface RailGroup {
  * entries, indented under it and lined up under its label; a parent without an `href` of its own
  * folds on a press anywhere on its row, and the keyboard's right and left arrows unfold and fold
  * it. A parent holding the active entry starts unfolded, its label set apart, and wears the accent
- * itself while folded. The rail holds which parents are unfolded, starting from `defaultOpen`;
- * `open` with `onOpenChange` holds them from outside. Collapsed or as a strip, a parent opens its
+ * itself while folded. The rail holds which parents are unfolded, starting from `defaultExpanded`;
+ * `expanded` with `onExpandedChange` holds them from outside. Collapsed or as a strip, a parent opens its
  * entries in a small flyout beside it; `defaultFlyout` names one that starts open.
  *
  * `renderLink` draws an entry's link, so an app passes its router's link; by default it is an
@@ -96,16 +111,16 @@ export function Rail({
             {children}
         </a>
     ),
-    width,
-    onWidthChange,
+    size,
+    onSizeChange,
     resizable = true,
-    minWidth = 200,
-    maxWidth = 360,
-    defaultWidth = 240,
-    labels = { collapse: 'Collapse the navigation', expand: 'Expand the navigation', resize: 'Resize the navigation' },
-    open,
-    onOpenChange,
-    defaultOpen = [],
+    minSize = 200,
+    maxSize = 360,
+    defaultSize = 240,
+    words: given,
+    expanded,
+    onExpandedChange,
+    defaultExpanded = [],
     defaultFlyout,
 }: {
     /** The app's mark, drawn in a small tile; in a strip, the workspace's tile at the top. */
@@ -120,51 +135,51 @@ export function Rail({
     /** What stands in the rail's foot cell, normally the account control; in a strip, the items stacked at its foot. */
     foot?: ReactNode
     renderLink?: (entry: RailEntry, children: ReactNode, className: string) => ReactNode
-    /** The expanded width in pixels, held from outside with `onWidthChange`. */
-    width?: number
-    onWidthChange?: (width: number) => void
+    /** The expanded width in pixels, held from outside with `onSizeChange`. */
+    size?: number
+    onSizeChange?: (size: number) => void
     /** Whether the expanded rail's edge drags to resize it. */
     resizable?: boolean
-    minWidth?: number
-    maxWidth?: number
+    minSize?: number
+    maxSize?: number
     /** The expanded width the rail starts at and a double click on the edge returns to. */
-    defaultWidth?: number
-    /** `unread` names the dot of an entry with something new and no count. */
-    labels?: { collapse: string; expand: string; resize: string; unread?: string }
-    /** The ids of the unfolded parents, held from outside with `onOpenChange`. */
-    open?: string[]
-    onOpenChange?: (open: string[]) => void
+    defaultSize?: number
+    words?: Partial<RailWords>
+    /** The ids of the unfolded parents, held from outside with `onExpandedChange`. */
+    expanded?: string[]
+    onExpandedChange?: (expanded: string[]) => void
     /** The parents unfolded at the start, beside those holding the active entry. */
-    defaultOpen?: string[]
+    defaultExpanded?: string[]
     /** The parent whose flyout stands open at the start in a collapsed rail or a strip. */
     defaultFlyout?: string
 }) {
     const aside = useRef<HTMLElement>(null)
     const footCell = useContext(ShellFootCell)
-    const unread = labels.unread ?? 'Unread'
+    const words = { ...WORDS, ...given }
+    const unread = words.unread
     const [ownOpen, setOwnOpen] = useState<string[]>(() => [
         ...new Set([
-            ...defaultOpen,
+            ...defaultExpanded,
             ...groups
                 .flatMap((group) => group.entries)
                 .filter(holdsActive)
                 .map((entry) => entry.id),
         ]),
     ])
-    const unfolded = open ?? ownOpen
+    const unfolded = expanded ?? ownOpen
     const fold = (id: string, next: boolean) => {
         const rest = unfolded.filter((other) => other !== id)
         const list = next ? [...rest, id] : rest
-        if (open === undefined) setOwnOpen(list)
-        onOpenChange?.(list)
+        if (expanded === undefined) setOwnOpen(list)
+        onExpandedChange?.(list)
     }
     const held = usePanelSize({
-        size: width,
-        onSizeChange: onWidthChange,
-        rest: defaultWidth,
-        fallback: defaultWidth,
-        min: minWidth,
-        max: maxWidth,
+        size,
+        onSizeChange,
+        rest: defaultSize,
+        fallback: defaultSize,
+        min: minSize,
+        max: maxSize,
     })
     if (variant === 'strip')
         return <Strip mark={mark} name={name} groups={groups} foot={foot} renderLink={renderLink} unread={unread} flyout={defaultFlyout} />
@@ -183,8 +198,8 @@ export function Rail({
                     {collapsed ? (
                         <button
                             type="button"
-                            aria-label={labels.expand}
-                            title={labels.expand}
+                            aria-label={words.expand}
+                            title={words.expand}
                             className="group/mark relative mx-auto flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground"
                             onClick={() => onCollapsedChange?.(false)}
                         >
@@ -205,8 +220,8 @@ export function Rail({
                             {onCollapsedChange !== undefined && (
                                 <button
                                     type="button"
-                                    aria-label={labels.collapse}
-                                    title={labels.collapse}
+                                    aria-label={words.collapse}
+                                    title={words.collapse}
                                     className="ml-auto flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-hover hover:text-foreground"
                                     onClick={() => onCollapsedChange(true)}
                                 >
@@ -274,9 +289,9 @@ export function Rail({
                     size={held.size}
                     onSize={held.set}
                     onReset={held.reset}
-                    min={minWidth}
-                    max={maxWidth}
-                    label={labels.resize}
+                    min={minSize}
+                    max={maxSize}
+                    label={words.resize}
                 />
             )}
         </>

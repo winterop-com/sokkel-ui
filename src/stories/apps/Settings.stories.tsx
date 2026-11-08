@@ -55,7 +55,7 @@ function usePreferences(): SettingsGroup[] {
                                 <Segmented
                                     label="Start page"
                                     value={start}
-                                    onChoose={setStart}
+                                    onValueChange={setStart}
                                     options={[
                                         { value: 'overview', label: 'Overview' },
                                         { value: 'projects', label: 'Projects' },
@@ -72,7 +72,7 @@ function usePreferences(): SettingsGroup[] {
                                 <Segmented
                                     label="Time format"
                                     value={clock}
-                                    onChoose={setClock}
+                                    onValueChange={setClock}
                                     options={[
                                         { value: '24', label: '24-hour' },
                                         { value: '12', label: '12-hour' },
@@ -143,7 +143,7 @@ function usePreferences(): SettingsGroup[] {
                                 <Segmented
                                     label="Scheme"
                                     value={scheme}
-                                    onChoose={setScheme}
+                                    onValueChange={setScheme}
                                     options={[
                                         { value: 'system', label: 'System' },
                                         { value: 'light', label: 'Light' },
@@ -160,7 +160,7 @@ function usePreferences(): SettingsGroup[] {
                                 <Segmented
                                     label="Density"
                                     value={density}
-                                    onChoose={setDensity}
+                                    onValueChange={setDensity}
                                     options={[
                                         { value: 'regular', label: 'Regular' },
                                         { value: 'compact', label: 'Compact' },
@@ -283,7 +283,7 @@ function usePreferences(): SettingsGroup[] {
                                 <Segmented
                                     label="Run history"
                                     value={history}
-                                    onChoose={setHistory}
+                                    onValueChange={setHistory}
                                     options={[
                                         { value: '30', label: '30 days' },
                                         { value: '90', label: '90 days' },
@@ -363,7 +363,7 @@ function SettingsApp({ opening }: { opening?: Opening }) {
                                         fill
                                         label="Scheme"
                                         value={scheme}
-                                        onChoose={setScheme}
+                                        onValueChange={setScheme}
                                         options={[
                                             { value: 'system', label: 'System' },
                                             { value: 'light', label: 'Light' },
@@ -377,7 +377,7 @@ function SettingsApp({ opening }: { opening?: Opening }) {
                                         fill
                                         label="Density"
                                         value={density}
-                                        onChoose={setDensity}
+                                        onValueChange={setDensity}
                                         options={[
                                             { value: 'regular', label: 'Regular' },
                                             { value: 'compact', label: 'Compact' },
@@ -403,7 +403,7 @@ function SettingsApp({ opening }: { opening?: Opening }) {
                                         fill
                                         label="Schedule clock"
                                         value={clock}
-                                        onChoose={setClock}
+                                        onValueChange={setClock}
                                         options={[
                                             { value: 'utc', label: 'UTC' },
                                             { value: 'local', label: 'Server time' },

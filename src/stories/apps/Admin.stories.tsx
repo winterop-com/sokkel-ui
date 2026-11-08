@@ -292,7 +292,7 @@ function RoleChoice({ id, label, value, onChange }: { id: string; label: string;
                 labelledBy={id}
                 value={value}
                 onValueChange={onChange}
-                choices={ROLE_IDS.filter((role) => role !== 'owner').map((role) => ({
+                options={ROLE_IDS.filter((role) => role !== 'owner').map((role) => ({
                     value: role,
                     label: ROLE_LABEL[role],
                     description: ROLE_ABOUT[role],
@@ -867,7 +867,7 @@ function TokenDialog({
                     size="md"
                     fill
                     value={expires}
-                    onChoose={setExpires}
+                    onValueChange={setExpires}
                     options={[
                         { value: '30', label: '30 days' },
                         { value: '90', label: '90 days' },

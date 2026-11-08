@@ -18,7 +18,7 @@ const ON_FAILURE = [
 export const Described: StoryObj = {
     render: function Render() {
         const [value, setValue] = useState<(typeof ON_FAILURE)[number]['value']>('retry')
-        return <ChoiceList label="When a step fails" choices={ON_FAILURE} value={value} onValueChange={setValue} className="max-w-md" />
+        return <ChoiceList label="When a step fails" options={ON_FAILURE} value={value} onValueChange={setValue} className="max-w-md" />
     },
 }
 
@@ -38,7 +38,7 @@ export const People: StoryObj = {
                 value={to}
                 onValueChange={setTo}
                 className="max-w-md"
-                choices={PEOPLE.map((person) => ({
+                options={PEOPLE.map((person) => ({
                     value: person.username,
                     label: (
                         <PersonRow name={person.username} image={pictureOf(person.username)} detail={person.email} aside={person.role} />

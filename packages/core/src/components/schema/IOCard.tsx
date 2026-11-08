@@ -43,7 +43,7 @@ function Side({ label, side, words }: { label: string; side?: IOSide; words: IOC
                     <Segmented
                         label={`${label}: ${words.schema} or ${words.example}`}
                         value={view}
-                        onChoose={setView}
+                        onValueChange={setView}
                         options={[
                             { value: 'schema', label: words.schema },
                             { value: 'example', label: words.example },

@@ -187,7 +187,7 @@ export function Tree({
     selected = [],
     onSelect,
     query = '',
-    defaultOpen = [],
+    defaultExpanded = [],
     loadChildren,
     search,
     trails = [],
@@ -200,7 +200,7 @@ export function Tree({
     selected?: readonly string[]
     onSelect?: (ids: string[]) => void
     query?: string
-    defaultOpen?: readonly string[]
+    defaultExpanded?: readonly string[]
     /** Brings the children of a node marked `hasChildren`; a rejection shows a row to try again. */
     loadChildren?: (node: TreeNode) => Promise<readonly TreeNode[]>
     /** Answers a query over the whole hierarchy with each match and its ancestors; without it the query searches the loaded nodes. */
@@ -213,7 +213,7 @@ export function Tree({
     className?: string
 }) {
     const words = { ...WORDS, ...given }
-    const [open, setOpen] = useState<Set<string>>(() => new Set(defaultOpen))
+    const [open, setOpen] = useState<Set<string>>(() => new Set(defaultExpanded))
     const [loads, setLoads] = useState<Map<string, TreeLoad>>(() => new Map())
     const asked = useRef(new Set<string>())
     const loader = useRef(loadChildren)
