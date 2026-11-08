@@ -291,6 +291,7 @@ html.dark[data-theme='tokyo'] {
     --chart-text-size: 0.6875rem;
     --chart-text-size-small: 0.625rem;
     --chart-stat-size: 1.5rem;
+    --chart-stat-size-small: 1.125rem;
     --shade: oklch(0 0 0);
     --on-shade: oklch(1 0 0);
     --globe-space: #05080f;
@@ -439,6 +440,7 @@ html.dark[data-theme='tokyo'] {
     --chart-text-size: 0.6875rem;
     --chart-text-size-small: 0.625rem;
     --chart-stat-size: 1.5rem;
+    --chart-stat-size-small: 1.125rem;
     --shade: oklch(0 0 0);
     --on-shade: oklch(1 0 0);
     --globe-space: #05080f;

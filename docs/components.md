@@ -324,7 +324,7 @@ being uploaded through `useUploads` (`hooks/use-uploads`), which feeds `Attachme
 
 | Component | Import | What it is | Story |
 | --- | --- | --- | --- |
-| **DashboardGrid**, DashboardPanel, KpiRow | `@winterop-com/sokkel-ui/dashboard/DashboardGrid` | The grid a dashboard's panels sit in: twelve columns on a wide screen, six on a tablet, one on a phone, with panels in a row stretched to the same height. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/charts-gauges--arc) |
+| **DashboardGrid**, DashboardPanel, KpiRow | `@winterop-com/sokkel-ui/dashboard/DashboardGrid` | The grid a dashboard's panels sit in: twelve columns on a wide screen, six on a tablet, two on a phone, with panels in a row stretched to the same height. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/charts-gauges--arc) |
 | **DashboardRow** | `@winterop-com/sokkel-ui/dashboard/DashboardRow` | A collapsible group of a dashboard's panels under a heading, such as Overview or Latency. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-dashboard-panels--stat-tiles) |
 | **ScoreTable** | `@winterop-com/sokkel-ui/dashboard/ScoreTable` | A scorecard: rows of places, teams or jobs against columns of periods or measures, each value colored by the band it falls in on a threshold scale. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/charts-scorecard--periods) |
 | **StatPanel** | `@winterop-com/sokkel-ui/dashboard/StatPanel` | One reading as a dashboard tile: a small title, the value written large, and optionally a trend drawn faintly behind it and a change against an earlier period. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/charts-tiles--targets) |

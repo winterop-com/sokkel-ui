@@ -1,7 +1,8 @@
 import { Code2, Image } from 'lucide-react'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { cssPixels } from '../lib/css-pixels'
 import { CopyButton } from './CopyButton'
 import { useWindowedPane, WindowedPane, WindowedPaneButton } from './WindowedPane'
 
@@ -82,7 +83,18 @@ function themeVariables(host: HTMLElement): Record<string, string> {
     }
 }
 
-async function render(code: string, host: HTMLElement): Promise<string> {
+/** A drawn diagram: its SVG and the least width it is shown at, in pixels. */
+interface Drawn {
+    svg: string
+    least: number
+}
+
+/**
+ * Draws the diagram. Its labels are `--text-xs`; it may shrink to fit its box until they are
+ * `--text-2xs`, the smallest text the tokens have, and no further, so `least` is its own width at
+ * that scale.
+ */
+async function render(code: string, host: HTMLElement): Promise<Drawn> {
     const mermaid = (await import('mermaid')).default
     const radius = getComputedStyle(host).getPropertyValue('--radius').trim() || '4px'
     mermaid.initialize({
@@ -97,7 +109,9 @@ async function render(code: string, host: HTMLElement): Promise<string> {
     await mermaid.parse(code)
     count += 1
     const { svg } = await mermaid.render(`winterop-mermaid-${count}`, code)
-    return svg
+    const width = Number(/viewBox="[-\d.]+ [-\d.]+ ([\d.]+) [\d.]+"/.exec(svg)?.[1] ?? 0)
+    const scale = cssPixels('var(--text-2xs)', 11, host) / cssPixels('var(--text-xs)', 13, host)
+    return { svg, least: Math.round(width * Math.min(1, scale)) }
 }
 
 export interface MermaidDiagramWords {
@@ -127,8 +141,10 @@ export const MERMAID_DIAGRAM_WORDS: MermaidDiagramWords = {
  * while the diagram loads, while it is still streaming, and when it does not parse; a toggle flips
  * between the two. Mermaid loads the first time a diagram is drawn.
  *
- * An expand button beside the toggle opens the diagram near full screen through `WindowedPane`,
- * drawn as large as the window allows; Escape or the close button brings it back.
+ * A diagram shrinks to fit its box only until its labels reach the smallest text size, then keeps
+ * that size and scrolls sideways, so a wide diagram in a narrow box stays readable. An expand
+ * button beside the toggle opens the diagram near full screen through `WindowedPane`, drawn as
+ * large as the window allows; Escape or the close button brings it back.
  */
 export function MermaidDiagram({
     code,
@@ -148,7 +164,7 @@ export function MermaidDiagram({
     const words = { ...MERMAID_DIAGRAM_WORDS, ...given }
     const look = useLook()
     const host = useRef<HTMLDivElement>(null)
-    const [svg, setSvg] = useState<string | null>(null)
+    const [drawn, setDrawn] = useState<Drawn | null>(null)
     const [failed, setFailed] = useState(false)
     const [source, setSource] = useState(false)
 
@@ -159,12 +175,12 @@ export function MermaidDiagram({
             (out) => {
                 if (cancelled) return
                 setFailed(false)
-                setSvg(out)
+                setDrawn(out)
             },
             () => {
                 if (cancelled) return
                 setFailed(true)
-                setSvg(null)
+                setDrawn(null)
             },
         )
         return () => {
@@ -180,7 +196,15 @@ export function MermaidDiagram({
                 defaultOpen={defaultExpanded}
                 words={{ expand: words.expand, close: words.close, away: words.away }}
             >
-                <Diagram code={code} svg={svg} failed={failed} streaming={streaming} source={source} setSource={setSource} words={words} />
+                <Diagram
+                    code={code}
+                    drawn={drawn}
+                    failed={failed}
+                    streaming={streaming}
+                    source={source}
+                    setSource={setSource}
+                    words={words}
+                />
             </WindowedPane>
         </div>
     )
@@ -189,7 +213,7 @@ export function MermaidDiagram({
 /** The diagram's box, in its place or filling the window. */
 function Diagram({
     code,
-    svg,
+    drawn,
     failed,
     streaming,
     source,
@@ -197,7 +221,7 @@ function Diagram({
     words,
 }: {
     code: string
-    svg: string | null
+    drawn: Drawn | null
     failed: boolean
     streaming: boolean
     source: boolean
@@ -205,7 +229,7 @@ function Diagram({
     words: MermaidDiagramWords
 }) {
     const windowed = useWindowedPane()?.windowed === true
-    const asSource = streaming || failed || source || svg === null
+    const asSource = streaming || failed || source || drawn === null
     return (
         <div
             className={cn(
@@ -214,7 +238,7 @@ function Diagram({
             )}
         >
             <div className="absolute top-2 right-2 z-10 flex items-center gap-1 opacity-0 transition-opacity group-focus-within/mermaid:opacity-100 group-hover/mermaid:opacity-100 pointer-coarse:opacity-100">
-                {!failed && !streaming && svg !== null && (
+                {!failed && !streaming && drawn !== null && (
                     <button
                         type="button"
                         onClick={() => setSource(!source)}
@@ -235,11 +259,12 @@ function Diagram({
             ) : (
                 <div
                     className={cn(
-                        'flex justify-center overflow-x-auto p-4 [&_svg]:max-w-full',
+                        'flex justify-center-safe overflow-x-auto p-4 [&_svg]:max-w-full [&_svg]:min-w-(--diagram-least)',
                         windowed && 'min-h-0 flex-1 items-center [&_svg]:size-full [&_svg]:max-w-none!',
                     )}
+                    style={{ '--diagram-least': `${String(drawn.least)}px` } as CSSProperties}
                     // The SVG comes from mermaid run with `securityLevel: 'strict'`.
-                    dangerouslySetInnerHTML={{ __html: svg }}
+                    dangerouslySetInnerHTML={{ __html: drawn.svg }}
                 />
             )}
         </div>

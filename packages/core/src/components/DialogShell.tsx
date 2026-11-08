@@ -47,13 +47,16 @@ const FIELD = [
  * is taller than the window, and a footer with Cancel and the one confirming verb at the right.
  *
  * On a phone the dialog is a full-screen sheet with its footer held to the bottom, so the verbs
- * are always in reach. A shut confirm stays focusable and carries its reason as a tooltip rather
+ * are always in reach; `phone="fit"` keeps a short one sized to its content inside the screen's
+ * margins instead, as a confirm is. The verbs stand in a row at the right while they fit it, and
+ * each takes the whole width, the confirm on top, once they do not. A shut confirm stays focusable and carries its reason as a tooltip rather
  * than going dead. Opening focuses the first field in the body. While the confirm is busy, Cancel, Back, Escape and the backdrop do nothing.
  */
 export function DialogShell({
     open,
     onOpenChange,
     width = 'md',
+    phone = 'sheet',
     title,
     description,
     header,
@@ -70,6 +73,8 @@ export function DialogShell({
     open: boolean
     onOpenChange: (open: boolean) => void
     width?: keyof typeof WIDTHS
+    /** On a phone: `sheet` covers the screen, for a form; `fit` is sized to its content inside the screen's margins, for a short question. */
+    phone?: 'sheet' | 'fit'
     title: ReactNode
     description?: ReactNode
     /** Held under the title, outside the scrolling body: a step indicator, a tab bar. */
@@ -110,7 +115,8 @@ export function DialogShell({
                     'flex max-h-[calc(100svh-4rem)] flex-col gap-4',
                     WIDTHS[width],
                     NESTED,
-                    'max-sm:top-0 max-sm:left-0 max-sm:h-svh max-sm:max-h-none max-sm:w-screen max-sm:max-w-none max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-none',
+                    phone === 'sheet' &&
+                        'max-sm:top-0 max-sm:left-0 max-sm:h-svh max-sm:max-h-none max-sm:w-screen max-sm:max-w-none max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-none',
                     className,
                 )}
             >
@@ -128,31 +134,34 @@ export function DialogShell({
                     <DialogFooter className="mt-auto items-center">
                         {footer !== undefined && <div className="mr-auto min-w-0 text-xs text-muted-foreground">{footer}</div>}
                         {count}
-                        {dismissible && (
-                            <DialogClose render={<Button variant="ghost" />} disabled={busy}>
-                                {words.cancel}
-                            </DialogClose>
-                        )}
-                        {back !== undefined && (
-                            <Button variant="outline" disabled={busy} onClick={back}>
-                                {words.back}
-                            </Button>
-                        )}
-                        {actions}
-                        <Button
-                            variant={confirm.destructive === true ? 'destructive' : 'default'}
-                            aria-disabled={shut || undefined}
-                            title={confirm.why}
-                            className={cn(
-                                shut && 'cursor-not-allowed',
-                                confirm.why !== undefined && 'opacity-50',
-                                busy && 'cursor-progress',
+                        {/* As wide as its verbs while they fit one row, else the whole width with a verb to each line. */}
+                        <div className="flex w-fit max-w-full flex-wrap-reverse justify-end gap-2 *:grow">
+                            {dismissible && (
+                                <DialogClose render={<Button variant="ghost" />} disabled={busy}>
+                                    {words.cancel}
+                                </DialogClose>
                             )}
-                            onClick={shut ? undefined : confirm.onConfirm}
-                        >
-                            {busy && <Spinner aria-hidden role={undefined} aria-label={undefined} />}
-                            {busy ? (confirm.busyLabel ?? confirm.label) : confirm.label}
-                        </Button>
+                            {back !== undefined && (
+                                <Button variant="outline" disabled={busy} onClick={back}>
+                                    {words.back}
+                                </Button>
+                            )}
+                            {actions}
+                            <Button
+                                variant={confirm.destructive === true ? 'destructive' : 'default'}
+                                aria-disabled={shut || undefined}
+                                title={confirm.why}
+                                className={cn(
+                                    shut && 'cursor-not-allowed',
+                                    confirm.why !== undefined && 'opacity-50',
+                                    busy && 'cursor-progress',
+                                )}
+                                onClick={shut ? undefined : confirm.onConfirm}
+                            >
+                                {busy && <Spinner aria-hidden role={undefined} aria-label={undefined} />}
+                                {busy ? (confirm.busyLabel ?? confirm.label) : confirm.label}
+                            </Button>
+                        </div>
                     </DialogFooter>
                 )}
             </DialogContent>
@@ -162,7 +171,8 @@ export function DialogShell({
 
 /**
  * A question with one answer to confirm: the title is the question ("Delete import-orders?"),
- * there is no body unless one is given, and a destructive answer is drawn as one.
+ * there is no body unless one is given, and a destructive answer is drawn as one. On a phone it
+ * stays sized to its content, never a full-screen sheet.
  */
 export function ConfirmDialog({
     open,
@@ -188,6 +198,7 @@ export function ConfirmDialog({
             open={open}
             onOpenChange={onOpenChange}
             width="sm"
+            phone="fit"
             title={question}
             description={detail}
             confirm={confirm}

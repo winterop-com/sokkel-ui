@@ -21,8 +21,11 @@ export interface ChartLook {
     grid: string
     card: string
     popover: string
-    /** Text sizes in pixels, read from the size tokens: axis and legend labels, axis names, titles and tooltips, and a figure in a chart's middle. */
-    size: { label: number; small: number; body: number; stat: number }
+    /**
+     * Text sizes in pixels, read from the size tokens: axis and legend labels, axis names, titles and
+     * tooltips, a figure in a chart's middle, and that figure in a small chart, such as a gauge on a phone.
+     */
+    size: { label: number; small: number; body: number; stat: number; statSmall: number }
     /** A mark's corner in pixels, such as a bar's top or a heatmap's cell: a share of the radius token, so a square theme draws square marks. */
     corner: number
     /** The categorical colors in order. */
@@ -102,6 +105,7 @@ export function readLook(key = readKey()): ChartLook {
             small: pixels('chart-text-size-small', 10),
             body: pixels('text-xs', 13),
             stat: pixels('chart-stat-size', 24),
+            statSmall: pixels('chart-stat-size-small', 18),
         },
         corner: Math.max(0, pixels('radius', 4.5) * 0.4),
         series: SERIES_ORDER.map(token),

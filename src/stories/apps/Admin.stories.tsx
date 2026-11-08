@@ -391,9 +391,9 @@ function MembersPage({ inviting = false }: { inviting?: boolean }) {
                 }
             />
             <DataTable
+                search={<SearchField value={query} onChange={setQuery} placeholder="Search" />}
                 toolbar={
                     <>
-                        <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-full max-w-64 min-w-40" />
                         <Select items={roleItems} value={role} onValueChange={(next) => setRole(String(next))}>
                             <SelectTrigger className="w-36" aria-label="Role">
                                 <SelectValue />
@@ -1082,6 +1082,7 @@ const EVENT_COLUMNS: DataColumn<AuditEvent>[] = [
             </Row>
         ),
         sortValue: (event) => event.who,
+        stack: 'secondary',
     },
     {
         id: 'did',
@@ -1089,6 +1090,7 @@ const EVENT_COLUMNS: DataColumn<AuditEvent>[] = [
         width: 'minmax(14rem,1.6fr)',
         cell: (event) => <span className={TONE_INK[event.tone ?? 'neutral']}>{event.did}</span>,
         sortValue: (event) => event.did,
+        stack: 'primary',
     },
     {
         id: 'action',
@@ -1096,6 +1098,7 @@ const EVENT_COLUMNS: DataColumn<AuditEvent>[] = [
         width: 'minmax(9rem,1fr)',
         cell: (event) => <span className="font-mono text-xs text-muted-foreground">{event.action}</span>,
         sortValue: (event) => event.action,
+        stack: 'secondary',
     },
     {
         id: 'ip',
@@ -1135,9 +1138,9 @@ function AuditPage({ chosen, onChoose }: { chosen: AuditEvent; onChoose: (event:
                 }
             />
             <DataTable
+                search={<SearchField value={query} onChange={setQuery} placeholder="Search" />}
                 toolbar={
                     <>
-                        <SearchField value={query} onChange={setQuery} placeholder="Search" className="w-full max-w-64 min-w-40" />
                         <FilterChip facet="Period" options={PERIOD_OPTIONS} defaultSelected={['7d']} />
                         <FilterChip facet="Actor" options={PEOPLE_OPTIONS} multiple selected={actors} onSelectedChange={setActors} />
                         <FilterChip facet="Action" options={ACTION_OPTIONS} multiple selected={actions} onSelectedChange={setActions} />

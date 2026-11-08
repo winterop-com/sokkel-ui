@@ -151,7 +151,7 @@ function Runs({
                 rowActions={runActions}
                 onOpen={(run) => setOpened(run.id)}
                 opened={(run) => run.id === opened}
-                toolbar={<SearchField value={query} onChange={setQuery} placeholder="Search" className="w-full max-w-md" />}
+                search={<SearchField value={query} onChange={setQuery} placeholder="Search" />}
             />
         </Stack>
     )
@@ -752,7 +752,7 @@ function FindInTree({ initial }: { initial: string }) {
                 onExpandedChange={setExpanded}
                 minWidth="40rem"
                 words={{ empty: 'Nothing matches.' }}
-                toolbar={
+                search={
                     <SearchField
                         value={query}
                         onChange={(text) => {
@@ -760,7 +760,6 @@ function FindInTree({ initial }: { initial: string }) {
                             setExpanded(findFolders(text).open)
                         }}
                         placeholder="Find"
-                        className="w-full max-w-md"
                     />
                 }
             />
@@ -913,7 +912,7 @@ function Albums({ count }: { count: number }) {
                         Add to queue
                     </Button>
                 )}
-                toolbar={<SearchField value={query} onChange={setQuery} placeholder="Search" className="w-full max-w-md" />}
+                search={<SearchField value={query} onChange={setQuery} placeholder="Search" />}
                 minWidth="40rem"
             />
         </Stack>

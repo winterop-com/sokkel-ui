@@ -1,5 +1,6 @@
 import { useMemo, type ReactNode } from 'react'
 
+import { useIsMobile } from '@winterop-com/sokkel-ui/hooks/use-mobile'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { ChartFrame, type ChartFrameWords } from '../ChartFrame'
 import { EChart } from '../EChart'
@@ -20,6 +21,7 @@ export function gaugeOption({
     decimals,
     format,
     label,
+    small,
 }: {
     value: number | null
     min?: number
@@ -30,6 +32,8 @@ export function gaugeOption({
     decimals?: number
     format?: (value: number) => string
     label?: string
+    /** Writes the figure at the small chart figure size. */
+    small?: boolean
 }) {
     const write = valueWriter(unit, decimals, format)
     return (look: ChartLook) => ({
@@ -41,6 +45,7 @@ export function gaugeOption({
             tone: look.token(thresholdColor(value, thresholds) ?? color),
             write,
             label,
+            small,
         }),
     })
 }
@@ -48,6 +53,9 @@ export function gaugeOption({
 /**
  * A dashboard panel of one reading on an arc from `min` to `max`, filled in the color its
  * thresholds give it, with the thresholds themselves as a thin band outside the arc.
+ *
+ * On a phone gauges stand two to a row of a `DashboardGrid`, whatever their span short of `full`,
+ * each on a shorter body with its figure drawn smaller, so a group of readings is still seen at once.
  */
 export function GaugePanel({
     title,
@@ -63,7 +71,7 @@ export function GaugePanel({
     format,
     label,
     span = 'sixth',
-    bodyClassName = 'h-32',
+    bodyClassName,
     loading,
     file,
     words,
@@ -84,15 +92,17 @@ export function GaugePanel({
     /** A word under the value, such as what it measures. */
     label?: string
     span?: PanelSpan
+    /** The dial's box: `h-32` by default, and `h-28` on a phone. */
     bodyClassName?: string
     loading?: boolean
     file?: string
     words?: Partial<ChartFrameWords>
     className?: string
 }) {
+    const phone = useIsMobile()
     const option = useMemo(
-        () => gaugeOption({ value, min, max, thresholds, color, unit, decimals, format, label }),
-        [value, min, max, thresholds, color, unit, decimals, format, label],
+        () => gaugeOption({ value, min, max, thresholds, color, unit, decimals, format, label, small: phone }),
+        [value, min, max, thresholds, color, unit, decimals, format, label, phone],
     )
     return (
         <ChartFrame
@@ -101,9 +111,9 @@ export function GaugePanel({
             actions={actions}
             file={file}
             loading={loading}
-            bodyClassName={bodyClassName}
+            bodyClassName={cn('h-32 max-md:h-28', bodyClassName)}
             words={words}
-            className={cn(SPAN[span], className)}
+            className={cn(SPAN[span], span !== 'full' && 'max-md:col-span-1', className)}
         >
             {(state) => <EChart option={option} label={typeof title === 'string' ? title : 'Gauge'} {...state} />}
         </ChartFrame>

@@ -13,6 +13,8 @@ import {
     TableIcon,
 } from 'lucide-react'
 import {
+    Fragment,
+    type CSSProperties,
     type KeyboardEvent,
     type MouseEvent,
     type ReactNode,
@@ -66,6 +68,17 @@ export interface DataColumn<T> {
     minSize?: number
     /** What the column says for a group of rows, in the group's head: a sum, a range, a count. */
     aggregate?: (rows: readonly T[]) => ReactNode
+    /**
+     * How the column shows once the table stacks its rows as cards on a narrow box: `line` (the
+     * default) a line of its own, `primary` the value in body text under the title over up to
+     * `stackLines` lines, `secondary` among the muted facts that share the card's last line, and
+     * `none` not at all. The first column is always the title.
+     */
+    stack?: 'line' | 'primary' | 'secondary' | 'none'
+    /** The most lines a `primary` value takes in a stacked card; 2 by default. */
+    stackLines?: number
+    /** Whether the column's line in a stacked card starts with its name; without it the value takes the whole line. */
+    stackLabel?: boolean
 }
 
 /** One thing a row's menu offers, or a line between groups of them. */
@@ -400,9 +413,12 @@ const CHECK = '2.5rem'
 const OVERSCAN = 8
 /** The space between cards, and around them, in pixels. */
 const GAP = 16
-/** A stacked card's padding and the height of each of its lines, in pixels. */
+/** A stacked card's padding, the height of each of its lines, and of each line of a primary value, in pixels. */
 const STACK_PAD = 8
 const STACK_LINE = 20
+const STACK_PRIMARY_LINE = 22
+/** The height of a stacked card's line of secondary facts, room for an avatar among them. */
+const STACK_FACTS = 24
 
 /**
  * A table for rows of any number: sorting, selection with a bulk bar, a column menu, child rows,
@@ -439,6 +455,12 @@ const STACK_LINE = 20
  * Sort, selection, open branches, folded groups, hidden columns and column widths are each held by
  * the table unless the app passes the value and hears the change.
  *
+ * The bar above the head holds `search` and the `toolbar`'s tools, then the count, the sort and the
+ * view switch. On a narrow table the search takes a line of its own and the tools wrap across the
+ * whole width, the count and the sort after them. Once the rows stack as cards, each column's
+ * `stack` says how it shows: a line (named, or not with `stackLabel: false`), a primary value over
+ * several lines under the title, or a secondary fact on the card's last line.
+ *
  * The table draws its own box, a border with rounded corners; `framed={false}` drops both, for a
  * table set into a panel or a card that already frames it.
  */
@@ -469,6 +491,7 @@ export function DataTable<T>({
     rowActions,
     actionButton = 'always',
     actionIcon = <EllipsisIcon />,
+    search,
     toolbar,
     total,
     paging,
@@ -550,7 +573,15 @@ export function DataTable<T>({
     actionButton?: 'always' | 'hover' | 'none'
     /** The menu button's icon. */
     actionIcon?: ReactNode
-    /** What the bar holds when nothing is selected, such as a search field and filters. */
+    /**
+     * The search field, first in the bar and sized by it: a fixed width beside the tools, and a line
+     * of its own across a narrow table.
+     */
+    search?: ReactNode
+    /**
+     * What the bar holds after the search when nothing is selected, such as filters. On a narrow
+     * table they wrap across its whole width, the count and the sort after them.
+     */
     toolbar?: ReactNode
     /** The count the bar shows, when the rows given are not all there are. */
     total?: number
@@ -776,7 +807,23 @@ export function DataTable<T>({
         view.width > 0 &&
         view.width < (minWidth === 'auto' ? stackBelow : Math.min(stackBelow, columnsWidth))
     const gridView = chosenGrid || stacked
-    const cardPixels = stacked ? STACK_PAD * 2 + 24 + Math.max(0, shown.length - 1) * STACK_LINE + 2 : cardBox.height
+    // A stacked card: the first column its title, then the primary values, the lines, and the secondary facts on one line.
+    const stackParts = useMemo(() => {
+        const rest = shown.slice(1)
+        return {
+            primary: rest.filter((column) => column.stack === 'primary'),
+            lines: rest.filter((column) => (column.stack ?? 'line') === 'line'),
+            facts: rest.filter((column) => column.stack === 'secondary'),
+        }
+    }, [shown])
+    const cardPixels = stacked
+        ? STACK_PAD * 2 +
+          24 +
+          stackParts.primary.reduce((sum, column) => sum + (column.stackLines ?? 2) * STACK_PRIMARY_LINE, 0) +
+          stackParts.lines.length * STACK_LINE +
+          (stackParts.facts.length > 0 ? STACK_FACTS : 0) +
+          2
+        : cardBox.height
     // The grid is drawn a line of cards at a time; the table's line is one row.
     const perLine = stacked ? 1 : gridView ? Math.max(1, Math.floor((view.width - 2 * GAP + GAP) / (cardBox.width + GAP))) : 1
     const lineHeight = gridView ? cardPixels + GAP : rowHeight
@@ -1081,6 +1128,75 @@ export function DataTable<T>({
         </div>
     )
 
+    /**
+     * What a stacked row shows under its title: each primary value over its lines, each line with its
+     * column's name unless the column drops it, and the secondary facts in one muted line. A card
+     * keeps every line, so all cards are one height; a narrow list leaves out a line with nothing to say.
+     */
+    const stackedLines = (entry: FlatRow<T>, listed: boolean) => {
+        const indent: CSSProperties | undefined = listed && tree ? { paddingLeft: `${String(entry.depth * 1.25 + 1.5)}rem` } : undefined
+        const said = (value: ReactNode) => !listed || (value !== null && value !== undefined && value !== false && value !== '')
+        const facts = stackParts.facts.map((column) => ({ column, value: column.cell(entry.row) })).filter(({ value }) => said(value))
+        return (
+            <>
+                {stackParts.primary.map((column) => {
+                    const value = column.cell(entry.row)
+                    if (!said(value)) return null
+                    return (
+                        <div
+                            key={column.id}
+                            role={listed ? 'gridcell' : undefined}
+                            className="line-clamp-(--stack-lines) min-w-0 text-sm font-normal"
+                            style={{ ...indent, '--stack-lines': column.stackLines ?? 2 } as CSSProperties}
+                        >
+                            {value}
+                        </div>
+                    )
+                })}
+                {stackParts.lines.map((column) => {
+                    const value = column.cell(entry.row)
+                    if (!said(value)) return null
+                    return (
+                        <div
+                            key={column.id}
+                            role={listed ? 'gridcell' : undefined}
+                            className={cn('flex min-w-0 gap-2 text-xs', listed ? 'items-baseline' : 'h-5 items-center')}
+                            style={indent}
+                        >
+                            {column.stackLabel !== false && (
+                                <span className={cn('shrink-0 truncate text-muted-foreground', listed ? 'w-20' : 'w-24')}>
+                                    {column.header}
+                                </span>
+                            )}
+                            <span className="min-w-0 truncate">{value}</span>
+                        </div>
+                    )
+                })}
+                {facts.length > 0 && (
+                    <div
+                        role={listed ? 'gridcell' : undefined}
+                        className={cn(
+                            'flex min-w-0 items-center gap-1.5 text-xs whitespace-nowrap text-muted-foreground',
+                            !listed && 'h-6',
+                        )}
+                        style={indent}
+                    >
+                        {facts.map(({ column, value }, index) => (
+                            <Fragment key={column.id}>
+                                {index > 0 && (
+                                    <span aria-hidden className="shrink-0 text-faint">
+                                        ·
+                                    </span>
+                                )}
+                                <span className={cn('min-w-0 truncate', index === facts.length - 1 ? 'shrink' : 'shrink-0')}>{value}</span>
+                            </Fragment>
+                        ))}
+                    </div>
+                )}
+            </>
+        )
+    }
+
     /** A row as a card: the app's card, with the selection box and the menu laid over its top corners. */
     const cardFor = (entry: FlatRow<T>) => {
         const chosen = selection.has(entry.key)
@@ -1105,7 +1221,7 @@ export function DataTable<T>({
                     </DropdownMenuContent>
                 </DropdownMenu>
             )
-        const [title, ...rest] = shown
+        const title = shown[0]
         // Stacked, the box, the title and the menu share the first line, and every line starts at the box's edge.
         const stackedCard = (
             <div className="flex h-full flex-col rounded-surface border border-border bg-card px-3 py-2 group-hover/card:bg-hover">
@@ -1119,12 +1235,7 @@ export function DataTable<T>({
                     <span className="min-w-0 flex-1 truncate text-sm font-medium">{title?.cell(entry.row)}</span>
                     {menu}
                 </div>
-                {rest.map((column) => (
-                    <div key={column.id} className="flex h-5 min-w-0 items-center gap-2 text-xs">
-                        <span className="w-24 shrink-0 truncate text-muted-foreground">{column.header}</span>
-                        <span className="min-w-0 truncate">{column.cell(entry.row)}</span>
-                    </div>
-                ))}
+                {stackedLines(entry, false)}
             </div>
         )
         const body = (
@@ -1188,128 +1299,145 @@ export function DataTable<T>({
             )}
         >
             {(!list || selection.size > 0) && (
-                <div className="flex min-h-(--density-panel-head) shrink-0 items-center gap-2 border-b border-border px-(--density-panel-pad) text-sm">
-                    {selection.size > 0 ? (
-                        <SelectionBar
-                            count={selection.size}
-                            onClear={clear}
-                            offer={
-                                offerEvery && (
-                                    <Button
-                                        variant="link"
-                                        size="xs"
-                                        onClick={() => (paging === 'client' ? setSelection(new Set(allKeys)) : onSelectAllPages?.())}
-                                    >
-                                        {words.selectEvery(everyCount)}
-                                    </Button>
-                                )
-                            }
-                            words={{
-                                selected: (count) =>
-                                    paging === 'client' && allChosen ? words.allSelected(allKeys.length) : words.selected(count),
-                                clear: words.clear,
-                                label: words.selection,
-                            }}
-                        >
-                            {bulkActions?.(selection, clear)}
-                        </SelectionBar>
-                    ) : (
-                        // The tools wrap onto more lines when the bar is too narrow for them, so none is hidden.
-                        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 py-0.5">{toolbar}</div>
-                    )}
-                    {selection.size === 0 && (
-                        <span className="ml-auto shrink-0 font-mono text-xs text-muted-foreground tabular-nums">
-                            {hasMore && total === undefined
-                                ? words.loaded(allCount(rows, treeKids))
-                                : words.rows(total ?? allCount(rows, treeKids))}
-                        </span>
-                    )}
-                    {gridView && selection.size === 0 && sortable.length > 0 && (
-                        <DropdownMenu>
-                            <DropdownMenuTrigger render={<Button variant="ghost" size="sm" />}>
-                                {sort === null ? <ArrowUpDownIcon /> : sort.direction === 'asc' ? <ArrowUpIcon /> : <ArrowDownIcon />}
-                                {sortColumn?.header ?? words.sort}
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48">
-                                <DropdownMenuGroup>
-                                    <DropdownMenuLabel>{words.sort}</DropdownMenuLabel>
-                                    <DropdownMenuRadioGroup
-                                        value={sort?.column ?? ''}
-                                        onValueChange={(value: string) => {
-                                            if (paging !== undefined) setPage(0)
-                                            setSort(value === '' ? null : { column: value, direction: sort?.direction ?? 'asc' })
-                                        }}
-                                    >
-                                        <DropdownMenuRadioItem value="">{words.unsorted}</DropdownMenuRadioItem>
-                                        {sortable.map((column) => (
-                                            <DropdownMenuRadioItem key={column.id} value={column.id}>
-                                                {column.header}
-                                            </DropdownMenuRadioItem>
-                                        ))}
-                                    </DropdownMenuRadioGroup>
-                                </DropdownMenuGroup>
-                                {sort !== null && (
-                                    <>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuRadioGroup
-                                            value={sort.direction}
-                                            onValueChange={(value: string) =>
-                                                setSort({ column: sort.column, direction: value === 'desc' ? 'desc' : 'asc' })
-                                            }
+                // Narrow, the search takes a line of its own and the tools wrap across the whole width, the count and the
+                // sort after them; wide, the tools wrap in the room the search and the count leave.
+                <div className="@container/bar shrink-0 border-b border-border px-(--density-panel-pad) text-sm">
+                    <div className="flex min-h-(--density-panel-head) min-w-0 items-center gap-2 @max-2xl/bar:flex-wrap @max-2xl/bar:gap-y-1.5 @max-2xl/bar:py-1.5">
+                        {selection.size > 0 ? (
+                            <SelectionBar
+                                count={selection.size}
+                                onClear={clear}
+                                offer={
+                                    offerEvery && (
+                                        <Button
+                                            variant="link"
+                                            size="xs"
+                                            onClick={() => (paging === 'client' ? setSelection(new Set(allKeys)) : onSelectAllPages?.())}
                                         >
-                                            <DropdownMenuRadioItem value="asc">{words.ascending}</DropdownMenuRadioItem>
-                                            <DropdownMenuRadioItem value="desc">{words.descending}</DropdownMenuRadioItem>
-                                        </DropdownMenuRadioGroup>
-                                    </>
-                                )}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    )}
-                    {card !== undefined && !stacked && (
-                        <div className="flex items-center gap-0.5 rounded-md bg-muted p-0.5">
-                            {(['table', 'grid'] as const).map((one) => (
-                                <IconButton
-                                    label={one === 'table' ? words.tableView : words.gridView}
-                                    key={one}
-                                    size="icon-xs"
-                                    pressed={shownView === one}
-                                    onClick={() => setShownView(one)}
-                                    className={cn(
-                                        'text-muted-foreground',
-                                        shownView === one && 'bg-background text-foreground shadow-xs hover:bg-background',
-                                    )}
-                                >
-                                    {one === 'table' ? <TableIcon /> : <LayoutGridIcon />}
-                                </IconButton>
-                            ))}
-                        </div>
-                    )}
-                    {!gridView && hideable.length > 0 && (
-                        <DropdownMenu>
-                            <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" aria-label={words.columns} />}>
-                                <Columns3Icon />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48">
-                                <DropdownMenuGroup>
-                                    <DropdownMenuLabel>{words.columns}</DropdownMenuLabel>
-                                    {hideable.map((column) => (
-                                        <DropdownMenuCheckboxItem
-                                            key={column.id}
-                                            checked={!hidden.has(column.id)}
-                                            onCheckedChange={(on) => {
-                                                const next = new Set(hidden)
-                                                if (on) next.delete(column.id)
-                                                else next.add(column.id)
-                                                setHidden(next)
-                                            }}
+                                            {words.selectEvery(everyCount)}
+                                        </Button>
+                                    )
+                                }
+                                words={{
+                                    selected: (count) =>
+                                        paging === 'client' && allChosen ? words.allSelected(allKeys.length) : words.selected(count),
+                                    clear: words.clear,
+                                    label: words.selection,
+                                }}
+                            >
+                                {bulkActions?.(selection, clear)}
+                            </SelectionBar>
+                        ) : (
+                            <>
+                                {search !== undefined && <div className="w-64 min-w-0 shrink @max-2xl/bar:w-full">{search}</div>}
+                                {/* The tools wrap onto more lines when the bar is too narrow for them, so none is hidden. */}
+                                <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 py-0.5 @max-2xl/bar:contents">
+                                    {toolbar}
+                                </div>
+                            </>
+                        )}
+                        <div className="ml-auto flex shrink-0 items-center gap-2">
+                            {selection.size === 0 && (
+                                <span className="shrink-0 font-mono text-xs text-muted-foreground tabular-nums">
+                                    {hasMore && total === undefined
+                                        ? words.loaded(allCount(rows, treeKids))
+                                        : words.rows(total ?? allCount(rows, treeKids))}
+                                </span>
+                            )}
+                            {gridView && selection.size === 0 && sortable.length > 0 && (
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger render={<Button variant="ghost" size="sm" />}>
+                                        {sort === null ? (
+                                            <ArrowUpDownIcon />
+                                        ) : sort.direction === 'asc' ? (
+                                            <ArrowUpIcon />
+                                        ) : (
+                                            <ArrowDownIcon />
+                                        )}
+                                        {sortColumn?.header ?? words.sort}
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-48">
+                                        <DropdownMenuGroup>
+                                            <DropdownMenuLabel>{words.sort}</DropdownMenuLabel>
+                                            <DropdownMenuRadioGroup
+                                                value={sort?.column ?? ''}
+                                                onValueChange={(value: string) => {
+                                                    if (paging !== undefined) setPage(0)
+                                                    setSort(value === '' ? null : { column: value, direction: sort?.direction ?? 'asc' })
+                                                }}
+                                            >
+                                                <DropdownMenuRadioItem value="">{words.unsorted}</DropdownMenuRadioItem>
+                                                {sortable.map((column) => (
+                                                    <DropdownMenuRadioItem key={column.id} value={column.id}>
+                                                        {column.header}
+                                                    </DropdownMenuRadioItem>
+                                                ))}
+                                            </DropdownMenuRadioGroup>
+                                        </DropdownMenuGroup>
+                                        {sort !== null && (
+                                            <>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuRadioGroup
+                                                    value={sort.direction}
+                                                    onValueChange={(value: string) =>
+                                                        setSort({ column: sort.column, direction: value === 'desc' ? 'desc' : 'asc' })
+                                                    }
+                                                >
+                                                    <DropdownMenuRadioItem value="asc">{words.ascending}</DropdownMenuRadioItem>
+                                                    <DropdownMenuRadioItem value="desc">{words.descending}</DropdownMenuRadioItem>
+                                                </DropdownMenuRadioGroup>
+                                            </>
+                                        )}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            )}
+                            {card !== undefined && !stacked && (
+                                <div className="flex items-center gap-0.5 rounded-md bg-muted p-0.5">
+                                    {(['table', 'grid'] as const).map((one) => (
+                                        <IconButton
+                                            label={one === 'table' ? words.tableView : words.gridView}
+                                            key={one}
+                                            size="icon-xs"
+                                            pressed={shownView === one}
+                                            onClick={() => setShownView(one)}
+                                            className={cn(
+                                                'text-muted-foreground',
+                                                shownView === one && 'bg-background text-foreground shadow-xs hover:bg-background',
+                                            )}
                                         >
-                                            {column.header}
-                                        </DropdownMenuCheckboxItem>
+                                            {one === 'table' ? <TableIcon /> : <LayoutGridIcon />}
+                                        </IconButton>
                                     ))}
-                                </DropdownMenuGroup>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    )}
+                                </div>
+                            )}
+                            {!gridView && hideable.length > 0 && (
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" aria-label={words.columns} />}>
+                                        <Columns3Icon />
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-48">
+                                        <DropdownMenuGroup>
+                                            <DropdownMenuLabel>{words.columns}</DropdownMenuLabel>
+                                            {hideable.map((column) => (
+                                                <DropdownMenuCheckboxItem
+                                                    key={column.id}
+                                                    checked={!hidden.has(column.id)}
+                                                    onCheckedChange={(on) => {
+                                                        const next = new Set(hidden)
+                                                        if (on) next.delete(column.id)
+                                                        else next.add(column.id)
+                                                        setHidden(next)
+                                                    }}
+                                                >
+                                                    {column.header}
+                                                </DropdownMenuCheckboxItem>
+                                            ))}
+                                        </DropdownMenuGroup>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            )}
+                        </div>
+                    </div>
                 </div>
             )}
             <div
@@ -1450,7 +1578,7 @@ export function DataTable<T>({
                                     </li>
                                 )
                             const isOpened = opened?.(entry.row) === true
-                            const [title, ...rest] = shown
+                            const title = shown[0]
                             return (
                                 <li
                                     key={entry.key}
@@ -1475,22 +1603,7 @@ export function DataTable<T>({
                                             <span className="min-w-0 truncate">{title.cell(entry.row)}</span>
                                         </div>
                                     )}
-                                    {rest.map((column) => {
-                                        // A line with nothing to say is left out, and a tree's lines sit under its name.
-                                        const value = column.cell(entry.row)
-                                        if (value === null || value === undefined || value === false || value === '') return null
-                                        return (
-                                            <div
-                                                key={column.id}
-                                                role="gridcell"
-                                                className="flex min-w-0 items-baseline gap-2 text-xs"
-                                                style={tree ? { paddingLeft: `${String(entry.depth * 1.25 + 1.5)}rem` } : undefined}
-                                            >
-                                                <span className="w-20 shrink-0 text-muted-foreground">{column.header}</span>
-                                                <span className="min-w-0 truncate">{value}</span>
-                                            </div>
-                                        )
-                                    })}
+                                    {stackedLines(entry, true)}
                                 </li>
                             )
                         })}
