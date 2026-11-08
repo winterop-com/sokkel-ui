@@ -1,8 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
 
-import { usePanelSize } from '../../hooks/use-panel-size'
-import { cn } from '../../lib/cn'
-import { ResizeHandle } from '../ResizeHandle'
+import { usePanelSize } from '@winterop-com/sokkel-ui/hooks/use-panel-size'
+import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { ResizeHandle } from '@winterop-com/sokkel-ui/ResizeHandle'
 import { grows, LINE, WIDE, type MediaBarLayout } from './bar-growth'
 import { chapterIndex, chapterSpan, nextChapterStart, previousChapterStart, waveformSpan } from './chapters'
 import { LineBar, PanelBar, RowsBar, StageBar, type BarProps } from './MediaBarLayouts'
@@ -15,15 +15,15 @@ import {
     type MediaTimeline,
     type RepeatMode,
 } from './MediaBarParts'
-import { MEDIA_RATES } from './MediaControls'
+import { MEDIA_RATES } from '@winterop-com/sokkel-ui/media/MediaControls'
 import { MediaFullscreen } from './MediaFullscreen'
-import { useOneSound } from './one-sound'
-import type { SoundKind } from './SoundVisualizer'
-import type { MediaRange } from './time'
+import { useOneSound } from '@winterop-com/sokkel-ui/media/one-sound'
+import type { SoundKind } from '@winterop-com/sokkel-ui/media/SoundVisualizer'
+import type { MediaRange } from '@winterop-com/sokkel-ui/media/time'
 
 export type { MediaBarLayout } from './bar-growth'
 export type { MediaBarWords, MediaSteps, MediaTimeline, RepeatMode } from './MediaBarParts'
-export { MEDIA_RATES } from './MediaControls'
+export { MEDIA_RATES } from '@winterop-com/sokkel-ui/media/MediaControls'
 
 /** How far the skip buttons move unless told otherwise, in seconds. */
 export const MEDIA_SKIP = 15

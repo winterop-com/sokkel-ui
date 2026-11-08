@@ -1,20 +1,21 @@
 # sokkel-ui
 
-> A shared React component library: one set of tokens and themes, Base UI primitives, and the patterns apps are built from (frame, layout, forms, tables, chat, files, media, dashboards), with charts, maps, graphs and terminals in add-on packages. Apps install the packages and never copy from them, so one fix in the library reaches every app at its next version. Before building any UI part in an app, look it up in the component index.
+> A shared React component library: one set of tokens and themes, Base UI primitives, and the patterns apps are built from (frame, layout, forms, tables, chat, files, media players, dashboards), with charts, maps, graphs, terminals and the music and video app parts in add-on packages. Apps install the packages and never copy from them, so one fix in the library reaches every app at its next version. Before building any UI part in an app, look it up in the component index.
 
 ## Packages
 
-All five are published to GitHub Packages and released together at one version.
+All six are published to GitHub Packages and released together at one version.
 
 - `@winterop-com/sokkel-ui` (core): the tokens and themes, the primitives and every pattern without an engine of its own. Every app installs it.
 - `@winterop-com/sokkel-ui-charts`: `Chart` and its kinds on ECharts, and the dashboard's chart panels.
 - `@winterop-com/sokkel-ui-maps`: `MapView` on maplibre, with its layers, legends, popups and basemaps.
 - `@winterop-com/sokkel-ui-graph`: the graphs and the graph editor on React Flow, laid out by elk.
 - `@winterop-com/sokkel-ui-terminal`: terminals on xterm.js: `TerminalView`, an interactive terminal whose connection the app owns, and `Terminal`, commands and their output.
+- `@winterop-com/sokkel-ui-media`: the music and video app parts: `MediaBar` (the player along the foot of a screen) and its fullscreen view, `TrackList`, `MediaCard`, `Artwork` (a cover, or one drawn from a seed) and `useMediaSession` (media keys and the lock screen). The players chat uses, `AudioPlayer` and `VideoPlayer`, and `SoundVisualizer` stay in the core.
 
 ## Install and import
 
-The scope points at the registry in the app's `.npmrc` (`@winterop-com:registry=https://npm.pkg.github.com`, with a token that can read packages). Install the core, and an add-on only when the app draws charts, maps, graphs or terminals, all at the same version:
+The scope points at the registry in the app's `.npmrc` (`@winterop-com:registry=https://npm.pkg.github.com`, with a token that can read packages). Install the core, and an add-on only when the app draws charts, maps, graphs or terminals or plays music or video, all at the same version:
 
 ```
 bun add @winterop-com/sokkel-ui @winterop-com/sokkel-ui-charts
@@ -30,7 +31,7 @@ The app runs Tailwind CSS 4.1 or later itself. Each package's `styles.css` is Ta
 @import '@winterop-com/sokkel-ui/themes/paper.css';
 ```
 
-Every add-on's styles go the same way, after the core's: `@winterop-com/sokkel-ui-maps/styles.css`, `@winterop-com/sokkel-ui-graph/styles.css` and `@winterop-com/sokkel-ui-terminal/styles.css`.
+Every add-on's styles go the same way, after the core's: `@winterop-com/sokkel-ui-maps/styles.css`, `@winterop-com/sokkel-ui-graph/styles.css`, `@winterop-com/sokkel-ui-terminal/styles.css` and `@winterop-com/sokkel-ui-media/styles.css`.
 
 An app that offers every theme (a theme picker in its settings) imports them all at once instead, about 6 kB gzipped for all seven, and `ThemePicker` then shows each one:
 

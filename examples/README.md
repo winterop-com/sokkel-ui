@@ -60,9 +60,10 @@ bun run build     # a release binary, without installers
 
 ## sizes
 
-Three small Tidevann apps that hold the library to a size budget: `forms` (a settings page and a
+Four small Tidevann apps that hold the library to a size budget: `forms` (a settings page and a
 dialog with a schema form, and no engine), `dashboard` (stat and chart panels on ECharts, the range
-controls and a table) and `map` (regions and sites on maplibre with a legend and a popup).
+controls and a table), `map` (regions and sites on maplibre with a legend and a popup) and `music`
+(an album's tracks and the player bar).
 `scripts/size-budget.ts` builds each with Vite against the built packages and measures it gzipped:
 the JavaScript loaded with the page (`start`), what a dynamic import fetches later (`lazy`) and the
 CSS. It fails when one grows past its budget in `sizes/budget.json`, or bundles an engine (ECharts,
@@ -72,7 +73,7 @@ packages.
 The apps have no install of their own: they import the packages by their names from inside the
 repository, which resolve through the workspace's links and each package's own `exports` to its
 `dist/`, as an installed copy does. `forms` imports only the core package; `dashboard` adds the
-charts package and `map` the maps package, each importing the add-on's `styles.css` after the
+charts package, `map` the maps package and `music` the media package, each importing the add-on's `styles.css` after the
 core's in its own stylesheet. A change that makes an app bigger on purpose raises that app's budget in the same PR.
 
 ```sh
