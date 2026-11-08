@@ -170,6 +170,9 @@ export function SoundVisualizer({
     )
 }
 
+// The mark `isSoundVisualizer` reads, so a slot can tell this part from any other node without importing it.
+SoundVisualizer.soundVisualizer = true
+
 interface Look {
     kind: SoundKind
     align: SoundAlign

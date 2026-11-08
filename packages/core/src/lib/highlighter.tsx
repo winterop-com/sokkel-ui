@@ -1,6 +1,5 @@
 import * as React from 'react'
-import { createHighlighterCore, type GrammarState, type HighlighterCore, type LanguageInput, type ThemeRegistration } from 'shiki/core'
-import { createJavaScriptRegexEngine } from 'shiki/engine/javascript'
+import type { GrammarState, HighlighterCore, LanguageInput, ThemeRegistration } from 'shiki/core'
 
 import { ansiCss, parseAnsi, type AnsiStyle } from './ansi'
 
@@ -148,11 +147,18 @@ const THEME: ThemeRegistration = {
 
 let highlighter: Promise<HighlighterCore> | undefined
 
+/** Shiki and its regex engine, fetched with the first code drawn, so a page with no code fetches neither. */
 function getHighlighter() {
-    highlighter ??= createHighlighterCore({
-        themes: [THEME],
-        langs: [],
-        engine: createJavaScriptRegexEngine({ forgiving: true }),
+    highlighter ??= Promise.all([import('shiki/core'), import('shiki/engine/javascript')]).then(
+        ([{ createHighlighterCore }, { createJavaScriptRegexEngine }]) =>
+            createHighlighterCore({
+                themes: [THEME],
+                langs: [],
+                engine: createJavaScriptRegexEngine({ forgiving: true }),
+            }),
+    )
+    highlighter.catch(() => {
+        highlighter = undefined
     })
 
     return highlighter

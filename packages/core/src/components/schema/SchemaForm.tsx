@@ -1,6 +1,6 @@
 import { IconButton } from '../IconButton'
 import { Plus, X } from 'lucide-react'
-import { useId, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useId, useMemo, useState, type ReactNode } from 'react'
 
 import { cn } from '../../lib/cn'
 import { Banner } from '../Banner'
@@ -14,7 +14,8 @@ import { Input } from '../ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
 import { Textarea } from '../ui/textarea'
 import { childSchema, literal, resolve, type JsonSchema } from './read'
-import { fieldSchema, given, pointer, types, validate, valueAt, type Path, type SchemaIssue } from './validate'
+import { loadedValidate, loadValidate } from './checker'
+import { fieldSchema, given, pointer, types, valueAt, type Path, type SchemaIssue } from './issues'
 
 /** What a server said about a value it refused, at the path it concerns. */
 export interface ServerIssue {
@@ -144,6 +145,44 @@ function setAt(value: unknown, path: Path, next: unknown): unknown {
 
 const NONE: readonly ServerIssue[] = []
 
+/**
+ * Loads the schema checker (ajv) once, and resolves when it is ready. `useSchemaForm` calls it
+ * itself when a form is first drawn; an app that knows a form is coming can call it ahead, so the
+ * first one checks at once.
+ */
+export function loadSchemaChecks(): Promise<void> {
+    return loadValidate().then(() => undefined)
+}
+
+/**
+ * What the schema finds wrong with the value: undefined while the checker loads, and one
+ * `unchecked` issue at the root when it cannot be fetched, so the form fails closed.
+ */
+function useChecked(schema: JsonSchema, value: unknown): readonly SchemaIssue[] | undefined {
+    const [check, setCheck] = useState(loadedValidate)
+    const [failed, setFailed] = useState<string | null>(null)
+    useEffect(() => {
+        if (check !== undefined) return
+        let live = true
+        loadValidate().then(
+            (loaded) => {
+                if (live) setCheck(() => loaded)
+            },
+            (error: unknown) => {
+                if (live) setFailed(error instanceof Error ? error.message : String(error))
+            },
+        )
+        return () => {
+            live = false
+        }
+    }, [check])
+    return useMemo((): readonly SchemaIssue[] | undefined => {
+        if (check !== undefined) return check(schema, value)
+        if (failed !== null) return [{ kind: 'unchecked', reason: failed, path: [], tone: 'critical' }]
+        return undefined
+    }, [check, failed, schema, value])
+}
+
 /** Everything a form holds: the value, what has been touched, what the server said, and which issue is open. */
 export interface SchemaFormState {
     schema: JsonSchema
@@ -159,8 +198,13 @@ export interface SchemaFormState {
     shown: (path: Path) => Issue[]
     /** How many shown issues stop the submit, and how many are warnings. */
     count: { critical: number; warning: number }
-    /** Shows every issue; true when nothing stops the submit, else focuses the first field that does. */
+    /**
+     * Shows every issue; true when nothing stops the submit, else focuses the first field that does.
+     * False while the checker is still loading, with every issue shown once it has.
+     */
     submit: () => boolean
+    /** Whether the schema checker is still loading, so no issue is known yet. */
+    checking: boolean
     /** Focuses the first field with an issue and opens what it says. */
     goToFirst: () => void
     /** Every shown issue with its field's title, in the order the fields are drawn, for the count's list. */
@@ -175,7 +219,9 @@ export interface SchemaFormState {
 /**
  * The state of a form drawn from a JSON Schema. A field's issues show once it has been left with
  * a value, or once the form has been submitted, and each goes the moment the value is put right.
- * What the server refused, passed as `issues`, shows at its field until that field is changed.
+ * What the server refused, passed as `issues`, shows at its field until that field is changed. The
+ * checker, ajv, loads when the first form is drawn: the form takes input at once, and its issues
+ * show as soon as the checker is there.
  */
 export function useSchemaForm(
     schema: JsonSchema,
@@ -209,7 +255,8 @@ export function useSchemaForm(
         setChanged(new Set())
     }
 
-    const found = useMemo(() => validate(schema, value), [schema, value])
+    const checked = useChecked(schema, value)
+    const found = checked ?? []
     const id = (path: Path) => `${base}-f${pointer(path).replace(/[^a-zA-Z0-9_-]/g, '_')}`
 
     const set = (path: Path, next: unknown) => {
@@ -310,6 +357,7 @@ export function useSchemaForm(
         count,
         submit: () => {
             setSubmitted(true)
+            if (checked === undefined) return false
             const blocking = first(critical)
             if (blocking === undefined) return true
             focus(blocking)
@@ -332,6 +380,7 @@ export function useSchemaForm(
             focus(at)
             setOpen(at)
         },
+        checking: checked === undefined,
         open,
         setOpen,
         id,

@@ -40,8 +40,7 @@
     },
     "dependencies": {
         "echarts": "^6.1.0",
-        "lucide-react": "^1.68.0",
-        "react-day-picker": "^10.0.2"
+        "lucide-react": "^1.68.0"
     },
     "peerDependencies": {
         "@winterop-com/sokkel-ui": "workspace:*",

@@ -1,12 +1,17 @@
 import { CalendarRange, ChevronDown, RefreshCw } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { lazy, Suspense, useRef, useState } from 'react'
 import type { DateRange } from 'react-day-picker'
 
 import { cn } from '../../lib/cn'
 import { Button } from '../ui/button'
-import { Calendar } from '../ui/calendar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '../ui/dropdown-menu'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
+import { Spinner } from '../ui/spinner'
+
+/** The calendar and its date library, fetched when the picker is first pointed at, focused or opened. */
+const loadCalendar = () => import('../ui/calendar')
+const Calendar = lazy(() => loadCalendar().then((module) => ({ default: module.Calendar })))
+const prefetchCalendar = () => void loadCalendar()
 
 /** A named range a dashboard covers: the last hour, the last 7 days. */
 export interface RangePreset {
@@ -48,7 +53,8 @@ const TIME_RANGE_WORDS: TimeRangeWords = {
 /**
  * The range a dashboard covers: a trigger naming the current range, opening a list of presets
  * beside a calendar for a custom span. Choosing a preset applies it at once; a custom span applies
- * with the Apply button.
+ * with the Apply button. The calendar loads when the trigger is first pointed at or focused, with
+ * a spinner in its place until it arrives.
  *
  * Left to itself the popover opens and closes on its own, starting at `defaultOpen`; `open` with
  * `onOpenChange` holds it from outside.
@@ -95,7 +101,17 @@ export function TimeRangePicker({
             : words.range(value.from, value.to)
     return (
         <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger render={<Button variant="outline" size="sm" className={cn('gap-1.5', className)} />}>
+            <PopoverTrigger
+                render={
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className={cn('gap-1.5', className)}
+                        onPointerEnter={prefetchCalendar}
+                        onFocus={prefetchCalendar}
+                    />
+                }
+            >
                 <CalendarRange aria-hidden />
                 {label}
                 <ChevronDown className="text-muted-foreground" aria-hidden />
@@ -127,14 +143,22 @@ export function TimeRangePicker({
                 </ul>
                 <div className="flex flex-col max-sm:hidden">
                     <p className="px-3 pt-2.5 text-xs font-medium text-muted-foreground">{words.custom}</p>
-                    <Calendar
-                        mode="range"
-                        numberOfMonths={2}
-                        defaultMonth={defaultMonth}
-                        today={today}
-                        selected={draft}
-                        onSelect={setDraft}
-                    />
+                    <Suspense
+                        fallback={
+                            <div className="flex h-72 w-106 items-center justify-center">
+                                <Spinner className="text-muted-foreground" />
+                            </div>
+                        }
+                    >
+                        <Calendar
+                            mode="range"
+                            numberOfMonths={2}
+                            defaultMonth={defaultMonth}
+                            today={today}
+                            selected={draft}
+                            onSelect={setDraft}
+                        />
+                    </Suspense>
                     <div className="flex justify-end border-t border-border p-2">
                         <Button
                             size="sm"

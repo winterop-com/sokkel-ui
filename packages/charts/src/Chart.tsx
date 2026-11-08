@@ -1,11 +1,9 @@
 import { useMemo, useState, type Ref } from 'react'
 
-import { pivot } from './data'
 import { EChart, type ChartHandle } from './EChart'
-import { KINDS, type ChartKind, type ChartKindDef, type ChartSpec } from './kinds'
-import { legendColor } from './kinds/spec'
-import type { LegendItem } from './ChartLegend'
-import { SERIES_ORDER, type ChartLook } from './look'
+import type { ChartKind, ChartSpec } from './kinds'
+import type { ChartLook } from './look'
+import { useKinds } from './use-kinds'
 
 /**
  * A chart drawn from rows: `kind` names how, and the spec's fields say which columns it reads, as
@@ -13,7 +11,7 @@ import { SERIES_ORDER, type ChartLook } from './look'
  * `kind` and the fields alone, so a view of data is a choice, not code. Inside a `ChartFrame`,
  * pass the frame's state through so its legend hides and highlights series; `chartLegend` gives
  * the frame its legend for the same spec. Keep `rows` stable between renders, as the chart is
- * built again when they change.
+ * built again when they change. The kinds' builders load with the first chart, beside the engine.
  */
 export function Chart({
     kind,
@@ -35,7 +33,11 @@ export function Chart({
     className?: string
 }) {
     const kept = useSpec(spec)
-    const option = useMemo(() => (look: ChartLook) => KINDS[kind].build(kept, look, hidden), [kind, kept, hidden])
+    const kinds = useKinds()
+    const option = useMemo(
+        () => (kinds === undefined ? null : (look: ChartLook) => kinds[kind].build(kept, look, hidden)),
+        [kinds, kind, kept, hidden],
+    )
     return (
         <EChart option={option} label={label} hidden={hidden} hovered={hovered} handle={handle} animate={animate} className={className} />
     )
@@ -53,29 +55,4 @@ export function useSpec(spec: ChartSpec): ChartSpec {
     const same = sameSpec(kept, spec)
     if (!same) setKept(spec)
     return same ? kept : spec
-}
-
-/**
- * The legend a `ChartFrame` shows for a chart of this spec: one entry per series in the color the
- * chart gives it, with its figures for the frame's table mode, or what the kind lists instead.
- */
-export function chartLegend(kind: ChartKind, spec: ChartSpec): LegendItem[] {
-    const own: ChartKindDef = KINDS[kind]
-    if (own.legend !== undefined) return own.legend(spec)
-    if (spec.x === undefined) return []
-    const data = pivot({
-        rows: spec.rows,
-        x: spec.x,
-        y: spec.y,
-        series: spec.series,
-        aggregate: spec.aggregate,
-        order: spec.order,
-        seriesOrder: spec.seriesOrder,
-    })
-    return data.series.map((entry, index) => ({
-        key: entry.name,
-        label: entry.name,
-        color: legendColor(spec, entry.name, index, SERIES_ORDER),
-        values: entry.values,
-    }))
 }

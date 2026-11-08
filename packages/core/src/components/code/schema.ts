@@ -5,7 +5,8 @@ import type { EditorState } from '@codemirror/state'
 import type { EditorView } from '@codemirror/view'
 
 import { literal, resolve, typeLabel, type JsonSchema } from '../schema/read'
-import { pointer, validate, type Path, type SchemaIssue } from '../schema/validate'
+import { pointer, type Path, type SchemaIssue } from '../schema/issues'
+import type { validate } from '../schema/validate'
 
 type SyntaxNode = ReturnType<typeof syntaxTree>['topNode']
 
@@ -257,18 +258,22 @@ function place(issue: SchemaIssue, spans: Map<string, Span>, state: EditorState)
     return { from: first.from, to: first.to }
 }
 
-/** What a schema finds wrong with a JSON or YAML document, as diagnostics on the text. */
+/**
+ * What a schema finds wrong with a JSON or YAML document, as diagnostics on the text, checked by
+ * `check`: `validate`, passed in so this module carries no checker of its own.
+ */
 export function schemaDiagnostics(
     state: EditorState,
     language: SchemaLanguage,
     schema: JsonSchema,
+    check: typeof validate,
     words: CodeSchemaWords = SCHEMA_WORDS,
 ): Diagnostic[] {
     if (state.doc.length === 0) return []
     const read = readDocument(state, language)
     if (read === null) return []
     if (read.broken !== undefined) return [{ ...read.broken, severity: 'error', message: words.syntax(language) }]
-    return validate(schema, read.value).map((issue) => ({
+    return check(schema, read.value).map((issue) => ({
         ...place(issue, read.spans, state),
         severity: issue.tone === 'critical' ? 'error' : 'warning',
         message: words.say(issue),

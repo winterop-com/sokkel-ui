@@ -1,6 +1,7 @@
 import { useMemo, type ReactNode } from 'react'
 
-import { Chart, chartLegend } from '@winterop-com/sokkel-ui-charts/Chart'
+import { Chart } from '@winterop-com/sokkel-ui-charts/Chart'
+import { chartLegend } from '@winterop-com/sokkel-ui-charts/chart-legend'
 import { ChartFrame } from '@winterop-com/sokkel-ui-charts/ChartFrame'
 import type { ChartKind, ChartSpec } from '@winterop-com/sokkel-ui-charts/kinds'
 import { TidevannMark } from '../fixtures/TidevannMark'

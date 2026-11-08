@@ -1,5 +1,5 @@
 import { Maximize2, Music, Repeat, Repeat1, Shuffle, SkipBack, SkipForward } from 'lucide-react'
-import { cloneElement, isValidElement, type ComponentProps, type CSSProperties, type ReactElement, type ReactNode } from 'react'
+import { cloneElement, type ComponentProps, type CSSProperties, type ReactNode } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
@@ -17,7 +17,8 @@ import {
     formatRate,
     type TransportSize,
 } from '@winterop-com/sokkel-ui/media/MediaControls'
-import { SoundVisualizer, type SoundKind, type SoundVisualizerProps } from '@winterop-com/sokkel-ui/media/SoundVisualizer'
+import type { SoundKind, SoundVisualizerProps } from '@winterop-com/sokkel-ui/media/SoundVisualizer'
+import { isSoundVisualizer } from '@winterop-com/sokkel-ui/media/visualizer-mark'
 import type { MediaRange } from '@winterop-com/sokkel-ui/media/time'
 import { nextRepeat, type RepeatMode } from './queue'
 
@@ -378,10 +379,6 @@ export function FullscreenButton({ label, onClick, className }: { label: string;
 }
 
 type Look = Pick<SoundVisualizerProps, 'kind' | 'align' | 'middle'>
-
-function isSoundVisualizer(node: ReactNode): node is ReactElement<SoundVisualizerProps> {
-    return isValidElement(node) && node.type === SoundVisualizer
-}
 
 /** The kind a `SoundVisualizer` in the slot draws, or nothing for any other node, whose kind cannot be picked. */
 export function kindOf(visualizer: ReactNode): SoundKind | undefined {

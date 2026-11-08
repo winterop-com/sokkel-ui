@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
 import type { JsonSchema } from './read'
-import { fieldSchema, pointer, validate } from './validate'
+import { fieldSchema, pointer } from './issues'
+import { validate } from './validate'
 
 const JOB: JsonSchema = {
     type: 'object',

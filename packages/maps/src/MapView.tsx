@@ -1,23 +1,14 @@
-import 'maplibre-gl/dist/maplibre-gl.css'
-
 import type { Feature } from 'geojson'
 import { Expand, Globe, LocateFixed, Map as MapIcon, Minus, Plus, Shrink } from 'lucide-react'
-import {
-    Map as MapLibreMap,
-    getWorkerUrl,
-    setWorkerUrl,
-    type MapGeoJSONFeature,
-    type PaddingOptions,
-    type PointLike,
-    type StyleSpecification,
-} from 'maplibre-gl'
-import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
+import type { Map as MapLibreMap, MapGeoJSONFeature, PaddingOptions, PointLike, StyleSpecification } from 'maplibre-gl'
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 
+import { useLongWait } from '@winterop-com/sokkel-ui/Loaders'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { ButtonGroup } from '@winterop-com/sokkel-ui/primitives/button-group'
+import { Spinner } from '@winterop-com/sokkel-ui/primitives/spinner'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import {
     BASEMAPS,
@@ -53,7 +44,11 @@ export interface MapWords {
     globe: string
     flat: string
     basemap: string
+    /** Said while the map engine loads, once the wait is long enough to show. */
+    loading: string
     unavailable: string
+    /** Said when the map engine could not be fetched. */
+    failed: string
     /** The note under the map when its layers left out features whose geometry they could not read. */
     unreadable: (count: number) => string
 }
@@ -67,7 +62,9 @@ const WORDS: MapWords = {
     globe: 'View as a globe',
     flat: 'View as a flat map',
     basemap: 'Basemap',
+    loading: 'Loading the map',
     unavailable: 'This browser cannot draw the map, because WebGL is not available.',
+    failed: 'The map could not be loaded.',
     unreadable: (count) =>
         count === 1
             ? '1 geometry could not be read and is not drawn.'
@@ -182,8 +179,32 @@ function webglAvailable(): boolean {
     }
 }
 
-function ensureWorker(): void {
-    if (getWorkerUrl() !== workerUrl) setWorkerUrl(workerUrl)
+type Engine = typeof import('./engine')
+
+let engine: Promise<Engine> | undefined
+let loaded: Engine | undefined
+
+/** maplibre, fetched once by the first map drawn and shared by the rest. */
+function loadEngine(): Promise<Engine> {
+    engine ??= import('./engine').then(
+        (module) => {
+            loaded = module
+            return module
+        },
+        (error: unknown) => {
+            engine = undefined
+            throw error
+        },
+    )
+    return engine
+}
+
+/**
+ * Loads the map engine, once, and resolves when it is ready. `MapView` calls it itself the first
+ * time a map is drawn; an app that knows a map is coming can call it ahead, so the map draws at once.
+ */
+export function loadMapEngine(): Promise<void> {
+    return loadEngine().then(() => undefined)
 }
 
 /** The tokens the map itself paints with: the ground, place names, the globe's horizon and the graticule. */
@@ -290,7 +311,8 @@ function ControlButton({
  * `data-theme`, redrawing in the new tokens; and holds the selected feature itself or takes it
  * from `selected`. Notes run under the map, with a count of the features its layers could not
  * read. Once the map has drawn everything it was given and nothing is moving or loading, the
- * frame carries `data-map-idle`.
+ * frame carries `data-map-idle`. maplibre loads the first time a map is drawn (`loadMapEngine`
+ * fetches it ahead); until it arrives the frame shows its ground, with a spinner once the wait is long.
  */
 export function MapView({
     label,
@@ -322,6 +344,7 @@ export function MapView({
     const said = { ...WORDS, ...words }
     const shown = controls === false ? null : controls === true ? CONTROLS : { ...CONTROLS, ...controls }
     const [supported] = useState(webglAvailable)
+    const [maplibre, setMaplibre] = useState<Engine | 'failed' | undefined>(loaded)
     const [scope, setScope] = useState<HTMLDivElement | null>(null)
     const [stage, setStage] = useState<HTMLDivElement | null>(null)
     const [canvasHost, setCanvasHost] = useState<HTMLDivElement | null>(null)
@@ -431,12 +454,29 @@ export function MapView({
         shownBasemapRef.current = shownBasemap
     })
 
+    useEffect(() => {
+        if (!supported || maplibre !== undefined) return
+        let live = true
+        loadEngine().then(
+            (module) => {
+                if (live) setMaplibre(module)
+            },
+            () => {
+                if (live) setMaplibre('failed')
+            },
+        )
+        return () => {
+            live = false
+        }
+    }, [supported, maplibre])
+    const waited = useLongWait(supported && maplibre === undefined, 200)
+
     // Built once per frame element, reading the camera and interactivity then; the basemap and the
     // theme change in place.
     useEffect(() => {
-        if (!supported || scope === null || stage === null || canvasHost === null) return
-        ensureWorker()
-        const instance = new MapLibreMap({
+        if (!supported || maplibre === undefined || maplibre === 'failed' || scope === null || stage === null || canvasHost === null) return
+        maplibre.ensureWorker()
+        const instance = new maplibre.Map({
             container: canvasHost,
             style: {
                 version: 8,
@@ -537,7 +577,7 @@ export function MapView({
             setMap(null)
             instance.remove()
         }
-    }, [supported, scope, stage, canvasHost])
+    }, [supported, maplibre, scope, stage, canvasHost])
 
     useEffect(() => {
         const root = document.documentElement
@@ -789,9 +829,10 @@ export function MapView({
                         ))}
                     </p>
                 )}
-                {!supported && (
+                {waited && <Spinner aria-label={said.loading} className="absolute inset-0 m-auto text-muted-foreground" />}
+                {(!supported || maplibre === 'failed') && (
                     <p className="absolute inset-0 flex items-center justify-center p-6 text-center text-sm text-muted-foreground">
-                        {said.unavailable}
+                        {supported ? said.failed : said.unavailable}
                     </p>
                 )}
             </div>

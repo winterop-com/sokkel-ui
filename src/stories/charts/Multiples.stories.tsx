@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useMemo, type ComponentProps } from 'react'
 
-import { chartLegend } from '@winterop-com/sokkel-ui-charts/Chart'
+import { chartLegend } from '@winterop-com/sokkel-ui-charts/chart-legend'
 import { ChartFrame } from '@winterop-com/sokkel-ui-charts/ChartFrame'
 import { ChartGrid } from '@winterop-com/sokkel-ui-charts/ChartGrid'
 import type { ChartKind, ChartSpec } from '@winterop-com/sokkel-ui-charts/kinds'
