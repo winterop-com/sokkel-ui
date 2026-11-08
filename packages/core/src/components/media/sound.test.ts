@@ -10,12 +10,22 @@ import {
     barLayout,
     holdPeak,
     isQuiet,
+    MIRROR_SHARE,
     MOST_GAIN,
+    SOUND_RAMPS,
+    TRAIL_FADE,
+    mirrorBase,
+    rampAlong,
+    rampIndex,
+    rampStops,
+    rampSteps,
     resample,
     ringRadii,
     ringSpokes,
     settle,
     shapeLevel,
+    stopColor,
+    trailFade,
     triggerAt,
     waveGain,
     wavePoints,
@@ -304,5 +314,63 @@ describe('ringSpokes', () => {
     it('fits the ring in the shorter side of its box', () => {
         const { inner, reach } = ringRadii(800, 200)
         expect(inner + reach).toBeLessThanOrEqual(100)
+    })
+})
+
+describe('ramps', () => {
+    it('reads a named ramp as its tokens and stops as given', () => {
+        expect(rampStops('heat')).toEqual(SOUND_RAMPS.heat)
+        expect(rampStops(['warning', 'oklch(0.6 0.2 30)'])).toEqual(['warning', 'oklch(0.6 0.2 30)'])
+    })
+
+    it('reads a bare name as a token, falling back to the color of that name, and anything else as written', () => {
+        expect(stopColor('primary')).toBe('var(--primary, primary)')
+        expect(stopColor(' kind-teal ')).toBe('var(--kind-teal, kind-teal)')
+        expect(stopColor('oklch(0.7 0.1 80)')).toBe('oklch(0.7 0.1 80)')
+        expect(stopColor('var(--brand)')).toBe('var(--brand)')
+    })
+
+    it('mixes evenly between the stops, landing on each stop on the way', () => {
+        const steps = rampSteps(['a', 'b', 'c'], 5)
+        expect(steps).toEqual(['a', 'color-mix(in oklab, a, b 50%)', 'b', 'color-mix(in oklab, b, c 50%)', 'c'])
+        expect(rampSteps(['a'], 3)).toEqual(['a', 'a', 'a'])
+        expect(rampSteps([], 3)).toEqual([])
+    })
+
+    it('places a level on its step, quiet at the first and full at the last', () => {
+        expect(rampIndex(0, 24)).toBe(0)
+        expect(rampIndex(Number.NaN, 24)).toBe(0)
+        expect(rampIndex(1, 24)).toBe(23)
+        expect(rampIndex(2, 24)).toBe(23)
+        expect(rampIndex(0.5, 3)).toBe(1)
+    })
+
+    it('runs a gradient out from the baseline, or out both ways from the middle', () => {
+        expect(rampAlong(3, false)).toEqual([
+            { offset: 0, step: 0 },
+            { offset: 0.5, step: 1 },
+            { offset: 1, step: 2 },
+        ])
+        const centered = rampAlong(3, true)
+        expect(centered.map((stop) => stop.offset)).toEqual([0, 0.25, 0.5, 0.75, 1])
+        expect(centered.map((stop) => stop.step)).toEqual([2, 1, 0, 1, 2])
+    })
+})
+
+describe('mirrorBase', () => {
+    it('stands the bars above the room their reflection takes', () => {
+        const { base, room } = mirrorBase(200)
+        expect(room).toBe(Math.round(200 * MIRROR_SHARE))
+        expect(base + room).toBe(200)
+        expect(mirrorBase(0)).toEqual({ base: 0, room: 0 })
+    })
+})
+
+describe('trailFade', () => {
+    it('wipes the same share each sixtieth of a second, whatever the screen', () => {
+        expect(trailFade(1000 / 60)).toBeCloseTo(TRAIL_FADE)
+        expect(trailFade(2000 / 60)).toBeCloseTo(1 - (1 - TRAIL_FADE) ** 2)
+        expect(trailFade(0)).toBe(0)
+        expect(trailFade(10_000)).toBeLessThanOrEqual(1)
     })
 })

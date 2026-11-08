@@ -1,21 +1,31 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 
 import { Columns, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { THEMES } from '@winterop-com/sokkel-ui/lib/appearance'
 import { PlayButton } from '@winterop-com/sokkel-ui/media/MediaControls'
-import { SoundVisualizer, type SoundKind } from '@winterop-com/sokkel-ui/media/SoundVisualizer'
+import { SOUND_RAMPS } from '@winterop-com/sokkel-ui/media/sound'
+import {
+    SoundVisualizer,
+    type SoundEffect,
+    type SoundKind,
+    type SoundRamp,
+    type SoundRampName,
+} from '@winterop-com/sokkel-ui/media/SoundVisualizer'
 import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
 import { Section, Surface } from '@winterop-com/sokkel-ui/Section'
 import { Segmented, type Segment } from '@winterop-com/sokkel-ui/Segmented'
 import { Toolbar } from '@winterop-com/sokkel-ui/Toolbar'
+import { Toggle } from '@winterop-com/sokkel-ui/primitives/toggle'
 import { Artwork } from '@winterop-com/sokkel-ui-media/Artwork'
-import { FRAME } from './fixtures/sound'
+import { FALLING, FRAME } from './fixtures/sound'
 import { tuneUrl } from './fixtures/tune'
 
 /**
  * A live picture of what is playing, read from a media element or a microphone's stream through
- * Web Audio: a spectrum, an area, a wave or a ring. The still stories draw a frame of levels and
- * samples without any audio; Live plays a tune made in the page.
+ * Web Audio: a spectrum, an area, a wave or a ring, in one color or along a ramp, mirrored, glowing
+ * or leaving trails. The still stories draw a frame of levels and samples without any audio; Live
+ * plays a tune made in the page.
  */
 const meta: Meta = { title: 'Media/Sound visualizer' }
 export default meta
@@ -113,6 +123,122 @@ export const Backdrop: StoryObj = {
     ),
 }
 
+const RAMPS: readonly { title: string; ramp: SoundRamp }[] = [
+    ...(Object.keys(SOUND_RAMPS) as SoundRampName[]).map((name) => ({ title: name, ramp: name })),
+    { title: "['warning', 'primary', 'critical']", ramp: ['warning', 'primary', 'critical'] },
+]
+
+/**
+ * The named ramps, each made of the theme's tokens, and stops given by hand: amber through the
+ * theme's primary to red. Colored by height, so a tall bar runs through the whole ramp on its way up.
+ */
+export const Ramps: StoryObj = {
+    parameters: { frame: 'padded' },
+    render: () => (
+        <Columns count={2} min="sm">
+            {RAMPS.map((entry) => (
+                <Section key={entry.title} title={entry.title} flush>
+                    <div className="h-40">
+                        <SoundVisualizer frame={FRAME} ramp={entry.ramp} />
+                    </div>
+                </Section>
+            ))}
+        </Columns>
+    ),
+}
+
+/** Each bar, and each spoke of a ring, in the one color of the ramp its level reaches. */
+export const ByLevel: StoryObj = {
+    name: 'By level',
+    render: () => (
+        <Stack gap="md" className="h-svh bg-background p-4 text-foreground sm:p-6">
+            <Surface className="min-h-0 flex-1">
+                <SoundVisualizer frame={FRAME} ramp="heat" rampBy="level" />
+            </Surface>
+            <Surface className="min-h-0 flex-1">
+                <SoundVisualizer kind="ring" frame={FRAME} ramp="heat" rampBy="level" />
+            </Surface>
+        </Stack>
+    ),
+}
+
+/** The named ramps in every theme, each tile scoped to its theme with `data-theme-scope`, in the scheme the toolbar sets. */
+export const EveryTheme: StoryObj = {
+    name: 'Every theme',
+    parameters: { frame: 'padded' },
+    render: () => (
+        <Columns min="sm" gap="lg">
+            {THEMES.map((theme) => (
+                <Stack
+                    key={theme.value}
+                    gap="sm"
+                    data-theme-scope={theme.value}
+                    className="rounded-surface bg-background p-3 text-foreground"
+                >
+                    <span className="text-head">{theme.label}</span>
+                    {(Object.keys(SOUND_RAMPS) as SoundRampName[]).map((name) => (
+                        <div key={name} className="h-16">
+                            <SoundVisualizer frame={FRAME} ramp={name} label={name} />
+                        </div>
+                    ))}
+                </Stack>
+            ))}
+        </Columns>
+    ),
+}
+
+/** The bars over their reflection, which fades toward the foot; an area mirrors the same way. */
+export const Mirror: StoryObj = {
+    render: () => (
+        <Stack gap="md" className="h-svh bg-background p-4 text-foreground sm:p-6">
+            <Surface className="min-h-0 flex-1">
+                <SoundVisualizer frame={FRAME} ramp="cool" mirror />
+            </Surface>
+            <Surface className="min-h-0 flex-1">
+                <SoundVisualizer kind="area" frame={FRAME} ramp="cool" mirror />
+            </Surface>
+        </Stack>
+    ),
+}
+
+/** What is lit blooming in its own colors along the ramp. Off while motion is reduced. */
+export const Glow: StoryObj = {
+    render: () => (
+        <Ground>
+            <SoundVisualizer frame={FRAME} ramp="heat" effect="glow" />
+        </Ground>
+    ),
+}
+
+/** Steps through a hit falling away once, one frame at a time, and holds the last. */
+function FallingHit({ kind }: { kind: SoundKind }) {
+    const [step, setStep] = useState(0)
+    useEffect(() => {
+        if (step >= FALLING.length - 1) return
+        const request = requestAnimationFrame(() => setStep(step + 1))
+        return () => cancelAnimationFrame(request)
+    }, [step])
+    return <SoundVisualizer kind={kind} frame={FALLING[step]} ramp="lagoon" effect="trails" />
+}
+
+/**
+ * A hit falling away, frame by frame as an app passes levels it holds, each frame leaving a fading
+ * afterimage above the next: the bars, and a wave's trace shrinking. It plays once and holds the
+ * last frame. Off while motion is reduced.
+ */
+export const Trails: StoryObj = {
+    render: () => (
+        <Stack gap="md" className="h-svh bg-background p-4 text-foreground sm:p-6">
+            <Surface className="min-h-0 flex-1">
+                <FallingHit kind="spectrum" />
+            </Surface>
+            <Surface className="min-h-0 flex-1">
+                <FallingHit kind="wave" />
+            </Surface>
+        </Stack>
+    ),
+}
+
 /** A tune made in the page, played through an audio element; it is made on the first play. */
 function useTune() {
     const [audio, setAudio] = useState<HTMLAudioElement | null>(null)
@@ -134,9 +260,23 @@ function useTune() {
 function LiveTune() {
     const tune = useTune()
     const [kind, setKind] = useState<SoundKind>('spectrum')
+    const [ramp, setRamp] = useState<RampChoice>('color')
+    const [effect, setEffect] = useState<SoundEffect>('none')
+    const [mirror, setMirror] = useState(false)
     return (
         <Stack gap="md" className="h-svh bg-background p-4 text-foreground sm:p-6">
-            <Toolbar end={<Segmented label="Kind" value={kind} options={KINDS} onValueChange={setKind} />}>
+            <Toolbar
+                end={
+                    <>
+                        <Segmented label="Kind" value={kind} options={KINDS} onValueChange={setKind} />
+                        <Segmented label="Colors" value={ramp} options={RAMP_CHOICES} onValueChange={setRamp} />
+                        <Segmented label="Effect" value={effect} options={EFFECTS} onValueChange={setEffect} />
+                        <Toggle variant="outline" size="sm" pressed={mirror} onPressedChange={setMirror}>
+                            Mirror
+                        </Toggle>
+                    </>
+                }
+            >
                 <PlayButton playing={tune.playing} onToggle={tune.toggle} words={{ play: 'Play', pause: 'Pause' }} />
                 <MetaLine items={['A tune made in the page', '0:08, looping']} />
             </Toolbar>
@@ -144,6 +284,9 @@ function LiveTune() {
                 <SoundVisualizer
                     source={tune.audio}
                     kind={kind}
+                    ramp={ramp === 'color' ? undefined : ramp}
+                    effect={effect}
+                    mirror={mirror}
                     middle={kind === 'ring' ? <Artwork cover={{ motif: 'wave', from: 'violet', to: 'pink' }} /> : undefined}
                 />
             </Surface>
@@ -152,6 +295,23 @@ function LiveTune() {
     )
 }
 
+type RampChoice = 'color' | SoundRampName
+
+const RAMP_CHOICES: readonly Segment<RampChoice>[] = [
+    { value: 'color', label: 'Plain' },
+    { value: 'heat', label: 'Heat' },
+    { value: 'cool', label: 'Cool' },
+    { value: 'lagoon', label: 'Lagoon' },
+    { value: 'ink', label: 'Ink' },
+]
+
+const EFFECTS: readonly Segment<SoundEffect>[] = [
+    { value: 'none', label: 'None' },
+    { value: 'glow', label: 'Glow' },
+    { value: 'trails', label: 'Trails' },
+]
+
+/** The tune with its kind, colors, effect and mirror picked while it plays. Glow and trails are off while motion is reduced. */
 export const Live: StoryObj = { render: () => <LiveTune /> }
 
 const DELAYS: readonly Segment<string>[] = [

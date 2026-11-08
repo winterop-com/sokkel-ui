@@ -555,6 +555,23 @@ reading goes into a short ring stamped with its time, and the one drawn is as ol
 a hand-set correction on top. The `bar-visualizer` primitive, a
 voice input's level bars, is drawn by it.
 
+In place of its one `color`, the visualizer draws along a `ramp` from quiet to loud: a named ramp
+made of the theme's tokens (`heat` from the warning ink to the critical one, `cool`, `lagoon`,
+`ink`, `primary`; `SOUND_RAMPS` in `media/sound`), or stops an app gives, each a token by name or a
+CSS color, such as `['warning', 'primary', 'critical']` for a spectrum from amber through the
+theme's primary to red. The stops are read in the canvas's own scope, so a ramp follows the theme, the scheme and a
+`data-theme-scope` around it, and mixed in oklab into a few dozen colors once per theme, never per
+frame. `rampBy="height"` (the default) runs the ramp up the box from the baseline as one gradient,
+out from the middle line for a centered drawing and a wave, and out from a ring's circle, so a tall
+bar passes through every color; `rampBy="level"` draws each bar and spoke in the one color its
+level reaches. `mirror` draws a spectrum's bars or an area's curve standing on the floor over a
+reflection that fades toward the foot. `effect` is `none`, `glow` or `trails`, both drawn on the
+same canvas at little cost: a glow is the picture shrunk by halves and stretched back behind itself,
+so what is lit blooms in its own colors; trails wipe only part of the last picture before drawing
+the next, a share set per sixtieth of a second so a fast screen trails as long as a slow one, and a
+quiet frame is drawn clean, so what rests is the floor. Trails also follow a `frame` the app
+changes, as one passing levels it holds. Both are off while motion is reduced (`useReducedMotion`).
+
 ## Validation
 
 Option F, picked from the validation research. A field with a problem gets a colored

@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, type ReactNode } from 'react'
 
+import { useReducedMotion } from '../../hooks/use-reduced-motion'
 import { cn } from '../../lib/cn'
 import {
     MUSIC_RANGE,
@@ -9,24 +10,34 @@ import {
     barLayout,
     holdPeak,
     isQuiet,
+    mirrorBase,
+    rampAlong,
+    rampIndex,
+    rampStops,
+    rampSteps,
     resample,
     ringRadii,
     ringSpokes,
     settle,
+    stopColor,
+    trailFade,
     triggerAt,
     waveGain,
     wavePoints,
     WAVE_SPAN,
     type Point,
     type SoundAlign,
+    type SoundEffect,
     type SoundFrame,
     type SoundKind,
+    type SoundRamp,
+    type SoundRampBy,
     type SoundRange,
 } from './sound'
 import { clampDelay, createDelay, outputDelay } from './sound-delay'
 import { isAnalyser, isStream, soundGraph, sounding, type SoundSource, type SoundTap } from './sound-source'
 
-export type { SoundAlign, SoundFrame, SoundKind, SoundRange } from './sound'
+export type { SoundAlign, SoundEffect, SoundFrame, SoundKind, SoundRamp, SoundRampBy, SoundRampName, SoundRange } from './sound'
 export type { SoundSource } from './sound-source'
 
 export interface SoundVisualizerProps {
@@ -55,8 +66,27 @@ export interface SoundVisualizerProps {
     ceiling?: number
     /** The widest a bar is drawn, in pixels; a row of narrower bars is centered. */
     barWidth?: number
-    /** The color token the drawing is inked in, by name: `primary`, `chart-3`, `kind-teal`. */
+    /** The color token the drawing is inked in, by name: `primary`, `chart-3`, `kind-teal`. A `ramp` takes its place. */
     color?: string
+    /**
+     * The colors the drawing runs through from quiet to loud, in place of the one `color`: a named
+     * ramp of the theme's tokens (`heat`, `cool`, `lagoon`, `ink`, `primary`, listed in
+     * `SOUND_RAMPS`), or stops, each a token by name or a CSS color, such as
+     * `['warning', 'primary', 'critical']` for amber through the theme's primary to red.
+     */
+    ramp?: SoundRamp
+    /** What places a bar or a spoke on the ramp: its height in the box, or its level. */
+    rampBy?: SoundRampBy
+    /**
+     * A reflection of a spectrum's bars or an area's curve below their baseline, fading toward the
+     * foot; for a drawing standing on the floor.
+     */
+    mirror?: boolean
+    /**
+     * `glow` blooms what is lit in its own colors; `trails` leaves a short fading afterimage of the
+     * frames before, while live or as an app's `frame` changes. Both are off while motion is reduced.
+     */
+    effect?: SoundEffect
     /** Drawn faint, to stand behind text such as a player's title. */
     backdrop?: boolean
     /**
@@ -83,6 +113,10 @@ export interface SoundVisualizerProps {
  * drawn on a canvas: a spectrum of bars, an area, a wave or a ring. It fills the box it is given,
  * draws in the theme's colors and follows the scheme as it changes.
  *
+ * It draws in one color token, or along a `ramp` of tokens or CSS colors by height or by level; a
+ * spectrum or an area can stand over its faded reflection (`mirror`), and `effect` adds a glow or
+ * trails, both off while motion is reduced.
+ *
  * It moves only while the source sounds and the box is in view. When the sound stops it falls to
  * rest and holds still, with no frame loop running; hidden or unmounted, it stops at once. A
  * `frame` draws without any audio.
@@ -102,6 +136,10 @@ export function SoundVisualizer({
     ceiling = 1,
     barWidth,
     color = 'primary',
+    ramp,
+    rampBy = 'height',
+    mirror = false,
+    effect = 'none',
     backdrop = false,
     delay = 0,
     delayOffset = 0,
@@ -113,6 +151,10 @@ export function SoundVisualizer({
     const box = useRef<HTMLDivElement>(null)
     const canvas = useRef<HTMLCanvasElement>(null)
     const engine = useRef<Engine | null>(null)
+    const reduced = useReducedMotion()
+    const shownEffect = reduced ? 'none' : effect
+    // Joined, so stops written inline in the render are not taken as a new ramp each time.
+    const rampKey = ramp === undefined ? '' : rampStops(ramp).join('\n')
 
     useLayoutEffect(() => {
         if (box.current === null || canvas.current === null) return
@@ -135,13 +177,35 @@ export function SoundVisualizer({
             floor,
             ceiling,
             barWidth,
+            ramp: rampKey === '' ? undefined : rampKey.split('\n'),
+            rampBy,
+            mirror,
+            effect: shownEffect,
             backdrop,
             frame,
             playing,
             delay,
             delayOffset,
         })
-    }, [kind, align, bands, low, high, floor, ceiling, barWidth, backdrop, frame, playing, delay, delayOffset])
+    }, [
+        kind,
+        align,
+        bands,
+        low,
+        high,
+        floor,
+        ceiling,
+        barWidth,
+        rampKey,
+        rampBy,
+        mirror,
+        shownEffect,
+        backdrop,
+        frame,
+        playing,
+        delay,
+        delayOffset,
+    ])
 
     useLayoutEffect(() => {
         engine.current?.restyle()
@@ -181,6 +245,11 @@ interface Look {
     floor: number
     ceiling: number
     barWidth: number | undefined
+    /** The ramp's stops, quiet first, or none to ink in the one color. */
+    ramp: readonly string[] | undefined
+    rampBy: SoundRampBy
+    mirror: boolean
+    effect: SoundEffect
     backdrop: boolean
     frame: SoundFrame | undefined
     /** Whether an analyser source is playing; elements and streams say so themselves. */
@@ -205,6 +274,16 @@ const QUIET_INK = 0.55
 /** The shortest a bar or spoke is drawn, in pixels, so a silent one still shows as a tick. */
 const TICK = 2
 const FRAME_MS = 1000 / 60
+/** How many colors a ramp is mixed into, for a gradient up the box and for a bar colored by its level. */
+const SHADES = 24
+/** How strong a mirror's reflection starts at its baseline, fading to nothing at the foot. */
+const REFLECTION = 0.45
+/** The room between the bars and their reflection, in pixels. */
+const MIRROR_GAP = 2
+/** How far a glow reaches, in pixels: about how far the halo spreads past what is lit. */
+const GLOW_REACH = 14
+/** How strong the glow is drawn behind the picture. */
+const GLOW = 0.9
 /** How often the latency the browser reports is read again while drawing, in milliseconds, as an output can change. */
 const REPORT_MS = 1000
 const ELEMENT_EVENTS = ['play', 'playing', 'pause', 'ended', 'emptied'] as const
@@ -221,6 +300,10 @@ function createEngine(canvas: HTMLCanvasElement, box: HTMLDivElement): Engine {
         floor: 0,
         ceiling: 1,
         barWidth: undefined,
+        ramp: undefined,
+        rampBy: 'height',
+        mirror: false,
+        effect: 'none',
         backdrop: false,
         frame: undefined,
         playing: true,
@@ -231,6 +314,13 @@ function createEngine(canvas: HTMLCanvasElement, box: HTMLDivElement): Engine {
     let height = 0
     let ink = ''
     let corner = 0
+    // The ramp mixed into colors the canvas paints, quiet first; empty to ink in the one color.
+    let shades: string[] = []
+    let rampKey = ''
+    let gradient: CanvasGradient | null = null
+    let gradientKey = ''
+    // Two canvases a glow shrinks the picture through, made the first time one glows.
+    let glows: [HTMLCanvasElement, HTMLCanvasElement] | null = null
     let visible = true
     let destroyed = false
 
@@ -279,15 +369,123 @@ function createEngine(canvas: HTMLCanvasElement, box: HTMLDivElement): Engine {
         box.dataset.state = state
     }
 
-    const paint = () => {
+    /**
+     * Colors read in the canvas's own scope, so a ramp follows a `data-theme-scope` around it. One
+     * that is no color comes back as the ink, and a token that is not set as the inherited color.
+     */
+    const readColors = (colors: readonly string[]) => {
+        const kept = canvas.style.color
+        const read = colors.map((color) => {
+            canvas.style.color = kept
+            canvas.style.color = color
+            return getComputedStyle(canvas).color
+        })
+        canvas.style.color = kept
+        return read
+    }
+
+    /** Mixes the ramp into the colors the canvas paints, in the theme as it is now. */
+    const resolveRamp = () => {
+        const stops = look.ramp ?? []
+        rampKey = stops.join('\n')
+        shades = stops.length === 0 ? [] : readColors(rampSteps(readColors(stops.map(stopColor)), stops.length === 1 ? 1 : SHADES))
+        gradient = null
+    }
+
+    /** Whether the drawing has a reflection under it: a spectrum or an area standing on the floor. */
+    const mirrored = () => look.mirror && look.align === 'bottom' && (look.kind === 'spectrum' || look.kind === 'area')
+
+    /**
+     * What the drawing is filled and stroked with: the ink, or the ramp as a gradient up the box
+     * from the baseline, out from the middle line, or out from a ring's circle. Made again only
+     * when the box, the kind or the ramp changes.
+     */
+    const fill = (draw: CanvasRenderingContext2D, base: number): string | CanvasGradient => {
+        const quiet = shades[0]
+        if (quiet === undefined) return ink
+        if (shades.length === 1) return quiet
+        const key = [look.kind, look.align, base, width, height, rampKey].join('|')
+        if (gradient !== null && key === gradientKey) return gradient
+        let made: CanvasGradient
+        let centered = false
+        if (look.kind === 'ring') {
+            const { inner, reach } = ringRadii(width, height)
+            made = draw.createRadialGradient(width / 2, height / 2, inner, width / 2, height / 2, inner + reach)
+        } else if (look.kind === 'wave' || look.align === 'center') {
+            made = draw.createLinearGradient(0, 0, 0, height)
+            centered = true
+        } else {
+            made = draw.createLinearGradient(0, base, 0, 0)
+        }
+        for (const stop of rampAlong(shades.length, centered)) made.addColorStop(stop.offset, shades[stop.step] ?? quiet)
+        gradient = made
+        gradientKey = key
+        return made
+    }
+
+    /**
+     * Blooms the picture: shrunk by halves and stretched back over the whole box, drawn behind
+     * itself, so what is lit glows in its own colors. A few small copies a frame, so it costs
+     * little at any size.
+     */
+    const bloom = (draw: CanvasRenderingContext2D, ratio: number, strength: number) => {
+        glows ??= [document.createElement('canvas'), document.createElement('canvas')]
+        const halvings = Math.max(1, Math.round(Math.log2(GLOW_REACH * ratio)))
+        let from: HTMLCanvasElement = canvas
+        let wide = canvas.width
+        let tall = canvas.height
+        for (let step = 0; step < halvings; step += 1) {
+            const into = glows[step % 2]
+            const shrunk = into.getContext('2d')
+            if (shrunk === null) return
+            const nextWide = Math.max(1, Math.ceil(wide / 2))
+            const nextTall = Math.max(1, Math.ceil(tall / 2))
+            if (into.width < nextWide || into.height < nextTall) {
+                into.width = Math.max(into.width, nextWide)
+                into.height = Math.max(into.height, nextTall)
+            }
+            shrunk.clearRect(0, 0, nextWide, nextTall)
+            shrunk.drawImage(from, 0, 0, wide, tall, 0, 0, nextWide, nextTall)
+            from = into
+            wide = nextWide
+            tall = nextTall
+        }
+        draw.setTransform(1, 0, 0, 1, 0, 0)
+        draw.globalCompositeOperation = 'destination-over'
+        draw.globalAlpha = GLOW * strength
+        draw.imageSmoothingEnabled = true
+        draw.drawImage(from, 0, 0, wide, tall, 0, 0, canvas.width, canvas.height)
+        draw.globalCompositeOperation = 'source-over'
+    }
+
+    /**
+     * Draws the picture. `fade` above zero keeps the last one, wiped by that share, under the new
+     * one, as trails draw; otherwise the canvas is cleared first.
+     */
+    const paint = (fade = 0) => {
         if (context === null || width <= 0 || height <= 0) return
         context.setTransform(1, 0, 0, 1, 0, 0)
-        context.clearRect(0, 0, canvas.width, canvas.height)
+        context.globalAlpha = 1
+        context.globalCompositeOperation = 'source-over'
+        if (fade > 0 && fade < 1) {
+            // Only the wipe's strength counts, never its color.
+            context.globalCompositeOperation = 'destination-out'
+            context.globalAlpha = fade
+            context.fillStyle = ink
+            context.fillRect(0, 0, canvas.width, canvas.height)
+            context.globalCompositeOperation = 'source-over'
+            context.globalAlpha = 1
+        } else context.clearRect(0, 0, canvas.width, canvas.height)
         const ratio = canvas.width / width
         context.setTransform(ratio, 0, 0, ratio, 0, 0)
-        context.fillStyle = ink
-        context.strokeStyle = ink
+        const room = mirrored() ? mirrorBase(height) : null
+        const base = room?.base ?? height
+        const style = fill(context, base)
+        context.fillStyle = style
+        context.strokeStyle = style
         const strength = look.backdrop ? BACKDROP : 1
+        const shade =
+            look.rampBy === 'level' && shades.length > 1 ? (level: number) => shades[rampIndex(level, shades.length)] ?? ink : undefined
         const shown = look.frame
         if (look.kind === 'wave') {
             paintWave(context, shown === undefined ? samples : (shown.samples ?? []), width, height, strength)
@@ -297,10 +495,13 @@ function createEngine(canvas: HTMLCanvasElement, box: HTMLDivElement): Engine {
             const fitted = raw.length === wanted ? raw : raw.length === 0 ? Array.from({ length: wanted }, () => 0) : resample(raw, wanted)
             const span = look.ceiling - look.floor
             const scaled = fitted.map((level) => look.floor + span * Math.min(1, Math.max(0, level)))
-            if (look.kind === 'spectrum') paintSpectrum(context, fitted, scaled, width, height, look, corner, strength)
-            else if (look.kind === 'area') paintArea(context, scaled, width, height, look.align, strength)
-            else paintRing(context, fitted, scaled, width, height, corner, strength)
+            if (look.kind === 'spectrum') paintSpectrum(context, fitted, scaled, width, base, look, corner, strength, shade)
+            else if (look.kind === 'area') paintArea(context, scaled, width, base, look.align, strength)
+            else paintRing(context, fitted, scaled, width, height, corner, strength, shade)
         }
+        if (room !== null) reflect(context, canvas, base * ratio, MIRROR_GAP * ratio, ink)
+        if (look.effect === 'glow') bloom(context, ratio, strength)
+        context.setTransform(1, 0, 0, 1, 0, 0)
         context.globalAlpha = 1
     }
 
@@ -318,6 +519,7 @@ function createEngine(canvas: HTMLCanvasElement, box: HTMLDivElement): Engine {
         const style = getComputedStyle(canvas)
         ink = style.color
         corner = Number.parseFloat(style.getPropertyValue('--radius')) || 0
+        resolveRamp()
         paint()
     }
 
@@ -356,7 +558,8 @@ function createEngine(canvas: HTMLCanvasElement, box: HTMLDivElement): Engine {
             levels = settle(levels, bandLevels(reading, count(), tap.sampleRate, look.range), elapsed)
             quiet = isQuiet(levels)
         }
-        if (!(quiet && quietPainted) && look.frame === undefined) paint()
+        // A quiet frame is drawn clean, so what rests is the floor rather than a fading afterimage.
+        if (!(quiet && quietPainted) && look.frame === undefined) paint(look.effect === 'trails' && !quiet ? trailFade(elapsed) : 0)
         quietPainted = quiet
         // After the sound stops the bands keep falling until they rest, and a held-back picture
         // plays out what the output has still to play, then the loop ends.
@@ -438,12 +641,19 @@ function createEngine(canvas: HTMLCanvasElement, box: HTMLDivElement): Engine {
 
     return {
         set(next) {
+            // A frame that follows another, as an app passes its own levels, leaves trails as the loop does.
+            const stepped = next.frame !== undefined && look.frame !== undefined && next.frame !== look.frame
             look = next
             quietPainted = false
             reportedAt = Number.NEGATIVE_INFINITY
+            if ((look.ramp ?? []).join('\n') !== rampKey) resolveRamp()
+            // The canvases a glow shrinks through are let go once it is off.
+            if (look.effect !== 'glow') glows = null
             if (look.frame !== undefined) stop()
             else if (source !== null) changed()
-            paint()
+            const shown = look.frame
+            const quiet = shown === undefined || isQuiet(look.kind === 'wave' ? (shown.samples ?? []) : (shown.levels ?? []))
+            paint(stepped && look.effect === 'trails' && !quiet ? trailFade(FRAME_MS) : 0)
         },
         restyle,
         listen(next) {
@@ -490,6 +700,7 @@ function paintSpectrum(
     look: Look,
     corner: number,
     strength: number,
+    shade?: (level: number) => string,
 ) {
     const { bar: wide, gap, offset } = barLayout(width, scaled.length, look.barWidth)
     const centered = look.align === 'center'
@@ -498,9 +709,36 @@ function paintSpectrum(
         const tall = Math.max(least, level * height)
         const x = offset + index * (wide + gap)
         const y = centered ? (height - tall) / 2 : height - tall
-        context.globalAlpha = strength * (QUIET_INK + (1 - QUIET_INK) * unit(levels[index] ?? 0))
+        const loud = unit(levels[index] ?? 0)
+        context.globalAlpha = strength * (QUIET_INK + (1 - QUIET_INK) * loud)
+        if (shade !== undefined) context.fillStyle = shade(loud)
         bar(context, x, y, wide, tall, Math.min(corner, wide / 2, tall / 2), !centered)
     })
+}
+
+/**
+ * Draws what stands above the baseline again below it, upside down past a small gap, and fades it
+ * toward the foot. In the canvas's own pixels; `ink` only wipes, so its color never shows.
+ */
+function reflect(context: CanvasRenderingContext2D, canvas: HTMLCanvasElement, baseline: number, gap: number, ink: string) {
+    const base = Math.round(baseline)
+    const room = canvas.height - base
+    const span = Math.min(room, base)
+    if (room <= 0 || span <= 0) return
+    context.setTransform(1, 0, 0, 1, 0, 0)
+    context.clearRect(0, base, canvas.width, room)
+    context.setTransform(1, 0, 0, -1, 0, 2 * base + Math.round(gap))
+    context.globalAlpha = REFLECTION
+    context.drawImage(canvas, 0, base - span, canvas.width, span, 0, base - span, canvas.width, span)
+    context.setTransform(1, 0, 0, 1, 0, 0)
+    context.globalAlpha = 1
+    context.globalCompositeOperation = 'destination-out'
+    const fade = context.createLinearGradient(0, base, 0, canvas.height)
+    fade.addColorStop(0, 'transparent')
+    fade.addColorStop(1, ink)
+    context.fillStyle = fade
+    context.fillRect(0, base, canvas.width, room)
+    context.globalCompositeOperation = 'source-over'
 }
 
 /** A curve through the points, joined through the midpoints between neighbors and run flat to both edges. */
@@ -577,6 +815,7 @@ function paintRing(
     height: number,
     corner: number,
     strength: number,
+    shade?: (level: number) => string,
 ) {
     const { inner, reach } = ringRadii(width, height)
     if (inner <= 0 || scaled.length === 0) return
@@ -592,7 +831,9 @@ function paintRing(
     context.lineCap = corner > 0 ? 'round' : 'butt'
     const spokes = ringSpokes(scaled, center, inner, reach - thick, TICK)
     spokes.forEach((spoke, index) => {
-        context.globalAlpha = strength * (QUIET_INK + (1 - QUIET_INK) * unit(levels[index % levels.length] ?? 0))
+        const loud = unit(levels[index % levels.length] ?? 0)
+        context.globalAlpha = strength * (QUIET_INK + (1 - QUIET_INK) * loud)
+        if (shade !== undefined) context.strokeStyle = shade(loud)
         context.beginPath()
         context.moveTo(spoke.from.x, spoke.from.y)
         context.lineTo(spoke.to.x, spoke.to.y)

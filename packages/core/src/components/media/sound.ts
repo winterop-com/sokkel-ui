@@ -14,8 +14,133 @@ export type SoundKind = 'spectrum' | 'area' | 'wave' | 'ring'
 
 export const SOUND_KINDS: readonly SoundKind[] = ['spectrum', 'area', 'wave', 'ring']
 
+/** One frame of a sixty-per-second screen, in milliseconds, the step the rates below are given in. */
+const FRAME_MS = 1000 / 60
+
 /** Where a spectrum's bars or an area's curve stand: on the floor, or about the middle line. */
 export type SoundAlign = 'bottom' | 'center'
+
+/**
+ * A ramp the drawing is colored along, by name, each made of the theme's tokens so it follows the
+ * theme: `heat` from the warning ink to the critical one, `cool` from teal through blue to violet,
+ * `lagoon` from green through teal to violet, `ink` from the muted ink to the text's, and `primary`
+ * from the muted ink into the theme's primary.
+ */
+export type SoundRampName = 'heat' | 'cool' | 'lagoon' | 'ink' | 'primary'
+
+/** The named ramps' stops, quiet first, as token names. */
+export const SOUND_RAMPS: Readonly<Record<SoundRampName, readonly string[]>> = {
+    heat: ['warning', 'critical'],
+    cool: ['kind-teal', 'kind-blue', 'kind-violet'],
+    lagoon: ['kind-green', 'kind-teal', 'kind-violet'],
+    ink: ['muted-foreground', 'foreground'],
+    primary: ['muted-foreground', 'primary'],
+}
+
+/**
+ * The colors a drawing runs through from quiet to loud: a named ramp, or stops, each a token by
+ * name (`warning`, `primary`) or a CSS color (`oklch(0.7 0.15 30)`, `var(--brand)`).
+ */
+export type SoundRamp = SoundRampName | readonly string[]
+
+/**
+ * What places a bar on its ramp: its `height`, the ramp running up the box so a tall bar passes
+ * through every color on its way up, or its `level`, each bar in the one color its loudness
+ * reaches. An area and a wave are colored by height either way, a wave by how far it swings from
+ * the middle.
+ */
+export type SoundRampBy = 'height' | 'level'
+
+/**
+ * What is done over the drawing: `glow` blooms what is lit in its own colors, and `trails` leaves
+ * a short fading afterimage of the frames before.
+ */
+export type SoundEffect = 'none' | 'glow' | 'trails'
+
+/** A ramp's stops, quiet first: a named ramp's tokens, or the stops given. */
+export function rampStops(ramp: SoundRamp): readonly string[] {
+    return typeof ramp === 'string' ? (SOUND_RAMPS[ramp as SoundRampName] ?? []) : ramp
+}
+
+/**
+ * A stop as a CSS color: a bare name is read as a token, and as the CSS color of that name where
+ * no token has it; anything else is a CSS color as written.
+ */
+export function stopColor(stop: string): string {
+    const name = stop.trim()
+    return /^[a-z][a-z0-9-]*$/i.test(name) ? `var(--${name}, ${name})` : name
+}
+
+/**
+ * `count` colors evenly along stops already resolved, quiet first, each mixed in oklab between the
+ * two stops either side of it, so a ramp through a few stops reads as one smooth run.
+ */
+export function rampSteps(stops: readonly string[], count: number): string[] {
+    const first = stops[0]
+    if (first === undefined || count <= 0) return []
+    if (stops.length === 1 || count === 1) return Array.from({ length: count }, () => first)
+    return Array.from({ length: count }, (_, index) => {
+        const at = (index / (count - 1)) * (stops.length - 1)
+        const below = Math.min(stops.length - 2, Math.floor(at))
+        const share = Math.round((at - below) * 100)
+        const from = stops[below] ?? first
+        const to = stops[below + 1] ?? from
+        if (share <= 0) return from
+        if (share >= 100) return to
+        return `color-mix(in oklab, ${from}, ${to} ${String(share)}%)`
+    })
+}
+
+/** Which of `count` steps along a ramp a level from 0 to 1 is drawn in. */
+export function rampIndex(level: number, count: number): number {
+    if (count <= 1 || !(level > 0)) return 0
+    return Math.round(Math.min(1, level) * (count - 1))
+}
+
+/** One color stop of a canvas gradient: where along it, from 0 to 1, and which step of the ramp. */
+export interface RampStop {
+    offset: number
+    step: number
+}
+
+/**
+ * Where `count` steps of a ramp sit along a gradient. From a baseline out, quiet at 0 and loud at
+ * 1; about the middle (`centered`), quiet at the middle and loud at both ends, so a bar standing
+ * up from the middle line and one hanging down from it wear the same colors.
+ */
+export function rampAlong(count: number, centered: boolean): RampStop[] {
+    if (count <= 0) return []
+    const share = (step: number) => (count === 1 ? 0 : step / (count - 1))
+    if (!centered) return Array.from({ length: count }, (_, step) => ({ offset: share(step), step }))
+    const stops: RampStop[] = []
+    for (let step = count - 1; step >= 0; step -= 1) stops.push({ offset: 0.5 - share(step) / 2, step })
+    for (let step = 1; step < count; step += 1) stops.push({ offset: 0.5 + share(step) / 2, step })
+    return stops
+}
+
+/** How much of a reflected spectrum's height the reflection takes, below the baseline. */
+export const MIRROR_SHARE = 0.3
+
+/**
+ * Where bars mirrored below their baseline stand, in a box this tall: the baseline, and the room
+ * the reflection has under it.
+ */
+export function mirrorBase(height: number): { base: number; room: number } {
+    const room = Math.max(0, Math.round(height * MIRROR_SHARE))
+    return { base: Math.max(0, height - room), room }
+}
+
+/** How much of what was drawn is wiped in each sixtieth of a second while trails are on. */
+export const TRAIL_FADE = 0.24
+
+/**
+ * How much of the last picture to wipe before drawing the next one, after `elapsedMs`, so trails
+ * are as long on a fast screen as on a slow one: about a sixth of a second to fade to nothing.
+ */
+export function trailFade(elapsedMs: number): number {
+    const steps = Math.max(0, elapsedMs) / FRAME_MS
+    return Math.min(1, 1 - (1 - TRAIL_FADE) ** steps)
+}
 
 /** One still picture of sound, drawn without any audio: a story's frame, or levels an app already holds. */
 export interface SoundFrame {
@@ -111,8 +236,6 @@ export function resample(levels: readonly number[], count: number): number[] {
 /** How far a band moves toward a louder reading in one sixtieth of a second, and toward a quieter one. */
 export const ATTACK = 0.55
 export const RELEASE = 0.14
-
-const FRAME_MS = 1000 / 60
 
 /**
  * This frame's levels settled against the last frame's: a band rises most of the way to a louder
