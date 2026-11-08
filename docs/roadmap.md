@@ -6,7 +6,15 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.9.3** is the latest release (2026-11-08): the validation round (`IssueCount` with a figure
+- **0.10.0** is the latest release (2026-11-08), built from the apps: each app's own screens laid
+  beside the library. `SignIn`; the code editor with languages, jq, completion, hover, ranged marks,
+  keys, search, folding and JSON Schema checks; code colors for every theme; `Markdown` parts;
+  `AnsiText`; `WindowedPane`, `useStored`, `useUploads`, `DataTable` row groups and
+  `ConversationHistory`; `SplitButton`, `RelativeTime`, `ApiLink`, `DownloadButton`, `TagChips`;
+  `ChipBar`, `ProfileRow`, `CommentThread`, `EditPreview`, `ShowMore`, `EventDetails`; one table of
+  type roles; one API shape for words, panel sizes, popovers and choices (renamed props listed in
+  the release notes). 0.10.x carries what follows from it.
+- **0.9.3** (2026-11-08): the validation round (`IssueCount` with a figure
   per kind, `IssueMarks` along a long form's scroll area, `FormBar` verbs that wrap), Patterns/Validation,
   a cancel button only with `onCancel` for an uploading file in `AttachmentList`, and mono in
   `text-2xs` at the small share.
@@ -33,7 +41,7 @@ to `plan.md` when it ships.
 - The first app has adopted it. A PR still merges as soon as the local gates pass and main's CI
   catches the rest; a release waits for green.
 
-## 0.10: example apps
+## Example apps
 
 - **Working demo apps outside Storybook.** In `examples/`, built against the package as an app would
   be: a data visualizer (a table of data with chart views to pick, saved and shared), and others to
