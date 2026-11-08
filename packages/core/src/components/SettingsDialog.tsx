@@ -140,9 +140,7 @@ export function SettingsDialog({
                             <ChevronLeft aria-hidden />
                         </IconButton>
                     )}
-                    <DialogTitle className={cn('flex-1 text-base leading-6 font-medium', !inSection && 'max-sm:pl-2')}>
-                        {say.title}
-                    </DialogTitle>
+                    <DialogTitle className={cn('flex-1', !inSection && 'max-sm:pl-2')}>{say.title}</DialogTitle>
                     <DialogClose render={<Button variant="ghost" size="icon-sm" aria-label={say.close} title={say.close} />}>
                         <XIcon aria-hidden />
                     </DialogClose>
@@ -208,7 +206,7 @@ export function SettingsDialog({
                             <p className="text-sm text-muted-foreground">{say.noMatch}</p>
                         ) : (
                             <section className="flex flex-col">
-                                <h2 className="pb-1 text-base font-semibold">{shown.heading ?? shown.label}</h2>
+                                <h2 className="pb-1 text-detail-title">{shown.heading ?? shown.label}</h2>
                                 <div className="flex flex-col divide-y divide-border">
                                     {shown.settings.map((setting) => (
                                         <SettingRow

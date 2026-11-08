@@ -1,8 +1,11 @@
 /*
  * Mono beside sans: Plex Mono is as tall as Plex Sans but its words run about 20 percent wider, so at
  * an equal size it reads larger. `font-size-adjust` sets every mono face's x-height to a share of the
- * text size instead: `--mono-x-height` at body size, `--mono-x-height-small` inside small text (`text-xs` and
- * `text-2xs`).
+ * text size instead: `--mono-x-height` at body size, `--mono-x-height-small` inside small text.
+ *
+ * Every size and type role sets `--mono-adjust`, the share for the text it sizes, and the element's
+ * mono reads it, so a size given by a variant (`data-[size=sm]:text-xs`) or a role (`text-help`)
+ * counts as well as a plain `text-xs`. A sans face inside mono drops the adjustment it would inherit.
  */
 /*
  * The terminal face: JetBrains Mono NL patched as a Nerd Font Mono, subset to Latin, box drawing,
@@ -24,18 +27,71 @@
     src: url('./fonts/jetbrains-mono-nl-nerd-font-mono-700.woff2') format('woff2');
 }
 
+@utility text-2xs {
+    --mono-adjust: var(--mono-x-height-small);
+}
+@utility text-xs {
+    --mono-adjust: var(--mono-x-height-small);
+}
+@utility text-head {
+    --mono-adjust: var(--mono-x-height-small);
+}
+@utility text-help {
+    --mono-adjust: var(--mono-x-height-small);
+}
+@utility text-badge {
+    --mono-adjust: var(--mono-x-height-small);
+}
+@utility text-sm {
+    --mono-adjust: var(--mono-x-height);
+}
+@utility text-base {
+    --mono-adjust: var(--mono-x-height);
+}
+@utility text-title {
+    --mono-adjust: var(--mono-x-height);
+}
+@utility text-page {
+    --mono-adjust: var(--mono-x-height);
+}
+@utility text-stat {
+    --mono-adjust: var(--mono-x-height);
+}
+@utility text-display {
+    --mono-adjust: var(--mono-x-height);
+}
+@utility text-page-title {
+    --mono-adjust: var(--mono-x-height);
+}
+@utility text-detail-title {
+    --mono-adjust: var(--mono-x-height);
+}
+@utility text-section-title {
+    --mono-adjust: var(--mono-x-height);
+}
+@utility text-body {
+    --mono-adjust: var(--mono-x-height);
+}
+@utility text-action {
+    --mono-adjust: var(--mono-x-height);
+}
+@utility text-label {
+    --mono-adjust: var(--mono-x-height);
+}
+@utility text-statistic {
+    --mono-adjust: var(--mono-x-height);
+}
+@utility text-media-title {
+    --mono-adjust: var(--mono-x-height);
+}
+
 @layer base {
     :where(.font-mono, code, kbd, samp, pre) {
-        font-size-adjust: var(--mono-x-height);
+        font-size-adjust: var(--mono-adjust, var(--mono-x-height));
     }
-    /* Small text keeps more of its size, so mono beside it stays readable. */
-    :where(
-        .text-xs:where(.font-mono, code),
-        .text-xs :where(.font-mono, code),
-        .text-2xs:where(.font-mono, code),
-        .text-2xs :where(.font-mono, code)
-    ) {
-        font-size-adjust: var(--mono-x-height-small);
+    /* A sans face inside mono takes its own size, not the mono share it would inherit. */
+    :where(.font-sans, .font-heading) {
+        font-size-adjust: none;
     }
     /* A graph is zoomed as a whole and sets its own small sizes. */
     :where([data-graph-view]) :where(.font-mono, code) {

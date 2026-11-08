@@ -146,7 +146,7 @@ export function Words({ deck, tier, center = false, className }: { deck: Deck; t
     if (tier === 'pair') {
         return (
             <div className={cn('min-w-0', align, className)}>
-                <p className="truncate text-base font-semibold text-foreground">{deck.title}</p>
+                <p className="truncate text-detail-title text-foreground">{deck.title}</p>
                 {deck.subtitle !== undefined ? (
                     <p className="truncate text-xs text-muted-foreground">{deck.subtitle}</p>
                 ) : (
@@ -181,7 +181,7 @@ export function ScreenWords({
     return (
         <div className={cn('min-w-0', center && 'w-full text-center', className)}>
             <Eyebrow deck={deck} className={cn(!phone && 'text-sm')} />
-            <p className={cn('truncate font-semibold tracking-tight text-foreground', phone ? 'text-page' : 'text-display')}>
+            <p className={cn('truncate text-foreground', phone ? 'text-page font-semibold tracking-tight' : 'text-media-title')}>
                 {deck.title}
             </p>
             {by !== undefined && <p className={cn('truncate text-muted-foreground', phone ? 'text-sm' : 'text-page')}>{by}</p>}

@@ -217,8 +217,8 @@ export function StatPanel({
                 <div className={cn('flex flex-1 flex-col items-center justify-center px-2.5 pb-3', inked && 'text-(--tone)')}>
                     <p
                         className={cn(
-                            'flex items-baseline gap-1 font-semibold tabular-nums',
-                            value === null ? 'text-title text-muted-foreground' : 'text-stat',
+                            'flex items-baseline gap-1 tabular-nums',
+                            value === null ? 'text-detail-title text-muted-foreground' : 'text-statistic',
                         )}
                     >
                         <span>{written}</span>

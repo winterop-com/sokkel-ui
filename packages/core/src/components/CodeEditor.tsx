@@ -44,14 +44,21 @@ const HIGHLIGHT = HighlightStyle.define([
     { tag: tags.invalid, color: 'var(--destructive)' },
 ])
 
-/** The chrome in the theme's tokens, so a change of theme or scheme repaints it without a rebuild. */
+/**
+ * The chrome in the theme's tokens, so a change of theme or scheme repaints it without a rebuild. The
+ * text and its line numbers are mono at body size, adjusted to the sans beside them as all mono is.
+ */
 const THEME = EditorView.theme({
-    '&': { backgroundColor: 'transparent', color: 'var(--foreground)', fontSize: '0.9375rem', height: '100%' },
+    '&': { backgroundColor: 'transparent', color: 'var(--foreground)', fontSize: 'var(--text-sm)', height: '100%' },
     '&.cm-focused': { outline: 'none' },
-    '.cm-scroller': { fontFamily: 'var(--font-mono)', lineHeight: '1.6' },
+    '.cm-scroller': {
+        fontFamily: 'var(--font-mono)',
+        lineHeight: 'var(--leading-code)',
+        fontSizeAdjust: 'var(--mono-x-height)',
+    },
     '.cm-content': { padding: '0.5rem 0', caretColor: 'var(--foreground)' },
     '.cm-line': { padding: '0 0.75rem' },
-    '.cm-gutters': { backgroundColor: 'transparent', color: 'var(--faint)', border: 'none' },
+    '.cm-gutters': { backgroundColor: 'transparent', color: 'var(--faint)', border: 'none', fontSizeAdjust: 'var(--mono-x-height)' },
     '.cm-lineNumbers .cm-gutterElement': { padding: '0 0.5rem 0 0.75rem', minWidth: '2.5rem' },
     '.cm-cursor': { borderLeftColor: 'var(--foreground)' },
     '.cm-placeholder': { color: 'var(--muted-foreground)' },

@@ -95,6 +95,29 @@ a focused field does not zoom. Every size comes from a token: `text-xs`, `text-s
 `text-page`, `text-stat` and `text-display` (a fullscreen view's title) in the interface, and `--chart-text-size`, `--chart-text-size-small`
 and `--chart-stat-size` for the text ECharts draws.
 
+A component sets its text by role, never by a size and a weight of its own. Each role is a token
+in `tokens.json` and a class of the same name, carrying size, line height, weight and tracking, which
+a `font-*` class still overrides:
+
+| Role                        | Class                       | Size / line             | Weight    |
+| --------------------------- | --------------------------- | ----------------------- | --------- |
+| Page title                  | `text-page-title`           | 24 / 32, tight tracking | 500       |
+| Detail or dialog title      | `text-detail-title`         | 16 / 24                 | 600       |
+| Section or card title       | `text-section-title`        | 15 / 22                 | 500       |
+| Compact panel or table head | `text-head`                 | 13 / 20                 | 600       |
+| Body and controls (actions) | `text-body` (`text-action`) | 15 / 22                 | 400 (500) |
+| Field label                 | `text-label`                | 15 / 20                 | 500       |
+| Help and metadata           | `text-help`                 | 13 / 20                 | 400       |
+| Badge and status            | `text-badge`                | 13 / 20                 | 500       |
+| Main statistic              | `text-statistic`            | 32 / 36                 | 600       |
+| Fullscreen media title      | `text-media-title`          | 48 / 56                 | 600       |
+
+Code takes the size around it at 400, 500 for emphasis, in mono adjusted by `font-size-adjust`:
+every size and role sets `--mono-adjust`, the body or the small share, and mono reads it, so a size
+given by a variant counts too, and a sans face inside mono drops it. Plex Mono ships at 400, 500,
+600 and 700, so no weight is synthesized. Page and detail titles wrap; card titles take
+`titleLines` and show their whole text on hover when cut short.
+
 ## Primitives
 
 The shadcn `base-nova` set on Base UI, restyled to the tokens: accordion, alert, alert-dialog,

@@ -2,8 +2,10 @@ import { format } from 'date-fns'
 import { CalendarDays, ListChecks, MessageSquare, MoreHorizontal } from 'lucide-react'
 import type { ReactNode } from 'react'
 
+import { useClamped } from '../../hooks/use-clamped'
 import { cn } from '../../lib/cn'
 import { KIND_WASH, kindOf, type KindColor } from '../../lib/kind'
+import { TITLE_LINES, type TitleLines } from '../../lib/title-lines'
 import { DueText } from '../DueText'
 import { PersonAvatar } from '../PersonAvatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '../ui/dropdown-menu'
@@ -20,7 +22,7 @@ export function BoardLabel({ name, color, className }: BoardLabelSpec & { classN
     return (
         <span
             className={cn(
-                'inline-flex items-center rounded-chip px-1.5 py-px text-xs whitespace-nowrap',
+                'inline-flex items-center rounded-chip px-1.5 py-px text-badge whitespace-nowrap',
                 KIND_WASH[color ?? kindOf(name)],
                 className,
             )}
@@ -59,6 +61,8 @@ const WORDS: BoardCardWords = {
  * The whole card is one control that opens the item; `selected` marks the open one. A `menu`,
  * such as "Move to", sits at the head's right and keeps its own press. Inside a `Board` the card
  * drags; it fades while it is dragged, and a line above it shows a card landing before it.
+ *
+ * The title takes up to `titleLines` lines, three by default; one cut short shows its whole text on hover.
  */
 export function BoardCard({
     id,
@@ -74,6 +78,7 @@ export function BoardCard({
     selected = false,
     onSelect,
     menu,
+    titleLines = 3,
     className,
     words: given,
 }: {
@@ -94,6 +99,8 @@ export function BoardCard({
     onSelect?: () => void
     /** Dropdown menu items behind the head's more button. */
     menu?: ReactNode
+    /** How many lines the title may take before it is cut short. */
+    titleLines?: TitleLines
     className?: string
     words?: Partial<BoardCardWords>
 }) {
@@ -102,6 +109,7 @@ export function BoardCard({
     const zone = useBoardZone()
     const dragged = drag?.card === id
     const landing = drag !== null && !dragged && drag.zone === zone && drag.before === id
+    const [titleRef, clamped] = useClamped<HTMLHeadingElement>()
     const hasFoot = due !== undefined || comments !== undefined || checklist !== undefined || assignee !== undefined
     return (
         <article
@@ -128,7 +136,13 @@ export function BoardCard({
             <div className="pointer-events-none relative flex min-w-0 items-start gap-2">
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                     {code !== undefined && <span className="truncate font-mono text-xs text-muted-foreground">{code}</span>}
-                    <h4 className="line-clamp-3 leading-5 font-medium">{title}</h4>
+                    <h4
+                        ref={titleRef}
+                        title={clamped && typeof title === 'string' ? title : undefined}
+                        className={cn('text-section-title', TITLE_LINES[titleLines])}
+                    >
+                        {title}
+                    </h4>
                 </div>
                 {menu !== undefined && (
                     <div data-board-nodrag className="pointer-events-auto relative z-10 -mt-1 -mr-1.5">
