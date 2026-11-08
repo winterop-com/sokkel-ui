@@ -25,6 +25,8 @@
     ],
     "exports": {
         "./styles.css": "./src/styles/index.css",
+        "./styles-base.css": "./src/styles/base.css",
+        "./sources/*.css": "./dist/sources/*.css",
         "./tokens.css": "./src/styles/tokens.css",
         "./themes.css": "./src/styles/themes.css",
         "./themes/*.css": "./src/styles/themes/*.css",
