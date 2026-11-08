@@ -1,8 +1,9 @@
-import { Pause, Play, Volume1, Volume2, VolumeX } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { Pause, Play, RotateCcw, RotateCw, Volume1, Volume2, VolumeX } from 'lucide-react'
+import type { ComponentProps, ReactNode } from 'react'
 
 import { cn } from '../../lib/cn'
 import { Button } from '../ui/button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '../ui/dropdown-menu'
 import { AudioScrubber } from '../ui/waveform'
 import { MediaSlider } from './MediaSlider'
 import { formatRemaining, formatTime, type MediaRange } from './time'
@@ -190,6 +191,105 @@ export function Position({
                 />
             )}
             <span className={cn(time, 'shrink-0', tone === 'overlay' && 'text-terminal-muted')}>{formatRemaining(at, duration)}</span>
+        </div>
+    )
+}
+
+/** The playback speeds a speed menu offers unless told others, as multiples of normal speed. */
+export const MEDIA_RATES: readonly number[] = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]
+
+/** A speed as the menu writes it, such as "1.25x". */
+export function formatRate(rate: number): string {
+    return `${String(rate)}x`
+}
+
+/**
+ * The playback speed as a button that says it ("1.25x") and opens a menu of `rates`. `container`
+ * holds the menu inside an element that may go fullscreen, where a menu on the body would not show.
+ */
+export function RateMenu({
+    rate,
+    rates = MEDIA_RATES,
+    onRateChange,
+    label,
+    format = formatRate,
+    tone = 'surface',
+    size = 'sm',
+    container,
+    onOpenChange,
+    className,
+}: {
+    rate: number
+    rates?: readonly number[]
+    onRateChange: (rate: number) => void
+    /** The menu's name, such as "Playback speed". */
+    label: string
+    format?: (rate: number) => string
+    tone?: MediaTone
+    size?: TransportSize
+    container?: ComponentProps<typeof DropdownMenuContent>['container']
+    onOpenChange?: (open: boolean) => void
+    className?: string
+}) {
+    return (
+        <DropdownMenu onOpenChange={onOpenChange}>
+            <DropdownMenuTrigger
+                render={
+                    <Button
+                        variant="ghost"
+                        size={size === 'sm' ? 'icon-sm' : 'icon'}
+                        aria-label={`${label}: ${format(rate)}`}
+                        className={cn(
+                            'w-auto min-w-8 px-1.5 font-mono text-xs tabular-nums',
+                            toneButton(tone),
+                            tone === 'surface' && 'text-muted-foreground',
+                            className,
+                        )}
+                    />
+                }
+            >
+                {format(rate)}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent container={container} side="top" align="end" className="w-auto min-w-24">
+                <DropdownMenuRadioGroup value={String(rate)} onValueChange={(value: string) => onRateChange(Number(value))}>
+                    {rates.map((option) => (
+                        <DropdownMenuRadioItem key={option} value={String(option)} className="font-mono tabular-nums">
+                            {format(option)}
+                        </DropdownMenuRadioItem>
+                    ))}
+                </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    )
+}
+
+/** The skip glyph: a turning arrow, back or forward, with the interval in seconds written inside it. */
+export function SkipGlyph({ seconds, back, size = 'sm' }: { seconds: number; back: boolean; size?: TransportSize }) {
+    const Arrow = back ? RotateCcw : RotateCw
+    return (
+        <span aria-hidden className="relative inline-flex items-center justify-center">
+            <Arrow strokeWidth={1.75} className={size === 'lg' ? 'size-7' : 'size-6'} />
+            <span
+                className={cn(
+                    'absolute inset-0 flex items-center justify-center pt-px leading-none font-semibold tabular-nums',
+                    size === 'lg' ? 'text-xs' : 'text-2xs',
+                )}
+            >
+                {Math.round(seconds)}
+            </span>
+        </span>
+    )
+}
+
+/** What stands where the position would on a live stream, which has no length to seek along: a dot and "Live". */
+export function LiveMark({ label, size = 'sm', className }: { label: string; size?: 'sm' | 'lg'; className?: string }) {
+    return (
+        <div
+            data-slot="media-live"
+            className={cn('flex items-center justify-center gap-1.5', size === 'lg' ? 'h-7 text-label' : 'h-5 text-badge', className)}
+        >
+            <span aria-hidden className="size-2 shrink-0 rounded-full bg-destructive" />
+            <span>{label}</span>
         </div>
     )
 }

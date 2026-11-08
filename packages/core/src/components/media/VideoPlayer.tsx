@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type Poin
 import { cn } from '../../lib/cn'
 import { Button } from '../ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '../ui/dropdown-menu'
-import { PlayButton, Position, TransportButton, VolumeControl } from './MediaControls'
+import { MEDIA_RATES, PlayButton, Position, RateMenu, TransportButton, VolumeControl } from './MediaControls'
 import { useOneSound } from './one-sound'
 import { type MediaRange } from './time'
 
@@ -56,8 +56,6 @@ export const VIDEO_PLAYER_WORDS: VideoPlayerWords = {
     forward: 'Forward 10 seconds',
 }
 
-const RATES = [0.5, 0.75, 1, 1.25, 1.5, 2]
-
 /** How far the left and right arrows seek, in seconds, and how far up and down move the volume. */
 const SEEK_STEP = 5
 const VOLUME_STEP = 0.1
@@ -75,7 +73,7 @@ export interface VideoPlayerProps {
     /** A picture shown until the first frame is ready. */
     poster?: string
     tracks?: readonly VideoTrack[]
-    /** The playback speeds offered, as multiples of normal speed. */
+    /** The playback speeds offered, as multiples of normal speed: `MEDIA_RATES` by default. */
     rates?: readonly number[]
     autoPlay?: boolean
     loop?: boolean
@@ -134,7 +132,7 @@ export function VideoPlayer({
     title,
     poster,
     tracks = [],
-    rates = RATES,
+    rates = MEDIA_RATES,
     autoPlay = false,
     loop = false,
     muted: startMuted = false,
@@ -531,37 +529,17 @@ export function VideoPlayer({
                             />
                         )}
                         {rates.length > 1 && (
-                            <DropdownMenu onOpenChange={setMenuOpen}>
-                                <DropdownMenuTrigger
-                                    render={
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            aria-label={words.speed}
-                                            className={cn(
-                                                ON_PICTURE,
-                                                'hidden w-auto min-w-8 px-1.5 font-mono text-xs tabular-nums @md:inline-flex',
-                                            )}
-                                        />
-                                    }
-                                >
-                                    {`${String(state.rate)}x`}
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent container={root} side="top" align="end" className="w-auto min-w-24">
-                                    <DropdownMenuRadioGroup
-                                        value={String(state.rate)}
-                                        onValueChange={(value: string) => {
-                                            setRate(Number(value))
-                                        }}
-                                    >
-                                        {rates.map((rate) => (
-                                            <DropdownMenuRadioItem key={rate} value={String(rate)} className="font-mono tabular-nums">
-                                                {`${String(rate)}x`}
-                                            </DropdownMenuRadioItem>
-                                        ))}
-                                    </DropdownMenuRadioGroup>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+                            <RateMenu
+                                tone="overlay"
+                                size="md"
+                                rate={state.rate}
+                                rates={rates}
+                                onRateChange={setRate}
+                                label={words.speed}
+                                container={root}
+                                onOpenChange={setMenuOpen}
+                                className="hidden @md:inline-flex"
+                            />
                         )}
                         {pipSupported && (
                             <Button

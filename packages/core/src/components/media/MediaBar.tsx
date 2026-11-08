@@ -4,15 +4,29 @@ import { usePanelSize } from '../../hooks/use-panel-size'
 import { cn } from '../../lib/cn'
 import { ResizeHandle } from '../ResizeHandle'
 import { grows, LINE, WIDE, type MediaBarLayout } from './bar-growth'
+import { chapterIndex, chapterSpan, nextChapterStart, previousChapterStart, waveformSpan } from './chapters'
 import { LineBar, PanelBar, RowsBar, StageBar, type BarProps } from './MediaBarLayouts'
-import { kindOf, MEDIA_BAR_WORDS, type Deck, type MediaBarWords, type RepeatMode } from './MediaBarParts'
+import {
+    kindOf,
+    MEDIA_BAR_WORDS,
+    type Deck,
+    type MediaBarWords,
+    type MediaSteps,
+    type MediaTimeline,
+    type RepeatMode,
+} from './MediaBarParts'
+import { MEDIA_RATES } from './MediaControls'
 import { MediaFullscreen } from './MediaFullscreen'
 import { useOneSound } from './one-sound'
 import type { SoundKind } from './SoundVisualizer'
 import type { MediaRange } from './time'
 
 export type { MediaBarLayout } from './bar-growth'
-export type { MediaBarWords, RepeatMode } from './MediaBarParts'
+export type { MediaBarWords, MediaSteps, MediaTimeline, RepeatMode } from './MediaBarParts'
+export { MEDIA_RATES } from './MediaControls'
+
+/** How far the skip buttons move unless told otherwise, in seconds. */
+export const MEDIA_SKIP = 15
 
 /** The most of the window's height the bar takes, whatever its size, so the page keeps the rest. */
 const WINDOW_SHARE = 0.5
@@ -29,7 +43,11 @@ export interface MediaBarProps {
     album?: ReactNode
     /** The year, in the line over the large title. */
     year?: ReactNode
-    /** Its place in what is playing, said as "Track 13 of 16" in the line over the large title. */
+    /**
+     * Its place in what is playing, said as "Track 13 of 16" in the line over the large title, or
+     * "Chapter 3 of 12" while previous and next step through chapters; with `chapters`, the
+     * chapter playing is counted instead.
+     */
     trackNumber?: number
     trackCount?: number
     /** A square picture for what is playing, filled edge to edge; without one, a cover drawn from `placeholderSeed`, or a note glyph. */
@@ -48,6 +66,34 @@ export interface MediaBarProps {
     /** Length in seconds; zero when unknown, which disables seeking. */
     duration: number
     onSeek: (seconds: number) => void
+    /**
+     * A live stream, such as a radio station: the scrubber and the times give way to a Live mark,
+     * and seeking, skipping and the speed menu are off. Previous and next stay the app's to give.
+     */
+    live?: boolean
+    /**
+     * Where each chapter starts, in seconds from the start, in order. Previous and next then step
+     * through chapters and say so, and without `onPrevious` or `onNext` they seek: previous to the
+     * chapter's start, or to the one before within its first three seconds, next to the next one's.
+     */
+    chapters?: readonly number[]
+    /** What previous and next step between and say: `chapter` with `chapters`, `track` without. */
+    steps?: MediaSteps
+    /** What the scrubber and its times measure: the whole item (the default) or, with `chapters`, the chapter playing. */
+    timeline?: MediaTimeline
+    /**
+     * The interval the skip buttons move back and forward, in seconds, drawn on their glyphs: 15
+     * by default. They are drawn when either this or `onSkip` is given.
+     */
+    skip?: number
+    /** Moves by the seconds given, negative for back; without it a skip seeks through `onSeek`. */
+    onSkip?: (seconds: number) => void
+    /** The playback speed, as a multiple of normal: 1 by default. */
+    rate?: number
+    /** The speeds the menu offers, `MEDIA_RATES` by default. */
+    rates?: readonly number[]
+    /** The speed menu, written as "1x", is drawn only with this handler. */
+    onRateChange?: (rate: number) => void
     /** Loaded stretches, in seconds. */
     buffered?: readonly MediaRange[]
     /** The track's loudness from start to end, each level from 0 to 1, drawn as the grown bar's scrubber. */
@@ -131,6 +177,12 @@ export interface MediaBarProps {
  * outside, and `resizable={false}` keeps it fixed. It never takes more than half the window's
  * height.
  *
+ * For a long listen, such as a book or a podcast, `skip` and `onSkip` add buttons that move back
+ * and forward by an interval written on them, `onRateChange` a speed menu, and `chapters` turn
+ * previous and next into chapter steps, with `timeline="chapter"` measuring the time within the
+ * chapter. `live` is for a stream with no length, such as a radio station: a Live mark stands
+ * where the position would, and nothing seeks.
+ *
  * It is controlled: it holds no clock, and draws the `position` it is given until a seek is
  * reported through `onSeek`. Under 672 pixels of its own width the one line folds into two rows,
  * the title beside the transport over the position, and every layout leaves shuffle, repeat and
@@ -152,6 +204,15 @@ export function MediaBar({
     position,
     duration,
     onSeek,
+    live = false,
+    chapters,
+    steps,
+    timeline = 'whole',
+    skip,
+    onSkip,
+    rate = 1,
+    rates = MEDIA_RATES,
+    onRateChange,
     buffered,
     waveform,
     visualizer,
@@ -211,6 +272,24 @@ export function MediaBar({
         onVisualizerKindChange?.(next)
     }
 
+    const marked = chapters !== undefined && chapters.length > 0 ? chapters : undefined
+    const stepping = steps ?? (marked === undefined ? 'track' : 'chapter')
+    const chapter = marked === undefined ? -1 : chapterIndex(marked, position)
+    // On a chapter's timeline the scrubber spans the chapter, and its positions are the chapter's own.
+    const span =
+        marked !== undefined && timeline === 'chapter' && chapter >= 0
+            ? chapterSpan(marked, chapter, duration)
+            : { start: 0, end: duration }
+    const whole = span.start === 0 && span.end === duration
+    // Previous and next step through the chapters given, counting them and seeking between them.
+    const byChapter = marked !== undefined && stepping === 'chapter' && !live
+    const counted = byChapter ? (chapter >= 0 ? chapter + 1 : undefined) : trackNumber
+    const count = byChapter ? marked.length : trackCount
+    const placeOf = stepping === 'chapter' ? words.chapterOf : words.trackOf
+    const interval = skip ?? (onSkip === undefined ? undefined : MEDIA_SKIP)
+    const seekWithin = (seconds: number) => onSeek(Math.min(duration, Math.max(0, seconds)))
+    const nextStart = byChapter ? nextChapterStart(marked, position) : undefined
+
     const deck: Deck = {
         words,
         title,
@@ -218,24 +297,37 @@ export function MediaBar({
         artist,
         album,
         year,
-        trackNumber,
-        trackCount,
+        place: counted === undefined ? undefined : placeOf(counted, count),
         artwork,
         placeholderSeed,
         playing,
         onPlayingChange,
-        at: scrub ?? position,
-        duration,
-        onSeek,
+        at: scrub ?? position - span.start,
+        duration: span.end - span.start,
+        onSeek: (seconds) => onSeek(span.start + seconds),
         onScrub: setScrub,
-        buffered,
-        waveform,
+        live,
+        buffered: whole
+            ? buffered
+            : buffered
+                  ?.map((range) => ({
+                      start: Math.max(range.start, span.start) - span.start,
+                      end: Math.min(range.end, span.end) - span.start,
+                  }))
+                  .filter((range) => range.end > range.start),
+        waveform: waveform === undefined || whole ? waveform : waveformSpan(waveform, duration, span.start, span.end),
         level: muted ? 0 : volume,
         muted,
         onMutedChange,
         onVolumeChange,
-        onPrevious,
-        onNext,
+        onPrevious: onPrevious ?? (byChapter ? () => seekWithin(previousChapterStart(marked, position)) : undefined),
+        onNext: onNext ?? (nextStart === undefined ? undefined : () => seekWithin(nextStart)),
+        steps: stepping,
+        skip: interval,
+        onSkip: interval === undefined ? undefined : (onSkip ?? ((seconds) => seekWithin(position + seconds))),
+        rate,
+        rates,
+        onRateChange,
         shuffle,
         onShuffleChange,
         repeat,

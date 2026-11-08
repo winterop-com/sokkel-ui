@@ -339,6 +339,19 @@ shelf of records without pictures is not all alike and a record wears the same c
 the list and the player. MediaCard draws it from `placeholderSeed` (the title by default) when it
 has no `cover`, and MediaBar from its `placeholderSeed` when it has no `artwork`.
 
+A long listen, a book or a podcast, gets what it needs from MediaBar's options: `skip` (or `onSkip`)
+adds buttons that jump back and forward by an interval written on their glyphs, 15 seconds unless
+told; `onRateChange` a speed menu written as "1.25x", from `rates` (`MEDIA_RATES`, 0.5x to 2x),
+the one speed menu, which `VideoPlayer` shares; `chapters`, the second each chapter starts at, make
+previous and next chapter steps that say so and seek between the starts when the app gives no
+handler, and `timeline="chapter"` measures the scrubber and its times within the chapter playing.
+`live` is for a stream with no length, such as a radio station: a Live mark stands where the
+position would, and seeking, skipping and the speed are off. `useMediaSession` tells the operating
+system what plays (title, artist, album, artwork), whether it plays and where along its length at
+its speed, and answers its media keys and lock screen through the app's handlers. It tells the
+position again only when it strays from where the system runs it, takes everything away on unmount,
+and does nothing where the browser has no media session.
+
 MediaBar resizes from its top edge. Up to about 96 pixels every layout is the one-line bar; above
 it the bar grows by its `layout`, picked from the player growth research, continuously and with no
 jump: `rows` (the default: the cover across two rows, what plays, the transport and the volume over

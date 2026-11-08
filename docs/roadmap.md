@@ -121,15 +121,13 @@ under Next. Each is a part or an option here, never a copy in an app. Roughly on
   track, page foot and palette insets; an app-defined status map for `StatusChip` beyond run
   states, with kind colors; radius by role (control and surface); themes named for their look:
   `ocean`, `indigo` and `terminal`.
-- **Round 4, media.** `MediaBar`: a speed menu, a skip interval (15 seconds each way), chapter
-  wording, and a live mode without a scrubber. `VideoPlayer`: HLS through hls.js as a lazy optional
-  peer, `startAt` to resume, `onTime`, `onEnded` and `onError`, retry on a stall, and keys handled
-  outside it. `useMediaSession` (metadata, artwork, position, handlers); queue helpers (shuffle as
-  an order of its own, repeat, next and previous, pure and tested); several files as one timeline
-  with a `ChapterList` keeping the current row in view; LRC lyrics and a `Lyrics` overlay (timed
-  lines follow, untimed ones read as a page); `TrackList` keeping the current row in view with time
-  left or progress per row; `SpeakButton` (fetched on demand, one player) and dictation in
-  `Composer`.
+- **Round 4, media.** `VideoPlayer`: HLS through hls.js as a lazy optional peer, `startAt` to
+  resume, `onTime`, `onEnded` and `onError`, retry on a stall, and keys handled outside it. Queue
+  helpers (shuffle as an order of its own, repeat, next and previous, pure and tested); several
+  files as one timeline with a `ChapterList` keeping the current row in view; LRC lyrics and a
+  `Lyrics` overlay (timed lines follow, untimed ones read as a page); `TrackList` keeping the
+  current row in view with time left or progress per row; `SpeakButton` (fetched on demand, one
+  player) and dictation in `Composer`.
 - **Round 5, the frame and keys.** A shortcut registry matched by the typed character (so it works
   on any keyboard layout), keys scoped to a screen and quiet under a dialog, read by
   `ShortcutsDialog`; `useOverlay` (inert, focus return, Escape), `useScrollMemory` and

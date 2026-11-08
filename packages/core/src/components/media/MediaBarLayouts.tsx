@@ -11,12 +11,13 @@ import {
     RepeatButton,
     Scrub,
     ShuffleButton,
+    Speed,
     Steps,
     Volume,
     Words,
     type Deck,
 } from './MediaBarParts'
-import { Position } from './MediaControls'
+import { LiveMark, Position } from './MediaControls'
 
 /** What every arrangement of the bar is given. */
 export interface BarProps {
@@ -38,9 +39,9 @@ function Expand({ deck, onFullscreen, corner = false }: { deck: Deck; onFullscre
 
 /**
  * The one-line bar, drawn by every layout until it grows: what plays at the left with the cover
- * growing with the height, the transport over the position in the middle, the volume and the
- * extra controls at the right. Under `WIDE` it folds into two rows, the title beside the
- * transport over the position.
+ * growing with the height, the transport over the position in the middle, the speed, the volume
+ * and the extra controls at the right. Under `WIDE` it folds into two rows, the title beside the
+ * transport over the position, the speed at the position's end.
  */
 export function LineBar({ deck, height, width, onFullscreen }: BarProps) {
     const wide = width >= WIDE
@@ -48,7 +49,9 @@ export function LineBar({ deck, height, width, onFullscreen }: BarProps) {
         deck.subtitle ??
         (deck.artist !== undefined || deck.album !== undefined ? <MetaLine inline items={[deck.artist, deck.album]} /> : undefined)
     const cover = height - 17
-    const position = (
+    const position = deck.live ? (
+        <LiveMark label={deck.words.live} />
+    ) : (
         <Position
             at={deck.at}
             duration={deck.duration}
@@ -84,10 +87,16 @@ export function LineBar({ deck, height, width, onFullscreen }: BarProps) {
                 {wide && position}
             </div>
 
-            {!wide && <div className="col-span-2">{position}</div>}
+            {!wide && (
+                <div className="col-span-2 flex min-w-0 items-center gap-2">
+                    <div className="min-w-0 flex-1">{position}</div>
+                    <Speed deck={deck} />
+                </div>
+            )}
 
             {wide && (
                 <div className="flex min-w-0 items-center justify-end gap-2">
+                    <Speed deck={deck} />
                     <Volume deck={deck} />
                     <Extras deck={deck} />
                     <Expand deck={deck} onFullscreen={onFullscreen} />
@@ -135,13 +144,17 @@ export function RowsBar({ deck, height, width, visualizer, onFullscreen }: BarPr
                     </div>
                     {!narrow && (
                         <div className="relative flex min-w-0 items-center justify-end gap-2">
+                            <Speed deck={deck} />
                             <Volume deck={deck} compact={rows.compactVolume} />
                             <Extras deck={deck} />
                             {!rows.corner && <Expand deck={deck} onFullscreen={onFullscreen} />}
                         </div>
                     )}
                 </div>
-                <Scrub deck={deck} height={rows.wave} />
+                <div className="flex min-w-0 items-center gap-2">
+                    <Scrub deck={deck} height={rows.wave} className="min-w-0 flex-1" />
+                    {narrow && <Speed deck={deck} />}
+                </div>
             </div>
             {rows.corner && <Expand deck={deck} onFullscreen={onFullscreen} corner />}
         </div>
@@ -181,6 +194,7 @@ export function PanelBar({ deck, height, width, visualizer, onFullscreen }: BarP
                     {!narrow && <RepeatButton deck={deck} />}
                     <Steps deck={deck} />
                     {!narrow && <div className="flex-1" />}
+                    <Speed deck={deck} />
                     {!narrow && <Volume deck={deck} compact={panel.compactVolume} />}
                     <Extras deck={deck} />
                 </div>
@@ -225,12 +239,14 @@ export function StageBar({ deck, height, width, visualizer, onFullscreen }: BarP
                         {!narrow && <ShuffleButton deck={deck} />}
                         <Steps deck={deck} size={stage.tall ? 'md' : 'sm'} />
                         {!narrow && <RepeatButton deck={deck} />}
+                        {narrow && <Speed deck={deck} />}
                         {narrow && <Extras deck={deck} />}
                     </div>
                 </div>
                 {!narrow && (
                     <div className="flex min-w-0 flex-col items-end justify-end">
                         <div className="flex h-9 items-center gap-2">
+                            <Speed deck={deck} />
                             <Volume deck={deck} compact={stage.compactVolume} />
                             <Extras deck={deck} />
                         </div>
