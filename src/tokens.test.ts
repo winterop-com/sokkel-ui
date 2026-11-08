@@ -54,7 +54,7 @@ describe('the tinted surfaces', () => {
     for (const theme of Object.keys(tokens.themes).filter((name) => name !== 'default')) {
         it(`set ${theme}'s own, never the default's`, () => {
             const css = readFileSync(join(styles, 'themes', `${theme}.css`), 'utf8')
-            const blocks = [...css.matchAll(/^([^\n{]+) \{\n([^}]*)\}/gm)].filter(([, selector]) => selector.startsWith('html'))
+            const blocks = [...css.matchAll(/^(html[^{}]*) \{\n([^}]*)\}/gm)]
             expect(blocks).toHaveLength(2)
             const wrong: string[] = []
             for (const [, selector, body] of blocks) {
@@ -71,10 +71,35 @@ describe('the tinted surfaces', () => {
     }
 })
 
+describe('the terminal', () => {
+    const base = tokens.themes.default
+    for (const [theme, schemes] of Object.entries(tokens.themes).filter(([name]) => name !== 'default')) {
+        it(`takes ${theme}'s own accent on its dark ground in both schemes`, () => {
+            const light = schemes.light?.['terminal-accent']
+            expect(light).toBeDefined()
+            expect(light).not.toBe(base.light?.['terminal-accent'])
+            expect(schemes.dark?.['terminal-accent']).toBe(light)
+        })
+    }
+})
+
 describe('the theme files', () => {
     const resolve = createRequire(import.meta.url).resolve
     const styles = join(__dirname, '..', 'packages', 'core', 'src', 'styles')
     for (const theme of Object.keys(tokens.themes).filter((name) => name !== 'default')) {
+        it(`set ${theme}'s light and dark once each, for the whole app and for one element`, () => {
+            const css = readFileSync(join(styles, 'themes', `${theme}.css`), 'utf8')
+            const selectors = [...css.matchAll(/([^{}]+)\{[^}]*\}/g)].map(([, head]) =>
+                head
+                    .replace(/\/\*[^]*?\*\//g, '')
+                    .trim()
+                    .split(/,\s*/),
+            )
+            expect(selectors).toEqual([
+                [`html[data-theme='${theme}']`, `[data-theme-scope='${theme}']`],
+                [`html.dark[data-theme='${theme}']`, `.dark [data-theme-scope='${theme}']`],
+            ])
+        })
         it(`export ${theme} as themes/${theme}.css`, () => {
             expect(resolve(`@winterop-com/sokkel-ui/themes/${theme}.css`)).toBe(join(styles, 'themes', `${theme}.css`))
         })

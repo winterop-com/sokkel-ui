@@ -1,6 +1,7 @@
 import { Search, X } from 'lucide-react'
-import { useEffect, useRef, type ComponentProps, type Ref } from 'react'
+import { useRef, type ComponentProps, type Ref } from 'react'
 
+import { useShortcuts } from '../hooks/use-shortcuts'
 import { cn } from '../lib/cn'
 import { Input } from './ui/input'
 
@@ -33,7 +34,10 @@ export function SearchField({
     value: string
     onChange: (value: string) => void
     placeholder?: string
-    /** Whether `/` focuses this field. Only one field on a page should take it. */
+    /**
+     * Whether `/` focuses this field, bound through `useShortcuts` and listed in the shortcuts
+     * dialog by the placeholder. Only one field on a page should take it.
+     */
     shortcut?: boolean
     className?: string
     words?: Partial<SearchFieldWords>
@@ -62,18 +66,10 @@ export function SearchField({
     const input = useRef<HTMLInputElement | null>(null)
     const { onKeyDown, ...rest } = inputProps ?? {}
 
-    useEffect(() => {
-        if (!shortcut) return
-        const onKey = (event: KeyboardEvent) => {
-            if (event.key !== '/' || event.metaKey || event.ctrlKey || event.altKey) return
-            const target = event.target as HTMLElement | null
-            if (target?.closest('input, textarea, select, [contenteditable="true"]')) return
-            event.preventDefault()
-            input.current?.focus()
-        }
-        window.addEventListener('keydown', onKey)
-        return () => window.removeEventListener('keydown', onKey)
-    }, [shortcut])
+    useShortcuts(shortcut ? [{ id: 'search', key: '/', label: placeholder, run: () => input.current?.focus() }] : [], [
+        shortcut,
+        placeholder,
+    ])
 
     return (
         <label

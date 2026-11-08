@@ -134,14 +134,19 @@ under Next. Each is a part or an option here, never a copy in an app. Roughly on
   ones read as a page); `TrackList` keeping the current row in view with time left or progress per
   row. `SpeakButton` (fetched on demand, one player) and dictation in `Composer` go in the core,
   since chat uses them.
-- **Round 5, the frame and keys.** A shortcut registry matched by the typed character (so it works
-  on any keyboard layout), keys scoped to a screen and quiet under a dialog, read by
-  `ShortcutsDialog`; `useOverlay` (inert, focus return, Escape), `useScrollMemory` and
-  `useReducedMotion`; fullscreen through a desktop shell (the app's own call in place of the
+- **Round 5, the frame.** Fullscreen through a desktop shell (the app's own call in place of the
   browser's, for the player, the video, charts and maps); `useAppearance` with pluggable storage and
   `appearanceScript` as an external module for pages that refuse inline script (browser
   extensions); a full-page `SettingsView` beside `SettingsDialog`, and a wizard's steps laid out on
-  a page; a way for a three-pane work page to hide or narrow the rail.
+  a page; a way for a three-pane work page to hide or narrow the rail. Later frame items an app
+  moving onto `Shell` reported, none blocking it: a palette filter of the library's own (every term
+  must match, a title starting with the query first); `keywords` on palette commands and rail
+  entries, matched but not drawn; the rail's mark as a link home; a collapsed rail expanded by
+  dragging its edge, or by Enter or the right arrow on its handle; a Light, Dark and System choice
+  inline in `AccountMenu`, and a phone variant of it with rows sized for a finger; `TopBar` with a
+  search field at its start and the palette button both, `/` focusing the field; and
+  `appearanceCommands` taking scheme and theme callbacks (or `useAppearance` taking the app's
+  storage key and theme names), so an app that keeps its look under its own key is not overruled.
 
 ## 1.0
 

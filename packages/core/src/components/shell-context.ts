@@ -21,3 +21,9 @@ export const ShellDesktop = createContext<DesktopWindow | undefined>(undefined)
  * place of collapsing; undefined outside the drawer.
  */
 export const ShellDrawer = createContext<{ close: () => void; label: string } | undefined>(undefined)
+
+/** Opens the shell's keyboard shortcuts, for the account menu; undefined where the shell holds none. */
+export const ShellShortcuts = createContext<(() => void) | undefined>(undefined)
+
+/** The shell's content, the one thing that scrolls there, for `useScrollMemory`; null outside a shell. */
+export const ShellScroller = createContext<HTMLElement | null>(null)

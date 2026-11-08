@@ -148,6 +148,37 @@ An app whose settings offer every theme imports `@winterop-com/sokkel-ui/themes.
 them all. `ThemePicker` draws its swatches from the same files, so it shows a theme's swatch only
 once that theme's file is imported.
 
+### Only the classes an app uses
+
+`styles.css` points Tailwind at every module of the core, so an app's CSS carries the classes of
+components it never imports: the forms page in `examples/sizes` ships 49 kB of CSS gzipped on it.
+An app that wants only its own imports `styles-base.css` instead, which is `styles.css` pointed at
+no module, and after it the list of sources of each module it imports, `sources/<module>.css`
+under the name it imports the module by. A list holds an `@source` for the module and for every
+module it draws on, however deep, so the app names only what it imports itself:
+
+```css
+/* app.css: a page with a form and a dialog, and nothing else of the core */
+@import '@winterop-com/sokkel-ui/styles-base.css';
+@import '@winterop-com/sokkel-ui/sources/Shell.css';
+@import '@winterop-com/sokkel-ui/sources/Rail.css';
+@import '@winterop-com/sokkel-ui/sources/TopBar.css';
+@import '@winterop-com/sokkel-ui/sources/TextField.css';
+@import '@winterop-com/sokkel-ui/sources/DialogShell.css';
+@import '@winterop-com/sokkel-ui/sources/primitives/button.css';
+@import '@winterop-com/sokkel-ui/themes/paper.css';
+```
+
+The app adds one line per module it imports, from any package: `import { Rail } from
+'@winterop-com/sokkel-ui/Rail'` is `@import '@winterop-com/sokkel-ui/sources/Rail.css'`, and
+`import { Chart } from '@winterop-com/sokkel-ui-charts/Chart'` is
+`@import '@winterop-com/sokkel-ui-charts/sources/Chart.css'`. An add-on's list brings the lists of
+the core modules it uses, and on this path it takes the place of the add-on's `styles.css`. A module
+the app starts importing needs its line, or its classes are missing. The same forms page built this
+way, `examples/sizes/forms-lean`, ships 20 kB of CSS gzipped.
+
+### An app's own Tailwind entry
+
 An app that brings its own Tailwind entry imports `@winterop-com/sokkel-ui/tokens.css` (the tokens,
 the default theme and the density levels) instead, with the theme files it offers, `motion.css`
 (the motion setting) and `typography.css` (mono sized to the text around it), and adds the

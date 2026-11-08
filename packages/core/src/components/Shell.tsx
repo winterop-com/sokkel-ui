@@ -3,13 +3,18 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type
 
 import { cn } from '../lib/cn'
 import { CommandRegistry, useCommandRegistry } from '../hooks/use-commands'
-import { usePaletteShortcut } from '../hooks/use-palette-shortcut'
+import { useIsMobile } from '../hooks/use-mobile'
+import { useOverlay } from '../hooks/use-overlay'
+import { ShortcutRegistry } from '../hooks/use-shortcuts'
 import { trafficLightsStyle, useTrafficLights, windowPressHandler, type DesktopWindow } from '../lib/desktop'
-import type { PaletteGroup, PaletteSearch } from './CommandPalette'
-import { ShellDesktop, ShellDrawer, ShellFootCell, ShellPalette } from './shell-context'
+import { createShortcutRegistry, type KeyBinding, type ShortcutGroup } from '../lib/shortcuts'
+import type { CommandPaletteWords, PaletteGroup, PaletteSearch } from './CommandPalette'
+import type { ShortcutsDialogWords } from './ShortcutsDialog'
+import { ShellDesktop, ShellDrawer, ShellFootCell, ShellPalette, ShellScroller, ShellShortcuts } from './shell-context'
 
-// The palette loads when it first opens, so an app's start carries none of it.
+// The palette and the shortcuts load when they first open, so an app's start carries neither.
 const CommandPalette = lazy(() => import('./CommandPalette').then((module) => ({ default: module.CommandPalette })))
+const ShortcutsDialog = lazy(() => import('./ShortcutsDialog').then((module) => ({ default: module.ShortcutsDialog })))
 
 /**
  * The app's frame: the rail on the left, a thin top bar over the content, the content as the one
@@ -29,12 +34,12 @@ const CommandPalette = lazy(() => import('./CommandPalette').then((module) => ({
  * the content: it does not scroll with the content and covers none of it.
  *
  * Below the `md` breakpoint the rail leaves the frame: a menu button at the start of the top bar
- * opens it as a drawer over the content, drawn expanded even where the app holds it `collapsed`.
- * The focus moves into the drawer as it opens and back to the menu button as it closes. Escape, a
- * press outside it, a press on a link and a change of the app's `route` close it, so a page reached
- * by the palette or by the app's own navigation closes it too; `drawerOpen` with
- * `onDrawerOpenChange` holds it from outside. The drawer and the panel's sheet are marked
- * `data-overlay`, so the panels' resize edges are not drawn there.
+ * opens it as a drawer over the content, drawn expanded even where the app holds it `collapsed`,
+ * its head's end closing it. A press outside it, on a link or Escape closes it, and so does a
+ * change of the app's `route`, so a page reached from the palette or by the app's own navigation
+ * closes it too; `drawerOpen` with `onDrawerOpenChange` holds it from outside. The drawer and the
+ * panel's sheet are marked `data-overlay`, so the panels' resize edges are not drawn there; while
+ * either is open over the content, the content is out of reach (`useOverlay`).
  *
  * The frame keeps clear of a phone's notch and home indicator by the safe-area insets, on all four
  * sides. They are zero unless the app's page opts in to drawing under them with
@@ -44,16 +49,25 @@ const CommandPalette = lazy(() => import('./CommandPalette').then((module) => ({
  * A panel is shown or hidden by a toggle held in the window's top-right corner: at the end of the top bar while the
  * panel is closed, in the corner of the panel's header while it is open. From the `lg` breakpoint it is
  * the right column; below it, an open panel slides over the content from the right and a press
- * outside it closes it. The panel eases in and out either way, as far as the document's motion allows.
+ * outside it or Escape closes it. The panel eases in and out either way, as far as the document's motion allows.
  * Left to itself it starts open on a wide window and closed on a narrow one;
  * `panelOpen` with `onPanelOpenChange` holds it from outside, which is how a panel's own close
  * button closes it.
  *
- * With `palette`, the shell holds the app's command palette: ⌘K or Ctrl+K opens it wherever focus
- * is, and so does the top bar's search, unless the app gives `TopBar` its own `onSearch`.
- * `placeCommands` makes its places from the rail's groups and `appearanceCommands` its scheme,
- * density and theme from `useAppearance`. A screen adds its own groups while it is mounted with
- * `useCommands`, listed with the shell's by their `rank`.
+ * With `palette`, the shell holds the app's command palette: ⌘K on a Mac and Ctrl+K elsewhere open
+ * it, from a field too, and close it again; so does the top bar's search, unless the app gives
+ * `TopBar` its own `onSearch`. The keys do not open it over a dialog or a menu, nor where
+ * `mayOpenPalette` says no, such as over an app's own full-screen view; `paletteOpen` with
+ * `onPaletteOpenChange` holds it from outside. `placeCommands` makes its places from the rail's
+ * groups and `appearanceCommands` its scheme, density and theme from `useAppearance`. A screen adds
+ * its own groups while it is mounted with `useCommands`, listed with the shell's by their `rank`.
+ *
+ * The shell answers the keys screens bind with `useShortcuts` while they are mounted, its own (the
+ * palette's, the shortcuts') yielding to theirs, and keeps them quiet while the palette or the
+ * shortcuts dialog is open. With `shortcuts`, it holds the shortcuts dialog: `?` outside a field
+ * opens it, bound once here however many account menus the frame draws, and so does the account
+ * menu's Keyboard shortcuts, listing every key bound with a label and the groups given for keys the
+ * app answers itself. `useScrollMemory` keeps the content's place per screen.
  *
  * With `desktop`, the shell stands in a desktop window whose native title bar is hidden: its top
  * strip, the rail's head and the top bar (and an open panel's header), is the window's drag
@@ -73,9 +87,15 @@ export function Shell({
     onDrawerOpenChange,
     route,
     palette,
+    paletteOpen,
     defaultPaletteOpen = false,
+    onPaletteOpenChange,
+    mayOpenPalette,
     paletteWords,
     paletteSearch,
+    shortcuts,
+    defaultShortcutsOpen = false,
+    shortcutsWords,
     desktop,
     children,
     words: given,
@@ -101,11 +121,27 @@ export function Shell({
     route?: string
     /** The command palette's groups; the shell opens it on ⌘K or Ctrl+K and from the top bar's search. No palette without it. */
     palette?: readonly PaletteGroup[]
+    /** Whether the palette is open; held inside the shell when not given. */
+    paletteOpen?: boolean
     /** Whether the palette starts open. */
     defaultPaletteOpen?: boolean
-    paletteWords?: { placeholder: string; empty: string; title: string }
+    onPaletteOpenChange?: (open: boolean) => void
+    /**
+     * Asked before the palette opens, from the keys or the top bar's search; false keeps it closed,
+     * as over an app's own full-screen view.
+     */
+    mayOpenPalette?: () => boolean
+    paletteWords?: Partial<CommandPaletteWords>
     /** The app's search, whose results the palette lists under its commands. */
     paletteSearch?: PaletteSearch
+    /**
+     * The keys the app answers itself, listed in the shortcuts dialog after the keys bound with
+     * `useShortcuts`; given, even empty, the shell holds the dialog and opens it on `?`.
+     */
+    shortcuts?: readonly ShortcutGroup[]
+    /** Whether the shortcuts dialog starts open. */
+    defaultShortcutsOpen?: boolean
+    shortcutsWords?: Partial<ShortcutsDialogWords>
     /** The desktop window the shell stands in, when its native title bar is hidden; leave it off in a browser. */
     desktop?: DesktopWindow
     children: ReactNode
@@ -123,32 +159,6 @@ export function Shell({
     )
     const closeDrawer = useCallback(() => setDrawer(false), [setDrawer])
     const drawerContext = useMemo(() => ({ close: closeDrawer, label: words.close }), [closeDrawer, words.close])
-    const menuButton = useRef<HTMLButtonElement>(null)
-    const drawerRoot = useRef<HTMLDivElement>(null)
-    const drawerPanel = useRef<HTMLDivElement>(null)
-    // The focus moves into the drawer as it opens, and back to the menu button as it closes unless
-    // something else has taken it by then.
-    useEffect(() => {
-        if (!drawer) return
-        const panel = drawerPanel.current
-        ;(panel?.querySelector<HTMLElement>(FOCUSABLE) ?? panel)?.focus()
-        return () => {
-            const active = document.activeElement
-            if (active === null || active === document.body) menuButton.current?.focus()
-        }
-    }, [drawer])
-    // Escape closes the drawer when it lands in it, so it leaves a menu or a dialog opened over it alone.
-    useEffect(() => {
-        if (!drawer) return
-        const escape = (event: KeyboardEvent) => {
-            if (event.key !== 'Escape' || event.defaultPrevented) return
-            const target = event.target
-            if (target !== document.body && !(target instanceof Node && drawerRoot.current?.contains(target))) return
-            setDrawer(false)
-        }
-        document.addEventListener('keydown', escape)
-        return () => document.removeEventListener('keydown', escape)
-    }, [drawer, setDrawer])
     // A change of route closes the drawer, however the app navigated.
     const routeSeen = useRef(route)
     useEffect(() => {
@@ -177,29 +187,61 @@ export function Shell({
     const screenGroups = commandRegistry.groups
     const groups = useMemo(() => (palette === undefined ? [] : [...screenGroups, ...palette]), [palette, screenGroups])
     const lights = useTrafficLights(desktop)
-    const [paletteOpen, setPaletteOpen] = useState(defaultPaletteOpen)
+    const [shortcutRegistry] = useState(() => createShortcutRegistry())
+    const [ownPaletteOpen, setOwnPaletteOpen] = useState(defaultPaletteOpen)
+    const paletteIsOpen = paletteOpen ?? ownPaletteOpen
     // Drawn from its first opening on, so it can close with its own animation.
     const [paletteShown, setPaletteShown] = useState(defaultPaletteOpen)
-    const openPalette = useCallback(() => {
-        setPaletteShown(true)
-        setPaletteOpen(true)
+    if (paletteIsOpen && !paletteShown) setPaletteShown(true)
+    const latest = useRef({ held: paletteOpen !== undefined, isOpen: paletteIsOpen, onPaletteOpenChange, mayOpenPalette })
+    useEffect(() => {
+        latest.current = { held: paletteOpen !== undefined, isOpen: paletteIsOpen, onPaletteOpenChange, mayOpenPalette }
+    })
+    const setPalette = useCallback((next: boolean) => {
+        if (next && latest.current.mayOpenPalette?.() === false) return
+        if (!latest.current.held) setOwnPaletteOpen(next)
+        latest.current.onPaletteOpenChange?.(next)
     }, [])
-    const commands = palette !== undefined && (
-        <>
-            <PaletteKeys onOpen={openPalette} />
-            {paletteShown && (
-                <Suspense fallback={null}>
-                    <CommandPalette
-                        open={paletteOpen}
-                        onOpenChange={setPaletteOpen}
-                        groups={groups}
-                        search={paletteSearch}
-                        words={paletteWords}
-                    />
-                </Suspense>
-            )}
-        </>
+    const openPalette = useCallback(() => setPalette(true), [setPalette])
+    // The keys close an open palette, and open one only where nothing stands over the page.
+    const togglePalette = useCallback(() => {
+        if (latest.current.isOpen) setPalette(false)
+        else if (!shortcutRegistry.covered()) setPalette(true)
+    }, [setPalette, shortcutRegistry])
+    const commands = palette !== undefined && paletteShown && (
+        <Suspense fallback={null}>
+            <CommandPalette open={paletteIsOpen} onOpenChange={setPalette} groups={groups} search={paletteSearch} words={paletteWords} />
+        </Suspense>
     )
+    const [shortcutsOpen, setShortcutsOpen] = useState(defaultShortcutsOpen)
+    const [shortcutsShown, setShortcutsShown] = useState(defaultShortcutsOpen)
+    const openShortcuts = useCallback(() => {
+        setShortcutsShown(true)
+        setShortcutsOpen(true)
+    }, [])
+    const keys = shortcuts !== undefined && shortcutsShown && (
+        <Suspense fallback={null}>
+            <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} groups={shortcuts} words={shortcutsWords} />
+        </Suspense>
+    )
+    useEffect(() => shortcutRegistry.listen(window), [shortcutRegistry])
+    useEffect(() => {
+        shortcutRegistry.surface('palette', paletteIsOpen)
+        shortcutRegistry.surface('shortcuts', shortcutsOpen)
+    }, [shortcutRegistry, paletteIsOpen, shortcutsOpen])
+    const hasPalette = palette !== undefined
+    const hasShortcuts = shortcuts !== undefined
+    useEffect(() => {
+        const own: KeyBinding[] = []
+        if (hasPalette)
+            own.push({ id: 'palette', key: 'k', mod: true, inFields: true, inDialogs: true, label: words.openPalette, run: togglePalette })
+        if (hasShortcuts) own.push({ id: 'shortcuts', key: '?', label: words.openShortcuts, run: openShortcuts })
+        shortcutRegistry.set('shell', own, { fallback: true })
+    }, [shortcutRegistry, hasPalette, hasShortcuts, words.openPalette, words.openShortcuts, togglePalette, openShortcuts])
+    const mobile = useIsMobile()
+    const drawerRef = useOverlay(drawer && mobile, { onClose: closeDrawer })
+    const panelRef = useOverlay(panel !== undefined && !wide && open, { onClose: () => setOpen(false), inert: false })
+    const [main, setMain] = useState<HTMLElement | null>(null)
 
     const toggle = panel !== undefined && (
         <button
@@ -218,13 +260,11 @@ export function Shell({
         </button>
     )
     const drawn = drawer && (
-        <div ref={drawerRoot} className="fixed inset-0 z-40 md:hidden">
-            <button type="button" aria-label={words.close} tabIndex={-1} className="absolute inset-0 bg-scrim" onClick={closeDrawer} />
+        <div ref={drawerRef} className="fixed inset-0 z-40 outline-none md:hidden">
+            <button type="button" aria-label={words.close} className="absolute inset-0 bg-scrim" onClick={closeDrawer} />
             <div
-                ref={drawerPanel}
                 data-overlay
-                tabIndex={-1}
-                className="absolute inset-y-0 left-0 flex bg-sidebar pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] shadow-pop outline-none"
+                className="absolute inset-y-0 left-0 flex bg-sidebar pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] shadow-pop"
                 onClick={(event) => {
                     if ((event.target as HTMLElement).closest('a')) closeDrawer()
                 }}
@@ -258,7 +298,6 @@ export function Shell({
                     )}
                 >
                     <button
-                        ref={menuButton}
                         type="button"
                         aria-label={words.menu}
                         title={words.menu}
@@ -272,7 +311,9 @@ export function Shell({
                 </header>
             )}
             {banner !== undefined && banner !== null && banner !== false && <div className="shrink-0">{banner}</div>}
-            <main className="@container relative min-h-0 flex-1 overflow-y-auto">{children}</main>
+            <main className="@container relative min-h-0 flex-1 overflow-y-auto" ref={setMain}>
+                {children}
+            </main>
             {!docked && strip}
         </div>
     )
@@ -294,7 +335,12 @@ export function Shell({
                 </div>
             )}
             {panel !== undefined && !wide && (
-                <div inert={!open} aria-hidden={!open || undefined} className={cn('fixed inset-0 z-40', !open && 'pointer-events-none')}>
+                <div
+                    ref={panelRef}
+                    inert={!open}
+                    aria-hidden={!open || undefined}
+                    className={cn('fixed inset-0 z-40 outline-none', !open && 'pointer-events-none')}
+                >
                     <button
                         type="button"
                         aria-label={words.hidePanel}
@@ -319,12 +365,19 @@ export function Shell({
     // A press anywhere in the frame is handed to the window when it lands in the top strip.
     const frame = { style: trafficLightsStyle(desktop), onMouseDown: windowPressHandler(desktop) }
     const provide = (node: ReactNode) => (
-        <ShellPalette value={palette === undefined ? undefined : openPalette}>
-            <ShellDesktop value={desktop}>
-                <CommandRegistry value={commandRegistry.registry}>{node}</CommandRegistry>
-            </ShellDesktop>
-            {commands}
-        </ShellPalette>
+        <ShortcutRegistry value={shortcutRegistry}>
+            <ShellPalette value={palette === undefined ? undefined : openPalette}>
+                <ShellShortcuts value={shortcuts === undefined ? undefined : openShortcuts}>
+                    <ShellDesktop value={desktop}>
+                        <ShellScroller value={main}>
+                            <CommandRegistry value={commandRegistry.registry}>{node}</CommandRegistry>
+                        </ShellScroller>
+                    </ShellDesktop>
+                </ShellShortcuts>
+                {commands}
+                {keys}
+            </ShellPalette>
+        </ShortcutRegistry>
     )
 
     if (!docked)
@@ -375,17 +428,15 @@ export function Shell({
     )
 }
 
-/** Opens the palette on ⌘K or Ctrl+K while the shell has one. */
-function PaletteKeys({ onOpen }: { onOpen: () => void }) {
-    usePaletteShortcut(onOpen)
-    return null
-}
-
 export interface ShellWords {
     menu: string
     close: string
     showPanel: string
     hidePanel: string
+    /** What ⌘K or Ctrl+K does, as the shortcuts dialog lists it. */
+    openPalette: string
+    /** What `?` does, as the shortcuts dialog lists it. */
+    openShortcuts: string
 }
 
 const WORDS: ShellWords = {
@@ -393,11 +444,9 @@ const WORDS: ShellWords = {
     close: 'Close the navigation',
     showPanel: 'Show the panel',
     hidePanel: 'Hide the panel',
+    openPalette: 'Open the command palette',
+    openShortcuts: 'Show the keyboard shortcuts',
 }
-
-/** What takes the focus first in the drawer as it opens. */
-const FOCUSABLE =
-    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 /** The `lg` breakpoint, from which the panel is a column rather than a sheet. */
 const WIDE = '(min-width: 64rem)'
