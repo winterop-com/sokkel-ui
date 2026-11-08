@@ -70,6 +70,13 @@ to `plan.md` when it ships.
   in both composers; `FileField` (picker and drop zone with accepted types, size and count limits,
   and refused files said); an unsaved-changes guard for navigation and closing the tab; `Toolbar`
   overflow into a More menu; next, previous, zoom and pan in `ImageLightbox`. All in core.
+- **Parts the app stories still build.** A letter header (avatar, sender, address, time, the
+  attachment mark, folding over its body) for Mail; a usage line (tokens, latency, time to first
+  token) and a model's answer column for Playground, with a streaming caret as a `Markdown` option;
+  a state map onto `StatusChip`; one detail sheet for the Workspace, Files and Admin detail panes;
+  the board item's panel with its checklist; a sideways-scrolling chip row with one chosen; a
+  channel row (avatar, name, followers, Follow) and an action cluster for a watch page; checkboxes
+  with a color dot for calendar toggles.
 - **Dashboard panels on the chart kinds.** `BarPanel`, `TimeSeriesPanel` and `ComboPanel` build
   ECharts options of their own and have drifted from the kinds (stack corners, for one); make them
   thin panels over the kinds, adding what the kinds lack first.
