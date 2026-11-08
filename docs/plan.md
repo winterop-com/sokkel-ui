@@ -565,7 +565,7 @@ note under it, after the app's own `notes`.
 Their own package, `@winterop-com/sokkel-ui-graph`, so an app that draws no graph installs neither
 React Flow nor elk.
 GraphCanvas (React Flow in the tokens, fit, zoom buttons, a stage or a fitted frame), GraphNode
-(the node box), the layout (a rank layout at once, elk loaded lazily and answering after),
+(the node box, its status a run state or one the app names in the status map), the layout (a rank layout at once, elk loaded lazily and answering after),
 useGraphLayout and useNodeGraph, and the views PipelineGraph, RunGraph, DependencyGraph (a lineage
 of datasets and jobs) and StateMachine (labeled transitions, initial and final markers, the
 current state). A canvas given `editing`, and PipelineGraph with it, becomes an editor: ports
