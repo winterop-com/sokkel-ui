@@ -98,13 +98,13 @@ function Gallery({ start = 'library', query: initial = '' }: { start?: 'library'
                 <Segmented
                     label="Which icons"
                     value={set}
-                    onChoose={(next) => setSet(next as 'library' | 'all')}
+                    onValueChange={(next) => setSet(next as 'library' | 'all')}
                     options={[
                         { value: 'library', label: `In the library (${String(USED.length)})` },
                         { value: 'all', label: `All (${EVERY.length.toLocaleString('en-US')})` },
                     ]}
                 />
-                <Segmented label="Size" value={size} onChoose={setSize} options={SIZES} />
+                <Segmented label="Size" value={size} onValueChange={setSize} options={SIZES} />
             </Toolbar>
             {shown.length === 0 ? (
                 <Empty>

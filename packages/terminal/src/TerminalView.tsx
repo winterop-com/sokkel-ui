@@ -6,6 +6,7 @@ import { Terminal as Xterm } from '@xterm/xterm'
 import { ArrowDown, Check, Copy, Eraser } from 'lucide-react'
 import { useEffect, useImperativeHandle, useRef, useState, type ReactNode, type Ref } from 'react'
 
+import { useCopy } from '@winterop-com/sokkel-ui/hooks/use-copy'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 
 import { readTerminalLook, useLookKey, type TerminalLook } from './look'
@@ -64,7 +65,7 @@ export interface TerminalViewProps {
     rows?: number
     autoFocus?: boolean
     className?: string
-    words?: TerminalViewWords
+    words?: Partial<TerminalViewWords>
 }
 
 /** Resolves once the look's typeface has loaded in the plain and bold weights the terminal draws with. */
@@ -111,7 +112,7 @@ export function TerminalView({
     rows,
     autoFocus = false,
     className,
-    words = WORDS,
+    words: given,
 }: TerminalViewProps) {
     const frame = useRef<HTMLDivElement>(null)
     const host = useRef<HTMLDivElement>(null)
@@ -122,7 +123,8 @@ export function TerminalView({
     /** Writes the terminal has not yet parsed, and whether it has opened; the frame says it is settling until both are done. */
     const busy = useRef({ writes: 0, open: false })
     const [away, setAway] = useState(false)
-    const [copied, setCopied] = useState(false)
+    const words = { ...WORDS, ...given }
+    const { copied, copy: toClipboard } = useCopy()
     const lookKey = useLookKey()
 
     const handlers = useRef({ onData, onResize, onTitleChange, onLink })
@@ -294,20 +296,11 @@ export function TerminalView({
         // oxlint-disable-next-line react/exhaustive-deps
     }, [lookKey])
 
-    useEffect(() => {
-        if (!copied) return
-        const timer = setTimeout(() => setCopied(false), 1500)
-        return () => clearTimeout(timer)
-    }, [copied])
-
     const copy = () => {
         const current = term.current
         if (current === null) return
         const text = current.hasSelection() ? current.getSelection() : bufferText(current)
-        navigator.clipboard.writeText(text).then(
-            () => setCopied(true),
-            () => undefined,
-        )
+        toClipboard(text)
     }
 
     const bar = title !== undefined || actions !== undefined || onClear !== undefined

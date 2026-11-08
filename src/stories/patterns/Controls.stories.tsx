@@ -67,7 +67,7 @@ function Settings({ fill, variant, stacked = false }: { fill: boolean; variant: 
                     variant={variant}
                     label="Appearance"
                     value={scheme}
-                    onChoose={setScheme}
+                    onValueChange={setScheme}
                     options={[
                         { value: 'system', label: 'System' },
                         { value: 'light', label: 'Light' },
@@ -81,7 +81,7 @@ function Settings({ fill, variant, stacked = false }: { fill: boolean; variant: 
                     variant={variant}
                     label="Schedule clock"
                     value={clock}
-                    onChoose={setClock}
+                    onValueChange={setClock}
                     options={[
                         { value: 'utc', label: 'UTC' },
                         { value: 'local', label: 'Server time' },
@@ -94,7 +94,7 @@ function Settings({ fill, variant, stacked = false }: { fill: boolean; variant: 
                     variant={variant}
                     label="Density"
                     value={density}
-                    onChoose={setDensity}
+                    onValueChange={setDensity}
                     disabled
                     options={[
                         { value: 'regular', label: 'Regular' },
@@ -170,7 +170,7 @@ function SegmentedOff() {
             <Segmented
                 label="Region"
                 value={region}
-                onChoose={setRegion}
+                onValueChange={setRegion}
                 options={[
                     { value: 'europe', label: 'Europe' },
                     { value: 'americas', label: 'Americas' },
@@ -204,7 +204,7 @@ function SegmentedWrapping() {
                             <CardTitle>Step</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <Segmented fill variant={variant} label="Step" value={step} onChoose={setStep} options={STEPS} />
+                            <Segmented fill variant={variant} label="Step" value={step} onValueChange={setStep} options={STEPS} />
                         </CardContent>
                     </Card>
                 ))}
@@ -223,7 +223,7 @@ function SegmentedInForm() {
                     size="md"
                     label="Notify on"
                     value={on}
-                    onChoose={setOn}
+                    onValueChange={setOn}
                     options={[
                         { value: 'success', label: 'Success' },
                         { value: 'failure', label: 'Failure' },
@@ -292,7 +292,7 @@ export const Playground: StoryObj<{ variant: SegmentedVariant; size: 'sm' | 'md'
                 <Segmented
                     label="Period"
                     value="day"
-                    onChoose={() => undefined}
+                    onValueChange={() => undefined}
                     options={all.slice(0, args.options)}
                     variant={args.variant}
                     size={args.size}

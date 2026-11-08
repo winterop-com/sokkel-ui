@@ -5,6 +5,19 @@ import { cn } from '../lib/cn'
 import { usePanelSize } from '../hooks/use-panel-size'
 import { ResizeHandle } from './ResizeHandle'
 
+/** The words a dock says. */
+export interface DockWords {
+    fold: string
+    unfold: string
+    resize: string
+}
+
+const WORDS: DockWords = {
+    fold: 'Fold the panel',
+    unfold: 'Unfold the panel',
+    resize: 'Resize the panel',
+}
+
 /**
  * A panel along the bottom of the content, for a log, a terminal or a result: a head bar with the
  * title, tools and a fold control, and its content scrolling under it. Folded, only the head bar
@@ -27,7 +40,7 @@ export function Dock({
     maxSize = 640,
     defaultSize,
     className,
-    words = { fold: 'Fold the panel', unfold: 'Unfold the panel', resize: 'Resize the panel' },
+    words: given,
     children,
 }: {
     title: ReactNode
@@ -46,9 +59,10 @@ export function Dock({
     /** The height in pixels the dock starts at and a double click on the edge returns to: 256 unless `height` is given. */
     defaultSize?: number
     className?: string
-    words?: { fold: string; unfold: string; resize: string }
+    words?: Partial<DockWords>
     children: ReactNode
 }) {
+    const words = { ...WORDS, ...given }
     const dock = useRef<HTMLElement>(null)
     const held = usePanelSize({
         size,

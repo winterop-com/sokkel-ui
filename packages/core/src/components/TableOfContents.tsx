@@ -56,6 +56,15 @@ export function useActiveHeading(container: RefObject<HTMLElement | null>, ids: 
     return active
 }
 
+/** The words a table of contents says. */
+export interface TableOfContentsWords {
+    title: string
+}
+
+const WORDS: TableOfContentsWords = {
+    title: 'On this page',
+}
+
 /**
  * An "on this page" list beside a long page or form: its headings, the deeper ones indented, the
  * one the reader is in marked with a bar, each with an optional mark such as a part's state. A press scrolls its heading into view; `onJump` replaces that.
@@ -66,15 +75,16 @@ export function TableOfContents({
     active,
     onJump,
     className,
-    words = { title: 'On this page' },
+    words: given,
 }: {
     entries: readonly ContentsEntry[]
     /** The id of the heading the reader is in. */
     active?: string
     onJump?: (id: string) => void
     className?: string
-    words?: { title: string }
+    words?: Partial<TableOfContentsWords>
 }) {
+    const words = { ...WORDS, ...given }
     if (entries.length === 0) return null
     const top = Math.min(...entries.map((entry) => entry.level))
     return (

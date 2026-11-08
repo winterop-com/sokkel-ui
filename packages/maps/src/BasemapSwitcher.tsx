@@ -14,6 +14,13 @@ import {
 import type { Basemap } from './basemap'
 import { useOptionalMapContext } from './context'
 
+/** The words a basemap choice says: `label` names the button, its menu and the gallery. */
+export interface BasemapWords {
+    label: string
+}
+
+const WORDS: BasemapWords = { label: 'Basemap' }
+
 /** A basemap's preview image, or the card color for one without tiles. */
 export function BasemapPreview({ basemap, className }: { basemap: Basemap; className?: string }) {
     if (basemap.preview === undefined) {
@@ -21,7 +28,7 @@ export function BasemapPreview({ basemap, className }: { basemap: Basemap; class
             <span
                 aria-hidden
                 className={cn(
-                    'block shrink-0 rounded-[3px] bg-card bg-[radial-gradient(var(--border-strong)_1px,transparent_1px)] bg-size-[6px_6px] ring-1 ring-foreground/15',
+                    'block shrink-0 rounded-mini bg-card bg-[radial-gradient(var(--border-strong)_1px,transparent_1px)] bg-size-[6px_6px] ring-1 ring-foreground/15',
                     className,
                 )}
             />
@@ -32,7 +39,7 @@ export function BasemapPreview({ basemap, className }: { basemap: Basemap; class
             src={basemap.preview}
             alt=""
             draggable={false}
-            className={cn('block shrink-0 rounded-[3px] object-cover ring-1 ring-foreground/15', className)}
+            className={cn('block shrink-0 rounded-mini object-cover ring-1 ring-foreground/15', className)}
         />
     )
 }
@@ -45,7 +52,7 @@ export function BasemapSwitcher({
     basemaps,
     value,
     onValueChange,
-    label = 'Basemap',
+    words: given,
     defaultOpen = false,
     className,
 }: {
@@ -53,11 +60,11 @@ export function BasemapSwitcher({
     /** The id of the basemap drawn. */
     value: string
     onValueChange: (id: string) => void
-    /** What the button and the menu are called. */
-    label?: string
+    words?: Partial<BasemapWords>
     defaultOpen?: boolean
     className?: string
 }) {
+    const { label } = { ...WORDS, ...given }
     const map = useOptionalMapContext()
     return (
         <DropdownMenu defaultOpen={defaultOpen}>
@@ -99,15 +106,16 @@ export function BasemapGallery({
     basemaps,
     value,
     onValueChange,
-    label = 'Basemap',
+    words: given,
     className,
 }: {
     basemaps: readonly Basemap[]
     value: string
     onValueChange: (id: string) => void
-    label?: string
+    words?: Partial<BasemapWords>
     className?: string
 }) {
+    const { label } = { ...WORDS, ...given }
     return (
         <div role="radiogroup" aria-label={label} className={cn('grid grid-cols-3 gap-1.5', className)}>
             {basemaps.map((basemap) => {

@@ -4,6 +4,7 @@ import {
     countFacets,
     filterGroups,
     KIND_FACET,
+    literalRanges,
     queryRanges,
     queryWords,
     searchEntries,
@@ -34,6 +35,19 @@ describe('searchEntries', () => {
             [1, 'jobs', 'import-orders'],
             [2, 'people', 'ada'],
         ])
+    })
+})
+
+describe('literalRanges', () => {
+    it('finds every occurrence of the whole term, in any case', () => {
+        expect(literalRanges('sync-inventory failed; Sync-Inventory retried', 'sync-inventory')).toEqual([
+            { start: 0, end: 14 },
+            { start: 23, end: 37 },
+        ])
+    })
+
+    it('finds nothing for a blank term', () => {
+        expect(literalRanges('nightly-export', '  ')).toEqual([])
     })
 })
 

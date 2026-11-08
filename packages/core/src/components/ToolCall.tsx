@@ -137,6 +137,11 @@ function Calls({ calls, words, openFailed }: { calls: readonly ToolCallEntry[]; 
     )
 }
 
+const WORDS: ToolCallsWords = {
+    args: 'Arguments',
+    result: 'Result',
+}
+
 /**
  * The tools an assistant called, one line each: the name, its arguments in one line, and how long
  * it took. A call that has finished opens into its arguments and its result in full.
@@ -149,15 +154,16 @@ export function ToolCalls({
     calls,
     summary,
     defaultOpen,
-    words = { args: 'Arguments', result: 'Result' },
+    words: given,
 }: {
     calls: readonly ToolCallEntry[]
     /** One line that stands for every call and opens into them, written from the calls' state. */
     summary?: ReactNode
     /** Whether the folded calls start open; by default only when one has failed. */
     defaultOpen?: boolean
-    words?: ToolCallsWords
+    words?: Partial<ToolCallsWords>
 }) {
+    const words = { ...WORDS, ...given }
     if (summary === undefined) return <Calls calls={calls} words={words} openFailed={false} />
     const running = calls.some((call) => call.status === 'running' || call.status === 'pending')
     const failed = calls.some((call) => call.status === 'error')

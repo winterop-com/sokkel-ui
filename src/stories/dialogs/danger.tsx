@@ -138,7 +138,7 @@ export function TransferOwnership({ step: first = 1 }: { step?: 0 | 1 }) {
                         label="New owner"
                         value={to}
                         onValueChange={setTo}
-                        choices={PEOPLE.map((person) => ({
+                        options={PEOPLE.map((person) => ({
                             value: person.username,
                             label: (
                                 <PersonRow

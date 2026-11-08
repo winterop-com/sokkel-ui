@@ -18,14 +18,14 @@ export interface Choice<T extends string> {
  * bare radio would be easy to miss.
  */
 export function ChoiceList<T extends string>({
-    choices,
+    options,
     value,
     onValueChange,
     label,
     labelledBy,
     className,
 }: {
-    choices: readonly Choice<T>[]
+    options: readonly Choice<T>[]
     value: T
     onValueChange: (value: T) => void
     /** The list's accessible name, where no visible heading names it. */
@@ -42,7 +42,7 @@ export function ChoiceList<T extends string>({
             aria-labelledby={labelledBy}
             className={cn('gap-0.5', className)}
         >
-            {choices.map((choice) => (
+            {options.map((choice) => (
                 <label
                     key={choice.value}
                     className={cn(

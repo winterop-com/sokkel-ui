@@ -78,7 +78,7 @@ export function PersonAvatar({
     name: string
     /** What the badge says on hover and to a screen reader; the name by default. */
     label?: string
-    /** One or two letters; the name's first letters by default. */
+    /** One or two letters; the name's first letters by default, an address's from the part before the `@`. */
     initials?: string
     color?: KindColor
     /** The person's picture, drawn over the initials once it has loaded. */
@@ -96,6 +96,7 @@ export function PersonAvatar({
     const letters = (
         initials ??
         name
+            .split('@')[0]
             .split(/[\s._-]+/)
             .filter(Boolean)
             .slice(0, 2)

@@ -47,7 +47,7 @@ export function ChartPanel({
     empty?: boolean
     file?: string
     /** The frame's words; the chart's own are the spec's `words`. */
-    frameWords?: ChartFrameWords
+    frameWords?: Partial<ChartFrameWords>
     className?: string
 }) {
     const spec = useSpec(rest)

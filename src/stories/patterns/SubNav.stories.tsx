@@ -59,7 +59,7 @@ export const Folders: StoryObj = {
                         nodes={FOLDERS}
                         selected={[folder]}
                         onSelect={(ids) => setFolder(ids[0])}
-                        defaultOpen={['harbor', 'harbor/shared']}
+                        defaultExpanded={['harbor', 'harbor/shared']}
                     />
                 </SubNav>
                 <Fill scroll>
@@ -95,7 +95,7 @@ export const Searching: StoryObj = {
                             query={query}
                             selected={[page]}
                             onSelect={(ids) => setPage(ids[0])}
-                            defaultOpen={['runbooks']}
+                            defaultExpanded={['runbooks']}
                         />
                     </SubNav>
                     <Fill scroll>

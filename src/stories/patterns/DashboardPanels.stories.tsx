@@ -338,7 +338,13 @@ function OpenRange() {
     const [range, setRange] = useState<TimeRangeValue>({ preset: '24h' })
     return (
         <Row gap="none" align="stretch" justify="end" className="min-h-svh bg-background p-6 text-foreground">
-            <TimeRangePicker value={range} onChange={setRange} defaultMonth={new Date(2026, 9, 1)} today={new Date(2026, 9, 20)} open />
+            <TimeRangePicker
+                value={range}
+                onChange={setRange}
+                defaultMonth={new Date(2026, 9, 1)}
+                today={new Date(2026, 9, 20)}
+                defaultOpen
+            />
         </Row>
     )
 }

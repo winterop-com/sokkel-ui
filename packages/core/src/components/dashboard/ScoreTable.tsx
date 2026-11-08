@@ -62,7 +62,7 @@ export function ScoreTable({
     higherIsBetter = true,
     nameHeader,
     framed = true,
-    words = WORDS,
+    words: given,
     className,
 }: {
     columns: readonly ScoreColumn[]
@@ -78,9 +78,10 @@ export function ScoreTable({
     nameHeader?: ReactNode
     /** Draws the table in its own bordered, rounded box. */
     framed?: boolean
-    words?: ScoreWords
+    words?: Partial<ScoreWords>
     className?: string
 }) {
+    const words = { ...WORDS, ...given }
     const width = columns.length + 1
     return (
         <div
