@@ -76,21 +76,23 @@ const preview: Preview = {
         layout: 'fullscreen',
         backgrounds: { disable: true },
         controls: { disable: true },
-        // The foundations and themes first, then the pieces from smallest to whole apps, and research last.
+        // What the library builds first: whole apps, then the patterns and the engine packages, then
+        // the building blocks (themes, primitives, foundations), and research last.
         options: {
             storySort: {
                 order: [
-                    'Foundations',
-                    'Themes',
-                    ['All themes', 'Kitchen sink', 'Theme picker', 'Gallery tile'],
-                    'Primitives',
+                    'Apps',
+                    ['Workspace', 'Dashboards', 'Music', 'Video', 'Query', '*'],
                     'Patterns',
                     'Charts',
                     'Maps',
                     'Graphs',
-                    'Terminal',
                     'Media',
-                    'Apps',
+                    'Terminal',
+                    'Themes',
+                    ['All themes', 'Kitchen sink', 'Theme picker', 'Gallery tile'],
+                    'Primitives',
+                    'Foundations',
                     'Research',
                 ],
             },
