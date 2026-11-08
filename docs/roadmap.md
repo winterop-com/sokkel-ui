@@ -6,7 +6,14 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.10.2** is the latest release (2026-11-08): media for a music and audiobook player (`MediaBar`
+- **0.10.3** is the latest release (2026-11-08): a sixth package, `@winterop-com/sokkel-ui-media`,
+  with the music and video app parts (the players chat uses stay in the core); queues, chapters
+  across files, LRC lyrics and a following track list; `VideoPlayer` resuming, reporting, retrying
+  and driven from outside, and `hlsSource` for HTTP live streams; a shortcut registry matched by
+  the typed character, `useOverlay`, `useScrollMemory` and `useReducedMotion`; the Shell's drawer,
+  palette state, safe-area insets and banner; `styles-base.css` with per-module source lists and
+  leaner theme files; terminal tokens per theme.
+- **0.10.2** (2026-11-08): media for a music and audiobook player (`MediaBar`
   speed, skip, chapters and live mode; `useMediaSession`; one sound at a time; seeded cover
   placeholders through `Artwork`; a delay on `SoundVisualizer`), `DownloadButton` removing a kept
   copy, the sign-in art configurable, and Storybook opening on the apps.
