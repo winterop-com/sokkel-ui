@@ -185,6 +185,7 @@ const CORE_AREAS: Record<string, string> = {
     ThemePicker: 'Frame and navigation',
     ThemeToggle: 'Frame and navigation',
     TopBar: 'Frame and navigation',
+    ServerMenu: 'Frame and navigation',
     // Page layout: what a page is arranged with.
     Inspector: 'Page layout',
     DetailSheet: 'Page layout',
@@ -199,6 +200,9 @@ const CORE_AREAS: Record<string, string> = {
     GroupLabel: 'Page layout',
     // Forms and inputs.
     AddressInput: 'Forms and inputs',
+    ComputedField: 'Forms and inputs',
+    PeriodPicker: 'Forms and inputs',
+    YesNoField: 'Forms and inputs',
     AsyncSelect: 'Forms and inputs',
     CapabilityPicker: 'Forms and inputs',
     CheckboxField: 'Forms and inputs',
@@ -304,6 +308,7 @@ const CORE_AREAS: Record<string, string> = {
     AnsiText: 'Code, text and documents',
     Code: 'Code, text and documents',
     CodeEditor: 'Code, text and documents',
+    ApiPlayground: 'Code, text and documents',
     DiffView: 'Code, text and documents',
     EditPreview: 'Code, text and documents',
     LogView: 'Code, text and documents',
