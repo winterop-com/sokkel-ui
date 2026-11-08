@@ -3,7 +3,9 @@
  * modules: the app adds an `@source` for each module it uses. styles.css is this with the whole core
  * as its source.
  */
-@import 'tailwindcss';
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/preflight.css' layer(base);
 @import 'tw-animate-css';
 @import './shadcn.css';
 @import '@fontsource-variable/ibm-plex-sans';
@@ -14,6 +16,18 @@
 @import './tokens.css';
 @import './motion.css';
 @import './typography.css';
+
+/*
+ * Tailwind's utilities, as `@import 'tailwindcss'` places them, under an `@supports` that every
+ * browser passes. Tailwind writes a utility with a color-mix twice, once plain for a browser without
+ * color-mix, except under an `@supports` that names it; here such a browser draws the utility
+ * without the tint instead.
+ */
+@layer utilities {
+    @supports (color: color-mix(in lab, red, red)) or (display: block) {
+        @tailwind utilities;
+    }
+}
 
 @layer base {
     * {
