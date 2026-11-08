@@ -164,15 +164,18 @@ export function IssueCount({
     critical,
     warning = 0,
     list,
+    defaultOpen = false,
     words: given,
 }: {
     critical: number
     warning?: number
     list: readonly IssueEntry[]
+    /** Starts with the list open. */
+    defaultOpen?: boolean
     words?: Partial<IssueCountWords>
 }) {
     const words = { ...COUNT_WORDS, ...given }
-    const [open, setOpen] = useState(false)
+    const [open, setOpen] = useState(defaultOpen)
     const tone = critical > 0 ? 'critical' : warning > 0 ? 'warning' : null
     if (tone === null) return null
     const label = [critical > 0 && words.errors(critical), warning > 0 && words.warnings(warning)].filter(Boolean).join(', ')

@@ -172,7 +172,6 @@ function NewPipeline() {
             width="lg"
             title="New pipeline"
             count={<SchemaIssueCount form={form} />}
-            marks={form.list}
             confirm={{ label: 'Create', onConfirm: () => form.submit() }}
         >
             <SchemaForm form={form} />

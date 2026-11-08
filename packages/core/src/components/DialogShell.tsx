@@ -4,8 +4,6 @@ import { Button } from './ui/button'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog'
 import { Spinner } from './ui/spinner'
 import { cn } from '../lib/cn'
-import type { IssueEntry } from './IssueMark'
-import { IssueMarks } from './IssueMarks'
 
 const WIDTHS = {
     sm: 'sm:max-w-sm',
@@ -65,7 +63,6 @@ export function DialogShell({
     dismissible = true,
     footer,
     count,
-    marks,
     children,
     className,
     words: given,
@@ -88,8 +85,6 @@ export function DialogShell({
     footer?: ReactNode
     /** The form's `IssueCount`, set just before the verbs it stops. */
     count?: ReactNode
-    /** The form's issues, marked on a strip beside the body when it scrolls (`IssueMarks`). */
-    marks?: readonly IssueEntry[]
     children?: ReactNode
     className?: string
     words?: Partial<DialogShellWords>
@@ -125,11 +120,8 @@ export function DialogShell({
                 </DialogHeader>
                 {header}
                 {children !== undefined && (
-                    <div className="-mx-4 flex min-h-0 flex-1">
-                        <div ref={body} className="min-w-0 flex-1 space-y-4 overflow-y-auto px-4">
-                            {children}
-                        </div>
-                        {marks !== undefined && <IssueMarks scroller={body} list={marks} />}
+                    <div ref={body} className="-mx-4 min-h-0 flex-1 space-y-4 overflow-y-auto px-4">
+                        {children}
                     </div>
                 )}
                 {confirm !== undefined && (

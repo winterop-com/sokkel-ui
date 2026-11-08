@@ -5,6 +5,7 @@ import { useId, useMemo, useState, type ReactNode } from 'react'
 import { cn } from '../../lib/cn'
 import { Banner } from '../Banner'
 import { Field } from '../Field'
+import { IssueMarks } from '../IssueMarks'
 import { ISSUE_EDGE, IssueCount, IssueMark, worst, type Issue, type IssueAction, type IssueEntry } from '../IssueMark'
 import { SwitchField } from '../SwitchField'
 import { Button } from '../ui/button'
@@ -750,13 +751,24 @@ function Fields({ form, path, schema }: { form: SchemaFormState; path: Path; sch
  * What is wrong is checked against the schema, and said the way every form here says it: a colored
  * edge and a mark at the end of the input, which opens the message and a fix when one is plain.
  * Nothing is inserted between fields, so the form keeps its height. Put `SchemaIssueCount` beside
- * the submit verb.
+ * the submit verb. While the form scrolls, a strip along the scroll area's edge marks where each
+ * issue sits.
  */
-export function SchemaForm({ form, className }: { form: SchemaFormState; className?: string }) {
+export function SchemaForm({
+    form,
+    marks = true,
+    className,
+}: {
+    form: SchemaFormState
+    /** Marks each issue on a strip along the scroll area's edge while the form scrolls (`IssueMarks`). */
+    marks?: boolean
+    className?: string
+}) {
     const root = fieldSchema(form.schema, form.schema)
     const whole = form.shown([])
     return (
         <div className={cn('flex min-w-0 flex-col gap-4', className)}>
+            {marks && <IssueMarks list={form.list} />}
             {whole.length > 0 && (
                 <Banner tone="critical">
                     {whole.map((issue) => (
