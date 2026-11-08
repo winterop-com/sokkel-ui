@@ -6,7 +6,14 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.10.6** is the latest release (2026-11-08), the last of the rounds the apps' own screens
+- **0.10.7** is the latest release (2026-11-08): the review's missing parts (`DateField`,
+  `TimeField`, `DateTimeField`, `NumberField`, `InlineEdit` and editable `DataTable` cells through
+  `tableEditing`, `FilterBar`, `SavedViews`, several values in `AsyncSelect`, `FileField`,
+  `useUnsavedChanges`, `Toolbar` overflow, a lightbox gallery with zoom, mentions in both
+  composers); caption settings, stats and stall recovery in `VideoPlayer`; settings found by
+  keywords; `SignIn`'s server line, probe and optional credentials; the base theme named
+  `tidevann`.
+- **0.10.6** (2026-11-08), the last of the rounds the apps' own screens
   asked for: `SplitPane` (two panes across or down, remembered by `id`), `GeoJsonLayer`, tokens a
   theme sets for headers, tables, the editor, scroll bars, the page foot and the palette, corners by
   role, an app's own states for `StatusChip` (`StatusProvider`), the themes `ocean`, `indigo` and
@@ -106,7 +113,11 @@ to `plan.md` when it ships.
   `Rail`, `AccountMenu`, with Base UI's menu, popover and tooltip on floating-ui), which the menu's
   popup could load on first open. On a dashboard `chartLegend` still brings every kind with the page: split each kind's
   shaping of rows, which the legend needs, from its option builder, which can load with ECharts.
-  `cmdk` stays a dependency while `Shell`'s palette is drawn with it.
+  `cmdk` stays a dependency while `Shell`'s palette is drawn with it. The CSS has no room left:
+  `styles.css` holds every component's classes, so each new part adds to every app's stylesheet,
+  and the forms and music pages stand at their CSS budgets (51 and 52 kB). Move apps to
+  `styles-base.css` with each module's sources, or split the stylesheet by package area, rather
+  than raise the budgets.
 - **Adoption.** Apps adopt the library one pattern per PR, each pinning a published version. The
   app adds a check in the same PR that refuses its own hand-rolled version of that pattern, so it
   cannot come back. A part an app needs to differ becomes an option here, never a local edit. The
@@ -123,26 +134,16 @@ to `plan.md` when it ships.
   an `examples/tauri-cef` shell on `tauri-runtime-cef` beside `examples/tauri`, built by the
   examples workflow; until then, nothing to build.
 
-- **Missing parts, from the 2026-11-08 review**, most valuable first: `DateField`, `TimeField` and
-  `DateTimeField` (typed entry with a picker, bounds and one format); `NumberField` (bounds, step,
-  units, explicit parse and format); `InlineEdit` with a save, cancel, pending and error cycle, and
-  editable `DataTable` cells; `AsyncSelect` with several values, creating an option and loading more;
-  search inside filter menus and a `FilterBar` (add a filter, clear all, range operators); saved
-  views for a listing (filters, sort, columns; the app stores them); mentions suggested at the caret
-  in both composers; `FileField` (picker and drop zone with accepted types, size and count limits,
-  and refused files said); an unsaved-changes guard for navigation and closing the tab; `Toolbar`
-  overflow into a More menu; next, previous, zoom and pan in `ImageLightbox`. All in core.
 - **Parts the app stories still build.** A letter header (avatar, sender, address, time, the
   attachment mark, folding over its body) for Mail; a usage line (tokens, latency, time to first
   token) and a model's answer column for Playground, with a streaming caret as a `Markdown` option;
-  a state map onto `StatusChip`; one detail sheet for the Workspace, Files and Admin detail panes;
+  one detail sheet for the Workspace, Files and Admin detail panes;
   the board item's panel with its checklist; a sideways-scrolling chip row with one chosen; a
   channel row (avatar, name, followers, Follow) and an action cluster for a watch page; checkboxes
   with a color dot for calendar toggles.
 - **Gaps from a records app (2026-11-08)**, its screens laid beside Apps/Records: a
   period picker (the recent periods of a type with their ids, newest first, and any other id typed
-  in); an entry grid (questions down, categories across, number cells with row totals, folding to a
-  card per question on a narrow screen), on `DataTable`'s editable cells; an API playground
+  in); an API playground
   composition (method, path, query parameters, send, the answer's status, time and body, copy as
   curl, the server's own requests as presets in a side panel); a grouped list of examples in tabs
   beside an editor; the palette's foot (the app's mark, the keys that open a row and the palette); a
