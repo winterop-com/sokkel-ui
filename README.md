@@ -169,7 +169,7 @@ there too.
 ### Only the classes an app uses
 
 `styles.css` points Tailwind at every module of the core, so an app's CSS carries the classes of
-components it never imports: the forms page in `examples/sizes` ships 49 kB of CSS gzipped on it.
+components it never imports: the forms page in `size/` ships 49 kB of CSS gzipped on it.
 An app that wants only its own imports `styles-base.css` instead, which is `styles.css` pointed at
 no module, and after it the list of sources of each module it imports, `sources/<module>.css`
 under the name it imports the module by. A list holds an `@source` for the module and for every
@@ -193,7 +193,7 @@ The app adds one line per module it imports, from any package: `import { Rail } 
 `@import '@winterop-com/sokkel-ui-charts/sources/Chart.css'`. An add-on's list brings the lists of
 the core modules it uses, and on this path it takes the place of the add-on's `styles.css`. A module
 the app starts importing needs its line, or its classes are missing. The same forms page built this
-way, `examples/sizes/forms-lean`, ships 20 kB of CSS gzipped.
+way, `size/forms-lean`, ships 20 kB of CSS gzipped.
 
 ### An app's own Tailwind entry
 
@@ -385,7 +385,7 @@ The repository is a Bun workspace: the packages are in `packages/core`, `package
 `packages/maps`, `packages/graph`, `packages/terminal` and `packages/media`, and the stories in
 `src/stories/` import them by their names, as an app does. `bun run build` builds all six,
 `bun run test` runs every package's tests and the library rules, and `bun run size` holds the apps
-in `examples/sizes` to their budgets.
+in `size/` to their budgets.
 
 ## License
 

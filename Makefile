@@ -1,7 +1,7 @@
 # The common commands, as `make <target>`. Everything runs through bun; `make help` lists them.
 
 .DEFAULT_GOAL := help
-.PHONY: help install tokens storybook build size typecheck lint fmt fmt-check test check storybook-build baselines visual visual-update screenshots-ci layout examples web web-dev electron tauri tauri-build clean
+.PHONY: help install tokens storybook build size typecheck lint fmt fmt-check test check storybook-build baselines visual visual-update screenshots-ci layout examples examples-list clean
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "} {printf "  %-16s %s\n", $$1, $$2}'
@@ -56,25 +56,19 @@ screenshots-ci: ## Retake the screenshots on GitHub into the current branch's ba
 layout: storybook-build ## Check that no story scrolls sideways at the narrow widths
 	bunx playwright test e2e/layout.spec.ts
 
-examples: build ## Build the web example, bundle the Electron main file and cargo check the Tauri shell, as CI does
-	cd examples/web && bun install && bun run build
-	cd examples/electron && bun install && bun run build:main
-	cd examples/tauri && bun install && cd src-tauri && cargo check
+# Every folder in examples/ with a Makefile is an example: a web app and its Electron and Tauri shells.
+EXAMPLES := $(sort $(patsubst examples/%/Makefile,%,$(wildcard examples/*/Makefile)))
+EXAMPLE_TARGETS := web dev electron tauri tauri-build
 
-web: build ## Build the web example and serve it with vite preview on port 4180
-	cd examples/web && bun install && bun run build && bunx vite preview --port 4180 --strictPort
+examples: build ## Build every example's web app and check its desktop shells, as CI does
+	@for name in $(EXAMPLES); do $(MAKE) -C examples/$$name check || exit 1; done
 
-web-dev: build ## Run the web example's dev server
-	cd examples/web && bun install && bun run dev
+examples-list: ## List the examples and what make runs for each, e.g. make tasks-tauri
+	@for name in $(EXAMPLES); do printf '  %-10s make %s-{%s}\n' $$name $$name "$$(echo $(EXAMPLE_TARGETS) | tr ' ' ,)"; done
 
-electron: build ## Build the web example and open it in the Electron shell
-	cd examples/electron && bun install && bun run start
-
-tauri: build ## Open the web example in the Tauri shell
-	cd examples/tauri && bun install && bun run dev
-
-tauri-build: build ## Build the Tauri shell's release binary
-	cd examples/tauri && bun install && bun run build
+# make <example>-<target>, e.g. make tasks-web or make runs-tauri-build, after building the packages.
+$(foreach target,$(EXAMPLE_TARGETS),$(addsuffix -$(target),$(EXAMPLES))): build
+	$(MAKE) -C examples/$(firstword $(subst -, ,$@)) $(patsubst $(firstword $(subst -, ,$@))-%,%,$@)
 
 clean: ## Remove what the builds made
 	rm -rf packages/*/dist storybook-static test-results

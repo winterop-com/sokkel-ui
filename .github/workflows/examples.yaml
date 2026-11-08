@@ -1,13 +1,14 @@
 name: examples
 
 # The examples build against the library, so a change to either can break them: they run when the
-# examples change, every night against main, and by hand. The size apps are built by ci.yaml instead.
+# examples change, every night against main, and by hand. Each folder in examples/ with a web/,
+# electron/ and tauri/ is one example; the size apps in size/ are built by ci.yaml instead.
 on:
     pull_request:
-        paths: ['examples/**', '!examples/sizes/**', '.github/workflows/examples.yaml']
+        paths: ['examples/**', '.github/workflows/examples.yaml']
     push:
         branches: [main]
-        paths: ['examples/**', '!examples/sizes/**', '.github/workflows/examples.yaml']
+        paths: ['examples/**', '.github/workflows/examples.yaml']
     schedule:
         - cron: '0 3 * * *'
     workflow_dispatch:
@@ -16,23 +17,25 @@ jobs:
     build:
         runs-on: ubuntu-latest
         env:
-            # The Electron shell only bundles its main file here; it never starts Electron.
+            # The Electron shells only bundle their main file here; they never start Electron.
             ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+            # One Cargo target folder for every example's Tauri shell, as the Makefiles use.
+            CARGO_TARGET_DIR: ${{ github.workspace }}/examples/.cargo-target
         steps:
             - uses: actions/checkout@v5
             - run: npm install -g bun
             - run: bun install --frozen-lockfile
             - run: bun run build
-            - name: Web example
-              working-directory: examples/web
+            - name: Web apps
               run: |
-                  bun install --frozen-lockfile
-                  bun run build
-            - name: Electron shell
-              working-directory: examples/electron
+                  for app in examples/*/web; do
+                      (cd "$app" && bun install --frozen-lockfile && bun run build) || exit 1
+                  done
+            - name: Electron shells
               run: |
-                  bun install --frozen-lockfile
-                  bun run build:main
+                  for shell in examples/*/electron; do
+                      (cd "$shell" && bun install --frozen-lockfile && bun run build:main) || exit 1
+                  done
             - name: Tauri system libraries
               run: |
                   sudo apt-get update
@@ -40,7 +43,9 @@ jobs:
             - uses: dtolnay/rust-toolchain@stable
             - uses: Swatinem/rust-cache@v2
               with:
-                  workspaces: examples/tauri/src-tauri
-            - name: Tauri shell
-              working-directory: examples/tauri/src-tauri
-              run: cargo check --locked
+                  cache-directories: examples/.cargo-target
+            - name: Tauri shells
+              run: |
+                  for shell in examples/*/tauri/src-tauri; do
+                      (cd "$shell" && cargo check --locked) || exit 1
+                  done

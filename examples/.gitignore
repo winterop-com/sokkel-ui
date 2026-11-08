@@ -1,2 +1,4 @@
-tauri/src-tauri/target/
-tauri/src-tauri/gen/schemas/
+# What the shells and the shared Cargo target build.
+.cargo-target/
+*/tauri/src-tauri/target/
+*/tauri/src-tauri/gen/schemas/
