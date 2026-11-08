@@ -77,7 +77,7 @@ export function PageHeader({
     const column = back && 'col-start-2'
     return (
         <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
-            <div className={cn('min-w-0 flex-[1_1_12rem]', back && 'grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2')}>
+            <div className={cn('min-w-0 flex-[1_1_16rem]', back && 'grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2')}>
                 {back && (
                     <IconButton label={said.back} onClick={onBack} className={cn('col-start-1', trailed ? 'row-start-2' : 'row-start-1')}>
                         <ChevronLeft aria-hidden />
