@@ -9,7 +9,7 @@
         "engines": [],
         "start": 225,
         "lazy": 21,
-        "css": 52
+        "css": 22
     },
     "dashboard": {
         "engines": ["echarts"],

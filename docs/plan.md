@@ -40,7 +40,11 @@ also its tokens), with no stories, story fixtures or tests. Each package's `styl
 source that scans only that package's components: the core's also carries Tailwind, the fonts, the
 tokens and the base styles, and an add-on's is imported after it in the same stylesheet. An app's
 CSS so carries the classes of the packages it uses and none of the stories'; every app runs Tailwind
-4.1 or later itself. The themes are in the core. Storybook gets every package's classes and the
+4.1 or later itself. For an app that wants the classes of its own imports alone, the core also
+exports `styles-base.css` (`styles.css` pointed at no module) and every package a list of sources
+per module, `sources/<module>.css`, written by the build from the module's imports: an `@source`
+for each of its package's modules it reaches and the core's list for each core module it uses. The
+app imports the list of each module it imports after `styles-base.css`. The themes are in the core. Storybook gets every package's classes and the
 stories' from its own entry, `.storybook/storybook.css`, which imports each package's styles and
 adds the stories as a source. The stories in `src/stories/` import the packages by their names; in
 Storybook and the tests those names resolve to the packages' sources, so neither needs a build.
@@ -56,7 +60,8 @@ the CSS). A check fails when one grows past its budget in `examples/sizes/budget
 engine it does not use, so a forms page never carries ECharts, maplibre, React Flow, xterm.js,
 CodeMirror, Mermaid or KaTeX. A change that grows an app on purpose raises its budget in the same
 PR. The forms page imports only the core package, the dashboard adds the charts package, the map
-page the maps package and the music page the media package.
+page the maps package and the music page the media package. `forms-lean` is the forms page on
+`styles-base.css` and its modules' lists of sources, so the lean path is measured too.
 
 ## Themes
 
@@ -65,7 +70,9 @@ Every theme is defined in `packages/core/tokens/tokens.json`, and `scripts/build
 that picks no theme needs nothing more. Every other theme is a file of its own in
 `packages/core/src/styles/themes/`, exported as `@winterop-com/sokkel-ui/themes/<name>.css`, with its light and
 dark tokens on `html[data-theme]` for the whole app and on `[data-theme-scope]` for one element,
-such as a theme picker's swatch; `themes.css` imports them all. An app imports the files of the
+such as a theme picker's swatch, each written once for both; `themes.css` imports them all. Every
+scope first takes the default's whole set from `tokens.css`, at no specificity, so the page's theme
+never shows through a scope of another. An app imports the files of the
 themes it offers and sets one on `<html data-theme>`, so its CSS carries no theme it never shows.
 Storybook imports `themes.css`, so its toolbar offers every theme.
 
@@ -325,7 +332,10 @@ fixed number of rows) and reports its size in cells, sends keystrokes and paste 
 and takes output through its handle's `write`, with full emulation for programs that move the
 cursor or take the whole screen, a scrollback, selection and copy. The connection to the program
 stays the app's. `Terminal` shows commands and what they wrote on the same engine, read-only, with
-a title bar, copy and clear, writing only what was added while output streams in.
+a title bar, copy and clear, writing only what was added while output streams in. The terminal
+ground is dark in both schemes; every theme gives it an accent in its own hue (`--terminal-accent`,
+the ANSI blue and the selection), and the title bar ground, `--terminal-bar`, is mixed from the
+theme's terminal ground and accent. SignIn's dark brand pane stands on the same bar on a phone.
 
 ## Media
 

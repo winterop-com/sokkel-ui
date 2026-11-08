@@ -63,7 +63,9 @@ bun run build     # a release binary, without installers
 Four small Tidevann apps that hold the library to a size budget: `forms` (a settings page and a
 dialog with a schema form, and no engine), `dashboard` (stat and chart panels on ECharts, the range
 controls and a table), `map` (regions and sites on maplibre with a legend and a popup) and `music`
-(an album's tracks and the player bar).
+(an album's tracks and the player bar). `forms-lean` is the forms app on the core's
+`styles-base.css` with the list of sources of each module it imports, where `forms` takes
+`styles.css`, so the CSS of an app that carries only its own modules' classes is measured too.
 `scripts/size-budget.ts` builds each with Vite against the built packages and measures it gzipped:
 the JavaScript loaded with the page (`start`), what a dynamic import fetches later (`lazy`) and the
 CSS. It fails when one grows past its budget in `sizes/budget.json`, or bundles an engine (ECharts,
