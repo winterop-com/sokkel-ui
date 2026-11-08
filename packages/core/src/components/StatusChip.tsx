@@ -31,7 +31,7 @@ const TONE: Record<Status, string> = {
  */
 export function StatusChip({ status, label, className }: { status: Status; label?: string; className?: string }) {
     return (
-        <span className={cn('inline-flex items-center rounded-chip px-1.5 py-0.5 text-xs whitespace-nowrap', TONE[status], className)}>
+        <span className={cn('inline-flex items-center rounded-chip px-1.5 py-0.5 text-badge whitespace-nowrap', TONE[status], className)}>
             {label ?? status.replaceAll('_', ' ')}
         </span>
     )

@@ -36,7 +36,7 @@ export function ShortcutsDialog({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle className="text-base font-medium">{words.title}</DialogTitle>
+                    <DialogTitle>{words.title}</DialogTitle>
                 </DialogHeader>
                 <div className="flex max-h-[60svh] flex-col gap-4 overflow-y-auto">
                     {groups.map((group) => (
