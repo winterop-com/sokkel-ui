@@ -22,22 +22,65 @@ import { TidevannMark } from '../fixtures/TidevannMark'
 import { PersonAvatar } from '@winterop-com/sokkel-ui/PersonAvatar'
 import { Columns, Stack } from '@winterop-com/sokkel-ui/Layout'
 
-/** Tidevann's preferences, from the start page to how long the server keeps its runs. */
-function usePreferences(): SettingsGroup[] {
-    const [start, setStart] = useState<'overview' | 'projects' | 'last'>('overview')
-    const [clock, setClock] = useState<'24' | '12'>('24')
-    const [newTab, setNewTab] = useState(false)
-    const [delay, setDelay] = useState(0)
-    const [confirmCancel, setConfirmCancel] = useState(true)
-    const [scheme, setScheme] = useState<'system' | 'light' | 'dark'>('system')
-    const [density, setDensity] = useState<'regular' | 'compact'>('regular')
-    const [motion, setMotion] = useState(false)
-    const [codeSize, setCodeSize] = useState(13)
-    const [hints, setHints] = useState(true)
-    const [singleKey, setSingleKey] = useState(true)
-    const [history, setHistory] = useState<'30' | '90' | '365'>('90')
-    const [maintenance, setMaintenance] = useState(false)
-    return [
+/** Tidevann's preferences as a new account has them. */
+const DEFAULTS = {
+    start: 'overview' as 'overview' | 'projects' | 'last',
+    clock: '24' as '24' | '12',
+    newTab: false,
+    delay: 0,
+    confirmCancel: true,
+    scheme: 'system' as 'system' | 'light' | 'dark',
+    density: 'regular' as 'regular' | 'compact',
+    motion: false,
+    codeSize: 13,
+    hints: true,
+    singleKey: true,
+    name: 'Grace',
+    email: 'grace@example.org',
+    history: '90' as '30' | '90' | '365',
+    maintenance: false,
+}
+
+type Preferences = typeof DEFAULTS
+
+/** The preferences each section holds, so a section can be put back to its defaults on its own. */
+const HELD: Record<string, readonly (keyof Preferences)[]> = {
+    general: ['start', 'clock', 'newTab', 'delay', 'confirmCancel'],
+    theme: ['scheme', 'density', 'motion', 'codeSize'],
+    shortcuts: ['hints', 'singleKey'],
+    account: ['name', 'email'],
+    server: ['history', 'maintenance'],
+}
+
+/**
+ * Tidevann's preferences, from the start page to how long the server keeps its runs, and a reset
+ * that puts one section back to its defaults, or every one when given no section.
+ */
+function usePreferences(): { groups: SettingsGroup[]; reset: (section?: string) => void } {
+    const [values, setValues] = useState(DEFAULTS)
+    const set = (change: Partial<Preferences>) => setValues((now) => ({ ...now, ...change }))
+    const reset = (section?: string) => {
+        const keys = section === undefined ? Object.values(HELD).flat() : (HELD[section] ?? [])
+        setValues((now) => ({ ...now, ...Object.fromEntries(keys.map((key) => [key, DEFAULTS[key]])) }))
+    }
+    const {
+        start,
+        clock,
+        newTab,
+        delay,
+        confirmCancel,
+        scheme,
+        density,
+        motion,
+        codeSize,
+        hints,
+        singleKey,
+        name,
+        email,
+        history,
+        maintenance,
+    } = values
+    const groups: SettingsGroup[] = [
         {
             id: 'preferences',
             title: 'Preferences',
@@ -55,7 +98,7 @@ function usePreferences(): SettingsGroup[] {
                                 <Segmented
                                     label="Start page"
                                     value={start}
-                                    onValueChange={setStart}
+                                    onValueChange={(start) => set({ start })}
                                     options={[
                                         { value: 'overview', label: 'Overview' },
                                         { value: 'projects', label: 'Projects' },
@@ -72,7 +115,7 @@ function usePreferences(): SettingsGroup[] {
                                 <Segmented
                                     label="Time format"
                                     value={clock}
-                                    onValueChange={setClock}
+                                    onValueChange={(clock) => set({ clock })}
                                     options={[
                                         { value: '24', label: '24-hour' },
                                         { value: '12', label: '12-hour' },
@@ -85,7 +128,13 @@ function usePreferences(): SettingsGroup[] {
                             title: 'Open runs in a new tab',
                             description: 'A run opened from a list keeps the list where it was.',
                             layout: 'trailing',
-                            control: <Switch aria-label="Open runs in a new tab" checked={newTab} onCheckedChange={setNewTab} />,
+                            control: (
+                                <Switch
+                                    aria-label="Open runs in a new tab"
+                                    checked={newTab}
+                                    onCheckedChange={(newTab) => set({ newTab })}
+                                />
+                            ),
                         },
                         {
                             id: 'delay',
@@ -102,7 +151,7 @@ function usePreferences(): SettingsGroup[] {
                                     max={2000}
                                     step={100}
                                     unit="ms"
-                                    onChange={setDelay}
+                                    onChange={(delay) => set({ delay })}
                                 />
                             ),
                         },
@@ -116,7 +165,7 @@ function usePreferences(): SettingsGroup[] {
                                 <Switch
                                     aria-label="Confirm before cancelling a run"
                                     checked={confirmCancel}
-                                    onCheckedChange={setConfirmCancel}
+                                    onCheckedChange={(confirmCancel) => set({ confirmCancel })}
                                 />
                             ),
                         },
@@ -146,7 +195,7 @@ function usePreferences(): SettingsGroup[] {
                                 <Segmented
                                     label="Scheme"
                                     value={scheme}
-                                    onValueChange={setScheme}
+                                    onValueChange={(scheme) => set({ scheme })}
                                     options={[
                                         { value: 'system', label: 'System' },
                                         { value: 'light', label: 'Light' },
@@ -163,7 +212,7 @@ function usePreferences(): SettingsGroup[] {
                                 <Segmented
                                     label="Density"
                                     value={density}
-                                    onValueChange={setDensity}
+                                    onValueChange={(density) => set({ density })}
                                     options={[
                                         { value: 'regular', label: 'Regular' },
                                         { value: 'compact', label: 'Compact' },
@@ -176,7 +225,7 @@ function usePreferences(): SettingsGroup[] {
                             title: 'Reduce motion',
                             description: 'Panels and dialogs appear without moving.',
                             layout: 'trailing',
-                            control: <Switch aria-label="Reduce motion" checked={motion} onCheckedChange={setMotion} />,
+                            control: <Switch aria-label="Reduce motion" checked={motion} onCheckedChange={(motion) => set({ motion })} />,
                         },
                         {
                             id: 'code-size',
@@ -192,7 +241,7 @@ function usePreferences(): SettingsGroup[] {
                                     max={16}
                                     step={1}
                                     unit="px"
-                                    onChange={setCodeSize}
+                                    onChange={(codeSize) => set({ codeSize })}
                                 />
                             ),
                         },
@@ -208,14 +257,20 @@ function usePreferences(): SettingsGroup[] {
                             title: 'Show key hints',
                             description: 'Buttons name their shortcut on hover.',
                             layout: 'trailing',
-                            control: <Switch aria-label="Show key hints" checked={hints} onCheckedChange={setHints} />,
+                            control: <Switch aria-label="Show key hints" checked={hints} onCheckedChange={(hints) => set({ hints })} />,
                         },
                         {
                             id: 'single-key',
                             title: 'Single-key shortcuts',
                             description: 'Keys such as / and ? act without a modifier.',
                             layout: 'trailing',
-                            control: <Switch aria-label="Single-key shortcuts" checked={singleKey} onCheckedChange={setSingleKey} />,
+                            control: (
+                                <Switch
+                                    aria-label="Single-key shortcuts"
+                                    checked={singleKey}
+                                    onCheckedChange={(singleKey) => set({ singleKey })}
+                                />
+                            ),
                         },
                         {
                             id: 'list',
@@ -245,13 +300,27 @@ function usePreferences(): SettingsGroup[] {
                             id: 'name',
                             title: 'Name',
                             description: 'How you appear on runs you start.',
-                            control: <Input aria-label="Name" className="w-56" defaultValue="Grace" />,
+                            control: (
+                                <Input
+                                    aria-label="Name"
+                                    className="w-56"
+                                    value={name}
+                                    onChange={(event) => set({ name: event.target.value })}
+                                />
+                            ),
                         },
                         {
                             id: 'email',
                             title: 'Email',
                             description: 'Where failed-run alerts are sent.',
-                            control: <Input aria-label="Email" className="w-56" defaultValue="grace@example.org" />,
+                            control: (
+                                <Input
+                                    aria-label="Email"
+                                    className="w-56"
+                                    value={email}
+                                    onChange={(event) => set({ email: event.target.value })}
+                                />
+                            ),
                         },
                         {
                             id: 'sessions',
@@ -291,7 +360,7 @@ function usePreferences(): SettingsGroup[] {
                                 <Segmented
                                     label="Run history"
                                     value={history}
-                                    onValueChange={setHistory}
+                                    onValueChange={(history) => set({ history })}
                                     options={[
                                         { value: '30', label: '30 days' },
                                         { value: '90', label: '90 days' },
@@ -306,13 +375,20 @@ function usePreferences(): SettingsGroup[] {
                             description: 'Queued jobs wait and no new run starts.',
                             note: 'Running jobs finish first; ada and linus are told by email.',
                             layout: 'trailing',
-                            control: <Switch aria-label="Maintenance mode" checked={maintenance} onCheckedChange={setMaintenance} />,
+                            control: (
+                                <Switch
+                                    aria-label="Maintenance mode"
+                                    checked={maintenance}
+                                    onCheckedChange={(maintenance) => set({ maintenance })}
+                                />
+                            ),
                         },
                     ],
                 },
             ],
         },
     ]
+    return { groups, reset }
 }
 
 /** Where the preferences dialog opens, when the story opens it. */
@@ -320,12 +396,15 @@ interface Opening {
     active: string
     search?: string
     phoneStart?: 'list' | 'section'
+    /** The app's own note in the footer, and a reset of every setting rather than the shown section. */
+    synced?: boolean
 }
 
 /**
  * An app with few places, framed by the navbar along the top instead of a rail: a settings page of
  * boxed sections, each with its fields and the one verb that saves it. The gear in the navbar opens
- * the preferences dialog.
+ * the preferences dialog, whose footer says changes are kept as they are made, resets the shown
+ * section and closes with Done.
  */
 function SettingsApp({ opening }: { opening?: Opening }) {
     const preferences = usePreferences()
@@ -441,12 +520,15 @@ function SettingsApp({ opening }: { opening?: Opening }) {
                 <SettingsDialog
                     open={preferencesOpen}
                     onOpenChange={setPreferencesOpen}
-                    groups={preferences}
+                    groups={preferences.groups}
                     active={active}
                     onActiveChange={setActive}
                     search={search}
                     onSearchChange={setSearch}
                     phoneStart={opening?.phoneStart}
+                    footer={opening?.synced === true ? 'Synced to your account at 09:52' : undefined}
+                    onReset={preferences.reset}
+                    resetScope={opening?.synced === true ? 'all' : 'section'}
                 />
             </Stack>
         </TooltipProvider>
@@ -460,8 +542,9 @@ export const WithNavBar: StoryObj = { name: 'Navbar', render: () => <SettingsApp
 
 /**
  * The preferences dialog open on General: the navigation with its search and grouped sections on
- * the left, General's rows on the right. A phone opens straight into General, with a way back to
- * the list of sections.
+ * the left, General's rows on the right, and the footer under both with Reset to defaults for
+ * General, the note that changes are kept as they are made, and Done. A phone opens straight into
+ * General, with a way back to the list of sections and the footer at the foot of the screen.
  */
 export const Dialog: StoryObj = {
     render: () => <SettingsApp opening={{ active: 'general', phoneStart: 'section' }} />,
@@ -474,4 +557,13 @@ export const Dialog: StoryObj = {
  */
 export const Search: StoryObj = {
     render: () => <SettingsApp opening={{ active: 'general', search: 'run' }} />,
+}
+
+/**
+ * The preferences dialog with the app's own note in its footer, when the preferences last synced,
+ * and a reset that puts back every setting rather than the shown section, so it shows on a phone's
+ * list of sections too.
+ */
+export const Synced: StoryObj = {
+    render: () => <SettingsApp opening={{ active: 'theme', synced: true }} />,
 }
