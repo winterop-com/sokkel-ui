@@ -346,8 +346,13 @@ for the rest, and `DescriptionList`'s `row` layout sets its facts in one wrappin
 its upper part and the mark, the name and a few facts at its foot, beside a centered form of a
 username and password (or a token, or the app's own fields), an optional server address, an error
 over the submit and other ways in under a rule. The seam between the panes drags, the form rises
-into place as it opens, and the username can be kept in the browser. On a phone the brand pane is a
-bar over the form. The art that ships, `LevelBars` and `FlowLines`, is drawn from a seed in the
+into place as it opens, and the username can be kept in the browser. Each field is led by an icon
+unless `icons` is off, and `optional` lets the password, or every credential, be left empty for a
+server that needs none. An app that finds its server itself says so in the server field's place
+(`looking`), then offers a link to a different server (`found`) that brings the field back; with the
+values held from outside (`values`, `onValuesChange`) it asks a typed address as it is typed, and
+`probe` says in the brand pane what answered there, its version or no answer. On a phone the brand
+pane is a bar over the form. The art that ships, `LevelBars` and `FlowLines`, is drawn from a seed in the
 theme's primary and muted inks and holds still when motion is reduced; an app may pass its own.
 
 DataTable is the one table, for five rows or fifty thousand: only the rows in view are drawn, at
@@ -364,7 +369,8 @@ group, rows sort within their group, and a head's box selects the group, in the 
 the grid alike.
 
 `SettingsDialog` holds an app's preferences: its sections in a navigation with a search over every
-setting, the chosen section's rows beside it, and under both a footer drawn as `DialogShell`'s,
+setting (its title, description and `keywords`, which are never drawn, and its section's name, so a
+search for a section keeps it whole), the chosen section's rows beside it, and under both a footer drawn as `DialogShell`'s,
 outside the scrolling, that says changes are kept as they are made (or the app's own `footer`, such
 as when they last synced) and closes with Done. `onReset` adds Reset to defaults at the footer's
 start, for the shown section or for every setting, asked once more before it runs. On a phone the
