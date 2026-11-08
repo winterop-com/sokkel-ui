@@ -1,8 +1,9 @@
 import { Play, Volume2 } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
-import { formatTime } from '@winterop-com/sokkel-ui/media/time'
+import { formatRemaining, formatTime } from '@winterop-com/sokkel-ui/media/time'
+import { useFollow } from './use-follow'
 
 /** One row of a track list. */
 export interface Track {
@@ -28,6 +29,9 @@ export interface TrackListWords {
 
 const WORDS: TrackListWords = { play: (title) => `Play ${title}`, playing: 'Now playing' }
 
+/** What the current row shows of how far it has played: the time left in place of its length, or a line along its foot. */
+export type TrackProgress = 'left' | 'bar'
+
 /**
  * A list of tracks or episodes: the number or a small picture, the title over an optional second
  * line, a quiet meta column, and the length in the code face at the end.
@@ -40,11 +44,20 @@ const WORDS: TrackListWords = { play: (title) => `Play ${title}`, playing: 'Now 
  * track to the queue and a `StarButton`; they stay in view rather than waiting for a hover, so a
  * starred row shows its star. Pointing at a row's track washes the whole row, its actions
  * included, so the row reads as the one a press plays.
+ *
+ * The current row is kept in view in the box that scrolls the list, or the page: brought to the
+ * middle on the first draw and whenever it changes, only when it is out of view, and never while
+ * the reader is scrolling or just after; `follow={false}` leaves the scrolling to the reader. With
+ * the `position` played into it, `progress` shows how far the current row has played: `left` the
+ * time still to play in place of its length, `bar` a line along its foot.
  */
 export function TrackList({
     tracks,
     current,
     playing = false,
+    position,
+    progress,
+    follow = true,
     onPlay,
     actions,
     variant = 'boxed',
@@ -56,6 +69,11 @@ export function TrackList({
     /** The id of the row that is playing or paused. */
     current?: string
     playing?: boolean
+    /** Seconds played into the current row, which `progress` shows. */
+    position?: number
+    progress?: TrackProgress
+    /** Whether the current row is kept in view as it changes. */
+    follow?: boolean
     onPlay?: (track: Track) => void
     /** A row's own controls, drawn at its end. */
     actions?: (track: Track) => ReactNode
@@ -65,6 +83,8 @@ export function TrackList({
     words?: Partial<TrackListWords>
 }) {
     const said = { ...WORDS, ...words }
+    const row = useRef<HTMLLIElement | null>(null)
+    useFollow(row, current, { enabled: follow && current !== undefined })
     return (
         <ol
             className={cn(
@@ -76,11 +96,15 @@ export function TrackList({
             {tracks.map((track) => {
                 const now = track.id === current
                 const label = typeof track.title === 'string' ? said.play(track.title) : undefined
+                const played = now && position !== undefined ? position : undefined
+                const bar = progress === 'bar' && played !== undefined && track.duration > 0
                 return (
                     <li
                         key={track.id}
+                        ref={now ? row : undefined}
                         className={cn(
                             'flex min-w-0 items-center gap-1 pr-2',
+                            bar && 'relative overflow-hidden',
                             variant === 'boxed' && 'border-b border-border last:border-b-0',
                             variant === 'plain' && 'rounded-control',
                             now ? 'bg-secondary' : onPlay !== undefined && 'has-[>button:hover]:bg-hover',
@@ -111,11 +135,21 @@ export function TrackList({
                                     {track.meta}
                                 </span>
                             )}
-                            <span className="w-12 shrink-0 text-right font-mono text-xs text-muted-foreground tabular-nums">
-                                {formatTime(track.duration)}
+                            <span className="min-w-12 shrink-0 text-right font-mono text-xs text-muted-foreground tabular-nums">
+                                {progress === 'left' && played !== undefined
+                                    ? formatRemaining(played, track.duration)
+                                    : formatTime(track.duration)}
                             </span>
                         </button>
                         {actions !== undefined && <span className="flex shrink-0 items-center gap-0.5 pl-1">{actions(track)}</span>}
+                        {bar && (
+                            <span
+                                aria-hidden
+                                data-slot="track-progress"
+                                className="pointer-events-none absolute inset-x-0 bottom-0 h-0.5 origin-left bg-primary"
+                                style={{ transform: `scaleX(${String(Math.min(1, Math.max(0, played / track.duration)))})` }}
+                            />
+                        )}
                     </li>
                 )
             })}
