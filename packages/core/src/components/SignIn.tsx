@@ -19,7 +19,7 @@ export interface SignInValues {
     user: string
     password: string
     token: string
-    /** Whether to keep the username for next time, when the form offers it. */
+    /** Whether the person asked to be remembered: the app keeps the session longer, and with `rememberKey` the form fills in the username next time. */
     remember: boolean
 }
 
@@ -90,7 +90,7 @@ const WORDS: SignInWords = {
     optional: 'optional',
     show: 'Show the password',
     hide: 'Hide the password',
-    remember: 'Remember my username',
+    remember: 'Remember me',
     submit: 'Sign in',
     busy: 'Signing in',
     or: 'or',
@@ -245,7 +245,7 @@ export interface SignInProps {
     optional?: SignInOptional
     /** Draws an icon at the start of each field: a globe, a person, a lock or a key. */
     icons?: boolean
-    /** Offers a box to keep the username for next time; with `rememberKey` the form keeps it itself. */
+    /** Offers a "Remember me" box. Its answer reaches `onSubmit` as `values.remember`, for the app to keep the session longer; with `rememberKey` the form also keeps the username. */
     remember?: boolean
     /** The local storage key the username is kept under in this browser; it fills the form's own values, never `values`. */
     rememberKey?: string
@@ -295,8 +295,10 @@ export interface SignInProps {
  * can ask an address as it is typed; `probe` says what answered there, the server's version or
  * that nothing did, in the brand pane, and `ready` can hold the submit until it has.
  *
- * `rememberKey` keeps the username in this browser under that key and fills it in next time;
- * `remember` adds a box to choose whether to. `resizable` puts a seam between the panes to drag
+ * `remember` adds a "Remember me" box whose answer reaches `onSubmit`, for the app to keep the
+ * session longer than the browser's. `rememberKey` keeps the username in this browser under that
+ * key and fills it in next time, only when the box is ticked if there is one. The password is never
+ * kept by the form: the fields name themselves for the browser's password manager, which keeps it. `resizable` puts a seam between the panes to drag
  * the brand pane's width, from `brandWidth` (half by default), double click putting it back.
  * `reveal` lets the form's parts rise into place as the screen opens, held still when motion is
  * reduced.

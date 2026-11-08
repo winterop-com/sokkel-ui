@@ -69,6 +69,8 @@ export interface PaletteSearch {
     onOpen: (result: SearchResult, group: SearchGroup) => void
     /** Characters needed before the search is asked. */
     minQuery?: number
+    /** Milliseconds of quiet typing before the search is asked again. */
+    debounce?: number
     words?: { searching: string }
 }
 
@@ -141,7 +143,7 @@ export function CommandPalette({
     const [query, setQuery] = useState(defaultQuery)
     const score = filter === 'fuzzy' ? undefined : filter === 'terms' ? termScore : filter
     const listed = useMemo(() => (score === undefined ? merged : filterCommands(merged, query, score)), [merged, query, score])
-    const answer = useSearch(search?.search, query, { enabled: open, minQuery: search?.minQuery })
+    const answer = useSearch(search?.search, query, { enabled: open, minQuery: search?.minQuery, debounce: search?.debounce })
     const found = answer.groups.filter((group) => group.results.length > 0)
     return (
         <CommandDialog open={open} onOpenChange={onOpenChange} title={words.title} description={words.placeholder}>
