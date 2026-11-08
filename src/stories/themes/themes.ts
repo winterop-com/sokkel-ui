@@ -18,7 +18,7 @@ export const TOOLBAR_THEMES: ThemeOption[] = [
 export function fromGlobals(globals: Record<string, unknown>): ThemeSettings {
     const read = (key: string, fallback: string) => (typeof globals[key] === 'string' ? (globals[key] as string) : fallback)
     return {
-        theme: read('look', 'default'),
+        theme: read('look', 'tidevann'),
         scheme: read('theme', 'dark') === 'light' ? 'light' : 'dark',
         density: read('density', 'regular'),
         corners: read('corners', 'theme'),

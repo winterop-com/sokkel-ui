@@ -102,12 +102,12 @@ page the maps package and the music page the media package. `forms-lean` is the 
 ## Themes
 
 Every theme is defined in `packages/core/tokens/tokens.json`, and `scripts/build-tokens.ts` writes it out.
-`tokens.css`, which `styles.css` carries, holds the default theme and the density levels, so an app
-that picks no theme needs nothing more. Every other theme is a file of its own in
+`tokens.css`, which `styles.css` carries, holds tidevann, the base theme, and the density levels, so
+an app that picks no theme needs nothing more. Every other theme is a file of its own in
 `packages/core/src/styles/themes/`, exported as `@winterop-com/sokkel-ui/themes/<name>.css`, with its light and
 dark tokens on `html[data-theme]` for the whole app and on `[data-theme-scope]` for one element,
 such as a theme picker's swatch, each written once for both; `themes.css` imports them all. Every
-scope first takes the default's whole set from `tokens.css`, at no specificity, so the page's theme
+scope first takes tidevann's whole set from `tokens.css`, at no specificity, so the page's theme
 never shows through a scope of another. An app imports the files of the
 themes it offers and sets one on `<html data-theme>`, so its CSS carries no theme it never shows.
 Storybook imports `themes.css`, so its toolbar offers every theme.
@@ -117,8 +117,8 @@ read (`$parts` in `tokens.json` lists them): the heading face, a section head's 
 ink and a page title's ink; a table's head (ground, rule, ink, case) and its zebra; a wash over the
 editor's and a code block's ground and over their gutter; the scroll area's thumb and track, which
 the browser's own scroll bars take where `--scrollbar` names them; the shell's foot strip; and the
-palette's insets. Each defaults to what the part drew before, so a theme that sets none looks as the
-default does. Corners go by role: controls (buttons, fields, selects, toggles, the composers) round
+palette's insets. Each defaults to what the part drew before, so a theme that sets none looks as
+tidevann does. Corners go by role: controls (buttons, fields, selects, toggles, the composers) round
 by `--control-radius` and surfaces (cards, boxed sections, popovers, menus, dialogs, code blocks)
 by `--surface-radius`, each `var(--radius)` unless a theme derives another from it, so one theme
 has sharp surfaces and round controls and another the reverse. Ocean (deep sea blues, teal), indigo

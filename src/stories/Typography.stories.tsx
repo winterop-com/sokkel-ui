@@ -82,7 +82,7 @@ function Grid({ face }: { face: string }) {
 export const Roles: StoryObj = { render: () => <RoleList /> }
 
 /** IBM Plex Sans beside IBM Plex Mono, the default typeface. */
-export const Plex: StoryObj = { globals: { look: 'default', typeface: 'theme' }, render: () => <Grid face="IBM Plex" /> }
+export const Plex: StoryObj = { globals: { look: 'tidevann', typeface: 'theme' }, render: () => <Grid face="IBM Plex" /> }
 
 /** Geist beside Geist Mono, with the face's own mono x-heights. */
-export const Geist: StoryObj = { globals: { look: 'default', typeface: 'geist' }, render: () => <Grid face="Geist" /> }
+export const Geist: StoryObj = { globals: { look: 'tidevann', typeface: 'geist' }, render: () => <Grid face="Geist" /> }
