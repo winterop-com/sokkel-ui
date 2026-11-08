@@ -80,3 +80,20 @@ export const Variants: StoryObj = {
         </Stack>
     ),
 }
+
+/** Actions that cannot be taken now: the tooltip names each and says why, on hover and on focus. */
+export const Reason: StoryObj = {
+    render: () => (
+        <Row gap="2xs">
+            <IconButton label="Run again" reason="The last run is still going.">
+                <RotateCcw aria-hidden />
+            </IconButton>
+            <IconButton label="Edit">
+                <Pencil aria-hidden />
+            </IconButton>
+            <IconButton label="Delete" reason="Only an owner can delete the job.">
+                <Trash2 aria-hidden />
+            </IconButton>
+        </Row>
+    ),
+}

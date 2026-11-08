@@ -31,9 +31,21 @@ function Facts() {
                     ]}
                 />
             </Section>
+            <Section title="In a line">
+                <DescriptionList
+                    layout="row"
+                    items={[
+                        { term: 'Job', value: 'nightly-export', code: true },
+                        { term: 'State', value: 'succeeded' },
+                        { term: 'Duration', value: '12.8s', numeric: true },
+                        { term: 'Started by', value: 'grace' },
+                        { term: 'Project', value: 'harbor' },
+                    ]}
+                />
+            </Section>
             <Section title="Service">
                 <DescriptionList
-                    stacked
+                    layout="stacked"
                     columns={2}
                     items={[
                         { term: 'Base URL', value: 'https://api.example.org', code: true },

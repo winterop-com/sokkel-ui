@@ -15,26 +15,33 @@ export interface Description {
 
 /**
  * Facts about one thing as terms and values: a run's state and duration, a service's base
- * URL. A value that is missing is drawn as a quiet dash, never as a blank. `columns={2}` sets the
- * pairs two to a row on wide screens; `stacked` puts each term above its value.
+ * URL. A value that is missing is drawn as a quiet dash, never as a blank. `layout` sets the pairs:
+ * `side` (the default) puts each term in a column beside its value, `stacked` each term above its
+ * value, and `row` the pairs one after another in a line that wraps, for a strip of facts under a
+ * title. `columns={2}` sets the side and stacked pairs two to a row on wide screens.
  */
 export function DescriptionList({
     items,
     columns = 1,
-    stacked = false,
+    layout = 'side',
     termWidth = '6rem',
     className,
 }: {
     items: readonly Description[]
     columns?: 1 | 2
-    stacked?: boolean
+    layout?: 'side' | 'stacked' | 'row'
     /** How wide the term column is in the side-by-side layout. */
     termWidth?: string
     className?: string
 }) {
     return (
         <dl
-            className={cn('grid gap-x-6 gap-y-2 text-sm leading-5', columns === 2 && 'md:grid-cols-2', className)}
+            className={cn(
+                'text-sm leading-5',
+                layout === 'row' ? 'flex flex-wrap gap-x-5 gap-y-1' : 'grid gap-x-6 gap-y-2',
+                layout !== 'row' && columns === 2 && 'md:grid-cols-2',
+                className,
+            )}
             style={{ '--term-width': termWidth } as React.CSSProperties}
         >
             {items.map((item, index) => {
@@ -44,8 +51,10 @@ export function DescriptionList({
                         key={index}
                         className={cn(
                             'min-w-0',
-                            stacked ? 'flex flex-col gap-0.5' : 'grid grid-cols-[var(--term-width)_minmax(0,1fr)] items-baseline gap-3',
-                            item.wide === true && 'md:col-span-full',
+                            layout === 'stacked' && 'flex flex-col gap-0.5',
+                            layout === 'side' && 'grid grid-cols-[var(--term-width)_minmax(0,1fr)] items-baseline gap-3',
+                            layout === 'row' && 'flex items-baseline gap-1.5',
+                            layout !== 'row' && item.wide === true && 'md:col-span-full',
                         )}
                     >
                         <dt className="text-xs leading-5 text-muted-foreground">{item.term}</dt>

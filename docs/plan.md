@@ -135,10 +135,21 @@ Shell, Rail, AppBar, SubNav, Page, PageHeader, PaneHeader, Toolbar, Section, Sur
 components (Stack, Row, Columns, Split, Fill), Field, TextField, InlineField, SliderField,
 CheckboxField, CheckboxList, ChoiceList, CodeField, SwitchField, SearchField, FilterChip, FormBar,
 SelectionBar, DataTable, StatusChip, PersonAvatar, PersonRow, MetaLine, DueText, AttachmentList,
-IconButton, StarButton, AccountMenu, SidePanel, DialogShell, ConfirmDialog, TreeSelect, AsyncSelect,
-CapabilityPicker.
+IconButton, StarButton, SplitButton, DownloadButton, AccountMenu, SidePanel, DialogShell,
+ConfirmDialog, TreeSelect, AsyncSelect, CapabilityPicker, SignIn, RelativeTime, ApiLink, TagChips.
 Every example arranges and builds its screens from these, never by hand, so a fix in one reaches
 them all.
+
+A button that cannot be pressed now says why: `reason` on `Button`, `IconButton` and `SplitButton`
+disables it and shows the reason on hover and focus, the button kept in the tab order so a keyboard
+reaches it. `SplitButton` joins the main action to a menu of other ways; `DownloadButton` goes from
+idle through n of m on a `ProgressRing`, with a cancel, to kept, its state held by the app.
+`RelativeTime` says a time as "3 minutes ago" through `Intl.RelativeTimeFormat`, the instant on
+hover, ticking on its own clock unless the app passes `now`. `ApiLink` names the request behind a
+screen as a copyable chip. `TagChips` shows as many tags as fit the room its row has left and a +N
+for the rest, and `DescriptionList`'s `row` layout sets its facts in one wrapping line. `SignIn` is
+the sign-in screen: the brand beside a form of a user and password or a token, with an optional
+server address, stacked in a narrow room.
 
 DataTable is the one table, for five rows or fifty thousand: only the rows in view are drawn, at
 the density's one row height, so 50k rows sort, scroll and select at once; rows that grow to fit

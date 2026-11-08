@@ -18,7 +18,7 @@ app has sign-in, and a `StatusLine` as the shell's `foot`.
 The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appearance`,
 `hooks/use-scheme`), with the option lists in `@winterop-com/sokkel-ui/lib/appearance`.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 207 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 213 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 13 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 9 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 11 modules
@@ -36,7 +36,7 @@ The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appeara
 
 | Component | Import | What it is | Story |
 | --- | --- | --- | --- |
-| **Button** | `@winterop-com/sokkel-ui/primitives/button` |  | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-actions-button--playground) |
+| **Button** | `@winterop-com/sokkel-ui/primitives/button` | A button. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-actions-button--playground) |
 | **ButtonGroup**, ButtonGroupText, ButtonGroupSeparator | `@winterop-com/sokkel-ui/primitives/button-group` |  | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-actions-buttongroup--variants) |
 | **Kbd**, KbdGroup | `@winterop-com/sokkel-ui/primitives/kbd` |  | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-actions-kbd--variants) |
 | **Toggle** | `@winterop-com/sokkel-ui/primitives/toggle` |  | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-actions-toggle--variants) |
@@ -209,6 +209,7 @@ The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appeara
 | **SecretReveal** | `@winterop-com/sokkel-ui/SecretReveal` | A secret shown once, as it is created: an API token, a signing key, a recovery code. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-access--secret) |
 | **Segmented** | `@winterop-com/sokkel-ui/Segmented` | A choice from a small fixed set, drawn as one control with every option in view. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/charts-linked--rain-and-flow) |
 | **SettingRow** | `@winterop-com/sokkel-ui/SettingRow` | One setting: its title and what it does, and its control, placed by `layout`. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-slider-field--plain) |
+| **SignIn** | `@winterop-com/sokkel-ui/SignIn` | A sign-in screen: a brand pane with the app's mark, name and a line about it beside a form of one or two fields, a user name and password or a token (`method`). | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-sign-in--password) |
 | **SliderField** | `@winterop-com/sokkel-ui/SliderField` | A number chosen on a slider, its value written out in figures so the setting reads without dragging. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-slider-field--plain) |
 | **SwitchField** | `@winterop-com/sokkel-ui/SwitchField` | An on/off setting: its label and the switch at the row's right edge. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-pages--runs-list) |
 | **TextField** | `@winterop-com/sokkel-ui/TextField` | A labeled text input: a `Field` with its input inside, wired together. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-text-field--plain) |
@@ -220,6 +221,7 @@ The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appeara
 | Component | Import | What it is | Story |
 | --- | --- | --- | --- |
 | **ActivityList**, ActivityButton, ActivityMenu | `@winterop-com/sokkel-ui/ActivityList` | What happened while the person was away, or needs following up: newest first, in groups by day when given, the unread ones drawn stronger with a dot. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-activity--top-bar-menu) |
+| **ApiLink** | `@winterop-com/sokkel-ui/ApiLink` | A small chip naming the request behind a screen, its method and path: `GET /api/jobs/nightly-export`. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-api-link--methods) |
 | **BarList** | `@winterop-com/sokkel-ui/BarList` | Labeled bars, each a share from 0 to 1, such as how likely each class is, with the chosen one in the accent and the rest quiet. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-bar-list--short) |
 | **CheckList** | `@winterop-com/sokkel-ui/CheckList` | A health report: each check with its verdict as a dot, its finding, and a hint when it needs attention. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-feedback--banners) |
 | **ConsequenceList** | `@winterop-com/sokkel-ui/ConsequenceList` | What goes with the thing an action removes or changes, a row per kind with its count, under a heading that says what happens to them. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-dialogs--confirm) |
@@ -236,10 +238,12 @@ The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appeara
 | **MetaLine** | `@winterop-com/sokkel-ui/MetaLine` | Small facts about a thing on one line, joined by a separator: an artist and a year, a count of views and an age. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-meta-line--facts) |
 | **PersonAvatar**, PresenceDot | `@winterop-com/sokkel-ui/PersonAvatar` | A person as a badge of their picture, or of their initials on a wash of their color: an assignee, an attendee, an author. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-person-avatar--sizes) |
 | **PersonRow** | `@winterop-com/sokkel-ui/PersonRow` | A person as a row names them: their picture, their username in the code face over a second line (an email, a team), and an optional `aside` at the row's end, such as their role or a control that changes it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-person-row--people) |
+| **RelativeTime** | `@winterop-com/sokkel-ui/RelativeTime` | A time said relative to now, "3 minutes ago", with the exact instant on hover and on focus. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-relative-time--distances) |
 | **SelectionBar** | `@winterop-com/sokkel-ui/SelectionBar` | What is selected and what can be done with it: the count, an optional `offer` after it (such as selecting every row on every page), a Clear button when `onClear` is given, and the actions as `children`. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-selection-bar--count) |
 | **Stat**, Sparkline | `@winterop-com/sokkel-ui/Stat` | One number with what it counts: runs today, the failure rate, the median duration. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-data--description) |
 | **StatusChip** | `@winterop-com/sokkel-ui/StatusChip` | A state as a small chip: the status's own color on a faint wash of it, the word lowercase. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-display-table--variants) |
 | **StepIndicator**, WizardDialog | `@winterop-com/sokkel-ui/StepIndicator` | Where a person is in a run of steps: each step numbered and named, the done ones checked and pressable to go back to, the current one filled. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-dialogs--confirm) |
+| **TagChips** | `@winterop-com/sokkel-ui/TagChips` | A row of tags as chips that shows as many as fit the room it is given and a +N chip for the rest, which names them on hover and focus. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-tag-chips--fits) |
 | **Timeline** | `@winterop-com/sokkel-ui/Timeline` | Events in the order they happened, on a rail: a run's steps, a job's history, an audit trail. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-data--description) |
 | **Tree** | `@winterop-com/sokkel-ui/Tree` | A hierarchy a reader opens a level at a time: regions, folders, teams. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-tree--trees) |
 
@@ -251,6 +255,7 @@ The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appeara
 | **ConfirmCard** | `@winterop-com/sokkel-ui/ConfirmCard` | An action an assistant holds until a person answers: what it will do in a sentence, the call in the code face, and Approve and Deny. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-assistant-reply--card) |
 | **CopyButton** | `@winterop-com/sokkel-ui/CopyButton` | A button that copies a value. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-controls--playground) |
 | **DialogShell**, ConfirmDialog | `@winterop-com/sokkel-ui/DialogShell` | Every dialog's frame: a title (and an optional line under it), the body that scrolls when it is taller than the window, and a footer with Cancel and the one confirming verb at the right. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-dialogs--confirm) |
+| **DownloadButton** | `@winterop-com/sokkel-ui/DownloadButton` | A button that downloads something for keeping, through its three states, which the app holds in `state`: idle says Download; running fills a `ProgressRing` and says how many of how many parts are in (`count` and `total`; `value` alone for a share such as bytes), with a button beside it to cancel; kept says Kept with a check, and pressing it calls `onOpen`, to show the kept copy, when given, or downloads again. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-download-button--states) |
 | **IconButton** | `@winterop-com/sokkel-ui/IconButton` | A button that shows only an icon. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-actions-icon-button--actions) |
 | **ListSkeleton**, Pending | `@winterop-com/sokkel-ui/Loading` | The shape of a list before its rows arrive: rows of uneven length with a short value at the end, or a grid of cards. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-feedback--banners) |
 | **LoadingBar**, PageProgress, LoadingOverlay | `@winterop-com/sokkel-ui/Loaders` | A thin bar for a wait: filled to `value` (0 to 100) when the progress is known, a sliding segment when it is not. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-loading--bars) |
@@ -258,6 +263,7 @@ The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appeara
 | **Problem** | `@winterop-com/sokkel-ui/Problem` | Something that went wrong, said for a person: what happened in one sentence, then where and what a right value looks like, with machine words marked by backticks drawn in the code face. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-feedback--banners) |
 | **SettingsDialog** | `@winterop-com/sokkel-ui/SettingsDialog` | A large dialog of settings: the navigation on the left, a search over every setting at its top and the sections under their group titles, and the chosen section's rows on the right, which scroll on their own. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/apps-settings--with-nav-bar) |
 | **ShortcutsDialog** | `@winterop-com/sokkel-ui/ShortcutsDialog` | Every keyboard shortcut, grouped, each with its keys drawn as keys. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-app-controls--theme) |
+| **SplitButton** | `@winterop-com/sokkel-ui/SplitButton` | The main action and a menu of other ways to do it, joined as one control: Run now beside Run with options and Run from a step. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-split-button--variants) |
 | **StarButton** | `@winterop-com/sokkel-ui/StarButton` | A favorite toggle: an outlined star in the quiet ink that fills in the accent once starred, the button pressed while it is. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-actions-star-button--off) |
 | **TypedConfirmDialog** | `@winterop-com/sokkel-ui/TypedConfirmDialog` | A confirm for what cannot be undone: the verb stays shut until the item's code is typed out exactly. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-dialogs--confirm) |
 

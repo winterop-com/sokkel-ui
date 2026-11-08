@@ -96,16 +96,11 @@ to `plan.md` when it ships.
 Mapping each app's own UI onto the library's parts found these, beyond the review's missing parts
 under Next. Each is a part or an option here, never a copy in an app. Roughly one release a round.
 
-- **Round 1, shared by several apps (core).** A `SignIn` layout (a brand pane and a form of one or
-  two fields, an optional server address); a `reason` on `Button` and `IconButton`, disabled with
-  the reason on hover; `SplitButton` (the main action and other ways); `RelativeTime` (relative,
-  the exact instant on hover, ticking); `WindowedPane`, any pane opened near full screen, which
-  `MermaidDiagram`'s expand uses; an `ApiLink` chip naming the request behind a screen;
-  `useStored` (state kept in local storage, safe when storage is refused, an app prefix);
-  `useUploads` (accept by type, in flight, cancel while uploading), feeding `AttachmentList` and
-  `FileField`; `DownloadButton` (idle, n of m, cancel, kept) on `ProgressRing`; `DataTable` row
-  groups with group heads; a `row` layout for `DescriptionList` and `TagChips` that fit the room a
-  row has left; a conversation history list with rename, pin and delete beside a chat.
+- **Round 1, shared by several apps (core).** `WindowedPane`, any pane opened near full screen,
+  which `MermaidDiagram`'s expand uses; `useStored` (state kept in local storage, safe when storage
+  is refused, an app prefix); `useUploads` (accept by type, in flight, cancel while uploading),
+  feeding `AttachmentList` and `FileField`; `DataTable` row groups with group heads; a conversation
+  history list with rename, pin and delete beside a chat.
 - **Round 2, the code editor and code color.** `CodeEditor` gains: a `languages` extension point
   and a `jq` language; `completions` (label, detail, docs, kind) on CodeMirror's autocomplete; a
   `hover(word)` for docs; ranged marks with a message (from and to columns, an underline, a gutter
