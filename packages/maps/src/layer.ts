@@ -39,17 +39,24 @@ export interface PreparedData {
     unreadable: number
 }
 
+/**
+ * A layer's data made ready to draw: each readable feature carries its id and what `derive` gives
+ * it, and `parts`, when given, draws a feature as several, such as one per kind of geometry, each
+ * keeping the feature's id so hover and selection reach them all.
+ */
 export function prepareData(
     data: FeatureCollection,
     idProperty: string | undefined,
     derive: (feature: Feature) => Record<string, unknown>,
+    parts?: (feature: Feature) => Feature[],
 ): PreparedData {
     const byId = new Map<string, Feature>()
     const readable = data.features.filter((feature) => isReadable(feature.geometry))
-    const features = readable.map((feature, index) => {
+    const features = readable.flatMap((feature, index) => {
         const id = featureId(feature, idProperty) ?? `#${index}`
         byId.set(id, feature)
-        return { ...feature, id: undefined, properties: { ...feature.properties, ...derive(feature), [ID_PROPERTY]: id } }
+        const drawn: Feature = { ...feature, id: undefined, properties: { ...feature.properties, ...derive(feature), [ID_PROPERTY]: id } }
+        return parts === undefined ? [drawn] : parts(drawn)
     })
     return {
         collection: { type: 'FeatureCollection', features },

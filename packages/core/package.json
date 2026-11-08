@@ -442,6 +442,10 @@
             "types": "./dist/components/SplitButton.d.ts",
             "import": "./dist/components/SplitButton.js"
         },
+        "./SplitPane": {
+            "types": "./dist/components/SplitPane.d.ts",
+            "import": "./dist/components/SplitPane.js"
+        },
         "./StarButton": {
             "types": "./dist/components/StarButton.d.ts",
             "import": "./dist/components/StarButton.js"

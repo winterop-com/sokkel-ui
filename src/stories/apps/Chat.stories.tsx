@@ -14,6 +14,7 @@ import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import type { ConfirmState } from '@winterop-com/sokkel-ui/ConfirmCard'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { Shell } from '@winterop-com/sokkel-ui/Shell'
+import { SplitPane } from '@winterop-com/sokkel-ui/SplitPane'
 import type { ToolCallEntry } from '@winterop-com/sokkel-ui/ToolCall'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
 import { Bubble, BubbleContent } from '@winterop-com/sokkel-ui/primitives/bubble'
@@ -33,7 +34,7 @@ import { HARBOR_DUSK } from '../fixtures/photos'
 import { ModelPicker } from '../fixtures/models'
 import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
-import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { Columns, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { PICKED_FILES, PICKED_LIMIT, useFakeUploader } from '../fixtures/uploader'
 import { tuneUrl } from '../media/fixtures/tune'
 import { waveformOf } from '../media/fixtures/waveform'
@@ -531,6 +532,30 @@ function ChatApp({
         uploads.add(PICKED_FILES.slice(0, 2))
         fake.step()
     }, [uploading, uploads, fake])
+    const conversation = (
+        <Stack gap="none" className="h-full min-h-0 min-w-0 flex-1">
+            {scroll ? (
+                <Stack gap="none" className="min-h-0 flex-1 overflow-y-auto">
+                    {children}
+                </Stack>
+            ) : (
+                <div className="min-h-0 flex-1">{children}</div>
+            )}
+            <div className="mx-auto w-full max-w-3xl px-4 pb-4">
+                <Composer
+                    value={draft}
+                    onChange={setDraft}
+                    onSend={() => setDraft('')}
+                    onStop={() => undefined}
+                    busy={busy}
+                    attachments={uploading ? uploads.composerFiles : files}
+                    onAttach={(picked) => (uploading ? uploads.add(picked) : undefined)}
+                    onRemove={(id) => (uploading ? uploads.onRemove(id) : setFiles(files.filter((file) => file.id !== id)))}
+                    onCancel={(id) => (uploading ? uploads.onCancel(id) : setFiles(files.filter((file) => file.id !== id)))}
+                />
+            </div>
+        </Stack>
+    )
     return (
         <TooltipProvider>
             <Shell
@@ -585,45 +610,33 @@ function ChatApp({
                     />
                 }
             >
-                <Row gap="none" align="stretch" className="h-full min-h-0">
-                    {history && showHistory && (
-                        <ConversationHistory
-                            framed={false}
-                            className="w-72 shrink-0 max-md:hidden"
-                            conversations={conversations}
-                            current={current}
-                            now={NOW}
-                            onSelect={setCurrent}
-                            onRename={(id, name) =>
-                                setConversations((all) => all.map((one) => (one.id === id ? { ...one, title: name } : one)))
-                            }
-                            onPin={(id, pinned) => setConversations((all) => all.map((one) => (one.id === id ? { ...one, pinned } : one)))}
-                            onDelete={(id) => setConversations((all) => all.filter((one) => one.id !== id))}
-                        />
-                    )}
-                    <Stack gap="none" className="h-full min-h-0 min-w-0 flex-1">
-                        {scroll ? (
-                            <Stack gap="none" className="min-h-0 flex-1 overflow-y-auto">
-                                {children}
-                            </Stack>
-                        ) : (
-                            <div className="min-h-0 flex-1">{children}</div>
-                        )}
-                        <div className="mx-auto w-full max-w-3xl px-4 pb-4">
-                            <Composer
-                                value={draft}
-                                onChange={setDraft}
-                                onSend={() => setDraft('')}
-                                onStop={() => undefined}
-                                busy={busy}
-                                attachments={uploading ? uploads.composerFiles : files}
-                                onAttach={(picked) => (uploading ? uploads.add(picked) : undefined)}
-                                onRemove={(id) => (uploading ? uploads.onRemove(id) : setFiles(files.filter((file) => file.id !== id)))}
-                                onCancel={(id) => (uploading ? uploads.onCancel(id) : setFiles(files.filter((file) => file.id !== id)))}
+                {history && showHistory ? (
+                    <SplitPane
+                        defaultShare={0.24}
+                        minShare={0.18}
+                        maxShare={0.4}
+                        narrow="second"
+                        first={
+                            <ConversationHistory
+                                framed={false}
+                                conversations={conversations}
+                                current={current}
+                                now={NOW}
+                                onSelect={setCurrent}
+                                onRename={(id, name) =>
+                                    setConversations((all) => all.map((one) => (one.id === id ? { ...one, title: name } : one)))
+                                }
+                                onPin={(id, pinned) =>
+                                    setConversations((all) => all.map((one) => (one.id === id ? { ...one, pinned } : one)))
+                                }
+                                onDelete={(id) => setConversations((all) => all.filter((one) => one.id !== id))}
                             />
-                        </div>
-                    </Stack>
-                </Row>
+                        }
+                        second={conversation}
+                    />
+                ) : (
+                    conversation
+                )}
             </Shell>
         </TooltipProvider>
     )

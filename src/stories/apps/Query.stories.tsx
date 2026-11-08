@@ -10,11 +10,10 @@ import { Stack } from '@winterop-com/sokkel-ui/Layout'
 import { PaneHeader } from '@winterop-com/sokkel-ui/PaneHeader'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { Shell } from '@winterop-com/sokkel-ui/Shell'
+import { SplitPane } from '@winterop-com/sokkel-ui/SplitPane'
 import { TopBar, type Crumb } from '@winterop-com/sokkel-ui/TopBar'
-import { useIsMobile } from '@winterop-com/sokkel-ui/hooks/use-mobile'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Kbd } from '@winterop-com/sokkel-ui/primitives/kbd'
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@winterop-com/sokkel-ui/primitives/resizable'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
@@ -112,14 +111,16 @@ function Pane({ title, meta, actions, children }: { title: string; meta?: ReactN
 }
 
 function Workbench({ broken }: { broken: boolean }) {
-    const mobile = useIsMobile()
     const [input, setInput] = useState(INPUT)
     const [program, setProgram] = useState(broken ? BROKEN : PROGRAM)
     const [ran, setRan] = useState(broken ? BROKEN : PROGRAM)
     const failed = ran === BROKEN
     return (
-        <ResizablePanelGroup orientation={mobile ? 'vertical' : 'horizontal'} className="min-h-0 flex-1">
-            <ResizablePanel defaultSize="42%" minSize="20%">
+        <SplitPane
+            defaultShare={0.42}
+            minShare={0.2}
+            maxShare={0.7}
+            first={
                 <Pane title="Input" meta="1.1 kB">
                     <CodeEditor
                         label="Input"
@@ -133,11 +134,12 @@ function Workbench({ broken }: { broken: boolean }) {
                         indentGuides
                     />
                 </Pane>
-            </ResizablePanel>
-            <ResizableHandle />
-            <ResizablePanel minSize="30%">
-                <ResizablePanelGroup orientation="vertical">
-                    <ResizablePanel defaultSize="45%" minSize="20%">
+            }
+            second={
+                <SplitPane
+                    direction="down"
+                    defaultShare={0.45}
+                    first={
                         <Pane
                             title="Program"
                             meta={
@@ -166,9 +168,8 @@ function Workbench({ broken }: { broken: boolean }) {
                                 bracketColors
                             />
                         </Pane>
-                    </ResizablePanel>
-                    <ResizableHandle />
-                    <ResizablePanel minSize="20%">
+                    }
+                    second={
                         <Pane title="Output" meta={failed ? 'Compile error' : '2 outputs, 1.8 ms'}>
                             {failed ? (
                                 <Banner tone="critical">
@@ -188,10 +189,10 @@ function Workbench({ broken }: { broken: boolean }) {
                                 />
                             )}
                         </Pane>
-                    </ResizablePanel>
-                </ResizablePanelGroup>
-            </ResizablePanel>
-        </ResizablePanelGroup>
+                    }
+                />
+            }
+        />
     )
 }
 

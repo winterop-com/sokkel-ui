@@ -291,7 +291,7 @@ toggle-group, tooltip, trace.
 ## Patterns
 
 Shell, Rail, AppBar, SubNav, Page, PageHeader, PaneHeader, Toolbar, Section, Surface, the layout
-components (Stack, Row, Columns, Split, Fill), Field, TextField, InlineField, SliderField,
+components (Stack, Row, Columns, Split, Fill), SplitPane, Field, TextField, InlineField, SliderField,
 CheckboxField, CheckboxList, ChoiceList, CodeField, SwitchField, SearchField, FilterChip, FormBar,
 SelectionBar, DataTable, StatusChip, PersonAvatar, PersonRow, MetaLine, DueText, AttachmentList,
 IconButton, StarButton, SplitButton, DownloadButton, AccountMenu, SidePanel, DialogShell,
@@ -370,6 +370,13 @@ a lane too narrow for the times its title alone, over as many lines as the block
 stand two to a row of a `DashboardGrid`, on shorter bodies with figures at `--chart-stat-size-small`.
 A `MermaidDiagram` shrinks to its box only until its labels reach `--text-2xs`, then scrolls sideways.
 
+`SplitPane` sets two panes across or down with a rule between them that drags, the first pane's
+share held within `minShare` and `maxShare`, the second's what is left. It holds its own share from
+`defaultShare` and keeps it by `id` in storage; `share` with `onShareChange` holds it from outside.
+Narrower than `narrowBelow`, measured on itself, it stacks its panes or shows the one `narrow` names,
+as a phone shows a list or the message opened from it, and `useSplitPane` tells a pane it is alone.
+Mail's list beside its reading pane, the query workbench and a chat's history are split by it.
+
 `WindowedPane` gives any pane an expand button that opens the same content near full screen, in a
 window with a margin, a title, a close button and Escape, the pane keeping its height in place
 until the content comes back; `MermaidDiagram`, an expandable `DashboardPanel` and `ChartFrame` open
@@ -426,6 +433,9 @@ areas or points draw and answer the cursor with no work per feature in React. `B
 simplifies heavy geometry once as it arrives (`simplify`) and names its areas (`label`) in a symbol
 layer that maplibre declutters, the larger areas placed first; names need a basemap with fonts.
 `PointLayer` gathers points into counted clusters, and the map fits whatever its layers draw.
+`GeoJsonLayer` draws any GeoJSON by its geometry, polygons as fills inside outlines, lines as lines
+and points as circles, a geometry collection part by part as one feature, in one color or a scale's
+by a property; `geoJsonEntry` keys it in a `MapLegend`, which draws a line's swatch as a stroke.
 
 A map beside a hierarchy (Apps/Sites, after an adopting app's own page of a tree, a map and a
 detail card) shares one selection with the tree: the selected feature in `--map-selection`, the
