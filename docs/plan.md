@@ -84,6 +84,12 @@ through `--typeface-sans` and `--typeface-mono`, with mono's x-height at `--mono
 and `--mono-x-height-small: 0.503`, the same share of Geist's x-height as the default's of Plex's.
 Both pairs were picked from the typeface research once mono was sized to its sans.
 
+Terminal text has a face of its own, `--typeface-terminal`: JetBrains Mono NL patched as a Nerd Font
+Mono, subset to Latin, box drawing and the Powerline and Octicons glyphs a prompt or a run state
+shows, shipped as files in the core (`src/styles/fonts/`) under the SIL OFL. `LogView` sets its own
+`--typeface-mono` to it, so the size rule still applies; a theme's or the look's typeface does not
+change it.
+
 Text is 15px (`text-sm`) on the page and in the components alike, with inputs at 16px on a phone so
 a focused field does not zoom. Every size comes from a token: `text-xs`, `text-sm`, `text-title`,
 `text-page`, `text-stat` and `text-display` (a fullscreen view's title) in the interface, and `--chart-text-size`, `--chart-text-size-small`
@@ -153,7 +159,7 @@ useGraphHistory are its parts; the Pipeline editor stories show each way of buil
 
 Their own package, `@winterop-com/sokkel-ui-terminal`, on xterm.js, so an app that shows no terminal
 does not install it. `TerminalView` is a real terminal on the terminal ground, in the theme's
-colors and mono typeface, following the theme and scheme as they change: it fills its box (or a
+colors and the terminal face (`--typeface-terminal`), following the theme and scheme as they change: it fills its box (or a
 fixed number of rows) and reports its size in cells, sends keystrokes and paste through `onData`,
 and takes output through its handle's `write`, with full emulation for programs that move the
 cursor or take the whole screen, a scrollback, selection and copy. The connection to the program

@@ -417,4 +417,4 @@ The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appeara
 | Component | Import | What it is | Story |
 | --- | --- | --- | --- |
 | **Terminal** | `@winterop-com/sokkel-ui-terminal/Terminal` | A terminal that shows commands and what they wrote: a title bar with copy and clear, then each command after its prompt and its output with escape codes drawn as colors, on the same engine as `TerminalView`. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/terminal-terminal--session) |
-| **TerminalView** | `@winterop-com/sokkel-ui-terminal/TerminalView` | An interactive terminal, drawn by xterm.js on the terminal ground in the theme's colors and mono typeface. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/terminal-terminal-view--shell) |
+| **TerminalView** | `@winterop-com/sokkel-ui-terminal/TerminalView` | An interactive terminal, drawn by xterm.js on the terminal ground in the theme's colors and the terminal face, `--typeface-terminal`. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/terminal-terminal-view--shell) |

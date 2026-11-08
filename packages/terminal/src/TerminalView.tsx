@@ -89,8 +89,8 @@ function bufferText(term: Xterm): string {
 }
 
 /**
- * An interactive terminal, drawn by xterm.js on the terminal ground in the theme's colors and mono
- * typeface. It fills its box and reports its size in cells as the box changes, sends keystrokes and
+ * An interactive terminal, drawn by xterm.js on the terminal ground in the theme's colors and the
+ * terminal face, `--typeface-terminal`. It fills its box and reports its size in cells as the box changes, sends keystrokes and
  * paste through `onData`, and takes output through its handle's `write`; the connection to the
  * program on the other end stays the app's. Full emulation, so a program that moves the cursor or
  * takes the whole screen draws as it would in any terminal, with a scrollback, selection and copy.
@@ -319,7 +319,7 @@ export function TerminalView({
             ref={frame}
             data-settling=""
             className={cn(
-                'flex min-h-0 min-w-0 flex-col overflow-hidden rounded-lg border border-terminal-bar bg-terminal font-mono text-xs leading-5',
+                'flex min-h-0 min-w-0 flex-col overflow-hidden rounded-lg border border-terminal-bar bg-terminal font-terminal text-xs leading-5',
                 rows === undefined && 'h-full',
                 className,
             )}
