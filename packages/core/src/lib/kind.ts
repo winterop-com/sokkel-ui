@@ -23,6 +23,16 @@ export const KIND_WASH: Record<KindColor, string> = {
     violet: 'bg-kind-violet/15 text-kind-violet-ink',
 }
 
+/** The color as a chip: the wash with its ink, edged faintly in the color, for a categorical value such as a kind. */
+export const KIND_CHIP: Record<KindColor, string> = {
+    blue: 'border-kind-blue/30 bg-kind-blue/12 text-kind-blue-ink',
+    green: 'border-kind-green/30 bg-kind-green/12 text-kind-green-ink',
+    jade: 'border-kind-jade/30 bg-kind-jade/12 text-kind-jade-ink',
+    pink: 'border-kind-pink/30 bg-kind-pink/12 text-kind-pink-ink',
+    teal: 'border-kind-teal/30 bg-kind-teal/12 text-kind-teal-ink',
+    violet: 'border-kind-violet/30 bg-kind-violet/12 text-kind-violet-ink',
+}
+
 /** The color's ink, for words in the color on a neutral ground. */
 export const KIND_INK: Record<KindColor, string> = {
     blue: 'text-kind-blue-ink',

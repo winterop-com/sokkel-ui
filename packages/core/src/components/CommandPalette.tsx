@@ -25,8 +25,10 @@ export interface PaletteCommand {
     id: string
     label: string
     icon?: LucideIcon
-    /** A quiet fact after the label: a code, where it leads. */
+    /** A quiet fact after the label, in words: what the place holds, where it leads. */
     hint?: string
+    /** An addressable code after the label, in the code face, such as a record's or a job's id. */
+    code?: string
     /** The keys that run it outside the palette, shown at the row's end. */
     keys?: readonly string[]
     /** More words it is found by, beyond its label. */
@@ -68,7 +70,7 @@ const WORDS: CommandPaletteWords = {
 
 /**
  * The command palette: one search over everything an app can do, grouped, each row with its
- * icon, a hint and the keys that run it directly. Choosing a row closes the palette and runs it.
+ * icon, a hint in words or a code, and the keys that run it directly. Choosing a row closes the palette and runs it.
  * With `search` the app's own results for the query follow the commands, each with its thumbnail
  * or icon and the query's words marked.
  */
@@ -118,7 +120,10 @@ export function CommandPalette({
                                             {Icon !== undefined && <Icon className="text-muted-foreground" aria-hidden />}
                                             <span className="truncate">{command.label}</span>
                                             {command.hint !== undefined && (
-                                                <span className="truncate font-mono text-xs text-muted-foreground">{command.hint}</span>
+                                                <span className="truncate text-xs text-muted-foreground">{command.hint}</span>
+                                            )}
+                                            {command.code !== undefined && (
+                                                <span className="truncate font-mono text-xs text-muted-foreground">{command.code}</span>
                                             )}
                                             {command.keys !== undefined && (
                                                 <CommandShortcut className="tracking-normal">

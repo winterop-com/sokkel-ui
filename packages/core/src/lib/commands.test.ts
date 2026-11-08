@@ -33,6 +33,26 @@ describe('placeCommands', () => {
         expect(navigate).toHaveBeenCalledWith('/projects/harbor', expect.objectContaining({ id: 'harbor' }))
     })
 
+    it("hints a place by its description before its parent's label", () => {
+        const [group] = placeCommands(
+            [
+                {
+                    id: 'work',
+                    entries: [
+                        { id: 'runs', label: 'Runs', description: 'Every run, newest first', href: '/runs' },
+                        {
+                            id: 'projects',
+                            label: 'Projects',
+                            entries: [{ id: 'harbor', label: 'harbor', description: 'The export project', href: '/projects/harbor' }],
+                        },
+                    ],
+                },
+            ],
+            () => undefined,
+        )
+        expect(group?.commands.map((command) => command.hint)).toEqual(['Every run, newest first', 'The export project'])
+    })
+
     it('makes no group without places', () => {
         expect(placeCommands([], () => undefined)).toEqual([])
     })

@@ -85,6 +85,18 @@ to `plan.md` when it ships.
   the board item's panel with its checklist; a sideways-scrolling chip row with one chosen; a
   channel row (avatar, name, followers, Follow) and an action cluster for a watch page; checkboxes
   with a color dot for calendar toggles.
+- **Gaps from a records app (2026-11-08)**, its screens laid beside Apps/Records: a
+  period picker (the recent periods of a type with their ids, newest first, and any other id typed
+  in); an entry grid (questions down, categories across, number cells with row totals, folding to a
+  card per question on a narrow screen), on `DataTable`'s editable cells; an API playground
+  composition (method, path, query parameters, send, the answer's status, time and body, copy as
+  curl, the server's own requests as presets in a side panel); a grouped list of examples in tabs
+  beside an editor; the palette's foot (the app's mark, the keys that open a row and the palette); a
+  server's state for the top bar (a dot, its name and version, a menu); a chevron at the end of a
+  row that opens a page; a computed answer drawn read only with why, and a clear for an optional
+  yes or no; fields in a row lined up when one has a description; a line saying what each theme
+  is in `ThemePicker`. A `--color-*` name exists only once a class uses it, so a prop that takes a
+  CSS color takes the raw token (`var(--status-running)`); decide whether every color is emitted.
 - **Dashboard panels on the chart kinds.** `BarPanel`, `TimeSeriesPanel` and `ComboPanel` build
   ECharts options of their own and have drifted from the kinds (stack corners, for one); make them
   thin panels over the kinds, adding what the kinds lack first.

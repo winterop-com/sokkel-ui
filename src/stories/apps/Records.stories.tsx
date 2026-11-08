@@ -2,12 +2,15 @@ import { TextField } from '@winterop-com/sokkel-ui/TextField'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { Feature } from 'geojson'
 import {
+    ArrowRight,
+    ArrowUpRight,
     CheckCircle2,
     CircleAlert,
     ClipboardList,
     Download,
     FilePlus2,
     FolderOpen,
+    LayoutDashboard,
     Map as MapIcon,
     MapPin,
     Plus,
@@ -16,6 +19,13 @@ import {
 import { useState, type ReactNode } from 'react'
 
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
+import { ApiLink } from '@winterop-com/sokkel-ui/ApiLink'
+import { DetailSheet } from '@winterop-com/sokkel-ui/DetailSheet'
+import { ItemCard } from '@winterop-com/sokkel-ui/ItemCard'
+import type { KindColor } from '@winterop-com/sokkel-ui/lib/kind'
+import { Stat } from '@winterop-com/sokkel-ui/Stat'
+import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
+import { Badge } from '@winterop-com/sokkel-ui/primitives/badge'
 import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
 import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
 import { Field } from '@winterop-com/sokkel-ui/Field'
@@ -61,16 +71,25 @@ import { Center, Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { TableOfContents } from '@winterop-com/sokkel-ui/TableOfContents'
 
 /**
- * A records app for structured data capture in the library's frame: a list of site visits with
- * filters and the chosen one in an inspector, a long visit form in sections with a step-through
- * site check and fields that refuse their values, and the visits by region on a map with a legend
- * and a month slider.
+ * A records app for structured data entry in the library's frame: an overview of what waits for
+ * review with the forms a record starts from, a list of site visits with filters and the chosen one
+ * in an inspector or a sheet, a long visit form in sections with a step-through site check and
+ * fields that refuse their values, and the visits by region on a map with a legend and a month
+ * slider. Each place in the rail says what it holds on a second line.
  */
-type View = 'records' | 'form' | 'map'
+type View = 'overview' | 'records' | 'form' | 'map'
 
 type State = 'draft' | 'submitted' | 'approved' | 'returned'
 
 const STATE: Record<State, Status> = { draft: 'pending', submitted: 'running', approved: 'succeeded', returned: 'failed' }
+
+/** Each state's color, for the dot before its count. */
+const STATE_DOT: Record<State, string> = {
+    draft: 'var(--status-pending)',
+    submitted: 'var(--status-running)',
+    approved: 'var(--status-succeeded)',
+    returned: 'var(--status-failed)',
+}
 
 function StateChip({ state }: { state: State }) {
     return <StatusChip status={STATE[state]} label={state} />
@@ -256,10 +275,25 @@ function groups(view: View): RailGroup[] {
         {
             id: 'capture',
             entries: [
-                { id: 'visits', label: 'Visits', icon: ClipboardList, href: '#', active: view === 'records' },
-                { id: 'new', label: 'New visit', icon: FilePlus2, href: '#', active: view === 'form' },
-                { id: 'sites', label: 'Sites', icon: MapPin, href: '#' },
-                { id: 'map', label: 'Map', icon: MapIcon, href: '#', active: view === 'map' },
+                {
+                    id: 'overview',
+                    label: 'Overview',
+                    description: 'What waits for review',
+                    icon: LayoutDashboard,
+                    href: '#',
+                    active: view === 'overview',
+                },
+                {
+                    id: 'visits',
+                    label: 'Visits',
+                    description: 'Every record filed',
+                    icon: ClipboardList,
+                    href: '#',
+                    active: view === 'records',
+                },
+                { id: 'new', label: 'New visit', description: 'Start a record', icon: FilePlus2, href: '#', active: view === 'form' },
+                { id: 'sites', label: 'Sites', description: 'Where visits happen', icon: MapPin, href: '#' },
+                { id: 'map', label: 'Map', description: 'Visits by region', icon: MapIcon, href: '#', active: view === 'map' },
             ],
         },
         {
@@ -275,6 +309,7 @@ function groups(view: View): RailGroup[] {
 }
 
 const TRAILS: Record<View, Crumb[]> = {
+    overview: [{ label: 'juniper', href: '#', code: true }, { label: 'Overview' }],
     records: [{ label: 'juniper', href: '#', code: true }, { label: 'Visits' }],
     form: [{ label: 'juniper', href: '#', code: true }, { label: 'Visits', href: '#' }, { label: 'New visit' }],
     map: [{ label: 'juniper', href: '#', code: true }, { label: 'Map' }],
@@ -447,9 +482,18 @@ function VisitForm() {
                 <PageHeader title="New visit" code="VIS-2049" />
                 <Row gap="2xl" align="start">
                     <Stack as="form" gap="page" className="max-w-4xl flex-1" onSubmit={(event) => event.preventDefault()}>
-                        <Section title="Where and when">
+                        <Section
+                            title="Where and when"
+                            description="The site and the moment of the reading. Every answer below is filed under them."
+                        >
                             <Columns gap="lg">
-                                <Field id="site" label="Site" required>
+                                <Field
+                                    id="site"
+                                    label="Site"
+                                    required
+                                    description="The station this visit reports from."
+                                    help="Only the sites assigned to juniper are offered."
+                                >
                                     <NativeSelect id="site" defaultValue="riverside" className="w-full">
                                         <NativeSelectOption value="riverside">Riverside station, Bo</NativeSelectOption>
                                         <NativeSelectOption value="ferry">North ferry landing, Port Loko</NativeSelectOption>
@@ -477,13 +521,15 @@ function VisitForm() {
                                 />
                             </Columns>
                         </Section>
-                        <Section title="Measurements" meta="4 of 5">
+                        <Section title="Measurements" meta="4 of 5" description="Read at the gauge, in the units beside each label.">
                             <Columns gap="lg">
                                 <TextField
                                     id="level"
                                     label="Water level"
                                     hint="m"
                                     required
+                                    description="Read off the gauge board before the sample is taken."
+                                    help="Between 0 and 10."
                                     error={levelError}
                                     issueOpen={issueOpen === 'level'}
                                     onIssueOpenChange={holdOpen('level')}
@@ -519,7 +565,7 @@ function VisitForm() {
                                 />
                             </Columns>
                         </Section>
-                        <Section title="Site check" meta="3 questions">
+                        <Section title="Site check" meta="3 questions" description="The conditions at the site, one question at a time.">
                             <Questionnaire shortcuts="letters" items={CHECKS} defaultItem="weather" className="max-w-xl">
                                 <QuestionnaireProgress />
                                 <QuestionnaireItem name="access">
@@ -721,11 +767,229 @@ function RegionsMap() {
     )
 }
 
-function RecordsApp({ view, children }: { view: View; children: ReactNode }) {
+type FormKind = 'monthly' | 'visit' | 'register' | 'followup'
+
+/** What each kind of form is called and the color its chip wears wherever a form is shown. */
+const KIND: Record<FormKind, { label: string; color: KindColor }> = {
+    monthly: { label: 'Monthly report', color: 'teal' },
+    visit: { label: 'Single visit', color: 'pink' },
+    register: { label: 'Registration', color: 'violet' },
+    followup: { label: 'Follow-up', color: 'green' },
+}
+
+const KINDS: FormKind[] = ['monthly', 'visit', 'register', 'followup']
+
+interface RecordForm {
+    code: string
+    title: string
+    kind: FormKind
+    questions: number
+}
+
+const FORMS: RecordForm[] = [
+    { code: 'FRM-MONTH', title: 'Monthly station summary', kind: 'monthly', questions: 116 },
+    { code: 'FRM-STOCK', title: 'Gauge and kit stock', kind: 'monthly', questions: 18 },
+    { code: 'FRM-SITE', title: 'Site visit', kind: 'visit', questions: 14 },
+    { code: 'FRM-SAMPLE', title: 'Water sample', kind: 'visit', questions: 9 },
+    { code: 'FRM-STATION', title: 'New station', kind: 'register', questions: 6 },
+    { code: 'FRM-OBSERVER', title: 'New observer', kind: 'register', questions: 3 },
+    { code: 'FRM-RECHECK', title: 'Gauge recheck after a flood', kind: 'followup', questions: 3 },
+    { code: 'FRM-REPAIR', title: 'Repair follow-up', kind: 'followup', questions: 8 },
+]
+
+function KindChip({ kind }: { kind: FormKind }) {
+    return <Badge kind={KIND[kind].color}>{KIND[kind].label}</Badge>
+}
+
+/** The month's records by state, each with what its count means. */
+const TILES: { state: State; label: string; count: number; note: string }[] = [
+    { state: 'submitted', label: 'Submitted', count: 3, note: 'waiting for review' },
+    { state: 'draft', label: 'Draft', count: 2, note: 'saved, not yet submitted' },
+    { state: 'approved', label: 'Approved', count: 18, note: 'accepted into the register' },
+    { state: 'returned', label: 'Returned', count: 1, note: 'sent back to grace with a reason' },
+]
+
+function Overview() {
+    const [kind, setKind] = useState<'all' | FormKind>('all')
+    const shown = FORMS.filter((form) => kind === 'all' || form.kind === kind)
+    return (
+        <Page>
+            <PageHeader title="Overview" description="What waits for review this month, and the forms a record starts from." />
+            <Section
+                variant="flat"
+                title="Records"
+                description="November's records by the state they are in. Each tile opens the list of them."
+            >
+                <Columns count={4} min="xs" gap="md">
+                    {TILES.map((tile) => (
+                        <Stat
+                            key={tile.state}
+                            variant="tile"
+                            dot={STATE_DOT[tile.state]}
+                            label={tile.label}
+                            value={tile.count}
+                            note={tile.note}
+                            href="#"
+                            emphasis={tile.state === 'submitted'}
+                        />
+                    ))}
+                </Columns>
+            </Section>
+            <Section
+                variant="flat"
+                title="Start a record"
+                meta={String(FORMS.length)}
+                description="The forms juniper offers. Each opens empty and is filed as a record when submitted."
+                actions={
+                    <Button size="sm" variant="outline">
+                        All forms
+                        <ArrowRight data-icon="inline-end" aria-hidden />
+                    </Button>
+                }
+            >
+                <Stack gap="md">
+                    <Segmented
+                        label="Kind of form"
+                        value={kind}
+                        onValueChange={setKind}
+                        options={[
+                            { value: 'all', label: 'All', count: FORMS.length },
+                            ...KINDS.map((one) => ({
+                                value: one,
+                                label: KIND[one].label,
+                                count: FORMS.filter((form) => form.kind === one).length,
+                                dot: `var(--kind-${KIND[one].color})`,
+                            })),
+                        ]}
+                    />
+                    <Columns count={4} min="md" gap="md">
+                        {shown.map((form) => (
+                            <ItemCard
+                                key={form.code}
+                                title={form.title}
+                                code={form.code}
+                                href="#"
+                                status={
+                                    <>
+                                        <KindChip kind={form.kind} />
+                                        <span>{form.questions} questions</span>
+                                    </>
+                                }
+                            />
+                        ))}
+                    </Columns>
+                </Stack>
+            </Section>
+        </Page>
+    )
+}
+
+interface Answer {
+    id: string
+    part: string
+    question: string
+    answer: string
+}
+
+const ANSWERS: Answer[] = [
+    { id: 'site', part: 'Where and when', question: 'Site', answer: 'Riverside station, Bo' },
+    { id: 'by', part: 'Where and when', question: 'Collected by', answer: 'grace' },
+    { id: 'date', part: 'Where and when', question: 'Visit date', answer: '2026-11-04' },
+    { id: 'time', part: 'Where and when', question: 'Reading taken at', answer: '09:40' },
+    { id: 'level', part: 'Measurements', question: 'Water level', answer: '1.42 m' },
+    { id: 'temperature', part: 'Measurements', question: 'Water temperature', answer: '26.1 °C' },
+    { id: 'turbidity', part: 'Measurements', question: 'Turbidity', answer: '12 NTU' },
+    { id: 'ph', part: 'Measurements', question: 'pH', answer: '7.2' },
+    { id: 'access', part: 'Site check', question: 'Could you reach the site?', answer: 'Yes, on the usual path' },
+    { id: 'weather', part: 'Site check', question: 'What was the weather during the reading?', answer: 'Dry' },
+]
+
+const ANSWER_COLUMNS: DataColumn<Answer>[] = [
+    {
+        id: 'question',
+        header: 'Question',
+        width: 'minmax(12rem,2fr)',
+        cell: (row) => (
+            <Stack gap="none">
+                <span className="text-help text-muted-foreground">{row.part}</span>
+                <span className="font-medium">{row.question}</span>
+            </Stack>
+        ),
+    },
+    { id: 'answer', header: 'Answer', width: 'minmax(8rem,1fr)', cell: (row) => row.answer },
+]
+
+/** The visit list with the first visit open in a sheet: what was filed, and every answer in the form's order. */
+function RecordSheet() {
+    const [open, setOpen] = useState(true)
+    const visit = VISITS[0]
+    return (
+        <>
+            <Records />
+            <DetailSheet
+                open={open}
+                onOpenChange={setOpen}
+                code={visit.code}
+                title={visit.site}
+                chips={
+                    <>
+                        <KindChip kind="visit" />
+                        <StateChip state={visit.state} />
+                    </>
+                }
+                actions={
+                    <>
+                        <Button size="sm" variant="outline" render={<a href="#" />}>
+                            Open the full page
+                            <ArrowUpRight data-icon="inline-end" aria-hidden />
+                        </Button>
+                        <ApiLink path={`/api/visits/${visit.code}`} />
+                    </>
+                }
+                foot={
+                    <>
+                        <Button size="sm" variant="outline">
+                            <Undo2 aria-hidden />
+                            Return
+                        </Button>
+                        <Button size="sm">
+                            <CheckCircle2 aria-hidden />
+                            Approve
+                        </Button>
+                    </>
+                }
+            >
+                <Section title="Filed" description="Who filed it, when, and from which form.">
+                    <DescriptionList
+                        layout="stacked"
+                        columns={2}
+                        items={[
+                            { term: 'Filed', value: `${visit.visited}, by ${visit.by}` },
+                            { term: 'Form', value: 'FRM-SITE', code: true },
+                            { term: 'Region', value: visit.region },
+                            { term: 'Answers', value: String(ANSWERS.length) },
+                        ]}
+                    />
+                </Section>
+                <Section
+                    variant="flat"
+                    title="Answers"
+                    meta={String(ANSWERS.length)}
+                    description="Each answer under the part of the form that asks it."
+                >
+                    <DataTable variant="list" columns={ANSWER_COLUMNS} rows={ANSWERS} rowKey={(row) => row.id} rowHeight="auto" />
+                </Section>
+            </DetailSheet>
+        </>
+    )
+}
+
+function RecordsApp({ view, foot, children }: { view: View; foot?: ReactNode; children: ReactNode }) {
     const [collapsed, setCollapsed] = useState(false)
     return (
         <TooltipProvider>
             <Shell
+                foot={foot}
                 rail={
                     <Rail
                         mark={<TidevannMark />}
@@ -755,20 +1019,47 @@ function RecordsApp({ view, children }: { view: View; children: ReactNode }) {
 const meta: Meta = { title: 'Apps/Records' }
 export default meta
 
+/** What waits for review: the month's records by state as tiles that lead to the list, Submitted edged as the one asking for work, and the forms a record starts from, each with its kind's chip and filtered by kind. */
+export const RecordsOverview: StoryObj = {
+    name: 'Overview',
+    render: () => (
+        <RecordsApp
+            view="overview"
+            foot={
+                <StatusLine note="3 records wait for review">
+                    <StatusItem>{FORMS.length} forms</StatusItem>
+                </StatusLine>
+            }
+        >
+            <Overview />
+        </RecordsApp>
+    ),
+}
+
 /** Site visits with filters, the chosen one in the inspector with its measurements and actions. */
 export const RecordList: StoryObj = {
     name: 'Records',
     render: () => (
-        <RecordsApp view="records">
+        <RecordsApp view="records" foot={<StatusLine note={`Showing ${String(VISITS.length)} of 248 visits`} />}>
             <Records />
         </RecordsApp>
     ),
 }
 
-/** A long visit form in sections, two fields refusing their values, the site check partway through, and the actions pinned at the foot. */
+/** A visit open from the list in a sheet, with its kind and state as chips beside the full page and the request, what was filed, every answer under the part of the form that asks it, and Approve and Return at the foot. */
+export const RecordSheetStory: StoryObj = {
+    name: 'Record sheet',
+    render: () => (
+        <RecordsApp view="records" foot={<StatusLine note={`Showing ${String(VISITS.length)} of 248 visits`} />}>
+            <RecordSheet />
+        </RecordsApp>
+    ),
+}
+
+/** A long visit form in sections, each saying what it asks, two fields refusing their values, the site check partway through, and the actions pinned at the foot. */
 export const Form: StoryObj = {
     render: () => (
-        <RecordsApp view="form">
+        <RecordsApp view="form" foot={<StatusLine note="9 of 12 questions answered" />}>
             <VisitForm />
         </RecordsApp>
     ),
