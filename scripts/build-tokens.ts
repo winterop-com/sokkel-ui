@@ -11,7 +11,10 @@
  * the whole app, overriding what it changes; a token it sets in light but not in dark takes the
  * default's dark value, so a theme never carries a light value into dark mode. Every theme also
  * answers on `[data-theme-scope]` for one element and what is inside it, as a theme picker's
- * preview swatch is. A theme may override any token, the density levels' included.
+ * preview swatch is, in the same rule as its `html` one: every scope first takes the default's
+ * whole set, at no specificity, so a scope shows its own theme whatever the page around it wears,
+ * and its theme's overrides go over that. A theme may override any token, the density levels'
+ * included.
  *
  * The default sets its surfaces (canvas, node, panel ground and line, critical wash) as fixed
  * colors; every other theme takes them from `derived`, mixed from its own colors, unless it sets
@@ -64,14 +67,6 @@ function darkOf(theme: { light: Vars; dark: Vars }): Vars {
     return dark
 }
 
-/** One element's theme: the whole set, so it shows that theme whatever the page around it uses. */
-function scope(name: string, theme: { light: Vars; dark: Vars }): string[] {
-    return [
-        block([`[data-theme-scope='${name}']`], { ...base.light, ...theme.light }),
-        block([`.dark [data-theme-scope='${name}']`], { ...base.light, ...base.dark, ...theme.light, ...darkOf(theme) }),
-    ]
-}
-
 /** Every file the tokens make, by path. */
 const files = new Map<string, string>()
 
@@ -87,22 +82,25 @@ files.set(
         block(['@theme inline'], tokens.theme),
         block([':root'], base.light),
         block(['.dark'], base.dark),
-        ...scope('default', base),
+        // Every scope, of whichever theme, starts from the default's whole set, so no token of the
+        // page's theme reaches into it; `:where` keeps these under any theme's own scope rule.
+        block([':where([data-theme-scope])'], base.light),
+        block([':where(.dark [data-theme-scope])'], base.dark),
         block([':root'], prefixed(tokens.density[tokens.density.default] as Vars)),
         ...levels.map((level) => block([`html[data-density='${level}']`], prefixed(tokens.density[level] as Vars))),
     ].join('\n'),
 )
 
-// A whole app's theme on `html`: the overrides alone, over the default on `:root`, which its
-// selectors outrank wherever the file is imported.
+// A theme's overrides, once for light and once for dark, each on the whole app's `html` and on one
+// element's scope. Its selectors outrank the default on `:root` and the scopes' default set
+// wherever the file is imported.
 for (const [name, theme] of others) {
     files.set(
         join(THEMES, `${name}.css`),
         [
             HEADER,
-            block([`html[data-theme='${name}']`], theme.light),
-            block([`html.dark[data-theme='${name}']`], darkOf(theme)),
-            ...scope(name, theme),
+            block([`html[data-theme='${name}']`, `[data-theme-scope='${name}']`], theme.light),
+            block([`html.dark[data-theme='${name}']`, `.dark [data-theme-scope='${name}']`], darkOf(theme)),
         ].join('\n'),
     )
 }

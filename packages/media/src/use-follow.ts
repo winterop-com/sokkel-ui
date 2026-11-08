@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, type RefObject } from 'react'
 
+import { motionReduced, systemReducedMotion } from '@winterop-com/sokkel-ui/lib/appearance'
 import { FOLLOW_PAUSE, followTop } from './follow'
 
 /** The keys that scroll what has the focus. */
@@ -22,7 +23,8 @@ function scrollerOf(element: HTMLElement): HTMLElement {
  * Keeps `target`, such as the playing row of a list or the line being sung, in view in the box
  * that scrolls it (`scroller`, or the nearest one around it, or the page) whenever `key` changes:
  * under `reveal` centering it only when it is out of view, under `center` centering it every time.
- * It moves at once on the first draw and smoothly after, unless the reader asks for less motion.
+ * It moves at once on the first draw and smoothly after, unless motion is reduced, by the look's
+ * own setting or the system's.
  * While the reader scrolls that box, and for `FOLLOW_PAUSE` after, it stays where they put it;
  * `resume` follows again at once, as a press on a row asks.
  */
@@ -75,7 +77,7 @@ export function useFollow(
         const rect = element.getBoundingClientRect()
         const top = followTop({ top: rect.top - origin, height: rect.height }, view, within.scrollHeight - view.height, mode)
         if (top === undefined) return
-        const still = first || window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        const still = first || motionReduced(document.documentElement.getAttribute('data-motion'), systemReducedMotion())
         within.scrollTo({ top, behavior: still ? 'instant' : 'smooth' })
     }, [target, scroller, key, enabled, mode])
 

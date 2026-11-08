@@ -177,6 +177,7 @@
     --color-terminal-warning: var(--terminal-warning);
     --color-terminal-critical: var(--terminal-critical);
     --color-terminal-accent: var(--terminal-accent);
+    --color-terminal-bar: var(--terminal-bar);
     --color-terminal-node: var(--terminal-node);
     --color-terminal-node-edge: var(--terminal-node-edge);
     --color-terminal-graph-edge: var(--terminal-graph-edge);
@@ -219,7 +220,6 @@
     --color-map-selection: var(--map-selection);
     --color-map-highlight: var(--map-highlight);
     --spacing-shell-foot: 46px;
-    --color-terminal-bar: var(--terminal-bar);
 }
 
 :root {
@@ -326,6 +326,7 @@
     --terminal-warning: oklch(0.82 0.14 75);
     --terminal-critical: oklch(0.72 0.17 25);
     --terminal-accent: oklch(0.78 0.1 235);
+    --terminal-bar: color-mix(in oklab, var(--terminal-accent) 6%, color-mix(in oklab, var(--terminal-foreground) 9%, var(--terminal)));
     --terminal-node: oklch(0.29 0.013 255);
     --terminal-node-edge: oklch(0.36 0.015 255);
     --terminal-graph-edge: oklch(0.42 0.015 255);
@@ -445,7 +446,6 @@
     --on-fill: oklch(0.99 0.003 255);
     --graph-edge: oklch(0.48 0.02 255);
     --terminal: oklch(0.105 0.012 255);
-    --terminal-bar: oklch(0.21 0.013 255);
     --terminal-node: oklch(0.16 0.012 255);
     --terminal-node-edge: oklch(0.24 0.014 255);
     --terminal-graph-edge: oklch(0.31 0.016 255);
@@ -492,7 +492,7 @@
     --code-bracket-3: oklch(0.8 0.12 230);
 }
 
-[data-theme-scope='default'] {
+:where([data-theme-scope]) {
     --typeface-sans: 'IBM Plex Sans Variable', 'IBM Plex Sans', system-ui, sans-serif;
     --typeface-mono: 'IBM Plex Mono', 'SF Mono', Menlo, Consolas, monospace;
     --typeface-terminal: 'JetBrainsMonoNL Nerd Font Mono', var(--typeface-mono);
@@ -596,6 +596,7 @@
     --terminal-warning: oklch(0.82 0.14 75);
     --terminal-critical: oklch(0.72 0.17 25);
     --terminal-accent: oklch(0.78 0.1 235);
+    --terminal-bar: color-mix(in oklab, var(--terminal-accent) 6%, color-mix(in oklab, var(--terminal-foreground) 9%, var(--terminal)));
     --terminal-node: oklch(0.29 0.013 255);
     --terminal-node-edge: oklch(0.36 0.015 255);
     --terminal-graph-edge: oklch(0.42 0.015 255);
@@ -641,10 +642,7 @@
     --code-bracket-3: oklch(0.5 0.14 230);
 }
 
-.dark [data-theme-scope='default'] {
-    --typeface-sans: 'IBM Plex Sans Variable', 'IBM Plex Sans', system-ui, sans-serif;
-    --typeface-mono: 'IBM Plex Mono', 'SF Mono', Menlo, Consolas, monospace;
-    --typeface-terminal: 'JetBrainsMonoNL Nerd Font Mono', var(--typeface-mono);
+:where(.dark [data-theme-scope]) {
     --background: oklch(0.145 0.012 255);
     --foreground: oklch(0.95 0.01 255);
     --card: oklch(0.21 0.015 255);
@@ -698,10 +696,6 @@
     --status-cancelled-ink: oklch(0.78 0.13 305);
     --status-skipped: oklch(0.55 0.02 255);
     --status-skipped-ink: oklch(0.7 0.02 255);
-    --status-sending: var(--status-running);
-    --status-sending-ink: var(--status-running-ink);
-    --status-sent: var(--status-succeeded);
-    --status-sent-ink: var(--status-succeeded-ink);
     --kind-green: oklch(0.68 0.12 125);
     --kind-green-ink: oklch(0.78 0.11 125);
     --kind-jade: oklch(0.68 0.12 165);
@@ -721,6 +715,11 @@
     --info: var(--status-running);
     --on-fill: oklch(0.99 0.003 255);
     --graph-edge: oklch(0.48 0.02 255);
+    --terminal: oklch(0.105 0.012 255);
+    --terminal-node: oklch(0.16 0.012 255);
+    --terminal-node-edge: oklch(0.24 0.014 255);
+    --terminal-graph-edge: oklch(0.31 0.016 255);
+    --terminal-graph-faint: oklch(0.155 0.012 255);
     --binding-ink: oklch(0.7 0.18 305);
     --map-selection: var(--warning);
     --map-highlight: var(--chart-2);
@@ -738,33 +737,6 @@
     --panel-ground: #171e24;
     --brand-ground: color-mix(in oklab, var(--shade) 45%, var(--background));
     --panel-dot: #ffffff1c;
-    --terminal: oklch(0.105 0.012 255);
-    --terminal-foreground: oklch(0.93 0.008 255);
-    --terminal-muted: oklch(0.72 0.015 255);
-    --terminal-faint: oklch(0.56 0.02 255);
-    --terminal-warning: oklch(0.82 0.14 75);
-    --terminal-critical: oklch(0.72 0.17 25);
-    --terminal-accent: oklch(0.78 0.1 235);
-    --terminal-node: oklch(0.16 0.012 255);
-    --terminal-node-edge: oklch(0.24 0.014 255);
-    --terminal-graph-edge: oklch(0.31 0.016 255);
-    --terminal-graph-faint: oklch(0.155 0.012 255);
-    --spacing-panel-head: 2.875rem;
-    --radius: 4.5px;
-    --table-head-transform: none;
-    --table-head-tracking: 0em;
-    --table-head-size: 0.8125rem;
-    --table-head-weight: 600;
-    --mono-x-height: 0.45;
-    --mono-x-height-small: 0.49;
-    --chart-text-size: 0.6875rem;
-    --chart-text-size-small: 0.625rem;
-    --chart-stat-size: 1.5rem;
-    --chart-stat-size-small: 1.125rem;
-    --shade: oklch(0 0 0);
-    --on-shade: oklch(1 0 0);
-    --globe-space: #05080f;
-    --globe-star: #dbe7ff;
     --hover: color-mix(in oklch, var(--foreground) 12%, transparent);
     --code-keyword: oklch(0.8 0.12 305);
     --code-operator: oklch(0.8 0.12 215);
@@ -788,7 +760,6 @@
     --code-bracket-1: oklch(0.8 0.12 85);
     --code-bracket-2: oklch(0.8 0.12 320);
     --code-bracket-3: oklch(0.8 0.12 230);
-    --terminal-bar: oklch(0.21 0.013 255);
 }
 
 :root {

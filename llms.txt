@@ -42,6 +42,20 @@ An app that offers every theme (a theme picker in its settings) imports them all
 
 The themes are default (in `styles.css`), amber, paper, contrast, tokyo, vinyl, cassette and neon.
 
+`styles.css` points Tailwind at every core module, so the CSS carries classes of components the app never imports (49 kB gzipped for a forms page). An app that wants only what it uses imports `styles-base.css` instead, then one line per module it imports, from any package: that module's list of sources, `sources/<module>.css` under the name the module is imported by. A list covers the module and every module it draws on, and an add-on's list brings the core lists it needs, so on this path it replaces the add-on's `styles.css` (the same forms page: 20 kB gzipped):
+
+```css
+/* app.css; the app imports Shell, TextField, primitives/button and the charts package's Chart */
+@import '@winterop-com/sokkel-ui/styles-base.css';
+@import '@winterop-com/sokkel-ui/sources/Shell.css';
+@import '@winterop-com/sokkel-ui/sources/TextField.css';
+@import '@winterop-com/sokkel-ui/sources/primitives/button.css';
+@import '@winterop-com/sokkel-ui-charts/sources/Chart.css';
+@import '@winterop-com/sokkel-ui/themes/paper.css';
+```
+
+A module the app starts importing needs its line too, or its classes are missing.
+
 Components import by path, one module each:
 
 ```ts
@@ -62,6 +76,16 @@ place. It has four parts, and an app has all four from its first screen:
   scheme, density and theme commands, so an app's places and look come for free. A screen adds
   its own groups while it is mounted with `useCommands(groups, deps)` from `hooks/use-commands`,
   placed by each group's `rank`; a command with a `detail` or `artwork` is a two-line row.
+  A second ⌘K closes it; `paletteOpen` with `onPaletteOpenChange` holds it from outside, and
+  `mayOpenPalette` refuses it over the app's own full-screen views.
+- **Keys, one registry**: a screen binds its keys with `useShortcuts(bindings, deps)` from
+  `hooks/use-shortcuts`, each `{ id, key, mod?, shift?, alt?, label?, group?, scope?, inFields?,
+  inDialogs?, run }`, the key named by the character it types (`event.key`), so it works on any
+  layout; quiet while typing in a field and while a dialog, a menu or the palette is open.
+  `Shell`'s `shortcuts` (the keys the app answers itself, or `[]`) makes it hold the shortcuts
+  dialog, opened on `?` and from the account menu, listing every bound key with a `label`. Never
+  add a `keydown` listener of the app's own for a shortcut. `useOverlay`, `useScrollMemory` and
+  `useReducedMotion` (all in `hooks/`) give the app's own overlays, lists and motion the same.
 - **An `AccountMenu`** in the rail's foot, always there, before the app has sign-in too: then it is
   `local`, named for the local user or "Local", with a neutral avatar, settings and appearance, and
   no sign-out. The place is held, and the frame looks the same in every app.
