@@ -38,6 +38,7 @@ const CORE_AREAS: Record<string, string> = {
     TopBar: 'Frame and navigation',
     // Page layout: what a page is arranged with.
     Inspector: 'Page layout',
+    DetailSheet: 'Page layout',
     Layout: 'Page layout',
     PageHeader: 'Page layout',
     PaneHeader: 'Page layout',

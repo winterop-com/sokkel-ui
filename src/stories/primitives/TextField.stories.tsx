@@ -49,6 +49,31 @@ export const Help: StoryObj = {
     ),
 }
 
+/** Questions a long form explains: what each asks between its label and its input, and what a right answer looks like under it. */
+export const Described: StoryObj = {
+    render: () => (
+        <Stack gap="lg" className="max-w-md">
+            <TextField
+                id="described-level"
+                label="Water level"
+                hint="m"
+                required
+                description="Read off the gauge board at the station, before the sample is taken."
+                help="Between 0 and 10."
+                inputMode="decimal"
+                defaultValue="1.42"
+                numeric
+            />
+            <TextField
+                id="described-visitor"
+                label="Collected by"
+                description="Whoever read the gauge, which may not be who files the record."
+                defaultValue="grace"
+            />
+        </Stack>
+    ),
+}
+
 /** A refused value marked at the input's end, and a warning beside a value that is allowed. */
 export const WithError: StoryObj = {
     name: 'Error',

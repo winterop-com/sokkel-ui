@@ -26,8 +26,10 @@ export interface PaletteCommand {
     id: string
     label: string
     icon?: LucideIcon
-    /** A quiet fact after the label: a code, where it leads. */
+    /** A quiet fact after the label, in words: what the place holds, where it leads. */
     hint?: string
+    /** An addressable code after the label, in the code face, such as a record's or a job's id. */
+    code?: string
     /** The keys that run it outside the palette, shown at the row's end. */
     keys?: readonly string[]
     /** More words it is found by, beyond its label. */
@@ -84,11 +86,12 @@ const WORDS: CommandPaletteWords = {
 
 /**
  * The command palette: one search over everything an app can do, grouped, each row with its
- * icon, a hint and the keys that run it directly. Choosing a row closes the palette and runs it.
- * A row with a `detail` or `artwork` is two lines tall, a picture or its icon on a tile at its
- * start, as a record found by a search is. The groups are listed by their `rank`, one group to a
- * title. With `search` the app's own results for the query follow the commands, each with its
- * thumbnail, artwork or icon and the query's words marked.
+ * icon, a hint in words or a code, and the keys that run it directly. Choosing a row closes the
+ * palette and runs it. A row with a `detail` or `artwork` is two lines tall, a picture or its icon
+ * on a tile at its start and its hint or code at its end, as a record found by a search is. The
+ * groups are listed by their `rank`, one group to a title. With `search` the app's own results for
+ * the query follow the commands, each with its thumbnail, artwork or icon and the query's words
+ * marked.
  */
 export function CommandPalette({
     open,
@@ -141,8 +144,11 @@ export function CommandPalette({
                                                     {Icon !== undefined && <Icon className="text-muted-foreground" aria-hidden />}
                                                     <span className="truncate">{command.label}</span>
                                                     {command.hint !== undefined && (
+                                                        <span className="truncate text-xs text-muted-foreground">{command.hint}</span>
+                                                    )}
+                                                    {command.code !== undefined && (
                                                         <span className="truncate font-mono text-xs text-muted-foreground">
-                                                            {command.hint}
+                                                            {command.code}
                                                         </span>
                                                     )}
                                                 </>
@@ -205,14 +211,14 @@ function findBy(command: PaletteCommand): string[] | undefined {
     return words.length === 0 ? undefined : words
 }
 
-/** A two-line command as the row a search result is drawn as, its hint the quiet fact at the end. */
+/** A two-line command as the row a search result is drawn as, its hint or code the quiet fact at the end. */
 function asResult(command: PaletteCommand): SearchResult {
     const picture = command.artwork
     return {
         id: command.id,
         title: command.label,
         detail: command.detail,
-        meta: command.hint,
+        meta: command.hint ?? command.code,
         icon: command.icon,
         round: command.round,
         ...(typeof picture === 'string' ? { thumbnail: picture } : { artwork: picture }),

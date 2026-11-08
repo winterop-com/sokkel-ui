@@ -59,6 +59,7 @@ const GROUPS: PaletteGroup[] = [
         commands: [
             { id: 'r-export', label: 'nightly-export', icon: FileText, hint: 'job, failed 02:00', onSelect: () => undefined },
             { id: 'r-import', label: 'import-orders', icon: FileText, hint: 'job, running', onSelect: () => undefined },
+            { id: 'r-run', label: 'Last sync-inventory run', icon: FileText, code: '01a1a5c6', onSelect: () => undefined },
         ],
     },
     {

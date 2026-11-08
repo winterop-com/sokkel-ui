@@ -23,7 +23,7 @@ The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appeara
 Other state an app keeps across reloads goes through `useStored` (`hooks/use-stored`), and files
 being uploaded through `useUploads` (`hooks/use-uploads`), which feeds `AttachmentList`.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 219 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 220 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 13 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 9 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 11 modules
@@ -73,7 +73,7 @@ being uploaded through `useUploads` (`hooks/use-uploads`), which feeds `Attachme
 | **Alert**, AlertTitle, AlertDescription, AlertAction | `@winterop-com/sokkel-ui/primitives/alert` |  | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-display-alert--variants) |
 | **AspectRatio** | `@winterop-com/sokkel-ui/primitives/aspect-ratio` |  | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-display-aspectratio--variants) |
 | **Avatar**, AvatarImage, AvatarFallback, AvatarBadge, AvatarGroup, AvatarGroupCount | `@winterop-com/sokkel-ui/primitives/avatar` | A face or initials; `square` takes the control radius in place of the circle, for an app or an agent rather than a person. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-display-avatar--variants) |
-| **Badge** | `@winterop-com/sokkel-ui/primitives/badge` |  | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-display-badge--playground) |
+| **Badge** | `@winterop-com/sokkel-ui/primitives/badge` | A short value as a chip. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-display-badge--playground) |
 | **Card**, CardHeader, CardTitle, CardDescription, CardAction, CardContent, CardFooter | `@winterop-com/sokkel-ui/primitives/card` |  | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-display-card--variants) |
 | **Empty**, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent | `@winterop-com/sokkel-ui/primitives/empty` |  | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-display-empty--variants) |
 | **Item**, ItemGroup, ItemSeparator, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions, ItemHeader, ItemFooter | `@winterop-com/sokkel-ui/primitives/item` |  | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-display-item--variants) |
@@ -162,7 +162,7 @@ being uploaded through `useUploads` (`hooks/use-uploads`), which feeds `Attachme
 | --- | --- | --- | --- |
 | **AccountMenu** | `@winterop-com/sokkel-ui/AccountMenu` | The account control in the rail's foot cell: a full-cell row with the initial, the name and a chevron, opening upward into a menu headed by who is signed in and where. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-rail--strip) |
 | **AppBar** | `@winterop-com/sokkel-ui/AppBar` | The app's bar along the top of a screen drawn without `Shell`, such as a page a dialog opens over or a screen of its own: the app's mark, the trail to the screen, the search and the actions, in the bar the shell draws, so the screen reads as the same app. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-app-bar--bar) |
-| **CommandPalette** | `@winterop-com/sokkel-ui/CommandPalette` | The command palette: one search over everything an app can do, grouped, each row with its icon, a hint and the keys that run it directly. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-command-palette--closed) |
+| **CommandPalette** | `@winterop-com/sokkel-ui/CommandPalette` | The command palette: one search over everything an app can do, grouped, each row with its icon, a hint in words or a code, and the keys that run it directly. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-command-palette--closed) |
 | **Dock** | `@winterop-com/sokkel-ui/Dock` | A panel along the bottom of the content, for a log, a terminal or a result: a head bar with the title, tools and a fold control, and its content scrolling under it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/apps-workspace--list-and-panel) |
 | **NavBar** | `@winterop-com/sokkel-ui/NavBar` | The app's frame along the top, for an app with few places and no rail: the mark and name, the places as links with the current one underlined, and the right-hand controls. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/themes-appearance--scheme) |
 | **Rail** | `@winterop-com/sokkel-ui/Rail` | The app's left navigation: a head with the app's mark and the collapse control, the groups, and a foot cell the shell's foot strip lines up with. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-rail--strip) |
@@ -181,6 +181,7 @@ being uploaded through `useUploads` (`hooks/use-uploads`), which feeds `Attachme
 
 | Component | Import | What it is | Story |
 | --- | --- | --- | --- |
+| **DetailSheet** | `@winterop-com/sokkel-ui/DetailSheet` | One thing's detail in a sheet from the right, so a row of a list is read without leaving the list: a head with the thing's code over its title, a sentence under it, and one line of its chips followed by its actions (open the full page, the request behind it), then the body, which scrolls under the head, and an optional foot pinned at the bottom for the verbs. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-detail-sheet--open) |
 | **GroupLabel** | `@winterop-com/sokkel-ui/GroupLabel` | The small heading over a group of entries: a rail's group, a panel's section, a palette's kind, a table's run of rows. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-audio-bar--playing) |
 | **Inspector**, InspectorSection | `@winterop-com/sokkel-ui/Inspector` | The panel beside a list that shows the chosen row: a header naming the thing (its name, then its code in the code face with a copy button), the thing's actions, then titled sections. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/graphs-run--running) |
 | **PageHeader** | `@winterop-com/sokkel-ui/PageHeader` | A page's title, its code under it in the code face, and its actions at the right with the primary one last. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-page-header--title) |

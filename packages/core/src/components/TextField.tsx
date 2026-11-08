@@ -17,6 +17,7 @@ export function TextField({
     label,
     hint,
     keyHint,
+    description,
     help,
     required,
     error,
@@ -48,6 +49,8 @@ export function TextField({
     hint?: string
     /** The hint names a key, so it is drawn in the code face. */
     keyHint?: boolean
+    /** A sentence between the label and the input: what the question asks. */
+    description?: string
     /** A sentence under the input. */
     help?: string
     required?: boolean
@@ -93,7 +96,7 @@ export function TextField({
         onBlur,
         spellCheck: mono ? false : undefined,
         'aria-invalid': invalid,
-        'aria-describedby': describedBy(id, { help }),
+        'aria-describedby': describedBy(id, { help, description }),
     }
     return (
         <Field
@@ -101,6 +104,7 @@ export function TextField({
             label={label}
             hint={hint}
             keyHint={keyHint}
+            description={description}
             help={help}
             required={required}
             issues={all}
