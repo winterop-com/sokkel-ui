@@ -87,6 +87,8 @@ export interface HeatmapPanelProps {
     subtitle?: ReactNode
     info?: ReactNode
     actions?: ReactNode
+    /** Dropdown menu items, behind the panel's more button. */
+    menu?: ReactNode
     x: readonly string[]
     y: readonly string[]
     cells: readonly HeatCell[]
@@ -101,6 +103,11 @@ export interface HeatmapPanelProps {
     loading?: boolean
     empty?: boolean
     file?: string
+    /** Expanding also takes the screen, as `WindowedPane`'s `fullscreen` does. */
+    fullscreen?: boolean
+    /** Whether the panel is in its window, held from outside with `onExpandedChange`, as when the app's own menu opens it. */
+    expanded?: boolean
+    onExpandedChange?: (expanded: boolean) => void
     words?: Partial<ChartFrameWords>
     className?: string
 }
@@ -115,6 +122,7 @@ export function HeatmapPanel({
     subtitle,
     info,
     actions,
+    menu,
     x,
     y,
     cells,
@@ -129,6 +137,9 @@ export function HeatmapPanel({
     loading,
     empty,
     file,
+    fullscreen,
+    expanded,
+    onExpandedChange,
     words,
     className,
 }: HeatmapPanelProps) {
@@ -142,7 +153,11 @@ export function HeatmapPanel({
             subtitle={subtitle}
             info={info}
             actions={actions}
+            menu={menu}
             file={file}
+            fullscreen={fullscreen}
+            expanded={expanded}
+            onExpandedChange={onExpandedChange}
             loading={loading}
             empty={empty}
             bodyClassName={bodyClassName}

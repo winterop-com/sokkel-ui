@@ -1,8 +1,9 @@
-import { ArrowDownRight, ArrowUpRight, Info } from 'lucide-react'
+import { ArrowDownRight, ArrowUpRight, Info, MoreHorizontal } from 'lucide-react'
 import { useId, type CSSProperties, type ReactNode } from 'react'
 
 import { cn } from '../../lib/cn'
 import { LoadingOverlay } from '../Loaders'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '../ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip'
 import { SPAN, type PanelSpan } from './DashboardGrid'
 import { formatValue, thresholdColor, tokenVar, type Threshold } from './thresholds'
@@ -10,12 +11,14 @@ import { formatValue, thresholdColor, tokenVar, type Threshold } from './thresho
 export interface StatWords {
     noData: string
     info: string
+    /** The label of the button that opens the tile's menu. */
+    menu: string
     loading: string
     /** Written before the target's value. */
     target: string
 }
 
-const WORDS: StatWords = { noData: 'No data', info: 'About this panel', loading: 'Loading', target: 'Target' }
+const WORDS: StatWords = { noData: 'No data', info: 'About this panel', menu: 'Panel actions', loading: 'Loading', target: 'Target' }
 
 /** How far a reading has come toward its target: a track with the reading filled in and a tick at the target. */
 function TargetMeter({
@@ -116,6 +119,8 @@ export interface StatPanelProps {
     targetRange?: readonly [number, number]
     note?: ReactNode
     info?: ReactNode
+    /** Dropdown menu items, behind a button at the end of the tile's head, as `DashboardPanel`'s `menu`. */
+    menu?: ReactNode
     span?: PanelSpan
     loading?: boolean
     words?: Partial<StatWords>
@@ -145,6 +150,7 @@ export function StatPanel({
     targetRange,
     note,
     info,
+    menu,
     span = 'sixth',
     loading = false,
     words: given,
@@ -157,6 +163,10 @@ export function StatPanel({
     const written = value === null ? words.noData : format !== undefined ? format(value) : formatValue(value, decimals)
     const rising = delta !== undefined && !delta.startsWith('-')
     const style = tone === undefined ? undefined : ({ '--tone': tokenVar(tone) } as CSSProperties)
+    const tool = cn(
+        'flex size-5 items-center justify-center rounded-md outline-none focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid',
+        filled ? 'text-on-fill/80 hover:text-on-fill' : 'text-muted-foreground hover:text-foreground',
+    )
     return (
         <section
             style={style}
@@ -203,17 +213,21 @@ export function StatPanel({
                 )}
                 {info !== undefined && (
                     <Tooltip>
-                        <TooltipTrigger
-                            aria-label={words.info}
-                            className={cn(
-                                'flex size-5 items-center justify-center rounded-md outline-none focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid',
-                                filled ? 'text-on-fill/80 hover:text-on-fill' : 'text-muted-foreground hover:text-foreground',
-                            )}
-                        >
+                        <TooltipTrigger aria-label={words.info} className={tool}>
                             <Info className="size-3" aria-hidden />
                         </TooltipTrigger>
                         <TooltipContent>{info}</TooltipContent>
                     </Tooltip>
+                )}
+                {menu !== undefined && (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger aria-label={words.menu} title={words.menu} className={tool}>
+                            <MoreHorizontal className="size-3.5" aria-hidden />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-44">
+                            {menu}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 )}
             </header>
             <LoadingOverlay loading={loading} label={words.loading} className="flex min-h-0 flex-1 flex-col">
