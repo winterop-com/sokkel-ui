@@ -38,6 +38,8 @@ export const PRIVATE: Record<PackageDir, Record<string, string>> = {
     core: {
         'components/code/guides': "`CodeEditor`'s bracket colors and indent guides",
         'components/code/schema': "`CodeEditor`'s JSON Schema checks and completion; `CodeSchemaWords` is exported by `CodeEditor`",
+        'components/Mentions':
+            'the suggestions at the caret both composers share; `ComposerMentions` and the types it names are exported by `Composer` and `MessageComposer`',
         'components/media/sound-delay': "how far `SoundVisualizer` holds its picture back behind the output's latency",
         'components/media/sound-source': 'what `SoundVisualizer` listens through; `SoundSource` is exported by `SoundVisualizer`',
         'components/schema/checker':
@@ -46,6 +48,7 @@ export const PRIVATE: Record<PackageDir, Record<string, string>> = {
             'what `SettingsDialog` and `SettingsView` share: the search, the sections, the rows and the reset; their types are exported by both',
         'components/shell-context': 'the contexts `Shell` hands the parts drawn inside it',
         'hooks/use-drag-size': "the drag on a resizable edge, for the library's own panels",
+        'hooks/use-file-drop': 'files dragged onto `DropZone` and `FileField`, which take them',
         'lib/css-pixels': 'a length token in pixels, for a part that hands a size to an engine',
         'lib/focus': 'where focus goes when a popup closes',
         'lib/jq-grammar': 'the jq grammar the highlighter loads',
@@ -192,6 +195,7 @@ const CORE_AREAS: Record<string, string> = {
     CodeField: 'Forms and inputs',
     CronField: 'Forms and inputs',
     Field: 'Forms and inputs',
+    FileField: 'Forms and inputs',
     FilterChip: 'Forms and inputs',
     FormBar: 'Forms and inputs',
     InlineField: 'Forms and inputs',

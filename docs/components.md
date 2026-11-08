@@ -35,7 +35,7 @@ over several files maps its timeline to a file with `timeline`, a position that 
 animation frame is read by `useFramePosition` (`use-frame-position`), and LRC lyrics are read by
 `parseLyrics` in `lrc`, all under `@winterop-com/sokkel-ui-media/`.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 218 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 219 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 10 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 11 modules
@@ -220,6 +220,7 @@ animation frame is read by `useFramePosition` (`use-frame-position`), and LRC ly
 | **CodeField** | `@winterop-com/sokkel-ui/CodeField` | The field a thing's code is typed in. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-pages--runs-list) |
 | **CronField** | `@winterop-com/sokkel-ui/CronField` | A cron expression typed in, read back in words under it, with the next runs it makes listed after a given time. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-dialogs--confirm) |
 | **Field** | `@winterop-com/sokkel-ui/Field` | A form control with its label, an optional hint beside the label, and help under the control. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-field--variants) |
+| **FileField** | `@winterop-com/sokkel-ui/FileField` | A field that takes files: a zone they are dropped on, with a button that opens the picker, and under it the limits it holds them to (the types in `accept`, `maxSize` and `maxFiles`). | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-file-field--empty) |
 | **FilterChip** | `@winterop-com/sokkel-ui/FilterChip` | One filter in a toolbar: the facet it filters on, and what it is set to. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-filter-chip--unset) |
 | **FormBar** | `@winterop-com/sokkel-ui/FormBar` | A form's actions: a note at the start, such as when the draft was last saved, and the actions at the end, the main verb last; `start` puts a control before the note, away from the verbs. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-form-bar--end) |
 | **InlineField** | `@winterop-com/sokkel-ui/InlineField` | A label and its control on one row: the label quiet at the start, never shrinking or wrapping, and the control taking the rest of the row. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-inline-field--compose) |
@@ -238,7 +239,7 @@ animation frame is read by `useFramePosition` (`use-frame-position`), and LRC ly
 | **SwitchField** | `@winterop-com/sokkel-ui/SwitchField` | An on/off setting: its label and the switch at the row's right edge. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-stored-state--kept) |
 | **TextField** | `@winterop-com/sokkel-ui/TextField` | A labeled text input: a `Field` with its input inside, wired together. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-text-field--plain) |
 | **TreeSelect** | `@winterop-com/sokkel-ui/TreeSelect` | A field that picks from a hierarchy: the trigger reads like a select and names the choice with its path, and the popover holds a search over a tree. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-tree--trees) |
-| **UnsavedChangesDialog** | `@winterop-com/sokkel-ui/UnsavedChanges` | The question a guarded dialog asks before it closes with changes. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-dialogs--confirm) |
+| **UnsavedChangesDialog** | `@winterop-com/sokkel-ui/UnsavedChanges` | The question a guarded dialog asks before it closes with changes. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-unsaved-changes--edited) |
 
 ### Data display
 
@@ -317,7 +318,7 @@ animation frame is read by `useFramePosition` (`use-frame-position`), and LRC ly
 | **FileList**, FileTypeIcon, FileTile, FileGrid | `@winterop-com/sokkel-ui/FileList` | A folder's contents as rows: a checkbox, the name with its kind's icon, the size, when it changed, and who owns it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-navigation-tabs--variants) |
 | **FilePreview** | `@winterop-com/sokkel-ui/FilePreview` | What a file holds, drawn for its kind: an image whole on a checkered ground, a CSV as a small table of its first rows, JSON as a tree to open, and text or code highlighted. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-files--list) |
 | **ImageAnnotations** | `@winterop-com/sokkel-ui/ImageAnnotations` | An image with boxes drawn over it, such as what a detector found. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-image-annotations--plain) |
-| **ImageLightbox** | `@winterop-com/sokkel-ui/ImageLightbox` | An image that opens full screen when pressed: a chart an assistant drew, a screenshot someone attached. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-app-controls--theme) |
+| **ImageLightbox** | `@winterop-com/sokkel-ui/ImageLightbox` | An image that opens full screen when pressed: a chart an assistant drew, a screenshot someone attached, a photo in a gallery. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-app-controls--theme) |
 | **SourceSheet** | `@winterop-com/sokkel-ui/SourceSheet` | A record's source in a sheet from the right: what the server holds for it, highlighted, with a copy button. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-editor--editors) |
 | **UploadTray**, DropZone | `@winterop-com/sokkel-ui/UploadTray` | The files being uploaded, in a card that sits over the corner of the page: a head that counts what is still going (or what finished, once nothing is), then a row per file with its progress, a done mark, or the reason it failed and a retry. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-files--list) |
 

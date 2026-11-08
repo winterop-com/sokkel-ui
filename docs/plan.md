@@ -305,7 +305,7 @@ toggle-group, tooltip, trace.
 
 Shell, Rail, AppBar, SubNav, Page, PageHeader, PaneHeader, Toolbar, Section, Surface, the layout
 components (Stack, Row, Columns, Split, Fill), SplitPane, Field, TextField, InlineField, SliderField,
-CheckboxField, CheckboxList, ChoiceList, CodeField, SwitchField, SearchField, FilterChip, FormBar,
+CheckboxField, CheckboxList, ChoiceList, CodeField, SwitchField, SearchField, FileField, FilterChip, FormBar,
 SelectionBar, DataTable, StatusChip, PersonAvatar, PersonRow, MetaLine, DueText, AttachmentList,
 IconButton, StarButton, SplitButton, DownloadButton, AccountMenu, SidePanel, DialogShell,
 ConfirmDialog, TreeSelect, AsyncSelect, CapabilityPicker, SignIn, RelativeTime, ApiLink, TagChips,
@@ -423,6 +423,26 @@ it refuses the rest, cancels through the signal (and drops what an uploader that
 later), and hands `AttachmentList`, `Composer` and `UploadTray` their files. `ConversationHistory`, the list
 beside a chat, is a `DataTable` list grouped under Pinned, Today and Earlier, with rename in place,
 pin, and delete after a question.
+
+`FileField` takes files in a form, in a `Field` as the other inputs are: a zone they are dropped on
+(the drag `DropZone`'s, from `use-file-drop`) with a button that opens the picker, the limits under
+it (the types in `accept`, `maxSize`, `maxFiles`), each file refused said with why ("too large: 12
+MB, at most 10 MB"), sorted by `checkFiles`, which `useUploads` shares, and the files taken listed
+by `AttachmentList`, an image with its picture and a file the app says is going up (`progress`) with
+its ring. With `maxFiles` of 1 a file chosen takes the place of the one held. `useUnsavedChanges`
+guards a page: while it is `dirty`, closing the tab or reloading asks through the browser's own
+warning, and since the library has no router, the app's blocker awaits `confirmLeave()`, which asks
+through `ConfirmDialog` (the hook's `dialog`, drawn once in the page) and answers whether to leave;
+`useUnsavedGuard` does the same for a dialog's form. `Toolbar`'s `items` give way as it narrows,
+measured on the toolbar itself: those it has no room for move, in order, into a More menu at their
+end, a toggle checked there. `ImageLightbox` moves between its `images` by the arrow keys, the
+buttons at its sides and a swipe, saying "3 of 12"; it zooms by the wheel, a pinch and its buttons
+about the pointer, from the fit to four times it or twice the image's own pixels, a zoomed image
+moves by a drag without leaving a gap at an edge, and a double press goes between the fit and 100%.
+Both composers take `mentions`: an `@` typed (or put in by `MessageComposer`'s mention button)
+suggests people at the caret from the app's list or its search, the arrow keys and Enter or Tab put
+one in as `@handle`, Escape closes them, and `onChange` hears the ids the text mentions;
+`mentionsIn` in `lib/mentions` reads them from a text the app holds.
 
 Tree and TreeSelect pick from a hierarchy of any depth and size. A single choice made outside the
 tree, such as a place picked on a map beside it, opens the tree down to it and scrolls to it. A node marked `hasChildren` loads

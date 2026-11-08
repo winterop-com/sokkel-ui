@@ -1,12 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { Composer, type ComposerAttachment, type ComposerDictation } from '@winterop-com/sokkel-ui/Composer'
+import { Composer, type ComposerAttachment, type ComposerDictation, type ComposerMentions } from '@winterop-com/sokkel-ui/Composer'
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
 import { ModelPicker } from '../fixtures/models'
 import clip from '../media/fixtures/clip.webm?url'
 import { tuneUrl } from '../media/fixtures/tune'
 import { waveformOf } from '../media/fixtures/waveform'
+import { PEOPLE } from '../fixtures/people'
 import { fakeMicrophone, transcribeLater } from '../fixtures/speech'
 
 /**
@@ -34,12 +35,14 @@ function Live({
     busy = false,
     disabled = false,
     dictation,
+    mentions,
 }: {
     initial: string
     files?: ComposerAttachment[]
     busy?: boolean
     disabled?: boolean
     dictation?: ComposerDictation
+    mentions?: ComposerMentions
 }) {
     const [value, setValue] = useState(initial)
     const [attachments, setAttachments] = useState(files)
@@ -72,6 +75,7 @@ function Live({
             onCancel={(id) => setAttachments((current) => current.filter((attachment) => attachment.id !== id))}
             tools={<ModelPicker />}
             dictation={dictation}
+            mentions={mentions}
         />
     )
 }
@@ -124,6 +128,23 @@ export const Uploads: StoryObj = {
             />
         </Ground>
     ),
+}
+
+/**
+ * People suggested at the caret as an `@` is typed, from the app's list, by name and handle: the
+ * arrow keys move, Enter or Tab puts the one chosen in as `@grace`, and Escape closes them. Under
+ * it, the ids the text mentions, as the composer hears them.
+ */
+export const Mentions: StoryObj = {
+    render: function Render() {
+        const [mentioned, setMentioned] = useState<string[]>([])
+        return (
+            <Ground>
+                <Live initial="Can @gr" mentions={{ people: PEOPLE, defaultOpen: true, onChange: setMentioned }} />
+                <p className="text-xs text-muted-foreground">Mentioned: {mentioned.length === 0 ? 'no one' : mentioned.join(', ')}</p>
+            </Ground>
+        )
+    },
 }
 
 /** Dictation through the app's transcriber, here a stand-in that answers with one sentence after a moment, recording a hum made in the page instead of the microphone. */
