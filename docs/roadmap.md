@@ -31,6 +31,12 @@ to `plan.md` when it ships.
   `-maps` (maplibre) and `-graph` (React Flow and elk), each with its own styles. An app installs the
   core and the add-ons it draws with. Move to `plan.md` once released.
 
+## 0.10: terminals (done on main)
+
+- **An interactive terminal**, in a fifth package, `@winterop-com/sokkel-ui-terminal`, on xterm.js:
+  `TerminalView` takes keystrokes and output, reports its size and emulates full-screen programs,
+  and the read-only `Terminal` moved onto the same engine. The core keeps no terminal of its own.
+
 ## 0.10: example apps
 
 - **Working demo apps outside Storybook.** In `examples/`, built against the package as an app would
@@ -46,9 +52,6 @@ to `plan.md` when it ships.
 - **Adoption.** Apps adopt the library one pattern per PR, each pinning a published version. The
   app adds a check in the same PR that refuses its own hand-rolled version of that pattern, so it
   cannot come back. A part an app needs to differ becomes an option here, never a local edit.
-- **Hierarchy trees and maps at scale.** A tree that picks from a deep hierarchy (lazy children,
-  search, a path shown for the choice) and maps over many boundaries come with the last wave of
-  adoption, not before.
 - **Search.** One search component for any page, beyond the plain field: results as the words are
   typed, grouped by kind (videos, people, jobs) with thumbnails and previews, moved through by the
   keyboard, and a results page with facets and counts. A data table's bar, the top bar and the
@@ -61,20 +64,18 @@ to `plan.md` when it ships.
   and `SchemaForm` so every form takes it at once.
 - **Tauri on Chromium (discovery).** Tauri runs on each platform's own webview: WebKit on
   macOS and Linux. Once Tauri supports an embedded Chromium runtime, add that build beside the
-  system-webview shell, so the library is checked in both.
-- **An interactive terminal.** `Terminal` shows commands and their output; a shell needs a real
-  terminal: keystrokes and paste sent to the app (which carries them to a remote shell over its own
-  connection), full emulation for programs that move the cursor or take the whole screen (an
-  editor, `top`), the size reported as it changes, a scrollback, selection and copy. That needs a
-  terminal emulator as its engine; pick one, likely xterm.js, and move the read-only `Terminal` onto
-  the same engine so there is one per job. The library draws it and hands the bytes over; the
-  connection stays the app's.
-- **A Nerd Font for terminals (discovery).** Try JetBrains Mono NL patched as a Nerd Font for
-  `Terminal` and `LogView` only, through their own `--typeface-mono`: the prompt icons it carries,
-  its size and a subset of only the icons used, and its license (SIL OFL, listed in
-  `THIRD_PARTY_NOTICES.md`) before shipping a font file.
-- **Mono size grid.** A story that sets mono text at every size beside its sans neighbor, in Plex
-  and in Geist, to check the `font-size-adjust` rule.
+  system-webview shell, so the library is checked in both. As of 2026-11-08 it does, in alpha only:
+  Tauri 3 splits the runtime out, and `tauri-runtime-cef` (Chromium Embedded Framework, Linux,
+  macOS and Windows) ships beside `tauri-runtime-wry` on the `v3` branch, at
+  [3.0.0-alpha.7](https://github.com/tauri-apps/tauri/releases/tag/tauri-runtime-cef-v3.0.0-alpha.7)
+  since 2026-11-06, with open CEF bugs (Linux keyboard focus, idle CPU, fullscreen sizing) and no
+  blog post yet; stable Tauri is 2.12 on the system webview. Next: once Tauri 3 reaches beta, add
+  an `examples/tauri-cef` shell on `tauri-runtime-cef` beside `examples/tauri`, built by the
+  examples workflow; until then, nothing to build.
+- **Mono at `text-2xs`.** The mono size grid (Foundations/Typography) shows the rule holding:
+  mono's x-height is 0.87 of sans's at every size and 0.95 inside `text-xs`, in Plex and in Geist,
+  while mono words still run about 20 percent wider. `text-2xs` takes the body share, so its mono
+  draws at 9.6px, smaller than mono inside `text-xs`; decide whether it takes the small share.
 
 ## Later
 
@@ -89,6 +90,6 @@ to `plan.md` when it ships.
 
 - Accessibility audits, axe gates in CI and contrast scoring.
 - A second engine for a job that already has one: ECharts draws every chart, maplibre every map,
-  React Flow every interactive graph, Mermaid every diagram written as text, KaTeX every formula.
+  React Flow every interactive graph, xterm.js every terminal, Mermaid every diagram written as text, KaTeX every formula.
   Sparklines are plain SVG.
 - Copy-in distribution. Apps install the package; nothing is vendored.

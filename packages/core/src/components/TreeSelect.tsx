@@ -1,29 +1,36 @@
 import { ChevronsUpDown, Search, X } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { cn } from '../lib/cn'
-import { Tree, treeHolding, type TreeNode } from './Tree'
+import { Tree, treeHolding, type TreeLoad, type TreeNode, type TreeTrail, type TreeWords } from './Tree'
 import { Input } from './ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 
-/** Every node by id, with the labels of its ancestors, for the trigger to name a choice by its path. */
-function index(nodes: readonly TreeNode[]): Map<string, { node: TreeNode; path: string[] }> {
+/**
+ * Every node by id, with the labels of its ancestors, for the trigger to name a choice by its path:
+ * the given nodes, the children loaded so far, and the trails of choices found by a search.
+ */
+function index(
+    nodes: readonly TreeNode[],
+    loaded: ReadonlyMap<string, readonly TreeNode[]>,
+    trails: readonly TreeTrail[],
+): Map<string, { node: TreeNode; path: string[] }> {
     const out = new Map<string, { node: TreeNode; path: string[] }>()
+    for (const trail of trails) out.set(trail.node.id, { node: trail.node, path: trail.ancestors.map((each) => each.label) })
     const walk = (list: readonly TreeNode[], path: string[]) => {
         for (const node of list) {
             out.set(node.id, { node, path })
-            walk(node.children ?? [], [...path, node.label])
+            walk(node.children ?? loaded.get(node.id) ?? [], [...path, node.label])
         }
     }
     walk(nodes, [])
     return out
 }
 
-export interface TreeSelectWords {
+export interface TreeSelectWords extends TreeWords {
     placeholder: string
     search: string
     clear: string
-    empty: string
     selected: (count: number) => string
 }
 
@@ -33,6 +40,11 @@ const WORDS: TreeSelectWords = {
     clear: 'Clear',
     empty: 'Nothing matches.',
     selected: (count) => `${count} chosen`,
+    loading: 'Loading',
+    failed: 'This level did not load.',
+    retry: 'Try again',
+    searching: 'Searching',
+    searchFailed: 'The search did not answer.',
 }
 
 /**
@@ -40,6 +52,10 @@ const WORDS: TreeSelectWords = {
  * its path, and the popover holds a search over a tree. `multiple` chooses several with checkboxes
  * and keeps the popover open; the trigger then lists the choices by name with their count at its
  * end. The tree opens on the branches that lead to a choice, and a parent holding some shows a dash.
+ *
+ * For a large hierarchy, `loadChildren` brings a level when it is first opened (kept for the next
+ * time the popover opens), and `search` looks through the whole of it, listing each match with its
+ * path. A choice not loaded yet is named by its path from `trails`, or from the search that found it.
  */
 export function TreeSelect({
     id,
@@ -49,7 +65,11 @@ export function TreeSelect({
     multiple = false,
     defaultOpen = [],
     open: openProp,
-    words = WORDS,
+    defaultQuery = '',
+    loadChildren,
+    search,
+    trails = [],
+    words: given,
     className,
     invalid = false,
 }: {
@@ -62,18 +82,65 @@ export function TreeSelect({
     defaultOpen?: readonly string[]
     /** Holds the popover open, for a static view of it. */
     open?: boolean
-    words?: TreeSelectWords
+    /** The search the popover opens with, for a static view of it. */
+    defaultQuery?: string
+    /** Brings the children of a node marked `hasChildren` when it is first opened. */
+    loadChildren?: (node: TreeNode) => Promise<readonly TreeNode[]>
+    /** Answers a query over the whole hierarchy with each match and its ancestors. */
+    search?: (query: string) => Promise<readonly TreeTrail[]>
+    /** Where chosen nodes not loaded yet sit, so the trigger names them by their path and the tree opens to them. */
+    trails?: readonly TreeTrail[]
+    words?: Partial<TreeSelectWords>
     className?: string
     invalid?: boolean
 }) {
+    const words = { ...WORDS, ...given }
     const [open, setOpen] = useState(openProp ?? false)
-    const [query, setQuery] = useState('')
-    const byId = useMemo(() => index(nodes), [nodes])
+    const [query, setQuery] = useState(defaultQuery)
+    const [loaded, setLoaded] = useState<ReadonlyMap<string, readonly TreeNode[]>>(() => new Map())
+    const [picked, setPicked] = useState<ReadonlyMap<string, TreeTrail>>(() => new Map())
+    const found = useRef(new Map<string, TreeTrail>())
+    const latest = useRef({ loadChildren, search })
+    useEffect(() => {
+        latest.current = { loadChildren, search }
+    })
+    // Loaded levels are kept here, so the tree the popover mounts next time has them at once.
+    const load = useCallback(
+        (node: TreeNode): Promise<readonly TreeNode[]> => {
+            const kept = loaded.get(node.id)
+            if (kept !== undefined) return Promise.resolve(kept)
+            const ask = latest.current.loadChildren
+            if (ask === undefined) return Promise.resolve([])
+            return ask(node).then((children) => {
+                setLoaded((now) => new Map(now).set(node.id, children))
+                return children
+            })
+        },
+        [loaded],
+    )
+    const find = useCallback((text: string): Promise<readonly TreeTrail[]> => {
+        const ask = latest.current.search
+        if (ask === undefined) return Promise.resolve([])
+        return ask(text).then((answer) => {
+            for (const trail of answer) found.current.set(trail.node.id, trail)
+            return answer
+        })
+    }, [])
+    const known = useMemo(() => [...trails, ...picked.values()], [trails, picked])
+    const byId = useMemo(() => index(nodes, loaded, known), [nodes, loaded, known])
     const first = value.length > 0 ? byId.get(value[0]) : undefined
     const summary = value.length === 1 && first !== undefined ? first : null
     const names = value.map((each) => byId.get(each)?.node.label ?? each)
     // The tree reads this when the popover mounts it: the branches that lead to a choice start unfolded.
-    const unfolded = [...new Set([...defaultOpen, ...treeHolding(nodes, new Set(value))])]
+    const loads = useMemo(() => new Map<string, TreeLoad>([...loaded].map(([id, children]) => [id, { state: 'done', children }])), [loaded])
+    const chosen = new Set(value)
+    const unfolded = [
+        ...new Set([
+            ...defaultOpen,
+            ...treeHolding(nodes, chosen, loads),
+            ...known.filter((trail) => chosen.has(trail.node.id)).flatMap((trail) => trail.ancestors.map((each) => each.id)),
+        ]),
+    ]
 
     return (
         <Popover open={openProp ?? open} onOpenChange={setOpen}>
@@ -138,22 +205,26 @@ export function TreeSelect({
                         defaultOpen={unfolded}
                         selection={multiple ? 'multiple' : 'single'}
                         selected={value}
+                        loadChildren={loadChildren === undefined ? undefined : load}
+                        search={search === undefined ? undefined : find}
+                        trails={known}
+                        words={words}
                         onSelect={(ids) => {
+                            const trailed = ids.flatMap((each) => {
+                                const trail = found.current.get(each)
+                                return trail === undefined ? [] : [trail]
+                            })
+                            if (trailed.length > 0)
+                                setPicked((now) => new Map([...now, ...trailed.map((trail) => [trail.node.id, trail] as const)]))
                             onChange(ids)
-                            if (!multiple && openProp === undefined) setOpen(false)
+                            if (!multiple && openProp === undefined) {
+                                setOpen(false)
+                                setQuery('')
+                            }
                         }}
                     />
-                    <TreeEmpty nodes={nodes} query={query} words={words} />
                 </div>
             </PopoverContent>
         </Popover>
     )
-}
-
-/** The empty line, shown only when nothing anywhere in the tree matches. */
-function TreeEmpty({ nodes, query, words }: { nodes: readonly TreeNode[]; query: string; words: TreeSelectWords }) {
-    const any = (list: readonly TreeNode[]): boolean =>
-        list.some((node) => node.label.toLowerCase().includes(query.trim().toLowerCase()) || any(node.children ?? []))
-    if (query.trim() === '' || any(nodes)) return null
-    return <p className="px-2 py-6 text-center text-sm text-muted-foreground">{words.empty}</p>
 }

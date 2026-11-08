@@ -28,6 +28,7 @@
         "@winterop-com/sokkel-ui-charts": "workspace:*",
         "@winterop-com/sokkel-ui-graph": "workspace:*",
         "@winterop-com/sokkel-ui-maps": "workspace:*",
+        "@winterop-com/sokkel-ui-terminal": "workspace:*",
         "date-fns": "^4.4.0",
         "http-server": "^14.1.1",
         "katex": "^0.16.47",
@@ -148,6 +149,21 @@
         "@types/geojson": "^7946.0.16",
         "lucide-react": "^1.68.0",
         "maplibre-gl": "^6.7.0",
+      },
+      "peerDependencies": {
+        "@winterop-com/sokkel-ui": "workspace:*",
+        "react": "^19.2.0",
+        "react-dom": "^19.2.0",
+      },
+    },
+    "packages/terminal": {
+      "name": "@winterop-com/sokkel-ui-terminal",
+      "version": "0.9.1",
+      "dependencies": {
+        "@xterm/addon-fit": "0.11.0",
+        "@xterm/addon-web-links": "0.12.0",
+        "@xterm/xterm": "6.0.0",
+        "lucide-react": "^1.68.0",
       },
       "peerDependencies": {
         "@winterop-com/sokkel-ui": "workspace:*",
@@ -824,6 +840,14 @@
     "@winterop-com/sokkel-ui-graph": ["@winterop-com/sokkel-ui-graph@workspace:packages/graph"],
 
     "@winterop-com/sokkel-ui-maps": ["@winterop-com/sokkel-ui-maps@workspace:packages/maps"],
+
+    "@winterop-com/sokkel-ui-terminal": ["@winterop-com/sokkel-ui-terminal@workspace:packages/terminal"],
+
+    "@xterm/addon-fit": ["@xterm/addon-fit@0.11.0", "", {}, "sha512-jYcgT6xtVYhnhgxh3QgYDnnNMYTcf8ElbxxFzX0IZo+vabQqSPAjC3c1wJrKB5E19VwQei89QCiZZP86DCPF7g=="],
+
+    "@xterm/addon-web-links": ["@xterm/addon-web-links@0.12.0", "", {}, "sha512-4Smom3RPyVp7ZMYOYDoC/9eGJJJqYhnPLGGqJ6wOBfB8VxPViJNSKdgRYb8NpaM6YSelEKbA2SStD7lGyqaobw=="],
+
+    "@xterm/xterm": ["@xterm/xterm@6.0.0", "", {}, "sha512-TQwDdQGtwwDt+2cgKDLn0IRaSxYu1tSUjgKarSDkUM0ZNiSRXFpjxEsvc/Zgc5kq5omJ+V0a8/kIM2WD3sMOYg=="],
 
     "@xyflow/react": ["@xyflow/react@12.12.1", "", { "dependencies": { "@xyflow/system": "0.0.84", "classcat": "^5.0.3", "zustand": "^4.4.0" }, "peerDependencies": { "@types/react": ">=17", "@types/react-dom": ">=17", "react": ">=17", "react-dom": ">=17" }, "optionalPeers": ["@types/react", "@types/react-dom"] }, "sha512-g41OHmP+GL5wDBQKpgYt8AF6RlB4CrABtiStXhCMqdItK6gPdSpsuDk8V0YtdyvIvMPTjDJvkuLkz0JbSYu5Cw=="],
 

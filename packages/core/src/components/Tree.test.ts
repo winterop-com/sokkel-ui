@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 
-import { treeMatches, visibleRows, type TreeNode } from './Tree'
+import { isBranch, treeHolding, treeMatches, visibleRows, type TreeLoad, type TreeNode } from './Tree'
 
 const NODES: TreeNode[] = [
     {
@@ -37,5 +37,29 @@ describe('a tree', () => {
 
     test('matches without regard to case and keeps a matching parent', () => {
         expect([...treeMatches(NODES, 'HARBOR')]).toEqual(['harbor'])
+    })
+
+    test('shows a loading row under an open lazy node, then its children once loaded', () => {
+        const lazy: TreeNode[] = [{ id: 'harbor', label: 'Harbor', hasChildren: true }]
+        expect(visibleRows(lazy, new Set(['harbor']), null).map((row) => [row.node.id, row.level, row.status])).toEqual([
+            ['harbor', 1, undefined],
+            ['harbor', 2, 'loading'],
+        ])
+        const failed = new Map<string, TreeLoad>([['harbor', { state: 'failed' }]])
+        expect(visibleRows(lazy, new Set(['harbor']), null, failed)[1].status).toBe('failed')
+        const done = new Map<string, TreeLoad>([['harbor', { state: 'done', children: [{ id: 'reports', label: 'Reports' }] }]])
+        expect(visibleRows(lazy, new Set(['harbor']), null, done).map((row) => row.node.id)).toEqual(['harbor', 'reports'])
+    })
+
+    test('stops counting a lazy node as a branch once it loads no children', () => {
+        const node: TreeNode = { id: 'juniper', label: 'Juniper', hasChildren: true }
+        expect(isBranch(node)).toBe(true)
+        expect(isBranch(node, new Map([['juniper', { state: 'done', children: [] }]]))).toBe(false)
+    })
+
+    test('marks the ancestors of a choice among loaded children', () => {
+        const lazy: TreeNode[] = [{ id: 'harbor', label: 'Harbor', hasChildren: true }]
+        const done = new Map<string, TreeLoad>([['harbor', { state: 'done', children: [{ id: 'reports', label: 'Reports' }] }]])
+        expect([...treeHolding(lazy, new Set(['reports']), done)]).toEqual(['harbor'])
     })
 })

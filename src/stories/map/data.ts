@@ -143,3 +143,76 @@ export const rainfall: Record<string, Grid> = Object.fromEntries(
         },
     ]),
 )
+
+/** How far apart neighboring hexagons' centers lie across, in degrees. */
+const HEX = 0.034
+
+let hexagonCells: FeatureCollection<Polygon, { name: string; reached: number }> | null = null
+
+/**
+ * Some six thousand hexagonal cells covering the country's land, each with a name and a share of
+ * households reached, in percent, that varies smoothly across the land. Built the same every time.
+ */
+export function hexagons(): FeatureCollection<Polygon, { name: string; reached: number }> {
+    hexagonCells ??= buildHexagons()
+    return hexagonCells
+}
+
+function buildHexagons(): FeatureCollection<Polygon, { name: string; reached: number }> {
+    const radius = HEX / Math.sqrt(3)
+    const step = radius * 1.5
+    const features: Feature<Polygon, { name: string; reached: number }>[] = []
+    for (let row = 0; GRID_BOUNDS[1] + row * step <= GRID_BOUNDS[3]; row += 1) {
+        const lat = GRID_BOUNDS[1] + row * step
+        for (let column = 0; GRID_BOUNDS[0] + column * HEX <= GRID_BOUNDS[2]; column += 1) {
+            const lng = GRID_BOUNDS[0] + column * HEX + (row % 2 === 1 ? HEX / 2 : 0)
+            if (!onLand(lng, lat)) continue
+            const ring = Array.from({ length: 7 }, (_, corner) => {
+                const angle = (Math.PI / 3) * (corner % 6) + Math.PI / 6
+                return [lng + radius * Math.cos(angle), lat + radius * Math.sin(angle)]
+            })
+            const id = `${String(row).padStart(3, '0')}-${String(column).padStart(3, '0')}`
+            const wave = 0.5 + 0.22 * Math.sin(lng * 2.3 + lat * 1.7) + 0.18 * Math.cos(lat * 3.1 - lng * 0.9)
+            const reached = Math.round(100 * Math.min(1, Math.max(0, wave + 0.12 * (hashed(id) - 0.5))))
+            features.push({
+                type: 'Feature',
+                id,
+                properties: { name: `Cell ${id}`, reached },
+                geometry: { type: 'Polygon', coordinates: [ring] },
+            })
+        }
+    }
+    return { type: 'FeatureCollection', features }
+}
+
+let scattered: FeatureCollection<Point, { name: string }> | null = null
+
+/**
+ * Twenty thousand sites scattered over the land, thicker around a few towns, each placed by a hash
+ * of its number so the scatter is the same every time.
+ */
+export function manySites(): FeatureCollection<Point, { name: string }> {
+    scattered ??= buildSites()
+    return scattered
+}
+
+function buildSites(): FeatureCollection<Point, { name: string }> {
+    const towns = places.features.filter((_, index) => index % 25 === 0).map((place) => place.geometry.coordinates)
+    const features: Feature<Point, { name: string }>[] = []
+    for (let index = 0; features.length < 20_000; index += 1) {
+        const town = towns[Math.floor(hashed(`town:${String(index)}`) * towns.length) % towns.length]
+        const spread = 0.04 + 0.5 * hashed(`spread:${String(index)}`) ** 3
+        const angle = 2 * Math.PI * hashed(`angle:${String(index)}`)
+        const lng = town[0] + spread * Math.cos(angle)
+        const lat = town[1] + spread * Math.sin(angle)
+        if (!onLand(lng, lat)) continue
+        const id = `site-${String(features.length + 1)}`
+        features.push({
+            type: 'Feature',
+            id,
+            properties: { name: `Site ${String(features.length + 1)}` },
+            geometry: { type: 'Point', coordinates: [lng, lat] },
+        })
+    }
+    return { type: 'FeatureCollection', features }
+}

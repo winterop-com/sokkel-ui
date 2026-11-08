@@ -21,7 +21,8 @@
             "@winterop-com/sokkel-ui/*": ["./packages/core/src/components/*"],
             "@winterop-com/sokkel-ui-charts/*": ["./packages/charts/src/*"],
             "@winterop-com/sokkel-ui-maps/*": ["./packages/maps/src/*"],
-            "@winterop-com/sokkel-ui-graph/*": ["./packages/graph/src/*"]
+            "@winterop-com/sokkel-ui-graph/*": ["./packages/graph/src/*"],
+            "@winterop-com/sokkel-ui-terminal/*": ["./packages/terminal/src/*"]
         }
     },
     "include": [
