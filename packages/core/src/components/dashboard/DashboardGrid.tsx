@@ -60,6 +60,8 @@ export interface DashboardPanelProps {
     /** Dropdown menu items, behind the panel's more button. */
     menu?: ReactNode
     expandable?: boolean
+    /** Expanding also takes the screen, as `WindowedPane`'s `fullscreen` does. */
+    fullscreen?: boolean
     loading?: boolean
     empty?: boolean
     /** Content that fills the panel to its edges, such as a list, takes no padding. */
@@ -83,6 +85,7 @@ export function DashboardPanel({
     actions,
     menu,
     expandable = false,
+    fullscreen = false,
     loading = false,
     empty = false,
     flush = false,
@@ -140,6 +143,7 @@ export function DashboardPanel({
                         open={expanded}
                         onOpenChange={setExpanded}
                         button="none"
+                        fullscreen={fullscreen}
                         words={{ expand: words.expand }}
                         className={cn('flex min-h-0 flex-1 flex-col', !flush && !empty && 'p-4')}
                     >

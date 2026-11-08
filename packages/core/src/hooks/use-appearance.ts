@@ -27,6 +27,11 @@ export interface AppearanceState {
  * (through `useScheme`, following the system until one is chosen), the density, the corners, the
  * typeface and the motion. Called once in the app's root; `ThemePicker` takes its `settings` and
  * `setSettings`. `defaults` stand until the person chooses otherwise.
+ *
+ * A page that keeps its settings elsewhere, such as a browser extension's storage or a desktop
+ * shell's settings file, hands that storage to `setAppearanceStorage` in `lib/appearance` once,
+ * before the app draws: reads may answer later, the look standing at the last known one (or the
+ * defaults) until they do.
  */
 export function useAppearance(defaults: Partial<ThemeSettings> = {}): AppearanceState {
     const { scheme, resolved } = useScheme(defaults.scheme ?? 'system')

@@ -6,6 +6,7 @@ import { createPortal } from 'react-dom'
 
 import { useLongWait } from '@winterop-com/sokkel-ui/Loaders'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { enterFullscreen, exitFullscreen, fullscreenElement, subscribeFullscreen } from '@winterop-com/sokkel-ui/lib/fullscreen'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { ButtonGroup } from '@winterop-com/sokkel-ui/primitives/button-group'
 import { Spinner } from '@winterop-com/sokkel-ui/primitives/spinner'
@@ -315,6 +316,8 @@ function ControlButton({
  * read. Once the map has drawn everything it was given and nothing is moving or loading, the
  * frame carries `data-map-idle`. maplibre loads the first time a map is drawn (`loadMapEngine`
  * fetches it ahead); until it arrives the frame shows its ground, with a spinner once the wait is long.
+ * Its full screen control goes through `lib/fullscreen`: the browser's full screen, or in a desktop
+ * shell the window's own once the app hands it over, keeping the same canvas and camera.
  */
 export function MapView({
     label,
@@ -676,9 +679,12 @@ export function MapView({
     }, [corners, camera])
 
     useEffect(() => {
-        const update = () => setFullscreen(scope !== null && document.fullscreenElement === scope)
-        document.addEventListener('fullscreenchange', update)
-        return () => document.removeEventListener('fullscreenchange', update)
+        const update = () => setFullscreen(scope !== null && fullscreenElement() === scope)
+        const stop = subscribeFullscreen(update)
+        return () => {
+            stop()
+            if (scope !== null) exitFullscreen(scope)
+        }
     }, [scope])
 
     const context = useMemo<MapContextValue | null>(
@@ -782,8 +788,9 @@ export function MapView({
                                         label={fullscreen ? said.exitFullscreen : said.fullscreen}
                                         container={scope}
                                         onClick={() => {
-                                            if (document.fullscreenElement === scope) void document.exitFullscreen()
-                                            else void scope?.requestFullscreen()
+                                            if (scope === null) return
+                                            if (fullscreenElement() === scope) exitFullscreen(scope)
+                                            else enterFullscreen(scope)
                                         }}
                                     >
                                         {fullscreen ? <Shrink /> : <Expand />}

@@ -183,6 +183,93 @@ function notify(): void {
 }
 
 /**
+ * Where the look is kept in place of `localStorage`, for a page that keeps its settings elsewhere:
+ * a browser extension's storage, a desktop shell's settings file. Each key holds text.
+ */
+export interface AppearanceStorage {
+    /** The text kept under `key`, or null or undefined where nothing is; at once, or as a promise. */
+    read: (key: string) => string | null | undefined | PromiseLike<string | null | undefined>
+    /** Keeps `value` under `key`; a promise it answers with is not waited on. */
+    write: (key: string, value: string) => unknown
+    /**
+     * Hears the look change elsewhere, such as in another window of the app or another page of the
+     * extension: `change` is called with the key and its new text (null once removed). Answers with
+     * the way to stop.
+     */
+    subscribe?: (change: (key: string, value: string | null) => void) => () => void
+}
+
+let storage: AppearanceStorage | undefined
+let stopStorage: (() => void) | undefined
+/** How often each key was written here, so a read answered after a later choice is not taken. */
+const writes = new Map<string, number>()
+
+function isKey(key: string): boolean {
+    return key === SCHEME_KEY || key === APPEARANCE_KEY
+}
+
+/** Takes text from the app's storage as the last known, kept beside it for `appearanceScript`, and tells the followers. */
+function take(key: string, value: string | null): void {
+    if (load(key) === value) return
+    save(key, value)
+    notify()
+}
+
+/** Asks the app's storage for a key, taking the answer unless the key was chosen again meanwhile. */
+function fetchKept(from: AppearanceStorage, key: string): void {
+    const asked = writes.get(key) ?? 0
+    const answer = (value: string | null | undefined) => {
+        if (storage === from && (writes.get(key) ?? 0) === asked) take(key, value ?? null)
+    }
+    try {
+        const value = from.read(key)
+        if (value !== null && typeof value === 'object' && typeof value.then === 'function') value.then(answer, () => undefined)
+        else answer(value as string | null | undefined)
+    } catch {
+        // The last known look stands.
+    }
+}
+
+/** Keeps a chosen value: in the last known copy at once, and in the app's storage when it gave one. */
+function keep(key: string, value: string): void {
+    save(key, value)
+    writes.set(key, (writes.get(key) ?? 0) + 1)
+    if (storage === undefined) return
+    try {
+        const kept = storage.write(key, value)
+        if (kept !== null && typeof kept === 'object' && typeof (kept as PromiseLike<unknown>).then === 'function') {
+            ;(kept as PromiseLike<unknown>).then(undefined, () => undefined)
+        }
+    } catch {
+        // The choice holds for this page.
+    }
+}
+
+/**
+ * Keeps the look in the app's own storage in place of `localStorage` from now on, for every
+ * `useAppearance`, `useScheme` and `SchemeToggle`; undefined goes back to `localStorage` alone.
+ * Called once before the app first draws, as `setStoredPrefix` is.
+ *
+ * The storage may answer later than asked, as a browser extension's and a desktop shell's do: until
+ * it answers, the look is the last known one, or the defaults where none is known, and the kept
+ * look is worn the moment the answer comes. The last known look is a copy in `localStorage` (in
+ * memory where that is refused), written on every choice and every answer, which is what
+ * `appearanceScript` reads before the page draws, so a page that keeps its look elsewhere still
+ * starts in it. With `subscribe`, a change made elsewhere is worn here as it comes.
+ */
+export function setAppearanceStorage(next: AppearanceStorage | undefined): void {
+    stopStorage?.()
+    stopStorage = undefined
+    storage = next
+    if (next === undefined) return
+    fetchKept(next, SCHEME_KEY)
+    fetchKept(next, APPEARANCE_KEY)
+    stopStorage = next.subscribe?.((key, value) => {
+        if (isKey(key) && storage === next) take(key, value)
+    })
+}
+
+/**
  * Calls `listener` when the kept look changes: here, in another tab, or by the system's scheme.
  * Answers with the function that stops it.
  */
@@ -216,9 +303,9 @@ export function readStoredScheme(): Scheme | null {
     return SCHEMES.find((scheme) => scheme === stored) ?? null
 }
 
-/** Keeps the scheme chosen and tells everyone following it. */
+/** Keeps the scheme chosen, in the app's storage when it gave one, and tells everyone following it. */
 export function storeScheme(scheme: Scheme): void {
-    save(SCHEME_KEY, scheme)
+    keep(SCHEME_KEY, scheme)
     notify()
 }
 
@@ -247,11 +334,11 @@ export function parseAppearance(text: string | null): Partial<Omit<ThemeSettings
     return out
 }
 
-/** Keeps the whole look, the scheme under its own key, and tells everyone following it. */
+/** Keeps the whole look, the scheme under its own key, in the app's storage when it gave one, and tells everyone following it. */
 export function storeAppearance(settings: ThemeSettings): void {
     const { scheme, ...rest } = settings
-    save(APPEARANCE_KEY, JSON.stringify(rest))
-    save(SCHEME_KEY, scheme)
+    keep(APPEARANCE_KEY, JSON.stringify(rest))
+    keep(SCHEME_KEY, scheme)
     notify()
 }
 
@@ -265,22 +352,25 @@ export function readAppearance(defaults: Partial<ThemeSettings> = {}): ThemeSett
     }
 }
 
+/** JSON that cannot close the script element it is written into. */
+function scriptJson(value: unknown): string {
+    return JSON.stringify(value).replaceAll('<', '\\u003c')
+}
+
 /**
- * A script for `<head>`, run before the page draws, that writes the kept look on `<html>` as
- * `applyAppearance` will, so the page never shows the wrong scheme first. `defaults` are the same
- * ones given to `useAppearance`. It only sets: `<html>` starts with nothing on it.
+ * The one script both `appearanceScript` and `appearanceScriptFile` are, with the app's defaults
+ * read from the expression `defaults`: the look kept in `localStorage` over the defaults over the
+ * library's, the scheme following the system until one is chosen, worn as `applyAppearance` wears it.
  */
-export function appearanceScript(defaults: Partial<ThemeSettings> = {}): string {
-    const { scheme = 'system', ...rest } = defaults
+function scriptWith(defaults: string): string {
     const { scheme: _scheme, ...base } = DEFAULT_APPEARANCE
-    const json = (value: unknown) => JSON.stringify(value).replaceAll('<', '\\u003c')
     return [
         '(function(){try{',
-        'var r=document.documentElement,l=window.localStorage,',
-        `a=Object.assign(${json({ ...base, ...rest })},JSON.parse(l.getItem(${json(APPEARANCE_KEY)})||'{}')),`,
-        `s=l.getItem(${json(SCHEME_KEY)})||${json(scheme)},`,
-        `f=${json(FACES)},`,
-        `d=s==='dark'||(s!=='light'&&window.matchMedia(${json(DARK_QUERY)}).matches);`,
+        `var r=document.documentElement,l=window.localStorage,o=${defaults}||{},`,
+        `a=Object.assign(${scriptJson(base)},o,JSON.parse(l.getItem(${scriptJson(APPEARANCE_KEY)})||'{}')),`,
+        `s=l.getItem(${scriptJson(SCHEME_KEY)})||o.scheme||'system',`,
+        `f=${scriptJson(FACES)},`,
+        `d=s==='dark'||(s!=='light'&&window.matchMedia(${scriptJson(DARK_QUERY)}).matches);`,
         "r.classList.toggle('dark',d);",
         "if(typeof a.theme==='string'&&a.theme!=='default')r.setAttribute('data-theme',a.theme);",
         "if(typeof a.density==='string')r.setAttribute('data-density',a.density);",
@@ -292,4 +382,31 @@ export function appearanceScript(defaults: Partial<ThemeSettings> = {}): string 
         "if(t.monoXSmall)r.style.setProperty('--mono-x-height-small',t.monoXSmall)}",
         '}catch(e){}})()',
     ].join('')
+}
+
+/**
+ * A script for `<head>`, run before the page draws, that writes the kept look on `<html>` as
+ * `applyAppearance` will, so the page never shows the wrong scheme first. `defaults` are the same
+ * ones given to `useAppearance`. It only sets: `<html>` starts with nothing on it. It reads the
+ * look from `localStorage`, where `setAppearanceStorage` keeps the last known copy too.
+ *
+ * A page that refuses inline script (a browser extension's pages, a strict Content Security
+ * Policy) loads the same script from a file instead: `appearanceScriptFile`, which the core package
+ * ships built as `@winterop-com/sokkel-ui/appearance.js`.
+ */
+export function appearanceScript(defaults: Partial<ThemeSettings> = {}): string {
+    return scriptWith(scriptJson(defaults))
+}
+
+/**
+ * `appearanceScript` as the text of a file a page loads with `<script src>`, for a page that refuses
+ * inline script. The core package ships it built as `@winterop-com/sokkel-ui/appearance.js`; an app
+ * copies it beside its pages, or lets its bundler hand it a URL. It is a classic script, not a
+ * module, loaded first in `<head>` with neither `async` nor `defer`, so it runs before the page
+ * draws. It takes the defaults `useAppearance` is given from its own data attributes:
+ * `<script src="appearance.js" data-theme="paper" data-scheme="dark"></script>`, and `data-density`,
+ * `data-corners`, `data-typeface` and `data-motion` likewise.
+ */
+export function appearanceScriptFile(): string {
+    return scriptWith('(document.currentScript||{}).dataset')
 }

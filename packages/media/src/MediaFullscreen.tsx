@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom'
 
 import { useThemeName } from '@winterop-com/sokkel-ui/hooks/use-theme-name'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { enterFullscreen, exitFullscreen, fullscreenElement, subscribeFullscreen } from '@winterop-com/sokkel-ui/lib/fullscreen'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { PHONE, type MediaBarLayout } from './bar-growth'
 import {
@@ -76,9 +77,10 @@ export interface MediaFullscreenProps {
  * It is a dark room in every scheme and theme: the `.dark` class around an element scoped to the
  * document's theme, so the theme's own dark tokens hold inside whatever the page wears.
  *
- * It asks the browser for its fullscreen with `requestFullscreen` and leaves with
- * `document.exitFullscreen`, and follows `fullscreenchange`, so the browser's own way out closes
- * it. Drawn without asking, or refused, it covers the window from a portal on the body.
+ * It goes full screen through `lib/fullscreen`: the browser's, or in a desktop shell the window's own
+ * once the app hands it over (`desktop.setFullscreen` on `Shell`). It follows it, so the browser's or
+ * the window's own way out closes it. Drawn without asking, or refused, it covers the window from a
+ * portal on the body.
  */
 export function MediaFullscreen(props: MediaFullscreenProps) {
     if (typeof document === 'undefined') return null
@@ -110,31 +112,43 @@ function Room({
         leave.current = onLeave
     })
 
+    // Left once, however many ways say so at the same press (Escape leaving full screen and the view).
+    const gone = useRef(false)
+    const leaveOnce = () => {
+        if (gone.current) return
+        gone.current = true
+        leave.current()
+        setTimeout(() => {
+            gone.current = false
+        }, 0)
+    }
+
     useLayoutEffect(() => {
         const element = room.current
         if (element === null) return
         const before = document.activeElement instanceof HTMLElement ? document.activeElement : null
         let full = false
         const change = () => {
-            const now = document.fullscreenElement === element
-            if (full && !now) leave.current()
+            const now = fullscreenElement() === element
+            if (full && !now) leaveOnce()
             full = now
         }
-        document.addEventListener('fullscreenchange', change)
+        const stop = subscribeFullscreen(change)
         if (native) {
             element.focus({ preventScroll: true })
-            if (typeof element.requestFullscreen === 'function') void element.requestFullscreen().catch(() => undefined)
+            // The view covers the window itself where full screen is refused.
+            enterFullscreen(element, { cover: false })
         }
         return () => {
-            document.removeEventListener('fullscreenchange', change)
-            if (document.fullscreenElement === element) void document.exitFullscreen().catch(() => undefined)
+            stop()
+            exitFullscreen(element)
             if (native && before?.isConnected === true) before.focus({ preventScroll: true })
         }
     }, [native])
 
     useEffect(() => {
         const key = (event: KeyboardEvent) => {
-            if (event.key === 'Escape' && !event.defaultPrevented) leave.current()
+            if (event.key === 'Escape' && !event.defaultPrevented) leaveOnce()
         }
         window.addEventListener('keydown', key)
         return () => window.removeEventListener('keydown', key)

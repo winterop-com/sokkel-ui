@@ -133,6 +133,8 @@ export interface ComboPanelProps {
     loading?: boolean
     empty?: boolean
     file?: string
+    /** Expanding also takes the screen, as `WindowedPane`'s `fullscreen` does. */
+    fullscreen?: boolean
     words?: Partial<ChartFrameWords>
     className?: string
 }
@@ -161,6 +163,7 @@ export function ComboPanel({
     loading,
     empty,
     file,
+    fullscreen,
     words,
     className,
 }: ComboPanelProps) {
@@ -179,6 +182,7 @@ export function ComboPanel({
             legendMode={legend === 'table' ? 'table' : 'list'}
             legendStats={legendStats}
             file={file}
+            fullscreen={fullscreen}
             loading={loading}
             empty={empty}
             bodyClassName={bodyClassName}

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { trafficLightsStyle, useTrafficLights, windowPressHandler, type DesktopWindow } from '../lib/desktop'
+import { useDesktopFullscreen } from '../lib/fullscreen'
 import { TopBar, type TopBarProps } from './TopBar'
 
 export type AppBarProps = TopBarProps & {
@@ -20,6 +21,7 @@ export type AppBarProps = TopBarProps & {
  */
 export function AppBar({ children, className, desktop, ...bar }: AppBarProps) {
     const lights = useTrafficLights(desktop)
+    useDesktopFullscreen(desktop)
     return (
         <header
             data-window-drag={desktop === undefined ? undefined : ''}
