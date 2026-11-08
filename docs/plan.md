@@ -95,6 +95,32 @@ that draws its own palette holds a registry with `useCommandRegistry`. A palette
 or `artwork` (an image's address or a node, round for a person) is two lines tall, drawn as a search
 result is, and the palette's search results take `artwork` too.
 
+Keys go through one registry, which `Shell` holds as it holds the commands. A screen binds its keys
+with `useShortcuts(bindings, deps)` while it is mounted (outside a shell, in the page's own). A
+binding names its key by the character it types (`KeyboardEvent.key`), so `?`, `/` and `*` work on
+a Norwegian keyboard as on an American one: a character that is not a letter is matched as itself
+whatever Shift, Option or AltGr the layout took, a letter by its case with `shift` saying so, and a
+letter key that Option or a non-Latin layout turned into another character by its place. `mod` is
+⌘ on a Mac and Ctrl elsewhere, the other one refusing the press. Keys are quiet while typing in a
+field, where a slider keeps its arrows and a button its Space, and while a dialog, a sheet, a menu,
+an overlay or the shell's palette is open, unless a binding asks (`inFields`, `inDialogs`); `scope`
+hears a binding only inside an element marked `data-shortcut-scope`, before the same key outside it.
+A later screen's binding comes before an earlier one's, and the shell's own (the palette's ⌘K or
+Ctrl K, which a second press closes; `?`) come last. `ShortcutsDialog` lists every binding with a
+`label` under its `group`, its keys written by `keyLabels` as the device writes them, then the
+groups an app gives for keys it answers itself; `Shell`'s `shortcuts` makes the shell hold it,
+opened on `?`, bound once, and from the account menu. `SearchField`'s `/` is a binding too. The
+palette can be held from outside (`paletteOpen`, `onPaletteOpenChange`) and refused over an app's
+own full-screen view (`mayOpenPalette`); on a touch screen it has a Close button.
+
+`useOverlay(open, { onClose })` makes an app's own overlay behave as a dialog: the page outside it
+inert, focus moved in, Escape closing the one on top, and focus back where it was; `Shell`'s drawer
+and its panel over a narrow window use it. `useScrollMemory(key, ref)` keeps a scroller's place per
+key for the session (in session storage, in memory where that is refused) and puts it back on
+return, the shell's content when no ref is given. `useReducedMotion()` says whether motion is
+reduced, from the look's own `motion` and else the system's, following both, for motion a script
+draws.
+
 In a desktop window whose native title bar is hidden (Electron's `hiddenInset`, Tauri's
 `Overlay`), `Shell`'s `desktop` makes its top strip, the rail's head, the top bar and an open
 panel's header, the window's title bar. Electron moves the window from it through

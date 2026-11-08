@@ -5,6 +5,7 @@ import { useSearch } from '../hooks/use-search'
 import { mergeCommands } from '../lib/commands'
 import type { SearchGroup, SearchResult, SearchSource } from '../lib/search'
 import { SearchResultBody } from './Search'
+import { Button } from './ui/button'
 import { Kbd, KbdGroup } from './ui/kbd'
 import { Spinner } from './ui/spinner'
 
@@ -76,12 +77,15 @@ export interface CommandPaletteWords {
     placeholder: string
     empty: string
     title: string
+    /** The button that closes the palette on a touch screen, which has no Escape to press. */
+    close: string
 }
 
 const WORDS: CommandPaletteWords = {
     placeholder: 'Search or run a command',
     empty: 'No command matches.',
     title: 'Command palette',
+    close: 'Close',
 }
 
 /**
@@ -91,7 +95,7 @@ const WORDS: CommandPaletteWords = {
  * on a tile at its start and its hint or code at its end, as a record found by a search is. The
  * groups are listed by their `rank`, one group to a title. With `search` the app's own results for
  * the query follow the commands, each with its thumbnail, artwork or icon and the query's words
- * marked.
+ * marked. On a touch screen, which has no Escape, a Close button stands at its foot.
  */
 export function CommandPalette({
     open,
@@ -195,6 +199,11 @@ export function CommandPalette({
                         </div>
                     )}
                 </CommandList>
+                <div className="hidden justify-end border-t border-border p-1.5 pointer-coarse:flex">
+                    <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
+                        {words.close}
+                    </Button>
+                </div>
             </Command>
         </CommandDialog>
     )
