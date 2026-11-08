@@ -106,10 +106,6 @@ under Next. Each is a part or an option here, never a copy in an app. Roughly on
   `FileField`; `DownloadButton` (idle, n of m, cancel, kept) on `ProgressRing`; `DataTable` row
   groups with group heads; a `row` layout for `DescriptionList` and `TagChips` that fit the room a
   row has left; a conversation history list with rename, pin and delete beside a chat.
-- **Round 2, code color.** `Markdown` gains `jq` among its code
-  languages, a way for an app to register more, and a `components` map (or a marker hook) for
-  parts embedded in the text. `code-*` syntax tokens theme Shiki and CodeMirror alike, so code
-  follows the theme. An `AnsiText` in core draws ANSI color output as spans in the kind inks.
 - **Round 3, layout, maps and tokens.** A split of two panes, across or down, with bounds, that
   remembers its share by `id`; a `GeoJsonLayer` drawing fills, lines and circles by geometry type
   in the theme's colors; tokens for headers, table zebra and head, map selection, editor, scroll

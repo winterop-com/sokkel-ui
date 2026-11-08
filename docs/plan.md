@@ -77,6 +77,21 @@ Ctrl K through `Shell`'s `palette`, an `AccountMenu` in the rail's foot, `local`
 sign-in, and a `StatusLine` as the shell's `foot`, which the account sits level with as one bar
 across the window's bottom edge.
 
+## Code
+
+Code is colored from the `code-*` tokens (keyword, operator, punctuation, string, regexp, number,
+constant, comment, function, variable, type, property, tag, attribute, heading, link, inserted,
+deleted, invalid, and `code-bracket-1` to `-3` for bracket pairs by depth), set by every theme in
+light and dark. Shiki highlights `Code` and `Markdown`'s
+fences through one theme whose every scope is a `code-*` variable, and CodeMirror's highlight style
+in `CodeEditor` reads the same tokens, so code follows the theme and scheme with no second pass.
+The highlighter knows the common languages and `jq` (a grammar of the library's own), each loaded
+the first time it is drawn; an app adds more with `registerLanguage` from `lib/highlighter`. ANSI
+output is read by one parser, `lib/ansi`, which `AnsiText` and an `ansi` fence share: the sixteen
+colors in the kind and status inks, 256-color and 24-bit color as they are. `Markdown` embeds an
+app's own parts in a text where it has `<!-- part:ID -->` (another word through `partMarker`),
+through its `parts` map or function, so the text stays one document with its headings and anchors.
+
 ## Typefaces
 
 Plex Sans and Plex Mono are the default. Geist and Geist Mono are the one alternative a theme sets,

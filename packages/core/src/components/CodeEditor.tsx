@@ -104,15 +104,27 @@ function languageExtension(language: CodeLanguage): Extension {
     return support
 }
 
+/** Code in the `code-*` tokens, the same colors Shiki draws highlighted code in. */
 const HIGHLIGHT = HighlightStyle.define([
-    { tag: [tags.keyword, tags.definitionKeyword], color: 'var(--kind-violet-ink)' },
-    { tag: [tags.string, tags.special(tags.string)], color: 'var(--kind-green-ink)' },
-    { tag: tags.number, color: 'var(--kind-blue-ink)' },
-    { tag: [tags.bool, tags.null, tags.atom], color: 'var(--kind-pink-ink)' },
-    { tag: [tags.propertyName, tags.definition(tags.propertyName)], color: 'var(--kind-teal-ink)' },
-    { tag: tags.comment, color: 'var(--muted-foreground)', fontStyle: 'italic' },
-    { tag: [tags.punctuation, tags.separator, tags.bracket], color: 'var(--muted-foreground)' },
-    { tag: tags.invalid, color: 'var(--destructive)' },
+    { tag: [tags.keyword, tags.definitionKeyword, tags.modifier, tags.controlKeyword, tags.moduleKeyword], color: 'var(--code-keyword)' },
+    { tag: [tags.operator, tags.operatorKeyword, tags.derefOperator], color: 'var(--code-operator)' },
+    { tag: [tags.punctuation, tags.separator, tags.bracket], color: 'var(--code-punctuation)' },
+    { tag: [tags.string, tags.special(tags.string), tags.character], color: 'var(--code-string)' },
+    { tag: [tags.regexp, tags.escape], color: 'var(--code-regexp)' },
+    { tag: tags.number, color: 'var(--code-number)' },
+    { tag: [tags.bool, tags.null, tags.atom, tags.constant(tags.name)], color: 'var(--code-constant)' },
+    { tag: tags.comment, color: 'var(--code-comment)', fontStyle: 'italic' },
+    { tag: [tags.function(tags.variableName), tags.function(tags.propertyName), tags.macroName], color: 'var(--code-function)' },
+    { tag: [tags.special(tags.variableName), tags.self], color: 'var(--code-variable)' },
+    { tag: [tags.typeName, tags.className, tags.namespace], color: 'var(--code-type)' },
+    { tag: [tags.propertyName, tags.definition(tags.propertyName)], color: 'var(--code-property)' },
+    { tag: tags.tagName, color: 'var(--code-tag)' },
+    { tag: tags.attributeName, color: 'var(--code-attribute)' },
+    { tag: tags.heading, color: 'var(--code-heading)', fontWeight: '600' },
+    { tag: [tags.link, tags.url], color: 'var(--code-link)' },
+    { tag: tags.inserted, color: 'var(--code-inserted)' },
+    { tag: tags.deleted, color: 'var(--code-deleted)' },
+    { tag: tags.invalid, color: 'var(--code-invalid)' },
 ])
 
 const TONES = { error: 'var(--critical)', warning: 'var(--warning)', info: 'var(--info)', hint: 'var(--info)' } as const
@@ -244,9 +256,9 @@ const THEME = EditorView.theme({
         fontSize: 'var(--text-xs)',
     },
     '.cm-button:hover': { backgroundColor: 'var(--accent)' },
-    '.cm-bracket-0': { color: 'var(--kind-violet-ink)' },
-    '.cm-bracket-1': { color: 'var(--kind-blue-ink)' },
-    '.cm-bracket-2': { color: 'var(--kind-pink-ink)' },
+    '.cm-bracket-0': { color: 'var(--code-bracket-1)' },
+    '.cm-bracket-1': { color: 'var(--code-bracket-2)' },
+    '.cm-bracket-2': { color: 'var(--code-bracket-3)' },
     '.cm-indent-guides': {
         display: 'inline-block',
         verticalAlign: 'top',
