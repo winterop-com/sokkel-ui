@@ -16,6 +16,13 @@ on:
         branches: [main]
     pull_request:
 
+# One run per branch at a time: a newer push, or the run a retake starts, cancels the run it
+# replaces, which would only fail on the baselines the retake is about to change. Runs on main
+# never cancel one another, so every merge lays its baselines down.
+concurrency:
+    group: ci-${{ (github.head_ref || github.ref_name) == 'main' && github.run_id || (github.head_ref || github.ref_name) }}
+    cancel-in-progress: true
+
 jobs:
     # Whether anything a story draws changed; a change to docs, Markdown or the Makefile alone skips
     # the screenshot and layout jobs. Pushes to main always run them.
