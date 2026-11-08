@@ -144,6 +144,16 @@ export interface MediaBarProps {
      * browser, as no press asked for it; the bar's button asks.
      */
     defaultFullscreen?: boolean
+    /**
+     * The words of what plays, such as a `Lyrics` following `position`. The fullscreen view draws a
+     * lyrics button in its corner that shows them in the visualizer's place.
+     */
+    lyrics?: ReactNode
+    /** Whether the fullscreen view shows the lyrics, held from outside with `onLyricsShownChange`. */
+    lyricsShown?: boolean
+    onLyricsShownChange?: (shown: boolean) => void
+    /** Whether the fullscreen view starts with the lyrics shown. */
+    defaultLyricsShown?: boolean
     /** The visualizer's kind in the fullscreen view, held from outside with `onVisualizerKindChange`; the slot's own by default. */
     visualizerKind?: SoundKind
     onVisualizerKindChange?: (kind: SoundKind) => void
@@ -170,7 +180,8 @@ export interface MediaBarProps {
  *
  * The corner button opens the fullscreen now-playing view (`MediaFullscreen`), arranged after the
  * layout, a dark room in every theme with the visualizer at full strength and a picker of its
- * kind; Escape leaves it.
+ * kind; Escape leaves it. Given `lyrics`, a button in its corner shows them in the visualizer's
+ * place.
  *
  * Its top edge drags to resize it and a double click on the edge puts it back. Left to itself it
  * holds its own height, starting at `defaultSize`; `size` with `onSizeChange` holds it from
@@ -238,6 +249,10 @@ export function MediaBar({
     fullscreen,
     onFullscreenChange,
     defaultFullscreen = false,
+    lyrics,
+    lyricsShown,
+    onLyricsShownChange,
+    defaultLyricsShown = false,
     visualizerKind,
     onVisualizerKindChange,
     words: given,
@@ -262,6 +277,12 @@ export function MediaBar({
     const setOpen = (next: boolean) => {
         if (fullscreen === undefined) setOwnOpen(next)
         onFullscreenChange?.(next)
+    }
+
+    const [ownLyrics, setOwnLyrics] = useState(defaultLyricsShown)
+    const setLyrics = (next: boolean) => {
+        if (lyricsShown === undefined) setOwnLyrics(next)
+        onLyricsShownChange?.(next)
     }
 
     const slotKind = kindOf(visualizer)
@@ -386,6 +407,9 @@ export function MediaBar({
                     onKindChange={setKind}
                     onLeave={() => setOpen(false)}
                     native={!first}
+                    lyrics={lyrics}
+                    lyricsShown={lyricsShown ?? ownLyrics}
+                    onLyricsShownChange={setLyrics}
                 />
             )}
         </>

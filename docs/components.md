@@ -23,14 +23,17 @@ The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appeara
 Other state an app keeps across reloads goes through `useStored` (`hooks/use-stored`), and files
 being uploaded through `useUploads` (`hooks/use-uploads`), which feeds `AttachmentList`.
 What plays is told to the operating system (media keys, lock screen) by `useMediaSession`
-(`@winterop-com/sokkel-ui-media/use-media-session`), beside `MediaBar`.
+(`@winterop-com/sokkel-ui-media/use-media-session`), beside `MediaBar`. A queue, its play order,
+shuffle and repeat are held by `useQueue` (`use-queue`) over the pure helpers in `queue`; a book
+over several files maps its timeline to a file with `timeline`, and LRC lyrics are read by
+`parseLyrics` in `lrc`, all under `@winterop-com/sokkel-ui-media/`.
 
 - [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 214 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 13 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 9 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 11 modules
 - [`@winterop-com/sokkel-ui-terminal`](#winterop-com-sokkel-ui-terminal): 2 modules
-- [`@winterop-com/sokkel-ui-media`](#winterop-com-sokkel-ui-media): 7 modules
+- [`@winterop-com/sokkel-ui-media`](#winterop-com-sokkel-ui-media): 9 modules
 
 ## @winterop-com/sokkel-ui
 
@@ -185,7 +188,7 @@ What plays is told to the operating system (media keys, lock screen) by `useMedi
 | Component | Import | What it is | Story |
 | --- | --- | --- | --- |
 | **DetailSheet** | `@winterop-com/sokkel-ui/DetailSheet` | One thing's detail in a sheet from the right, so a row of a list is read without leaving the list: a head with the thing's code over its title, a sentence under it, and one line of its chips followed by its actions (open the full page, the request behind it), then the body, which scrolls under the head, and an optional foot pinned at the bottom for the verbs. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-detail-sheet--open) |
-| **GroupLabel** | `@winterop-com/sokkel-ui/GroupLabel` | The small heading over a group of entries: a rail's group, a panel's section, a palette's kind, a table's run of rows. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-audio-bar--playing) |
+| **GroupLabel** | `@winterop-com/sokkel-ui/GroupLabel` | The small heading over a group of entries: a rail's group, a panel's section, a palette's kind, a table's run of rows. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-queue--in-order) |
 | **Inspector**, InspectorSection | `@winterop-com/sokkel-ui/Inspector` | The panel beside a list that shows the chosen row: a header naming the thing (its name, then its code in the code face with a copy button), the thing's actions, then titled sections. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/graphs-run--running) |
 | **PageHeader** | `@winterop-com/sokkel-ui/PageHeader` | A page's title, its code under it in the code face, and its actions at the right with the primary one last. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-page-header--title) |
 | **PaneHeader** | `@winterop-com/sokkel-ui/PaneHeader` | The strip across the top of a pane, with a rule under it: the pane's title, controls before it such as a back button, and actions at its right end. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-pane-header--plain) |
@@ -448,9 +451,11 @@ What plays is told to the operating system (media keys, lock screen) by `useMedi
 | Component | Import | What it is | Story |
 | --- | --- | --- | --- |
 | **Artwork** | `@winterop-com/sokkel-ui-media/Artwork` | A record's cover: its picture, or a cover drawn in the theme's hues, a gradient between two with one motif over it, chosen from a stable `seed` unless `cover` names it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-artwork--motifs) |
-| **Cover**, Eyebrow, Words, ScreenWords, Scrub, Steps, Speed, ShuffleButton, RepeatButton, Volume, Extras, FullscreenButton, Backdrop | `@winterop-com/sokkel-ui-media/MediaBarParts` | The cover, square and filled edge to edge; without artwork one drawn from the seed, or a note glyph. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-audio-bar--playing) (in MediaBar) |
-| **LineBar**, RowsBar, PanelBar, StageBar | `@winterop-com/sokkel-ui-media/MediaBarLayouts` | The one-line bar, drawn by every layout until it grows: what plays at the left with the cover growing with the height, the transport over the position in the middle, the speed, the volume and the extra controls at the right. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-audio-bar--playing) (in MediaBar) |
-| **MediaBar** | `@winterop-com/sokkel-ui-media/MediaBar` | The player along the foot of a screen, for audio. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-audio-bar--playing) |
+| **ChapterList** | `@winterop-com/sokkel-ui-media/ChapterList` | The chapters of a book, a podcast or a long work, in order: each one's number, its title over where it starts, and its length at the end, the last one's running to `duration`. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-chapter-list--chapters) |
+| **Cover**, Eyebrow, Words, ScreenWords, Scrub, Steps, Speed, ShuffleButton, RepeatButton, Volume, Extras, FullscreenButton, Backdrop | `@winterop-com/sokkel-ui-media/MediaBarParts` | The cover, square and filled edge to edge; without artwork one drawn from the seed, or a note glyph. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-lyrics--timed) (in MediaBar) |
+| **LineBar**, RowsBar, PanelBar, StageBar | `@winterop-com/sokkel-ui-media/MediaBarLayouts` | The one-line bar, drawn by every layout until it grows: what plays at the left with the cover growing with the height, the transport over the position in the middle, the speed, the volume and the extra controls at the right. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-lyrics--timed) (in MediaBar) |
+| **Lyrics** | `@winterop-com/sokkel-ui-media/Lyrics` | The lyrics of what plays, filling the box it is given and scrolling within it, as a panel beside the player or the fullscreen view in the visualizer's place (`MediaBar`'s `lyrics`). | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-lyrics--timed) |
+| **MediaBar** | `@winterop-com/sokkel-ui-media/MediaBar` | The player along the foot of a screen, for audio. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-lyrics--timed) |
 | **MediaCard**, MediaGrid | `@winterop-com/sokkel-ui-media/MediaCard` | One album, film or episode in a grid: the cover first, then its title and a line under it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-media-card--albums) |
-| **MediaFullscreen** | `@winterop-com/sokkel-ui-media/MediaFullscreen` | The player's now-playing view over the whole screen, opened from the bar: what plays at full size, the visualizer at full strength, the waveform and the transport, arranged after the bar's layout. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-audio-bar--playing) (in MediaBar) |
+| **MediaFullscreen** | `@winterop-com/sokkel-ui-media/MediaFullscreen` | The player's now-playing view over the whole screen, opened from the bar: what plays at full size, the visualizer at full strength, the waveform and the transport, arranged after the bar's layout. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-lyrics--timed) (in MediaBar) |
 | **TrackList** | `@winterop-com/sokkel-ui-media/TrackList` | A list of tracks or episodes: the number or a small picture, the title over an optional second line, a quiet meta column, and the length in the code face at the end. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-track-list--numbered) |
