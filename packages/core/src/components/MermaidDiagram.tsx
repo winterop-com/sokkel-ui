@@ -1,7 +1,9 @@
 import { Code2, Image } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 
+import { cn } from '../lib/cn'
 import { CopyButton } from './CopyButton'
+import { useWindowedPane, WindowedPane, WindowedPaneButton } from './WindowedPane'
 
 let count = 0
 
@@ -98,21 +100,52 @@ async function render(code: string, host: HTMLElement): Promise<string> {
     return svg
 }
 
+export interface MermaidDiagramWords {
+    source: string
+    diagram: string
+    failed: string
+    /** The expand button's label. */
+    expand: string
+    /** The window's close button's label. */
+    close: string
+    /** Said in the diagram's place while it is open in the window. */
+    away: string
+}
+
+export const MERMAID_DIAGRAM_WORDS: MermaidDiagramWords = {
+    source: 'Source',
+    diagram: 'Diagram',
+    failed: 'This diagram does not parse; its source is shown.',
+    expand: 'Expand',
+    close: 'Close',
+    away: 'Shown in a window.',
+}
+
 /**
  * A mermaid diagram, drawn in the current theme's colors and typeface and redrawn when the scheme,
  * the theme or a token override changes. Its source shows
  * while the diagram loads, while it is still streaming, and when it does not parse; a toggle flips
  * between the two. Mermaid loads the first time a diagram is drawn.
+ *
+ * An expand button beside the toggle opens the diagram near full screen through `WindowedPane`,
+ * drawn as large as the window allows; Escape or the close button brings it back.
  */
 export function MermaidDiagram({
     code,
     streaming = false,
-    words = { source: 'Source', diagram: 'Diagram', failed: 'This diagram does not parse; its source is shown.' },
+    title,
+    defaultExpanded = false,
+    words: given,
 }: {
     code: string
     streaming?: boolean
-    words?: { source: string; diagram: string; failed: string }
+    /** The window's title when the diagram is expanded; `Diagram` by default. */
+    title?: ReactNode
+    /** Opens the diagram in the window at first. */
+    defaultExpanded?: boolean
+    words?: Partial<MermaidDiagramWords>
 }) {
+    const words = { ...MERMAID_DIAGRAM_WORDS, ...given }
     const look = useLook()
     const host = useRef<HTMLDivElement>(null)
     const [svg, setSvg] = useState<string | null>(null)
@@ -139,9 +172,47 @@ export function MermaidDiagram({
         }
     }, [code, look, streaming])
 
+    return (
+        <div ref={host} className="min-w-0">
+            <WindowedPane
+                title={title ?? words.diagram}
+                button="none"
+                defaultOpen={defaultExpanded}
+                words={{ expand: words.expand, close: words.close, away: words.away }}
+            >
+                <Diagram code={code} svg={svg} failed={failed} streaming={streaming} source={source} setSource={setSource} words={words} />
+            </WindowedPane>
+        </div>
+    )
+}
+
+/** The diagram's box, in its place or filling the window. */
+function Diagram({
+    code,
+    svg,
+    failed,
+    streaming,
+    source,
+    setSource,
+    words,
+}: {
+    code: string
+    svg: string | null
+    failed: boolean
+    streaming: boolean
+    source: boolean
+    setSource: (source: boolean) => void
+    words: MermaidDiagramWords
+}) {
+    const windowed = useWindowedPane()?.windowed === true
     const asSource = streaming || failed || source || svg === null
     return (
-        <div ref={host} className="group/mermaid relative overflow-hidden rounded-lg border border-input dark:bg-input/30">
+        <div
+            className={cn(
+                'group/mermaid relative overflow-hidden rounded-lg border border-input dark:bg-input/30',
+                windowed && 'flex min-h-0 flex-1 flex-col',
+            )}
+        >
             <div className="absolute top-2 right-2 z-10 flex items-center gap-1 opacity-0 transition-opacity group-focus-within/mermaid:opacity-100 group-hover/mermaid:opacity-100 pointer-coarse:opacity-100">
                 {!failed && !streaming && svg !== null && (
                     <button
@@ -154,15 +225,19 @@ export function MermaidDiagram({
                     </button>
                 )}
                 <CopyButton value={code} size="icon-xs" className="bg-background ring-1 ring-foreground/10" />
+                {!streaming && <WindowedPaneButton className="bg-background ring-1 ring-foreground/10" />}
             </div>
             {failed && <p className="px-3 pt-3 text-xs text-muted-foreground">{words.failed}</p>}
             {asSource ? (
-                <pre className="overflow-x-auto p-3 font-mono text-sm leading-relaxed">
+                <pre className={cn('overflow-x-auto p-3 font-mono text-sm leading-relaxed', windowed && 'flex-1')}>
                     <code>{code}</code>
                 </pre>
             ) : (
                 <div
-                    className="flex justify-center overflow-x-auto p-4 [&_svg]:max-w-full"
+                    className={cn(
+                        'flex justify-center overflow-x-auto p-4 [&_svg]:max-w-full',
+                        windowed && 'min-h-0 flex-1 items-center [&_svg]:size-full [&_svg]:max-w-none!',
+                    )}
                     // The SVG comes from mermaid run with `securityLevel: 'strict'`.
                     dangerouslySetInnerHTML={{ __html: svg }}
                 />

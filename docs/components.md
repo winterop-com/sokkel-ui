@@ -17,8 +17,10 @@ Ctrl+K through `Shell`'s `palette` (`placeCommands` and `appearanceCommands` in
 app has sign-in, and a `StatusLine` as the shell's `foot`.
 The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appearance`,
 `hooks/use-scheme`), with the option lists in `@winterop-com/sokkel-ui/lib/appearance`.
+Other state an app keeps across reloads goes through `useStored` (`hooks/use-stored`), and files
+being uploaded through `useUploads` (`hooks/use-uploads`), which feeds `AttachmentList`.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 207 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 209 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 13 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 9 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 11 modules
@@ -184,6 +186,7 @@ The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appeara
 | **Stack**, Row, Center, Columns, Split, Fill | `@winterop-com/sokkel-ui/Layout` | Cells one under the other, each as wide as the stack. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-audio-player--slider) |
 | **Toolbar**, ToolbarTitle | `@winterop-com/sokkel-ui/Toolbar` | The row of tools above a page's or a pane's content: a search, filters, a `Segmented`, a sort, a count. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-toolbar--page) |
 | **Unfoldable** | `@winterop-com/sokkel-ui/Unfoldable` | A heading that opens what is under it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-states--read) |
+| **WindowedPane**, WindowedPaneButton | `@winterop-com/sokkel-ui/WindowedPane` | Any pane, with a way to open the same content near full screen: an expand button at its top right corner (shown while the pointer is over it, always on touch) opens a window with a margin all round, a title and a close button; Escape closes it too. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-windowed-pane--closed) |
 
 ### Forms and inputs
 
@@ -210,7 +213,7 @@ The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appeara
 | **Segmented** | `@winterop-com/sokkel-ui/Segmented` | A choice from a small fixed set, drawn as one control with every option in view. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/charts-linked--rain-and-flow) |
 | **SettingRow** | `@winterop-com/sokkel-ui/SettingRow` | One setting: its title and what it does, and its control, placed by `layout`. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-slider-field--plain) |
 | **SliderField** | `@winterop-com/sokkel-ui/SliderField` | A number chosen on a slider, its value written out in figures so the setting reads without dragging. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-slider-field--plain) |
-| **SwitchField** | `@winterop-com/sokkel-ui/SwitchField` | An on/off setting: its label and the switch at the row's right edge. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-pages--runs-list) |
+| **SwitchField** | `@winterop-com/sokkel-ui/SwitchField` | An on/off setting: its label and the switch at the row's right edge. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-stored-state--kept) |
 | **TextField** | `@winterop-com/sokkel-ui/TextField` | A labeled text input: a `Field` with its input inside, wired together. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-text-field--plain) |
 | **TreeSelect** | `@winterop-com/sokkel-ui/TreeSelect` | A field that picks from a hierarchy: the trigger reads like a select and names the choice with its path, and the popover holds a search over a tree. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-tree--trees) |
 | **UnsavedChangesDialog** | `@winterop-com/sokkel-ui/UnsavedChanges` | The question a guarded dialog asks before it closes with changes. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-dialogs--confirm) |
@@ -247,7 +250,7 @@ The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appeara
 
 | Component | Import | What it is | Story |
 | --- | --- | --- | --- |
-| **Banner** | `@winterop-com/sokkel-ui/Banner` | A strip across the top of a screen or the app for a state that holds until it changes: the server is not answering, a read-only instance, a pending upgrade. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-feedback--banners) |
+| **Banner** | `@winterop-com/sokkel-ui/Banner` | A strip across the top of a screen or the app for a state that holds until it changes: the server is not answering, a read-only instance, a pending upgrade. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-attachment-list--files) |
 | **ConfirmCard** | `@winterop-com/sokkel-ui/ConfirmCard` | An action an assistant holds until a person answers: what it will do in a sentence, the call in the code face, and Approve and Deny. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-assistant-reply--card) |
 | **CopyButton** | `@winterop-com/sokkel-ui/CopyButton` | A button that copies a value. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-controls--playground) |
 | **DialogShell**, ConfirmDialog | `@winterop-com/sokkel-ui/DialogShell` | Every dialog's frame: a title (and an optional line under it), the body that scrolls when it is taller than the window, and a footer with Cancel and the one confirming verb at the right. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-dialogs--confirm) |
@@ -272,6 +275,7 @@ The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appeara
 | **CommentThread**, CommentComposer, CommentItem | `@winterop-com/sokkel-ui/CommentThread` | The comments under a post or a video, as a list: each with its author, time, likes and menu, the pinned one first as given, and replies folded under their comment behind a count. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-comment-thread--composer) |
 | **Composer** | `@winterop-com/sokkel-ui/Composer` | Where a message is written: the text grows with what is typed up to a limit, Enter sends and Shift+Enter breaks the line, and files come in by the attach button, a paste or a drop. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-composer--states) |
 | **Conversation**, ConversationStart, ThreadView | `@winterop-com/sokkel-ui/Conversation` | A conversation's column, as a team chat lays it out: the header on top, the messages scrolling under it from their end, as a conversation opens at its latest message, then who is typing and the composer at the foot. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-team-chat--message) |
+| **ConversationHistory** | `@winterop-com/sokkel-ui/ConversationHistory` | The conversations beside a chat, newest first and grouped under Pinned, Today and Earlier, with the current one marked. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-conversation-history--list) |
 | **MessageComposer**, MessageComposerAction | `@winterop-com/sokkel-ui/MessageComposer` | Where a message to people is written: the formatting toolbar on top, the text that grows with what is typed, and a row under it with add, the text style toggle, emoji and mentions at the left, then any `actions`, and Send at the right. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-message-composer--empty) |
 | **MessageRow** | `@winterop-com/sokkel-ui/MessageRow` | One message, or one conversation, in a list of them: who it is from, the subject, a line of the text, and when it came, with marks for unread, starred, attachments and the number of messages in its thread. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-message-row--plain) |
 | **ToolCalls** | `@winterop-com/sokkel-ui/ToolCall` | The tools an assistant called, one line each: the name, its arguments in one line, and how long it took. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-assistant-reply--card) |
@@ -292,13 +296,13 @@ The look is kept and worn by `useAppearance` and `useScheme` (`hooks/use-appeara
 
 | Component | Import | What it is | Story |
 | --- | --- | --- | --- |
-| **Code** | `@winterop-com/sokkel-ui/Code` | A block of code, highlighted for its language, with a copy button. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-chat--markdown-answer) |
+| **Code** | `@winterop-com/sokkel-ui/Code` | A block of code, highlighted for its language, with a copy button. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-windowed-pane--closed) |
 | **CodeEditor** | `@winterop-com/sokkel-ui/CodeEditor` | A code editor on CodeMirror for JSON, YAML or plain text: highlighted in the theme's colors, with line numbers, bracket matching, undo, and Tab indenting (Escape then Tab leaves the editor). | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-editor--editors) |
 | **DiffView** | `@winterop-com/sokkel-ui/DiffView` | Two versions of a text as one list of lines, the removed ones marked `-` and the added ones `+`: a job definition before and after an edit, a config against the one it replaces. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-data--description) |
 | **EditPreview** | `@winterop-com/sokkel-ui/EditPreview` | A source and what it makes, as an editor beside its live preview: markdown and the page, a template and the message. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-edit-preview--markdown) |
 | **LogView** | `@winterop-com/sokkel-ui/LogView` | A log on the terminal ground: time, level, source and text in columns, levels inked, lines numbered. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-data--description) |
 | **Markdown** | `@winterop-com/sokkel-ui/Markdown` | GitHub-flavored markdown, as an assistant or a description writes it: fenced code highlighted with a copy button, mermaid fences drawn as diagrams, links opening in a new tab, and a quote whose first line is `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]` or `[!CAUTION]` drawn as a callout. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-docs--callout) |
-| **MermaidDiagram** | `@winterop-com/sokkel-ui/MermaidDiagram` | A mermaid diagram, drawn in the current theme's colors and typeface and redrawn when the scheme, the theme or a token override changes. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-chat--markdown-answer) |
+| **MermaidDiagram** | `@winterop-com/sokkel-ui/MermaidDiagram` | A mermaid diagram, drawn in the current theme's colors and typeface and redrawn when the scheme, the theme or a token override changes. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-windowed-pane--closed) |
 | **ProseText** | `@winterop-com/sokkel-ui/ProseText` | A sentence whose machine parts are marked with backticks, drawn with those parts in the code face: "Set `base_url` in the service" shows `base_url` in mono. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-states--read) |
 | **ShowMore** | `@winterop-com/sokkel-ui/ShowMore` | A block of text held to a few lines, with Show more under it to read the rest and Show less to fold it again: a description, a prompt, a long note. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-show-more--short) |
 

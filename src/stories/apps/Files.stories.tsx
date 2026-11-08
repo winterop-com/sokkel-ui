@@ -13,7 +13,7 @@ import {
     Trash2,
     Upload as UploadIcon,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { type DataColumn, DataTable, findInTree } from '@winterop-com/sokkel-ui/DataTable'
@@ -41,6 +41,8 @@ import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { CHART, FIELD, HARBOR_DUSK, LIGHTHOUSE, PINES } from '../fixtures/photos'
 import { Row } from '@winterop-com/sokkel-ui/Layout'
+import { useUploads } from '@winterop-com/sokkel-ui/hooks/use-uploads'
+import { PICKED_FILES, PICKED_LIMIT, useFakeUploader } from '../fixtures/uploader'
 import { SubNav } from '@winterop-com/sokkel-ui/SubNav'
 import { Toolbar } from '@winterop-com/sokkel-ui/Toolbar'
 
@@ -404,6 +406,7 @@ function FilesApp({
     confirming = false,
     dropping = false,
     uploads: initialUploads = [],
+    live = false,
 }: {
     view?: 'list' | 'grid' | 'tree'
     folder?: string
@@ -412,6 +415,8 @@ function FilesApp({
     confirming?: boolean
     dropping?: boolean
     uploads?: Upload[]
+    /** Uploads through `useUploads` and a pretend uploader that Move uploads on sends further. */
+    live?: boolean
 }) {
     const [dark, setDark] = useState(true)
     const [collapsed, setCollapsed] = useState(false)
@@ -427,7 +432,19 @@ function FilesApp({
     const [moving, setMoving] = useState(false)
     const [renaming, setRenaming] = useState(false)
     const [moveTo, setMoveTo] = useState<string[]>([])
-    const [uploads, setUploads] = useState(initialUploads)
+    const [held, setHeld] = useState(initialUploads)
+    const fake = useFakeUploader()
+    const sending = useUploads({ accept: '.csv,.yaml,.json,.md,.jpg', maxSize: PICKED_LIMIT, upload: fake.upload })
+    const uploads = live ? sending.tray : held
+    const setUploads = (next: Upload[]) => setHeld(next)
+    // The live story opens with every picked file added once, two of them on their way up.
+    const started = useRef(false)
+    useEffect(() => {
+        if (!live || started.current) return
+        started.current = true
+        sending.add(PICKED_FILES)
+        fake.step()
+    }, [live, sending, fake])
     const [store, setStore] = useState<Record<string, StoredFile[]>>({ 'harbor/shared/review': REVIEW, 'harbor/shared/archive': [] })
 
     const files = store[folder] ?? []
@@ -543,16 +560,18 @@ function FilesApp({
                         open={dropping || undefined}
                         className="min-w-0 flex-1"
                         onFiles={(dropped) =>
-                            setUploads([
-                                ...uploads,
-                                ...dropped.map((each, index) => ({
-                                    id: `drop-${uploads.length + index}`,
-                                    name: each.name,
-                                    size: each.size,
-                                    state: 'uploading' as const,
-                                    progress: 0,
-                                })),
-                            ])
+                            live
+                                ? sending.add(dropped)
+                                : setUploads([
+                                      ...uploads,
+                                      ...dropped.map((each, index) => ({
+                                          id: `drop-${uploads.length + index}`,
+                                          name: each.name,
+                                          size: each.size,
+                                          state: 'uploading' as const,
+                                          progress: 0,
+                                      })),
+                                  ])
                         }
                         words={{ detail: `The files go into ${path.join('/')}.` }}
                     >
@@ -567,7 +586,12 @@ function FilesApp({
                                                 <FolderPlus aria-hidden />
                                                 New folder
                                             </Button>
-                                            <Button size="sm">
+                                            {live && (
+                                                <Button variant="outline" size="sm" onClick={fake.step}>
+                                                    Move uploads on
+                                                </Button>
+                                            )}
+                                            <Button size="sm" onClick={() => (live ? sending.add(PICKED_FILES) : undefined)}>
                                                 <UploadIcon aria-hidden />
                                                 Upload
                                             </Button>
@@ -675,12 +699,14 @@ function FilesApp({
                             <UploadTray
                                 uploads={uploads}
                                 onRetry={(id) =>
-                                    setUploads(
-                                        uploads.map((each) => (each.id === id ? { ...each, state: 'uploading', progress: 0 } : each)),
-                                    )
+                                    live
+                                        ? sending.onRetry(id)
+                                        : setUploads(
+                                              uploads.map((each) => (each.id === id ? { ...each, state: 'uploading', progress: 0 } : each)),
+                                          )
                                 }
-                                onCancel={(id) => setUploads(uploads.filter((each) => each.id !== id))}
-                                onClose={() => setUploads([])}
+                                onCancel={(id) => (live ? sending.onCancel(id) : setUploads(uploads.filter((each) => each.id !== id)))}
+                                onClose={() => (live ? sending.onClose() : setUploads([]))}
                                 className="absolute right-4 bottom-4 z-10 max-sm:right-2 max-sm:bottom-2 max-sm:left-2 max-sm:w-auto"
                             />
                         )}
@@ -743,6 +769,13 @@ export const Dropping: StoryObj = { render: () => <FilesApp dropping /> }
 
 /** Uploads under way in the tray: two going, two done, one refused. */
 export const Uploads: StoryObj = { render: () => <FilesApp uploads={UPLOADS} /> }
+
+/**
+ * Uploads through `useUploads`: it opens with four files added, two going up and two refused (one
+ * by its type, one by its size) shown failed with the reason; Move uploads on sends each a quarter
+ * further, and Upload adds the four again.
+ */
+export const Uploading: StoryObj = { render: () => <FilesApp live /> }
 
 /** A folder with nothing in it yet. */
 export const EmptyFolder: StoryObj = { name: 'Empty folder', render: () => <FilesApp folder="harbor/shared/archive" /> }

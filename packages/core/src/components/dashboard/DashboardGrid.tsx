@@ -4,7 +4,7 @@ import { useState, type ReactNode } from 'react'
 import { cn } from '../../lib/cn'
 import { LoadingOverlay } from '../Loaders'
 import { Stat } from '../Stat'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog'
+import { WindowedPane } from '../WindowedPane'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '../ui/dropdown-menu'
 
 /**
@@ -122,23 +122,30 @@ export function DashboardPanel({
                 )}
             </header>
             <LoadingOverlay loading={loading} className="flex min-h-0 flex-1 flex-col">
-                <div className={cn('flex min-h-0 flex-1 flex-col', !flush && !empty && 'p-4')}>{body}</div>
+                {expandable ? (
+                    <WindowedPane
+                        title={
+                            <>
+                                {title}
+                                {subtitle !== undefined && (
+                                    <span className="ml-2 text-xs font-normal text-muted-foreground">{subtitle}</span>
+                                )}
+                            </>
+                        }
+                        open={expanded}
+                        onOpenChange={setExpanded}
+                        button="none"
+                        words={{ expand: words.expand }}
+                        className={cn('flex min-h-0 flex-1 flex-col', !flush && !empty && 'p-4')}
+                    >
+                        {body}
+                    </WindowedPane>
+                ) : (
+                    <div className={cn('flex min-h-0 flex-1 flex-col', !flush && !empty && 'p-4')}>{body}</div>
+                )}
             </LoadingOverlay>
             {footer !== undefined && (
                 <footer className="shrink-0 border-t border-border px-3 py-1.5 text-xs text-muted-foreground">{footer}</footer>
-            )}
-            {expandable && (
-                <Dialog open={expanded} onOpenChange={setExpanded}>
-                    <DialogContent className="flex h-[calc(100svh-4rem)] max-w-[calc(100vw-4rem)] flex-col gap-3 sm:max-w-[calc(100vw-4rem)]">
-                        <DialogHeader>
-                            <DialogTitle className="flex items-baseline gap-2">
-                                {title}
-                                {subtitle !== undefined && <span className="text-xs font-normal text-muted-foreground">{subtitle}</span>}
-                            </DialogTitle>
-                        </DialogHeader>
-                        <div className="min-h-0 flex-1 overflow-auto">{body}</div>
-                    </DialogContent>
-                </Dialog>
             )}
         </section>
     )

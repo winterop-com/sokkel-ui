@@ -148,7 +148,21 @@ panels resize, pins its first column and its row menu, opens child rows of any d
 a branch first opens, if the app wants), and moves by the keyboard. It pages in the browser or
 from a server, loads more as its end comes near, and shows the same rows as a grid of cards (an
 album view) that keeps the selection, menus and sort. A short listing drops the bar above its
-head and may carry a foot line.
+head and may carry a foot line. Rows gather under group heads by a field or a key made from the row
+(`groupBy`), each head with its label, its count and a column's `aggregate`; a head folds its
+group, rows sort within their group, and a head's box selects the group, in the table, the list and
+the grid alike.
+
+`WindowedPane` gives any pane an expand button that opens the same content near full screen, in a
+window with a margin, a title, a close button and Escape, the pane keeping its height in place
+until the content comes back; `MermaidDiagram` sets the button in its own toolbar. `useStored` keeps
+a value in `localStorage` as JSON under an app prefix (`setStoredPrefix`), in memory when storage
+is refused, and follows the same key in other hooks and other tabs; `useAppearance` keeps the look
+through the same store. `useUploads` runs the app's `upload(file, { signal, onProgress })` for each
+file it accepts by type, size and count, says why it refuses the rest, cancels through the signal,
+and hands `AttachmentList` its files, `onRemove` and `onCancel`. `ConversationHistory`, the list
+beside a chat, is a `DataTable` list grouped under Pinned, Today and Earlier, with rename in place,
+pin, and delete after a question.
 
 Tree and TreeSelect pick from a hierarchy of any depth and size. A node marked `hasChildren` loads
 its level through the app's `loadChildren` when first opened, with a loading row meanwhile and a row
