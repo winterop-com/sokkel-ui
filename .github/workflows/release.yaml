@@ -13,12 +13,13 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v5
-            - uses: oven-sh/setup-bun@v2
             - uses: actions/setup-node@v4
               with:
                   node-version: 24
                   registry-url: https://npm.pkg.github.com
                   scope: '@winterop-com'
+            # Bun from npm rather than GitHub's release downloads, which fail when GitHub's are down.
+            - run: npm install -g bun --registry https://registry.npmjs.org
             - run: bun install --frozen-lockfile
             # The packages ship together, so every one of them carries the tag's version.
             - name: The tag names the version in every package.json
