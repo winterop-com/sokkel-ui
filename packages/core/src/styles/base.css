@@ -18,6 +18,17 @@
 @import './typography.css';
 
 /*
+ * shadcn.css's state variants on Base UI's attributes alone, in the same order: no part sets
+ * Radix's `data-state` to open, closed, checked, unchecked or active.
+ */
+@custom-variant data-open (&:where([data-open]:not([data-open='false'])));
+@custom-variant data-closed (&:where([data-closed]:not([data-closed='false'])));
+@custom-variant data-checked (&:where([data-checked]:not([data-checked='false'])));
+@custom-variant data-unchecked (&:where([data-unchecked]:not([data-unchecked='false'])));
+@custom-variant data-disabled (&:where([data-disabled]:not([data-disabled='false'])));
+@custom-variant data-active (&:where([data-active]:not([data-active='false'])));
+
+/*
  * Tailwind's utilities, as `@import 'tailwindcss'` places them, under an `@supports` that every
  * browser passes. Tailwind writes a utility with a color-mix twice, once plain for a browser without
  * color-mix, except under an `@supports` that names it; here such a browser draws the utility
