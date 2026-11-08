@@ -670,7 +670,11 @@ while it fills the screen and may reach past a small one otherwise.
 the rendition's bitrate, the bandwidth, the buffer ahead and the frames dropped of those shown
 (`getVideoPlaybackQuality`), each null where nobody can tell. `VideoStatsOverlay` in the media
 package draws a reading in a few lines, the app showing and hiding it through the player's
-`overlay`, which keeps it over the picture in full screen.
+`overlay`, which keeps it over the picture in full screen. What the app knows beside the player
+goes in it too, so it needs no overlay of its own: a `headline`, the verdict in a sentence ("Playing
+smoothly", "Buffering often"), in the title's place in its `tone`'s ink, and `rows` of its own facts
+under the player's (the server's encoding speed, its encoder and load, the segments ready, the other
+streams), shown before the first reading too.
 
 One sound is heard at a time: a player claims the sound as it starts to be heard and whoever held it
 is paused, through `claimSound` and `useOneSound` in `media/one-sound`. AudioPlayer, VideoPlayer and

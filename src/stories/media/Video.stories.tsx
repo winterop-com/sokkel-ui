@@ -20,7 +20,7 @@ import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { ButtonGroup } from '@winterop-com/sokkel-ui/primitives/button-group'
 import { hlsSource } from '@winterop-com/sokkel-ui-media/hls-source'
 import { UpNext } from '@winterop-com/sokkel-ui-media/UpNext'
-import { VideoStatsOverlay } from '@winterop-com/sokkel-ui-media/VideoStatsOverlay'
+import { VideoStatsOverlay, type VideoStatsRow } from '@winterop-com/sokkel-ui-media/VideoStatsOverlay'
 import captions from './fixtures/captions.vtt?url'
 import clip from './fixtures/clip.webm?url'
 import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
@@ -170,6 +170,18 @@ const READING: VideoStats = {
     playing: true,
     readyState: 4,
 }
+
+/** What a server that encodes the stream as it plays knows beside the player's own reading. */
+const SERVER_ROWS: VideoStatsRow[] = [
+    { label: 'Transcode', value: '0.92x realtime' },
+    { label: 'Encoder', value: 'h264, hardware' },
+    { label: 'Encoder load', value: '2 of 4 workers' },
+    { label: 'Segments', value: '38 of 412' },
+    { label: 'Other streams', value: '1' },
+]
+
+/** A reading with little buffered ahead, as when the encoder falls behind. */
+const THIN: VideoStats = { ...READING, bufferAhead: 1.4, droppedFrames: 41 }
 
 /** An episode in a queue, as a series plays them one after another. */
 interface Episode {
@@ -431,6 +443,34 @@ export const StatsOverlay: StoryObj = {
                 preload="auto"
                 title="Coastline, morning to evening"
                 overlay={<VideoStatsOverlay stats={READING} onClose={() => undefined} />}
+            />
+        </Ground>
+    ),
+}
+
+/**
+ * The stats with the app's verdict and its own facts: `headline` says in one sentence how it plays,
+ * in `tone`'s ink, and `rows` add what the app's server knows (how fast it encodes, its encoder and
+ * load, the segments ready, the other streams) under the player's reading, so the app needs no
+ * overlay of its own.
+ */
+export const StatsVerdict: StoryObj = {
+    name: 'Stats verdict',
+    render: () => (
+        <Ground>
+            <VideoPlayer
+                src={`${clip}#t=24`}
+                preload="auto"
+                title="Coastline, morning to evening"
+                overlay={
+                    <VideoStatsOverlay
+                        stats={THIN}
+                        headline="Buffering often: the encoder runs slower than the video plays"
+                        tone="warning"
+                        rows={SERVER_ROWS}
+                        onClose={() => undefined}
+                    />
+                }
             />
         </Ground>
     ),
