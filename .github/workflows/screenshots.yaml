@@ -10,7 +10,7 @@ name: screenshots
 # `stories` narrows the retake to the story ids matching a pattern, so a change to a few stories
 # retakes in minutes; empty retakes every story. Start it with `make screenshots-ci`, or
 # `make screenshots-ci STORIES='foundations-icons|apps-music'`. Once the baselines are pushed, it
-# starts the ci workflow on the branch again, as its own push starts none.
+# runs the PR's ci run again, or starts one where there is none, as its own push starts none.
 on:
     workflow_dispatch:
         inputs:
@@ -62,7 +62,22 @@ jobs:
         needs: update
         runs-on: ubuntu-latest
         steps:
-            - run: gh workflow run ci.yaml --repo "$GITHUB_REPOSITORY" --ref "$BRANCH"
+            # On a PR's branch, the PR's own ci run for this commit is run again (stopped first if it
+            # is still going), so the PR's check ends on the new baselines rather than showing a run
+            # a later one cancelled. With no such run, as on main, a new run is started.
+            - run: |
+                  run=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci.yaml --branch "$BRANCH" --commit "$SHA" \
+                      --event pull_request --limit 1 --json databaseId --jq '.[0].databaseId // empty')
+                  if [ -z "$run" ]; then
+                      gh workflow run ci.yaml --repo "$GITHUB_REPOSITORY" --ref "$BRANCH"
+                      exit 0
+                  fi
+                  if [ "$(gh run view "$run" --repo "$GITHUB_REPOSITORY" --json status --jq .status)" != completed ]; then
+                      gh run cancel "$run" --repo "$GITHUB_REPOSITORY"
+                      until [ "$(gh run view "$run" --repo "$GITHUB_REPOSITORY" --json status --jq .status)" = completed ]; do sleep 15; done
+                  fi
+                  gh run rerun "$run" --repo "$GITHUB_REPOSITORY"
               env:
                   GH_TOKEN: ${{ github.token }}
                   BRANCH: ${{ github.ref_name }}
+                  SHA: ${{ github.sha }}

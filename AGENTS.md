@@ -110,9 +110,9 @@ and ask before acting.
   look has its baselines retaken on its branch before the PR merges; bring the branch up to date
   with main before a full retake, so it does not undo baselines main has moved on.
 - Every agent shares one GitHub API limit. Wait on a run with `gh run watch <id> --interval 60
-  --exit-status`, one watch per run, never a loop that polls faster; a retake already starts the
-  CI run that follows it, so do not start or watch a second one. A newer CI run on a branch cancels
-  the older one.
+  --exit-status`, one watch per run, never a loop that polls faster. A retake runs the PR's CI run
+  again once its baselines are pushed (or starts one where there is none), so do not start a second
+  one; watch that run. A newer push to a branch cancels the run of the older one.
 
 ## Design
 
