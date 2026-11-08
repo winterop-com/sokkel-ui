@@ -6,7 +6,11 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.10.1** is the latest release (2026-11-08): the frame for desktop shells (a drag strip, room
+- **0.10.2** is the latest release (2026-11-08): media for a music and audiobook player (`MediaBar`
+  speed, skip, chapters and live mode; `useMediaSession`; one sound at a time; seeded cover
+  placeholders through `Artwork`; a delay on `SoundVisualizer`), `DownloadButton` removing a kept
+  copy, the sign-in art configurable, and Storybook opening on the apps.
+- **0.10.1** (2026-11-08): the frame for desktop shells (a drag strip, room
   for the window's buttons) and `useCommands` with two-line palette rows; map selection with what
   lies under it, a selection legend, chosen controls, a globe, notes under the map, no basemap
   fetched unless offered, and a sites page; `ChartFrame` expanding through `WindowedPane`; rail
