@@ -123,7 +123,7 @@ export interface SparklineProps {
     values: readonly number[]
     width?: number
     height?: number
-    tone?: 'primary' | 'good' | 'critical' | 'muted'
+    tone?: 'primary' | 'good' | 'warning' | 'critical' | 'muted'
     /** What the line shows, for a screen reader. */
     label: string
 }
@@ -141,7 +141,13 @@ export function Sparkline({ values, width = 120, height = 28, tone = 'primary', 
     const points = values.map((value, index) => [2 + index * step, 2 + (height - 4) * (1 - (value - min) / span)] as const)
     const path = points.map(([x, y], index) => `${index === 0 ? 'M' : 'L'}${x.toFixed(1)} ${y.toFixed(1)}`).join(' ')
     const [lastX, lastY] = points[points.length - 1]
-    const ink = { primary: 'text-primary', good: 'text-good', critical: 'text-critical', muted: 'text-muted-foreground' }[tone]
+    const ink = {
+        primary: 'text-primary',
+        good: 'text-good',
+        warning: 'text-warning',
+        critical: 'text-critical',
+        muted: 'text-muted-foreground',
+    }[tone]
     return (
         <svg role="img" aria-label={label} width={width} height={height} viewBox={`0 0 ${width} ${height}`} className={ink}>
             <path d={path} fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round" />
