@@ -57,6 +57,9 @@ function said(options: readonly FilterOption[], chosen: readonly string[], words
  * Any, which unsets it) or several to tick with `multiple`, and the chip says what is chosen. The
  * choice is held by the app through `selected`, or by the chip from `defaultSelected`. Without
  * options, pressing it calls `onOpen` and the app opens what it likes.
+ *
+ * The chip keeps its label on one line and never shrinks in a row of filters; a long value ends
+ * in an ellipsis, and the remove button keeps its width.
  */
 export function FilterChip({
     facet,
@@ -114,13 +117,17 @@ export function FilterChip({
                   choose([])
                   onClear?.()
               }
-    const face = 'flex items-center gap-1.5 px-2.5 hover:bg-hover data-popup-open:bg-hover'
+    const face = 'flex min-w-0 items-center gap-1.5 px-2.5 whitespace-nowrap hover:bg-hover data-popup-open:bg-hover'
     const inner = (
         <>
             {icon}
-            <span className={set ? 'text-muted-foreground' : undefined}>{facet}</span>
-            {set && <span className="font-medium">{shown}</span>}
-            {!set && <ChevronDown className="size-3.5 text-muted-foreground" aria-hidden />}
+            <span className={cn('shrink-0', set && 'text-muted-foreground')}>{facet}</span>
+            {set && (
+                <span className="max-w-48 min-w-0 truncate font-medium" title={typeof shown === 'string' ? shown : undefined}>
+                    {shown}
+                </span>
+            )}
+            {!set && <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />}
         </>
     )
     const row = (option: FilterOption) =>
@@ -134,7 +141,7 @@ export function FilterChip({
         <span
             ref={chipRef}
             className={cn(
-                'inline-flex h-(--density-control) items-stretch overflow-hidden rounded-control border text-sm',
+                'inline-flex h-(--density-control) max-w-full shrink-0 items-stretch overflow-hidden rounded-control border text-sm whitespace-nowrap',
                 set ? 'border-primary/40 bg-accent text-foreground' : 'border-input bg-field text-foreground',
                 className,
             )}
@@ -195,7 +202,7 @@ export function FilterChip({
                     type="button"
                     aria-label={words.clear(facet)}
                     title={words.clear(facet)}
-                    className="flex items-center border-l border-primary/30 px-1.5 text-muted-foreground hover:bg-hover hover:text-foreground"
+                    className="flex shrink-0 items-center border-l border-primary/30 px-1.5 text-muted-foreground hover:bg-hover hover:text-foreground"
                     onClick={clear}
                 >
                     <X className="size-3.5" aria-hidden />

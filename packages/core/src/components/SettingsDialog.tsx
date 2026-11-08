@@ -4,7 +4,7 @@ import { useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { SearchField } from './SearchField'
-import { SettingRow } from './SettingRow'
+import { SettingRow, type SettingRowLayout } from './SettingRow'
 import { Button } from './ui/button'
 import { Dialog, DialogClose, DialogContent, DialogTitle } from './ui/dialog'
 
@@ -16,6 +16,8 @@ export interface Setting {
     /** A line under the description: what the setting needs, or what it changes elsewhere. */
     note?: ReactNode
     control: ReactNode
+    /** Where the control sits: `trailing` for a switch or a small button, `below` for a wide control; by the row's width when absent. */
+    layout?: SettingRowLayout
 }
 
 /** A page of settings, reached from the dialog's navigation. */
@@ -217,6 +219,7 @@ export function SettingsDialog({
                                             description={setting.description}
                                             note={setting.note}
                                             control={setting.control}
+                                            layout={setting.layout}
                                         />
                                     ))}
                                 </div>

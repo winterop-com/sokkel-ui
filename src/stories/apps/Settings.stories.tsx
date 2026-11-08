@@ -84,6 +84,7 @@ function usePreferences(): SettingsGroup[] {
                             id: 'new-tab',
                             title: 'Open runs in a new tab',
                             description: 'A run opened from a list keeps the list where it was.',
+                            layout: 'trailing',
                             control: <Switch aria-label="Open runs in a new tab" checked={newTab} onCheckedChange={setNewTab} />,
                         },
                         {
@@ -110,6 +111,7 @@ function usePreferences(): SettingsGroup[] {
                             title: 'Confirm before cancelling a run',
                             description: 'Ask once more before a running job is stopped.',
                             note: 'Runs the scheduler cancels are never asked about.',
+                            layout: 'trailing',
                             control: (
                                 <Switch
                                     aria-label="Confirm before cancelling a run"
@@ -122,6 +124,7 @@ function usePreferences(): SettingsGroup[] {
                             id: 'recent',
                             title: 'Recent searches',
                             description: 'The searches offered when the search box opens.',
+                            layout: 'trailing',
                             control: (
                                 <Button variant="outline" size="sm">
                                     Clear
@@ -172,6 +175,7 @@ function usePreferences(): SettingsGroup[] {
                             id: 'motion',
                             title: 'Reduce motion',
                             description: 'Panels and dialogs appear without moving.',
+                            layout: 'trailing',
                             control: <Switch aria-label="Reduce motion" checked={motion} onCheckedChange={setMotion} />,
                         },
                         {
@@ -203,18 +207,21 @@ function usePreferences(): SettingsGroup[] {
                             id: 'hints',
                             title: 'Show key hints',
                             description: 'Buttons name their shortcut on hover.',
+                            layout: 'trailing',
                             control: <Switch aria-label="Show key hints" checked={hints} onCheckedChange={setHints} />,
                         },
                         {
                             id: 'single-key',
                             title: 'Single-key shortcuts',
                             description: 'Keys such as / and ? act without a modifier.',
+                            layout: 'trailing',
                             control: <Switch aria-label="Single-key shortcuts" checked={singleKey} onCheckedChange={setSingleKey} />,
                         },
                         {
                             id: 'list',
                             title: 'Every shortcut',
                             description: 'The full list, grouped by where it works.',
+                            layout: 'trailing',
                             control: (
                                 <Button variant="outline" size="sm">
                                     Show
@@ -250,6 +257,7 @@ function usePreferences(): SettingsGroup[] {
                             id: 'sessions',
                             title: 'Other sessions',
                             description: 'Sign out everywhere but this browser.',
+                            layout: 'trailing',
                             control: (
                                 <Button variant="outline" size="sm">
                                     Sign out
@@ -297,6 +305,7 @@ function usePreferences(): SettingsGroup[] {
                             title: 'Maintenance mode',
                             description: 'Queued jobs wait and no new run starts.',
                             note: 'Running jobs finish first; ada and linus are told by email.',
+                            layout: 'trailing',
                             control: <Switch aria-label="Maintenance mode" checked={maintenance} onCheckedChange={setMaintenance} />,
                         },
                     ],
