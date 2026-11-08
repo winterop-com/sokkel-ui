@@ -54,6 +54,10 @@
             "types": "./dist/components/ApiLink.d.ts",
             "import": "./dist/components/ApiLink.js"
         },
+        "./ApiPlayground": {
+            "types": "./dist/components/ApiPlayground.d.ts",
+            "import": "./dist/components/ApiPlayground.js"
+        },
         "./AppBar": {
             "types": "./dist/components/AppBar.d.ts",
             "import": "./dist/components/AppBar.js"
