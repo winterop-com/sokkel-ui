@@ -1,5 +1,6 @@
 import type { PaletteGroup } from '@winterop-com/sokkel-ui/CommandPalette'
 import { useAppearance, type AppearanceState } from '@winterop-com/sokkel-ui/hooks/use-appearance'
+import { THEMES } from '@winterop-com/sokkel-ui/lib/appearance'
 import { appearanceCommands } from '@winterop-com/sokkel-ui/lib/commands'
 import type { DesktopWindow } from '@winterop-com/sokkel-ui/lib/desktop'
 import { RotateCcw } from 'lucide-react'
@@ -19,15 +20,24 @@ export interface Frame {
     route: readonly string[]
 }
 
-/** The frame for an example's page, followed as the look and the route change. */
-export function useFrame(): Frame {
+/**
+ * The frame for an example's page, followed as the look and the route change. `themes` are the
+ * themes whose styles the example imports, the only ones its palette offers; the base alone when
+ * not given.
+ */
+export function useFrame(themes: readonly string[] = ['tidevann']): Frame {
     const route = useRoute()
     const appearance = useAppearance()
     const desktop = useDesktopWindow()
     const { settings, setSettings } = appearance
     const palette = useMemo(
         (): PaletteGroup[] => [
-            ...appearanceCommands(settings, setSettings).map((group) => ({ ...group, rank: 20 })),
+            ...appearanceCommands(settings, setSettings, { themes: THEMES.filter((theme) => themes.includes(theme.value)) }).map(
+                (group) => ({
+                    ...group,
+                    rank: 20,
+                }),
+            ),
             {
                 title: 'Demo',
                 rank: 30,
@@ -43,7 +53,7 @@ export function useFrame(): Frame {
                 ],
             },
         ],
-        [settings, setSettings],
+        [settings, setSettings, themes],
     )
     return { palette, desktop, appearance, route }
 }

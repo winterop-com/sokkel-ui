@@ -29,9 +29,9 @@ import {
 } from '../data'
 import { removeAllDownloads } from '../downloads'
 import { EFFECTS, LOOKS, RAMPS } from '../look'
+import { CARRIED } from '../themes'
 
-/** The themes this app carries the styles of. */
-const OFFERED = new Set(['tidevann', 'paper', 'contrast', 'ocean', 'vinyl', 'neon'])
+const OFFERED = new Set(CARRIED)
 const APP_THEMES = THEMES.filter((theme) => OFFERED.has(theme.value))
 
 /** What a section's Reset to defaults puts back. */

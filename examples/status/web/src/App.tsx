@@ -13,6 +13,7 @@ import { PublicPage } from './pages/PublicPage'
 import { RowsProvider, useRows } from './rows'
 import { DEFAULT_SETTINGS, settings } from './settings'
 import { type Health, STATUSES } from './status'
+import { CARRIED } from './themes'
 
 const SAID: Record<Health, string> = {
     operational: 'is operational again',
@@ -96,7 +97,7 @@ function Notices() {
 
 /** The Status example: the board inside the shell, and the public status page on its own. */
 export function App() {
-    const frame = useFrame()
+    const frame = useFrame(CARRIED)
     useEffect(() => startLive(), [])
     return (
         <TooltipProvider>

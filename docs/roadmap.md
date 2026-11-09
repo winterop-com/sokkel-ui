@@ -125,10 +125,6 @@ to `plan.md` when it ships.
           chart builder, metrics panel editor, analytics report name). `useUnsavedChanges` blocks
           the tab closing but not the app's hash route; have it block the route too, and guard the
           analytics report, which has no guard at all.
-        - Themes offered but not loaded: the palette offers every theme, yet ten examples import none
-          but the base, so choosing Ocean is saved and changes nothing. `appearanceCommands` takes
-          the themes an app carries; the shared frame passes them, and an unknown saved theme falls
-          back to the base. Decide whether every example carries every theme.
     - **Round 3, charts:**
         - Chart text is 11 and 10 px (`chart-text-size`, `chart-text-size-small`) beside 13 px
           everywhere else. Try 12 to 13 px in rendered stories, then fix what it crowds.
