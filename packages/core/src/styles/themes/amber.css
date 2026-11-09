@@ -56,7 +56,7 @@ html.dark[data-theme='amber'],
     --critical-wash: color-mix(in oklab, var(--destructive) 16%, var(--card));
     --panel-line: color-mix(in oklab, var(--border-strong) 50%, var(--border));
     --panel-ground: color-mix(in oklab, var(--muted) 35%, var(--card));
-    --brand-ground: color-mix(in oklab, var(--shade) 45%, var(--background));
+    --brand-ground: color-mix(in oklab, var(--shade) 20%, var(--background));
     --primary: oklch(0.8 0.13 80);
     --primary-foreground: oklch(0.16 0.01 255);
     --primary-ink: var(--primary);
