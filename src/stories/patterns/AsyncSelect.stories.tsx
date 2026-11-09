@@ -3,7 +3,6 @@ import { useState, type ReactNode } from 'react'
 
 import { AsyncSelect, type AsyncPage } from '@winterop-com/sokkel-ui/AsyncSelect'
 import { Field } from '@winterop-com/sokkel-ui/Field'
-import { Row } from '@winterop-com/sokkel-ui/Layout'
 import { REGIONS } from '../fixtures/weekRuns'
 
 /**
@@ -39,16 +38,6 @@ function answer(query: string): Promise<Dataset[]> {
 const never = () => new Promise<Dataset[]>(() => undefined)
 const refuse = () => Promise.reject(new Error('503'))
 
-function DatasetRow({ dataset }: { dataset: Dataset }) {
-    return (
-        <Row as="span" align="baseline" className="min-w-0">
-            <span className="truncate">{dataset.name}</span>
-            <span className="truncate font-mono text-xs text-muted-foreground">{dataset.code}</span>
-            <span className="ml-auto shrink-0 text-xs text-faint tabular-nums">{dataset.rows}</span>
-        </Row>
-    )
-}
-
 function Ground({ children }: { children: ReactNode }) {
     return <div className="max-w-sm">{children}</div>
 }
@@ -77,7 +66,8 @@ function Picker({
                     load={load}
                     itemKey={(dataset) => dataset.code}
                     itemLabel={(dataset) => dataset.name}
-                    renderItem={(dataset) => <DatasetRow dataset={dataset} />}
+                    itemDetail={(dataset) => dataset.code}
+                    itemMeta={(dataset) => dataset.rows}
                     defaultOpen={open}
                     defaultQuery={query}
                     minQuery={minQuery}

@@ -122,6 +122,10 @@ interface AsyncSelectBase<T> {
     itemLabel: (item: T) => string
     /** How an option is drawn in the list; its label alone otherwise. */
     renderItem?: (item: T) => ReactNode
+    /** A second word for an option, such as its code, beside its label, or under it where the list is narrow. */
+    itemDetail?: (item: T) => ReactNode
+    /** A figure at the option's end, such as how many rows it holds. */
+    itemMeta?: (item: T) => ReactNode
     /**
      * Makes an option of the typed text, given when the app allows it: the list then ends in a row
      * that offers it while no option is called that, and the option made is chosen.
@@ -173,6 +177,8 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
         itemKey,
         itemLabel,
         renderItem,
+        itemDetail,
+        itemMeta,
         onCreate,
         debounce = 250,
         minQuery = 0,
@@ -307,7 +313,23 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
                         </>
                     ) : (
                         <>
-                            <span className="min-w-0 flex-1">{renderItem === undefined ? itemLabel(item) : renderItem(item)}</span>
+                            {renderItem !== undefined ? (
+                                <span className="min-w-0 flex-1">{renderItem(item)}</span>
+                            ) : (
+                                <>
+                                    <span className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2">
+                                        <span className="min-w-0 truncate">{itemLabel(item)}</span>
+                                        {itemDetail !== undefined && (
+                                            <span className="min-w-0 truncate font-mono text-xs text-muted-foreground">
+                                                {itemDetail(item)}
+                                            </span>
+                                        )}
+                                    </span>
+                                    {itemMeta !== undefined && (
+                                        <span className="shrink-0 text-xs text-faint tabular-nums">{itemMeta(item)}</span>
+                                    )}
+                                </>
+                            )}
                             <Combobox.ItemIndicator className="absolute right-2 flex size-4 items-center justify-center">
                                 <Check className="size-4" aria-hidden />
                             </Combobox.ItemIndicator>

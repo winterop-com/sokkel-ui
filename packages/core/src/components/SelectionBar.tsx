@@ -56,10 +56,8 @@ export function SelectionBar({
             role="group"
             aria-label={words.label}
             className={cn(
-                'flex min-w-0 flex-1 items-center gap-2 text-sm',
-                framed
-                    ? 'flex-wrap gap-y-1 rounded-control border border-primary/40 bg-primary/8 py-0.5 pr-1 pl-3'
-                    : '[scrollbar-width:none] overflow-x-auto',
+                'flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 text-sm',
+                framed && 'rounded-control border border-primary/40 bg-primary/8 py-0.5 pr-1 pl-3',
                 className,
             )}
         >

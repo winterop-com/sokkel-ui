@@ -196,7 +196,10 @@ export function StatPanel({
                 <h3
                     ref={titleRef}
                     title={clamped && typeof title === 'string' ? title : undefined}
-                    className={cn('min-w-0 flex-1 truncate text-xs font-medium', filled ? 'text-on-fill/90' : 'text-muted-foreground')}
+                    className={cn(
+                        'line-clamp-2 min-w-0 flex-1 text-xs font-medium break-words',
+                        filled ? 'text-on-fill/90' : 'text-muted-foreground',
+                    )}
                 >
                     {title}
                 </h3>

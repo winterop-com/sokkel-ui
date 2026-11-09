@@ -136,12 +136,6 @@ to `plan.md` when it ships.
         - Workspace at 1024: the rail stays open beside the inspector and the list falls to three
           tall cards. Collapse the rail first when the inspector opens, and stack rows compactly
           before full labeled cards.
-        - `SelectionBar` scrolls its actions with no sign there are more: use `Toolbar`'s overflow,
-          or wrap.
-        - `AsyncSelect` results at 344: name, code and count truncate in three columns. Put the
-          code and count under the name when narrow.
-        - `StatTile` cuts a long title, with only a hover title to read it. Wrap it, as
-          `ItemCard`'s `titleLines` does.
         - Pipeline editor, empty, at 344: the palette sits below the fold of the canvas that points
           at it. Offer Add step in the empty state, opening `BlockPicker`.
     - **Round 5, dashboards:**
