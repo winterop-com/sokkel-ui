@@ -43,7 +43,6 @@ const FILE_COLUMNS: DataColumn<ModelFile>[] = [
         width: 'minmax(12rem,1fr)',
         cell: (file) => <span className="font-mono">{file.name}</span>,
         sortValue: (file) => file.name,
-        stack: 'lead',
     },
     {
         id: 'role',

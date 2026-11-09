@@ -35,7 +35,6 @@ function columns(models: readonly Model[]): DataColumn<CatalogEntry>[] {
             width: 'minmax(13rem,2fr)',
             cell: (entry) => <span className="font-mono">{entry.name}</span>,
             sortValue: (entry) => entry.name,
-            stack: 'lead',
         },
         { id: 'publisher', header: 'Publisher', width: '7rem', cell: (entry) => entry.publisher, sortValue: (entry) => entry.publisher },
         {
@@ -99,7 +98,6 @@ function Variants({ entry }: { entry: CatalogEntry }) {
             header: 'Rounding',
             width: 'minmax(6rem,1fr)',
             cell: (variant) => <span className="font-mono">{variant.quant}</span>,
-            stack: 'lead',
         },
         { id: 'format', header: 'Format', width: '7rem', cell: (variant) => <FormatBadge format={variant.format} /> },
         {
@@ -132,8 +130,6 @@ function Variants({ entry }: { entry: CatalogEntry }) {
             columns={rows}
             rows={entry.variants}
             rowKey={(variant) => `${variant.format}-${variant.quant}`}
-            stackBelow={false}
-            minWidth="36rem"
         />
     )
 }

@@ -66,7 +66,6 @@ export function RunnerPage() {
             width: 'minmax(11rem,1.4fr)',
             cell: (one) => <span className="font-mono">{one.model}</span>,
             sortValue: (one) => one.model,
-            stack: 'lead',
         },
         {
             id: 'state',

@@ -107,6 +107,12 @@ export function ModelsApp({ frame }: { frame: Frame }) {
     const page: PageId | 'missing' = (PAGES as readonly string[]).includes(first) ? (first as PageId) : 'missing'
     const second = rest.length === 0 ? undefined : rest.join('/')
     const [checking, setChecking] = useState(false)
+    // The uptime in the foot and the server menu moves on every half minute.
+    const [now, setNow] = useState(Date.now)
+    useEffect(() => {
+        const timer = setInterval(() => setNow(Date.now()), 30_000)
+        return () => clearInterval(timer)
+    }, [])
     const [panelOpen, setPanelOpen] = useStored('models.chat.panel', false)
 
     useEffect(
@@ -306,7 +312,7 @@ export function ModelsApp({ frame }: { frame: Frame }) {
                                 facts={[
                                     'runner.example.org:8400',
                                     status === 'up'
-                                        ? `Up for ${uptime(Date.now() - (runner?.since ?? Date.now()))}, ${counted(ready.length, 'model')} loaded`
+                                        ? `Up for ${uptime(now - (runner?.since ?? now))}, ${counted(ready.length, 'model')} loaded`
                                         : status === 'down'
                                           ? 'Stopped; chats cannot be answered until it starts'
                                           : status === 'starting'
@@ -363,7 +369,7 @@ export function ModelsApp({ frame }: { frame: Frame }) {
                             ? 'The runner is stopped'
                             : pulling.length > 0
                               ? `Pulling ${pulling.map((one) => one.name).join(', ')}`
-                              : `Runner up for ${uptime(Date.now() - (runner?.since ?? Date.now()))}`
+                              : `Runner up for ${uptime(now - (runner?.since ?? now))}`
                     }
                 >
                     <StatusItem label="loaded">{ready.length === 0 ? 'none' : ready.map((one) => one.model).join(', ')}</StatusItem>

@@ -94,7 +94,6 @@ function columns(loaded: readonly Loaded[]): DataColumn<Model>[] {
             cell: (model) => <span className="font-mono">{model.name}</span>,
             sortValue: (model) => model.name,
             hideable: false,
-            stack: 'lead',
         },
         {
             id: 'quant',

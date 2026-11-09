@@ -74,7 +74,6 @@ const COLUMNS: DataColumn<Download>[] = [
             </span>
         ),
         sortValue: (pull) => pull.name,
-        stack: 'lead',
     },
     { id: 'source', header: 'From', width: '8rem', cell: (pull) => SOURCES[pull.source].label, sortValue: (pull) => pull.source },
     { id: 'state', header: 'State', width: '7rem', cell: (pull) => <StateChip pull={pull} />, sortValue: (pull) => pull.state },

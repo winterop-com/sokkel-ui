@@ -33,7 +33,6 @@ const COPY_COLUMNS: DataColumn<Copies>[] = [
         header: 'Model',
         width: 'minmax(10rem,1fr)',
         cell: (row) => <span className="font-mono">{row.name}</span>,
-        stack: 'lead',
     },
     {
         id: 'kept',
