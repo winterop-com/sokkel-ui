@@ -24,6 +24,10 @@
         "*.css"
     ],
     "exports": {
+        "./RepeatedGroup": {
+            "types": "./dist/components/RepeatedGroup.d.ts",
+            "import": "./dist/components/RepeatedGroup.js"
+        },
         "./styles.css": "./src/styles/index.css",
         "./styles-base.css": "./src/styles/base.css",
         "./sources/*.css": "./dist/sources/*.css",
@@ -1097,6 +1101,10 @@
         "./hooks/use-refresh": {
             "types": "./dist/hooks/use-refresh.d.ts",
             "import": "./dist/hooks/use-refresh.js"
+        },
+        "./hooks/use-repeated": {
+            "types": "./dist/hooks/use-repeated.d.ts",
+            "import": "./dist/hooks/use-repeated.js"
         },
         "./hooks/use-scheme": {
             "types": "./dist/hooks/use-scheme.d.ts",

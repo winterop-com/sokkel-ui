@@ -141,8 +141,6 @@ to `plan.md` when it ships.
         - A delta says what it compares against ("vs the previous 6 hours"); one look for the main
           figures and a quieter one for the rest; fewer solid fills on a phone's first screen.
     - **Round 6, data entry:**
-        - Repeated groups for a hand-composed form, as `SchemaForm`'s lists have (stable keys, marks
-          that follow an item removed or moved, Move up and Move down).
         - Interaction tests for the above: a bad submit focusing the first issue, a server error,
           removing a repeated item, cancelling and retrying an upload, editing stored files.
     - **Not covered yet:** the Electron and Tauri shells, browsers other than Chromium, and real
