@@ -145,14 +145,24 @@ export function SidePanel({
 
 export interface PanelSectionProps {
     title: string
+    /** Small buttons at the end of the heading's line that act on the whole section, such as Clear. */
+    actions?: ReactNode
     children: ReactNode
 }
 
-/** A titled block inside a side panel: a quiet uppercase heading over its content. */
-export function PanelSection({ title, children }: PanelSectionProps) {
+/** A titled block inside a side panel: a quiet uppercase heading, its own `actions` at the line's end, over its content. */
+export function PanelSection({ title, actions, children }: PanelSectionProps) {
+    const heading = <GroupLabel as="h3">{title}</GroupLabel>
     return (
         <section className="flex flex-col gap-2 border-b border-border px-4 py-3 last:border-b-0">
-            <GroupLabel as="h3">{title}</GroupLabel>
+            {actions === undefined ? (
+                heading
+            ) : (
+                <div className="-my-1 flex min-h-7 items-center justify-between gap-2">
+                    {heading}
+                    <div className="flex shrink-0 items-center gap-1">{actions}</div>
+                </div>
+            )}
             {children}
         </section>
     )
