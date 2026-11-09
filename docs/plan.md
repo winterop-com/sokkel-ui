@@ -660,10 +660,19 @@ VideoPlayer plays a URL in `src`, or a `source` (`VideoSource` in `media/video-s
 whose `attach(video, report)` gives the element its media and returns what takes it away, with an
 optional `canPlay(video)` and an `id` that says when it is a new source, so an add-on feeds the
 element and the core never knows the engine. `hlsSource(url, options)` in the media package is one:
-an HTTP live stream, played natively where the browser plays HLS itself (Safari, and recent
-Chromium) and otherwise through hls.js, loaded by a dynamic import the first time a stream plays (or
-always through hls.js with `native: false`). hls.js is an optional peer dependency of the media
-package, so only an app that plays streams installs it, and it never enters the core. hls.js draws
+an HTTP live stream, played natively by Apple's WebKit (Safari, the WKWebView a desktop shell draws
+on macOS, every browser on an iPhone or iPad) and by a browser that plays HLS but has no Media
+Source Extensions, and otherwise through hls.js, loaded by a dynamic import the first time a stream
+plays (or always through hls.js with `native: false`). Chromium says it plays HLS too, but hls.js
+plays it there: tried headless in Chromium 156 against an event playlist ffmpeg was writing,
+Chromium's own player failed the live stream when it was played after loading paused (a demuxer
+error, which the player takes for media it cannot play), kept no seekable window, so a try could
+only rejoin at the live edge and play the last segments over, and told no bandwidth or rendition;
+hls.js played it, picked a stall up where it stood and told its stats. Apple's own player, tried
+the same way in WebKit, played the stream, its `startAt` and its stalls as hls.js does, a try
+picking up at the start of the segment it stood in. Apple's WebKit is told by its user agent
+(`isAppleWebKit`), since a WKWebView's names no Safari. hls.js is an optional peer dependency of
+the media package, so only an app that plays streams installs it, and it never enters the core. hls.js draws
 every HTTP live stream. The player hands `attach` where playback picks up (`startAt`, or where a
 try resumes) and hls.js starts loading there (`startPosition`), so the first fragment fetched is
 the one played. The source recovers from a fatal network error by loading again and from a
