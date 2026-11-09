@@ -124,7 +124,7 @@ export const StatTiles: StoryObj = {
         <Ground title="Stat tiles">
             <DashboardGrid dense>
                 <StatPanel title="Success rate" value={99.3} unit="%" decimals={1} thresholds={HIGH_IS_GOOD} sparkline={RUNS} />
-                <StatPanel title="Runs" value={3526} color="chart-2" sparkline={RUNS} delta="+6%" good />
+                <StatPanel title="Runs" value={3526} color="chart-2" sparkline={RUNS} delta="+6%" compared="vs yesterday" good />
                 <StatPanel
                     title="Queue depth"
                     value={30}
