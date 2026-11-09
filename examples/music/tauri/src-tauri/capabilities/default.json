@@ -1,0 +1,11 @@
+{
+    "identifier": "default",
+    "description": "What the page may ask of its window: drag it, zoom it and take it full screen.",
+    "windows": ["main"],
+    "permissions": [
+        "core:default",
+        "core:window:allow-start-dragging",
+        "core:window:allow-toggle-maximize",
+        "core:window:allow-set-fullscreen"
+    ]
+}

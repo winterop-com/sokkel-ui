@@ -16,6 +16,10 @@ examples/
   metrics/       live dashboards over a simulated source, a panel editor with a live preview, and alerts
   status/        a live operations board: services, regions and incidents changing as the page
                  watches, on-call, and the public status page with its subscribe form
+  music/         a music player that really plays: songs made in the page by a small synthesizer,
+                 albums, artists and the library's tree in the rail, favorites, playlists ordered by
+                 drag, simulated downloads, endless radio, the queue, the full screen with its
+                 visualizer and timed words, crossfade and the media keys
   example.mk     the targets every example's Makefile includes
 ```
 
@@ -37,7 +41,7 @@ From the repository root, after `make build` builds the packages, every example 
 targets as `make <example>-<target>`; `make examples-list` names them:
 
 ```sh
-make tasks-web          # build the web app and serve it (Tasks on 4180, Runs on 4181, Records on 4182, Metrics on 4185, Status on 4190)
+make tasks-web          # build the web app and serve it (Tasks on 4180, Runs on 4181, Records on 4182, Metrics on 4185, Music on 4186, Status on 4190)
 make tasks-dev          # the web app's dev server
 make tasks-electron     # open it in Electron
 make tasks-tauri        # open it in Tauri
