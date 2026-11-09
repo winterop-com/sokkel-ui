@@ -211,6 +211,8 @@ export interface GraphCanvasProps<N extends Node = Node, E extends Edge = Edge> 
     settled?: boolean
     /** Called with the canvas's width as it changes, so a view can lay its graph out to fit. */
     onWidth?: (width: number) => void
+    /** What an empty canvas offers under its words, such as a button that adds the first step. */
+    emptyAction?: ReactNode
     /** Called with the node chosen, or null when the ground was clicked. */
     onSelect?: (id: string | null) => void
     /** Called with every chosen node when the choice changes; given this, several can be chosen at once. */
@@ -257,6 +259,7 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
     toolbar,
     fitMinZoom = FIT_MIN_ZOOM,
     onWidth,
+    emptyAction,
     words,
     className,
     children,
@@ -559,9 +562,10 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
                             </ViewControls>
                         </ReactFlow>
                         {empty && (
-                            <p className="pointer-events-none absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-muted-foreground">
-                                {said.empty}
-                            </p>
+                            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center">
+                                <p className="text-sm text-muted-foreground">{said.empty}</p>
+                                {emptyAction !== undefined && <div className="pointer-events-auto">{emptyAction}</div>}
+                            </div>
                         )}
                     </div>
                 </GraphEditingContext>

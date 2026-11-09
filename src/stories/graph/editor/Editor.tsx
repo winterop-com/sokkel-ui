@@ -16,6 +16,8 @@ import type { JsonSchema } from '@winterop-com/sokkel-ui/schema/read'
 import { blockOf, BLOCKS, GROUPS, type BlockSpec } from './blocks'
 import { usePipelineEditor, type Notice, type Picker, type PipelineDoc, type PipelineEditorState } from './use-editor'
 import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { Popover, PopoverContent, PopoverTrigger } from '@winterop-com/sokkel-ui/primitives/popover'
 import { Center, Fill, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /** The canvas of the editor: the pipeline with its toolbar, the open picker, and the last notice. */
@@ -33,6 +35,7 @@ export function EditorCanvas({
     toolbar?: ReactNode
 }) {
     const count = editor.selection.length
+    const [adding, setAdding] = useState(false)
     return (
         <PipelineGraph
             steps={editor.steps}
@@ -45,6 +48,25 @@ export function EditorCanvas({
             editing={readOnly ? undefined : editor.editing}
             controls={false}
             words={{ label: 'nightly-export', empty }}
+            emptyAction={
+                readOnly ? undefined : (
+                    <Popover open={adding} onOpenChange={setAdding}>
+                        <PopoverTrigger render={<Button size="sm">Add step</Button>} />
+                        <PopoverContent className="w-auto p-0">
+                            <BlockPicker
+                                blocks={BLOCKS}
+                                groups={GROUPS}
+                                title="Add a step"
+                                onPick={(block) => {
+                                    editor.addFromPalette(block as BlockSpec)
+                                    setAdding(false)
+                                }}
+                                onClose={() => setAdding(false)}
+                            />
+                        </PopoverContent>
+                    </Popover>
+                )
+            }
             toolbar={
                 <GraphToolbar
                     onUndo={readOnly ? undefined : editor.history.undo}

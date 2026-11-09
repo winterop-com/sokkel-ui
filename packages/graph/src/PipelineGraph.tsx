@@ -51,6 +51,8 @@ export type PipelineGraphProps = GraphViewProps & {
     controls?: boolean
     /** A bar over the canvas's top-left corner, such as a `GraphToolbar`. */
     toolbar?: ReactNode
+    /** What the canvas offers while it has no steps, such as a button that adds the first. */
+    emptyAction?: ReactNode
     /** What the canvas holds over the drawing, such as a `GraphOverlay`. */
     children?: ReactNode
 }
@@ -72,6 +74,7 @@ export function PipelineGraph({
     positions,
     controls,
     toolbar,
+    emptyAction,
     words,
     className,
     children,
@@ -101,6 +104,7 @@ export function PipelineGraph({
             editing={editing}
             controls={controls}
             toolbar={toolbar}
+            emptyAction={emptyAction}
             words={words}
             className={className}
         >

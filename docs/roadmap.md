@@ -132,8 +132,6 @@ to `plan.md` when it ships.
         - Workspace at 1024: the rail stays open beside the inspector and the list falls to three
           tall cards. Collapse the rail first when the inspector opens, and stack rows compactly
           before full labeled cards.
-        - Pipeline editor, empty, at 344: the palette sits below the fold of the canvas that points
-          at it. Offer Add step in the empty state, opening `BlockPicker`.
     - **Round 5, dashboards:**
         - A panel's own failure and freshness: `DashboardPanel`, `ChartFrame` and `StatPanel` show
           loading and no data, but not a failed query with Retry, or values kept but stale since a
