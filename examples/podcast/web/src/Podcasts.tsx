@@ -5,7 +5,6 @@ import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { Search } from '@winterop-com/sokkel-ui/Search'
 import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
-import { ThemeToggle } from '@winterop-com/sokkel-ui/ThemeToggle'
 import { TopBar, type Crumb } from '@winterop-com/sokkel-ui/TopBar'
 import { useShortcuts } from '@winterop-com/sokkel-ui/hooks/use-shortcuts'
 import { placeCommands } from '@winterop-com/sokkel-ui/lib/commands'
@@ -71,8 +70,7 @@ const TITLES: Record<string, string> = {
 /** The podcasts app: the rail of places, the page the route names, the player along the foot, and the palette. */
 export function Podcasts({ frame }: { frame: Frame }) {
     const state = usePodcasts()
-    const { settings: look, setSettings: setLook, resolved } = frame.appearance
-    const dark = resolved === 'dark'
+    const { settings: look, setSettings: setLook } = frame.appearance
     const [first = 'home', second, third] = frame.route
     const page = (PAGES as readonly string[]).includes(first) ? first : 'missing'
     const [fullscreen, setFullscreen] = useState(false)
@@ -364,7 +362,6 @@ export function Podcasts({ frame }: { frame: Frame }) {
                             words={{ placeholder: 'Search podcasts' }}
                         />
                     }
-                    actions={<ThemeToggle dark={dark} onToggle={() => setLook({ ...look, scheme: dark ? 'light' : 'dark' })} />}
                 />
             }
             bottom={<Player fullscreen={fullscreen} onFullscreenChange={setFullscreen} queueShown={page === 'queue'} />}

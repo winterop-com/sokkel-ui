@@ -5,7 +5,6 @@ import { PageState } from '@winterop-com/sokkel-ui/PageState'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
-import { ThemeToggle } from '@winterop-com/sokkel-ui/ThemeToggle'
 import { TopBar, type Crumb } from '@winterop-com/sokkel-ui/TopBar'
 import { placeCommands } from '@winterop-com/sokkel-ui/lib/commands'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
@@ -63,8 +62,7 @@ const LABELS: Record<PageId | 'missing', string> = {
 /** Tidevann's analytics: the rail of its pages, the palette, the page the address names, and the live stream's state at the foot. */
 export function Analytics({ frame }: { frame: Frame }) {
     const { world, error, view, href, prefs, setPrefs, setView, stream, money } = useApp()
-    const { settings: look, setSettings: setLook, resolved } = frame.appearance
-    const dark = resolved === 'dark'
+    const { settings: look, setSettings: setLook } = frame.appearance
     const [first = 'overview', second] = view.path
     const page: PageId | 'missing' = (PAGES as readonly string[]).includes(first) ? (first as PageId) : 'missing'
     const views = useCollection(invoiceViews).rows ?? []
@@ -283,7 +281,6 @@ export function Analytics({ frame }: { frame: Frame }) {
                             >
                                 {paused ? <Play aria-hidden /> : <Pause aria-hidden />}
                             </IconButton>
-                            <ThemeToggle dark={dark} onToggle={() => setLook({ ...look, scheme: dark ? 'light' : 'dark' })} />
                         </>
                     }
                 />
