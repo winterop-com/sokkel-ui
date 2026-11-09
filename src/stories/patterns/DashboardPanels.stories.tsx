@@ -132,7 +132,7 @@ export const StatTiles: StoryObj = {
                     sparkline={QUEUE['worker-3']}
                     info="Runs waiting for a slot, every worker."
                 />
-                <StatPanel title="Failed now" value={0} thresholds={FAILED_IS_BAD} colorMode="background" />
+                <StatPanel title="Failed now" value={0} thresholds={FAILED_IS_BAD} colorMode="background" href="#failed-runs" />
                 <StatPanel
                     title="Median run time across every job and worker"
                     value={4.2}
