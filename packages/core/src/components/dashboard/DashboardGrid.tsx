@@ -8,18 +8,18 @@ import { WindowedPane } from '../WindowedPane'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '../ui/dropdown-menu'
 
 /**
- * How much of the grid's width a panel takes on a wide screen. Every panel is full width on a
- * phone but a sixth, which takes half, so stat tiles and gauges stand two to a row.
+ * How much of the grid's width a panel takes in a wide grid. Every panel is full width in a
+ * phone-wide grid but a sixth, which takes half, so stat tiles and gauges stand two to a row.
  */
 export type PanelSpan = 'sixth' | 'quarter' | 'third' | 'half' | 'two-thirds' | 'full'
 
 /** The grid classes for a panel's span. */
 export const SPAN: Record<PanelSpan, string> = {
-    sixth: 'col-span-1 md:col-span-2 xl:col-span-2',
-    quarter: 'col-span-full md:col-span-3 xl:col-span-3',
-    third: 'col-span-full md:col-span-6 xl:col-span-4',
-    half: 'col-span-full md:col-span-6 xl:col-span-6',
-    'two-thirds': 'col-span-full md:col-span-6 xl:col-span-8',
+    sixth: 'col-span-1 @2xl/dashboard:col-span-2',
+    quarter: 'col-span-full @2xl/dashboard:col-span-3',
+    third: 'col-span-full @2xl/dashboard:col-span-6 @4xl/dashboard:col-span-4',
+    half: 'col-span-full @2xl/dashboard:col-span-6',
+    'two-thirds': 'col-span-full @2xl/dashboard:col-span-6 @4xl/dashboard:col-span-8',
     full: 'col-span-full',
 }
 
@@ -30,16 +30,23 @@ export interface DashboardGridProps {
 }
 
 /**
- * The grid a dashboard's panels sit in: twelve columns on a wide screen, six on a tablet, two on a
- * phone, with panels in a row stretched to the same height. On a phone a wide panel spans both
+ * The grid a dashboard's panels sit in: twelve columns when the grid is wide, six when it is
+ * tablet-wide, two when phone-wide, by the grid's own width, not the window's, so a dashboard beside
+ * a rail or a panel lays out for the room it has. Panels in a row stretch to the same height. On a phone a wide panel spans both
  * columns while stat tiles and gauges stand two to a row. A dense grid packs panels with small gaps.
  */
 export function DashboardGrid({ dense = false, children, className }: DashboardGridProps) {
     return (
-        <div
-            className={cn('grid grid-cols-2 md:grid-cols-6 xl:grid-cols-12', dense ? 'gap-1.5' : 'gap-(--density-section-gap)', className)}
-        >
-            {children}
+        <div className="@container/dashboard min-w-0">
+            <div
+                className={cn(
+                    'grid grid-cols-2 @2xl/dashboard:grid-cols-6 @4xl/dashboard:grid-cols-12',
+                    dense ? 'gap-1.5' : 'gap-(--density-section-gap)',
+                    className,
+                )}
+            >
+                {children}
+            </div>
         </div>
     )
 }
