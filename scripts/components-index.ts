@@ -287,6 +287,7 @@ const CORE_AREAS: Record<string, string> = {
     StarButton: 'Actions, dialogs and feedback',
     TypedConfirmDialog: 'Actions, dialogs and feedback',
     // Chat and messaging.
+    AnswerColumn: 'Chat and messaging',
     AssistantReply: 'Chat and messaging',
     ChannelHeader: 'Chat and messaging',
     ChannelList: 'Chat and messaging',
@@ -298,6 +299,7 @@ const CORE_AREAS: Record<string, string> = {
     MessageComposer: 'Chat and messaging',
     MessageRow: 'Chat and messaging',
     ToolCall: 'Chat and messaging',
+    UsageLine: 'Chat and messaging',
     // Files and attachments.
     AttachmentList: 'Files and attachments',
     FileList: 'Files and attachments',

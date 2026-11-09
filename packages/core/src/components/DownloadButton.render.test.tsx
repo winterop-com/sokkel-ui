@@ -13,6 +13,19 @@ describe('DownloadButton', () => {
         expect(armed).toContain('aria-label="Press again to remove this download"')
     })
 
+    it('says the share of a download by its bytes, and offers pause and resume when given', () => {
+        const running = renderToStaticMarkup(<DownloadButton state="running" value={0.62} onPause={() => undefined} />)
+        expect(running).toContain('62%')
+        expect(running).toContain('aria-label="Pause the download"')
+        const paused = renderToStaticMarkup(
+            <DownloadButton state="paused" value={0.62} onResume={() => undefined} onCancel={() => undefined} />,
+        )
+        expect(paused).toContain('Paused')
+        expect(paused).toContain('aria-label="Resume the download"')
+        expect(paused).toContain('aria-label="Cancel the download"')
+        expect(paused).not.toContain('Pause the download')
+    })
+
     it('says why the last try failed on hover', () => {
         expect(renderToStaticMarkup(<DownloadButton state="idle" error="The server stopped answering." />)).toContain(
             'title="The server stopped answering."',

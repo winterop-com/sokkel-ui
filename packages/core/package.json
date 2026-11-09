@@ -50,6 +50,10 @@
             "types": "./dist/components/AnsiText.d.ts",
             "import": "./dist/components/AnsiText.js"
         },
+        "./AnswerColumn": {
+            "types": "./dist/components/AnswerColumn.d.ts",
+            "import": "./dist/components/AnswerColumn.js"
+        },
         "./ApiLink": {
             "types": "./dist/components/ApiLink.d.ts",
             "import": "./dist/components/ApiLink.js"
@@ -597,6 +601,10 @@
         "./UploadTray": {
             "types": "./dist/components/UploadTray.d.ts",
             "import": "./dist/components/UploadTray.js"
+        },
+        "./UsageLine": {
+            "types": "./dist/components/UsageLine.d.ts",
+            "import": "./dist/components/UsageLine.js"
         },
         "./WindowedPane": {
             "types": "./dist/components/WindowedPane.d.ts",
