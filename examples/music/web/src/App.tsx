@@ -11,6 +11,7 @@ import { resumeDownloads } from './downloads'
 import { Music } from './Music'
 import { Dialogs } from './parts/dialogs'
 import { currentSong, player, restore, stop } from './player'
+import { CARRIED } from './themes'
 
 /** Reads what the backend kept, then picks the player up where it was left. */
 function useStart(): boolean {
@@ -55,7 +56,7 @@ function useTitle(): void {
 
 /** The Music example: a player that really plays, in a browser or either desktop shell. */
 export function App() {
-    const frame = useFrame()
+    const frame = useFrame(CARRIED)
     const ready = useStart()
     useTitle()
     useEffect(() => {

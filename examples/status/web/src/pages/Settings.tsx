@@ -23,9 +23,9 @@ import { SERVICE_IDS, type ServiceId, SITES, type Subscriber, subscribers } from
 import { calmDown, trigger, useLive } from '../live'
 import { useRows } from '../rows'
 import { DEFAULT_SETTINGS, setSettings, type Settings as Options, type Weather } from '../settings'
+import { CARRIED } from '../themes'
 
-/** The themes this app carries the styles of. */
-const OFFERED = new Set(['tidevann', 'paper', 'contrast', 'ocean'])
+const OFFERED = new Set(CARRIED)
 const APP_THEMES = THEMES.filter((theme) => OFFERED.has(theme.value))
 
 const SUBSCRIBER_COLUMNS: DataColumn<Subscriber>[] = [
