@@ -37,6 +37,7 @@ import { createRoot } from 'react-dom/client'
 import { cn } from '../lib/cn'
 import { bracketColors as colorBrackets, indentGuides as drawGuides } from './code/guides'
 import { jq } from './code/jq'
+import { markdown } from './code/markdown'
 import { SCHEMA_WORDS, schemaCompletion, schemaDiagnostics, type CodeSchemaWords, type SchemaLanguage } from './code/schema'
 import { loadedValidate, loadValidate } from './schema/checker'
 import type { JsonSchema } from './schema/read'
@@ -44,7 +45,7 @@ import type { JsonSchema } from './schema/read'
 export type { CodeSchemaWords } from './code/schema'
 
 /** The languages the editor carries by name. */
-export type CodeLanguageName = 'json' | 'yaml' | 'jq' | 'text'
+export type CodeLanguageName = 'json' | 'yaml' | 'jq' | 'markdown' | 'text'
 
 /** A language described by its tokens: a CodeMirror stream parser with a name. */
 export type CodeLanguageSpec = StreamParser<unknown> & { name: string }
@@ -91,6 +92,7 @@ const NAMED: Record<CodeLanguageName, () => Extension> = {
     json: () => json(),
     yaml: () => yaml(),
     jq: () => jq(),
+    markdown: () => markdown(),
     text: () => [],
 }
 
@@ -125,6 +127,13 @@ const HIGHLIGHT = HighlightStyle.define([
     { tag: tags.attributeName, color: 'var(--code-attribute)' },
     { tag: tags.heading, color: 'var(--code-heading)', fontWeight: '600' },
     { tag: [tags.link, tags.url], color: 'var(--code-link)' },
+    { tag: tags.strong, fontWeight: '600' },
+    { tag: tags.emphasis, fontStyle: 'italic' },
+    { tag: tags.strikethrough, textDecoration: 'line-through' },
+    { tag: tags.monospace, color: 'var(--code-string)' },
+    { tag: tags.quote, color: 'var(--code-comment)' },
+    { tag: [tags.list, tags.contentSeparator, tags.processingInstruction], color: 'var(--code-punctuation)' },
+    { tag: tags.labelName, color: 'var(--code-attribute)' },
     { tag: tags.inserted, color: 'var(--code-inserted)' },
     { tag: tags.deleted, color: 'var(--code-deleted)' },
     { tag: tags.invalid, color: 'var(--code-invalid)' },
@@ -274,10 +283,14 @@ const THEME = EditorView.theme({
     '.cm-searchMatch.cm-searchMatch-selected': { backgroundColor: 'color-mix(in oklab, var(--warning) 48%, transparent)' },
 })
 
-/** The text and line heights by size: `md` at body size, `sm` at the size of help text, for a dense pane. */
+/**
+ * The text and line heights by size: `md` at body size, `sm` at the size of help text, for a dense
+ * pane, and `lg` a step over the body, for long writing.
+ */
 const SIZES = {
     sm: EditorView.theme({ '&': { fontSize: 'var(--text-xs)' }, '.cm-scroller': { lineHeight: 'var(--text-xs--line-height)' } }),
     md: EditorView.theme({ '&': { fontSize: 'var(--text-sm)' }, '.cm-scroller': { lineHeight: 'var(--leading-code)' } }),
+    lg: EditorView.theme({ '&': { fontSize: 'var(--text-base)' }, '.cm-scroller': { lineHeight: 'var(--text-base--line-height)' } }),
 }
 
 /** A document past this many characters drops folding, bracket colors and indent guides, which walk the whole of it. */
@@ -362,6 +375,26 @@ function toCompletion(item: CodeCompletion): Completion {
     return { label: item.label, detail: item.detail, info: item.docs, type: item.kind, apply: item.apply }
 }
 
+/** The names a `[[link]]` completes from: a list, or a function of what is typed after the brackets. */
+export type CodeLinks = readonly CodeCompletion[] | ((query: string) => readonly CodeCompletion[] | Promise<readonly CodeCompletion[]>)
+
+/**
+ * The names offered as a `[[link]]` is typed, from the brackets on, matched against what follows
+ * them. The one chosen is put in with the closing `]]`, unless they follow already.
+ */
+export async function linkCompletions(context: CompletionContext, links: CodeLinks): Promise<CompletionResult | null> {
+    const typed = context.matchBefore(/\[\[[^[\]\n]*/)
+    if (typed === null) return null
+    const query = typed.text.slice(2)
+    const list = typeof links === 'function' ? await links(query) : links
+    const closed = context.state.sliceDoc(context.pos, context.pos + 2) === ']]'
+    return {
+        from: typed.from + 2,
+        options: list.map((item) => ({ ...toCompletion(item), apply: `${item.apply ?? item.label}${closed ? '' : ']]'}` })),
+        validFor: /^[^[\]\n]*$/,
+    }
+}
+
 export interface CodeEditorProps {
     value: string
     onChange?: (value: string) => void
@@ -373,6 +406,8 @@ export interface CodeEditorProps {
     marks?: readonly CodeMark[]
     /** Words offered while typing, beside the language's own: a list, or a function of the word being typed (a leading `$` or `@` included, a `.` not). */
     completions?: readonly CodeCompletion[] | ((word: string) => readonly CodeCompletion[] | Promise<readonly CodeCompletion[]>)
+    /** The names a `[[link]]` to another note completes from as it is typed, such as every note's title. */
+    links?: CodeLinks
     /** What a word is, shown when the pointer rests on it; nothing to show nothing. */
     hover?: (word: string) => ReactNode
     /** Runs the document, on Mod-Enter (Cmd on a Mac, Ctrl elsewhere). */
@@ -389,8 +424,8 @@ export interface CodeEditorProps {
     bracketColors?: boolean
     /** Faint rules at each indent step. Off past a megabyte. */
     indentGuides?: boolean
-    /** `md` at body size, `sm` at the size of help text, for a dense pane. */
-    size?: 'sm' | 'md'
+    /** `md` at body size, `sm` at the size of help text, for a dense pane, `lg` a step over the body, for long writing. */
+    size?: 'sm' | 'md' | 'lg'
     /** `field` is boxed like an input; `pane` fills the pane it is in, edge to edge, under the pane's own header. */
     variant?: 'field' | 'pane'
     /** A JSON Schema (2020-12) a JSON or YAML document is checked against and completed from. */
@@ -417,6 +452,11 @@ export interface CodeEditorProps {
  * `schema` checks JSON or YAML against a JSON Schema (2020-12) and completes its property names and
  * values. `wrap` folds long lines at the editor's edge, for prose such as a prompt. The value is
  * controlled: a new `value` replaces the document, and an edit is reported through `onChange`.
+ *
+ * `markdown` highlights notes and documents: headings, strong and emphasized words, code, quotes,
+ * lists, links and addresses, `[[links]]` between notes and `#tags`. `links` completes a
+ * `[[link]]` as it is typed from the names given, such as every note's title, the closing brackets
+ * put in with the name.
  */
 export function CodeEditor({
     value,
@@ -427,6 +467,7 @@ export function CodeEditor({
     wrap = false,
     marks = NO_MARKS,
     completions,
+    links,
     hover,
     onRun,
     keys,
@@ -449,8 +490,8 @@ export function CodeEditor({
     const view = useRef<EditorView | null>(null)
     const report = useRef(onChange)
     report.current = onChange
-    const props = useRef({ marks, completions, hover, onRun, keys, schema, words, language })
-    props.current = { marks, completions, hover, onRun, keys, schema, words, language }
+    const props = useRef({ marks, completions, links, hover, onRun, keys, schema, words, language })
+    props.current = { marks, completions, links, hover, onRun, keys, schema, words, language }
     const compartments = useRef({
         language: new Compartment(),
         readOnly: new Compartment(),
@@ -570,8 +611,13 @@ export function CodeEditor({
         // The editor is made once; later prop changes are dispatched by the effects below.
     }, [])
 
-    /** The words the caller offers for the word being typed. */
+    /** The names of a `[[link]]` being typed, or else the words the caller offers for the word being typed. */
     async function complete(context: CompletionContext): Promise<CompletionResult | null> {
+        const offered = props.current.links
+        if (offered !== undefined) {
+            const linked = await linkCompletions(context, offered)
+            if (linked !== null) return linked
+        }
         const given = props.current.completions
         if (given === undefined) return null
         const word = context.matchBefore(/[$@]?\w*/)

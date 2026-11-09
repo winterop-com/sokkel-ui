@@ -209,6 +209,39 @@ const LOG = Array.from({ length: 40 }, (_, index) => {
     return `2026-11-04T02:${minute}:00Z ${job.padEnd(15)} ${state.padEnd(10)} step=${['fetch', 'transform', 'validate', 'upload'][index % 4]}`
 }).join('\n')
 
+const NOTE_TEXT = [
+    '## Nightly export',
+    '',
+    'Runs at 02:00 on the worker and writes to the **larkspur** bucket. When it fails,',
+    'follow [[Retry a run]] and tell the owner of [[harbor]]. The *validate* step rejects',
+    'rows without an `order_id`; see [the schema](https://example.org/schemas/orders).',
+    '',
+    '- [x] fetch and transform',
+    '- [ ] move notify to the new scheduler',
+    '',
+    '> Asked in [[Weekly sync with grace]]: keep a week of exports?',
+    '',
+    '#runbook #on-call',
+].join('\n')
+
+const NOTES: CodeCompletion[] = [
+    { label: 'Nightly export', detail: 'Jobs' },
+    { label: 'Retry a run', detail: 'Runbooks' },
+    { label: 'harbor', detail: 'Projects' },
+    { label: 'juniper', detail: 'Projects' },
+    { label: 'larkspur', detail: 'Projects' },
+    { label: 'Weekly sync with grace', detail: 'Meetings' },
+]
+
+function MarkdownNote() {
+    const [note, setNote] = useState(NOTE_TEXT)
+    return (
+        <Ground>
+            <CodeEditor label="Note" language="markdown" value={note} onChange={setNote} links={NOTES} wrap size="lg" className="h-96" />
+        </Ground>
+    )
+}
+
 function Searching() {
     return (
         <Ground>
@@ -269,4 +302,10 @@ export const Jq: StoryObj = { name: 'jq', render: () => <JqFilter /> }
  * about, with its message on hover, and the schema's property names and enum values offered while typing.
  */
 export const Schema: StoryObj = { name: 'Schema', render: () => <SchemaChecked /> }
+/**
+ * A note in markdown at the large size, wrapped: headings, strong and emphasized words, code,
+ * lists, quotes, links, `[[links]]` to other notes and `#tags` highlighted. Typing `[[` offers the
+ * notes by name, and the one chosen goes in with its closing brackets.
+ */
+export const Markdown: StoryObj = { name: 'Markdown', render: () => <MarkdownNote /> }
 export const SourceOpen: StoryObj = { name: 'Source sheet, open', render: () => <Source open /> }

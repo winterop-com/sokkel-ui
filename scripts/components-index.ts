@@ -37,6 +37,7 @@ const KIND_BUILDER = "a chart kind's builder, reached through the registry `kind
 export const PRIVATE: Record<PackageDir, Record<string, string>> = {
     core: {
         'components/code/guides': "`CodeEditor`'s bracket colors and indent guides",
+        'components/code/markdown': "`CodeEditor`'s markdown language, which it carries by name",
         'components/code/schema': "`CodeEditor`'s JSON Schema checks and completion; `CodeSchemaWords` is exported by `CodeEditor`",
         'components/day-pick': 'the calendar the date fields pick from, loaded on first use',
         'components/entry':
