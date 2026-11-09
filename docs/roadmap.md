@@ -6,7 +6,12 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.10.17** is the latest release (2026-11-09): fixes from a Codex review of the day's work,
+- **0.10.18** is the latest release (2026-11-09): the records app's gap map closed, and the first
+  gaps from a pipeline app's move: schema completion that follows `allOf` and decides `if`/`then`,
+  `deferred` values left unchecked, `PlainMarkdown`, merged completions. Sheets resize (their `size`
+  presets are gone), `DataTable` gets a row `detail` and column `band`s, two themes (`steel`,
+  `ember`), `FoldingRail`, `ExampleList`, and the rest of `ApiPlayground`.
+- **0.10.17** (2026-11-09): fixes from a Codex review of the day's work,
   and an editable table that marks its active and edited cell with a line under it (`cellFocus`).
   `useUnsavedChanges` keeps the history as it was and asks once; `SchemaForm` carries refusals and
   nested keys with their items and asks the app's `field` for every field; `CodeEditor` takes `id`
