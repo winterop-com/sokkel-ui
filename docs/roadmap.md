@@ -141,8 +141,6 @@ to `plan.md` when it ships.
         - A delta says what it compares against ("vs the previous 6 hours"); one look for the main
           figures and a quieter one for the rest; fewer solid fills on a phone's first screen.
     - **Round 6, data entry:**
-        - A submit that waits on checks, uploads and pending async checks, shows server errors on
-          their fields, and refuses a second press.
         - Repeated groups for a hand-composed form, as `SchemaForm`'s lists have (stable keys, marks
           that follow an item removed or moved, Move up and Move down).
         - Interaction tests for the above: a bad submit focusing the first issue, a server error,

@@ -1122,6 +1122,10 @@
             "types": "./dist/hooks/use-stored.d.ts",
             "import": "./dist/hooks/use-stored.js"
         },
+        "./hooks/use-submit": {
+            "types": "./dist/hooks/use-submit.d.ts",
+            "import": "./dist/hooks/use-submit.js"
+        },
         "./hooks/use-theme-name": {
             "types": "./dist/hooks/use-theme-name.d.ts",
             "import": "./dist/hooks/use-theme-name.js"
