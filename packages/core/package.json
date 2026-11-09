@@ -24,6 +24,10 @@
         "*.css"
     ],
     "exports": {
+        "./PlainMarkdown": {
+            "types": "./dist/components/PlainMarkdown.d.ts",
+            "import": "./dist/components/PlainMarkdown.js"
+        },
         "./RepeatedGroup": {
             "types": "./dist/components/RepeatedGroup.d.ts",
             "import": "./dist/components/RepeatedGroup.js"

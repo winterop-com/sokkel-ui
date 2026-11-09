@@ -5,6 +5,7 @@ import { useRef, useState } from 'react'
 import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
 import { Dot } from '@winterop-com/sokkel-ui/Dot'
 import { Markdown, markdownHeadings } from '@winterop-com/sokkel-ui/Markdown'
+import { PlainMarkdown } from '@winterop-com/sokkel-ui/PlainMarkdown'
 import { TableOfContents, useActiveHeading } from '@winterop-com/sokkel-ui/TableOfContents'
 import { Row } from '@winterop-com/sokkel-ui/Layout'
 import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
@@ -74,6 +75,29 @@ function Callouts() {
     return (
         <div className="max-w-2xl p-6">
             <Markdown content={CALLOUTS} />
+        </div>
+    )
+}
+
+const PLAIN = [
+    '## Retry policy',
+    '',
+    'A step is tried again up to its `retries`, waiting $2^n$ seconds before try $n$.',
+    '',
+    '```mermaid',
+    'flowchart LR',
+    '  fetch --> transform --> validate --> upload',
+    '```',
+    '',
+    '> [!NOTE]',
+    '> The schedule is in UTC.',
+].join('\n')
+
+/** The same text in `PlainMarkdown`: the formula stays as written and the mermaid fence is code. */
+function Plain() {
+    return (
+        <div className="max-w-2xl p-6">
+            <PlainMarkdown content={PLAIN} />
         </div>
     )
 }
@@ -218,6 +242,12 @@ export default meta
 
 /** Each kind of callout a quote becomes from its first line, and a plain quote. */
 export const Callout: StoryObj = { name: 'Callouts', render: () => <Callouts /> }
+/**
+ * `PlainMarkdown`: everything `Markdown` draws save math and diagrams, so a formula stays as written
+ * and a mermaid fence shows as code, and an app that renders only this carries neither KaTeX nor
+ * Mermaid in its build.
+ */
+export const PlainText: StoryObj = { name: 'Plain markdown', render: () => <Plain /> }
 
 /**
  * Code and the app's own parts in one text: a jq fence, ANSI output, and a status and a run's
