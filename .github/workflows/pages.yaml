@@ -1,6 +1,7 @@
 name: storybook
 
-# Publishes main's Storybook on every push to main, without waiting for CI (as merges do not).
+# Publishes main's Storybook on every push to main, without waiting for CI (as merges do not), and
+# beside it, under examples/, every example's web app with an index of them.
 on:
     push:
         branches: [main]
@@ -29,6 +30,10 @@ jobs:
             - run: npm install -g bun
             - run: bun install --frozen-lockfile
             - run: bun run build-storybook
+            # The examples install the built packages; chromium takes each one's still for the index.
+            - run: bun run build
+            - run: bunx playwright install --with-deps chromium
+            - run: bun scripts/examples-site.ts --shots --out storybook-static/examples
             - uses: actions/configure-pages@v5
             - uses: actions/upload-pages-artifact@v4
               with:
