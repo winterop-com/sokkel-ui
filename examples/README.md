@@ -26,6 +26,10 @@ examples/
   models/        a local library of language models: the models on a disk and what they take, pulls from
                  simulated sources, a chat and a side-by-side comparison streamed by a simulated model,
                  and the runner that holds them in memory
+  music/         a music player that really plays: songs made in the page by a small synthesizer,
+                 albums, artists and the library's tree in the rail, favorites, playlists ordered by
+                 drag, simulated downloads, endless radio, the queue, the full screen with its
+                 visualizer and timed words, crossfade and the media keys
   example.mk     the targets every example's Makefile includes
 ```
 
@@ -47,7 +51,7 @@ From the repository root, after `make build` builds the packages, every example 
 targets as `make <example>-<target>`; `make examples-list` names them:
 
 ```sh
-make tasks-web          # build the web app and serve it (Tasks on 4180, Runs on 4181, Records on 4182, Models on 4183, Dataviz on 4184, Metrics on 4185, Notes on 4188, Status on 4190, Analytics on 4191)
+make tasks-web          # build the web app and serve it (Tasks on 4180, Runs on 4181, Records on 4182, Models on 4183, Dataviz on 4184, Metrics on 4185, Music on 4186, Notes on 4188, Status on 4190, Analytics on 4191)
 make tasks-dev          # the web app's dev server
 make tasks-electron     # open it in Electron
 make tasks-tauri        # open it in Tauri

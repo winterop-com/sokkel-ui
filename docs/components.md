@@ -43,7 +43,7 @@ in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second 
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 10 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 12 modules
 - [`@winterop-com/sokkel-ui-terminal`](#winterop-com-sokkel-ui-terminal): 2 modules
-- [`@winterop-com/sokkel-ui-media`](#winterop-com-sokkel-ui-media): 11 modules
+- [`@winterop-com/sokkel-ui-media`](#winterop-com-sokkel-ui-media): 12 modules
 
 ## @winterop-com/sokkel-ui
 
@@ -492,6 +492,7 @@ in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second 
 | **MediaBar** | `@winterop-com/sokkel-ui-media/MediaBar` | The player along the foot of a screen, for audio. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-lyrics--timed) |
 | **MediaCard**, MediaGrid | `@winterop-com/sokkel-ui-media/MediaCard` | One album, film or episode in a grid: the cover first, then its title and a line under it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-media-card--albums) |
 | **MediaFullscreen** | `@winterop-com/sokkel-ui-media/MediaFullscreen` | The player's now-playing view over the whole screen, opened from the bar: what plays at full size, the visualizer at full strength, the waveform and the transport, arranged after the bar's layout. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-lyrics--timed) (in MediaBar) |
+| **ReorderableTrackList** | `@winterop-com/sokkel-ui-media/ReorderableTrackList` | A track list the listener puts in their own order, such as a playlist or what a queue plays next: a `TrackList` whose rows each end in a grip after their own `actions`. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-reorderable-track-list--playlist) |
 | **TrackList** | `@winterop-com/sokkel-ui-media/TrackList` | A list of tracks or episodes: the number or a small picture, the title over an optional second line, a quiet meta column, and the length in the code face at the end. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-track-list--numbered) |
 | **UpNext** | `@winterop-com/sokkel-ui-media/UpNext` | What plays next, offered over the picture as a video ends: its artwork, its title and a line under it, a countdown to playing it by itself, Play now and Cancel. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-video--paused-frame) |
 | **VideoStatsOverlay** | `@winterop-com/sokkel-ui-media/VideoStatsOverlay` | How a video is playing, in a few lines over its picture: the picture's size, the rendition's bitrate, the link's bandwidth as the engine measures it, the seconds buffered ahead and the frames dropped. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-video--paused-frame) |
