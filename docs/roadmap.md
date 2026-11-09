@@ -116,6 +116,98 @@ to `plan.md` when it ships.
 
 ## Next
 
+- **The reviews of 2026-11-09.** A visual review of the published catalog (every story group at
+  1280 and 344 wide, every theme in both schemes) and a review of the twelve example apps on the
+  web. Each round below is a PR or a few, smallest and surest first. Every fix goes in the
+  component, never the story, with a test or story that shows it.
+    - **Round 1, wrong behavior in the core:**
+        - `SchemaForm`: a `readOnly` array still offers Remove on each item, and its items do not
+          inherit read-only, as list or records. Carry `readOnly` down through arrays and nested
+          objects, and test that a read-only group cannot be changed or removed.
+        - Records form: a section's mark in the section list says complete while a field in it has
+          an error. Derive the mark from the section's own field issues.
+        - `Banner` is one truncated line, so at 344 a warning or a critical banner loses the words
+          needed to act (a server's address, why a form cannot be sent). Let critical and warning
+          banners wrap, their actions moving to a second line.
+        - `ApiPlayground`: at 344 Send lies over the path input. Give the path field a basis and a
+          minimum, or put method, path and Send on their own rows when narrow.
+        - `Inspector` keeps its 360 default inside a narrower page, so its right side is cut off.
+          Clamp it to its container, and at narrow widths show it full width or as the detail sheet.
+        - `CodeBlockContent wrap` still scrolls sideways on a long URL: the code grid's tracks do not
+          shrink. Make them shrink and break long tokens when wrapping.
+        - Calendar week at 344: the toolbar title shrinks to "Thu ..." and no month or year shows.
+          Give `ToolbarTitle` priority, the view switch and arrows moving to a second line first.
+    - **Round 2, the examples' own wrong behavior** (no library change except the first two):
+        - Following a sidebar link from a dirty editor drops its draft with no question (dataviz
+          chart builder, metrics panel editor, analytics report name). `useUnsavedChanges` blocks
+          the tab closing but not the app's hash route; have it block the route too, and guard the
+          analytics report, which has no guard at all.
+        - Themes offered but not loaded: the palette offers every theme, yet ten examples import none
+          but the base, so choosing Ocean is saved and changes nothing. `appearanceCommands` takes
+          the themes an app carries; the shared frame passes them, and an unknown saved theme falls
+          back to the base. Decide whether every example carries every theme.
+        - Music and status: Reset to defaults under Appearance confirms and leaves the theme as it
+          was. Reset the appearance.
+        - Runs, models, notes and podcast: settings' Done goes back in history, which can leave the
+          example. Return to the last page of the example, or its home.
+        - Tasks, metrics and dataviz: Sign out does nothing. Sign out to a signed-out page, or leave
+          it out.
+        - Metrics and dataviz: Settings, Data offers a generic reset that resets nothing and says it
+          did. Use `reset: false` on that section.
+    - **Round 3, charts:**
+        - Chart text is 11 and 10 px (`chart-text-size`, `chart-text-size-small`) beside 13 px
+          everywhere else. Try 12 to 13 px in rendered stories, then fix what it crowds.
+        - Ticks chosen from the room and the label's width, so a narrow heatmap's hours do not run
+          together, and its scale takes less of the width.
+        - Radar labels clipped at the edges at 344: reserve room for the labels and shrink the
+          radius, never the text.
+        - A short legend scrolls inside itself with room to spare below: let it grow to its series,
+          scrolling only a long one.
+    - **Round 4, narrow layouts:**
+        - `RunGraph`, lineage and branching pipelines lose their downstream steps on a phone, the
+          failed step among them. Lay them out top to bottom when narrow, or open on the failed
+          step, as `NetworkGraph` already fits.
+        - `VideoPlayer` speed and quality hide below a medium width with no menu to reach them.
+          Move them into an overflow menu on a narrow player.
+        - `MediaBar` with skip, sleep timer and full screen leaves the title a few letters at 344.
+          Keep a minimum for the title, moving the secondary controls into a menu or a second row.
+        - Workspace at 1024: the rail stays open beside the inspector and the list falls to three
+          tall cards. Collapse the rail first when the inspector opens, and stack rows compactly
+          before full labeled cards.
+        - `SelectionBar` scrolls its actions with no sign there are more: use `Toolbar`'s overflow,
+          or wrap.
+        - `AsyncSelect` results at 344: name, code and count truncate in three columns. Put the
+          code and count under the name when narrow.
+        - `StatTile` cuts a long title, with only a hover title to read it. Wrap it, as
+          `ItemCard`'s `titleLines` does.
+        - Pipeline editor, empty, at 344: the palette sits below the fold of the canvas that points
+          at it. Offer Add step in the empty state, opening `BlockPicker`.
+    - **Round 5, dashboards:**
+        - A panel's own failure and freshness: `DashboardPanel`, `ChartFrame` and `StatPanel` show
+          loading and no data, but not a failed query with Retry, or values kept but stale since a
+          time. One contract for loading, empty, failed and stale, built on `Problem`.
+        - `DashboardGrid` spans that follow their container, not the window.
+        - A drilldown on `StatPanel` (`href` or `onSelect`), as `Stat` has.
+        - A delta says what it compares against ("vs the previous 6 hours"); one look for the main
+          figures and a quieter one for the rest; fewer solid fills on a phone's first screen.
+    - **Round 6, data entry:**
+        - A field kind for `SchemaForm`: an app maps a schema field to a control of its own, so a
+          file, a date, a searchable choice or an upload works in a generated form.
+        - One attachment model for a field: stored files with their ids, new files, replacements
+          and removals, wired to `useUploads`, so cancel in the field also aborts the upload.
+        - A submit that waits on checks, uploads and pending async checks, shows server errors on
+          their fields, and refuses a second press.
+        - Repeated groups for a composed form, with stable keys (`SchemaForm` keys its items by
+          index today, so removing one shifts the issues), and moving one up or down.
+        - Interaction tests for the above: a bad submit focusing the first issue, a server error,
+          removing a repeated item, cancelling and retrying an upload, editing stored files.
+    - **Round 7, cold loads:** the notes example's entry script is 1.5 MB (466 kB gzipped) on its
+      list page; find what it pulls in at start. The analytics and status dashboards fetch the map
+      engine and its worker (about 1.5 MB) for a map below the fold; load a map when it nears the
+      screen.
+    - **Not covered yet:** the Electron and Tauri shells, browsers other than Chromium, and real
+      touch devices. Run that pass before calling the examples checked on every platform.
+
 - **Smaller start bundles, what is left.** Every library only some parts need is an optional peer,
   and the heavy ones, Base UI's menu among them, load on first use. Left:
     - On a dashboard, `chartLegend` still brings every chart kind with the page. Split each kind's
@@ -167,7 +259,6 @@ to `plan.md` when it ships.
     - **Frame:**
         - a rail that shows its places above its body, not behind a row
         - ⌘K refused while a closing dialog still counts as a layer
-        - `useUnsavedChanges` blocking an app's hash route as well as the tab closing
     - **Tables:**
         - `DataTable` heads that take a node (a type badge)
         - a list variant with its own search
@@ -175,7 +266,6 @@ to `plan.md` when it ships.
         - blank space under stacked cards
         - windowing in `TrackList`, and a `TrackList` row that links to a page
     - **Dashboards:**
-        - `DashboardGrid` spans that follow their container, not the window
         - panels moved by drag
         - custom ranges with a time of day
         - a phone layout for an editor beside its live preview
@@ -186,7 +276,6 @@ to `plan.md` when it ships.
         - a basemap that works offline
     - **Graphs:**
         - a small engine-free pipeline glyph for lists
-        - `RunGraph` and dependency graphs fitting a phone, as `NetworkGraph` does
         - a live force layout with dragging
     - **Editors:**
         - `CodeEditor` following a `[[link]]` on Mod-click
@@ -198,7 +287,6 @@ to `plan.md` when it ships.
           and completing a key's whole object from the schema's `required` keys, as a snippet
     - **Media:** artwork for the media session from drawn covers.
     - **Video:**
-        - speed and quality reachable on a narrow player (they hide below a medium width today)
         - waiting on a live stream's missing segments, where hls.js now skips past them
         - Apple's own HLS (Safari, the macOS webview) picking a try up at the start of the segment it
           stood in, so up to a segment plays again, and dropping "Trying again" once the media loads
