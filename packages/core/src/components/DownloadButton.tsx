@@ -1,4 +1,4 @@
-import { Check, Download, X } from 'lucide-react'
+import { Check, Download, Pause, Play, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import { cn } from '../lib/cn'
@@ -6,15 +6,21 @@ import { IconButton } from './IconButton'
 import { Button, buttonVariants } from './ui/button'
 import { ProgressRing } from './ui/progress-ring'
 
-/** Where a download stands: not started, under way, or done and kept on the device. */
-export type DownloadState = 'idle' | 'running' | 'kept'
+/** Where a download stands: not started, under way, held part way, or done and kept on the device. */
+export type DownloadState = 'idle' | 'running' | 'paused' | 'kept'
 
 export interface DownloadButtonWords {
     download: string
     /** What a running download says, given how many of how many parts are in. */
     progress: (count: number, total: number) => string
-    /** What a running download with no count says. */
+    /** What a running download with a share and no count says, given the share from 0 to 1. */
+    share: (value: number) => string
+    /** What a running download with no count and no share says. */
     running: string
+    /** What a paused download says. */
+    paused: string
+    pause: string
+    resume: string
     cancel: string
     kept: string
     /** What a kept copy says once pressed to remove, waiting for the second press. */
@@ -27,7 +33,11 @@ export interface DownloadButtonWords {
 const WORDS: DownloadButtonWords = {
     download: 'Download',
     progress: (count, total) => `${String(count)} of ${String(total)}`,
+    share: (value) => `${String(Math.round(value * 100))}%`,
     running: 'Downloading',
+    paused: 'Paused',
+    pause: 'Pause the download',
+    resume: 'Resume the download',
     cancel: 'Cancel the download',
     kept: 'Kept',
     remove: 'Remove?',
@@ -53,6 +63,10 @@ export interface DownloadButtonProps {
     value?: number
     onDownload?: () => void
     onCancel?: () => void
+    /** Offers a pause beside a running download; the app then holds it as `paused`. */
+    onPause?: () => void
+    /** Offers a resume beside a paused download. */
+    onResume?: () => void
     onOpen?: () => void
     /** Removes the kept copy, after a confirming second press. */
     onRemove?: () => void
@@ -71,11 +85,12 @@ export interface DownloadButtonProps {
 }
 
 /**
- * A button that downloads something for keeping, through its three states, which the app holds in
+ * A button that downloads something for keeping, through its states, which the app holds in
  * `state`: idle says Download; running fills a `ProgressRing` and says how many of how many parts
- * are in (`count` and `total`; `value` alone for a share such as bytes), with a button beside it to
- * cancel; kept says Kept with a check, and pressing it calls `onOpen`, to show the kept copy, when
- * given, or downloads again.
+ * are in (`count` and `total`), or the share done (`value` alone, for bytes), with a button beside
+ * it to cancel and, with `onPause`, one to pause; paused holds the ring where it stopped, says
+ * Paused, and offers resume (`onResume`) and cancel; kept says Kept with a check, and pressing it
+ * calls `onOpen`, to show the kept copy, when given, or downloads again.
  *
  * With `onRemove`, pressing a kept copy removes it in two presses: the first arms it (it says
  * Remove? in the critical ink, for a few seconds or until focus leaves), the second calls
@@ -90,6 +105,8 @@ export function DownloadButton({
     value,
     onDownload,
     onCancel,
+    onPause,
+    onResume,
     onOpen,
     onRemove,
     keptDetail,
@@ -114,20 +131,34 @@ export function DownloadButton({
     const word = (text: string) => (
         <span className={cn(compact === true && 'sr-only', compact === 'narrow' && 'max-sm:sr-only')}>{text}</span>
     )
-    if (state === 'running') {
-        const said = count !== undefined && total !== undefined ? words.progress(count, total) : words.running
+    if (state === 'running' || state === 'paused') {
+        const said =
+            state === 'paused'
+                ? words.paused
+                : count !== undefined && total !== undefined
+                  ? words.progress(count, total)
+                  : value !== undefined
+                    ? words.share(value)
+                    : words.running
+        const icon = size === 'sm' ? 'icon-sm' : size === 'lg' ? 'icon-lg' : 'icon'
         return (
-            <span data-slot="download-button" className={cn('inline-flex items-center gap-0.5', className)}>
+            <span data-slot="download-button" data-state={state} className={cn('inline-flex items-center gap-0.5', className)}>
                 <span role="status" className={cn(buttonVariants({ variant, size }), 'pointer-events-none tabular-nums')}>
                     <ProgressRing value={downloadShare({ value, count, total })} label={said} />
                     {said}
                 </span>
+                {state === 'running' && onPause !== undefined && (
+                    <IconButton label={words.pause} size={icon} onClick={onPause}>
+                        <Pause aria-hidden />
+                    </IconButton>
+                )}
+                {state === 'paused' && onResume !== undefined && (
+                    <IconButton label={words.resume} size={icon} onClick={onResume}>
+                        <Play aria-hidden />
+                    </IconButton>
+                )}
                 {onCancel !== undefined && (
-                    <IconButton
-                        label={words.cancel}
-                        size={size === 'sm' ? 'icon-sm' : size === 'lg' ? 'icon-lg' : 'icon'}
-                        onClick={onCancel}
-                    >
+                    <IconButton label={words.cancel} size={icon} onClick={onCancel}>
                         <X aria-hidden />
                     </IconButton>
                 )}

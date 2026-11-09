@@ -367,7 +367,8 @@ carries no chip; `lib/status` holds the map's types, the run states and each col
 A button that cannot be pressed now says why: `reason` on `Button`, `IconButton` and `SplitButton`
 disables it and shows the reason on hover and focus, the button kept in the tab order so a keyboard
 reaches it. `SplitButton` joins the main action to a menu of other ways; `DownloadButton` goes from
-idle through n of m on a `ProgressRing`, with a cancel, to kept, its state held by the app.
+idle through n of m (or a share, for bytes) on a `ProgressRing`, with a cancel and, when the app can
+hold one, a pause and a resume, to kept, its state held by the app.
 `RelativeTime` says a time as "3 minutes ago" through `Intl.RelativeTimeFormat`, the instant on
 hover, ticking on its own clock unless the app passes `now`. `ApiLink` names the request behind a
 screen as a copyable chip. `TagChips` shows as many tags as fit the room its row has left and a +N
@@ -505,7 +506,12 @@ draws again only what reads the changed fact. `useUploads` runs the app's
 it refuses the rest, cancels through the signal (and drops what an uploader that ignores it answers
 later), and hands `AttachmentList`, `Composer` and `UploadTray` their files. `ConversationHistory`, the list
 beside a chat, is a `DataTable` list grouped under Pinned, Today and Earlier, with rename in place,
-pin, and delete after a question.
+pin, and delete after a question. `UsageLine` says under a model's answer what it cost and how fast
+it came (tokens in and out, the time to the first token, the rate, the whole time), counting so far
+while it streams, and `AnswerColumn` is one model's answer among several sent the same prompt: the
+model over a fact about it, the state as a chip, its thinking folded as `AssistantReply` folds it, the
+answer streaming with `Markdown`'s caret, and the usage line pinned under it, with Stop, Run again,
+Copy and Remove in its head.
 
 `FileField` takes files in a form, in a `Field` as the other inputs are: a zone they are dropped on
 (the drag `DropZone`'s, from `use-file-drop`) with a button that opens the picker, the limits under
