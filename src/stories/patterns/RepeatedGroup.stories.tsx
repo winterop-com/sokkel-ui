@@ -100,6 +100,38 @@ function Recipients() {
     )
 }
 
+function Services() {
+    const services = useRepeated<string>(['api', 'worker'], () => '')
+    const few = services.rows.length < 3
+    return (
+        <TooltipProvider>
+            <Stack gap="lg" className="max-w-xl">
+                <RepeatedGroup
+                    label="Services"
+                    description="Every service the harbor project runs, each watched by sync-inventory."
+                    required
+                    error={few ? 'Add at least 3 services' : null}
+                    rows={services.rows}
+                    onAdd={() => services.add()}
+                    onRemove={services.remove}
+                    words={{ item: (index) => `Service ${String(index + 1)}` }}
+                >
+                    {(key, index) => (
+                        <TextField
+                            id={`${key}-name`}
+                            label="Name"
+                            mono
+                            required
+                            value={services.rows[index].value}
+                            onChange={(name) => services.set(key, name)}
+                        />
+                    )}
+                </RepeatedGroup>
+            </Stack>
+        </TooltipProvider>
+    )
+}
+
 /** A question answered more than once: a row of one control for each answer, each with Remove, and Add for another. */
 export const OneControl: StoryObj = { name: 'One control', render: () => <Recipients /> }
 
@@ -108,3 +140,9 @@ export const Editable: StoryObj = { name: 'Steps', render: () => <Steps /> }
 
 /** The same steps read only: no Add, Move or Remove, and the fields locked. */
 export const ReadOnly: StoryObj = { name: 'Read only', render: () => <Steps readOnly /> }
+
+/**
+ * A required group, starred after its name as a required field is, refused as a whole: the issue
+ * mark beside its name opens why ("Add at least 3 services"), and goes once a third service is added.
+ */
+export const Refused: StoryObj = { render: () => <Services /> }
