@@ -1,6 +1,7 @@
-import { readdirSync, statSync } from 'node:fs'
-import { dirname, join, relative } from 'node:path'
+import { readFileSync, readdirSync, statSync } from 'node:fs'
+import { join, relative } from 'node:path'
 
+import { Scanner } from '@tailwindcss/oxide'
 import react from '@vitejs/plugin-react'
 import { defineConfig, type Plugin, type Rolldown, type UserConfig } from 'vite'
 
@@ -19,15 +20,36 @@ function entries(src: string, dir: string): Record<string, string> {
 const CORE = '@winterop-com/sokkel-ui/'
 
 /**
- * Writes `dist/sources/<name>.css` for every module: an `@source` for its own source file and for
- * every module of the package it imports, however deep, and an `@import` of the core's list for
- * every core module an add-on's module imports, so Tailwind finds the classes of that module alone.
+ * The class candidates Tailwind finds in a source file, as `@source inline` lines. Inline, not
+ * `@source` of the file: Tailwind 4.3 scans the whole folder of a file named inside `node_modules`,
+ * so naming one module's file pulled in every component's classes. A candidate holding a double quote, a
+ * brace or a backslash is left out, since `inline` reads braces as alternatives.
+ */
+function inlineSources(scanner: Scanner, files: string[]): string[] {
+    const found = new Set<string>()
+    for (const file of files)
+        for (const { candidate } of scanner.getCandidatesWithPositions({
+            content: readFileSync(file, 'utf8'),
+            extension: file.slice(file.lastIndexOf('.') + 1),
+        }))
+            if (!/["{}\\\s]/.test(candidate)) found.add(candidate)
+    const all = [...found].sort()
+    const lines: string[] = []
+    for (let at = 0; at < all.length; at += 100) lines.push(`@source inline("${all.slice(at, at + 100).join(' ')}");`)
+    return lines
+}
+
+/**
+ * Writes `dist/sources/<name>.css` for every module: the classes of its own source file and of every
+ * module of the package it imports, however deep, written inline, and an `@import` of the core's list
+ * for every core module an add-on's module imports, so Tailwind finds the classes of that module alone.
  * `name` maps a module's path under `src` to the name an app imports it by.
  */
-function sourceLists(root: string, src: string, name: (module: string) => string): Plugin {
+function sourceLists(src: string, name: (module: string) => string): Plugin {
     return {
         name: 'source-lists',
         generateBundle(_, bundle) {
+            const scanner = new Scanner({})
             const chunks = new Map(
                 Object.values(bundle)
                     .filter((out): out is Rolldown.OutputChunk => out.type === 'chunk')
@@ -49,12 +71,13 @@ function sourceLists(root: string, src: string, name: (module: string) => string
                 }
                 visit(chunk.fileName)
                 const fileName = `sources/${name(chunk.fileName.replace(/\.js$/, ''))}.css`
-                const from = dirname(join(root, 'dist', fileName))
                 const own = [...reached]
                     .map((file) => chunks.get(file)?.facadeModuleId)
                     .filter((id): id is string => id?.startsWith(src) === true)
-                    .map((id) => `@source '${relative(from, id)}';`)
-                const lines = [...[...core].map((module) => `@import '${CORE}sources/${module}.css';`).sort(), ...own.sort()]
+                const lines = [
+                    ...[...core].map((module) => `@import '${CORE}sources/${module}.css';`).sort(),
+                    ...inlineSources(scanner, own),
+                ]
                 this.emitFile({ type: 'asset', fileName, source: `${lines.join('\n')}\n` })
             }
         },
@@ -75,7 +98,7 @@ export function library(
     const src = join(root, 'src')
     return defineConfig({
         root,
-        plugins: [react(), sourceLists(root, src, sources)],
+        plugins: [react(), sourceLists(src, sources)],
         build: {
             outDir: 'dist',
             emptyOutDir: true,
