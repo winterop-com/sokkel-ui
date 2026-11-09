@@ -1,4 +1,4 @@
-import { Maximize, Minimize, PictureInPicture2, Play, RefreshCw, RotateCcw, RotateCw } from 'lucide-react'
+import { Ellipsis, Maximize, Minimize, PictureInPicture2, Play, RefreshCw, RotateCcw, RotateCw } from 'lucide-react'
 import {
     useCallback,
     useEffect,
@@ -18,7 +18,16 @@ import { cn } from '../../lib/cn'
 import { enterFullscreen, exitFullscreen, fullscreenElement, subscribeFullscreen } from '../../lib/fullscreen'
 import type { Store } from '../../lib/stored'
 import { Button } from '../ui/button'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '../ui/dropdown-menu'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuLabel,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '../ui/dropdown-menu'
 import { Spinner } from '../ui/spinner'
 import {
     CAPTIONS_KEY,
@@ -34,7 +43,7 @@ import {
     type CaptionStyle,
 } from './captions'
 import { CaptionsMenu } from './CaptionsMenu'
-import { MEDIA_RATES, PlayButton, Position, RateMenu, TransportButton, VolumeControl } from './MediaControls'
+import { formatRate, MEDIA_RATES, PlayButton, Position, RateMenu, TransportButton, VolumeControl } from './MediaControls'
 import { useOneSound } from './one-sound'
 import { type MediaRange } from './time'
 import {
@@ -85,6 +94,8 @@ export interface VideoPlayerWords {
     speed: string
     /** The quality menu's name. */
     quality: string
+    /** The menu a narrow player keeps its speed and quality in. */
+    more: string
     captions: string
     captionsOff: string
     /** The captions menu's settings, each a submenu. */
@@ -119,6 +130,7 @@ export const VIDEO_PLAYER_WORDS: VideoPlayerWords = {
     seek: 'Seek',
     speed: 'Playback speed',
     quality: 'Quality',
+    more: 'More',
     captions: 'Captions',
     captionsOff: 'Off',
     captionSize: 'Size',
@@ -1278,6 +1290,58 @@ export function VideoPlayer({
                                             </DropdownMenuRadioItem>
                                         ))}
                                     </DropdownMenuRadioGroup>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        )}
+                        {(rates.length > 1 || (qualities.length > 1 && chosenQuality !== undefined)) && (
+                            <DropdownMenu onOpenChange={setMenuOpen}>
+                                <DropdownMenuTrigger
+                                    render={
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            aria-label={words.more}
+                                            className={cn(ON_PICTURE, 'inline-flex @md:hidden')}
+                                        />
+                                    }
+                                >
+                                    <Ellipsis aria-hidden />
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent container={menuRoom} side="top" align="end" className="w-auto min-w-40">
+                                    {rates.length > 1 && (
+                                        <DropdownMenuGroup>
+                                            <DropdownMenuLabel>{words.speed}</DropdownMenuLabel>
+                                            <DropdownMenuRadioGroup
+                                                value={String(state.rate)}
+                                                onValueChange={(value: string) => setRate(Number(value))}
+                                            >
+                                                {rates.map((rate) => (
+                                                    <DropdownMenuRadioItem key={rate} value={String(rate)} closeOnClick>
+                                                        {formatRate(rate)}
+                                                    </DropdownMenuRadioItem>
+                                                ))}
+                                            </DropdownMenuRadioGroup>
+                                        </DropdownMenuGroup>
+                                    )}
+                                    {rates.length > 1 && qualities.length > 1 && chosenQuality !== undefined && <DropdownMenuSeparator />}
+                                    {qualities.length > 1 && chosenQuality !== undefined && (
+                                        <DropdownMenuGroup>
+                                            <DropdownMenuLabel>{words.quality}</DropdownMenuLabel>
+                                            <DropdownMenuRadioGroup
+                                                value={chosenQuality.value}
+                                                onValueChange={(value: string) => onQualityChange?.(value)}
+                                            >
+                                                {qualities.map((option) => (
+                                                    <DropdownMenuRadioItem key={option.value} value={option.value} closeOnClick>
+                                                        <span className="flex-1">{option.label}</span>
+                                                        {option.detail !== undefined && (
+                                                            <span className="text-muted-foreground">{option.detail}</span>
+                                                        )}
+                                                    </DropdownMenuRadioItem>
+                                                ))}
+                                            </DropdownMenuRadioGroup>
+                                        </DropdownMenuGroup>
+                                    )}
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         )}
