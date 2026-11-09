@@ -104,6 +104,9 @@ export const Down: StoryObj = { render: () => <SplitPane direction="down" defaul
 /** A split that does not resize: the job keeps a third of the room and the edge does not drag. */
 export const Fixed: StoryObj = { render: () => <SplitPane resizable={false} defaultShare={1 / 3} first={config} second={log} /> }
 
+/** The log alone at every width, as when the reader turns the job off; the job stays mounted, hidden. */
+export const SecondAlone: StoryObj = { name: 'Second alone', render: () => <SplitPane only="second" first={config} second={log} /> }
+
 const SHARES = [
     { value: '0.25', label: '25%' },
     { value: '0.5', label: '50%' },

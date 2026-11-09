@@ -479,7 +479,10 @@ share held within `minShare` and `maxShare`, the second's what is left. It holds
 `defaultShare` and keeps it by `id` in storage; `share` with `onShareChange` holds it from outside.
 Narrower than `narrowBelow`, measured on itself, it stacks its panes or shows the one `narrow` names,
 as a phone shows a list or the message opened from it, and `useSplitPane` tells a pane it is alone.
-Mail's list beside its reading pane, the query workbench and a chat's history are split by it.
+`only` shows one pane alone at any width, the other kept mounted, as a reader turns it off.
+Mail's list beside its reading pane, the query workbench and a chat's history are split by it, and so
+is `EditPreview`'s `pane` variant: an editor and its live preview edge to edge in a pane of the
+app's, the share kept by `id`, with `view` showing both or either alone.
 
 `WindowedPane` gives any pane an expand button that opens the same content near full screen, in a
 window with a margin, a title, a close button and Escape, the pane keeping its height in place
