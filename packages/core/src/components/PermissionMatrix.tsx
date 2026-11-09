@@ -1,9 +1,9 @@
 import { Lock } from 'lucide-react'
-import { Fragment, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
-import { TABLE_HEAD_ROW, TABLE_HEAD_TEXT } from '../lib/table'
-import { GroupLabel } from './GroupLabel'
+import { TABLE_HEAD_TEXT } from '../lib/table'
+import { DataTable, type DataColumn } from './DataTable'
 import { Checkbox } from './ui/checkbox'
 import { NativeSelect, NativeSelectOption } from './ui/native-select'
 
@@ -79,9 +79,16 @@ export interface PermissionMatrixProps {
     words?: Partial<PermissionMatrixWords>
 }
 
+/** One row of the matrix as the table holds it: a permission and the group it sits in. */
+interface MatrixLine {
+    permission: MatrixPermission
+    group: string
+}
+
 /**
- * Roles against permissions as a grid of checkboxes: a column per role, a row per permission, the
- * rows grouped by what they act on with each group's row counting what every role holds of it.
+ * Roles against permissions as a grid of checkboxes, drawn by `DataTable`: a column per role, a
+ * row per permission, the rows grouped by what they act on, each group's head counting what every
+ * role holds of it and folding the group.
  *
  * A locked role is built in: its column is drawn with a lock and its boxes are read-only. Given
  * `saved`, a box that differs from it is marked as changed, so unsaved edits show where they are.
@@ -90,7 +97,6 @@ export interface PermissionMatrixProps {
  */
 export function PermissionMatrix({ roles, groups, value, saved, onChange, className, words: given }: PermissionMatrixProps) {
     const words = { ...WORDS, ...given }
-    const stuck = 'sticky left-0 z-10 bg-card'
     // One role at a time once the permission column and every role's column no longer fit.
     const box = useRef<HTMLDivElement>(null)
     const [width, setWidth] = useState(1200)
@@ -107,13 +113,103 @@ export function PermissionMatrix({ roles, groups, value, saved, onChange, classN
     const one = roles.length > 1 && width < (11 + roles.length * 7) * rem
     const [picked, setPicked] = useState(roles[0]?.id ?? '')
     const shown = one ? roles.filter((role) => role.id === picked).slice(0, 1) : roles
+    const lines = useMemo(
+        () => groups.flatMap((group) => group.permissions.map((permission): MatrixLine => ({ permission, group: group.id }))),
+        [groups],
+    )
+    const labels = useMemo(() => new Map(groups.map((group) => [group.id, group.label])), [groups])
+    const columns: DataColumn<MatrixLine>[] = [
+        {
+            id: 'permission',
+            header: words.permission,
+            width: 'minmax(11rem,1fr)',
+            cell: ({ permission }) => (
+                <span className="flex min-w-0 flex-col">
+                    <span className="flex min-w-0 items-baseline gap-2">
+                        <span className="truncate">{permission.label}</span>
+                        {permission.code !== undefined && (
+                            <span className="hidden truncate font-mono text-xs text-faint md:inline">{permission.code}</span>
+                        )}
+                    </span>
+                    {permission.description !== undefined && (
+                        <span className="truncate text-xs text-muted-foreground">{permission.description}</span>
+                    )}
+                </span>
+            ),
+        },
+        ...shown.map((role): DataColumn<MatrixLine> => {
+            const locked = role.locked === true
+            const changed = ({ permission }: MatrixLine) =>
+                saved !== undefined && has(value, role.id, permission.id) !== has(saved, role.id, permission.id)
+            return {
+                id: `role:${role.id}`,
+                header: role.label,
+                head: (
+                    <span className="flex min-w-0 flex-col items-center text-center">
+                        <span className="flex max-w-full items-center justify-center gap-1">
+                            {locked && (
+                                <span title={words.builtIn} className="inline-flex text-faint">
+                                    <Lock className="size-3 shrink-0" aria-hidden />
+                                    <span className="sr-only">{words.builtIn}</span>
+                                </span>
+                            )}
+                            <span className="truncate">{role.label}</span>
+                        </span>
+                        {role.code !== undefined && role.code !== role.label && (
+                            <span className="max-w-full truncate font-mono text-xs font-normal text-muted-foreground normal-case">
+                                {role.code}
+                            </span>
+                        )}
+                        {role.note !== undefined && (
+                            <span className="max-w-full truncate text-xs font-normal text-muted-foreground normal-case">{role.note}</span>
+                        )}
+                    </span>
+                ),
+                width: 'minmax(6rem,7rem)',
+                align: 'center',
+                fill: (line) => (changed(line) ? { color: 'var(--warning)' } : undefined),
+                aggregate: (rows) => (
+                    <span className="text-xs font-normal text-muted-foreground">
+                        {words.held(rows.filter(({ permission }) => has(value, role.id, permission.id)).length, rows.length)}
+                    </span>
+                ),
+                cell: (line) => {
+                    const { permission } = line
+                    const isChanged = changed(line)
+                    return (
+                        <span data-changed={isChanged || undefined} className="relative inline-flex items-center justify-center p-1">
+                            <Checkbox
+                                checked={has(value, role.id, permission.id)}
+                                readOnly={locked}
+                                aria-label={words.toggle(permission.label, role.label)}
+                                className={cn(locked && 'cursor-default opacity-60')}
+                                onCheckedChange={(next) => {
+                                    if (!locked) onChange?.(role.id, permission.id, next)
+                                }}
+                            />
+                            {isChanged && (
+                                <span
+                                    className="absolute -top-0.5 -right-1.5 size-1.5 rounded-full bg-warning"
+                                    title={words.changed}
+                                    aria-label={words.changed}
+                                />
+                            )}
+                        </span>
+                    )
+                },
+            }
+        }),
+    ]
     return (
         <div
             ref={box}
-            className={cn('min-w-60 overflow-hidden rounded-surface border border-border-strong bg-card [contain:inline-size]', className)}
+            className={cn(
+                'flex min-h-0 min-w-60 flex-col overflow-hidden rounded-surface border border-border-strong bg-card [contain:inline-size]',
+                className,
+            )}
         >
             {one && (
-                <div className="flex items-center gap-2 border-b border-border px-(--density-panel-pad) py-2">
+                <div className="flex shrink-0 items-center gap-2 border-b border-border px-(--density-panel-pad) py-2">
                     <span className={TABLE_HEAD_TEXT}>{words.role}</span>
                     <NativeSelect size="sm" aria-label={words.role} value={picked} onChange={(event) => setPicked(event.target.value)}>
                         {roles.map((role) => (
@@ -124,137 +220,19 @@ export function PermissionMatrix({ roles, groups, value, saved, onChange, classN
                     </NativeSelect>
                 </div>
             )}
-            {/* Relative, so the labels drawn for screen readers only stay inside the scroll and never widen the page. */}
-            <div className="relative overflow-x-auto">
-                <table className="w-full border-collapse text-sm">
-                    <thead>
-                        <tr className={TABLE_HEAD_ROW}>
-                            <th
-                                scope="col"
-                                className={cn(
-                                    stuck,
-                                    'bg-table-head-ground px-(--density-panel-pad) py-2 text-left align-bottom',
-                                    TABLE_HEAD_TEXT,
-                                )}
-                            >
-                                {words.permission}
-                            </th>
-                            {shown.map((role) => (
-                                <th
-                                    key={role.id}
-                                    scope="col"
-                                    className={cn(
-                                        'w-28 min-w-24 border-l border-border px-2 py-2 text-center align-bottom',
-                                        TABLE_HEAD_TEXT,
-                                    )}
-                                >
-                                    <span className="flex items-center justify-center gap-1">
-                                        {role.locked === true && (
-                                            <span title={words.builtIn} className="inline-flex text-faint">
-                                                <Lock className="size-3 shrink-0" aria-hidden />
-                                                <span className="sr-only">{words.builtIn}</span>
-                                            </span>
-                                        )}
-                                        <span className="truncate">{role.label}</span>
-                                    </span>
-                                    {role.code !== undefined && role.code !== role.label && (
-                                        <span className="block truncate font-mono text-xs font-normal text-muted-foreground">
-                                            {role.code}
-                                        </span>
-                                    )}
-                                    {role.note !== undefined && (
-                                        <span className="block truncate text-xs font-normal text-muted-foreground">{role.note}</span>
-                                    )}
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {groups.map((group) => (
-                            <Fragment key={group.id}>
-                                <tr className="border-b border-border bg-muted/40">
-                                    <th
-                                        scope="rowgroup"
-                                        className={cn(
-                                            stuck,
-                                            'bg-[color-mix(in_oklab,var(--muted)_40%,var(--card))] px-(--density-panel-pad) py-1.5 text-left',
-                                        )}
-                                    >
-                                        <GroupLabel as="span">{group.label}</GroupLabel>
-                                    </th>
-                                    {shown.map((role) => (
-                                        <td
-                                            key={role.id}
-                                            className="border-l border-border px-2 py-1.5 text-center text-xs text-muted-foreground tabular-nums"
-                                        >
-                                            {words.held(
-                                                group.permissions.filter((permission) => has(value, role.id, permission.id)).length,
-                                                group.permissions.length,
-                                            )}
-                                        </td>
-                                    ))}
-                                </tr>
-                                {group.permissions.map((permission) => (
-                                    <tr key={permission.id} className="border-b border-border last:border-b-0">
-                                        <th
-                                            scope="row"
-                                            className={cn(stuck, 'max-w-72 min-w-44 px-(--density-panel-pad) py-2 text-left font-normal')}
-                                        >
-                                            <span className="flex items-baseline gap-2">
-                                                <span className="truncate">{permission.label}</span>
-                                                {permission.code !== undefined && (
-                                                    <span className="hidden truncate font-mono text-xs text-faint md:inline">
-                                                        {permission.code}
-                                                    </span>
-                                                )}
-                                            </span>
-                                            {permission.description !== undefined && (
-                                                <span className="block truncate text-xs text-muted-foreground">
-                                                    {permission.description}
-                                                </span>
-                                            )}
-                                        </th>
-                                        {shown.map((role) => {
-                                            const granted = has(value, role.id, permission.id)
-                                            const changed = saved !== undefined && granted !== has(saved, role.id, permission.id)
-                                            const locked = role.locked === true
-                                            return (
-                                                <td
-                                                    key={role.id}
-                                                    data-changed={changed || undefined}
-                                                    className={cn(
-                                                        'relative border-l border-border px-2 py-2 text-center',
-                                                        changed && 'bg-warning/12',
-                                                    )}
-                                                >
-                                                    <span className="inline-flex items-center justify-center">
-                                                        <Checkbox
-                                                            checked={granted}
-                                                            readOnly={locked}
-                                                            aria-label={words.toggle(permission.label, role.label)}
-                                                            className={cn(locked && 'cursor-default opacity-60')}
-                                                            onCheckedChange={(next) => {
-                                                                if (!locked) onChange?.(role.id, permission.id, next)
-                                                            }}
-                                                        />
-                                                    </span>
-                                                    {changed && (
-                                                        <span
-                                                            className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-warning"
-                                                            title={words.changed}
-                                                            aria-label={words.changed}
-                                                        />
-                                                    )}
-                                                </td>
-                                            )
-                                        })}
-                                    </tr>
-                                ))}
-                            </Fragment>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+            <DataTable
+                columns={columns}
+                rows={lines}
+                rowKey={({ permission }) => permission.id}
+                groupBy="group"
+                groupLabel={(key) => labels.get(key) ?? key}
+                rowHeight="auto"
+                bar={false}
+                hover={false}
+                stackBelow={false}
+                minWidth="auto"
+                framed={false}
+            />
         </div>
     )
 }

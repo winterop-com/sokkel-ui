@@ -72,6 +72,15 @@ const RULES: Rule[] = [
         except: { 'src/stories/primitives/Table.stories.tsx': "the Table primitive's own stories" },
     },
     {
+        name: 'a table drawn by hand in a component instead of DataTable',
+        pattern: /<(table|Table)\b/,
+        in: Object.values(SOURCES).flat(),
+        except: {
+            'packages/core/src/components/ui/table.tsx': 'the Table primitive itself',
+            'packages/core/src/components/LogView.tsx': "a log's lines on the terminal ground, read and followed rather than listed",
+        },
+    },
+    {
         name: 'a pill shape in a story instead of a component',
         pattern: /rounded-(full|4xl|3xl)/,
         in: STORIES,

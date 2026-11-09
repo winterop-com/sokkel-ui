@@ -88,11 +88,23 @@ export type DataCellEdit<T> =
           options: readonly EditOption[] | ((row: T) => readonly EditOption[])
       })
 
+/** A color a cell is filled with; see `DataColumn.fill`. */
+export interface CellFill {
+    color: string
+    solid?: boolean
+}
+
 /** One column: its name, how wide it is, how a row draws its cell, and how it sorts. */
 export interface DataColumn<T> {
     id: string
     /** The column's name, in its head and in the column menu. */
     header: string
+    /**
+     * What the column's head draws in place of `header`, such as a name with a mark or a second line
+     * under it; `header` still names the column in the menu, a stacked card and its resize handle.
+     * A head of several lines makes the head row as tall as it needs.
+     */
+    head?: ReactNode
     /**
      * The band the column sits in, such as one option of a cut whose other options are the columns
      * under it. Neighboring columns with the same band are drawn under one head above theirs, a rule
@@ -102,7 +114,12 @@ export interface DataColumn<T> {
     /** A CSS grid track: `8rem`, `minmax(12rem,1fr)`. */
     width: string
     cell: (row: T) => ReactNode
-    align?: 'start' | 'end'
+    align?: 'start' | 'center' | 'end'
+    /**
+     * A color under a row's cell in this column, in the table's cells: a CSS color such as a token's
+     * variable, mixed into the table's ground, or at full strength with the ink for fills when `solid`.
+     */
+    fill?: (row: T) => CellFill | undefined
     /** The value the column sorts by; a column without one does not sort. */
     sortValue?: (row: T) => string | number
     /** Whether the column menu may hide it. The first column never hides. */
@@ -680,6 +697,12 @@ export interface DataTableProps<T> {
     onColumnWidthsChange?: (widths: Readonly<Record<string, number>>) => void
     /** `list`: a short listing's look, with no bar above the head while nothing is selected, unless it has a `search` or a `toolbar`. */
     variant?: 'table' | 'list'
+    /**
+     * Whether the bar above the head shows while nothing is selected: by default a table has one, and a
+     * list only with a `search` or a `toolbar`. `false` for a table that only shows its rows, such as a
+     * scorecard.
+     */
+    bar?: boolean
     /** A line at the foot, such as how many rows are loaded. */
     foot?: ReactNode
     /**
@@ -856,6 +879,7 @@ export function DataTable<T>({
     defaultColumnWidths = NO_WIDTHS,
     onColumnWidthsChange,
     variant = 'table',
+    bar,
     foot,
     empty,
     hover = true,
@@ -1288,6 +1312,8 @@ export function DataTable<T>({
     // The rule where a band starts or ends; a list's columns sit apart by a gap, so its rule takes room after it too.
     const edge = cn('border-l border-border', list && 'pl-3')
     const spaced = list && 'gap-3 px-(--density-panel-pad)'
+    // A head drawn as a node may take several lines, so the head row grows to fit it.
+    const tallHeads = shown.some((column) => column.head !== undefined)
 
     /** A tree row's indent and its control: open or close, or a spinner while its children load. */
     const treeControl = (entry: FlatRow<T>) => (
@@ -1418,6 +1444,7 @@ export function DataTable<T>({
                             pad,
                             bandEdge(labelSpan + index) && edge,
                             column.align === 'end' && 'justify-end tabular-nums',
+                            column.align === 'center' && 'justify-center tabular-nums',
                         )}
                     >
                         <span className="min-w-0 truncate">{column.aggregate?.(head.rows)}</span>
@@ -1752,7 +1779,7 @@ export function DataTable<T>({
                 className,
             )}
         >
-            {(!list || selection.size > 0 || search !== undefined || toolbar !== undefined) && (
+            {(selection.size > 0 || (bar ?? (!list || search !== undefined || toolbar !== undefined))) && (
                 // Narrow, the search takes a line of its own and the tools wrap across the whole width, the count and the
                 // sort after them; wide, the tools wrap in the room the search and the count leave.
                 <div className="@container/bar shrink-0 border-b border-border px-(--density-panel-pad) text-sm">
@@ -2011,7 +2038,8 @@ export function DataTable<T>({
                             'sticky z-[2] grid items-center',
                             !banded ? 'top-0' : list ? 'top-(--density-panel-head)' : 'top-(--density-row)',
                             TABLE_HEAD_ROW,
-                            list ? 'h-(--density-panel-head)' : 'h-(--density-row)',
+                            list ? 'min-h-(--density-panel-head)' : 'min-h-(--density-row)',
+                            !tallHeads && (list ? 'h-(--density-panel-head)' : 'h-(--density-row)'),
                             spaced,
                             TABLE_HEAD_TEXT,
                         )}
@@ -2042,15 +2070,21 @@ export function DataTable<T>({
                                         'relative flex h-full min-w-0 items-center',
                                         pad,
                                         column.align === 'end' && 'justify-end',
+                                        column.align === 'center' && 'justify-center',
+                                        tallHeads && 'py-1.5',
                                         index === 0 && cn(pinned, selectable ? 'left-(--check)' : 'left-0'),
                                         bandEdge(index) && edge,
                                     )}
                                     style={index === 0 ? ({ '--check': CHECK } as React.CSSProperties) : undefined}
                                 >
                                     {column.sortValue === undefined ? (
-                                        <span className="truncate" title={column.header}>
-                                            {column.header}
-                                        </span>
+                                        column.head === undefined ? (
+                                            <span className="truncate" title={column.header}>
+                                                {column.header}
+                                            </span>
+                                        ) : (
+                                            <span className="min-w-0">{column.head}</span>
+                                        )
                                     ) : (
                                         <button
                                             type="button"
@@ -2063,9 +2097,13 @@ export function DataTable<T>({
                                                 sorted !== undefined && 'text-foreground',
                                             )}
                                         >
-                                            <span className="truncate" title={column.header}>
-                                                {column.header}
-                                            </span>
+                                            {column.head === undefined ? (
+                                                <span className="truncate" title={column.header}>
+                                                    {column.header}
+                                                </span>
+                                            ) : (
+                                                <span className="min-w-0">{column.head}</span>
+                                            )}
                                             {sorted === 'asc' && <ArrowUpIcon className="size-3.5 shrink-0" />}
                                             {sorted === 'desc' && <ArrowDownIcon className="size-3.5 shrink-0" />}
                                         </button>
@@ -2278,11 +2316,13 @@ export function DataTable<T>({
                                         const pinnedHere = index === 0 && pinned !== ''
                                         const cellProps =
                                             edits === undefined ? undefined : editing?.cellProps(edits, entry, column, pinnedHere)
+                                        const filled = column.fill?.(entry.row)
                                         return (
                                             <span
                                                 key={column.id}
                                                 role="gridcell"
                                                 data-pinned={pinnedHere || undefined}
+                                                data-filled={filled === undefined ? undefined : filled.solid === true ? 'solid' : 'tint'}
                                                 {...cellProps}
                                                 className={cn(
                                                     'flex h-full min-w-0 items-center',
@@ -2290,10 +2330,22 @@ export function DataTable<T>({
                                                     bandEdge(index) && edge,
                                                     every && 'py-2',
                                                     column.align === 'end' && 'justify-end tabular-nums',
+                                                    column.align === 'center' && 'justify-center',
                                                     index === 0 && cn(pinned, selectable ? 'left-(--check)' : 'left-0'),
+                                                    filled !== undefined &&
+                                                        (filled.solid === true
+                                                            ? 'bg-(--fill) text-on-fill'
+                                                            : 'bg-[color-mix(in_oklab,var(--fill)_24%,var(--card))]'),
                                                     cellProps?.className,
                                                 )}
-                                                style={index === 0 ? ({ '--check': CHECK } as React.CSSProperties) : undefined}
+                                                style={
+                                                    index === 0 || filled !== undefined
+                                                        ? ({
+                                                              '--check': index === 0 ? CHECK : undefined,
+                                                              '--fill': filled?.color,
+                                                          } as React.CSSProperties)
+                                                        : undefined
+                                                }
                                             >
                                                 {index === 0 && opens && treeControl(entry)}
                                                 <span
@@ -2301,6 +2353,7 @@ export function DataTable<T>({
                                                         'min-w-0',
                                                         every ? 'break-words' : 'truncate',
                                                         column.align === 'end' && 'text-right',
+                                                        column.align === 'center' && 'text-center',
                                                     )}
                                                 >
                                                     {edits === undefined ? column.cell(entry.row) : editing?.content(edits, entry, column)}

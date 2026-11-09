@@ -1,21 +1,9 @@
-import {
-    ArrowDown,
-    ArrowUp,
-    File,
-    FileArchive,
-    FileBraces,
-    FileCode,
-    FileImage,
-    FileSpreadsheet,
-    FileText,
-    Folder,
-    type LucideIcon,
-} from 'lucide-react'
+import { File, FileArchive, FileBraces, FileCode, FileImage, FileSpreadsheet, FileText, Folder, type LucideIcon } from 'lucide-react'
 import type { KeyboardEvent, ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { DataTable, type DataColumn, type DataSort } from './DataTable'
 import { Checkbox } from './ui/checkbox'
-import { TABLE_HEAD_ROW, TABLE_HEAD_TEXT } from '../lib/table'
 
 /** What a file is, which picks its icon and how it previews. */
 export type FileKind = 'folder' | 'image' | 'table' | 'json' | 'text' | 'code' | 'pdf' | 'archive' | 'other'
@@ -158,13 +146,14 @@ export interface FileListProps {
 }
 
 /**
- * A folder's contents as rows: a checkbox, the name with its kind's icon, the size, when it
- * changed, and who owns it. A column header sorts by that column and a second press reverses it;
- * folders stay above files whichever way it sorts. A press on a row opens it (`onOpen`), the
- * checkbox adds it to the selection, and the head's checkbox selects or clears every row.
+ * A folder's contents as rows of a `DataTable` list: a checkbox, the name with its kind's icon, the
+ * size, when it changed, and who owns it. A column header sorts by that column and a second press
+ * reverses it; the app orders the entries (`sortFiles` keeps folders above files whichever way it
+ * sorts). A press on a row opens it (`onOpen`), the checkbox adds it to the selection, and the
+ * head's checkbox selects or clears every row.
  *
- * As its box narrows the owner goes first, then the size and the time move under the name, so a
- * listing beside an open panel or on a phone still reads.
+ * On a narrow box each row is its name over a quiet line of its size and time, so a listing beside
+ * an open panel or on a phone still reads.
  */
 export function FileList({
     entries,
@@ -179,137 +168,74 @@ export function FileList({
     words: given,
 }: FileListProps) {
     const words = { ...WORDS, ...given }
-    const selectable = onSelectedChange !== undefined
-    const chosen = new Set(selected)
-    const all = entries.length > 0 && entries.every((entry) => chosen.has(entry.id))
-    const template = selectable
-        ? 'grid-cols-[1.25rem_minmax(0,1fr)] @md:grid-cols-[1.25rem_minmax(0,1fr)_5rem_7.5rem] @2xl:grid-cols-[1.25rem_minmax(0,1fr)_5.5rem_9rem_6.5rem]'
-        : 'grid-cols-[minmax(0,1fr)] @md:grid-cols-[minmax(0,1fr)_5rem_7.5rem] @2xl:grid-cols-[minmax(0,1fr)_5.5rem_9rem_6.5rem]'
-    const header = (key: FileSortKey, label: string, end = false) => {
-        const on = sort?.key === key
-        const Arrow = sort?.direction === 'desc' ? ArrowDown : ArrowUp
-        return (
-            <span
-                role="columnheader"
-                aria-sort={on ? (sort?.direction === 'asc' ? 'ascending' : 'descending') : undefined}
-                className={cn('min-w-0', key === 'owner' ? 'hidden @2xl:block' : key !== 'name' && 'hidden @md:block', end && 'text-right')}
-            >
-                {onSortChange === undefined ? (
-                    <span className="truncate">{label}</span>
-                ) : (
-                    <button
-                        type="button"
-                        className={cn(
-                            'inline-flex max-w-full items-center gap-1 rounded-sm outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring',
-                            on && 'text-foreground',
-                        )}
-                        onClick={() =>
-                            onSortChange({
-                                key,
-                                direction:
-                                    on && sort?.direction === 'asc'
-                                        ? 'desc'
-                                        : on
-                                          ? 'asc'
-                                          : key === 'name' || key === 'owner'
-                                            ? 'asc'
-                                            : 'desc',
-                            })
-                        }
-                    >
-                        <span className="truncate">{label}</span>
-                        {on && <Arrow aria-hidden className="size-3 shrink-0" />}
-                    </button>
-                )}
-            </span>
-        )
+    // A column sorts from its head only when the app hears it; the app orders the entries, folders first.
+    const sortable = (value: (entry: FileEntry) => string | number) => (onSortChange === undefined ? {} : { sortValue: value })
+    const columns: DataColumn<FileEntry>[] = [
+        {
+            ...sortable((entry) => entry.name),
+            id: 'name',
+            header: words.name,
+            width: 'minmax(12rem,1fr)',
+            hideable: false,
+            cell: (entry) => (
+                <span className="flex min-w-0 items-center gap-2">
+                    <FileTypeIcon kind={entry.kind} />
+                    <span className="truncate">{entry.name}</span>
+                </span>
+            ),
+        },
+        {
+            ...sortable((entry) => entry.size ?? 0),
+            id: 'size',
+            header: words.size,
+            width: '5.5rem',
+            align: 'end',
+            stack: 'secondary',
+            cell: (entry) => (entry.size === undefined ? null : <span className="text-muted-foreground">{formatSize(entry.size)}</span>),
+        },
+        {
+            ...sortable((entry) => entry.modifiedAt ?? entry.modified),
+            id: 'modified',
+            header: words.modified,
+            width: '9rem',
+            stack: 'secondary',
+            cell: (entry) => <span className="text-muted-foreground tabular-nums">{entry.modified}</span>,
+        },
+        {
+            ...sortable((entry) => entry.owner ?? ''),
+            id: 'owner',
+            header: words.owner,
+            width: '6.5rem',
+            stack: 'none',
+            cell: (entry) => (entry.owner === undefined ? null : <span className="text-muted-foreground">{entry.owner}</span>),
+        },
+    ]
+    /** A press on a head: the other way round on the sorted column, else that column's own first way. */
+    const changeSort = (next: DataSort | null) => {
+        if (onSortChange === undefined) return
+        const key = (next?.column ?? sort?.key ?? 'name') as FileSortKey
+        const flipped = sort?.key === key ? (sort.direction === 'asc' ? 'desc' : 'asc') : undefined
+        onSortChange({ key, direction: flipped ?? (key === 'name' || key === 'owner' ? 'asc' : 'desc') })
     }
     return (
-        <div
-            className={cn(
-                '@container flex min-h-0 flex-col overflow-hidden rounded-surface border border-border-strong bg-card',
-                className,
-            )}
-        >
-            <div role="table" className="min-h-0 overflow-y-auto">
-                <div
-                    role="row"
-                    className={cn(
-                        cn(
-                            'sticky top-0 z-10 grid h-(--density-panel-head) items-center gap-3 px-(--density-panel-pad)',
-                            TABLE_HEAD_ROW,
-                            TABLE_HEAD_TEXT,
-                        ),
-                        template,
-                    )}
-                >
-                    {selectable && (
-                        <span role="columnheader" className="flex items-center">
-                            <Checkbox
-                                aria-label={words.selectAll}
-                                checked={all}
-                                disabled={entries.length === 0}
-                                onCheckedChange={() => onSelectedChange(all ? [] : entries.map((entry) => entry.id))}
-                            />
-                        </span>
-                    )}
-                    {header('name', words.name)}
-                    {header('size', words.size, true)}
-                    {header('modified', words.modified)}
-                    {header('owner', words.owner)}
-                </div>
-                {entries.length === 0
-                    ? (empty ?? <p className="px-(--density-panel-pad) py-3 text-sm text-muted-foreground">{words.empty}</p>)
-                    : entries.map((entry) => {
-                          const isChosen = chosen.has(entry.id)
-                          const size = entry.size === undefined ? '' : formatSize(entry.size)
-                          return (
-                              <div
-                                  key={entry.id}
-                                  role="row"
-                                  aria-selected={selectable ? isChosen : undefined}
-                                  aria-current={entry.id === active || undefined}
-                                  {...pressable(onOpen === undefined ? undefined : () => onOpen(entry))}
-                                  className={cn(
-                                      'grid min-h-(--density-row) items-center gap-3 border-b border-border px-(--density-panel-pad) py-1 text-sm last:border-b-0',
-                                      template,
-                                      onOpen !== undefined && 'cursor-pointer outline-none hover:bg-hover focus-visible:bg-hover',
-                                      isChosen && 'bg-primary/8 hover:bg-primary/12',
-                                      entry.id === active && 'bg-secondary',
-                                  )}
-                              >
-                                  {selectable && (
-                                      <span role="cell" className="flex items-center" onClick={(event) => event.stopPropagation()}>
-                                          <Checkbox
-                                              aria-label={`${words.select} ${entry.name}`}
-                                              checked={isChosen}
-                                              onCheckedChange={() => onSelectedChange(flip(selected, entry.id))}
-                                          />
-                                      </span>
-                                  )}
-                                  <span role="cell" className="flex min-w-0 items-center gap-2">
-                                      <FileTypeIcon kind={entry.kind} />
-                                      <span className="flex min-w-0 flex-col">
-                                          <span className="truncate">{entry.name}</span>
-                                          <span className="truncate text-xs text-muted-foreground @md:hidden">
-                                              {[size, entry.modified].filter((part) => part !== '').join(' · ')}
-                                          </span>
-                                      </span>
-                                  </span>
-                                  <span role="cell" className="hidden truncate text-right text-muted-foreground tabular-nums @md:block">
-                                      {size}
-                                  </span>
-                                  <span role="cell" className="hidden truncate text-muted-foreground tabular-nums @md:block">
-                                      {entry.modified}
-                                  </span>
-                                  <span role="cell" className="hidden truncate text-muted-foreground @2xl:block">
-                                      {entry.owner}
-                                  </span>
-                              </div>
-                          )
-                      })}
-            </div>
-        </div>
+        <DataTable
+            columns={columns}
+            rows={entries}
+            rowKey={(entry) => entry.id}
+            variant="list"
+            stackLayout="compact"
+            sort={sort === undefined ? null : { column: sort.key, direction: sort.direction }}
+            onSortChange={changeSort}
+            manualSort
+            selectable={onSelectedChange !== undefined}
+            selection={new Set(selected)}
+            onSelectionChange={(next) => onSelectedChange?.([...next])}
+            onOpen={onOpen}
+            opened={active === undefined ? undefined : (entry) => entry.id === active}
+            empty={empty ?? words.empty}
+            words={{ selectAll: words.selectAll, selectRow: words.select, empty: words.empty }}
+            className={className}
+        />
     )
 }
 

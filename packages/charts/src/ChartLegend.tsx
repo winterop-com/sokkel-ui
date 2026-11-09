@@ -1,3 +1,4 @@
+import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 
 /** One series in a legend. `key` is the series' name in the chart. */
@@ -68,7 +69,7 @@ export interface ChartLegendProps {
 /**
  * The legend for a chart drawn beside it rather than inside it: a swatch and label per series that
  * a click or Enter hides or shows, and hover or focus emphasizes. In table mode each series is a
- * row with its min, max, mean and current value, worked out from `values`.
+ * `DataTable` row with its min, max, mean and current value, worked out from `values`.
  */
 export function ChartLegend({
     items,
@@ -89,51 +90,56 @@ export function ChartLegend({
         onBlur: () => onHover?.(null),
     })
     if (mode === 'table') {
+        const columns: DataColumn<LegendItem>[] = [
+            {
+                id: 'series',
+                header: words.series,
+                width: 'minmax(8rem,1fr)',
+                cell: (item) => {
+                    const off = hidden.has(item.key)
+                    return (
+                        <button
+                            type="button"
+                            aria-pressed={!off}
+                            {...handlers(item.key, off)}
+                            className={cn(
+                                'flex w-full min-w-0 items-center gap-1.5 rounded-sm text-left',
+                                ITEM,
+                                off && 'text-muted-foreground',
+                            )}
+                        >
+                            <Swatch color={item.color} off={off} />
+                            <span className={cn('truncate', off && 'line-through')}>{item.label}</span>
+                        </button>
+                    )
+                },
+            },
+            ...stats.map((stat): DataColumn<LegendItem> => ({
+                id: stat,
+                header: words[stat],
+                width: 'minmax(4rem,auto)',
+                align: 'end',
+                cell: (item) => {
+                    const value = legendStats(item.values ?? [])[stat]
+                    return (
+                        <span className={cn('font-mono', hidden.has(item.key) && 'text-muted-foreground')}>
+                            {value === null ? '-' : format(value)}
+                        </span>
+                    )
+                },
+            })),
+        ]
         return (
-            <div className={cn('min-w-0 overflow-x-auto', className)} onMouseLeave={() => onHover?.(null)}>
-                <table className="w-full border-collapse text-xs tabular-nums">
-                    <thead>
-                        <tr className="text-muted-foreground">
-                            <th scope="col" className="px-1.5 py-1 text-left font-medium">
-                                {words.series}
-                            </th>
-                            {stats.map((stat) => (
-                                <th key={stat} scope="col" className="w-16 px-1.5 py-1 text-right font-medium">
-                                    {words[stat]}
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {items.map((item) => {
-                            const off = hidden.has(item.key)
-                            const figures = legendStats(item.values ?? [])
-                            return (
-                                <tr key={item.key} className={cn('border-t border-border hover:bg-hover', off && 'text-muted-foreground')}>
-                                    <td className="p-0">
-                                        <button
-                                            type="button"
-                                            aria-pressed={!off}
-                                            {...handlers(item.key, off)}
-                                            className={cn('flex w-full min-w-0 items-center gap-1.5 px-1.5 py-1 text-left', ITEM)}
-                                        >
-                                            <Swatch color={item.color} off={off} />
-                                            <span className={cn('truncate', off && 'line-through')}>{item.label}</span>
-                                        </button>
-                                    </td>
-                                    {stats.map((stat) => {
-                                        const value = figures[stat]
-                                        return (
-                                            <td key={stat} className="px-1.5 py-1 text-right font-mono">
-                                                {value === null ? '-' : format(value)}
-                                            </td>
-                                        )
-                                    })}
-                                </tr>
-                            )
-                        })}
-                    </tbody>
-                </table>
+            <div className={cn('flex min-h-0 min-w-0 flex-col', className)} onMouseLeave={() => onHover?.(null)}>
+                <DataTable
+                    columns={columns}
+                    rows={items}
+                    rowKey={(item) => item.key}
+                    variant="list"
+                    framed={false}
+                    stackBelow={false}
+                    resizable={false}
+                />
             </div>
         )
     }
