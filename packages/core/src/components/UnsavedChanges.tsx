@@ -143,6 +143,19 @@ export function leaveQuestion(onAskingChange: (asking: boolean) => void): LeaveQ
     }
 }
 
+/** The parts of the Navigation API the guard uses, where the browser has it. */
+interface GuardNavigateEvent extends Event {
+    readonly hashChange: boolean
+    readonly navigationType: 'push' | 'replace' | 'reload' | 'traverse'
+    readonly destination: { readonly url: string; readonly key: string }
+}
+
+interface GuardNavigation {
+    addEventListener: (type: 'navigate', listener: (event: GuardNavigateEvent) => void) => void
+    removeEventListener: (type: 'navigate', listener: (event: GuardNavigateEvent) => void) => void
+    traverseTo: (key: string) => { finished: Promise<unknown> }
+}
+
 export interface UnsavedChangesOptions {
     /** The question's words; it asks to leave without saving by default. */
     words?: Partial<UnsavedChangesWords>
@@ -196,17 +209,53 @@ export function useUnsavedChanges(
         return () => window.removeEventListener('beforeunload', warn)
     }, [dirty])
     useEffect(() => () => question.drop(), [question])
-    const [confirmLeave] = useState(() => () => question.ask(latest.current))
+    // Set once a leave is confirmed, so the move the app makes next is not asked about again.
+    const confirmed = useRef(false)
+    const [confirmLeave] = useState(
+        () => () =>
+            question.ask(latest.current).then((leave) => {
+                confirmed.current = leave
+                return leave
+            }),
+    )
     useEffect(() => {
         if (!dirty || !hashRoutes) return
+        confirmed.current = false
         let here = window.location.href
-        // A hash set by this guard itself, which its own listener lets through.
+        // A move this guard makes itself, or one already confirmed, which its listeners let through.
         let passing = false
+        const through = () => {
+            if (passing) return true
+            if (!confirmed.current) return false
+            confirmed.current = false
+            passing = true
+            return true
+        }
+        const navigation = (window as { navigation?: GuardNavigation }).navigation
+        // Where the browser has the Navigation API, a move is stopped before it happens and, once
+        // the reader leaves, made as it was asked: Back goes back, so the history stays as it was.
+        const navigate = (event: GuardNavigateEvent) => {
+            if (!event.hashChange || !event.cancelable || through()) return
+            event.preventDefault()
+            const { url, key } = event.destination
+            const traverse = event.navigationType === 'traverse'
+            void confirmLeave().then((leave) => {
+                if (!leave) return
+                confirmed.current = false
+                passing = true
+                if (traverse && navigation !== undefined) void navigation.traverseTo(key).finished.catch(() => undefined)
+                else if (event.navigationType === 'replace') window.location.replace(url)
+                else window.location.href = url
+            })
+        }
+        // Elsewhere, the address is put back before any router reads it (routers read
+        // `location.hash` when `hashchange` arrives, after this), and Leave takes the entry's place.
         const leaveTo = (href: string) => {
             void confirmLeave().then((leave) => {
                 if (!leave) return
+                confirmed.current = false
                 passing = true
-                window.location.href = href
+                window.location.replace(href)
             })
         }
         const samePage = (url: URL) =>
@@ -216,14 +265,12 @@ export function useUnsavedChanges(
             const link = event.target instanceof Element ? event.target.closest('a[href]') : null
             if (!(link instanceof HTMLAnchorElement) || (link.target !== '' && link.target !== '_self')) return
             const to = new URL(link.href, window.location.href)
-            if (!samePage(to) || to.hash === window.location.hash) return
+            if (!samePage(to) || to.hash === window.location.hash || through()) return
             event.preventDefault()
             leaveTo(to.href)
         }
-        // Back, Forward, or the app setting the hash: put the address back before any router reads
-        // it (routers read `location.hash` when `hashchange` arrives, after this), then ask.
         const moved = () => {
-            if (passing || window.location.href === here) return
+            if (window.location.href === here || through()) return
             const to = window.location.href
             window.history.replaceState(window.history.state, '', here)
             leaveTo(to)
@@ -233,11 +280,15 @@ export function useUnsavedChanges(
             passing = false
             here = window.location.href
         }
-        document.addEventListener('click', click, true)
-        window.addEventListener('popstate', moved, true)
-        window.addEventListener('hashchange', moved, true)
+        if (navigation !== undefined) navigation.addEventListener('navigate', navigate)
+        else {
+            document.addEventListener('click', click, true)
+            window.addEventListener('popstate', moved, true)
+            window.addEventListener('hashchange', moved, true)
+        }
         window.addEventListener('hashchange', changed)
         return () => {
+            navigation?.removeEventListener('navigate', navigate)
             document.removeEventListener('click', click, true)
             window.removeEventListener('popstate', moved, true)
             window.removeEventListener('hashchange', moved, true)
