@@ -49,8 +49,8 @@ says what is missing. **Not covered** has no part yet.
     group does not already say it.
 11. **`ApiLink` that opens.** The app's API chip opens the address in a new tab; the library's
     copies it. An `href` (or `open`) option on `ApiLink`.
-12. **A larger tile.** The overview's one figure that asks for work is drawn larger than its
-    neighbors. `Stat`'s `emphasis` edges it; a `size` for the hero figure would match.
+12. **A larger tile.** Done: `Stat` `size="lg"` draws the one figure that asks for work at the
+    display size, larger than its neighbors, beside `emphasis`; the overview's Received tile uses it.
 
 Parts added for this conversion, in this branch: `PeriodPicker` with `lib/periods`, `ApiPlayground`,
 `ServerMenu`, `ComputedField`, `YesNoField`, `Columns` `fields` (fields lined up in a row),
@@ -86,11 +86,11 @@ mounts its control afresh as an issue comes or goes, which closed the period pic
 
 ## Overview
 
-| The app's part                                                                  | Library part now                                               | Coverage | What the app changes                  |
-| ------------------------------------------------------------------------------- | -------------------------------------------------------------- | -------- | ------------------------------------- |
-| Receipt tiles by state, each a link, Received edged                             | `Stat` `variant="tile"` with `dot`, `note`, `href`, `emphasis` | Covered  | The hero size is item 12.             |
-| Start a record: form cards with a kind chip and a count                         | `ItemCard`, `Badge` `kind`                                     | Covered  | Five kinds map onto five kind colors. |
-| This server: a strip with the server's name, its version, operations and a link | `Section`, `DescriptionList`, `StatusChip`, `Button` as a link | Covered  |                                       |
+| The app's part                                                                  | Library part now                                                       | Coverage | What the app changes                    |
+| ------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | -------- | --------------------------------------- |
+| Receipt tiles by state, each a link, Received edged                             | `Stat` `variant="tile"` with `dot`, `note`, `href`, `emphasis`, `size` | Covered  | Received is `size="lg"` while it waits. |
+| Start a record: form cards with a kind chip and a count                         | `ItemCard`, `Badge` `kind`                                             | Covered  | Five kinds map onto five kind colors.   |
+| This server: a strip with the server's name, its version, operations and a link | `Section`, `DescriptionList`, `StatusChip`, `Button` as a link         | Covered  |                                         |
 
 ## Forms
 

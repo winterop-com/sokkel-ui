@@ -25,6 +25,8 @@ export interface StatProps {
     onSelect?: () => void
     /** Edges the tile in its dot's color: the count that asks for work. */
     emphasis?: boolean
+    /** `lg` draws the number at the display size: the one hero figure, larger than its neighbors. */
+    size?: 'md' | 'lg'
     className?: string
 }
 
@@ -38,7 +40,8 @@ export interface StatProps {
  * text's ink, the number at the statistic's size and the note under it wrapping as it needs; given
  * `href` or `onSelect` the whole tile is one control that goes to what it counts, such as a list
  * filtered to that state. `emphasis` edges the one tile that asks for work in its dot's color, so
- * it stands apart from the counts of what already happened.
+ * it stands apart from the counts of what already happened, and `size="lg"` draws its number
+ * larger than its neighbors'.
  */
 export function Stat({
     label,
@@ -53,6 +56,7 @@ export function Stat({
     href,
     onSelect,
     emphasis = false,
+    size = 'md',
     className,
 }: StatProps) {
     const rising = change !== undefined && !change.startsWith('-')
@@ -97,7 +101,14 @@ export function Stat({
                 <span className="truncate">{label}</span>
             </span>
             <div className={cn(through, 'flex items-baseline gap-2', tile && 'mt-1')}>
-                <span className={cn('tabular-nums', tile ? 'text-statistic' : 'text-page font-semibold')}>{value}</span>
+                <span
+                    className={cn(
+                        'tabular-nums',
+                        size === 'lg' ? 'text-statistic-hero' : tile ? 'text-statistic' : 'text-page font-semibold',
+                    )}
+                >
+                    {value}
+                </span>
                 {unit !== undefined && <span className="text-sm text-muted-foreground">{unit}</span>}
                 {change !== undefined && (
                     <span

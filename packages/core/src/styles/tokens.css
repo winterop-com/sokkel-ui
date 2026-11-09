@@ -59,6 +59,10 @@
     --text-statistic: var(--text-stat);
     --text-statistic--line-height: var(--text-stat--line-height);
     --text-statistic--font-weight: 600;
+    --text-statistic-hero: var(--text-display);
+    --text-statistic-hero--line-height: var(--text-display--line-height);
+    --text-statistic-hero--font-weight: 600;
+    --text-statistic-hero--letter-spacing: -0.025em;
     --text-media-title: var(--text-display);
     --text-media-title--line-height: var(--text-display--line-height);
     --text-media-title--font-weight: 600;

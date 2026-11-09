@@ -244,6 +244,30 @@ export default meta
 
 export const Description: StoryObj = { name: 'Description list', render: () => <Facts /> }
 export const Stats: StoryObj = { name: 'Stats', render: () => <Numbers /> }
+/**
+ * Runs by state as tiles, each leading to the runs it counts. Queued is the one that asks for work:
+ * edged in its dot's color and its number drawn at the hero size, larger than its neighbors.
+ */
+export const Tiles: StoryObj = {
+    name: 'Stat tiles',
+    render: () => (
+        <Columns count={4} min="xs" gap="md">
+            <Stat
+                variant="tile"
+                dot="var(--status-queued)"
+                label="Queued"
+                value={42}
+                note="Waiting for a worker"
+                href="#"
+                emphasis
+                size="lg"
+            />
+            <Stat variant="tile" dot="var(--status-running)" label="Running" value={6} note="On worker and scheduler" href="#" />
+            <Stat variant="tile" dot="var(--status-succeeded)" label="Succeeded" value={1284} note="Since Monday" href="#" />
+            <Stat variant="tile" dot="var(--status-failed)" label="Failed" value={17} note="Since Monday" href="#" />
+        </Columns>
+    ),
+}
 export const Timelines: StoryObj = { name: 'Timeline', render: () => <Events /> }
 /**
  * A run's log twice: scrolling sideways, then wrapped with "rows" marked. On a phone the wrapped

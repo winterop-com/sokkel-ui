@@ -945,6 +945,7 @@ function Overview() {
                             note={tile.note}
                             href="#"
                             emphasis={tile.state === 'submitted'}
+                            size={tile.state === 'submitted' ? 'lg' : 'md'}
                         />
                     ))}
                 </Columns>
