@@ -115,6 +115,16 @@ and ask before acting.
   --exit-status`, one watch per run, never a loop that polls faster. A newer push to a branch cancels the run
   of the older one.
 
+## Examples
+
+- `examples/<name>/{web,electron,tauri}` holds working Tidevann apps on a simulated backend
+  (`examples/shared`): every page, button, menu and setting does what it says, and a dashboard
+  updates live. What cannot work is left out, never stubbed.
+- An example installs the packages and imports only their public entry points, as any app does. A
+  part it needs that the library lacks goes into the library, never into the example.
+- A library fix for a gap an example found updates that example in the same change, so it uses the
+  fix, and takes the gap off the roadmap.
+
 ## Design
 
 - Show a design as a rendered story and look at the rendering before showing it. Never use ASCII
