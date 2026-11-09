@@ -6,7 +6,12 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.10.13** is the latest release (2026-11-09): the first two rounds of the review. A read-only
+- **0.10.14** is the latest release (2026-11-09): rounds 3 to 5 of the review. Charts read at
+  12 px and fit radar names and tick steps to their width; run, pipeline and dependency graphs
+  read top to bottom in a box under 560 px; a narrow `VideoPlayer` keeps speed and quality in a
+  More menu; `DashboardGrid` lays out by its own width; dashboard panels say when their query
+  failed (Retry) or their figures are stale; `StatPanel` drills down with `href` or `onSelect`.
+- **0.10.13** (2026-11-09): the first two rounds of the review. A read-only
   `SchemaForm` group locks its items; `Banner` wraps on a phone; `ApiPlayground`'s Send, `Inspector`,
   `CodeBlockContent wrap` and a toolbar's title keep to their room; a `TableOfContents` entry draws
   its section's state; and `useUnsavedChanges` guards hash routes (`hashRoutes`). The examples ask
