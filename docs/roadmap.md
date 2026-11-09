@@ -179,7 +179,6 @@ to `plan.md` when it ships.
   with a color dot for calendar toggles.
 - **The records app's conversion.** `examples/records/GAPS.md` maps every screen of the records app
   onto the library and ends with the work left, in order:
-    - a grouped list of examples in tabs beside an editor
     - a free-form detail under an opened `DataTable` row
     - the rest of `ApiPlayground`
     - more modes for the entry grid

@@ -40,7 +40,7 @@ viewer's caption settings through `useStored` or an app's store, with the option
 in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second by `useVideoStats`
 (`@winterop-com/sokkel-ui/media/video-stats`) for `VideoStatsOverlay`.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 239 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 241 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 10 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 12 modules
@@ -201,6 +201,8 @@ in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second 
 | Component | Import | What it is | Story |
 | --- | --- | --- | --- |
 | **DetailSheet** | `@winterop-com/sokkel-ui/DetailSheet` | One thing's detail in a sheet from the right, so a row of a list is read without leaving the list: a head with the thing's code over its title, a sentence under it, and one line of its chips followed by its actions (open the full page, the request behind it), then the body, which scrolls under the head, and an optional foot pinned at the bottom for the verbs. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-detail-sheet--open) |
+| **ExampleList** | `@winterop-com/sokkel-ui/ExampleList` | Runnable examples grouped under headings, each a row to choose, as an editor's or a request builder's starting points beside it: its name, its source in the code face and a sentence on what it shows. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-example-list--groups) |
+| **FoldingRail** | `@winterop-com/sokkel-ui/FoldingRail` | Main content with a rail beside it that resizes and folds: runnable examples beside an editor, a request builder's presets. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-folding-rail--folded) |
 | **GroupLabel** | `@winterop-com/sokkel-ui/GroupLabel` | The small heading over a group of entries: a rail's group, a panel's section, a palette's kind, a table's run of rows. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-queue--in-order) |
 | **Inspector**, InspectorSection | `@winterop-com/sokkel-ui/Inspector` | The panel beside a list that shows the chosen row: a header naming the thing (its name, then its code in the code face with a copy button), the thing's actions, then titled sections. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/graphs-run--running) |
 | **PageHeader** | `@winterop-com/sokkel-ui/PageHeader` | A page's title, its code under it in the code face, and its actions at the right with the primary one last. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-page-header--title) |

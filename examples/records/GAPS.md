@@ -27,6 +27,10 @@ says what is missing. **Not covered** has no part yet.
    rail of runnable examples grouped under headings, in tabs per language, that folds to a strip
    with its name written down it, as the playground's presets do. Neither the grouped list in tabs
    nor a rail folding to a strip is a part (`Split` and `Inspector` hold a fixed side).
+   **Closed:** `FoldingRail` sets a rail beside the main content that resizes from its inner edge
+   and folds to a strip with its name written down it (under the content in a narrow container);
+   `ExampleList` lists runnable examples under headings, in tabs per language with `tabs`. The
+   example has no expressions page; its playground's presets use both (item 6).
 4. **Two themes by their look.** The app offers seven themes; five match the library's (its
    default is tidevann, then indigo, paper, contrast and terminal). The other two are a steel-blue
    chrome over the familiar gray and a warm white with an ember accent spent only where the app
@@ -177,12 +181,12 @@ mounts its control afresh as an issue comes or goes, which closed the period pic
 
 ## Playground, expressions, server, code lists
 
-| The app's part                                                                                                                | Library part now                                                                     | Coverage | What the app changes                                                                                                    |
-| ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | -------- | ----------------------------------------------------------------------------------------------------------------------- |
-| The playground: method, path, parameter rows with chips, body, Send, status and time, body, Copy as curl, history, presets    | `ApiPlayground`                                                                      | Partly   | Open in a new tab, a JSON body editor, name completion and a folding side are item 6. The app's `fetch` becomes `send`. |
-| Expressions: language, define, source editor, context picker, results per define with Table and Raw, diagnostics with a caret | `CodeEditor` (`defineLanguage`, ranged marks), `Select`, `Tabs`, `DataTable`, `Code` | Partly   | The examples rail is item 3; its grammars are stream languages through `defineLanguage`.                                |
-| The server: identity, authentication, operations, resource types folding to their parameters, raw document                    | `Section`, `DescriptionList`, `DataTable` with `detail`, `TagChips`, `Code`          | Covered  | A resource type opens into its parameters through `detail`.                                                             |
-| Code lists: tabs with counts, shelves, tables with chevrons, a concept table with paging, a code lookup sheet                 | `Segmented` or `Tabs`, `Section`, `DataTable` (`paging`), `DetailSheet`              | Covered  | Not built in the example; every part it needs is in use on other pages.                                                 |
+| The app's part                                                                                                                | Library part now                                                                                                   | Coverage | What the app changes                                                                                                               |
+| ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| The playground: method, path, parameter rows with chips, body, Send, status and time, body, Copy as curl, history, presets    | `ApiPlayground`                                                                                                    | Partly   | Open in a new tab, a JSON body editor, name completion and a folding side are item 6. The app's `fetch` becomes `send`.            |
+| Expressions: language, define, source editor, context picker, results per define with Table and Raw, diagnostics with a caret | `CodeEditor` (`defineLanguage`, ranged marks), `Select`, `Tabs`, `DataTable`, `Code`, `FoldingRail`, `ExampleList` | Covered  | The examples rail is a `FoldingRail` holding an `ExampleList` in tabs; its grammars are stream languages through `defineLanguage`. |
+| The server: identity, authentication, operations, resource types folding to their parameters, raw document                    | `Section`, `DescriptionList`, `DataTable` with `detail`, `TagChips`, `Code`                                        | Covered  | A resource type opens into its parameters through `detail`.                                                                        |
+| Code lists: tabs with counts, shelves, tables with chevrons, a concept table with paging, a code lookup sheet                 | `Segmented` or `Tabs`, `Section`, `DataTable` (`paging`), `DetailSheet`                                            | Covered  | Not built in the example; every part it needs is in use on other pages.                                                            |
 
 ## Settings and themes
 
@@ -194,17 +198,17 @@ mounts its control afresh as an issue comes or goes, which closed the period pic
 
 ## Small parts
 
-| The app's part                                             | Library part now                                | Coverage    | What the app changes                             |
-| ---------------------------------------------------------- | ----------------------------------------------- | ----------- | ------------------------------------------------ |
-| API chip                                                   | `ApiLink` `open`                                | Covered     | The chip takes `open` and the address as `href`. |
-| Links inside text and among facts (a place, a form, an id) | `TextLink` (`code`, `external`)                 | Covered     | Plain anchors become `TextLink`.                 |
-| Kind badges, domain and machine badges                     | `Badge` (`kind`, `outline`, mono)               | Covered     |                                                  |
-| Identifier chips                                           | `Badge` `outline` in a wrapping row, `TagChips` | Covered     |                                                  |
-| Text with machine parts in backticks                       | `ProseText`                                     | Covered     |                                                  |
-| A heading that opens what is under it                      | `Unfoldable`                                    | Covered     |                                                  |
-| Links into the platform's other apps                       | `IconButton` with a tooltip                     | Covered     |                                                  |
-| A side rail folding to a strip                             | none                                            | Not covered | Item 3.                                          |
-| Page states (reading, refused, not answering, empty)       | `PageState` (`status`)                          | Covered     |                                                  |
+| The app's part                                             | Library part now                                | Coverage | What the app changes                             |
+| ---------------------------------------------------------- | ----------------------------------------------- | -------- | ------------------------------------------------ |
+| API chip                                                   | `ApiLink` `open`                                | Covered  | The chip takes `open` and the address as `href`. |
+| Links inside text and among facts (a place, a form, an id) | `TextLink` (`code`, `external`)                 | Covered  | Plain anchors become `TextLink`.                 |
+| Kind badges, domain and machine badges                     | `Badge` (`kind`, `outline`, mono)               | Covered  |                                                  |
+| Identifier chips                                           | `Badge` `outline` in a wrapping row, `TagChips` | Covered  |                                                  |
+| Text with machine parts in backticks                       | `ProseText`                                     | Covered  |                                                  |
+| A heading that opens what is under it                      | `Unfoldable`                                    | Covered  |                                                  |
+| Links into the platform's other apps                       | `IconButton` with a tooltip                     | Covered  |                                                  |
+| A side rail folding to a strip                             | `FoldingRail`                                   | Covered  |                                                  |
+| Page states (reading, refused, not answering, empty)       | `PageState` (`status`)                          | Covered  |                                                  |
 
 ## Notes from building the example
 
