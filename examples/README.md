@@ -14,6 +14,9 @@ examples/
                  their visits, places on a map, an API playground and metadata health (GAPS.md
                  maps the records app it rehearses onto the library)
   metrics/       live dashboards over a simulated source, a panel editor with a live preview, and alerts
+  models/        a local library of language models: the models on a disk and what they take, pulls from
+                 simulated sources, a chat and a side-by-side comparison streamed by a simulated model,
+                 and the runner that holds them in memory
   example.mk     the targets every example's Makefile includes
 ```
 
@@ -35,7 +38,7 @@ From the repository root, after `make build` builds the packages, every example 
 targets as `make <example>-<target>`; `make examples-list` names them:
 
 ```sh
-make tasks-web          # build the web app and serve it (Tasks on 4180, Runs on 4181, Records on 4182, Metrics on 4185)
+make tasks-web          # build the web app and serve it (Tasks on 4180, Runs on 4181, Records on 4182, Models on 4183, Metrics on 4185)
 make tasks-dev          # the web app's dev server
 make tasks-electron     # open it in Electron
 make tasks-tauri        # open it in Tauri
