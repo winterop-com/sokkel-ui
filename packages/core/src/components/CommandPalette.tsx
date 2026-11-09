@@ -111,7 +111,7 @@ export interface CommandPaletteProps {
     groups: readonly PaletteGroup[]
     /** The app's search, whose results are listed under the commands. */
     search?: PaletteSearch
-    /** What the search holds when the palette opens. */
+    /** What the search holds each time the palette opens. */
     defaultQuery?: string
     /** How the commands are matched to what is typed; `fuzzy` when not given. */
     filter?: PaletteFilter
@@ -141,6 +141,12 @@ export function CommandPalette({
     const words = { ...WORDS, ...given }
     const merged = useMemo(() => mergeCommands(groups), [groups])
     const [query, setQuery] = useState(defaultQuery)
+    // Each opening starts from the default query, not from what was typed the time before.
+    const [shown, setShown] = useState(open)
+    if (shown !== open) {
+        setShown(open)
+        if (open) setQuery(defaultQuery)
+    }
     const score = filter === 'fuzzy' ? undefined : filter === 'terms' ? termScore : filter
     const listed = useMemo(() => (score === undefined ? merged : filterCommands(merged, query, score)), [merged, query, score])
     const answer = useSearch(search?.search, query, { enabled: open, minQuery: search?.minQuery, debounce: search?.debounce })
