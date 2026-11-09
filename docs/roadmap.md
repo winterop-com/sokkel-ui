@@ -180,6 +180,13 @@ to `plan.md` when it ships.
         - backlink lines drawn as Markdown
         - `Tree` reordering within a folder, dragging from the keyboard, and opening a parent when it is chosen
     - **Media:** artwork for the media session from drawn covers.
+    - **Video:**
+        - speed and quality reachable on a narrow player (they hide below a medium width today)
+        - waiting on a live stream's missing segments, where hls.js now skips past them
+        - the browser's own HLS replaying the last seconds when it rejoins after a stall
+
+        Checked on 2026-11-09: the video example makes its clips (WebCodecs VP8 and Opus) and plays
+        them in Tauri on the system WebKit, as in Chromium.
 - **Gaps from a query app (2026-11-08)**, found moving an app with a jq editor onto 0.10.6:
     - **Completions listed twice in `CodeEditor`.** An app's own `completions` (one per builtin,
       with signatures as `detail` and a summary as `docs`) are offered beside the language's own
