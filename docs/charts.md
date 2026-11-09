@@ -87,6 +87,11 @@ dashboard panels draw what dashboards draw most, each with its own props:
 | `DashboardGrid`, `DashboardRow`                     | The grid panels sit in, and a collapsible group of them under a heading          | Patterns/Dashboard panels, Apps/Dashboards |
 | `VariablesBar`, `TimeRangePicker`, `RefreshControl` | The bar of variables, the range and the refresh across a dashboard's top         | Patterns/Dashboard panels, Apps/Dashboards |
 
+Every panel takes a `menu` of dropdown items behind a more button in its head, and the panels that
+open in a window take `expanded` with `onExpandedChange`, so the app's own menu can open one as
+its expand button does (Patterns/Dashboard panels, Panel menus). `RefreshControl` offers the app's
+own `intervals` and, with `onPausedChange`, a pause that keeps the interval for when it resumes.
+
 ## The spec
 
 What a chart reads. Each kind reads some of these fields; its row in the tables below says which.

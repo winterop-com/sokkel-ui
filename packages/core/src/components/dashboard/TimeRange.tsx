@@ -1,4 +1,4 @@
-import { CalendarRange, ChevronDown, RefreshCw } from 'lucide-react'
+import { CalendarRange, ChevronDown, Pause, Play, RefreshCw } from 'lucide-react'
 import { lazy, Suspense, useRef, useState } from 'react'
 import type { DateRange } from 'react-day-picker'
 
@@ -189,6 +189,9 @@ export interface RefreshWords {
     refresh: string
     every: string
     off: string
+    /** The pause button's label while refreshing by itself runs, and while it is paused. */
+    pause: string
+    resume: string
     seconds: (count: number) => string
 }
 
@@ -196,6 +199,8 @@ const REFRESH_WORDS: RefreshWords = {
     refresh: 'Refresh',
     every: 'Refresh every',
     off: 'Off',
+    pause: 'Pause',
+    resume: 'Resume',
     seconds: (count) => (count < 60 ? `${count}s` : `${count / 60}m`),
 }
 
@@ -205,6 +210,14 @@ export interface RefreshControlProps {
     /** Seconds between refreshes; 0 is never. */
     interval: number
     onIntervalChange: (seconds: number) => void
+    /** The intervals the menu offers, in seconds, 0 for never; `REFRESH_INTERVALS` when omitted. */
+    intervals?: readonly number[]
+    /**
+     * Whether refreshing by itself is paused, keeping the interval for when it resumes. Given with
+     * `onPausedChange`, a pause button stands between the refresh and the menu while an interval is set.
+     */
+    paused?: boolean
+    onPausedChange?: (paused: boolean) => void
     /** When it last refreshed: `updated 2 min ago`. */
     updated?: string
     words?: Partial<RefreshWords>
@@ -212,10 +225,24 @@ export interface RefreshControlProps {
 
 /**
  * Refreshing a dashboard: a button that refreshes now and spins while it does, a menu choosing how
- * often it refreshes by itself, and when it last did, already written for a reader.
+ * often it refreshes by itself, which closes on a choice, and when it last did, already written for
+ * a reader. With
+ * `onPausedChange`, a pause button holds the refreshing a while without losing the interval, as
+ * while reading a moment of a live dashboard.
  */
-export function RefreshControl({ onRefresh, refreshing = false, interval, onIntervalChange, updated, words: given }: RefreshControlProps) {
+export function RefreshControl({
+    onRefresh,
+    refreshing = false,
+    interval,
+    onIntervalChange,
+    intervals = REFRESH_INTERVALS,
+    paused = false,
+    onPausedChange,
+    updated,
+    words: given,
+}: RefreshControlProps) {
     const words = { ...REFRESH_WORDS, ...given }
+    const pausable = onPausedChange !== undefined && interval > 0
     return (
         <div className="flex items-center gap-2">
             {updated !== undefined && <span className="text-xs text-muted-foreground max-sm:hidden">{updated}</span>}
@@ -230,13 +257,29 @@ export function RefreshControl({ onRefresh, refreshing = false, interval, onInte
                 >
                     <RefreshCw className={cn(refreshing && 'animate-spin')} aria-hidden />
                 </Button>
+                {pausable && (
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="rounded-none border-l border-border"
+                        aria-label={paused ? words.resume : words.pause}
+                        aria-pressed={paused}
+                        title={paused ? words.resume : words.pause}
+                        onClick={() => onPausedChange(!paused)}
+                    >
+                        {paused ? <Play aria-hidden /> : <Pause aria-hidden />}
+                    </Button>
+                )}
                 <DropdownMenu>
                     <DropdownMenuTrigger
                         render={
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                className="rounded-l-none border-l border-border px-2 tabular-nums"
+                                className={cn(
+                                    'rounded-l-none border-l border-border px-2 tabular-nums',
+                                    pausable && paused && 'text-muted-foreground',
+                                )}
                                 aria-label={words.every}
                             />
                         }
@@ -246,8 +289,8 @@ export function RefreshControl({ onRefresh, refreshing = false, interval, onInte
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-36">
                         <DropdownMenuRadioGroup value={String(interval)} onValueChange={(next) => onIntervalChange(Number(next))}>
-                            {REFRESH_INTERVALS.map((seconds) => (
-                                <DropdownMenuRadioItem key={seconds} value={String(seconds)}>
+                            {intervals.map((seconds) => (
+                                <DropdownMenuRadioItem key={seconds} value={String(seconds)} closeOnClick>
                                     {seconds === 0 ? words.off : words.seconds(seconds)}
                                 </DropdownMenuRadioItem>
                             ))}

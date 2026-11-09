@@ -1,4 +1,4 @@
-import { Download, Info, Maximize2 } from 'lucide-react'
+import { Download, Info, Maximize2, MoreHorizontal } from 'lucide-react'
 import { useRef, useState, type ReactNode, type RefObject } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
@@ -25,6 +25,8 @@ export interface ChartFrameWords {
     png: string
     /** The expand button's label. */
     expand: string
+    /** The label of the button that opens the panel's menu. */
+    menu: string
     /** The window's close button's label. */
     close: string
     /** Said in the frame's place while the chart is in the window. */
@@ -40,6 +42,7 @@ const WORDS: ChartFrameWords = {
     svg: 'Export as SVG',
     png: 'Export as PNG',
     expand: WINDOWED_PANE_WORDS.expand,
+    menu: 'Panel actions',
     close: WINDOWED_PANE_WORDS.close,
     away: WINDOWED_PANE_WORDS.away,
     empty: 'No data for this range.',
@@ -62,6 +65,8 @@ export interface ChartFrameProps {
     /** What the panel shows, behind an info marker beside the title. */
     info?: ReactNode
     actions?: ReactNode
+    /** Dropdown menu items, behind a button after the export and expand tools, as `DashboardPanel`'s `menu`. */
+    menu?: ReactNode
     legend?: readonly LegendItem[]
     /** A wrapped row of series under the chart, or a table of their figures. */
     legendMode?: 'list' | 'table'
@@ -75,6 +80,9 @@ export interface ChartFrameProps {
     fullscreen?: boolean
     /** Opens the chart in the window at first. */
     defaultExpanded?: boolean
+    /** Whether the chart is in the window, held from outside with `onExpandedChange`, as when a panel's menu opens it. */
+    expanded?: boolean
+    onExpandedChange?: (expanded: boolean) => void
     loading?: boolean
     empty?: boolean
     /** The chart area's size; it fills the window when expanded. */
@@ -91,7 +99,8 @@ export interface ChartFrameProps {
  * actions, an Export menu (SVG and PNG, with the title and legend drawn into the image) and an
  * expand button, the legend, and the chart. Expanding opens the chart and its legend near full
  * screen through `WindowedPane`, as every expandable pane opens, with the frame keeping its place
- * until the window closes; `fullscreen` makes the page take the screen while it is open. The tools show on hover or focus where the pointer can hover.
+ * until the window closes; `fullscreen` makes the page take the screen while it is open, and
+ * `expanded` with `onExpandedChange` opens it from outside. The tools show on hover or focus where the pointer can hover.
  * `children` draws the chart from the state.
  */
 export function ChartFrame({
@@ -99,6 +108,7 @@ export function ChartFrame({
     subtitle,
     info,
     actions,
+    menu,
     legend,
     legendMode = 'list',
     legendStats,
@@ -108,6 +118,8 @@ export function ChartFrame({
     expandable = true,
     fullscreen = false,
     defaultExpanded = false,
+    expanded: expandedProp,
+    onExpandedChange,
     loading = false,
     empty = false,
     bodyClassName = 'h-56',
@@ -121,7 +133,12 @@ export function ChartFrame({
     const [root, setRoot] = useState<HTMLElement | null>(null)
     const [hidden, setHidden] = useState<ReadonlySet<string>>(() => new Set())
     const [hovered, setHovered] = useState<string | null>(null)
-    const [expanded, setExpanded] = useState(defaultExpanded)
+    const [ownExpanded, setOwnExpanded] = useState(defaultExpanded)
+    const expanded = expandedProp ?? ownExpanded
+    const setExpanded = (next: boolean) => {
+        if (expandedProp === undefined) setOwnExpanded(next)
+        onExpandedChange?.(next)
+    }
 
     const toggle = (key: string) => {
         const next = new Set(hidden)
@@ -148,7 +165,7 @@ export function ChartFrame({
         setTimeout(() => URL.revokeObjectURL(url), 1000)
     }
 
-    const head = title !== undefined || actions !== undefined || exportable || expandable
+    const head = title !== undefined || actions !== undefined || menu !== undefined || exportable || expandable
     const showLegend = legend !== undefined && legend.length > 0 && !empty
     const content = (
         <FrameBody
@@ -223,6 +240,16 @@ export function ChartFrame({
                                 >
                                     <Maximize2 className="size-3.5" aria-hidden />
                                 </button>
+                            )}
+                            {menu !== undefined && (
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger aria-label={words.menu} title={words.menu} className={TOOL}>
+                                        <MoreHorizontal className="size-3.5" aria-hidden />
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" container={root} className="w-44">
+                                        {menu}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                             )}
                         </div>
                     </div>

@@ -264,15 +264,16 @@ export function shortcutGroups(
 
 /**
  * What stands over the page while it is open: a dialog, an alert, a sheet, or a menu or a select's
- * list. Popups that stay in the page while closed are matched only while open; a toast is not one.
+ * list. Popups that stay in the page while closed are matched only while open, as a select's list
+ * is kept once it has opened, marked `data-closed`; a toast is not one.
  */
 const OPEN_LAYERS = [
     '[role="dialog"][data-open]:not([aria-modal="false"])',
     '[role="alertdialog"][data-open]:not([aria-modal="false"])',
-    '[data-slot="dropdown-menu-content"]',
-    '[data-slot="context-menu-content"]',
-    '[data-slot="menubar-content"]',
-    '[data-slot="select-content"]',
+    '[data-slot="dropdown-menu-content"]:not([data-closed])',
+    '[data-slot="context-menu-content"]:not([data-closed])',
+    '[data-slot="menubar-content"]:not([data-closed])',
+    '[data-slot="select-content"]:not([data-closed])',
 ].join(', ')
 
 /** Whether a dialog, a sheet or a menu is open in `doc`, wherever focus is. */

@@ -61,6 +61,8 @@ export interface RadarPanelProps {
     subtitle?: ReactNode
     info?: ReactNode
     actions?: ReactNode
+    /** Dropdown menu items, behind the panel's more button. */
+    menu?: ReactNode
     spokes: readonly RadarSpoke[]
     series: readonly PanelSeries[]
     unit?: string
@@ -75,6 +77,11 @@ export interface RadarPanelProps {
     loading?: boolean
     empty?: boolean
     file?: string
+    /** Expanding also takes the screen, as `WindowedPane`'s `fullscreen` does. */
+    fullscreen?: boolean
+    /** Whether the panel is in its window, held from outside with `onExpandedChange`, as when the app's own menu opens it. */
+    expanded?: boolean
+    onExpandedChange?: (expanded: boolean) => void
     words?: Partial<ChartFrameWords>
     className?: string
 }
@@ -89,6 +96,7 @@ export function RadarPanel({
     subtitle,
     info,
     actions,
+    menu,
     spokes,
     series,
     unit,
@@ -103,6 +111,9 @@ export function RadarPanel({
     loading,
     empty,
     file,
+    fullscreen,
+    expanded,
+    onExpandedChange,
     words,
     className,
 }: RadarPanelProps) {
@@ -117,8 +128,12 @@ export function RadarPanel({
             subtitle={subtitle}
             info={info}
             actions={actions}
+            menu={menu}
             legend={legend === 'none' ? undefined : items}
             file={file}
+            fullscreen={fullscreen}
+            expanded={expanded}
+            onExpandedChange={onExpandedChange}
             loading={loading}
             empty={empty}
             bodyClassName={bodyClassName}
