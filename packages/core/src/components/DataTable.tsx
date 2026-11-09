@@ -146,6 +146,9 @@ export interface DataSort {
     direction: 'asc' | 'desc'
 }
 
+/** The controls a cell may hold whose press is their own, never the row's open. */
+const CELL_CONTROL = 'button, a[href], input, select, textarea, label, [role="switch"], [role="checkbox"], [role="combobox"]'
+
 /** The words a data table says, in English unless an app passes its own. */
 export interface DataTableWords {
     columns: string
@@ -1187,6 +1190,9 @@ export function DataTable<T>({
     }
 
     const press = (entry: FlatRow<T>, event: MouseEvent) => {
+        // A press on a control in a cell, such as a switch or a link, is the control's alone.
+        const control = event.target instanceof Element ? event.target.closest(CELL_CONTROL) : null
+        if (control !== null && control !== event.currentTarget && event.currentTarget.contains(control)) return
         setActive(entry.key)
         if (selectable && event.shiftKey) toggle(entry, true)
         else if (selectable && (event.metaKey || event.ctrlKey)) toggle(entry, false)
