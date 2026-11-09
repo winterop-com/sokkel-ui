@@ -43,7 +43,8 @@ export type LineBarProps = BarProps
  * The one-line bar, drawn by every layout until it grows: what plays at the left with the cover
  * growing with the height, the transport over the position in the middle, the speed, the volume
  * and the extra controls at the right. Under `WIDE` it folds into two rows, the title beside the
- * transport over the position, the speed at the position's end. The deck's face takes the place of
+ * transport over the position, the speed and the extra controls at the position's end, so the
+ * title keeps its room. The deck's face takes the place of
  * the words and the position.
  */
 export function LineBar({ deck, height, width, onFullscreen }: LineBarProps) {
@@ -74,7 +75,6 @@ export function LineBar({ deck, height, width, onFullscreen }: LineBarProps) {
                     {wide && <ShuffleButton deck={deck} />}
                     <Steps deck={deck} />
                     {wide && <RepeatButton deck={deck} />}
-                    {!wide && <Extras deck={deck} />}
                     {!wide && <Expand deck={deck} onFullscreen={onFullscreen} />}
                 </div>
                 {wide && position}
@@ -84,6 +84,7 @@ export function LineBar({ deck, height, width, onFullscreen }: LineBarProps) {
                 <div className="col-span-2 flex min-w-0 items-center gap-2">
                     <div className="min-w-0 flex-1">{position}</div>
                     <Speed deck={deck} />
+                    <Extras deck={deck} />
                 </div>
             )}
 
