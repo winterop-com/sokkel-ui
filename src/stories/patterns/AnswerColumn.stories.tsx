@@ -35,10 +35,15 @@ The next run is tonight at 02:00. Questions go to ada.`,
     small: `Last night nightly-export failed in \`validate\`. 37 rows had amounts that were not numbers, because they used a comma as the decimal mark.`,
 }
 
+/** A thinking model's thought before it answers. */
+const THINKING = `The question is why the export failed. Start with the step that stopped it, then what the rows it refused have in common.
+
+Most of the refused amounts carry a comma as the decimal mark, so the cause is the feed, not the code.`
+
 /** An answer cut off part way, as it stands while streaming or once stopped. */
 const PARTIAL = 'Last night nightly-export failed in `validate`. 37 rows had amounts that were not numbers, because'
 
-/** Each state a column passes through, side by side. */
+/** Each state a column passes through, side by side, and a thinking model while it thinks and once it has answered. */
 export const States: StoryObj = {
     render: () => (
         <TooltipProvider>
@@ -67,6 +72,24 @@ export const States: StoryObj = {
                     state="stopped"
                     content={PARTIAL}
                     usage={{ input: 184, output: 21, firstToken: 210, rate: 47.8, latency: 650 }}
+                    onRetry={() => undefined}
+                />
+                <AnswerColumn
+                    model="reef-8b"
+                    detail="Q4_K_M · 4.9 GB"
+                    state="streaming"
+                    reasoning={THINKING}
+                    content=""
+                    usage={{ input: 184, output: 64, firstToken: 260, rate: 52.4, latency: 1_480 }}
+                    onStop={() => undefined}
+                />
+                <AnswerColumn
+                    model="reef-8b"
+                    detail="Q4_K_M · 4.9 GB"
+                    state="done"
+                    reasoning={THINKING}
+                    content={ANSWERS.small}
+                    usage={{ input: 184, output: 118, firstToken: 260, rate: 52.4, latency: 2_510 }}
                     onRetry={() => undefined}
                 />
                 <AnswerColumn

@@ -52,6 +52,8 @@ export const PRIVATE: Record<PackageDir, Record<string, string>> = {
         'components/media/sound-delay': "how far `SoundVisualizer` holds its picture back behind the output's latency",
         'components/media/sound-source': 'what `SoundVisualizer` listens through; `SoundSource` is exported by `SoundVisualizer`',
         'components/pickers': 'the popup the date and time fields pick in, and the list of times',
+        'components/reasoning':
+            "a model's thinking folded behind a line, which `AssistantReply` and `AnswerColumn` draw; `wordCount` is exported by `AssistantReply`",
         'components/schema/checker':
             '`validate` loaded on first use, for `SchemaForm` and `CodeEditor`; an app preloads it with `loadSchemaChecks`',
         'components/settings-parts':

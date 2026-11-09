@@ -7,6 +7,7 @@ import { IconButton } from './IconButton'
 import { Markdown, type MarkdownWords } from './Markdown'
 import { PaneHeader } from './PaneHeader'
 import { Problem } from './Problem'
+import { Reasoning } from './reasoning'
 import { StatusChip, type Status } from './StatusChip'
 import { UsageLine, type UsageLineProps, type UsageLineWords } from './UsageLine'
 
@@ -25,6 +26,10 @@ export interface AnswerColumnWords extends Record<AnswerState, string> {
     remove: string
     /** The title of a failed answer, when no `problem` title is given. */
     failedTitle: string
+    /** The line over the model's thinking while it thinks. */
+    thinking: string
+    /** The folded line over finished thinking, from its length in words. */
+    thoughtFor: (words: number) => string
     usage: Partial<UsageLineWords>
     markdown: Partial<MarkdownWords>
 }
@@ -42,6 +47,8 @@ export const ANSWER_COLUMN_WORDS: AnswerColumnWords = {
     stop: 'Stop',
     remove: 'Remove',
     failedTitle: 'The model could not answer',
+    thinking: 'Thinking',
+    thoughtFor: (count) => `Thought for ${String(count)} ${count === 1 ? 'word' : 'words'}`,
     usage: {},
     markdown: {},
 }
@@ -63,6 +70,8 @@ export interface AnswerColumnProps {
     state: AnswerState
     /** The answer so far, as markdown. */
     content: string
+    /** The model's thinking before its answer, as markdown: open while it is written, folded once the answer begins. */
+    reasoning?: string
     /** What the answer cost and how fast it came, under it; its count says so far while it streams. */
     usage?: Omit<UsageLineProps, 'live' | 'words' | 'className'>
     /** What went wrong, when `failed`, in a sentence. */
@@ -81,10 +90,11 @@ export interface AnswerColumnProps {
 
 /**
  * One model's answer to a prompt sent to several, as a column beside the others: the model in the
- * code face over a short fact, the answer's state as a chip, then the answer in markdown with a
- * caret where the next words land while it streams, and its usage line pinned under it. The head
- * offers Copy once something is written, Stop while the answer is coming, Run again once it has
- * ended and Remove, each when its handler is given. A failed answer says why; a stopped one keeps
+ * code face over a short fact, the answer's state as a chip, then the model's thinking when it
+ * thinks (open while it is written, folded behind a line counting its words once the answer
+ * begins), the answer in markdown with a caret where the next words land while it streams, and
+ * its usage line pinned under it. The head offers Copy once something is written, Stop while the
+ * answer is coming, Run again once it has ended and Remove, each when its handler is given. A failed answer says why; a stopped one keeps
  * what was written. The column fills the height it is given and its answer scrolls within it.
  */
 export function AnswerColumn({
@@ -92,6 +102,7 @@ export function AnswerColumn({
     detail,
     state,
     content,
+    reasoning = '',
     usage,
     problem,
     onStop,
@@ -136,7 +147,14 @@ export function AnswerColumn({
                 }
             />
             <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-auto p-(--density-panel-pad)">
-                {state === 'waiting' && content === '' && (
+                {reasoning !== '' && (
+                    <Reasoning
+                        text={reasoning}
+                        thinking={going && content === ''}
+                        words={{ thinking: words.thinking, thoughtFor: words.thoughtFor, markdown: words.markdown }}
+                    />
+                )}
+                {state === 'waiting' && content === '' && reasoning === '' && (
                     <p className="text-sm text-muted-foreground motion-safe:animate-pulse">{words.first}</p>
                 )}
                 {content !== '' && (

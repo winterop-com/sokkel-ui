@@ -496,8 +496,9 @@ beside a chat, is a `DataTable` list grouped under Pinned, Today and Earlier, wi
 pin, and delete after a question. `UsageLine` says under a model's answer what it cost and how fast
 it came (tokens in and out, the time to the first token, the rate, the whole time), counting so far
 while it streams, and `AnswerColumn` is one model's answer among several sent the same prompt: the
-model over a fact about it, the state as a chip, the answer streaming with `Markdown`'s caret, and the
-usage line pinned under it, with Stop, Run again, Copy and Remove in its head.
+model over a fact about it, the state as a chip, its thinking folded as `AssistantReply` folds it, the
+answer streaming with `Markdown`'s caret, and the usage line pinned under it, with Stop, Run again,
+Copy and Remove in its head.
 
 `FileField` takes files in a form, in a `Field` as the other inputs are: a zone they are dropped on
 (the drag `DropZone`'s, from `use-file-drop`) with a button that opens the picker, the limits under
