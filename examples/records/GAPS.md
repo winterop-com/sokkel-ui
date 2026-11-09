@@ -47,8 +47,9 @@ says what is missing. **Not covered** has no part yet.
 10. **The palette's foot and rows, the rest.** The foot's verb follows the chosen row (Open, Switch,
     Run) where `paletteFoot` says Open, and a row ends with its kind (Page, Form, Receipt) where its
     group does not already say it.
-11. **`ApiLink` that opens.** The app's API chip opens the address in a new tab; the library's
-    copies it. An `href` (or `open`) option on `ApiLink`.
+11. **`ApiLink` that opens.** Done: `ApiLink` `open` makes the whole chip one link opening `href`
+    in a new tab, in place of the copy button. The example keeps copying, since its server is
+    simulated and has no address to open.
 12. **A larger tile.** Done: `Stat` `size="lg"` draws the one figure that asks for work at the
     display size, larger than its neighbors, beside `emphasis`; the overview's Received tile uses it.
 
@@ -186,17 +187,17 @@ mounts its control afresh as an issue comes or goes, which closed the period pic
 
 ## Small parts
 
-| The app's part                                             | Library part now                                | Coverage    | What the app changes             |
-| ---------------------------------------------------------- | ----------------------------------------------- | ----------- | -------------------------------- |
-| API chip                                                   | `ApiLink`                                       | Partly      | Item 11.                         |
-| Links inside text and among facts (a place, a form, an id) | `TextLink` (`code`, `external`)                 | Covered     | Plain anchors become `TextLink`. |
-| Kind badges, domain and machine badges                     | `Badge` (`kind`, `outline`, mono)               | Covered     |                                  |
-| Identifier chips                                           | `Badge` `outline` in a wrapping row, `TagChips` | Covered     |                                  |
-| Text with machine parts in backticks                       | `ProseText`                                     | Covered     |                                  |
-| A heading that opens what is under it                      | `Unfoldable`                                    | Covered     |                                  |
-| Links into the platform's other apps                       | `IconButton` with a tooltip                     | Covered     |                                  |
-| A side rail folding to a strip                             | none                                            | Not covered | Item 3.                          |
-| Page states (reading, refused, not answering, empty)       | `PageState` (`status`)                          | Covered     |                                  |
+| The app's part                                             | Library part now                                | Coverage    | What the app changes                             |
+| ---------------------------------------------------------- | ----------------------------------------------- | ----------- | ------------------------------------------------ |
+| API chip                                                   | `ApiLink` `open`                                | Covered     | The chip takes `open` and the address as `href`. |
+| Links inside text and among facts (a place, a form, an id) | `TextLink` (`code`, `external`)                 | Covered     | Plain anchors become `TextLink`.                 |
+| Kind badges, domain and machine badges                     | `Badge` (`kind`, `outline`, mono)               | Covered     |                                                  |
+| Identifier chips                                           | `Badge` `outline` in a wrapping row, `TagChips` | Covered     |                                                  |
+| Text with machine parts in backticks                       | `ProseText`                                     | Covered     |                                                  |
+| A heading that opens what is under it                      | `Unfoldable`                                    | Covered     |                                                  |
+| Links into the platform's other apps                       | `IconButton` with a tooltip                     | Covered     |                                                  |
+| A side rail folding to a strip                             | none                                            | Not covered | Item 3.                                          |
+| Page states (reading, refused, not answering, empty)       | `PageState` (`status`)                          | Covered     |                                                  |
 
 ## Notes from building the example
 

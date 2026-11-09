@@ -33,6 +33,16 @@ export const Linked: StoryObj = {
     ),
 }
 
+/** With `open` the whole chip is one link that opens the address in a new tab, in place of the copy button. */
+export const Opens: StoryObj = {
+    render: () => (
+        <Stack gap="sm" align="start">
+            <ApiLink open path="/api/jobs/nightly-export" href="https://api.example.org/api/jobs/nightly-export" />
+            <ApiLink open method="POST" path="/api/jobs/sync-inventory/runs" href="https://api.example.org/api/jobs/sync-inventory/runs" />
+        </Stack>
+    ),
+}
+
 /** Under a page's title, naming the request the page is drawn from; a long path gives way on a phone. */
 export const OnPage: StoryObj = {
     name: 'On a page',
