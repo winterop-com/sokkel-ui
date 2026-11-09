@@ -17,9 +17,9 @@ says what is missing. **Not covered** has no part yet.
 
 ## Library work still left, in order
 
-1. **Resizable sheets.** Every sheet in the app drags from its left edge and keeps its width (384
-   px to most of the window). `DetailSheet` and `SourceSheet` have a fixed width; give them a
-   draggable edge with a remembered size, as panels have.
+1. **Resizable sheets.** Done: `DetailSheet` and `SourceSheet` drag from their left edge, 384 px
+   to most of the window, holding their width as panels do (`defaultSize`, `size` with
+   `onSizeChange`, `resizable={false}`); the example keeps each sheet's width with `useStored`.
 2. **Repeating answers.** A question answered more than once (rows of a control, each with its
    remove button, and Add answer). No part holds a list of one control yet.
 3. **Examples in tabs beside an editor, and a side rail that folds.** The expressions page keeps a
@@ -136,20 +136,20 @@ mounts its control afresh as an issue comes or goes, which closed the period pic
 | Form filter, Reload                                                                                                   | `FilterChip`, `Button`                                          | Covered  |                                                            |
 | Files set aside as unreadable, above the table                                                                        | `Banner` with a list                                            | Covered  | Composed.                                                  |
 | The table: received, form, kind, state with a warning mark, answers, receipt                                          | `DataTable` with `rowActions` and `opened`                      | Covered  | The warning mark beside a state is an icon with a tooltip. |
-| A receipt in a sheet over the list                                                                                    | `DetailSheet` (`chips`, `actions`, `foot`)                      | Partly   | The sheet's width is item 1.                               |
+| A receipt in a sheet over the list                                                                                    | `DetailSheet` (`chips`, `actions`, `foot`, `size`)              | Covered  | Its width is kept with `useStored`.                        |
 | A receipt on a page                                                                                                   | `PageHeader`, the same body                                     | Covered  |                                                            |
 | What arrived, what the record is filed for, the answers in form order, warnings, the register's refusal, a withdrawal | `Section`, `DescriptionList`, `DataTable`, `Banner`, `Timeline` | Covered  |                                                            |
-| Raw response                                                                                                          | `SourceSheet`                                                   | Partly   | Its width is item 1.                                       |
+| Raw response                                                                                                          | `SourceSheet` (`size`)                                          | Covered  | Its width is kept with `useStored`.                        |
 
 ## The register's people
 
-| The app's part                                                                                           | Library part now                                               | Coverage | What the app changes                                                                                                        |
-| -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Search by identifier, with what it searches said                                                         | `SearchField` in `DataTable`'s `search`, `Field` `description` | Covered  |                                                                                                                             |
-| Type chips, attribute and value filter                                                                   | `Segmented`, `FilterBar` or `FilterChip`                       | Covered  |                                                                                                                             |
-| The table of a page, Previous and Next                                                                   | `DataTable` `paging="server"` with `chevron`                   | Covered  |                                                                                                                             |
-| A person's page or sheet: identifiers, other values, registrations, visits folding open to their answers | `DescriptionList`, `DataTable` `variant="list"`, `Unfoldable`  | Partly   | Answers nested under groups with a rule down their side draw one level with `DescriptionList`; the sheet's width is item 1. |
-| One person's events under the responses                                                                  | `Search` and the same body                                     | Covered  |                                                                                                                             |
+| The app's part                                                                                           | Library part now                                               | Coverage | What the app changes                                                                           |
+| -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------- |
+| Search by identifier, with what it searches said                                                         | `SearchField` in `DataTable`'s `search`, `Field` `description` | Covered  |                                                                                                |
+| Type chips, attribute and value filter                                                                   | `Segmented`, `FilterBar` or `FilterChip`                       | Covered  |                                                                                                |
+| The table of a page, Previous and Next                                                                   | `DataTable` `paging="server"` with `chevron`                   | Covered  |                                                                                                |
+| A person's page or sheet: identifiers, other values, registrations, visits folding open to their answers | `DescriptionList`, `DataTable` `variant="list"`, `Unfoldable`  | Partly   | Answers nested under groups with a rule down their side draw one level with `DescriptionList`. |
+| One person's events under the responses                                                                  | `Search` and the same body                                     | Covered  |                                                                                                |
 
 ## Places
 

@@ -9,6 +9,7 @@ import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Section } from '@winterop-com/sokkel-ui/Section'
 import { Page } from '@winterop-com/sokkel-ui/Shell'
 import { SourceSheet } from '@winterop-com/sokkel-ui/SourceSheet'
+import { useStored } from '@winterop-com/sokkel-ui/hooks/use-stored'
 import { Unfoldable } from '@winterop-com/sokkel-ui/Unfoldable'
 import { TextLink } from '@winterop-com/sokkel-ui/TextLink'
 import { ArrowUpRight, ClipboardPlus, DoorOpen, FileJson, Trash2 } from 'lucide-react'
@@ -30,6 +31,7 @@ export function Household({ id }: { id: string }) {
     const { rows, error } = useCollection(households)
     const { rows: all } = useCollection(receipts)
     const [raw, setRaw] = useState(false)
+    const [sourceWidth, setSourceWidth] = useStored('source-sheet-width', 576)
     const [removing, setRemoving] = useState(false)
     const [busy, setBusy] = useState(false)
     const home = rows?.find((one) => one.id === id)
@@ -251,6 +253,8 @@ export function Household({ id }: { id: string }) {
                             onOpenChange={setRaw}
                             title="Raw record"
                             description="The household exactly as the server stores it."
+                            size={sourceWidth}
+                            onSizeChange={setSourceWidth}
                             value={home}
                             language="json"
                         />
