@@ -43,15 +43,16 @@ import { clock, day, wordCount } from './model'
 import { NotePanel } from './NotePanel'
 import { AllNotes } from './pages/AllNotes'
 import { Daily } from './pages/Daily'
-import { NotePage } from './pages/NotePage'
 import { SearchPage, searchVault } from './pages/SearchPage'
-import { SettingsPage } from './pages/Settings'
 import { Tags } from './pages/Tags'
 import { useVault } from './state'
 import { vaultTree } from './vault'
 
-// The graph loads React Flow and elk the first time it is opened.
+// The graph loads React Flow and elk the first time it is opened, and a note and settings the
+// editor (CodeMirror), so the list a reader lands on carries none of them.
 const GraphPage = lazy(() => import('./pages/Graph').then((module) => ({ default: module.GraphPage })))
+const NotePage = lazy(() => import('./pages/NotePage').then((module) => ({ default: module.NotePage })))
+const SettingsPage = lazy(() => import('./pages/Settings').then((module) => ({ default: module.SettingsPage })))
 
 const PAGES = ['notes', 'folder', 'note', 'daily', 'tags', 'graph', 'search', 'settings'] as const
 
