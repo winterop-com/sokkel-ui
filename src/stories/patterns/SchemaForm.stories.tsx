@@ -258,6 +258,8 @@ const codeFields: SchemaFieldRenderer = (field) => {
     return (
         <CodeEditor
             label={field.label ?? String(field.path[field.path.length - 1])}
+            id={field.id}
+            onBlur={field.touch}
             language={languageForMediaType(type)}
             value={typeof field.value === 'string' ? field.value : ''}
             onChange={field.set}

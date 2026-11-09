@@ -509,6 +509,10 @@ export interface CodeEditorProps {
     placeholder?: string
     /** What the editor holds, for a screen reader. */
     label: string
+    /** The id of the editable text, for a form's label to point at and its submit to focus. */
+    id?: string
+    /** Called as the editor loses the focus, as a field marks itself left. */
+    onBlur?: () => void
     className?: string
     invalid?: boolean
 }
@@ -557,6 +561,8 @@ export function CodeEditor({
     phrases,
     placeholder,
     label,
+    id,
+    onBlur,
     className,
     invalid = false,
 }: CodeEditorProps) {
@@ -570,8 +576,8 @@ export function CodeEditor({
     const [named, setNamed] = useState<{ address: string; schema: JsonSchema } | undefined>()
     const schema = given ?? (named !== undefined && named.address === address ? named.schema : undefined)
     const [languageReady, setLanguageReady] = useState(0)
-    const props = useRef({ marks, completions, links, hover, onRun, keys, schema, words, language, resolveSchema })
-    props.current = { marks, completions, links, hover, onRun, keys, schema, words, language, resolveSchema }
+    const props = useRef({ marks, completions, links, hover, onRun, keys, schema, words, language, resolveSchema, onBlur })
+    props.current = { marks, completions, links, hover, onRun, keys, schema, words, language, resolveSchema, onBlur }
     const compartments = useRef({
         language: new Compartment(),
         readOnly: new Compartment(),
@@ -676,7 +682,8 @@ export function CodeEditor({
                     THEME,
                     phrases === undefined ? [] : EditorState.phrases.of(phrases),
                     placeholder !== undefined ? placeholderText(placeholder) : [],
-                    EditorView.contentAttributes.of({ 'aria-label': label }),
+                    EditorView.contentAttributes.of(id === undefined ? { 'aria-label': label } : { 'aria-label': label, id }),
+                    EditorView.domEventHandlers({ blur: () => void props.current.onBlur?.() }),
                     EditorView.updateListener.of((update) => {
                         if (!update.docChanged) return
                         const text = update.state.doc.toString()
