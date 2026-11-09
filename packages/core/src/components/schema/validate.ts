@@ -34,7 +34,13 @@ const compiled = new WeakMap<JsonSchema, ValidateFunction | Error>()
 function compile(schema: JsonSchema): ValidateFunction | Error {
     const known = compiled.get(schema)
     if (known !== undefined) return known
-    const { $schema: _dialect, $id: _id, ...body } = schema
+    const { $schema: _dialect, $id: id, ...body } = schema
+    // A schema that is only the address of a dialect ajv carries, such as JSON Schema 2020-12, is that dialect's meta-schema.
+    const carried = typeof id === 'string' && Object.keys(body).length === 0 ? ajv.getSchema(id) : undefined
+    if (carried !== undefined) {
+        compiled.set(schema, carried)
+        return carried
+    }
     let check: ValidateFunction | Error
     try {
         check = ajv.compile(body)

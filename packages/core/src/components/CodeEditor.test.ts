@@ -26,3 +26,22 @@ describe('a large read-only document', () => {
         expect(tree.length).toBeLessThan(doc.length)
     })
 })
+
+describe('languages by name', () => {
+    it('reads a media type as the language it is written in', async () => {
+        const { languageForMediaType } = await import('./CodeEditor')
+        expect(languageForMediaType('application/schema+json')).toBe('json')
+        expect(languageForMediaType('application/x-compose+yaml')).toBe('yaml')
+        expect(languageForMediaType('text/x-shellscript')).toBe('shell')
+        expect(languageForMediaType('text/x-jinja')).toBe('jinja')
+        expect(languageForMediaType('application/sql; charset=utf-8')).toBe('sql')
+        expect(languageForMediaType('application/jq')).toBe('jq')
+        expect(languageForMediaType('image/png')).toBe('text')
+        expect(languageForMediaType(undefined)).toBe('text')
+    })
+
+    it('loads SQL, shell and Jinja on first use', async () => {
+        const { loadCodeLanguage } = await import('./CodeEditor')
+        await Promise.all([loadCodeLanguage('sql'), loadCodeLanguage('shell'), loadCodeLanguage('jinja'), loadCodeLanguage('json')])
+    })
+})
