@@ -3,6 +3,7 @@ import { useId, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { IconButton } from './IconButton'
+import { IssueMark, worst, type Issue } from './IssueMark'
 import { Button } from './ui/button'
 
 /** The words a repeated group says. */
@@ -13,6 +14,8 @@ export interface RepeatedGroupWords {
     moveDown: string
     /** A row's name: its place, counted from 1. */
     item: (index: number) => string
+    /** Said after the name of a required group, for a screen reader; the star is drawn. */
+    required: string
 }
 
 export const REPEATED_GROUP_WORDS: RepeatedGroupWords = {
@@ -21,6 +24,7 @@ export const REPEATED_GROUP_WORDS: RepeatedGroupWords = {
     moveUp: 'Move up',
     moveDown: 'Move down',
     item: (index) => `Item ${String(index + 1)}`,
+    required: 'required',
 }
 
 export interface RepeatedGroupProps {
@@ -28,6 +32,16 @@ export interface RepeatedGroupProps {
     label: ReactNode
     /** What the group asks for, under its name. */
     description?: ReactNode
+    /** The id of the group's name, which takes the focus, for a form's issue count to go to it. */
+    id?: string
+    /** Marked by a star after the name, as a required field is. */
+    required?: boolean
+    /** Why the group as a whole is refused (too few rows, one twice), as one critical issue. */
+    error?: string | null
+    issues?: readonly Issue[]
+    /** Whether the mark's message is open, for a form's count to open it. */
+    issueOpen?: boolean
+    onIssueOpenChange?: (open: boolean) => void
     /** The rows' keys, in order, such as `useRepeated`'s `rows`. */
     rows: readonly { key: string }[]
     /** A row's fields. */
@@ -52,11 +66,21 @@ export interface RepeatedGroupProps {
  * A group of fields asked again for each of several things in a hand-composed form, such as a
  * run's steps or a household's people: the group's name with Add, then each row in a box with its
  * number, Move up, Move down and Remove, and its fields. Hold the rows with `useRepeated`, so each
- * keeps its key and its fields' state as rows move. As `SchemaForm`'s lists of records look.
+ * keeps its key and its fields' state as rows move. `SchemaForm` draws its lists of records with it.
+ *
+ * Like a `Field`, a `required` group has a star after its name, and what is wrong with the group as
+ * a whole (`error`, `issues`) is the issue mark beside its name, opening the message, while each
+ * row's own fields say their own.
  */
 export function RepeatedGroup({
     label,
     description,
+    id,
+    required = false,
+    error,
+    issues: issuesGiven = [],
+    issueOpen,
+    onIssueOpenChange,
     rows,
     children,
     onAdd,
@@ -69,16 +93,31 @@ export function RepeatedGroup({
     className,
 }: RepeatedGroupProps) {
     const words = { ...REPEATED_GROUP_WORDS, ...given }
-    const titleId = useId()
+    const ownId = useId()
+    const titleId = id ?? ownId
+    const issues: Issue[] = [...(error === undefined || error === null ? [] : [{ tone: 'critical' as const, text: error }]), ...issuesGiven]
     const adding = !readOnly && onAdd !== undefined && (max === undefined || rows.length < max)
     const removing = !readOnly && onRemove !== undefined && rows.length > min
     const moving = !readOnly && onMove !== undefined && rows.length > 1
     return (
         <fieldset aria-labelledby={titleId} className={cn('flex min-w-0 flex-col gap-2', className)}>
             <div className="flex min-h-7 items-center gap-2">
-                <span id={titleId} className="min-w-0 truncate text-sm font-medium">
-                    {label}
+                <span id={titleId} tabIndex={-1} className="flex min-w-0 items-baseline gap-1 text-sm font-medium outline-none">
+                    <span className="min-w-0 truncate">{label}</span>
+                    {required && (
+                        <>
+                            <span className="shrink-0 text-critical-ink" aria-hidden>
+                                *
+                            </span>
+                            <span className="sr-only">{words.required}</span>
+                        </>
+                    )}
                 </span>
+                {worst(issues) !== null && (
+                    <span className="relative flex size-7 shrink-0 items-center">
+                        <IssueMark issues={issues} open={issueOpen} onOpenChange={onIssueOpenChange} className="inset-0 right-0" />
+                    </span>
+                )}
                 {adding && (
                     <Button type="button" variant="ghost" size="sm" className="ml-auto" onClick={onAdd}>
                         <Plus aria-hidden />

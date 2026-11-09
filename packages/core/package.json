@@ -450,6 +450,10 @@
             "types": "./dist/components/SearchResults.d.ts",
             "import": "./dist/components/SearchResults.js"
         },
+        "./SecretField": {
+            "types": "./dist/components/SecretField.d.ts",
+            "import": "./dist/components/SecretField.js"
+        },
         "./SecretReveal": {
             "types": "./dist/components/SecretReveal.d.ts",
             "import": "./dist/components/SecretReveal.js"

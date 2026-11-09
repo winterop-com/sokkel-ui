@@ -366,6 +366,15 @@ it. The display format is a prop (`format`, `clock`, a number's `format` and `pa
 the calendar, loaded on first use; `SchemaForm` draws numbers with `NumberField` and keeps the
 browser's own date input, since the calendar would put the forms page past its budget.
 
+`SecretField` takes a secret a form sets and never reads back, such as a connection's token. With
+one already set (`sealed`) it says so, masked, and when (`setAt`), and stays as it is unless Replace
+opens an empty input for a new one, Cancel or Escape sealing it again; its value is the new secret
+or undefined, so a form leaves an unchanged secret out of what it sends. `SchemaForm` draws a
+`writeOnly` property with it, sealed where `useSchemaForm`'s `sealed` names a secret as set, and a
+required secret that is set asks for nothing more. `RepeatedGroup` is marked as a field is: a star
+after its name when `required`, and the issue mark beside its name for what is wrong with the group
+as a whole; `SchemaForm` draws its lists of records with it.
+
 A records app is built from the same parts (Apps/Records). A `Rail` entry says what its
 place holds on a second line (`description`), which the palette's Go to rows repeat; a palette row's
 `hint` is words and its `code` an id in the code face. `Stat` as a `tile` is a count on a card of its
@@ -609,7 +618,11 @@ a `# yaml-language-server: $schema=` line: the app finds it by address with `res
 editor fetching nothing, and a schema document in the 2020-12 dialect is checked against that
 dialect's meta-schema, which ajv carries. A key's type and description show on hover. `reveal`
 selects a range and scrolls it into view. `variant="pane"` fills a pane edge to edge; the Query app
-shows it in panes.
+shows it in panes. Two editors edit one document as Monaco's views share a model: `doc` takes a
+`SharedDocument` (`useSharedDocument`) in place of `value`, which holds the text and one undo history
+in a CodeMirror state no view draws, hands each edit to every other editor, and keeps each editor's
+caret and selection its own; a new editor opens at the caret the last one left, so a pane opened
+again in its `WindowedPane` window goes on where it was (Patterns/Windowed pane).
 
 CodeMirror rather than Monaco, weighed on 2026-11-09 against an app that edits pipelines in Monaco,
 and still open until that app has moved onto it: the deciding question is whether schema-aware YAML

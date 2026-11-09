@@ -1,7 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import type { ReactNode } from 'react'
 
 import { Code } from '@winterop-com/sokkel-ui/Code'
+import { CodeEditor, useSharedDocument, useSharedText } from '@winterop-com/sokkel-ui/CodeEditor'
+import { Fill, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { MermaidDiagram } from '@winterop-com/sokkel-ui/MermaidDiagram'
+import { PaneHeader } from '@winterop-com/sokkel-ui/PaneHeader'
+import { SplitPane } from '@winterop-com/sokkel-ui/SplitPane'
 import { WindowedPane } from '@winterop-com/sokkel-ui/WindowedPane'
 
 /**
@@ -64,4 +69,52 @@ export const Open: StoryObj = {
 /** A mermaid diagram's own expand button, beside its source toggle, opens it as large as the window allows. */
 export const Diagram: StoryObj = {
     render: () => <MermaidDiagram code={FLOW} title="import-orders" defaultExpanded />,
+}
+
+function Pane({ title, meta, children }: { title: string; meta?: ReactNode; children: ReactNode }) {
+    return (
+        <Stack gap="none" className="h-full min-h-0">
+            <PaneHeader title={title} meta={meta} />
+            <Fill>{children}</Fill>
+        </Stack>
+    )
+}
+
+/** One document in two editors: the job beside a second view of it that opens into the window. */
+function SharedEditors({ open = false }: { open?: boolean }) {
+    const doc = useSharedDocument(CONFIG)
+    const lines = useSharedText(doc).split('\n').length - 1
+    return (
+        <Stack gap="none" className="h-svh bg-background text-foreground">
+            <SplitPane
+                first={
+                    <Pane title="import-orders.yaml" meta={`${String(lines)} lines`}>
+                        <CodeEditor doc={doc} label="Job" language="yaml" variant="pane" size="sm" />
+                    </Pane>
+                }
+                second={
+                    <Pane title="import-orders.yaml" meta="second view">
+                        <WindowedPane title="import-orders.yaml" defaultOpen={open} className="h-full">
+                            <CodeEditor doc={doc} label="Job, second view" language="yaml" variant="pane" size="sm" />
+                        </WindowedPane>
+                    </Pane>
+                }
+            />
+        </Stack>
+    )
+}
+
+/**
+ * A job in a pane beside a second view of the same document (`useSharedDocument`): typing in either
+ * shows in the other, Mod-z undoes the last edit made in either, and each keeps its own caret and
+ * selection. The second view's expand button opens it in the window, where it goes on at the caret
+ * it left.
+ */
+export const SharedDocument: StoryObj = { name: 'Shared document', parameters: { frame: false }, render: () => <SharedEditors /> }
+
+/** The second view opened in the window over the page, the pane beside it still editing the same document. */
+export const SharedDocumentOpen: StoryObj = {
+    name: 'Shared document, open',
+    parameters: { frame: false },
+    render: () => <SharedEditors open />,
 }
