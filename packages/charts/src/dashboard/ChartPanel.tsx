@@ -25,6 +25,11 @@ export type ChartPanelProps = ChartSpec & {
     bodyClassName?: string
     loading?: boolean
     empty?: boolean
+    /** A failed query, its raw message, Retry, and figures kept but behind; see `PanelStateProps`. */
+    error?: boolean | string
+    technical?: string
+    onRetry?: () => void
+    stale?: boolean | string
     file?: string
     /** Expanding also takes the screen, as `WindowedPane`'s `fullscreen` does. */
     fullscreen?: boolean
@@ -56,6 +61,10 @@ export function ChartPanel({
     bodyClassName = 'h-48',
     loading,
     empty,
+    error,
+    technical,
+    onRetry,
+    stale,
     file,
     fullscreen,
     expanded,
@@ -84,6 +93,10 @@ export function ChartPanel({
             onExpandedChange={onExpandedChange}
             loading={loading}
             empty={empty}
+            error={error}
+            technical={technical}
+            onRetry={onRetry}
+            stale={stale}
             bodyClassName={bodyClassName}
             words={frameWords}
             className={cn(SPAN[span], className)}

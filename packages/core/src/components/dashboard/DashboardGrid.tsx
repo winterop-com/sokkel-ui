@@ -1,10 +1,12 @@
-import { Maximize2, MoreHorizontal } from 'lucide-react'
+import { Clock, Maximize2, MoreHorizontal, RotateCw } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
 import { cn } from '../../lib/cn'
 import { LoadingOverlay } from '../Loaders'
+import { Problem } from '../Problem'
 import { Stat } from '../Stat'
 import { WindowedPane } from '../WindowedPane'
+import { Button } from '../ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '../ui/dropdown-menu'
 
 /**
@@ -51,15 +53,76 @@ export function DashboardGrid({ dense = false, children, className }: DashboardG
     )
 }
 
-export interface PanelWords {
+/** What a panel says when its query failed or its figures fell behind. */
+export interface PanelStateWords {
+    /** Said in a failed panel's place when `error` gives no words of its own. */
+    failed: string
+    retry: string
+    /** Said in the head of a stale panel when `stale` gives no time of its own. */
+    stale: string
+}
+
+export const PANEL_STATE_WORDS: PanelStateWords = { failed: 'This panel could not load.', retry: 'Retry', stale: 'Not up to date' }
+
+/**
+ * How a panel failed or fell behind, the same on every dashboard panel. `error` (true, or what
+ * failed) puts the failure with `Retry` in the content's place, the raw message folded under
+ * `technical`; `stale` (true, or since when, such as "Updated 12 min ago") keeps the content and
+ * marks the head. Loading, empty, failed and stale stay apart, so a reader never takes a failure
+ * for no data.
+ */
+export interface PanelStateProps {
+    error?: boolean | string
+    technical?: string
+    onRetry?: () => void
+    stale?: boolean | string
+}
+
+export type PanelFailureProps = Omit<PanelStateProps, 'stale'> & { words: PanelStateWords }
+
+/** A failed panel's content: what failed, the raw message folded away, and Retry. */
+export function PanelFailure({ error, technical, onRetry, words }: PanelFailureProps) {
+    return (
+        <Problem
+            title={typeof error === 'string' ? error : words.failed}
+            technical={technical}
+            actions={
+                onRetry === undefined ? undefined : (
+                    <Button size="sm" variant="outline" onClick={onRetry}>
+                        <RotateCw aria-hidden />
+                        {words.retry}
+                    </Button>
+                )
+            }
+        />
+    )
+}
+
+export interface StaleMarkProps {
+    stale: true | string
+    words: PanelStateWords
+}
+
+/** A stale panel's mark in its head: a clock and since when, in the warning ink. */
+export function StaleMark({ stale, words }: StaleMarkProps) {
+    const said = typeof stale === 'string' ? stale : words.stale
+    return (
+        <span className="flex min-w-0 shrink items-center gap-1 text-xs text-warning-ink" title={said}>
+            <Clock className="size-3 shrink-0" aria-hidden />
+            <span className="truncate">{said}</span>
+        </span>
+    )
+}
+
+export interface PanelWords extends PanelStateWords {
     expand: string
     menu: string
     empty: string
 }
 
-const WORDS: PanelWords = { expand: 'Expand', menu: 'Panel actions', empty: 'No data for this range.' }
+const WORDS: PanelWords = { expand: 'Expand', menu: 'Panel actions', empty: 'No data for this range.', ...PANEL_STATE_WORDS }
 
-export interface DashboardPanelProps {
+export interface DashboardPanelProps extends PanelStateProps {
     title: ReactNode
     subtitle?: ReactNode
     span?: PanelSpan
@@ -86,7 +149,7 @@ export interface DashboardPanelProps {
  * One panel of a dashboard: a head with the title, a quiet subtitle such as the range it covers,
  * and its actions, then the content. `menu` holds dropdown items; `expandable` opens the content
  * in a full-screen dialog, by its button or, with `expanded`, from the app. While `loading` the content dims under a bar; when `empty` the panel
- * says so in place of its content.
+ * says so in place of its content; `error` and `stale` say it failed or fell behind (`PanelStateProps`).
  */
 export function DashboardPanel({
     title,
@@ -100,6 +163,10 @@ export function DashboardPanel({
     fullscreen = false,
     loading = false,
     empty = false,
+    error,
+    technical,
+    onRetry,
+    stale,
     flush = false,
     footer,
     words: given,
@@ -113,7 +180,14 @@ export function DashboardPanel({
         if (expandedProp === undefined) setOwnExpanded(next)
         onExpandedChange?.(next)
     }
-    const body = empty ? <p className="px-4 py-8 text-center text-sm text-muted-foreground">{words.empty}</p> : children
+    const failed = error !== undefined && error !== false
+    const body = failed ? (
+        <PanelFailure error={error} technical={technical} onRetry={onRetry} words={words} />
+    ) : empty ? (
+        <p className="px-4 py-8 text-center text-sm text-muted-foreground">{words.empty}</p>
+    ) : (
+        children
+    )
     const tool =
         'flex size-7 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-ring'
     return (
@@ -129,6 +203,7 @@ export function DashboardPanel({
                     <h3 className="truncate text-sm font-medium">{title}</h3>
                     {subtitle !== undefined && <span className="truncate text-xs text-muted-foreground">{subtitle}</span>}
                 </div>
+                {stale !== undefined && stale !== false && !failed && <StaleMark stale={stale} words={words} />}
                 {actions}
                 {expandable && (
                     <button type="button" aria-label={words.expand} title={words.expand} className={tool} onClick={() => setExpanded(true)}>

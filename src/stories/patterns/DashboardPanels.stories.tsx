@@ -351,6 +351,54 @@ function PanelMenus() {
  */
 export const PanelMenusStory: StoryObj = { name: 'Panel menus', render: () => <PanelMenus /> }
 
+function PanelStates() {
+    return (
+        <Ground title="Panel states">
+            <DashboardGrid>
+                <StatPanel title="Runs today" value={248} stale="Updated 12 min ago" />
+                <StatPanel title="Failed now" value={null} error onRetry={() => undefined} />
+                <DashboardPanel title="Queue" subtitle="last hour" span="third" empty />
+                <DashboardPanel
+                    title="Workers"
+                    subtitle="now"
+                    span="third"
+                    error="The workers could not be read."
+                    technical="GET https://api.example.org/v1/workers: 503 Service Unavailable"
+                    onRetry={() => undefined}
+                />
+                <ChartPanel
+                    kind="donut"
+                    title="Runs by state"
+                    subtitle="October"
+                    rows={RUN_ROWS}
+                    x="state"
+                    order={STATE_ORDER}
+                    colors={STATE_COLORS}
+                    span="half"
+                    stale="Updated 2 h ago"
+                />
+                <ChartPanel
+                    kind="donut"
+                    title="Runs by project"
+                    subtitle="October"
+                    rows={RUN_ROWS}
+                    x="state"
+                    span="half"
+                    error
+                    onRetry={() => undefined}
+                />
+            </DashboardGrid>
+        </Ground>
+    )
+}
+
+/**
+ * Each way a panel can stand apart from its data, on a stat tile, a panel and a chart panel: no
+ * data, a failed query in its content's place with Retry and the raw message folded away, and
+ * figures kept but stale, marked in the head with since when.
+ */
+export const PanelStatesStory: StoryObj = { name: 'Panel states', render: () => <PanelStates /> }
+
 const CAPACITY: Threshold[] = [{ color: 'critical' }, { value: 100, color: 'warning' }, { value: 300, color: 'good' }]
 const capacityScale = sequentialScale({
     breaks: [100, 300],

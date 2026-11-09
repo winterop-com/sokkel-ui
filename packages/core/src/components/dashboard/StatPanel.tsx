@@ -1,4 +1,4 @@
-import { ArrowDownRight, ArrowUpRight, Info, MoreHorizontal } from 'lucide-react'
+import { ArrowDownRight, ArrowUpRight, Info, MoreHorizontal, RotateCw } from 'lucide-react'
 import { useId, type CSSProperties, type ReactNode } from 'react'
 
 import { useClamped } from '../../hooks/use-clamped'
@@ -6,7 +6,7 @@ import { cn } from '../../lib/cn'
 import { LoadingOverlay } from '../Loaders'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '../ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip'
-import { SPAN, type PanelSpan } from './DashboardGrid'
+import { PANEL_STATE_WORDS, SPAN, StaleMark, type PanelSpan, type PanelStateProps, type PanelStateWords } from './DashboardGrid'
 import { formatValue, thresholdColor, tokenVar, type Threshold } from './thresholds'
 
 export interface StatWords {
@@ -19,7 +19,14 @@ export interface StatWords {
     target: string
 }
 
-const WORDS: StatWords = { noData: 'No data', info: 'About this panel', menu: 'Panel actions', loading: 'Loading', target: 'Target' }
+const WORDS: StatWords & PanelStateWords = {
+    noData: 'No data',
+    info: 'About this panel',
+    menu: 'Panel actions',
+    loading: 'Loading',
+    target: 'Target',
+    ...PANEL_STATE_WORDS,
+}
 
 /** How far a reading has come toward its target: a track with the reading filled in and a tick at the target. */
 function TargetMeter({
@@ -128,7 +135,11 @@ export interface StatPanelProps {
     onSelect?: () => void
     span?: PanelSpan
     loading?: boolean
-    words?: Partial<StatWords>
+    /** A failed query in the value's place with Retry, and a stale value marked under it; see `PanelStateProps`. */
+    error?: PanelStateProps['error']
+    onRetry?: () => void
+    stale?: PanelStateProps['stale']
+    words?: Partial<StatWords & PanelStateWords>
     className?: string
 }
 
@@ -160,6 +171,9 @@ export function StatPanel({
     onSelect,
     span = 'sixth',
     loading = false,
+    error,
+    onRetry,
+    stale,
     words: given,
     className,
 }: StatPanelProps) {
@@ -259,32 +273,47 @@ export function StatPanel({
                 )}
             </header>
             <LoadingOverlay loading={loading} label={words.loading} className="flex min-h-0 flex-1 flex-col">
-                <div className={cn('flex flex-1 flex-col items-center px-2.5 pb-3', inked && 'text-(--tone)')}>
-                    <p
-                        className={cn(
-                            'flex items-baseline gap-1 tabular-nums',
-                            value === null ? 'text-detail-title text-muted-foreground' : 'text-statistic',
+                {error !== undefined && error !== false ? (
+                    <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-1.5 px-2.5 pb-3 text-center">
+                        <p className={cn('text-xs', filled ? 'text-on-fill/90' : 'text-critical-ink')}>
+                            {typeof error === 'string' ? error : words.failed}
+                        </p>
+                        {onRetry !== undefined && (
+                            <button type="button" className={cn(tool, 'w-auto gap-1 px-1.5 text-xs')} onClick={onRetry}>
+                                <RotateCw className="size-3" aria-hidden />
+                                {words.retry}
+                            </button>
                         )}
-                    >
-                        <span>{written}</span>
-                        {unit !== undefined && value !== null && (
-                            <span className={cn('text-sm font-medium', !filled && !inked && 'text-muted-foreground')}>{unit}</span>
+                    </div>
+                ) : (
+                    <div className={cn('flex flex-1 flex-col items-center px-2.5 pb-3', inked && 'text-(--tone)')}>
+                        <p
+                            className={cn(
+                                'flex items-baseline gap-1 tabular-nums',
+                                value === null ? 'text-detail-title text-muted-foreground' : 'text-statistic',
+                            )}
+                        >
+                            <span>{written}</span>
+                            {unit !== undefined && value !== null && (
+                                <span className={cn('text-sm font-medium', !filled && !inked && 'text-muted-foreground')}>{unit}</span>
+                            )}
+                        </p>
+                        {stale !== undefined && stale !== false && <StaleMark stale={stale} words={words} />}
+                        {note !== undefined && (
+                            <p className={cn('truncate text-xs', filled ? 'text-on-fill/85' : 'text-muted-foreground')}>{note}</p>
                         )}
-                    </p>
-                    {note !== undefined && (
-                        <p className={cn('truncate text-xs', filled ? 'text-on-fill/85' : 'text-muted-foreground')}>{note}</p>
-                    )}
-                    {target !== undefined && value !== null && (
-                        <TargetMeter
-                            value={value}
-                            target={target}
-                            range={targetRange}
-                            written={`${format !== undefined ? format(target) : formatValue(target, decimals)}${typeof unit === 'string' ? unit : ''}`}
-                            label={words.target}
-                            filled={filled}
-                        />
-                    )}
-                </div>
+                        {target !== undefined && value !== null && (
+                            <TargetMeter
+                                value={value}
+                                target={target}
+                                range={targetRange}
+                                written={`${format !== undefined ? format(target) : formatValue(target, decimals)}${typeof unit === 'string' ? unit : ''}`}
+                                label={words.target}
+                                filled={filled}
+                            />
+                        )}
+                    </div>
+                )}
             </LoadingOverlay>
         </section>
     )

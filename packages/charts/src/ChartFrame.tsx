@@ -8,6 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Tooltip, TooltipContent, TooltipTrigger } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { ChartLegend, type LegendItem, type LegendStat, type LegendWords } from './ChartLegend'
 import type { ChartHandle } from './EChart'
+import { PANEL_STATE_WORDS, PanelFailure, StaleMark } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
 
 /** What the frame hands its chart: the legend's state, the handle the chart fills for export, and where it is drawn. */
 export interface ChartState {
@@ -33,6 +34,9 @@ export interface ChartFrameWords {
     away: string
     empty: string
     loading: string
+    failed: string
+    retry: string
+    stale: string
     legend?: Partial<LegendWords>
 }
 
@@ -47,6 +51,7 @@ const WORDS: ChartFrameWords = {
     away: WINDOWED_PANE_WORDS.away,
     empty: 'No data for this range.',
     loading: 'Loading',
+    ...PANEL_STATE_WORDS,
 }
 
 function save(name: string, href: string) {
@@ -85,6 +90,12 @@ export interface ChartFrameProps {
     onExpandedChange?: (expanded: boolean) => void
     loading?: boolean
     empty?: boolean
+    /** A failed query, in the chart's place; see `PanelStateProps`. */
+    error?: boolean | string
+    technical?: string
+    onRetry?: () => void
+    /** Figures kept but behind, marked in the head; see `PanelStateProps`. */
+    stale?: boolean | string
     /** The chart area's size; it fills the window when expanded. */
     bodyClassName?: string
     /** The content sets the body's height, for content laid out in the page rather than drawn on a canvas. */
@@ -125,6 +136,10 @@ export function ChartFrame({
     onExpandedChange,
     loading = false,
     empty = false,
+    error,
+    technical,
+    onRetry,
+    stale,
     bodyClassName = 'h-56',
     fit = false,
     words: given,
@@ -169,11 +184,13 @@ export function ChartFrame({
     }
 
     const head = title !== undefined || actions !== undefined || menu !== undefined || exportable || expandable
-    const showLegend = legend !== undefined && legend.length > 0 && !empty
+    const failed = error !== undefined && error !== false
+    const showLegend = legend !== undefined && legend.length > 0 && !empty && !failed
     const content = (
         <FrameBody
             loading={loading}
             empty={empty}
+            failure={failed ? <PanelFailure error={error} technical={technical} onRetry={onRetry} words={words} /> : undefined}
             fit={fit}
             bodyClassName={bodyClassName}
             words={words}
@@ -212,6 +229,7 @@ export function ChartFrame({
                 <header className={cn('flex min-h-8 shrink-0 items-center gap-1 pr-1.5 pl-3', actions !== undefined && 'flex-wrap')}>
                     <div className={cn('flex min-h-8 min-w-0 items-center gap-1.5', actions !== undefined ? 'grow basis-40' : 'flex-1')}>
                         {title !== undefined && <h3 className="truncate text-xs font-medium">{title}</h3>}
+                        {stale !== undefined && stale !== false && !failed && <StaleMark stale={stale} words={words} />}
                         {info !== undefined && (
                             <Tooltip>
                                 <TooltipTrigger aria-label={words.info} className={cn(TOOL, 'size-5')}>
@@ -289,6 +307,7 @@ export function ChartFrame({
 function FrameBody({
     loading,
     empty,
+    failure,
     fit,
     bodyClassName,
     legend,
@@ -297,6 +316,7 @@ function FrameBody({
 }: {
     loading: boolean
     empty: boolean
+    failure?: ReactNode
     fit: boolean
     bodyClassName: string
     legend: ReactNode
@@ -309,9 +329,11 @@ function FrameBody({
             <LoadingOverlay
                 loading={loading}
                 label={words.loading}
-                className={cn('min-h-0', fit ? (empty ? 'h-24' : undefined) : windowed ? 'flex-1' : bodyClassName)}
+                className={cn('min-h-0', fit ? (empty || failure !== undefined ? 'h-40' : undefined) : windowed ? 'flex-1' : bodyClassName)}
             >
-                {empty ? (
+                {failure !== undefined ? (
+                    <div className="absolute inset-0 flex items-center justify-center overflow-auto p-2">{failure}</div>
+                ) : empty ? (
                     <p className="absolute inset-0 flex items-center justify-center text-center text-xs text-muted-foreground">
                         {words.empty}
                     </p>
