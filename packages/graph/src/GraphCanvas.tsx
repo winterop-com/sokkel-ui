@@ -125,6 +125,14 @@ export interface GraphEditing {
     onDropItem?: (item: string, at: GraphPointer) => void
 }
 
+/** Below this width a flow reads top to bottom, so its later steps stay on a phone's screen. */
+const NARROW_GRAPH = 560
+
+/** The direction a flow is laid out in for the width its canvas has: down when narrow, else right. */
+export function fitDirection(width: number | undefined): GraphDirection {
+    return width !== undefined && width > 0 && width < NARROW_GRAPH ? 'down' : 'right'
+}
+
 /** What every ready-made graph view takes besides its data. */
 export interface GraphViewProps {
     /** The id of the chosen node, or null for none. */
@@ -201,6 +209,8 @@ export interface GraphCanvasProps<N extends Node = Node, E extends Edge = Edge> 
     direction?: GraphDirection
     frame?: GraphFrame
     settled?: boolean
+    /** Called with the canvas's width as it changes, so a view can lay its graph out to fit. */
+    onWidth?: (width: number) => void
     /** Called with the node chosen, or null when the ground was clicked. */
     onSelect?: (id: string | null) => void
     /** Called with every chosen node when the choice changes; given this, several can be chosen at once. */
@@ -246,6 +256,7 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
     controls = true,
     toolbar,
     fitMinZoom = FIT_MIN_ZOOM,
+    onWidth,
     words,
     className,
     children,
@@ -300,6 +311,16 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
         const at = flowRef.current?.screenToFlowPosition({ x: event.clientX, y: event.clientY }) ?? { x: 0, y: 0 }
         return { clientX: event.clientX, clientY: event.clientY, ...at }
     }
+
+    const reportWidth = useRef(onWidth)
+    reportWidth.current = onWidth
+    useEffect(() => {
+        const element = box.current
+        if (element === null || reportWidth.current === undefined) return
+        const observer = new ResizeObserver(() => reportWidth.current?.(element.clientWidth))
+        observer.observe(element)
+        return () => observer.disconnect()
+    }, [])
 
     useEffect(() => {
         const element = box.current

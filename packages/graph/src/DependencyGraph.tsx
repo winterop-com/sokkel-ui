@@ -1,8 +1,8 @@
 import { Cog, Database } from 'lucide-react'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 
 import type { Status } from '@winterop-com/sokkel-ui/StatusChip'
-import { GraphCanvas, type GraphViewProps } from './GraphCanvas'
+import { fitDirection, GraphCanvas, type GraphViewProps } from './GraphCanvas'
 import { useNodeGraph, type GraphItem, type GraphLink } from './use-node-graph'
 
 /** One thing in a lineage: a dataset, or a job that reads datasets and writes others. */
@@ -33,11 +33,13 @@ export function DependencyGraph({
     edges,
     selected = null,
     onSelect,
-    direction = 'right',
+    direction: given,
     frame = 'stage',
     words,
     className,
 }: DependencyGraphProps) {
+    const [width, setWidth] = useState<number>()
+    const direction = given ?? fitDirection(width)
     const items = useMemo<GraphItem[]>(
         () =>
             nodes.map((node) => ({
@@ -61,6 +63,7 @@ export function DependencyGraph({
             edges={graph.edges}
             settled={graph.settled}
             direction={direction}
+            onWidth={setWidth}
             frame={frame}
             onSelect={onSelect}
             words={words}

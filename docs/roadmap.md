@@ -126,9 +126,9 @@ to `plan.md` when it ships.
   web. Each round below is a PR or a few, smallest and surest first. Every fix goes in the
   component, never the story, with a test or story that shows it.
     - **Round 4, narrow layouts:**
-        - `RunGraph`, lineage and branching pipelines lose their downstream steps on a phone, the
-          failed step among them. Lay them out top to bottom when narrow, or open on the failed
-          step, as `NetworkGraph` already fits.
+        - `RunGraph` laid out top to bottom on a phone still puts two first steps side by side,
+          clipping the second slightly at 344, since the fit stops at its least zoom. Stack wide
+          ranks, or let a narrow fit zoom out further.
         - Workspace at 1024: the rail stays open beside the inspector and the list falls to three
           tall cards. Collapse the rail first when the inspector opens, and stack rows compactly
           before full labeled cards.
