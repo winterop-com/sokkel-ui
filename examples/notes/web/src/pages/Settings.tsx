@@ -1,7 +1,7 @@
 import { CodeEditor } from '@winterop-com/sokkel-ui/CodeEditor'
 import { ConfirmDialog } from '@winterop-com/sokkel-ui/DialogShell'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
-import { SettingsView, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsView'
+import { SettingsDialog, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsDialog'
 import { ThemePicker } from '@winterop-com/sokkel-ui/ThemePicker'
 import { DEFAULT_APPEARANCE, THEMES } from '@winterop-com/sokkel-ui/lib/appearance'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
@@ -12,7 +12,6 @@ import { useEffect, useRef, useState } from 'react'
 
 import { resetAll } from 'tidevann-shared/backend'
 import type { Frame } from 'tidevann-shared/frame'
-import { go } from 'tidevann-shared/router'
 import { DEFAULT_PREFS, TEMPLATE, type FontSize, type View } from '../model'
 import { useVault } from '../state'
 
@@ -54,7 +53,7 @@ function TemplateEditor() {
 }
 
 /** The reader's settings, kept by the backend as each is changed; the look is kept in this browser. */
-export function SettingsPage({ frame }: { frame: Frame }) {
+export function SettingsPage({ frame, open, onClose }: { frame: Frame; open: boolean; onClose: () => void }) {
     const { prefs, setPrefs, vault } = useVault()
     const { settings: look, setSettings: setLook } = frame.appearance
     const [active, setActive] = useState('editor')
@@ -243,7 +242,11 @@ export function SettingsPage({ frame }: { frame: Frame }) {
 
     return (
         <>
-            <SettingsView
+            <SettingsDialog
+                open={open}
+                onOpenChange={(next) => {
+                    if (!next) onClose()
+                }}
                 groups={groups}
                 active={active}
                 onActiveChange={setActive}
@@ -262,7 +265,6 @@ export function SettingsPage({ frame }: { frame: Frame }) {
                         template: TEMPLATE,
                     })
                 }}
-                onDone={() => go('/notes')}
             />
             <ConfirmDialog
                 open={resetting}

@@ -36,7 +36,7 @@ import { lazy, Suspense, useEffect, useMemo, useState, useSyncExternalStore } fr
 
 import type { Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
-import { go } from 'tidevann-shared/router'
+import { go, useOverlayRoute } from 'tidevann-shared/router'
 import { Dialogs } from './Dialogs'
 import { clock, day, wordCount } from './model'
 import { NotePanel } from './NotePanel'
@@ -53,7 +53,7 @@ const GraphPage = lazy(() => import('./pages/Graph').then((module) => ({ default
 const NotePage = lazy(() => import('./pages/NotePage').then((module) => ({ default: module.NotePage })))
 const SettingsPage = lazy(() => import('./pages/Settings').then((module) => ({ default: module.SettingsPage })))
 
-const PAGES = ['notes', 'folder', 'note', 'daily', 'tags', 'graph', 'search', 'settings'] as const
+const PAGES = ['notes', 'folder', 'note', 'daily', 'tags', 'graph', 'search'] as const
 
 /** Where the shell sets its panel as a column rather than a sheet over the content. */
 const WIDE = '(min-width: 64rem)'
@@ -102,7 +102,9 @@ export function Notes({ frame }: { frame: Frame }) {
     const state = useVault()
     const { vault, prefs, setPrefs, open, openDay, newNote, ask, moveNote, moveFolder, save, drafts } = state
     const { settings: look, setSettings: setLook } = frame.appearance
-    const [first = 'notes', second] = frame.route
+    // Settings open as a dialog over the page they were opened from.
+    const settings = useOverlayRoute(frame.route, 'settings', ['notes'])
+    const [first = 'notes', second] = settings.route
     const page = (PAGES as readonly string[]).includes(first) ? first : 'missing'
     const [filter, setFilter] = useState('')
     const [switching, setSwitching] = useState(false)
@@ -111,7 +113,7 @@ export function Notes({ frame }: { frame: Frame }) {
     // Wide, the panel is a column the reader keeps shown or hidden; narrow, it is a sheet opened for a moment.
     const wide = useSyncExternalStore(followWidth, isWide, () => true)
     const [sheet, setSheet] = useState(false)
-    const where = frame.route.join('/')
+    const where = settings.route.join('/')
     useEffect(() => setSheet(false), [where])
     const panelShown = wide ? prefs.panel : sheet
 
@@ -289,18 +291,17 @@ export function Notes({ frame }: { frame: Frame }) {
     else if (page === 'tags') content = <Tags tag={second === undefined ? undefined : decodeURIComponent(second)} />
     else if (page === 'graph') content = <GraphPage />
     else if (page === 'search') content = <SearchPage key={second ?? ''} query={second === undefined ? '' : decodeURIComponent(second)} />
-    else if (page === 'settings') content = <SettingsPage frame={frame} />
     else content = <Gone what="page" />
 
-    // A note fills the content edge to edge, and the graph and the settings lay out their own page.
-    const bare = page === 'note' || page === 'graph' || page === 'settings'
+    // A note fills the content edge to edge, and the graph lays out its own page.
+    const bare = page === 'note' || page === 'graph'
 
     return (
         <Shell
             palette={palette}
             paletteFilter="terms"
             desktop={frame.desktop}
-            route={frame.route.join('/')}
+            route={settings.route.join('/')}
             shortcuts={[]}
             rail={
                 <Rail
@@ -401,6 +402,11 @@ export function Notes({ frame }: { frame: Frame }) {
             onPanelOpenChange={(panel) => (wide ? void setPrefs({ panel }) : setSheet(panel))}
         >
             <Suspense fallback={null}>{bare ? content : <Page>{content}</Page>}</Suspense>
+            {settings.open && (
+                <Suspense fallback={null}>
+                    <SettingsPage frame={frame} open onClose={settings.close} />
+                </Suspense>
+            )}
             <Dialogs />
             <CommandPalette
                 open={switching}
