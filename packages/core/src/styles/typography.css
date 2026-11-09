@@ -81,6 +81,9 @@
 @utility text-statistic {
     --mono-adjust: var(--mono-x-height);
 }
+@utility text-statistic-hero {
+    --mono-adjust: var(--mono-x-height);
+}
 @utility text-media-title {
     --mono-adjust: var(--mono-x-height);
 }

@@ -64,6 +64,7 @@ export function Overview({ serverState }: { serverState: ServerState }) {
                             note={STATE_WORDS[state].note}
                             href={`#/responses/in/${state}`}
                             emphasis={state === 'received' && waiting > 0}
+                            size={state === 'received' && waiting > 0 ? 'lg' : 'md'}
                         />
                     ))}
                 </Columns>
