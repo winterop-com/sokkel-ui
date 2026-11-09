@@ -30,6 +30,28 @@ const ajv = new Ajv2020({ allErrors: true, strict: false, validateFormats: true 
 addFormats(ajv)
 const compiled = new WeakMap<JsonSchema, ValidateFunction | Error>()
 
+declare const process: { env: { NODE_ENV?: string } }
+
+/** Whether the build is a development one; a bundler writes NODE_ENV in, and a page without one counts as development. */
+function developing(): boolean {
+    try {
+        return process.env.NODE_ENV !== 'production'
+    } catch {
+        return true
+    }
+}
+
+let warned = false
+
+/** Says once per page, in development, that schema checks run generated code, so a Content Security Policy needs 'unsafe-eval'. */
+function warnOfGeneratedCode(): void {
+    if (warned || !developing()) return
+    warned = true
+    console.warn(
+        "sokkel-ui: schema checks compile each schema to a function with ajv (new Function), so a page with a Content Security Policy needs 'unsafe-eval' in script-src.",
+    )
+}
+
 /** The schema compiled to a check, or why it could not be: a broken schema, or a page whose policy forbids generated code. */
 function compile(schema: JsonSchema): ValidateFunction | Error {
     const known = compiled.get(schema)
@@ -43,6 +65,7 @@ function compile(schema: JsonSchema): ValidateFunction | Error {
     }
     let check: ValidateFunction | Error
     try {
+        warnOfGeneratedCode()
         check = ajv.compile(body)
     } catch (error) {
         check = error instanceof Error ? error : new Error(String(error))
