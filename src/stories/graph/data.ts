@@ -70,3 +70,139 @@ export const LARGE: PipelineStep[] = [
     { code: 'merge', kind: 'sql', needs: REGIONS.map((region) => `report-${region}`) },
     { code: 'notify', kind: 'webhook', needs: ['merge'] },
 ]
+
+/** The import-orders job, its steps named at length, so a box's width follows its words up to the widest. */
+export const LONG_NAMES: PipelineStep[] = [
+    { code: 'fetch', name: 'Fetch', kind: 'http', needs: [] },
+    { code: 'transform', name: 'Transform orders into the warehouse layout', kind: 'sql', needs: ['fetch'] },
+    {
+        code: 'validate',
+        name: 'Validate every order line against the inventory schema and the price list',
+        kind: 'schema',
+        needs: ['transform'],
+    },
+    { code: 'upload', name: 'Upload', kind: 's3', needs: ['validate'] },
+    { code: 'notify', kind: 'webhook', needs: ['validate'] },
+]
+
+/** One run of a job, for a list of runs. */
+export interface JobRun {
+    id: string
+    job: string
+    project: string
+    started: string
+    by: string
+    status: RunStep['status']
+    steps: RunStep[]
+}
+
+/** Each step of a pipeline in a state, by code; a step not named has succeeded. */
+function runOf(steps: PipelineStep[], states: Record<string, RunStep['status']>): RunStep[] {
+    return steps.map((each) => ({ ...each, status: states[each.code] ?? 'succeeded' }))
+}
+
+const SYNC_INVENTORY: PipelineStep[] = [
+    { code: 'fetch', needs: [] },
+    { code: 'transform', needs: ['fetch'] },
+    { code: 'validate', needs: ['transform'] },
+    { code: 'upload', needs: ['validate'] },
+]
+
+const SEND_DIGEST: PipelineStep[] = [
+    { code: 'fetch-orders', needs: [] },
+    { code: 'fetch-inventory', needs: [] },
+    { code: 'fetch-customers', needs: [] },
+    { code: 'transform', needs: ['fetch-orders', 'fetch-inventory', 'fetch-customers'] },
+    { code: 'notify', needs: ['transform'] },
+]
+
+const REBUILD_INDEX: PipelineStep[] = [
+    { code: 'plan', needs: [] },
+    ...['north', 'south', 'east'].flatMap((region) => [
+        { code: `fetch-${region}`, needs: ['plan'] },
+        { code: `transform-${region}`, needs: [`fetch-${region}`] },
+        { code: `upload-${region}`, needs: [`transform-${region}`] },
+    ]),
+    { code: 'validate', needs: ['upload-north', 'upload-south', 'upload-east'] },
+    { code: 'notify', needs: ['validate'] },
+]
+
+/** Recent runs of five jobs, each with its steps in the state the run left them. */
+export const JOB_RUNS: JobRun[] = [
+    {
+        id: '01a1a5b9',
+        job: 'nightly-export',
+        project: 'harbor',
+        started: '02:00',
+        by: 'scheduler',
+        status: 'running',
+        steps: RUNNING,
+    },
+    {
+        id: '01a1a5c2',
+        job: 'nightly-export',
+        project: 'harbor',
+        started: 'Yesterday 02:00',
+        by: 'scheduler',
+        status: 'failed',
+        steps: FAILED,
+    },
+    {
+        id: '01a1a5d0',
+        job: 'sync-inventory',
+        project: 'juniper',
+        started: '01:45',
+        by: 'ada',
+        status: 'succeeded',
+        steps: runOf(SYNC_INVENTORY, {}),
+    },
+    {
+        id: '01a1a5d7',
+        job: 'sync-inventory',
+        project: 'juniper',
+        started: '01:30',
+        by: 'grace',
+        status: 'cancelled',
+        steps: runOf(SYNC_INVENTORY, { validate: 'cancelled', upload: 'cancelled' }),
+    },
+    {
+        id: '01a1a5e3',
+        job: 'send-digest',
+        project: 'harbor',
+        started: '01:15',
+        by: 'linus',
+        status: 'queued',
+        steps: runOf(SEND_DIGEST, {
+            'fetch-orders': 'queued',
+            'fetch-inventory': 'queued',
+            'fetch-customers': 'queued',
+            transform: 'queued',
+            notify: 'queued',
+        }),
+    },
+    {
+        id: '01a1a5f1',
+        job: 'rebuild-index',
+        project: 'larkspur',
+        started: '00:40',
+        by: 'margaret',
+        status: 'running',
+        steps: runOf(REBUILD_INDEX, {
+            'transform-south': 'running',
+            'upload-south': 'queued',
+            'transform-east': 'failed',
+            'upload-east': 'skipped',
+            validate: 'queued',
+            notify: 'queued',
+        }),
+    },
+    {
+        id: '01a1a5f8',
+        job: 'import-orders',
+        project: 'harbor',
+        started: '00:10',
+        by: 'scheduler',
+        status: 'succeeded',
+        steps: runOf(LONG_NAMES, {}),
+    },
+]

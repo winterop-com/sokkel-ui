@@ -75,6 +75,10 @@ export function PipelineGraph({
     controls,
     toolbar,
     emptyAction,
+    routing,
+    spacing,
+    minNodeWidth,
+    maxNodeWidth,
     words,
     className,
     children,
@@ -90,7 +94,15 @@ export function PipelineGraph({
         [steps],
     )
     const links = useMemo(() => stepLinks(steps), [steps])
-    const graph = useNodeGraph(items, links, { direction, selected: selection ?? selected, positions })
+    const graph = useNodeGraph(items, links, {
+        direction,
+        selected: selection ?? selected,
+        positions,
+        routing,
+        spacing,
+        minNodeWidth,
+        maxNodeWidth,
+    })
     return (
         <GraphCanvas
             nodes={graph.nodes}

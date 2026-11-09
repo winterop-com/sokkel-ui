@@ -66,6 +66,10 @@
             "types": "./dist/measure.d.ts",
             "import": "./dist/measure.js"
         },
+        "./MiniGraph": {
+            "types": "./dist/MiniGraph.d.ts",
+            "import": "./dist/MiniGraph.js"
+        },
         "./NetworkGraph": {
             "types": "./dist/NetworkGraph.d.ts",
             "import": "./dist/NetworkGraph.js"

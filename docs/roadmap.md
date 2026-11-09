@@ -212,7 +212,6 @@ to `plan.md` when it ships.
         - country fills from a world geometry
         - a basemap that works offline
     - **Graphs:**
-        - a small engine-free pipeline glyph for lists
         - a live force layout with dragging
     - **Editors:**
         - `CodeEditor` following a `[[link]]` on Mod-click

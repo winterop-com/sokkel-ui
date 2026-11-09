@@ -71,8 +71,24 @@ function linesOf(data: GraphNodeData): { title: string; named: boolean; line: st
     return { title: named ? (data.name as string) : data.code, named, line, duration }
 }
 
+/**
+ * The narrowest and widest a graph draws its node boxes, each sized from its words between the two.
+ * Past the widest a box's words end in an ellipsis and the whole of them shows on pointing; the same
+ * number for both draws every box at one width.
+ */
+export interface NodeWidthBounds {
+    /** 96 when left out. */
+    min?: number
+    /** 280 when left out. */
+    max?: number
+}
+
 /** The size a node box is drawn at, so none of its words is cut short of the widest a box may be. */
-export function graphNodeSize(data: GraphNodeData, measure: Measure): { width: number; height: number } {
+export function graphNodeSize(
+    data: GraphNodeData,
+    measure: Measure,
+    { min = NODE_MIN_WIDTH, max = NODE_MAX_WIDTH }: NodeWidthBounds = {},
+): { width: number; height: number } {
     const { title, named, line, duration } = linesOf(data)
     const head =
         (data.icon === undefined ? 0 : GLYPH + GAP) +
@@ -81,8 +97,8 @@ export function graphNodeSize(data: GraphNodeData, measure: Measure): { width: n
         (hasIssues(data) ? GAP + MARK - 4 : 0)
     const foot = (line === '' ? 0 : measure(line, 'small-mono')) + (duration === null ? 0 : GAP + 2 + measure(duration, 'small-mono'))
     const width = Math.min(
-        NODE_MAX_WIDTH,
-        Math.max(NODE_MIN_WIDTH, Math.ceil(Math.max(head, foot) + CHROME + (data.shape === 'round' ? ROUND_PAD : 0))),
+        Math.max(min, max),
+        Math.max(min, Math.ceil(Math.max(head, foot) + CHROME + (data.shape === 'round' ? ROUND_PAD : 0))),
     )
     return { width, height: line === '' && duration === null ? NODE_HEIGHT_SHORT : NODE_HEIGHT }
 }
