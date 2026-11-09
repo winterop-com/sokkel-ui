@@ -135,10 +135,6 @@ to `plan.md` when it ships.
   1280 and 344 wide, every theme in both schemes) and a review of the twelve example apps on the
   web. Each round below is a PR or a few, smallest and surest first. Every fix goes in the
   component, never the story, with a test or story that shows it.
-    - **Round 4, narrow layouts:**
-        - `RunGraph` laid out top to bottom on a phone still puts two first steps side by side,
-          clipping the second slightly at 344, since the fit stops at its least zoom. Stack wide
-          ranks, or let a narrow fit zoom out further.
     - **Round 5, dashboards:**
         - One look for a dashboard's main figures and a quieter one for the rest, and fewer solid
           fills on a phone's first screen (a delta now says what it compares against, `compared`).
