@@ -6,7 +6,12 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.10.16** is the latest release (2026-11-09): the review's last fixes. A `StatPanel` centers
+- **0.10.17** is the latest release (2026-11-09): fixes from a Codex review of the day's work,
+  and an editable table that marks its active and edited cell with a line under it (`cellFocus`).
+  `useUnsavedChanges` keeps the history as it was and asks once; `SchemaForm` carries refusals and
+  nested keys with their items and asks the app's `field` for every field; `CodeEditor` takes `id`
+  and `onBlur`; a `StatPanel` link takes a press anywhere on the tile.
+- **0.10.16** (2026-11-09): the review's last fixes. A `StatPanel` centers
   its value and says what its change compares against (`compared`); a graph on a narrow canvas fits
   its width; a `DataTable`'s bar has room around its search. The examples open their settings as a
   dialog over the page and keep light and dark there, not in the top bar.
