@@ -50,6 +50,9 @@ says what is missing. **Not covered** has no part yet.
 10. **The palette's foot and rows, the rest.** The foot's verb follows the chosen row (Open, Switch,
     Run) where `paletteFoot` says Open, and a row ends with its kind (Page, Form, Receipt) where its
     group does not already say it.
+    **Closed:** `verb` on a palette row or its group sets the foot's word for the chosen row
+    (`appearanceCommands` says Switch); `kind` on a row ends it, left out where its group's `kind`
+    says the same.
 11. **`ApiLink` that opens.** Done: `ApiLink` `open` makes the whole chip one link opening `href`
     in a new tab, in place of the copy button. The example keeps copying, since its server is
     simulated and has no address to open.
@@ -85,8 +88,8 @@ mounts its control afresh as an issue comes or goes, which closed the period pic
 | Pages, Forms, Responses, Appearance, View, Help, Session groups  | `Shell` `palette`, `placeCommands`, `appearanceCommands` | Covered  | Pages come from the rail through `placeCommands`; forms and recent receipts are groups the app builds. |
 | Its own ranking (an id prefix first, then a label start)         | `paletteFilter` as a function                            | Covered  | Its scoring moves into the filter function.                                                            |
 | Receipts found by an id prefix, a register lookup row            | `paletteSearch`                                          | Covered  | The lookup row is one search result opening the register's search.                                     |
-| Foot: the mark and name, the verb with Enter, the palette's keys | `paletteFoot`                                            | Partly   | The verb is always Open; see item 10.                                                                  |
-| A kind noun at a row's end                                       | `hint` or `code`                                         | Partly   | Use `hint`; see item 10.                                                                               |
+| Foot: the mark and name, the verb with Enter, the palette's keys | `paletteFoot`, `verb` on a row or group                  | Covered  | Its actions say Run, its themes Switch, the rest Open.                                                 |
+| A kind noun at a row's end                                       | `kind` on a row, `kind` on its group                     | Covered  | A mixed group's rows say their kind; a group of one kind sets it once.                                 |
 
 ## Overview
 

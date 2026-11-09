@@ -47,6 +47,16 @@ export interface PaletteCommand {
     round?: boolean
     /** Lists the command dimmed and never runs it, so a list need not be built around it; words say why, in the hint's place. */
     disabled?: boolean | string
+    /**
+     * The foot's word for what choosing this row does (Open, Switch, Run), said beside Enter while
+     * the row is chosen; its group's `verb`, then the palette's `open` word, when not given.
+     */
+    verb?: string
+    /**
+     * What the row is, said at its end (Page, Form, Receipt), so a group of mixed things tells them
+     * apart; left out where its group's `kind` already says it.
+     */
+    kind?: string
     onSelect: () => void
 }
 
@@ -60,6 +70,10 @@ export interface PaletteGroup {
      * app's own. Groups of one title are listed as one.
      */
     rank?: number
+    /** The foot's word for every row of the group that names no `verb` of its own. */
+    verb?: string
+    /** What every row of the group is; a row of this `kind` does not say it again. */
+    kind?: string
 }
 
 /**
@@ -93,7 +107,7 @@ export interface CommandPaletteWords {
     title: string
     /** The button that closes the palette on a touch screen, which has no Escape to press. */
     close: string
-    /** The foot's word before the key that runs the chosen row. */
+    /** The foot's word before the key that runs the chosen row, when neither the row nor its group names a `verb`. */
     open: string
     /** The foot's word before the keys that open and close the palette. */
     palette: string
@@ -152,7 +166,9 @@ export interface CommandPaletteProps {
  * the query follow the commands, each with its thumbnail, artwork or icon and the query's words
  * marked. On a touch screen, which has no Escape, a Close button stands at its foot. `filter`
  * chooses how the commands are matched: by their letters (`fuzzy`), by every word typed (`terms`),
- * or by the app's own score. `foot` adds a strip with the app's mark and the keys it answers. A
+ * or by the app's own score. `foot` adds a strip with the app's mark and the keys it answers, its
+ * verb beside Enter following the chosen row (`verb` on a row or its group: Open, Switch, Run). A
+ * row's `kind` (Page, Form, Receipt) ends it where its group's `kind` does not already say it. A
  * command that cannot run now is listed `disabled`, dimmed and passed over, with why in its hint.
  */
 export function CommandPalette({
@@ -170,17 +186,32 @@ export function CommandPalette({
     const [query, setQuery] = useState(defaultQuery)
     // Each opening starts from `defaultQuery`, not from what was typed the last time it was open.
     const [shown, setShown] = useState(open)
+    // The chosen row, held so the foot can say its verb; each opening starts at the first row.
+    const [chosen, setChosen] = useState('')
     if (open !== shown) {
         setShown(open)
-        if (open) setQuery(defaultQuery)
+        if (open) {
+            setQuery(defaultQuery)
+            setChosen('')
+        }
     }
     const score = filter === 'fuzzy' ? undefined : filter === 'terms' ? termScore : filter
     const listed = useMemo(() => (score === undefined ? merged : filterCommands(merged, query, score)), [merged, query, score])
     const answer = useSearch(search?.search, query, { enabled: open, minQuery: search?.minQuery, debounce: search?.debounce })
     const found = answer.groups.filter((group) => group.results.length > 0)
+    const verbs = useMemo(() => {
+        const byValue = new Map<string, string>()
+        for (const group of merged)
+            for (const command of group.commands) {
+                const verb = command.verb ?? group.verb
+                if (verb !== undefined) byValue.set(rowValue(command), verb)
+            }
+        return byValue
+    }, [merged])
+    const verb = verbs.get(chosen) ?? words.open
     return (
         <CommandDialog open={open} onOpenChange={onOpenChange} title={words.title} description={words.placeholder}>
-            <Command shouldFilter={score === undefined} className="p-(--palette-inset)">
+            <Command shouldFilter={score === undefined} className="p-(--palette-inset)" value={chosen} onValueChange={setChosen}>
                 <CommandInput placeholder={words.placeholder} value={query} onValueChange={setQuery} />
                 <CommandList className="max-h-[min(24rem,60svh)] scroll-fade-b pb-1.5">
                     {found.length === 0 && answer.state !== 'loading' && <CommandEmpty>{words.empty}</CommandEmpty>}
@@ -191,11 +222,12 @@ export function CommandPalette({
                                 {group.commands.map((command) => {
                                     const Icon = command.icon
                                     const hint = hintOf(command)
+                                    const kind = command.kind === group.kind ? undefined : command.kind
                                     return (
                                         <CommandItem
                                             key={command.id}
                                             className={ROW}
-                                            value={`${command.label} ${command.id}`}
+                                            value={rowValue(command)}
                                             keywords={findBy(command)}
                                             disabled={Boolean(command.disabled)}
                                             onSelect={() => {
@@ -219,13 +251,16 @@ export function CommandPalette({
                                                     )}
                                                 </>
                                             )}
-                                            {command.keys !== undefined && (
-                                                <CommandShortcut className="tracking-normal">
-                                                    <KbdGroup>
-                                                        {command.keys.map((key) => (
-                                                            <Kbd key={key}>{key}</Kbd>
-                                                        ))}
-                                                    </KbdGroup>
+                                            {(kind !== undefined || command.keys !== undefined) && (
+                                                <CommandShortcut className="flex shrink-0 items-center gap-2 tracking-normal">
+                                                    {kind !== undefined && <span className="text-faint">{kind}</span>}
+                                                    {command.keys !== undefined && (
+                                                        <KbdGroup>
+                                                            {command.keys.map((key) => (
+                                                                <Kbd key={key}>{key}</Kbd>
+                                                            ))}
+                                                        </KbdGroup>
+                                                    )}
                                                 </CommandShortcut>
                                             )}
                                         </CommandItem>
@@ -273,7 +308,7 @@ export function CommandPalette({
                         {foot.mark !== undefined && <span className="flex size-4 shrink-0 items-center justify-center">{foot.mark}</span>}
                         {foot.name !== undefined && <span className="min-w-0 truncate">{foot.name}</span>}
                         <span className="ml-auto flex shrink-0 items-center gap-1.5 pointer-coarse:hidden">
-                            {words.open}
+                            {verb}
                             <Kbd>{keyLabels({ key: 'Enter' })[0]}</Kbd>
                         </span>
                         <span className="flex shrink-0 items-center gap-1.5 max-sm:hidden pointer-coarse:hidden">
@@ -297,6 +332,11 @@ export function CommandPalette({
             </Command>
         </CommandDialog>
     )
+}
+
+/** The value cmdk holds a command's row by, which the chosen row is known by. */
+function rowValue(command: PaletteCommand): string {
+    return `${command.label} ${command.id}`
 }
 
 /** Whether a command is drawn as a two-line row. */

@@ -84,6 +84,15 @@ describe('mergeCommands', () => {
     const command = (id: string) => ({ id, label: id, onSelect: run })
     const shape = (groups: ReturnType<typeof mergeCommands>) => groups.map((group) => [group.title, group.commands.map((one) => one.id)])
 
+    it("puts a group's verb on its rows and keeps the first kind of a title", () => {
+        const [group] = mergeCommands([
+            { title: 'Recent', verb: 'Run', commands: [command('a'), { ...command('b'), verb: 'Open' }] },
+            { title: 'Recent', kind: 'Job', commands: [command('c')] },
+        ])
+        expect(group?.kind).toBe('Job')
+        expect(group?.commands.map((one) => one.verb)).toEqual(['Run', 'Open', undefined])
+    })
+
     it('sorts the groups by rank, keeping their order at equal rank', () => {
         const merged = mergeCommands([
             { title: 'Go to', commands: [command('runs')] },
