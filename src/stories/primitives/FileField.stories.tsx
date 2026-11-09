@@ -2,10 +2,12 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
 import { FileField, checkFiles } from '@winterop-com/sokkel-ui/FileField'
-import { Stack } from '@winterop-com/sokkel-ui/Layout'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { useAttachmentField } from '@winterop-com/sokkel-ui/hooks/use-attachment-field'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { TextField } from '@winterop-com/sokkel-ui/TextField'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
-import { PICKED_FILES, PICKED_LIMIT } from '../fixtures/uploader'
+import { PICKED_FILES, PICKED_LIMIT, useFakeUploader } from '../fixtures/uploader'
 
 /**
  * A field that takes files: a zone to drop them on with a button that opens the picker, the limits
@@ -105,6 +107,49 @@ export const Uploading: StoryObj = {
         />
     ),
 }
+
+/** The two files a record of runs holds already, as stored on the server. */
+const STORED = [
+    { id: 'att-1', name: 'orders-2026-10.csv', size: 48_213 },
+    { id: 'att-2', name: 'validate-report.yaml', size: 2_940 },
+]
+
+function Editing() {
+    const uploader = useFakeUploader()
+    const attachments = useAttachmentField({ stored: STORED, upload: uploader.upload, accept: '.csv,.yaml,image/*', maxFiles: 4 })
+    const { kept, removed, added } = attachments.changes
+    return (
+        <TooltipProvider>
+            <Stack gap="lg" className="max-w-xl">
+                <FileField id="editing-attachments" label="Attachments" {...attachments.field} />
+                <Row gap="sm">
+                    <Button size="sm" variant="outline" onClick={uploader.step}>
+                        Move uploads on
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={uploader.failOne}>
+                        Fail one
+                    </Button>
+                    <Button size="sm" variant="outline" disabled={!attachments.failed} onClick={attachments.retry}>
+                        Retry
+                    </Button>
+                </Row>
+                <p className="text-sm text-muted-foreground">
+                    {attachments.busy
+                        ? 'Saving waits for the uploads.'
+                        : `To save: keep ${String(kept.length)}, remove ${String(removed.length)}, add ${String(added.length)}.`}
+                </p>
+            </Stack>
+        </TooltipProvider>
+    )
+}
+
+/**
+ * A record's attachments being edited (`useAttachmentField`): the two files it holds already come
+ * first and can be taken out, and new files go up as they are chosen, cancelled with their upload
+ * aborted, or failed and said in place of their size. What to save is counted under the buttons,
+ * which move the pretend uploads on, fail one and send failed ones again.
+ */
+export const Editing_: StoryObj = { name: 'Editing stored files', render: () => <Editing /> }
 
 /** In a form beside a text field, required and left empty after a submit: its zone takes the issue's edge and mark. */
 export const InForm: StoryObj = {

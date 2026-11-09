@@ -1046,6 +1046,10 @@
             "types": "./dist/hooks/use-appearance.d.ts",
             "import": "./dist/hooks/use-appearance.js"
         },
+        "./hooks/use-attachment-field": {
+            "types": "./dist/hooks/use-attachment-field.d.ts",
+            "import": "./dist/hooks/use-attachment-field.js"
+        },
         "./hooks/use-clamped": {
             "types": "./dist/hooks/use-clamped.d.ts",
             "import": "./dist/hooks/use-clamped.js"
