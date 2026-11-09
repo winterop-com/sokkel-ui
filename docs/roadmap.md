@@ -123,8 +123,6 @@ to `plan.md` when it ships.
     - **Round 1, wrong behavior in the core:**
         - Records form: a section's mark in the section list says complete while a field in it has
           an error. Derive the mark from the section's own field issues.
-        - `ApiPlayground`: at 344 Send lies over the path input. Give the path field a basis and a
-          minimum, or put method, path and Send on their own rows when narrow.
         - `Inspector` keeps its 360 default inside a narrower page, so its right side is cut off.
           Clamp it to its container, and at narrow widths show it full width or as the detail sheet.
         - `CodeBlockContent wrap` still scrolls sideways on a long URL: the code grid's tracks do not

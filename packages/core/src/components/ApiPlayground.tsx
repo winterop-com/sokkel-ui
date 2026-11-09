@@ -309,11 +309,11 @@ export function ApiPlayground({
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                            <div className="flex min-w-48 flex-1 basis-48 flex-col gap-1.5">
                                 <Label htmlFor="api-path">{words.path}</Label>
                                 <Input
                                     id="api-path"
-                                    className="min-w-48 font-mono"
+                                    className="w-full min-w-0 font-mono"
                                     value={request.path}
                                     spellCheck={false}
                                     autoComplete="off"
