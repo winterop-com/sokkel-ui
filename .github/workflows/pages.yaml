@@ -1,7 +1,9 @@
 name: storybook
 
 # Publishes main's Storybook on every push to main, without waiting for CI (as merges do not), and
-# beside it, under examples/, every example's web app with an index of them.
+# beside it, under examples/, every example's web app with an index of them. The examples never
+# hold Storybook back: when they fail to build, Storybook is published without them and the run
+# still fails, on its last step, so the failure shows.
 on:
     push:
         branches: [main]
@@ -30,13 +32,33 @@ jobs:
             - run: npm install -g bun
             - run: bun install --frozen-lockfile
             - run: bun run build-storybook
-            # The examples install the built packages; chromium takes each one's still for the index.
-            - run: bun run build
-            - run: bunx playwright install --with-deps chromium
-            - run: bun scripts/examples-site.ts --shots --out storybook-static/examples
+            # chromium takes each example's still for the index; without it the index has cards without stills.
+            - id: browser
+              continue-on-error: true
+              run: bunx playwright install --with-deps chromium
+            - if: steps.browser.outcome == 'failure'
+              run: echo "::warning::Playwright's chromium did not install, so the examples' index has no stills."
+            # The examples install the built packages. The site is built apart and joins Storybook only when whole.
+            - id: examples
+              continue-on-error: true
+              env:
+                  BROWSER: ${{ steps.browser.outcome }}
+              run: |
+                  bun run build
+                  if [ "$BROWSER" = success ]; then
+                      bun scripts/examples-site.ts --shots --out examples-static
+                  else
+                      bun scripts/examples-site.ts --out examples-static
+                  fi
+            - if: steps.examples.outcome == 'success'
+              run: cp -R examples-static storybook-static/examples
             - uses: actions/configure-pages@v5
             - uses: actions/upload-pages-artifact@v4
               with:
                   path: storybook-static
             - id: deployment
               uses: actions/deploy-pages@v4
+            - if: steps.examples.outcome == 'failure'
+              run: |
+                  echo "::error::The examples site did not build, so Storybook was published without it. See the examples step."
+                  exit 1

@@ -37,7 +37,8 @@ export interface LogViewProps {
 /**
  * A log on the terminal ground: time, level, source and text in columns, levels inked, lines
  * numbered. `follow` keeps the newest line in view as lines arrive, until the reader scrolls up;
- * `query` marks its matches. Long lines wrap when `wrap` is set and scroll sideways otherwise.
+ * `query` marks its matches. Long lines wrap when `wrap` is set and scroll sideways otherwise;
+ * wrapped in a narrow log, as on a phone, a line's time, level and source stand over its text.
  * It is set in the terminal face, `--typeface-terminal`, whose Nerd Font icons a line can carry.
  * `framed={false}` drops its rounded corners, for a log set edge to edge in a dock or a panel.
  */
@@ -59,13 +60,21 @@ export function LogView({ lines, follow = false, wrap = false, query = '', numbe
             className={cn(
                 'min-h-0 overflow-auto bg-terminal py-2 font-mono text-xs leading-5 text-terminal-foreground outline-none [--typeface-mono:var(--typeface-terminal)] focus-visible:ring-2 focus-visible:ring-ring',
                 framed && 'rounded-surface',
+                wrap && '@container',
                 className,
             )}
         >
-            <table className={cn('border-separate border-spacing-0', wrap ? 'w-full' : 'min-w-full')}>
-                <tbody>
+            {/* Wrapped in a narrow log, each line's time, level and source fold onto a line of their own over its text. */}
+            <table className={cn('border-separate border-spacing-0', wrap ? 'w-full @max-lg:block' : 'min-w-full')}>
+                <tbody className={cn(wrap && '@max-lg:block')}>
                     {lines.map((line, index) => (
-                        <tr key={index} className="align-top hover:bg-terminal-bar [&>td:first-child]:pl-3">
+                        <tr
+                            key={index}
+                            className={cn(
+                                'align-top hover:bg-terminal-bar [&>td:first-child]:pl-3',
+                                wrap && '@max-lg:flex @max-lg:flex-wrap @max-lg:pb-1',
+                            )}
+                        >
                             {numbered && (
                                 <td className="w-10 pr-3 pl-3 text-right text-terminal-faint tabular-nums select-none">{index + 1}</td>
                             )}
@@ -81,7 +90,8 @@ export function LogView({ lines, follow = false, wrap = false, query = '', numbe
                             <td
                                 className={cn(
                                     'w-full pr-3',
-                                    wrap ? '[overflow-wrap:anywhere] whitespace-pre-wrap' : 'whitespace-pre',
+                                    wrap ? '[overflow-wrap:anywhere] whitespace-pre-wrap @max-lg:basis-full' : 'whitespace-pre',
+                                    wrap && (numbered ? '@max-lg:pl-10' : '@max-lg:pl-3'),
                                     line.level === 'error' && 'text-terminal-critical',
                                 )}
                             >

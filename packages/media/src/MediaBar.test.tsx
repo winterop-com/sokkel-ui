@@ -44,3 +44,19 @@ describe('MediaBar at a starting height', () => {
         expect(held).toContain('height:240px')
     })
 })
+
+describe('MediaBar skips', () => {
+    it('moves back and forward by one interval, written on both', () => {
+        const html = renderToStaticMarkup(<MediaBar {...BAR} skip={15} />)
+        expect(html).toContain('aria-label="Back 15 seconds"')
+        expect(html).toContain('aria-label="Forward 15 seconds"')
+    })
+
+    it('moves each way by its own interval, each button saying and drawing its own', () => {
+        const html = renderToStaticMarkup(<MediaBar {...BAR} skip={{ back: 15, forward: 30 }} />)
+        expect(html).toContain('aria-label="Back 15 seconds"')
+        expect(html).toContain('aria-label="Forward 30 seconds"')
+        expect(html).toMatch(/>15<\/span>/)
+        expect(html).toMatch(/>30<\/span>/)
+    })
+})

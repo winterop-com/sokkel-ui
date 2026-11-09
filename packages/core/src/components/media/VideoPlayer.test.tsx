@@ -43,3 +43,31 @@ describe('VideoPlayer with a cover', () => {
         }
     })
 })
+
+describe('VideoPlayer with renditions and the buttons of the app', () => {
+    const qualities = [
+        { value: 'auto', label: 'Auto', detail: '720p' },
+        { value: '720', label: '720p' },
+        { value: '360', label: '360p' },
+    ]
+
+    it('says the chosen rendition on the quality button, and the first while none is chosen', () => {
+        const chosen = renderToStaticMarkup(<VideoPlayer src={CLIP} defaultControlsVisible qualities={qualities} quality="360" />)
+        expect(chosen).toContain('aria-label="Quality: 360p"')
+        const none = renderToStaticMarkup(<VideoPlayer src={CLIP} defaultControlsVisible qualities={qualities} />)
+        expect(none).toContain('aria-label="Quality: Auto"')
+    })
+
+    it('offers no quality menu for one rendition or none', () => {
+        expect(renderToStaticMarkup(<VideoPlayer src={CLIP} qualities={[qualities[0]]} />)).not.toContain('Quality:')
+        expect(renderToStaticMarkup(<VideoPlayer src={CLIP} />)).not.toContain('Quality:')
+    })
+
+    it('draws the buttons of the app among the controls, before full screen', () => {
+        const html = renderToStaticMarkup(
+            <VideoPlayer src={CLIP} defaultControlsVisible actions={<button type="button">Theater</button>} />,
+        )
+        expect(html.indexOf('>Theater<')).toBeGreaterThan(0)
+        expect(html.indexOf('>Theater<')).toBeLessThan(html.indexOf('aria-label="Fullscreen"'))
+    })
+})

@@ -18,6 +18,7 @@ import { cn } from '../../lib/cn'
 import { enterFullscreen, exitFullscreen, fullscreenElement, subscribeFullscreen } from '../../lib/fullscreen'
 import type { Store } from '../../lib/stored'
 import { Button } from '../ui/button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '../ui/dropdown-menu'
 import { Spinner } from '../ui/spinner'
 import {
     CAPTIONS_KEY,
@@ -64,6 +65,15 @@ export interface VideoTrack {
     default?: boolean
 }
 
+/** One rendition the viewer may pick, such as Auto or 720p. */
+export interface VideoQuality {
+    value: string
+    /** What the menu and its button say: `720p`, `Auto`. */
+    label: string
+    /** A second word in the menu, such as the rendition's bitrate or what Auto plays now. */
+    detail?: string
+}
+
 /** The words the player says, each with an English default. */
 export interface VideoPlayerWords {
     play: string
@@ -73,6 +83,8 @@ export interface VideoPlayerWords {
     volume: string
     seek: string
     speed: string
+    /** The quality menu's name. */
+    quality: string
     captions: string
     captionsOff: string
     /** The captions menu's settings, each a submenu. */
@@ -106,6 +118,7 @@ export const VIDEO_PLAYER_WORDS: VideoPlayerWords = {
     volume: 'Volume',
     seek: 'Seek',
     speed: 'Playback speed',
+    quality: 'Quality',
     captions: 'Captions',
     captionsOff: 'Off',
     captionSize: 'Size',
@@ -207,6 +220,22 @@ export interface VideoPlayerProps {
     captionStore?: Store<Partial<CaptionSettings>>
     /** The playback speeds offered, as multiples of normal speed: `MEDIA_RATES` by default. */
     rates?: readonly number[]
+    /**
+     * The speed each new media starts at, as a multiple of normal speed, such as the viewer's last
+     * choice kept by the app: 1 by default. A new value is taken at once.
+     */
+    defaultRate?: number
+    /** The viewer chose a speed in the speed menu: for keeping it, as the next video's `defaultRate`. */
+    onRateChange?: (rate: number) => void
+    /**
+     * The renditions the viewer may pick among, such as Auto, 1080p and 720p: a menu after the speed,
+     * closing on a choice, whose button says the chosen one. The app plays the one chosen, as a new
+     * `source` or `src` with `startAt` where it was.
+     */
+    qualities?: readonly VideoQuality[]
+    /** The `value` of the rendition chosen. */
+    quality?: string
+    onQualityChange?: (quality: string) => void
     autoPlay?: boolean
     loop?: boolean
     /** Start muted. */
@@ -254,6 +283,12 @@ export interface VideoPlayerProps {
      * so the cover's own buttons are what the viewer does next.
      */
     cover?: ReactNode
+    /**
+     * The app's own buttons in the controls, before full screen, such as theater mode:
+     * `TransportButton`s with `tone="overlay"` and `size="md"`, drawn as the player's own. Like the
+     * speed and the quality they show where the controls have room, from a player of medium width.
+     */
+    actions?: ReactNode
     /** Show the controls before the video is first played; otherwise only the play button is drawn until then. */
     defaultControlsVisible?: boolean
     /** How long the controls stay after the pointer stops while playing, in milliseconds. */
@@ -367,6 +402,11 @@ export function VideoPlayer({
     captionDefaults,
     captionStore,
     rates = MEDIA_RATES,
+    defaultRate = 1,
+    onRateChange,
+    qualities = [],
+    quality,
+    onQualityChange,
     autoPlay = false,
     loop = false,
     muted: startMuted = false,
@@ -381,6 +421,7 @@ export function VideoPlayer({
     stallAfter = 8000,
     overlay,
     cover,
+    actions,
     defaultControlsVisible = false,
     hideAfter = 2500,
     exclusive = true,
@@ -428,9 +469,31 @@ export function VideoPlayer({
 
     // What the element's listeners read, set after each render so a parent that renders again
     // never has them taken off and put back.
-    const latest = useRef({ source, startAt, onTime, onPlayingChange, onEnded, onError, onFullscreenChange, retries, stallAfter })
+    const latest = useRef({
+        source,
+        startAt,
+        onTime,
+        onPlayingChange,
+        onEnded,
+        onError,
+        onFullscreenChange,
+        onRateChange,
+        retries,
+        stallAfter,
+    })
     useEffect(() => {
-        latest.current = { source, startAt, onTime, onPlayingChange, onEnded, onError, onFullscreenChange, retries, stallAfter }
+        latest.current = {
+            source,
+            startAt,
+            onTime,
+            onPlayingChange,
+            onEnded,
+            onError,
+            onFullscreenChange,
+            onRateChange,
+            retries,
+            stallAfter,
+        }
     })
     const seek = useRef<Held>(null)
     const tries = useRef(0)
@@ -753,6 +816,14 @@ export function VideoPlayer({
         }
     }, [src, sourceKey])
 
+    // Each new media starts at the app's speed, which the element keeps through a load as its default.
+    useEffect(() => {
+        const element = video.current
+        if (element === null) return
+        element.defaultPlaybackRate = defaultRate
+        element.playbackRate = defaultRate
+    }, [defaultRate, src, sourceKey])
+
     useEffect(() => {
         const element = root.current
         const change = () => {
@@ -854,6 +925,7 @@ export function VideoPlayer({
     const setRate = (rate: number) => {
         const element = video.current
         if (element !== null) element.playbackRate = rate
+        latest.current.onRateChange?.(rate)
     }
     const toggleFullscreen = () => {
         const container = root.current
@@ -964,6 +1036,7 @@ export function VideoPlayer({
     const menuRoom = fullscreen ? root : undefined
     const at = scrub ?? state.time
     const level = state.muted ? 0 : state.volume
+    const chosenQuality = qualities.find((one) => one.value === quality) ?? qualities[0]
 
     return (
         <div
@@ -1163,6 +1236,44 @@ export function VideoPlayer({
                                 onOpenChange={setMenuOpen}
                                 className="hidden @md:inline-flex"
                             />
+                        )}
+                        {qualities.length > 1 && chosenQuality !== undefined && (
+                            <DropdownMenu onOpenChange={setMenuOpen}>
+                                <DropdownMenuTrigger
+                                    render={
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            aria-label={`${words.quality}: ${chosenQuality.label}`}
+                                            className={cn(
+                                                'w-auto min-w-8 px-1.5 font-mono text-xs tabular-nums',
+                                                ON_PICTURE,
+                                                'hidden @md:inline-flex',
+                                            )}
+                                        />
+                                    }
+                                >
+                                    {chosenQuality.label}
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent container={menuRoom} side="top" align="end" className="w-auto min-w-24">
+                                    <DropdownMenuRadioGroup
+                                        value={chosenQuality.value}
+                                        onValueChange={(value: string) => onQualityChange?.(value)}
+                                    >
+                                        {qualities.map((option) => (
+                                            <DropdownMenuRadioItem key={option.value} value={option.value} closeOnClick>
+                                                <span className="flex-1">{option.label}</span>
+                                                {option.detail !== undefined && (
+                                                    <span className="text-muted-foreground">{option.detail}</span>
+                                                )}
+                                            </DropdownMenuRadioItem>
+                                        ))}
+                                    </DropdownMenuRadioGroup>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        )}
+                        {actions !== undefined && actions !== null && actions !== false && (
+                            <div className="hidden @md:contents">{actions}</div>
                         )}
                         {pipSupported && (
                             <Button

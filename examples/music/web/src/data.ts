@@ -71,7 +71,7 @@ export interface Favorite extends Row {
 const STARTED = Date.UTC(2026, 10, 1, 9)
 
 export const favorites = mirror(
-    collection<Favorite>('music-favorites', () => [
+    collection<Favorite>('favorites', () => [
         ...[
             'open-water-1-2',
             'open-water-1-4',
@@ -140,7 +140,7 @@ const pickSongs = (step: number, count: number, from = 0) =>
 const entriesOf = (songs: readonly string[]): PlaylistEntry[] => songs.map((song, index) => ({ key: `${song}~${String(index)}`, song }))
 
 export const playlists = mirror(
-    collection<Playlist>('music-playlists', () => [
+    collection<Playlist>('playlists', () => [
         {
             id: 'morning-run',
             name: 'Morning run',
@@ -227,7 +227,7 @@ export interface Download extends Row {
 }
 
 export const downloads = mirror(
-    collection<Download>('music-downloads', () =>
+    collection<Download>('downloads', () =>
         ['northern-coast', 'sea-glass', 'pilot-light'].map((album, index) => {
             const songs = songsOfAlbum(album)
             return {
@@ -250,7 +250,7 @@ export interface MadeStation extends Row, Omit<Station, 'id'> {
     at: number
 }
 
-export const stations = mirror(collection<MadeStation>('music-stations', () => []))
+export const stations = mirror(collection<MadeStation>('stations', () => []))
 
 // History
 
@@ -260,7 +260,7 @@ export interface Played extends Row {
 }
 
 export const history = mirror(
-    collection<Played>('music-history', () =>
+    collection<Played>('history', () =>
         ['glass-harbor-1-1', 'lowlands-1-3', 'shoals-1-2', 'open-water-1-1'].map((song, index) => ({
             id: `played-seed-${String(index)}`,
             song,
@@ -339,7 +339,7 @@ export const DEFAULT_PLAYER: PlayerRow = {
     radio: null,
 }
 
-export const playerRows = collection<PlayerRow>('music-player', () => [DEFAULT_PLAYER])
+export const playerRows = collection<PlayerRow>('player', () => [DEFAULT_PLAYER])
 
 // Settings
 
@@ -390,7 +390,7 @@ export const DEFAULT_SETTINGS: Settings = {
     albumOrder: 'recent',
 }
 
-const settingsRows = collection<Settings>('music-settings', () => [DEFAULT_SETTINGS])
+const settingsRows = collection<Settings>('settings', () => [DEFAULT_SETTINGS])
 
 /** The settings, here at once and kept by the backend shortly after a change. */
 export const settings = createStore<Settings>(DEFAULT_SETTINGS)

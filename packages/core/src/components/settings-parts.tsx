@@ -28,6 +28,11 @@ export interface SettingsSection {
     /** The heading over the section's rows; the label when absent. */
     heading?: string
     settings: readonly Setting[]
+    /**
+     * `false` leaves Reset to defaults out while this section shows, for one with nothing to put
+     * back (an account, sample data). Only a `section` reset reads it; a reset of every setting shows.
+     */
+    reset?: boolean
 }
 
 /** Sections under a title in the navigation: Preferences, You, This server. */
@@ -206,11 +211,12 @@ export interface SettingsResetProps {
 /**
  * Reset to defaults and the question it asks before it runs: for the shown section, given its
  * label and id, or for every setting when `all`. The answer calls `onReset` with the section's id,
- * or with nothing for every setting. Nothing is drawn for a section when none is shown.
+ * or with nothing for every setting. Nothing is drawn for a section when none is shown, or when the
+ * shown one says it has no `reset`.
  */
 export function SettingsReset({ onReset, all, section, say, size, className }: SettingsResetProps) {
     const [asking, setAsking] = useState(false)
-    if (!all && section === undefined) return null
+    if (!all && (section === undefined || section.reset === false)) return null
     const label = section?.label ?? ''
     return (
         <>

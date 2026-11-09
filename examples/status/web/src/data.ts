@@ -492,7 +492,7 @@ function seedIncidents(): Incident[] {
     return [open, ...past]
 }
 
-export const incidents = collection<Incident>('status-incidents', seedIncidents)
+export const incidents = collection<Incident>('incidents', seedIncidents)
 
 function seedMaintenance(): Maintenance[] {
     const at = (days: number, hour: number) => {
@@ -532,7 +532,7 @@ function seedMaintenance(): Maintenance[] {
     ]
 }
 
-export const maintenance = collection<Maintenance>('status-maintenance', seedMaintenance)
+export const maintenance = collection<Maintenance>('maintenance', seedMaintenance)
 
 /** A version one patch after another: `v2.41.0` gives `v2.41.1`. */
 export function nextVersion(version: string): string {
@@ -572,7 +572,7 @@ function seedDeploys(): Deploy[] {
     )
 }
 
-export const deploys = collection<Deploy>('status-deploys', seedDeploys)
+export const deploys = collection<Deploy>('deploys', seedDeploys)
 
 /** Eight weeks of the rotation: the two before this one, this one and five after. */
 function seedShifts(): Shift[] {
@@ -591,7 +591,7 @@ function seedShifts(): Shift[] {
     })
 }
 
-export const shifts = collection<Shift>('status-shifts', seedShifts)
+export const shifts = collection<Shift>('shifts', seedShifts)
 
 /** This week's person in the seeded rotation. */
 const SEEDED_ON_CALL: Person = PEOPLE[(2 + 3) % PEOPLE.length] ?? 'grace'
@@ -605,7 +605,7 @@ function mondayMorning(weeks: number): Date {
     return nine.getTime() <= Date.now() ? nine : monday
 }
 
-export const onCall = collection<OnCall>('status-on-call', () => [
+export const onCall = collection<OnCall>('on-call', () => [
     {
         id: 'now',
         person: SEEDED_ON_CALL,
@@ -614,7 +614,7 @@ export const onCall = collection<OnCall>('status-on-call', () => [
     },
 ])
 
-export const handovers = collection<Handover>('status-handovers', () => [
+export const handovers = collection<Handover>('handovers', () => [
     {
         id: 'handover-1',
         at: mondayMorning(0).toISOString(),
@@ -631,7 +631,7 @@ export const handovers = collection<Handover>('status-handovers', () => [
     },
 ])
 
-export const subscribers = collection<Subscriber>('status-subscribers', () => [
+export const subscribers = collection<Subscriber>('subscribers', () => [
     { id: 'subscriber-1', email: 'ops@example.org', services: [], at: ago(30 * DAY) },
     { id: 'subscriber-2', email: 'harbor-team@example.org', services: ['api', 'web'], at: ago(11 * DAY) },
 ])

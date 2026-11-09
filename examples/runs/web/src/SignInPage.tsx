@@ -2,6 +2,7 @@ import { SignIn } from '@winterop-com/sokkel-ui/SignIn'
 import { FlowLines } from '@winterop-com/sokkel-ui/SignInArt'
 import { useState } from 'react'
 
+import { storageKey } from 'tidevann-shared/backend'
 import type { Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
 import { PEOPLE, type Person } from './model'
@@ -24,7 +25,7 @@ export function SignInPage({ frame }: { frame: Frame }) {
             ]}
             art={<FlowLines />}
             remember
-            rememberKey="tidevann-demo:user"
+            rememberKey={storageKey('user')}
             busy={busy}
             error={error}
             desktop={frame.desktop}

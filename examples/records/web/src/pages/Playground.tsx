@@ -13,7 +13,7 @@ const HEADERS = { Accept: 'application/json' }
 /** Send one request to the demo server and read what it answers: the same backend the app reads, through its API. */
 export function Playground() {
     const { rows } = useCollection(receipts)
-    const [history, setHistory] = useStored<ApiSent[]>('records:playground-history', [])
+    const [history, setHistory] = useStored<ApiSent[]>('playground-history', [])
     const last = history[0]
     const sample = rows?.find((receipt) => receipt.state === 'received')?.receipt ?? rows?.[0]?.receipt
     useFoot(

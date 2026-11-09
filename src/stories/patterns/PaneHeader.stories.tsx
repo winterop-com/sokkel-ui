@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { Archive, ArrowLeft, Forward, MoreHorizontal, Plus, Reply, Trash2 } from 'lucide-react'
+import { Archive, ArrowLeft, Filter, Forward, MoreHorizontal, Plus, RefreshCw, Reply, Trash2 } from 'lucide-react'
 
 import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
+import { Columns } from '@winterop-com/sokkel-ui/Layout'
 import { PaneHeader } from '@winterop-com/sokkel-ui/PaneHeader'
 import { Surface } from '@winterop-com/sokkel-ui/Section'
 import { PanelSection } from '@winterop-com/sokkel-ui/SidePanel'
@@ -120,5 +121,49 @@ export const Detail: StoryObj = {
                 </p>
             </PanelSection>
         </Surface>
+    ),
+}
+
+/** Three narrow panes of a work page, each head with a count or a fact beside its title and tools at its end. */
+const PANES = [
+    { title: 'Runs', meta: '1,204 in harbor, updated 09:52 by the scheduler', variant: 'plain' as const },
+    { title: 'Queued', meta: '3', variant: 'plain' as const },
+    { title: 'Failed this week', meta: 'nightly-export, sync-inventory and send-digest', variant: 'panel' as const },
+]
+
+/**
+ * Heads in panes too narrow for their title and a long fact side by side: the fact goes under the
+ * title, cut short where it is wider still, and never runs into the tools. A short count stays
+ * beside its title.
+ */
+export const LongMeta: StoryObj = {
+    name: 'Long meta',
+    render: () => (
+        <TooltipProvider>
+            <Columns count={3}>
+                {PANES.map((pane) => (
+                    <Surface key={pane.title}>
+                        <PaneHeader
+                            variant={pane.variant}
+                            title={pane.title}
+                            meta={pane.meta}
+                            actions={
+                                <>
+                                    <IconButton label="Filter">
+                                        <Filter aria-hidden />
+                                    </IconButton>
+                                    <IconButton label="Refresh">
+                                        <RefreshCw aria-hidden />
+                                    </IconButton>
+                                </>
+                            }
+                        />
+                        <PanelSection title="Took">
+                            <DescriptionList items={STEPS} />
+                        </PanelSection>
+                    </Surface>
+                ))}
+            </Columns>
+        </TooltipProvider>
     ),
 }

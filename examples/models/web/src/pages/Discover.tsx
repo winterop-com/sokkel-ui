@@ -137,9 +137,9 @@ function Variants({ entry }: { entry: CatalogEntry }) {
 /** Searches the sources (a public hub and the runners on this machine) and pulls a model from them into the library. */
 export function DiscoverPage() {
     const { models, downloads } = useApp()
-    const [query, setQuery] = useStored('models.discover.query', '')
-    const [source, setSource] = useStored<Source | 'all'>('models.discover.source', 'all')
-    const [format, setFormat] = useStored<Format | 'all'>('models.discover.format', 'all')
+    const [query, setQuery] = useStored('discover.query', '')
+    const [source, setSource] = useStored<Source | 'all'>('discover.source', 'all')
+    const [format, setFormat] = useStored<Format | 'all'>('discover.format', 'all')
     const [results, setResults] = useState<CatalogEntry[] | undefined>(undefined)
     const [open, setOpen] = useState<CatalogEntry | undefined>(undefined)
 

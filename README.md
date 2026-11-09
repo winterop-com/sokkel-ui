@@ -204,6 +204,25 @@ tidevann, the base theme, and the density levels) instead, with the theme files 
 `motion.css` (the motion setting) and `typography.css` (mono sized to the text around it), and adds
 the add-ons' `styles.css` after them.
 
+### Maps in Vite's dev server
+
+The maps package loads maplibre's worker through Vite's `?worker&url` import, which the dev
+server's dependency prebundling cannot load, so a Vite app that draws maps fails in its dev server
+until it adds the package's plugin, `mapsVite` from `@winterop-com/sokkel-ui-maps/vite`, to its
+plugins. The build needs nothing from it.
+
+```ts
+// vite.config.ts
+import tailwindcss from '@tailwindcss/vite'
+import react from '@vitejs/plugin-react'
+import { mapsVite } from '@winterop-com/sokkel-ui-maps/vite'
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+    plugins: [react(), tailwindcss(), mapsVite()],
+})
+```
+
 ### The frame every app has
 
 Every app stands in the same frame, so a person moving between apps finds everything in the same

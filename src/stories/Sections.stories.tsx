@@ -109,6 +109,21 @@ const tool = (
     </IconButton>
 )
 
+/** What the runs offer at their head's end. */
+const runTools = (
+    <>
+        <Button variant="ghost" size="sm">
+            Retry failed
+        </Button>
+        <Button variant="ghost" size="sm">
+            Cancel queued
+        </Button>
+        <Button variant="ghost" size="sm">
+            All runs
+        </Button>
+    </>
+)
+
 function Overview({ layout }: { layout: 'flat' | 'boxed' | 'hybrid' }) {
     const sections: ReactNode =
         layout === 'boxed' ? (
@@ -126,7 +141,7 @@ function Overview({ layout }: { layout: 'flat' | 'boxed' | 'hybrid' }) {
                         </Section>
                     }
                 >
-                    <Section variant="boxed" title="Recent runs" meta="3">
+                    <Section variant="boxed" title="Recent runs" meta="3" actions={runTools}>
                         <RunsList />
                     </Section>
                 </Split>
@@ -146,7 +161,7 @@ function Overview({ layout }: { layout: 'flat' | 'boxed' | 'hybrid' }) {
                         </Section>
                     }
                 >
-                    <Section title="Recent runs" meta="3">
+                    <Section title="Recent runs" meta="3" actions={runTools}>
                         <RunsList />
                     </Section>
                 </Split>
@@ -168,7 +183,7 @@ function Overview({ layout }: { layout: 'flat' | 'boxed' | 'hybrid' }) {
                         </Section>
                     }
                 >
-                    <Section title="Recent runs" meta="3">
+                    <Section title="Recent runs" meta="3" actions={runTools}>
                         <RunsList />
                     </Section>
                 </Split>

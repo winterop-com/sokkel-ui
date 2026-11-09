@@ -27,7 +27,8 @@ export interface DescriptionListProps {
  * URL. A value that is missing is drawn as a quiet dash, never as a blank. `layout` sets the pairs:
  * `side` (the default) puts each term in a column beside its value, `stacked` each term above its
  * value, and `row` the pairs one after another in a line that wraps, for a strip of facts under a
- * title. `columns={2}` sets the side and stacked pairs two to a row on wide screens.
+ * title. `columns={2}` sets the side and stacked pairs two to a row on wide screens. A value edited
+ * in place with `InlineEdit` lines its text up with the plain values, its box reaching into the gap.
  */
 export function DescriptionList({ items, columns = 1, layout = 'side', termWidth = '6rem', className }: DescriptionListProps) {
     return (
@@ -57,6 +58,9 @@ export function DescriptionList({ items, columns = 1, layout = 'side', termWidth
                         <dd
                             className={cn(
                                 'min-w-0 break-words',
+                                // An `InlineEdit`'s box reaches into the gap before it, so its text starts where a plain value's does.
+                                layout !== 'row' &&
+                                    '[&>[data-slot^=inline-edit]]:-ml-[calc(--spacing(2.5)+1px)] [&>[data-slot^=inline-edit]]:w-[calc(100%+--spacing(2.5)+1px)]',
                                 item.code === true && !empty && 'font-mono',
                                 item.numeric === true && 'tabular-nums',
                                 empty && 'text-faint',

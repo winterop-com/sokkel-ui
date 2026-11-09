@@ -1,10 +1,32 @@
 /**
  * A fake backend: typed collections kept in localStorage, each call answering after a short delay
  * with a promise, as a server would. Storage that refuses (a private window, a full quota) leaves
- * the rows in memory for the session.
+ * the rows in memory for the session. Every key is under the example's own prefix, which
+ * `configureDemo` names, since the published examples share one origin and so one localStorage.
  */
+import { setStoredPrefix } from '@winterop-com/sokkel-ui/lib/stored'
 
 const PREFIX = 'tidevann-demo:'
+
+let app: string | undefined
+
+/**
+ * Names the example whose data the page keeps, its folder's name: every key the backend writes is
+ * `tidevann-demo:<app>:<name>`, and so is every `useStored` key, the library's own included. The
+ * look's keys take no prefix, so the look stays shared. Called once in the app's `main.tsx`, before
+ * it renders.
+ */
+export function configureDemo(options: { app: string }): void {
+    if (!/^[a-z][a-z0-9-]*$/.test(options.app)) throw new Error(`"${options.app}" is not an example's folder name.`)
+    app = options.app
+    setStoredPrefix(`${PREFIX}${app}:`)
+}
+
+/** The localStorage key of `name` in the example's own data; it throws until `configureDemo` has named the example. */
+export function storageKey(name: string): string {
+    if (app === undefined) throw new Error('Call configureDemo({ app }) in main.tsx before the backend is used.')
+    return `${PREFIX}${app}:${name}`
+}
 
 /** How long each call takes, in milliseconds. */
 const LATENCY = 150
@@ -28,8 +50,9 @@ export interface Collection<T extends Row> {
 const collections: { reset: () => void }[] = []
 
 function load<T>(name: string): T[] | undefined {
+    const key = storageKey(name)
     try {
-        const text = localStorage.getItem(PREFIX + name)
+        const text = localStorage.getItem(key)
         return text === null ? undefined : (JSON.parse(text) as T[])
     } catch {
         return undefined
@@ -37,8 +60,9 @@ function load<T>(name: string): T[] | undefined {
 }
 
 function store<T>(name: string, rows: readonly T[]): void {
+    const key = storageKey(name)
     try {
-        localStorage.setItem(PREFIX + name, JSON.stringify(rows))
+        localStorage.setItem(key, JSON.stringify(rows))
     } catch {
         // Storage refused: the rows stay in memory.
     }

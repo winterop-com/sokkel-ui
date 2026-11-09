@@ -75,9 +75,11 @@ export interface WindowedPaneProps {
 /**
  * Any pane, with a way to open the same content near full screen: an expand button at its top
  * right corner (shown while the pointer is over it, always on touch) opens a window with a margin
- * all round, a title and a close button; Escape closes it too. While the content is in the window,
- * the pane keeps its height in place and says so, and the content comes back when the window
- * closes. The content is drawn once, in one place or the other, so it fills the room it is given.
+ * all round, a title and a close button; Escape closes it too. It opens with its content focused,
+ * not the close button, so one Escape closes it however it was opened. While the content is in the
+ * window, the pane keeps its height in place and says so, and the content comes back when the
+ * window closes. The content is drawn once, in one place or the other, so it fills the room it is
+ * given.
  *
  * `button="none"` leaves the button to the content, which places `WindowedPaneButton` in its own
  * toolbar; `useWindowedPane` tells it whether it is in the window. Open or closed is held by the
@@ -106,6 +108,7 @@ export function WindowedPane({
         return () => exitFullscreen(page)
     }, [open, fullscreen])
     const place = useRef<HTMLDivElement>(null)
+    const body = useRef<HTMLDivElement>(null)
     const [height, setHeight] = useState<number | undefined>(undefined)
     const setOpen = (next: boolean) => {
         if (next && place.current !== null) {
@@ -138,8 +141,10 @@ export function WindowedPane({
                 </div>
             </WindowedContext.Provider>
             <Dialog open={open} onOpenChange={setOpen}>
+                {/* The window opens on its content, not its close button, whose tooltip would take the first Escape. */}
                 <DialogContent
                     showCloseButton={false}
+                    initialFocus={body}
                     className="inset-3 flex w-auto max-w-none translate-x-0 translate-y-0 flex-col gap-0 p-0 sm:inset-6 sm:max-w-none"
                 >
                     <div className="flex min-h-(--density-panel-head) shrink-0 items-center gap-2 border-b border-border px-(--density-panel-pad)">
@@ -149,7 +154,9 @@ export function WindowedPane({
                         </IconButton>
                     </div>
                     <WindowedContext.Provider value={{ windowed: true, setOpen, words }}>
-                        <div className="flex min-h-0 flex-1 flex-col overflow-auto p-4">{children}</div>
+                        <div ref={body} tabIndex={-1} className="flex min-h-0 flex-1 flex-col overflow-auto p-4 outline-none">
+                            {children}
+                        </div>
                     </WindowedContext.Provider>
                 </DialogContent>
             </Dialog>

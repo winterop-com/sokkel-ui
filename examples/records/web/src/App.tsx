@@ -159,7 +159,7 @@ export function App() {
     const [settingsOpen, setSettingsOpen] = useState(false)
     const [section, setSection] = useState('appearance')
     const [settingsQuery, setSettingsQuery] = useState('')
-    const [keepPlace, setKeepPlace] = useStored('records:keep-place', true)
+    const [keepPlace, setKeepPlace] = useStored('keep-place', true)
     const { settings, setSettings } = frame.appearance
     const down = server.state === 'down'
 

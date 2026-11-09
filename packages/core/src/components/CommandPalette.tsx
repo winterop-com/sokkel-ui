@@ -45,6 +45,8 @@ export interface PaletteCommand {
     artwork?: ReactNode
     /** Draws the artwork round, as a person's picture. */
     round?: boolean
+    /** Lists the command dimmed and never runs it, so a list need not be built around it; words say why, in the hint's place. */
+    disabled?: boolean | string
     onSelect: () => void
 }
 
@@ -150,7 +152,8 @@ export interface CommandPaletteProps {
  * the query follow the commands, each with its thumbnail, artwork or icon and the query's words
  * marked. On a touch screen, which has no Escape, a Close button stands at its foot. `filter`
  * chooses how the commands are matched: by their letters (`fuzzy`), by every word typed (`terms`),
- * or by the app's own score. `foot` adds a strip with the app's mark and the keys it answers.
+ * or by the app's own score. `foot` adds a strip with the app's mark and the keys it answers. A
+ * command that cannot run now is listed `disabled`, dimmed and passed over, with why in its hint.
  */
 export function CommandPalette({
     open,
@@ -187,12 +190,14 @@ export function CommandPalette({
                             <CommandGroup heading={group.title} className={GROUP}>
                                 {group.commands.map((command) => {
                                     const Icon = command.icon
+                                    const hint = hintOf(command)
                                     return (
                                         <CommandItem
                                             key={command.id}
                                             className={ROW}
                                             value={`${command.label} ${command.id}`}
                                             keywords={findBy(command)}
+                                            disabled={Boolean(command.disabled)}
                                             onSelect={() => {
                                                 onOpenChange(false)
                                                 command.onSelect()
@@ -204,8 +209,8 @@ export function CommandPalette({
                                                 <>
                                                     {Icon !== undefined && <Icon className="text-muted-foreground" aria-hidden />}
                                                     <span className="truncate">{command.label}</span>
-                                                    {command.hint !== undefined && (
-                                                        <span className="truncate text-xs text-muted-foreground">{command.hint}</span>
+                                                    {hint !== undefined && (
+                                                        <span className="truncate text-xs text-muted-foreground">{hint}</span>
                                                     )}
                                                     {command.code !== undefined && (
                                                         <span className="truncate font-mono text-xs text-muted-foreground">
@@ -305,6 +310,11 @@ function findBy(command: PaletteCommand): string[] | undefined {
     return words.length === 0 ? undefined : words
 }
 
+/** A command's quiet words after its label: why it cannot run now, or its hint. */
+function hintOf(command: PaletteCommand): string | undefined {
+    return typeof command.disabled === 'string' ? command.disabled : command.hint
+}
+
 /** A two-line command as the row a search result is drawn as, its hint or code the quiet fact at the end. */
 function asResult(command: PaletteCommand): SearchResult {
     const picture = command.artwork
@@ -312,7 +322,7 @@ function asResult(command: PaletteCommand): SearchResult {
         id: command.id,
         title: command.label,
         detail: command.detail,
-        meta: command.hint ?? command.code,
+        meta: hintOf(command) ?? command.code,
         icon: command.icon,
         round: command.round,
         ...(typeof picture === 'string' ? { thumbnail: picture } : { artwork: picture }),

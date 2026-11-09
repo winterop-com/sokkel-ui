@@ -1,17 +1,19 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { Activity, Maximize, Pause, Play, RotateCcw, RotateCw, Volume2 } from 'lucide-react'
+import { Activity, Maximize, Pause, Play, RectangleHorizontal, RotateCcw, RotateCw, Volume2 } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 
 import { createStore, useStore, type Store } from '@winterop-com/sokkel-ui/hooks/use-store'
 import { useShortcuts } from '@winterop-com/sokkel-ui/hooks/use-shortcuts'
 import { LogView, type LogLine } from '@winterop-com/sokkel-ui/LogView'
 import { captionSettings, type CaptionSettings, type CaptionStyle } from '@winterop-com/sokkel-ui/media/captions'
+import { formatRate, TransportButton } from '@winterop-com/sokkel-ui/media/MediaControls'
 import { formatTime } from '@winterop-com/sokkel-ui/media/time'
 import { useVideoStats, type VideoStats } from '@winterop-com/sokkel-ui/media/video-stats'
 import {
     VideoPlayer,
     type VideoError,
     type VideoPlayerHandle,
+    type VideoQuality,
     type VideoSource,
     type VideoTrack,
 } from '@winterop-com/sokkel-ui/media/VideoPlayer'
@@ -103,6 +105,42 @@ function Resumed() {
                 onPlayingChange={log.onPlayingChange}
                 onEnded={log.onEnded}
                 onError={log.onError}
+            />
+        </Ground>
+    )
+}
+
+/** The renditions a site offers, Auto first with what it plays now. */
+const QUALITIES: VideoQuality[] = [
+    { value: 'auto', label: 'Auto', detail: '720p' },
+    { value: '720', label: '720p', detail: '2.5 Mbps' },
+    { value: '480', label: '480p', detail: '1.2 Mbps' },
+    { value: '360', label: '360p', detail: '600 kbps' },
+]
+
+/** A player whose speed and rendition the screen keeps, with a theater mode button of the screen's among its controls. */
+function Tuned() {
+    const [rate, setRate] = useState(1.25)
+    const [quality, setQuality] = useState('auto')
+    const [theater, setTheater] = useState(false)
+    const chosen = QUALITIES.find((one) => one.value === quality)?.label ?? quality
+    return (
+        <Ground meta={[`Speed ${formatRate(rate)}`, `Quality ${chosen}`, theater ? 'Theater mode' : 'Default view']}>
+            <VideoPlayer
+                src={`${clip}#t=24`}
+                preload="auto"
+                defaultControlsVisible
+                title="Coastline, morning to evening"
+                defaultRate={rate}
+                onRateChange={setRate}
+                qualities={QUALITIES}
+                quality={quality}
+                onQualityChange={setQuality}
+                actions={
+                    <TransportButton tone="overlay" size="md" label="Theater mode" pressed={theater} onClick={() => setTheater(!theater)}>
+                        <RectangleHorizontal aria-hidden />
+                    </TransportButton>
+                }
             />
         </Ground>
     )
@@ -414,6 +452,15 @@ export const CaptionStyles: StoryObj = {
  * around it, as an app keeps the viewer's place.
  */
 export const Resume: StoryObj = { render: () => <Resumed /> }
+
+/**
+ * Speed, quality and the screen's own buttons: `defaultRate` starts each video at the speed the
+ * viewer last chose, which `onRateChange` hands the screen to keep; `qualities` put a menu of
+ * renditions after the speed, its button saying the one chosen, for the screen to play through
+ * `onQualityChange`; and `actions` draws the screen's own buttons, here theater mode, before full
+ * screen. What the screen keeps is written under the player.
+ */
+export const SpeedAndQuality: StoryObj = { name: 'Speed and quality', render: () => <Tuned /> }
 
 /**
  * Driven from outside: `keys={false}` leaves every key to the app, whose own controls and keys, bound

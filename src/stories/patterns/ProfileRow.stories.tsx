@@ -13,6 +13,23 @@ export const Person: StoryObj = {
     render: () => <ProfileRow name="grace" detail="312k followers" image={pictureOf('grace')} action={<Button size="sm">Follow</Button>} />,
 }
 
+/** Linked to their own page: the picture and the name open it, the name underlined on hover. */
+export const Linked: StoryObj = {
+    render: () => (
+        <ProfileRow
+            name="margaret"
+            detail="127k followers"
+            image={pictureOf('margaret')}
+            href="#"
+            action={
+                <Button size="sm" variant="secondary">
+                    Following
+                </Button>
+            }
+        />
+    ),
+}
+
 /** With the page's own actions at the row's end; they wrap under the person on a narrow row. */
 export const WithActions: StoryObj = {
     name: 'With actions',
@@ -39,5 +56,13 @@ export const WithActions: StoryObj = {
                 </>
             }
         />
+    ),
+}
+
+/** At the head of the page about them: a large picture, the name as the page's title, and the fact under it. */
+export const PageHead: StoryObj = {
+    name: 'Page head',
+    render: () => (
+        <ProfileRow size="lg" name="Harbor Workshop" detail="48.2K followers, 14 videos" color="teal" action={<Button>Follow</Button>} />
     ),
 }

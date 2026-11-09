@@ -1,7 +1,7 @@
 import { PersonRow } from '@winterop-com/sokkel-ui/PersonRow'
 import { ChoiceList } from '@winterop-com/sokkel-ui/ChoiceList'
 import { CheckboxField } from '@winterop-com/sokkel-ui/CheckboxField'
-import { Bell, CalendarClock, History, KeyRound, Workflow } from 'lucide-react'
+import { Bell, CalendarClock, FileText, HardDrive, History, KeyRound, Workflow } from 'lucide-react'
 import { useState } from 'react'
 
 import { ConsequenceList } from '@winterop-com/sokkel-ui/ConsequenceList'
@@ -71,6 +71,29 @@ export function DeleteWithConsequences() {
                 confirm={{ label: 'Delete job and 17 more', destructive: true, onConfirm: () => setOpen(false) }}
             >
                 <ConsequenceList items={GOES} />
+            </ConfirmDialog>
+        </Behind>
+    )
+}
+
+const CLEARED = [
+    { label: 'Room freed', detail: '2.4 GB of cached outputs.', icon: <HardDrive /> },
+    { label: 'Files removed', count: 1204, icon: <FileText /> },
+    { label: 'Runs', count: 312, detail: 'They keep their logs; a rerun fetches its inputs again.', icon: <History /> },
+]
+
+export function ClearCache() {
+    const [open, setOpen] = useState(true)
+    return (
+        <Behind action="Clear cache" onAction={() => setOpen(true)}>
+            <ConfirmDialog
+                open={open}
+                onOpenChange={setOpen}
+                question="Clear the cache of harbor?"
+                detail="The next run of each job fetches its inputs again."
+                confirm={{ label: 'Clear cache', onConfirm: () => setOpen(false) }}
+            >
+                <ConsequenceList items={CLEARED} tone="neutral" />
             </ConfirmDialog>
         </Behind>
     )
@@ -152,7 +175,7 @@ export function TransferOwnership({ step: first = 1 }: { step?: 0 | 1 }) {
                     />
                 ) : (
                     <>
-                        <ConsequenceList items={OWNED} tone="neutral" words={{ heading: `Moves to ${to}` }} />
+                        <ConsequenceList items={OWNED} tone="neutral" heading={`Moves to ${to}`} />
                         <CheckboxField
                             tone="critical"
                             label={

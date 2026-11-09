@@ -1,6 +1,7 @@
 import { ArrowDownRight, ArrowUpRight, Info, MoreHorizontal } from 'lucide-react'
 import { useId, type CSSProperties, type ReactNode } from 'react'
 
+import { useClamped } from '../../hooks/use-clamped'
 import { cn } from '../../lib/cn'
 import { LoadingOverlay } from '../Loaders'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '../ui/dropdown-menu'
@@ -132,7 +133,7 @@ export interface StatPanelProps {
  * drawn faintly behind it and a change against an earlier period. `thresholds` pick the reading's
  * color, which inks the value (`colorMode="value"`) or fills the tile (`colorMode="background"`).
  * `target` draws a meter under the value toward it. A null value says there is no data, in
- * neutral ink and without its trend.
+ * neutral ink and without its trend. A title cut short by a narrow tile gives its whole text on hover.
  */
 export function StatPanel({
     title,
@@ -157,6 +158,7 @@ export function StatPanel({
     className,
 }: StatPanelProps) {
     const words = { ...WORDS, ...given }
+    const [titleRef, clamped] = useClamped<HTMLHeadingElement>()
     const tone = value === null ? undefined : (thresholdColor(value, thresholds) ?? color)
     const filled = colorMode === 'background' && tone !== undefined
     const inked = colorMode === 'value' && tone !== undefined
@@ -191,7 +193,11 @@ export function StatPanel({
                 />
             )}
             <header className="flex h-7 shrink-0 items-center gap-1 px-2.5 pt-1">
-                <h3 className={cn('min-w-0 flex-1 truncate text-xs font-medium', filled ? 'text-on-fill/90' : 'text-muted-foreground')}>
+                <h3
+                    ref={titleRef}
+                    title={clamped && typeof title === 'string' ? title : undefined}
+                    className={cn('min-w-0 flex-1 truncate text-xs font-medium', filled ? 'text-on-fill/90' : 'text-muted-foreground')}
+                >
                     {title}
                 </h3>
                 {delta !== undefined && value !== null && (

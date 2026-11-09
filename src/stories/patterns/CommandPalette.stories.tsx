@@ -59,6 +59,7 @@ const GROUPS: PaletteGroup[] = [
         commands: [
             { id: 'new-job', label: 'New job', icon: Plus, keys: ['C'], onSelect: () => undefined },
             { id: 'new-schedule', label: 'New schedule', icon: Plus, onSelect: () => undefined },
+            { id: 'new-project', label: 'New project', icon: Plus, disabled: 'Only an owner can make one', onSelect: () => undefined },
         ],
     },
     {
@@ -178,7 +179,10 @@ export const Open: StoryObj = { name: 'Long', render: () => <Palette initial /> 
  * touch screen the keys give way to Close.
  */
 export const Foot: StoryObj = { render: () => <Palette initial foot={{ mark: <TidevannMark />, name: 'Tidevann' }} /> }
-/** A search narrowing the long list to what matches. */
+/**
+ * A search narrowing the long list to what matches. New project cannot be made by this person, so
+ * it is listed dimmed with why (`disabled`), and the arrows and Enter pass it over.
+ */
 export const Searching: StoryObj = { render: () => <Palette initial query="new" /> }
 /**
  * Every word typed must match (`filter="terms"`), in a label, a hint or the words a command is found

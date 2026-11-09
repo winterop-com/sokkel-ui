@@ -193,7 +193,8 @@ export const ReadOnly: StoryObj = {
 /**
  * A job's page with its name and settings edited in place: the schedule refused by the scheduler
  * unless it has five fields, the retries refused past ten before anything is sent, and the owner
- * and the description saved after a short wait.
+ * and the description saved after a short wait. In the list of settings the edited values start
+ * where the plain ones do (Last run, Project), each box reaching into the gap before it.
  */
 export const JobPage: StoryObj = {
     name: 'Job page',

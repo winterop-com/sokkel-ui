@@ -250,7 +250,7 @@ function seededDashboards(): Dashboard[] {
     ]
 }
 
-export const dashboards = collection<Dashboard>('metrics-dashboards', seedDashboards)
+export const dashboards = collection<Dashboard>('dashboards', seedDashboards)
 
 /** An alert rule: a metric's value against a threshold, held for a while before it fires. */
 export interface AlertRule {
@@ -332,7 +332,7 @@ function seedRules(): AlertRule[] {
     ]
 }
 
-export const rules = collection<AlertRule>('metrics-rules', seedRules)
+export const rules = collection<AlertRule>('rules', seedRules)
 
 /** A rule that fired: when, at what value, and when it resolved, if it has. */
 export interface AlertEvent {
@@ -391,7 +391,7 @@ function seedEvents(): AlertEvent[] {
         .map((event, index) => ({ ...event, id: `event-seed-${String(index + 1)}` }))
 }
 
-export const events = collection<AlertEvent>('metrics-events', seedEvents)
+export const events = collection<AlertEvent>('events', seedEvents)
 
 /** The app's preferences, one row. */
 export interface Preferences {
@@ -419,4 +419,4 @@ export const DEFAULT_PREFERENCES: Preferences = {
     keep: 24 * 3600,
 }
 
-export const preferences = collection<Preferences>('metrics-preferences', () => [DEFAULT_PREFERENCES])
+export const preferences = collection<Preferences>('preferences', () => [DEFAULT_PREFERENCES])

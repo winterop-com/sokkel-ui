@@ -8,6 +8,7 @@ import {
     needsPosition,
     positionOf,
     runAction,
+    skipBy,
     tellPlaying,
     tellPosition,
     type MediaSessionActionName,
@@ -165,5 +166,16 @@ describe('the media session', () => {
         expect(handlers.seekbackward).toHaveBeenCalledWith(15)
         expect(handlers.seekforward.mock.calls).toEqual([[10], [30]])
         expect(handlers.seekto.mock.calls).toEqual([[95]])
+    })
+
+    it('moves the seek buttons each by its own skip when given a pair', () => {
+        const handlers = { seekbackward: vi.fn(), seekforward: vi.fn() }
+        const skip = { back: 15, forward: 30 }
+        runAction(handlers, 'seekbackward', {}, skip)
+        runAction(handlers, 'seekforward', {}, skip)
+        runAction(handlers, 'seekforward', { seekOffset: 10 }, skip)
+        expect(handlers.seekbackward.mock.calls).toEqual([[15]])
+        expect(handlers.seekforward.mock.calls).toEqual([[30], [10]])
+        expect([skipBy(20, 'back'), skipBy(20, 'forward'), skipBy(skip, 'back'), skipBy(skip, 'forward')]).toEqual([20, 20, 15, 30])
     })
 })

@@ -1,5 +1,4 @@
 import { Avatar } from '@base-ui/react/avatar'
-import { Menu } from '@base-ui/react/menu'
 import { Check, ChevronsUpDown, Keyboard, LogIn, LogOut, Monitor, Moon, Palette, Settings, Sun, User, type LucideIcon } from 'lucide-react'
 import { useContext } from 'react'
 
@@ -7,6 +6,7 @@ import { ShortcutRegistry, useShortcuts } from '../hooks/use-shortcuts'
 import type { Scheme } from '../lib/appearance'
 import { cn } from '../lib/cn'
 import { RailCollapsed, ShellDrawer, ShellShortcuts } from './shell-context'
+import { menu as Menu } from './ui/deferred-menu'
 
 /** A row an app adds to the account menu: its words, its icon and what choosing it does. */
 export interface AccountMenuRow {
