@@ -313,7 +313,7 @@ export function presets(sample: string | undefined): ApiPresetGroup[] {
                             form: 'FRM-SAMPLE',
                             place: 'bo/baomahun',
                             visitDate: new Date().toISOString().slice(0, 10),
-                            answers: { bottle: 'B-2041', taken: '09:40', preserved: true },
+                            answers: { bottle: ['B-2041', 'B-2042'], taken: '09:40', preserved: true },
                         },
                         null,
                         2,
