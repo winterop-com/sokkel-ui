@@ -12,7 +12,6 @@ import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
 import { SwitchField } from '@winterop-com/sokkel-ui/SwitchField'
 import { tableEditing } from '@winterop-com/sokkel-ui/table-editing'
-import { ThemeToggle } from '@winterop-com/sokkel-ui/ThemeToggle'
 import { Toolbar } from '@winterop-com/sokkel-ui/Toolbar'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
 import { placeCommands } from '@winterop-com/sokkel-ui/lib/commands'
@@ -150,8 +149,6 @@ function columns(now: Date): DataColumn<Task>[] {
 
 /** Tasks: lists in the rail, a quick add, and tasks edited in place, each a compact row on a phone. */
 export function TasksDemo({ frame }: { frame: Frame }) {
-    const { settings, setSettings, resolved } = frame.appearance
-    const dark = resolved === 'dark'
     const today = day(0)
     const now = useMemo(() => dateOf(today), [today])
     const list = LISTS.find((one) => one.id === frame.route[0]) ?? LISTS[0]
@@ -220,12 +217,7 @@ export function TasksDemo({ frame }: { frame: Frame }) {
                     foot={<AccountMenu name="ada" where="tidevann.example.org" />}
                 />
             }
-            top={
-                <TopBar
-                    trail={[{ label: 'Tasks', href: '#/inbox' }, { label }]}
-                    actions={<ThemeToggle dark={dark} onToggle={() => setSettings({ ...settings, scheme: dark ? 'light' : 'dark' })} />}
-                />
-            }
+            top={<TopBar trail={[{ label: 'Tasks', href: '#/inbox' }, { label }]} />}
             foot={
                 <StatusLine note="Kept in this browser">
                     <StatusItem label="open">{all.filter((task) => !task.done).length}</StatusItem>

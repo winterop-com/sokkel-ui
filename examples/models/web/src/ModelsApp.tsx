@@ -12,7 +12,6 @@ import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { ServerMenu, type ServerState } from '@winterop-com/sokkel-ui/ServerMenu'
 import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
-import { ThemeToggle } from '@winterop-com/sokkel-ui/ThemeToggle'
 import { TopBar, type Crumb } from '@winterop-com/sokkel-ui/TopBar'
 import {
     ArrowDownToLine,
@@ -101,8 +100,7 @@ const SERVER: Record<string, ServerState> = { up: 'up', down: 'down', starting: 
 export function ModelsApp({ frame }: { frame: Frame }) {
     const app = useApp()
     const { models, conversations, downloads, runner, loaded, prefs } = app
-    const { settings: look, setSettings: setLook, resolved } = frame.appearance
-    const dark = resolved === 'dark'
+    const { settings: look, setSettings: setLook } = frame.appearance
     const [first = 'library', ...rest] = frame.route
     const page: PageId | 'missing' = (PAGES as readonly string[]).includes(first) ? (first as PageId) : 'missing'
     const second = rest.length === 0 ? undefined : rest.join('/')
@@ -355,7 +353,6 @@ export function ModelsApp({ frame }: { frame: Frame }) {
                                     Open the runner
                                 </DropdownMenuItem>
                             </ServerMenu>
-                            <ThemeToggle dark={dark} onToggle={() => setLook({ ...look, scheme: dark ? 'light' : 'dark' })} />
                         </>
                     }
                 />

@@ -9,7 +9,6 @@ import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
 import { Section } from '@winterop-com/sokkel-ui/Section'
 import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 import { TextField } from '@winterop-com/sokkel-ui/TextField'
-import { ThemeToggle } from '@winterop-com/sokkel-ui/ThemeToggle'
 import { Timeline } from '@winterop-com/sokkel-ui/Timeline'
 import { useStore } from '@winterop-com/sokkel-ui/hooks/use-store'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
@@ -66,8 +65,6 @@ export function PublicPage({ frame }: { frame: Frame }) {
     const rows = useRows()
     const uptime = useUptime()
     const subscribe = useRef<HTMLDivElement>(null)
-    const { settings: look, setSettings: setLook, resolved } = frame.appearance
-    const dark = resolved === 'dark'
     const overall = worstOf(Object.values(state.health))
     const shown = (rows.incidents ?? []).filter((incident) => incident.public)
     const going = shown.filter((incident) => incident.state !== 'resolved')
@@ -101,7 +98,6 @@ export function PublicPage({ frame }: { frame: Frame }) {
                         <IconButton label="Open the board" onClick={() => go('/')}>
                             <LayoutDashboard aria-hidden />
                         </IconButton>
-                        <ThemeToggle dark={dark} onToggle={() => setLook({ ...look, scheme: dark ? 'light' : 'dark' })} />
                     </>
                 }
             />

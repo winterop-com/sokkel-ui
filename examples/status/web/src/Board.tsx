@@ -5,7 +5,6 @@ import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { PageState } from '@winterop-com/sokkel-ui/PageState'
 import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
-import { ThemeToggle } from '@winterop-com/sokkel-ui/ThemeToggle'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
 import { useStore } from '@winterop-com/sokkel-ui/hooks/use-store'
 import { placeCommands } from '@winterop-com/sokkel-ui/lib/commands'
@@ -77,8 +76,7 @@ export function Board({ frame }: { frame: Frame }) {
     const rows = useRows()
     const [reporting, setReporting] = useState(false)
     const [handingOver, setHandingOver] = useState(false)
-    const { settings: look, setSettings: setLook, resolved } = frame.appearance
-    const dark = resolved === 'dark'
+    const { settings: look, setSettings: setLook } = frame.appearance
 
     const [first, second, third] = frame.route
     const place: Place = PLACES.includes(first as Place) ? (first as Place) : 'overview'
@@ -298,7 +296,6 @@ export function Board({ frame }: { frame: Frame }) {
                                     {options.live ? <Pause aria-hidden /> : <Play aria-hidden />}
                                     {options.live ? 'Live' : 'Paused'}
                                 </Button>
-                                <ThemeToggle dark={dark} onToggle={() => setLook({ ...look, scheme: dark ? 'light' : 'dark' })} />
                             </>
                         }
                     />

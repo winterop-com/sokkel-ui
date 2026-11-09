@@ -3,7 +3,6 @@ import type { PaletteGroup } from '@winterop-com/sokkel-ui/CommandPalette'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
-import { ThemeToggle } from '@winterop-com/sokkel-ui/ThemeToggle'
 import { TopBar, type Crumb } from '@winterop-com/sokkel-ui/TopBar'
 import { placeCommands } from '@winterop-com/sokkel-ui/lib/commands'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
@@ -36,8 +35,7 @@ const JobPage = lazy(() => import('./pages/JobPage').then((module) => ({ default
 export function Console({ frame }: { frame: Frame }) {
     const { runs, jobs, prefs, setPrefs, me, now, runOf, jobOf } = useConsole()
     const actions = useActions()
-    const { settings: look, setSettings: setLook, resolved } = frame.appearance
-    const dark = resolved === 'dark'
+    const { settings: look, setSettings: setLook } = frame.appearance
     const [first = 'overview', second] = frame.route
     const page = (PAGES as readonly string[]).includes(first) ? first : 'missing'
 
@@ -165,7 +163,6 @@ export function Console({ frame }: { frame: Frame }) {
                     trail={trail}
                     actions={
                         <>
-                            <ThemeToggle dark={dark} onToggle={() => setLook({ ...look, scheme: dark ? 'light' : 'dark' })} />
                             <Button variant="ghost" size="icon-sm" aria-label="Settings" onClick={() => go('/settings')}>
                                 <Settings aria-hidden />
                             </Button>

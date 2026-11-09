@@ -6,7 +6,6 @@ import { Toaster } from '@winterop-com/sokkel-ui/primitives/sonner'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
-import { ThemeToggle } from '@winterop-com/sokkel-ui/ThemeToggle'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
 import { ChartColumn, Database, LayoutDashboard, LayoutGrid, Plus, Presentation, Settings2, Upload } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -31,8 +30,6 @@ import { VIEW_ICONS } from './views'
 
 /** The Visualizer: datasets to chart, a builder with a live preview, saved and shared charts, and boards of them. */
 export function Visualizer({ frame }: { frame: Frame }) {
-    const { settings, setSettings, resolved } = frame.appearance
-    const dark = resolved === 'dark'
     const datasets = useCollection(datasetStore)
     const charts = useCollection(chartStore)
     const boards = useCollection(boardStore)
@@ -244,12 +241,7 @@ export function Visualizer({ frame }: { frame: Frame }) {
                         foot={<AccountMenu name="ada" where="tidevann.example.org" onSettings={() => go('/settings')} />}
                     />
                 }
-                top={
-                    <TopBar
-                        trail={trail}
-                        actions={<ThemeToggle dark={dark} onToggle={() => setSettings({ ...settings, scheme: dark ? 'light' : 'dark' })} />}
-                    />
-                }
+                top={<TopBar trail={trail} />}
                 foot={
                     <StatusLine note="Kept in this browser">
                         <StatusItem label="datasets">{allDatasets.length}</StatusItem>

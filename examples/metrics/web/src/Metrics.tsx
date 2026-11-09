@@ -9,7 +9,6 @@ import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { Shell } from '@winterop-com/sokkel-ui/Shell'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
 import { StatusProvider } from '@winterop-com/sokkel-ui/StatusProvider'
-import { ThemeToggle } from '@winterop-com/sokkel-ui/ThemeToggle'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
 import {
     Bell,
@@ -92,8 +91,6 @@ function Foot({ zone, firing, paused, refresh }: { zone: 'local' | 'utc'; firing
 
 /** The Metrics app: live dashboards, a panel editor with a live preview, and alerts, over a simulated source. */
 export function MetricsApp({ frame }: { frame: Frame }) {
-    const { settings, setSettings, resolved } = frame.appearance
-    const dark = resolved === 'dark'
     useScrapeClock()
     const place = usePlace()
     const boards = useCollection(dashboards)
@@ -271,7 +268,6 @@ export function MetricsApp({ frame }: { frame: Frame }) {
                 top={
                     <TopBar
                         trail={page === 'editor' && board !== undefined ? [...trail(board.title), { label: 'Edit panel' }] : trail(title)}
-                        actions={<ThemeToggle dark={dark} onToggle={() => setSettings({ ...settings, scheme: dark ? 'light' : 'dark' })} />}
                     />
                 }
                 foot={<Foot zone={prefs.zone} firing={firing} paused={paused} refresh={refresh} />}

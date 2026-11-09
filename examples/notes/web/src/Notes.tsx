@@ -9,7 +9,6 @@ import { Search } from '@winterop-com/sokkel-ui/Search'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
-import { ThemeToggle } from '@winterop-com/sokkel-ui/ThemeToggle'
 import { TopBar, type Crumb } from '@winterop-com/sokkel-ui/TopBar'
 import { Tree, type TreeNode } from '@winterop-com/sokkel-ui/Tree'
 import { useShortcuts } from '@winterop-com/sokkel-ui/hooks/use-shortcuts'
@@ -102,8 +101,7 @@ function useRowActions(): (node: TreeNode) => DataAction[] {
 export function Notes({ frame }: { frame: Frame }) {
     const state = useVault()
     const { vault, prefs, setPrefs, open, openDay, newNote, ask, moveNote, moveFolder, save, drafts } = state
-    const { settings: look, setSettings: setLook, resolved } = frame.appearance
-    const dark = resolved === 'dark'
+    const { settings: look, setSettings: setLook } = frame.appearance
     const [first = 'notes', second] = frame.route
     const page = (PAGES as readonly string[]).includes(first) ? first : 'missing'
     const [filter, setFilter] = useState('')
@@ -387,7 +385,6 @@ export function Notes({ frame }: { frame: Frame }) {
                             <IconButton label="New note" onClick={() => newNote(note?.folder ?? null)}>
                                 <FilePlus />
                             </IconButton>
-                            <ThemeToggle dark={dark} onToggle={() => setLook({ ...look, scheme: dark ? 'light' : 'dark' })} />
                         </>
                     }
                 />
