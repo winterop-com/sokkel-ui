@@ -586,6 +586,8 @@ export function MapView({
 
     useEffect(() => {
         const root = document.documentElement
+        // An app wears its kept scheme before paint, after this map first read it, so it reads it again here.
+        setDark(isDark())
         const observer = new MutationObserver(() => {
             setDark(isDark())
             setReading((value) => value + 1)

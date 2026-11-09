@@ -1,6 +1,7 @@
 import type { HTMLAttributes, ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { FieldRows } from './field-rows'
 
 /**
  * The gaps a layout puts between its cells, smallest to largest. A gap that falls between two steps
@@ -259,14 +260,25 @@ const GAP_LENGTH: Record<Gap, string> = {
     inspector: 'var(--density-inspector-gap)',
 }
 
-export type ColumnsProps = Base & { count?: 2 | 3 | 4 | 6 | 'fill'; min?: keyof typeof MIN; align?: 'start' | 'stretch'; rowGap?: Gap }
+export type ColumnsProps = Base & {
+    count?: 2 | 3 | 4 | 6 | 'fill'
+    min?: keyof typeof MIN
+    align?: 'start' | 'stretch'
+    rowGap?: Gap
+    /**
+     * Lines up the fields in it: each `Field` shares its label, description, control and help
+     * rows with the fields beside it, so the controls of a row stand level when one field has a
+     * description and its neighbor has none. Every cell is then a field.
+     */
+    fields?: boolean
+}
 
 /**
  * Cells in a grid of equal columns: up to `count` side by side, and fewer as the room narrows,
  * so no column gets narrower than `min`, down to one. `count="fill"` sets no limit: as many
  * columns as fit, for a gallery of tiles. The columns follow the room the grid is
  * given, not the window, so a grid in a side panel stacks while the same grid on a page spreads
- * out.
+ * out. With `fields` the fields in a row line up their controls.
  */
 export function Columns({
     children,
@@ -279,6 +291,7 @@ export function Columns({
     from,
     fromRoom,
     room,
+    fields = false,
     className,
     style,
     ...props
@@ -287,10 +300,17 @@ export function Columns({
         count === 'fill'
             ? `minmax(min(${MIN[min]}, 100%), 1fr)`
             : `minmax(max(min(${MIN[min]}, 100%), calc((100% - ${String(count - 1)} * ${GAP_LENGTH[gap]}) / ${String(count)})), 1fr)`
-    return (
+    // Lined-up fields keep the room between their rows as their own foot, since the grid's row gap
+    // would also fall between the rows each field spans.
+    const between = GAP_LENGTH[rowGap ?? gap]
+    const grid = (
         <Tag
             {...props}
-            style={{ gridTemplateColumns: `repeat(auto-fill, ${track})`, ...style }}
+            style={{
+                gridTemplateColumns: `repeat(auto-fill, ${track})`,
+                ...(fields ? { rowGap: 0, marginBottom: `calc(-1 * ${between})` } : undefined),
+                ...style,
+            }}
             className={cn(
                 'grid min-w-0 [:where(&>*)]:min-w-0',
                 GAP[gap],
@@ -303,6 +323,8 @@ export function Columns({
             {children}
         </Tag>
     )
+    // A grid inside lined-up fields that lines up none of its own leaves its fields as they are.
+    return <FieldRows.Provider value={fields ? between : null}>{grid}</FieldRows.Provider>
 }
 
 /** The aside's width: a fixed width, or `third`, a third of the room beside two thirds of main content. */

@@ -3,6 +3,7 @@ import { useMemo, useState, type ReactNode } from 'react'
 
 import { useSearch } from '../hooks/use-search'
 import { filterCommands, mergeCommands, termScore } from '../lib/commands'
+import { keyLabels } from '../lib/keys'
 import type { SearchGroup, SearchResult, SearchSource } from '../lib/search'
 import { SearchResultBody } from './Search'
 import { Button } from './ui/button'
@@ -90,6 +91,10 @@ export interface CommandPaletteWords {
     title: string
     /** The button that closes the palette on a touch screen, which has no Escape to press. */
     close: string
+    /** The foot's word before the key that runs the chosen row. */
+    open: string
+    /** The foot's word before the keys that open and close the palette. */
+    palette: string
 }
 
 const WORDS: CommandPaletteWords = {
@@ -97,6 +102,18 @@ const WORDS: CommandPaletteWords = {
     empty: 'No command matches.',
     title: 'Command palette',
     close: 'Close',
+    open: 'Open',
+    palette: 'Command palette',
+}
+
+/** The strip along the palette's foot: the app's mark and name at its start, the keys at its end. */
+export interface PaletteFoot {
+    /** The app's mark, drawn at the size of an icon. */
+    mark?: ReactNode
+    /** The app's name beside its mark. */
+    name?: string
+    /** The keys that open the palette, as `keyLabels` writes them; ⌘K or Ctrl K when not given. */
+    keys?: readonly string[]
 }
 
 /** A group's title, inset as its rows are, from the palette's row tokens. */
@@ -111,10 +128,16 @@ export interface CommandPaletteProps {
     groups: readonly PaletteGroup[]
     /** The app's search, whose results are listed under the commands. */
     search?: PaletteSearch
-    /** What the search holds when the palette opens. */
+    /** What the search holds each time the palette opens. */
     defaultQuery?: string
     /** How the commands are matched to what is typed; `fuzzy` when not given. */
     filter?: PaletteFilter
+    /**
+     * A strip at the palette's foot with the app's mark and name and the keys it answers: Enter to
+     * open the chosen row and the keys that open the palette. A touch screen, which has no keys,
+     * shows its Close button there instead.
+     */
+    foot?: PaletteFoot
     words?: Partial<CommandPaletteWords>
 }
 
@@ -127,7 +150,7 @@ export interface CommandPaletteProps {
  * the query follow the commands, each with its thumbnail, artwork or icon and the query's words
  * marked. On a touch screen, which has no Escape, a Close button stands at its foot. `filter`
  * chooses how the commands are matched: by their letters (`fuzzy`), by every word typed (`terms`),
- * or by the app's own score.
+ * or by the app's own score. `foot` adds a strip with the app's mark and the keys it answers.
  */
 export function CommandPalette({
     open,
@@ -136,11 +159,18 @@ export function CommandPalette({
     search,
     defaultQuery = '',
     filter = 'fuzzy',
+    foot,
     words: given,
 }: CommandPaletteProps) {
     const words = { ...WORDS, ...given }
     const merged = useMemo(() => mergeCommands(groups), [groups])
     const [query, setQuery] = useState(defaultQuery)
+    // Each opening starts from `defaultQuery`, not from what was typed the last time it was open.
+    const [shown, setShown] = useState(open)
+    if (open !== shown) {
+        setShown(open)
+        if (open) setQuery(defaultQuery)
+    }
     const score = filter === 'fuzzy' ? undefined : filter === 'terms' ? termScore : filter
     const listed = useMemo(() => (score === undefined ? merged : filterCommands(merged, query, score)), [merged, query, score])
     const answer = useSearch(search?.search, query, { enabled: open, minQuery: search?.minQuery, debounce: search?.debounce })
@@ -227,11 +257,38 @@ export function CommandPalette({
                         </div>
                     )}
                 </CommandList>
-                <div className="hidden justify-end border-t border-border p-1.5 pointer-coarse:flex">
-                    <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
-                        {words.close}
-                    </Button>
-                </div>
+                {foot === undefined ? (
+                    <div className="hidden justify-end border-t border-border p-1.5 pointer-coarse:flex">
+                        <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
+                            {words.close}
+                        </Button>
+                    </div>
+                ) : (
+                    <div className="-mx-(--palette-inset) flex items-center gap-3 border-t border-border px-3 py-1.5 text-xs text-muted-foreground">
+                        {foot.mark !== undefined && <span className="flex size-4 shrink-0 items-center justify-center">{foot.mark}</span>}
+                        {foot.name !== undefined && <span className="min-w-0 truncate">{foot.name}</span>}
+                        <span className="ml-auto flex shrink-0 items-center gap-1.5 pointer-coarse:hidden">
+                            {words.open}
+                            <Kbd>{keyLabels({ key: 'Enter' })[0]}</Kbd>
+                        </span>
+                        <span className="flex shrink-0 items-center gap-1.5 max-sm:hidden pointer-coarse:hidden">
+                            {words.palette}
+                            <KbdGroup>
+                                {(foot.keys ?? keyLabels({ key: 'k', mod: true })).map((key) => (
+                                    <Kbd key={key}>{key}</Kbd>
+                                ))}
+                            </KbdGroup>
+                        </span>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="ml-auto hidden pointer-coarse:flex"
+                            onClick={() => onOpenChange(false)}
+                        >
+                            {words.close}
+                        </Button>
+                    </div>
+                )}
             </Command>
         </CommandDialog>
     )

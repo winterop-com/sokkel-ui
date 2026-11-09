@@ -7,6 +7,8 @@ import { measureByCharacters } from '@winterop-com/sokkel-ui-graph/measure'
 import { useNodeGraph, type GraphItem, type GraphLink } from '@winterop-com/sokkel-ui-graph/use-node-graph'
 import { Stage } from './Frame'
 import { Row } from '@winterop-com/sokkel-ui/Layout'
+import type { StatusMap } from '@winterop-com/sokkel-ui/StatusChip'
+import { StatusProvider } from '@winterop-com/sokkel-ui/StatusProvider'
 
 /** Every way a node box is drawn: named or not, with a kind, a status, a duration, progress, and chosen. */
 const BOXES: { data: GraphNodeData; selected?: boolean; width: number }[] = [
@@ -67,6 +69,40 @@ function Services() {
     )
 }
 
+/** Tidevann's states for a service, which a status board draws its nodes in. */
+const HEALTH: StatusMap = {
+    operational: { color: 'good' },
+    degraded: { color: 'warning' },
+    outage: { color: 'critical' },
+    maintenance: { color: 'info' },
+}
+
+const HEALTHY: GraphItem[] = [
+    { id: 'web', data: { code: 'web', kind: 'service', status: 'operational' } },
+    { id: 'api', data: { code: 'api', kind: 'service', status: 'outage' } },
+    { id: 'worker', data: { code: 'worker', kind: 'service', status: 'degraded' } },
+    { id: 'queue', data: { code: 'queue', kind: 'store', status: 'operational', shape: 'round' } },
+    { id: 'search', data: { code: 'search', kind: 'store', status: 'maintenance', shape: 'round' } },
+]
+
+const DEPENDS: GraphLink[] = [
+    { source: 'web', target: 'api', arrow: true },
+    { source: 'api', target: 'queue', arrow: true },
+    { source: 'api', target: 'search', arrow: true },
+    { source: 'worker', target: 'queue', arrow: true },
+]
+
+function Health() {
+    const graph = useNodeGraph(HEALTHY, DEPENDS)
+    return (
+        <StatusProvider statuses={HEALTH}>
+            <Stage title="Services" meta="by health, in the app's own states">
+                <GraphCanvas nodes={graph.nodes} edges={graph.edges} settled={graph.settled} words={{ label: 'Services by health' }} />
+            </Stage>
+        </StatusProvider>
+    )
+}
+
 function Nothing() {
     return (
         <Stage title="Services" meta="Nothing deployed yet">
@@ -88,3 +124,6 @@ export const NodeBoxes: Story = { name: 'Node boxes', render: () => <Boxes /> }
 
 /** A graph none of the views cover, built from the canvas, the node box and the layout hook, with labeled edges. */
 export const CustomGraph: Story = { name: 'Custom graph', render: () => <Services /> }
+
+/** Nodes in an app's own states from a `StatusProvider`: each dot in its state's color, an outage and a degraded service edged as an issue is. */
+export const AppStates: Story = { name: 'App states', render: () => <Health /> }

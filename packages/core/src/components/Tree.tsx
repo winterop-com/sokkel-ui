@@ -1,8 +1,12 @@
-import { ChevronRight, RotateCw } from 'lucide-react'
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { ChevronRight, Ellipsis, RotateCw, type LucideIcon } from 'lucide-react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import type { DataAction } from './DataTable'
+import { Button } from './ui/button'
 import { Checkbox } from './ui/checkbox'
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from './ui/context-menu'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu'
 import { Spinner } from './ui/spinner'
 import { Highlight } from './Highlight'
 import { literalRanges } from '../lib/search'
@@ -16,6 +20,10 @@ export interface TreeNode {
     children?: readonly TreeNode[]
     /** Has children not given in `children`, which the tree's `loadChildren` brings when the node is first opened. */
     hasChildren?: boolean
+    /** An icon before the label, such as a folder or a file. */
+    icon?: LucideIcon
+    /** The icon an open branch shows in place of `icon`, such as an open folder. */
+    openIcon?: LucideIcon
 }
 
 /** Where a node sits: the node and its ancestors, from the top level down to its parent. */
@@ -45,6 +53,8 @@ export interface TreeRow {
 }
 
 export interface TreeWords {
+    /** The button at a row's end that opens its menu. */
+    actions: string
     loading: string
     failed: string
     retry: string
@@ -54,6 +64,7 @@ export interface TreeWords {
 }
 
 const WORDS: TreeWords = {
+    actions: 'Actions',
     loading: 'Loading',
     failed: 'This level did not load.',
     retry: 'Try again',
@@ -104,6 +115,22 @@ export function treeAncestors(nodes: readonly TreeNode[], id: string, loads: Tre
         return null
     }
     return visit(nodes, [])
+}
+
+/**
+ * Whether a node may be moved into a branch, or to the top level with null: never into itself or
+ * below itself, and never where it already is.
+ */
+export function canMoveInto(nodes: readonly TreeNode[], id: string, into: string | null, loads: TreeLoads = NO_LOADS): boolean {
+    if (into === id) return false
+    const above = treeAncestors(nodes, id, loads)
+    if (above === null || (above[above.length - 1] ?? null) === into) return false
+    return into === null || !(treeAncestors(nodes, into, loads) ?? []).includes(id)
+}
+
+/** Where a row dragged over another lands: inside a branch, an empty one too, or beside a leaf, in the leaf's parent. */
+export function dropInto(row: Pick<TreeRow, 'node' | 'parent'>): string | null {
+    return row.node.children !== undefined || row.node.hasChildren === true ? row.node.id : row.parent
 }
 
 /** The ids of every node with a chosen node somewhere under it. */
@@ -168,6 +195,34 @@ function viewOf(list: HTMLElement, box: HTMLElement | null): { start: number; he
     return { start: top - list.getBoundingClientRect().top, height }
 }
 
+/** A closed branch a row is dragged over opens after this many milliseconds, so a row can be moved deep in one drag. */
+const OPEN_AFTER = 600
+
+/** What a row's menu offers, from its button or a right-click. */
+function MenuItems({ actions, kind }: { actions: readonly DataAction[]; kind: 'dropdown' | 'context' }) {
+    const Item = kind === 'dropdown' ? DropdownMenuItem : ContextMenuItem
+    const Separator = kind === 'dropdown' ? DropdownMenuSeparator : ContextMenuSeparator
+    return actions.map((action) =>
+        'separator' in action ? (
+            <Separator key={action.id} />
+        ) : (
+            <Item
+                key={action.id}
+                variant={action.destructive === true ? 'destructive' : 'default'}
+                disabled={action.disabled}
+                // The press does the item's work alone, never the row's choice.
+                onClick={(event) => {
+                    event.stopPropagation()
+                    action.onSelect()
+                }}
+            >
+                {action.icon}
+                {action.label}
+            </Item>
+        ),
+    )
+}
+
 /** The text with every case-blind occurrence of the query marked. */
 function Marked({ text, query }: { text: string; query: string }) {
     return <Highlight text={text} ranges={literalRanges(text, query)} />
@@ -188,6 +243,12 @@ export interface TreeProps {
     search?: (query: string) => Promise<readonly TreeTrail[]>
     /** Where chosen nodes not loaded yet sit, so the parents above them show that they hold a choice. */
     trails?: readonly TreeTrail[]
+    /** What a row's menu offers, opened from a button at its end or a right-click: rename, move, delete. */
+    actions?: (node: TreeNode) => DataAction[] | undefined
+    /** Lets a row be dragged into a branch, or beside a top-level row to the top level (null), and hears where it went. */
+    onMove?: (id: string, into: string | null) => void
+    /** Whether a node may go into a branch or the top level, beyond the tree's own rule that nothing goes into itself. */
+    canMove?: (id: string, into: string | null) => boolean
     words?: Partial<TreeWords>
     /** What the tree is, for a screen reader. */
     label: string
@@ -210,6 +271,11 @@ export interface TreeProps {
  *
  * A single choice made outside the tree, such as a place picked on a map beside it, opens the tree
  * down to the chosen node and scrolls to it.
+ *
+ * As a file tree, each node takes an `icon` (an open branch its `openIcon`), `actions` puts a menu
+ * on each row, opened from a button at its end or a right-click, and `onMove` lets a row be dragged
+ * into a branch, or beside a top-level row to the top level, a closed branch opening as a row is
+ * held over it. A node never goes into itself or below itself, and `canMove` refuses more.
  */
 export function Tree({
     nodes,
@@ -221,6 +287,9 @@ export function Tree({
     loadChildren,
     search,
     trails = [],
+    actions,
+    onMove,
+    canMove,
     words: given,
     label,
     className,
@@ -408,6 +477,52 @@ export function Tree({
             else next.delete(id)
             return next
         })
+    const dragged = useRef<string | null>(null)
+    const [dropTarget, setDropTarget] = useState<string | null | undefined>(undefined)
+    const opening = useRef<{ id: string; timer: number } | null>(null)
+    const stopOpening = () => {
+        if (opening.current !== null) window.clearTimeout(opening.current.timer)
+        opening.current = null
+    }
+    useEffect(() => stopOpening, [])
+    const allowed = (into: string | null) => {
+        const id = dragged.current
+        return id !== null && canMoveInto(nodes, id, into, loads) && (canMove?.(id, into) ?? true)
+    }
+    /** A row held over: where the dragged row would land, said by a ring on that branch, and a closed branch opening after a moment. */
+    const dragOver = (event: DragEvent, into: string | null, row?: TreeRow) => {
+        if (!allowed(into)) {
+            if (row === undefined) setDropTarget(undefined)
+            return
+        }
+        event.preventDefault()
+        event.stopPropagation()
+        event.dataTransfer.dropEffect = 'move'
+        setDropTarget(into)
+        const closed = row !== undefined && into === row.node.id && matches === null && !open.has(row.node.id)
+        if (!closed) stopOpening()
+        else if (opening.current?.id !== row.node.id) {
+            stopOpening()
+            const id = row.node.id
+            opening.current = { id, timer: window.setTimeout(() => toggle(id, true), OPEN_AFTER) }
+        }
+    }
+    const drop = (event: DragEvent, into: string | null) => {
+        const id = dragged.current
+        stopOpening()
+        setDropTarget(undefined)
+        if (id === null || !allowed(into)) return
+        event.preventDefault()
+        event.stopPropagation()
+        dragged.current = null
+        onMove?.(id, into)
+    }
+    const endDrag = () => {
+        dragged.current = null
+        stopOpening()
+        setDropTarget(undefined)
+    }
+
     const choose = (row: TreeRow) => {
         const id = row.node.id
         if (row.trail !== undefined) {
@@ -448,8 +563,18 @@ export function Tree({
                 aria-label={label}
                 aria-multiselectable={selection === 'multiple' || undefined}
                 aria-busy={(remote && found?.state === 'loading') || undefined}
-                className={cn('flex flex-col text-sm', className)}
+                data-drop={dropTarget === null ? '' : undefined}
+                className={cn('flex flex-col text-sm', dropTarget === null && 'rounded-md ring-2 ring-ring ring-inset', className)}
                 style={virtual ? { height: rows.length * rowHeight, paddingTop: first * rowHeight } : undefined}
+                onDragOver={onMove === undefined ? undefined : (event) => dragOver(event, null)}
+                onDragLeave={
+                    onMove === undefined
+                        ? undefined
+                        : (event) => {
+                              if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDropTarget(undefined)
+                          }
+                }
+                onDrop={onMove === undefined ? undefined : (event) => drop(event, null)}
                 onKeyDown={(event) => {
                     if (current === undefined || !(event.target as HTMLElement).matches('[role="treeitem"]')) return
                     const index = items.indexOf(current)
@@ -513,21 +638,40 @@ export function Tree({
                     const branch = row.trail === undefined && isBranch(row.node, loads)
                     const expanded = matches !== null || open.has(row.node.id)
                     const isChosen = chosen.has(row.node.id)
-                    return (
+                    const menu = actions?.(row.node)
+                    const Icon = branch && expanded ? (row.node.openIcon ?? row.node.icon) : row.node.icon
+                    const movable = onMove !== undefined && row.trail === undefined
+                    const item = (
                         <li
                             key={row.node.id}
                             data-id={row.node.id}
+                            data-drop={dropTarget === row.node.id ? '' : undefined}
                             role="treeitem"
                             aria-level={row.level}
                             aria-expanded={branch ? expanded : undefined}
                             aria-selected={selection === 'none' ? undefined : isChosen}
                             tabIndex={row === current ? 0 : -1}
+                            draggable={movable || undefined}
+                            onDragStart={
+                                movable
+                                    ? (event) => {
+                                          dragged.current = row.node.id
+                                          event.dataTransfer.effectAllowed = 'move'
+                                          event.dataTransfer.setData('text/plain', row.node.label)
+                                      }
+                                    : undefined
+                            }
+                            onDragEnd={movable ? endDrag : undefined}
+                            onDragOver={movable ? (event) => dragOver(event, dropInto(row), row) : undefined}
+                            onDrop={movable ? (event) => drop(event, dropInto(row)) : undefined}
                             onFocus={() => setFocus(row.node.id)}
                             onClick={() => choose(row)}
                             style={indent}
                             className={cn(
-                                'flex h-8 shrink-0 cursor-default items-center gap-1.5 rounded-md pr-2 outline-none select-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                                'group/row flex h-8 shrink-0 cursor-default items-center gap-1.5 rounded-md pr-2 outline-none select-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                                 selection === 'single' && isChosen && 'bg-primary/12 font-medium text-primary-ink hover:bg-primary/18',
+                                dropTarget === row.node.id && 'ring-2 ring-ring ring-inset',
+                                menu !== undefined && 'pr-1',
                             )}
                         >
                             {branch ? (
@@ -546,6 +690,7 @@ export function Tree({
                             ) : (
                                 <span className="size-5 shrink-0" aria-hidden />
                             )}
+                            {Icon !== undefined && <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden />}
                             {selection === 'multiple' && (
                                 <Checkbox
                                     checked={isChosen}
@@ -572,7 +717,37 @@ export function Tree({
                             {row.node.meta !== undefined && (
                                 <span className="shrink-0 text-xs text-muted-foreground tabular-nums">{row.node.meta}</span>
                             )}
+                            {menu !== undefined && (
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger
+                                        render={
+                                            <Button
+                                                variant="ghost"
+                                                size="icon-xs"
+                                                tabIndex={-1}
+                                                aria-label={words.actions}
+                                                className="shrink-0 opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100 data-popup-open:opacity-100"
+                                            />
+                                        }
+                                        onClick={(event) => event.stopPropagation()}
+                                    >
+                                        <Ellipsis aria-hidden />
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-48">
+                                        <MenuItems actions={menu} kind="dropdown" />
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            )}
                         </li>
+                    )
+                    if (menu === undefined) return item
+                    return (
+                        <ContextMenu key={row.node.id}>
+                            <ContextMenuTrigger render={item} />
+                            <ContextMenuContent className="w-48">
+                                <MenuItems actions={menu} kind="context" />
+                            </ContextMenuContent>
+                        </ContextMenu>
                     )
                 })}
             </ul>

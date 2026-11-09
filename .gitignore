@@ -1,5 +1,7 @@
 node_modules/
 storybook-static/
+# The examples site scripts/examples-site.ts builds.
+examples-static/
 dist/
 test-results/
 # The screenshot baselines live on their own branches; scripts/baselines.sh fetches them here.

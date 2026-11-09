@@ -282,7 +282,10 @@ describe('layerOpen', () => {
         const page = (found: string[]) => ({
             querySelector: (selector: string) => (selector.split(', ').some((one) => found.includes(one)) ? {} : null) as Element | null,
         })
-        expect(layerOpen(page(['[data-slot="dropdown-menu-content"]']))).toBe(true)
+        expect(layerOpen(page(['[data-slot="dropdown-menu-content"]:not([data-closed])']))).toBe(true)
+        expect(layerOpen(page(['[data-slot="select-content"]:not([data-closed])']))).toBe(true)
+        // A select's list stays in the page once it has opened; closed, it is no layer.
+        expect(layerOpen(page(['[data-slot="select-content"]']))).toBe(false)
         expect(layerOpen(page(['[role="dialog"][data-open]:not([aria-modal="false"])']))).toBe(true)
         expect(layerOpen(page([]))).toBe(false)
         expect(layerOpen(undefined)).toBe(false)

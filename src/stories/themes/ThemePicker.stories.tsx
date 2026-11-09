@@ -13,16 +13,23 @@ export default meta
 
 const START: ThemeSettings = { theme: 'paper', scheme: 'dark', density: 'regular', corners: 'theme', typeface: 'theme' }
 
-function Picker({ full, words }: { full: boolean; words?: Partial<ThemePickerWords> }) {
+function Picker({ full, list = false, words }: { full: boolean; list?: boolean; words?: Partial<ThemePickerWords> }) {
     const [settings, setSettings] = useState(START)
     return (
-        <div className="w-full max-w-xs rounded-surface border border-border-strong bg-card p-4">
+        <div
+            className={
+                list
+                    ? 'w-full max-w-md rounded-surface border border-border-strong bg-card p-4'
+                    : 'w-full max-w-xs rounded-surface border border-border-strong bg-card p-4'
+            }
+        >
             <ThemePicker
                 value={settings}
                 onChange={setSettings}
                 themes={THEMES}
                 corners={full ? CORNERS : undefined}
                 typefaces={full ? TYPEFACES : undefined}
+                themeList={list}
                 words={words}
             />
         </div>
@@ -34,6 +41,12 @@ export const Basic: StoryObj = { render: () => <Picker full={false} /> }
 
 /** With corners and typefaces given as well. */
 export const Full: StoryObj = { render: () => <Picker full /> }
+
+/**
+ * The themes as rows (`themeList`), each with its swatch, its name and the line saying how it looks,
+ * as a settings section with room for them lists them; the select says the same line under each name.
+ */
+export const ThemeList: StoryObj = { name: 'Theme list', render: () => <Picker full={false} list /> }
 
 /** The words in Norwegian, as an app that translates them passes them. */
 export const Translated: StoryObj = {

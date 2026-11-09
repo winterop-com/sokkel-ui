@@ -37,10 +37,12 @@ const KIND_BUILDER = "a chart kind's builder, reached through the registry `kind
 export const PRIVATE: Record<PackageDir, Record<string, string>> = {
     core: {
         'components/code/guides': "`CodeEditor`'s bracket colors and indent guides",
+        'components/code/markdown': "`CodeEditor`'s markdown language, which it carries by name",
         'components/code/schema': "`CodeEditor`'s JSON Schema checks and completion; `CodeSchemaWords` is exported by `CodeEditor`",
         'components/day-pick': 'the calendar the date fields pick from, loaded on first use',
         'components/entry':
             'what the typed fields share: the value held as text, its issues and its frame; `EntryFieldProps` is exported by each field',
+        'components/field-rows': 'the gap `Columns` with `fields` hands each `Field` so a row of fields lines up',
         'components/inline-edit-parts': 'the editors `InlineEdit` and the cells `tableEditing` edits share',
         'components/option-list':
             'the searchable list `FilterChip`, `FilterBar` and their menus draw values in; `FilterOption` is exported by `FilterChip`',
@@ -51,6 +53,8 @@ export const PRIVATE: Record<PackageDir, Record<string, string>> = {
         'components/media/sound-delay': "how far `SoundVisualizer` holds its picture back behind the output's latency",
         'components/media/sound-source': 'what `SoundVisualizer` listens through; `SoundSource` is exported by `SoundVisualizer`',
         'components/pickers': 'the popup the date and time fields pick in, and the list of times',
+        'components/reasoning':
+            "a model's thinking folded behind a line, which `AssistantReply` and `AnswerColumn` draw; `wordCount` is exported by `AssistantReply`",
         'components/schema/checker':
             '`validate` loaded on first use, for `SchemaForm` and `CodeEditor`; an app preloads it with `loadSchemaChecks`',
         'components/settings-parts':
@@ -184,6 +188,7 @@ const CORE_AREAS: Record<string, string> = {
     ThemePicker: 'Frame and navigation',
     ThemeToggle: 'Frame and navigation',
     TopBar: 'Frame and navigation',
+    ServerMenu: 'Frame and navigation',
     // Page layout: what a page is arranged with.
     Inspector: 'Page layout',
     DetailSheet: 'Page layout',
@@ -198,6 +203,9 @@ const CORE_AREAS: Record<string, string> = {
     GroupLabel: 'Page layout',
     // Forms and inputs.
     AddressInput: 'Forms and inputs',
+    ComputedField: 'Forms and inputs',
+    PeriodPicker: 'Forms and inputs',
+    YesNoField: 'Forms and inputs',
     AsyncSelect: 'Forms and inputs',
     CapabilityPicker: 'Forms and inputs',
     CheckboxField: 'Forms and inputs',
@@ -220,6 +228,7 @@ const CORE_AREAS: Record<string, string> = {
     SavedViews: 'Forms and inputs',
     Search: 'Forms and inputs',
     SearchField: 'Forms and inputs',
+    QuickAdd: 'Forms and inputs',
     SearchResults: 'Forms and inputs',
     SecretReveal: 'Forms and inputs',
     Segmented: 'Forms and inputs',
@@ -244,6 +253,7 @@ const CORE_AREAS: Record<string, string> = {
     Dot: 'Data display',
     DueText: 'Data display',
     Highlight: 'Data display',
+    TextLink: 'Data display',
     IssueMark: 'Data display',
     IssueMarks: 'Data display',
     ItemCard: 'Data display',
@@ -262,6 +272,7 @@ const CORE_AREAS: Record<string, string> = {
     StepIndicator: 'Data display',
     Timeline: 'Data display',
     Tree: 'Data display',
+    UptimeBar: 'Data display',
     // Actions, dialogs and feedback.
     Banner: 'Actions, dialogs and feedback',
     ConfirmCard: 'Actions, dialogs and feedback',
@@ -280,6 +291,7 @@ const CORE_AREAS: Record<string, string> = {
     StarButton: 'Actions, dialogs and feedback',
     TypedConfirmDialog: 'Actions, dialogs and feedback',
     // Chat and messaging.
+    AnswerColumn: 'Chat and messaging',
     AssistantReply: 'Chat and messaging',
     ChannelHeader: 'Chat and messaging',
     ChannelList: 'Chat and messaging',
@@ -291,6 +303,7 @@ const CORE_AREAS: Record<string, string> = {
     MessageComposer: 'Chat and messaging',
     MessageRow: 'Chat and messaging',
     ToolCall: 'Chat and messaging',
+    UsageLine: 'Chat and messaging',
     // Files and attachments.
     AttachmentList: 'Files and attachments',
     FileList: 'Files and attachments',
@@ -303,7 +316,9 @@ const CORE_AREAS: Record<string, string> = {
     AnsiText: 'Code, text and documents',
     Code: 'Code, text and documents',
     CodeEditor: 'Code, text and documents',
+    ApiPlayground: 'Code, text and documents',
     DiffView: 'Code, text and documents',
+    DocumentTabs: 'Code, text and documents',
     EditPreview: 'Code, text and documents',
     LogView: 'Code, text and documents',
     Markdown: 'Code, text and documents',

@@ -19,9 +19,9 @@ The library is six packages, built from one Bun workspace and released together 
 - `@winterop-com/sokkel-ui-terminal` (`packages/terminal`): `TerminalView` and `Terminal`, on
   xterm.js.
 - `@winterop-com/sokkel-ui-media` (`packages/media`): the music and video app parts, `MediaBar`
-  with its layouts and fullscreen view, `TrackList`, `ChapterList`, `Lyrics`, `MediaCard`,
-  `Artwork`, `useMediaSession`, `useQueue`, `VideoStatsOverlay`, and `hlsSource`, which plays an
-  HTTP live stream in `VideoPlayer` through hls.js, an optional peer.
+  with its layouts and fullscreen view, `TrackList`, `ReorderableTrackList`, `ChapterList`,
+  `Lyrics`, `MediaCard`, `Artwork`, `useMediaSession`, `useQueue`, `VideoStatsOverlay`, `UpNext`,
+  and `hlsSource`, which plays an HTTP live stream in `VideoPlayer` through hls.js, an optional peer.
 
 An app installs the core and the add-ons it draws with, so an engine is installed only by an app
 that uses it, and the music and video parts only by an app that plays music or video. Each add-on
@@ -160,6 +160,14 @@ panes of its own narrows the rail to its icons or hides it while it is shown, wi
 asks, a narrowed rail's mark still widens it for the reader with the account following, and a
 hidden rail opens as the drawer from the top bar at every width.
 
+A place whose content is a hierarchy to browse, such as a music library's artists and albums, puts
+it in the rail itself with `body`, so the app keeps one left column rather than a second beside the
+rail: a tree and its search in place of the places, under a row back to them (All places), with the
+same head, width, edge and foot. A place chosen from the places, or a body given anew, shows the
+body again; collapsed, the rail draws the places' icons, a body having no icon form, and expanding
+it shows the body as it was left; the drawer draws the body, and the palette still lists every
+place.
+
 A screen adds what only it can do to the palette with `useCommands(groups, deps)` while it is
 mounted and takes it away when it unmounts; the shell holds the registry and lists those groups with
 its own by each group's `rank`, a screen's first at equal rank, groups of one title as one. An app
@@ -248,6 +256,11 @@ output is read by one parser, `lib/ansi`, which `AnsiText` and an `ansi` fence s
 colors in the kind and status inks, 256-color and 24-bit color as they are. `Markdown` embeds an
 app's own parts in a text where it has `<!-- part:ID -->` (another word through `partMarker`),
 through its `parts` map or function, so the text stays one document with its headings and anchors.
+Notes that link to each other are read by one module, `lib/wiki-links`: `[[Note]]`,
+`[[Note|words]]` and `[[Note#Heading]]` link to a note by its name and `#tag` tags it, neither read
+inside code. `Markdown`'s `links` draws them as links the app follows (`onOpen`, a link to a note
+`exists` denies drawn faint, `onTag` for the tags), and `wikiLinksIn`, `tagsIn` and `mentionsOf`
+give an app a note's links, its tags and where a name is written unlinked, for backlinks.
 
 ## Typefaces
 
@@ -309,11 +322,11 @@ toggle-group, tooltip, trace.
 Shell, Rail, AppBar, SubNav, Page, PageHeader, PaneHeader, Toolbar, Section, Surface, the layout
 components (Stack, Row, Columns, Split, Fill), SplitPane, Field, TextField, DateField, TimeField,
 DateTimeField, NumberField, InlineField, SliderField, CheckboxField, CheckboxList, ChoiceList,
-CodeField, SwitchField, SearchField, FileField, FilterChip, FilterBar, SavedViews, FormBar, InlineEdit,
+CodeField, SwitchField, SearchField, QuickAdd, FileField, FilterChip, FilterBar, SavedViews, FormBar, InlineEdit,
 SelectionBar, DataTable, StatusChip, PersonAvatar, PersonRow, MetaLine, DueText, AttachmentList,
 IconButton, StarButton, SplitButton, DownloadButton, AccountMenu, SidePanel, DialogShell,
 ConfirmDialog, TreeSelect, AsyncSelect, CapabilityPicker, SignIn, RelativeTime, ApiLink, TagChips,
-DetailSheet.
+DetailSheet, UptimeBar.
 Every example arranges and builds its screens from these, never by hand, so a fix in one reaches
 them all.
 
@@ -333,7 +346,9 @@ A records app is built from the same parts (Apps/Records). A `Rail` entry says w
 place holds on a second line (`description`), which the palette's Go to rows repeat; a palette row's
 `hint` is words and its `code` an id in the code face. `Stat` as a `tile` is a count on a card of its
 own, a state's dot before its label and a note under it, leading to what it counts, and `emphasis`
-edges the one that asks for work. `Badge` takes a `kind` color for a categorical value, such as the
+edges the one that asks for work. `UptimeBar` is a thing's record over the last days, a bar a day in
+its state's color or by its uptime, the oldest giving way in a box too narrow for them all, and the
+day pointed at said under it with its note. `Badge` takes a `kind` color for a categorical value, such as the
 sort of form a card is, and `Segmented` options carry a count and a state's dot. `Section`,
 `PaneHeader` and `Field` take a `description`, a field's between its label and its control.
 `DetailSheet` is one thing's detail in a sheet from the right, its chips and actions on one line
@@ -352,7 +367,8 @@ carries no chip; `lib/status` holds the map's types, the run states and each col
 A button that cannot be pressed now says why: `reason` on `Button`, `IconButton` and `SplitButton`
 disables it and shows the reason on hover and focus, the button kept in the tab order so a keyboard
 reaches it. `SplitButton` joins the main action to a menu of other ways; `DownloadButton` goes from
-idle through n of m on a `ProgressRing`, with a cancel, to kept, its state held by the app.
+idle through n of m (or a share, for bytes) on a `ProgressRing`, with a cancel and, when the app can
+hold one, a pause and a resume, to kept, its state held by the app.
 `RelativeTime` says a time as "3 minutes ago" through `Intl.RelativeTimeFormat`, the instant on
 hover, ticking on its own clock unless the app passes `now`. `ApiLink` names the request behind a
 screen as a copyable chip. `TagChips` shows as many tags as fit the room its row has left and a +N
@@ -382,7 +398,12 @@ album view) that keeps the selection, menus and sort. A short listing drops the 
 head and may carry a foot line. Rows gather under group heads by a field or a key made from the row
 (`groupBy`), each head with its label, its count and a column's `aggregate`; a head folds its
 group, rows sort within their group, and a head's box selects the group, in the table, the list and
-the grid alike. Its column menu hides columns and moves them a place earlier or later, the first
+the grid alike. Below its stack width a row becomes a card of labeled lines, or with `stackLayout="compact"` a
+row of its leads (a done box) and its title over one quiet line of the other columns, its values
+edited on a press rather than drawn as fields; a stacked list keeps each row's box and menu. With no
+rows it says `empty`, a sentence or a node such as an `Empty` with an action. `QuickAdd` is the
+field at a list's top that adds a row on Enter, holding the text with a spinner while the app's
+promise runs and with the reason in its issue mark when it is refused. Its column menu hides columns and moves them a place earlier or later, the first
 column staying first as each row's title, and the order is held like the widths (`columnOrder`).
 
 A listing filters from a `FilterBar` in its table's bar: Filter adds a filter from a menu of the
@@ -411,9 +432,9 @@ pure and tested): it opens on a press, Enter or F2, Escape drops what was typed,
 runs while the editor holds the value with a spinner; a refusal, the app's own message, keeps what
 was typed with a critical edge and the message in an `IssueMark`, and typing clears it, as a field a
 server refused is no longer refused once changed. A line of text, several lines or a choice from a
-list is edited on the library's own input, text area or select, and a number or a day on
-`NumberField` or `DateField` drawn `bare`, whose own refusals (text it cannot read, a value outside
-its bounds) refuse the save. `InlineEdit` draws a field's value boxed as its editor is, so nothing
+list is edited on the library's own input, text area or select, and a number, a day or a time of
+day on `NumberField`, `DateField` or `TimeField` drawn `bare`, whose own refusals (text it cannot
+read, a value outside its bounds) refuse the save. `InlineEdit` draws a field's value boxed as its editor is, so nothing
 moves as it opens, or a page title with only a rule under it, so `PageHeader`'s `title` edits where
 it stands. A table edits its cells only given `editing` (`tableEditing` from `table-editing`), so a
 table that edits nothing carries none of it; a column's `edit` then makes its cells editable, each
@@ -461,7 +482,13 @@ share held within `minShare` and `maxShare`, the second's what is left. It holds
 `defaultShare` and keeps it by `id` in storage; `share` with `onShareChange` holds it from outside.
 Narrower than `narrowBelow`, measured on itself, it stacks its panes or shows the one `narrow` names,
 as a phone shows a list or the message opened from it, and `useSplitPane` tells a pane it is alone.
-Mail's list beside its reading pane, the query workbench and a chat's history are split by it.
+`only` shows one pane alone at any width, the other kept mounted, as a reader turns it off.
+Mail's list beside its reading pane, the query workbench and a chat's history are split by it, and so
+is `EditPreview`'s `pane` variant: an editor and its live preview edge to edge in a pane of the
+app's, the share kept by `id`, with `view` showing both or either alone. `DocumentTabs` is the strip
+of documents open in a work area over such a pane: a tab each with its icon, its name cut short and
+a close button (a dot while unsaved), the shown one joined to the content, a middle click closing,
+the arrows moving along it, and the strip scrolling sideways past its room with `end` held at its end.
 
 `WindowedPane` gives any pane an expand button that opens the same content near full screen, in a
 window with a margin, a title, a close button and Escape, the pane keeping its height in place
@@ -479,7 +506,12 @@ draws again only what reads the changed fact. `useUploads` runs the app's
 it refuses the rest, cancels through the signal (and drops what an uploader that ignores it answers
 later), and hands `AttachmentList`, `Composer` and `UploadTray` their files. `ConversationHistory`, the list
 beside a chat, is a `DataTable` list grouped under Pinned, Today and Earlier, with rename in place,
-pin, and delete after a question.
+pin, and delete after a question. `UsageLine` says under a model's answer what it cost and how fast
+it came (tokens in and out, the time to the first token, the rate, the whole time), counting so far
+while it streams, and `AnswerColumn` is one model's answer among several sent the same prompt: the
+model over a fact about it, the state as a chip, its thinking folded as `AssistantReply` folds it, the
+answer streaming with `Markdown`'s caret, and the usage line pinned under it, with Stop, Run again,
+Copy and Remove in its head.
 
 `FileField` takes files in a form, in a `Field` as the other inputs are: a zone they are dropped on
 (the drag `DropZone`'s, from `use-file-drop`) with a button that opens the picker, the limits under
@@ -508,7 +540,10 @@ to try again when it fails; the app's `search` looks through the whole hierarchy
 lists each match with its path, and choosing one opens the tree down to it. TreeSelect names its
 choice by its path, from `trails` when the choice's level has not loaded yet. Past a few hundred
 visible rows a tree draws only those in view of its nearest scrolling box, so fifty thousand open
-rows scroll as smoothly as fifty.
+rows scroll as smoothly as fifty. As a file tree a node wears an `icon` (an open branch its
+`openIcon`), `actions` gives each row the menu a table's rows have, from a button at its end or a
+right-click, and `onMove` lets a row be dragged into a branch or beside a top-level row to the top
+level, a closed branch opening as a row is held over it; nothing goes into itself (`canMoveInto`).
 
 PersonAvatar draws a person as their picture, or as their initials on their color. A picture takes
 the initials' place only once it has loaded (Base UI's avatar tracks it), so until then, and for good
@@ -522,9 +557,12 @@ icon's corner), ChannelList, ChannelHeader, Conversation and ThreadView (the col
 conversation and of a thread), ConversationStart, ChatMessage with ChatDay, and MessageComposer.
 An app's own navigation strip is the library's `Rail`, with no hand-drawn badge.
 
-CodeEditor is the one code editor, on CodeMirror 6. It carries JSON, YAML and jq (a stream language
-written from the jq manual) by name and takes any other language as a CodeMirror `LanguageSupport` or
-a stream parser (`defineLanguage`). An app adds words to complete (a list or a function of the word,
+CodeEditor is the one code editor, on CodeMirror 6. It carries JSON, YAML, jq (a stream language
+written from the jq manual) and markdown (a stream language of its own, with `[[links]]` between
+notes and `#tags`) by name and takes any other language as a CodeMirror `LanguageSupport` or
+a stream parser (`defineLanguage`). `links` completes a `[[link]]` from the names an app gives as it
+is typed, the closing brackets put in with the name, and `size="lg"` sets long writing a step over
+the body. An app adds words to complete (a list or a function of the word,
 each with a detail, docs and a kind), docs on hover, ranged marks drawn as lint (an underline, a
 gutter dot, the message on hover), `onRun` on Mod-Enter and any other `keys`, a themed find bar, a
 fold gutter, bracket colors by depth and indent guides; the last three turn off past a megabyte. Given
@@ -558,7 +596,7 @@ note under it, after the app's own `notes`.
 Their own package, `@winterop-com/sokkel-ui-graph`, so an app that draws no graph installs neither
 React Flow nor elk.
 GraphCanvas (React Flow in the tokens, fit, zoom buttons, a stage or a fitted frame), GraphNode
-(the node box), the layout (a rank layout at once, elk loaded lazily and answering after),
+(the node box, its status a run state or one the app names in the status map), the layout (a rank layout at once, elk loaded lazily and answering after),
 useGraphLayout and useNodeGraph, and the views PipelineGraph, RunGraph, DependencyGraph (a lineage
 of datasets and jobs) and StateMachine (labeled transitions, initial and final markers, the
 current state). A canvas given `editing`, and PipelineGraph with it, becomes an editor: ports
@@ -568,6 +606,10 @@ An editor also refuses a connection with the reason said on the canvas, adds a s
 button at a node's output or an edge's middle, takes blocks dragged in from a palette, and chooses
 several nodes with Shift. BlockPalette, BlockPicker, GraphOverlay, GraphNotice, GraphToolbar and
 useGraphHistory are its parts; the Pipeline editor stories show each way of building a pipeline.
+NetworkGraph draws things linked with no direction to read, such as notes: a dot each in its group's
+color, larger the more links it has, its name under it, straight lines between them, laid out by
+elk's stress algorithm (`layoutNetwork`) after a spiral holds the first frame; pointing at a dot
+lights its neighbors and fades the rest, and `current` rings the one the reader stands on.
 
 ## Terminals
 
@@ -591,7 +633,7 @@ app that plays nothing does not carry them: `MediaBar` with its layouts, parts a
 covers (`cover-seed`), the arithmetic of chapters, of a timeline over several files and of the
 bar's growth, the queue (`queue`, `useQueue`), LRC lyrics (`lrc`), `useMediaSession` with its
 helpers in `media-session`, a position read on every animation frame (`useFramePosition`),
-`VideoStatsOverlay`, and `hlsSource` in `hls-source`. It stands on the core by name, and its one engine, hls.js, is an
+`VideoStatsOverlay`, `UpNext`, and `hlsSource` in `hls-source`. It stands on the core by name, and its one engine, hls.js, is an
 optional peer it loads only when a stream plays. What a core part plays through
 stays in the core, under `@winterop-com/sokkel-ui/media/*`: `AudioPlayer` and `VideoPlayer`, which
 attachments, chat messages, the composer and a spoken answer use; the controls they share
@@ -640,7 +682,20 @@ whose buffer stalled while away is moved a hair to wake it, unless a pause was a
 handle meanwhile. `keys={false}` leaves every key to the app, whose shortcuts drive it through the
 handle on `ref` (`play`, `pause`, `toggle`, `seekTo`, held until the media can take it, `seekBy`,
 `setVolume`, `toggleMute`, `toggleFullscreen`, `retry`, `stats`, and what it plays, where and how
-loud); `onFullscreenChange` says when the picture fills the screen.
+loud); `onFullscreenChange` says when the picture fills the screen. `crossOrigin` is the video
+element's `crossorigin`, so captions served from another origin load, the media then fetched with
+CORS too.
+
+Over the picture an app draws in two places, both kept in full screen: `overlay` in the top corner,
+such as the stats, scrolling when taller than the picture, and `cover` over the whole of it, dimmed
+behind, such as what plays next as a video ends. They are two slots, not one with a placement, since
+both can stand at once (the stats stay over a cover) and a cover takes the player over: its controls
+hidden and out of reach (their focus handed to the player), no play button over the picture, and none
+of the player's own keys while it stands, so the cover's buttons are what the viewer does next.
+`UpNext` in the media package is the cover every video app with a queue needs: the next title, a line
+under it and its artwork, which shows once the player is wide enough, a countdown that calls `onPlay`
+at zero (held by `paused`, absent when the app's autoplay is off), Play now, and Cancel, its words
+props.
 
 Captions are words on the picture, outlined with no box, in `--caption-*` tokens, sized against
 the player's width (`--caption-size`, never under `--caption-size-min`). The captions button opens
@@ -657,7 +712,11 @@ while it fills the screen and may reach past a small one otherwise.
 the rendition's bitrate, the bandwidth, the buffer ahead and the frames dropped of those shown
 (`getVideoPlaybackQuality`), each null where nobody can tell. `VideoStatsOverlay` in the media
 package draws a reading in a few lines, the app showing and hiding it through the player's
-`overlay`, which keeps it over the picture in full screen.
+`overlay`, which keeps it over the picture in full screen. What the app knows beside the player
+goes in it too, so it needs no overlay of its own: a `headline`, the verdict in a sentence ("Playing
+smoothly", "Buffering often"), in the title's place in its `tone`'s ink, and `rows` of its own facts
+under the player's (the server's encoding speed, its encoder and load, the segments ready, the other
+streams), shown before the first reading too.
 
 One sound is heard at a time: a player claims the sound as it starts to be heard and whoever held it
 is paused, through `claimSound` and `useOneSound` in `media/one-sound`. AudioPlayer, VideoPlayer and
@@ -724,7 +783,11 @@ reader put it while they scroll and for four seconds after (`useFollow`, with th
 `follow`). TrackList's `progress` shows how far the playing row has played, the time left in place
 of its length or a line along its foot. An album over several discs gives each track its `disc`, and
 the list heads each disc where its tracks begin ("Disc 1", "Disc 2", from `words.disc`); a list on
-one disc draws no head.
+one disc draws no head. `ReorderableTrackList`, a module of its own so a page that only lists tracks
+does not carry it, is the list a listener orders, a playlist or what a queue plays next: each row
+ends in a grip that drags it, the rest moving aside and the box scrolling at its edges, Escape
+putting it back, and the arrows move a focused grip's row a place; it calls `onMove(from, to)` and
+draws the order it is given.
 
 Lyrics are read by `parseLyrics` in `lrc`: LRC's timed lines, several stamps on one line, the
 `offset` tag and the metadata tags, word stamps dropped; plain text, or LRC stamped all at zero,

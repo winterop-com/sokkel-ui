@@ -36,7 +36,8 @@ export interface InlineEditProps<K extends EditorKind = 'text'> {
     label: string
     /**
      * Which control edits the value: a line of text (the default), several lines, a number, a date
-     * (`YYYY-MM-DD`; the number and the date null when emptied), or one of `options`.
+     * (`YYYY-MM-DD`), a time of day (`HH:mm`; the number, the date and the time null when emptied),
+     * or one of `options`.
      */
     editor?: K
     /** The choices a `select` offers. */
@@ -72,7 +73,7 @@ export interface InlineEditProps<K extends EditorKind = 'text'> {
 
 /**
  * A value shown as text that turns into an editor on a press, Enter or F2, and back once saved.
- * Enter saves a line of text, a number, a date or a choice; a text of several lines keeps Enter for a new
+ * Enter saves a line of text, a number, a date, a time or a choice; a text of several lines keeps Enter for a new
  * line and saves on ⌘ or Ctrl with Enter or with its Save button. Escape drops what was typed, and
  * leaving the editor saves it (or drops it, with `blur="cancel"`). An unchanged value closes with
  * no save.
@@ -80,8 +81,9 @@ export interface InlineEditProps<K extends EditorKind = 'text'> {
  * The app's `onSave` runs the save: while its promise runs the editor holds the typed value with
  * a spinner, and a rejection keeps the editor open on it with a critical edge and the rejection's
  * message in the mark at its end, opened at once. Typing clears the refusal; leaving an unchanged
- * refused value does not save it again. A number or a date is typed into `NumberField` or
- * `DateField` drawn bare, the date with its calendar; text either cannot read, or a value
+ * refused value does not save it again. A number, a date or a time is typed into `NumberField`,
+ * `DateField` or `TimeField` drawn bare, the date with its calendar and the time with its list of
+ * times; text none of them can read, or a value
  * `validate` refuses, is refused the same way before the app is asked.
  *
  * `variant="field"` sizes the value and its editor alike, so nothing moves as it opens;
@@ -98,7 +100,7 @@ export function InlineEdit<K extends EditorKind = 'text'>(props: InlineEditProps
     const validate = props.validate as ((value: EditValue) => string | null | undefined) | undefined
     const display = props.display as ((value: EditValue) => ReactNode) | undefined
 
-    const [own, setOwn] = useState<EditValue>(props.defaultValue ?? (kind === 'number' || kind === 'date' ? null : ''))
+    const [own, setOwn] = useState<EditValue>(props.defaultValue ?? (kind === 'number' || kind === 'date' || kind === 'time' ? null : ''))
     const value: EditValue = props.value !== undefined ? props.value : own
     const still = typeof defaultEditing === 'object' ? defaultEditing : undefined
     const [state, dispatch] = useReducer(
@@ -205,7 +207,7 @@ export function InlineEdit<K extends EditorKind = 'text'>(props: InlineEditProps
             className={cn(
                 'min-w-0 flex-1',
                 kind === 'multiline' ? 'break-words whitespace-pre-wrap' : title ? 'break-words' : 'truncate',
-                kind === 'number' && 'tabular-nums',
+                (kind === 'number' || kind === 'time') && 'tabular-nums',
                 empty && 'text-muted-foreground',
             )}
         >

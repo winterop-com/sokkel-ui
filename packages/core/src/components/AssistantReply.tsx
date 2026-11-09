@@ -1,6 +1,5 @@
 import { IconButton } from './IconButton'
 import {
-    Brain,
     Check,
     ChevronLeft,
     ChevronRight,
@@ -14,10 +13,11 @@ import {
     ThumbsDown,
     ThumbsUp,
 } from 'lucide-react'
-import { Children, useState, type ReactNode } from 'react'
+import { Children, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { ConfirmCard, type ConfirmCardProps } from './ConfirmCard'
+import { Reasoning, wordCount } from './reasoning'
 import { Markdown, type InlineCode, type MarkdownWords } from './Markdown'
 import { useCopy } from '../hooks/use-copy'
 import { Problem } from './Problem'
@@ -29,7 +29,7 @@ import { Card, CardContent, CardFooter, CardHeader } from './ui/card'
 import { Marker, MarkerContent, MarkerIcon } from './ui/marker'
 import { MessageFooter, MessageHeader } from './ui/message'
 import { Spinner } from './ui/spinner'
-import { Trace, TraceCollapsible, TraceCollapsibleContent, TraceCollapsibleTrigger, TraceIcon, TraceLine, TraceTitle } from './ui/trace'
+import { Trace, TraceLine, TraceTitle } from './ui/trace'
 import { AudioPlayer, type AudioPlayerWords } from './media/AudioPlayer'
 import { SpeakButton, type SpeakAudio, type SpeakButtonWords } from './media/SpeakButton'
 
@@ -91,6 +91,8 @@ export interface AssistantReplyWords {
     markdown: Partial<MarkdownWords>
 }
 
+export { wordCount }
+
 const plural = (count: number, word: string) => `${String(count)} ${word}${count === 1 ? '' : 's'}`
 
 const WORDS: AssistantReplyWords = {
@@ -123,11 +125,6 @@ const WORDS: AssistantReplyWords = {
     markdown: {},
 }
 
-/** How many words a text holds, markdown marks and all. */
-export function wordCount(text: string): number {
-    return text.split(/\s+/).filter((word) => /[\p{L}\p{N}]/u.test(word)).length
-}
-
 /** The answer read aloud: a recording the model made of it. */
 export interface AssistantReplySpeech {
     src: string
@@ -140,32 +137,6 @@ export interface AssistantReplySpeech {
 /** Whether React would draw anything for a node: `false`, `null`, `undefined` and `''` draw nothing. */
 function shown(node: ReactNode): boolean {
     return Children.toArray(node).some((child) => child !== '')
-}
-
-/**
- * The model's thinking, folded behind one line that counts its words. While it is still being
- * written it is open, its line says Thinking with a shimmer, and the text grows; once the answer
- * begins it folds away, and a press opens it again.
- */
-function Reasoning({ text, thinking, math, words }: { text: string; thinking: boolean; math: boolean; words: AssistantReplyWords }) {
-    const [open, setOpen] = useState(false)
-    return (
-        <Trace data-slot="assistant-reasoning">
-            <TraceCollapsible open={thinking || open} onOpenChange={(next) => setOpen(next)}>
-                <TraceCollapsibleTrigger>
-                    <TraceLine status={thinking ? 'running' : undefined}>
-                        <TraceIcon>
-                            <Brain />
-                        </TraceIcon>
-                        <TraceTitle>{thinking ? words.thinking : words.thoughtFor(wordCount(text))}</TraceTitle>
-                    </TraceLine>
-                </TraceCollapsibleTrigger>
-                <TraceCollapsibleContent>
-                    <Markdown content={text} streaming={thinking} math={math} className="text-muted-foreground" words={words.markdown} />
-                </TraceCollapsibleContent>
-            </TraceCollapsible>
-        </Trace>
-    )
 }
 
 /** The inline-code look of each layout. */
@@ -251,7 +222,7 @@ export interface AssistantReplyProps {
  *
  * `reasoning`, the model's thinking, folds between the tools and the answer behind a line that
  * counts its words; while it streams with no answer yet it stands open and grows. A streaming reply
- * with nothing to show yet, no thinking, no calls and no answer, says Thinking with a shimmer
+ * with nothing to show yet, no thinking, no calls and no answer, says Thinking, shimmering,
  * instead of an empty card. `speech` puts the answer read aloud in a player under it; `speak`
  * instead fetches it on demand from Read aloud in the footer.
  *
@@ -324,7 +295,14 @@ export function AssistantReply({
                     </TraceLine>
                 </Trace>
             )}
-            {thought && <Reasoning text={reasoning} thinking={streaming && !written} math={math} words={words} />}
+            {thought && (
+                <Reasoning
+                    text={reasoning}
+                    thinking={streaming && !written}
+                    math={math}
+                    words={{ thinking: words.thinking, thoughtFor: words.thoughtFor, markdown: words.markdown }}
+                />
+            )}
             {written && (
                 <Markdown
                     content={content}

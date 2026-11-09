@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import {
+    CheckIcon,
     CopyIcon,
     EllipsisVerticalIcon,
     ExternalLinkIcon,
@@ -27,6 +28,18 @@ import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { Checkbox } from '@winterop-com/sokkel-ui/primitives/checkbox'
+import {
+    Empty as EmptyBox,
+    EmptyContent,
+    EmptyDescription,
+    EmptyHeader,
+    EmptyMedia,
+    EmptyTitle,
+} from '@winterop-com/sokkel-ui/primitives/empty'
+import { DueText } from '@winterop-com/sokkel-ui/DueText'
+import { PersonAvatar } from '@winterop-com/sokkel-ui/PersonAvatar'
+import { saveTask, TASK_PEOPLE, TASK_PROJECTS, taskDate, type TaskRow, TASKS, TASKS_TODAY } from '../fixtures/tasks'
 import { type Album, makeAlbums } from '../fixtures/albums'
 import { Artwork } from '@winterop-com/sokkel-ui-media/Artwork'
 import { folderContents, type FolderRow, makeFolderTree, projectFolders } from '../fixtures/folders'
@@ -214,6 +227,14 @@ export const ShortList: StoryObj = {
     ),
 }
 
+/** A chevron at each row's end (`chevron`): a press opens the run's own page rather than a panel beside the list. */
+export const RowPages: StoryObj = {
+    name: 'Row pages',
+    render: () => (
+        <DataTable variant="list" columns={LIST_COLUMNS} rows={LIST_RUNS} rowKey={(run) => run.id} onOpen={() => undefined} chevron />
+    ),
+}
+
 /** Only a failed run can be retried; every other row's actions are empty. */
 const listActions = (run: ListRun): DataAction[] =>
     run.state === 'failed' ? [{ id: 'retry', label: 'Retry', icon: <RotateCcwIcon />, onSelect: () => undefined }] : []
@@ -296,6 +317,116 @@ export const GroupedList: StoryObj = {
         />
     ),
 }
+
+const TODAY = taskDate(TASKS_TODAY)
+const PEOPLE_OPTIONS = TASK_PEOPLE.map((person) => ({ value: person }))
+const PROJECT_OPTIONS = TASK_PROJECTS.map((project) => ({ value: project }))
+
+/** Tidevann's tasks in a list that stacks compact: each edited in place, done from its box. */
+function TaskList() {
+    const [tasks, setTasks] = useState(TASKS)
+    const put = (task: TaskRow, patch: Partial<TaskRow>) =>
+        setTasks((all) => all.map((one) => (one.id === task.id ? { ...one, ...patch } : one)))
+    const change = (task: TaskRow, patch: Partial<TaskRow>) => saveTask().then(() => put(task, patch))
+    const columns: DataColumn<TaskRow>[] = [
+        {
+            id: 'done',
+            header: 'Done',
+            width: '3rem',
+            resizable: false,
+            stack: 'lead',
+            cell: (task) => (
+                <Checkbox
+                    aria-label={task.done ? `Reopen ${task.title}` : `Mark ${task.title} done`}
+                    checked={task.done}
+                    onCheckedChange={(done) => put(task, { done })}
+                />
+            ),
+        },
+        {
+            id: 'title',
+            header: 'Title',
+            width: 'minmax(14rem,1fr)',
+            cell: (task) => <span className={task.done ? 'text-muted-foreground line-through' : undefined}>{task.title}</span>,
+            edit: {
+                editor: 'text',
+                value: (task) => task.title,
+                validate: (title) => (title.trim() === '' ? 'A task needs a title.' : null),
+                save: (task, title) => change(task, { title: title.trim() }),
+            },
+        },
+        {
+            id: 'due',
+            header: 'Due',
+            width: '7rem',
+            cell: (task) => <DueText date={task.due === null ? undefined : taskDate(task.due)} now={TODAY} done={task.done} />,
+            edit: { editor: 'date', value: (task) => task.due, save: (task, due) => change(task, { due }) },
+        },
+        {
+            id: 'assignee',
+            header: 'Assignee',
+            width: '8rem',
+            cell: (task) => (
+                <Row gap="2xs" inline>
+                    <PersonAvatar name={task.assignee} size="2xs" />
+                    {task.assignee}
+                </Row>
+            ),
+            edit: {
+                editor: 'select',
+                options: PEOPLE_OPTIONS,
+                value: (task) => task.assignee,
+                save: (task, assignee) => change(task, { assignee: assignee as TaskRow['assignee'] }),
+            },
+        },
+        {
+            id: 'project',
+            header: 'Project',
+            width: '7rem',
+            cell: (task) => task.project,
+            edit: {
+                editor: 'select',
+                options: PROJECT_OPTIONS,
+                value: (task) => task.project,
+                save: (task, project) => change(task, { project: project as TaskRow['project'] }),
+            },
+        },
+    ]
+    return (
+        <DataTable
+            variant="list"
+            stackLayout="compact"
+            columns={columns}
+            rows={tasks}
+            rowKey={(task) => task.id}
+            rowActions={(task) => [
+                {
+                    id: 'done',
+                    label: task.done ? 'Reopen' : 'Mark done',
+                    icon: <CheckIcon />,
+                    onSelect: () => put(task, { done: !task.done }),
+                },
+                { id: 'line', separator: true },
+                {
+                    id: 'delete',
+                    label: 'Delete',
+                    icon: <Trash2Icon />,
+                    destructive: true,
+                    onSelect: () => setTasks((all) => all.filter((one) => one.id !== task.id)),
+                },
+            ]}
+            editing={tableEditing}
+        />
+    )
+}
+
+/**
+ * Tidevann's tasks as a list whose rows stack compact on a narrow box (see it at a phone's width):
+ * the done box before the title, and the due day, the assignee and the project in one quiet line
+ * under it. A press on the title or on a detail opens its editor in that line's place; each save
+ * takes a moment. Wide, it is a list with the same cells edited in place.
+ */
+export const CompactList: StoryObj = { name: 'Compact list', render: () => <TaskList /> }
 
 /** A hundred runs: the whole table at a size that needs no scrolling to see its parts. */
 export const Hundred: StoryObj = { parameters: { frame: 'none' }, name: '100 rows', render: () => <Runs count={100} /> }
@@ -1071,5 +1202,35 @@ export const Empty: StoryObj = {
                 words={{ empty: 'No runs match the search.' }}
             />
         </Stack>
+    ),
+}
+
+/** A list with nothing in it yet, saying so with an icon, a sentence and the way to make the first. */
+export const EmptyState: StoryObj = {
+    name: 'Empty state',
+    render: () => (
+        <DataTable
+            variant="list"
+            columns={LIST_COLUMNS}
+            rows={[]}
+            rowKey={(run) => run.id}
+            empty={
+                <EmptyBox>
+                    <EmptyHeader>
+                        <EmptyMedia variant="icon">
+                            <PlayIcon />
+                        </EmptyMedia>
+                        <EmptyTitle>No runs yet</EmptyTitle>
+                        <EmptyDescription>Runs show here once a job has started.</EmptyDescription>
+                    </EmptyHeader>
+                    <EmptyContent>
+                        <Button size="sm">
+                            <PlayIcon />
+                            Run a job
+                        </Button>
+                    </EmptyContent>
+                </EmptyBox>
+            }
+        />
     ),
 }

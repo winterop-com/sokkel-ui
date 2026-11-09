@@ -29,6 +29,7 @@ import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
 import { TrackList, type Track } from '@winterop-com/sokkel-ui-media/TrackList'
 import { VideoPlayer } from '@winterop-com/sokkel-ui/media/VideoPlayer'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
+import { placeCommands } from '@winterop-com/sokkel-ui/lib/commands'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
@@ -38,6 +39,7 @@ import { StarButton } from '@winterop-com/sokkel-ui/StarButton'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
 import { Toolbar } from '@winterop-com/sokkel-ui/Toolbar'
 import { TopBar, type Crumb } from '@winterop-com/sokkel-ui/TopBar'
+import { Tree, type TreeNode } from '@winterop-com/sokkel-ui/Tree'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { DropdownMenuItem } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
 import { Toaster } from '@winterop-com/sokkel-ui/primitives/sonner'
@@ -173,13 +175,15 @@ const EPISODES: Track[] = [
     duration: episode.duration,
 }))
 
-function groups(view: View): RailGroup[] {
-    const entry = (id: string, label: string, icon: LucideIcon, active = false) => ({ id, label, icon, href: '#', active })
+/** The rail's places, the one shown (`place`, or the view's) marked active. */
+function groups(view: View, place?: string): RailGroup[] {
+    const shown = place ?? (view === 'video' || view === 'series' ? 'series' : 'albums')
+    const entry = (id: string, label: string, icon: LucideIcon) => ({ id, label, icon, href: `#${id}`, active: id === shown })
     return [
         {
             id: 'library',
             entries: [
-                entry('albums', 'Albums', Disc3, view !== 'video' && view !== 'series'),
+                entry('albums', 'Albums', Disc3),
                 entry('artists', 'Artists', MicVocal),
                 entry('tracks', 'Tracks', Music2),
                 entry('favorites', 'Favorites', Star),
@@ -198,7 +202,7 @@ function groups(view: View): RailGroup[] {
         {
             id: 'watch',
             title: 'Watch',
-            entries: [entry('films', 'Films', Clapperboard), entry('series', 'Series', Tv, view === 'video' || view === 'series')],
+            entries: [entry('films', 'Films', Clapperboard), entry('series', 'Series', Tv)],
         },
     ]
 }
@@ -299,7 +303,11 @@ function LibraryPage() {
     )
 }
 
-function AlbumPage() {
+/**
+ * One album's page, its tracks the one playing marked when it is the album playing, more by its
+ * artist from `shelf`, and the trail up through `from` and the artist.
+ */
+function AlbumPage({ album = PLAYING, shelf = ALBUMS, from = 'Music' }: { album?: Release; shelf?: Release[]; from?: string }) {
     const total = TRACKS.reduce((sum, track) => sum + track.duration, 0)
     const [starred, setStarred] = useState(true)
     const [stars, setStars] = useState<ReadonlySet<string>>(() => new Set(STARRED))
@@ -315,16 +323,16 @@ function AlbumPage() {
             <PageHeader
                 onBack={() => undefined}
                 trail={[
-                    { label: 'Music', href: '#' },
-                    { label: PLAYING.artist, href: '#' },
+                    { label: from, href: '#' },
+                    { label: album.artist, href: '#' },
                 ]}
-                title={PLAYING.title}
+                title={album.title}
                 meta={
                     <MetaLine
                         size="sm"
                         items={[
-                            <span className="font-medium text-foreground">{PLAYING.artist}</span>,
-                            PLAYING.year,
+                            <span className="font-medium text-foreground">{album.artist}</span>,
+                            album.year,
                             `${String(TRACKS.length)} tracks, ${String(Math.round(total / 60))} min`,
                         ]}
                     />
@@ -346,7 +354,7 @@ function AlbumPage() {
             <Row gap="2xl" align="start" stackBelowRoom="2xl">
                 <Row gap="lg" align="end" wrap className="shrink-0 @2xl:sticky @2xl:top-0 @2xl:w-44 @4xl:w-60">
                     <span className="block size-32 shrink-0 overflow-hidden rounded-surface shadow-xs ring-1 ring-border @2xl:aspect-square @2xl:size-auto @2xl:w-full">
-                        <Artwork cover={PLAYING.cover} />
+                        <Artwork cover={album.cover} />
                     </span>
                     <Row>
                         <Button size="sm">
@@ -362,8 +370,8 @@ function AlbumPage() {
                 <Stack gap="2xl" className="flex-1">
                     <TrackList
                         tracks={ALBUM_TRACKS}
-                        current={`t${String(CURRENT + 1)}`}
-                        playing
+                        current={album.id === PLAYING.id ? `t${String(CURRENT + 1)}` : undefined}
+                        playing={album.id === PLAYING.id}
                         onPlay={() => undefined}
                         actions={(track) => (
                             <>
@@ -375,8 +383,8 @@ function AlbumPage() {
                         )}
                     />
                     <Stack as="section">
-                        <h2 className="text-sm font-medium">More by {PLAYING.artist}</h2>
-                        <AlbumGrid albums={ALBUMS.filter((album) => album.artist === PLAYING.artist && album.id !== PLAYING.id)} />
+                        <h2 className="text-sm font-medium">More by {album.artist}</h2>
+                        <AlbumGrid albums={shelf.filter((other) => other.artist === album.artist && other.id !== album.id)} />
                     </Stack>
                 </Stack>
             </Row>
@@ -410,7 +418,14 @@ function QueueBody({ history = false }: { history?: boolean }) {
                     </div>
                 </Row>
             </PanelSection>
-            <PanelSection title={`Up next, ${String(NEXT_UP.length)} tracks, ${String(Math.round(next / 60))} min`}>
+            <PanelSection
+                title={`Up next, ${String(NEXT_UP.length)} tracks, ${String(Math.round(next / 60))} min`}
+                actions={
+                    <Button size="xs" variant="ghost">
+                        Clear
+                    </Button>
+                }
+            >
                 <TrackList tracks={NEXT_UP} variant="plain" onPlay={() => undefined} className="-mx-2" />
             </PanelSection>
             <PanelSection title="Then, from Morning run">
@@ -612,6 +627,177 @@ function MusicApp({ view, player, fullscreen = false }: { view: View; player?: n
     )
 }
 
+/** More records on the shelf, by artists the album grid leaves out, so the library's tree is taller than the rail. */
+const MORE: Release[] = [
+    { id: 'shoals', title: 'Shoals', artist: 'Brackwater Duo', year: 2024, cover: { motif: 'wave', from: 'teal', to: 'blue' } },
+    { id: 'neap-tide', title: 'Neap Tide', artist: 'Brackwater Duo', year: 2021, cover: { motif: 'bands', from: 'blue', to: 'violet' } },
+    { id: 'sea-glass', title: 'Sea Glass', artist: 'Eelgrass', year: 2023, cover: { motif: 'dots', from: 'jade', to: 'teal' } },
+    { id: 'quayside', title: 'Quayside', artist: 'Eelgrass', year: 2020, cover: { motif: 'rings', from: 'amber', to: 'pink' } },
+    { id: 'long-swell', title: 'Long Swell', artist: 'Eelgrass', year: 2018, cover: { motif: 'wave', from: 'violet', to: 'blue' } },
+    { id: 'ebb-and-flow', title: 'Ebb and Flow', artist: 'Kelpwood', year: 2023, cover: { motif: 'sun', from: 'green', to: 'amber' } },
+    {
+        id: 'lantern-rock',
+        title: 'Lantern Rock',
+        artist: 'Northwater Choir',
+        year: 2022,
+        cover: { motif: 'peaks', from: 'coral', to: 'amber' },
+    },
+    { id: 'estuary', title: 'Estuary', artist: 'Saltmarsh Ensemble', year: 2025, cover: { motif: 'bands', from: 'teal', to: 'jade' } },
+    { id: 'skerries', title: 'Skerries', artist: 'Saltmarsh Ensemble', year: 2019, cover: { motif: 'rings', from: 'blue', to: 'teal' } },
+    { id: 'pilot-light', title: 'Pilot Light', artist: 'The Tidelines', year: 2024, cover: { motif: 'sun', from: 'pink', to: 'coral' } },
+    { id: 'driftwood', title: 'Driftwood', artist: 'The Tidelines', year: 2022, cover: { motif: 'peaks', from: 'jade', to: 'green' } },
+    {
+        id: 'shingle-beach',
+        title: 'Shingle Beach',
+        artist: 'The Tidelines',
+        year: 2017,
+        cover: { motif: 'dots', from: 'violet', to: 'pink' },
+    },
+]
+
+/** Every record in the library, the album grid's and the rest. */
+const SHELF: Release[] = [...ALBUMS, ...MORE]
+
+const artistId = (artist: string) => `artist:${artist.toLowerCase().replaceAll(' ', '-')}`
+
+/** The library as the rail's tree: each artist by name, its albums under it, newest first. */
+const LIBRARY: TreeNode[] = [...new Set(SHELF.map((album) => album.artist))]
+    .sort((one, other) => one.localeCompare(other))
+    .map((artist) => {
+        const albums = SHELF.filter((album) => album.artist === artist).sort((one, other) => other.year - one.year)
+        return {
+            id: artistId(artist),
+            label: artist,
+            meta: albums.length,
+            children: albums.map((album) => ({ id: album.id, label: album.title, meta: album.year })),
+        }
+    })
+
+/** An artist's page: their albums as covers. */
+function ArtistPage({ artist }: { artist: string }) {
+    const albums = SHELF.filter((album) => album.artist === artist).sort((one, other) => other.year - one.year)
+    return (
+        <Page>
+            <PageHeader trail={[{ label: 'Artists', href: '#' }]} title={artist} count={`${String(albums.length)} albums`} />
+            <AlbumGrid albums={albums} />
+        </Page>
+    )
+}
+
+/** What a place other than Artists shows here: its name over the album grid. */
+function PlacePage({ label }: { label: string }) {
+    return (
+        <Page>
+            <PageHeader title={label} count={`${String(ALBUMS.length)} albums`} />
+            <AlbumGrid albums={ALBUMS} />
+        </Page>
+    )
+}
+
+const PLACES = groups('library')
+const labelOf = (place: string) => PLACES.flatMap((group) => group.entries).find((entry) => entry.id === place)?.label ?? place
+
+/**
+ * The library in the rail itself: on Artists the rail holds a tree of the artists and their albums
+ * with its search, under the row back to every place, and the album chosen in the tree opens in the
+ * page. `collapsed` holds the rail narrowed to the places' icons, and `drawer` opens it as the
+ * drawer on a phone.
+ */
+function LibraryApp({ collapsed: start = false, drawer = false }: { collapsed?: boolean; drawer?: boolean }) {
+    const [collapsed, setCollapsed] = useState(start)
+    const [drawerOpen, setDrawerOpen] = useState(drawer)
+    const [place, setPlace] = useState('artists')
+    const [chosen, setChosen] = useState(PLAYING.id)
+    const [query, setQuery] = useState('')
+    const album = SHELF.find((each) => each.id === chosen)
+    const artist = LIBRARY.find((node) => node.id === chosen)?.label ?? album?.artist ?? PLAYING.artist
+    const go = (id: string) => setPlace(id)
+    const library = place === 'artists'
+    // The album's and the artist's pages carry their own trail, as the album page does in the app.
+    const trail: Crumb[] = library ? [] : [{ label: labelOf(place) }]
+    return (
+        <TooltipProvider>
+            <Shell
+                route={`${place}:${chosen}`}
+                drawerOpen={drawerOpen}
+                onDrawerOpenChange={setDrawerOpen}
+                palette={placeCommands(PLACES, (href) => go(href.slice(1)))}
+                rail={
+                    <Rail
+                        mark={<TidevannMark />}
+                        name="Tidevann"
+                        groups={groups('library', place)}
+                        collapsed={collapsed}
+                        onCollapsedChange={setCollapsed}
+                        renderLink={(entry, children, className) => (
+                            <a
+                                href={entry.href}
+                                aria-current={entry.active ? 'page' : undefined}
+                                className={className}
+                                onClick={(event) => {
+                                    event.preventDefault()
+                                    if (entry.href !== undefined) go(entry.href.slice(1))
+                                }}
+                            >
+                                {children}
+                            </a>
+                        )}
+                        body={
+                            library
+                                ? {
+                                      title: 'Artists',
+                                      search: <SearchField value={query} onChange={setQuery} />,
+                                      content: (
+                                          <Tree
+                                              label="Artists"
+                                              nodes={LIBRARY}
+                                              query={query}
+                                              selected={[chosen]}
+                                              onSelect={([id]) => {
+                                                  if (id !== undefined) setChosen(id)
+                                              }}
+                                              defaultExpanded={[artistId(artist)]}
+                                          />
+                                      ),
+                                  }
+                                : undefined
+                        }
+                        foot={
+                            <AccountMenu
+                                name="ada"
+                                image={pictureOf('ada')}
+                                where="tidevann.example.org"
+                                collapsed={collapsed}
+                                onSettings={() => undefined}
+                            />
+                        }
+                    />
+                }
+                top={<TopBar trail={trail} />}
+                foot={
+                    <StatusLine note="Playing on this computer">
+                        <StatusItem label="library">{`${String(SHELF.length)} albums`}</StatusItem>
+                    </StatusLine>
+                }
+                bottom={<Player queueOpen={false} />}
+            >
+                {library ? (
+                    album === undefined ? (
+                        <ArtistPage artist={artist} />
+                    ) : (
+                        <AlbumPage album={album} shelf={SHELF} from="Artists" />
+                    )
+                ) : place === 'series' || place === 'films' ? (
+                    <SeriesPage />
+                ) : (
+                    <PlacePage label={labelOf(place)} />
+                )}
+            </Shell>
+            <Toaster />
+        </TooltipProvider>
+    )
+}
+
 const meta: Meta = { title: 'Apps/Music' }
 export default meta
 
@@ -626,7 +812,25 @@ export const Library: StoryObj = { name: 'Library', render: () => <MusicApp view
  */
 export const Album: StoryObj = { name: 'Album', render: () => <MusicApp view="album" /> }
 
-/** The queue in the side panel beside the album, its button pressed in the bar; on a phone the queue is the page. */
+/**
+ * The library in the rail itself, in one column: on Artists the rail holds a tree of the artists
+ * and their albums in place of its places, with a search that stays as the tree scrolls, under All
+ * places, the row that shows every place again. The album chosen in the tree opens in the page, and
+ * an artist chosen opens their albums. A place chosen from All places leaves the library, and
+ * Artists brings it back; the palette still goes to every place. The head, the width, the edge
+ * and the account stay as they are on every other page.
+ */
+export const LibraryRail: StoryObj = { name: 'Library rail', render: () => <LibraryApp /> }
+
+/**
+ * The app holds the rail collapsed: a tree has no icon form, so the rail draws the places' icons,
+ * Artists marked, and the mark or the edge expands it back to the library. On a phone the rail
+ * opens as the drawer, here open, drawn expanded with the library in it; an album chosen there
+ * opens in the page and closes the drawer.
+ */
+export const LibraryCollapsed: StoryObj = { name: 'Library collapsed', render: () => <LibraryApp collapsed drawer /> }
+
+/** The queue in the side panel beside the album, its button pressed in the bar, with Clear at the end of Up next's heading; on a phone the queue is the page. */
 export const Queue: StoryObj = { name: 'Queue', render: () => <MusicApp view="queue" /> }
 
 /**

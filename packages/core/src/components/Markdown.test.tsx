@@ -55,3 +55,42 @@ describe('Markdown parts', () => {
         expect(html).toContain('data-slot="code-block"')
     })
 })
+
+const NOTE = [
+    '## Steps',
+    '',
+    'See [[Nightly export]], [[harbor|the harbor project]] and [[Nightly export#Steps]] for #runbook and #on-call.',
+    '',
+    'A [[Missing note]] and `[[code]]` and [a link](https://example.org/#top).',
+].join('\n')
+
+describe('Markdown links', () => {
+    const links = { onOpen: () => undefined, exists: (target: string) => target !== 'Missing note', onTag: () => undefined }
+
+    it('draws each link between notes as a link to follow, with its words', () => {
+        const html = renderToStaticMarkup(<Markdown content={NOTE} links={links} />)
+        expect(html).toContain('<a href="#" data-wiki-link="Nightly export" class="">Nightly export</a>')
+        expect(html).toContain('data-wiki-link="harbor" class="">the harbor project</a>')
+        expect(html).toContain('data-heading="Steps" class="">Nightly export › Steps</a>')
+        expect(html).toContain('data-wiki-link="Missing note" class="opacity-60">')
+        expect(html).toContain('<code>[[code]]</code>')
+        expect(html).toContain('target="_blank"')
+    })
+
+    it('draws tags as chips only when they are followed', () => {
+        expect(renderToStaticMarkup(<Markdown content={NOTE} links={links} />)).toContain('data-tag="runbook"')
+        const untagged = renderToStaticMarkup(<Markdown content={NOTE} links={{ onOpen: links.onOpen }} />)
+        expect(untagged).not.toContain('data-tag')
+        expect(untagged).toContain('for #runbook and #on-call.')
+    })
+
+    it('leaves the brackets as text without links', () => {
+        expect(renderToStaticMarkup(<Markdown content={NOTE} />)).toContain('See [[Nightly export]]')
+    })
+
+    it('keeps the links with raw HTML allowed and sanitized', () => {
+        const html = renderToStaticMarkup(<Markdown content={NOTE} links={links} allowHtml />)
+        expect(html).toContain('data-wiki-link="Nightly export"')
+        expect(html).toContain('data-tag="on-call"')
+    })
+})

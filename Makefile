@@ -1,7 +1,7 @@
 # The common commands, as `make <target>`. Everything runs through bun; `make help` lists them.
 
 .DEFAULT_GOAL := help
-.PHONY: help install tokens storybook build size typecheck lint fmt fmt-check test check storybook-build baselines visual visual-update screenshots-ci layout examples examples-list clean
+.PHONY: help install tokens storybook build size typecheck lint fmt fmt-check test check storybook-build baselines visual visual-update screenshots-ci layout examples examples-list examples-site clean
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "} {printf "  %-16s %s\n", $$1, $$2}'
@@ -63,6 +63,9 @@ EXAMPLE_TARGETS := web dev electron tauri tauri-build
 examples: build ## Build every example's web app and check its desktop shells, as CI does
 	@for name in $(EXAMPLES); do $(MAKE) -C examples/$$name check || exit 1; done
 
+examples-site: build ## Build every example's web app into examples-static/, with an index and their stills, as Pages publishes them
+	bun scripts/examples-site.ts --shots
+
 examples-list: ## List the examples and what make runs for each, e.g. make tasks-tauri
 	@for name in $(EXAMPLES); do printf '  %-10s make %s-{%s}\n' $$name $$name "$$(echo $(EXAMPLE_TARGETS) | tr ' ' ,)"; done
 
@@ -71,4 +74,4 @@ $(foreach target,$(EXAMPLE_TARGETS),$(addsuffix -$(target),$(EXAMPLES))): build
 	$(MAKE) -C examples/$(firstword $(subst -, ,$@)) $(patsubst $(firstword $(subst -, ,$@))-%,%,$@)
 
 clean: ## Remove what the builds made
-	rm -rf packages/*/dist storybook-static test-results
+	rm -rf packages/*/dist storybook-static examples-static test-results

@@ -87,6 +87,11 @@ dashboard panels draw what dashboards draw most, each with its own props:
 | `DashboardGrid`, `DashboardRow`                     | The grid panels sit in, and a collapsible group of them under a heading          | Patterns/Dashboard panels, Apps/Dashboards |
 | `VariablesBar`, `TimeRangePicker`, `RefreshControl` | The bar of variables, the range and the refresh across a dashboard's top         | Patterns/Dashboard panels, Apps/Dashboards |
 
+Every panel takes a `menu` of dropdown items behind a more button in its head, and the panels that
+open in a window take `expanded` with `onExpandedChange`, so the app's own menu can open one as
+its expand button does (Patterns/Dashboard panels, Panel menus). `RefreshControl` offers the app's
+own `intervals` and, with `onPausedChange`, a pause that keeps the interval for when it resumes.
+
 ## The spec
 
 What a chart reads. Each kind reads some of these fields; its row in the tables below says which.
@@ -104,6 +109,7 @@ What a chart reads. Each kind reads some of these fields; its row in the tables 
 | `order`       | Categories in this order first.                                                                                              |
 | `seriesOrder` | Series in this order first.                                                                                                  |
 | `colors`      | A color token for a series or a category by its name, such as `status-failed`.                                               |
+| `palette`     | The color tokens series and categories take in turn where `colors` names none, in place of the theme's order.                |
 | `format`      | How a figure is written in tooltips and labels.                                                                              |
 | `unit`        | A unit written after each figure, such as `s` or `%`, or one per `y` field.                                                  |
 | `fieldNames`  | What a field is called where the chart names it.                                                                             |
@@ -165,6 +171,7 @@ appear in Storybook.
 | Kind       | For                                                                          | Reads                                                                               | Story            |
 | ---------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ---------------- |
 | `donut`    | A ring of slices, each its share of the whole, the total in its middle       | `x`, `y`, `aggregate`, `order`, `colors`, `format`, `unit`, `total`                 | Charts/Donut     |
+| `pie`      | The same slices as a whole circle, with no hole                              | `x`, `y`, `aggregate`, `order`, `colors`, `format`, `unit`                          | Charts/Donut     |
 | `rose`     | Categories around a circle, each wedge as long as its figure: hours, regions | `x`, `y`, `series`, `aggregate`, `order`, `seriesOrder`, `colors`, `format`, `unit` | Charts/Polar     |
 | `treemap`  | Nested boxes, each sized by its share, grouped by the fields of `path`       | `path`, `y`, `order`, `colors`, `format`, `unit`                                    | Charts/Hierarchy |
 | `sunburst` | Rings of the same nesting from the middle out; a click opens a slice         | `path`, `y`, `order`, `colors`, `format`, `unit`                                    | Charts/Hierarchy |

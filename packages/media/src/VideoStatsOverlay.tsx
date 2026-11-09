@@ -1,4 +1,5 @@
 import { X } from 'lucide-react'
+import type { ReactNode } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { formatBitrate, formatResolution, type VideoStats } from '@winterop-com/sokkel-ui/media/video-stats'
@@ -38,9 +39,38 @@ export const VIDEO_STATS_OVERLAY_WORDS: VideoStatsOverlayWords = {
     waiting: 'Waiting for the player',
 }
 
+/** How a headline reads: as plain news, or good, worrying or bad news, in the ink of each. */
+export type VideoStatsTone = 'neutral' | 'good' | 'warning' | 'critical'
+
+/** A fact the app knows beside the player's own, such as how fast its server encodes. */
+export interface VideoStatsRow {
+    label: string
+    /** Written as given, in the code face; a dash when nobody can tell yet, as the player's own say. */
+    value: string
+}
+
+const TONES: Record<VideoStatsTone, string | undefined> = {
+    neutral: undefined,
+    good: 'text-status-succeeded',
+    warning: 'text-terminal-warning',
+    critical: 'text-terminal-critical',
+}
+
 export interface VideoStatsOverlayProps {
     /** A reading from `useVideoStats`, or null before the first. */
     stats: VideoStats | null
+    /**
+     * A verdict in one sentence, such as "Playing smoothly" or "Buffering often: the link is slower
+     * than the stream", drawn in the title's place in `tone`'s ink, the rows under it as its evidence.
+     */
+    headline?: ReactNode
+    /** The headline's ink: `neutral` by default. */
+    tone?: VideoStatsTone
+    /**
+     * The app's own facts, after the player's, such as the server's encoding speed, its encoder and
+     * load, the segments ready and the other streams it serves. They show before the first reading too.
+     */
+    rows?: readonly VideoStatsRow[]
     /** Adds a close button, as when the app toggles the overlay from a key or a menu. */
     onClose?: () => void
     words?: Partial<VideoStatsOverlayWords>
@@ -52,9 +82,19 @@ export interface VideoStatsOverlayProps {
  * bitrate, the link's bandwidth as the engine measures it, the seconds buffered ahead and the
  * frames dropped. The app reads the stats with `useVideoStats` from the player's handle and shows
  * the overlay through `VideoPlayer`'s `overlay`, so it stays over the picture in full screen; a fact
- * nobody can tell (a plain file has no bandwidth estimate) is a dash, never a zero.
+ * nobody can tell (a plain file has no bandwidth estimate) is a dash, never a zero. An app that
+ * knows more says it too: a `headline` with its verdict in the title's place, and `rows` of its own
+ * facts under the player's, so it needs no overlay of its own.
  */
-export function VideoStatsOverlay({ stats, onClose, words: given, className }: VideoStatsOverlayProps) {
+export function VideoStatsOverlay({
+    stats,
+    headline,
+    tone = 'neutral',
+    rows: extra = [],
+    onClose,
+    words: given,
+    className,
+}: VideoStatsOverlayProps) {
     const words = { ...VIDEO_STATS_OVERLAY_WORDS, ...given }
     const none = words.unknown
     const rows: [string, string][] =
@@ -75,17 +115,23 @@ export function VideoStatsOverlay({ stats, onClose, words: given, className }: V
     if (stats !== null && stats.levels !== null && stats.levels > 1 && stats.level !== null) {
         rows.splice(2, 0, [words.level, `${String(stats.level + 1)} ${words.of} ${String(stats.levels)}`])
     }
+    for (const row of extra) rows.push([row.label, row.value])
+    const told = headline !== undefined && headline !== null && headline !== false
     return (
         <section
             aria-label={words.title}
             data-slot="video-stats-overlay"
             className={cn(
-                'w-64 max-w-full rounded-surface bg-terminal/80 py-1.5 pr-1.5 pl-3 text-xs text-terminal-foreground shadow-md backdrop-blur-sm',
+                'w-64 max-w-full overflow-y-auto rounded-surface bg-terminal/80 py-1.5 pr-1.5 pl-3 text-xs text-terminal-foreground shadow-md backdrop-blur-sm',
                 className,
             )}
         >
-            <div className="flex min-h-7 items-center gap-2">
-                <h2 className="min-w-0 flex-1 truncate font-medium">{words.title}</h2>
+            <div className="flex min-h-7 items-start gap-2">
+                {told ? (
+                    <p className={cn('min-w-0 flex-1 py-1 font-medium', TONES[tone])}>{headline}</p>
+                ) : (
+                    <h2 className="min-w-0 flex-1 self-center truncate font-medium">{words.title}</h2>
+                )}
                 {onClose !== undefined && (
                     <Button
                         variant="ghost"
@@ -98,12 +144,11 @@ export function VideoStatsOverlay({ stats, onClose, words: given, className }: V
                     </Button>
                 )}
             </div>
-            {stats === null ? (
-                <p className="pr-1.5 pb-1 text-terminal-muted">{words.waiting}</p>
-            ) : (
+            {stats === null && <p className="pr-1.5 pb-1 text-terminal-muted">{words.waiting}</p>}
+            {rows.length > 0 && (
                 <dl className="grid grid-cols-[auto_minmax(0,1fr)] items-baseline gap-x-3 pr-1.5 pb-1 font-mono">
-                    {rows.map(([name, value]) => (
-                        <div key={name} className="contents">
+                    {rows.map(([name, value], index) => (
+                        <div key={`${String(index)}-${name}`} className="contents">
                             <dt className="truncate font-sans text-terminal-muted">{name}</dt>
                             <dd className="truncate text-right tabular-nums" title={value}>
                                 {value}

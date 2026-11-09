@@ -109,6 +109,8 @@ export interface TimeSeriesPanelProps {
     subtitle?: ReactNode
     info?: ReactNode
     actions?: ReactNode
+    /** Dropdown menu items, behind the panel's more button. */
+    menu?: ReactNode
     /** The time of each value, written for a reader. */
     x: readonly string[]
     series: readonly PanelSeries[]
@@ -132,6 +134,9 @@ export interface TimeSeriesPanelProps {
     file?: string
     /** Expanding also takes the screen, as `WindowedPane`'s `fullscreen` does. */
     fullscreen?: boolean
+    /** Whether the panel is in its window, held from outside with `onExpandedChange`, as when the app's own menu opens it. */
+    expanded?: boolean
+    onExpandedChange?: (expanded: boolean) => void
     words?: Partial<ChartFrameWords>
     className?: string
 }
@@ -146,6 +151,7 @@ export function TimeSeriesPanel({
     subtitle,
     info,
     actions,
+    menu,
     x,
     series,
     unit,
@@ -166,6 +172,8 @@ export function TimeSeriesPanel({
     empty,
     file,
     fullscreen,
+    expanded,
+    onExpandedChange,
     words,
     className,
 }: TimeSeriesPanelProps) {
@@ -181,12 +189,15 @@ export function TimeSeriesPanel({
             subtitle={subtitle}
             info={info}
             actions={actions}
+            menu={menu}
             legend={legend === 'none' ? undefined : items}
             legendMode={legend === 'table' ? 'table' : 'list'}
             legendStats={legendStats}
             legendFormat={write}
             file={file}
             fullscreen={fullscreen}
+            expanded={expanded}
+            onExpandedChange={onExpandedChange}
             loading={loading}
             empty={empty}
             bodyClassName={bodyClassName}

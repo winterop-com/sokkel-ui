@@ -5,11 +5,11 @@ import { DownloadButton, type DownloadState } from '@winterop-com/sokkel-ui/Down
 import { Row } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
 
-/** A button that downloads something for keeping: idle, n of m with a cancel, and kept. */
+/** A button that downloads something for keeping: idle, n of m or a share with a cancel and a pause, paused, and kept. */
 const meta: Meta = { title: 'Patterns/Download button', parameters: { frame: 'column' } }
 export default meta
 
-/** The three states, held by the story. */
+/** The states, held by the story. */
 export const States: StoryObj = {
     render: () => (
         <Row gap="lg" align="start" wrap>
@@ -21,6 +21,12 @@ export const States: StoryObj = {
             </Specimen>
             <Specimen label="running, a share">
                 <DownloadButton state="running" value={0.62} onCancel={() => undefined} />
+            </Specimen>
+            <Specimen label="running, pausable">
+                <DownloadButton state="running" value={0.62} onPause={() => undefined} onCancel={() => undefined} />
+            </Specimen>
+            <Specimen label="paused">
+                <DownloadButton state="paused" value={0.62} onResume={() => undefined} onCancel={() => undefined} />
             </Specimen>
             <Specimen label="kept">
                 <DownloadButton state="kept" />
@@ -94,6 +100,44 @@ export const Live: StoryObj = {
                         setState('running')
                     }}
                     onCancel={() => setState('idle')}
+                />
+            </Row>
+        )
+    },
+}
+
+/**
+ * A large file downloaded by its bytes: press to start, the share fills, pause holds it where it
+ * is and resume carries on from there; cancel starts over, and it is kept once done.
+ */
+export const Pausing: StoryObj = {
+    render: function Render() {
+        const [state, setState] = useState<DownloadState>('idle')
+        const [share, setShare] = useState(0)
+        useEffect(() => {
+            if (state !== 'running') return
+            if (share >= 1) {
+                setState('kept')
+                return
+            }
+            const timer = setTimeout(() => setShare(Math.min(1, share + 0.04)), 250)
+            return () => clearTimeout(timer)
+        }, [state, share])
+        return (
+            <Row>
+                <DownloadButton
+                    state={state}
+                    value={share}
+                    onDownload={() => {
+                        setShare(0)
+                        setState('running')
+                    }}
+                    onPause={() => setState('paused')}
+                    onResume={() => setState('running')}
+                    onCancel={() => {
+                        setShare(0)
+                        setState('idle')
+                    }}
                 />
             </Row>
         )

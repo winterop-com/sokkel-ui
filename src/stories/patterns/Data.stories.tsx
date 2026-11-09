@@ -61,6 +61,7 @@ function Facts() {
 
 const RUNS = [212, 230, 198, 241, 255, 249, 262, 270, 251, 266, 281, 290, 284, 302]
 const FAILURES = [6.1, 5.4, 7.2, 4.9, 4.1, 4.4, 3.8, 3.2, 3.9, 3.1, 2.7, 2.9, 2.2, 1.8]
+const DURATIONS = [3.4, 3.5, 3.3, 3.6, 3.5, 3.7, 3.6, 3.8, 3.7, 3.9, 4.0, 3.9, 4.1, 4.2]
 
 function Numbers() {
     return (
@@ -83,7 +84,15 @@ function Numbers() {
                     note="vs yesterday"
                     trend={<Sparkline values={FAILURES} tone="good" label="Failure rate, last 14 days" />}
                 />
-                <Stat label="Median duration" value="4.2" unit="s" change="+0.6s" good={false} note="p50, last 24 hours" />
+                <Stat
+                    label="Median duration"
+                    value="4.2"
+                    unit="s"
+                    change="+0.6s"
+                    good={false}
+                    note="p50, last 24 hours"
+                    trend={<Sparkline values={DURATIONS} tone="warning" label="Median duration, last 14 days" />}
+                />
                 <Stat label="Jobs" value="18" note="3 paused" />
             </Columns>
         </Ground>

@@ -1,7 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { Feature } from 'geojson'
+import { CircleAlert, CircleCheck, Pause, Plus, TriangleAlert } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
+import { ActivityList, type ActivityItem } from '@winterop-com/sokkel-ui/ActivityList'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { BarGauge } from '@winterop-com/sokkel-ui-charts/dashboard/BarGauge'
 import { BarPanel } from '@winterop-com/sokkel-ui-charts/dashboard/BarPanel'
 import { ChartPanel } from '@winterop-com/sokkel-ui-charts/dashboard/ChartPanel'
@@ -20,6 +23,7 @@ import { MapLegend } from '@winterop-com/sokkel-ui-maps/MapLegend'
 import { MapOverlay, MapView } from '@winterop-com/sokkel-ui-maps/MapView'
 import { PointLayer } from '@winterop-com/sokkel-ui-maps/PointLayer'
 import { classCounts, sequentialScale } from '@winterop-com/sokkel-ui-maps/scale'
+import { DropdownMenuItem, DropdownMenuSeparator } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import {
     BUCKETS,
@@ -253,6 +257,68 @@ export const ChartPanels: StoryObj = {
     ),
 }
 
+/** A panel's menu: View opens the panel in its window from the menu, as its expand button does. */
+function PanelMenu({ onView }: { onView?: () => void }) {
+    return (
+        <>
+            {onView !== undefined && <DropdownMenuItem onClick={onView}>View</DropdownMenuItem>}
+            <DropdownMenuItem>Inspect data</DropdownMenuItem>
+            <DropdownMenuItem>Edit</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
+        </>
+    )
+}
+
+function PanelMenus() {
+    const [viewing, setViewing] = useState<string | null>(null)
+    const view = (id: string) => ({
+        expanded: viewing === id,
+        onExpandedChange: (open: boolean) => setViewing(open ? id : null),
+    })
+    return (
+        <Ground title="Panel menus">
+            <DashboardGrid dense>
+                <StatPanel
+                    title="Success rate"
+                    value={99.3}
+                    unit="%"
+                    decimals={1}
+                    thresholds={HIGH_IS_GOOD}
+                    sparkline={RUNS}
+                    menu={<PanelMenu />}
+                />
+                <StatPanel title="Failed now" value={0} thresholds={FAILED_IS_BAD} colorMode="background" menu={<PanelMenu />} />
+                <GaugePanel
+                    title="Worker load"
+                    value={72}
+                    unit="%"
+                    thresholds={LOW_IS_GOOD}
+                    label="worker-3"
+                    menu={<PanelMenu onView={() => setViewing('load')} />}
+                    {...view('load')}
+                />
+                <TimeSeriesPanel
+                    title="Runs and failures"
+                    subtitle="every 15 min"
+                    x={TIMES}
+                    series={RUN_SERIES}
+                    labelEvery={16}
+                    menu={<PanelMenu onView={() => setViewing('runs')} />}
+                    {...view('runs')}
+                />
+            </DashboardGrid>
+        </Ground>
+    )
+}
+
+/**
+ * Panels with a menu behind their more button, a stat tile's in its head and a chart panel's
+ * after its export and expand tools. View opens a chart panel in its window from the menu, held
+ * by the app through `expanded`.
+ */
+export const PanelMenusStory: StoryObj = { name: 'Panel menus', render: () => <PanelMenus /> }
+
 const CAPACITY: Threshold[] = [{ color: 'critical' }, { value: 100, color: 'warning' }, { value: 300, color: 'good' }]
 const capacityScale = sequentialScale({
     breaks: [100, 300],
@@ -294,6 +360,62 @@ export const MapPanel: StoryObj = {
     ),
 }
 
+const ACTIVITY: ActivityItem[] = [
+    { id: 'failed', icon: <CircleAlert />, tone: 'critical', text: 'nightly-export failed at validate', when: '2m ago', unread: true },
+    { id: 'queue', icon: <TriangleAlert />, tone: 'warning', text: 'worker-3 queue passed 20', when: '14m ago', unread: true },
+    { id: 'done', icon: <CircleCheck />, tone: 'good', text: 'rebuild-index succeeded in 6m 03s', when: '25m ago' },
+    { id: 'paused', icon: <Pause />, tone: 'quiet', text: 'ada paused send-digest', when: '1h ago' },
+    { id: 'added', icon: <Plus />, tone: 'info', text: 'grace added the job sync-inventory', when: '3h ago' },
+]
+
+function ActivityBeside() {
+    const [items, setItems] = useState(ACTIVITY)
+    const unread = items.filter((item) => item.unread === true).length
+    return (
+        <Ground title="Activity panel">
+            <DashboardGrid>
+                <TimeSeriesPanel
+                    title="Runs and failures"
+                    subtitle="today"
+                    span="two-thirds"
+                    x={TIMES}
+                    series={RUN_SERIES}
+                    bodyClassName="h-72"
+                />
+                <DashboardPanel
+                    title="Activity"
+                    subtitle={`${String(unread)} unread`}
+                    span="third"
+                    flush
+                    actions={
+                        <Button
+                            variant="ghost"
+                            size="xs"
+                            disabled={unread === 0}
+                            onClick={() => setItems((was) => was.map((item) => ({ ...item, unread: false })))}
+                        >
+                            Mark all read
+                        </Button>
+                    }
+                >
+                    <ActivityList
+                        items={items}
+                        head={false}
+                        onRead={(id) => setItems((was) => was.map((item) => (item.id === id ? { ...item, unread: false } : item)))}
+                    />
+                </DashboardPanel>
+            </DashboardGrid>
+        </Ground>
+    )
+}
+
+/**
+ * An activity list in a panel beside a chart: the panel's head names it, says how many are unread
+ * and holds Mark all read, so the list draws no head of its own, and it fills the panel the chart
+ * stretches.
+ */
+export const ActivityPanel: StoryObj = { name: 'Activity panel', render: () => <ActivityBeside /> }
+
 const PROJECTS = [
     { value: 'harbor', label: 'harbor' },
     { value: 'juniper', label: 'juniper' },
@@ -307,6 +429,7 @@ function Variables() {
     const [live, setLive] = useState(true)
     const [range, setRange] = useState<TimeRangeValue>({ preset: '24h' })
     const [interval, setInterval] = useState(30)
+    const [paused, setPaused] = useState(false)
     return (
         <Ground title="Variables">
             <VariablesBar
@@ -323,7 +446,14 @@ function Variables() {
                             defaultMonth={new Date(2026, 10, 1)}
                             today={new Date(2026, 10, 4)}
                         />
-                        <RefreshControl onRefresh={() => undefined} interval={interval} onIntervalChange={setInterval} />
+                        <RefreshControl
+                            onRefresh={() => undefined}
+                            interval={interval}
+                            onIntervalChange={setInterval}
+                            intervals={[0, 5, 10, 30]}
+                            paused={paused}
+                            onPausedChange={setPaused}
+                        />
                     </>
                 }
             />
@@ -331,7 +461,7 @@ function Variables() {
     )
 }
 
-/** The variables bar: two dropdown filters and a toggle, with the range and refresh at the end. */
+/** The variables bar: two dropdown filters and a toggle, with the range and refresh at the end, the refresh with its own intervals and a pause. */
 export const VariablesStory: StoryObj = { name: 'Variables bar', render: () => <Variables /> }
 
 function OpenRange() {

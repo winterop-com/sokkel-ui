@@ -4,12 +4,14 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "dev": "vite",
-        "build": "tsc --noEmit && vite build",
-        "preview": "vite preview"
+        "dev": "bun --bun vite",
+        "build": "bun --bun tsc --noEmit && bun --bun vite build",
+        "preview": "bun --bun vite preview"
     },
     "dependencies": {
         "@winterop-com/sokkel-ui": "file:../../../packages/core",
+        "@winterop-com/sokkel-ui-charts": "file:../../../packages/charts",
+        "@winterop-com/sokkel-ui-graph": "file:../../../packages/graph",
         "lucide-react": "^1.68.0",
         "react": "^19.3.1",
         "react-dom": "^19.3.1",
@@ -23,5 +25,8 @@
         "tailwindcss": "^4.3.4",
         "typescript": "^7.0.2",
         "vite": "^8.3.5"
+    },
+    "overrides": {
+        "@winterop-com/sokkel-ui": "file:../../../packages/core"
     }
 }

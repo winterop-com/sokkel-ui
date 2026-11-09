@@ -32,6 +32,12 @@ export interface ChartSpec {
     seriesOrder?: readonly string[]
     /** A color token for a series or a category by its name, such as `status-failed`. */
     colors?: Readonly<Record<string, string>>
+    /**
+     * The color tokens series and categories take in turn where `colors` names none of their own,
+     * such as `['kind-teal', 'kind-blue', 'chart-2']`; the theme's order by default. The first is
+     * also a heatmap's scale.
+     */
+    palette?: readonly string[]
     /** How a figure is written in tooltips and labels. */
     format?: (value: number) => string
     /** A unit written after each figure, on the value axis too, such as `s` or `%`, or one for each `y` field in order. */
@@ -113,14 +119,20 @@ export interface ChartKindDef {
     legend?: (spec: ChartSpec) => LegendItem[]
 }
 
-/** A legend entry's color: the token the spec names for it, or the next in the theme's order. */
-export function legendColor(spec: ChartSpec, name: string, index: number, order: readonly string[]): string {
-    return `var(--${spec.colors?.[name] ?? order[index % order.length]})`
+/** The `index`th token of the spec's palette, or undefined where it gives none. */
+export function paletteToken(spec: ChartSpec, index: number): string | undefined {
+    const palette = spec.palette
+    return palette === undefined || palette.length === 0 ? undefined : palette[index % palette.length]
 }
 
-/** A series' color: the token the spec names for it, or the next in the theme's order. */
+/** A legend entry's color: the token the spec names for it, or the next in the spec's palette or the theme's order. */
+export function legendColor(spec: ChartSpec, name: string, index: number, order: readonly string[]): string {
+    return `var(--${spec.colors?.[name] ?? paletteToken(spec, index) ?? order[index % order.length]})`
+}
+
+/** A series' color: the token the spec names for it, or the next in the spec's palette or the theme's order. */
 export function colorOf(spec: ChartSpec, look: ChartLook, name: string, index: number): string {
-    const token = spec.colors?.[name]
+    const token = spec.colors?.[name] ?? paletteToken(spec, index)
     return token === undefined ? look.series[index % look.series.length] : look.token(token)
 }
 

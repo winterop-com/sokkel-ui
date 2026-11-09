@@ -9,7 +9,27 @@ reaches into a package's `src/`. Each is a Tidevann product, in a folder of its 
 examples/
   shared/        the fake backend, the window frame, the hash route and the Tidevann mark
   tasks/         lists, a quick add and tasks edited in place
-  runs/          job runs in a table, with a run opened beside it
+  runs/          a jobs console: an overview, runs, a run's page, jobs, schedules and settings
+  records/       a records app: forms filled in sections, responses and receipts, households and
+                 their visits, places on a map, an API playground and metadata health (GAPS.md
+                 maps the records app it rehearses onto the library)
+  metrics/       live dashboards over a simulated source, a panel editor with a live preview, and alerts
+  status/        a live operations board: services, regions and incidents changing as the page
+                 watches, on-call, and the public status page with its subscribe form
+  analytics/     a live sales dashboard: revenue, customers, funnels, reports and goals
+  notes/         a vault of linked notes: folders in the rail, markdown beside its preview in
+                 tabs, [[links]] completed as typed, backlinks and mentions, tags, a quick
+                 switcher, search, a graph of the links and a daily journal
+  dataviz/       a data visualizer: datasets imported, edited and filtered, a chart builder with a
+                 live preview and suggested views, charts saved, downloaded and shared as links
+                 that carry their data, and boards filtered together and presented
+  models/        a local library of language models: the models on a disk and what they take, pulls from
+                 simulated sources, a chat and a side-by-side comparison streamed by a simulated model,
+                 and the runner that holds them in memory
+  music/         a music player that really plays: songs made in the page by a small synthesizer,
+                 albums, artists and the library's tree in the rail, favorites, playlists ordered by
+                 drag, simulated downloads, endless radio, the queue, the full screen with its
+                 visualizer and timed words, crossfade and the media keys
   example.mk     the targets every example's Makefile includes
 ```
 
@@ -19,11 +39,22 @@ and inside each example:
   web/           the Vite app
   electron/      a thin Electron shell that opens web/dist, under the example's name
   tauri/         a thin Tauri shell that does the same
+  example.json   its name and one line, for the examples' index
   Makefile
 ```
 
 `.github/workflows/examples.yaml` builds every web app and checks every shell on each pull request
 that touches them. The size budget's apps are not examples; they live in `size/` at the root.
+
+Every web app is published beside the Storybook at
+**https://winterop-com.github.io/sokkel-ui/examples/**, under its folder's name, with an index that
+shows each one's still, its name, its line and the packages it installs. `.github/workflows/pages.yaml`
+publishes them on every push to main; `make examples-site` builds the same site into
+`examples-static/` (`scripts/examples-site.ts`, whose `--shots` takes the stills in Playwright's
+chromium). Every app builds with `base: './'`, so it runs under any path. Published, the examples
+share one origin and so one `localStorage`: the look chosen in one is worn by all, and no two
+examples may give a collection the same name, so a new one prefixes its collections with its own
+name, as `dataviz-charts` does.
 
 ## Running one
 
@@ -31,7 +62,7 @@ From the repository root, after `make build` builds the packages, every example 
 targets as `make <example>-<target>`; `make examples-list` names them:
 
 ```sh
-make tasks-web          # build the web app and serve it (Tasks on port 4180, Runs on 4181)
+make tasks-web          # build the web app and serve it (Tasks on 4180, Runs on 4181, Records on 4182, Models on 4183, Dataviz on 4184, Metrics on 4185, Music on 4186, Notes on 4188, Status on 4190, Analytics on 4191)
 make tasks-dev          # the web app's dev server
 make tasks-electron     # open it in Electron
 make tasks-tauri        # open it in Tauri
@@ -45,11 +76,17 @@ Each runs `bun install` in its folder first. The Tauri shells share one Cargo ta
 Linux, the system libraries it lists (webkit2gtk 4.1 and others; see the workflow). Electron's
 binary is fetched in its `postinstall`.
 
+Nothing needs Node: every script runs its tools under bun (`bun --bun tsc`, `vite`, `electron`,
+`tauri`), and Electron's main process runs on the Node built into Electron itself.
+
 ## How an example is built
 
 - **The packages:** each `web/` installs the core package through `file:../../../packages/core`,
   which bun installs as a copy, with its own dependencies in the app's `node_modules`. Run
-  `bun install` again after rebuilding the packages to refresh the copy. `styles.css` is Tailwind
+  `bun install` again after rebuilding the packages to refresh the copy. An add-on is installed the
+  same way (`file:../../../packages/charts`), with an `overrides` entry pointing the core at the
+  same folder, since an add-on names the core as a `workspace:*` peer, which bun cannot find outside
+  the workspace; the add-on's `styles.css` is imported after the core's in `app.css`. `styles.css` is Tailwind
   source, so the app runs Tailwind v4 through `@tailwindcss/vite`, and its `app.css` adds
   `examples/shared` as a source.
 - **What they share:** `examples/shared/` is the local package `tidevann-shared`, installed the same
@@ -60,12 +97,21 @@ binary is fetched in its `postinstall`.
 - **The desktop frame:** inside a shell the app passes `desktop` to `Shell`, so its top strip is the
   window's title bar, with room for the macOS window buttons. Electron uses `hiddenInset`; Tauri an
   overlay title bar with the title hidden, and `capabilities/default.json` lets the page drag, zoom
-  and fill the window, since WebKit ignores the CSS drag region.
+  and fill the window, since WebKit ignores the CSS drag region. Both place the buttons on the
+  strip's middle with `trafficLightPosition` (Electron `{ x: 12, y: 16 }`, Tauri `{ x: 12, y: 25 }`,
+  which each reads its own way). Electron's preload (`src/preload.ts`) tells the page when the window
+  enters or leaves full screen, which `useFrame` passes on as `desktop.fullscreen`, so the room for
+  the buttons goes while macOS hides them.
 - **Assets:** the web build uses relative asset paths, so the shells load it from a file URL.
+- **Maps in the dev server:** an example that draws maps adds a small plugin to
+  `optimizeDeps.rolldownOptions` in its `vite.config.ts` (as `dataviz` does), since the dev server's
+  prebundling cannot load the maps package's `?worker&url` import of maplibre's worker. The build
+  needs nothing.
 
 ## Adding one
 
 Copy an example's folder, rename it, and change its name in `web/index.html`, the two
-`package.json` files, `electron/src/main.ts`'s title, and `tauri/src-tauri/Cargo.toml` and
-`tauri.conf.json` (`productName`, `identifier`, the window's title). Give its `Makefile` a port of its
-own. The root Makefile and the workflow pick it up by its folder.
+`package.json` files, `example.json`, `electron/src/main.ts`'s title, and `tauri/src-tauri/Cargo.toml`
+and `tauri.conf.json` (`productName`, `identifier`, the window's title). Give its `Makefile` a port of
+its own. The root Makefile, the workflows and the examples site pick it up by its folder; without an
+`example.json`, the index takes its name and line from the comment that heads its `Makefile`.

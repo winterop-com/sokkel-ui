@@ -259,6 +259,62 @@ export async function layoutGraph(shape: GraphShape, direction: GraphDirection =
     return fromElk(shape, await using.layout(toElk(shape, direction)))
 }
 
+/** How long elk tries to keep each edge of a network, center to center. */
+export const NETWORK_EDGE = 130
+
+/**
+ * The options elk lays a network out with: by stress, every edge kept near one length so linked
+ * nodes gather and the rest spread, each part of the network laid out alone and the parts packed
+ * side by side, the nodes with no edge in a row under them.
+ */
+export function networkOptions(): Record<string, string> {
+    return {
+        'elk.algorithm': 'stress',
+        'elk.stress.desiredEdgeLength': String(NETWORK_EDGE),
+        'elk.spacing.nodeNode': String(NODE_GAP),
+        'elk.separateConnectedComponents': 'true',
+        'elk.spacing.componentComponent': String(RANK_GAP),
+    }
+}
+
+/**
+ * A network placed at once, before elk answers: its nodes along a spiral from the middle, the ones
+ * with the most edges nearest it, so the first frame already reads as a cluster.
+ */
+export function spiralLayout(shape: GraphShape): PlacedGraph {
+    const edges = knownEdges(shape)
+    const degree = new Map<string, number>()
+    for (const edge of edges) {
+        degree.set(edge.source, (degree.get(edge.source) ?? 0) + 1)
+        degree.set(edge.target, (degree.get(edge.target) ?? 0) + 1)
+    }
+    const order = shape.nodes
+        .map((node, index) => ({ node, index }))
+        .sort((a, b) => (degree.get(b.node.id) ?? 0) - (degree.get(a.node.id) ?? 0) || a.index - b.index)
+    // The golden angle spreads a spiral's points evenly without lining any up.
+    const turn = Math.PI * (3 - Math.sqrt(5))
+    const placed = new Map(
+        order.map(({ node }, rank) => {
+            const radius = NETWORK_EDGE * 0.6 * Math.sqrt(rank)
+            return [node.id, { ...node, x: Math.round(radius * Math.cos(rank * turn)), y: Math.round(radius * Math.sin(rank * turn)) }]
+        }),
+    )
+    return {
+        nodes: shape.nodes.map((node) => placed.get(node.id) ?? { ...node, x: 0, y: 0 }),
+        edges: edges.map((edge) => ({ id: edge.id, source: edge.source, target: edge.target })),
+    }
+}
+
+/** Place a network with elk, loading it first unless an engine is given; edges are drawn straight, so their routes are not read. */
+export async function layoutNetwork(shape: GraphShape, elk?: ElkEngine): Promise<PlacedGraph> {
+    if (shape.nodes.length === 0) return { nodes: [], edges: [] }
+    const using = elk ?? (await loadElk())
+    const graph: ElkGraph = { ...toElk(shape), layoutOptions: networkOptions() }
+    const laid = await using.layout(graph)
+    const placed = fromElk(shape, laid)
+    return { ...placed, edges: placed.edges.map((edge) => ({ id: edge.id, source: edge.source, target: edge.target })) }
+}
+
 /** What decides a graph's geometry: its nodes and their sizes, its edges and labels, and its direction. */
 export function shapeSignature(shape: GraphShape, direction: GraphDirection): string {
     return [

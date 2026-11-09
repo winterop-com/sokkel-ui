@@ -83,8 +83,9 @@ export const Title: StoryObj = {
 }
 
 /**
- * Each editor: a line of text, several lines (saved with ⌘ or Ctrl and Enter, or Save), a number
- * and a date typed into `NumberField` and `DateField`, the date with its calendar, and a choice.
+ * Each editor: a line of text, several lines (saved with ⌘ or Ctrl and Enter, or Save), a number,
+ * a date and a time typed into `NumberField`, `DateField` and `TimeField`, the date with its
+ * calendar and the time with its list of times, and a choice.
  */
 export const Editors: StoryObj = {
     render: () => (
@@ -116,6 +117,18 @@ export const Editors: StoryObj = {
                                 editor="date"
                                 defaultValue="2026-11-20"
                                 placeholder="Running"
+                                onSave={() => pause()}
+                            />
+                        ),
+                    },
+                    {
+                        term: 'Runs at',
+                        value: (
+                            <InlineEdit
+                                label="Runs at"
+                                editor="time"
+                                defaultValue="02:30"
+                                display={(time) => `${time ?? ''} UTC`}
                                 onSave={() => pause()}
                             />
                         ),
