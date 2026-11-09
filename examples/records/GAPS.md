@@ -32,9 +32,9 @@ says what is missing. **Not covered** has no part yet.
    acts. Add them to `tokens.json` named for how they look (such as `steel` and `ember`).
    **Closed:** the themes `steel` and `ember`, light and dark, each with its line in `ThemePicker`;
    the example loads and offers its seven.
-5. **A row's own detail in `DataTable`.** The server page opens a row of a resource type into a
-   free-form detail (each search parameter with its documentation) that is not more rows of the same
-   shape. `childRows` only adds rows; add a detail drawn under an opened row.
+5. **A row's own detail in `DataTable`.** Closed: `detail` draws a row's own free-form detail under
+   it once opened, from the same control, keys and `expanded` as a branch. The server page opens a
+   kind of record into its search parameters, each with its type and what it does.
 6. **`ApiPlayground`, the rest.** An actions slot after Copy as curl (the app's Open in a new
    tab), the body in `CodeEditor` with JSON colors in place of a text area, parameter names
    completed from the hints, and the presets side folding and resizing.
@@ -180,7 +180,7 @@ mounts its control afresh as an issue comes or goes, which closed the period pic
 | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | -------- | ----------------------------------------------------------------------------------------------------------------------- |
 | The playground: method, path, parameter rows with chips, body, Send, status and time, body, Copy as curl, history, presets    | `ApiPlayground`                                                                      | Partly   | Open in a new tab, a JSON body editor, name completion and a folding side are item 6. The app's `fetch` becomes `send`. |
 | Expressions: language, define, source editor, context picker, results per define with Table and Raw, diagnostics with a caret | `CodeEditor` (`defineLanguage`, ranged marks), `Select`, `Tabs`, `DataTable`, `Code` | Partly   | The examples rail is item 3; its grammars are stream languages through `defineLanguage`.                                |
-| The server: identity, authentication, operations, resource types folding to their parameters, raw document                    | `Section`, `DescriptionList`, `DataTable`, `TagChips`, `Code`                        | Partly   | The row detail is item 5.                                                                                               |
+| The server: identity, authentication, operations, resource types folding to their parameters, raw document                    | `Section`, `DescriptionList`, `DataTable` with `detail`, `TagChips`, `Code`          | Covered  | A resource type opens into its parameters through `detail`.                                                             |
 | Code lists: tabs with counts, shelves, tables with chevrons, a concept table with paging, a code lookup sheet                 | `Segmented` or `Tabs`, `Section`, `DataTable` (`paging`), `DetailSheet`              | Covered  | Not built in the example; every part it needs is in use on other pages.                                                 |
 
 ## Settings and themes

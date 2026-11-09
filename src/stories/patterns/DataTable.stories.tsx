@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { useCallback, useMemo, useRef, useState } from 'react'
 
+import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
 import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
 import {
     type CellFocus,
@@ -298,6 +299,59 @@ export const TallRows: StoryObj = {
             ]}
             rows={LIST_RUNS}
             rowKey={(run) => run.id}
+        />
+    ),
+}
+
+const RUN_STEPS: Record<string, { step: string; said: string }[]> = {
+    r1: [
+        { step: 'fetch', said: 'Three of four files read, 12,400 orders so far.' },
+        { step: 'transform', said: 'Waiting for fetch.' },
+    ],
+    r2: [
+        { step: 'fetch', said: 'Read 2,310 rows from the warehouse.' },
+        { step: 'transform', said: 'Wrote 2,310 rows as one file.' },
+        { step: 'upload', said: 'Refused: files.example.org asked for a fresh token. Nothing was written.' },
+    ],
+    r3: [
+        { step: 'fetch', said: 'Read every entry from the store.' },
+        { step: 'validate', said: 'Every entry had a key and a body.' },
+        { step: 'upload', said: 'Swapped the new index in for the old one.' },
+    ],
+    r4: [
+        { step: 'transform', said: 'Built a digest for each of 48 people.' },
+        { step: 'notify', said: 'Sent 48 mails, none returned.' },
+    ],
+}
+
+/**
+ * Each run opens into its own detail (`detail`): its note and what each step said, drawn under the
+ * row across the table rather than as more rows. The failed run starts open; the queued run has no
+ * detail and no control. A press, Enter or Right opens a row, Left closes it.
+ */
+export const RowDetail: StoryObj = {
+    name: 'Row detail',
+    render: () => (
+        <DataTable
+            variant="list"
+            columns={LIST_COLUMNS}
+            rows={LIST_RUNS}
+            rowKey={(run) => run.id}
+            defaultExpanded={new Set(['r2'])}
+            detail={(run) =>
+                RUN_STEPS[run.id] === undefined ? undefined : (
+                    <Stack gap="sm">
+                        <p className="text-muted-foreground">{run.note}</p>
+                        <DescriptionList
+                            termWidth="6rem"
+                            items={RUN_STEPS[run.id].map((step) => ({
+                                term: <span className="font-mono">{step.step}</span>,
+                                value: step.said,
+                            }))}
+                        />
+                    </Stack>
+                )
+            }
         />
     ),
 }

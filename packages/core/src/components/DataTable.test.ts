@@ -112,6 +112,26 @@ describe('flattenRows', () => {
     })
 })
 
+describe('flattenRows with a detail of a row’s own', () => {
+    it('opens a row with a detail as a branch that never waits', () => {
+        const rows: Node[] = [
+            { id: 'x', size: 0 },
+            { id: 'y', size: 0 },
+        ]
+        const flat = flattenRows({
+            rows,
+            rowKey: key,
+            hasDetail: (node) => node.id === 'x',
+            expanded: new Set(['x', 'y']),
+            order: (level) => level,
+        })
+        expect(flat.map((entry) => [entry.key, entry.branch, entry.open, entry.waiting])).toEqual([
+            ['x', true, true, false],
+            ['y', false, false, false],
+        ])
+    })
+})
+
 describe('flattenRows with children not known yet', () => {
     it('draws a row that has children as a branch, waiting while it is open', () => {
         const rows: Node[] = [

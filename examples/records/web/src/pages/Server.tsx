@@ -16,12 +16,21 @@ interface Operation {
     does: string
 }
 
+/** A search parameter a kind reads: its name, the type of its value, and what it does. */
+interface Param {
+    name: string
+    type: string
+    does: string
+}
+
 interface Kind {
     name: string
     interactions: string
-    params: string[]
+    params: Param[]
     detail: string
 }
+
+const COUNT: Param = { name: 'count', type: 'number', does: 'How many to answer with at most, 50 when left out.' }
 
 const OPERATIONS: Operation[] = [
     {
@@ -41,25 +50,33 @@ const KINDS: Kind[] = [
     {
         name: 'forms',
         interactions: 'read, list',
-        params: ['kind', 'count'],
+        params: [{ name: 'kind', type: 'token', does: 'Only forms of this kind: periodic, event, registration or followup.' }, COUNT],
         detail: 'The forms the server serves, each with its sections and questions.',
     },
     {
         name: 'places',
         interactions: 'read, list',
-        params: ['level', 'parent', 'count'],
+        params: [
+            { name: 'level', type: 'token', does: 'Only places at this level: country, region or site.' },
+            { name: 'parent', type: 'reference', does: 'Only the places directly under this one, by its id.' },
+            COUNT,
+        ],
         detail: 'The country, its regions and their sites, each with its parent.',
     },
     {
         name: 'households',
         interactions: 'list, create by registration',
-        params: ['identifier', 'count'],
+        params: [{ name: 'identifier', type: 'token', does: 'The household with this identifier, matched exactly.' }, COUNT],
         detail: 'The registered households, named by their identifiers.',
     },
     {
         name: 'responses',
         interactions: 'create, read, list',
-        params: ['state', 'form', 'count'],
+        params: [
+            { name: 'state', type: 'token', does: 'Only records in this state: received, forwarded or rejected.' },
+            { name: 'form', type: 'reference', does: 'Only records filed on this form, by its id.' },
+            COUNT,
+        ],
         detail: 'Every record filed, with where it is now.',
     },
 ]
@@ -88,7 +105,12 @@ const KIND_COLUMNS: DataColumn<Kind>[] = [
         width: '12rem',
         cell: (kind) => <span className="font-mono text-xs">{kind.interactions}</span>,
     },
-    { id: 'params', header: 'Parameters', width: '14rem', cell: (kind) => <TagChips tags={kind.params} variant="outline" /> },
+    {
+        id: 'params',
+        header: 'Parameters',
+        width: '14rem',
+        cell: (kind) => <TagChips tags={kind.params.map((param) => param.name)} variant="outline" />,
+    },
 ]
 
 /** What the demo server is and what it offers: its kinds of record, the parameters each reads, and its operations. */
@@ -117,7 +139,7 @@ export function Server() {
                 variant="flat"
                 title="Kinds of record"
                 meta={String(KINDS.length)}
-                description="What a caller can read from the server, and how."
+                description="What a caller can read from the server, and how. Open a kind for the search parameters it reads."
             >
                 <DataTable
                     variant="list"
@@ -126,6 +148,19 @@ export function Server() {
                     rowKey={(kind) => kind.name}
                     rowHeight="auto"
                     minWidth="auto"
+                    detail={(kind) => (
+                        <DescriptionList
+                            termWidth="7rem"
+                            items={kind.params.map((param) => ({
+                                term: <span className="font-mono">{param.name}</span>,
+                                value: (
+                                    <span>
+                                        {param.does} <span className="text-help text-muted-foreground">{param.type}</span>
+                                    </span>
+                                ),
+                            }))}
+                        />
+                    )}
                 />
             </Section>
             <Section

@@ -277,6 +277,7 @@ export function flattenRows<T>({
     rowKey,
     childRows,
     hasChildren,
+    hasDetail,
     expanded,
     order,
 }: {
@@ -285,6 +286,8 @@ export function flattenRows<T>({
     childRows?: (row: T) => readonly T[] | undefined
     /** Whether a row whose children are not known yet has any. */
     hasChildren?: (row: T) => boolean
+    /** Whether a row has a detail of its own to draw under it, which opens it as children do. */
+    hasDetail?: (row: T) => boolean
     expanded: ReadonlySet<string>
     order: (rows: readonly T[]) => readonly T[]
 }): FlatRow<T>[] {
@@ -293,9 +296,10 @@ export function flattenRows<T>({
         for (const row of order(level)) {
             const key = rowKey(row)
             const children = childRows?.(row)
-            const branch = children === undefined ? hasChildren?.(row) === true : children.length > 0
+            const lazy = children === undefined && hasChildren?.(row) === true
+            const branch = (children === undefined ? lazy : children.length > 0) || hasDetail?.(row) === true
             const open = branch && expanded.has(key)
-            flat.push({ row, key, depth, parent, branch, open, waiting: open && children === undefined })
+            flat.push({ row, key, depth, parent, branch, open, waiting: open && lazy })
             if (open && children !== undefined) walk(children, depth + 1, key)
         }
     }
@@ -540,6 +544,12 @@ export interface DataTableProps<T> {
      * table keeps them; a load that fails closes the branch again.
      */
     loadChildren?: (row: T) => Promise<readonly T[]>
+    /**
+     * A row's own detail, drawn under it across the table's width once it is opened, such as the
+     * fields of a record that are not more rows; `undefined` or `null` for a row without one. A row
+     * with a detail opens and closes as a branch does, and its open state is held in `expanded`.
+     */
+    detail?: (row: T) => ReactNode
     expanded?: ReadonlySet<string>
     defaultExpanded?: ReadonlySet<string>
     onExpandedChange?: (expanded: ReadonlySet<string>) => void
@@ -717,6 +727,13 @@ export interface DataTableProps<T> {
  * opens, a spinner in its control until they come. Arrow keys move through the rows, Space
  * selects, Enter opens, and Right and Left open and close a branch.
  *
+ * With `detail`, a row opens into a free-form detail of its own, drawn under it across the width
+ * of the table, such as a record's fields with their documentation: not more rows of the same shape,
+ * which `childRows` gives. It opens from the same control as a branch, Right and Left open and
+ * close it, and its open state is the same `expanded`. Without `onOpen`, a press or Enter on such a
+ * row opens and closes it too. Stacked rows show it under their card; the grid view's cards do not.
+ * A table with details draws every row, as their heights are not known before they are.
+ *
  * Without `selectable`, a plain click, Enter or Space picks a row with `onOpen`, and the row
  * `opened` names is drawn and marked selected, for a list beside its detail. `variant="list"` is
  * the look of a short listing: no bar above the head (until rows are selected), the column names
@@ -771,6 +788,7 @@ export function DataTable<T>({
     childRows,
     hasChildren,
     loadChildren,
+    detail,
     expanded: expandedValue,
     defaultExpanded = EMPTY,
     onExpandedChange,
@@ -860,6 +878,18 @@ export function DataTable<T>({
     const kids = useCallback((row: T) => childRows?.(row) ?? loaded.get(rowKey(row)), [childRows, loaded, rowKey])
     const tree = childRows !== undefined || loadChildren !== undefined
     const treeKids = tree ? kids : undefined
+    // Rows open into children, a detail of their own, or both; each such row draws the control that opens it.
+    const opens = tree || detail !== undefined
+    const hasDetail = useMemo(
+        () =>
+            detail === undefined
+                ? undefined
+                : (row: T) => {
+                      const said = detail(row)
+                      return said !== undefined && said !== null && said !== false
+                  },
+        [detail],
+    )
 
     const shown = ordered.filter((column, index) => index === 0 || !hidden.has(column.id))
     const sortColumn = sort === null ? undefined : columns.find((column) => column.id === sort.column)
@@ -892,13 +922,14 @@ export function DataTable<T>({
                 rowKey,
                 childRows: treeKids,
                 hasChildren: loadChildren === undefined ? undefined : hasChildren,
+                hasDetail,
                 expanded,
                 order,
             })
         if (groups === undefined) return { all: flatten(rows), heads: undefined, lines: undefined }
         const laid = groupLines(groups, folded, flatten)
         return { all: laid.rows, heads: laid.heads, lines: laid.lines }
-    }, [rows, rowKey, treeKids, hasChildren, loadChildren, expanded, order, groups, folded])
+    }, [rows, rowKey, treeKids, hasChildren, loadChildren, hasDetail, expanded, order, groups, folded])
     const foldGroup = (key: string) => {
         const next = new Set(folded)
         if (next.has(key)) next.delete(key)
@@ -1010,7 +1041,9 @@ export function DataTable<T>({
     }, [current, pageSize, shownView])
 
     // Nearing the end of what has loaded asks for more, and so does a first load too short to fill the view.
-    const nearEnd = view.top + view.height >= (auto && !gridView ? view.full : lines * lineHeight) - lineHeight * over
+    // Details are drawn under their rows at their own heights, so a table with them draws every row.
+    const detailed = detail !== undefined && !chosenGrid
+    const nearEnd = view.top + view.height >= ((auto && !gridView) || detailed ? view.full : lines * lineHeight) - lineHeight * over
     useEffect(() => {
         if (hasMore && !loading && nearEnd) onLoadMore?.()
     }, [hasMore, loading, nearEnd, onLoadMore])
@@ -1020,8 +1053,9 @@ export function DataTable<T>({
     const listed = list && stacked
     // Grouped cards are drawn group by group, every one of them.
     const every = (auto && !gridView) || listed || (gridView && groupHeads !== undefined)
-    const firstLine = every ? 0 : Math.max(0, Math.floor(view.top / lineHeight) - over)
-    const lastLine = every ? lines : Math.min(lines, Math.ceil((view.top + view.height) / lineHeight) + over)
+    const whole = every || detailed
+    const firstLine = whole ? 0 : Math.max(0, Math.floor(view.top / lineHeight) - over)
+    const lastLine = whole ? lines : Math.min(lines, Math.ceil((view.top + view.height) / lineHeight) + over)
     const first = firstLine * perLine
     const last = Math.min(gridView ? flat.length : drawn.length, lastLine * perLine)
 
@@ -1122,7 +1156,7 @@ export function DataTable<T>({
         setActive(entry.key)
         const box = scroller.current
         if (box === null) return
-        if (every) {
+        if (whole) {
             box.querySelector(`[data-row="${CSS.escape(entry.key)}"]`)?.scrollIntoView({ block: 'nearest' })
             return
         }
@@ -1164,6 +1198,14 @@ export function DataTable<T>({
         if (edits !== undefined) editing?.settle(edits, scroller.current)
     })
 
+    /** A row picked by a press or Enter: opened with `onOpen`, or without it, a row with a detail opened or closed. */
+    const pick = (entry: FlatRow<T>) => {
+        if (onOpen !== undefined) onOpen(entry.row)
+        else if (hasDetail?.(entry.row) === true) openBranch(entry.key, !entry.open)
+    }
+    /** Whether a press on a row does anything. */
+    const pressable = onOpen !== undefined || detail !== undefined
+
     const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
         const page = Math.max(1, Math.floor(view.height / lineHeight) - 1) * perLine
         const entry = flat[activeIndex]
@@ -1178,10 +1220,10 @@ export function DataTable<T>({
             ' ': () => {
                 if (entry === undefined) return
                 if (selectable) toggle(entry, event.shiftKey)
-                else onOpen?.(entry.row)
+                else pick(entry)
             },
             Enter: () => {
-                if (entry !== undefined) onOpen?.(entry.row)
+                if (entry !== undefined) pick(entry)
             },
             ArrowRight: () => {
                 if (gridView) moveTo(activeIndex + 1)
@@ -1207,7 +1249,7 @@ export function DataTable<T>({
         setActive(entry.key)
         if (selectable && event.shiftKey) toggle(entry, true)
         else if (selectable && (event.metaKey || event.ctrlKey)) toggle(entry, false)
-        else onOpen?.(entry.row)
+        else pick(entry)
     }
 
     /** A branch row's selection: all of it, part of it, or none. */
@@ -1449,7 +1491,7 @@ export function DataTable<T>({
      * keeps every line, so all cards are one height; a narrow list leaves out a line with nothing to say.
      */
     const stackedLines = (entry: FlatRow<T>, listed: boolean) => {
-        const indent: CSSProperties | undefined = listed && tree ? { paddingLeft: `${String(entry.depth * 1.25 + 1.5)}rem` } : undefined
+        const indent: CSSProperties | undefined = listed && opens ? { paddingLeft: `${String(entry.depth * 1.25 + 1.5)}rem` } : undefined
         const said = saidIn(listed)
         const facts = stackParts.facts.map((column) => ({ column, value: column.cell(entry.row) })).filter(({ value }) => said(value))
         return (
@@ -1502,7 +1544,7 @@ export function DataTable<T>({
                         {box}
                     </span>
                 )}
-                {tree && <span className="flex h-6 items-center">{treeControl(entry)}</span>}
+                {opens && <span className="flex h-6 items-center">{treeControl(entry)}</span>}
                 {leadsOf(entry, listed)}
                 <div className="flex min-w-0 flex-1 flex-col">
                     {title !== undefined &&
@@ -1539,6 +1581,71 @@ export function DataTable<T>({
             </ContextMenu>
         )
 
+    /**
+     * An open row's detail, drawn under it: across the table's width under a table row, starting
+     * where the row's first cell does and kept in view as the table scrolls sideways; under the card
+     * of a stacked row. Its keys and presses are its own, never the table's.
+     */
+    const detailFor = (entry: FlatRow<T>, kind: 'row' | 'item' | 'card', ground?: string) => {
+        if (!entry.open || detail === undefined) return null
+        const said = detail(entry.row)
+        if (said === undefined || said === null || said === false) return null
+        const content = (
+            <div
+                role="gridcell"
+                aria-colspan={kind === 'row' ? shown.length + (selectable ? 1 : 0) + (endWidth === undefined ? 0 : 1) : undefined}
+                className={cn('min-w-0 text-sm', kind === 'row' && 'sticky left-0 py-3 pr-3')}
+                style={
+                    kind === 'row'
+                        ? {
+                              maxWidth: view.width,
+                              paddingLeft: `calc(${selectable ? CHECK : '0rem'} + ${String(entry.depth * 1.25 + 1.5)}rem + ${list ? 'var(--density-panel-pad)' : '0.75rem'})`,
+                          }
+                        : kind === 'item'
+                          ? { paddingLeft: `${String(entry.depth * 1.25 + 1.5)}rem` }
+                          : undefined
+                }
+            >
+                {said}
+            </div>
+        )
+        const own = {
+            key: `${entry.key}:detail`,
+            role: 'row',
+            'data-detail': entry.key,
+            onClick: keep,
+            onKeyDown: (event: KeyboardEvent) => event.stopPropagation(),
+        }
+        if (kind === 'item')
+            return (
+                <li {...own} className="px-(--density-panel-pad) pb-3">
+                    {content}
+                </li>
+            )
+        if (kind === 'card')
+            return (
+                <div {...own} className="min-w-0 rounded-surface border border-border bg-panel-ground px-3 py-2">
+                    {content}
+                </div>
+            )
+        return (
+            <div {...own} className={cn('border-b border-border', ground)} style={{ minWidth: rowMin }}>
+                {content}
+            </div>
+        )
+    }
+    /** A row's own element with its open detail after it. */
+    const withDetail = (entry: FlatRow<T>, body: ReactElement, kind: 'row' | 'item' | 'card', ground?: string) => {
+        const after = detailFor(entry, kind, ground)
+        if (after === null) return body
+        return (
+            <Fragment key={entry.key}>
+                {body}
+                {after}
+            </Fragment>
+        )
+    }
+
     /** A row as a card: the app's card, with the selection box and the menu laid over its top corners. */
     const cardFor = (entry: FlatRow<T>) => {
         const chosen = selection.has(entry.key)
@@ -1560,7 +1667,7 @@ export function DataTable<T>({
                                     {box}
                                 </span>
                             )}
-                            {tree && treeControl(entry)}
+                            {opens && treeControl(entry)}
                             {leadsOf(entry, false)}
                             {/* The title keeps to its line: a cell of two lines, a name over its code, shows its first. */}
                             <span className="h-6 min-w-0 flex-1 truncate text-sm leading-6 font-medium">{title?.cell(entry.row)}</span>
@@ -1580,7 +1687,7 @@ export function DataTable<T>({
                 onClick={(event) => press(entry, event)}
                 className={cn(
                     'group/card relative min-w-0 overflow-hidden rounded-surface',
-                    onOpen !== undefined && 'cursor-pointer',
+                    pressable && 'cursor-pointer',
                     chosen ? 'ring-2 ring-primary' : isOpened && 'ring-2 ring-ring/60',
                     'group-focus-visible/table:data-active:ring-2 group-focus-visible/table:data-active:ring-ring',
                 )}
@@ -1610,7 +1717,7 @@ export function DataTable<T>({
                 )}
             </div>
         )
-        return withMenu(entry, actions, body)
+        return stacked ? withDetail(entry, withMenu(entry, actions, body), 'card') : withMenu(entry, actions, body)
     }
 
     return (
@@ -1955,50 +2062,56 @@ export function DataTable<T>({
                             const actions = actionsOf(entry.row)
                             const box = boxFor(entry)
                             const menu = menuFor(actions, 'ghost')
-                            return withMenu(
+                            return withDetail(
                                 entry,
-                                actions,
-                                <li
-                                    key={entry.key}
-                                    role="row"
-                                    aria-selected={selectable ? chosen : opened === undefined ? undefined : isOpened}
-                                    aria-expanded={entry.branch ? entry.open : undefined}
-                                    aria-level={tree ? entry.depth + 1 : undefined}
-                                    data-row={entry.key}
-                                    data-active={entry.key === active || undefined}
-                                    onClick={(event) => press(entry, event)}
-                                    className={cn(
-                                        'flex flex-col gap-1 px-(--density-panel-pad) text-sm',
-                                        compact ? 'py-2' : 'py-2.5',
-                                        hover && 'hover:bg-hover',
-                                        onOpen !== undefined && 'cursor-pointer',
-                                        (chosen || isOpened) && 'bg-secondary hover:bg-secondary',
-                                        'group-focus-visible/table:data-active:shadow-[inset_2px_0_0_var(--ring)]',
-                                    )}
-                                >
-                                    {compact ? (
-                                        compactRow(entry, true, box, menu)
-                                    ) : (
-                                        <>
-                                            <div className="flex min-w-0 items-center gap-2">
-                                                {box !== null && (
-                                                    <span className="flex" onClick={keep}>
-                                                        {box}
-                                                    </span>
-                                                )}
-                                                {leadsOf(entry, true)}
-                                                {title !== undefined && (
-                                                    <div role="gridcell" className="flex min-w-0 flex-1 items-center font-medium">
-                                                        {tree && treeControl(entry)}
-                                                        <span className="min-w-0 truncate">{title.cell(entry.row)}</span>
-                                                    </div>
-                                                )}
-                                                {menu}
-                                            </div>
-                                            {stackedLines(entry, true)}
-                                        </>
-                                    )}
-                                </li>,
+                                withMenu(
+                                    entry,
+                                    actions,
+                                    <li
+                                        key={entry.key}
+                                        role="row"
+                                        aria-selected={selectable ? chosen : opened === undefined ? undefined : isOpened}
+                                        aria-expanded={entry.branch ? entry.open : undefined}
+                                        aria-level={tree ? entry.depth + 1 : undefined}
+                                        data-row={entry.key}
+                                        data-active={entry.key === active || undefined}
+                                        onClick={(event) => press(entry, event)}
+                                        className={cn(
+                                            'flex flex-col gap-1 px-(--density-panel-pad) text-sm',
+                                            // A row and its open detail read as one item, with no line between them.
+                                            '[&:has(+[data-detail])]:border-b-0',
+                                            compact ? 'py-2' : 'py-2.5',
+                                            hover && 'hover:bg-hover',
+                                            pressable && 'cursor-pointer',
+                                            (chosen || isOpened) && 'bg-secondary hover:bg-secondary',
+                                            'group-focus-visible/table:data-active:shadow-[inset_2px_0_0_var(--ring)]',
+                                        )}
+                                    >
+                                        {compact ? (
+                                            compactRow(entry, true, box, menu)
+                                        ) : (
+                                            <>
+                                                <div className="flex min-w-0 items-center gap-2">
+                                                    {box !== null && (
+                                                        <span className="flex" onClick={keep}>
+                                                            {box}
+                                                        </span>
+                                                    )}
+                                                    {leadsOf(entry, true)}
+                                                    {title !== undefined && (
+                                                        <div role="gridcell" className="flex min-w-0 flex-1 items-center font-medium">
+                                                            {opens && treeControl(entry)}
+                                                            <span className="min-w-0 truncate">{title.cell(entry.row)}</span>
+                                                        </div>
+                                                    )}
+                                                    {menu}
+                                                </div>
+                                                {stackedLines(entry, true)}
+                                            </>
+                                        )}
+                                    </li>,
+                                ),
+                                'item',
                             )
                         })}
                     </ul>
@@ -2040,14 +2153,17 @@ export function DataTable<T>({
                         </div>
                     </div>
                 ) : (
-                    <div style={every ? { minWidth: rowMin } : { height: drawn.length * rowHeight, minWidth: rowMin }} className="relative">
-                        {!every && <div style={{ height: first * rowHeight }} />}
+                    <div style={whole ? { minWidth: rowMin } : { height: drawn.length * rowHeight, minWidth: rowMin }} className="relative">
+                        {!whole && <div style={{ height: first * rowHeight }} />}
                         {drawn.slice(first, last).map((entry, offset) => {
                             if (isGroupHead(entry)) return groupRow(entry, first + offset)
                             const chosen = selection.has(entry.key)
                             const isOpened = opened?.(entry.row) === true
                             const state = selectable ? branchState(entry) : 'none'
                             const actions = actionsOf(entry.row)
+                            // Every other line on the zebra's ground, counted from the table's first line so a
+                            // line keeps its stripe as the table scrolls; a row's detail shares its ground.
+                            const ground = (first + offset) % 2 === 1 ? 'bg-table-zebra' : 'bg-card'
                             const row = (
                                 <div
                                     key={entry.key}
@@ -2062,14 +2178,12 @@ export function DataTable<T>({
                                     onClick={(event) => press(entry, event)}
                                     className={cn(
                                         'group/row grid cursor-default items-center border-b border-border text-sm',
-                                        // Every other line on the zebra's ground, counted from the table's first line so a
-                                        // line keeps its stripe as the table scrolls.
-                                        (first + offset) % 2 === 1 ? 'bg-table-zebra' : 'bg-card',
+                                        ground,
                                         spaced,
                                         list && first + offset === drawn.length - 1 && 'border-b-0',
                                         every ? 'min-h-(--density-row) scroll-mt-(--density-row)' : 'h-(--density-row)',
                                         hover && 'hover:bg-hover',
-                                        onOpen !== undefined && 'cursor-pointer',
+                                        pressable && 'cursor-pointer',
                                         (chosen || isOpened) && 'bg-secondary hover:bg-secondary',
                                         'group-focus-visible/table:data-active:shadow-[inset_2px_0_0_var(--ring)]',
                                         cellFocus === 'row' && 'group-focus-within/table:has-data-cell-active:bg-hover',
@@ -2111,7 +2225,7 @@ export function DataTable<T>({
                                                 )}
                                                 style={index === 0 ? ({ '--check': CHECK } as React.CSSProperties) : undefined}
                                             >
-                                                {index === 0 && tree && treeControl(entry)}
+                                                {index === 0 && opens && treeControl(entry)}
                                                 <span
                                                     className={cn(
                                                         'min-w-0',
@@ -2183,15 +2297,7 @@ export function DataTable<T>({
                                     )}
                                 </div>
                             )
-                            if (actions === undefined) return row
-                            return (
-                                <ContextMenu key={entry.key} onOpenChange={(open) => open && setActive(entry.key)}>
-                                    <ContextMenuTrigger render={row} />
-                                    <ContextMenuContent className="w-48">
-                                        <MenuItems actions={actions} kind="context" />
-                                    </ContextMenuContent>
-                                </ContextMenu>
-                            )
+                            return withDetail(entry, withMenu(entry, actions, row), 'row', ground)
                         })}
                     </div>
                 )}
