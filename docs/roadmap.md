@@ -6,7 +6,11 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.10.10** is the latest release (2026-11-09): the sign-in brand pane sits one step below the page
+- **0.10.11** is the latest release (2026-11-09): `hlsSource` plays through hls.js in Chromium and
+  Electron, and natively only in Apple's WebKit, since Chromium's own HLS fails a live stream played
+  after loading paused; a video whose tries are spent holds still under the failure, and playing it
+  again clears it.
+- **0.10.10** (2026-11-09): the sign-in brand pane sits one step below the page
   in dark instead of reading as a black slab.
 - **0.10.9** (2026-11-09): a media slider mounted while hidden draws its
   level, so `VideoPlayer`'s volume no longer shows an empty bar on a wide player.
@@ -187,10 +191,14 @@ to `plan.md` when it ships.
     - **Video:**
         - speed and quality reachable on a narrow player (they hide below a medium width today)
         - waiting on a live stream's missing segments, where hls.js now skips past them
-        - the browser's own HLS replaying the last seconds when it rejoins after a stall
+        - Apple's own HLS (Safari, the macOS webview) picking a try up at the start of the segment it
+          stood in, so up to a segment plays again, and dropping "Trying again" once the media loads
+          rather than once it plays
 
         Checked on 2026-11-09: the video example makes its clips (WebCodecs VP8 and Opus) and plays
-        them in Tauri on the system WebKit, as in Chromium.
+        them in Tauri on the system WebKit, as in Chromium. Native HLS (MPEG-TS, `startAt`, stalls and
+        giving up) and full screen with a cover, in the browser and through a desktop call, were
+        checked headless in WebKit the same day.
 - **Gaps from a query app (2026-11-08)**, found moving an app with a jq editor onto 0.10.6:
     - **Completions listed twice in `CodeEditor`.** An app's own `completions` (one per builtin,
       with signatures as `detail` and a summary as `docs`) are offered beside the language's own
