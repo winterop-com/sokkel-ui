@@ -19,9 +19,9 @@ The library is six packages, built from one Bun workspace and released together 
 - `@winterop-com/sokkel-ui-terminal` (`packages/terminal`): `TerminalView` and `Terminal`, on
   xterm.js.
 - `@winterop-com/sokkel-ui-media` (`packages/media`): the music and video app parts, `MediaBar`
-  with its layouts and fullscreen view, `TrackList`, `ChapterList`, `Lyrics`, `MediaCard`,
-  `Artwork`, `useMediaSession`, `useQueue`, `VideoStatsOverlay`, `UpNext`, and `hlsSource`, which
-  plays an HTTP live stream in `VideoPlayer` through hls.js, an optional peer.
+  with its layouts and fullscreen view, `TrackList`, `ReorderableTrackList`, `ChapterList`,
+  `Lyrics`, `MediaCard`, `Artwork`, `useMediaSession`, `useQueue`, `VideoStatsOverlay`, `UpNext`,
+  and `hlsSource`, which plays an HTTP live stream in `VideoPlayer` through hls.js, an optional peer.
 
 An app installs the core and the add-ons it draws with, so an engine is installed only by an app
 that uses it, and the music and video parts only by an app that plays music or video. Each add-on
@@ -756,7 +756,11 @@ reader put it while they scroll and for four seconds after (`useFollow`, with th
 `follow`). TrackList's `progress` shows how far the playing row has played, the time left in place
 of its length or a line along its foot. An album over several discs gives each track its `disc`, and
 the list heads each disc where its tracks begin ("Disc 1", "Disc 2", from `words.disc`); a list on
-one disc draws no head.
+one disc draws no head. `ReorderableTrackList`, a module of its own so a page that only lists tracks
+does not carry it, is the list a listener orders, a playlist or what a queue plays next: each row
+ends in a grip that drags it, the rest moving aside and the box scrolling at its edges, Escape
+putting it back, and the arrows move a focused grip's row a place; it calls `onMove(from, to)` and
+draws the order it is given.
 
 Lyrics are read by `parseLyrics` in `lrc`: LRC's timed lines, several stamps on one line, the
 `offset` tag and the metadata tags, word stamps dropped; plain text, or LRC stamped all at zero,
