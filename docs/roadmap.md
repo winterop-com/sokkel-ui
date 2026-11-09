@@ -6,7 +6,12 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.10.12** is the latest release (2026-11-09): `CodeEditor` carries SQL, shell and Jinja,
+- **0.10.13** is the latest release (2026-11-09): the first two rounds of the review. A read-only
+  `SchemaForm` group locks its items; `Banner` wraps on a phone; `ApiPlayground`'s Send, `Inspector`,
+  `CodeBlockContent wrap` and a toolbar's title keep to their room; a `TableOfContents` entry draws
+  its section's state; and `useUnsavedChanges` guards hash routes (`hashRoutes`). The examples ask
+  before dropping a draft, offer only the themes they load, and reset what they say.
+- **0.10.12** (2026-11-09): `CodeEditor` carries SQL, shell and Jinja,
   each loaded on first use (an app using it installs `@codemirror/lang-sql` and
   `@codemirror/legacy-modes`), reveals a range, finds the schema a document names through
   `resolveSchema`, checks a schema document against the 2020-12 dialect, completes from a schema
