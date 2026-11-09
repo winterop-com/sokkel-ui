@@ -262,7 +262,7 @@ export function SettingsPage({ frame }: { frame: Frame }) {
                         template: TEMPLATE,
                     })
                 }}
-                onDone={() => (window.history.length > 1 ? window.history.back() : go('/notes'))}
+                onDone={() => go('/notes')}
             />
             <ConfirmDialog
                 open={resetting}

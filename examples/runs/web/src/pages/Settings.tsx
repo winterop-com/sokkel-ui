@@ -249,7 +249,7 @@ export function Settings({ frame }: { frame: Frame }) {
                         ),
                     )
                 }}
-                onDone={() => (window.history.length > 1 ? window.history.back() : go('/'))}
+                onDone={() => go('/')}
             />
             <ConfirmDialog
                 open={resetting}

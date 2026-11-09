@@ -5,7 +5,7 @@ import { SettingsView } from '@winterop-com/sokkel-ui/SettingsView'
 import { SliderField } from '@winterop-com/sokkel-ui/SliderField'
 import { ThemePicker } from '@winterop-com/sokkel-ui/ThemePicker'
 import type { AppearanceState } from '@winterop-com/sokkel-ui/hooks/use-appearance'
-import { CORNERS, THEMES } from '@winterop-com/sokkel-ui/lib/appearance'
+import { CORNERS, DEFAULT_APPEARANCE, THEMES } from '@winterop-com/sokkel-ui/lib/appearance'
 import { MEDIA_RATES } from '@winterop-com/sokkel-ui/media/MediaControls'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Switch } from '@winterop-com/sokkel-ui/primitives/switch'
@@ -381,6 +381,7 @@ export function Settings({ appearance }: { appearance: AppearanceState }) {
                 onReset={(section) => {
                     const keys = section === undefined ? [] : (SECTION_KEYS[section] ?? [])
                     setSettings(Object.fromEntries(keys.map((key) => [key, DEFAULT_SETTINGS[key]])) as Partial<Options>)
+                    if (section === 'appearance') appearance.setSettings({ ...DEFAULT_APPEARANCE, scheme: appearance.settings.scheme })
                     toast.add({ title: 'Put back to the defaults', timeout: 2000 })
                 }}
                 onDone={() => go('/albums')}

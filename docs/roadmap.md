@@ -129,14 +129,6 @@ to `plan.md` when it ships.
           but the base, so choosing Ocean is saved and changes nothing. `appearanceCommands` takes
           the themes an app carries; the shared frame passes them, and an unknown saved theme falls
           back to the base. Decide whether every example carries every theme.
-        - Music and status: Reset to defaults under Appearance confirms and leaves the theme as it
-          was. Reset the appearance.
-        - Runs, models, notes and podcast: settings' Done goes back in history, which can leave the
-          example. Return to the last page of the example, or its home.
-        - Tasks, metrics and dataviz: Sign out does nothing. Sign out to a signed-out page, or leave
-          it out.
-        - Metrics and dataviz: Settings, Data offers a generic reset that resets nothing and says it
-          did. Use `reset: false` on that section.
     - **Round 3, charts:**
         - Chart text is 11 and 10 px (`chart-text-size`, `chart-text-size-small`) beside 13 px
           everywhere else. Try 12 to 13 px in rendered stories, then fix what it crowds.

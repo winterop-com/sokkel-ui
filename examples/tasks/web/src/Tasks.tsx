@@ -217,7 +217,7 @@ export function TasksDemo({ frame }: { frame: Frame }) {
                     markHref="#/"
                     name="Tasks"
                     groups={groups}
-                    foot={<AccountMenu name="ada" where="tidevann.example.org" onSignOut={() => undefined} />}
+                    foot={<AccountMenu name="ada" where="tidevann.example.org" />}
                 />
             }
             top={
