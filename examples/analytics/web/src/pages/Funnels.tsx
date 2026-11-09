@@ -1,6 +1,7 @@
 import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
 import { ConfirmDialog } from '@winterop-com/sokkel-ui/DialogShell'
 import { Field } from '@winterop-com/sokkel-ui/Field'
+import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import { Split, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import { Section } from '@winterop-com/sokkel-ui/Section'
@@ -190,10 +191,9 @@ function Builder({ funnel: start }: { funnel: Funnel | undefined }) {
                 actions={
                     <>
                         {start !== undefined && (
-                            <Button variant="ghost" size="sm" onClick={() => setDeleting(true)}>
+                            <IconButton label="Delete funnel" variant="ghost" size="icon-sm" onClick={() => setDeleting(true)}>
                                 <Trash2 aria-hidden />
-                                Delete
-                            </Button>
+                            </IconButton>
                         )}
                         <Button size="sm" reason={why} disabled={busy} onClick={save}>
                             <Save aria-hidden />

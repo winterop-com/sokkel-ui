@@ -1,6 +1,7 @@
 import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
 import { ConfirmDialog } from '@winterop-com/sokkel-ui/DialogShell'
 import { Field } from '@winterop-com/sokkel-ui/Field'
+import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import { Split, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import { Section } from '@winterop-com/sokkel-ui/Section'
@@ -149,10 +150,9 @@ function Composer({ report: start, list }: { report: Report | undefined; list: R
                     actions={
                         <>
                             {start !== undefined && (
-                                <Button variant="ghost" size="sm" onClick={() => setDeleting(true)}>
+                                <IconButton label="Delete report" variant="ghost" size="icon-sm" onClick={() => setDeleting(true)}>
                                     <Trash2 aria-hidden />
-                                    Delete
-                                </Button>
+                                </IconButton>
                             )}
                             <Button
                                 variant="outline"
