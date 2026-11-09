@@ -1,7 +1,7 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 
 import type { Status } from '@winterop-com/sokkel-ui/StatusChip'
-import { GraphCanvas, type GraphViewProps } from './GraphCanvas'
+import { fitDirection, GraphCanvas, type GraphViewProps } from './GraphCanvas'
 import type { GraphEdgeData } from './GraphEdge'
 import { formatDuration as sayDuration } from './GraphNode'
 import type { PipelineStep } from './PipelineGraph'
@@ -35,12 +35,14 @@ export function RunGraph({
     steps,
     selected = null,
     onSelect,
-    direction = 'right',
+    direction: given,
     frame = 'stage',
     formatDuration = sayDuration,
     words,
     className,
 }: RunGraphProps) {
+    const [width, setWidth] = useState<number>()
+    const direction = given ?? fitDirection(width)
     const items = useMemo<GraphItem[]>(
         () =>
             steps.map((step) => ({
@@ -70,6 +72,7 @@ export function RunGraph({
             edges={graph.edges}
             settled={graph.settled}
             direction={direction}
+            onWidth={setWidth}
             frame={frame}
             onSelect={onSelect}
             words={words}

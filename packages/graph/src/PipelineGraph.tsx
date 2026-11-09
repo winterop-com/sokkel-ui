@@ -1,7 +1,7 @@
-import { useMemo, type ComponentType, type ReactNode } from 'react'
+import { useMemo, useState, type ComponentType, type ReactNode } from 'react'
 
 import type { Issue } from '@winterop-com/sokkel-ui/IssueMark'
-import { GraphCanvas, type GraphEditing, type GraphViewProps } from './GraphCanvas'
+import { fitDirection, GraphCanvas, type GraphEditing, type GraphViewProps } from './GraphCanvas'
 import { useNodeGraph, type GraphItem, type GraphLink } from './use-node-graph'
 
 /** One step of a pipeline: its code, an optional name and kind, and the codes of the steps it needs. */
@@ -66,7 +66,7 @@ export function PipelineGraph({
     onSelect,
     selection,
     onSelectionChange,
-    direction = 'right',
+    direction: given,
     frame = 'stage',
     editing,
     positions,
@@ -76,6 +76,8 @@ export function PipelineGraph({
     className,
     children,
 }: PipelineGraphProps) {
+    const [width, setWidth] = useState<number>()
+    const direction = given ?? fitDirection(width)
     const items = useMemo<GraphItem[]>(
         () =>
             steps.map((step) => ({
@@ -92,6 +94,7 @@ export function PipelineGraph({
             edges={graph.edges}
             settled={graph.settled}
             direction={direction}
+            onWidth={setWidth}
             frame={frame}
             onSelect={onSelect}
             onSelectionChange={onSelectionChange}
