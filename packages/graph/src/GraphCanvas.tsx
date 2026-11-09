@@ -180,10 +180,21 @@ function nodeAt(clientX: number, clientY: number): string | null {
 }
 
 /** Fit the graph within the fit's zoom bounds, then hang what does not fit off the far edges, start first. */
+/** The least zoom a narrow canvas goes to so a graph's width fits it, its words still readable. */
+const NARROW_FIT_MIN_ZOOM = 0.6
+
 async function fitGraph(flow: ReactFlowInstance, canvas: { width: number; height: number }, minZoom: number): Promise<void> {
     const nodes = flow.getNodes()
     if (nodes.length === 0) return
-    await flow.fitView({ ...FIT_OPTIONS, minZoom })
+    // On a narrow canvas the width fits first, a little under the usual least zoom if it must; a
+    // tall graph then reads down and scrolls rather than hanging off the side.
+    let least = minZoom
+    if (canvas.width > 0 && canvas.width < NARROW_GRAPH) {
+        const across = flow.getNodesBounds(nodes).width
+        const fitsAcross = across > 0 ? (canvas.width * (1 - 2 * FIT_PADDING)) / across : minZoom
+        least = Math.min(minZoom, Math.max(NARROW_FIT_MIN_ZOOM, fitsAcross))
+    }
+    await flow.fitView({ ...FIT_OPTIONS, minZoom: least })
     const view = flow.getViewport()
     const placed = startOfOverflow(view, flow.getNodesBounds(nodes), canvas)
     if (placed.x !== view.x || placed.y !== view.y) await flow.setViewport(placed, { duration: 0 })
