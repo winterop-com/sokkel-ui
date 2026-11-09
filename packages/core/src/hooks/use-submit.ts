@@ -69,7 +69,8 @@ export function useSubmit({ check, waiting = false, send }: SubmitOptions): Subm
         setHeld(false)
         setSending(true)
         setError(undefined)
-        post()
+        // A sender that throws before it answers fails the send as one that rejects does.
+        new Promise<readonly ServerIssue[] | void>((answer) => answer(post()))
             .then(
                 (refused) => {
                     const said = refused ?? NONE

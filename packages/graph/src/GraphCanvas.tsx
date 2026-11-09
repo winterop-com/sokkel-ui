@@ -328,13 +328,15 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
 
     const reportWidth = useRef(onWidth)
     reportWidth.current = onWidth
+    const reporting = onWidth !== undefined
     useEffect(() => {
         const element = box.current
-        if (element === null || reportWidth.current === undefined) return
+        if (element === null || !reporting) return
+        reportWidth.current?.(element.clientWidth)
         const observer = new ResizeObserver(() => reportWidth.current?.(element.clientWidth))
         observer.observe(element)
         return () => observer.disconnect()
-    }, [])
+    }, [reporting])
 
     useEffect(() => {
         const element = box.current

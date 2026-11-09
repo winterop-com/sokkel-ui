@@ -233,7 +233,7 @@ export function StatPanel({
                     ref={titleRef}
                     title={clamped && typeof title === 'string' ? title : undefined}
                     className={cn(
-                        'line-clamp-2 min-w-0 flex-1 text-xs font-medium break-words',
+                        'line-clamp-2 min-w-16 flex-1 text-xs font-medium break-words',
                         filled ? 'text-on-fill/90' : 'text-muted-foreground',
                     )}
                 >
@@ -243,7 +243,7 @@ export function StatPanel({
                     <span
                         title={compared === undefined ? undefined : `${delta} ${compared}`}
                         className={cn(
-                            'flex shrink-0 items-center gap-0.5 text-xs font-medium tabular-nums',
+                            'flex min-w-0 shrink items-center gap-0.5 text-xs font-medium tabular-nums',
                             filled
                                 ? 'text-on-fill/90'
                                 : good === undefined
@@ -254,8 +254,8 @@ export function StatPanel({
                         )}
                     >
                         {rising ? <ArrowUpRight className="size-3.5" aria-hidden /> : <ArrowDownRight className="size-3.5" aria-hidden />}
-                        {delta}
-                        {compared !== undefined && <span className="ml-1 font-normal">{compared}</span>}
+                        <span className="shrink-0">{delta}</span>
+                        {compared !== undefined && <span className="ml-1 min-w-0 truncate font-normal">{compared}</span>}
                     </span>
                 )}
                 {info !== undefined && (
@@ -277,9 +277,14 @@ export function StatPanel({
                     </DropdownMenu>
                 )}
             </header>
-            <LoadingOverlay loading={loading} label={words.loading} className="flex min-h-0 flex-1 flex-col">
+            {/* A tile that is a link lets a press on its body through to the cover under it. */}
+            <LoadingOverlay
+                loading={loading}
+                label={words.loading}
+                className={cn('flex min-h-0 flex-1 flex-col', interactive && 'pointer-events-none')}
+            >
                 {error !== undefined && error !== false ? (
-                    <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-1.5 px-2.5 pb-3 text-center">
+                    <div className="pointer-events-auto relative z-10 flex flex-1 flex-col items-center justify-center gap-1.5 px-2.5 pb-3 text-center">
                         <p className={cn('text-xs', filled ? 'text-on-fill/90' : 'text-critical-ink')}>
                             {typeof error === 'string' ? error : words.failed}
                         </p>
