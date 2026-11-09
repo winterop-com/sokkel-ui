@@ -8,7 +8,7 @@ import { SettingsView } from '@winterop-com/sokkel-ui/SettingsView'
 import { TagChips } from '@winterop-com/sokkel-ui/TagChips'
 import { ThemePicker } from '@winterop-com/sokkel-ui/ThemePicker'
 import type { AppearanceState } from '@winterop-com/sokkel-ui/hooks/use-appearance'
-import { CORNERS, THEMES } from '@winterop-com/sokkel-ui/lib/appearance'
+import { CORNERS, DEFAULT_APPEARANCE, THEMES } from '@winterop-com/sokkel-ui/lib/appearance'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Input } from '@winterop-com/sokkel-ui/primitives/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@winterop-com/sokkel-ui/primitives/select'
@@ -463,6 +463,7 @@ export function Settings({ options, appearance }: { options: Options; appearance
                 onReset={(section) => {
                     const keys = section === undefined ? [] : (SECTION_KEYS[section] ?? [])
                     setSettings(Object.fromEntries(keys.map((key) => [key, DEFAULT_SETTINGS[key]])) as Partial<Options>)
+                    if (section === 'appearance') appearance.setSettings({ ...DEFAULT_APPEARANCE, scheme: appearance.settings.scheme })
                 }}
                 onDone={() => go('/')}
             />

@@ -202,7 +202,7 @@ export function SettingsPage({ frame }: { frame: Frame }) {
                     const { id: _id, ...defaults } = DEFAULT_PREFS
                     setPrefs(defaults)
                 }}
-                onDone={() => (window.history.length > 1 ? window.history.back() : go('/home'))}
+                onDone={() => go('/home')}
             />
             <ConfirmDialog
                 open={asking === 'stats'}

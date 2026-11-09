@@ -163,6 +163,7 @@ export function SettingsPage({ prefs, frame, datasets }: { prefs: Preferences; f
             sections: [
                 {
                     id: 'data',
+                    reset: false,
                     label: 'Data',
                     icon: Database,
                     settings: [

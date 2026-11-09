@@ -306,7 +306,7 @@ export function SettingsPage({ frame }: { frame: Frame }) {
                     const keys = section === undefined ? Object.values(HELD).flat() : (HELD[section] ?? [])
                     if (keys.length > 0) save(Object.fromEntries(keys.map((key) => [key, DEFAULT_PREFS[key]])))
                 }}
-                onDone={() => (window.history.length > 1 ? window.history.back() : go('/library'))}
+                onDone={() => go('/library')}
             />
             <ConfirmDialog
                 open={resetting}

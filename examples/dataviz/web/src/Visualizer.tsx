@@ -241,14 +241,7 @@ export function Visualizer({ frame }: { frame: Frame }) {
                         markHref="#/datasets"
                         name="Visualizer"
                         groups={groups}
-                        foot={
-                            <AccountMenu
-                                name="ada"
-                                where="tidevann.example.org"
-                                onSettings={() => go('/settings')}
-                                onSignOut={() => undefined}
-                            />
-                        }
+                        foot={<AccountMenu name="ada" where="tidevann.example.org" onSettings={() => go('/settings')} />}
                     />
                 }
                 top={
