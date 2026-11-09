@@ -227,6 +227,7 @@ const CORE_AREAS: Record<string, string> = {
     NumberField: 'Forms and inputs',
     PeopleFilter: 'Forms and inputs',
     PermissionMatrix: 'Forms and inputs',
+    RepeatedGroup: 'Forms and inputs',
     SaveBar: 'Forms and inputs',
     SavedViews: 'Forms and inputs',
     Search: 'Forms and inputs',

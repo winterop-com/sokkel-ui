@@ -40,7 +40,7 @@ viewer's caption settings through `useStored` or an app's store, with the option
 in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second by `useVideoStats`
 (`@winterop-com/sokkel-ui/media/video-stats`) for `VideoStatsOverlay`.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 237 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 238 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 10 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 12 modules
@@ -193,7 +193,7 @@ in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second 
 | **SubNav** | `@winterop-com/sokkel-ui/SubNav` | The second column beside the rail: what the app's section holds, such as a tree of folders, a section's pages or a month to pick a day from. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-sub-nav--folders) |
 | **TableOfContents** | `@winterop-com/sokkel-ui/TableOfContents` | An "on this page" list beside a long page or form: its headings, the deeper ones indented, the one the reader is in marked with a bar, each with an optional mark such as a part's state. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-docs--callout) |
 | **ThemePicker** | `@winterop-com/sokkel-ui/ThemePicker` | The appearance controls an app's settings show: the named theme, dark or light, the density, the corners, the typeface and the motion. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/themes-theme-picker--basic) |
-| **ThemeToggle** | `@winterop-com/sokkel-ui/ThemeToggle` | The light and dark switch for a top bar: the icon shows the scheme in use, and the name and tooltip say what a press does. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-activity--top-bar-menu) |
+| **ThemeToggle** | `@winterop-com/sokkel-ui/ThemeToggle` | The light and dark switch for a top bar: the icon shows the scheme in use, and the name and tooltip say what a press does. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-app-controls--theme) |
 | **TopBar** | `@winterop-com/sokkel-ui/TopBar` | What the shell's top bar holds: a search field and the trail to the current screen at the left, the button that opens the command palette and the screen's actions at the right. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/charts-area--single) |
 
 ### Page layout
@@ -241,6 +241,7 @@ in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second 
 | **PeriodPicker** | `@winterop-com/sokkel-ui/PeriodPicker` | The period a report is made for: the recent periods of its type, newest first, each with its id in the code face, and Other period last, which opens a field where any id is typed. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-period-picker--empty) |
 | **PermissionMatrix** | `@winterop-com/sokkel-ui/PermissionMatrix` | Roles against permissions as a grid of checkboxes: a column per role, a row per permission, the rows grouped by what they act on with each group's row counting what every role holds of it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-access--secret) |
 | **QuickAdd** | `@winterop-com/sokkel-ui/QuickAdd` | The field at the top of a list that adds a row: type, press Enter, and the field empties for the next one. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-quick-add--field) |
+| **RepeatedGroup** | `@winterop-com/sokkel-ui/RepeatedGroup` | A group of fields asked again for each of several things in a hand-composed form, such as a run's steps or a household's people: the group's name with Add, then each row in a box with its number, Move up, Move down and Remove, and its fields. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-repeated-group--editable) |
 | **SaveBar** | `@winterop-com/sokkel-ui/SaveBar` | The bar pinned to the foot of a page while its edits are not yet saved: how many there are at the left, Discard and Save at the right. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-access--secret) |
 | **SavedViews** | `@winterop-com/sokkel-ui/SavedViews` | The saved views of a listing: a menu that names the chosen view, lists the others to pick, and saves the listing now as a new view, renames the chosen one or deletes it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-saved-views--chosen) |
 | **Search**, SearchResultBody, SearchPreview, SearchGroupHeading | `@winterop-com/sokkel-ui/Search` | The one search for a page, built on `SearchField`: as words are typed the app's `search` is asked, and its results open in a popover under the field, grouped by kind, each with its thumbnail or icon, its title with the query's words marked and a line under it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-search--open) |
@@ -364,7 +365,7 @@ in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second 
 
 | Component | Import | What it is | Story |
 | --- | --- | --- | --- |
-| **DashboardGrid**, PanelFailure, StaleMark, DashboardPanel, KpiRow | `@winterop-com/sokkel-ui/dashboard/DashboardGrid` | The grid a dashboard's panels sit in: twelve columns when the grid is wide, six when it is tablet-wide, two when phone-wide, by the grid's own width, not the window's, so a dashboard beside a rail or a panel lays out for the room it has. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/charts-gauges--arc) |
+| **DashboardGrid**, PanelFailure, StaleMark, DashboardPanel, KpiRow | `@winterop-com/sokkel-ui/dashboard/DashboardGrid` | The grid a dashboard's panels sit in: twelve columns, a panel's span following the grid's own width, not the window's, so a dashboard beside a rail or a panel lays out for the room it has. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/charts-gauges--arc) |
 | **DashboardRow** | `@winterop-com/sokkel-ui/dashboard/DashboardRow` | A collapsible group of a dashboard's panels under a heading, such as Overview or Latency. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-dashboard-panels--key-figures) |
 | **ScoreTable** | `@winterop-com/sokkel-ui/dashboard/ScoreTable` | A scorecard: rows of places, teams or jobs against columns of periods or measures, each value colored by the band it falls in on a threshold scale. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/charts-scorecard--periods) |
 | **StatPanel** | `@winterop-com/sokkel-ui/dashboard/StatPanel` | One reading as a dashboard tile: a small title, the value written large, and optionally a trend drawn faintly behind it and a change against an earlier period. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/charts-tiles--targets) |
