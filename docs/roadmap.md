@@ -129,9 +129,9 @@ to `plan.md` when it ships.
         - `RunGraph` laid out top to bottom on a phone still puts two first steps side by side,
           clipping the second slightly at 344, since the fit stops at its least zoom. Stack wide
           ranks, or let a narrow fit zoom out further.
-        - Workspace at 1024: the rail stays open beside the inspector and the list falls to three
-          tall cards. Collapse the rail first when the inspector opens, and stack rows compactly
-          before full labeled cards.
+        - Workspace at 1024: the list falls to three tall labeled cards beside the panel. Stack rows
+          compactly before full labeled cards (the rail now narrows while the panel is open under
+          `xl`).
     - **Round 5, dashboards:**
         - A panel's own failure and freshness: `DashboardPanel`, `ChartFrame` and `StatPanel` show
           loading and no data, but not a failed query with Retry, or values kept but stale since a
