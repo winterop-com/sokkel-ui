@@ -3,7 +3,7 @@ import { CORNERS, DEFAULT_APPEARANCE, THEMES, TYPEFACES } from '@winterop-com/so
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Switch } from '@winterop-com/sokkel-ui/primitives/switch'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
-import { type SettingsGroup, SettingsView } from '@winterop-com/sokkel-ui/SettingsView'
+import { SettingsDialog, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsDialog'
 import { ThemePicker } from '@winterop-com/sokkel-ui/ThemePicker'
 import { Bell, Database, LayoutDashboard, Palette } from 'lucide-react'
 import { useState } from 'react'
@@ -13,7 +13,6 @@ import { resetAll } from 'tidevann-shared/backend'
 import type { Frame } from 'tidevann-shared/frame'
 import { DEFAULT_PREFERENCES, type Preferences, preferences } from './data'
 import { SelectInput } from './inputs'
-import { go } from './place'
 import { INTERVALS, PRESETS, type Zone } from './query'
 
 const KEEPS = [
@@ -22,8 +21,8 @@ const KEEPS = [
     { value: String(7 * 24 * 3600), label: 'A week' },
 ]
 
-/** The app's preferences as a page: dashboards, alerts, the look and the demo's data. */
-export function SettingsPage({ prefs, frame }: { prefs: Preferences; frame: Frame }) {
+/** The app's preferences as a dialog: dashboards, alerts, the look and the demo's data. */
+export function SettingsPage({ prefs, frame, open, onClose }: { prefs: Preferences; frame: Frame; open: boolean; onClose: () => void }) {
     const [active, setActive] = useState('dashboards')
     const [search, setSearch] = useState('')
     const [resetting, setResetting] = useState(false)
@@ -194,7 +193,11 @@ export function SettingsPage({ prefs, frame }: { prefs: Preferences; frame: Fram
 
     return (
         <>
-            <SettingsView
+            <SettingsDialog
+                open={open}
+                onOpenChange={(next) => {
+                    if (!next) onClose()
+                }}
                 groups={groups}
                 active={active}
                 onActiveChange={setActive}
@@ -209,7 +212,6 @@ export function SettingsPage({ prefs, frame }: { prefs: Preferences; frame: Fram
                     if (section === 'appearance') setSettings({ ...DEFAULT_APPEARANCE, scheme: settings.scheme })
                     toast.success('Back to the defaults')
                 }}
-                onDone={() => go('/dashboards')}
             />
             <ConfirmDialog
                 open={resetting}

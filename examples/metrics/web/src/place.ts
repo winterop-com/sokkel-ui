@@ -14,10 +14,14 @@ export interface Place {
     params: URLSearchParams
 }
 
-function read(): Place {
-    const hash = window.location.hash.replace(/^#\/?/, '')
-    const [path = '', query = ''] = hash.split('?')
+/** The place a hash names, with or without its leading `#/`: `d/services?range=15m`. */
+export function placeOf(hash: string): Place {
+    const [path = '', query = ''] = hash.replace(/^#?\/?/, '').split('?')
     return { path: path.split('/').filter((part) => part !== ''), params: new URLSearchParams(query) }
+}
+
+function read(): Place {
+    return placeOf(window.location.hash)
 }
 
 /** The place in the hash, followed as it changes. */

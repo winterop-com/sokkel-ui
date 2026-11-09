@@ -1,7 +1,6 @@
 import { ConfirmDialog } from '@winterop-com/sokkel-ui/DialogShell'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
-import type { SettingsGroup } from '@winterop-com/sokkel-ui/SettingsView'
-import { SettingsView } from '@winterop-com/sokkel-ui/SettingsView'
+import { SettingsDialog, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsDialog'
 import { ThemePicker } from '@winterop-com/sokkel-ui/ThemePicker'
 import { DEFAULT_APPEARANCE, THEMES } from '@winterop-com/sokkel-ui/lib/appearance'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
@@ -11,7 +10,6 @@ import { useState } from 'react'
 
 import { resetAll } from 'tidevann-shared/backend'
 import type { Frame } from 'tidevann-shared/frame'
-import { go } from 'tidevann-shared/router'
 import { DEFAULT_PREFS, type Prefs } from '../model'
 import { useConsole } from '../state'
 
@@ -29,7 +27,7 @@ function Toggle({ label, on, onChange }: { label: string; on: boolean; onChange:
 }
 
 /** The person's settings, kept by the backend as each is changed; the look is kept in this browser. */
-export function Settings({ frame }: { frame: Frame }) {
+export function Settings({ frame, open, onClose }: { frame: Frame; open: boolean; onClose: () => void }) {
     const { prefs, setPrefs, me } = useConsole()
     const { settings: look, setSettings: setLook } = frame.appearance
     const [active, setActive] = useState('general')
@@ -231,7 +229,11 @@ export function Settings({ frame }: { frame: Frame }) {
 
     return (
         <>
-            <SettingsView
+            <SettingsDialog
+                open={open}
+                onOpenChange={(next) => {
+                    if (!next) onClose()
+                }}
                 groups={groups}
                 active={active}
                 onActiveChange={setActive}
@@ -249,7 +251,6 @@ export function Settings({ frame }: { frame: Frame }) {
                         ),
                     )
                 }}
-                onDone={() => go('/')}
             />
             <ConfirmDialog
                 open={resetting}

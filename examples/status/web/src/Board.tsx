@@ -28,7 +28,7 @@ import { lazy, Suspense, useState } from 'react'
 
 import type { Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
-import { go } from 'tidevann-shared/router'
+import { go, useOverlayRoute } from 'tidevann-shared/router'
 import { type Person, SERVICE_IDS, type ServiceId, SERVICES, SITE_BY_ID, SITES } from './data'
 import { useLive, worstOf } from './live'
 import { Incident } from './pages/Incident'
@@ -50,7 +50,7 @@ const Service = lazy(() => import('./pages/Service').then((module) => ({ default
 /** Who is signed in to the board. */
 const ME: Person = 'ada'
 
-const PLACES = ['overview', 'incidents', 'services', 'regions', 'on-call', 'settings'] as const
+const PLACES = ['overview', 'incidents', 'services', 'regions', 'on-call'] as const
 type Place = (typeof PLACES)[number]
 
 const LABELS: Record<Place, string> = {
@@ -59,7 +59,6 @@ const LABELS: Record<Place, string> = {
     services: 'Services',
     regions: 'Regions',
     'on-call': 'On call',
-    settings: 'Settings',
 }
 
 const BANNER_TONE: Record<Health, 'critical' | 'warning' | 'info' | 'good'> = {
@@ -78,7 +77,9 @@ export function Board({ frame }: { frame: Frame }) {
     const [handingOver, setHandingOver] = useState(false)
     const { settings: look, setSettings: setLook } = frame.appearance
 
-    const [first, second, third] = frame.route
+    // Settings open as a dialog over the page they were opened from.
+    const overlay = useOverlayRoute(frame.route, 'settings', [])
+    const [first, second, third] = overlay.route
     const place: Place = PLACES.includes(first as Place) ? (first as Place) : 'overview'
     const service = place === 'services' && SERVICE_IDS.includes(second as ServiceId) ? (second as ServiceId) : undefined
     const incident = place === 'incidents' ? rows.incidents?.find((one) => one.id === second) : undefined
@@ -226,8 +227,6 @@ export function Board({ frame }: { frame: Frame }) {
             <Regions />
         ) : place === 'on-call' ? (
             <OnCall options={options} onHandOver={() => setHandingOver(true)} />
-        ) : place === 'settings' ? (
-            <Settings options={options} appearance={frame.appearance} />
         ) : (
             <Overview options={options} onReport={() => setReporting(true)} />
         )
@@ -262,7 +261,7 @@ export function Board({ frame }: { frame: Frame }) {
                 palette={palette}
                 paletteFilter="terms"
                 desktop={frame.desktop}
-                route={frame.route.join('/')}
+                route={overlay.route.join('/')}
                 banner={banner}
                 rail={
                     <Rail
@@ -314,11 +313,11 @@ export function Board({ frame }: { frame: Frame }) {
                     </StatusLine>
                 }
             >
-                {/* Settings lay themselves out as a page of their own. */}
-                {place === 'settings' ? page : <Page className={fills ? 'h-full' : undefined}>{page}</Page>}
+                <Page className={fills ? 'h-full' : undefined}>{page}</Page>
             </Shell>
             <NewIncidentDialog open={reporting} onOpenChange={setReporting} me={ME} service={service} />
             <HandOverDialog open={handingOver} onOpenChange={setHandingOver} />
+            {overlay.open && <Settings options={options} appearance={frame.appearance} open onClose={overlay.close} />}
         </>
     )
 }

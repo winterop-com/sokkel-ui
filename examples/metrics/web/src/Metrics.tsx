@@ -36,6 +36,7 @@ import { useMemo, useState } from 'react'
 import { useCollection } from 'tidevann-shared/backend'
 import type { Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
+import { useOverlayRoute } from 'tidevann-shared/router'
 import { readings, type RuleReading, useAlerting } from './alerting'
 import { AlertsPage } from './Alerts'
 import { DashboardPage } from './Dashboard'
@@ -45,7 +46,7 @@ import { DashboardDialog, ShareDialog } from './dialogs'
 import { EditorPage } from './Editor'
 import { scraped, useDashboardTime, useScrapeClock } from './live'
 import type { PanelKind } from './model'
-import { go, patchParams, type Place, rangeOf, rangeParams, usePlace, variablesOf, viewParams } from './place'
+import { go, patchParams, type Place, placeOf, rangeOf, rangeParams, usePlace, variablesOf, viewParams } from './place'
 import { clockOf } from './query'
 import { RuleDialog } from './RuleDialog'
 import { SettingsPage } from './Settings'
@@ -92,7 +93,11 @@ function Foot({ zone, firing, paused, refresh }: { zone: 'local' | 'utc'; firing
 /** The Metrics app: live dashboards, a panel editor with a live preview, and alerts, over a simulated source. */
 export function MetricsApp({ frame }: { frame: Frame }) {
     useScrapeClock()
-    const place = usePlace()
+    const here = usePlace()
+    // Settings open as a dialog over the page they were opened from, which keeps drawing and updating under it.
+    const settings = useOverlayRoute(frame.route, 'settings', ['dashboards'])
+    const under = settings.route.join('/')
+    const place = useMemo(() => (settings.open ? placeOf(under) : here), [settings.open, under, here])
     const boards = useCollection(dashboards)
     const ruleList = useCollection(rules)
     const fired = useCollection(events)
@@ -176,7 +181,7 @@ export function MetricsApp({ frame }: { frame: Frame }) {
         {
             id: 'system',
             title: 'System',
-            entries: [{ id: 'settings', label: 'Settings', icon: Settings2, href: '#/settings', active: section === 'settings' }],
+            entries: [{ id: 'settings', label: 'Settings', icon: Settings2, href: '#/settings' }],
         },
     ]
 
@@ -244,11 +249,9 @@ export function MetricsApp({ frame }: { frame: Frame }) {
             ? (board?.title ?? '')
             : page === 'alerts'
               ? 'Alerts'
-              : page === 'settings'
-                ? 'Settings'
-                : page === 'dashboards'
-                  ? 'Dashboards'
-                  : ''
+              : page === 'dashboards'
+                ? 'Dashboards'
+                : ''
 
     return (
         <StatusProvider statuses={ALERT_STATUSES}>
@@ -284,14 +287,13 @@ export function MetricsApp({ frame }: { frame: Frame }) {
                     <EditorPage key={`${board.id}/${panelId ?? 'new'}`} dashboard={board} panelId={panelId} view={view} kept={kept} />
                 ) : page === 'alerts' ? (
                     <AlertsPage rules={ruleList.rows} fired={fired.rows} zone={prefs.zone} onNew={() => setNewRule(true)} />
-                ) : page === 'settings' ? (
-                    <SettingsPage prefs={prefs} frame={frame} />
                 ) : (
                     <PageState loading={false} empty emptyMessage="Nothing is here. Pick a dashboard in the rail.">
                         {null}
                     </PageState>
                 )}
             </Shell>
+            {settings.open && <SettingsPage prefs={prefs} frame={frame} open onClose={settings.close} />}
             {board !== undefined && <ShareDialog open={sharing} onOpenChange={setSharing} dashboard={board} view={view} />}
             <DashboardDialog open={creating} onOpenChange={setCreating} dashboards={all} kept={kept} />
             <RuleDialog open={newRule} onOpenChange={setNewRule} onSaved={() => go('/alerts')} />
@@ -300,7 +302,7 @@ export function MetricsApp({ frame }: { frame: Frame }) {
     )
 }
 
-type PageName = 'loading' | 'error' | 'dashboards' | 'dashboard' | 'editor' | 'alerts' | 'settings' | 'missing'
+type PageName = 'loading' | 'error' | 'dashboards' | 'dashboard' | 'editor' | 'alerts' | 'missing'
 
 /** Which page the place shows, sending a bare address to the first dashboard. */
 function route(
@@ -315,7 +317,6 @@ function route(
 ): PageName {
     const [section] = place.path
     if (section === 'alerts') return 'alerts'
-    if (section === 'settings') return 'settings'
     if (section === 'dashboards') return 'dashboards'
     if (loading) return 'loading'
     if (error !== undefined) return 'error'

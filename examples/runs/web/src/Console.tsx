@@ -12,7 +12,7 @@ import { lazy, Suspense, useEffect } from 'react'
 
 import type { Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
-import { go } from 'tidevann-shared/router'
+import { go, useOverlayRoute } from 'tidevann-shared/router'
 import { useActions } from './actions'
 import { clock, dayOf } from './model'
 import { Jobs } from './pages/Jobs'
@@ -25,7 +25,7 @@ import { nextFire } from './schedule'
 import { useConsole } from './state'
 import { isLive } from './timeline'
 
-const PAGES = ['overview', 'runs', 'schedules', 'jobs', 'settings'] as const
+const PAGES = ['overview', 'runs', 'schedules', 'jobs'] as const
 
 // The pages that draw a graph load React Flow and elk the first time one is opened.
 const RunPage = lazy(() => import('./pages/RunPage').then((module) => ({ default: module.RunPage })))
@@ -36,7 +36,9 @@ export function Console({ frame }: { frame: Frame }) {
     const { runs, jobs, prefs, setPrefs, me, now, runOf, jobOf } = useConsole()
     const actions = useActions()
     const { settings: look, setSettings: setLook } = frame.appearance
-    const [first = 'overview', second] = frame.route
+    // Settings open as a dialog over the page they were opened from.
+    const settings = useOverlayRoute(frame.route, 'settings', [])
+    const [first = 'overview', second] = settings.route
     const page = (PAGES as readonly string[]).includes(first) ? first : 'missing'
 
     // A run shown on its own page is not shown beside it as well.
@@ -102,8 +104,7 @@ export function Console({ frame }: { frame: Frame }) {
 
     const runPage = first === 'runs' && second !== undefined ? runOf(second) : undefined
     const jobPage = first === 'jobs' && second !== undefined ? jobOf(second) : undefined
-    const label =
-        { overview: 'Overview', runs: 'Runs', schedules: 'Schedules', jobs: 'Jobs', settings: 'Settings', missing: 'Not found' }[page] ?? ''
+    const label = { overview: 'Overview', runs: 'Runs', schedules: 'Schedules', jobs: 'Jobs', missing: 'Not found' }[page] ?? ''
     const trail: Crumb[] = [{ label: 'Tidevann', href: '#/' }]
     if (second !== undefined && (first === 'runs' || first === 'jobs')) {
         trail.push({ label, href: `#/${first}` }, { label: first === 'runs' ? (runPage?.id ?? second) : (jobPage?.name ?? second) })
@@ -120,13 +121,12 @@ export function Console({ frame }: { frame: Frame }) {
     else if (page === 'runs') content = second === undefined ? <Runs /> : <RunPage id={second} />
     else if (page === 'jobs') content = second === undefined ? <Jobs /> : <JobPage id={second} />
     else if (page === 'schedules') content = <Schedules />
-    else if (page === 'settings') content = null
     else
         content = (
             <Empty>
                 <EmptyHeader>
                     <EmptyTitle>Nothing at this address</EmptyTitle>
-                    <EmptyDescription>The console has no page at #/{frame.route.join('/')}.</EmptyDescription>
+                    <EmptyDescription>The console has no page at #/{settings.route.join('/')}.</EmptyDescription>
                 </EmptyHeader>
                 <Button size="sm" variant="outline" onClick={() => go('/')}>
                     Go to the overview
@@ -139,7 +139,7 @@ export function Console({ frame }: { frame: Frame }) {
         <Shell
             palette={palette}
             desktop={frame.desktop}
-            route={frame.route.join('/')}
+            route={settings.route.join('/')}
             rail={
                 <Rail
                     mark={<TidevannMark />}
@@ -190,13 +190,10 @@ export function Console({ frame }: { frame: Frame }) {
             onPanelOpenChange={(open) => !open && actions.close()}
             panel={shown === undefined ? undefined : <RunPanel key={shown.id} run={shown} />}
         >
-            {page === 'settings' ? (
-                <SettingsPage frame={frame} />
-            ) : (
-                <Page className={fills ? 'h-full' : undefined}>
-                    <Suspense fallback={null}>{content}</Suspense>
-                </Page>
-            )}
+            <Page className={fills ? 'h-full' : undefined}>
+                <Suspense fallback={null}>{content}</Suspense>
+            </Page>
+            {settings.open && <SettingsPage frame={frame} open onClose={settings.close} />}
         </Shell>
     )
 }

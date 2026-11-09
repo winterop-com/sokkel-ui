@@ -3,8 +3,7 @@ import { type DataColumn, DataTable } from '@winterop-com/sokkel-ui/DataTable'
 import { Row } from '@winterop-com/sokkel-ui/Layout'
 import { RelativeTime } from '@winterop-com/sokkel-ui/RelativeTime'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
-import type { SettingsGroup } from '@winterop-com/sokkel-ui/SettingsDialog'
-import { SettingsView } from '@winterop-com/sokkel-ui/SettingsView'
+import { SettingsDialog, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsDialog'
 import { TagChips } from '@winterop-com/sokkel-ui/TagChips'
 import { ThemePicker } from '@winterop-com/sokkel-ui/ThemePicker'
 import type { AppearanceState } from '@winterop-com/sokkel-ui/hooks/use-appearance'
@@ -87,8 +86,18 @@ const SECTION_KEYS: Record<string, (keyof Options)[]> = {
     page: ['pageTitle', 'showUptime', 'historyDays'],
 }
 
-/** The board's settings as a page: how it updates and tells, the simulation, the status page, its subscribers and the look. */
-export function Settings({ options, appearance }: { options: Options; appearance: AppearanceState }) {
+/** The board's settings as a dialog: how it updates and tells, the simulation, the status page, its subscribers and the look. */
+export function Settings({
+    options,
+    appearance,
+    open,
+    onClose,
+}: {
+    options: Options
+    appearance: AppearanceState
+    open: boolean
+    onClose: () => void
+}) {
     const rows = useRows()
     const state = useLive()
     const [active, setActive] = useState('board')
@@ -454,7 +463,11 @@ export function Settings({ options, appearance }: { options: Options; appearance
 
     return (
         <>
-            <SettingsView
+            <SettingsDialog
+                open={open}
+                onOpenChange={(next) => {
+                    if (!next) onClose()
+                }}
                 groups={groups}
                 active={active}
                 onActiveChange={setActive}
@@ -465,7 +478,6 @@ export function Settings({ options, appearance }: { options: Options; appearance
                     setSettings(Object.fromEntries(keys.map((key) => [key, DEFAULT_SETTINGS[key]])) as Partial<Options>)
                     if (section === 'appearance') appearance.setSettings({ ...DEFAULT_APPEARANCE, scheme: appearance.settings.scheme })
                 }}
-                onDone={() => go('/')}
             />
             <ConfirmDialog
                 open={resetting}
