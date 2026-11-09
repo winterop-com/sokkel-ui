@@ -1,7 +1,6 @@
 import { ConfirmDialog } from '@winterop-com/sokkel-ui/DialogShell'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
-import type { SettingsGroup } from '@winterop-com/sokkel-ui/SettingsDialog'
-import { SettingsView } from '@winterop-com/sokkel-ui/SettingsView'
+import { SettingsDialog, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsDialog'
 import { SliderField } from '@winterop-com/sokkel-ui/SliderField'
 import { ThemePicker } from '@winterop-com/sokkel-ui/ThemePicker'
 import type { AppearanceState } from '@winterop-com/sokkel-ui/hooks/use-appearance'
@@ -14,7 +13,6 @@ import { AudioLines, Library, PanelBottom, Palette, Play } from 'lucide-react'
 import { useState } from 'react'
 
 import { resetAll } from 'tidevann-shared/backend'
-import { go } from 'tidevann-shared/router'
 import { formatBytes } from '../catalog'
 import {
     clearHistory,
@@ -43,8 +41,8 @@ const SECTION_KEYS: Record<string, (keyof Options)[]> = {
 
 const rateLabel = (rate: number) => `${String(rate)}x`
 
-/** The player's settings as a page: playback, the bar, the visualizer, the library kept here, and the look. */
-export function Settings({ appearance }: { appearance: AppearanceState }) {
+/** The player's settings as a dialog: playback, the bar, the visualizer, the library kept here, and the look. */
+export function Settings({ appearance, open, onClose }: { appearance: AppearanceState; open: boolean; onClose: () => void }) {
     const options = useSettings()
     const kept = useRows(downloads)
     const played = useRows(history)
@@ -372,7 +370,11 @@ export function Settings({ appearance }: { appearance: AppearanceState }) {
 
     return (
         <>
-            <SettingsView
+            <SettingsDialog
+                open={open}
+                onOpenChange={(next) => {
+                    if (!next) onClose()
+                }}
                 groups={groups}
                 active={active}
                 onActiveChange={setActive}
@@ -384,7 +386,6 @@ export function Settings({ appearance }: { appearance: AppearanceState }) {
                     if (section === 'appearance') appearance.setSettings({ ...DEFAULT_APPEARANCE, scheme: appearance.settings.scheme })
                     toast.add({ title: 'Put back to the defaults', timeout: 2000 })
                 }}
-                onDone={() => go('/albums')}
             />
             <ConfirmDialog
                 open={resetting}

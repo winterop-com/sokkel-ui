@@ -1,6 +1,6 @@
 import { ConfirmDialog } from '@winterop-com/sokkel-ui/DialogShell'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
-import { SettingsView, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsView'
+import { SettingsDialog, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsDialog'
 import { ThemePicker } from '@winterop-com/sokkel-ui/ThemePicker'
 import { DEFAULT_APPEARANCE, THEMES } from '@winterop-com/sokkel-ui/lib/appearance'
 import {
@@ -38,7 +38,7 @@ function Toggle({ label, on, onChange }: { label: string; on: boolean; onChange:
 }
 
 /** The viewer's settings: playback, captions, history, the look, and what the browser keeps; each kept as it is changed. */
-export function Settings({ frame }: { frame: Frame }) {
+export function Settings({ frame, open, onClose }: { frame: Frame; open: boolean; onClose: () => void }) {
     const prefs = usePrefs()
     const { settings: look, setSettings: setLook } = frame.appearance
     const [active, setActive] = useState('playback')
@@ -332,7 +332,11 @@ export function Settings({ frame }: { frame: Frame }) {
 
     return (
         <>
-            <SettingsView
+            <SettingsDialog
+                open={open}
+                onOpenChange={(next) => {
+                    if (!next) onClose()
+                }}
                 groups={groups}
                 active={active}
                 onActiveChange={setActive}
@@ -346,7 +350,6 @@ export function Settings({ frame }: { frame: Frame }) {
                     setPrefs(defaults)
                     toast.add({ title: 'Settings put back' })
                 }}
-                onDone={() => go('/')}
             />
             <ConfirmDialog
                 open={resetting}

@@ -36,7 +36,7 @@ import { useState } from 'react'
 
 import type { Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
-import { go } from 'tidevann-shared/router'
+import { go, useOverlayRoute } from 'tidevann-shared/router'
 import { categoryLabel, EPISODES, episodeById, SHOWS, showById } from './catalog'
 import { find } from './pages/Discover'
 import { Discover } from './pages/Discover'
@@ -53,7 +53,7 @@ import { Stats } from './pages/Stats'
 import { Player, RATES } from './Player'
 import { usePodcasts } from './state'
 
-const PAGES = ['home', 'inbox', 'queue', 'discover', 'shows', 'show', 'episode', 'starred', 'downloads', 'stats', 'settings'] as const
+const PAGES = ['home', 'inbox', 'queue', 'discover', 'shows', 'show', 'episode', 'starred', 'downloads', 'stats'] as const
 
 const TITLES: Record<string, string> = {
     home: 'Listen now',
@@ -64,14 +64,15 @@ const TITLES: Record<string, string> = {
     starred: 'Starred',
     downloads: 'Downloads',
     stats: 'Stats',
-    settings: 'Settings',
 }
 
 /** The podcasts app: the rail of places, the page the route names, the player along the foot, and the palette. */
 export function Podcasts({ frame }: { frame: Frame }) {
     const state = usePodcasts()
     const { settings: look, setSettings: setLook } = frame.appearance
-    const [first = 'home', second, third] = frame.route
+    // Settings open as a dialog over the page they were opened from.
+    const settings = useOverlayRoute(frame.route, 'settings', ['home'])
+    const [first = 'home', second, third] = settings.route
     const page = (PAGES as readonly string[]).includes(first) ? first : 'missing'
     const [fullscreen, setFullscreen] = useState(false)
     const [topQuery, setTopQuery] = useState('')
@@ -288,7 +289,6 @@ export function Podcasts({ frame }: { frame: Frame }) {
     else if (page === 'starred') content = <Starred />
     else if (page === 'downloads') content = <Downloads />
     else if (page === 'stats') content = <Stats />
-    else if (page === 'settings') content = <SettingsPage frame={frame} />
     else content = <Gone what="page" />
 
     return (
@@ -296,7 +296,7 @@ export function Podcasts({ frame }: { frame: Frame }) {
             palette={palette}
             paletteFilter="terms"
             desktop={frame.desktop}
-            route={frame.route.join('/')}
+            route={settings.route.join('/')}
             shortcuts={[]}
             rail={
                 <Rail
@@ -378,6 +378,7 @@ export function Podcasts({ frame }: { frame: Frame }) {
                     {content}
                 </PageState>
             </Page>
+            {settings.open && <SettingsPage frame={frame} open onClose={settings.close} />}
         </Shell>
     )
 }
