@@ -13,6 +13,8 @@ export interface ThemeOption {
     label: string
     /** A short note after the label, such as where the theme comes from. */
     note?: string
+    /** A line under the label saying what the choice looks like, as a theme's does. */
+    description?: string
     /** Draws a swatch of the theme beside its name. Only themes that answer `data-theme-scope` can be drawn. */
     swatch?: boolean
 }

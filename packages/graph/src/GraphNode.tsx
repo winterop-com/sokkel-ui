@@ -5,6 +5,8 @@ import { useContext, type ComponentType } from 'react'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { IssueMark, worst, type Issue } from '@winterop-com/sokkel-ui/IssueMark'
 import type { Status } from '@winterop-com/sokkel-ui/StatusChip'
+import { useStatus } from '@winterop-com/sokkel-ui/StatusProvider'
+import { RUN_STATUSES, type RunStatus } from '@winterop-com/sokkel-ui/lib/status'
 import { GraphEditableContext, GraphEditingContext, useGraphDirection } from './context'
 import type { Measure } from './measure'
 
@@ -16,7 +18,8 @@ export interface GraphNodeData extends Record<string, unknown> {
     name?: string
     /** What sort of thing the node is, on the code line after the code. */
     kind?: string
-    status?: Status
+    /** A run state, or a state the app names in the status map, drawn in the color the map gives it. */
+    status?: Status | (string & {})
     duration_ms?: number
     /** How far along the node is, from 0 to 1, drawn as a line along its foot. */
     progress?: number
@@ -120,6 +123,8 @@ const PROGRESS_TONE: Partial<Record<Status, string>> = {
     succeeded: 'bg-status-succeeded',
 }
 
+const isRunStatus = (value: string): value is RunStatus => (RUN_STATUSES as readonly string[]).includes(value)
+
 export interface GraphHandlesProps {
     selected?: boolean
 }
@@ -193,6 +198,10 @@ export function GraphNodeBox({ data, selected = false, className }: GraphNodeBox
     const { title, named, line, duration } = linesOf(data)
     const Icon = data.icon
     const status = data.status
+    const look = useStatus(status ?? '')
+    // A run state wears its own classes; an app's state the run state its color is, or the edge an issue of its color gives.
+    const run = status === undefined ? undefined : isRunStatus(status) ? status : isRunStatus(look.color) ? look.color : undefined
+    const edge = run === undefined && (look.color === 'critical' || look.color === 'warning') ? ISSUE_BOX[look.color] : undefined
     const progress = data.progress === undefined ? null : Math.min(1, Math.max(0, data.progress))
     const issue = data.issues === undefined ? null : worst(data.issues)
     return (
@@ -204,7 +213,8 @@ export function GraphNodeBox({ data, selected = false, className }: GraphNodeBox
             className={cn(
                 'relative flex h-full w-full flex-col justify-center gap-0.5 overflow-hidden border border-node-line bg-node px-2.5 text-left text-foreground shadow-node transition-[border-color,box-shadow] duration-100 hover:border-muted-foreground',
                 data.shape === 'round' ? 'rounded-[calc(var(--radius-node)*3)] px-3.5' : 'rounded-node',
-                status !== undefined && BOX[status],
+                run !== undefined && BOX[run],
+                edge,
                 issue !== null && ISSUE_BOX[issue],
                 selected && 'outline-2 outline-offset-2 outline-foreground outline-solid',
                 className,
@@ -215,7 +225,13 @@ export function GraphNodeBox({ data, selected = false, className }: GraphNodeBox
                 <span title={title} className={cn('min-w-0 truncate text-graph-title font-semibold', !named && 'font-mono')}>
                     {title}
                 </span>
-                {status !== undefined && <span className={cn('ml-auto size-2 shrink-0 rounded-full', DOT_TONE[status])} aria-hidden />}
+                {status !== undefined && (
+                    <span
+                        className={cn('ml-auto size-2 shrink-0 rounded-full', run !== undefined && DOT_TONE[run])}
+                        style={run === undefined ? { background: look.css } : undefined}
+                        aria-hidden
+                    />
+                )}
                 {issue !== null && data.issues !== undefined && (
                     <IssueMark
                         issues={data.issues}
@@ -234,7 +250,7 @@ export function GraphNodeBox({ data, selected = false, className }: GraphNodeBox
             {progress !== null && (
                 <span className="absolute inset-x-0 bottom-0 h-0.5 bg-border" aria-hidden>
                     <span
-                        className={cn('block h-full', (status !== undefined && PROGRESS_TONE[status]) || 'bg-status-running')}
+                        className={cn('block h-full', (run !== undefined && PROGRESS_TONE[run]) || 'bg-status-running')}
                         style={{ width: `${String(progress * 100)}%` }}
                     />
                 </span>

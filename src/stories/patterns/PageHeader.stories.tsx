@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { Download, ListPlus, Play, RotateCcw, Upload } from 'lucide-react'
+import { CalendarClock, Download, History, ListPlus, Play, RotateCcw, Upload } from 'lucide-react'
 import { useState } from 'react'
 
 import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
@@ -49,7 +49,10 @@ export const Actions: StoryObj = {
     ),
 }
 
-/** One thing's page: its name over its code, a sentence on what it does, and a line of small facts. */
+/**
+ * One thing's page: its name over its code, a sentence on what it does, a line of small facts and
+ * three actions, which on a phone wrap under the title and then onto as many lines as they need.
+ */
 export const Details: StoryObj = {
     render: () => (
         <PageHeader
@@ -58,10 +61,20 @@ export const Details: StoryObj = {
             description="Exports the day's orders from harbor to the archive, then sends the digest to the team."
             meta={<MetaLine items={['Owned by grace', 'Project harbor', 'Every night at 02:00']} />}
             actions={
-                <Button size="sm">
-                    <Play aria-hidden />
-                    Run
-                </Button>
+                <>
+                    <Button size="sm" variant="outline">
+                        <History aria-hidden />
+                        Run history
+                    </Button>
+                    <Button size="sm" variant="outline">
+                        <CalendarClock aria-hidden />
+                        Change the schedule
+                    </Button>
+                    <Button size="sm">
+                        <Play aria-hidden />
+                        Run
+                    </Button>
+                </>
             }
         />
     ),

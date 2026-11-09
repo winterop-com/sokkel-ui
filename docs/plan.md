@@ -321,7 +321,7 @@ CodeField, SwitchField, SearchField, QuickAdd, FileField, FilterChip, FilterBar,
 SelectionBar, DataTable, StatusChip, PersonAvatar, PersonRow, MetaLine, DueText, AttachmentList,
 IconButton, StarButton, SplitButton, DownloadButton, AccountMenu, SidePanel, DialogShell,
 ConfirmDialog, TreeSelect, AsyncSelect, CapabilityPicker, SignIn, RelativeTime, ApiLink, TagChips,
-DetailSheet.
+DetailSheet, UptimeBar.
 Every example arranges and builds its screens from these, never by hand, so a fix in one reaches
 them all.
 
@@ -341,7 +341,9 @@ A records app is built from the same parts (Apps/Records). A `Rail` entry says w
 place holds on a second line (`description`), which the palette's Go to rows repeat; a palette row's
 `hint` is words and its `code` an id in the code face. `Stat` as a `tile` is a count on a card of its
 own, a state's dot before its label and a note under it, leading to what it counts, and `emphasis`
-edges the one that asks for work. `Badge` takes a `kind` color for a categorical value, such as the
+edges the one that asks for work. `UptimeBar` is a thing's record over the last days, a bar a day in
+its state's color or by its uptime, the oldest giving way in a box too narrow for them all, and the
+day pointed at said under it with its note. `Badge` takes a `kind` color for a categorical value, such as the
 sort of form a card is, and `Segmented` options carry a count and a state's dot. `Section`,
 `PaneHeader` and `Field` take a `description`, a field's between its label and its control.
 `DetailSheet` is one thing's detail in a sheet from the right, its chips and actions on one line
@@ -571,7 +573,7 @@ note under it, after the app's own `notes`.
 Their own package, `@winterop-com/sokkel-ui-graph`, so an app that draws no graph installs neither
 React Flow nor elk.
 GraphCanvas (React Flow in the tokens, fit, zoom buttons, a stage or a fitted frame), GraphNode
-(the node box), the layout (a rank layout at once, elk loaded lazily and answering after),
+(the node box, its status a run state or one the app names in the status map), the layout (a rank layout at once, elk loaded lazily and answering after),
 useGraphLayout and useNodeGraph, and the views PipelineGraph, RunGraph, DependencyGraph (a lineage
 of datasets and jobs) and StateMachine (labeled transitions, initial and final markers, the
 current state). A canvas given `editing`, and PipelineGraph with it, becomes an editor: ports

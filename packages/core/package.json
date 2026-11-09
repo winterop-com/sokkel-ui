@@ -54,6 +54,10 @@
             "types": "./dist/components/ApiLink.d.ts",
             "import": "./dist/components/ApiLink.js"
         },
+        "./ApiPlayground": {
+            "types": "./dist/components/ApiPlayground.d.ts",
+            "import": "./dist/components/ApiPlayground.js"
+        },
         "./AppBar": {
             "types": "./dist/components/AppBar.d.ts",
             "import": "./dist/components/AppBar.js"
@@ -133,6 +137,10 @@
         "./Composer": {
             "types": "./dist/components/Composer.d.ts",
             "import": "./dist/components/Composer.js"
+        },
+        "./ComputedField": {
+            "types": "./dist/components/ComputedField.d.ts",
+            "import": "./dist/components/ComputedField.js"
         },
         "./ConfirmCard": {
             "types": "./dist/components/ConfirmCard.d.ts",
@@ -346,6 +354,10 @@
             "types": "./dist/components/PeopleFilter.d.ts",
             "import": "./dist/components/PeopleFilter.js"
         },
+        "./PeriodPicker": {
+            "types": "./dist/components/PeriodPicker.d.ts",
+            "import": "./dist/components/PeriodPicker.js"
+        },
         "./PermissionMatrix": {
             "types": "./dist/components/PermissionMatrix.d.ts",
             "import": "./dist/components/PermissionMatrix.js"
@@ -425,6 +437,10 @@
         "./SelectionBar": {
             "types": "./dist/components/SelectionBar.d.ts",
             "import": "./dist/components/SelectionBar.js"
+        },
+        "./ServerMenu": {
+            "types": "./dist/components/ServerMenu.d.ts",
+            "import": "./dist/components/ServerMenu.js"
         },
         "./SettingRow": {
             "types": "./dist/components/SettingRow.d.ts",
@@ -526,6 +542,10 @@
             "types": "./dist/components/TextField.d.ts",
             "import": "./dist/components/TextField.js"
         },
+        "./TextLink": {
+            "types": "./dist/components/TextLink.d.ts",
+            "import": "./dist/components/TextLink.js"
+        },
         "./ThemePicker": {
             "types": "./dist/components/ThemePicker.d.ts",
             "import": "./dist/components/ThemePicker.js"
@@ -578,9 +598,17 @@
             "types": "./dist/components/UploadTray.d.ts",
             "import": "./dist/components/UploadTray.js"
         },
+        "./UptimeBar": {
+            "types": "./dist/components/UptimeBar.d.ts",
+            "import": "./dist/components/UptimeBar.js"
+        },
         "./WindowedPane": {
             "types": "./dist/components/WindowedPane.d.ts",
             "import": "./dist/components/WindowedPane.js"
+        },
+        "./YesNoField": {
+            "types": "./dist/components/YesNoField.d.ts",
+            "import": "./dist/components/YesNoField.js"
         },
         "./board/Board": {
             "types": "./dist/components/board/Board.d.ts",
@@ -1141,6 +1169,10 @@
         "./lib/numbers": {
             "types": "./dist/lib/numbers.d.ts",
             "import": "./dist/lib/numbers.js"
+        },
+        "./lib/periods": {
+            "types": "./dist/lib/periods.d.ts",
+            "import": "./dist/lib/periods.js"
         },
         "./lib/search": {
             "types": "./dist/lib/search.d.ts",

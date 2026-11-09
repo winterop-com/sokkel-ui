@@ -146,6 +146,9 @@ export interface DataSort {
     direction: 'asc' | 'desc'
 }
 
+/** The controls a cell may hold whose press is their own, never the row's open. */
+const CELL_CONTROL = 'button, a[href], input, select, textarea, label, [role="switch"], [role="checkbox"], [role="combobox"]'
+
 /** The words a data table says, in English unless an app passes its own. */
 export interface DataTableWords {
     columns: string
@@ -566,6 +569,11 @@ export interface DataTableProps<T> {
     onOpen?: (row: T) => void
     /** The row shown elsewhere, drawn as chosen. */
     opened?: (row: T) => boolean
+    /**
+     * A chevron at the end of every row, saying that a press (`onOpen`) leaves the list for the
+     * row's own page rather than showing it beside the list.
+     */
+    chevron?: boolean
     /** What a row's menu offers: from the button at its end, and on a right-click anywhere on it. */
     rowActions?: (row: T) => DataAction[]
     /** When the menu button at a row's end shows: always, only while the pointer is over the row, or never (right-click only). */
@@ -781,6 +789,7 @@ export function DataTable<T>({
     onColumnOrderChange,
     onOpen,
     opened,
+    chevron = false,
     rowActions,
     actionButton = 'always',
     actionIcon = <EllipsisIcon />,
@@ -1027,10 +1036,11 @@ export function DataTable<T>({
         rowActions === undefined || rows.length === 0
             ? 0
             : rowActions(rows[0]).filter((action) => !('separator' in action) && action.inline === true).length
-    const endWidth =
+    const menuWidth =
         rowActions === undefined || (actionButton === 'none' && inlineSlots === 0)
             ? undefined
-            : `${String((actionButton === 'none' ? 0.5 : 2.5) + inlineSlots * 1.75)}rem`
+            : (actionButton === 'none' ? 0.5 : 2.5) + inlineSlots * 1.75
+    const endWidth = menuWidth === undefined && !chevron ? undefined : `${String((menuWidth ?? 0.5) + (chevron ? 1.5 : 0))}rem`
     const track = (column: DataColumn<T>) => (widths[column.id] === undefined ? column.width : `${String(widths[column.id])}px`)
     const template = [selectable ? CHECK : undefined, ...shown.map(track), endWidth].filter(Boolean).join(' ')
     // The rows are never narrower than their columns' least widths, so a widened column scrolls the table sideways.
@@ -1187,6 +1197,9 @@ export function DataTable<T>({
     }
 
     const press = (entry: FlatRow<T>, event: MouseEvent) => {
+        // A press on a control in a cell, such as a switch or a link, is the control's alone.
+        const control = event.target instanceof Element ? event.target.closest(CELL_CONTROL) : null
+        if (control !== null && control !== event.currentTarget && event.currentTarget.contains(control)) return
         setActive(entry.key)
         if (selectable && event.shiftKey) toggle(entry, true)
         else if (selectable && (event.metaKey || event.ctrlKey)) toggle(entry, false)
@@ -2134,6 +2147,7 @@ export function DataTable<T>({
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
                                             )}
+                                            {chevron && <ChevronRightIcon aria-hidden className="size-4 shrink-0 text-faint" />}
                                         </span>
                                     )}
                                 </div>

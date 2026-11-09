@@ -60,6 +60,9 @@ export interface DashboardPanelProps {
     /** Dropdown menu items, behind the panel's more button. */
     menu?: ReactNode
     expandable?: boolean
+    /** Whether an expandable panel's content is in the window, held from outside with `onExpandedChange`, as when the app's own menu opens it. */
+    expanded?: boolean
+    onExpandedChange?: (expanded: boolean) => void
     /** Expanding also takes the screen, as `WindowedPane`'s `fullscreen` does. */
     fullscreen?: boolean
     loading?: boolean
@@ -75,7 +78,7 @@ export interface DashboardPanelProps {
 /**
  * One panel of a dashboard: a head with the title, a quiet subtitle such as the range it covers,
  * and its actions, then the content. `menu` holds dropdown items; `expandable` opens the content
- * in a full-screen dialog. While `loading` the content dims under a bar; when `empty` the panel
+ * in a full-screen dialog, by its button or, with `expanded`, from the app. While `loading` the content dims under a bar; when `empty` the panel
  * says so in place of its content.
  */
 export function DashboardPanel({
@@ -85,6 +88,8 @@ export function DashboardPanel({
     actions,
     menu,
     expandable = false,
+    expanded: expandedProp,
+    onExpandedChange,
     fullscreen = false,
     loading = false,
     empty = false,
@@ -95,7 +100,12 @@ export function DashboardPanel({
     children,
 }: DashboardPanelProps) {
     const words = { ...WORDS, ...given }
-    const [expanded, setExpanded] = useState(false)
+    const [ownExpanded, setOwnExpanded] = useState(false)
+    const expanded = expandedProp ?? ownExpanded
+    const setExpanded = (next: boolean) => {
+        if (expandedProp === undefined) setOwnExpanded(next)
+        onExpandedChange?.(next)
+    }
     const body = empty ? <p className="px-4 py-8 text-center text-sm text-muted-foreground">{words.empty}</p> : children
     const tool =
         'flex size-7 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-ring'

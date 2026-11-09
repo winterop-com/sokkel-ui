@@ -32,12 +32,16 @@ export function valueWriter(unit = '', decimals?: number, format?: (value: numbe
 }
 
 const compact = new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 })
+const fine = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 })
 
-/** An axis label: the value written short, with its unit. */
+/**
+ * An axis label: the value written short, with its unit. A value under ten keeps two decimals, so
+ * the ticks of a small range (0.05 apart for a rate under one percent) never read the same.
+ */
 export const axisWriter =
     (unit = '') =>
     (value: number) =>
-        `${compact.format(value)}${unit}`
+        `${Math.abs(value) < 10 ? fine.format(value) : compact.format(value)}${unit}`
 
 /** The axis settings every dashboard chart panel shares. */
 export function axes(look: ChartLook, x: readonly string[], unit?: string, labelEvery?: number) {
