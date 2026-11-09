@@ -33,7 +33,6 @@ import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { Shell } from '@winterop-com/sokkel-ui/Shell'
 import { PanelSection, SidePanel } from '@winterop-com/sokkel-ui/SidePanel'
-import { ThemeToggle } from '@winterop-com/sokkel-ui/ThemeToggle'
 import { Timeline } from '@winterop-com/sokkel-ui/Timeline'
 import { Toolbar } from '@winterop-com/sokkel-ui/Toolbar'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
@@ -491,7 +490,6 @@ function BoardApp({
     const [folded, setFolded] = useState<Project[]>([])
     const [chosen, setChosen] = useState<string | null>(open ?? null)
     const [collapsed, setCollapsed] = useState(false)
-    const [dark, setDark] = useState(true)
     const shown = items.filter((item) => matches(item, filters))
     const current = items.find((item) => item.code === chosen)
 
@@ -539,13 +537,7 @@ function BoardApp({
                         }
                     />
                 }
-                top={
-                    <TopBar
-                        trail={[{ label: 'Tidevann', href: '#' }, { label: 'Board' }]}
-                        onSearch={() => undefined}
-                        actions={<ThemeToggle dark={dark} onToggle={() => setDark(!dark)} />}
-                    />
-                }
+                top={<TopBar trail={[{ label: 'Tidevann', href: '#' }, { label: 'Board' }]} onSearch={() => undefined} />}
                 panelOpen={current !== undefined}
                 onPanelOpenChange={(next) => {
                     if (!next) setChosen(null)

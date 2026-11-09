@@ -29,7 +29,6 @@ import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { Shell } from '@winterop-com/sokkel-ui/Shell'
 import { StatusChip, type Status } from '@winterop-com/sokkel-ui/StatusChip'
 import { SubNav } from '@winterop-com/sokkel-ui/SubNav'
-import { ThemeToggle } from '@winterop-com/sokkel-ui/ThemeToggle'
 import { Toolbar, ToolbarTitle } from '@winterop-com/sokkel-ui/Toolbar'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
@@ -285,7 +284,6 @@ function CalendarApp({ view: initialView = 'week', open = null }: { view?: View;
     const [shown, setShown] = useState<CalendarId[]>(CALENDARS.map((calendar) => calendar.id))
     const [openEvent, setOpenEvent] = useState<string | null>(open)
     const [collapsed, setCollapsed] = useState(false)
-    const [dark, setDark] = useState(true)
     const events = EVENTS.filter((event) => shown.includes(event.calendar))
     const week = weekOf(anchor)
     const go = (day: Date) => {
@@ -322,13 +320,7 @@ function CalendarApp({ view: initialView = 'week', open = null }: { view?: View;
                         }
                     />
                 }
-                top={
-                    <TopBar
-                        trail={[{ label: 'Tidevann', href: '#' }, { label: 'Calendar' }]}
-                        onSearch={() => undefined}
-                        actions={<ThemeToggle dark={dark} onToggle={() => setDark(!dark)} />}
-                    />
-                }
+                top={<TopBar trail={[{ label: 'Tidevann', href: '#' }, { label: 'Calendar' }]} onSearch={() => undefined} />}
             >
                 <Row gap="none" align="stretch" className="h-full min-h-0">
                     <SubNav label="Calendars" from="xl">
