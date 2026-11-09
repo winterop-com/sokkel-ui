@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import { ExternalLink } from 'lucide-react'
 import { useState } from 'react'
 
 import {
@@ -10,6 +11,7 @@ import {
     type ApiSent,
 } from '@winterop-com/sokkel-ui/ApiPlayground'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Page } from '@winterop-com/sokkel-ui/Shell'
 
 /**
@@ -101,7 +103,17 @@ const hints = (path: string): ApiParamHint[] =>
 
 const NOTE = 'The path is under the server base. Every request carries Accept: application/json.'
 
-function Playground({ presets = PRESETS, sent }: { presets?: ApiPresetGroup[]; sent?: ApiSent }) {
+function Playground({
+    presets = PRESETS,
+    sent,
+    request,
+    folded = false,
+}: {
+    presets?: ApiPresetGroup[]
+    sent?: ApiSent
+    request?: ApiRequest
+    folded?: boolean
+}) {
     const [history, setHistory] = useState<ApiSent[]>(sent === undefined ? [] : [sent])
     return (
         <Page>
@@ -110,10 +122,19 @@ function Playground({ presets = PRESETS, sent }: { presets?: ApiPresetGroup[]; s
                 send={send}
                 base={BASE}
                 presets={presets}
+                presetsRail={{ defaultFolded: folded }}
                 paramHints={hints}
                 headers={{ Accept: 'application/json' }}
                 note={NOTE}
-                defaultRequest={sent?.request ?? { method: 'GET', path: '/jobs', params: [] }}
+                actions={(asked, target) =>
+                    asked.method === 'GET' && (
+                        <Button variant="outline" size="sm" render={<a href={target} target="_blank" rel="noreferrer" />}>
+                            <ExternalLink aria-hidden />
+                            Open in a new tab
+                        </Button>
+                    )
+                }
+                defaultRequest={request ?? sent?.request ?? { method: 'GET', path: '/jobs', params: [] }}
                 defaultSent={sent}
                 history={history}
                 onSent={(one) => setHistory((all) => [one, ...all].slice(0, 20))}
@@ -130,8 +151,30 @@ const SENT: ApiSent = {
 /** The builder alone, before anything is sent, with no presets beside it. */
 export const Empty: StoryObj = { render: () => <Playground presets={[]} /> }
 
-/** The server's own requests beside the builder, in groups; choosing one fills the builder without sending it. */
+/**
+ * The server's own requests beside the builder, in groups; choosing one fills the builder without
+ * sending it. The rail resizes from its inner edge and folds from its head. A GET request opens in a
+ * new tab from the app's own action after Copy as curl, and a parameter's name completes from the
+ * ones the path answers to.
+ */
 export const Presets: StoryObj = { render: () => <Playground /> }
+
+/** The presets folded to a strip with their name written down it; a press unfolds them. */
+export const Folded: StoryObj = { render: () => <Playground folded /> }
+
+/** A request that sends a body, edited as JSON in the code editor with its colors. */
+export const Body: StoryObj = {
+    render: () => (
+        <Playground
+            request={{
+                method: 'POST',
+                path: '/jobs/rebuild-index/runs',
+                params: [],
+                body: '{\n  "reason": "rebuild after the upload",\n  "steps": ["fetch", "transform"]\n}',
+            }}
+        />
+    ),
+}
 
 /** An answer: its status and how long it took over the body, and the request in the sent list under it. */
 export const Answered: StoryObj = { render: () => <Playground sent={SENT} /> }

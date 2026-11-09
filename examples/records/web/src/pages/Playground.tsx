@@ -14,6 +14,8 @@ const HEADERS = { Accept: 'application/json' }
 export function Playground() {
     const { rows } = useCollection(receipts)
     const [history, setHistory] = useStored<ApiSent[]>('playground-history', [])
+    const [folded, setFolded] = useStored('playground-presets-folded', false)
+    const [width, setWidth] = useStored('playground-presets-width', 288)
     const last = history[0]
     const sample = rows?.find((receipt) => receipt.state === 'received')?.receipt ?? rows?.[0]?.receipt
     useFoot(
@@ -33,6 +35,7 @@ export function Playground() {
                 send={(request) => answer(request)}
                 base={SERVER.base}
                 presets={presets(sample)}
+                presetsRail={{ folded, onFoldedChange: setFolded, size: width, onSizeChange: setWidth }}
                 paramHints={hintsFor}
                 headers={HEADERS}
                 note="The path is under the server's base. Every request carries Accept: application/json, and this demo sends no credentials."
