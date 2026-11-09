@@ -115,6 +115,8 @@ const FIELDS: CodeCompletion[] = [
     { label: 'failed_step', detail: 'string', docs: 'The step a failed run stopped on.', kind: 'property' },
     { label: 'owner', detail: 'string', kind: 'property' },
     { label: 'rejected', detail: 'number', docs: 'Rows the validate step refused.', kind: 'property' },
+    // The app's own word for a jq built-in, with its own docs, takes the built-in's place in the list.
+    { label: 'has', detail: '(key) → boolean', docs: 'Whether the run has the field, such as has("failed_step").', kind: 'function' },
 ]
 
 const BUILTIN_DOCS = new Map(

@@ -1,4 +1,11 @@
-import { autocompletion, completionKeymap, type Completion, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete'
+import {
+    autocompletion,
+    completionKeymap,
+    type Completion,
+    type CompletionContext,
+    type CompletionResult,
+    type CompletionSource,
+} from '@codemirror/autocomplete'
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands'
 import { json } from '@codemirror/lang-json'
 import { yaml } from '@codemirror/lang-yaml'
@@ -470,6 +477,11 @@ export interface CodeEditorProps {
     marks?: readonly CodeMark[]
     /** Words offered while typing, beside the language's own: a list, or a function of the word being typed (a leading `$` or `@` included, a `.` not). */
     completions?: readonly CodeCompletion[] | ((word: string) => readonly CodeCompletion[] | Promise<readonly CodeCompletion[]>)
+    /**
+     * Whether the language's own words (jq's built-ins) are offered beside `completions`; an app's
+     * word replaces the language's of the same label either way, its detail and docs being its own.
+     */
+    languageWords?: boolean
     /** The names a `[[link]]` to another note completes from as it is typed, such as every note's title. */
     links?: CodeLinks
     /** What a word is, shown when the pointer rests on it; nothing to show nothing. */
@@ -543,6 +555,7 @@ export function CodeEditor({
     wrap = false,
     marks = NO_MARKS,
     completions,
+    languageWords = true,
     links,
     hover,
     onRun,
@@ -576,8 +589,8 @@ export function CodeEditor({
     const [named, setNamed] = useState<{ address: string; schema: JsonSchema } | undefined>()
     const schema = given ?? (named !== undefined && named.address === address ? named.schema : undefined)
     const [languageReady, setLanguageReady] = useState(0)
-    const props = useRef({ marks, completions, links, hover, onRun, keys, schema, words, language, resolveSchema, onBlur })
-    props.current = { marks, completions, links, hover, onRun, keys, schema, words, language, resolveSchema, onBlur }
+    const props = useRef({ marks, completions, languageWords, links, hover, onRun, keys, schema, words, language, resolveSchema, onBlur })
+    props.current = { marks, completions, languageWords, links, hover, onRun, keys, schema, words, language, resolveSchema, onBlur }
     const compartments = useRef({
         language: new Compartment(),
         readOnly: new Compartment(),
@@ -668,7 +681,7 @@ export function CodeEditor({
                     bracketMatching(),
                     highlightActiveLine(),
                     syntaxHighlighting(HIGHLIGHT),
-                    autocompletion({ icons: true }),
+                    autocompletion({ icons: true, override: [offer] }),
                     keymap.of([...completionKeymap, ...defaultKeymap, ...historyKeymap, indentWithTab]),
                     parts.search.of(extensions.search()),
                     parts.language.of(languageExtension(language)),
@@ -709,6 +722,30 @@ export function CodeEditor({
     }, [])
 
     /** The names of a `[[link]]` being typed, or else the words the caller offers for the word being typed. */
+    /**
+     * Every source's words at once, the app's first: a language's or a schema's word with the label of
+     * one the app gives is left out, and the language's words go when `languageWords` is false.
+     */
+    async function offer(context: CompletionContext): Promise<CompletionResult | null> {
+        const sources = context.state
+            .languageDataAt<CompletionSource | readonly (string | Completion)[]>('autocomplete', context.pos)
+            .filter((source): source is CompletionSource => typeof source === 'function' && source !== complete)
+        const [own, ...others] = await Promise.all([complete(context), ...sources.map((source) => source(context))])
+        if (own !== null && own !== undefined && 'options' in own && own.options.length > 0 && others.every((other) => !other)) return own
+        const taken = new Set((own?.options ?? []).map((option) => option.label))
+        const kept = others.filter((other): other is CompletionResult => other !== null && other !== undefined)
+        // The language's own words are those of a source other than the schema's, which answers only for JSON and YAML.
+        const theirs = props.current.languageWords === false && props.current.schema === undefined ? [] : kept
+        const results = [
+            ...(own === null || own === undefined ? [] : [own]),
+            ...theirs.map((other) => ({ ...other, options: other.options.filter((option) => !taken.has(option.label)) })),
+        ]
+        const from = results[0]?.from
+        if (from === undefined) return null
+        const options = results.filter((result) => result.from === from).flatMap((result) => result.options)
+        return options.length === 0 ? null : { from, options, validFor: results.length === 1 ? results[0].validFor : undefined }
+    }
+
     async function complete(context: CompletionContext): Promise<CompletionResult | null> {
         const offered = props.current.links
         if (offered !== undefined) {
