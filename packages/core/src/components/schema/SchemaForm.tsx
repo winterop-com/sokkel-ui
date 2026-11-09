@@ -16,7 +16,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Textarea } from '../ui/textarea'
 import { childSchema, literal, resolve, type JsonSchema } from './read'
 import { loadedValidate, loadValidate } from './checker'
-import { fieldSchema, given, pointer, shiftKey, shiftRecord, shiftSet, types, valueAt, type Path, type SchemaIssue } from './issues'
+import {
+    fieldSchema,
+    given,
+    pointer,
+    shiftKey,
+    shiftRecord,
+    shiftSet,
+    types,
+    valueAt,
+    withoutDeferred,
+    type DeferredValue,
+    type Path,
+    type SchemaIssue,
+} from './issues'
 
 /** What a server said about a value it refused, at the path it concerns. */
 export interface ServerIssue {
@@ -163,7 +176,7 @@ export function loadSchemaChecks(): Promise<void> {
  * What the schema finds wrong with the value: undefined while the checker loads, and one
  * `unchecked` issue at the root when it cannot be fetched, so the form fails closed.
  */
-function useChecked(schema: JsonSchema, value: unknown): readonly SchemaIssue[] | undefined {
+function useChecked(schema: JsonSchema, value: unknown, deferred?: DeferredValue): readonly SchemaIssue[] | undefined {
     const [check, setCheck] = useState(loadedValidate)
     const [failed, setFailed] = useState<string | null>(null)
     useEffect(() => {
@@ -182,10 +195,10 @@ function useChecked(schema: JsonSchema, value: unknown): readonly SchemaIssue[] 
         }
     }, [check])
     return useMemo((): readonly SchemaIssue[] | undefined => {
-        if (check !== undefined) return check(schema, value)
+        if (check !== undefined) return withoutDeferred(check(schema, value), value, deferred)
         if (failed !== null) return [{ kind: 'unchecked', reason: failed, path: [], tone: 'critical' }]
         return undefined
-    }, [check, failed, schema, value])
+    }, [check, failed, schema, value, deferred])
 }
 
 /** Everything a form holds: the value, what has been touched, what the server said, and which issue is open. */
@@ -246,6 +259,7 @@ export function useSchemaForm(
         issues: server = NONE,
         defaultSubmitted = false,
         defaultOpen,
+        deferred,
         words: given_,
     }: {
         initial?: unknown
@@ -254,6 +268,11 @@ export function useSchemaForm(
         defaultSubmitted?: boolean
         /** The field whose issues start open. */
         defaultOpen?: Path
+        /**
+         * Leaves a value unchecked, and anything inside it, such as one holding a reference filled in
+         * later (`${steps.fetch.rows}` where a number goes). Keep it the same function between renders.
+         */
+        deferred?: DeferredValue
         words?: Partial<SchemaFormWords>
     } = {},
 ): SchemaFormState {
@@ -313,7 +332,7 @@ export function useSchemaForm(
         setOpen((current) => (current === null ? null : shiftKey(current, at, map)))
     }
 
-    const checked = useChecked(schema, value)
+    const checked = useChecked(schema, value, deferred)
     const found = checked ?? []
     const id = (path: Path) => `${base}-f${pointer(path).replace(/[^a-zA-Z0-9_-]/g, '_')}`
 

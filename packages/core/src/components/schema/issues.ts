@@ -104,3 +104,24 @@ export function shiftRecord<T>(record: Record<string, T>, list: string, map: (in
     }
     return out
 }
+
+/** Whether a value is left unchecked, such as one holding a reference that is filled in later. */
+export type DeferredValue = (value: unknown) => boolean
+
+/**
+ * The issues a check found, without those about a value `deferred` leaves unchecked or anything
+ * inside one: a field holding `${steps.fetch.rows}` where a number goes is not an error, as it is
+ * filled in later.
+ */
+export function withoutDeferred<I extends { path: Path }>(
+    issues: readonly I[],
+    document: unknown,
+    deferred: DeferredValue | undefined,
+): I[] {
+    if (deferred === undefined) return [...issues]
+    return issues.filter((issue) => {
+        for (let depth = issue.path.length; depth >= 0; depth -= 1)
+            if (deferred(valueAt(document, issue.path.slice(0, depth)))) return false
+        return true
+    })
+}

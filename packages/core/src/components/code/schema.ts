@@ -5,7 +5,7 @@ import type { EditorState } from '@codemirror/state'
 import type { EditorView } from '@codemirror/view'
 
 import { literal, resolve, typeLabel, type JsonSchema } from '../schema/read'
-import { pointer, valueAt, type Path, type SchemaIssue } from '../schema/issues'
+import { pointer, valueAt, withoutDeferred, type DeferredValue, type Path, type SchemaIssue } from '../schema/issues'
 import type { validate } from '../schema/validate'
 
 type SyntaxNode = ReturnType<typeof syntaxTree>['topNode']
@@ -270,12 +270,13 @@ export function schemaDiagnostics(
     schema: JsonSchema,
     check: typeof validate,
     words: CodeSchemaWords = SCHEMA_WORDS,
+    deferred?: DeferredValue,
 ): Diagnostic[] {
     if (state.doc.length === 0) return []
     const read = readDocument(state, language)
     if (read === null) return []
     if (read.broken !== undefined) return [{ ...read.broken, severity: 'error', message: words.syntax(language) }]
-    return check(schema, read.value).map((issue) => ({
+    return withoutDeferred(check(schema, read.value), read.value, deferred).map((issue) => ({
         ...place(issue, read.spans, state),
         severity: issue.tone === 'critical' ? 'error' : 'warning',
         message: words.say(issue),
