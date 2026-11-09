@@ -314,8 +314,9 @@ function ControlButton({
  * `data-theme`, redrawing in the new tokens; and holds the selected feature itself or takes it
  * from `selected`. Notes run under the map, with a count of the features its layers could not
  * read. Once the map has drawn everything it was given and nothing is moving or loading, the
- * frame carries `data-map-idle`. maplibre loads the first time a map is drawn (`loadMapEngine`
- * fetches it ahead); until it arrives the frame shows its ground, with a spinner once the wait is long.
+ * frame carries `data-map-idle`. maplibre loads the first time a map comes near the screen, so a
+ * map below the fold costs nothing until it is scrolled to (`loadMapEngine` fetches it ahead);
+ * until it arrives the frame shows its ground, with a spinner once the wait is long.
  * Its full screen control goes through `lib/fullscreen`: the browser's full screen, or in a desktop
  * shell the window's own once the app hands it over, keeping the same canvas and camera.
  */
@@ -459,8 +460,26 @@ export function MapView({
         shownBasemapRef.current = shownBasemap
     })
 
+    // Whether the map is on the screen or within a scroll of it: the engine loads only then.
+    const [near, setNear] = useState(false)
     useEffect(() => {
-        if (!supported || maplibre !== undefined) return
+        if (near || scope === null) return
+        if (typeof IntersectionObserver === 'undefined') {
+            setNear(true)
+            return
+        }
+        const observer = new IntersectionObserver(
+            (seen) => {
+                if (seen.some((entry) => entry.isIntersecting)) setNear(true)
+            },
+            { rootMargin: '400px' },
+        )
+        observer.observe(scope)
+        return () => observer.disconnect()
+    }, [near, scope])
+
+    useEffect(() => {
+        if (!supported || maplibre !== undefined || !near) return
         let live = true
         loadEngine().then(
             (module) => {
@@ -473,8 +492,8 @@ export function MapView({
         return () => {
             live = false
         }
-    }, [supported, maplibre])
-    const waited = useLongWait(supported && maplibre === undefined, 200)
+    }, [supported, maplibre, near])
+    const waited = useLongWait(supported && near && maplibre === undefined, 200)
 
     // Built once per frame element, reading the camera and interactivity then; the basemap and the
     // theme change in place.
