@@ -452,7 +452,7 @@ function NewJobPage({ layout }: { layout?: 'side' | 'top' }) {
                     count={job.count}
                     finish={job.finish(() => job.setStep(0))}
                     onCancel={() => job.setStep(0)}
-                    footer="Draft kept in this browser"
+                    footer="Draft saved"
                 >
                     {job.body}
                 </WizardView>

@@ -40,6 +40,16 @@ export interface FieldProps {
 }
 
 /**
+ * Focuses a field's control when a press on its label would not: a label focuses an input, a
+ * select or a button by itself, but not an editor drawn as editable text, such as a code editor.
+ */
+function focusUnlabelable(id: string) {
+    const control = document.getElementById(id)
+    if (control === null || control.matches('input, select, textarea, button, meter, output, progress')) return
+    control.focus()
+}
+
+/**
  * A form control with its label, an optional hint beside the label, and help under the control. A
  * required field is marked by a star after its label, and says "required" to a screen reader.
  * `description` is a sentence between the label and the control saying what the question asks, as a
@@ -105,7 +115,7 @@ export function Field({
             style={lined ? { gridRow: 'span 4', gridTemplateRows: 'subgrid', rowGap: 0, paddingBottom: rows } : undefined}
         >
             <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                <Label htmlFor={id} className={cn(mono && 'font-mono')}>
+                <Label htmlFor={id} className={cn(mono && 'font-mono')} onClick={() => focusUnlabelable(id)}>
                     {label}
                     {required === true && (
                         <>
