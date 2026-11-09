@@ -249,6 +249,12 @@ export interface TreeProps {
     onMove?: (id: string, into: string | null) => void
     /** Whether a node may go into a branch or the top level, beyond the tree's own rule that nothing goes into itself. */
     canMove?: (id: string, into: string | null) => boolean
+    /**
+     * Why a node cannot be chosen, such as a place outside a form's assignment, or `undefined` when
+     * it can. Such a row is drawn shut: quiet, with the reason at its end, never chosen, though a
+     * branch still opens to what is under it.
+     */
+    unavailable?: (node: TreeNode) => string | undefined
     words?: Partial<TreeWords>
     /** What the tree is, for a screen reader. */
     label: string
@@ -276,6 +282,9 @@ export interface TreeProps {
  * on each row, opened from a button at its end or a right-click, and `onMove` lets a row be dragged
  * into a branch, or beside a top-level row to the top level, a closed branch opening as a row is
  * held over it. A node never goes into itself or below itself, and `canMove` refuses more.
+ *
+ * `unavailable` shuts the rows a reader may not choose and says why on each, such as the places
+ * outside what a form is assigned to; their branches still open to the rows under them.
  */
 export function Tree({
     nodes,
@@ -290,6 +299,7 @@ export function Tree({
     actions,
     onMove,
     canMove,
+    unavailable,
     words: given,
     label,
     className,
@@ -532,6 +542,7 @@ export function Tree({
             setReveal(id)
         }
         if (selection === 'none' || onSelect === undefined) return
+        if (unavailable?.(row.node) !== undefined && !chosen.has(id)) return
         if (selection === 'single') onSelect([id])
         else onSelect(chosen.has(id) ? selected.filter((each) => each !== id) : [...selected, id])
     }
@@ -638,6 +649,7 @@ export function Tree({
                     const branch = row.trail === undefined && isBranch(row.node, loads)
                     const expanded = matches !== null || open.has(row.node.id)
                     const isChosen = chosen.has(row.node.id)
+                    const shut = unavailable?.(row.node)
                     const menu = actions?.(row.node)
                     const Icon = branch && expanded ? (row.node.openIcon ?? row.node.icon) : row.node.icon
                     const movable = onMove !== undefined && row.trail === undefined
@@ -650,6 +662,7 @@ export function Tree({
                             aria-level={row.level}
                             aria-expanded={branch ? expanded : undefined}
                             aria-selected={selection === 'none' ? undefined : isChosen}
+                            aria-disabled={shut !== undefined || undefined}
                             tabIndex={row === current ? 0 : -1}
                             draggable={movable || undefined}
                             onDragStart={
@@ -672,6 +685,7 @@ export function Tree({
                                 selection === 'single' && isChosen && 'bg-primary/12 font-medium text-primary-ink hover:bg-primary/18',
                                 dropTarget === row.node.id && 'ring-2 ring-ring ring-inset',
                                 menu !== undefined && 'pr-1',
+                                shut !== undefined && !isChosen && 'text-muted-foreground',
                             )}
                         >
                             {branch ? (
@@ -695,6 +709,7 @@ export function Tree({
                                 <Checkbox
                                     checked={isChosen}
                                     indeterminate={!isChosen && holding.has(row.node.id)}
+                                    disabled={shut !== undefined && !isChosen}
                                     tabIndex={-1}
                                     aria-hidden
                                     className="pointer-events-none"
@@ -712,6 +727,11 @@ export function Tree({
                                     <span className="min-w-0 truncate text-xs text-muted-foreground">
                                         {row.trail.ancestors.map((ancestor) => ancestor.label).join(' / ')}
                                     </span>
+                                </span>
+                            )}
+                            {shut !== undefined && (
+                                <span title={shut} className="max-w-1/2 min-w-0 shrink truncate text-xs text-muted-foreground">
+                                    {shut}
                                 </span>
                             )}
                             {row.node.meta !== undefined && (

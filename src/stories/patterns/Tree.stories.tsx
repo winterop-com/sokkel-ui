@@ -146,6 +146,29 @@ function Picker({ open }: { open?: 'one' | 'several' }) {
     )
 }
 
+/** The cities the harbor project is assigned to; every other place is outside it. */
+const ASSIGNED = new Set(['oslo', 'bergen', 'trondheim', 'tromso', 'lisbon', 'porto'])
+
+function Scoped() {
+    const [value, setValue] = useState<string[]>([])
+    return (
+        <Stack gap="lg" className="mx-auto max-w-md">
+            <Field id="visited" label="City visited" description="Optional. Only the harbor project's cities can be chosen.">
+                <TreeSelect
+                    id="visited"
+                    nodes={PLACES}
+                    value={value}
+                    onValueChange={setValue}
+                    optional
+                    unavailable={(node) => (ASSIGNED.has(node.id) ? undefined : 'Not assigned to harbor')}
+                    defaultExpanded={['europe', 'norway', 'portugal', 'africa']}
+                    defaultOpen
+                />
+            </Field>
+        </Stack>
+    )
+}
+
 /** A load that never answers, so its level stays loading. */
 const neverAnswers = (node: TreeNode) => (node.id === 'asia' ? new Promise<readonly TreeNode[]>(() => undefined) : loadPlace(node))
 
@@ -313,6 +336,8 @@ export const SeveralOpen: StoryObj = {
     name: 'Several, open',
     render: () => <Picker open="several" />,
 }
+/** Scoped and optional, open: places outside the project's assignment drawn shut with why, and a Clear row first, chosen while nothing is. */
+export const ScopedOpen: StoryObj = { name: 'Scoped, open', render: () => <Scoped /> }
 /** A geography whose levels load as they are opened: loaded down to a district, a level still loading, and one refused with a way to try again. */
 export const LazyTree: StoryObj = { name: 'Lazy', render: () => <Lazy /> }
 /** A site picked deep in a lazy geography, named by its path before its level has loaded. */

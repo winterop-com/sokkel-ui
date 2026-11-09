@@ -45,7 +45,7 @@ import {
     type Form,
     type Question,
 } from '../data/forms'
-import { PLACE_TREE, pathOf, placeOf } from '../data/geo'
+import { LEVEL_LABEL, PLACE_TREE, pathOf, placeOf } from '../data/geo'
 import { count, KindBadge, useFoot } from '../ui'
 
 /** Where a kind of form is filed from, said under the place's label. */
@@ -84,7 +84,13 @@ export function FormFill({ formId, householdId, keepPlace }: { formId: string; h
 function Filling({ form, householdId: givenHousehold, keepPlace }: { form: Form; householdId?: string; keepPlace: boolean }) {
     const today = day(0)
     const [lastPlace, setLastPlace] = useStored<string | null>('last-place', null)
-    const startPlace = keepPlace && lastPlace !== null && placeOf(lastPlace) !== undefined ? lastPlace : null
+    const outside = (id: string): string | undefined => {
+        const level = placeOf(id)?.level
+        if (form.levels === undefined || level === undefined || form.levels.includes(level)) return undefined
+        return `Filed per ${form.levels.map((each) => LEVEL_LABEL[each].toLowerCase()).join(' or ')}`
+    }
+    const startPlace =
+        keepPlace && lastPlace !== null && placeOf(lastPlace) !== undefined && outside(lastPlace) === undefined ? lastPlace : null
     const [answers, setAnswers] = useState<Record<string, AnswerValue>>({})
     const [place, setPlace] = useState<string | null>(startPlace)
     const [period, setPeriod] = useState<string | null>(form.period === undefined ? null : lastWholePeriod(form.period, today))
@@ -260,6 +266,7 @@ function Filling({ form, householdId: givenHousehold, keepPlace }: { form: Form;
                                 nodes={PLACE_TREE}
                                 value={place === null ? [] : [place]}
                                 onValueChange={(ids) => setPlace(ids[0] ?? null)}
+                                unavailable={(node) => outside(node.id)}
                                 defaultExpanded={place === null ? ['sierra-leone'] : pathOf(place).map((one) => one.id)}
                                 invalid={issueOf('place') !== null}
                             />
