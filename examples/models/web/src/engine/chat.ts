@@ -40,15 +40,54 @@ function versionOf(ended: Live, base: Version): Version {
     }
 }
 
-/** Puts an ended answer in its message's version, reading the conversation as it is now. */
-function keep(conversation: string, message: string, at: number, ended: Live): Promise<unknown> {
-    const now = conversationNow(conversation)
-    if (now === undefined) return Promise.resolve()
-    const messages = now.messages.map((one): Message => {
-        if (one.id !== message || one.role !== 'assistant') return one
-        return { ...one, versions: one.versions.map((version, index) => (index === at ? versionOf(ended, version) : version)) }
+const queues = new Map<string, Promise<unknown>>()
+
+/**
+ * Runs the changes to one conversation or comparison one after another, each reading it as the one
+ * before left it, so two answers ending together never write over each other.
+ */
+function serially<T>(key: string, run: () => Promise<T>): Promise<T> {
+    const next = (queues.get(key) ?? Promise.resolve()).catch(() => undefined).then(run)
+    queues.set(key, next)
+    return next
+}
+
+/** Changes one answer of a conversation, as the conversation is when the change is made. */
+function changeMessage(
+    conversation: string,
+    message: string,
+    change: (one: AssistantMessage) => AssistantMessage,
+    touch = false,
+): Promise<unknown> {
+    return serially(conversation, async () => {
+        const now = conversationNow(conversation)
+        if (now === undefined) return
+        const messages = now.messages.map((one): Message => (one.id === message && one.role === 'assistant' ? change(one) : one))
+        await conversations.update(conversation, touch ? { messages, time: Date.now() } : { messages })
     })
-    return conversations.update(conversation, { messages, time: Date.now() })
+}
+
+/** Puts an ended answer in its message's version. */
+function keep(conversation: string, message: string, at: number, ended: Live): Promise<unknown> {
+    return changeMessage(
+        conversation,
+        message,
+        (one) => ({ ...one, versions: one.versions.map((version, index) => (index === at ? versionOf(ended, version) : version)) }),
+        true,
+    )
+}
+
+/** Shows another version of an answer asked for more than once. */
+export function showVersion(conversation: string, message: string, at: number): void {
+    void changeMessage(conversation, message, (one) => ({ ...one, at }))
+}
+
+/** Keeps the feedback given on the version of an answer shown. */
+export function giveFeedback(conversation: string, message: string, feedback: 'good' | 'bad' | undefined): void {
+    void changeMessage(conversation, message, (one) => ({
+        ...one,
+        versions: one.versions.map((version, index) => (index === one.at ? { ...version, feedback } : version)),
+    }))
 }
 
 /** Tokens of the conversation before message `upTo`, as the model reads them again. */
@@ -89,9 +128,11 @@ export async function send(conversationId: string, text: string, attachments: re
         versions: [{ text: '', model: conversation.model, state: 'streaming', usage: null, time: now }],
         at: 0,
     }
-    const messages = [...conversation.messages, user, reply]
-    const title = conversation.messages.length === 0 && conversation.title === 'New chat' ? titleOf(text) : conversation.title
-    await conversations.update(conversationId, { messages, time: now, title })
+    await serially(conversationId, async () => {
+        const latest = conversationNow(conversationId) ?? conversation
+        const title = latest.messages.length === 0 && latest.title === 'New chat' ? titleOf(text) : latest.title
+        await conversations.update(conversationId, { messages: [...latest.messages, user, reply], time: now, title })
+    })
     if (model === undefined) {
         await keep(
             conversationId,
@@ -124,10 +165,7 @@ export async function regenerate(conversationId: string, messageId: string): Pro
     const model = modelNow(conversation.model)
     const at = reply.versions.length
     const version: Version = { text: '', model: conversation.model, state: 'streaming', usage: null, time: Date.now() }
-    const messages = conversation.messages.map((one): Message =>
-        one.id === messageId && one.role === 'assistant' ? { ...one, versions: [...one.versions, version], at } : one,
-    )
-    await conversations.update(conversationId, { messages, time: Date.now() })
+    await changeMessage(conversationId, messageId, (one) => ({ ...one, versions: [...one.versions, version], at }), true)
     if (model === undefined) {
         await keep(conversationId, messageId, at, failed(conversation.model, 'This model is no longer in the library.'))
         return
@@ -145,29 +183,33 @@ export function stopConversation(conversationId: string): void {
 }
 
 export function setSettings(conversationId: string, settings: Partial<Sampling>): void {
-    const conversation = conversationNow(conversationId)
-    if (conversation !== undefined) void conversations.update(conversationId, { settings: { ...conversation.settings, ...settings } })
+    void serially(conversationId, async () => {
+        const conversation = conversationNow(conversationId)
+        if (conversation !== undefined) await conversations.update(conversationId, { settings: { ...conversation.settings, ...settings } })
+    })
 }
 
 /** The key a comparison's column streams under. */
 export const compareKey = (comparison: string, column: number) => `cmp:${comparison}:${String(column)}`
 
 function keepColumn(id: string, index: number, ended: Live): Promise<unknown> {
-    const now = state.comparisons.rows().find((one) => one.id === id)
-    if (now === undefined) return Promise.resolve()
-    const columns = now.columns.map((column, at): CompareColumn =>
-        at === index
-            ? {
-                  ...column,
-                  text: ended.text,
-                  reasoning: ended.reasoning,
-                  state: ended.phase === 'done' ? 'done' : ended.phase === 'failed' ? 'failed' : 'stopped',
-                  usage: ended.first === null ? null : usageOf(ended, ended.ended ?? Date.now()),
-                  problem: ended.problem,
-              }
-            : column,
-    )
-    return comparisons.update(id, { columns })
+    return serially(id, async () => {
+        const now = state.comparisons.rows().find((one) => one.id === id)
+        if (now === undefined) return
+        const columns = now.columns.map((column, at): CompareColumn =>
+            at === index
+                ? {
+                      ...column,
+                      text: ended.text,
+                      reasoning: ended.reasoning,
+                      state: ended.phase === 'done' ? 'done' : ended.phase === 'failed' ? 'failed' : 'stopped',
+                      usage: ended.first === null ? null : usageOf(ended, ended.ended ?? Date.now()),
+                      problem: ended.problem,
+                  }
+                : column,
+        )
+        await comparisons.update(id, { columns })
+    })
 }
 
 function settingsOf(comparison: Pick<Comparison, 'temperature' | 'maxTokens'>): Sampling {
@@ -203,13 +245,15 @@ export async function compare(prompt: string, modelIds: readonly string[], tempe
 
 /** Asks one column's model again. */
 export async function rerunColumn(id: string, index: number): Promise<void> {
-    const comparison = state.comparisons.rows().find((one) => one.id === id)
-    if (comparison === undefined) return
-    const columns = comparison.columns.map((column, at): CompareColumn =>
-        at === index ? { ...column, state: 'waiting', text: '', reasoning: '', usage: null, problem: undefined } : column,
-    )
-    const next = await comparisons.update(id, { columns })
-    runColumn(next, index, Date.now() % 97)
+    const next = await serially(id, async () => {
+        const comparison = state.comparisons.rows().find((one) => one.id === id)
+        if (comparison === undefined) return undefined
+        const columns = comparison.columns.map((column, at): CompareColumn =>
+            at === index ? { ...column, state: 'waiting', text: '', reasoning: '', usage: null, problem: undefined } : column,
+        )
+        return comparisons.update(id, { columns })
+    })
+    if (next !== undefined) runColumn(next, index, Date.now() % 97)
 }
 
 export function stopColumn(id: string, index: number): void {

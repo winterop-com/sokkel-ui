@@ -35,6 +35,7 @@ import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import type { Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
 import { go } from 'tidevann-shared/router'
+import { log } from './data/backend'
 import { bytes, counted, uptime } from './data/format'
 import { chatWith } from './actions'
 import { clearEnded, onPulled } from './engine/downloads'
@@ -314,7 +315,16 @@ export function ModelsApp({ frame }: { frame: Frame }) {
                                 ]}
                                 onCheck={() => {
                                     setChecking(true)
-                                    setTimeout(() => setChecking(false), 600)
+                                    setTimeout(() => {
+                                        setChecking(false)
+                                        log(
+                                            status === 'up' ? 'info' : 'warn',
+                                            'runner',
+                                            status === 'up'
+                                                ? 'probe: the runner answered in 3 ms'
+                                                : 'probe: no answer from runner.example.org:8400',
+                                        )
+                                    }, 600)
                                 }}
                                 words={{
                                     up: 'Running',

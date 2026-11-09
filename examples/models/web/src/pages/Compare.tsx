@@ -55,7 +55,6 @@ function Answer({
     const state = now === undefined ? column.state : now.phase === 'loading' || now.phase === 'waiting' ? 'waiting' : now.phase
     const text = now?.text ?? column.text
     const usage = now !== undefined && now.first !== null ? usageOf(now) : column.usage
-    const thinking = (now?.reasoning ?? column.reasoning ?? '') !== '' && text === ''
     return (
         <AnswerColumn
             model={model?.name ?? column.model}
@@ -65,9 +64,8 @@ function Answer({
                     : `${model.quant} · ${bytes(model.size)}${now?.phase === 'loading' ? ' · loading' : ''}`
             }
             state={state}
-            content={
-                thinking ? `*Thinking: ${(now?.reasoning ?? column.reasoning ?? '').split(/\s+/).length.toString()} words so far*` : text
-            }
+            reasoning={now?.reasoning ?? column.reasoning}
+            content={text}
             usage={usage ?? undefined}
             problem={now?.problem ?? column.problem}
             onStop={() => stopColumn(comparison.id, index)}

@@ -27,7 +27,7 @@ import { conversations as talks } from '../data/backend'
 import { bytes, clock } from '../data/format'
 import type { AssistantMessage, Attachment, Conversation as Talk, Model, UserMessage, Version } from '../data/model'
 import { newId } from '../data/seed'
-import { chatKey, regenerate, send, stopConversation } from '../engine/chat'
+import { chatKey, giveFeedback, regenerate, send, showVersion, stopConversation } from '../engine/chat'
 import { live, usageOf, writing, type Live } from '../engine/stream'
 import { useApp } from '../state'
 import { ModelSelect } from './ChatSettings'
@@ -93,14 +93,6 @@ function Reply({ talk, message, models }: { talk: Talk; message: AssistantMessag
     const state = streaming ? 'streaming' : now?.phase === 'failed' ? 'failed' : now?.phase === 'stopped' ? 'stopped' : version.state
     const usage = now !== undefined && now.first !== null ? usageOf(now) : version.usage
     const problem = now?.problem ?? version.problem
-    const setFeedback = (feedback: 'good' | 'bad' | undefined) => {
-        const messages = talk.messages.map((one) =>
-            one.id === message.id && one.role === 'assistant'
-                ? { ...one, versions: one.versions.map((each, at) => (at === one.at ? { ...each, feedback } : each)) }
-                : one,
-        )
-        void talks.update(talk.id, { messages })
-    }
     return (
         <AssistantReply
             mark={<Bot aria-hidden />}
@@ -113,18 +105,13 @@ function Reply({ talk, message, models }: { talk: Talk; message: AssistantMessag
             problem={problem === undefined ? undefined : { detail: problem }}
             onRetry={() => void regenerate(talk.id, message.id)}
             feedback={version.feedback}
-            onFeedback={setFeedback}
+            onFeedback={(feedback) => giveFeedback(talk.id, message.id, feedback)}
             versions={
                 message.versions.length > 1
                     ? {
                           at: message.at + 1,
                           of: message.versions.length,
-                          onChange: (at) => {
-                              const messages = talk.messages.map((one) =>
-                                  one.id === message.id && one.role === 'assistant' ? { ...one, at: at - 1 } : one,
-                              )
-                              void talks.update(talk.id, { messages })
-                          },
+                          onChange: (at) => showVersion(talk.id, message.id, at - 1),
                       }
                     : undefined
             }
