@@ -123,8 +123,6 @@ to `plan.md` when it ships.
     - **Round 1, wrong behavior in the core:**
         - Records form: a section's mark in the section list says complete while a field in it has
           an error. Derive the mark from the section's own field issues.
-        - `Inspector` keeps its 360 default inside a narrower page, so its right side is cut off.
-          Clamp it to its container, and at narrow widths show it full width or as the detail sheet.
         - Calendar week at 344: the toolbar title shrinks to "Thu ..." and no month or year shows.
           Give `ToolbarTitle` priority, the view switch and arrows moving to a second line first.
     - **Round 2, the examples' own wrong behavior** (no library change except the first two):
