@@ -6,7 +6,8 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.11.2** is the latest release (2026-11-09): a module's `sources/*.css` lists its classes inline,
+- **0.11.3** is the latest release (2026-11-09): `Table` takes `containerClassName`.
+- **0.11.2** (2026-11-09): a module's `sources/*.css` lists its classes inline,
   so an app on `styles-base.css` carries only what it imports.
 - **0.11.1** (2026-11-09): `Link` gives every link a tab index, so links stay in
   the Tab order in WebKit.
