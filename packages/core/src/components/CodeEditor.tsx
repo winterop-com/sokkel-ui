@@ -54,10 +54,12 @@ import {
     type CodeSchemaWords,
     type SchemaLanguage,
 } from './code/schema'
+import { sharedLink, type SharedDocument } from './code/shared'
 import { loadedValidate, loadValidate } from './schema/checker'
 import type { JsonSchema } from './schema/read'
 
 export type { CodeSchemaWords } from './code/schema'
+export { createSharedDocument, useSharedDocument, useSharedText, type SharedDocument } from './code/shared'
 
 /** The languages the editor carries by name. */
 export type CodeLanguageName = 'json' | 'yaml' | 'jq' | 'markdown' | 'sql' | 'shell' | 'jinja' | 'text'
@@ -467,8 +469,17 @@ export async function linkCompletions(context: CompletionContext, links: CodeLin
 }
 
 export interface CodeEditorProps {
-    value: string
+    /** The document, held from outside with `onChange`; left out with `doc`. */
+    value?: string
+    /** Called with the document after each change, its own or, with `doc`, another editor's. */
     onChange?: (value: string) => void
+    /**
+     * A document shared with other editors (`useSharedDocument`), in place of `value`: an edit in
+     * any of them shows in all, one undo history serves them all, and each keeps its own caret and
+     * selection. The editor opens at the caret the last one left, so a pane opened again in a
+     * window goes on where it was. Keep the same document for the editor's life.
+     */
+    doc?: SharedDocument
     language?: CodeLanguage
     readOnly?: boolean
     lineNumbers?: boolean
@@ -543,14 +554,19 @@ export interface CodeEditorProps {
  * values. `wrap` folds long lines at the editor's edge, for prose such as a prompt. The value is
  * controlled: a new `value` replaces the document, and an edit is reported through `onChange`.
  *
+ * `doc` edits a document shared with other editors in place of `value`, as a pane and the window
+ * it opens into (`WindowedPane`) edit one document: `useSharedDocument` makes one, `useSharedText`
+ * reads its text.
+ *
  * `markdown` highlights notes and documents: headings, strong and emphasized words, code, quotes,
  * lists, links and addresses, `[[links]]` between notes and `#tags`. `links` completes a
  * `[[link]]` as it is typed from the names given, such as every note's title, the closing brackets
  * put in with the name.
  */
 export function CodeEditor({
-    value,
+    value: givenValue,
     onChange,
+    doc,
     language = 'text',
     readOnly = false,
     lineNumbers: numbered = true,
@@ -584,10 +600,12 @@ export function CodeEditor({
 }: CodeEditorProps) {
     const host = useRef<HTMLDivElement>(null)
     const view = useRef<EditorView | null>(null)
+    const value = givenValue ?? ''
+    const link = doc === undefined ? undefined : sharedLink(doc)
     const report = useRef(onChange)
     report.current = onChange
     const [address, setAddress] = useState<string | undefined>(() =>
-        given === undefined && (language === 'json' || language === 'yaml') ? namedSchema(value, language) : undefined,
+        given === undefined && (language === 'json' || language === 'yaml') ? namedSchema(doc?.text ?? value, language) : undefined,
     )
     const [named, setNamed] = useState<{ address: string; schema: JsonSchema } | undefined>()
     const schema = given ?? (named !== undefined && named.address === address ? named.schema : undefined)
@@ -638,7 +656,7 @@ export function CodeEditor({
 
     const schemaLanguage: SchemaLanguage | undefined =
         schema !== undefined && (language === 'json' || language === 'yaml') ? language : undefined
-    const large = value.length > LARGE_DOCUMENT
+    const large = (doc?.length ?? value.length) > LARGE_DOCUMENT
     const diagnosing = schemaLanguage !== undefined || marks.some((mark) => mark.message !== undefined)
     const keyNames = [...(onRun === undefined ? [] : ['Mod-Enter']), ...Object.keys(keys ?? {})].join(' ')
 
@@ -696,24 +714,50 @@ export function CodeEditor({
         if (host.current === null) return
         const parts = compartments.current
         const given = [{ autocomplete: complete }]
+        // A shared document keeps the history; the keys reach it rather than a history of the editor's own.
+        const shared: Extension =
+            link === undefined
+                ? []
+                : Prec.high(
+                      keymap.of([
+                          { key: 'Mod-z', run: (editor) => !editor.state.readOnly && link.history('undo', editor), preventDefault: true },
+                          {
+                              key: 'Mod-y',
+                              mac: 'Mod-Shift-z',
+                              run: (editor) => !editor.state.readOnly && link.history('redo', editor),
+                              preventDefault: true,
+                          },
+                          {
+                              linux: 'Ctrl-Shift-z',
+                              run: (editor) => !editor.state.readOnly && link.history('redo', editor),
+                              preventDefault: true,
+                          },
+                      ]),
+                  )
         const editor = new EditorView({
             parent: host.current,
+            dispatchTransactions: (transactions, editor) => {
+                editor.update(transactions)
+                link?.forward(transactions, editor)
+            },
             state: EditorState.create({
-                doc: value,
+                doc: doc?.text ?? value,
+                selection: link?.selection(),
                 extensions: [
+                    shared,
                     parts.gutter.of(numbered ? [lineNumbers(), highlightActiveLineGutter()] : []),
                     parts.folding.of(extensions.folding()),
                     parts.look.of(extensions.look()),
                     parts.wrap.of(wrap ? EditorView.lineWrapping : []),
                     parts.keys.of(extensions.keys()),
-                    history(),
+                    link === undefined ? history() : [],
                     drawSelection(),
                     indentOnInput(),
                     bracketMatching(),
                     highlightActiveLine(),
                     syntaxHighlighting(HIGHLIGHT),
                     autocompletion({ icons: true, override: [offer] }),
-                    keymap.of([...completionKeymap, ...defaultKeymap, ...historyKeymap, indentWithTab]),
+                    keymap.of([...completionKeymap, ...defaultKeymap, ...(link === undefined ? historyKeymap : []), indentWithTab]),
                     parts.search.of(extensions.search()),
                     parts.language.of(languageExtension(language)),
                     parts.schema.of(extensions.schema()),
@@ -739,6 +783,7 @@ export function CodeEditor({
             }),
         })
         view.current = editor
+        const detach = link?.attach(editor)
         editor.dispatch({ effects: setMarks.of(marks) })
         if (diagnosing) editor.dispatch(setDiagnostics(editor.state, diagnose(editor.state)))
         if (search && defaultSearch !== undefined) {
@@ -746,6 +791,7 @@ export function CodeEditor({
             editor.dispatch({ effects: setSearchQuery.of(new SearchQuery({ search: defaultSearch })) })
         }
         return () => {
+            detach?.()
             editor.destroy()
             view.current = null
         }
@@ -821,7 +867,7 @@ export function CodeEditor({
 
     useEffect(() => {
         const editor = view.current
-        if (editor === null || editor.state.doc.toString() === value) return
+        if (editor === null || doc !== undefined || editor.state.doc.toString() === value) return
         editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: value } })
     }, [value])
 
