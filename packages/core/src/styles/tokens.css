@@ -515,7 +515,7 @@
     --elevation-pop: 0 14px 44px #00000059;
     --panel-line: #34414c;
     --panel-ground: #171e24;
-    --brand-ground: color-mix(in oklab, var(--shade) 45%, var(--background));
+    --brand-ground: color-mix(in oklab, var(--shade) 20%, var(--background));
     --panel-dot: #ffffff1c;
     --hover: color-mix(in oklch, var(--foreground) 12%, transparent);
     --section-head-ground: var(--panel-ground);

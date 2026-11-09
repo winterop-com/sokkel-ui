@@ -108,7 +108,7 @@ html.dark[data-theme='contrast'],
     --critical-wash: color-mix(in oklab, var(--destructive) 16%, var(--card));
     --panel-line: color-mix(in oklab, var(--border-strong) 50%, var(--border));
     --panel-ground: color-mix(in oklab, var(--muted) 35%, var(--card));
-    --brand-ground: color-mix(in oklab, var(--shade) 45%, var(--background));
+    --brand-ground: color-mix(in oklab, var(--shade) 20%, var(--background));
     --background: oklch(0 0 0);
     --foreground: oklch(1 0 0);
     --card: oklch(0.14 0 0);
