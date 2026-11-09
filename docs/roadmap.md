@@ -6,7 +6,12 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.10.11** is the latest release (2026-11-09): `hlsSource` plays through hls.js in Chromium and
+- **0.10.12** is the latest release (2026-11-09): `CodeEditor` carries SQL, shell and Jinja,
+  each loaded on first use (an app using it installs `@codemirror/lang-sql` and
+  `@codemirror/legacy-modes`), reveals a range, finds the schema a document names through
+  `resolveSchema`, checks a schema document against the 2020-12 dialect, completes from a schema
+  without the keys already written and with defaults, and shows a key's description on hover.
+- **0.10.11** (2026-11-09): `hlsSource` plays through hls.js in Chromium and
   Electron, and natively only in Apple's WebKit, since Chromium's own HLS fails a live stream played
   after loading paused; a video whose tries are spent holds still under the failure, and playing it
   again clears it.
