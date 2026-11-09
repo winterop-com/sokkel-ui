@@ -30,7 +30,6 @@ import { SelectionBar } from '@winterop-com/sokkel-ui/SelectionBar'
 import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
 import { PanelSection, SidePanel } from '@winterop-com/sokkel-ui/SidePanel'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
-import { ThemeToggle } from '@winterop-com/sokkel-ui/ThemeToggle'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
 import { Tree, type TreeNode } from '@winterop-com/sokkel-ui/Tree'
 import { DropZone, UploadTray, type Upload } from '@winterop-com/sokkel-ui/UploadTray'
@@ -448,7 +447,6 @@ function FilesApp({
     /** Uploads through `useUploads` and a pretend uploader that Move uploads on sends further. */
     live?: boolean
 }) {
-    const [dark, setDark] = useState(true)
     const [collapsed, setCollapsed] = useState(false)
     const [view, setView] = useState(initialView)
     const [treeOpen, setTreeOpen] = useState<ReadonlySet<string>>(new Set(['harbor', 'harbor/shared', 'harbor/shared/review']))
@@ -557,7 +555,6 @@ function FilesApp({
                             })),
                         ]}
                         onSearch={() => undefined}
-                        actions={<ThemeToggle dark={dark} onToggle={() => setDark(!dark)} />}
                     />
                 }
                 foot={

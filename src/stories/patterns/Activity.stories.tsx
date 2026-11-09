@@ -3,7 +3,6 @@ import { AtSign, CircleAlert, CircleCheck, Play, Trash2, TriangleAlert } from 'l
 import { useState } from 'react'
 
 import { ActivityList, ActivityMenu, type ActivityItem } from '@winterop-com/sokkel-ui/ActivityList'
-import { ThemeToggle } from '@winterop-com/sokkel-ui/ThemeToggle'
 import { AppBar } from '@winterop-com/sokkel-ui/AppBar'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
@@ -87,7 +86,6 @@ function useItems(start: ActivityItem[]) {
 
 function InTopBar({ start = ITEMS }: { start?: ActivityItem[] }) {
     const activity = useItems(start)
-    const [dark, setDark] = useState(true)
     return (
         <TooltipProvider>
             <Stack gap="none" className="min-h-svh bg-background text-foreground">
@@ -98,7 +96,6 @@ function InTopBar({ start = ITEMS }: { start?: ActivityItem[] }) {
                     actions={
                         <>
                             <ActivityMenu {...activity} defaultOpen />
-                            <ThemeToggle dark={dark} onToggle={() => setDark(!dark)} />
                         </>
                     }
                 />

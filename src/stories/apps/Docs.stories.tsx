@@ -21,7 +21,6 @@ import { Shell } from '@winterop-com/sokkel-ui/Shell'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
 import { SubNav } from '@winterop-com/sokkel-ui/SubNav'
 import { TableOfContents, useActiveHeading } from '@winterop-com/sokkel-ui/TableOfContents'
-import { ThemeToggle } from '@winterop-com/sokkel-ui/ThemeToggle'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
 import { Tree, type TreeNode } from '@winterop-com/sokkel-ui/Tree'
 import { Badge } from '@winterop-com/sokkel-ui/primitives/badge'
@@ -394,7 +393,6 @@ function Compare({ chosen, against, onAgainst }: { chosen: number; against: numb
 }
 
 function DocsApp({ mode: initialMode = 'read', guide = false }: { mode?: 'read' | 'edit' | 'history'; guide?: boolean }) {
-    const [dark, setDark] = useState(true)
     const [collapsed, setCollapsed] = useState(false)
     const [query, setQuery] = useState('')
     const [pageId, setPageId] = useState(guide ? 'querying-runs' : 'nightly-export')
@@ -440,7 +438,6 @@ function DocsApp({ mode: initialMode = 'read', guide = false }: { mode?: 'read' 
                             ...(mode === 'edit' ? [{ label: 'Edit' }] : mode === 'history' ? [{ label: 'History' }] : []),
                         ]}
                         onSearch={() => undefined}
-                        actions={<ThemeToggle dark={dark} onToggle={() => setDark(!dark)} />}
                     />
                 }
                 foot={

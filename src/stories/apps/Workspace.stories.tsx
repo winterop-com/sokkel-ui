@@ -28,7 +28,6 @@ import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
 import { PanelSection, SidePanel } from '@winterop-com/sokkel-ui/SidePanel'
 import { StatusChip, type Status } from '@winterop-com/sokkel-ui/StatusChip'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
-import { SchemeToggle } from '@winterop-com/sokkel-ui/SchemeToggle'
 import { Timeline } from '@winterop-com/sokkel-ui/Timeline'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
 import { useAppearance } from '@winterop-com/sokkel-ui/hooks/use-appearance'
@@ -297,12 +296,7 @@ function Workspace({
                         }
                     />
                 }
-                top={
-                    <TopBar
-                        trail={[{ label: 'Tidevann', href: '#' }, { label: 'Runs' }]}
-                        actions={<SchemeToggle fallback={defaults.scheme} />}
-                    />
-                }
+                top={<TopBar trail={[{ label: 'Tidevann', href: '#' }, { label: 'Runs' }]} />}
                 foot={
                     <StatusLine note="import-orders is running" tone="live" live>
                         <StatusItem label="runs today">248</StatusItem>
