@@ -10,6 +10,7 @@ examples/
   shared/        the fake backend, the window frame, the hash route and the Tidevann mark
   tasks/         lists, a quick add and tasks edited in place
   runs/          a jobs console: an overview, runs, a run's page, jobs, schedules and settings
+  analytics/     a live sales dashboard: revenue, customers, funnels, reports and goals
   example.mk     the targets every example's Makefile includes
 ```
 
@@ -31,7 +32,7 @@ From the repository root, after `make build` builds the packages, every example 
 targets as `make <example>-<target>`; `make examples-list` names them:
 
 ```sh
-make tasks-web          # build the web app and serve it (Tasks on port 4180, Runs on 4181)
+make tasks-web          # build the web app and serve it (Tasks on port 4180, Runs on 4181, Analytics on 4191)
 make tasks-dev          # the web app's dev server
 make tasks-electron     # open it in Electron
 make tasks-tauri        # open it in Tauri
