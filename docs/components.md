@@ -38,7 +38,7 @@ viewer's caption settings through `useStored` or an app's store, with the option
 in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second by `useVideoStats`
 (`@winterop-com/sokkel-ui/media/video-stats`) for `VideoStatsOverlay`.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 232 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 233 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 10 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 11 modules
@@ -286,6 +286,7 @@ in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second 
 | **StatusProvider** | `@winterop-com/sokkel-ui/StatusProvider` | Tells every status part inside it the app's own states, so a chip, a dot or a timeline says `draft` or `published` in the app's words and colors without being told each time. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-status-chip--run-states) |
 | **StepIndicator**, WizardDialog, WizardView | `@winterop-com/sokkel-ui/StepIndicator` | Where a person is in a run of steps: each step numbered and named, the done ones checked and pressable to go back to, the current one filled. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-dialogs--confirm) |
 | **TagChips** | `@winterop-com/sokkel-ui/TagChips` | A row of tags as chips that shows as many as fit the room it is given and a +N chip for the rest, which names them on hover and focus. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-tag-chips--fits) |
+| **TextLink** | `@winterop-com/sokkel-ui/TextLink` | A link inside text or a value: a place named in a record's facts, a form's title in a receipt, a sentence's way onward. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-text-link--in-text) |
 | **Timeline** | `@winterop-com/sokkel-ui/Timeline` | Events in the order they happened, on a rail: a run's steps, a job's history, an audit trail. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-data--description) |
 | **Tree** | `@winterop-com/sokkel-ui/Tree` | A hierarchy a reader opens a level at a time: regions, folders, teams. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-tree--trees) |
 

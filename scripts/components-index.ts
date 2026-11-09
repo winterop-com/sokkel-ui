@@ -250,6 +250,7 @@ const CORE_AREAS: Record<string, string> = {
     Dot: 'Data display',
     DueText: 'Data display',
     Highlight: 'Data display',
+    TextLink: 'Data display',
     IssueMark: 'Data display',
     IssueMarks: 'Data display',
     ItemCard: 'Data display',

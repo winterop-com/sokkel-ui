@@ -542,6 +542,10 @@
             "types": "./dist/components/TextField.d.ts",
             "import": "./dist/components/TextField.js"
         },
+        "./TextLink": {
+            "types": "./dist/components/TextLink.d.ts",
+            "import": "./dist/components/TextLink.js"
+        },
         "./ThemePicker": {
             "types": "./dist/components/ThemePicker.d.ts",
             "import": "./dist/components/ThemePicker.js"
