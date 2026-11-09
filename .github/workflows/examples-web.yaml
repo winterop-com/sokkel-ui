@@ -1,0 +1,22 @@
+name: examples web
+
+# A change to the packages can break an example, so a pull request that changes them builds every
+# example's web app against it. The desktop shells are checked by examples.yaml when the examples change.
+on:
+    pull_request:
+        paths: ['packages/**', '.github/workflows/examples-web.yaml']
+    workflow_dispatch:
+
+jobs:
+    web:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v5
+            - run: npm install -g bun
+            - run: bun install --frozen-lockfile
+            - run: bun run build
+            - name: Web apps
+              run: |
+                  for app in examples/*/web; do
+                      (cd "$app" && bun install --frozen-lockfile && bun run build) || exit 1
+                  done

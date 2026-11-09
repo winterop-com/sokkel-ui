@@ -51,7 +51,8 @@ and inside each example:
 ```
 
 `.github/workflows/examples.yaml` builds every web app and checks every shell on each pull request
-that touches them. The size budget's apps are not examples; they live in `size/` at the root.
+that touches them and every night against main, and `examples-web.yaml` builds the web apps on each
+pull request that changes the packages. The size budget's apps are not examples; they live in `size/` at the root.
 
 Every web app is published beside the Storybook at
 **https://winterop-com.github.io/sokkel-ui/examples/**, under its folder's name, with an index that
