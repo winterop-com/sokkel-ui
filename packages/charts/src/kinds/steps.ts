@@ -1,16 +1,17 @@
 import { SERIES_ORDER, tooltipMarkup } from '../look'
 import { spread } from '../shapes'
-import { edgeAxis, line, written } from './categories'
+import { area, edgeAxis, line, written } from './categories'
 import { colorOf, legendColor, type ChartBuilder, type ChartSpec } from './spec'
 import type { LegendItem } from '../ChartLegend'
 
 /**
  * A line that holds each figure flat until the next category, then steps: for a level that changes
  * at moments rather than drifting, such as workers in a pool or a limit. It reads what a line
- * reads: `x` along, `y` combined by `aggregate`, `series` split into lines, and `stack`.
+ * reads: `x` along, `y` combined by `aggregate`, `series` split into lines, and `stack`; `fill`
+ * fills the area under it, evenly or fading.
  */
 export const step: ChartBuilder = (spec, look) => {
-    const option = line({ ...spec, smooth: false }, look)
+    const option = (spec.fill === undefined || spec.fill === 'none' ? line : area)({ ...spec, smooth: false }, look)
     const series = (option.series ?? []) as Record<string, unknown>[]
     return { ...option, series: series.map((entry) => ({ ...entry, step: 'end' })) }
 }

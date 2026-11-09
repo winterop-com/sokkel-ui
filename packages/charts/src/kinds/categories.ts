@@ -1,6 +1,6 @@
-import { asShares, formatNumber, pivot, type Series } from '../data'
+import { asShares, formatNumber, formatTick, pivot, type Series } from '../data'
 import { SERIES_ORDER, tooltipMarkup, type ChartLook } from '../look'
-import { colorOf, legendColor, measureName, paletteToken, unitAt, type ChartBuilder, type ChartSpec } from './spec'
+import { colorOf, isDashed, legendColor, measureName, paletteToken, stackOf, unitAt, type ChartBuilder, type ChartSpec } from './spec'
 import type { LegendItem } from '../ChartLegend'
 
 /** The figure as a tooltip or a label writes it, with the spec's unit, or the unit of the `field`th `y` field. */
@@ -33,11 +33,41 @@ function categoryAxis(spec: ChartSpec, categories: string[]) {
     }
 }
 
-/** The value axis' labels: with the spec's unit where it has one, or `%` where the figures stack to 100%. */
+/** The value axis' labels: written short, with the spec's unit where it has one, or `%` where the figures stack to 100%. */
 export function valueLabels(spec: ChartSpec) {
     if (spec.stack === 'percent') return { axisLabel: { formatter: (value: number) => `${formatNumber(value)}%` } }
-    if (spec.unit === undefined) return {}
-    return { axisLabel: { formatter: (value: number) => written(spec, value) } }
+    const unit = spec.axes?.left?.unit ?? unitAt(spec)
+    return { axisLabel: { formatter: (value: number) => `${formatTick(value)}${unit}` } }
+}
+
+/** The value axis' range: from `min` to `max`, or 0 to 100% in quarters where the figures stack to 100%. */
+function valueRange(spec: ChartSpec) {
+    return spec.stack === 'percent' ? { min: 0, max: 100, interval: 25 } : { min: spec.min, max: spec.max }
+}
+
+/** The spec's steps after the first, each a dashed line across the chart at its value, in its color and labeled with its figure. */
+export function stepLines(spec: ChartSpec, look: ChartLook) {
+    const steps = (spec.steps ?? []).slice(1).filter((step) => step.value !== undefined)
+    if (steps.length === 0) return undefined
+    return {
+        silent: true,
+        symbol: 'none',
+        data: steps.map((step) => {
+            const color = step.color === undefined ? look.muted : look.token(step.color)
+            return {
+                yAxis: step.value,
+                lineStyle: { color, type: 'dashed', width: 1 },
+                label: {
+                    show: true,
+                    position: 'insideEndTop',
+                    formatter: () => written(spec, step.value),
+                    color,
+                    fontFamily: look.font,
+                    fontSize: look.size.small,
+                },
+            }
+        }),
+    }
 }
 
 /** A tooltip listing every series at the category under the pointer. */
@@ -58,11 +88,21 @@ function axisTooltip(spec: ChartSpec) {
     }
 }
 
-/** Which series ends each category's stack: the last with a figure above zero, and the last with one below. */
-function stackEnds(series: readonly Series[]) {
-    const last = (sign: number) =>
-        (series[0]?.values ?? []).map((_, category) => series.findLastIndex((entry) => Math.sign(entry.values[category] ?? 0) === sign))
-    return { up: last(1), down: last(-1) }
+/**
+ * Whether a bar ends its stack in its category: it stands alone, or it is the last of its stack
+ * with a figure on its side of zero.
+ */
+export function endsStack(
+    groups: readonly (string | undefined)[],
+    series: readonly Series[],
+    index: number,
+    category: number,
+    value: number,
+) {
+    const group = groups[index]
+    if (group === undefined) return true
+    const sign = Math.sign(value)
+    return series.findLastIndex((entry, at) => groups[at] === group && Math.sign(entry.values[category] ?? 0) === sign) === index
 }
 
 /** A bar's corners, rounded at its far end from the axis. */
@@ -72,19 +112,18 @@ export function farCorners(corner: number, horizontal: boolean, value: number) {
 }
 
 /**
- * Bars per category, one bar per series side by side, stacked, or as shares of 100%; `gap` sets how
- * close they stand. Each bar, or each stack, is rounded at its far end, and stacked bars are parted
- * by a line in the card's color.
+ * Bars per category, one bar per series side by side, stacked, or as shares of 100%; `stacks` puts
+ * series in stacks of their own, and `gap` sets how close they stand. Each bar, or each stack, is
+ * rounded at its far end, and stacked bars are parted by a line in the card's color.
  */
 export const bar: ChartBuilder = (spec, look) => {
     const { categories, series } = shaped(spec)
     const along = categoryAxis(spec, categories)
-    const valueAxis = { type: 'value', max: spec.stack === 'percent' ? 100 : undefined, ...valueLabels(spec) }
-    const stacked = spec.stack !== undefined
+    const valueAxis = { type: 'value', ...valueRange(spec), ...valueLabels(spec) }
+    const groups = series.map((entry) => stackOf(spec, entry.name))
+    const stacked = groups.some((group) => group !== undefined)
     const horizontal = spec.horizontal === true
-    const ends = stackEnds(series)
-    const isEnd = (index: number, category: number, value: number) =>
-        !stacked || (value > 0 ? ends.up[category] === index : ends.down[category] === index)
+    const isEnd = (index: number, category: number, value: number) => endsStack(groups, series, index, category, value)
     return {
         tooltip: axisTooltip(spec),
         grid: { left: 4, right: 10, top: 10, bottom: 4 },
@@ -98,11 +137,11 @@ export const bar: ChartBuilder = (spec, look) => {
                     ? value
                     : { value, itemStyle: { borderRadius: farCorners(look.corner, horizontal, value) } },
             ),
-            stack: stacked ? 'all' : undefined,
+            stack: groups[index],
             ...(spec.gap === 'tight' ? { barCategoryGap: '6%', barMaxWidth: 400 } : stacked ? { barCategoryGap: '24%' } : {}),
             itemStyle: {
                 color: colorOf(spec, look, entry.name, index),
-                ...(stacked ? { borderColor: look.card, borderWidth: 1 } : {}),
+                ...(groups[index] === undefined ? {} : { borderColor: look.card, borderWidth: 1 }),
             },
         })),
     }
@@ -138,30 +177,40 @@ export function edgeAxis(spec: ChartSpec, categories: string[]) {
     }
 }
 
-/** A line per series across the categories, or areas filled under them, evenly or fading by `fill`. */
+/**
+ * A line per series across the categories, or areas filled under them, evenly or fading by `fill`;
+ * `stacks` puts series in stacks of their own, a `dashed` series is drawn as a reference with no
+ * area, the steps after the first are dashed lines across at their values, and `min` and `max` fix
+ * the value axis.
+ */
 function lines(filled: boolean): ChartBuilder {
     return (spec, look) => {
         const { categories, series } = shaped(spec)
+        const marks = stepLines(spec, look)
         return {
             tooltip: { ...axisTooltip(spec), axisPointer: { type: 'line' } },
             grid: { left: 4, right: 10, top: 10, bottom: 4 },
             xAxis: edgeAxis(spec, categories),
-            yAxis: { type: 'value', max: spec.stack === 'percent' ? 100 : undefined, ...valueLabels(spec) },
+            yAxis: { type: 'value', ...valueRange(spec), ...valueLabels(spec) },
             series: series.map((entry, index) => {
                 const color = colorOf(spec, look, entry.name, index)
+                const stack = stackOf(spec, entry.name)
+                const dashed = isDashed(spec, entry.name)
                 return {
                     type: 'line',
                     name: entry.name,
                     data: entry.values,
                     smooth: spec.smooth === true,
-                    stack: spec.stack === undefined ? undefined : 'all',
+                    stack,
                     itemStyle: { color },
-                    lineStyle: { color },
-                    areaStyle: !filled
-                        ? undefined
-                        : spec.fill === 'gradient'
-                          ? { opacity: 1, color: fading(look, color, spec.stack !== undefined) }
-                          : { color, opacity: spec.stack === undefined ? 0.15 : 0.55 },
+                    lineStyle: dashed ? { color, width: 1.25, type: 'dashed' } : { color },
+                    areaStyle:
+                        !filled || dashed || spec.fill === 'none'
+                            ? undefined
+                            : spec.fill === 'gradient'
+                              ? { opacity: 1, color: fading(look, color, stack !== undefined) }
+                              : { color, opacity: stack === undefined ? 0.15 : 0.55 },
+                    markLine: index === 0 ? marks : undefined,
                 }
             }),
         }
@@ -226,12 +275,25 @@ export const donut = slices(true)
 /** A pie: slices of a whole circle, one per category, each its share of the whole; `total` is left to the ring. */
 export const pie = slices(false)
 
-/** A grid of cells, `x` along and `series` down, each cell's color its combined `y`, with the scale beside it by `showScale`. */
+/** A heatmap scale's colors: from the card to one token, or from the card through several in turn. */
+function scaleColors(look: ChartLook, scale: string | readonly string[]): string[] {
+    if (typeof scale === 'string') return look.ramp(scale, 7)
+    const [first, ...rest] = scale
+    return [look.mix(`var(--${first})`, 10), look.mix(`var(--${first})`, 45), look.token(first), ...rest.map(look.token)]
+}
+
+/**
+ * A grid of cells, `x` along and `series` down, each cell's color its combined `y`, on a scale
+ * from `min` to `max` (the smallest and largest figure by default) through the tokens of `scale`,
+ * shown beside the grid with its ends written by `showScale`.
+ */
 export const heatmap: ChartBuilder = (spec, look) => {
     const { categories, series } = shaped(spec)
     const cells = series.flatMap((entry, row) => entry.values.map((value, column) => [column, row, value]))
     const values = cells.map((cell) => cell[2]).filter((value): value is number => typeof value === 'number')
-    const token = spec.colors?.value ?? paletteToken(spec, 0) ?? 'chart-2'
+    const scale = spec.scale ?? spec.colors?.value ?? paletteToken(spec, 0) ?? 'chart-2'
+    const low = spec.min ?? (values.length === 0 ? 0 : Math.min(...values))
+    const high = spec.max ?? (values.length === 0 ? 1 : Math.max(...values))
     return {
         tooltip: {
             trigger: 'item',
@@ -243,7 +305,7 @@ export const heatmap: ChartBuilder = (spec, look) => {
                     },
                 ]),
         },
-        grid: { left: 4, right: spec.showScale === true ? 56 : 10, top: 10, bottom: 4 },
+        grid: { left: 4, right: spec.showScale === true ? 44 : 10, top: 10, bottom: 4 },
         xAxis: { ...categoryAxis(spec, categories), splitArea: { show: false } },
         yAxis: { type: 'category', data: series.map((entry) => entry.name), inverse: true },
         visualMap: {
@@ -251,14 +313,24 @@ export const heatmap: ChartBuilder = (spec, look) => {
             calculable: false,
             orient: 'vertical',
             right: 0,
-            top: 'center',
-            itemWidth: 10,
-            itemHeight: 120,
-            min: values.length === 0 ? 0 : Math.min(...values),
-            max: values.length === 0 ? 1 : Math.max(...values),
-            inRange: { color: look.ramp(token, 7) },
+            top: 4,
+            bottom: 20,
+            itemWidth: 8,
+            itemHeight: 100,
+            min: low,
+            max: high,
+            text: [`${formatTick(high)}${unitAt(spec)}`, `${formatTick(low)}${unitAt(spec)}`],
+            textGap: 4,
+            inRange: { color: scaleColors(look, scale) },
         },
-        series: [{ type: 'heatmap', data: cells, itemStyle: { borderColor: look.card, borderWidth: 1, borderRadius: look.corner } }],
+        series: [
+            {
+                type: 'heatmap',
+                data: cells,
+                itemStyle: { borderColor: look.card, borderWidth: 1, borderRadius: look.corner },
+                emphasis: { itemStyle: { borderColor: look.foreground } },
+            },
+        ],
     }
 }
 

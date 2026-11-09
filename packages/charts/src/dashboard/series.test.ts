@@ -1,17 +1,38 @@
 import { describe, expect, it } from 'vitest'
 
-import { axisWriter } from './series'
+import { pivot } from '../data'
+import { panelFormat, seriesSpec } from './series'
 
-describe('axisWriter', () => {
-    it('keeps the ticks of a small range apart', () => {
-        const write = axisWriter('%')
-        expect([0, 0.05, 0.1, 0.15, 0.2].map(write)).toEqual(['0%', '0.05%', '0.1%', '0.15%', '0.2%'])
+describe('seriesSpec', () => {
+    const spec = seriesSpec(
+        ['Mon', 'Tue'],
+        [
+            { name: 'Runs', values: [3, null], stack: 'all' },
+            { name: 'Target', values: [4, 4], color: 'muted-foreground', dashed: true },
+        ],
+    )
+
+    it('gives back the series it was given, as a chart reads its rows', () => {
+        const { categories, series } = pivot({ ...spec, x: spec.x ?? '', y: spec.y })
+        expect(categories).toEqual(['Mon', 'Tue'])
+        expect(series).toEqual([
+            { name: 'Runs', values: [3, null] },
+            { name: 'Target', values: [4, 4] },
+        ])
     })
 
-    it('writes a large value short', () => {
-        const write = axisWriter()
-        expect(write(1250)).toBe('1.3K')
-        expect(write(42)).toBe('42')
-        expect(write(2.5)).toBe('2.5')
+    it('keeps each series in its color, stack and dash', () => {
+        expect(spec.colors).toEqual({ Runs: 'chart-2', Target: 'muted-foreground' })
+        expect(spec.stacks).toEqual({ Runs: 'all' })
+        expect(spec.dashed).toEqual(['Target'])
+    })
+})
+
+describe('panelFormat', () => {
+    it('writes to the decimals with the unit after, or by the format alone', () => {
+        const fixed = panelFormat('%', 1)
+        expect([fixed.format?.(42), fixed.unit]).toEqual(['42.0', '%'])
+        const own = panelFormat('%', 1, (value) => `${String(value)} runs`)
+        expect([own.format?.(3), own.unit, own.axes?.left?.unit]).toEqual(['3 runs', undefined, '%'])
     })
 })

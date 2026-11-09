@@ -2,58 +2,15 @@ import { useMemo, type ReactNode } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { ChartFrame, type ChartFrameWords } from '../ChartFrame'
-import { EChart } from '../EChart'
-import { radarGrid, radarPolygon } from '../kinds/radar'
-import type { ChartLook } from '../look'
+import { Chart } from '../Chart'
+import type { ChartSpec } from '../kinds'
 import { SPAN, type PanelSpan } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
-import { legendItems, seriesToken, valueWriter, type PanelSeries } from './series'
+import { legendItems, panelFormat, seriesSpec, type PanelSeries } from './series'
 
 /** One spoke of a radar chart: the measure it stands for and the value at its rim. */
 export interface RadarSpoke {
     name: string
     max: number
-}
-
-/** The option for a radar chart, one polygon per series over the same spokes, built from the look. */
-export function radarOption({
-    spokes,
-    series,
-    unit,
-    decimals,
-    format,
-    shape = 'polygon',
-    fill = true,
-    rings = 4,
-}: {
-    spokes: readonly RadarSpoke[]
-    /** Each series' values, one per spoke in order. */
-    series: readonly PanelSeries[]
-    unit?: string
-    decimals?: number
-    format?: (value: number) => string
-    shape?: 'polygon' | 'circle'
-    /** Fills each polygon faintly in its series' color. */
-    fill?: boolean
-    rings?: number
-}) {
-    const write = valueWriter(unit, decimals, format)
-    return (look: ChartLook) => ({
-        tooltip: {
-            trigger: 'item',
-            valueFormatter: (value: number | null) => (value === null ? '-' : write(value)),
-        },
-        radar: radarGrid(look, { spokes, shape, rings }),
-        // One series per polygon, so the legend beside the chart can hide and emphasize each by name.
-        series: series.map((entry, index) =>
-            radarPolygon({
-                name: entry.name,
-                values: entry.values,
-                color: look.token(seriesToken(entry, index)),
-                dashed: entry.dashed === true,
-                fill,
-            }),
-        ),
-    })
 }
 
 export interface RadarPanelProps {
@@ -117,8 +74,18 @@ export function RadarPanel({
     words,
     className,
 }: RadarPanelProps) {
-    const option = useMemo(
-        () => radarOption({ spokes, series, unit, decimals, format, shape, fill, rings }),
+    const spec = useMemo<ChartSpec>(
+        () => ({
+            ...seriesSpec(
+                spokes.map((spoke) => spoke.name),
+                series,
+            ),
+            ...panelFormat(unit, decimals, format),
+            rims: Object.fromEntries(spokes.map((spoke) => [spoke.name, spoke.max])),
+            round: shape === 'circle',
+            levels: rings,
+            fill: fill === false ? 'none' : undefined,
+        }),
         [spokes, series, unit, decimals, format, shape, fill, rings],
     )
     const items = useMemo(() => legendItems(series).map((item) => ({ ...item, values: undefined })), [series])
@@ -140,7 +107,7 @@ export function RadarPanel({
             words={words}
             className={cn(SPAN[span], className)}
         >
-            {(state) => <EChart option={option} label={typeof title === 'string' ? title : 'Radar chart'} {...state} />}
+            {(state) => <Chart kind="radar" label={typeof title === 'string' ? title : 'Radar chart'} {...spec} {...state} />}
         </ChartFrame>
     )
 }

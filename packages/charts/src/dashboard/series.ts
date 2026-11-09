@@ -1,5 +1,6 @@
 import type { LegendItem } from '../ChartLegend'
-import { SERIES_ORDER, type ChartLook } from '../look'
+import type { ChartSpec } from '../kinds'
+import { SERIES_ORDER } from '../look'
 import { formatValue, tokenVar } from '@winterop-com/sokkel-ui/dashboard/thresholds'
 
 /** One series of a dashboard chart panel. `name` names it in the legend, the tooltip and `hidden`. */
@@ -31,28 +32,44 @@ export function valueWriter(unit = '', decimals?: number, format?: (value: numbe
     return (value) => (format !== undefined ? format(value) : `${formatValue(value, decimals)}${unit}`)
 }
 
-const compact = new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 })
-const fine = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 })
+/**
+ * How a panel's figures are written, as a chart's spec says it: by `format` alone when given, or to
+ * `decimals` with the unit after; the value axis' ticks carry the unit either way.
+ */
+export function panelFormat(
+    unit?: string,
+    decimals?: number,
+    format?: (value: number) => string,
+): Pick<ChartSpec, 'format' | 'unit' | 'axes'> {
+    if (format === undefined) return { format: (value) => formatValue(value, decimals), unit }
+    return { format, ...(unit === undefined ? {} : { axes: { left: { unit } } }) }
+}
+
+/** The field of a panel's rows each category is in. */
+export const CATEGORY = 'category'
+/** The field of a panel's rows each series is named in. */
+export const SERIES = 'series'
+/** The field of a panel's rows each figure is in. */
+export const FIGURE = 'value'
 
 /**
- * An axis label: the value written short, with its unit. A value under ten keeps two decimals, so
- * the ticks of a small range (0.05 apart for a rate under one percent) never read the same.
+ * A panel's series as the rows and fields a `Chart` reads: a row per category and series, the
+ * categories and series in their order, each series in its color, its stack and dashed as it says.
  */
-export const axisWriter =
-    (unit = '') =>
-    (value: number) =>
-        `${Math.abs(value) < 10 ? fine.format(value) : compact.format(value)}${unit}`
-
-/** The axis settings every dashboard chart panel shares. */
-export function axes(look: ChartLook, x: readonly string[], unit?: string, labelEvery?: number) {
-    const write = axisWriter(unit)
+export function seriesSpec(x: readonly string[], series: readonly PanelSeries[]): ChartSpec {
+    const stacks = series.filter((entry) => entry.stack !== undefined).map((entry) => [entry.name, entry.stack ?? ''])
+    const dashed = series.filter((entry) => entry.dashed === true).map((entry) => entry.name)
     return {
-        xAxis: {
-            type: 'category',
-            data: x,
-            axisLabel: { interval: labelEvery === undefined ? 'auto' : labelEvery - 1, hideOverlap: true },
-            axisLine: { lineStyle: { color: look.border } },
-        },
-        yAxis: { type: 'value', axisLabel: { formatter: (value: number) => write(value), hideOverlap: true }, splitNumber: 4 },
+        rows: series.flatMap((entry) =>
+            x.map((category, index) => ({ [CATEGORY]: category, [SERIES]: entry.name, [FIGURE]: entry.values[index] ?? null })),
+        ),
+        x: CATEGORY,
+        y: FIGURE,
+        series: SERIES,
+        order: x,
+        seriesOrder: series.map((entry) => entry.name),
+        colors: Object.fromEntries(series.map((entry, index) => [entry.name, seriesToken(entry, index)])),
+        ...(stacks.length === 0 ? {} : { stacks: Object.fromEntries(stacks) }),
+        ...(dashed.length === 0 ? {} : { dashed }),
     }
 }

@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
-import { aggregate, asShares, distinct, pivot, quantile } from './data'
+import { aggregate, asShares, distinct, formatTick, pivot, quantile } from './data'
+
+describe('formatTick', () => {
+    it('keeps the ticks of a small range apart', () => {
+        expect([0, 0.05, 0.1, 0.15, 0.2].map(formatTick)).toEqual(['0', '0.05', '0.1', '0.15', '0.2'])
+    })
+
+    it('writes a large value short', () => {
+        expect([formatTick(1250), formatTick(42), formatTick(2.5)]).toEqual(['1.3K', '42', '2.5'])
+    })
+})
 
 const ROWS = [
     { job: 'nightly-export', state: 'succeeded', duration: 100 },

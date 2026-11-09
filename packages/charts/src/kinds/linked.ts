@@ -243,7 +243,7 @@ function seriesOf(
     panel: { name: string; values: (number | null)[]; style: LinkedPanel },
     index: number,
     smooth: boolean,
-    fill: 'solid' | 'gradient' | undefined,
+    fill: 'solid' | 'gradient' | 'none' | undefined,
     look: ChartLook,
     color: string,
 ) {
@@ -271,7 +271,7 @@ function seriesOf(
         itemStyle: { color },
         lineStyle: { color },
         areaStyle:
-            panel.style.mark !== 'area'
+            panel.style.mark !== 'area' || fill === 'none'
                 ? undefined
                 : fill === 'gradient'
                   ? { opacity: 1, color: fading(look, color, false, hang) }
