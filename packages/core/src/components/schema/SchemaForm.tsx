@@ -267,9 +267,12 @@ export function useSchemaForm(
     const [open, setOpen] = useState<string | null>(defaultOpen === undefined ? null : pointer(defaultOpen))
     const [seen, setSeen] = useState(server)
     const [changed, setChanged] = useState<ReadonlySet<string>>(new Set())
+    // The removals and moves made since the server's issues came, which carry each issue to its item's place now.
+    const [moves, setMoves] = useState<readonly { list: string; map: (index: number) => number | null }[]>([])
     if (seen !== server) {
         setSeen(server)
         setChanged(new Set())
+        setMoves([])
     }
 
     const rowKeys = useRef(new Map<string, string[]>())
@@ -292,7 +295,16 @@ export function useSchemaForm(
             nextKeys[to] = keys[index]
             nextItems[to] = item
         })
-        rowKeys.current.set(at, nextKeys)
+        // The keys of lists inside the items move with their items, as the items' own keys do.
+        const nextRows = new Map<string, string[]>()
+        for (const [list, held] of rowKeys.current) {
+            if (list === at) continue
+            const moved = shiftKey(list, at, map)
+            if (moved !== null) nextRows.set(moved, held)
+        }
+        nextRows.set(at, nextKeys)
+        rowKeys.current = nextRows
+        setMoves((current) => [...current, { list: at, map }])
         setValue((current: unknown) => setAt(current, path, nextItems))
         setTouched((current) => shiftSet(current, at, map))
         setUnread((current) => shiftSet(current, at, map))
@@ -351,17 +363,23 @@ export function useSchemaForm(
             add(at, { tone: 'critical', text: words.notJson })
         }
     }
+    // Each refusal at its item's place now, gone with an item that was taken out.
+    const refused = server.flatMap((issue) => {
+        let at: string | null = pointer(issue.path)
+        for (const move of moves) at = at === null ? null : shiftKey(at, move.list, move.map)
+        return at === null ? [] : [{ issue, at }]
+    })
     const refusedAt = (at: string): Issue[] =>
         changed.has(at)
             ? []
-            : server
-                  .filter((issue) => pointer(issue.path) === at)
-                  .map((issue) => ({ tone: issue.tone ?? 'critical', text: issue.text, detail: issue.detail, actions: issue.actions }))
+            : refused
+                  .filter((one) => one.at === at)
+                  .map(({ issue }) => ({ tone: issue.tone ?? 'critical', text: issue.text, detail: issue.detail, actions: issue.actions }))
     const pending = (at: string): Issue[] =>
         [...refusedAt(at), ...(all.get(at) ?? [])].sort((a, b) => (a.tone === b.tone ? 0 : a.tone === 'critical' ? -1 : 1))
     // What is wrong with the form as a whole, such as a schema that cannot be checked, shows at once.
     const shownAt = (at: string): Issue[] => (at === '' || submitted || touched.has(at) ? pending(at) : refusedAt(at))
-    const places = [...new Set([...all.keys(), ...server.map((issue) => pointer(issue.path))])]
+    const places = [...new Set([...all.keys(), ...refused.map((one) => one.at)])]
     const count = { critical: 0, warning: 0 }
     for (const at of places) for (const issue of shownAt(at)) count[issue.tone] += 1
     /** The first place, in the order the fields are drawn, whose issues pass the test. */
@@ -556,12 +574,26 @@ export type SchemaFieldRenderer = (field: SchemaFieldControl) => ReactNode | und
 
 const FieldRendererContext = createContext<SchemaFieldRenderer | undefined>(undefined)
 
-function Control({ form, path, at, label }: { form: SchemaFormState; path: Path; at: JsonSchema; label?: string }) {
+function Control({
+    form,
+    path,
+    at,
+    label,
+    ask = true,
+}: {
+    form: SchemaFormState
+    path: Path
+    at: JsonSchema
+    label?: string
+    /** Whether to ask the app's `field` for this field, false where its property already did. */
+    ask?: boolean
+}) {
     const kind = kindOf(at, form.schema)
     const value = valueAt(form.value, path)
     const id = form.id(path)
     const invalid = worst(form.shown(path)) === 'critical' || undefined
-    const custom = useContext(FieldRendererContext)?.({
+    const renderer = useContext(FieldRendererContext)
+    const custom = (ask ? renderer : undefined)?.({
         path,
         schema: at,
         value,
@@ -768,6 +800,36 @@ function Property({
     const value = valueAt(form.value, path)
     const locked = at.readOnly === true
 
+    // The app's own control for any field, a whole object, list or choice among them, in the form's frame.
+    const custom = useContext(FieldRendererContext)?.({
+        path,
+        schema: at,
+        value,
+        set: (next) => form.set(path, next),
+        touch: () => form.touch(path),
+        id: form.id(path),
+        invalid: worst(form.shown(path)) === 'critical',
+        readOnly: locked,
+        label,
+    })
+    if (custom !== undefined && custom !== null)
+        return (
+            <Field
+                id={form.id(path)}
+                label={label}
+                mono={mono}
+                hint={hint}
+                keyHint={hint !== undefined}
+                required={required}
+                help={at.description}
+                className={span}
+            >
+                <Marked form={form} path={path}>
+                    {custom}
+                </Marked>
+            </Field>
+        )
+
     if (kind === 'object')
         return (
             <fieldset className={cn('flex min-w-0 flex-col gap-3 rounded-surface border border-border p-3', '@lg:col-span-2')}>
@@ -927,13 +989,15 @@ function Property({
             help={at.description}
             className={span}
         >
-            <Control form={form} path={path} at={at} />
+            <Control form={form} path={path} at={at} ask={false} />
         </Field>
     )
 }
 
 /** An object's properties laid out in rows: half-width fields pair up when the form is wide enough. */
-function Fields({ form, path, schema }: { form: SchemaFormState; path: Path; schema: JsonSchema }) {
+function Fields({ form, path, schema: given }: { form: SchemaFormState; path: Path; schema: JsonSchema }) {
+    // A read-only object, the form's root or a list's item among them, locks every field it holds.
+    const schema = given.readOnly === true ? lock(given) : given
     const required = new Set(schema.required ?? [])
     return (
         <div className="@container">
