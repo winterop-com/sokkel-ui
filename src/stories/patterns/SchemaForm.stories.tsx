@@ -236,6 +236,50 @@ function NewPipeline() {
 /** A nested object, a set of choices, a list of values, a list of objects, and a map edited as JSON; the strip beside the body marks where each issue sits down the form. */
 export const NestedAndLists: StoryObj = { name: 'Nested and lists', render: () => <NewPipeline /> }
 
+const CONNECTION: JsonSchema = {
+    type: 'object',
+    required: ['host', 'token'],
+    properties: {
+        host: { type: 'string', title: 'Host', format: 'hostname' },
+        user: { type: 'string', title: 'User', maxLength: 64 },
+        token: {
+            type: 'string',
+            title: 'API token',
+            writeOnly: true,
+            minLength: 16,
+            description: 'Kept by the server and never shown again.',
+        },
+        signing: { type: 'string', title: 'Signing secret', writeOnly: true, description: 'Checks the webhooks the api sends back.' },
+    },
+}
+
+function EditConnection() {
+    const form = useSchemaForm(CONNECTION, {
+        initial: { host: 'api.example.org', user: 'grace' },
+        sealed: [{ path: ['token'], setAt: '2026-11-06T08:30:00Z' }],
+        now: new Date('2026-11-09T10:00:00Z'),
+    })
+    return (
+        <DialogShell
+            open
+            onOpenChange={() => undefined}
+            title="sync-inventory connection"
+            description="How sync-inventory reaches the api for the harbor project."
+            count={<SchemaIssueCount form={form} />}
+            confirm={{ label: 'Save', onConfirm: () => form.submit() }}
+        >
+            <SchemaForm form={form} />
+        </DialogShell>
+    )
+}
+
+/**
+ * Secrets marked `writeOnly`: the API token is set, so it shows as set three days ago and stays out
+ * of the value (and what Save sends) until Replace; the signing secret is not set, so it is a masked
+ * input. The required token asks for nothing more while it is set.
+ */
+export const Secrets: StoryObj = { render: () => <EditConnection /> }
+
 const STEP: JsonSchema = {
     type: 'object',
     required: ['code', 'script'],

@@ -218,9 +218,7 @@ to `plan.md` when it ships.
         - `CodeEditor` following a `[[link]]` on Mod-click
         - backlink lines drawn as Markdown
         - `Tree` reordering within a folder, dragging from the keyboard, and opening a parent when it is chosen
-        - `CodeEditor` gaps from a pipeline app that edits in Monaco (2026-11-09): two editors over one
-          buffer, so a pane and the window it pops out into share edits, undo and the caret's place;
-          an option to wash the caret's line while the editor is not focused, as a user preference;
+        - `CodeEditor` gaps from a pipeline app that edits in Monaco (2026-11-09): an option to wash the caret's line while the editor is not focused, as a user preference;
           and completing a key's whole object from the schema's `required` keys, as a snippet
     - **Media:** artwork for the media session from drawn covers.
     - **Video:**

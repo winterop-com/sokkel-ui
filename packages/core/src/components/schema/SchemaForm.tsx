@@ -8,6 +8,8 @@ import { Field } from '../Field'
 import { IssueMarks } from '../IssueMarks'
 import { ISSUE_EDGE, IssueCount, IssueMark, worst, type Issue, type IssueAction, type IssueEntry } from '../IssueMark'
 import { NumberField } from '../NumberField'
+import { RepeatedGroup } from '../RepeatedGroup'
+import { SecretField } from '../SecretField'
 import { SwitchField } from '../SwitchField'
 import { Button } from '../ui/button'
 import { Checkbox } from '../ui/checkbox'
@@ -38,6 +40,13 @@ export interface ServerIssue {
     detail?: string
     tone?: Issue['tone']
     actions?: readonly IssueAction[]
+}
+
+/** A secret already set where the app keeps it, at a `writeOnly` property: never read back, only replaced. */
+export interface SealedSecret {
+    path: Path
+    /** When it was set. */
+    setAt?: Date | string
 }
 
 export interface SchemaFormWords {
@@ -162,6 +171,7 @@ function setAt(value: unknown, path: Path, next: unknown): unknown {
 }
 
 const NONE: readonly ServerIssue[] = []
+const NO_SECRETS: readonly SealedSecret[] = []
 
 /**
  * Loads the schema checker (ajv) once, and resolves when it is ready. `useSchemaForm` calls it
@@ -242,6 +252,10 @@ export interface SchemaFormState {
     moveItem: (path: Path, from: number, to: number) => void
     /** A key per item of the list at `path` that stays with the item as items are removed and moved. */
     itemKeys: (path: Path, length: number) => readonly string[]
+    /** The secret already set at a path, if one is. */
+    sealed: (path: Path) => SealedSecret | undefined
+    /** The moment a sealed secret's `setAt` is counted from; without it, the clock. */
+    now?: Date
     words: SchemaFormWords
 }
 
@@ -260,6 +274,8 @@ export function useSchemaForm(
         defaultSubmitted = false,
         defaultOpen,
         deferred,
+        sealed = NO_SECRETS,
+        now,
         words: given_,
     }: {
         initial?: unknown
@@ -273,6 +289,14 @@ export function useSchemaForm(
          * later (`${steps.fetch.rows}` where a number goes). Keep it the same function between renders.
          */
         deferred?: DeferredValue
+        /**
+         * The secrets already set, by path: each `writeOnly` property among them shows as set and
+         * stays out of the value until it is replaced, so what is sent leaves it as it is. A
+         * required secret that is set asks for nothing more.
+         */
+        sealed?: readonly SealedSecret[]
+        /** The moment a sealed secret's `setAt` is counted from; without it, the clock. */
+        now?: Date
         words?: Partial<SchemaFormWords>
     } = {},
 ): SchemaFormState {
@@ -362,11 +386,12 @@ export function useSchemaForm(
         return { tone: issue.tone, ...said, actions }
     }
 
+    const sealedAt = new Map(sealed.map((secret) => [pointer(secret.path), secret]))
     const all = new Map<string, Issue[]>()
     const add = (at: string, issue: Issue) => all.set(at, [...(all.get(at) ?? []), issue])
     for (const issue of found) {
         const at = pointer(issue.path)
-        if (issue.kind === 'required' && ((drafts[at] ?? '').trim() !== '' || unread.has(at))) continue
+        if (issue.kind === 'required' && ((drafts[at] ?? '').trim() !== '' || unread.has(at) || sealedAt.has(at))) continue
         add(at, asIssue(issue))
     }
     // Text typed into a number or JSON field that does not parse leaves the value as it was, and says so.
@@ -490,6 +515,8 @@ export function useSchemaForm(
             )
         },
         itemKeys: (path, length) => keysAt(pointer(path), length),
+        sealed: (path) => sealedAt.get(pointer(path)),
+        now,
         words,
     }
 }
@@ -723,12 +750,33 @@ function Control({
             )
         }
         default: {
+            if (at.writeOnly === true) {
+                const secret = form.sealed(path)
+                return (
+                    <Marked form={form} path={path}>
+                        <SecretField
+                            bare
+                            id={id}
+                            label={label ?? ''}
+                            issues={form.shown(path)}
+                            value={typeof value === 'string' && value !== '' ? value : undefined}
+                            onChange={(next) => form.set(path, next)}
+                            sealed={secret !== undefined}
+                            setAt={secret?.setAt}
+                            now={form.now}
+                            readOnly={at.readOnly === true}
+                            onBlur={() => form.touch(path)}
+                            className={edge(form, path)}
+                        />
+                    </Marked>
+                )
+            }
             const mono = at.pattern !== undefined || at.format === 'uri' || at.format === 'uuid' || at.format === 'hostname'
             return (
                 <Marked form={form} path={path}>
                     <Input
                         {...common}
-                        type={at.format === 'date' ? 'date' : at.writeOnly === true ? 'password' : 'text'}
+                        type={at.format === 'date' ? 'date' : 'text'}
                         value={typeof value === 'string' ? value : value === undefined || value === null ? '' : String(value)}
                         onChange={(event) => form.set(path, event.target.value === '' ? undefined : event.target.value)}
                         className={cn(mono && 'font-mono', edge(form, path))}
@@ -917,7 +965,38 @@ function Property({
             </div>
         )
 
-    if (kind === 'list' || kind === 'records') {
+    if (kind === 'records') {
+        const keys = form.itemKeys(path, items.length)
+        const indexOf = (key: string) => keys.indexOf(key)
+        return (
+            <RepeatedGroup
+                id={form.id(path)}
+                label={<Title label={label} mono={mono} hint={hint} required={false} />}
+                required={required}
+                description={at.description}
+                issues={form.shown(path)}
+                issueOpen={form.open === pointer(path)}
+                onIssueOpenChange={(open) => form.setOpen(open ? pointer(path) : null)}
+                rows={keys.map((key) => ({ key }))}
+                onAdd={() => form.set(path, [...items, initialValue(at.items ?? {}, form.schema)])}
+                onRemove={(key) => form.removeItem(path, indexOf(key))}
+                onMove={(key, by) => form.moveItem(path, indexOf(key), indexOf(key) + by)}
+                readOnly={locked}
+                words={{
+                    add: form.words.add,
+                    remove: form.words.remove,
+                    moveUp: form.words.moveUp,
+                    moveDown: form.words.moveDown,
+                    item: form.words.item,
+                }}
+                className="@lg:col-span-2"
+            >
+                {(_, index) => <Fields form={form} path={[...path, index]} schema={itemSchema} />}
+            </RepeatedGroup>
+        )
+    }
+
+    if (kind === 'list') {
         const addOne = () => form.set(path, [...items, initialValue(at.items ?? {}, form.schema)])
         const removeAt = (index: number) => form.removeItem(path, index)
         const keys = form.itemKeys(path, items.length)
@@ -953,46 +1032,24 @@ function Property({
                     onAdd={locked ? undefined : addOne}
                 />
                 {at.description !== undefined && <p className="-mt-1 text-xs text-muted-foreground">{at.description}</p>}
-                {items.map((_, index) =>
-                    kind === 'list' ? (
-                        <div key={keys[index]} className="flex min-w-0 items-center gap-1.5">
-                            <div className="min-w-0 flex-1">
-                                <Control form={form} path={[...path, index]} at={itemSchema} label={`${label} ${String(index + 1)}`} />
-                            </div>
-                            {moves(index)}
-                            {!locked && (
-                                <IconButton
-                                    label={`${form.words.remove} ${form.words.item(index)}`}
-                                    type="button"
-                                    size="icon"
-                                    onClick={() => removeAt(index)}
-                                >
-                                    <X aria-hidden />
-                                </IconButton>
-                            )}
+                {items.map((_, index) => (
+                    <div key={keys[index]} className="flex min-w-0 items-center gap-1.5">
+                        <div className="min-w-0 flex-1">
+                            <Control form={form} path={[...path, index]} at={itemSchema} label={`${label} ${String(index + 1)}`} />
                         </div>
-                    ) : (
-                        <section key={keys[index]} className="flex min-w-0 flex-col gap-3 rounded-surface border border-border p-3">
-                            <div className="-my-1 flex items-center gap-2">
-                                <span className="text-xs font-medium text-muted-foreground">{form.words.item(index)}</span>
-                                <span className="ml-auto flex items-center">{moves(index)}</span>
-                                {!locked && (
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="sm"
-                                        className="text-muted-foreground"
-                                        onClick={() => removeAt(index)}
-                                    >
-                                        <X aria-hidden />
-                                        {form.words.remove}
-                                    </Button>
-                                )}
-                            </div>
-                            <Fields form={form} path={[...path, index]} schema={itemSchema} />
-                        </section>
-                    ),
-                )}
+                        {moves(index)}
+                        {!locked && (
+                            <IconButton
+                                label={`${form.words.remove} ${form.words.item(index)}`}
+                                type="button"
+                                size="icon"
+                                onClick={() => removeAt(index)}
+                            >
+                                <X aria-hidden />
+                            </IconButton>
+                        )}
+                    </div>
+                ))}
             </div>
         )
     }
