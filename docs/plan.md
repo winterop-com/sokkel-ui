@@ -416,6 +416,11 @@ rows it says `empty`, a sentence or a node such as an `Empty` with an action. `Q
 field at a list's top that adds a row on Enter, holding the text with a spinner while the app's
 promise runs and with the reason in its issue mark when it is refused. Its column menu hides columns and moves them a place earlier or later, the first
 column staying first as each row's title, and the order is held like the widths (`columnOrder`).
+A column's `head` draws a node in its head (a lock, a second line), `align: 'center'` centers a box,
+and `fill` puts a color under a row's cell, tinted or solid; `bar={false}` drops the bar from a
+table that only shows its rows. On these the scorecard (`ScoreTable`), the permission matrix, the
+file listing, a CSV preview and a chart legend's table are all `DataTable`s; only `LogView` draws a
+table of its own, a log's lines rather than a listing.
 
 A listing filters from a `FilterBar` in its table's bar: Filter adds a filter from a menu of the
 fields with a search over them, each filter is a chip saying its field, how it compares and its

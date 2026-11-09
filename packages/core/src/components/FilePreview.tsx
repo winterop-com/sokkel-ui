@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
-import { TABLE_HEAD_ROW } from '../lib/table'
 import { Code } from './Code'
+import { DataTable, type DataColumn } from './DataTable'
 import { FileTypeIcon, type FileKind } from './FileList'
 import { JsonTree } from './JsonTree'
 
@@ -51,45 +51,38 @@ export function parseCsv(text: string): string[][] {
     return rows
 }
 
+const NUMBER = /^-?[\d.,]+$/
+
+/** One line of a CSV, keyed by its place among the lines. */
+interface CsvLine {
+    at: number
+    cells: readonly string[]
+}
+
 function CsvTable({ text, maxRows, words }: { text: string; maxRows: number; words: FilePreviewWords }) {
     const [head = [], ...body] = parseCsv(text)
-    const shown = body.slice(0, maxRows)
+    const shown: CsvLine[] = body.slice(0, maxRows).map((cells, at) => ({ at, cells }))
+    // A column whose every filled cell is a number lines up at its end.
+    const columns: DataColumn<CsvLine>[] = head.map((name, index) => ({
+        id: String(index),
+        header: name,
+        width: 'minmax(7rem,1fr)',
+        align:
+            shown.some((line) => (line.cells[index] ?? '') !== '') &&
+            shown.every((line) => (line.cells[index] ?? '') === '' || NUMBER.test(line.cells[index] ?? ''))
+                ? 'end'
+                : 'start',
+        cell: (line) => line.cells[index],
+    }))
     return (
-        <div className="flex min-w-0 flex-col overflow-hidden rounded-surface border border-border-strong bg-card">
-            <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-xs">
-                    <thead>
-                        <tr className={cn(TABLE_HEAD_ROW, 'text-left text-table-head-ink')}>
-                            {head.map((cell, index) => (
-                                <th key={index} className="px-2.5 py-1.5 font-medium whitespace-nowrap">
-                                    {cell}
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {shown.map((row, index) => (
-                            <tr key={index} className="border-b border-border last:border-b-0">
-                                {head.map((_, column) => (
-                                    <td
-                                        key={column}
-                                        className={cn(
-                                            'px-2.5 py-1 whitespace-nowrap',
-                                            /^-?[\d.,]+$/.test(row[column] ?? '') && 'text-right tabular-nums',
-                                        )}
-                                    >
-                                        {row[column]}
-                                    </td>
-                                ))}
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-            <div className="border-t border-border-strong px-2.5 py-1.5 font-mono text-xs text-muted-foreground">
-                {words.rows(shown.length, body.length)}
-            </div>
-        </div>
+        <DataTable
+            columns={columns}
+            rows={shown}
+            rowKey={(line) => String(line.at)}
+            variant="list"
+            stackBelow={false}
+            foot={<span className="font-mono text-xs">{words.rows(shown.length, body.length)}</span>}
+        />
     )
 }
 

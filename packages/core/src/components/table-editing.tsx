@@ -306,7 +306,7 @@ function contentOf<T>(table: TableEditingContext<T>, entry: FlatRow<T>, column: 
                 openList={table.open.openList}
                 selectAll={table.open.selectAll}
                 inCell
-                align={column.align}
+                align={column.align === 'end' ? 'end' : 'start'}
                 onMove={(move) => moveEdit(table, move)}
                 onChoose={(value) => {
                     if (saveEdit(table, false, value)) closeEdit(table, true)

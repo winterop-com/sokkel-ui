@@ -236,8 +236,6 @@ to `plan.md` when it ships.
 - **Dashboard panels on the chart kinds.** `BarPanel`, `TimeSeriesPanel` and `ComboPanel` build
   ECharts options of their own and have drifted from the kinds (stack corners, for one); make them
   thin panels over the kinds, adding what the kinds lack first.
-- **The remaining hand-drawn tables.** `FilePreview` (CSV), `ScoreTable` and `ChartLegend` draw
-  tables of their own; move them onto `DataTable`. `PermissionMatrix` may stay a matrix; decide.
 
 ## 1.0
 
