@@ -162,8 +162,8 @@ const THEME = {
 /** The height the zoom buttons take in a fitted frame, laid out in a row. */
 const BUTTON_ROW = 36
 
-/** What every fit is made with. */
-const FIT_OPTIONS = { padding: FIT_PADDING, minZoom: FIT_MIN_ZOOM, maxZoom: FIT_MAX_ZOOM, duration: 0 }
+/** What every fit is made with; the least zoom is the canvas's own. */
+const FIT_OPTIONS = { padding: FIT_PADDING, maxZoom: FIT_MAX_ZOOM, duration: 0 }
 
 /** The id of the node under a point on the screen, if any. */
 function nodeAt(clientX: number, clientY: number): string | null {
@@ -172,10 +172,10 @@ function nodeAt(clientX: number, clientY: number): string | null {
 }
 
 /** Fit the graph within the fit's zoom bounds, then hang what does not fit off the far edges, start first. */
-async function fitGraph(flow: ReactFlowInstance, canvas: { width: number; height: number }): Promise<void> {
+async function fitGraph(flow: ReactFlowInstance, canvas: { width: number; height: number }, minZoom: number): Promise<void> {
     const nodes = flow.getNodes()
     if (nodes.length === 0) return
-    await flow.fitView(FIT_OPTIONS)
+    await flow.fitView({ ...FIT_OPTIONS, minZoom })
     const view = flow.getViewport()
     const placed = startOfOverflow(view, flow.getNodesBounds(nodes), canvas)
     if (placed.x !== view.x || placed.y !== view.y) await flow.setViewport(placed, { duration: 0 })
@@ -211,6 +211,11 @@ export interface GraphCanvasProps<N extends Node = Node, E extends Edge = Edge> 
     controls?: boolean
     /** A bar over the canvas's top-left corner; inside it, `useGraphControls` reaches the view. */
     toolbar?: ReactNode
+    /**
+     * The least zoom a fit goes to, past which a graph too big hangs off the far edges: 0.75 so a
+     * box's words stay legible, lower for a view of small marks that should be seen whole.
+     */
+    fitMinZoom?: number
     words?: Partial<GraphWords>
     className?: string
     /** What the canvas holds over the drawing. */
@@ -240,6 +245,7 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
     editing,
     controls = true,
     toolbar,
+    fitMinZoom = FIT_MIN_ZOOM,
     words,
     className,
     children,
@@ -511,11 +517,12 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
                                 moved={moved}
                                 settled={settled}
                                 direction={direction}
+                                minZoom={fitMinZoom}
                                 onFitted={(fittedKey) => setFittedFor(fittedKey)}
                             />
                             {fitted && <ModifierWheel onZoomed={() => setMoved(true)} />}
                             {!fitted && <Background variant={BackgroundVariant.Dots} gap={18} size={1} />}
-                            <ViewControls empty={empty} onMoved={setMoved}>
+                            <ViewControls empty={empty} onMoved={setMoved} minZoom={fitMinZoom}>
                                 {controls && !empty && (
                                     <Panel position="bottom-right" className="m-2!">
                                         <ZoomButtons words={said} row={fitted} />
@@ -543,7 +550,17 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
 }
 
 /** What the zoom buttons and a toolbar's view buttons do, for everything drawn over the canvas. */
-function ViewControls({ empty, onMoved, children }: { empty: boolean; onMoved: (moved: boolean) => void; children: ReactNode }) {
+function ViewControls({
+    empty,
+    onMoved,
+    minZoom,
+    children,
+}: {
+    empty: boolean
+    onMoved: (moved: boolean) => void
+    minZoom: number
+    children: ReactNode
+}) {
     const flow = useReactFlow()
     const store = useStoreApi()
     const controls = useMemo<GraphControls>(() => {
@@ -554,11 +571,11 @@ function ViewControls({ empty, onMoved, children }: { empty: boolean; onMoved: (
             fit: () => {
                 onMoved(false)
                 const { width, height } = store.getState()
-                void fitGraph(flow, { width, height })
+                void fitGraph(flow, { width, height }, minZoom)
             },
             empty,
         }
-    }, [flow, store, onMoved, empty])
+    }, [flow, store, onMoved, empty, minZoom])
     return <GraphControlsContext value={controls}>{children}</GraphControlsContext>
 }
 
@@ -622,12 +639,14 @@ function FitToGraph({
     moved,
     settled,
     direction,
+    minZoom,
     onFitted,
 }: {
     placement: string
     moved: boolean
     settled: boolean
     direction: GraphDirection
+    minZoom: number
     onFitted: (placement: string) => void
 }) {
     const flow = useReactFlow()
@@ -652,7 +671,7 @@ function FitToGraph({
         let current = true
         const fit = () => {
             const { width, height } = store.getState()
-            void fitGraph(flow, { width, height }).then(() => {
+            void fitGraph(flow, { width, height }, minZoom).then(() => {
                 if (current && settled) done.current(placement)
             })
         }
@@ -665,7 +684,7 @@ function FitToGraph({
             cancelAnimationFrame(frame)
             unsubscribe()
         }
-    }, [flow, store, moved, placement, settled])
+    }, [flow, store, moved, placement, settled, minZoom])
 
     return null
 }

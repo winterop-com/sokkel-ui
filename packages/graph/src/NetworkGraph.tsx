@@ -46,6 +46,9 @@ const NAME_WIDTH = 120
 const NAME_LINE = 15
 const NAME_GAP = 4
 
+/** How far a fit zooms out, so a network is seen whole even on a phone; its names are small marks anyway. */
+const NETWORK_FIT_ZOOM = 0.35
+
 /** A dot's size by how many links it has: more links, a larger dot. */
 export function dotSize(links: number): number {
     return Math.round(8 + Math.min(14, Math.sqrt(links) * 4))
@@ -125,7 +128,8 @@ function useNetworkLayout(shape: GraphShape): PlacedGraph & { settled: boolean }
  * each other: each a dot in its group's color, larger the more links it has, its name under it, and
  * each link a straight line between two dots. elk lays it out by stress, so linked things gather
  * and the rest spread, each separate part laid out alone and the nodes with no link in a row under
- * them; a spiral holds the first frame until elk answers. Pointing at a dot lights it, its links
+ * them; a spiral holds the first frame until elk answers, and the view zooms out as far as it must
+ * to show the whole of it. Pointing at a dot lights it, its links
  * and its neighbors, and fades the rest. `current` rings the node the reader stands on, and
  * choosing a dot calls `onSelect`, as opening the note it is.
  */
@@ -235,6 +239,7 @@ export function NetworkGraph({
                 edges={lines}
                 nodeTypes={NODE_TYPES}
                 settled={placed.settled}
+                fitMinZoom={NETWORK_FIT_ZOOM}
                 frame={frame}
                 onSelect={onSelect}
                 words={words}
