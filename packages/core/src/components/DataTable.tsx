@@ -1623,7 +1623,7 @@ export function DataTable<T>({
                 // Narrow, the search takes a line of its own and the tools wrap across the whole width, the count and the
                 // sort after them; wide, the tools wrap in the room the search and the count leave.
                 <div className="@container/bar shrink-0 border-b border-border px-(--density-panel-pad) text-sm">
-                    <div className="flex min-h-(--density-panel-head) min-w-0 items-center gap-2 @max-2xl/bar:flex-wrap @max-2xl/bar:gap-y-1.5 @max-2xl/bar:py-1.5">
+                    <div className="flex min-h-(--density-panel-head) min-w-0 items-center gap-2 py-2 @max-2xl/bar:flex-wrap @max-2xl/bar:gap-y-1.5">
                         {selection.size > 0 ? (
                             <SelectionBar
                                 count={selection.size}
