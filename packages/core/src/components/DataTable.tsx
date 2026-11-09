@@ -52,9 +52,9 @@ import { Skeleton } from './ui/skeleton'
 import { Spinner } from './ui/spinner'
 import { TABLE_HEAD_ROW, TABLE_HEAD_TEXT, columnOrder } from '../lib/table'
 import type { CellAt, EditedValue, EditOption, EditorKind, EditValue } from '../lib/edit'
-import type { CellEdit, OpenCell, TableEditing, TableEditingContext } from './table-editing'
+import type { CellEdit, CellFocus, OpenCell, TableEditing, TableEditingContext } from './table-editing'
 
-export type { CellAt, EditedValue, EditOption, EditorKind, EditValue, TableEditing }
+export type { CellAt, CellFocus, EditedValue, EditOption, EditorKind, EditValue, TableEditing }
 
 /** How one kind of editor reads and saves a column's cells. */
 type CellEditing<T, K extends EditorKind, V = EditedValue<K>> = {
@@ -650,6 +650,8 @@ export interface DataTableProps<T> {
      * things on a phone, such as tasks.
      */
     stackLayout?: 'labeled' | 'compact'
+    /** How an editable table marks its active cell while it has the focus: `ring` (the default), `soft`, `underline`, or `row`, which washes the cell's row. */
+    cellFocus?: CellFocus
     /** `auto` lets a row grow to fit its tallest cell; every row is then drawn, not only those in view. */
     rowHeight?: 'fixed' | 'auto'
     /** Whether the column heads' edges resize the columns. */
@@ -816,6 +818,7 @@ export function DataTable<T>({
     cardHeight = '16rem',
     stackBelow = 576,
     stackLayout = 'labeled',
+    cellFocus = 'ring',
     minWidth: ownMinWidth,
     rowHeight: rowSizing = 'fixed',
     resizable = true,
@@ -1155,6 +1158,7 @@ export function DataTable<T>({
                   grid: gridView,
                   step: gridView ? perLine : 1,
                   words,
+                  cellFocus,
               }
     useEffect(() => {
         if (edits !== undefined) editing?.settle(edits, scroller.current)
@@ -1800,6 +1804,14 @@ export function DataTable<T>({
                 aria-multiselectable={selectable || undefined}
                 tabIndex={0}
                 onKeyDown={onKeyDown}
+                // A press on the table's empty ground, past its rows, leaves it, as a press outside would.
+                onMouseDown={(event) => {
+                    if (event.target instanceof Element && event.target.closest('[role=row]') === null) {
+                        event.preventDefault()
+                        if (event.currentTarget.contains(document.activeElement) && document.activeElement instanceof HTMLElement)
+                            document.activeElement.blur()
+                    }
+                }}
                 onFocus={() => {
                     if (active === undefined && flat.length > 0)
                         setActive(flat[Math.min(first + OVERSCAN, flat.length - 1)]?.key ?? flat[0].key)
@@ -2060,6 +2072,7 @@ export function DataTable<T>({
                                         onOpen !== undefined && 'cursor-pointer',
                                         (chosen || isOpened) && 'bg-secondary hover:bg-secondary',
                                         'group-focus-visible/table:data-active:shadow-[inset_2px_0_0_var(--ring)]',
+                                        cellFocus === 'row' && 'group-focus-within/table:has-data-cell-active:bg-hover',
                                     )}
                                     style={grid}
                                 >

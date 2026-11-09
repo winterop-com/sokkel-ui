@@ -14,7 +14,9 @@ import {
 } from 'lucide-react'
 import { useCallback, useMemo, useRef, useState } from 'react'
 
+import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
 import {
+    type CellFocus,
     type DataAction,
     type DataColumn,
     DataTable,
@@ -681,8 +683,8 @@ export const RowMenus: StoryObj = {
 const OWNER_OPTIONS = JOB_OWNERS.map((owner) => ({ value: owner }))
 
 /** Tidevann's jobs with their settings edited in place, each cell saved on its own after a short wait. */
-function EditableJobs() {
-    const [jobs, setJobs] = useState(JOB_SETTINGS)
+function EditableJobs({ cellFocus, count, fill = true }: { cellFocus?: CellFocus; count?: number; fill?: boolean }) {
+    const [jobs, setJobs] = useState(count === undefined ? JOB_SETTINGS : JOB_SETTINGS.slice(0, count))
     const change = <K extends keyof JobSetting>(job: JobSetting, field: K, value: JobSetting[K]) =>
         saveJobSetting(field, value).then(() => setJobs((all) => all.map((one) => (one.id === job.id ? { ...one, [field]: value } : one))))
     const columns: DataColumn<JobSetting>[] = [
@@ -772,7 +774,7 @@ function EditableJobs() {
         { id: 'last', header: 'Last run', width: '7.5rem', cell: (job) => <StatusChip status={job.last} />, stack: 'secondary' },
     ]
     return (
-        <Stack gap="none" className="h-svh bg-background p-4 text-foreground">
+        <Stack gap="none" className={fill ? 'h-svh bg-background p-4 text-foreground' : 'h-60'}>
             <DataTable
                 className="flex-1"
                 columns={columns}
@@ -782,6 +784,7 @@ function EditableJobs() {
                 bulkActions={bulk}
                 minWidth="68rem"
                 editing={tableEditing}
+                cellFocus={cellFocus}
             />
         </Stack>
     )
@@ -797,6 +800,33 @@ function EditableJobs() {
  * project's and cannot be edited here.
  */
 export const EditableCells: StoryObj = { parameters: { frame: 'none' }, name: 'Editable cells', render: () => <EditableJobs /> }
+
+const CELL_LOOKS: { look: CellFocus; name: string }[] = [
+    { look: 'ring', name: 'A · Ring: a 2px ring in the focus color, as now' },
+    { look: 'soft', name: 'B · Soft: the cell washed, with a quiet outline' },
+    { look: 'underline', name: 'C · Underline: a line in the focus color under the cell' },
+    { look: 'row', name: 'D · Row: the whole row washed, a quiet line under the cell' },
+]
+
+/**
+ * Four ways to mark the active cell of an editable table, for the owner to choose from: press a
+ * cell in each to see its look (only the table that has the focus marks its cell). A press on a
+ * table's empty ground, past its rows, leaves it.
+ */
+export const CellLooks: StoryObj = {
+    parameters: { frame: 'none' },
+    name: 'Active cell looks',
+    render: () => (
+        <Stack gap="lg" className="min-h-svh bg-background p-4 text-foreground">
+            {CELL_LOOKS.map(({ look, name }) => (
+                <Stack key={look} gap="sm">
+                    <GroupLabel>{name}</GroupLabel>
+                    <EditableJobs cellFocus={look} count={3} fill={false} />
+                </Stack>
+            ))}
+        </Stack>
+    ),
+}
 
 const children = (row: TreeRow) => (row.kind === 'run' ? undefined : row.children)
 const runOf = (row: TreeRow) => (row.kind === 'run' ? row.run : undefined)

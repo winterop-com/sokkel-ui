@@ -67,6 +67,18 @@ export interface TableEditingContext<T> {
     /** How many rows a move down or up steps over: a line of cards in a grid. */
     step: number
     words: Pick<DataTableWords, 'saving' | 'saveFailed' | 'notNumber'>
+    /** How the active cell is marked while the table has the focus. */
+    cellFocus: CellFocus
+}
+
+/** How an editable table marks its active cell: a ring, a soft outline on a washed cell, a line under it, or its row washed. */
+export type CellFocus = 'ring' | 'soft' | 'underline' | 'row'
+
+const CELL_FOCUS: Record<CellFocus, string> = {
+    ring: 'group-focus-within/table:data-cell-active:shadow-[inset_0_0_0_2px_var(--ring)]',
+    soft: 'group-focus-within/table:data-cell-active:bg-hover group-focus-within/table:data-cell-active:shadow-[inset_0_0_0_1px_var(--border-strong)]',
+    underline: 'group-focus-within/table:data-cell-active:shadow-[inset_0_-2px_0_var(--ring)]',
+    row: 'group-focus-within/table:data-cell-active:shadow-[inset_0_-1px_0_var(--border-strong)]',
 }
 
 /** A table cell's attributes while its table edits: which cell it is, its states, and its presses. */
@@ -392,8 +404,8 @@ export const tableEditing: TableEditing = {
                 // The open editor covers the whole cell; a pinned cell is already placed for it.
                 column.edit !== undefined && !pinned && 'relative',
                 opens && 'cursor-text',
-                // The active cell is ringed while the table has the focus, by a press as well as a key.
-                'group-focus-within/table:data-cell-active:shadow-[inset_0_0_0_2px_var(--ring)]',
+                // The active cell is marked while the table has the focus, by a press as well as a key.
+                CELL_FOCUS[table.cellFocus],
                 edit?.error != null && 'bg-critical/8 ring-2 ring-critical ring-inset',
             ),
         }
