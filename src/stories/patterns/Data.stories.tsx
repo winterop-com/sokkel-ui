@@ -208,6 +208,28 @@ function Json() {
     )
 }
 
+const JOBS = ['nightly-export', 'sync-inventory', 'rebuild-index', 'send-digest', 'import-orders'] as const
+const STATES = ['succeeded', 'failed', 'running', 'queued', 'cancelled', 'skipped'] as const
+
+/** A page of 240 runs, as a runs endpoint answers: more than an opened list draws at once. */
+const RUN_PAGE = {
+    total: 240,
+    runs: Array.from({ length: 240 }, (_, index) => ({
+        id: `run_${String(1000 + index)}`,
+        job: JOBS[index % JOBS.length],
+        state: STATES[(index * 7) % STATES.length],
+        duration_ms: 900 + ((index * 337) % 6000),
+    })),
+}
+
+function LongJson() {
+    return (
+        <Section title="Response">
+            <JsonTree value={RUN_PAGE} />
+        </Section>
+    )
+}
+
 function Diff() {
     return (
         <Ground>
@@ -277,4 +299,6 @@ export const Log: StoryObj = { name: 'Log view', render: () => <Logs /> }
 /** A log in the terminal face, its lines carrying Nerd Font icons: a Powerline prompt, git and run states. */
 export const LogIcons: StoryObj = { name: 'Log icons', render: () => <LogView lines={ICON_LOG} /> }
 export const Tree: StoryObj = { name: 'JSON tree', render: () => <Json /> }
+/** A list of 240 runs, opened: the first 100 drawn and a step under them that shows 100 more. */
+export const LongTree: StoryObj = { name: 'Long JSON', render: () => <LongJson /> }
 export const Diffs: StoryObj = { name: 'Diff view', render: () => <Diff /> }

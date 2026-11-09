@@ -3,12 +3,17 @@ import { useState } from 'react'
 
 import { cn } from '../lib/cn'
 
-/** The words a JSON tree says: how many keys a folded object holds. */
+/** The words a JSON tree says: how many keys a folded object holds, and the step that shows more of a long one. */
 export interface JsonTreeWords {
     keys: (count: number) => string
+    /** The step under a long list or object's shown entries, `count` the entries a press adds. */
+    more: (count: number) => string
 }
 
-const WORDS: JsonTreeWords = { keys: (count) => `${String(count)} ${count === 1 ? 'key' : 'keys'}` }
+const WORDS: JsonTreeWords = {
+    keys: (count) => `${String(count)} ${count === 1 ? 'key' : 'keys'}`,
+    more: (count) => `Show ${count.toLocaleString('en-US')} more`,
+}
 
 function Scalar({ value }: { value: unknown }) {
     if (value === null) return <span className="text-muted-foreground">null</span>
@@ -18,9 +23,19 @@ function Scalar({ value }: { value: unknown }) {
     return <span className="text-muted-foreground">{String(value)}</span>
 }
 
-function Node({ name, value, depth, open, words }: { name?: string; value: unknown; depth: number; open: number; words: JsonTreeWords }) {
+interface NodeProps {
+    name?: string
+    value: unknown
+    depth: number
+    open: number
+    limit: number
+    words: JsonTreeWords
+}
+
+function Node({ name, value, depth, open, limit, words }: NodeProps) {
     const nested = value !== null && typeof value === 'object'
     const [expanded, setExpanded] = useState(depth < open)
+    const [shown, setShown] = useState(limit)
     const key = name !== undefined && <span className="text-foreground">{name}: </span>
     if (!nested) {
         return (
@@ -33,6 +48,7 @@ function Node({ name, value, depth, open, words }: { name?: string; value: unkno
     const list = Array.isArray(value)
     const entries = list ? value.map((item, index) => [String(index), item] as const) : Object.entries(value as Record<string, unknown>)
     const [start, end] = list ? ['[', ']'] : ['{', '}']
+    const step = Math.min(limit, entries.length - shown)
     return (
         <div>
             <button
@@ -59,16 +75,26 @@ function Node({ name, value, depth, open, words }: { name?: string; value: unkno
             {expanded && (
                 <>
                     <div className="ml-[7px] border-l border-border pl-1">
-                        {entries.map(([childName, child]) => (
+                        {entries.slice(0, shown).map(([childName, child]) => (
                             <Node
                                 key={childName}
                                 name={list ? undefined : childName}
                                 value={child}
                                 depth={depth + 1}
                                 open={open}
+                                limit={limit}
                                 words={words}
                             />
                         ))}
+                        {step > 0 && (
+                            <button
+                                type="button"
+                                onClick={() => setShown(shown + limit)}
+                                className="ml-4 rounded-sm text-left text-primary-ink outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+                            >
+                                {words.more(step)}
+                            </button>
+                        )}
                     </div>
                     <div className="pl-4 text-muted-foreground">{end}</div>
                 </>
@@ -80,19 +106,23 @@ function Node({ name, value, depth, open, words }: { name?: string; value: unkno
 export interface JsonTreeProps {
     value: unknown
     open?: number
+    /** How many entries an opened list or object shows before a step that shows as many more. */
+    limit?: number
     className?: string
     words?: Partial<JsonTreeWords>
 }
 
 /**
  * A JSON value as a tree that folds: objects and lists open to `open` levels deep, and a folded
- * one shows how many entries it holds. Strings, numbers and booleans are inked by type.
+ * one shows how many entries it holds. Strings, numbers and booleans are inked by type. An opened
+ * list or object draws its first `limit` entries, 100 by default, and a step under them ("Show 100
+ * more", `words.more`) that draws as many more, so a long response opens at once.
  */
-export function JsonTree({ value, open = 2, className, words: given }: JsonTreeProps) {
+export function JsonTree({ value, open = 2, limit = 100, className, words: given }: JsonTreeProps) {
     const words = { ...WORDS, ...given }
     return (
         <div className={cn('font-mono text-xs leading-5', className)}>
-            <Node value={value} depth={0} open={open} words={words} />
+            <Node value={value} depth={0} open={open} limit={Math.max(1, Math.floor(limit))} words={words} />
         </div>
     )
 }
