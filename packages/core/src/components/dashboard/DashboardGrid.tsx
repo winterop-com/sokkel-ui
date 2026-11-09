@@ -189,7 +189,7 @@ export interface KpiRowProps {
 
 /**
  * A row of key figures across a dashboard's top, each a stat divided from the next. The row wraps
- * to two columns on a phone.
+ * to two columns on a phone, the last of an odd number of figures taking the whole width of its line.
  */
 export function KpiRow({ items, className }: KpiRowProps) {
     return (
@@ -210,7 +210,8 @@ export function KpiRow({ items, className }: KpiRowProps) {
                     good={item.good}
                     note={item.note}
                     trend={item.trend}
-                    className="border-r border-b border-border p-4 md:border-b-0 md:last:border-r-0"
+                    // On a phone's two columns the box's own border closes the right column and the last line.
+                    className="border-r border-b border-border p-4 max-md:last:border-b-0 max-md:odd:last:col-span-2 max-md:odd:last:border-r-0 max-md:even:border-r-0 md:border-b-0 md:last:border-r-0 max-md:[&:nth-last-child(2):nth-child(odd)]:border-b-0"
                 />
             ))}
         </div>

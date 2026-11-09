@@ -590,6 +590,13 @@ const GROUP_COLUMNS: DataColumn<TableRun>[] = COLUMNS.map((column) =>
             : column,
 )
 
+/** What each project holds, said in its group's head. */
+const PROJECT_LABELS: Record<string, string> = {
+    harbor: 'harbor: orders, stock and the nightly export',
+    juniper: 'juniper: the search index and its rebuilds',
+    larkspur: 'larkspur: the weekly digest',
+}
+
 function GroupedRuns() {
     const rows = useMemo(() => makeRuns(300), [])
     return (
@@ -600,6 +607,7 @@ function GroupedRuns() {
                 rows={rows}
                 rowKey={(run) => run.id}
                 groupBy="project"
+                groupLabel={(project) => PROJECT_LABELS[project] ?? project}
                 defaultFoldedGroups={new Set(['larkspur'])}
                 defaultSort={{ column: 'duration', direction: 'desc' }}
                 defaultSelection={new Set(rows.filter((run) => run.project === 'harbor').map((run) => run.id))}
@@ -613,7 +621,8 @@ function GroupedRuns() {
 
 /**
  * Runs under a head for each project, with its count and the records, time and attempts summed up
- * in its columns. Pressing a head folds its group (larkspur is folded), rows sort within their
+ * in its columns. A head's label runs on across the columns with nothing to sum, so the narrow Run
+ * column never cuts it. Pressing a head folds its group (larkspur is folded), rows sort within their
  * group, and a head's box selects the group: harbor is selected whole.
  */
 export const Groups: StoryObj = { parameters: { frame: 'none' }, render: () => <GroupedRuns /> }

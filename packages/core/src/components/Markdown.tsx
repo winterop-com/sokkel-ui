@@ -1,5 +1,5 @@
 import { CircleAlert, Info, Lightbulb, MessageSquareWarning, TriangleAlert, type LucideIcon } from 'lucide-react'
-import { memo, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { memo, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import ReactMarkdown, { type Components, type Options } from 'react-markdown'
 import rehypeRaw from 'rehype-raw'
 import rehypeSanitize from 'rehype-sanitize'
@@ -337,11 +337,12 @@ const INLINE_CODE: Record<InlineCode, string> = {
     wash: '[&_:not(pre)>code]:rounded-sm [&_:not(pre)>code]:bg-secondary [&_:not(pre)>code]:px-0.5 [&_td_code]:bg-transparent [&_td_code]:px-0',
 }
 
-/** A text caret after the last paragraph or list item, where the next words will land. */
-const CARET = cn(
-    '[&>:is(ol,ul):last-child>li:last-child]:after:ml-0.5 [&>:is(ol,ul):last-child>li:last-child]:after:inline-block [&>:is(ol,ul):last-child>li:last-child]:after:h-4 [&>:is(ol,ul):last-child>li:last-child]:after:w-1.5 [&>:is(ol,ul):last-child>li:last-child]:after:translate-y-0.5 [&>:is(ol,ul):last-child>li:last-child]:after:animate-pulse [&>:is(ol,ul):last-child>li:last-child]:after:bg-foreground motion-reduce:[&>:is(ol,ul):last-child>li:last-child]:after:animate-none',
-    '[&>p:last-child]:after:ml-0.5 [&>p:last-child]:after:inline-block [&>p:last-child]:after:h-4 [&>p:last-child]:after:w-1.5 [&>p:last-child]:after:translate-y-0.5 [&>p:last-child]:after:animate-pulse [&>p:last-child]:after:bg-foreground motion-reduce:[&>p:last-child]:after:animate-none',
-)
+/**
+ * A text caret where the next words will land: after the last paragraph or list item, in the last
+ * cell of a table's last row, or at the end of a code block's last line.
+ */
+const CARET =
+    '[:is(&>p:last-child,&>:is(ol,ul):last-child>li:last-child,&>table:last-child>:last-child>tr:last-child>:last-child,&>[data-slot=code-block]:last-child_[data-slot=code-block-line]:last-child>*)]:after:ml-0.5 [:is(&>p:last-child,&>:is(ol,ul):last-child>li:last-child,&>table:last-child>:last-child>tr:last-child>:last-child,&>[data-slot=code-block]:last-child_[data-slot=code-block-line]:last-child>*)]:after:inline-block [:is(&>p:last-child,&>:is(ol,ul):last-child>li:last-child,&>table:last-child>:last-child>tr:last-child>:last-child,&>[data-slot=code-block]:last-child_[data-slot=code-block-line]:last-child>*)]:after:h-4 [:is(&>p:last-child,&>:is(ol,ul):last-child>li:last-child,&>table:last-child>:last-child>tr:last-child>:last-child,&>[data-slot=code-block]:last-child_[data-slot=code-block-line]:last-child>*)]:after:w-1.5 [:is(&>p:last-child,&>:is(ol,ul):last-child>li:last-child,&>table:last-child>:last-child>tr:last-child>:last-child,&>[data-slot=code-block]:last-child_[data-slot=code-block-line]:last-child>*)]:after:translate-y-0.5 [:is(&>p:last-child,&>:is(ol,ul):last-child>li:last-child,&>table:last-child>:last-child>tr:last-child>:last-child,&>[data-slot=code-block]:last-child_[data-slot=code-block-line]:last-child>*)]:after:animate-pulse [:is(&>p:last-child,&>:is(ol,ul):last-child>li:last-child,&>table:last-child>:last-child>tr:last-child>:last-child,&>[data-slot=code-block]:last-child_[data-slot=code-block-line]:last-child>*)]:after:bg-foreground motion-reduce:[:is(&>p:last-child,&>:is(ol,ul):last-child>li:last-child,&>table:last-child>:last-child>tr:last-child>:last-child,&>[data-slot=code-block]:last-child_[data-slot=code-block-line]:last-child>*)]:after:animate-none'
 
 export interface MarkdownProps {
     content: string
@@ -363,6 +364,12 @@ export interface MarkdownProps {
     partMarker?: string
     /** Draws `[[links]]` between notes, and `#tags` with `onTag`, as links the app follows. */
     links?: MarkdownLinks
+    /**
+     * Follows a link inside the app: called with a link's address on a plain press, which stays in
+     * the page when it answers true, such as a time in an episode's notes (`#t=754`) or a route of
+     * the app's own. Any other link opens in a new tab.
+     */
+    onLink?: (href: string) => boolean
     className?: string
     words?: Partial<MarkdownWords>
 }
@@ -403,6 +410,9 @@ export interface MarkdownProps {
  * `onOpen`, and a link to a note `exists` says is not there drawn faint. With `onTag` each `#tag` is
  * a chip that follows the tag. Neither is read in code. `wikiLinksIn` and `tagsIn` in
  * `lib/wiki-links` read the same links and tags from the text, for backlinks and a list of tags.
+ *
+ * `onLink` keeps the links the app answers for in the page, such as the times in a podcast's show
+ * notes, which seek the player; a press with a modifier key, or on a link it declines, opens a new tab.
  */
 export const Markdown = memo(function Markdown({
     content,
@@ -416,12 +426,17 @@ export const Markdown = memo(function Markdown({
     parts,
     partMarker: word = 'part',
     links,
+    onLink,
     className,
     words: given,
 }: MarkdownProps) {
     // The words are held by their text, so an object made anew each render keeps the renderers.
     const said = JSON.stringify(given ?? null)
     const words = useMemo<MarkdownWords>(() => ({ ...WORDS, ...(JSON.parse(said) as Partial<MarkdownWords> | null) }), [said])
+    // The latest handler, read on a press, so a handler made anew each render keeps the renderers.
+    const follow = useRef(onLink)
+    follow.current = onLink
+    const following = onLink !== undefined
     const components = useMemo<Components>(
         () => ({
             blockquote: ({ children, node: _node, ...props }) => {
@@ -506,7 +521,21 @@ export const Markdown = memo(function Markdown({
                     )
                 }
                 return (
-                    <a {...props} target="_blank" rel="noreferrer noopener">
+                    <a
+                        {...props}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        onClick={
+                            following
+                                ? (event) => {
+                                      const href = event.currentTarget.getAttribute('href')
+                                      const plain =
+                                          event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey
+                                      if (plain && href !== null && follow.current?.(href) === true) event.preventDefault()
+                                  }
+                                : undefined
+                        }
+                    >
                         {children}
                     </a>
                 )
@@ -523,7 +552,7 @@ export const Markdown = memo(function Markdown({
                 return <Code value={value} language={language} words={words.code} />
             },
         }),
-        [streaming, words, parts, links],
+        [streaming, words, parts, links, following],
     )
     const needsMath = useMemo(() => math && hasMath(content), [math, content])
     const katex = useMathEngine(needsMath)

@@ -14,7 +14,7 @@ import {
     type ToldPosition,
 } from './media-session'
 
-export type { MediaSessionHandlers, MediaSessionImage, MediaSessionInfo } from './media-session'
+export type { MediaSessionHandlers, MediaSessionImage, MediaSessionInfo, MediaSkip } from './media-session'
 
 /**
  * Tells the operating system what plays, so its media keys, its now-playing widget and the lock

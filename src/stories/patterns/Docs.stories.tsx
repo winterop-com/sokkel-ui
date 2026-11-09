@@ -135,6 +135,37 @@ function LinkedNote() {
     )
 }
 
+const SHOW_NOTES = `Ada and grace walk the harbor at low water and count what the tide left behind.
+
+- [00:00](#t=0) The harbor at low water
+- [01:12](#t=72) Rock pools on the north wall
+- [02:40](#t=160) What the boats bring in
+
+More from this season in [the harbor project](#/projects/harbor). The tide tables are at
+[example.org](https://example.org/tides), which opens in a new tab.
+`
+
+/** An episode's notes whose times and app routes the app follows in the page; the line under it says what was followed. */
+function ShowNotes() {
+    const [followed, setFollowed] = useState('Nothing yet')
+    return (
+        <div className="max-w-2xl p-6">
+            <Markdown
+                content={SHOW_NOTES}
+                scale="document"
+                onLink={(href) => {
+                    const time = /^#t=(\d+)$/.exec(href)
+                    if (time !== null) setFollowed(`Seek to ${time[1]} seconds`)
+                    else if (href.startsWith('#/')) setFollowed(`Route ${href.slice(1)}`)
+                    else return false
+                    return true
+                }}
+            />
+            <p className="mt-6 text-sm text-muted-foreground">Followed: {followed}</p>
+        </div>
+    )
+}
+
 function Contents() {
     const article = useRef<HTMLElement>(null)
     const headings = markdownHeadings(PAGE)
@@ -199,6 +230,12 @@ export const Parts: StoryObj = { name: 'Embedded parts', render: () => <Runbook 
  * app follows, a link to a note that does not exist is drawn faint, and each `#tag` is a chip.
  */
 export const Links: StoryObj = { name: 'Linked notes', render: () => <LinkedNote /> }
+
+/**
+ * Links the app follows in the page through `onLink`: each time in an episode's notes seeks, and a
+ * link to a route of the app's own goes there, while a link to another site opens in a new tab.
+ */
+export const AppLinks: StoryObj = { name: 'App links', render: () => <ShowNotes /> }
 
 /** A long page with its headings beside it; scrolling moves the mark to the heading in view. */
 export const Contents_: StoryObj = { name: 'Table of contents', render: () => <Contents /> }

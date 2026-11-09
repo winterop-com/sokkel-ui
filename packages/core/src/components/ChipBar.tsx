@@ -32,7 +32,8 @@ export interface ChipBarProps<T extends string = string> {
 /**
  * A row of chips with one chosen, such as topics over a feed. When the chips run past the row's
  * room it scrolls sideways with no scroll bar: the cut edges fade, and an arrow at each side that
- * has more scrolls a page that way (a phone swipes). The chosen chip is kept in view.
+ * has more scrolls a page that way (a phone swipes). The chosen chip is kept in view by scrolling
+ * the row alone, never the page around it.
  */
 export function ChipBar<T extends string = string>({ label, chips, value, onValueChange, words: given, className }: ChipBarProps<T>) {
     const words = { ...WORDS, ...given }
@@ -59,9 +60,15 @@ export function ChipBar<T extends string = string>({ label, chips, value, onValu
         }
     }, [measure])
 
+    // Only the row scrolls, sideways, to the chosen chip: the page stays where the reader has it.
     useEffect(() => {
-        const chosen = row.current?.querySelector<HTMLElement>('[aria-pressed="true"]')
-        chosen?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+        const element = row.current
+        const chosen = element?.querySelector<HTMLElement>('[aria-pressed="true"]')
+        if (element === null || chosen === null || chosen === undefined) return
+        const box = element.getBoundingClientRect()
+        const chip = chosen.getBoundingClientRect()
+        if (chip.left < box.left) element.scrollLeft -= box.left - chip.left
+        else if (chip.right > box.right) element.scrollLeft += chip.right - box.right
     }, [value])
 
     const page = (direction: 1 | -1) => {

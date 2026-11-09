@@ -20,8 +20,9 @@ The library is six packages, built from one Bun workspace and released together 
   xterm.js.
 - `@winterop-com/sokkel-ui-media` (`packages/media`): the music and video app parts, `MediaBar`
   with its layouts and fullscreen view, `TrackList`, `ReorderableTrackList`, `ChapterList`,
-  `Lyrics`, `MediaCard`, `Artwork`, `useMediaSession`, `useQueue`, `VideoStatsOverlay`, `UpNext`,
-  and `hlsSource`, which plays an HTTP live stream in `VideoPlayer` through hls.js, an optional peer.
+  `Lyrics`, `Transcript`, `SleepTimerMenu`, `MediaCard`, `Artwork`, `useMediaSession`, `useQueue`,
+  `VideoStatsOverlay`, `UpNext`, `ChannelRow`, `MediaActions`, `WatchLayout`, and `hlsSource`, which
+  plays an HTTP live stream in `VideoPlayer` through hls.js, an optional peer.
 
 An app installs the core and the add-ons it draws with, so an engine is installed only by an app
 that uses it, and the music and video parts only by an app that plays music or video. Each add-on
@@ -42,8 +43,12 @@ spinner after a moment, `Chart` and `ChartGrid` load the kinds' builders beside 
 preview loads when the switcher shows it, `useSchemaForm` and `CodeEditor` load ajv (`loadSchemaChecks`
 ahead), the form taking input at once and refusing a submit until its checks are there,
 `TimeRangePicker` and the date fields load the calendar when first pointed at or focused, the
-highlighter loads Shiki with the first code drawn plain until then, and `MediaBar` loads its
-fullscreen view after the bar is drawn. A module that only asks whether a node is a part tells it by a mark, so it
+highlighter loads Shiki with the first code drawn plain until then, `MediaBar` loads its
+fullscreen view after the bar is drawn, and every menu (`primitives/dropdown-menu`,
+`primitives/context-menu`, `AccountMenu` and the parts drawn with them) loads Base UI's menu once
+the page is drawn, its trigger drawn until then by a stand-in that looks and reads the same, a press
+or a right click on it opening the menu as soon as the menu is there. A menu bar has the menu at
+once (`primitives/menubar` imports it), as its keys need. A module that only asks whether a node is a part tells it by a mark, so it
 need not import the part (`isSoundVisualizer`), and `chartLegend` has a module of its own, since it
 reads every kind.
 
@@ -177,7 +182,9 @@ result is, and the palette's search results take `artwork` too. The palette matc
 order unless its `filter` (`paletteFilter` on `Shell`) is `terms`, the library's own: every word
 typed must be found in a command's label, `keywords`, hint, code, second line or group, and a label
 starting with the query comes first. `keywords` on a command, and on a rail entry through
-`placeCommands`, are matched and never drawn. `appearanceCommands` takes `useAppearance`'s settings
+`placeCommands`, are matched and never drawn. A command that cannot run now stays in the list as
+`disabled`, dimmed and passed over, with why in its hint's place, so an app never builds its
+groups around it. `appearanceCommands` takes `useAppearance`'s settings
 and setter, or the parts of a look an app keeps itself, each with its callback
 (`onSchemeChange`, `onThemeChange`, `onDensityChange`), so the palette never overrules the app's
 own keys.
@@ -260,7 +267,9 @@ Notes that link to each other are read by one module, `lib/wiki-links`: `[[Note]
 `[[Note|words]]` and `[[Note#Heading]]` link to a note by its name and `#tag` tags it, neither read
 inside code. `Markdown`'s `links` draws them as links the app follows (`onOpen`, a link to a note
 `exists` denies drawn faint, `onTag` for the tags), and `wikiLinksIn`, `tagsIn` and `mentionsOf`
-give an app a note's links, its tags and where a name is written unlinked, for backlinks.
+give an app a note's links, its tags and where a name is written unlinked, for backlinks. Any other
+link opens in a new tab unless `onLink` takes it: the app's own routes and the times in an episode's
+notes stay in the page.
 
 ## Typefaces
 
@@ -451,7 +460,8 @@ setting (its title, description and `keywords`, which are never drawn, and its s
 search for a section keeps it whole), the chosen section's rows beside it, and under both a footer drawn as `DialogShell`'s,
 outside the scrolling, that says changes are kept as they are made (or the app's own `footer`, such
 as when they last synced) and closes with Done. `onReset` adds Reset to defaults at the footer's
-start, for the shown section or for every setting, asked once more before it runs. On a phone the
+start, for the shown section or for every setting, asked once more before it runs; a section with
+nothing to put back (an account, sample data) says `reset: false` and shows none. On a phone the
 dialog is a full-screen sheet with the footer at its foot, clear of the home indicator.
 
 `SettingsView` lays the same groups, search, reset and words out as a page inside `Shell`, on the
@@ -629,11 +639,12 @@ theme's terminal ground and accent. SignIn's dark brand pane stands on the same 
 
 The music and video app parts have a package of their own, `@winterop-com/sokkel-ui-media`, so an
 app that plays nothing does not carry them: `MediaBar` with its layouts, parts and
-`MediaFullscreen`, `TrackList`, `ChapterList`, `Lyrics`, `MediaCard`, `Artwork` and its seeded
+`MediaFullscreen`, `TrackList`, `ChapterList`, `Lyrics`, `Transcript`, the sleep timer
+(`SleepTimerMenu`, `useSleepTimer`), `MediaCard`, `Artwork` and its seeded
 covers (`cover-seed`), the arithmetic of chapters, of a timeline over several files and of the
 bar's growth, the queue (`queue`, `useQueue`), LRC lyrics (`lrc`), `useMediaSession` with its
 helpers in `media-session`, a position read on every animation frame (`useFramePosition`),
-`VideoStatsOverlay`, `UpNext`, and `hlsSource` in `hls-source`. It stands on the core by name, and its one engine, hls.js, is an
+`VideoStatsOverlay`, `UpNext`, a watch page's `ChannelRow`, `MediaActions` and `WatchLayout`, and `hlsSource` in `hls-source`. It stands on the core by name, and its one engine, hls.js, is an
 optional peer it loads only when a stream plays. What a core part plays through
 stays in the core, under `@winterop-com/sokkel-ui/media/*`: `AudioPlayer` and `VideoPlayer`, which
 attachments, chat messages, the composer and a spoken answer use; the controls they share
@@ -686,6 +697,13 @@ loud); `onFullscreenChange` says when the picture fills the screen. `crossOrigin
 element's `crossorigin`, so captions served from another origin load, the media then fetched with
 CORS too.
 
+What the viewer picks beside the captions the app may keep too: `defaultRate` starts each new media
+at the speed the app holds, which `onRateChange` tells as the viewer picks one from the speed menu,
+so the next video plays at it; `qualities` put a menu of renditions (Auto, 720p) after the speed,
+its button saying the one chosen, and the app plays the one picked through `onQualityChange`, as a
+new source started where it was. `actions` draws the app's own buttons among the controls, before
+full screen, such as theater mode, as `TransportButton`s over the picture.
+
 Over the picture an app draws in two places, both kept in full screen: `overlay` in the top corner,
 such as the stats, scrolling when taller than the picture, and `cover` over the whole of it, dimmed
 behind, such as what plays next as a video ends. They are two slots, not one with a placement, since
@@ -696,6 +714,21 @@ of the player's own keys while it stands, so the cover's buttons are what the vi
 under it and its artwork, which shows once the player is wide enough, a countdown that calls `onPlay`
 at zero (held by `paused`, absent when the app's autoplay is off), Play now, and Cancel, its words
 props.
+
+Under the picture a watch page names where the video comes from and what the viewer does with it.
+`ChannelRow` is the channel on `ProfileRow`: its picture and name opening its page (`href`), its
+followers written short (48.2K), and Follow turning to Following with a check; `size="lg"` heads the
+channel's own page. `MediaActions` is the viewer's row: like and dislike joined with the like count,
+then the app's actions (Share, Save, Download, each a plain button, a toggle or the app's own node
+such as a `DownloadButton`), which move from the last into More as the row runs out of room, measured
+on itself as `Toolbar`'s tools are, and `menu` entries always in More. Given to the channel row as its
+`actions` they stand at the line's end beside the channel where there is room and on a line of their
+own under it where there is not.
+`WatchLayout` holds a watch page together: the player, what is under it and an aside beside both
+(what plays next), the aside running down beside the rest on a wide page and stacking last on a
+narrow one, measured on the layout itself. `theater` spans the player across the aside's column, as
+tall as the window lets it be, the aside starting under it; the player keeps its place in the page,
+so a video plays on as the viewer turns theater mode on and off.
 
 Captions are words on the picture, outlined with no box, in `--caption-*` tokens, sized against
 the player's width (`--caption-size`, never under `--caption-size-min`). The captions button opens
@@ -795,6 +828,16 @@ reads as untimed. `Lyrics` fills the box it is given: timed lines follow the pos
 inked in the middle and the rest faint, a press on a line seeking to it, and the same pause for a
 reader who scrolls; untimed lyrics read as a page in verses. MediaBar's `lyrics` gives the
 fullscreen view a lyrics button in its corner that shows them in the visualizer's place.
+
+What is said rather than sung, a podcast, an interview or a talk, is a `Transcript`: lines with
+their start and their speaker, read at the page's size, each under its time and the speaker written
+where the voice changes. It fills its box and follows the position as `Lyrics` does, the line said
+inked in the middle and the rest quiet, a press seeking to its start, and goes in MediaBar's
+`lyrics` for the fullscreen view the same way. A long listen's sleep timer is `SleepTimerMenu`, a
+moon for the bar's `extra` that offers minutes, the end of the chapter and the end of the episode,
+the time left beside it while minutes count, and `useSleepTimer` keeps it: minutes count only while
+playing, a chapter's timer runs out as playback passes into the next chapter, following a seek into
+another, and the end's through `ended`, which tells the app not to go on to the next.
 
 The bar draws the `position` the app gives it, which a media element reports about four times a
 second on `timeupdate`. Given the playing element in `media`, or `getPosition` for a clock that is

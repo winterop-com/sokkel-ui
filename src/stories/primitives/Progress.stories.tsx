@@ -30,6 +30,10 @@ export const Variants: StoryObj = {
     ),
 }
 
+/**
+ * Waiting with no share to tell, nearly done, and done. The value is said as `DownloadButton` says
+ * its share: a bar just short of its end reads >99%, never 100% before it is.
+ */
 export const States: StoryObj = {
     render: () => (
         <Stack gap="xl" className="max-w-md">
@@ -37,6 +41,13 @@ export const States: StoryObj = {
                 <Caption>indeterminate (value null)</Caption>
                 <Progress value={null}>
                     <ProgressLabel>Waiting for harbor</ProgressLabel>
+                </Progress>
+            </Stack>
+            <Stack gap="sm">
+                <Caption>nearly done (99.6)</Caption>
+                <Progress value={99.6}>
+                    <ProgressLabel>Rows written</ProgressLabel>
+                    <ProgressValue />
                 </Progress>
             </Stack>
             <Stack gap="sm">

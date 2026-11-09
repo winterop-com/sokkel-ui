@@ -8,9 +8,9 @@
  * An example is a folder in `examples/` with a `web/` app. The index takes its name and one line
  * from its `example.json` (`{ "name", "summary" }`), or, without one, from the comment that heads its
  * Makefile (`# Name: what it is.`). `--shots` takes a still of each app, light and dark, in
- * Playwright's chromium, for its card. The site goes to `examples-static/` unless `--out` names
- * another folder, which is emptied first. Every app is built with `base: './'`, so the site works
- * under any path.
+ * Playwright's chromium, for its card; without it, or where a still cannot be taken, the card has
+ * none. The site goes to `examples-static/` unless `--out` names another folder, which is emptied
+ * first. Every app is built with `base: './'`, so the site works under any path.
  */
 import type { SiteExample } from 'virtual:examples'
 
@@ -105,32 +105,60 @@ async function serve(out: string, prefix: string): Promise<{ url: string; stop: 
     return { url: `http://127.0.0.1:${String(port)}${prefix}`, stop: () => void server.close() }
 }
 
-/** Takes each example's still at its first page, light and dark, and says what threw while it loaded. */
-async function takeStills(out: string, ids: readonly string[]): Promise<void> {
-    const { chromium } = await import('@playwright/test')
+/** Prints a warning, as an annotation on the run when it runs in GitHub Actions. */
+function warn(message: string): void {
+    console.warn(process.env.GITHUB_ACTIONS === 'true' ? `::warning::${message}` : message)
+}
+
+/**
+ * Takes each example's still at its first page, light and dark, and says what threw while it loaded.
+ * Returns the examples it took both stills of; one it could not take, or every one when chromium
+ * does not start, gets a card without a still.
+ */
+async function takeStills(out: string, ids: readonly string[]): Promise<Set<string>> {
+    const taken = new Set<string>()
     const site = await serve(out, '/sokkel-ui/examples/')
-    const browser = await chromium.launch()
-    mkdirSync(join(out, STILLS), { recursive: true })
     try {
-        for (const id of ids) {
-            for (const colorScheme of ['light', 'dark'] as const) {
-                const context = await browser.newContext({ viewport: { width: 1280, height: 720 }, colorScheme, reducedMotion: 'reduce' })
-                const page = await context.newPage()
-                const errors: string[] = []
-                page.on('pageerror', (error) => errors.push(error.message))
-                await page.goto(`${site.url}${id}/`, { waitUntil: 'load' })
-                await page.waitForLoadState('networkidle', { timeout: 10_000 }).catch(() => undefined)
-                await page.waitForTimeout(1_500)
-                await page.screenshot({ path: join(out, STILLS, `${id}-${colorScheme}.jpg`), type: 'jpeg', quality: 80 })
-                for (const error of errors) console.warn(`${id} (${colorScheme}): ${error}`)
-                await context.close()
+        const { chromium } = await import('@playwright/test')
+        const browser = await chromium.launch()
+        mkdirSync(join(out, STILLS), { recursive: true })
+        try {
+            for (const id of ids) {
+                try {
+                    for (const colorScheme of ['light', 'dark'] as const) {
+                        const context = await browser.newContext({
+                            viewport: { width: 1280, height: 720 },
+                            colorScheme,
+                            reducedMotion: 'reduce',
+                        })
+                        try {
+                            const page = await context.newPage()
+                            const errors: string[] = []
+                            page.on('pageerror', (error) => errors.push(error.message))
+                            await page.goto(`${site.url}${id}/`, { waitUntil: 'load' })
+                            await page.waitForLoadState('networkidle', { timeout: 10_000 }).catch(() => undefined)
+                            await page.waitForTimeout(1_500)
+                            await page.screenshot({ path: join(out, STILLS, `${id}-${colorScheme}.jpg`), type: 'jpeg', quality: 80 })
+                            for (const error of errors) console.warn(`${id} (${colorScheme}): ${error}`)
+                        } finally {
+                            await context.close()
+                        }
+                    }
+                    taken.add(id)
+                    console.log(`still: ${id}`)
+                } catch (error) {
+                    warn(`No still of ${id}: ${error instanceof Error ? error.message : String(error)}`)
+                }
             }
-            console.log(`still: ${id}`)
+        } finally {
+            await browser.close()
         }
+    } catch (error) {
+        warn(`No stills, as chromium did not start: ${error instanceof Error ? error.message : String(error)}`)
     } finally {
-        await browser.close()
         site.stop()
     }
+    return taken
 }
 
 /** The examples as the module `virtual:examples`, which the index page imports. */
@@ -176,14 +204,14 @@ async function main(args: readonly string[]): Promise<void> {
         cpSync(join(web, 'dist'), join(out, id), { recursive: true })
     }
 
-    if (shots) await takeStills(out, ids)
+    const stilled = shots ? await takeStills(out, ids) : new Set<string>()
 
     const examples: SiteExample[] = ids
         .map((id) => ({
             id,
             ...describeExample(join(EXAMPLES, id)),
             packages: packagesOf(join(EXAMPLES, id, 'web')),
-            stills: shots ? { light: `./${STILLS}/${id}-light.jpg`, dark: `./${STILLS}/${id}-dark.jpg` } : undefined,
+            stills: stilled.has(id) ? { light: `./${STILLS}/${id}-light.jpg`, dark: `./${STILLS}/${id}-dark.jpg` } : undefined,
         }))
         .sort((a, b) => a.name.localeCompare(b.name))
 

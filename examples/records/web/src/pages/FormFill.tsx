@@ -83,7 +83,7 @@ export function FormFill({ formId, householdId, keepPlace }: { formId: string; h
 
 function Filling({ form, householdId: givenHousehold, keepPlace }: { form: Form; householdId?: string; keepPlace: boolean }) {
     const today = day(0)
-    const [lastPlace, setLastPlace] = useStored<string | null>('records:last-place', null)
+    const [lastPlace, setLastPlace] = useStored<string | null>('last-place', null)
     const startPlace = keepPlace && lastPlace !== null && placeOf(lastPlace) !== undefined ? lastPlace : null
     const [answers, setAnswers] = useState<Record<string, AnswerValue>>({})
     const [place, setPlace] = useState<string | null>(startPlace)

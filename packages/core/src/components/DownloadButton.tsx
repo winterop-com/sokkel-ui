@@ -2,6 +2,7 @@ import { Check, Download, Pause, Play, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import { cn } from '../lib/cn'
+import { formatPercent } from '../lib/percent'
 import { IconButton } from './IconButton'
 import { Button, buttonVariants } from './ui/button'
 import { ProgressRing } from './ui/progress-ring'
@@ -13,7 +14,7 @@ export interface DownloadButtonWords {
     download: string
     /** What a running download says, given how many of how many parts are in. */
     progress: (count: number, total: number) => string
-    /** What a running download with a share and no count says, given the share from 0 to 1. */
+    /** What a running download with a share and no count says, given the share from 0 to 1: by `formatPercent`, as `Progress` says it. */
     share: (value: number) => string
     /** What a running download with no count and no share says. */
     running: string
@@ -33,7 +34,7 @@ export interface DownloadButtonWords {
 const WORDS: DownloadButtonWords = {
     download: 'Download',
     progress: (count, total) => `${String(count)} of ${String(total)}`,
-    share: (value) => `${String(Math.round(value * 100))}%`,
+    share: formatPercent,
     running: 'Downloading',
     paused: 'Paused',
     pause: 'Pause the download',

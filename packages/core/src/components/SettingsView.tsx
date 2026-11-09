@@ -42,6 +42,7 @@ export interface SettingsViewProps {
     /**
      * Adds Reset to defaults at the start of the footer, which asks once more before it calls this.
      * It is given the shown section's id when `resetScope` is `section`, and nothing when it is `all`.
+     * A section with `reset: false` shows none while it is the shown one, under a `section` reset.
      */
     onReset?: (section?: string) => void
     /** What Reset to defaults puts back: the shown section (the default) or every setting. */

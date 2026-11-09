@@ -1090,6 +1090,10 @@
             "types": "./dist/hooks/use-reduced-motion.d.ts",
             "import": "./dist/hooks/use-reduced-motion.js"
         },
+        "./hooks/use-refresh": {
+            "types": "./dist/hooks/use-refresh.d.ts",
+            "import": "./dist/hooks/use-refresh.js"
+        },
         "./hooks/use-scheme": {
             "types": "./dist/hooks/use-scheme.d.ts",
             "import": "./dist/hooks/use-scheme.js"

@@ -20,6 +20,7 @@ import { MEDIA_RATES } from '@winterop-com/sokkel-ui/media/MediaControls'
 import { useOneSound } from '@winterop-com/sokkel-ui/media/one-sound'
 import type { SoundKind } from '@winterop-com/sokkel-ui/media/SoundVisualizer'
 import type { MediaRange } from '@winterop-com/sokkel-ui/media/time'
+import type { MediaSkip } from './media-session'
 
 /** The fullscreen view and its visualizer, fetched once a bar that opens it is drawn, after the page. */
 const loadFullscreen = () => import('./MediaFullscreen')
@@ -28,6 +29,7 @@ const MediaFullscreen = lazy(() => loadFullscreen().then((module) => ({ default:
 export type { MediaBarLayout } from './bar-growth'
 export { rowsHeightFor } from './bar-growth'
 export type { MediaBarWords, MediaSteps, MediaTimeline, MediaVisualizerOption, RepeatMode } from './MediaBarParts'
+export type { MediaSkip } from './media-session'
 export { MEDIA_RATES } from '@winterop-com/sokkel-ui/media/MediaControls'
 
 /** How far the skip buttons move unless told otherwise, in seconds. */
@@ -103,9 +105,10 @@ export interface MediaBarProps {
     timeline?: MediaTimeline
     /**
      * The interval the skip buttons move back and forward, in seconds, drawn on their glyphs: 15
-     * by default. They are drawn when either this or `onSkip` is given.
+     * by default, or each way its own, as `{ back: 15, forward: 30 }` for a podcast. They are drawn
+     * when either this or `onSkip` is given. `useMediaSession` takes the same for the system's seek buttons.
      */
-    skip?: number
+    skip?: MediaSkip
     /** Moves by the seconds given, negative for back; without it a skip seeks through `onSeek`. */
     onSkip?: (seconds: number) => void
     /** The playback speed, as a multiple of normal: 1 by default. */
@@ -229,7 +232,7 @@ export interface MediaBarProps {
  * height.
  *
  * For a long listen, such as a book or a podcast, `skip` and `onSkip` add buttons that move back
- * and forward by an interval written on them, `onRateChange` a speed menu, and `chapters` turn
+ * and forward by an interval written on them (the same both ways, or each its own), `onRateChange` a speed menu, and `chapters` turn
  * previous and next into chapter steps, with `timeline="chapter"` measuring the time within the
  * chapter. `live` is for a stream with no length, such as a radio station: a Live mark stands
  * where the position would, and nothing seeks.

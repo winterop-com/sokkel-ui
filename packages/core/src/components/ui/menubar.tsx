@@ -4,6 +4,7 @@ import * as React from 'react'
 import { Menu as MenuPrimitive } from '@base-ui/react/menu'
 import { Menubar as MenubarPrimitive } from '@base-ui/react/menubar'
 import { cn } from '../../lib/cn'
+import { menuPartsAtOnce } from './deferred-menu'
 
 import {
     DropdownMenu,
@@ -24,13 +25,16 @@ import { CheckIcon } from 'lucide-react'
 
 export type MenubarProps = MenubarPrimitive.Props
 
+/** A row of menus. It has Base UI's menu at once, so its menus are drawn real from the start, as the bar's keys need. */
 function Menubar({ className, ...props }: MenubarProps) {
     return (
-        <MenubarPrimitive
-            data-slot="menubar"
-            className={cn('flex h-8 items-center gap-0.5 rounded-control border p-[3px]', className)}
-            {...props}
-        />
+        <menuPartsAtOnce.Provider value={MenuPrimitive}>
+            <MenubarPrimitive
+                data-slot="menubar"
+                className={cn('flex h-8 items-center gap-0.5 rounded-control border p-[3px]', className)}
+                {...props}
+            />
+        </menuPartsAtOnce.Provider>
     )
 }
 

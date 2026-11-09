@@ -1302,45 +1302,63 @@ export function DataTable<T>({
         )
     }
 
+    /**
+     * How many columns a group head's label takes: the first and every one after it up to the first
+     * that aggregates, so a narrow first column never cuts the label short.
+     */
+    const aggregated = shown.findIndex((column, at) => at > 0 && column.aggregate !== undefined)
+    const labelSpan = aggregated === -1 ? shown.length : aggregated
+
     /** A group's head as a line of the table, on the table's columns. */
-    const groupRow = (head: GroupHead<T>, index: number) => (
-        <div
-            key={`group:${head.key}`}
-            role="row"
-            aria-rowindex={index + 2}
-            aria-expanded={!head.folded}
-            data-group={head.key}
-            onClick={() => foldGroup(head.key)}
-            className={cn(
-                'grid cursor-pointer items-center border-b border-border bg-panel-ground text-sm font-medium',
-                spaced,
-                every ? 'min-h-(--density-row)' : 'h-(--density-row)',
-            )}
-            style={grid}
-        >
-            {selectable && (
-                <span role="gridcell" className={cn(pinned, 'left-0 flex h-full items-center justify-center')}>
-                    {groupBox(head)}
-                </span>
-            )}
-            {shown.map((column, at) => (
+    const groupRow = (head: GroupHead<T>, index: number) => {
+        const left = selectable ? 'left-(--check)' : 'left-0'
+        const spans = labelSpan > 1
+        return (
+            <div
+                key={`group:${head.key}`}
+                role="row"
+                aria-rowindex={index + 2}
+                aria-expanded={!head.folded}
+                data-group={head.key}
+                onClick={() => foldGroup(head.key)}
+                className={cn(
+                    'grid cursor-pointer items-center border-b border-border bg-panel-ground text-sm font-medium',
+                    spaced,
+                    every ? 'min-h-(--density-row)' : 'h-(--density-row)',
+                )}
+                style={grid}
+            >
+                {selectable && (
+                    <span role="gridcell" className={cn(pinned, 'left-0 flex h-full items-center justify-center')}>
+                        {groupBox(head)}
+                    </span>
+                )}
+                {/* A label across several columns keeps to the pinned edge inside its cell, rather than pinning the whole width. */}
                 <span
-                    key={column.id}
                     role="gridcell"
-                    className={cn(
-                        'flex h-full min-w-0 items-center',
-                        pad,
-                        column.align === 'end' && 'justify-end tabular-nums',
-                        at === 0 && cn(pinned, selectable ? 'left-(--check)' : 'left-0'),
-                    )}
-                    style={at === 0 ? ({ '--check': CHECK } as React.CSSProperties) : undefined}
+                    aria-colspan={spans ? labelSpan : undefined}
+                    className={cn('flex h-full min-w-0 items-center', !spans && cn(pad, pinned, left))}
+                    style={{ '--check': CHECK, gridColumn: spans ? `span ${String(labelSpan)}` : undefined } as React.CSSProperties}
                 >
-                    {at === 0 ? groupTitle(head) : <span className="min-w-0 truncate">{column.aggregate?.(head.rows)}</span>}
+                    {spans ? (
+                        <span className={cn('flex min-w-0 items-center', pad, !list && cn('sticky', left))}>{groupTitle(head)}</span>
+                    ) : (
+                        groupTitle(head)
+                    )}
                 </span>
-            ))}
-            {endWidth !== undefined && <span role="gridcell" className={cn(pinnedEnd, 'right-0 h-full')} />}
-        </div>
-    )
+                {shown.slice(labelSpan).map((column) => (
+                    <span
+                        key={column.id}
+                        role="gridcell"
+                        className={cn('flex h-full min-w-0 items-center', pad, column.align === 'end' && 'justify-end tabular-nums')}
+                    >
+                        <span className="min-w-0 truncate">{column.aggregate?.(head.rows)}</span>
+                    </span>
+                ))}
+                {endWidth !== undefined && <span role="gridcell" className={cn(pinnedEnd, 'right-0 h-full')} />}
+            </div>
+        )
+    }
 
     /** A press on a part of a stacked row that is its own control, kept from opening the row. */
     const keep = (event: MouseEvent) => event.stopPropagation()

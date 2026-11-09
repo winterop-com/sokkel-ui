@@ -26,6 +26,9 @@ export const TypeToConfirm: StoryObj = { name: 'Type to confirm', render: () => 
 /** A delete that says what goes with it, a row per kind with its count. */
 export const DeleteCascade: StoryObj = { name: 'Delete cascade', render: () => <danger.DeleteWithConsequences /> }
 
+/** A confirm that says what it does as facts, a row each, under the heading a `neutral` list takes. */
+export const ClearCache: StoryObj = { name: 'Clear cache', render: () => <danger.ClearCache /> }
+
 /** The confirm is working: its verb spins, and Cancel, Escape and the backdrop do nothing until it is done. */
 export const Busy: StoryObj = { name: 'Busy', render: () => <small.Busy /> }
 

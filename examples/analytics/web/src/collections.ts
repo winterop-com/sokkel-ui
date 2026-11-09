@@ -24,14 +24,14 @@ import {
 } from './model'
 
 /** Teams that signed up while the app was open. */
-export const teams = collection<TeamRecord>('analytics-teams', () => [])
+export const teams = collection<TeamRecord>('teams', () => [])
 /** Changes to plans made by the live stream or by a person, after the history. */
-export const changes = collection<Change>('analytics-changes', () => [])
-export const invoiceChanges = collection<InvoiceChange>('analytics-invoice-changes', () => [])
-export const teamEdits = collection<TeamEdit>('analytics-team-edits', () => [])
-export const prefs = collection<Prefs>('analytics-prefs', () => [{ ...DEFAULT_PREFS, feedSeen: Date.now() }])
+export const changes = collection<Change>('changes', () => [])
+export const invoiceChanges = collection<InvoiceChange>('invoice-changes', () => [])
+export const teamEdits = collection<TeamEdit>('team-edits', () => [])
+export const prefs = collection<Prefs>('prefs', () => [{ ...DEFAULT_PREFS, feedSeen: Date.now() }])
 
-export const invoiceViews = collection<InvoiceView>('analytics-invoice-views', () => [
+export const invoiceViews = collection<InvoiceView>('invoice-views', () => [
     { id: 'all', name: 'All invoices', state: EMPTY_VIEW, locked: true },
     {
         id: 'failed',
@@ -61,7 +61,7 @@ export const invoiceViews = collection<InvoiceView>('analytics-invoice-views', (
     },
 ])
 
-export const funnels = collection<Funnel>('analytics-funnels', () => [
+export const funnels = collection<Funnel>('funnels', () => [
     {
         id: 'signup-to-paid',
         name: 'Sign-up to paid',
@@ -88,7 +88,7 @@ export const funnels = collection<Funnel>('analytics-funnels', () => [
     },
 ])
 
-export const reports = collection<Report>('analytics-reports', () => [
+export const reports = collection<Report>('reports', () => [
     {
         id: 'monthly-board',
         name: 'Monthly board report',
@@ -105,7 +105,7 @@ export const reports = collection<Report>('analytics-reports', () => [
     },
 ])
 
-export const goals = collection<Goal>('analytics-goals', () => {
+export const goals = collection<Goal>('goals', () => {
     const today = dayOf(Date.now())
     const date = new Date()
     const quarterEnd = dayOfDate(new Date(date.getFullYear(), Math.floor(date.getMonth() / 3) * 3 + 3, 0))

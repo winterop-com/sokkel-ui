@@ -39,7 +39,11 @@ const FLOW = `flowchart LR
   validate -->|invalid| notify[notify]
   upload --> notify`
 
-/** A pane of code in its place; the expand button shows at its top right corner while the pointer is over it. */
+/**
+ * A pane of code in its place; the expand button shows at its top right corner while the pointer is
+ * over it, or while it has focus. Opened from the keyboard, the window takes focus on its content
+ * rather than its close button, so one Escape closes it.
+ */
 export const Closed: StoryObj = {
     render: () => (
         <WindowedPane title="import-orders.yaml">
@@ -48,7 +52,7 @@ export const Closed: StoryObj = {
     ),
 }
 
-/** The same pane opened in the window; its place says where it went and keeps its height. */
+/** The same pane opened in the window, focused on its content; its place says where it went and keeps its height. */
 export const Open: StoryObj = {
     render: () => (
         <WindowedPane title="import-orders.yaml" defaultOpen>

@@ -46,6 +46,8 @@ export interface PaneHeaderProps {
  * of one thing's detail: its code over a larger title that wraps, with `children` (chips, labels)
  * on a line under it. `inset={false}` drops the side padding, for a head on the page's own edge.
  * `description` is a sentence under the title saying what the pane holds; the strip grows to hold it.
+ * A `meta` too long to stand beside the title on a narrow head goes under it, so it never runs
+ * into the actions, and actions too wide to leave the title its room go under the title, as on a phone.
  */
 export function PaneHeader({
     title,
@@ -67,7 +69,7 @@ export function PaneHeader({
     return (
         <header
             className={cn(
-                'flex min-h-(--density-panel-head) shrink-0 items-center gap-2 border-b',
+                'flex min-h-(--density-panel-head) shrink-0 flex-wrap items-center gap-2 border-b',
                 GROUND[variant],
                 inset && (large ? 'px-4' : 'px-(--density-panel-pad)'),
                 large && 'items-start py-3',
@@ -77,12 +79,15 @@ export function PaneHeader({
         >
             {start !== undefined && <div className="flex shrink-0 items-center gap-0.5">{start}</div>}
             {titled && (
-                <div className={cn('flex min-w-0 flex-1 flex-col', large && 'gap-2')}>
+                // The actions stay beside the title while it has 10rem or its own width, and go under it otherwise.
+                <div className={cn('flex max-w-max min-w-0 grow basis-40 flex-col', large && 'gap-2', !large && !described && 'py-1')}>
                     {code !== undefined && <span className="truncate font-mono text-xs text-muted-foreground">{code}</span>}
                     {title !== undefined && (
-                        <div className="flex min-w-0 items-center gap-2">
-                            <Heading className={TITLE[large ? 'large' : variant]}>{title}</Heading>
-                            {meta !== undefined && <span className="shrink-0 font-mono text-xs text-muted-foreground">{meta}</span>}
+                        // The meta stays beside the title while both fit with the title at 6rem or its
+                        // own width, and drops under it otherwise, cut short where it is wider still.
+                        <div className="flex min-w-0 flex-wrap items-center gap-x-2">
+                            <Heading className={cn('max-w-max min-w-0 grow basis-24', TITLE[large ? 'large' : variant])}>{title}</Heading>
+                            {meta !== undefined && <span className="min-w-0 truncate font-mono text-xs text-muted-foreground">{meta}</span>}
                         </div>
                     )}
                     {described && <p className="text-help text-pretty text-muted-foreground">{description}</p>}

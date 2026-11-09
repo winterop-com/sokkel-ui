@@ -15,6 +15,7 @@ const GROUPS: SettingsGroup[] = [
                 settings: [{ id: 'start', title: 'Start page', description: 'What opens after you sign in.', control: null }],
             },
             { id: 'theme', label: 'Theme', heading: 'Look and feel', settings: [{ id: 'scheme', title: 'Scheme', control: null }] },
+            { id: 'account', label: 'Account', reset: false, settings: [{ id: 'name', title: 'Name', control: null }] },
         ],
     },
 ]
@@ -61,6 +62,11 @@ describe('SettingsView', () => {
         expect(page).toContain('>Done</button>')
         expect(page).toContain('Reset to defaults')
         expect(page).toContain('Synced at 09:52')
+    })
+
+    it('leaves Reset to defaults out for a section with nothing to put back, unless every setting is reset', () => {
+        expect(view({ active: 'account', onReset: () => undefined })).not.toContain('Reset to defaults')
+        expect(view({ active: 'account', onReset: () => undefined, resetScope: 'all' })).toContain('Reset to defaults')
     })
 
     it('says when nothing matches the search', () => {

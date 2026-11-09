@@ -8,7 +8,7 @@ import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { BarGauge } from '@winterop-com/sokkel-ui-charts/dashboard/BarGauge'
 import { BarPanel } from '@winterop-com/sokkel-ui-charts/dashboard/BarPanel'
 import { ChartPanel } from '@winterop-com/sokkel-ui-charts/dashboard/ChartPanel'
-import { DashboardGrid, DashboardPanel } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
+import { DashboardGrid, DashboardPanel, KpiRow } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
 import { DashboardRow } from '@winterop-com/sokkel-ui/dashboard/DashboardRow'
 import { GaugePanel } from '@winterop-com/sokkel-ui-charts/dashboard/GaugePanel'
 import { HeatmapPanel } from '@winterop-com/sokkel-ui-charts/dashboard/HeatmapPanel'
@@ -16,6 +16,7 @@ import type { PanelSeries } from '@winterop-com/sokkel-ui-charts/dashboard/serie
 import { StatPanel } from '@winterop-com/sokkel-ui/dashboard/StatPanel'
 import { tokenVar, type Threshold } from '@winterop-com/sokkel-ui/dashboard/thresholds'
 import { RefreshControl, TimeRangePicker, type TimeRangeValue } from '@winterop-com/sokkel-ui/dashboard/TimeRange'
+import { useRefresh } from '@winterop-com/sokkel-ui/hooks/use-refresh'
 import { TimeSeriesPanel } from '@winterop-com/sokkel-ui-charts/dashboard/TimeSeriesPanel'
 import { VariablesBar } from '@winterop-com/sokkel-ui/dashboard/VariablesBar'
 import { BoundaryLayer } from '@winterop-com/sokkel-ui-maps/BoundaryLayer'
@@ -92,7 +93,31 @@ const STATE_SERIES: PanelSeries[] = [
 const HISTOGRAM_SERIES: PanelSeries[] = [{ name: 'Runs', values: HISTOGRAM, color: 'chart-2' }]
 const SECONDS = (value: number) => `${value.toFixed(1)}s`
 
-/** Stat tiles: values inked by thresholds, tiles filled by them, a trend behind the value, a change, and one with no data. */
+/**
+ * Five key figures across the top of a dashboard, each with its change or a note. A phone sets them
+ * two to a line, the fifth across the whole of its own.
+ */
+export const KeyFigures: StoryObj = {
+    name: 'Key figures',
+    render: () => (
+        <Ground title="Key figures">
+            <KpiRow
+                items={[
+                    { id: 'runs', label: 'Runs today', value: '3,526', change: '+6%', good: true },
+                    { id: 'success', label: 'Success rate', value: '99.3', unit: '%', change: '+0.4 pts', good: true },
+                    { id: 'median', label: 'Median run', value: '4.2', unit: 's', change: '+0.3s', good: false },
+                    { id: 'queue', label: 'Queued', value: '30', note: 'on 4 workers' },
+                    { id: 'failed', label: 'Failed', value: '2', note: 'nightly-export, sync-inventory' },
+                ]}
+            />
+        </Ground>
+    ),
+}
+
+/**
+ * Stat tiles: values inked by thresholds, tiles filled by them, a trend behind the value, a change,
+ * and one with no data. The median's title is cut short by its tile and given whole on hover.
+ */
 export const StatTiles: StoryObj = {
     name: 'Stat tiles',
     render: () => (
@@ -108,7 +133,14 @@ export const StatTiles: StoryObj = {
                     info="Runs waiting for a slot, every worker."
                 />
                 <StatPanel title="Failed now" value={0} thresholds={FAILED_IS_BAD} colorMode="background" />
-                <StatPanel title="Median" value={4.2} unit="s" color="chart-4" colorMode="background" sparkline={DURATIONS.p50} />
+                <StatPanel
+                    title="Median run time across every job and worker"
+                    value={4.2}
+                    unit="s"
+                    color="chart-4"
+                    colorMode="background"
+                    sparkline={DURATIONS.p50}
+                />
                 <StatPanel title="Paused jobs" value={null} />
             </DashboardGrid>
         </Ground>
@@ -430,6 +462,8 @@ function Variables() {
     const [range, setRange] = useState<TimeRangeValue>({ preset: '24h' })
     const [interval, setInterval] = useState(30)
     const [paused, setPaused] = useState(false)
+    // A refresh that takes a moment, as a fetch does, run on the control's interval and pause.
+    const auto = useRefresh(() => new Promise((done) => window.setTimeout(done, 800)), { interval, paused })
     return (
         <Ground title="Variables">
             <VariablesBar
@@ -447,7 +481,8 @@ function Variables() {
                             today={new Date(2026, 10, 4)}
                         />
                         <RefreshControl
-                            onRefresh={() => undefined}
+                            onRefresh={auto.refresh}
+                            refreshing={auto.refreshing}
                             interval={interval}
                             onIntervalChange={setInterval}
                             intervals={[0, 5, 10, 30]}
@@ -461,7 +496,11 @@ function Variables() {
     )
 }
 
-/** The variables bar: two dropdown filters and a toggle, with the range and refresh at the end, the refresh with its own intervals and a pause. */
+/**
+ * The variables bar: two dropdown filters and a toggle, with the range and refresh at the end, the
+ * refresh with its own intervals and a pause. `useRefresh` runs the refresh on the chosen interval
+ * unless paused, and at once on a press, the button spinning while it runs.
+ */
 export const VariablesStory: StoryObj = { name: 'Variables bar', render: () => <Variables /> }
 
 function OpenRange() {

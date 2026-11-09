@@ -11,19 +11,19 @@ import type { Comparison, Conversation, Download, Loaded, LogEvent, Model, Prefs
 import { DEFAULT_PREFS } from './model'
 import { seedComparisons, seedConversations, seedEvents, seedLoaded, seedModels, seedRunner } from './seed'
 
-export const models = collection<Model>('models.library', () => seedModels())
-export const conversations = collection<Conversation>('models.conversations', () => seedConversations(seedModels()))
-export const downloads = collection<Download>('models.downloads', () => [])
-export const runner = collection<Runner>('models.runner', () => seedRunner())
-export const loaded = collection<Loaded>('models.loaded', () => seedLoaded(seedModels()))
-export const events = collection<LogEvent>('models.events', () => seedEvents())
-export const comparisons = collection<Comparison>('models.comparisons', () => seedComparisons(seedModels()))
-export const prefs = collection<Prefs>('models.prefs', () => [{ ...DEFAULT_PREFS }])
+export const models = collection<Model>('library', () => seedModels())
+export const conversations = collection<Conversation>('conversations', () => seedConversations(seedModels()))
+export const downloads = collection<Download>('downloads', () => [])
+export const runner = collection<Runner>('runner', () => seedRunner())
+export const loaded = collection<Loaded>('loaded', () => seedLoaded(seedModels()))
+export const events = collection<LogEvent>('events', () => seedEvents())
+export const comparisons = collection<Comparison>('comparisons', () => seedComparisons(seedModels()))
+export const prefs = collection<Prefs>('prefs', () => [{ ...DEFAULT_PREFS }])
 
 /** A view of the library: its filters, sort and columns under a name. */
 export type LibraryView = SavedView
 
-export const views = collection<LibraryView>('models.views', () => [
+export const views = collection<LibraryView>('views', () => [
     { id: 'all', name: 'All models', state: EMPTY_VIEW, locked: true },
     {
         id: 'small',

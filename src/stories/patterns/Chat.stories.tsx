@@ -106,6 +106,35 @@ function Answer() {
     )
 }
 
+/** Three answers cut off mid-stream: in a sentence, in a table's last row, and inside a code block. */
+const STREAMED = [
+    'The run **failed at `validate`**, step 3 of 5. The `fetch` step read 2,184 rows, but 37 of them carry an',
+    `The rows that failed, so far:
+
+| row | order | amount |
+| --- | --- | --- |
+| 412 | \`ord-10412\` | \`n/a\` |
+| 977 | \`ord-10977\` |`,
+    `Drop rows whose amount does not parse, in \`transform\`:
+
+\`\`\`yaml
+steps:
+  transform:
+    uses: rows.filter
+    with:
+      where: "try_cast(amount`,
+]
+
+function Streamed() {
+    return (
+        <Ground>
+            {STREAMED.map((content, index) => (
+                <Markdown key={index} content={content} streaming caret />
+            ))}
+        </Ground>
+    )
+}
+
 function MathReply() {
     return (
         <Ground>
@@ -168,6 +197,12 @@ const meta: Meta = { title: 'Patterns/Chat', parameters: { frame: 'padded' } }
 export default meta
 
 export const MarkdownAnswer: StoryObj = { name: 'Markdown', render: () => <Answer /> }
+
+/**
+ * Answers still streaming, each with the caret where the next words land: after the last words of
+ * a sentence, in the last cell of a table's newest row, and at the end of a code block's last line.
+ */
+export const Streaming: StoryObj = { render: () => <Streamed /> }
 /**
  * LaTeX in an answer, drawn by KaTeX once it loads: inline with `$…$` and `\(…\)`, display with
  * `$$`, `\[…\]` and a `math` fence, a formula KaTeX cannot read, and dollars that stay prices.

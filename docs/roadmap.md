@@ -85,39 +85,29 @@ to `plan.md` when it ships.
 
 ## Example apps
 
-- **Working demo apps outside Storybook.** In `examples/`, built against the package as an app would
-  be: a data visualizer (a table of data with chart views to pick, saved and shared), and others to
-  follow. Storybook stays the catalog of parts; the examples show them working together.
-- **The examples as they stand (run 2026-11-08).** the one example then, a runs page, in Chromium, the Electron 45
-  shell and the Tauri 2 shell on WebKit all start and draw with no errors, but they hold one page
-  (the runs table) on the core package alone, from before the palette existed. To bring them up
-  to the library:
-    - **Palette and search:** wire `palette`, `paletteSearch`, the top bar's search and the
-      appearance commands; ⌘K does nothing today.
-    - **Desktop frame:** both shells keep the system title bar. Use `desktop` on `Shell` (a hidden
-      title bar, the drag strip, room for the traffic lights) and full screen through
-      `setFullscreen`.
-    - **Wording:** words follow their context ("Search" and "New" on Runs, not "Search runs" and
-      "New run").
-    - **Electron install:** `bun install` did not fetch Electron's binary although it is a trusted
-      dependency; fix the install or say in the README how to fetch it.
-    - **CI:** it only compiles the shells. Start each once: Electron under Playwright with a virtual
-      display, Tauri as a built binary.
-    - **Room for the demos:** each example is its own app, `examples/<name>/` with `web/`,
-      `electron/` and `tauri/`, sharing `examples/shared/`; the first two are Tasks and Runs.
+- **The examples.** Twelve apps in `examples/<name>/{web,electron,tauri}`, each a Tidevann product
+  built only on the packages' public exports, with a fake backend kept per app
+  (`tidevann-shared`). They are tasks; runs, a jobs console; records; three live dashboards
+  (metrics, status and analytics); notes; dataviz; models, with chat and compare; music; podcast;
+  and video. Each passed a scripted click-through of every page and control. `make examples`
+  builds them all, `make <name>-web|-electron|-tauri` runs one, and Pages publishes them at
+  `/sokkel-ui/examples/` beside Storybook.
+- **CI starts each shell once.** CI builds every web app and checks every shell but never starts
+  one: start Electron under Playwright with a virtual display and Tauri as a built binary, and
+  take a still of each.
 
 ## Next
 
 - **Smaller start bundles, what is left.** Every library only some parts need is an optional peer,
-  and the heavy ones load on first use. Left in every page's start: React and the frame (`Shell`,
-  `Rail`, `AccountMenu`, with Base UI's menu, popover and tooltip on floating-ui), which the menu's
-  popup could load on first open. On a dashboard `chartLegend` still brings every kind with the page: split each kind's
-  shaping of rows, which the legend needs, from its option builder, which can load with ECharts.
-  `cmdk` stays a dependency while `Shell`'s palette is drawn with it. The CSS has no room left:
-  `styles.css` holds every component's classes, so each new part adds to every app's stylesheet,
-  and the forms and music pages stand at their CSS budgets (51 and 52 kB). Move apps to
-  `styles-base.css` with each module's sources, or split the stylesheet by package area, rather
-  than raise the budgets.
+  and the heavy ones, Base UI's menu among them, load on first use. Left:
+    - On a dashboard, `chartLegend` still brings every chart kind with the page. Split each kind's
+      shaping of rows, which the legend needs, from its option builder, which can load with ECharts.
+    - The palette's lazy chunk carries cmdk's `Command.Dialog` and the Radix dialog stack behind it
+      (about 21 kB), which cmdk attaches whether or not it is used. Replace or vendor cmdk.
+    - `styles.css` holds every component's classes, so each new part adds to every app's
+      stylesheet. A Vite plugin that writes the `@source` list from the app's own imports would
+      give every app the lean stylesheet without a hand-kept list. Leaving out the 27 primitives no
+      part uses would take the forms page from about 48 to 38 kB.
 - **Adoption.** Apps adopt the library one pattern per PR, each pinning a published version. The
   app adds a check in the same PR that refuses its own hand-rolled version of that pattern, so it
   cannot come back. A part an app needs to differ becomes an option here, never a local edit. The
@@ -135,23 +125,56 @@ to `plan.md` when it ships.
   examples workflow; until then, nothing to build.
 
 - **Parts the app stories still build.** A letter header (avatar, sender, address, time, the
-  attachment mark, folding over its body) for Mail; a usage line (tokens, latency, time to first
-  token) and a model's answer column for Playground, with a streaming caret as a `Markdown` option;
+  attachment mark, folding over its body) for Mail;
   one detail sheet for the Workspace, Files and Admin detail panes;
   the board item's panel with its checklist; a sideways-scrolling chip row with one chosen; a
   channel row (avatar, name, followers, Follow) and an action cluster for a watch page; checkboxes
   with a color dot for calendar toggles.
-- **Gaps from a records app (2026-11-08)**, its screens laid beside Apps/Records: a
-  period picker (the recent periods of a type with their ids, newest first, and any other id typed
-  in); an API playground
-  composition (method, path, query parameters, send, the answer's status, time and body, copy as
-  curl, the server's own requests as presets in a side panel); a grouped list of examples in tabs
-  beside an editor; the palette's foot (the app's mark, the keys that open a row and the palette); a
-  server's state for the top bar (a dot, its name and version, a menu); a chevron at the end of a
-  row that opens a page; a computed answer drawn read only with why, and a clear for an optional
-  yes or no; fields in a row lined up when one has a description; a line saying what each theme
-  is in `ThemePicker`. A `--color-*` name exists only once a class uses it, so a prop that takes a
-  CSS color takes the raw token (`var(--status-running)`); decide whether every color is emitted.
+- **The records app's conversion.** `examples/records/GAPS.md` maps every screen of the records app
+  onto the library and ends with the work left, in order:
+    - sheets that resize from their left edge and keep their width
+    - repeating answers
+    - a grouped list of examples in tabs beside an editor
+    - its two themes named by their look: a steel-blue chrome and a warm white with an ember accent
+    - a free-form detail under an opened `DataTable` row
+    - the rest of `ApiPlayground`
+    - more modes for the entry grid
+    - `TreeSelect` scopes
+    - counts beside `BarList`'s bars
+
+    A `--color-*` name exists only once a class uses it, so a prop that takes a CSS color takes the
+    raw token (`var(--status-running)`); decide whether every color is emitted.
+
+- **Gaps the examples found (2026-11-09)**, still open:
+    - **Frame:**
+        - a rail that shows its places above its body, not behind a row
+        - ⌘K refused while a closing dialog still counts as a layer
+        - `useUnsavedChanges` blocking an app's hash route as well as the tab closing
+    - **Tables:**
+        - `DataTable` heads that take a node (a type badge)
+        - a list variant with its own search
+        - `stack: 'lead'` passing a press on a non-control through to the row
+        - blank space under stacked cards
+        - windowing in `TrackList`, and a `TrackList` row that links to a page
+    - **Dashboards:**
+        - `DashboardGrid` spans that follow their container, not the window
+        - panels moved by drag
+        - custom ranges with a time of day
+        - a phone layout for an editor beside its live preview
+    - **Charts and maps:**
+        - PNG export from `MapView`
+        - colors mapped from values in a chart's spec, so run states take their status colors
+        - country fills from a world geometry
+        - a basemap that works offline
+    - **Graphs:**
+        - a small engine-free pipeline glyph for lists
+        - `RunGraph` and dependency graphs fitting a phone, as `NetworkGraph` does
+        - a live force layout with dragging
+    - **Editors:**
+        - `CodeEditor` following a `[[link]]` on Mod-click
+        - backlink lines drawn as Markdown
+        - `Tree` reordering within a folder, dragging from the keyboard, and opening a parent when it is chosen
+    - **Media:** artwork for the media session from drawn covers.
 - **Gaps from a query app (2026-11-08)**, found moving an app with a jq editor onto 0.10.6:
     - **Completions listed twice in `CodeEditor`.** An app's own `completions` (one per builtin,
       with signatures as `detail` and a summary as `docs`) are offered beside the language's own

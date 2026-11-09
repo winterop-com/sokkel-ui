@@ -1,33 +1,38 @@
 'use client'
 
 import * as React from 'react'
-import { Menu as MenuPrimitive } from '@base-ui/react/menu'
+import type { Menu as BaseMenu } from '@base-ui/react/menu'
 
 import { cn } from '../../lib/utils'
 import { returnFocusOnKeyboard } from '../../lib/focus'
+import { menu as MenuPrimitive } from './deferred-menu'
 import { ChevronRightIcon, CheckIcon } from 'lucide-react'
 
-export type DropdownMenuProps = MenuPrimitive.Root.Props
+export type DropdownMenuProps = BaseMenu.Root.Props
 
+/**
+ * A menu opened from a trigger. Base UI's menu loads once the page is drawn, the trigger drawn until
+ * then by a stand-in that looks and reads the same, a press on it opening the menu once it is here.
+ */
 function DropdownMenu({ ...props }: DropdownMenuProps) {
     return <MenuPrimitive.Root data-slot="dropdown-menu" {...props} />
 }
 
-export type DropdownMenuPortalProps = MenuPrimitive.Portal.Props
+export type DropdownMenuPortalProps = BaseMenu.Portal.Props
 
 function DropdownMenuPortal({ ...props }: DropdownMenuPortalProps) {
     return <MenuPrimitive.Portal data-slot="dropdown-menu-portal" {...props} />
 }
 
-export type DropdownMenuTriggerProps = MenuPrimitive.Trigger.Props
+export type DropdownMenuTriggerProps = BaseMenu.Trigger.Props
 
 function DropdownMenuTrigger({ ...props }: DropdownMenuTriggerProps) {
     return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props} />
 }
 
-export type DropdownMenuContentProps = MenuPrimitive.Popup.Props &
-    Pick<MenuPrimitive.Positioner.Props, 'align' | 'alignOffset' | 'side' | 'sideOffset' | 'anchor'> &
-    Pick<MenuPrimitive.Portal.Props, 'container'>
+export type DropdownMenuContentProps = BaseMenu.Popup.Props &
+    Pick<BaseMenu.Positioner.Props, 'align' | 'alignOffset' | 'side' | 'sideOffset' | 'anchor'> &
+    Pick<BaseMenu.Portal.Props, 'container'>
 
 function DropdownMenuContent({
     align = 'start',
@@ -63,13 +68,13 @@ function DropdownMenuContent({
     )
 }
 
-export type DropdownMenuGroupProps = MenuPrimitive.Group.Props
+export type DropdownMenuGroupProps = BaseMenu.Group.Props
 
 function DropdownMenuGroup({ ...props }: DropdownMenuGroupProps) {
     return <MenuPrimitive.Group data-slot="dropdown-menu-group" {...props} />
 }
 
-export type DropdownMenuLabelProps = MenuPrimitive.GroupLabel.Props & {
+export type DropdownMenuLabelProps = BaseMenu.GroupLabel.Props & {
     inset?: boolean
 }
 
@@ -84,7 +89,7 @@ function DropdownMenuLabel({ className, inset, ...props }: DropdownMenuLabelProp
     )
 }
 
-export type DropdownMenuItemProps = MenuPrimitive.Item.Props & {
+export type DropdownMenuItemProps = BaseMenu.Item.Props & {
     inset?: boolean
     variant?: 'default' | 'destructive'
 }
@@ -104,13 +109,13 @@ function DropdownMenuItem({ className, inset, variant = 'default', ...props }: D
     )
 }
 
-export type DropdownMenuSubProps = MenuPrimitive.SubmenuRoot.Props
+export type DropdownMenuSubProps = BaseMenu.SubmenuRoot.Props
 
 function DropdownMenuSub({ ...props }: DropdownMenuSubProps) {
     return <MenuPrimitive.SubmenuRoot data-slot="dropdown-menu-sub" {...props} />
 }
 
-export type DropdownMenuSubTriggerProps = MenuPrimitive.SubmenuTrigger.Props & {
+export type DropdownMenuSubTriggerProps = BaseMenu.SubmenuTrigger.Props & {
     inset?: boolean
 }
 
@@ -157,7 +162,7 @@ function DropdownMenuSubContent({
     )
 }
 
-export type DropdownMenuCheckboxItemProps = MenuPrimitive.CheckboxItem.Props & {
+export type DropdownMenuCheckboxItemProps = BaseMenu.CheckboxItem.Props & {
     inset?: boolean
 }
 
@@ -186,13 +191,13 @@ function DropdownMenuCheckboxItem({ className, children, checked, inset, ...prop
     )
 }
 
-export type DropdownMenuRadioGroupProps = MenuPrimitive.RadioGroup.Props
+export type DropdownMenuRadioGroupProps = BaseMenu.RadioGroup.Props
 
 function DropdownMenuRadioGroup({ ...props }: DropdownMenuRadioGroupProps) {
     return <MenuPrimitive.RadioGroup data-slot="dropdown-menu-radio-group" {...props} />
 }
 
-export type DropdownMenuRadioItemProps = MenuPrimitive.RadioItem.Props & {
+export type DropdownMenuRadioItemProps = BaseMenu.RadioItem.Props & {
     inset?: boolean
 }
 
@@ -220,7 +225,7 @@ function DropdownMenuRadioItem({ className, children, inset, ...props }: Dropdow
     )
 }
 
-export type DropdownMenuSeparatorProps = MenuPrimitive.Separator.Props
+export type DropdownMenuSeparatorProps = BaseMenu.Separator.Props
 
 function DropdownMenuSeparator({ className, ...props }: DropdownMenuSeparatorProps) {
     return <MenuPrimitive.Separator data-slot="dropdown-menu-separator" className={cn('-mx-1 my-1 h-px bg-border', className)} {...props} />

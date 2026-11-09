@@ -223,9 +223,9 @@ function History({ current, framed = false }: { current: string | undefined; fra
 export function ChatPage({ id }: { id: string | undefined }) {
     const { conversations, models, modelOf, prefs, loading } = useApp()
     const narrow = useNarrow()
-    const [showHistory, setShowHistory] = useStored('models.chat.history', true)
+    const [showHistory, setShowHistory] = useStored('chat.history', true)
     const [historyOpen, setHistoryOpen] = useState(false)
-    const [drafts, setDrafts] = useStored<Record<string, string>>('models.chat.drafts', {})
+    const [drafts, setDrafts] = useStored<Record<string, string>>('chat.drafts', {})
     const [files, setFiles] = useState<ComposerAttachment[]>([])
     const [read, setRead] = useState<Attachment[]>([])
     const all = useStore(live)

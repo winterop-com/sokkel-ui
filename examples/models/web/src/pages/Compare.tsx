@@ -79,7 +79,7 @@ function Answer({
 /** One prompt sent to two, three or four models side by side, each column streaming its answer with its usage under it. */
 export function ComparePage({ id }: { id: string | undefined }) {
     const { comparisons, models } = useApp()
-    const [draft, setDraft] = useStored<Draft>('models.compare.draft', FIRST_DRAFT)
+    const [draft, setDraft] = useStored<Draft>('compare.draft', FIRST_DRAFT)
     const all = useStore(live)
     const sorted = [...comparisons].sort((a, b) => b.time - a.time)
     const shown = id === 'new' ? undefined : id === undefined ? sorted[0] : comparisons.find((one) => one.id === id)

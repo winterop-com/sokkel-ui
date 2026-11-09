@@ -7,11 +7,10 @@ import {
     Home,
     ListPlus,
     ListVideo,
-    MoreHorizontal,
+    RectangleHorizontal,
     Plus,
     Share2,
     SlidersHorizontal,
-    ThumbsDown,
     ThumbsUp,
     User,
     Users,
@@ -20,22 +19,24 @@ import {
 import { useState } from 'react'
 
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
+import { ChannelRow } from '@winterop-com/sokkel-ui-media/ChannelRow'
+import { MediaActions, type MediaRating } from '@winterop-com/sokkel-ui-media/MediaActions'
 import { MediaCard, MediaGrid } from '@winterop-com/sokkel-ui-media/MediaCard'
+import { WatchLayout } from '@winterop-com/sokkel-ui-media/WatchLayout'
+import { TransportButton } from '@winterop-com/sokkel-ui/media/MediaControls'
 import { formatTime } from '@winterop-com/sokkel-ui/media/time'
 import { RelativeTime } from '@winterop-com/sokkel-ui/RelativeTime'
 import { CommentComposer, CommentThread, type ThreadComment } from '@winterop-com/sokkel-ui/CommentThread'
 import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
 import { ShowMore } from '@winterop-com/sokkel-ui/ShowMore'
 import { VideoPlayer } from '@winterop-com/sokkel-ui/media/VideoPlayer'
-import { ProfileRow } from '@winterop-com/sokkel-ui/ProfileRow'
 import { ChipBar } from '@winterop-com/sokkel-ui/ChipBar'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
 import { Toolbar, ToolbarTitle } from '@winterop-com/sokkel-ui/Toolbar'
 import { TopBar, type Crumb } from '@winterop-com/sokkel-ui/TopBar'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
-import { ButtonGroup } from '@winterop-com/sokkel-ui/primitives/button-group'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
+import { DropdownMenuItem } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@winterop-com/sokkel-ui/primitives/select'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import type { KindColor } from '@winterop-com/sokkel-ui/lib/kind'
@@ -44,7 +45,7 @@ import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import captions from '../media/fixtures/captions.vtt?url'
 import clip from '../media/fixtures/clip.webm?url'
-import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /**
  * A video site in the library's frame: a home grid of videos under topic chips, and a watch page
@@ -57,11 +58,11 @@ export default meta
 
 type Channel = 'ada' | 'grace' | 'linus' | 'margaret'
 
-const CHANNELS: Record<Channel, { color: KindColor; followers: string }> = {
-    ada: { color: 'blue', followers: '48.2k followers' },
-    grace: { color: 'violet', followers: '312k followers' },
-    linus: { color: 'green', followers: '9.6k followers' },
-    margaret: { color: 'pink', followers: '127k followers' },
+const CHANNELS: Record<Channel, { color: KindColor; followers: number }> = {
+    ada: { color: 'blue', followers: 48_200 },
+    grace: { color: 'violet', followers: 312_000 },
+    linus: { color: 'green', followers: 9_600 },
+    margaret: { color: 'pink', followers: 127_000 },
 }
 
 interface Video {
@@ -390,63 +391,94 @@ function Comments() {
 
 function WatchPage() {
     const [following, setFollowing] = useState(false)
+    const [rating, setRating] = useState<MediaRating>(null)
+    const [saved, setSaved] = useState(false)
+    const [theater, setTheater] = useState(false)
     const channel = CHANNELS[WATCHING.channel]
     return (
         <Page>
-            <Row gap="xl" align="start" stackBelow="xl">
-                <Stack gap="lg" className="flex-1">
+            <WatchLayout
+                theater={theater}
+                player={
                     <VideoPlayer
                         src={`${clip}#t=24`}
                         preload="auto"
                         defaultControlsVisible
                         tracks={[{ src: captions, label: 'English', lang: 'en', default: true }]}
+                        actions={
+                            <TransportButton
+                                tone="overlay"
+                                size="md"
+                                label="Theater mode"
+                                pressed={theater}
+                                onClick={() => setTheater(!theater)}
+                            >
+                                <RectangleHorizontal aria-hidden />
+                            </TransportButton>
+                        }
                     />
+                }
+                aside={
+                    <Stack>
+                        <Topics />
+                        <Stack>
+                            {NEXT.map((video) => (
+                                <MediaCard
+                                    key={video.id}
+                                    layout="row"
+                                    shape="wide"
+                                    title={video.title}
+                                    subtitle={
+                                        <>
+                                            {video.channel}
+                                            <br />
+                                            <MetaLine inline items={[video.views, video.ago]} />
+                                        </>
+                                    }
+                                    cover={<Artwork cover={video.cover} wide />}
+                                    badge={formatTime(video.length)}
+                                    progress={video.watched}
+                                    href="#"
+                                    menu={videoMenu}
+                                />
+                            ))}
+                        </Stack>
+                    </Stack>
+                }
+            >
+                <Stack gap="lg">
                     <h1 className="text-title font-semibold">{WATCHING.title}</h1>
-                    <ProfileRow
+                    <ChannelRow
                         name={WATCHING.channel}
-                        detail={channel.followers}
+                        href="#"
+                        followers={channel.followers + (following ? 1 : 0)}
                         image={pictureOf(WATCHING.channel)}
                         color={channel.color}
-                        action={
-                            <Button size="sm" variant={following ? 'secondary' : 'default'} onClick={() => setFollowing(!following)}>
-                                {following ? 'Following' : 'Follow'}
-                            </Button>
-                        }
+                        following={following}
+                        onFollowingChange={setFollowing}
                         actions={
-                            <>
-                                <ButtonGroup>
-                                    <Button variant="outline" size="sm" aria-label="Like">
-                                        <ThumbsUp aria-hidden />
-                                        4.1k
-                                    </Button>
-                                    <Button variant="outline" size="sm" aria-label="Dislike">
-                                        <ThumbsDown aria-hidden />
-                                    </Button>
-                                </ButtonGroup>
-                                <Button variant="outline" size="sm">
-                                    <Share2 aria-hidden />
-                                    Share
-                                </Button>
-                                <Button variant="outline" size="sm">
-                                    <Bookmark aria-hidden />
-                                    Save
-                                </Button>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger render={<Button variant="outline" size="icon-sm" aria-label="More" />}>
-                                        <MoreHorizontal aria-hidden />
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="w-44">
-                                        <DropdownMenuItem>
-                                            <ListPlus aria-hidden />
-                                            Add to playlist
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem>
-                                            <Flag aria-hidden />
-                                            Report
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </>
+                            <MediaActions
+                                rating={rating}
+                                likes={4_100 + (rating === 'like' ? 1 : 0)}
+                                onRatingChange={setRating}
+                                actions={[
+                                    { id: 'share', label: 'Share', icon: <Share2 aria-hidden />, onSelect: () => undefined },
+                                    {
+                                        id: 'save',
+                                        label: saved ? 'Saved' : 'Save',
+                                        icon: <Bookmark className={saved ? 'fill-current' : undefined} aria-hidden />,
+                                        pressed: saved,
+                                        onSelect: () => setSaved(!saved),
+                                    },
+                                    { id: 'playlist', label: 'Add to playlist', icon: <ListPlus aria-hidden />, onSelect: () => undefined },
+                                ]}
+                                menu={
+                                    <DropdownMenuItem>
+                                        <Flag aria-hidden />
+                                        Report
+                                    </DropdownMenuItem>
+                                }
+                            />
                         }
                     />
                     <ShowMore variant="well" head={<MetaLine size="sm" tone="strong" items={[WATCHING.views, WATCHING.ago]} />}>
@@ -456,32 +488,7 @@ function WatchPage() {
                     </ShowMore>
                     <Comments />
                 </Stack>
-                <Stack as="aside" className="shrink-0 xl:w-96">
-                    <Topics />
-                    <Stack>
-                        {NEXT.map((video) => (
-                            <MediaCard
-                                key={video.id}
-                                layout="row"
-                                shape="wide"
-                                title={video.title}
-                                subtitle={
-                                    <>
-                                        {video.channel}
-                                        <br />
-                                        <MetaLine inline items={[video.views, video.ago]} />
-                                    </>
-                                }
-                                cover={<Artwork cover={video.cover} wide />}
-                                badge={formatTime(video.length)}
-                                progress={video.watched}
-                                href="#"
-                                menu={videoMenu}
-                            />
-                        ))}
-                    </Stack>
-                </Stack>
-            </Row>
+            </WatchLayout>
         </Page>
     )
 }

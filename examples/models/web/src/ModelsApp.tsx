@@ -113,7 +113,7 @@ export function ModelsApp({ frame }: { frame: Frame }) {
         const timer = setInterval(() => setNow(Date.now()), 30_000)
         return () => clearInterval(timer)
     }, [])
-    const [panelOpen, setPanelOpen] = useStored('models.chat.panel', false)
+    const [panelOpen, setPanelOpen] = useStored('chat.panel', false)
 
     useEffect(
         () =>

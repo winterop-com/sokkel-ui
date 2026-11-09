@@ -15,6 +15,7 @@ import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
 import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
 import { Artwork } from './Artwork'
 import type { Tier } from './bar-growth'
+import { skipBy, type MediaSkip } from './media-session'
 import {
     LiveMark,
     PlayButton,
@@ -32,6 +33,7 @@ import type { MediaRange } from '@winterop-com/sokkel-ui/media/time'
 import { nextRepeat, type RepeatMode } from './queue'
 import { useFramePosition } from './use-frame-position'
 
+export type { MediaSkip } from './media-session'
 export type { RepeatMode } from './queue'
 export type { Tier } from './bar-growth'
 
@@ -164,8 +166,8 @@ export interface Deck {
     onPrevious?: () => void
     onNext?: () => void
     steps: MediaSteps
-    /** The interval the skip buttons move, in seconds, and what moves it; no skip buttons without one. */
-    skip?: number
+    /** How far the skip buttons move, in seconds, one interval or each its own, and what moves it; no skip buttons without one. */
+    skip?: MediaSkip
     onSkip?: (seconds: number) => void
     rate: number
     rates: readonly number[]
@@ -427,17 +429,20 @@ export interface StepsProps {
 
 /**
  * Previous, play and next, named for chapters while they step through chapters, between the skip
- * buttons when the deck has an interval. A live stream's skip buttons are drawn disabled.
+ * buttons when the deck has an interval, each labeled and drawn with its own. A live stream's skip
+ * buttons are drawn disabled.
  */
 export function Steps({ deck, size = 'sm' }: StepsProps) {
     const { words, playing, onPlayingChange, onPrevious, onNext, skip, onSkip, live } = deck
     const chapter = deck.steps === 'chapter'
     const skipping = skip !== undefined && onSkip !== undefined
+    const back = skipping ? skipBy(skip, 'back') : 0
+    const forward = skipping ? skipBy(skip, 'forward') : 0
     return (
         <>
             {skipping && (
-                <TransportButton size={size} label={words.skipBack(skip)} onClick={() => onSkip(-skip)} disabled={live}>
-                    <SkipGlyph seconds={skip} back size={size} />
+                <TransportButton size={size} label={words.skipBack(back)} onClick={() => onSkip(-back)} disabled={live}>
+                    <SkipGlyph seconds={back} back size={size} />
                 </TransportButton>
             )}
             <TransportButton
@@ -453,8 +458,8 @@ export function Steps({ deck, size = 'sm' }: StepsProps) {
                 <SkipForward className="fill-current" aria-hidden />
             </TransportButton>
             {skipping && (
-                <TransportButton size={size} label={words.skipForward(skip)} onClick={() => onSkip(skip)} disabled={live}>
-                    <SkipGlyph seconds={skip} back={false} size={size} />
+                <TransportButton size={size} label={words.skipForward(forward)} onClick={() => onSkip(forward)} disabled={live}>
+                    <SkipGlyph seconds={forward} back={false} size={size} />
                 </TransportButton>
             )}
         </>

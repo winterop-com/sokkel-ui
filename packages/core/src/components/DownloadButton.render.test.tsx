@@ -26,6 +26,11 @@ describe('DownloadButton', () => {
         expect(paused).not.toContain('Pause the download')
     })
 
+    it('says its share as Progress says it, never certain before the end', () => {
+        expect(renderToStaticMarkup(<DownloadButton state="running" value={0.996} />)).toContain('&gt;99%')
+        expect(renderToStaticMarkup(<DownloadButton state="running" value={0.125} />)).toContain('13%')
+    })
+
     it('says why the last try failed on hover', () => {
         expect(renderToStaticMarkup(<DownloadButton state="idle" error="The server stopped answering." />)).toContain(
             'title="The server stopped answering."',

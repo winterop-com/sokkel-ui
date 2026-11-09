@@ -245,6 +245,10 @@ export default meta
 export const Description: StoryObj = { name: 'Description list', render: () => <Facts /> }
 export const Stats: StoryObj = { name: 'Stats', render: () => <Numbers /> }
 export const Timelines: StoryObj = { name: 'Timeline', render: () => <Events /> }
+/**
+ * A run's log twice: scrolling sideways, then wrapped with "rows" marked. On a phone the wrapped
+ * log sets each line's time, level and source over its text, which keeps the width of the log.
+ */
 export const Log: StoryObj = { name: 'Log view', render: () => <Logs /> }
 /** A log in the terminal face, its lines carrying Nerd Font icons: a Powerline prompt, git and run states. */
 export const LogIcons: StoryObj = { name: 'Log icons', render: () => <LogView lines={ICON_LOG} /> }

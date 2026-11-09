@@ -1,30 +1,36 @@
 'use client'
 
 import * as React from 'react'
-import { ContextMenu as ContextMenuPrimitive } from '@base-ui/react/context-menu'
+import type { ContextMenu as BaseContextMenu } from '@base-ui/react/context-menu'
 import { cn } from '../../lib/cn'
+import { contextMenu as ContextMenuPrimitive } from './deferred-menu'
 import { ChevronRightIcon, CheckIcon } from 'lucide-react'
 
-export type ContextMenuProps = ContextMenuPrimitive.Root.Props
+export type ContextMenuProps = BaseContextMenu.Root.Props
 
+/**
+ * A menu opened by a right click or a long press on its trigger. Base UI's context menu loads when
+ * the first one is drawn, the trigger drawn until then by a stand-in that keeps the browser's menu
+ * away, a right click on it opening the menu at its point once it is here.
+ */
 function ContextMenu({ ...props }: ContextMenuProps) {
     return <ContextMenuPrimitive.Root data-slot="context-menu" {...props} />
 }
 
-export type ContextMenuPortalProps = ContextMenuPrimitive.Portal.Props
+export type ContextMenuPortalProps = BaseContextMenu.Portal.Props
 
 function ContextMenuPortal({ ...props }: ContextMenuPortalProps) {
     return <ContextMenuPrimitive.Portal data-slot="context-menu-portal" {...props} />
 }
 
-export type ContextMenuTriggerProps = ContextMenuPrimitive.Trigger.Props
+export type ContextMenuTriggerProps = BaseContextMenu.Trigger.Props
 
 function ContextMenuTrigger({ className, ...props }: ContextMenuTriggerProps) {
     return <ContextMenuPrimitive.Trigger data-slot="context-menu-trigger" className={cn('select-none', className)} {...props} />
 }
 
-export type ContextMenuContentProps = ContextMenuPrimitive.Popup.Props &
-    Pick<ContextMenuPrimitive.Positioner.Props, 'align' | 'alignOffset' | 'side' | 'sideOffset'>
+export type ContextMenuContentProps = BaseContextMenu.Popup.Props &
+    Pick<BaseContextMenu.Positioner.Props, 'align' | 'alignOffset' | 'side' | 'sideOffset'>
 
 function ContextMenuContent({
     className,
@@ -56,13 +62,13 @@ function ContextMenuContent({
     )
 }
 
-export type ContextMenuGroupProps = ContextMenuPrimitive.Group.Props
+export type ContextMenuGroupProps = BaseContextMenu.Group.Props
 
 function ContextMenuGroup({ ...props }: ContextMenuGroupProps) {
     return <ContextMenuPrimitive.Group data-slot="context-menu-group" {...props} />
 }
 
-export type ContextMenuLabelProps = ContextMenuPrimitive.GroupLabel.Props & {
+export type ContextMenuLabelProps = BaseContextMenu.GroupLabel.Props & {
     inset?: boolean
 }
 
@@ -77,7 +83,7 @@ function ContextMenuLabel({ className, inset, ...props }: ContextMenuLabelProps)
     )
 }
 
-export type ContextMenuItemProps = ContextMenuPrimitive.Item.Props & {
+export type ContextMenuItemProps = BaseContextMenu.Item.Props & {
     inset?: boolean
     variant?: 'default' | 'destructive'
 }
@@ -97,13 +103,13 @@ function ContextMenuItem({ className, inset, variant = 'default', ...props }: Co
     )
 }
 
-export type ContextMenuSubProps = ContextMenuPrimitive.SubmenuRoot.Props
+export type ContextMenuSubProps = BaseContextMenu.SubmenuRoot.Props
 
 function ContextMenuSub({ ...props }: ContextMenuSubProps) {
     return <ContextMenuPrimitive.SubmenuRoot data-slot="context-menu-sub" {...props} />
 }
 
-export type ContextMenuSubTriggerProps = ContextMenuPrimitive.SubmenuTrigger.Props & {
+export type ContextMenuSubTriggerProps = BaseContextMenu.SubmenuTrigger.Props & {
     inset?: boolean
 }
 
@@ -130,7 +136,7 @@ function ContextMenuSubContent({ ...props }: ContextMenuSubContentProps) {
     return <ContextMenuContent data-slot="context-menu-sub-content" className="shadow-lg" side="right" {...props} />
 }
 
-export type ContextMenuCheckboxItemProps = ContextMenuPrimitive.CheckboxItem.Props & {
+export type ContextMenuCheckboxItemProps = BaseContextMenu.CheckboxItem.Props & {
     inset?: boolean
 }
 
@@ -156,13 +162,13 @@ function ContextMenuCheckboxItem({ className, children, checked, inset, ...props
     )
 }
 
-export type ContextMenuRadioGroupProps = ContextMenuPrimitive.RadioGroup.Props
+export type ContextMenuRadioGroupProps = BaseContextMenu.RadioGroup.Props
 
 function ContextMenuRadioGroup({ ...props }: ContextMenuRadioGroupProps) {
     return <ContextMenuPrimitive.RadioGroup data-slot="context-menu-radio-group" {...props} />
 }
 
-export type ContextMenuRadioItemProps = ContextMenuPrimitive.RadioItem.Props & {
+export type ContextMenuRadioItemProps = BaseContextMenu.RadioItem.Props & {
     inset?: boolean
 }
 
@@ -187,7 +193,7 @@ function ContextMenuRadioItem({ className, children, inset, ...props }: ContextM
     )
 }
 
-export type ContextMenuSeparatorProps = ContextMenuPrimitive.Separator.Props
+export type ContextMenuSeparatorProps = BaseContextMenu.Separator.Props
 
 function ContextMenuSeparator({ className, ...props }: ContextMenuSeparatorProps) {
     return (

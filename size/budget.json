@@ -2,31 +2,31 @@
     "forms": {
         "engines": [],
         "start": 189,
-        "lazy": 66,
+        "lazy": 78,
         "css": 51
     },
     "forms-lean": {
         "engines": [],
         "start": 189,
-        "lazy": 66,
+        "lazy": 78,
         "css": 21
     },
     "dashboard": {
         "engines": ["echarts"],
         "start": 197,
-        "lazy": 398,
+        "lazy": 412,
         "css": 52
     },
     "map": {
         "engines": ["maplibre"],
         "start": 171,
-        "lazy": 336,
+        "lazy": 352,
         "css": 62
     },
     "music": {
         "engines": [],
         "start": 174,
-        "lazy": 30,
+        "lazy": 45,
         "css": 52
     }
 }

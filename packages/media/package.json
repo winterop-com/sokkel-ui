@@ -30,6 +30,10 @@
             "types": "./dist/ChapterList.d.ts",
             "import": "./dist/ChapterList.js"
         },
+        "./ChannelRow": {
+            "types": "./dist/ChannelRow.d.ts",
+            "import": "./dist/ChannelRow.js"
+        },
         "./chapters": {
             "types": "./dist/chapters.d.ts",
             "import": "./dist/chapters.js"
@@ -45,6 +49,10 @@
         "./Lyrics": {
             "types": "./dist/Lyrics.d.ts",
             "import": "./dist/Lyrics.js"
+        },
+        "./MediaActions": {
+            "types": "./dist/MediaActions.d.ts",
+            "import": "./dist/MediaActions.js"
         },
         "./MediaBar": {
             "types": "./dist/MediaBar.d.ts",
@@ -74,6 +82,10 @@
             "types": "./dist/ReorderableTrackList.d.ts",
             "import": "./dist/ReorderableTrackList.js"
         },
+        "./SleepTimer": {
+            "types": "./dist/SleepTimer.d.ts",
+            "import": "./dist/SleepTimer.js"
+        },
         "./timeline": {
             "types": "./dist/timeline.d.ts",
             "import": "./dist/timeline.js"
@@ -81,6 +93,10 @@
         "./TrackList": {
             "types": "./dist/TrackList.d.ts",
             "import": "./dist/TrackList.js"
+        },
+        "./Transcript": {
+            "types": "./dist/Transcript.d.ts",
+            "import": "./dist/Transcript.js"
         },
         "./UpNext": {
             "types": "./dist/UpNext.d.ts",
@@ -101,6 +117,10 @@
         "./VideoStatsOverlay": {
             "types": "./dist/VideoStatsOverlay.d.ts",
             "import": "./dist/VideoStatsOverlay.js"
+        },
+        "./WatchLayout": {
+            "types": "./dist/WatchLayout.d.ts",
+            "import": "./dist/WatchLayout.js"
         }
     },
     "publishConfig": {

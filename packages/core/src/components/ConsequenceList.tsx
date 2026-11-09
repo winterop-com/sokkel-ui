@@ -13,30 +13,37 @@ export interface Consequence {
 }
 
 export interface ConsequenceListWords {
+    /** The heading over things that are lost, with `tone` `critical`. */
     heading: string
+    /** The heading over what an action changes, moves or keeps, or the facts of it (room freed, files removed), with `tone` `neutral`. */
+    changed: string
 }
 
-const WORDS: ConsequenceListWords = { heading: 'Also deleted' }
+const WORDS: ConsequenceListWords = { heading: 'Also deleted', changed: 'What this changes' }
 
 export interface ConsequenceListProps {
     items: readonly Consequence[]
-    /** `critical` when they are lost, `neutral` when they are only moved or kept. */
+    /** `critical` when they are lost, `neutral` when they are only moved or kept, or are facts. */
     tone?: 'critical' | 'neutral'
+    /** The heading for this list alone, such as "Moves to grace"; the words' heading for the `tone` when absent. */
+    heading?: ReactNode
     className?: string
     words?: Partial<ConsequenceListWords>
 }
 
 /**
  * What goes with the thing an action removes or changes, a row per kind with its count, under a
- * heading that says what happens to them. It sits in a confirm's body, before the verb.
+ * heading that says what happens to them. A `critical` list is headed Also deleted and a
+ * `neutral` one What this changes, which also reads right over facts, unless the list has its own
+ * `heading`. It sits in a confirm's body, before the verb.
  */
-export function ConsequenceList({ items, tone = 'critical', className, words: given }: ConsequenceListProps) {
+export function ConsequenceList({ items, tone = 'critical', heading, className, words: given }: ConsequenceListProps) {
     const words = { ...WORDS, ...given }
     if (items.length === 0) return null
     return (
         <div className={cn('flex flex-col gap-1.5', className)}>
             <p className={cn('text-xs font-medium', tone === 'critical' ? 'text-critical-ink' : 'text-muted-foreground')}>
-                {words.heading}
+                {heading ?? (tone === 'critical' ? words.heading : words.changed)}
             </p>
             <ul
                 className={cn(

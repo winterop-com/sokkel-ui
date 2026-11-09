@@ -1,4 +1,4 @@
-import { collection } from 'tidevann-shared/backend'
+import { collection, storageKey } from 'tidevann-shared/backend'
 
 import { type AnswerValue, type Answers, cellKey, formOf, FORMS, questionsOf, answerIssue, testAnswers, testPlace } from './forms'
 import { COUNTRY, PLACES, placeOf } from './geo'
@@ -236,12 +236,10 @@ function previousQuarter(): string {
     return quarter === 0 ? `${String(date.getFullYear() - 1)}Q4` : `${String(date.getFullYear())}Q${String(quarter)}`
 }
 
-export const receipts = collection<Receipt>('records-receipts', seedReceipts)
-export const households = collection<Household>('records-households', seedHouseholds)
+export const receipts = collection<Receipt>('receipts', seedReceipts)
+export const households = collection<Household>('households', seedHouseholds)
 
 // The server: whether it answers, kept in this browser so the outage survives a reload.
-
-const OFFLINE_KEY = 'tidevann-demo:records-offline'
 
 export const SERVER = {
     name: 'Tidevann records',
@@ -252,8 +250,9 @@ export const SERVER = {
 
 /** Whether the demo server has been told not to answer. */
 export function serverDown(): boolean {
+    const key = storageKey('offline')
     try {
-        return localStorage.getItem(OFFLINE_KEY) === 'yes'
+        return localStorage.getItem(key) === 'yes'
     } catch {
         return false
     }
@@ -262,9 +261,10 @@ export function serverDown(): boolean {
 const downListeners = new Set<() => void>()
 
 export function setServerDown(down: boolean): void {
+    const key = storageKey('offline')
     try {
-        if (down) localStorage.setItem(OFFLINE_KEY, 'yes')
-        else localStorage.removeItem(OFFLINE_KEY)
+        if (down) localStorage.setItem(key, 'yes')
+        else localStorage.removeItem(key)
     } catch {
         // Storage refused: the outage lasts this session only.
     }

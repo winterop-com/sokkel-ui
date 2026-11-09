@@ -228,7 +228,8 @@ export interface RefreshControlProps {
  * often it refreshes by itself, which closes on a choice, and when it last did, already written for
  * a reader. With
  * `onPausedChange`, a pause button holds the refreshing a while without losing the interval, as
- * while reading a moment of a live dashboard.
+ * while reading a moment of a live dashboard. `useRefresh` runs the app's refresh on the interval
+ * and pause the control sets, and gives it `onRefresh` and `refreshing`.
  */
 export function RefreshControl({
     onRefresh,

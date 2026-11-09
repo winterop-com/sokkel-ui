@@ -30,6 +30,13 @@ examples/
                  albums, artists and the library's tree in the rail, favorites, playlists ordered by
                  drag, simulated downloads, endless radio, the queue, the full screen with its
                  visualizer and timed words, crossfade and the media keys
+  video/         a video site that really plays: clips drawn and encoded in the page (WebCodecs into
+                 WebM, kept in IndexedDB), a watch page with the channel, likes, saving, sharing,
+                 downloads, comments and up next, theater mode and stats, channels, subscriptions,
+                 a library with history and playlists, search, and player settings that stick
+  podcast/       podcasts that really play: episodes spoken in the page with a transcript that
+                 follows, chapters, speed, a sleep timer, the queue, New as an inbox, downloads,
+                 Discover, stats and settings
   example.mk     the targets every example's Makefile includes
 ```
 
@@ -51,10 +58,13 @@ Every web app is published beside the Storybook at
 shows each one's still, its name, its line and the packages it installs. `.github/workflows/pages.yaml`
 publishes them on every push to main; `make examples-site` builds the same site into
 `examples-static/` (`scripts/examples-site.ts`, whose `--shots` takes the stills in Playwright's
-chromium). Every app builds with `base: './'`, so it runs under any path. Published, the examples
-share one origin and so one `localStorage`: the look chosen in one is worn by all, and no two
-examples may give a collection the same name, so a new one prefixes its collections with its own
-name, as `dataviz-charts` does.
+chromium). The examples never hold Storybook back: when the site fails to build, Storybook is
+published without it and the run fails on its last step, and when chromium does not install, or a
+still cannot be taken, the index shows the card without one. Every app builds with `base: './'`, so
+it runs under any path. Published, the examples share one origin and so one `localStorage`: the
+look chosen in one is worn by all, while each example's data is kept under its own prefix
+(`tidevann-demo:<example>:`), so no two examples' data can clash, whatever their collections are
+named.
 
 ## Running one
 
@@ -62,7 +72,7 @@ From the repository root, after `make build` builds the packages, every example 
 targets as `make <example>-<target>`; `make examples-list` names them:
 
 ```sh
-make tasks-web          # build the web app and serve it (Tasks on 4180, Runs on 4181, Records on 4182, Models on 4183, Dataviz on 4184, Metrics on 4185, Music on 4186, Notes on 4188, Status on 4190, Analytics on 4191)
+make tasks-web          # build the web app and serve it (Tasks on 4180, Runs on 4181, Records on 4182, Models on 4183, Dataviz on 4184, Metrics on 4185, Music on 4186, Video on 4187, Notes on 4188, Podcasts on 4189, Status on 4190, Analytics on 4191)
 make tasks-dev          # the web app's dev server
 make tasks-electron     # open it in Electron
 make tasks-tauri        # open it in Tauri
@@ -90,10 +100,12 @@ Nothing needs Node: every script runs its tools under bun (`bun --bun tsc`, `vit
   source, so the app runs Tailwind v4 through `@tailwindcss/vite`, and its `app.css` adds
   `examples/shared` as a source.
 - **What they share:** `examples/shared/` is the local package `tidevann-shared`, installed the same
-  way: `tidevann-shared/backend` (typed collections kept in localStorage, answering promises after a
-  short delay as a server would), `tidevann-shared/frame` (`useFrame`: the look, the window, the
-  route and the palette's shared groups, Reset demo data among them), `tidevann-shared/router`
-  (a hash route of its own) and `tidevann-shared/mark`.
+  way: `tidevann-shared/backend` (typed collections kept in localStorage under the example's own
+  prefix, which `configureDemo({ app })` in its `main.tsx` names, answering promises after a short
+  delay as a server would; `useStored` keys take the same prefix, and `storageKey` gives it to any
+  other key the example keeps), `tidevann-shared/frame` (`useFrame`: the look, the window, the
+  route and the palette's shared groups, Reset demo data among them), `tidevann-shared/router` (a
+  hash route of its own) and `tidevann-shared/mark`.
 - **The desktop frame:** inside a shell the app passes `desktop` to `Shell`, so its top strip is the
   window's title bar, with room for the macOS window buttons. Electron uses `hiddenInset`; Tauri an
   overlay title bar with the title hidden, and `capabilities/default.json` lets the page drag, zoom
@@ -103,15 +115,18 @@ Nothing needs Node: every script runs its tools under bun (`bun --bun tsc`, `vit
   enters or leaves full screen, which `useFrame` passes on as `desktop.fullscreen`, so the room for
   the buttons goes while macOS hides them.
 - **Assets:** the web build uses relative asset paths, so the shells load it from a file URL.
-- **Maps in the dev server:** an example that draws maps adds a small plugin to
-  `optimizeDeps.rolldownOptions` in its `vite.config.ts` (as `dataviz` does), since the dev server's
-  prebundling cannot load the maps package's `?worker&url` import of maplibre's worker. The build
-  needs nothing.
+- **Maps in the dev server:** an example that draws maps adds `mapsVite()` from
+  `@winterop-com/sokkel-ui-maps/vite` to the plugins in its `vite.config.ts`, as any app does, since
+  the dev server's prebundling cannot load the maps package's `?worker&url` import of maplibre's
+  worker. The build needs nothing.
 
 ## Adding one
 
 Copy an example's folder, rename it, and change its name in `web/index.html`, the two
 `package.json` files, `example.json`, `electron/src/main.ts`'s title, and `tauri/src-tauri/Cargo.toml`
-and `tauri.conf.json` (`productName`, `identifier`, the window's title). Give its `Makefile` a port of
-its own. The root Makefile, the workflows and the examples site pick it up by its folder; without an
-`example.json`, the index takes its name and line from the comment that heads its `Makefile`.
+and `tauri.conf.json` (`productName`, `identifier`, the window's title). In `web/src/main.tsx`,
+`configureDemo({ app })` takes the new folder's name, which keeps its data apart from every other
+example's; the backend refuses to read or write until it is called, and its collections need no
+prefix of their own. Give its `Makefile` a port of its own. The root Makefile, the workflows and the
+examples site pick it up by its folder; without an `example.json`, the index takes its name and line
+from the comment that heads its `Makefile`.

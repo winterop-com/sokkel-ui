@@ -64,7 +64,6 @@ const HELD: Record<string, readonly (keyof Preferences)[]> = {
     general: ['start', 'clock', 'newTab', 'delay', 'confirmCancel'],
     theme: ['scheme', 'density', 'motion', 'codeSize'],
     shortcuts: ['hints', 'singleKey'],
-    account: ['name', 'email'],
     server: ['history', 'maintenance'],
 }
 
@@ -324,6 +323,7 @@ function usePreferences(): { groups: SettingsGroup[]; reset: (section?: string) 
                     id: 'account',
                     label: 'Account',
                     icon: User,
+                    reset: false,
                     settings: [
                         {
                             id: 'name',
@@ -590,10 +590,10 @@ const PLACES: RailGroup[] = [
  * Reset to defaults, the note that changes are kept as they are made, and Done back to where the
  * person came from. A phone puts the search and a row of the sections on top of the page.
  */
-function SettingsPage({ search: initialSearch = '', synced = false }: { search?: string; synced?: boolean }) {
+function SettingsPage({ search: initialSearch = '', synced = false, open }: { search?: string; synced?: boolean; open?: string }) {
     const preferences = usePreferences()
     const [collapsed, setCollapsed] = useState(false)
-    const [active, setActive] = useState(synced ? 'theme' : 'general')
+    const [active, setActive] = useState(open ?? (synced ? 'theme' : 'general'))
     const [search, setSearch] = useState(initialSearch)
     return (
         <TooltipProvider>
@@ -683,6 +683,12 @@ export const Synced: StoryObj = {
  * row of the sections on top.
  */
 export const Page: StoryObj = { render: () => <SettingsPage /> }
+
+/**
+ * The page open on Account, a section with nothing to put back (`reset: false` on the section): its
+ * footer leaves Reset to defaults out and keeps the note and Done.
+ */
+export const NoReset: StoryObj = { name: 'No reset', render: () => <SettingsPage open="account" /> }
 
 /** The page with "run" typed into its search: the sections narrowed to those with a matching setting, and General to its matching rows. */
 export const PageSearch: StoryObj = { name: 'Page search', render: () => <SettingsPage search="run" /> }

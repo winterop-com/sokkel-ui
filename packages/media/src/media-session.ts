@@ -25,9 +25,9 @@ export interface MediaSessionHandlers {
     stop?: () => void
     previoustrack?: () => void
     nexttrack?: () => void
-    /** Moves back by the seconds given: the system's own offset, or the session's `skip`. */
+    /** Moves back by the seconds given: the system's own offset, or the session's `skip` back. */
     seekbackward?: (seconds: number) => void
-    /** Moves forward by the seconds given: the system's own offset, or the session's `skip`. */
+    /** Moves forward by the seconds given: the system's own offset, or the session's `skip` forward. */
     seekforward?: (seconds: number) => void
     /** Goes to the second given. */
     seekto?: (seconds: number) => void
@@ -55,8 +55,16 @@ export interface MediaSessionInfo {
     rate?: number
     playing: boolean
     handlers?: MediaSessionHandlers
-    /** How far `seekbackward` and `seekforward` move when the system gives no offset, in seconds: 15 by default. */
-    skip?: number
+    /** How far `seekbackward` and `seekforward` move when the system gives no offset, in seconds: 15 by default, or each its own. */
+    skip?: MediaSkip
+}
+
+/** How far a skip moves, in seconds: one interval both ways, or each way its own, as back 15 and forward 30. */
+export type MediaSkip = number | { readonly back: number; readonly forward: number }
+
+/** The seconds a skip moves one way. */
+export function skipBy(skip: MediaSkip, way: 'back' | 'forward'): number {
+    return typeof skip === 'number' ? skip : skip[way]
 }
 
 /** How far the system's seek buttons move when it gives no offset, in seconds. */
@@ -149,15 +157,15 @@ export function runAction(
     handlers: MediaSessionHandlers | undefined,
     action: MediaSessionActionName,
     details: Pick<MediaSessionActionDetails, 'seekOffset' | 'seekTime'>,
-    skip: number = MEDIA_SESSION_SKIP,
+    skip: MediaSkip = MEDIA_SESSION_SKIP,
 ) {
     if (handlers === undefined) return
     switch (action) {
         case 'seekbackward':
-            handlers.seekbackward?.(details.seekOffset ?? skip)
+            handlers.seekbackward?.(details.seekOffset ?? skipBy(skip, 'back'))
             return
         case 'seekforward':
-            handlers.seekforward?.(details.seekOffset ?? skip)
+            handlers.seekforward?.(details.seekOffset ?? skipBy(skip, 'forward'))
             return
         case 'seekto':
             if (details.seekTime !== undefined) handlers.seekto?.(details.seekTime)
