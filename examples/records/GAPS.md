@@ -30,6 +30,8 @@ says what is missing. **Not covered** has no part yet.
    default is tidevann, then indigo, paper, contrast and terminal). The other two are a steel-blue
    chrome over the familiar gray and a warm white with an ember accent spent only where the app
    acts. Add them to `tokens.json` named for how they look (such as `steel` and `ember`).
+   **Closed:** the themes `steel` and `ember`, light and dark, each with its line in `ThemePicker`;
+   the example loads and offers its seven.
 5. **A row's own detail in `DataTable`.** The server page opens a row of a resource type into a
    free-form detail (each search parameter with its documentation) that is not more rows of the same
    shape. `childRows` only adds rows; add a detail drawn under an opened row.
@@ -180,11 +182,11 @@ mounts its control afresh as an issue comes or goes, which closed the period pic
 
 ## Settings and themes
 
-| The app's part                                      | Library part now                                                        | Coverage | What the app changes          |
-| --------------------------------------------------- | ----------------------------------------------------------------------- | -------- | ----------------------------- |
-| Settings: search, Appearance and Keyboard shortcuts | `SettingsDialog`, `ShortcutsDialog`                                     | Covered  |                               |
-| Themes as a list of names with a line on each       | `ThemePicker` `themeList`, `THEMES` with `description`                  | Partly   | Two of its themes are item 4. |
-| Light and dark                                      | `ThemePicker`'s scheme, `AccountMenu` scheme rows, `appearanceCommands` | Covered  |                               |
+| The app's part                                      | Library part now                                                        | Coverage | What the app changes                        |
+| --------------------------------------------------- | ----------------------------------------------------------------------- | -------- | ------------------------------------------- |
+| Settings: search, Appearance and Keyboard shortcuts | `SettingsDialog`, `ShortcutsDialog`                                     | Covered  |                                             |
+| Themes as a list of names with a line on each       | `ThemePicker` `themeList`, `THEMES` with `description`                  | Covered  | Its two own themes are `steel` and `ember`. |
+| Light and dark                                      | `ThemePicker`'s scheme, `AccountMenu` scheme rows, `appearanceCommands` | Covered  |                                             |
 
 ## Small parts
 

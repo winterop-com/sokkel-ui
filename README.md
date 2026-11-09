@@ -56,7 +56,7 @@ around in the app.
   `bun scripts/build-tokens.ts --check` fails when the CSS and the JSON disagree.
 - Themes are named for how they look, save `tidevann`, the base theme, named for the examples app
   that wears it. Tidevann defines every token and needs no `data-theme`; the others (amber, paper,
-  contrast, tokyo, vinyl, cassette, neon, ocean, indigo, terminal) override what they change, which
+  contrast, tokyo, vinyl, cassette, neon, ocean, indigo, terminal, steel, ember) override what they change, which
   may be any token: colors, typefaces, radius or density. An app picks its theme on `<html data-theme>`, `.dark`
   picks dark mode, and `data-theme-scope` draws one element in a theme of its own. A theme other
   than tidevann answers once its file is imported.

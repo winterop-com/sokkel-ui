@@ -130,8 +130,10 @@ tidevann does. Corners go by role: controls (buttons, fields, selects, toggles, 
 by `--control-radius` and surfaces (cards, boxed sections, popovers, menus, dialogs, code blocks)
 by `--surface-radius`, each `var(--radius)` unless a theme derives another from it, so one theme
 has sharp surfaces and round controls and another the reverse. Ocean (deep sea blues, teal), indigo
-(an indigo primary on cool neutrals) and terminal (green on black in the code face, a light console
-by day) use them.
+(an indigo primary on cool neutrals), terminal (green on black in the code face, a light console
+by day) and steel (a steel-blue rail, bars and heads over the cool gray) use them. Ember is the
+quiet one: warm white and neutral grays, with its ember spent only where the app acts (buttons,
+links, focus, the chosen place), so its hovers and heads stay gray.
 
 Applying and keeping the look is the library's too, never an app's: `useAppearance` keeps the theme,
 scheme, density, corners, typeface and motion in `localStorage` and wears them on `<html>`,

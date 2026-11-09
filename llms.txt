@@ -44,7 +44,7 @@ An app that offers every theme (a theme picker in its settings) imports them all
 @import '@winterop-com/sokkel-ui/themes.css';
 ```
 
-The themes are tidevann (the base theme, in `styles.css`, worn with no `data-theme`), amber, paper, contrast, tokyo, vinyl, cassette, neon, ocean, indigo and terminal.
+The themes are tidevann (the base theme, in `styles.css`, worn with no `data-theme`), amber, paper, contrast, tokyo, vinyl, cassette, neon, ocean, indigo, terminal, steel and ember.
 
 `styles.css` points Tailwind at every core module, so the CSS carries classes of components the app never imports (49 kB gzipped for a forms page). An app that wants only what it uses imports `styles-base.css` instead, then one line per module it imports, from any package: that module's list of sources, `sources/<module>.css` under the name the module is imported by. A list covers the module and every module it draws on, and an add-on's list brings the core lists it needs, so on this path it replaces the add-on's `styles.css` (the same forms page: 20 kB gzipped):
 

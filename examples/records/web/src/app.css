@@ -1,5 +1,11 @@
 @import '@winterop-com/sokkel-ui/styles.css';
 @import '@winterop-com/sokkel-ui-maps/styles.css';
+@import '@winterop-com/sokkel-ui/themes/indigo.css';
+@import '@winterop-com/sokkel-ui/themes/paper.css';
+@import '@winterop-com/sokkel-ui/themes/contrast.css';
+@import '@winterop-com/sokkel-ui/themes/terminal.css';
+@import '@winterop-com/sokkel-ui/themes/steel.css';
+@import '@winterop-com/sokkel-ui/themes/ember.css';
 
 /* The parts every example shares, which Tailwind would not find inside node_modules. */
 @source '../../../shared';
