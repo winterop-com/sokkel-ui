@@ -10,7 +10,9 @@ A shared React component library: one set of tokens and themes, Base UI primitiv
 apps are built from, and the Storybook stories that show and test them. Apps install it as a
 package and never copy from it, so one fix here reaches every app at its next version.
 
-The Storybook is published at **https://winterop-com.github.io/sokkel-ui/**.
+The Storybook is published at **https://winterop-com.github.io/sokkel-ui/**, and beside it the
+examples, Tidevann's apps built on the packages as an app is (see [`examples/`](examples/README.md)),
+at **https://winterop-com.github.io/sokkel-ui/examples/**.
 
 ## For agents
 

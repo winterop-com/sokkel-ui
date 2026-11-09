@@ -39,11 +39,22 @@ and inside each example:
   web/           the Vite app
   electron/      a thin Electron shell that opens web/dist, under the example's name
   tauri/         a thin Tauri shell that does the same
+  example.json   its name and one line, for the examples' index
   Makefile
 ```
 
 `.github/workflows/examples.yaml` builds every web app and checks every shell on each pull request
 that touches them. The size budget's apps are not examples; they live in `size/` at the root.
+
+Every web app is published beside the Storybook at
+**https://winterop-com.github.io/sokkel-ui/examples/**, under its folder's name, with an index that
+shows each one's still, its name, its line and the packages it installs. `.github/workflows/pages.yaml`
+publishes them on every push to main; `make examples-site` builds the same site into
+`examples-static/` (`scripts/examples-site.ts`, whose `--shots` takes the stills in Playwright's
+chromium). Every app builds with `base: './'`, so it runs under any path. Published, the examples
+share one origin and so one `localStorage`: the look chosen in one is worn by all, and no two
+examples may give a collection the same name, so a new one prefixes its collections with its own
+name, as `dataviz-charts` does.
 
 ## Running one
 
@@ -92,10 +103,15 @@ Nothing needs Node: every script runs its tools under bun (`bun --bun tsc`, `vit
   enters or leaves full screen, which `useFrame` passes on as `desktop.fullscreen`, so the room for
   the buttons goes while macOS hides them.
 - **Assets:** the web build uses relative asset paths, so the shells load it from a file URL.
+- **Maps in the dev server:** an example that draws maps adds a small plugin to
+  `optimizeDeps.rolldownOptions` in its `vite.config.ts` (as `dataviz` does), since the dev server's
+  prebundling cannot load the maps package's `?worker&url` import of maplibre's worker. The build
+  needs nothing.
 
 ## Adding one
 
 Copy an example's folder, rename it, and change its name in `web/index.html`, the two
-`package.json` files, `electron/src/main.ts`'s title, and `tauri/src-tauri/Cargo.toml` and
-`tauri.conf.json` (`productName`, `identifier`, the window's title). Give its `Makefile` a port of its
-own. The root Makefile and the workflow pick it up by its folder.
+`package.json` files, `example.json`, `electron/src/main.ts`'s title, and `tauri/src-tauri/Cargo.toml`
+and `tauri.conf.json` (`productName`, `identifier`, the window's title). Give its `Makefile` a port of
+its own. The root Makefile, the workflows and the examples site pick it up by its folder; without an
+`example.json`, the index takes its name and line from the comment that heads its `Makefile`.
