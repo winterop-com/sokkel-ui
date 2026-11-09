@@ -147,8 +147,8 @@ to `plan.md` when it ships.
           and removals, wired to `useUploads`, so cancel in the field also aborts the upload.
         - A submit that waits on checks, uploads and pending async checks, shows server errors on
           their fields, and refuses a second press.
-        - Repeated groups for a composed form, with stable keys (`SchemaForm` keys its items by
-          index today, so removing one shifts the issues), and moving one up or down.
+        - Repeated groups for a hand-composed form, as `SchemaForm`'s lists have (stable keys, marks
+          that follow an item removed or moved, Move up and Move down).
         - Interaction tests for the above: a bad submit focusing the first issue, a server error,
           removing a repeated item, cancelling and retrying an upload, editing stored files.
     - **Not covered yet:** the Electron and Tauri shells, browsers other than Chromium, and real

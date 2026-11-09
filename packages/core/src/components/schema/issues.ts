@@ -80,3 +80,27 @@ export function valueAt(value: unknown, path: Path): unknown {
     }
     return current
 }
+
+/** A key held by place, moved as a list's items are taken out or moved: the new index for an old one, or null for gone. */
+export function shiftKey(key: string, list: string, map: (index: number) => number | null): string | null {
+    if (!key.startsWith(`${list}/`)) return key
+    const rest = key.slice(list.length + 1)
+    const slash = rest.indexOf('/')
+    const head = slash === -1 ? rest : rest.slice(0, slash)
+    if (!/^\d+$/.test(head)) return key
+    const next = map(Number(head))
+    return next === null ? null : `${list}/${String(next)}${slash === -1 ? '' : rest.slice(slash)}`
+}
+
+export function shiftSet(keys: ReadonlySet<string>, list: string, map: (index: number) => number | null): ReadonlySet<string> {
+    return new Set([...keys].map((key) => shiftKey(key, list, map)).filter((key): key is string => key !== null))
+}
+
+export function shiftRecord<T>(record: Record<string, T>, list: string, map: (index: number) => number | null): Record<string, T> {
+    const out: Record<string, T> = {}
+    for (const [key, value] of Object.entries(record)) {
+        const next = shiftKey(key, list, map)
+        if (next !== null) out[next] = value
+    }
+    return out
+}
