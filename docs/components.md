@@ -40,7 +40,7 @@ viewer's caption settings through `useStored` or an app's store, with the option
 in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second by `useVideoStats`
 (`@winterop-com/sokkel-ui/media/video-stats`) for `VideoStatsOverlay`.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 241 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 242 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 10 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 12 modules
@@ -182,7 +182,8 @@ in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second 
 | **AppBar** | `@winterop-com/sokkel-ui/AppBar` | The app's bar along the top of a screen drawn without `Shell`, such as a page a dialog opens over or a screen of its own: the app's mark, the trail to the screen, the search and the actions, in the bar the shell draws, so the screen reads as the same app. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-app-bar--bar) |
 | **CommandPalette** | `@winterop-com/sokkel-ui/CommandPalette` | The command palette: one search over everything an app can do, grouped, each row with its icon, a hint in words or a code, and the keys that run it directly. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-command-palette--closed) |
 | **Dock** | `@winterop-com/sokkel-ui/Dock` | A panel along the bottom of the content, for a log, a terminal or a result: a head bar with the title, tools and a fold control, and its content scrolling under it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/apps-workspace--list-and-panel) |
-| **NavBar** | `@winterop-com/sokkel-ui/NavBar` | The app's frame along the top, for an app with few places and no rail: the mark and name, the places as links with the current one underlined, and the right-hand controls. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/themes-appearance--scheme) |
+| **Link**, LinkProvider | `@winterop-com/sokkel-ui/Link` | An anchor drawn as the app's `LinkProvider` says: its router's link for an internal address, a plain anchor otherwise. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-link-provider--router) |
+| **NavBar** | `@winterop-com/sokkel-ui/NavBar` | The app's frame along the top, for an app with few places and no rail: the mark and name, the places as links with the current one underlined, and the right-hand controls. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-link-provider--router) |
 | **Rail** | `@winterop-com/sokkel-ui/Rail` | The app's left navigation: a head with the app's mark and the collapse control, the groups, and a foot cell the shell's foot strip lines up with. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-rail--strip) |
 | **ResizeHandle** | `@winterop-com/sokkel-ui/ResizeHandle` | The edge a panel is resized by: dragged with a pointer, moved 16px a press with the arrows, sent to its limits with Home and End, and put back to `reset` with a double click or Enter. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-channel-list--channels) (in ChannelList) |
 | **SchemeToggle** | `@winterop-com/sokkel-ui/SchemeToggle` | The light and dark switch wired to `useScheme`: it shows the scheme the document wears, and a press chooses the other one and keeps it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/themes-appearance--scheme) |

@@ -1,4 +1,5 @@
 import { TransportButton } from '@winterop-com/sokkel-ui/media/MediaControls'
+import { LinkProvider } from '@winterop-com/sokkel-ui/Link'
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import {
@@ -45,6 +46,7 @@ import { DropdownMenuItem } from '@winterop-com/sokkel-ui/primitives/dropdown-me
 import { Toaster } from '@winterop-com/sokkel-ui/primitives/sonner'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { Artwork, type ArtworkCover } from '@winterop-com/sokkel-ui-media/Artwork'
+import { routerLink } from '../fixtures/router'
 import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import captions from '../media/fixtures/captions.vtt?url'
@@ -723,55 +725,44 @@ function LibraryApp({ collapsed: start = false, drawer = false }: { collapsed?: 
                 onDrawerOpenChange={setDrawerOpen}
                 palette={placeCommands(PLACES, (href) => go(href.slice(1)))}
                 rail={
-                    <Rail
-                        mark={<TidevannMark />}
-                        name="Tidevann"
-                        groups={groups('library', place)}
-                        collapsed={collapsed}
-                        onCollapsedChange={setCollapsed}
-                        renderLink={(entry, children, className) => (
-                            <a
-                                href={entry.href}
-                                aria-current={entry.active ? 'page' : undefined}
-                                className={className}
-                                onClick={(event) => {
-                                    event.preventDefault()
-                                    if (entry.href !== undefined) go(entry.href.slice(1))
-                                }}
-                            >
-                                {children}
-                            </a>
-                        )}
-                        body={
-                            library
-                                ? {
-                                      title: 'Artists',
-                                      search: <SearchField value={query} onChange={setQuery} />,
-                                      content: (
-                                          <Tree
-                                              label="Artists"
-                                              nodes={LIBRARY}
-                                              query={query}
-                                              selected={[chosen]}
-                                              onSelect={([id]) => {
-                                                  if (id !== undefined) setChosen(id)
-                                              }}
-                                              defaultExpanded={[artistId(artist)]}
-                                          />
-                                      ),
-                                  }
-                                : undefined
-                        }
-                        foot={
-                            <AccountMenu
-                                name="ada"
-                                image={pictureOf('ada')}
-                                where="tidevann.example.org"
-                                collapsed={collapsed}
-                                onSettings={() => undefined}
-                            />
-                        }
-                    />
+                    <LinkProvider render={routerLink((href) => go(href.slice(1)))}>
+                        <Rail
+                            mark={<TidevannMark />}
+                            name="Tidevann"
+                            groups={groups('library', place)}
+                            collapsed={collapsed}
+                            onCollapsedChange={setCollapsed}
+                            body={
+                                library
+                                    ? {
+                                          title: 'Artists',
+                                          search: <SearchField value={query} onChange={setQuery} />,
+                                          content: (
+                                              <Tree
+                                                  label="Artists"
+                                                  nodes={LIBRARY}
+                                                  query={query}
+                                                  selected={[chosen]}
+                                                  onSelect={([id]) => {
+                                                      if (id !== undefined) setChosen(id)
+                                                  }}
+                                                  defaultExpanded={[artistId(artist)]}
+                                              />
+                                          ),
+                                      }
+                                    : undefined
+                            }
+                            foot={
+                                <AccountMenu
+                                    name="ada"
+                                    image={pictureOf('ada')}
+                                    where="tidevann.example.org"
+                                    collapsed={collapsed}
+                                    onSettings={() => undefined}
+                                />
+                            }
+                        />
+                    </LinkProvider>
                 }
                 top={<TopBar trail={trail} />}
                 foot={

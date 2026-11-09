@@ -1,6 +1,7 @@
 import { MoreHorizontal, Play, Volume2 } from 'lucide-react'
 import type { ReactNode } from 'react'
 
+import { Link } from '@winterop-com/sokkel-ui/Link'
 import { useClamped } from '@winterop-com/sokkel-ui/hooks/use-clamped'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { TITLE_LINES, type TitleLines } from '@winterop-com/sokkel-ui/lib/title-lines'
@@ -83,7 +84,7 @@ export function MediaCard({
     className,
     words = WORDS,
 }: MediaCardProps) {
-    const Cover = href !== undefined ? 'a' : 'button'
+    const Cover = href !== undefined ? Link : 'button'
     const interactive = href !== undefined || onSelect !== undefined
     const lines = titleLines ?? (layout === 'row' || shape === 'wide' ? 2 : 1)
     const [titleRef, clamped] = useClamped<HTMLHeadingElement>()

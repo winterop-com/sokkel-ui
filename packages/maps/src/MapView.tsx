@@ -4,6 +4,7 @@ import type { Map as MapLibreMap, MapGeoJSONFeature, PaddingOptions, PointLike, 
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 
+import { Link } from '@winterop-com/sokkel-ui/Link'
 import { useLongWait } from '@winterop-com/sokkel-ui/Loaders'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { enterFullscreen, exitFullscreen, fullscreenElement, subscribeFullscreen } from '@winterop-com/sokkel-ui/lib/fullscreen'
@@ -846,14 +847,14 @@ export function MapView({
                                 {credit.href === undefined ? (
                                     credit.label
                                 ) : (
-                                    <a
+                                    <Link
                                         href={credit.href}
                                         target="_blank"
                                         rel="noreferrer"
                                         className="hover:text-foreground hover:underline"
                                     >
                                         {credit.label}
-                                    </a>
+                                    </Link>
                                 )}
                             </Fragment>
                         ))}

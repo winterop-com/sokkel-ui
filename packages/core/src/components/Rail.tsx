@@ -23,6 +23,7 @@ import { ResizeHandle } from './ResizeHandle'
 import { Count } from './Count'
 import { Dot } from './Dot'
 import { GroupLabel } from './GroupLabel'
+import { Link } from './Link'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 
 /** One place the rail leads to. */
@@ -129,7 +130,7 @@ export interface RailProps {
     name: string
     /**
      * Where the mark leads, the app's home: the expanded rail's mark and name, and a strip's tile,
-     * are a link there, drawn by `renderLink`. A collapsed rail's mark stays the control that
+     * are a link there. A collapsed rail's mark stays the control that
      * expands it.
      */
     markHref?: string
@@ -140,7 +141,6 @@ export interface RailProps {
     onCollapsedChange?: (collapsed: boolean) => void
     /** What stands in the rail's foot cell, normally the account control; in a strip, the items stacked at its foot. */
     foot?: ReactNode
-    renderLink?: (entry: RailEntry, children: ReactNode, className: string) => ReactNode
     /** The expanded width in pixels, held from outside with `onSizeChange`. */
     size?: number
     onSizeChange?: (size: number) => void
@@ -203,8 +203,8 @@ export interface RailProps {
  * `expanded` with `onExpandedChange` holds them from outside. Collapsed or as a strip, a parent opens its
  * entries in a small flyout beside it; `defaultFlyout` names one that starts open.
  *
- * `renderLink` draws an entry's link, so an app passes its router's link; by default it is an
- * anchor.
+ * Each entry's link, and the mark's, is a `Link`, drawn as the app's `LinkProvider` says, so an app
+ * sets its router's link once at its root.
  *
  * A screen in a `Shell` may narrow the rail to its icons while it is shown (`useRailMode`, or the
  * shell's `railMode`): the rail draws collapsed whatever the app holds, its mark and its edge still
@@ -235,11 +235,6 @@ export function Rail({
     collapsed: kept = false,
     onCollapsedChange,
     foot,
-    renderLink = (entry, children, className) => (
-        <a href={entry.href} className={className} aria-current={entry.active ? 'page' : undefined}>
-            {children}
-        </a>
-    ),
     size,
     onSizeChange,
     resizable = true,
@@ -332,7 +327,6 @@ export function Rail({
                 markHref={markHref}
                 groups={groups}
                 foot={foot}
-                renderLink={renderLink}
                 unread={unread}
                 flyout={defaultFlyout}
                 drag={drag}
@@ -467,25 +461,18 @@ export function Rail({
                             {group.entries.map((entry) =>
                                 entry.entries !== undefined && entry.entries.length > 0 ? (
                                     collapsed ? (
-                                        <RailFlyout
-                                            key={entry.id}
-                                            entry={entry}
-                                            renderLink={renderLink}
-                                            unread={unread}
-                                            defaultOpen={defaultFlyout === entry.id}
-                                        />
+                                        <RailFlyout key={entry.id} entry={entry} unread={unread} defaultOpen={defaultFlyout === entry.id} />
                                     ) : (
                                         <RailParent
                                             key={entry.id}
                                             entry={entry}
                                             open={unfolded.includes(entry.id)}
                                             onOpen={(next) => fold(entry.id, next)}
-                                            renderLink={renderLink}
                                             unread={unread}
                                         />
                                     )
                                 ) : (
-                                    <RailLink key={entry.id} entry={entry} collapsed={collapsed} renderLink={renderLink} unread={unread} />
+                                    <RailLink key={entry.id} entry={entry} collapsed={collapsed} unread={unread} />
                                 ),
                             )}
                         </nav>
@@ -521,7 +508,12 @@ export function Rail({
     )
 }
 
-type RenderLink = (entry: RailEntry, children: ReactNode, className: string) => ReactNode
+/** An entry's link, holding `children`. */
+const renderLink = (entry: RailEntry, children: ReactNode, className: string) => (
+    <Link href={entry.href} className={className} aria-current={entry.active ? 'page' : undefined}>
+        {children}
+    </Link>
+)
 
 /** The control at the end of the expanded rail's head: collapse, or close in the shell's drawer. */
 const HEAD_BUTTON =
@@ -624,19 +616,7 @@ function RowEnd({ entry, unread }: { entry: RailEntry; unread: string }) {
 }
 
 /** A parent in the expanded rail: its row with the chevron at its end, and its entries folded under it. */
-function RailParent({
-    entry,
-    open,
-    onOpen,
-    renderLink,
-    unread,
-}: {
-    entry: RailEntry
-    open: boolean
-    onOpen: (open: boolean) => void
-    renderLink: RenderLink
-    unread: string
-}) {
+function RailParent({ entry, open, onOpen, unread }: { entry: RailEntry; open: boolean; onOpen: (open: boolean) => void; unread: string }) {
     const id = useId()
     const control = useRef<HTMLButtonElement>(null)
     const holds = holdsActive(entry)
@@ -725,14 +705,12 @@ function RailParent({
 function Flyout({
     entry,
     trigger,
-    renderLink,
     unread,
     defaultOpen,
     sideOffset,
 }: {
     entry: RailEntry
     trigger: (props: ComponentPropsWithRef<'button'>) => ReactElement
-    renderLink: RenderLink
     unread: string
     defaultOpen: boolean
     sideOffset: number
@@ -768,23 +746,12 @@ function Flyout({
 }
 
 /** A parent in the collapsed rail: its icon opens its entries in a flyout, and its tooltip names it. */
-function RailFlyout({
-    entry,
-    renderLink,
-    unread,
-    defaultOpen,
-}: {
-    entry: RailEntry
-    renderLink: RenderLink
-    unread: string
-    defaultOpen: boolean
-}) {
+function RailFlyout({ entry, unread, defaultOpen }: { entry: RailEntry; unread: string; defaultOpen: boolean }) {
     const active = entry.active === true || holdsActive(entry)
     const counted = entry.count !== undefined && entry.count > 0
     return (
         <Flyout
             entry={entry}
-            renderLink={renderLink}
             unread={unread}
             defaultOpen={defaultOpen}
             sideOffset={12}
@@ -836,7 +803,6 @@ function Strip({
     markHref,
     groups,
     foot,
-    renderLink,
     unread,
     flyout,
     drag,
@@ -847,7 +813,6 @@ function Strip({
     markHref?: string
     groups: RailGroup[]
     foot?: ReactNode
-    renderLink: RenderLink
     unread: string
     flyout?: string
     drag?: string
@@ -889,7 +854,6 @@ function Strip({
                                 <Flyout
                                     key={entry.id}
                                     entry={entry}
-                                    renderLink={renderLink}
                                     unread={unread}
                                     defaultOpen={flyout === entry.id}
                                     sideOffset={8}
@@ -904,7 +868,7 @@ function Strip({
                                     )}
                                 />
                             ) : (
-                                <StripLink key={entry.id} entry={entry} renderLink={renderLink} unread={unread} />
+                                <StripLink key={entry.id} entry={entry} unread={unread} />
                             ),
                         )}
                     </nav>
@@ -947,22 +911,12 @@ function StripFace({ entry, active, unread }: { entry: RailEntry; active: boolea
     )
 }
 
-function StripLink({ entry, renderLink, unread }: { entry: RailEntry; renderLink: RenderLink; unread: string }) {
+function StripLink({ entry, unread }: { entry: RailEntry; unread: string }) {
     const active = entry.active === true
     return renderLink(entry, <StripFace entry={entry} active={active} unread={unread} />, stripClass(active))
 }
 
-function RailLink({
-    entry,
-    collapsed,
-    renderLink,
-    unread,
-}: {
-    entry: RailEntry
-    collapsed: boolean
-    renderLink: RenderLink
-    unread: string
-}) {
+function RailLink({ entry, collapsed, unread }: { entry: RailEntry; collapsed: boolean; unread: string }) {
     const counted = entry.count !== undefined && entry.count > 0
     const dotted = !counted && entry.unread === true
     if (collapsed) {

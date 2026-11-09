@@ -4,6 +4,7 @@ import { useRef, useState, type ReactNode } from 'react'
 import { cn } from '../lib/cn'
 import type { KindColor } from '../lib/kind'
 import { Count } from './Count'
+import { Link } from './Link'
 import { PersonAvatar, PresenceDot, type Presence } from './PersonAvatar'
 import { usePanelSize } from '../hooks/use-panel-size'
 import { ResizeHandle } from './ResizeHandle'
@@ -361,9 +362,9 @@ function Entry({
     )
     if (entry.href !== undefined)
         return (
-            <a href={entry.href} aria-current={active ? 'page' : undefined} className={className} onClick={() => onSelect?.(entry.id)}>
+            <Link href={entry.href} aria-current={active ? 'page' : undefined} className={className} onClick={() => onSelect?.(entry.id)}>
                 {body}
-            </a>
+            </Link>
         )
     return (
         <button type="button" aria-current={active ? 'page' : undefined} className={className} onClick={() => onSelect?.(entry.id)}>

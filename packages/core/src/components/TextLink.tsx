@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { Link } from './Link'
 
 export interface TextLinkProps {
     href: string
@@ -17,11 +18,11 @@ export interface TextLinkProps {
  * a sentence's way onward. It is drawn in the primary ink and underlined on hover, so it
  * reads as a link among plain values without shouting, and ringed on focus; `code` sets it in the code
  * face for an id.
- * `external` opens it in a new tab, safely.
+ * `external` opens it in a new tab, safely. An internal link goes through the app's `LinkProvider`.
  */
 export function TextLink({ href, children, external = false, code = false, className }: TextLinkProps) {
     return (
-        <a
+        <Link
             href={href}
             target={external ? '_blank' : undefined}
             rel={external ? 'noreferrer' : undefined}
@@ -32,6 +33,6 @@ export function TextLink({ href, children, external = false, code = false, class
             )}
         >
             {children}
-        </a>
+        </Link>
     )
 }

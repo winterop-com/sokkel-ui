@@ -152,7 +152,7 @@ Ctrl K through `Shell`'s `palette`, an `AccountMenu` in the rail's foot, `local`
 sign-in, and a `StatusLine` as the shell's `foot`, which the account sits level with as one bar
 across the window's bottom edge.
 
-The rail's mark and name lead home (`markHref`, drawn by `renderLink`); collapsed, the mark expands
+The rail's mark and name lead home (`markHref`); collapsed, the mark expands
 it, and so does its edge, pulled outward (the rail following the pointer and keeping the width it is
 let go at) or with Enter, Space or the right arrow. `TopBar` holds a search field at its start
 (`search`, a `SearchField` or a `Search`, which `/` focuses), the trail after it, and the palette's
@@ -166,6 +166,19 @@ panes of its own narrows the rail to its icons or hides it while it is shown, wi
 (or `Shell`'s `railMode`): the latest screen's ask wins, the rail is as the app holds it once none
 asks, a narrowed rail's mark still widens it for the reader with the account following, and a
 hidden rail opens as the drawer from the top bar at every width.
+
+Every link the library draws is a `Link`: the rail's places, the top bar's and a page header's
+trail, a nav bar's places, a stat, a stat panel, a card, a profile, a channel, a link in text, a
+breadcrumb, a page number. An app with a client router sets `LinkProvider` once at its root, its
+`render` drawing the router's link from the anchor's props (spreading them, `ref`, `className`
+and `onClick` among them), so every one of them moves without a reload while it stays a real
+anchor for a middle click, Cmd-click or "Copy link address"; `useLink` gives the same as a render
+function. Only internal links go through `render` (`isInternalLink`): one that opens a new tab
+(`target` other than `_self`), downloads (`download`) or names another origin (`https:` elsewhere,
+`//host`, `mailto:`, `tel:`) stays a plain anchor, as `ApiLink`, an external `TextLink`, a
+Markdown link and a map's credits are; the provider's `internal` replaces that test when an app's
+renderer takes those too. A contents list's jumps stay in the page and never reach the router.
+With no provider every link is a plain anchor, which a hash router follows as it is.
 
 A place whose content is a hierarchy to browse, such as a music library's artists and albums, puts
 it in the rail itself with `body`, so the app keeps one left column rather than a second beside the

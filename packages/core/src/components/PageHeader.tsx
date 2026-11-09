@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { IconButton } from './IconButton'
+import { Link } from './Link'
 import type { Crumb } from './TopBar'
 
 /** The words the header says, each with an English default. */
@@ -33,8 +34,6 @@ export interface PageHeaderProps {
     onBack?: () => void
     /** Keeps the title to one line, cut short with an ellipsis, rather than wrapping. */
     singleLine?: boolean
-    /** Draws a step of the trail that has an `href`, for an app's own router link. */
-    renderLink?: (crumb: Crumb, className: string) => ReactNode
     words?: Partial<PageHeaderWords>
 }
 
@@ -54,23 +53,7 @@ export interface PageHeaderProps {
  *
  * A long title wraps; `singleLine` keeps it to one line, cut short with the whole of it on hover.
  */
-export function PageHeader({
-    title,
-    code,
-    count,
-    description,
-    meta,
-    actions,
-    trail,
-    onBack,
-    singleLine = false,
-    renderLink = (crumb, className) => (
-        <a href={crumb.href} className={className}>
-            {crumb.label}
-        </a>
-    ),
-    words,
-}: PageHeaderProps) {
+export function PageHeader({ title, code, count, description, meta, actions, trail, onBack, singleLine = false, words }: PageHeaderProps) {
     const said = { ...WORDS, ...words }
     const showCode = code !== undefined && code !== title
     const back = onBack !== undefined
@@ -96,7 +79,9 @@ export function PageHeader({
                                         {crumb.href === undefined ? (
                                             <span className={face}>{crumb.label}</span>
                                         ) : (
-                                            renderLink(crumb, cn(face, 'transition-colors hover:text-foreground'))
+                                            <Link href={crumb.href} className={cn(face, 'transition-colors hover:text-foreground')}>
+                                                {crumb.label}
+                                            </Link>
                                         )}
                                         <ChevronRight className="size-3 shrink-0 text-faint" aria-hidden />
                                     </li>
