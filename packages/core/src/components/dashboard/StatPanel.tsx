@@ -122,6 +122,10 @@ export interface StatPanelProps {
     info?: ReactNode
     /** Dropdown menu items, behind a button at the end of the tile's head, as `DashboardPanel`'s `menu`. */
     menu?: ReactNode
+    /** Where the tile goes, such as the records its figure counts: the whole tile is one link, its info and menu still their own. */
+    href?: string
+    /** What a press on the tile does, in place of `href`. */
+    onSelect?: () => void
     span?: PanelSpan
     loading?: boolean
     words?: Partial<StatWords>
@@ -152,6 +156,8 @@ export function StatPanel({
     note,
     info,
     menu,
+    href,
+    onSelect,
     span = 'sixth',
     loading = false,
     words: given,
@@ -165,8 +171,10 @@ export function StatPanel({
     const written = value === null ? words.noData : format !== undefined ? format(value) : formatValue(value, decimals)
     const rising = delta !== undefined && !delta.startsWith('-')
     const style = tone === undefined ? undefined : ({ '--tone': tokenVar(tone) } as CSSProperties)
+    const interactive = href !== undefined || onSelect !== undefined
+    const Cover = href !== undefined ? 'a' : 'button'
     const tool = cn(
-        'flex size-5 items-center justify-center rounded-md outline-none focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid',
+        'pointer-events-auto flex size-5 items-center justify-center rounded-md outline-none focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid',
         filled ? 'text-on-fill/80 hover:text-on-fill' : 'text-muted-foreground hover:text-foreground',
     )
     return (
@@ -178,6 +186,7 @@ export function StatPanel({
                 filled
                     ? 'border-transparent bg-[linear-gradient(135deg,color-mix(in_oklab,var(--tone)_92%,var(--on-fill)),var(--tone)_70%)] text-on-fill dark:bg-[linear-gradient(135deg,color-mix(in_oklab,var(--tone)_80%,var(--background)),color-mix(in_oklab,var(--tone)_62%,var(--background)))]'
                     : 'border-border bg-card text-card-foreground',
+                interactive && !filled && 'transition-colors hover:border-foreground/25 hover:bg-hover',
                 SPAN[span],
                 className,
             )}
@@ -192,7 +201,17 @@ export function StatPanel({
                     )}
                 />
             )}
-            <header className="flex h-7 shrink-0 items-center gap-1 px-2.5 pt-1">
+            {interactive && (
+                <Cover
+                    {...(href !== undefined ? { href } : { type: 'button' as const, onClick: onSelect })}
+                    className="absolute inset-0 rounded-surface outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid"
+                >
+                    <span className="sr-only">{typeof title === 'string' ? `${title}: ${written}` : written}</span>
+                </Cover>
+            )}
+            <header
+                className={cn('flex min-h-7 shrink-0 items-center gap-1 px-2.5 pt-1', interactive && 'pointer-events-none relative z-10')}
+            >
                 <h3
                     ref={titleRef}
                     title={clamped && typeof title === 'string' ? title : undefined}
