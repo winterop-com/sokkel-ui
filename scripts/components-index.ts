@@ -313,6 +313,7 @@ const CORE_AREAS: Record<string, string> = {
     CodeEditor: 'Code, text and documents',
     ApiPlayground: 'Code, text and documents',
     DiffView: 'Code, text and documents',
+    DocumentTabs: 'Code, text and documents',
     EditPreview: 'Code, text and documents',
     LogView: 'Code, text and documents',
     Markdown: 'Code, text and documents',

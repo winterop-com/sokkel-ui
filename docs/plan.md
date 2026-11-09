@@ -482,7 +482,10 @@ as a phone shows a list or the message opened from it, and `useSplitPane` tells 
 `only` shows one pane alone at any width, the other kept mounted, as a reader turns it off.
 Mail's list beside its reading pane, the query workbench and a chat's history are split by it, and so
 is `EditPreview`'s `pane` variant: an editor and its live preview edge to edge in a pane of the
-app's, the share kept by `id`, with `view` showing both or either alone.
+app's, the share kept by `id`, with `view` showing both or either alone. `DocumentTabs` is the strip
+of documents open in a work area over such a pane: a tab each with its icon, its name cut short and
+a close button (a dot while unsaved), the shown one joined to the content, a middle click closing,
+the arrows moving along it, and the strip scrolling sideways past its room with `end` held at its end.
 
 `WindowedPane` gives any pane an expand button that opens the same content near full screen, in a
 window with a margin, a title, a close button and Escape, the pane keeping its height in place
