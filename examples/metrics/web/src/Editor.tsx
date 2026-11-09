@@ -134,7 +134,7 @@ export function EditorPage({
     const [draft, setDraft] = useState<Panel>(() => original ?? newPanel())
     const [saving, setSaving] = useState(false)
     const dirty = original === undefined || JSON.stringify(draft) !== JSON.stringify(original)
-    const guard = useUnsavedChanges(dirty && !saving)
+    const guard = useUnsavedChanges(dirty && !saving, { hashRoutes: true })
     const back = (focus?: string) => {
         const params = new URLSearchParams(kept)
         if (focus !== undefined) params.set('focus', focus)

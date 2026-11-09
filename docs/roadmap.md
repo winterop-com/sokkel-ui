@@ -120,11 +120,6 @@ to `plan.md` when it ships.
   1280 and 344 wide, every theme in both schemes) and a review of the twelve example apps on the
   web. Each round below is a PR or a few, smallest and surest first. Every fix goes in the
   component, never the story, with a test or story that shows it.
-    - **Round 2, the examples' own wrong behavior** (no library change except the first two):
-        - Following a sidebar link from a dirty editor drops its draft with no question (dataviz
-          chart builder, metrics panel editor, analytics report name). `useUnsavedChanges` blocks
-          the tab closing but not the app's hash route; have it block the route too, and guard the
-          analytics report, which has no guard at all.
     - **Round 3, charts:**
         - Chart text is 11 and 10 px (`chart-text-size`, `chart-text-size-small`) beside 13 px
           everywhere else. Try 12 to 13 px in rendered stories, then fix what it crowds.

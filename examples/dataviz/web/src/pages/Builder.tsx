@@ -169,7 +169,7 @@ export function BuilderPage({ datasets, boards, prefs, chart, datasetId }: Build
     const png = useRef<(() => Promise<string>) | null>(null)
     const dataset = datasets.find((one) => one.id === draft?.datasetId)
     const dirty = draft !== undefined && (original === undefined || JSON.stringify(draft) !== JSON.stringify(original))
-    const guard = useUnsavedChanges(dirty && !saving)
+    const guard = useUnsavedChanges(dirty && !saving, { hashRoutes: true })
     const spec = draft?.spec
     const shaped = useShaped(dataset ?? EMPTY_DATASET, spec ?? EMPTY_SPEC)
     const title = draft === undefined || draft.name.trim() === '' ? 'Untitled chart' : draft.name.trim()

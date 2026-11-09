@@ -12,6 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@winterop-com/sokkel-ui/primitives/empty'
 import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { Download, Plus, Save, Trash2 } from 'lucide-react'
+import { useUnsavedChanges } from '@winterop-com/sokkel-ui/UnsavedChanges'
 import { Fragment, useState, type ReactNode } from 'react'
 
 import { useCollection } from 'tidevann-shared/backend'
@@ -96,6 +97,7 @@ function Composer({ report: start, list }: { report: Report | undefined; list: R
     const [deleting, setDeleting] = useState(false)
 
     const changed = start === undefined || start.name !== name.trim() || start.panels.join() !== panels.join()
+    const guard = useUnsavedChanges((start === undefined ? name.trim() !== '' : changed) && !busy, { hashRoutes: true })
     const why =
         name.trim() === ''
             ? 'A report needs a name.'
@@ -142,6 +144,7 @@ function Composer({ report: start, list }: { report: Report | undefined; list: R
     const left = PANELS.filter((panel) => !panels.includes(panel))
     return (
         <Stack gap="section">
+            {guard.dialog}
             <Split side="start" width="sm" align="start" aside={list}>
                 <Section
                     title={start === undefined ? 'New report' : start.name}
