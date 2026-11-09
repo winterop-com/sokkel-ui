@@ -5,6 +5,29 @@ export const TABLE_HEAD_TEXT =
 /** A table's head row: its ground and the rule under it, from the table-head tokens. */
 export const TABLE_HEAD_ROW = 'border-b border-table-head-line bg-table-head-ground'
 
+/** A column's name where it stands alone, as in a stacked card's line: its band before its header. */
+export function columnName(column: { header: string; band?: string }): string {
+    return column.band === undefined ? column.header : `${column.band} · ${column.header}`
+}
+
+/** A run of side-by-side columns under one band head, or under none: the band, where the run starts, and how many columns it spans. */
+export interface ColumnBand {
+    band: string | undefined
+    start: number
+    span: number
+}
+
+/** The columns as runs under their band heads: neighbors with the same band share one run. */
+export function columnBands(columns: readonly { band?: string }[]): ColumnBand[] {
+    const runs: ColumnBand[] = []
+    columns.forEach((column, index) => {
+        const last = runs.at(-1)
+        if (last !== undefined && last.band !== undefined && last.band === column.band) last.span += 1
+        else runs.push({ band: column.band, start: index, span: 1 })
+    })
+    return runs
+}
+
 /**
  * Column ids in the order a table draws them: those `order` names first, once each, then the rest
  * in their given order, the first column staying first whatever the order says, as each row's title.

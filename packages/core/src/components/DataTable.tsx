@@ -50,7 +50,7 @@ import { NativeSelect, NativeSelectOption } from './ui/native-select'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { Skeleton } from './ui/skeleton'
 import { Spinner } from './ui/spinner'
-import { TABLE_HEAD_ROW, TABLE_HEAD_TEXT, columnOrder } from '../lib/table'
+import { TABLE_HEAD_ROW, TABLE_HEAD_TEXT, columnBands, columnName, columnOrder } from '../lib/table'
 import type { CellAt, EditedValue, EditOption, EditorKind, EditValue } from '../lib/edit'
 import type { CellEdit, CellFocus, OpenCell, TableEditing, TableEditingContext } from './table-editing'
 
@@ -93,6 +93,12 @@ export interface DataColumn<T> {
     id: string
     /** The column's name, in its head and in the column menu. */
     header: string
+    /**
+     * The band the column sits in, such as one option of a cut whose other options are the columns
+     * under it. Neighboring columns with the same band are drawn under one head above theirs, a rule
+     * marking where each band starts; a stacked card names the column by its band and its header.
+     */
+    band?: string
     /** A CSS grid track: `8rem`, `minmax(12rem,1fr)`. */
     width: string
     cell: (row: T) => ReactNode
@@ -672,7 +678,7 @@ export interface DataTableProps<T> {
     columnWidths?: Readonly<Record<string, number>>
     defaultColumnWidths?: Readonly<Record<string, number>>
     onColumnWidthsChange?: (widths: Readonly<Record<string, number>>) => void
-    /** `list`: a short listing's look, with no bar above the head while nothing is selected. */
+    /** `list`: a short listing's look, with no bar above the head while nothing is selected, unless it has a `search` or a `toolbar`. */
     variant?: 'table' | 'list'
     /** A line at the foot, such as how many rows are loaded. */
     foot?: ReactNode
@@ -736,10 +742,15 @@ export interface DataTableProps<T> {
  *
  * Without `selectable`, a plain click, Enter or Space picks a row with `onOpen`, and the row
  * `opened` names is drawn and marked selected, for a list beside its detail. `variant="list"` is
- * the look of a short listing: no bar above the head (until rows are selected), the column names
+ * the look of a short listing: no bar above the head (until rows are selected, or with a `search`
+ * or a `toolbar`), the column names
  * as the box's head, the columns set apart by a gap rather than padded, and, once the box is
  * narrow, a plain divided list of rows each as tall as its lines; a `foot` line says what the bar
  * would have.
+ *
+ * Columns with a `band` are drawn under band heads above their own, neighbors with the same band
+ * sharing one, and a rule marks where each band starts and ends, such as the options of a cut set
+ * under the options of a smaller one. Stacked, a column is named by its band and its header.
  *
  * With `groupBy`, the rows gather under group heads, each with its label, its count and what each
  * column's `aggregate` says for its rows; pressing a head folds the group. Rows sort within their
@@ -892,6 +903,10 @@ export function DataTable<T>({
     )
 
     const shown = ordered.filter((column, index) => index === 0 || !hidden.has(column.id))
+    // Columns in bands draw a head line above theirs, and a rule where each band starts and ends.
+    const banded = shown.some((column) => column.band !== undefined)
+    const bandEdge = (index: number) =>
+        banded && index > 0 && shown[index].band !== shown[index - 1].band && (shown[index].band ?? shown[index - 1].band) !== undefined
     const sortColumn = sort === null ? undefined : columns.find((column) => column.id === sort.column)
     const order = useCallback(
         (level: readonly T[]) =>
@@ -1270,6 +1285,8 @@ export function DataTable<T>({
     const pinned = list ? '' : 'sticky z-1 bg-inherit shadow-[1px_0_0_var(--border)]'
     const pinnedEnd = list ? '' : 'sticky z-1 bg-inherit shadow-[-1px_0_0_var(--border)]'
     const pad = list ? '' : 'px-3'
+    // The rule where a band starts or ends; a list's columns sit apart by a gap, so its rule takes room after it too.
+    const edge = cn('border-l border-border', list && 'pl-3')
     const spaced = list && 'gap-3 px-(--density-panel-pad)'
 
     /** A tree row's indent and its control: open or close, or a spinner while its children load. */
@@ -1392,11 +1409,16 @@ export function DataTable<T>({
                         groupTitle(head)
                     )}
                 </span>
-                {shown.slice(labelSpan).map((column) => (
+                {shown.slice(labelSpan).map((column, index) => (
                     <span
                         key={column.id}
                         role="gridcell"
-                        className={cn('flex h-full min-w-0 items-center', pad, column.align === 'end' && 'justify-end tabular-nums')}
+                        className={cn(
+                            'flex h-full min-w-0 items-center',
+                            pad,
+                            bandEdge(labelSpan + index) && edge,
+                            column.align === 'end' && 'justify-end tabular-nums',
+                        )}
                     >
                         <span className="min-w-0 truncate">{column.aggregate?.(head.rows)}</span>
                     </span>
@@ -1509,8 +1531,8 @@ export function DataTable<T>({
                             style={indent}
                         >
                             {column.stackLabel !== false && (
-                                <span className={cn('shrink-0 truncate text-muted-foreground', listed ? 'w-20' : 'w-24')}>
-                                    {column.header}
+                                <span className={cn('shrink-0 truncate text-muted-foreground', banded ? 'w-32' : listed ? 'w-20' : 'w-24')}>
+                                    {columnName(column)}
                                 </span>
                             )}
                             <span className="min-w-0 truncate">{value}</span>
@@ -1730,7 +1752,7 @@ export function DataTable<T>({
                 className,
             )}
         >
-            {(!list || selection.size > 0) && (
+            {(!list || selection.size > 0 || search !== undefined || toolbar !== undefined) && (
                 // Narrow, the search takes a line of its own and the tools wrap across the whole width, the count and the
                 // sort after them; wide, the tools wrap in the room the search and the count leave.
                 <div className="@container/bar shrink-0 border-b border-border px-(--density-panel-pad) text-sm">
@@ -1940,12 +1962,54 @@ export function DataTable<T>({
                     <div ref={cardProbe} style={{ width: cardWidth, height: cardHeight }} />
                     <div ref={widthProbe} style={{ width: rowMin }} />
                 </div>
+                {!gridView && columnHeads && banded && (
+                    <div
+                        role="row"
+                        className={cn(
+                            'sticky top-0 z-[3] grid items-center',
+                            TABLE_HEAD_ROW,
+                            list ? 'h-(--density-panel-head)' : 'h-(--density-row)',
+                            spaced,
+                            TABLE_HEAD_TEXT,
+                        )}
+                        style={grid}
+                    >
+                        {selectable && <span aria-hidden className={cn(pinned, 'left-0 h-full')} />}
+                        {columnBands(shown).map((run) =>
+                            run.band === undefined ? (
+                                <span
+                                    key={shown[run.start].id}
+                                    aria-hidden
+                                    className={cn(
+                                        'h-full',
+                                        run.start === 0 && cn(pinned, selectable ? 'left-(--check)' : 'left-0'),
+                                        bandEdge(run.start) && edge,
+                                    )}
+                                    style={run.start === 0 ? ({ '--check': CHECK } as React.CSSProperties) : undefined}
+                                />
+                            ) : (
+                                <span
+                                    key={`band:${shown[run.start].id}`}
+                                    role="columnheader"
+                                    aria-colspan={run.span}
+                                    title={run.band}
+                                    className={cn('flex h-full min-w-0 items-center', pad, bandEdge(run.start) && edge)}
+                                    style={{ gridColumn: `span ${String(run.span)}` }}
+                                >
+                                    <span className="truncate">{run.band}</span>
+                                </span>
+                            ),
+                        )}
+                        {endWidth !== undefined && <span aria-hidden className={cn(pinnedEnd, 'right-0 h-full')} />}
+                    </div>
+                )}
                 {!gridView && columnHeads && (
                     <div
                         role="row"
                         aria-rowindex={1}
                         className={cn(
-                            'sticky top-0 z-[2] grid items-center',
+                            'sticky z-[2] grid items-center',
+                            !banded ? 'top-0' : list ? 'top-(--density-panel-head)' : 'top-(--density-row)',
                             TABLE_HEAD_ROW,
                             list ? 'h-(--density-panel-head)' : 'h-(--density-row)',
                             spaced,
@@ -1979,11 +2043,14 @@ export function DataTable<T>({
                                         pad,
                                         column.align === 'end' && 'justify-end',
                                         index === 0 && cn(pinned, selectable ? 'left-(--check)' : 'left-0'),
+                                        bandEdge(index) && edge,
                                     )}
                                     style={index === 0 ? ({ '--check': CHECK } as React.CSSProperties) : undefined}
                                 >
                                     {column.sortValue === undefined ? (
-                                        <span className="truncate">{column.header}</span>
+                                        <span className="truncate" title={column.header}>
+                                            {column.header}
+                                        </span>
                                     ) : (
                                         <button
                                             type="button"
@@ -1996,7 +2063,9 @@ export function DataTable<T>({
                                                 sorted !== undefined && 'text-foreground',
                                             )}
                                         >
-                                            <span className="truncate">{column.header}</span>
+                                            <span className="truncate" title={column.header}>
+                                                {column.header}
+                                            </span>
                                             {sorted === 'asc' && <ArrowUpIcon className="size-3.5 shrink-0" />}
                                             {sorted === 'desc' && <ArrowDownIcon className="size-3.5 shrink-0" />}
                                         </button>
@@ -2218,6 +2287,7 @@ export function DataTable<T>({
                                                 className={cn(
                                                     'flex h-full min-w-0 items-center',
                                                     pad,
+                                                    bandEdge(index) && edge,
                                                     every && 'py-2',
                                                     column.align === 'end' && 'justify-end tabular-nums',
                                                     index === 0 && cn(pinned, selectable ? 'left-(--check)' : 'left-0'),

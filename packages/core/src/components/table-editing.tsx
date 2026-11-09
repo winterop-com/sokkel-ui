@@ -2,6 +2,7 @@ import { CircleAlertIcon } from 'lucide-react'
 import type { CSSProperties, Dispatch, HTMLAttributes, KeyboardEvent, MouseEvent, ReactNode, RefObject, SetStateAction } from 'react'
 
 import { cn } from '../lib/cn'
+import { columnName } from '../lib/table'
 import {
     draftOf,
     EDIT_WORDS,
@@ -296,7 +297,7 @@ function contentOf<T>(table: TableEditingContext<T>, entry: FlatRow<T>, column: 
             <InlineEditor
                 kind={spec.editor}
                 look={look === 'cell' || spec.editor === 'multiline' ? 'cell' : 'field'}
-                label={column.header}
+                label={columnName(column)}
                 draft={edit.draft}
                 onDraftChange={(draft) => setEdit(table, id, { ...edit, draft, error: null })}
                 options={options}
@@ -424,7 +425,16 @@ export const tableEditing: TableEditing = {
                 className={cn('flex min-w-0 items-center gap-2 text-xs', !listed && 'h-9')}
                 style={indent}
             >
-                {label && <span className={cn('shrink-0 truncate text-muted-foreground', listed ? 'w-20' : 'w-24')}>{column.header}</span>}
+                {label && (
+                    <span
+                        className={cn(
+                            'shrink-0 truncate text-muted-foreground',
+                            column.band !== undefined ? 'w-32' : listed ? 'w-20' : 'w-24',
+                        )}
+                    >
+                        {columnName(column)}
+                    </span>
+                )}
                 {isOpen(table, entry, column) ? (
                     // The open editor takes the field's place at the field's size, so the card does not move.
                     <span className="relative flex h-8 min-w-0 flex-1 text-sm" onClick={(event) => event.stopPropagation()}>
@@ -434,7 +444,7 @@ export const tableEditing: TableEditing = {
                     <span
                         role={opens ? 'button' : undefined}
                         tabIndex={-1}
-                        aria-label={opens ? column.header : undefined}
+                        aria-label={opens ? columnName(column) : undefined}
                         aria-invalid={edit?.error != null || undefined}
                         aria-busy={edit?.saving === true || undefined}
                         onClick={(event) => {
