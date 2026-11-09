@@ -15,8 +15,11 @@ import { PeriodPicker } from '@winterop-com/sokkel-ui/PeriodPicker'
 import { RepeatedGroup } from '@winterop-com/sokkel-ui/RepeatedGroup'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Input } from '@winterop-com/sokkel-ui/primitives/input'
+import { Toggle } from '@winterop-com/sokkel-ui/primitives/toggle'
 import { NativeSelect, NativeSelectOption } from '@winterop-com/sokkel-ui/primitives/native-select'
+import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { Section } from '@winterop-com/sokkel-ui/Section'
+import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { Page } from '@winterop-com/sokkel-ui/Shell'
 import { tableEditing } from '@winterop-com/sokkel-ui/table-editing'
 import { TextField } from '@winterop-com/sokkel-ui/TextField'
@@ -35,6 +38,7 @@ import {
     answerIssue,
     cellKey,
     formOf,
+    gridCells,
     isAnswered,
     KIND,
     lastWholePeriod,
@@ -57,12 +61,6 @@ const PLACE_MEANING: Record<Form['kind'], string> = {
     event: 'The site the visit was made at. The record is filed under it.',
     registration: 'Where the household lives. Its visits are filed under the same place.',
     followup: 'The site the visit was made from, usually where the household was registered.',
-}
-
-interface GridRow {
-    id: string
-    part: string
-    label: string
 }
 
 /** A form opened to fill in: where and when it is for, its sections of questions or its grid of counts, and Submit at the foot. */
@@ -602,7 +600,25 @@ function RepeatedAnswer({
     )
 }
 
-/** A periodic report's counts: a row per question under its part, a column per category, a total for each, every cell saved as it is entered. */
+const capitalized = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
+
+/** A run of counts this long or longer is searched, and can show only what is still unfilled. */
+const LONG_RUN = 8
+
+/** One line of the count grid: a question with its cells across, or a cell of the cut with the questions across. */
+interface GridLine {
+    id: string
+    label: string
+    /** The question's part, or the cell's band. */
+    group: string | undefined
+}
+
+/**
+ * A periodic report's counts, every cell saved as it is entered. The reader sets the questions in
+ * rows (a column per cell of the cut, banded by its smaller category, and a total) or in columns (a
+ * row per cell under its band, a column per question under its part), and the choice is kept. A
+ * long run has a search and Unfilled only.
+ */
 function CountGrid({
     form,
     answers,
@@ -613,60 +629,124 @@ function CountGrid({
     onAnswer: (id: string, value: AnswerValue) => void
 }) {
     const grid = form.grid
-    const rows: GridRow[] = useMemo(() => [...(grid?.rows ?? [])], [grid])
+    const [across, setAcross] = useStored<'rows' | 'columns'>('grid-questions', 'rows')
+    const [query, setQuery] = useState('')
+    const [unfilled, setUnfilled] = useState(false)
+    const cells = useMemo(() => (grid === undefined ? [] : gridCells(grid)), [grid])
     if (grid === undefined) return null
-    const cell = (row: GridRow, category: string) => {
-        const value = answers[cellKey(row.id, category)]
-        return typeof value === 'number' ? value : null
+    const questions = grid.rows
+    const inRows = across === 'rows'
+    const value = (question: string, cell: string) => {
+        const answer = answers[cellKey(question, cell)]
+        return typeof answer === 'number' ? answer : null
     }
-    const sum = (values: readonly (number | null)[]) => values.reduce<number>((all, value) => all + (value ?? 0), 0)
-    const rowTotal = (row: GridRow) => sum(grid.categories.map((category) => cell(row, category.value)))
-    const columns: DataColumn<GridRow>[] = [
-        { id: 'label', header: 'Question', width: 'minmax(14rem,1fr)', cell: (row) => row.label },
-        ...grid.categories.map((category): DataColumn<GridRow> => ({
-            id: category.value,
-            header: category.label,
-            width: '6.5rem',
-            align: 'end',
-            cell: (row) => cell(row, category.value)?.toLocaleString('en-US') ?? '',
-            aggregate: (group) => sum(group.map((row) => cell(row, category.value))).toLocaleString('en-US'),
-            edit: {
-                editor: 'number',
-                value: (row) => cell(row, category.value),
-                validate: (value) =>
-                    value !== null && (!Number.isInteger(value) || value < 0) ? 'Counts are whole numbers, 0 or more.' : undefined,
-                save: async (row, value) => {
-                    if (value !== null && value > 999) throw new Error('A month holds at most 999. Check the count with the station.')
-                    onAnswer(cellKey(row.id, category.value), value)
-                },
+    // A line's questions and cells: one question across every cell, or one cell across every question.
+    const pairs = (line: GridLine) =>
+        inRows ? cells.map((cell) => [line.id, cell.value] as const) : questions.map((question) => [question.id, line.id] as const)
+    const sum = (values: readonly (number | null)[]) => values.reduce<number>((all, each) => all + (each ?? 0), 0)
+    const lineTotal = (line: GridLine) => sum(pairs(line).map(([question, cell]) => value(question, cell)))
+    const lines: GridLine[] = inRows
+        ? questions.map((question) => ({ id: question.id, label: question.label, group: question.part }))
+        : cells.map((cell) => ({ id: cell.value, label: cell.label, group: cell.band }))
+    const long = lines.length >= LONG_RUN
+    const asked = query.trim().toLowerCase()
+    const shown = lines.filter(
+        (line) =>
+            (!long || asked === '' || `${line.group ?? ''} ${line.label}`.toLowerCase().includes(asked)) &&
+            (!long || !unfilled || pairs(line).some(([question, cell]) => value(question, cell) === null)),
+    )
+    const countColumn = (
+        id: string,
+        header: string,
+        band: string | undefined,
+        at: (line: GridLine) => readonly [string, string],
+    ): DataColumn<GridLine> => ({
+        id,
+        header,
+        band,
+        width: inRows ? '6.5rem' : 'minmax(7rem,1fr)',
+        align: 'end',
+        cell: (line) => value(...at(line))?.toLocaleString('en-US') ?? '',
+        aggregate: (group) => sum(group.map((line) => value(...at(line)))).toLocaleString('en-US'),
+        edit: {
+            editor: 'number',
+            value: (line) => value(...at(line)),
+            validate: (count) =>
+                count !== null && (!Number.isInteger(count) || count < 0) ? 'Counts are whole numbers, 0 or more.' : undefined,
+            save: async (line, count) => {
+                if (count !== null && count > 999) throw new Error('A month holds at most 999. Check the count with the station.')
+                onAnswer(cellKey(...at(line)), count)
             },
-        })),
-        {
-            id: 'total',
-            header: 'Total',
-            width: '6.5rem',
-            align: 'end',
-            cell: (row) => <span className="font-medium">{rowTotal(row).toLocaleString('en-US')}</span>,
-            aggregate: (group) => sum(group.map(rowTotal)).toLocaleString('en-US'),
         },
-    ]
+    })
+    const cut = grid.within === undefined ? grid.by : `${grid.by} and ${grid.within.by}`
+    // What names a cell: its category, or in bands the larger category, as the band names the smaller.
+    const within = grid.within
+    const cellsBy =
+        within === undefined
+            ? grid.by
+            : cells.some((cell) => cell.band !== undefined)
+              ? grid.categories.length > within.categories.length
+                  ? grid.by
+                  : within.by
+              : cut
+    const columns: DataColumn<GridLine>[] = inRows
+        ? [
+              { id: 'label', header: 'Question', width: 'minmax(14rem,1fr)', cell: (line) => line.label },
+              ...cells.map((cell) => countColumn(cell.value, cell.label, cell.band, (line) => [line.id, cell.value])),
+              {
+                  id: 'total',
+                  header: 'Total',
+                  width: '6.5rem',
+                  align: 'end',
+                  cell: (line) => <span className="font-medium">{lineTotal(line).toLocaleString('en-US')}</span>,
+                  aggregate: (group) => sum(group.map(lineTotal)).toLocaleString('en-US'),
+              },
+          ]
+        : [
+              { id: 'label', header: capitalized(cellsBy), width: '9rem', cell: (line) => line.label },
+              ...questions.map((question) => countColumn(question.id, question.label, question.part, (line) => [question.id, line.id])),
+          ]
+    const grouped = lines.some((line) => line.group !== undefined)
     return (
         <Section
             title="Counts"
-            description={`By ${grid.by}. Each count is kept as it is entered; Tab moves to the next, Enter down.`}
+            description={`By ${cut}. Each count is kept as it is entered; Tab moves to the next, Enter down.`}
             meta={KIND[form.kind].label}
             flush
         >
             <DataTable
+                key={across}
                 columns={columns}
-                rows={rows}
-                rowKey={(row) => row.id}
-                groupBy="part"
+                rows={shown}
+                rowKey={(line) => line.id}
+                groupBy={grouped ? (line) => line.group ?? '' : undefined}
                 minWidth="auto"
                 stackBelow={720}
                 editing={tableEditing}
                 hover={false}
                 variant="list"
+                search={long ? <SearchField value={query} onChange={setQuery} placeholder="Search" /> : undefined}
+                toolbar={
+                    <>
+                        {long && (
+                            <Toggle variant="outline" size="sm" pressed={unfilled} onPressedChange={setUnfilled}>
+                                Unfilled only
+                            </Toggle>
+                        )}
+                        <Segmented
+                            label="Where the questions go"
+                            size="sm"
+                            value={across}
+                            onValueChange={setAcross}
+                            options={[
+                                { value: 'rows', label: 'Questions in rows' },
+                                { value: 'columns', label: 'Questions in columns' },
+                            ]}
+                        />
+                    </>
+                }
+                empty={unfilled && asked === '' ? 'Every count is filled.' : 'Nothing matches.'}
             />
         </Section>
     )

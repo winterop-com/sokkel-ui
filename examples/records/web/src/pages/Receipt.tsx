@@ -20,7 +20,7 @@ import { useCollection } from 'tidevann-shared/backend'
 import { go } from 'tidevann-shared/router'
 
 import { cellOf, forward, households, receiptOf, receipts, STATE_WORDS, withdraw, type Receipt } from '../data/backend'
-import { formOf, PERIOD_LABEL, type Form, type Question } from '../data/forms'
+import { formOf, gridCells, PERIOD_LABEL, type Form, type Question } from '../data/forms'
 import { placeName } from '../data/geo'
 import { answerText, count, KindBadge, NUMBER, onDay, StateChip, useFoot, when } from '../ui'
 
@@ -63,9 +63,10 @@ function GridAnswers({ form, receipt }: { form: Form; receipt: Receipt }) {
     type Line = (typeof grid.rows)[number]
     const columns: DataColumn<Line>[] = [
         { id: 'label', header: 'Question', width: 'minmax(12rem,1fr)', cell: (row) => row.label },
-        ...grid.categories.map((category): DataColumn<Line> => ({
+        ...gridCells(grid).map((category): DataColumn<Line> => ({
             id: category.value,
             header: category.label,
+            band: category.band,
             width: '6rem',
             align: 'end',
             cell: (row) => {

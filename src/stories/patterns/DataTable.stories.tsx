@@ -374,6 +374,119 @@ export const GroupedList: StoryObj = {
     ),
 }
 
+interface JobCounts {
+    job: string
+    counts: Record<string, number>
+}
+
+const BAND_SERVICES = ['api', 'worker'] as const
+const BAND_STATES = ['succeeded', 'failed', 'cancelled'] as const
+const JOB_COUNTS: JobCounts[] = [
+    {
+        job: 'nightly-export',
+        counts: {
+            'api-succeeded': 28,
+            'api-failed': 2,
+            'api-cancelled': 0,
+            'worker-succeeded': 30,
+            'worker-failed': 0,
+            'worker-cancelled': 1,
+        },
+    },
+    {
+        job: 'sync-inventory',
+        counts: {
+            'api-succeeded': 412,
+            'api-failed': 9,
+            'api-cancelled': 3,
+            'worker-succeeded': 380,
+            'worker-failed': 41,
+            'worker-cancelled': 3,
+        },
+    },
+    {
+        job: 'rebuild-index',
+        counts: {
+            'api-succeeded': 4,
+            'api-failed': 0,
+            'api-cancelled': 0,
+            'worker-succeeded': 3,
+            'worker-failed': 1,
+            'worker-cancelled': 0,
+        },
+    },
+    {
+        job: 'send-digest',
+        counts: {
+            'api-succeeded': 30,
+            'api-failed': 0,
+            'api-cancelled': 1,
+            'worker-succeeded': 31,
+            'worker-failed': 0,
+            'worker-cancelled': 0,
+        },
+    },
+    {
+        job: 'import-orders',
+        counts: {
+            'api-succeeded': 96,
+            'api-failed': 4,
+            'api-cancelled': 0,
+            'worker-succeeded': 88,
+            'worker-failed': 12,
+            'worker-cancelled': 0,
+        },
+    },
+]
+const BAND_COLUMNS: DataColumn<JobCounts>[] = [
+    { id: 'job', header: 'Job', width: 'minmax(10rem,1fr)', cell: (row) => <span className="font-mono">{row.job}</span> },
+    ...BAND_SERVICES.flatMap((service) =>
+        BAND_STATES.map((state): DataColumn<JobCounts> => ({
+            id: `${service}-${state}`,
+            header: state,
+            band: service,
+            width: '6.5rem',
+            align: 'end',
+            cell: (row) => row.counts[`${service}-${state}`].toLocaleString('en-US'),
+        })),
+    ),
+    {
+        id: 'total',
+        header: 'Total',
+        width: '6rem',
+        align: 'end',
+        cell: (row) => (
+            <span className="font-medium">
+                {Object.values(row.counts)
+                    .reduce((sum, count) => sum + count, 0)
+                    .toLocaleString('en-US')}
+            </span>
+        ),
+    },
+]
+
+/**
+ * Columns in bands (`band`): a month's runs of each job by service, and under each service by how
+ * they ended, a rule where each band starts and ends. A list given a search keeps its bar. Stacked,
+ * each line is named by its band and its header.
+ */
+export const Bands: StoryObj = {
+    render: function Render() {
+        const [query, setQuery] = useState('')
+        return (
+            <DataTable
+                variant="list"
+                columns={BAND_COLUMNS}
+                rows={JOB_COUNTS.filter((row) => row.job.includes(query.trim()))}
+                rowKey={(row) => row.job}
+                minWidth="auto"
+                search={<SearchField value={query} onChange={setQuery} placeholder="Search" />}
+                empty="No job is named like that."
+            />
+        )
+    },
+}
+
 const TODAY = taskDate(TASKS_TODAY)
 const PEOPLE_OPTIONS = TASK_PEOPLE.map((person) => ({ value: person }))
 const PROJECT_OPTIONS = TASK_PROJECTS.map((project) => ({ value: project }))

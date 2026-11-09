@@ -73,11 +73,44 @@ export interface FormSection {
     questions: readonly Question[]
 }
 
-/** A grid of counts: a row per question under its part, a column per category. */
+/** A grid of counts: a row per question under its part, a column per cell of its cut. */
 export interface CountGrid {
     by: string
     categories: readonly Option[]
+    /** A second category the first is crossed with, so each cell is one option of each. */
+    within?: { by: string; categories: readonly Option[] }
     rows: readonly { id: string; part: string; label: string }[]
+}
+
+/** One cell of a grid's cut: its key, what it is called, and the band it sits in, if any. */
+export interface GridCell {
+    value: string
+    label: string
+    band?: string
+}
+
+/** A cut of this many cells or more is drawn in bands, by the option of its smaller category. */
+const BAND_FROM = 5
+
+/**
+ * A grid's cells: each option of its category, crossed with each of `within`'s when it has one. A
+ * cut of five cells or more is banded by the smaller category, its options as the bands and the
+ * larger one's under each; a smaller cut names each cell by both options.
+ */
+export function gridCells(grid: CountGrid): GridCell[] {
+    const within = grid.within
+    if (within === undefined) return grid.categories.map((category) => ({ value: category.value, label: category.label }))
+    const key = (outer: Option, inner: Option) => `${outer.value}-${inner.value}`
+    const outerSmaller = grid.categories.length <= within.categories.length
+    const [bands, across] = outerSmaller ? [grid.categories, within.categories] : [within.categories, grid.categories]
+    const banded = grid.categories.length * within.categories.length >= BAND_FROM
+    return bands.flatMap((band) =>
+        across.map((option) => ({
+            value: outerSmaller ? key(band, option) : key(option, band),
+            label: banded ? option.label : `${band.label}, ${option.label}`,
+            band: banded ? band.label : undefined,
+        })),
+    )
 }
 
 export interface Form {
@@ -139,14 +172,24 @@ export const FORMS: readonly Form[] = [
         grid: {
             by: 'kind of site',
             categories: SITE_KINDS,
+            within: {
+                by: 'time of day',
+                categories: [
+                    { value: 'am', label: 'Morning' },
+                    { value: 'pm', label: 'Evening' },
+                ],
+            },
             rows: [
                 { id: 'readings', part: 'Readings', label: 'Gauge readings taken' },
                 { id: 'missed', part: 'Readings', label: 'Readings missed' },
                 { id: 'flagged', part: 'Readings', label: 'Readings flagged for review' },
+                { id: 'late', part: 'Readings', label: 'Readings sent in late' },
                 { id: 'samples', part: 'Samples', label: 'Water samples sent to the lab' },
                 { id: 'refused', part: 'Samples', label: 'Samples the lab refused' },
+                { id: 'kits', part: 'Samples', label: 'Field kits used' },
                 { id: 'visits', part: 'Upkeep', label: 'Visits by observers' },
                 { id: 'repairs', part: 'Upkeep', label: 'Repairs made' },
+                { id: 'damage', part: 'Upkeep', label: 'Damage reported' },
             ],
         },
     },
@@ -430,10 +473,10 @@ export function questionsOf(form: Form): Question[] {
 
 /** How many questions a form asks: its fields, or its grid's cells. */
 export function questionCount(form: Form): number {
-    return form.grid === undefined ? questionsOf(form).length : form.grid.rows.length * form.grid.categories.length
+    return form.grid === undefined ? questionsOf(form).length : form.grid.rows.length * gridCells(form.grid).length
 }
 
-/** A grid's key for one cell: the row and the category. */
+/** A grid's key for one answer: the row and the cell of the cut. */
 export const cellKey = (row: string, category: string) => `${row}.${category}`
 
 /** Whether a question holds an answer: not nothing, not empty text, and for a repeated one at least one text. */
@@ -486,8 +529,8 @@ export function testAnswers(form: Form, seed: number): Record<string, AnswerValu
     const answers: Record<string, AnswerValue> = {}
     if (form.grid !== undefined) {
         for (const row of form.grid.rows)
-            for (const category of form.grid.categories)
-                answers[cellKey(row.id, category.value)] = Math.floor(next() * (row.id === 'readings' ? 140 : 24))
+            for (const cell of gridCells(form.grid))
+                answers[cellKey(row.id, cell.value)] = Math.floor(next() * (row.id === 'readings' ? 140 : 24))
         return answers
     }
     for (const question of questionsOf(form)) {
