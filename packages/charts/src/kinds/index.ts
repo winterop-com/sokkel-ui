@@ -1,7 +1,7 @@
 import { boxplot } from './boxplot'
 import { bullet, bulletLegend } from './bullet'
 import { calendar } from './calendar'
-import { area, bar, donut, donutLegend, heatmap, line } from './categories'
+import { area, bar, donut, donutLegend, heatmap, line, pie } from './categories'
 import { dual } from './dual'
 import { sankey, sankeyLegend } from './flows'
 import { funnel, funnelLegend } from './funnel'
@@ -28,6 +28,7 @@ export const KINDS = {
     line: { build: line },
     area: { build: area },
     donut: { build: donut, legend: donutLegend },
+    pie: { build: pie, legend: donutLegend },
     heatmap: { build: heatmap, legend: () => [] },
     scatter: { build: scatter, legend: scatterLegend },
     histogram: { build: histogram, legend: histogramLegend },

@@ -7,7 +7,7 @@ import type { ChartSpec } from '@winterop-com/sokkel-ui-charts/kinds'
 import { STATE_HOUR_ROWS, STATE_LABEL_COLORS } from '../fixtures/dayRows'
 import { Ground } from './Ground'
 
-/** A donut on Chart: the day's runs by state, the total in the middle, the legend under it. */
+/** A donut on Chart: the day's runs by state, the total in the middle, the legend under it; and the same slices as a pie. */
 const meta: Meta = { title: 'Charts/Donut' }
 export default meta
 
@@ -26,6 +26,19 @@ export const ByState: StoryObj = {
             <div className="max-w-sm">
                 <ChartFrame title="Runs by state" legend={LEGEND} file="runs-by-state">
                     {(state) => <Chart kind="donut" label="Runs by state" {...BY_STATE} {...state} />}
+                </ChartFrame>
+            </div>
+        </Ground>
+    ),
+}
+
+/** The same runs by state as a pie: whole slices with no hole, the figures in the legend. */
+export const Pie: StoryObj = {
+    render: () => (
+        <Ground title="Runs, today" columns={1}>
+            <div className="max-w-sm">
+                <ChartFrame title="Runs by state" legend={LEGEND} file="runs-by-state">
+                    {(state) => <Chart kind="pie" label="Runs by state" {...BY_STATE} {...state} />}
                 </ChartFrame>
             </div>
         </Ground>

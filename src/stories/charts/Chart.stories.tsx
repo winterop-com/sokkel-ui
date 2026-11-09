@@ -48,6 +48,10 @@ const BY_HOUR_WEEKDAY: ChartSpec = {
     seriesOrder: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
 }
 const DURATION_AGAINST_ROWS: ChartSpec = { rows: RUN_ROWS, x: 'rows', y: 'duration', series: 'project', value: 'wait' }
+const COOL = ['kind-teal', 'kind-blue', 'kind-violet', 'kind-jade']
+const WARM = ['kind-pink', 'chart-5', 'chart-4', 'chart-3']
+const ROWS_BY_PROJECT: ChartSpec = { rows: RUN_ROWS, x: 'job', y: 'rows', series: 'project', stack: 'stacked', palette: COOL }
+const BY_WORKER: ChartSpec = { rows: RUN_ROWS, x: 'worker', palette: WARM }
 
 /** Runs per job, stacked by state in the states' own colors. */
 export const Stacked: StoryObj = {
@@ -109,6 +113,22 @@ export const Points: StoryObj = {
                 subtitle="sized by queue wait"
                 label="Each run's duration against its rows"
             />
+        </Ground>
+    ),
+}
+
+/** Series and slices in a palette of the app's choosing, in place of the theme's order: cool bars and a warm ring. */
+export const Palette: StoryObj = {
+    render: () => (
+        <Ground title="Runs, October">
+            <Framed
+                kind="bar"
+                spec={ROWS_BY_PROJECT}
+                title="Rows moved"
+                subtitle="by job and project"
+                label="Rows moved per job, stacked by project"
+            />
+            <Framed kind="donut" spec={BY_WORKER} title="Runs by worker" label="Runs by worker" />
         </Ground>
     ),
 }
