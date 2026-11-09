@@ -1,10 +1,27 @@
-import { describe, expect, test } from 'vitest'
+import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import type { VideoError } from '@winterop-com/sokkel-ui/media/video-source'
 
-import { hasMediaSource, hlsSource, hlsStats, type HlsModule } from './hls-source'
+import { hasMediaSource, hlsSource, hlsStats, isAppleWebKit, playsHlsNatively, type HlsModule } from './hls-source'
 
 const STREAM = 'https://media.example.org/harbor/stream.m3u8'
+
+/** User agents as each engine sends them; a WKWebView's names no Safari. */
+const SAFARI = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15'
+const WKWEBVIEW = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko)'
+const IPHONE =
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 26_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.1 Mobile/15E148 Safari/604.1'
+const IPHONE_CHROME =
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 26_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/156.0.8078.4 Mobile/15E148 Safari/604.1'
+const CHROME = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36'
+const HEADLESS_CHROME =
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36'
+const ELECTRON =
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Electron/41.0.0 Safari/537.36'
+const EDGE = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36 Edg/156.0.0.0'
+const ANDROID = 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Mobile Safari/537.36'
+const FIREFOX = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:150.0) Gecko/20100101 Firefox/150.0'
+const LINUX_WEBKIT = 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64) AppleWebKit/605.1.15 (KHTML, like Gecko)'
 
 type Listener = (event: string, data: unknown) => void
 
@@ -112,6 +129,10 @@ async function attached(options: Parameters<typeof hlsSource>[1] = {}, startAt?:
 }
 
 describe('an HLS source', () => {
+    afterEach(() => {
+        vi.unstubAllGlobals()
+    })
+
     test('is known by its URL', () => {
         expect(hlsSource(STREAM).id).toBe(STREAM)
     })
@@ -132,6 +153,30 @@ describe('an HLS source', () => {
         expect(hls.config).toEqual({ lowLatencyMode: true })
         expect(hls.calls).toEqual([`loadSource ${STREAM}`, 'attachMedia'])
         expect(hls.media).toBe(video)
+    })
+
+    test("gives Apple's WebKit the stream to play itself, Media Source Extensions or not", () => {
+        vi.stubGlobal('navigator', { userAgent: WKWEBVIEW })
+        vi.stubGlobal('MediaSource', class {})
+        const engine = fake()
+        const { video } = element(true)
+        hlsSource(STREAM, { load: engine.load }).attach(video, () => undefined)
+        expect(video.src).toBe(STREAM)
+        expect(engine.loads()).toBe(0)
+    })
+
+    test('plays through hls.js in Chromium, which says it plays HLS itself too', async () => {
+        vi.stubGlobal('navigator', { userAgent: CHROME })
+        vi.stubGlobal('MediaSource', class {})
+        FakeHls.made = []
+        const engine = fake()
+        const { video } = element(true)
+        const source = hlsSource(STREAM, { load: engine.load })
+        source.attach(video, () => undefined)
+        await Promise.resolve()
+        expect(engine.loads()).toBe(1)
+        expect(video.src).toBe('')
+        expect(source.stats?.(video)?.engine).toBe('hls.js')
     })
 
     test('plays through hls.js even where the browser could, when told not to play natively', async () => {
@@ -262,6 +307,22 @@ describe('an HLS source', () => {
         expect(source.stats?.(video)).toEqual({ engine: 'native' })
         detach()
         expect(source.stats?.(video)).toBeNull()
+    })
+
+    test("tells Apple's WebKit from Chromium and WebKit elsewhere", () => {
+        for (const agent of [SAFARI, WKWEBVIEW, IPHONE, IPHONE_CHROME]) expect(isAppleWebKit(agent)).toBe(true)
+        for (const agent of [CHROME, HEADLESS_CHROME, ELECTRON, EDGE, ANDROID, FIREFOX, LINUX_WEBKIT])
+            expect(isAppleWebKit(agent)).toBe(false)
+    })
+
+    test("plays HLS itself in Apple's WebKit, and elsewhere only without Media Source Extensions", () => {
+        const says = (answer: CanPlayTypeResult) => ({ canPlayType: () => answer })
+        const withMse = { MediaSource: class {} }
+        expect(playsHlsNatively(says('maybe'), { userAgent: WKWEBVIEW, scope: withMse })).toBe(true)
+        expect(playsHlsNatively(says('maybe'), { userAgent: CHROME, scope: withMse })).toBe(false)
+        expect(playsHlsNatively(says('maybe'), { userAgent: ELECTRON, scope: withMse })).toBe(false)
+        expect(playsHlsNatively(says('maybe'), { userAgent: ANDROID, scope: {} })).toBe(true)
+        expect(playsHlsNatively(says(''), { userAgent: SAFARI, scope: {} })).toBe(false)
     })
 
     test('can play where the browser plays HLS or has Media Source Extensions', () => {
