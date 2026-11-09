@@ -217,7 +217,7 @@ export function StatPanel({
                 )}
             </header>
             <LoadingOverlay loading={loading} label={words.loading} className="flex min-h-0 flex-1 flex-col">
-                <div className={cn('flex flex-1 flex-col items-center justify-center px-2.5 pb-3', inked && 'text-(--tone)')}>
+                <div className={cn('flex flex-1 flex-col items-center px-2.5 pb-3', inked && 'text-(--tone)')}>
                     <p
                         className={cn(
                             'flex items-baseline gap-1 tabular-nums',

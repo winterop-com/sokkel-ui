@@ -116,7 +116,15 @@ export function LoadingOverlay({ loading, delay = 300, label = 'Loading', classN
     const long = useLongWait(loading, delay)
     return (
         <div aria-busy={loading || undefined} className={cn('relative', className)}>
-            <div className={cn('transition-opacity duration-200', long && 'pointer-events-none opacity-50 select-none')}>{children}</div>
+            {/* A column that fills the element, so content set to grow fills an element stretched taller than it, as a panel in a row is. */}
+            <div
+                className={cn(
+                    'flex min-h-0 flex-1 flex-col transition-opacity duration-200',
+                    long && 'pointer-events-none opacity-50 select-none',
+                )}
+            >
+                {children}
+            </div>
             {long && (
                 <div className="pointer-events-none absolute inset-x-0 top-0 overflow-hidden rounded-t-[inherit]">
                     <LoadingBar label={label} className="bg-transparent" />
