@@ -69,6 +69,13 @@ export interface TreeSelectProps {
     search?: (query: string) => Promise<readonly TreeTrail[]>
     /** Where chosen nodes not loaded yet sit, so the trigger names them by their path and the tree opens to them. */
     trails?: readonly TreeTrail[]
+    /**
+     * Why a node cannot be chosen, such as a place outside a form's assignment, or `undefined` when
+     * it can. Its row is drawn shut with the reason at its end, and its branch still opens.
+     */
+    unavailable?: (node: TreeNode) => string | undefined
+    /** The question may be left unanswered: the list opens with a row that clears the choice (`words.clear`). */
+    optional?: boolean
     words?: Partial<TreeSelectWords>
     className?: string
     invalid?: boolean
@@ -83,6 +90,11 @@ export interface TreeSelectProps {
  * For a large hierarchy, `loadChildren` brings a level when it is first opened (kept for the next
  * time the popover opens), and `search` looks through the whole of it, listing each match with its
  * path. A choice not loaded yet is named by its path from `trails`, or from the search that found it.
+ *
+ * `unavailable` scopes the choice: a node it gives a reason for, such as a place outside a form's
+ * assignment, is drawn shut with that reason and cannot be chosen, while its branch still opens.
+ * `optional` starts the list with a Clear row, chosen while nothing is, that leaves the question
+ * unanswered; without it the Clear button beside the search does that once something is chosen.
  *
  * Left to itself the popover opens and closes on its own, starting at `defaultOpen`; `open` with
  * `onOpenChange` holds it from outside.
@@ -101,6 +113,8 @@ export function TreeSelect({
     loadChildren,
     search,
     trails = [],
+    unavailable,
+    optional = false,
     words: given,
     className,
     invalid = false,
@@ -202,7 +216,7 @@ export function TreeSelect({
                         aria-label={words.search}
                         className="h-9 flex-1 text-sm"
                     />
-                    {value.length > 0 && (
+                    {value.length > 0 && !optional && (
                         <button
                             type="button"
                             onClick={() => onValueChange([])}
@@ -214,6 +228,25 @@ export function TreeSelect({
                     )}
                 </div>
                 <div className="max-h-80 overflow-y-auto p-1">
+                    {optional && query.trim() === '' && (
+                        <button
+                            type="button"
+                            aria-pressed={value.length === 0}
+                            onClick={() => {
+                                onValueChange([])
+                                setOpen(false)
+                            }}
+                            className={cn(
+                                'flex h-8 w-full items-center gap-1.5 rounded-md pr-2 pl-1 text-left text-sm text-muted-foreground outline-none select-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                                value.length === 0 && 'bg-primary/12 font-medium text-primary-ink hover:bg-primary/18',
+                            )}
+                        >
+                            <span className="flex size-5 shrink-0 items-center justify-center" aria-hidden>
+                                <X className="size-3.5" />
+                            </span>
+                            {words.clear}
+                        </button>
+                    )}
                     <Tree
                         label={words.search}
                         nodes={nodes}
@@ -224,6 +257,7 @@ export function TreeSelect({
                         loadChildren={loadChildren === undefined ? undefined : load}
                         search={search === undefined ? undefined : find}
                         trails={known}
+                        unavailable={unavailable}
                         words={words}
                         onSelect={(ids) => {
                             const trailed = ids.flatMap((each) => {

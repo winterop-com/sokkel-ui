@@ -40,8 +40,9 @@ says what is missing. **Not covered** has no part yet.
    (remembered), bands by the smallest category when a cut has five or more cells, and a search with
    Unfilled only over long runs. `DataTable` with `tableEditing`, `groupBy` and `aggregate` draws the
    grid, its totals and its folding to cards today.
-8. **`TreeSelect` scopes.** Places outside a form's assignment drawn shut with why, and a Clear row
-   for an optional place question.
+8. **`TreeSelect` scopes.** Closed: `unavailable` draws a place outside a form's assignment shut
+   with its reason (the stock form is filed per region, so its sites and country say so), and
+   `optional` starts the list with a Clear row.
 9. **Counts beside a bar.** Closed: a `BarList` item's `note` is said after its share, so the
    health page's translations read "1,740 of 2,866 strings" beside each bar.
 10. **The palette's foot and rows, the rest.** The foot's verb follows the chosen row (Open, Switch,
@@ -107,7 +108,7 @@ mounts its control afresh as an issue comes or goes, which closed the period pic
 | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Header: back to All forms, title, kind, id, question count, API chip                                 | `PageHeader` (`onBack`, `code`, `meta`, `actions`), `ApiLink`          | Covered     |                                                                                                                                                                                |
 | Context cards side by side, each a label, a long sentence and a control                              | `Section` with `Columns` `fields` and `Field`                          | Covered     | Every control in a row lines up whatever its sentence's length.                                                                                                                |
-| Reporting from: a place picker with search and browse                                                | `TreeSelect`                                                           | Partly      | Places outside the form's scope and Clear are item 8.                                                                                                                          |
+| Reporting from: a place picker with search and browse                                                | `TreeSelect` with `unavailable` and `optional`                         | Covered     | The form's scope becomes `unavailable`'s reasons; an optional place question sets `optional`.                                                                                  |
 | Reporting period: recent periods of the form's type, Other period typed in                           | `PeriodPicker`, `lib/periods`                                          | Covered     | Its period types map onto `daily` to `yearly`; the uncommon ones (two-weekly, financial years, weeks from other days) are typed through Other period, which the server grades. |
 | Visit date with seconds                                                                              | `DateTimeField` (`seconds`), `DateField`                               | Covered     |                                                                                                                                                                                |
 | The category the values are filed under (a list with entries shut by date or place)                  | `Field` with `Select`, a disabled item with its reason                 | Covered     |                                                                                                                                                                                |

@@ -1,7 +1,7 @@
 import type { KindColor } from '@winterop-com/sokkel-ui/lib/kind'
 import { parsePeriod, PERIOD_TYPES, recentPeriods, type PeriodType } from '@winterop-com/sokkel-ui/lib/periods'
 
-import { bankHeight, PLACES } from './geo'
+import { bankHeight, PLACES, type Level } from './geo'
 
 /** How a form is filed: counts for a place over a period, one event, a person's registration, or a visit to a registered person. */
 export type FormKind = 'periodic' | 'event' | 'registration' | 'followup'
@@ -85,6 +85,8 @@ export interface Form {
     description: string
     /** The period a periodic report is made for. */
     period?: PeriodType
+    /** The levels of place the form is assigned to; every level when left out. */
+    levels?: readonly Level[]
     sections: readonly FormSection[]
     grid?: CountGrid
     /** The program a registration or a follow-up belongs to. */
@@ -151,6 +153,7 @@ export const FORMS: readonly Form[] = [
         title: 'Gauge and kit stock',
         kind: 'periodic',
         period: 'quarterly',
+        levels: ['region'],
         description: 'What a region holds in store at the end of a quarter.',
         sections: [
             {
