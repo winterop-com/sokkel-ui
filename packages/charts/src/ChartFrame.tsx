@@ -94,6 +94,9 @@ export interface ChartFrameProps {
     children: (state: ChartState) => ReactNode
 }
 
+/** A table legend of this many series or fewer shows them all; a longer one scrolls in its own box. */
+const SHORT_LEGEND = 6
+
 /**
  * The chrome around a chart: a small title with an optional info marker and subtitle, the panel's
  * actions, an Export menu (SVG and PNG, with the title and legend drawn into the image) and an
@@ -185,7 +188,10 @@ export function ChartFrame({
                         stats={legendStats}
                         format={legendFormat}
                         words={words.legend}
-                        className={cn('mt-1 shrink-0', legendMode === 'table' && 'max-h-40 overflow-y-auto')}
+                        className={cn(
+                            'mt-1 shrink-0',
+                            legendMode === 'table' && legend.length > SHORT_LEGEND && 'max-h-40 overflow-y-auto',
+                        )}
                     />
                 ) : null
             }

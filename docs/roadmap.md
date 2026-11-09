@@ -125,15 +125,6 @@ to `plan.md` when it ships.
   1280 and 344 wide, every theme in both schemes) and a review of the twelve example apps on the
   web. Each round below is a PR or a few, smallest and surest first. Every fix goes in the
   component, never the story, with a test or story that shows it.
-    - **Round 3, charts:**
-        - Chart text is 11 and 10 px (`chart-text-size`, `chart-text-size-small`) beside 13 px
-          everywhere else. Try 12 to 13 px in rendered stories, then fix what it crowds.
-        - Ticks chosen from the room and the label's width, so a narrow heatmap's hours do not run
-          together, and its scale takes less of the width.
-        - Radar labels clipped at the edges at 344: reserve room for the labels and shrink the
-          radius, never the text.
-        - A short legend scrolls inside itself with room to spare below: let it grow to its series,
-          scrolling only a long one.
     - **Round 4, narrow layouts:**
         - `RunGraph`, lineage and branching pipelines lose their downstream steps on a phone, the
           failed step among them. Lay them out top to bottom when narrow, or open on the failed

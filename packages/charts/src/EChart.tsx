@@ -2,7 +2,7 @@ import type { EChartsCoreOption, EChartsType } from 'echarts/core'
 import { useEffect, useImperativeHandle, useMemo, useRef, useState, type Ref } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
-import { useChartLook, type ChartLook } from './look'
+import { textWidth, useChartLook, type ChartLook } from './look'
 import { chartTheme } from './theme'
 import { keepZoom } from './zoom'
 
@@ -56,7 +56,58 @@ function fewerSteps(axis: unknown): unknown {
  * The option as drawn: ECharts' own legend hidden behind ours, series hidden by name, animation off
  * when asked, the tooltip on the page body, and fewer steps up the side of a short chart.
  */
-function compose(option: EChartsCoreOption, hidden: ReadonlySet<string>, animate: boolean, short = false): EChartsCoreOption {
+/** The room a chart has, in pixels, rounded so it redraws on a real change of size and not on every pixel. */
+interface Room {
+    width: number
+    height: number
+}
+
+const ROUNDED = 24
+
+const roomOf = (element: HTMLElement): Room => ({
+    width: Math.round(element.clientWidth / ROUNDED) * ROUNDED,
+    height: Math.round(element.clientHeight / ROUNDED) * ROUNDED,
+})
+
+const each = (part: unknown, fit: (one: Record<string, unknown>) => unknown) =>
+    Array.isArray(part) ? part.map((one) => fit(one as Record<string, unknown>)) : fit(part as Record<string, unknown>)
+
+/** A radar's radius shrunk until the names at its sides fit beside it, never the names. */
+function fitRadar(radar: unknown, room: Room): unknown {
+    return each(radar, (one) => {
+        const names = (one.indicator as { name?: string }[] | undefined) ?? []
+        const size = (one.axisName as { fontSize?: number } | undefined)?.fontSize ?? 12
+        const widest = Math.max(0, ...names.map((spoke) => textWidth(spoke.name ?? '', size)))
+        const beside = room.width / 2 - widest - ((one.axisNameGap as number | undefined) ?? 6) - 4
+        const usual = (0.68 * Math.min(room.width, room.height)) / 2
+        return beside >= usual ? one : { ...one, radius: Math.max(24, beside) }
+    })
+}
+
+/** A category axis whose labels are set to every nth shows fewer, in steps of n, when that many would run together. */
+function fitTicks(axis: unknown, room: Room): unknown {
+    return each(axis, (one) => {
+        const label = one.axisLabel as { interval?: unknown; fontSize?: number } | undefined
+        if (one.type !== 'category' || !Array.isArray(one.data) || typeof label?.interval !== 'number') return one
+        const size = label.fontSize ?? 12
+        const names = (one.data as unknown[]).map((item) =>
+            String(typeof item === 'object' && item !== null && 'value' in item ? (item as { value: unknown }).value : item),
+        )
+        const widest = Math.max(0, ...names.map((name) => textWidth(name, size))) + 8
+        const fits = Math.max(1, Math.floor((room.width - 64) / widest))
+        const step = label.interval + 1
+        const needed = Math.ceil(names.length / fits)
+        return needed <= step ? one : { ...one, axisLabel: { ...label, interval: step * Math.ceil(needed / step) - 1 } }
+    })
+}
+
+function compose(
+    option: EChartsCoreOption,
+    hidden: ReadonlySet<string>,
+    animate: boolean,
+    short = false,
+    room: Room | null = null,
+): EChartsCoreOption {
     const legend = (Array.isArray(option.legend) ? option.legend[0] : option.legend) as Record<string, unknown> | undefined
     // The tooltip lives on the page body, so a panel's clipping or the chart above it never covers it.
     const onBody = (tooltip: unknown) => ({ appendTo: 'body', ...(tooltip as Record<string, unknown>) })
@@ -66,6 +117,8 @@ function compose(option: EChartsCoreOption, hidden: ReadonlySet<string>, animate
         ...option,
         ...(tooltip === undefined ? {} : { tooltip }),
         ...(short && option.yAxis !== undefined ? { yAxis: fewerSteps(option.yAxis) } : {}),
+        ...(room !== null && option.radar !== undefined ? { radar: fitRadar(option.radar, room) } : {}),
+        ...(room !== null && option.xAxis !== undefined ? { xAxis: fitTicks(option.xAxis, room) } : {}),
         animation: animate && option.animation !== false,
         legend: { show: false, ...legend, selected: Object.fromEntries([...hidden].map((name) => [name, false])) },
     }
@@ -142,6 +195,12 @@ export function EChart({ option, label, hidden = EMPTY, hovered = null, animate 
     // Whether the current option is drawn; marked on the element, so a screenshot waits for it.
     const [settled, setSettled] = useState(false)
     const [short, setShort] = useState(false)
+    const [room, setRoom] = useState<Room | null>(null)
+    const measure = (el: HTMLElement) => {
+        setShort(el.clientHeight < SHORT)
+        const next = roomOf(el)
+        setRoom((held) => (held !== null && held.width === next.width && held.height === next.height ? held : next))
+    }
     const resolved = useMemo(
         () => (look === null || option === null ? null : typeof option === 'function' ? option(look) : option),
         [look, option],
@@ -163,10 +222,10 @@ export function EChart({ option, label, hidden = EMPTY, hovered = null, animate 
             if (!live || el === null || themed.current === null) return
             chart.current = init(el, chartTheme(themed.current), { renderer: 'canvas' })
             made.current = partsLoaded()
-            setShort(el.clientHeight < SHORT)
+            measure(el)
             observer = new ResizeObserver(() => {
                 chart.current?.resize()
-                setShort(el.clientHeight < SHORT)
+                measure(el)
             })
             observer.observe(el)
             setReady(true)
@@ -207,14 +266,14 @@ export function EChart({ option, label, hidden = EMPTY, hovered = null, animate 
             const instance = chart.current
             if (instance === null) return
             const zooms = (instance.getOption() as { dataZoom?: { start?: number; end?: number }[] } | undefined)?.dataZoom ?? []
-            instance.setOption(keepZoom(drawnOption.current, compose(resolved, hidden, animate, short), zooms), { notMerge: true })
+            instance.setOption(keepZoom(drawnOption.current, compose(resolved, hidden, animate, short, room), zooms), { notMerge: true })
             drawnOption.current = resolved
             setSettled(true)
         })
         return () => {
             live = false
         }
-    }, [ready, resolved, hidden, animate, short])
+    }, [ready, resolved, hidden, animate, short, room])
 
     useEffect(() => {
         const instance = chart.current

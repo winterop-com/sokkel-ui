@@ -101,8 +101,8 @@ export function readLook(key = readKey()): ChartLook {
         card: token('card'),
         popover: token('popover'),
         size: {
-            label: pixels('chart-text-size', 11),
-            small: pixels('chart-text-size-small', 10),
+            label: pixels('chart-text-size', 12),
+            small: pixels('chart-text-size-small', 11),
             body: pixels('text-xs', 13),
             stat: pixels('chart-stat-size', 24),
             statSmall: pixels('chart-stat-size-small', 18),
@@ -155,4 +155,11 @@ export function tooltipMarkup(title: string, rows: readonly TooltipRow[]): strin
         )
         .join('')
     return `<div class="grid min-w-36 gap-1 rounded-md border border-border bg-popover px-2.5 py-1.5 font-sans text-xs text-popover-foreground shadow-(--elevation-pop)">${title === '' ? '' : `<div class="font-medium">${escape(title)}</div>`}${lines}</div>`
+}
+
+/** About how wide a line of text is drawn at this size, in pixels: wide letters, narrow marks and the rest. */
+export function textWidth(text: string, size: number): number {
+    let ems = 0
+    for (const char of text) ems += /[mwMW%]/.test(char) ? 0.88 : /[\s.,:;'il|/!³²]/.test(char) ? 0.32 : 0.6
+    return ems * size
 }

@@ -1,5 +1,5 @@
 import { formatCompact } from '../data'
-import { tooltipMarkup, withAlpha, type ChartLook } from '../look'
+import { textWidth, tooltipMarkup, withAlpha, type ChartLook } from '../look'
 import { niceExtent } from '../scales'
 import { farCorners, fading, shaped, written } from './categories'
 import { colorOf, unitAt, type ChartBuilder, type LinkedPanel } from './spec'
@@ -39,13 +39,6 @@ export function linkedLayout(weights: readonly number[]): { top: number | string
         start = end + share(GAP)
         return box
     })
-}
-
-/** About how wide a line of text is drawn at this size, in pixels: wide letters, narrow marks and the rest. */
-export function textWidth(text: string, size: number): number {
-    let ems = 0
-    for (const char of text) ems += /[mwMW%]/.test(char) ? 0.88 : /[\s.,:;'il|/!³²]/.test(char) ? 0.32 : 0.6
-    return ems * size
 }
 
 /** The widest tick label a value axis over these figures draws, in pixels, with three or so ticks from zero. */
