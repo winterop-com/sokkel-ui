@@ -182,7 +182,6 @@ to `plan.md` when it ships.
     - sheets that resize from their left edge and keep their width
     - repeating answers
     - a grouped list of examples in tabs beside an editor
-    - its two themes named by their look: a steel-blue chrome and a warm white with an ember accent
     - a free-form detail under an opened `DataTable` row
     - the rest of `ApiPlayground`
     - more modes for the entry grid

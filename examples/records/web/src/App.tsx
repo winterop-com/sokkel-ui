@@ -55,6 +55,10 @@ import { Responses } from './pages/Responses'
 import { Server } from './pages/Server'
 import { FootContext, RECEIPT_STATUSES, type Foot } from './ui'
 
+/** The themes `app.css` loads, the base theme first. */
+const OFFERED = new Set(['tidevann', 'indigo', 'paper', 'contrast', 'terminal', 'steel', 'ember'])
+const APP_THEMES = THEMES.filter((theme) => OFFERED.has(theme.value))
+
 /** The place each first part of the route opens. */
 const PLACES_BY_ROUTE: Record<string, string> = {
     '': 'overview',
@@ -250,8 +254,8 @@ export function App() {
                             title: 'Theme',
                             description: 'Every theme has a light and a dark scheme.',
                             layout: 'below',
-                            keywords: ['dark', 'light', 'scheme', 'density', ...THEMES.map((theme) => theme.label)],
-                            control: <ThemePicker value={settings} onChange={setSettings} themes={THEMES} system themeList />,
+                            keywords: ['dark', 'light', 'scheme', 'density', ...APP_THEMES.map((theme) => theme.label)],
+                            control: <ThemePicker value={settings} onChange={setSettings} themes={APP_THEMES} system themeList />,
                         },
                     ],
                 },

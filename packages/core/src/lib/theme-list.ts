@@ -13,4 +13,6 @@ export const THEME_LIST: readonly { value: string; label: string; description?: 
     { value: 'ocean', label: 'Ocean', description: 'Deep sea blues and teal, with softer corners.' },
     { value: 'indigo', label: 'Indigo', description: 'An indigo accent on cool neutrals.' },
     { value: 'terminal', label: 'Terminal', description: 'Green on black in the code face, and a light console by day.' },
+    { value: 'steel', label: 'Steel', description: 'A steel-blue chrome (rail, bars, heads) over the familiar cool gray.' },
+    { value: 'ember', label: 'Ember', description: 'Warm white, with an ember accent spent only where the app acts.' },
 ]
