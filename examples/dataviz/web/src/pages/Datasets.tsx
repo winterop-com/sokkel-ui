@@ -134,7 +134,7 @@ export function DatasetsPage({
             <PageHeader
                 title="Datasets"
                 count={counted(datasets.length, 'dataset')}
-                description="Tables of data to chart. Import a file or paste rows; every dataset is kept in this browser."
+                description="Tables of data to chart. Import a file or paste rows."
                 actions={
                     <Button size="sm" onClick={onImport}>
                         <Upload aria-hidden />

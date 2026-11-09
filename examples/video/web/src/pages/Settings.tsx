@@ -254,7 +254,7 @@ export function Settings({ frame, open, onClose }: { frame: Frame; open: boolean
                         {
                             id: 'look',
                             title: 'Theme',
-                            description: 'The theme, the scheme and the density, kept in this browser.',
+                            description: 'The theme, the scheme and the density.',
                             layout: 'below',
                             keywords: ['dark', 'light', 'scheme', 'density'],
                             control: <ThemePicker value={look} onChange={setLook} themes={THEMES} system />,

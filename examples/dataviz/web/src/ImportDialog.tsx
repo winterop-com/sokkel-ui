@@ -177,7 +177,7 @@ export function ImportDialog({ open, onOpenChange }: { open: boolean; onOpenChan
             width="xl"
             phone="sheet"
             title="Import data"
-            description="A CSV, TSV or JSON file, or rows pasted. It is read in this browser and kept here; nothing is sent anywhere."
+            description="A CSV, TSV or JSON file, or rows pasted."
             confirm={{ label: 'Import', onConfirm: save, busy, busyLabel: 'Importing', why }}
             footer={
                 table === null ? undefined : <span className="text-xs text-muted-foreground">{counted(table.rows.length, 'row')} read</span>

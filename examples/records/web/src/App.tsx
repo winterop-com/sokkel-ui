@@ -386,7 +386,7 @@ export function App() {
                                         facts={[
                                             SERVER.address,
                                             'Serves forms, places, households and responses',
-                                            'Keeps what it receives in this browser',
+                                            'Keeps every response it receives',
                                         ]}
                                         onCheck={server.check}
                                     >

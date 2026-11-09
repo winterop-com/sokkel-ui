@@ -207,7 +207,7 @@ export function SettingsPage({
                 onActiveChange={setActive}
                 search={search}
                 onSearchChange={setSearch}
-                footer="Kept in this browser as they are changed"
+                footer="Saved as each is changed"
                 onReset={(section) => {
                     if (section === 'charts')
                         set({
