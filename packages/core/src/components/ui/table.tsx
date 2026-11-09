@@ -2,11 +2,14 @@ import * as React from 'react'
 import { cn } from '../../lib/cn'
 import { TABLE_HEAD_TEXT } from '../../lib/table'
 
-export type TableProps = React.ComponentProps<'table'>
+export type TableProps = React.ComponentProps<'table'> & {
+    /** Classes for the box around the table, which scrolls it sideways; `overflow-x-visible` lets a sticky head follow an outer scroller. */
+    containerClassName?: string
+}
 
-function Table({ className, ...props }: TableProps) {
+function Table({ className, containerClassName, ...props }: TableProps) {
     return (
-        <div data-slot="table-container" className="relative w-full overflow-x-auto">
+        <div data-slot="table-container" className={cn('relative w-full overflow-x-auto', containerClassName)}>
             <table data-slot="table" className={cn('w-full caption-bottom text-sm', className)} {...props} />
         </div>
     )
