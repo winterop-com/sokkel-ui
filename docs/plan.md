@@ -581,7 +581,7 @@ gutter dot, the message on hover), `onRun` on Mod-Enter and any other `keys`, a 
 fold gutter, bracket colors by depth and indent guides; the last three turn off past a megabyte. Given
 a JSON Schema (2020-12), JSON and YAML are checked by the same ajv rules as SchemaForm, each issue
 placed on the key or value it is about, and the schema's property names and enum values complete as
-they are typed, a key already written left out, a required one first, and a key with a default
+they are typed, a key already written left out, a required one first, `allOf` parts followed and each `if` decided against the document, so a key's `then` offers only the branch that applies, and a key with a default
 put in with the default selected. A document can name its own schema, by a top-level `$schema` or
 a `# yaml-language-server: $schema=` line: the app finds it by address with `resolveSchema`, the
 editor fetching nothing, and a schema document in the 2020-12 dialect is checked against that
@@ -589,14 +589,16 @@ dialect's meta-schema, which ajv carries. A key's type and description show on h
 selects a range and scrolls it into view. `variant="pane"` fills a pane edge to edge; the Query app
 shows it in panes.
 
-CodeMirror rather than Monaco, weighed on 2026-11-09 against an app that edits pipelines in Monaco.
+CodeMirror rather than Monaco, weighed on 2026-11-09 against an app that edits pipelines in Monaco,
+and still open until that app has moved onto it: the deciding question is whether schema-aware YAML
+(completion, hover and checks through `allOf` and `if`/`then`) holds up against monaco-yaml's.
 Both are MIT. CodeMirror is plain ES modules, where Monaco runs its languages in web workers that
-each app's bundler has to set up. It is styled with CSS, so the `code-*` tokens and a change of
+each app's bundler has to set up, and a page's security policy has to allow (`worker-src blob:`). It is styled with CSS, so the `code-*` tokens and a change of
 scheme reach it as they reach everything else, where Monaco takes literal colors and one theme for
 every editor on the page. It keeps no global state, where Monaco holds one model per address and
-one YAML schema setup per page, so two editors with different schemas would contend. It works on
-phones, which Monaco does not support, and edits prose with the browser's own spellcheck, which the
-notes editor needs. And it is small: about 134 KB gzipped with JSON, YAML, completion, lint,
+one YAML schema setup per page, so two editors with different schemas would contend. It edits prose
+with the browser's own spellcheck, which the notes editor needs. (Editing code on a phone or a
+folded foldable is not a goal, so neither editor is chosen for it.) And it is small: about 134 KB gzipped with JSON, YAML, completion, lint,
 search and folding, where Monaco's editor alone is about 1 MB before its workers. What Monaco
 brings over it is VS Code's language services; when the editor needs one, it comes through
 `@codemirror/lsp-client` and a language server in a worker, never a second editor.

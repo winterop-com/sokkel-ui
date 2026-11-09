@@ -5,7 +5,7 @@ import type { EditorState } from '@codemirror/state'
 import type { EditorView } from '@codemirror/view'
 
 import { literal, resolve, typeLabel, type JsonSchema } from '../schema/read'
-import { pointer, type Path, type SchemaIssue } from '../schema/issues'
+import { pointer, valueAt, type Path, type SchemaIssue } from '../schema/issues'
 import type { validate } from '../schema/validate'
 
 type SyntaxNode = ReturnType<typeof syntaxTree>['topNode']
@@ -346,14 +346,28 @@ function yamlLine(line: string): { dashes: number[]; key?: { name: string; colum
     return { dashes, key: { name, column, open: key[2].replace(/#.*$/, '').trim() === '' }, content: column }
 }
 
-/** The slot at a position in YAML, read from the indentation of the lines above it. */
+/** How many items of the list whose dashes stand at `column` come before the line, back to the list's own key. */
+function itemsBefore(state: EditorState, lineNumber: number, column: number): number {
+    let count = 0
+    for (let number = lineNumber - 1; number >= 1; number -= 1) {
+        const text = state.doc.line(number).text
+        if (text.trim() === '' || text.trim().startsWith('#')) continue
+        const parsed = yamlLine(text)
+        const start = parsed.dashes[0] ?? parsed.content
+        if (start < column) break
+        if (parsed.dashes[0] === column) count += 1
+    }
+    return count
+}
+
+/** The slot at a position in YAML, read from the indentation of the lines above it, each list item at its own index. */
 export function yamlSlot(state: EditorState, pos: number): Slot {
     const line = state.doc.lineAt(pos)
     const before = state.sliceDoc(line.from, pos)
     const here = yamlLine(before)
     const word = /[^\s:]*$/.exec(before)?.[0] ?? ''
     const from = pos - word.length
-    const tail: Path = here.dashes.map(() => 0)
+    const tail: Path = here.dashes.map((dash, index) => (index === 0 ? itemsBefore(state, line.number, dash) : 0))
     let target = here.dashes[0] ?? here.content
     const path: Path[] = []
     for (let number = line.number - 1; number >= 1 && target > 0; number -= 1) {
@@ -367,7 +381,7 @@ export function yamlSlot(state: EditorState, pos: number): Slot {
         }
         for (const dash of [...parsed.dashes].reverse())
             if (dash < target) {
-                found.unshift(0)
+                found.unshift(dash === parsed.dashes[0] ? itemsBefore(state, number, dash) : 0)
                 target = dash
             }
         if (found.length > 0) path.unshift(found)
@@ -378,19 +392,88 @@ export function yamlSlot(state: EditorState, pos: number): Slot {
     return { path: at, at: 'key', from, quoted: false }
 }
 
-/** The schemas a value at the path may follow: one, or each branch of a choice. */
-export function schemasAt(schema: JsonSchema, path: Path, root: JsonSchema = schema): JsonSchema[] {
-    const expand = (each: JsonSchema): JsonSchema[] => {
-        const resolved = resolve(each, root)
-        const branches = [
-            ...(resolved.anyOf ?? []),
-            ...(resolved.oneOf ?? []),
-            ...[resolved.then, resolved.else].filter((branch): branch is JsonSchema => typeof branch === 'object' && branch !== null),
-        ]
-        return branches.length > 0 ? [resolved, ...branches.flatMap(expand)] : [resolved]
+/** A schema with its local `$ref` followed, its `allOf` left in place. */
+function followRef(schema: JsonSchema, root: JsonSchema): JsonSchema {
+    let current = schema
+    for (let hops = 0; current.$ref !== undefined && hops < 16; hops += 1) {
+        const match = /^#\/(\$defs|definitions)\/(.+)$/.exec(current.$ref)
+        const target = match === null ? undefined : root[match[1] === '$defs' ? '$defs' : 'definitions']?.[match[2]]
+        if (target === undefined) break
+        const { $ref: _ref, ...rest } = current
+        current = { ...(target as JsonSchema), ...rest }
     }
-    let current = expand(schema)
-    for (const part of path) {
+    return current
+}
+
+const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value)
+
+function hasType(value: unknown, type: string): boolean {
+    switch (type) {
+        case 'object':
+            return isRecord(value)
+        case 'array':
+            return Array.isArray(value)
+        case 'integer':
+            return typeof value === 'number' && Number.isInteger(value)
+        case 'number':
+            return typeof value === 'number'
+        case 'null':
+            return value === null
+        default:
+            return typeof value === type
+    }
+}
+
+/** Whether a value meets an `if`: the parts a condition is written with (const, enum, type, required, properties, allOf, anyOf, not). */
+export function satisfies(condition: JsonSchema, value: unknown): boolean {
+    if (condition.const !== undefined && !same(condition.const, value)) return false
+    if (condition.enum !== undefined && !condition.enum.some((one) => same(one, value))) return false
+    if (condition.type !== undefined) {
+        const types = Array.isArray(condition.type) ? condition.type : [condition.type]
+        if (!types.some((type) => hasType(value, type))) return false
+    }
+    if (condition.required !== undefined && (!isRecord(value) || condition.required.some((key) => !(key in value)))) return false
+    if (condition.properties !== undefined && isRecord(value))
+        for (const [key, inner] of Object.entries(condition.properties)) if (key in value && !satisfies(inner, value[key])) return false
+    if (condition.allOf !== undefined && !condition.allOf.every((part) => satisfies(part, value))) return false
+    if (condition.anyOf !== undefined && !condition.anyOf.some((part) => satisfies(part, value))) return false
+    const not = condition.not as JsonSchema | undefined
+    if (not !== undefined && satisfies(not, value)) return false
+    return true
+}
+
+/**
+ * The schemas a value at the path may follow: one, each branch of a choice, each part of an
+ * `allOf`, and a conditional's `then` or `else`. Given the `document`, each `if` is decided against
+ * the value it is about, so only the branch that applies is followed; without it both are.
+ */
+export function schemasAt(schema: JsonSchema, path: Path, root: JsonSchema = schema, document?: { value: unknown }): JsonSchema[] {
+    const expand = (each: JsonSchema, at: Path): JsonSchema[] => {
+        const {
+            allOf,
+            if: test,
+            then,
+            else: otherwise,
+            ...own
+        } = followRef(each, root) as JsonSchema & {
+            if?: JsonSchema
+            then?: JsonSchema
+            else?: JsonSchema
+        }
+        const out: JsonSchema[] = [own]
+        for (const branch of [...(own.anyOf ?? []), ...(own.oneOf ?? [])]) out.push(...expand(branch, at))
+        for (const part of allOf ?? []) out.push(...expand(part, at))
+        if (typeof test === 'object' && test !== null) {
+            const holds = document === undefined ? undefined : satisfies(test, valueAt(document.value, at))
+            if (holds !== false && typeof then === 'object' && then !== null) out.push(...expand(then, at))
+            if (holds !== true && typeof otherwise === 'object' && otherwise !== null) out.push(...expand(otherwise, at))
+        }
+        return out
+    }
+    let current = expand(schema, [])
+    path.forEach((part, depth) => {
+        const at = path.slice(0, depth + 1)
         current = current
             .flatMap((each) => {
                 if (typeof part === 'number') {
@@ -401,8 +484,8 @@ export function schemasAt(schema: JsonSchema, path: Path, root: JsonSchema = sch
                 if (named !== undefined) return [named]
                 return typeof each.additionalProperties === 'object' ? [each.additionalProperties] : []
             })
-            .flatMap(expand)
-    }
+            .flatMap((each) => expand(each, at))
+    })
     return current
 }
 
@@ -554,18 +637,25 @@ function keyOption(
 }
 
 /** The property names and values a schema allows where the cursor is. */
-function schemaOptions(schema: JsonSchema, language: SchemaLanguage, slot: Slot, present: Set<string>, column: number): Option[] {
+function schemaOptions(
+    schema: JsonSchema,
+    language: SchemaLanguage,
+    slot: Slot,
+    present: Set<string>,
+    column: number,
+    document?: { value: unknown },
+): Option[] {
     const json = language === 'json'
     if (slot.at === 'key') {
         const seen = new Set<string>(present)
-        return schemasAt(schema, slot.path).flatMap((each) =>
+        return schemasAt(schema, slot.path, schema, document).flatMap((each) =>
             Object.entries(each.properties ?? {})
                 .filter(([name]) => !seen.has(name) && seen.add(name) !== undefined)
                 .map(([name, property]) => keyOption(name, property, schema, language, column, each.required?.includes(name) ?? false)),
         )
     }
     const path = slot.key === undefined ? slot.path : [...slot.path, slot.key]
-    const values = schemasAt(schema, path).flatMap((each) => {
+    const values = schemasAt(schema, path, schema, document).flatMap((each) => {
         if (each.const !== undefined) return [each.const]
         if (each.enum !== undefined) return each.enum
         return types(each).includes('boolean') ? [true, false] : []
@@ -597,7 +687,9 @@ export function schemaCompletion(schema: () => JsonSchema | undefined, language:
                 : language === 'json'
                   ? jsonKeys(source, context.pos)
                   : yamlKeys(context.state, context.pos, column)
-        const options = schemaOptions(current, language, slot, present, column)
+        // The document as written so far, so a conditional schema offers the keys of the branch that applies.
+        const read = readDocument(context.state, language, 100)
+        const options = schemaOptions(current, language, slot, present, column, read === null ? undefined : { value: read.value })
         if (options.length === 0) return null
         // Inside a JSON string an option replaces the whole string, its quotes included.
         const after = slot.quoted && context.state.sliceDoc(context.pos, context.pos + 1) === '"' ? 1 : 0
@@ -628,7 +720,9 @@ export function schemaHover(schema: () => JsonSchema | undefined, language: Sche
         if (read === null) return null
         const span = [...read.spans.values()].find((each) => each.key !== undefined && each.key.from <= pos && pos <= each.key.to)
         if (span?.key === undefined) return null
-        const described = schemasAt(current, span.path).find((each) => each.description !== undefined || each.type !== undefined)
+        const described = schemasAt(current, span.path, current, { value: read.value }).find(
+            (each) => each.description !== undefined || each.type !== undefined,
+        )
         if (described === undefined) return null
         const kind = typeLabel(described, current)
         const description = described.description
