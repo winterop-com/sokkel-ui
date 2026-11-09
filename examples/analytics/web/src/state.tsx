@@ -14,7 +14,10 @@ export interface AppState {
     error: string | undefined
     prefs: Prefs
     setPrefs: (patch: Partial<Omit<Prefs, 'id'>>) => Promise<unknown>
+    /** The page's view: the address, or, while settings are open over a page, that page's. */
     view: View
+    /** Whether the address is settings, drawn as a dialog over `view`'s page. */
+    settingsOpen: boolean
     /** Changes the range, the comparison or the segment, keeping the page. */
     setView: (patch: Partial<Pick<View, 'range' | 'compare' | 'plan' | 'region'>>) => void
     /** The address of a page in the current view. */
@@ -46,7 +49,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const { rows } = useCollection(prefRows)
     const prefs = rows?.[0] ?? DEFAULT_PREFS
     const hash = useHash()
-    const view = useMemo(() => readView(hash, prefs), [hash, prefs])
+    const read = useMemo(() => readView(hash, prefs), [hash, prefs])
+    // Settings are a dialog over a page, which keeps its whole view under it: the range, the
+    // segment and any saved view or form the page had open.
+    const settingsOpen = read.path[0] === 'settings'
+    const under = useRef<View | null>(null)
+    if (!settingsOpen) under.current = read
+    else under.current ??= readView('#/', prefs)
+    const view = settingsOpen ? under.current : read
     const [stream, setStream] = useState<StreamState>('live')
     const pace = useRef(prefs.pace)
     pace.current = prefs.pace
@@ -67,6 +77,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             prefs,
             setPrefs,
             view,
+            settingsOpen,
             setView: (patch) => {
                 const next = { ...view, ...patch }
                 const extra = Object.fromEntries([...view.params].filter(([key]) => !VIEW_KEYS.has(key)))
@@ -77,7 +88,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             money: (dollars, compact = false) => (compact ? short : full).format(dollars * rate),
             stream,
         }
-    }, [world, error, prefs, view, stream])
+    }, [world, error, prefs, view, settingsOpen, stream])
     return <Context value={value}>{children}</Context>
 }
 
