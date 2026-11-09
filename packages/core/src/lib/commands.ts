@@ -12,21 +12,28 @@ import { THEMES, type Scheme, type ThemeOption, type ThemeSettings } from './app
  * `rank`, lowest first (0 when not given), keeping their order at equal rank.
  */
 export function mergeCommands(groups: readonly PaletteGroup[]): PaletteGroup[] {
-    const merged = new Map<string, { rank: number; order: number; commands: PaletteCommand[]; ids: Set<string> }>()
+    const merged = new Map<string, { rank: number; order: number; kind?: string; commands: PaletteCommand[]; ids: Set<string> }>()
     for (const group of groups) {
         const held = merged.get(group.title) ?? { rank: group.rank ?? 0, order: merged.size, commands: [], ids: new Set<string>() }
         held.rank = Math.min(held.rank, group.rank ?? 0)
+        held.kind ??= group.kind
         for (const command of group.commands) {
             if (held.ids.has(command.id)) continue
             held.ids.add(command.id)
-            held.commands.push(command)
+            // A group's verb goes onto its rows, so it holds when groups of one title are listed as one.
+            held.commands.push(command.verb === undefined && group.verb !== undefined ? { ...command, verb: group.verb } : command)
         }
         merged.set(group.title, held)
     }
     return [...merged.entries()]
         .filter(([, held]) => held.commands.length > 0)
         .sort(([, left], [, right]) => left.rank - right.rank || left.order - right.order)
-        .map(([title, held]) => ({ title, commands: held.commands, ...(held.rank === 0 ? {} : { rank: held.rank }) }))
+        .map(([title, held]) => ({
+            title,
+            commands: held.commands,
+            ...(held.rank === 0 ? {} : { rank: held.rank }),
+            ...(held.kind === undefined ? {} : { kind: held.kind }),
+        }))
 }
 
 /**
@@ -114,6 +121,8 @@ export interface AppearanceCommandWords {
     theme: string
     /** The hint on the choice in use. */
     current: string
+    /** The palette foot's word for choosing one of these rows. */
+    switch: string
 }
 
 const WORDS: AppearanceCommandWords = {
@@ -126,6 +135,7 @@ const WORDS: AppearanceCommandWords = {
     compact: 'Compact',
     theme: 'Theme',
     current: 'in use',
+    switch: 'Switch',
 }
 
 /**
@@ -196,6 +206,7 @@ export function appearanceCommands(
     if (onSchemeChange !== undefined)
         groups.push({
             title: words.scheme,
+            verb: words.switch,
             commands: schemes.map((scheme) => ({
                 id: `scheme-${scheme.value}`,
                 label: scheme.label,
@@ -208,6 +219,7 @@ export function appearanceCommands(
     if (onDensityChange !== undefined)
         groups.push({
             title: words.density,
+            verb: words.switch,
             commands: densities.map((density) => ({
                 id: `density-${density.value}`,
                 label: density.label,
@@ -220,6 +232,7 @@ export function appearanceCommands(
     if (onThemeChange !== undefined)
         groups.push({
             title: words.theme,
+            verb: words.switch,
             commands: themes.map((theme) => ({
                 id: `theme-${theme.value}`,
                 label: theme.label,

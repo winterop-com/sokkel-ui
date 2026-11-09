@@ -179,6 +179,53 @@ export const Open: StoryObj = { name: 'Long', render: () => <Palette initial /> 
  * touch screen the keys give way to Close.
  */
 export const Foot: StoryObj = { render: () => <Palette initial foot={{ mark: <TidevannMark />, name: 'Tidevann' }} /> }
+
+/** Rows that do different things and are different things: a verb per group, a kind per row. */
+const VERBS: PaletteGroup[] = [
+    {
+        title: 'Actions',
+        verb: 'Run',
+        commands: [
+            { id: 'rerun', label: 'Rerun nightly-export', icon: RotateCcw, onSelect: () => undefined },
+            { id: 'cancel', label: 'Cancel import-orders', icon: CircleStop, onSelect: () => undefined },
+        ],
+    },
+    {
+        title: 'Recent',
+        commands: [
+            { id: 'recent-runs', label: 'Runs', icon: Play, kind: 'Page', onSelect: () => undefined },
+            { id: 'recent-export', label: 'nightly-export', icon: Workflow, hint: 'failed 02:00', kind: 'Job', onSelect: () => undefined },
+            { id: 'recent-run', label: 'sync-inventory', icon: ScrollText, code: '01a1a5c6', kind: 'Run', onSelect: () => undefined },
+            { id: 'recent-harbor', label: 'harbor', icon: FolderGit2, kind: 'Project', onSelect: () => undefined },
+        ],
+    },
+    {
+        title: 'Pages',
+        kind: 'Page',
+        commands: [
+            { id: 'jobs', label: 'Jobs', icon: ListChecks, kind: 'Page', keys: ['G', 'J'], onSelect: () => undefined },
+            { id: 'people', label: 'People', icon: Users, kind: 'Page', onSelect: () => undefined },
+        ],
+    },
+    {
+        title: 'Projects',
+        verb: 'Switch',
+        commands: [
+            { id: 'juniper', label: 'juniper', icon: FolderGit2, onSelect: () => undefined },
+            { id: 'larkspur', label: 'larkspur', icon: FolderGit2, onSelect: () => undefined },
+        ],
+    },
+]
+
+/**
+ * The foot's verb follows the chosen row: Run on an action, Open on a page or a record, Switch on a
+ * project, from `verb` on a row or its group. A row in a mixed group (Recent) ends with its `kind`;
+ * a row whose group's `kind` already says it (Pages) does not repeat it.
+ */
+export const VerbsAndKinds: StoryObj = {
+    name: 'Verbs and kinds',
+    render: () => <Palette initial groups={VERBS} foot={{ mark: <TidevannMark />, name: 'Tidevann' }} />,
+}
 /**
  * A search narrowing the long list to what matches. New project cannot be made by this person, so
  * it is listed dimmed with why (`disabled`), and the arrows and Enter pass it over.

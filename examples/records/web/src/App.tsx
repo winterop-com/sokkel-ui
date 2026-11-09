@@ -200,10 +200,18 @@ export function App() {
         },
         {
             title: 'Actions',
+            verb: 'Run',
             commands: [
                 { id: 'send-on', label: 'Send on every received response', icon: Send, keywords: ['forward'], onSelect: sendOn },
                 { id: 'check-server', label: 'Check the server again', icon: ServerCrash, onSelect: server.check },
-                { id: 'settings', label: 'Settings', icon: Settings, keywords: ['preferences', 'theme'], onSelect: () => openSettings() },
+                {
+                    id: 'settings',
+                    label: 'Settings',
+                    icon: Settings,
+                    verb: 'Open',
+                    keywords: ['preferences', 'theme'],
+                    onSelect: () => openSettings(),
+                },
             ],
         },
         ...frame.palette,
