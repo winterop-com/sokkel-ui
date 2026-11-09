@@ -140,6 +140,8 @@ and ask before acting.
 - Never wait on CI. A PR is merged as soon as the fast gates pass locally; neither its own CI run nor
   main's is waited for, and a failure on main is fixed forward. A release does not wait for main's
   CI either: `release.yaml` runs the gates itself before it publishes.
+- Before 1.0 a release with a breaking change moves the minor version (0.11.0 to 0.12.0); one
+  without moves the patch.
 - No tags and no releases unless the owner asks for one. A release is a PR that moves the version
   in every `packages/*/package.json` to the same one; once it is merged, the tag `vX.Y.Z` on that
   commit runs `.github/workflows/release.yaml`, which checks the tag against each package's version,
