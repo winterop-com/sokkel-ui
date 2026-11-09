@@ -171,7 +171,11 @@ export function Toolbar({
                 {search !== undefined && <div className="w-full @md/toolbar:w-64">{search}</div>}
                 {children}
                 {items !== undefined && (
-                    <div ref={room} data-slot="toolbar-items" className="relative flex min-w-0 flex-1 basis-24 items-center gap-2">
+                    <div
+                        ref={room}
+                        data-slot="toolbar-items"
+                        className="relative flex min-w-0 flex-1 basis-24 items-center gap-2 has-data-[slot=toolbar-title]:basis-64"
+                    >
                         {/* Every tool and More at their own widths, out of sight, so what fits is known before it is drawn. */}
                         <div
                             ref={ruler}
@@ -216,7 +220,15 @@ export interface ToolbarTitleProps {
     children: ReactNode
 }
 
-/** The title a toolbar names its content by, such as the month a calendar shows; it takes the room the tools leave and truncates. */
+/**
+ * The title a toolbar names its content by, such as the month a calendar shows; it takes the room
+ * the tools leave and truncates. A toolbar with a title keeps room for it, its end moving to a
+ * line of its own first, so a phone still reads the date.
+ */
 export function ToolbarTitle({ as: Heading = 'h2', children }: ToolbarTitleProps) {
-    return <Heading className="min-w-0 flex-1 truncate text-detail-title">{children}</Heading>
+    return (
+        <Heading data-slot="toolbar-title" className="min-w-0 flex-1 truncate text-detail-title">
+            {children}
+        </Heading>
+    )
 }
