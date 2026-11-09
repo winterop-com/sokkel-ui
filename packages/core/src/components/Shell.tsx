@@ -175,7 +175,8 @@ export interface ShellProps {
  * `useRailMode`, the latest screen's ask going before the prop; once nothing asks, the rail is as the
  * app holds it again. Narrowed, its mark still widens it for the reader until the ask changes, and
  * the account in its foot follows it. Hidden, the top bar's menu button opens it as the drawer at
- * every width.
+ * every width. With no ask, the rail narrows to its icons while the panel is open on a window under
+ * `xl`, so the content between them keeps its room.
  *
  * With `desktop`, the shell stands in a desktop window whose native title bar is hidden: its top
  * strip, the rail's head and the top bar (and an open panel's header), is the window's drag
@@ -246,6 +247,8 @@ export function Shell({
     const wide = useWide()
     const [ownOpen, setOwnOpen] = useState<boolean | null>(null)
     const open = panelOpen ?? ownOpen ?? wide
+    const roomy = useMatch(ROOMY)
+    const crowded = panel !== undefined && open && wide && !roomy
     const setOpen = (next: boolean) => {
         if (panelOpen === undefined) setOwnOpen(next)
         onPanelOpenChange?.(next)
@@ -476,7 +479,7 @@ export function Shell({
                 <ShellShortcuts value={shortcuts === undefined ? undefined : openShortcuts}>
                     <ShellDesktop value={desktop}>
                         <ShellRailAsk value={askRail}>
-                            <ShellRailMode value={railMode}>
+                            <ShellRailMode value={railMode ?? (crowded ? 'collapsed' : undefined)}>
                                 <ShellScroller value={main}>
                                     <CommandRegistry value={commandRegistry.registry}>{node}</CommandRegistry>
                                 </ShellScroller>
@@ -602,17 +605,25 @@ export function useRailMode(mode: RailMode | undefined): void {
 /** The `lg` breakpoint, from which the panel is a column rather than a sheet. */
 const WIDE = '(min-width: 64rem)'
 
-/** Whether the window is at least `lg` wide, followed as it is resized. */
-function useWide(): boolean {
-    const [wide, setWide] = useState(() => typeof window === 'undefined' || window.matchMedia(WIDE).matches)
+/** The `xl` breakpoint, from which the rail stays open beside an open panel. */
+const ROOMY = '(min-width: 80rem)'
+
+/** Whether the window matches a media query, followed as it is resized. */
+function useMatch(media: string): boolean {
+    const [matches, setMatches] = useState(() => typeof window === 'undefined' || window.matchMedia(media).matches)
     useEffect(() => {
-        const query = window.matchMedia(WIDE)
-        const change = () => setWide(query.matches)
+        const query = window.matchMedia(media)
+        const change = () => setMatches(query.matches)
         change()
         query.addEventListener('change', change)
         return () => query.removeEventListener('change', change)
-    }, [])
-    return wide
+    }, [media])
+    return matches
+}
+
+/** Whether the window is at least `lg` wide, followed as it is resized. */
+function useWide(): boolean {
+    return useMatch(WIDE)
 }
 
 export interface PageProps {
