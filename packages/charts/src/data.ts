@@ -143,3 +143,9 @@ const compact = new Intl.NumberFormat('en-US', { notation: 'compact', maximumFra
 
 /** A figure written short for an axis' ticks: `1.2K` for 1,200. */
 export const formatCompact = (value: number): string => compact.format(value)
+
+/**
+ * A figure written for a value axis' tick: short from ten up, `1.2K` for 1,200, and with up to two
+ * decimals below, so the ticks of a small range (0.05 apart) never read the same.
+ */
+export const formatTick = (value: number): string => (Math.abs(value) < 10 ? formatNumber(value) : formatCompact(value))

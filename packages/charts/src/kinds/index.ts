@@ -54,4 +54,4 @@ export const KINDS = {
 
 export type ChartKind = keyof typeof KINDS
 
-export type { ChartBuilder, ChartKindDef, ChartSpec, ChartStep, ChartWords, GaugeDial, LinkedPanel } from './spec'
+export type { ChartAxis, ChartBuilder, ChartKindDef, ChartLayer, ChartSpec, ChartStep, ChartWords, GaugeDial, LinkedPanel } from './spec'

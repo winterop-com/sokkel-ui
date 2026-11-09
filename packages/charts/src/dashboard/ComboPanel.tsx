@@ -3,10 +3,11 @@ import { useMemo, type ReactNode } from 'react'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { ChartFrame, type ChartFrameWords } from '../ChartFrame'
 import type { LegendStat } from '../ChartLegend'
-import { EChart } from '../EChart'
-import type { ChartLook } from '../look'
+import { Chart } from '../Chart'
+import type { ChartAxis, ChartSpec } from '../kinds'
 import { SPAN, type PanelSpan } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
-import { axes, axisWriter, legendItems, seriesToken, valueWriter, type PanelSeries } from './series'
+import { legendItems, seriesSpec, type PanelSeries } from './series'
+import { formatValue } from '@winterop-com/sokkel-ui/dashboard/thresholds'
 
 /** One series of a combined chart: bars or a line, measured on the left axis or the right one. */
 export interface ComboSeries extends PanelSeries {
@@ -25,93 +26,10 @@ export interface ComboAxis {
     max?: number
 }
 
-/** The option for bars and lines over the same categories, on up to two value axes, built from the look. */
-export function comboOption({
-    x,
-    series,
-    left = {},
-    right = {},
-    stacked = false,
-    labelEvery,
-}: {
-    x: readonly string[]
-    series: readonly ComboSeries[]
-    left?: ComboAxis
-    right?: ComboAxis
-    /** Stacks the bars on each other; lines are never stacked. */
-    stacked?: boolean
-    labelEvery?: number
-}) {
-    const sides = { left, right }
-    const writers = {
-        left: valueWriter(left.unit, left.decimals, left.format),
-        right: valueWriter(right.unit, right.decimals, right.format),
-    }
-    const twoAxes = series.some((entry) => entry.axis === 'right')
-    const bars = series.filter((entry) => entry.kind === 'bar')
-    return (look: ChartLook) => {
-        const shared = axes(look, x, left.unit, labelEvery)
-        const valueAxis = (side: 'left' | 'right') => {
-            const spec = sides[side]
-            return {
-                ...shared.yAxis,
-                position: side,
-                name: spec.name,
-                nameGap: 8,
-                nameTextStyle: { align: side, padding: 0 },
-                min: spec.min,
-                max: spec.max,
-                // The right axis keeps the left one's grid unless its range is fixed, where aligned ticks land on odd values.
-                alignTicks: side === 'right' && spec.min === undefined && spec.max === undefined,
-                axisLabel: { formatter: axisWriter(spec.unit), hideOverlap: true },
-                splitLine: side === 'right' ? { show: false } : undefined,
-            }
-        }
-        const named = left.name !== undefined || right.name !== undefined
-        return {
-            tooltip: { trigger: 'axis', axisPointer: { type: bars.length > 0 ? 'shadow' : 'line' } },
-            grid: named ? { top: 26 } : undefined,
-            xAxis: { ...shared.xAxis, axisLine: { show: true, lineStyle: { color: look.border } } },
-            yAxis: twoAxes ? [valueAxis('left'), valueAxis('right')] : [valueAxis('left')],
-            series: series.map((entry, index) => {
-                const side = entry.axis ?? 'left'
-                const color = look.token(seriesToken(entry, index))
-                const write = writers[side]
-                const common = {
-                    name: entry.name,
-                    data: entry.values,
-                    color,
-                    yAxisIndex: side === 'right' && twoAxes ? 1 : 0,
-                    tooltip: { valueFormatter: (value: number | null) => (value === null ? '-' : write(value)) },
-                }
-                if (entry.kind === 'line') {
-                    return {
-                        ...common,
-                        type: 'line',
-                        z: 3,
-                        showSymbol: entry.dashed !== true,
-                        symbolSize: 5,
-                        connectNulls: false,
-                        itemStyle: { borderColor: look.card, borderWidth: 1 },
-                        lineStyle: { width: entry.dashed === true ? 1.25 : 2, type: entry.dashed === true ? 'dashed' : 'solid' },
-                    }
-                }
-                const top = !stacked || entry === bars[bars.length - 1]
-                return {
-                    ...common,
-                    type: 'bar',
-                    stack: entry.stack ?? (stacked ? 'bars' : undefined),
-                    barCategoryGap: '28%',
-                    barMaxWidth: 32,
-                    itemStyle: {
-                        borderRadius: top ? [look.corner, look.corner, 0, 0] : 0,
-                        borderColor: stacked ? look.card : undefined,
-                        borderWidth: stacked ? 1 : 0,
-                    },
-                }
-            }),
-        }
-    }
+/** A combined chart's axis as the dual kind reads it, its figures written to its decimals with its unit after. */
+function comboAxis(axis: ComboAxis = {}): ChartAxis {
+    const format = axis.format ?? ((value: number) => `${formatValue(value, axis.decimals)}${axis.unit ?? ''}`)
+    return { name: axis.name, unit: axis.unit ?? '', format, min: axis.min, max: axis.max }
 }
 
 export interface ComboPanelProps {
@@ -175,8 +93,14 @@ export function ComboPanel({
     words,
     className,
 }: ComboPanelProps) {
-    const option = useMemo(
-        () => comboOption({ x, series, left, right, stacked, labelEvery }),
+    const spec = useMemo<ChartSpec>(
+        () => ({
+            ...seriesSpec(x, series),
+            layers: Object.fromEntries(series.map((entry) => [entry.name, { mark: entry.kind, axis: entry.axis ?? 'left' }])),
+            axes: { left: comboAxis(left), right: comboAxis(right) },
+            stack: stacked === true ? 'stacked' : undefined,
+            labelEvery,
+        }),
         [x, series, left, right, stacked, labelEvery],
     )
     const items = useMemo(() => legendItems(series), [series])
@@ -200,7 +124,7 @@ export function ComboPanel({
             words={words}
             className={cn(SPAN[span], className)}
         >
-            {(state) => <EChart option={option} label={typeof title === 'string' ? title : 'Bars and lines'} {...state} />}
+            {(state) => <Chart kind="dual" label={typeof title === 'string' ? title : 'Bars and lines'} {...spec} {...state} />}
         </ChartFrame>
     )
 }

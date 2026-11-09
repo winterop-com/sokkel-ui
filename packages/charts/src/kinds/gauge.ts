@@ -32,14 +32,13 @@ export function dialSplits(min: number, max: number): number {
 }
 
 /**
- * The dial a gauge is drawn as, shared by the gauge kind and `GaugePanel` so every gauge looks the
- * same. In its `arc`, `ring` and `half` shapes, a thick arc from `min` to `max` is filled to the
- * figure in `tone`, the steps' colors run as a thin band outside it, and the figure is written in
- * the middle in its tone, with `label` under it. `bands` draws the steps' colors as the thick arc,
- * with a pointer at the figure, and `needle` draws them as a thin arc over ticks and round figures,
- * with a needle at the figure.
+ * The dial a gauge is drawn as. In its `arc`, `ring` and `half` shapes, a thick arc from `min` to
+ * `max` is filled to the figure in `tone`, the steps' colors run as a thin band outside it, and the
+ * figure is written in the middle in its tone, with `label` under it. `bands` draws the steps'
+ * colors as the thick arc, with a pointer at the figure, and `needle` draws them as a thin arc over
+ * ticks and round figures, with a needle at the figure.
  */
-export function dial(
+function dial(
     look: ChartLook,
     {
         value,
@@ -186,8 +185,9 @@ const tokenOf = (spec: ChartSpec, step: ChartStep | undefined) => step?.color ??
  * rows counted. `steps` are its thresholds, drawn as a band around the dial, and the figure takes
  * the color of the step it reaches; without steps it takes the color `colors` names for `y`.
  * `dial` picks the shape: an open arc, a ring, a half circle for a stat tile, colored bands with a
- * pointer, or a needle over ticks. `total` is a word written under the figure.
- * Reads `y`, `aggregate`, `steps`, `min`, `max`, `colors`, `format`, `unit`, `dial` and `total`.
+ * pointer, or a needle over ticks. `total` is a word written under the figure, and `small` writes
+ * the figure smaller, for a small box.
+ * Reads `y`, `aggregate`, `steps`, `min`, `max`, `colors`, `format`, `unit`, `dial`, `total` and `small`.
  */
 export const gauge: ChartBuilder = (spec, look) => {
     const value = gaugeFigure(spec)
@@ -203,6 +203,7 @@ export const gauge: ChartBuilder = (spec, look) => {
             write: (shown) => written(spec, shown),
             label: spec.total,
             shape: spec.dial,
+            small: spec.small,
         }),
     }
 }

@@ -50,8 +50,8 @@ export interface ChartSpec {
     labelEvery?: number
     /** How far apart bars stand: `tight` draws a histogram's tall bars, nearly touching. */
     gap?: 'tight' | 'normal'
-    /** How an area is filled: evenly, or fading from its line toward the axis. */
-    fill?: 'solid' | 'gradient'
+    /** How an area is filled: evenly, fading from its line toward the axis, or not at all, leaving a step line or a radar's outlines. */
+    fill?: 'solid' | 'gradient' | 'none'
     /** A heatmap's color scale shown beside the grid. */
     showScale?: boolean
     /** A ring's total written in its middle, with this word under it, such as `runs`; under a gauge's figure, the word alone. */
@@ -89,6 +89,53 @@ export interface ChartSpec {
      * as `[60, 100]`, or the first and last category in view, such as `['Aug 1', 'Aug 31']`.
      */
     zoom?: readonly [number, number] | readonly [string, string]
+    /**
+     * The stack each series joins, by its name: series that share one are drawn on top of each
+     * other, and a series named in none stands alone, or joins the one stack `stack` draws.
+     */
+    stacks?: Readonly<Record<string, string>>
+    /** Series drawn as a thin dashed line with no area or points: a reference, such as a target or the period before. */
+    dashed?: readonly string[]
+    /** How a two-axis chart draws each series or `y` field, by its name: bars or a line, on the left axis or the right. */
+    layers?: Readonly<Record<string, ChartLayer>>
+    /**
+     * A two-axis chart's value axes: each one's name, unit, format and range. A chart of one value
+     * axis reads the unit of `left` for its ticks, whichever way the axis runs.
+     */
+    axes?: Readonly<{ left?: ChartAxis; right?: ChartAxis }>
+    /** Where each spoke of a radar ends, by its category's name, in place of the one scale `max` sets. */
+    rims?: Readonly<Record<string, number>>
+    /** A radar's rings drawn as circles rather than polygons. */
+    round?: boolean
+    /** How many rings a radar's scale is drawn with; 4 by default. */
+    levels?: number
+    /**
+     * The color tokens a heatmap's scale runs through: one shades from the card to it, several are
+     * stepped through in turn. `colors.value` or the palette's first by default.
+     */
+    scale?: string | readonly string[]
+    /** A gauge's figure written at the small figure size, for a dial in a small box. */
+    small?: boolean
+}
+
+/** How a two-axis chart draws one series; see `ChartSpec.layers`. */
+export interface ChartLayer {
+    /** Bars or a line; the first series is bars and the rest lines by default. */
+    mark?: 'bar' | 'line'
+    /** The value axis it is measured on; the first series is on the left and the rest on the right by default. */
+    axis?: 'left' | 'right'
+}
+
+/** One value axis of a two-axis chart; see `ChartSpec.axes`. */
+export interface ChartAxis {
+    /** What the axis measures, written over it. */
+    name?: string
+    /** A unit written after its ticks, in place of the spec's, and after its figures where its `format` does not write them. */
+    unit?: string
+    /** How its figures are written in tooltips, unit and all, in place of the spec's `format`. */
+    format?: (value: number) => string
+    min?: number
+    max?: number
 }
 
 /** The shapes a gauge's dial takes; see `ChartSpec.dial`. */
@@ -196,3 +243,10 @@ export function unitAt(spec: ChartSpec, index = 0): string {
 
 /** The `y` fields as a list. */
 export const fieldsOf = (spec: ChartSpec): string[] => (spec.y === undefined ? [] : typeof spec.y === 'string' ? [spec.y] : [...spec.y])
+
+/** The stack a series joins: the one `stacks` names for it, or the one stack `stack` draws. */
+export const stackOf = (spec: ChartSpec, name: string): string | undefined =>
+    spec.stacks?.[name] ?? (spec.stack === undefined ? undefined : 'all')
+
+/** Whether a series is drawn dashed, as a reference. */
+export const isDashed = (spec: ChartSpec, name: string): boolean => spec.dashed?.includes(name) === true

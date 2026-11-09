@@ -216,4 +216,84 @@ describe('the chart kinds', () => {
             ['Poor', undefined],
         ])
     })
+
+    const BY_STATE: ChartSpec = { rows: ROWS, x: 'job', y: 'duration', series: 'state' }
+
+    it('puts bars in the stacks named for them, and leaves the rest alone', () => {
+        type Bars = { series: { name: string; stack?: string; itemStyle: { borderWidth?: number } }[] }
+        const option = KINDS.bar.build({ ...BY_STATE, stacks: { succeeded: 'done' } }, LOOK) as unknown as Bars
+        expect(option.series.map((entry) => [entry.name, entry.stack, entry.itemStyle.borderWidth])).toEqual([
+            ['succeeded', 'done', 1],
+            ['failed', undefined, undefined],
+        ])
+    })
+
+    it('draws the steps after the first as lines across, a dashed series bare, and the range fixed', () => {
+        type Lines = {
+            yAxis: { min?: number; max?: number }
+            series: { name: string; areaStyle?: unknown; lineStyle: { type?: string }; markLine?: { data: { yAxis: number }[] } }[]
+        }
+        const spec: ChartSpec = {
+            ...BY_STATE,
+            fill: 'gradient',
+            dashed: ['failed'],
+            steps: [{ color: 'good' }, { value: 30, color: 'critical' }],
+            min: 0,
+            max: 1000,
+        }
+        const option = KINDS.area.build(spec, LOOK) as unknown as Lines
+        expect([option.yAxis.min, option.yAxis.max]).toEqual([0, 1000])
+        expect(option.series[0].markLine?.data.map((line) => line.yAxis)).toEqual([30])
+        expect(option.series.map((entry) => [entry.name, entry.areaStyle !== undefined, entry.lineStyle.type])).toEqual([
+            ['succeeded', true, undefined],
+            ['failed', false, 'dashed'],
+        ])
+        const steps = KINDS.step.build({ ...spec, fill: 'none' }, LOOK) as unknown as Lines
+        expect(steps.series.every((entry) => entry.areaStyle === undefined)).toBe(true)
+    })
+
+    it('draws a dual chart of series by their layers, on the axes they name', () => {
+        type Dual = {
+            yAxis: { name?: string; min?: number; alignTicks: boolean }[]
+            series: { type: string; yAxisIndex: number }[]
+        }
+        const spec: ChartSpec = {
+            ...BY_STATE,
+            layers: { succeeded: { mark: 'bar', axis: 'left' }, failed: { mark: 'line', axis: 'right' } },
+            axes: { right: { name: 'Failed', unit: '%', min: 0 } },
+        }
+        const option = KINDS.dual.build(spec, LOOK) as unknown as Dual
+        expect(option.yAxis.map((axis) => [axis.name, axis.min, axis.alignTicks])).toEqual([
+            [undefined, undefined, false],
+            ['Failed', 0, false],
+        ])
+        expect(option.series.map((entry) => [entry.type, entry.yAxisIndex])).toEqual([
+            ['bar', 0],
+            ['line', 1],
+        ])
+        const left = KINDS.dual.build({ ...spec, layers: { failed: { mark: 'line', axis: 'left' } } }, LOOK) as unknown as Dual
+        expect(left.yAxis).toHaveLength(1)
+    })
+
+    it('steps a heatmap scale through several tokens from the floor it is given', () => {
+        type Heat = { visualMap: { min: number; inRange: { color: string[] } } }
+        const option = KINDS.heatmap.build({ ...BY_STATE, min: 0, scale: ['chart-2', 'warning', 'critical'] }, LOOK) as unknown as Heat
+        expect(option.visualMap.min).toBe(0)
+        expect(option.visualMap.inRange.color).toEqual(['var(--chart-2) 10', 'var(--chart-2) 45', 'chart-2', 'warning', 'critical'])
+    })
+
+    it('ends radar spokes at their own rims, on round rings, as outlines', () => {
+        type Radar = { radar: { indicator: { max: number }[]; shape: string; splitNumber: number }; series: { areaStyle?: unknown }[] }
+        const spec: ChartSpec = { ...SPECS.radar, rims: { 'nightly-export': 50 }, max: 10, round: true, levels: 3, fill: 'none' }
+        const option = KINDS.radar.build(spec, LOOK) as unknown as Radar
+        expect(option.radar.indicator.map((spoke) => spoke.max)).toEqual([50, 10, 10])
+        expect([option.radar.shape, option.radar.splitNumber]).toEqual(['circle', 3])
+        expect(option.series.every((entry) => entry.areaStyle === undefined)).toBe(true)
+    })
+
+    it('writes a small gauge figure at the small size', () => {
+        type Dial = { series: { detail?: { fontSize: number } }[] }
+        const option = KINDS.gauge.build({ ...SPECS.gauge, small: true }, LOOK) as unknown as Dial
+        expect(option.series[1].detail?.fontSize).toBe(18)
+    })
 })

@@ -2,10 +2,10 @@ import type { ChartLook } from '../look'
 import { tooltipMarkup } from '../look'
 import { niceCeil } from '../stats'
 import { shaped, written } from './categories'
-import { colorOf, type ChartBuilder } from './spec'
+import { colorOf, isDashed, type ChartBuilder } from './spec'
 
-/** The spokes and rings of a radar chart, shared by the radar kind and `RadarPanel` so both look the same. */
-export function radarGrid(
+/** The spokes and rings of a radar chart. */
+function radarGrid(
     look: ChartLook,
     {
         spokes,
@@ -31,7 +31,7 @@ export function radarGrid(
  * One polygon of a radar chart as its own series, so a legend beside the chart can hide and
  * emphasize it by name: faintly filled in its color, or a dashed outline for a reference.
  */
-export function radarPolygon({
+function radarPolygon({
     name,
     values,
     color,
@@ -61,9 +61,12 @@ export function radarPolygon({
 
 /**
  * The categories of `x` as spokes around a center and one polygon per series, each spoke's figure
- * its `y` combined by `aggregate`, or the rows counted. Every spoke shares one scale, from 0 to
- * `max` or a round number above the largest figure. Reads `x`, `y`, `series`, `aggregate`,
- * `order`, `seriesOrder`, `max`, `colors`, `format` and `unit`.
+ * its `y` combined by `aggregate`, or the rows counted, each polygon faintly filled unless `fill`
+ * is `none`. Every spoke shares one scale, from 0 to `max` or a round number above the largest
+ * figure, save the spokes `rims` ends elsewhere. `levels` sets how many rings it has, `round`
+ * draws them as circles, and a `dashed` series is an outline, as a target is. Reads `x`, `y`,
+ * `series`, `aggregate`, `order`, `seriesOrder`, `max`, `rims`, `levels`, `round`, `fill`,
+ * `dashed`, `colors`, `format` and `unit`.
  */
 export const radar: ChartBuilder = (spec, look) => {
     const { categories, series } = shaped({ ...spec, stack: undefined })
@@ -78,9 +81,19 @@ export const radar: ChartBuilder = (spec, look) => {
                     categories.map((name, index) => ({ label: name, value: written(spec, point.value[index]) })),
                 ),
         },
-        radar: radarGrid(look, { spokes: categories.map((name) => ({ name, max: rim })) }),
+        radar: radarGrid(look, {
+            spokes: categories.map((name) => ({ name, max: spec.rims?.[name] ?? rim })),
+            shape: spec.round === true ? 'circle' : 'polygon',
+            rings: spec.levels,
+        }),
         series: series.map((entry, index) =>
-            radarPolygon({ name: entry.name, values: entry.values, color: colorOf(spec, look, entry.name, index) }),
+            radarPolygon({
+                name: entry.name,
+                values: entry.values,
+                color: colorOf(spec, look, entry.name, index),
+                dashed: isDashed(spec, entry.name),
+                fill: spec.fill !== 'none',
+            }),
         ),
     }
 }

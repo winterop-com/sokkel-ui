@@ -3,52 +3,11 @@ import { useMemo, type ReactNode } from 'react'
 import { useIsMobile } from '@winterop-com/sokkel-ui/hooks/use-mobile'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { ChartFrame, type ChartFrameWords } from '../ChartFrame'
-import { EChart } from '../EChart'
-import { dial } from '../kinds/gauge'
-import type { ChartLook } from '../look'
+import { Chart } from '../Chart'
+import type { ChartSpec } from '../kinds'
 import { SPAN, type PanelSpan } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
-import { valueWriter } from './series'
-import { thresholdColor, type Threshold } from '@winterop-com/sokkel-ui/dashboard/thresholds'
-
-/** The option for a gauge, built from the look. */
-export function gaugeOption({
-    value,
-    min = 0,
-    max = 100,
-    thresholds,
-    color = 'chart-2',
-    unit,
-    decimals,
-    format,
-    label,
-    small,
-}: {
-    value: number | null
-    min?: number
-    max?: number
-    thresholds?: readonly Threshold[]
-    color?: string
-    unit?: string
-    decimals?: number
-    format?: (value: number) => string
-    label?: string
-    /** Writes the figure at the small chart figure size. */
-    small?: boolean
-}) {
-    const write = valueWriter(unit, decimals, format)
-    return (look: ChartLook) => ({
-        series: dial(look, {
-            value,
-            min,
-            max,
-            steps: thresholds ?? [{ color }],
-            tone: look.token(thresholdColor(value, thresholds) ?? color),
-            write,
-            label,
-            small,
-        }),
-    })
-}
+import { FIGURE, panelFormat } from './series'
+import type { Threshold } from '@winterop-com/sokkel-ui/dashboard/thresholds'
 
 export interface GaugePanelProps {
     title: ReactNode
@@ -97,7 +56,7 @@ export function GaugePanel({
     min,
     max,
     thresholds,
-    color,
+    color = 'chart-2',
     unit,
     decimals,
     format,
@@ -113,8 +72,18 @@ export function GaugePanel({
     className,
 }: GaugePanelProps) {
     const phone = useIsMobile()
-    const option = useMemo(
-        () => gaugeOption({ value, min, max, thresholds, color, unit, decimals, format, label, small: phone }),
+    const spec = useMemo<ChartSpec>(
+        () => ({
+            rows: [{ [FIGURE]: value }],
+            y: FIGURE,
+            ...panelFormat(unit, decimals, format),
+            min,
+            max,
+            steps: thresholds,
+            colors: { [FIGURE]: color },
+            total: label,
+            small: phone,
+        }),
         [value, min, max, thresholds, color, unit, decimals, format, label, phone],
     )
     return (
@@ -132,7 +101,7 @@ export function GaugePanel({
             words={words}
             className={cn(SPAN[span], span !== 'full' && '@max-2xl/dashboard:col-span-6', className)}
         >
-            {(state) => <EChart option={option} label={typeof title === 'string' ? title : 'Gauge'} {...state} />}
+            {(state) => <Chart kind="gauge" label={typeof title === 'string' ? title : 'Gauge'} {...spec} {...state} />}
         </ChartFrame>
     )
 }
