@@ -234,11 +234,6 @@ to `plan.md` when it ships.
         giving up) and full screen with a cover, in the browser and through a desktop call, were
         checked headless in WebKit the same day.
 - **Gaps from a query app (2026-11-08)**, found moving an app with a jq editor onto 0.10.6:
-    - **Completions listed twice in `CodeEditor`.** An app's own `completions` (one per builtin,
-      with signatures as `detail` and a summary as `docs`) are offered beside the language's own
-      words, and nothing merges the two by label, so `has` is listed twice. An app's completion
-      with the same label as a language word should replace it, the app's detail and docs being
-      richer; or an option leaves the language's words out.
     - **Diagrams and math in every Markdown build.** An app that renders `Markdown` with
       `math={false}` and no diagram fences still gets chunks for Mermaid (with cytoscape and elk)
       and KaTeX in its build. They are lazy and never fetched, but they grow its `dist/` from 8.7 MB
