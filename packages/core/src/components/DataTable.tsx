@@ -1554,7 +1554,7 @@ export function DataTable<T>({
                         <div
                             key={column.id}
                             role={listed ? 'gridcell' : undefined}
-                            className={cn('flex min-w-0 gap-2 text-xs', listed ? 'items-baseline' : 'h-5 items-center')}
+                            className={cn('flex min-w-0 gap-2 text-xs', listed ? 'items-baseline' : 'min-h-5 items-center')}
                             style={indent}
                         >
                             {column.stackLabel !== false && (
