@@ -45,6 +45,7 @@
         "@storybook/addon-a11y": "^10",
         "@storybook/addon-docs": "^10",
         "@storybook/react-vite": "^10",
+        "@tailwindcss/oxide": "4.3.4",
         "@tailwindcss/vite": "^4.3.4",
         "@types/geojson": "^7946.0.16",
         "@types/node": "^26.6.6",
