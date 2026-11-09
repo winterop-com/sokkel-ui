@@ -1,0 +1,12 @@
+[package]
+name = "tidevann-status"
+version = "0.0.0"
+description = "The Status example's Tauri shell, around its web build"
+edition = "2021"
+publish = false
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
