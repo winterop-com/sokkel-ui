@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react'
 import { useCollection } from 'tidevann-shared/backend'
 import type { Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
-import { go } from 'tidevann-shared/router'
+import { go, useOverlayRoute } from 'tidevann-shared/router'
 
 import { boards as boardStore, charts as chartStore, datasets as datasetStore, preferences } from './backend'
 import { BoardDialog } from './dialogs'
@@ -38,7 +38,9 @@ export function Visualizer({ frame }: { frame: Frame }) {
     const [importing, setImporting] = useState(false)
     const [newBoard, setNewBoard] = useState(false)
 
-    const [section, id, mode] = frame.route
+    // Settings open as a dialog over the page they were opened from.
+    const settings = useOverlayRoute(frame.route, 'settings', ['datasets'])
+    const [section, id, mode] = settings.route
     useEffect(() => {
         if (section === undefined) window.location.replace('#/datasets')
     }, [section])
@@ -103,7 +105,6 @@ export function Visualizer({ frame }: { frame: Frame }) {
                     label: 'Settings',
                     icon: Settings2,
                     href: '#/settings',
-                    active: section === 'settings',
                     keywords: ['preferences', 'palette', 'numbers'],
                 },
             ],
@@ -179,12 +180,10 @@ export function Visualizer({ frame }: { frame: Frame }) {
         if (section === 'boards')
             return id === undefined ? [{ label: 'Boards' }] : [{ label: 'Boards', href: '#/boards' }, { label: board?.name ?? 'Board' }]
         if (section === 'shared') return [{ label: 'Shared chart' }]
-        if (section === 'settings') return [{ label: 'Settings' }]
         return []
     })()
 
     const page = (() => {
-        if (section === 'settings') return <SettingsPage prefs={prefs} frame={frame} datasets={allDatasets} />
         if (section === 'shared' && id !== undefined) return <SharedPage key={id} payload={id} prefs={prefs} />
         if (loading)
             return (
@@ -231,7 +230,7 @@ export function Visualizer({ frame }: { frame: Frame }) {
             <Shell
                 palette={palette}
                 desktop={frame.desktop}
-                route={frame.route.join('/')}
+                route={settings.route.join('/')}
                 rail={
                     <Rail
                         mark={<TidevannMark />}
@@ -252,6 +251,7 @@ export function Visualizer({ frame }: { frame: Frame }) {
             >
                 {page}
             </Shell>
+            {settings.open && <SettingsPage prefs={prefs} frame={frame} datasets={allDatasets} open onClose={settings.close} />}
             <ImportDialog open={importing} onOpenChange={setImporting} />
             <BoardDialog open={newBoard} onOpenChange={setNewBoard} onMade={(made) => go(`/boards/${made.id}`)} />
             <Toaster position="bottom-right" />
