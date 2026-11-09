@@ -1,4 +1,5 @@
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
+import { LinkProvider } from '@winterop-com/sokkel-ui/Link'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import {
     Bell,
@@ -25,6 +26,7 @@ import { Rail, type RailEntry, type RailGroup } from '@winterop-com/sokkel-ui/Ra
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { Tree, type TreeNode } from '@winterop-com/sokkel-ui/Tree'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
+import { routerLink } from '../fixtures/router'
 import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { Row } from '@winterop-com/sokkel-ui/Layout'
@@ -221,46 +223,35 @@ function BodyRail() {
     const [job, setJob] = useState('harbor/rebuild-index')
     return (
         <Frame>
-            <Rail
-                mark={<TidevannMark />}
-                name="Tidevann"
-                groups={navAt(place)}
-                onCollapsedChange={() => undefined}
-                renderLink={(entry, children, className) => (
-                    <a
-                        href={entry.href}
-                        aria-current={entry.active ? 'page' : undefined}
-                        className={className}
-                        onClick={(event) => {
-                            event.preventDefault()
-                            setPlace(entry.id)
-                        }}
-                    >
-                        {children}
-                    </a>
-                )}
-                body={
-                    place === 'jobs'
-                        ? {
-                              title: 'Jobs',
-                              search: <SearchField value={query} onChange={setQuery} />,
-                              content: (
-                                  <Tree
-                                      label="Jobs"
-                                      nodes={PROJECT_JOBS}
-                                      query={query}
-                                      selected={[job]}
-                                      onSelect={([id]) => {
-                                          if (id !== undefined) setJob(id)
-                                      }}
-                                      defaultExpanded={['harbor', 'juniper']}
-                                  />
-                              ),
-                          }
-                        : undefined
-                }
-                foot={<AccountMenu name="ada" where="tidevann.example.org" onSettings={() => undefined} />}
-            />
+            <LinkProvider render={routerLink((href) => setPlace(href.slice(1)))}>
+                <Rail
+                    mark={<TidevannMark />}
+                    name="Tidevann"
+                    groups={navAt(place)}
+                    onCollapsedChange={() => undefined}
+                    body={
+                        place === 'jobs'
+                            ? {
+                                  title: 'Jobs',
+                                  search: <SearchField value={query} onChange={setQuery} />,
+                                  content: (
+                                      <Tree
+                                          label="Jobs"
+                                          nodes={PROJECT_JOBS}
+                                          query={query}
+                                          selected={[job]}
+                                          onSelect={([id]) => {
+                                              if (id !== undefined) setJob(id)
+                                          }}
+                                          defaultExpanded={['harbor', 'juniper']}
+                                      />
+                                  ),
+                              }
+                            : undefined
+                    }
+                    foot={<AccountMenu name="ada" where="tidevann.example.org" onSettings={() => undefined} />}
+                />
+            </LinkProvider>
         </Frame>
     )
 }

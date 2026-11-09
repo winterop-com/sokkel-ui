@@ -3,6 +3,7 @@ import type { CSSProperties, ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { Dot } from './Dot'
+import { Link } from './Link'
 
 export interface StatProps {
     label: ReactNode
@@ -62,7 +63,7 @@ export function Stat({
     const rising = change !== undefined && !change.startsWith('-')
     const tile = variant === 'tile'
     const interactive = href !== undefined || onSelect !== undefined
-    const Cover = href !== undefined ? 'a' : 'button'
+    const Cover = href !== undefined ? Link : 'button'
     // The cover takes the pointer for the whole tile, so what is drawn over it lets the pointer through.
     const through = interactive && 'pointer-events-none'
     const style = dot === undefined ? undefined : ({ '--stat-tone': dot } as CSSProperties)

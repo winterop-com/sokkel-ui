@@ -3,6 +3,7 @@ import { useId, type CSSProperties, type ReactNode } from 'react'
 
 import { useClamped } from '../../hooks/use-clamped'
 import { cn } from '../../lib/cn'
+import { Link } from '../Link'
 import { LoadingOverlay } from '../Loaders'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '../ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip'
@@ -189,7 +190,7 @@ export function StatPanel({
     const rising = delta !== undefined && !delta.startsWith('-')
     const style = tone === undefined ? undefined : ({ '--tone': tokenVar(tone) } as CSSProperties)
     const interactive = href !== undefined || onSelect !== undefined
-    const Cover = href !== undefined ? 'a' : 'button'
+    const Cover = href !== undefined ? Link : 'button'
     const tool = cn(
         'pointer-events-auto flex size-5 items-center justify-center rounded-md outline-none focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-solid',
         filled ? 'text-on-fill/80 hover:text-on-fill' : 'text-muted-foreground hover:text-foreground',

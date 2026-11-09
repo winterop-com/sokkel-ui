@@ -3,6 +3,7 @@ import { Menu } from '@base-ui/react/menu'
 import type { ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { Link } from './Link'
 
 /** One place the navbar leads to. */
 export interface NavLink {
@@ -29,7 +30,6 @@ export interface NavBarProps {
     links: readonly NavLink[]
     /** What stands at the right end: a search, the theme toggle, the account. */
     end?: ReactNode
-    renderLink?: (link: NavLink, className: string) => ReactNode
     className?: string
     words?: Partial<NavBarWords>
 }
@@ -37,21 +37,9 @@ export interface NavBarProps {
 /**
  * The app's frame along the top, for an app with few places and no rail: the mark and name, the
  * places as links with the current one underlined, and the right-hand controls. On a phone the
- * places fold into a menu.
+ * places fold into a menu. Each place is a `Link`, drawn by the app's `LinkProvider`.
  */
-export function NavBar({
-    mark,
-    name,
-    links,
-    end,
-    renderLink = (link, className) => (
-        <a href={link.href} className={className} aria-current={link.active === true ? 'page' : undefined}>
-            {link.label}
-        </a>
-    ),
-    className,
-    words: given,
-}: NavBarProps) {
+export function NavBar({ mark, name, links, end, className, words: given }: NavBarProps) {
     const words = { ...WORDS, ...given }
     return (
         <header className={cn('flex h-shell-top shrink-0 items-stretch gap-4 border-b border-border-strong bg-sidebar px-3', className)}>
@@ -73,15 +61,18 @@ export function NavBar({
                                     <Menu.Item
                                         key={link.id}
                                         render={
-                                            renderLink(
-                                                link,
-                                                cn(
+                                            <Link
+                                                href={link.href}
+                                                aria-current={link.active === true ? 'page' : undefined}
+                                                className={cn(
                                                     'flex h-9 items-center rounded-md px-2 text-sm outline-none data-highlighted:bg-hover',
                                                     link.active === true && 'font-medium text-primary-ink',
-                                                ),
-                                            ) as React.ReactElement
+                                                )}
+                                            />
                                         }
-                                    />
+                                    >
+                                        {link.label}
+                                    </Menu.Item>
                                 ))}
                             </Menu.Popup>
                         </Menu.Positioner>
@@ -93,15 +84,18 @@ export function NavBar({
             <nav aria-label={words.navigation} className="hidden min-w-0 items-stretch gap-1 md:flex">
                 {links.map((link) => (
                     <span key={link.id} className="flex items-stretch">
-                        {renderLink(
-                            link,
-                            cn(
+                        <Link
+                            href={link.href}
+                            aria-current={link.active === true ? 'page' : undefined}
+                            className={cn(
                                 'relative flex items-center px-2.5 text-sm transition-colors outline-none after:absolute after:inset-x-2 after:bottom-0 after:h-0.5 after:rounded-full focus-visible:after:bg-ring',
                                 link.active === true
                                     ? 'font-medium text-foreground after:bg-primary'
                                     : 'text-muted-foreground hover:text-foreground',
-                            ),
-                        )}
+                            )}
+                        >
+                            {link.label}
+                        </Link>
                     </span>
                 ))}
             </nav>

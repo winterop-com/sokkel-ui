@@ -10,6 +10,7 @@ import { hasMath, markdownSchema, normalizeMath } from '../lib/math'
 import { TABLE_HEAD_TEXT } from '../lib/table'
 import { tagMatches, wikiLinksIn } from '../lib/wiki-links'
 import { Code } from './Code'
+import { Link } from './Link'
 import type { CodeBlockWords } from './ui/code-block'
 import type { MermaidDiagramWords } from './MermaidDiagram'
 
@@ -498,7 +499,7 @@ export const MarkdownView = memo(function MarkdownView({
                     )
                 }
                 return (
-                    <a
+                    <Link
                         {...props}
                         target="_blank"
                         rel="noreferrer noopener"
@@ -514,7 +515,7 @@ export const MarkdownView = memo(function MarkdownView({
                         }
                     >
                         {children}
-                    </a>
+                    </Link>
                 )
             },
             pre: ({ children }) => {

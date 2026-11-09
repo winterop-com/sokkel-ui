@@ -180,6 +180,7 @@ const CORE_AREAS: Record<string, string> = {
     AppBar: 'Frame and navigation',
     CommandPalette: 'Frame and navigation',
     Dock: 'Frame and navigation',
+    Link: 'Frame and navigation',
     NavBar: 'Frame and navigation',
     Rail: 'Frame and navigation',
     ResizeHandle: 'Frame and navigation',

@@ -2,6 +2,7 @@ import * as React from 'react'
 import { mergeProps } from '@base-ui/react/merge-props'
 import { useRender } from '@base-ui/react/use-render'
 import { cn } from '../../lib/cn'
+import { Link } from '../Link'
 import { ChevronRightIcon, MoreHorizontalIcon } from 'lucide-react'
 
 export type BreadcrumbProps = React.ComponentProps<'nav'>
@@ -39,7 +40,7 @@ function BreadcrumbLink({ className, render, ...props }: BreadcrumbLinkProps) {
             },
             props,
         ),
-        render,
+        render: render ?? <Link />,
         state: {
             slot: 'breadcrumb-link',
         },

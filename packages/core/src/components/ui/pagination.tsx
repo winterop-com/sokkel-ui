@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { cn } from '../../lib/cn'
 
+import { Link } from '../Link'
 import { Button } from './button'
 import { ChevronLeftIcon, ChevronRightIcon, MoreHorizontalIcon } from 'lucide-react'
 
@@ -42,7 +43,7 @@ function PaginationLink({ className, isActive, size = 'icon', ...props }: Pagina
             size={size}
             className={cn(className)}
             nativeButton={false}
-            render={<a aria-current={isActive ? 'page' : undefined} data-slot="pagination-link" data-active={isActive} {...props} />}
+            render={<Link aria-current={isActive ? 'page' : undefined} data-slot="pagination-link" data-active={isActive} {...props} />}
         />
     )
 }

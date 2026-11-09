@@ -3,6 +3,7 @@ import { Fragment, useContext, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { shortcutLabel } from '../lib/keys'
+import { Link } from './Link'
 import { ShellPalette } from './shell-context'
 import { Kbd } from './ui/kbd'
 
@@ -36,7 +37,6 @@ export interface TopBarProps {
      */
     shortcut?: string
     actions?: ReactNode
-    renderLink?: (crumb: Crumb, className: string) => ReactNode
     words?: Partial<TopBarWords>
 }
 
@@ -58,20 +58,7 @@ const WORDS: TopBarWords = { search: 'Search', palette: 'Open the command palett
  * its last step and the palette's button becomes an icon. `mark` puts the app's mark before the
  * rest where no rail shows it; `AppBar` is the bar itself for a screen drawn without `Shell`.
  */
-export function TopBar({
-    trail = [],
-    mark,
-    onSearch,
-    search: field,
-    shortcut: shortcutGiven,
-    actions,
-    renderLink = (crumb, className) => (
-        <a href={crumb.href} className={className}>
-            {crumb.label}
-        </a>
-    ),
-    words: given,
-}: TopBarProps) {
+export function TopBar({ trail = [], mark, onSearch, search: field, shortcut: shortcutGiven, actions, words: given }: TopBarProps) {
     const words = { ...WORDS, ...given }
     const shellPalette = useContext(ShellPalette)
     const search = onSearch ?? shellPalette
@@ -103,7 +90,9 @@ export function TopBar({
                                                 {crumb.label}
                                             </span>
                                         ) : (
-                                            renderLink(crumb, cn(face, 'text-muted-foreground hover:text-foreground'))
+                                            <Link href={crumb.href} className={cn(face, 'text-muted-foreground hover:text-foreground')}>
+                                                {crumb.label}
+                                            </Link>
                                         )}
                                     </li>
                                     {!last && (

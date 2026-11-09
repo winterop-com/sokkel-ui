@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import type { KindColor } from '../lib/kind'
+import { Link } from './Link'
 import { PersonAvatar } from './PersonAvatar'
 
 export interface ProfileRowProps {
@@ -32,7 +33,7 @@ export interface ProfileRowProps {
 export function ProfileRow({ name, detail, image, color, href, size = 'md', action, actions, className }: ProfileRowProps) {
     const large = size === 'lg'
     const Name = large ? 'h1' : 'span'
-    const Who = href === undefined ? 'div' : 'a'
+    const Who = href === undefined ? 'div' : Link
     return (
         <div data-slot="profile-row" className={cn('flex min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-3', className)}>
             {/* The action goes under the name rather than cut it short, where the two do not fit on a line. */}

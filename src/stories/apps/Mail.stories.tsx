@@ -21,7 +21,7 @@ import {
     Trash2,
     type LucideIcon,
 } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import { useState } from 'react'
 
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { AddressInput, type Address } from '@winterop-com/sokkel-ui/AddressInput'
@@ -32,7 +32,8 @@ import { InlineField } from '@winterop-com/sokkel-ui/InlineField'
 import { Markdown } from '@winterop-com/sokkel-ui/Markdown'
 import { MessageRow, type MessageLabel } from '@winterop-com/sokkel-ui/MessageRow'
 import { PaneHeader } from '@winterop-com/sokkel-ui/PaneHeader'
-import { Rail, type RailEntry, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
+import { LinkProvider } from '@winterop-com/sokkel-ui/Link'
+import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { SelectionBar } from '@winterop-com/sokkel-ui/SelectionBar'
@@ -48,6 +49,7 @@ import { Textarea } from '@winterop-com/sokkel-ui/primitives/textarea'
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@winterop-com/sokkel-ui/primitives/empty'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { routerLink } from '../fixtures/router'
 import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { Dot } from '@winterop-com/sokkel-ui/Dot'
@@ -727,10 +729,7 @@ function ComposeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
     )
 }
 
-function rail(
-    box: Box,
-    onBox: (box: Box) => void,
-): { groups: RailGroup[]; renderLink: (entry: RailEntry, children: ReactNode, className: string) => ReactNode } {
+function rail(box: Box): RailGroup[] {
     const unread = MAIL.filter((mail) => mail.box === 'inbox' && mail.unread === true).length
     const groups: RailGroup[] = [
         {
@@ -739,7 +738,7 @@ function rail(
                 id: entry.id,
                 label: entry.label,
                 icon: entry.icon,
-                href: '#',
+                href: `#${entry.id}`,
                 active: entry.id === box,
                 count: entry.id === 'inbox' ? unread : undefined,
             })),
@@ -756,20 +755,7 @@ function rail(
             })),
         },
     ]
-    const renderLink = (entry: RailEntry, children: ReactNode, className: string) => (
-        <a
-            href={entry.href}
-            aria-current={entry.active ? 'page' : undefined}
-            className={className}
-            onClick={(event) => {
-                event.preventDefault()
-                if (!entry.id.startsWith('label-')) onBox(entry.id as Box)
-            }}
-        >
-            {children}
-        </a>
-    )
-    return { groups, renderLink }
+    return groups
 }
 
 function MailApp({
@@ -791,8 +777,12 @@ function MailApp({
     const [query, setQuery] = useState(startQuery)
     const [checked, setChecked] = useState<string[]>(startChecked)
     const [compose, setCompose] = useState(composing)
-    const { groups, renderLink } = rail(box, (next) => {
-        setBox(next)
+    const groups = rail(box)
+    // A box's link opens it; a label's leads nowhere yet.
+    const link = routerLink((href) => {
+        const next = BOXES.find((entry) => `#${entry.id}` === href)
+        if (next === undefined) return
+        setBox(next.id)
         setOpen(null)
         setChecked([])
     })
@@ -801,23 +791,24 @@ function MailApp({
         <TooltipProvider>
             <Shell
                 rail={
-                    <Rail
-                        mark={<TidevannMark />}
-                        name="Tidevann"
-                        groups={groups}
-                        renderLink={renderLink}
-                        collapsed={collapsed}
-                        onCollapsedChange={setCollapsed}
-                        foot={
-                            <AccountMenu
-                                name="ada"
-                                image={pictureOf('ada')}
-                                where="ada@example.org"
-                                collapsed={collapsed}
-                                onSettings={() => undefined}
-                            />
-                        }
-                    />
+                    <LinkProvider render={link}>
+                        <Rail
+                            mark={<TidevannMark />}
+                            name="Tidevann"
+                            groups={groups}
+                            collapsed={collapsed}
+                            onCollapsedChange={setCollapsed}
+                            foot={
+                                <AccountMenu
+                                    name="ada"
+                                    image={pictureOf('ada')}
+                                    where="ada@example.org"
+                                    collapsed={collapsed}
+                                    onSettings={() => undefined}
+                                />
+                            }
+                        />
+                    </LinkProvider>
                 }
                 top={
                     <TopBar

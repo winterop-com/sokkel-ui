@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import { LinkProvider } from '@winterop-com/sokkel-ui/Link'
 import { BookOpen, CalendarClock, FolderGit2, Play, Search, Server, Workflow } from 'lucide-react'
 import { useMemo, useState, type ReactNode } from 'react'
 
@@ -32,6 +33,7 @@ import {
 } from '@winterop-com/sokkel-ui/primitives/command'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@winterop-com/sokkel-ui/primitives/resizable'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
+import { routerLink } from '../fixtures/router'
 import { JOBS, makeRuns, PROJECTS, startedAt, STEPS, type TableRun } from '../fixtures/tableRuns'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import clip from '../media/fixtures/clip.webm?url'
@@ -258,36 +260,25 @@ function Frame({
                 mayOpenPalette={overlay ? (over) => over === null || searching : undefined}
                 onPaletteOpenChange={overlay ? (open) => open && setSearching(false) : undefined}
                 rail={
-                    <Rail
-                        mark={<TidevannMark />}
-                        name="Tidevann"
-                        markHref="#runs"
-                        groups={placesAt(place)}
-                        collapsed={collapsed}
-                        onCollapsedChange={setCollapsed}
-                        renderLink={(entry, children, className) => (
-                            <a
-                                href={entry.href}
-                                aria-current={entry.active ? 'page' : undefined}
-                                className={className}
-                                onClick={(event) => {
-                                    event.preventDefault()
-                                    if (entry.href !== undefined) go(entry.href)
-                                }}
-                            >
-                                {children}
-                            </a>
-                        )}
-                        foot={
-                            <AccountMenu
-                                name="ada"
-                                where="tidevann.example.org"
-                                collapsed={collapsed}
-                                onSettings={() => undefined}
-                                onSignOut={() => undefined}
-                            />
-                        }
-                    />
+                    <LinkProvider render={routerLink(go)}>
+                        <Rail
+                            mark={<TidevannMark />}
+                            name="Tidevann"
+                            markHref="#runs"
+                            groups={placesAt(place)}
+                            collapsed={collapsed}
+                            onCollapsedChange={setCollapsed}
+                            foot={
+                                <AccountMenu
+                                    name="ada"
+                                    where="tidevann.example.org"
+                                    collapsed={collapsed}
+                                    onSettings={() => undefined}
+                                    onSignOut={() => undefined}
+                                />
+                            }
+                        />
+                    </LinkProvider>
                 }
                 top={
                     <TopBar

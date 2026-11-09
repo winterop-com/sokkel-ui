@@ -322,6 +322,10 @@
             "types": "./dist/components/Layout.d.ts",
             "import": "./dist/components/Layout.js"
         },
+        "./Link": {
+            "types": "./dist/components/Link.d.ts",
+            "import": "./dist/components/Link.js"
+        },
         "./Loaders": {
             "types": "./dist/components/Loaders.d.ts",
             "import": "./dist/components/Loaders.js"

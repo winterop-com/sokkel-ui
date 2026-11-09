@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import { useClamped } from '../hooks/use-clamped'
 import { cn } from '../lib/cn'
 import { TITLE_LINES, type TitleLines } from '../lib/title-lines'
+import { Link } from './Link'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from './ui/dropdown-menu'
 
 /** A fact at a card's foot: what it is, and its value. */
@@ -76,7 +77,7 @@ export function ItemCard({
     const heading = title ?? code
     const showCode = title !== undefined && code !== undefined
     const interactive = href !== undefined || onSelect !== undefined
-    const Cover = href !== undefined ? 'a' : 'button'
+    const Cover = href !== undefined ? Link : 'button'
     const [titleRef, clamped] = useClamped<HTMLHeadingElement>()
     return (
         <article

@@ -2,6 +2,7 @@ import { ArrowUpRight } from 'lucide-react'
 
 import { cn } from '../lib/cn'
 import { CopyButton } from './CopyButton'
+import { Link } from './Link'
 
 export interface ApiLinkWords {
     copy: string
@@ -47,7 +48,7 @@ export function ApiLink({ method = 'GET', path, href, copyValue, open = false, c
     const verb = <span className={cn('shrink-0 font-mono text-xs font-medium', methodTone(method))}>{method.toUpperCase()}</span>
     if (open) {
         return (
-            <a
+            <Link
                 data-slot="api-link"
                 href={href ?? path}
                 target="_blank"
@@ -63,7 +64,7 @@ export function ApiLink({ method = 'GET', path, href, copyValue, open = false, c
                 <span className={PATH}>{path}</span>
                 <span className="sr-only">, {words.opens}</span>
                 <ArrowUpRight className="size-3 shrink-0 text-muted-foreground" aria-hidden />
-            </a>
+            </Link>
         )
     }
     return (
@@ -74,7 +75,7 @@ export function ApiLink({ method = 'GET', path, href, copyValue, open = false, c
                     {path}
                 </span>
             ) : (
-                <a
+                <Link
                     href={href}
                     target="_blank"
                     rel="noreferrer"
@@ -86,7 +87,7 @@ export function ApiLink({ method = 'GET', path, href, copyValue, open = false, c
                 >
                     <span className="truncate">{path}</span>
                     <ArrowUpRight className="size-3 shrink-0" aria-hidden />
-                </a>
+                </Link>
             )}
             <CopyButton value={copyValue ?? `${method.toUpperCase()} ${path}`} size="icon-xs" words={words} className="shrink-0" />
         </span>
