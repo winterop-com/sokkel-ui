@@ -6,7 +6,11 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.10.15** is the latest release (2026-11-09): round 6 of the review and a fix to 0.10.14.
+- **0.10.16** is the latest release (2026-11-09): the review's last fixes. A `StatPanel` centers
+  its value and says what its change compares against (`compared`); a graph on a narrow canvas fits
+  its width; a `DataTable`'s bar has room around its search. The examples open their settings as a
+  dialog over the page and keep light and dark there, not in the top bar.
+- **0.10.15** (2026-11-09): round 6 of the review and a fix to 0.10.14.
   `DashboardGrid` is its own container again, so an app's `className` places it; `SchemaForm`
   lists keep each item's identity and move items, and take an app's own control through `field`;
   `useAttachmentField`, `useSubmit`, `RepeatedGroup` and `useRepeated` are new; a map loads its
@@ -131,13 +135,8 @@ to `plan.md` when it ships.
 
 ## Next
 
-- **The reviews of 2026-11-09.** A visual review of the published catalog (every story group at
-  1280 and 344 wide, every theme in both schemes) and a review of the twelve example apps on the
-  web. Each round below is a PR or a few, smallest and surest first. Every fix goes in the
-  component, never the story, with a test or story that shows it.
-    - **Round 5, dashboards:**
-        - One look for a dashboard's main figures and a quieter one for the rest, and fewer solid
-          fills on a phone's first screen (a delta now says what it compares against, `compared`).
+- **The reviews of 2026-11-09.** A visual review of the published catalog and a review of the
+  twelve example apps on the web; every round of fixes from them shipped in 0.10.13 to 0.10.16.
     - **Not covered yet:** the Electron and Tauri shells, browsers other than Chromium, and real
       touch devices. Run that pass before calling the examples checked on every platform.
 
