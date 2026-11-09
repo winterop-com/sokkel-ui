@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.10.8** is the latest release (2026-11-09): twelve example apps in `examples/`, published
+- **0.10.9** is the latest release (2026-11-09): a media slider mounted while hidden draws its
+  level, so `VideoPlayer`'s volume no longer shows an empty bar on a wide player.
+- **0.10.8** (2026-11-09): twelve example apps in `examples/`, published
   beside Storybook, and what they asked of the library: video parts for a watch page, podcast
   parts, a file tree, document tabs, linked notes, a network graph, period and server parts for a
   records app, panel menus, an uptime bar, a usage line and answer columns, a rail with a body,
