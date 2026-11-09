@@ -142,9 +142,6 @@ to `plan.md` when it ships.
     - **Round 5, dashboards:**
         - One look for a dashboard's main figures and a quieter one for the rest, and fewer solid
           fills on a phone's first screen (a delta now says what it compares against, `compared`).
-    - **Round 6, data entry:**
-        - Interaction tests for the above: a bad submit focusing the first issue, a server error,
-          removing a repeated item, cancelling and retrying an upload, editing stored files.
     - **Not covered yet:** the Electron and Tauri shells, browsers other than Chromium, and real
       touch devices. Run that pass before calling the examples checked on every platform.
 
