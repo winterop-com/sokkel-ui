@@ -256,6 +256,11 @@ output is read by one parser, `lib/ansi`, which `AnsiText` and an `ansi` fence s
 colors in the kind and status inks, 256-color and 24-bit color as they are. `Markdown` embeds an
 app's own parts in a text where it has `<!-- part:ID -->` (another word through `partMarker`),
 through its `parts` map or function, so the text stays one document with its headings and anchors.
+Notes that link to each other are read by one module, `lib/wiki-links`: `[[Note]]`,
+`[[Note|words]]` and `[[Note#Heading]]` link to a note by its name and `#tag` tags it, neither read
+inside code. `Markdown`'s `links` draws them as links the app follows (`onOpen`, a link to a note
+`exists` denies drawn faint, `onTag` for the tags), and `wikiLinksIn`, `tagsIn` and `mentionsOf`
+give an app a note's links, its tags and where a name is written unlinked, for backlinks.
 
 ## Typefaces
 

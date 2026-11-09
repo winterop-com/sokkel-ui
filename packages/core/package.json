@@ -1185,6 +1185,10 @@
         "./lib/title-lines": {
             "types": "./dist/lib/title-lines.d.ts",
             "import": "./dist/lib/title-lines.js"
+        },
+        "./lib/wiki-links": {
+            "types": "./dist/lib/wiki-links.d.ts",
+            "import": "./dist/lib/wiki-links.js"
         }
     },
     "publishConfig": {

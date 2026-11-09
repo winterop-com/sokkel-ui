@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { CheckCircle2, CircleAlert } from 'lucide-react'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 
 import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
 import { Dot } from '@winterop-com/sokkel-ui/Dot'
@@ -104,6 +104,37 @@ function Runbook() {
     )
 }
 
+const NOTE = `## Nightly export
+
+The [[Nightly export]] job runs at 02:00 on the worker. When it fails, follow [[Runbooks/Retry a run|the retry runbook]] and
+tell the owner of [[harbor]]. The steps are in [[Nightly export#Steps]].
+
+Open questions for [[Weekly sync with grace]] and a page nobody wrote yet, [[Export retention]].
+
+#runbook #on-call/weekly
+`
+
+const NOTES = new Set(['Nightly export', 'Runbooks/Retry a run', 'harbor', 'Weekly sync with grace'])
+
+/** A note's links to other notes and its tags, each followed by the app; the line under it says what was followed. */
+function LinkedNote() {
+    const [followed, setFollowed] = useState('Nothing yet')
+    return (
+        <div className="max-w-2xl p-6">
+            <Markdown
+                content={NOTE}
+                scale="document"
+                links={{
+                    onOpen: (target, heading) => setFollowed(heading === undefined ? `Note ${target}` : `Note ${target}, at ${heading}`),
+                    exists: (target) => NOTES.has(target),
+                    onTag: (tag) => setFollowed(`Tag #${tag}`),
+                }}
+            />
+            <p className="mt-6 text-sm text-muted-foreground">Followed: {followed}</p>
+        </div>
+    )
+}
+
 function Contents() {
     const article = useRef<HTMLElement>(null)
     const headings = markdownHeadings(PAGE)
@@ -162,6 +193,12 @@ export const Callout: StoryObj = { name: 'Callouts', render: () => <Callouts /> 
  * details set in where the text has `<!-- part:state -->` and `<!-- part:run -->`.
  */
 export const Parts: StoryObj = { name: 'Embedded parts', render: () => <Runbook /> }
+
+/**
+ * Links between notes and tags: `[[Note]]`, `[[Note|words]]` and `[[Note#Heading]]` are links the
+ * app follows, a link to a note that does not exist is drawn faint, and each `#tag` is a chip.
+ */
+export const Links: StoryObj = { name: 'Linked notes', render: () => <LinkedNote /> }
 
 /** A long page with its headings beside it; scrolling moves the mark to the heading in view. */
 export const Contents_: StoryObj = { name: 'Table of contents', render: () => <Contents /> }
