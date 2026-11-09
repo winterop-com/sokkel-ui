@@ -358,6 +358,7 @@ function Workspace({
                                     }
                                 />
                                 <DataTable
+                                    stackLayout="compact"
                                     search={<SearchField value={query} onChange={setQuery} placeholder="Search" />}
                                     toolbar={
                                         <>

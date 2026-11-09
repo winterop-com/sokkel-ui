@@ -139,9 +139,6 @@ to `plan.md` when it ships.
         - `RunGraph` laid out top to bottom on a phone still puts two first steps side by side,
           clipping the second slightly at 344, since the fit stops at its least zoom. Stack wide
           ranks, or let a narrow fit zoom out further.
-        - Workspace at 1024: the list falls to three tall labeled cards beside the panel. Stack rows
-          compactly before full labeled cards (the rail now narrows while the panel is open under
-          `xl`).
     - **Round 5, dashboards:**
         - A delta says what it compares against ("vs the previous 6 hours"); one look for the main
           figures and a quieter one for the rest; fewer solid fills on a phone's first screen.
