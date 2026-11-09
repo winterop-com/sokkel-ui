@@ -51,3 +51,28 @@ export const Probabilities: StoryObj = {
 export const Format: StoryObj = {
     render: () => <BarList label="Likely cause" items={STEPS.slice(0, 5)} format={(value) => value.toFixed(2)} className="max-w-sm" />,
 }
+
+const LANGUAGES = [
+    { language: 'en', name: 'English', translated: 2866 },
+    { language: 'fr', name: 'French', translated: 2611 },
+    { language: 'es', name: 'Spanish', translated: 1740 },
+    { language: 'pt', name: 'Portuguese', translated: 902 },
+    { language: 'sw', name: 'Swahili', translated: 118 },
+]
+const STRINGS = 2866
+
+/** Each bar with its own note after the share: the counts the share was taken from. */
+export const Counts: StoryObj = {
+    render: () => (
+        <BarList
+            label="Strings translated, by language"
+            items={LANGUAGES.map((language) => ({
+                id: language.language,
+                label: `${language.name} (${language.language})`,
+                value: language.translated / STRINGS,
+                note: `${language.translated.toLocaleString('en-US')} of ${STRINGS.toLocaleString('en-US')} strings`,
+            }))}
+            className="max-w-xl"
+        />
+    ),
+}

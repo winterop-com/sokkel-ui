@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react'
+
 import { cn } from '../lib/cn'
 import { formatPercent } from '../lib/percent'
 
@@ -10,6 +12,8 @@ export interface BarListItem {
     value: number
     /** The bar the answer is: drawn in the accent, the others quiet. */
     chosen?: boolean
+    /** Words said after the value, such as the counts behind the share ("1,740 of 2,866 strings"). */
+    note?: ReactNode
 }
 
 export interface BarListProps {
@@ -31,12 +35,25 @@ export interface BarListProps {
  * says otherwise. The labels, bars and values line up in three columns; a label too long for its
  * room is cut short, as the bars keep at least two fifths of the width.
  *
+ * An item's `note` is said after its value, in a fourth column the notes line up in, such as the
+ * counts a share was taken from. A note too long for its room is cut short, as a label is.
+ *
  * `active` and `onActiveChange` tie the list to something beside it, such as the boxes over an
  * image: the bar under the pointer is reported, and the active one is drawn on a wash.
  */
 export function BarList({ items, format = formatPercent, label, active, onActiveChange, className }: BarListProps) {
+    const noted = items.some((item) => item.note !== undefined && item.note !== null && item.note !== false)
     return (
-        <ul aria-label={label} className={cn('grid grid-cols-[minmax(0,max-content)_minmax(40%,1fr)_auto] gap-x-3 text-sm', className)}>
+        <ul
+            aria-label={label}
+            className={cn(
+                'grid gap-x-3 text-sm',
+                noted
+                    ? 'grid-cols-[minmax(0,max-content)_minmax(40%,1fr)_auto_minmax(0,max-content)]'
+                    : 'grid-cols-[minmax(0,max-content)_minmax(40%,1fr)_auto]',
+                className,
+            )}
+        >
             {items.map((item) => {
                 const id = item.id ?? item.label
                 const chosen = item.chosen === true
@@ -48,7 +65,10 @@ export function BarList({ items, format = formatPercent, label, active, onActive
                         data-active={active === id || undefined}
                         onPointerEnter={onActiveChange === undefined ? undefined : () => onActiveChange(id)}
                         onPointerLeave={onActiveChange === undefined ? undefined : () => onActiveChange(undefined)}
-                        className="col-span-3 grid grid-cols-subgrid items-center rounded-mini px-1.5 py-1 data-active:bg-hover"
+                        className={cn(
+                            'grid grid-cols-subgrid items-center rounded-mini px-1.5 py-1 data-active:bg-hover',
+                            noted ? 'col-span-4' : 'col-span-3',
+                        )}
                     >
                         <span
                             title={item.label}
@@ -70,6 +90,14 @@ export function BarList({ items, format = formatPercent, label, active, onActive
                         >
                             {format(item.value)}
                         </span>
+                        {noted && (
+                            <span
+                                title={typeof item.note === 'string' ? item.note : undefined}
+                                className="truncate text-xs text-muted-foreground tabular-nums"
+                            >
+                                {item.note}
+                            </span>
+                        )}
                     </li>
                 )
             })}

@@ -106,22 +106,16 @@ export function Health() {
                 title="Translations"
                 description="Each language's share of the strings the forms say: titles, questions and their help."
             >
-                <Stack gap="sm">
-                    <BarList
-                        label="Strings translated, by language"
-                        items={languages.map((language) => ({
-                            id: language.language,
-                            label: `${language.name} (${language.language})`,
-                            value: language.translated / language.total,
-                        }))}
-                        format={(value) => `${String(Math.round(value * 100))}%`}
-                    />
-                    <p className="text-help text-muted-foreground">
-                        {languages
-                            .map((language) => `${language.name}: ${String(language.translated)} of ${String(language.total)}`)
-                            .join(' · ')}
-                    </p>
-                </Stack>
+                <BarList
+                    label="Strings translated, by language"
+                    items={languages.map((language) => ({
+                        id: language.language,
+                        label: `${language.name} (${language.language})`,
+                        value: language.translated / language.total,
+                        note: `${language.translated.toLocaleString('en-US')} of ${language.total.toLocaleString('en-US')} strings`,
+                    }))}
+                    format={(value) => `${String(Math.round(value * 100))}%`}
+                />
             </Section>
             <Stack gap="md">
                 <SearchField value={query} onChange={setQuery} placeholder="Object name or id" className="max-w-md" />

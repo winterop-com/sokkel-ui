@@ -42,8 +42,8 @@ says what is missing. **Not covered** has no part yet.
    grid, its totals and its folding to cards today.
 8. **`TreeSelect` scopes.** Places outside a form's assignment drawn shut with why, and a Clear row
    for an optional place question.
-9. **Counts beside a bar.** `BarList` writes a share; translation coverage reads "1,740 of 2,866
-   strings". Let an item carry the text said beside its bar.
+9. **Counts beside a bar.** Closed: a `BarList` item's `note` is said after its share, so the
+   health page's translations read "1,740 of 2,866 strings" beside each bar.
 10. **The palette's foot and rows, the rest.** The foot's verb follows the chosen row (Open, Switch,
     Run) where `paletteFoot` says Open, and a row ends with its kind (Page, Form, Receipt) where its
     group does not already say it.
@@ -160,12 +160,12 @@ mounts its control afresh as an issue comes or goes, which closed the period pic
 
 ## Metadata health
 
-| The app's part                                                               | Library part now                                 | Coverage | What the app changes            |
-| ---------------------------------------------------------------------------- | ------------------------------------------------ | -------- | ------------------------------- |
-| Errors, warnings and notes as tiles                                          | `Stat` tiles                                     | Covered  |                                 |
-| Translations per language with a bar and counts, each folding to its objects | `BarList`, `Unfoldable`, `DataTable`             | Partly   | Counts beside a bar are item 9. |
-| A filter that opens every section while typing                               | `SearchField`, `Unfoldable` `forced`             | Covered  |                                 |
-| Findings by severity, then by kind of object                                 | `Unfoldable` per severity, `DataTable` `groupBy` | Covered  |                                 |
+| The app's part                                                               | Library part now                                 | Coverage | What the app changes                 |
+| ---------------------------------------------------------------------------- | ------------------------------------------------ | -------- | ------------------------------------ |
+| Errors, warnings and notes as tiles                                          | `Stat` tiles                                     | Covered  |                                      |
+| Translations per language with a bar and counts, each folding to its objects | `BarList` with `note`, `Unfoldable`, `DataTable` | Covered  | The counts go in each item's `note`. |
+| A filter that opens every section while typing                               | `SearchField`, `Unfoldable` `forced`             | Covered  |                                      |
+| Findings by severity, then by kind of object                                 | `Unfoldable` per severity, `DataTable` `groupBy` | Covered  |                                      |
 
 ## Playground, expressions, server, code lists
 
