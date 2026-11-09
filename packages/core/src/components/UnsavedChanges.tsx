@@ -148,6 +148,12 @@ export interface UnsavedChangesOptions {
     words?: Partial<UnsavedChangesWords>
     /** Starts with the question showing, for a still view of it. */
     defaultAsking?: boolean
+    /**
+     * Also guards an app that routes by the location's hash: a link to another hash in the page,
+     * Back or Forward, and the app setting the hash ask first while there are changes; until the
+     * answer, the address stays where the changes are.
+     */
+    hashRoutes?: boolean
 }
 
 /** What `useUnsavedChanges` gives a page. */
@@ -169,9 +175,13 @@ export interface UnsavedChanges {
  * browser's own warning (`beforeunload`) while `dirty` is true. The library has no router, so a
  * move inside the app asks through `confirmLeave`, which the app calls from its router's blocker
  * and which opens the library's `ConfirmDialog`: Stay keeps the page and its changes, Leave goes on
- * without them. The browser's warning has no words of its own; `words` are the dialog's.
+ * without them. An app that routes by the hash passes `hashRoutes`, and its links and Back ask as
+ * well. The browser's warning has no words of its own; `words` are the dialog's.
  */
-export function useUnsavedChanges(dirty: boolean, { words: given, defaultAsking = false }: UnsavedChangesOptions = {}): UnsavedChanges {
+export function useUnsavedChanges(
+    dirty: boolean,
+    { words: given, defaultAsking = false, hashRoutes = false }: UnsavedChangesOptions = {},
+): UnsavedChanges {
     const words = { ...LEAVE_WORDS, ...given }
     const [asking, setAsking] = useState(defaultAsking)
     const [question] = useState(() => leaveQuestion(setAsking))
@@ -187,6 +197,53 @@ export function useUnsavedChanges(dirty: boolean, { words: given, defaultAsking 
     }, [dirty])
     useEffect(() => () => question.drop(), [question])
     const [confirmLeave] = useState(() => () => question.ask(latest.current))
+    useEffect(() => {
+        if (!dirty || !hashRoutes) return
+        let here = window.location.href
+        // A hash set by this guard itself, which its own listener lets through.
+        let passing = false
+        const leaveTo = (href: string) => {
+            void confirmLeave().then((leave) => {
+                if (!leave) return
+                passing = true
+                window.location.href = href
+            })
+        }
+        const samePage = (url: URL) =>
+            url.origin + url.pathname + url.search === window.location.origin + window.location.pathname + window.location.search
+        const click = (event: MouseEvent) => {
+            if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+            const link = event.target instanceof Element ? event.target.closest('a[href]') : null
+            if (!(link instanceof HTMLAnchorElement) || (link.target !== '' && link.target !== '_self')) return
+            const to = new URL(link.href, window.location.href)
+            if (!samePage(to) || to.hash === window.location.hash) return
+            event.preventDefault()
+            leaveTo(to.href)
+        }
+        // Back, Forward, or the app setting the hash: put the address back before any router reads
+        // it (routers read `location.hash` when `hashchange` arrives, after this), then ask.
+        const moved = () => {
+            if (passing || window.location.href === here) return
+            const to = window.location.href
+            window.history.replaceState(window.history.state, '', here)
+            leaveTo(to)
+        }
+        const changed = () => {
+            if (!passing) return
+            passing = false
+            here = window.location.href
+        }
+        document.addEventListener('click', click, true)
+        window.addEventListener('popstate', moved, true)
+        window.addEventListener('hashchange', moved, true)
+        window.addEventListener('hashchange', changed)
+        return () => {
+            document.removeEventListener('click', click, true)
+            window.removeEventListener('popstate', moved, true)
+            window.removeEventListener('hashchange', moved, true)
+            window.removeEventListener('hashchange', changed)
+        }
+    }, [dirty, hashRoutes, confirmLeave])
     return {
         confirmLeave,
         asking,
