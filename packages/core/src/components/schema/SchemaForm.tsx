@@ -1,6 +1,6 @@
 import { IconButton } from '../IconButton'
-import { Plus, X } from 'lucide-react'
-import { useEffect, useId, useMemo, useState, type ReactNode } from 'react'
+import { ArrowDown, ArrowUp, Plus, X } from 'lucide-react'
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../../lib/cn'
 import { Banner } from '../Banner'
@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Textarea } from '../ui/textarea'
 import { childSchema, literal, resolve, type JsonSchema } from './read'
 import { loadedValidate, loadValidate } from './checker'
-import { fieldSchema, given, pointer, types, valueAt, type Path, type SchemaIssue } from './issues'
+import { fieldSchema, given, pointer, shiftKey, shiftRecord, shiftSet, types, valueAt, type Path, type SchemaIssue } from './issues'
 
 /** What a server said about a value it refused, at the path it concerns. */
 export interface ServerIssue {
@@ -38,6 +38,8 @@ export interface SchemaFormWords {
     none: string
     notJson: string
     item: (index: number) => string
+    moveUp: string
+    moveDown: string
 }
 
 const FORMAT: Record<string, { text: string; detail?: string }> = {
@@ -109,6 +111,8 @@ const WORDS: SchemaFormWords = {
     none: 'None',
     notJson: 'Not valid JSON',
     item: (index) => `Item ${String(index + 1)}`,
+    moveUp: 'Move up',
+    moveDown: 'Move down',
 }
 
 /** A form's value with every schema default and every nested object in place. */
@@ -216,6 +220,15 @@ export interface SchemaFormState {
     setOpen: (at: string | null) => void
     /** The id of a field's control. */
     id: (path: Path) => string
+    /**
+     * Takes an item out of a list, the marks kept by place (a field left, a draft, a refused value
+     * changed) moving with the items after it, so none lands on the wrong item.
+     */
+    removeItem: (path: Path, index: number) => void
+    /** Moves a list's item to another place, its marks with it. */
+    moveItem: (path: Path, from: number, to: number) => void
+    /** A key per item of the list at `path` that stays with the item as items are removed and moved. */
+    itemKeys: (path: Path, length: number) => readonly string[]
     words: SchemaFormWords
 }
 
@@ -257,6 +270,35 @@ export function useSchemaForm(
     if (seen !== server) {
         setSeen(server)
         setChanged(new Set())
+    }
+
+    const rowKeys = useRef(new Map<string, string[]>())
+    const rowCount = useRef(0)
+    const keysAt = (at: string, length: number): string[] => {
+        const held = rowKeys.current.get(at) ?? []
+        while (held.length < length) held.push(`row-${String((rowCount.current += 1))}`)
+        held.length = length
+        rowKeys.current.set(at, held)
+        return held
+    }
+    const reorder = (path: Path, map: (index: number) => number | null, items: unknown[]) => {
+        const at = pointer(path)
+        const keys = keysAt(at, items.length)
+        const nextKeys: string[] = []
+        const nextItems: unknown[] = []
+        items.forEach((item, index) => {
+            const to = map(index)
+            if (to === null) return
+            nextKeys[to] = keys[index]
+            nextItems[to] = item
+        })
+        rowKeys.current.set(at, nextKeys)
+        setValue((current: unknown) => setAt(current, path, nextItems))
+        setTouched((current) => shiftSet(current, at, map))
+        setUnread((current) => shiftSet(current, at, map))
+        setChanged((current) => new Set([...shiftSet(current, at, map), at]))
+        setDrafts((current) => shiftRecord(current, at, map))
+        setOpen((current) => (current === null ? null : shiftKey(current, at, map)))
     }
 
     const checked = useChecked(schema, value)
@@ -396,6 +438,21 @@ export function useSchemaForm(
         open,
         setOpen,
         id,
+        removeItem: (path, index) => {
+            const items = valueAt(value, path)
+            if (!Array.isArray(items)) return
+            reorder(path, (at) => (at === index ? null : at > index ? at - 1 : at), items)
+        },
+        moveItem: (path, from, to) => {
+            const items = valueAt(value, path)
+            if (!Array.isArray(items) || from === to || to < 0 || to >= items.length) return
+            reorder(
+                path,
+                (at) => (at === from ? to : from < to && at > from && at <= to ? at - 1 : from > to && at >= to && at < from ? at + 1 : at),
+                items,
+            )
+        },
+        itemKeys: (path, length) => keysAt(pointer(path), length),
         words,
     }
 }
@@ -742,10 +799,30 @@ function Property({
 
     if (kind === 'list' || kind === 'records') {
         const addOne = () => form.set(path, [...items, initialValue(at.items ?? {}, form.schema)])
-        const removeAt = (index: number) =>
-            form.set(
-                path,
-                items.filter((_, at_) => at_ !== index),
+        const removeAt = (index: number) => form.removeItem(path, index)
+        const keys = form.itemKeys(path, items.length)
+        const moves = (index: number) =>
+            locked || items.length < 2 ? null : (
+                <>
+                    <IconButton
+                        label={`${form.words.moveUp}: ${form.words.item(index)}`}
+                        type="button"
+                        size="icon"
+                        disabled={index === 0}
+                        onClick={() => form.moveItem(path, index, index - 1)}
+                    >
+                        <ArrowUp aria-hidden />
+                    </IconButton>
+                    <IconButton
+                        label={`${form.words.moveDown}: ${form.words.item(index)}`}
+                        type="button"
+                        size="icon"
+                        disabled={index === items.length - 1}
+                        onClick={() => form.moveItem(path, index, index + 1)}
+                    >
+                        <ArrowDown aria-hidden />
+                    </IconButton>
+                </>
             )
         return (
             <div className="flex min-w-0 flex-col gap-2 @lg:col-span-2">
@@ -758,10 +835,11 @@ function Property({
                 {at.description !== undefined && <p className="-mt-1 text-xs text-muted-foreground">{at.description}</p>}
                 {items.map((_, index) =>
                     kind === 'list' ? (
-                        <div key={index} className="flex min-w-0 items-center gap-1.5">
+                        <div key={keys[index]} className="flex min-w-0 items-center gap-1.5">
                             <div className="min-w-0 flex-1">
                                 <Control form={form} path={[...path, index]} at={itemSchema} label={`${label} ${String(index + 1)}`} />
                             </div>
+                            {moves(index)}
                             {!locked && (
                                 <IconButton
                                     label={`${form.words.remove} ${form.words.item(index)}`}
@@ -774,15 +852,16 @@ function Property({
                             )}
                         </div>
                     ) : (
-                        <section key={index} className="flex min-w-0 flex-col gap-3 rounded-surface border border-border p-3">
+                        <section key={keys[index]} className="flex min-w-0 flex-col gap-3 rounded-surface border border-border p-3">
                             <div className="-my-1 flex items-center gap-2">
                                 <span className="text-xs font-medium text-muted-foreground">{form.words.item(index)}</span>
+                                <span className="ml-auto flex items-center">{moves(index)}</span>
                                 {!locked && (
                                     <Button
                                         type="button"
                                         variant="ghost"
                                         size="sm"
-                                        className="ml-auto text-muted-foreground"
+                                        className="text-muted-foreground"
                                         onClick={() => removeAt(index)}
                                     >
                                         <X aria-hidden />
