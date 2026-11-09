@@ -506,6 +506,8 @@ export interface CodeEditorProps {
     variant?: 'field' | 'pane'
     /** A JSON Schema (2020-12) a JSON or YAML document is checked against and completed from. */
     schema?: JsonSchema
+    /** Leaves a value unchecked by the schema, and anything inside it, such as one holding a reference filled in later. */
+    deferred?: (value: unknown) => boolean
     /**
      * Finds the schema a document names for itself, when `schema` is not given: a top-level `$schema`
      * key, or a `# yaml-language-server: $schema=<address>` line in YAML. The editor fetches nothing;
@@ -568,6 +570,7 @@ export function CodeEditor({
     size = 'md',
     variant = 'field',
     schema: given,
+    deferred,
     resolveSchema,
     reveal,
     words,
@@ -589,8 +592,36 @@ export function CodeEditor({
     const [named, setNamed] = useState<{ address: string; schema: JsonSchema } | undefined>()
     const schema = given ?? (named !== undefined && named.address === address ? named.schema : undefined)
     const [languageReady, setLanguageReady] = useState(0)
-    const props = useRef({ marks, completions, languageWords, links, hover, onRun, keys, schema, words, language, resolveSchema, onBlur })
-    props.current = { marks, completions, languageWords, links, hover, onRun, keys, schema, words, language, resolveSchema, onBlur }
+    const props = useRef({
+        marks,
+        completions,
+        languageWords,
+        links,
+        hover,
+        onRun,
+        keys,
+        schema,
+        deferred,
+        words,
+        language,
+        resolveSchema,
+        onBlur,
+    })
+    props.current = {
+        marks,
+        completions,
+        languageWords,
+        links,
+        hover,
+        onRun,
+        keys,
+        schema,
+        deferred,
+        words,
+        language,
+        resolveSchema,
+        onBlur,
+    }
     const compartments = useRef({
         language: new Compartment(),
         readOnly: new Compartment(),
@@ -616,11 +647,11 @@ export function CodeEditor({
      * the schema checker has loaded.
      */
     const diagnose = (state: EditorState): Diagnostic[] => {
-        const { marks: given, schema: against, words, language: lang } = props.current
+        const { marks: given, schema: against, words, language: lang, deferred: unchecked } = props.current
         const found = markDiagnostics(state, given)
         const check = loadedValidate()
         if (against === undefined || (lang !== 'json' && lang !== 'yaml') || check === undefined) return found
-        return [...found, ...schemaDiagnostics(state, lang, against, check, { ...SCHEMA_WORDS, ...words })]
+        return [...found, ...schemaDiagnostics(state, lang, against, check, { ...SCHEMA_WORDS, ...words }, unchecked)]
     }
 
     const extensions = {
