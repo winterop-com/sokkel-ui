@@ -123,9 +123,6 @@ to `plan.md` when it ships.
     - **Round 1, wrong behavior in the core:**
         - Records form: a section's mark in the section list says complete while a field in it has
           an error. Derive the mark from the section's own field issues.
-        - `Banner` is one truncated line, so at 344 a warning or a critical banner loses the words
-          needed to act (a server's address, why a form cannot be sent). Let critical and warning
-          banners wrap, their actions moving to a second line.
         - `ApiPlayground`: at 344 Send lies over the path input. Give the path field a basis and a
           minimum, or put method, path and Send on their own rows when narrow.
         - `Inspector` keeps its 360 default inside a narrower page, so its right side is cut off.
