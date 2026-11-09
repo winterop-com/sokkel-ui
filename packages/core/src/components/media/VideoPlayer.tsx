@@ -384,8 +384,9 @@ function useCaptionChoice(store: Store<Partial<CaptionSettings>> | undefined): [
  * where it is through `onTime` and whether it plays through `onPlayingChange`. A playhead that
  * stands longer than `stallAfter` while playing, or a network or decoding error, loads the media
  * again where it was (a live stream's live edge once its window has moved past that point), the
- * source's engine starting its load there, `retries` times with a growing wait, before it says over
- * the picture that the video could not be played, with a button to try again. When the page is shown
+ * source's engine starting its load there, `retries` times with a growing wait, before it pauses and
+ * says over the picture that the video could not be played, with a button to try again where it
+ * stood; played again, as by the viewer, it no longer counts as failed. When the page is shown
  * again after being hidden, a video that was playing plays on, and one whose buffer stalled while
  * away is moved a hair to wake it; a pause asked through the handle while hidden stays.
  *
@@ -575,6 +576,8 @@ export function VideoPlayer({
         retryTimer.current = undefined
         failed.current = true
         trying.current = false
+        // Held still where it stood, so media that comes back does not play on under the failure; Retry picks up there.
+        video.current?.pause()
         setTrouble({ phase: 'failed', unsupported })
         tell(false)
         latest.current.onError?.({ ...error, fatal: true })
@@ -735,6 +738,12 @@ export function VideoPlayer({
             // Where a try picked up is where it first plays, which an engine starting at a live edge settles only then.
             if (resuming.current && event.type === 'playing') {
                 resuming.current = false
+                resumedFrom.current = element.currentTime
+            }
+            // Media played again after a failure, as when the viewer presses Play, has not failed.
+            if (failed.current && event.type === 'playing') {
+                failed.current = false
+                tries.current = 0
                 resumedFrom.current = element.currentTime
             }
             if (!element.paused) startWatch(element)
