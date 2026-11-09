@@ -1,6 +1,6 @@
 {
     "name": "@winterop-com/sokkel-ui-media",
-    "version": "0.10.13",
+    "version": "0.10.14",
     "description": "The music and video parts, the player bar, its fullscreen view, covers, track lists and the media session, for sokkel-ui.",
     "license": "SEE LICENSE IN LICENSE",
     "repository": {
