@@ -133,9 +133,6 @@ to `plan.md` when it ships.
           compactly before full labeled cards (the rail now narrows while the panel is open under
           `xl`).
     - **Round 5, dashboards:**
-        - A panel's own failure and freshness: `DashboardPanel`, `ChartFrame` and `StatPanel` show
-          loading and no data, but not a failed query with Retry, or values kept but stale since a
-          time. One contract for loading, empty, failed and stale, built on `Problem`.
         - A delta says what it compares against ("vs the previous 6 hours"); one look for the main
           figures and a quieter one for the rest; fewer solid fills on a phone's first screen.
     - **Round 6, data entry:**
