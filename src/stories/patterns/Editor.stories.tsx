@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { CodeEditor, type CodeCompletion } from '@winterop-com/sokkel-ui/CodeEditor'
+import { CodeEditor, languageForMediaType, type CodeCompletion, type CodeRange } from '@winterop-com/sokkel-ui/CodeEditor'
 import { JQ_BUILTINS } from '@winterop-com/sokkel-ui/code/jq'
 import { Field } from '@winterop-com/sokkel-ui/Field'
 import { SourceSheet } from '@winterop-com/sokkel-ui/SourceSheet'
@@ -202,6 +202,136 @@ function SchemaChecked() {
     )
 }
 
+const JOB_ADDRESS = 'https://example.org/schemas/job.json'
+
+const NAMED_JOB = `# yaml-language-server: $schema=${JOB_ADDRESS}
+code: nightly-export
+project: larkspur
+schedule: every day at 02:00
+steps:
+  - step: fetch
+    retries: 2
+  - step: validate
+    on_invalid: fail
+`
+
+const ORDER_SCHEMA = `{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": "order_id",
+  "properties": {
+    "order_id": { "type": "string" },
+    "total": { "type": "numeric", "minimum": 0 }
+  }
+}`
+
+function NamedSchemas() {
+    const [job, setJob] = useState(NAMED_JOB)
+    const [order, setOrder] = useState(ORDER_SCHEMA)
+    return (
+        <Ground>
+            <Field id="named-job" label="Definition" hint="Names its schema in its first line; the app finds it by address.">
+                <CodeEditor
+                    label="Definition"
+                    language="yaml"
+                    value={job}
+                    onChange={setJob}
+                    resolveSchema={(address) => (address === JOB_ADDRESS ? JOB_SCHEMA : undefined)}
+                    className="h-64"
+                />
+            </Field>
+            <Field
+                id="order-schema"
+                label="Order schema"
+                hint="A schema document, checked against the JSON Schema 2020-12 dialect it names."
+            >
+                <CodeEditor
+                    label="Order schema"
+                    language={languageForMediaType('application/schema+json')}
+                    value={order}
+                    onChange={setOrder}
+                    className="h-56"
+                />
+            </Field>
+        </Ground>
+    )
+}
+
+const QUERY = `-- The runs that failed last night, by job
+select job, count(*) as failures, max(started) as last_failed
+from runs
+where state = 'failed'
+  and project = 'larkspur'
+  and started >= date '2026-11-03'
+group by job
+order by failures desc;`
+
+const SCRIPT = `#!/usr/bin/env bash
+# Retry the failed runs of a job from the step they stopped on
+set -euo pipefail
+job="\${1:-nightly-export}"
+for run in $(tidevann runs --job "$job" --state failed --ids); do
+  echo "retrying $run"
+  tidevann retry "$run" --from validate
+done`
+
+const DIGEST = `{# The morning mail send-digest writes #}
+Runs in {{ project | title }} since {{ since }}:
+{% for run in runs if run.state == "failed" %}
+- {{ run.job }} stopped at {{ run.failed_step }} ({{ run.rejected }} rows)
+{% else %}
+Nothing failed.
+{% endfor %}`
+
+function Languages() {
+    const [query, setQuery] = useState(QUERY)
+    const [script, setScript] = useState(SCRIPT)
+    const [digest, setDigest] = useState(DIGEST)
+    return (
+        <Ground>
+            <Field id="sql" label="Query">
+                <CodeEditor label="Query" language="sql" value={query} onChange={setQuery} className="h-52" />
+            </Field>
+            <Field id="shell" label="Script">
+                <CodeEditor label="Script" language="shell" value={script} onChange={setScript} className="h-52" />
+            </Field>
+            <Field id="jinja" label="Template">
+                <CodeEditor label="Template" language="jinja" value={digest} onChange={setDigest} className="h-52" />
+            </Field>
+        </Ground>
+    )
+}
+
+const RECORD_TEXT = JSON.stringify(RECORD, null, 2)
+
+/** A key's name in the record, as a range to reveal. */
+const keyRange = (key: string): CodeRange => {
+    const from = RECORD_TEXT.indexOf(`"${key}"`)
+    return { from, to: from + key.length + 2 }
+}
+
+const PLACES = [
+    { label: 'Failed step', key: 'failed_step' },
+    { label: 'Schedule', key: 'schedule' },
+    { label: 'Labels', key: 'labels' },
+]
+
+function Revealing() {
+    const [reveal, setReveal] = useState<CodeRange>(() => keyRange('failed_step'))
+    return (
+        <Ground>
+            <Row gap="sm">
+                {PLACES.map((place) => (
+                    <Button key={place.key} size="sm" variant="outline" onClick={() => setReveal(keyRange(place.key))}>
+                        {place.label}
+                    </Button>
+                ))}
+            </Row>
+            <CodeEditor label="Stored record" language="json" value={RECORD_TEXT} readOnly reveal={reveal} className="h-48" />
+        </Ground>
+    )
+}
+
 const LOG = Array.from({ length: 40 }, (_, index) => {
     const job = ['nightly-export', 'sync-inventory', 'rebuild-index', 'send-digest'][index % 4]
     const state = ['succeeded', 'failed', 'succeeded', 'running', 'skipped'][index % 5]
@@ -290,6 +420,8 @@ export const Wrapped: StoryObj = { name: 'Wrapped text', render: () => <WrappedT
 export const Folded: StoryObj = { name: 'Folding', render: () => <Folding /> }
 /** A run log, read only and small, with the find bar open on a query. Mod-f opens it, Escape closes it. */
 export const Searched: StoryObj = { name: 'Search', render: () => <Searching /> }
+/** A range selected and scrolled into view, as when a check names where it failed; each button moves there again. */
+export const Revealed: StoryObj = { name: 'Reveal', render: () => <Revealing /> }
 /**
  * A jq filter: its keywords, strings and their interpolation, fields, variables and formats
  * highlighted; the run's fields offered after a dot and jq's built-ins while typing a name; a
@@ -297,11 +429,20 @@ export const Searched: StoryObj = { name: 'Search', render: () => <Searching /> 
  * Mod-Enter runs it.
  */
 export const Jq: StoryObj = { name: 'jq', render: () => <JqFilter /> }
+/** SQL, a shell script and a Jinja template, each language loaded the first time an editor shows it. */
+export const Languages_: StoryObj = { name: 'Languages', render: () => <Languages /> }
 /**
  * YAML checked against a JSON Schema as it is typed: each issue underlined on the value or key it is
- * about, with its message on hover, and the schema's property names and enum values offered while typing.
+ * about, with its message on hover, and the schema's property names and enum values offered while
+ * typing, required ones first, a key with a default put in with it selected.
  */
 export const Schema: StoryObj = { name: 'Schema', render: () => <SchemaChecked /> }
+/**
+ * Documents that name their own schema: YAML by a `# yaml-language-server: $schema=` line the app
+ * resolves, and a JSON Schema checked against the 2020-12 dialect its `$schema` names, with no fetch.
+ * A key's type and description show on hover, and keys already written are not offered again.
+ */
+export const NamedSchema: StoryObj = { name: 'Named schema', render: () => <NamedSchemas /> }
 /**
  * A note in markdown at the large size, wrapped: headings, strong and emphasized words, code,
  * lists, quotes, links, `[[links]]` to other notes and `#tags` highlighted. Typing `[[` offers the

@@ -18,6 +18,8 @@ export interface Span {
     from: number
     to: number
     key?: { from: number; to: number }
+    /** The value's path from the document's root. */
+    path: Path
 }
 
 /** A document read into a value, with where each value is written, by JSON Pointer. */
@@ -98,7 +100,7 @@ function firstError(node: SyntaxNode): SyntaxNode | null {
 
 /** A JSON tree read into a value. */
 function readJson(state: EditorState, node: SyntaxNode, path: Path, spans: Map<string, Span>, key?: Span['key']): unknown {
-    spans.set(pointer(path), { from: node.from, to: node.to, key })
+    spans.set(pointer(path), { from: node.from, to: node.to, key, path })
     switch (node.name) {
         case 'Object': {
             const out: Record<string, unknown> = {}
@@ -182,7 +184,7 @@ function readYaml(state: EditorState, node: SyntaxNode | null, path: Path, spans
         const inner = children(node).find((child) => !['Tag', 'Anchor'].includes(child.name)) ?? null
         return readYaml(state, inner, path, spans, key)
     }
-    spans.set(pointer(path), { from: node.from, to: node.to, key })
+    spans.set(pointer(path), { from: node.from, to: node.to, key, path })
     switch (node.name) {
         case 'BlockMapping':
         case 'FlowMapping': {
@@ -380,7 +382,11 @@ export function yamlSlot(state: EditorState, pos: number): Slot {
 export function schemasAt(schema: JsonSchema, path: Path, root: JsonSchema = schema): JsonSchema[] {
     const expand = (each: JsonSchema): JsonSchema[] => {
         const resolved = resolve(each, root)
-        const branches = [...(resolved.anyOf ?? []), ...(resolved.oneOf ?? [])]
+        const branches = [
+            ...(resolved.anyOf ?? []),
+            ...(resolved.oneOf ?? []),
+            ...[resolved.then, resolved.else].filter((branch): branch is JsonSchema => typeof branch === 'object' && branch !== null),
+        ]
         return branches.length > 0 ? [resolved, ...branches.flatMap(expand)] : [resolved]
     }
     let current = expand(schema)
@@ -403,59 +409,271 @@ export function schemasAt(schema: JsonSchema, path: Path, root: JsonSchema = sch
 const quoteYaml = (value: unknown) =>
     typeof value === 'string' && /^[\w./@-][\w ./@-]*$/.test(value) && typeof yamlScalar(value) === 'string' ? value : literal(value)
 
+/** The end of the JSON string that opens at `start`, just past its closing quote; one left open ends with its line. */
+function stringEnd(source: string, start: number): number {
+    let end = start + 1
+    while (end < source.length && source[end] !== '"' && source[end] !== '\n') end += source[end] === '\\' ? 2 : 1
+    return source[end] === '"' ? end + 1 : end
+}
+
+/** The keys of the JSON object around `pos`, without the key being written there. */
+export function jsonKeys(source: string, pos: number): Set<string> {
+    const found = new Set<string>()
+    const opens: number[] = []
+    let quote = -1
+    for (let index = 0; index < pos; index += 1) {
+        const char = source[index]
+        if (quote >= 0) {
+            if (char === '\\') index += 1
+            else if (char === '"') quote = -1
+            continue
+        }
+        if (char === '"') quote = index
+        else if (char === '{' || char === '[') opens.push(index)
+        else if (char === '}' || char === ']') opens.pop()
+    }
+    const open = opens[opens.length - 1]
+    if (open === undefined || source[open] !== '{') return found
+    let start = pos
+    let end = pos
+    if (quote >= 0) {
+        start = quote
+        end = stringEnd(source, quote)
+    } else {
+        while (start > open + 1 && /[\w$-]/.test(source[start - 1])) start -= 1
+        while (end < source.length && /[\w$-]/.test(source[end])) end += 1
+    }
+    /** Each `"name":` at the object's own depth between two places, stopping where the object closes. */
+    const scan = (from: number, to: number) => {
+        let depth = 0
+        let pending: string | null = null
+        for (let index = from; index < to; index += 1) {
+            const char = source[index]
+            if (char === '"') {
+                const close = stringEnd(source, index)
+                if (depth === 0) pending = parseString(source.slice(index, close))
+                index = close - 1
+                continue
+            }
+            if (char === ':' && depth === 0 && pending !== null) found.add(pending)
+            if (!/\s/.test(char)) pending = null
+            if (char === '{' || char === '[') depth += 1
+            else if (char === '}' || char === ']') {
+                depth -= 1
+                if (depth < 0) return
+            }
+        }
+    }
+    scan(open + 1, start)
+    scan(end, source.length)
+    return found
+}
+
+/** The keys a YAML mapping already holds beside the line at `pos`, read from the lines with the same key column. */
+export function yamlKeys(state: EditorState, pos: number, column: number): Set<string> {
+    const found = new Set<string>()
+    const here = state.doc.lineAt(pos).number
+    const startOf = (parsed: ReturnType<typeof yamlLine>) => parsed.dashes[0] ?? parsed.content
+    for (let number = here - 1; number >= 1; number -= 1) {
+        const text = state.doc.line(number).text
+        if (text.trim() === '' || text.trim().startsWith('#')) continue
+        const parsed = yamlLine(text)
+        if (parsed.key?.column === column && startOf(parsed) <= column) found.add(parsed.key.name)
+        if (startOf(parsed) < column) break
+    }
+    for (let number = here + 1; number <= state.doc.lines; number += 1) {
+        const text = state.doc.line(number).text
+        if (text.trim() === '' || text.trim().startsWith('#')) continue
+        const parsed = yamlLine(text)
+        if (startOf(parsed) < column) break
+        if (parsed.key?.column === column && parsed.dashes.length === 0) found.add(parsed.key.name)
+    }
+    return found
+}
+
+/** An option as inserted: its text, and what to select of it once it is in. */
+interface Option extends Completion {
+    insert: string
+    /** Offsets into `insert` to select, or the one place to leave the cursor. */
+    select?: [number, number]
+}
+
+function types(schema: JsonSchema): string[] {
+    if (Array.isArray(schema.type)) return schema.type
+    if (schema.type !== undefined) return [schema.type]
+    if (schema.properties !== undefined) return ['object']
+    return []
+}
+
+/** A property's key as completed: with its default when it has one, else opened for the value it takes. */
+function keyOption(
+    name: string,
+    property: JsonSchema,
+    root: JsonSchema,
+    language: SchemaLanguage,
+    column: number,
+    required: boolean,
+): Option {
+    const resolved = resolve(property, root)
+    const kinds = types(resolved)
+    const option = {
+        label: name,
+        detail: typeLabel(property, root),
+        info: resolved.description,
+        type: 'property',
+        boost: required ? 1 : 0,
+    }
+    if (language === 'json') {
+        const head = `${JSON.stringify(name)}: `
+        if (resolved.default !== undefined) {
+            const value = literal(resolved.default)
+            return { ...option, insert: head + value, select: [head.length, head.length + value.length] }
+        }
+        const empty =
+            kinds.length !== 1
+                ? undefined
+                : kinds[0] === 'object'
+                  ? '{}'
+                  : kinds[0] === 'array'
+                    ? '[]'
+                    : kinds[0] === 'string' && resolved.enum === undefined
+                      ? '""'
+                      : undefined
+        if (empty === undefined) return { ...option, insert: head }
+        return { ...option, insert: head + empty, select: [head.length + 1, head.length + 1] }
+    }
+    const head = `${name}:`
+    if (resolved.default !== undefined) {
+        const value = quoteYaml(resolved.default)
+        return { ...option, insert: `${head} ${value}`, select: [head.length + 1, head.length + 1 + value.length] }
+    }
+    const pad = ' '.repeat(column + 2)
+    if (kinds.length === 1 && kinds[0] === 'object') return { ...option, insert: `${head}\n${pad}` }
+    if (kinds.length === 1 && kinds[0] === 'array') return { ...option, insert: `${head}\n${pad}- ` }
+    return { ...option, insert: `${head} ` }
+}
+
 /** The property names and values a schema allows where the cursor is. */
-function schemaOptions(schema: JsonSchema, language: SchemaLanguage, slot: Slot): Completion[] {
+function schemaOptions(schema: JsonSchema, language: SchemaLanguage, slot: Slot, present: Set<string>, column: number): Option[] {
     const json = language === 'json'
     if (slot.at === 'key') {
-        const seen = new Set<string>()
+        const seen = new Set<string>(present)
         return schemasAt(schema, slot.path).flatMap((each) =>
             Object.entries(each.properties ?? {})
                 .filter(([name]) => !seen.has(name) && seen.add(name) !== undefined)
-                .map(([name, property]) => ({
-                    label: name,
-                    detail: typeLabel(property, schema),
-                    info: resolve(property, schema).description,
-                    type: 'property',
-                    apply: json ? `"${name}": ` : `${name}: `,
-                })),
+                .map(([name, property]) => keyOption(name, property, schema, language, column, each.required?.includes(name) ?? false)),
         )
     }
     const path = slot.key === undefined ? slot.path : [...slot.path, slot.key]
     const values = schemasAt(schema, path).flatMap((each) => {
         if (each.const !== undefined) return [each.const]
         if (each.enum !== undefined) return each.enum
-        const types = Array.isArray(each.type) ? each.type : [each.type]
-        return types.includes('boolean') ? [true, false] : []
+        return types(each).includes('boolean') ? [true, false] : []
     })
     return [...new Set(values.map((value) => JSON.stringify(value)))].map((encoded) => {
         const value = JSON.parse(encoded) as unknown
         const written = json ? literal(value) : quoteYaml(value)
-        return { label: typeof value === 'string' ? value : written, type: 'enum', apply: written }
+        return { label: typeof value === 'string' ? value : written, type: 'enum', insert: written }
     })
 }
 
-/** Completes property names and enum values from a schema, for JSON or YAML. */
+/**
+ * Completes property names and enum values from a schema, for JSON or YAML. A key already in its
+ * object is not offered again, a required one is listed first, and a key is put in with its default
+ * selected, or opened for the object, list or string it takes.
+ */
 export function schemaCompletion(schema: () => JsonSchema | undefined, language: SchemaLanguage) {
     return (context: CompletionContext): CompletionResult | null => {
         const current = schema()
         if (current === undefined) return null
-        const slot = language === 'json' ? jsonSlot(context.state.doc.toString(), context.pos) : yamlSlot(context.state, context.pos)
+        const source = context.state.doc.toString()
+        const slot = language === 'json' ? jsonSlot(source, context.pos) : yamlSlot(context.state, context.pos)
         if (slot === null) return null
         if (slot.from === context.pos && !context.explicit && !(language === 'json' && slot.quoted)) return null
-        const options = schemaOptions(current, language, slot)
+        const column = slot.from - context.state.doc.lineAt(slot.from).from
+        const present =
+            slot.at !== 'key'
+                ? new Set<string>()
+                : language === 'json'
+                  ? jsonKeys(source, context.pos)
+                  : yamlKeys(context.state, context.pos, column)
+        const options = schemaOptions(current, language, slot, present, column)
         if (options.length === 0) return null
-        if (!slot.quoted) return { from: slot.from, options }
-        // Inside a JSON string: the option replaces the whole string, its quotes included.
-        const after = context.state.sliceDoc(context.pos, context.pos + 1) === '"' ? 1 : 0
+        // Inside a JSON string an option replaces the whole string, its quotes included.
+        const after = slot.quoted && context.state.sliceDoc(context.pos, context.pos + 1) === '"' ? 1 : 0
         return {
             from: slot.from,
-            options: options.map((option) => ({
+            options: options.map(({ insert, select, ...option }) => ({
                 ...option,
                 apply: (view: EditorView, _completion: Completion, from: number, to: number) => {
-                    const insert = typeof option.apply === 'string' ? option.apply : option.label
-                    view.dispatch({ changes: { from: from - 1, to: to + after, insert }, selection: { anchor: from - 1 + insert.length } })
+                    const start = slot.quoted ? from - 1 : from
+                    const [anchor, head] = select ?? [insert.length, insert.length]
+                    view.dispatch({
+                        changes: { from: start, to: to + after, insert },
+                        selection: { anchor: start + anchor, head: start + head },
+                        userEvent: 'input.complete',
+                    })
                 },
             })),
         }
     }
+}
+
+/** What the schema says of the key under the pointer: its type and its description. */
+export function schemaHover(schema: () => JsonSchema | undefined, language: SchemaLanguage) {
+    return (view: EditorView, pos: number) => {
+        const current = schema()
+        if (current === undefined) return null
+        const read = readDocument(view.state, language, 100)
+        if (read === null) return null
+        const span = [...read.spans.values()].find((each) => each.key !== undefined && each.key.from <= pos && pos <= each.key.to)
+        if (span?.key === undefined) return null
+        const described = schemasAt(current, span.path).find((each) => each.description !== undefined || each.type !== undefined)
+        if (described === undefined) return null
+        const kind = typeLabel(described, current)
+        const description = described.description
+        return {
+            pos: span.key.from,
+            end: span.key.to,
+            above: true,
+            create: () => {
+                const dom = document.createElement('div')
+                dom.className = 'cm-hover'
+                const detail = document.createElement('div')
+                detail.className = 'cm-hover-detail'
+                detail.textContent = kind
+                dom.append(detail)
+                if (description !== undefined) dom.append(description)
+                return { dom }
+            },
+        }
+    }
+}
+
+/**
+ * The address of the schema a document names for itself: a top-level `$schema` key in JSON or
+ * YAML, or a `# yaml-language-server: $schema=<address>` line in YAML.
+ */
+export function namedSchema(source: string, language: SchemaLanguage): string | undefined {
+    if (language === 'yaml') {
+        const line = /^#\s*yaml-language-server:\s*\$schema=(\S+)/m.exec(source)
+        if (line !== null) return line[1]
+        const key = /^(?:\$schema|"\$schema"|'\$schema')\s*:\s*["']?([^\s"'#]+)/m.exec(source)
+        return key?.[1]
+    }
+    let depth = 0
+    for (let index = 0; index < source.length; index += 1) {
+        const char = source[index]
+        if (char === '{' || char === '[') depth += 1
+        else if (char === '}' || char === ']') depth -= 1
+        else if (char === '"') {
+            const end = stringEnd(source, index)
+            const name = source.slice(index, end)
+            index = end - 1
+            if (depth !== 1 || name !== '"$schema"') continue
+            const value = /^\s*:\s*("(?:[^"\\]|\\.)*")/.exec(source.slice(end))
+            if (value !== null) return parseString(value[1])
+        }
+    }
+    return undefined
 }

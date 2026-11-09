@@ -30,7 +30,7 @@ import {
     type DecorationSet,
 } from '@codemirror/view'
 import { tags } from '@lezer/highlight'
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { flushSync } from 'react-dom'
 import { createRoot } from 'react-dom/client'
 
@@ -38,14 +38,22 @@ import { cn } from '../lib/cn'
 import { bracketColors as colorBrackets, indentGuides as drawGuides } from './code/guides'
 import { jq } from './code/jq'
 import { markdown } from './code/markdown'
-import { SCHEMA_WORDS, schemaCompletion, schemaDiagnostics, type CodeSchemaWords, type SchemaLanguage } from './code/schema'
+import {
+    namedSchema,
+    SCHEMA_WORDS,
+    schemaCompletion,
+    schemaDiagnostics,
+    schemaHover,
+    type CodeSchemaWords,
+    type SchemaLanguage,
+} from './code/schema'
 import { loadedValidate, loadValidate } from './schema/checker'
 import type { JsonSchema } from './schema/read'
 
 export type { CodeSchemaWords } from './code/schema'
 
 /** The languages the editor carries by name. */
-export type CodeLanguageName = 'json' | 'yaml' | 'jq' | 'markdown' | 'text'
+export type CodeLanguageName = 'json' | 'yaml' | 'jq' | 'markdown' | 'sql' | 'shell' | 'jinja' | 'text'
 
 /** A language described by its tokens: a CodeMirror stream parser with a name. */
 export type CodeLanguageSpec = StreamParser<unknown> & { name: string }
@@ -80,6 +88,22 @@ export interface CodeCompletion {
     apply?: string
 }
 
+/**
+ * A place to select and bring into view: a whole `line` counted from 1, columns `from` and `to` on
+ * it, or, without `line`, offsets into the document counted from 0.
+ */
+export interface CodeRange {
+    line?: number
+    from?: number
+    to?: number
+}
+
+/** A schema a document names by its `$schema` address, found by the app; nothing when it has none. */
+export type CodeSchemaResolver = (address: string) => JsonSchema | undefined | Promise<JsonSchema | undefined>
+
+/** The JSON Schema 2020-12 dialect, which a schema document names; the checker carries it, so a schema written in it is checked without a fetch. */
+const DRAFT_2020 = 'https://json-schema.org/draft/2020-12/schema'
+
 /** A key binding's handler, given the document. */
 export type CodeKeyHandler = (value: string) => void
 
@@ -88,7 +112,7 @@ export function defineLanguage<State>(spec: StreamParser<State> & { name: string
     return new LanguageSupport(StreamLanguage.define(spec))
 }
 
-const NAMED: Record<CodeLanguageName, () => Extension> = {
+const NAMED: Record<Exclude<CodeLanguageName, LazyLanguage>, () => Extension> = {
     json: () => json(),
     yaml: () => yaml(),
     jq: () => jq(),
@@ -96,9 +120,48 @@ const NAMED: Record<CodeLanguageName, () => Extension> = {
     text: () => [],
 }
 
+type LazyLanguage = 'sql' | 'shell' | 'jinja'
+
+/** The languages loaded the first time an editor shows one, so an app that never does carries none of them. */
+const LAZY: Record<LazyLanguage, () => Promise<Extension>> = {
+    sql: () => import('@codemirror/lang-sql').then((module) => module.sql()),
+    shell: () => import('@codemirror/legacy-modes/mode/shell').then((module) => new LanguageSupport(StreamLanguage.define(module.shell))),
+    jinja: () => import('@codemirror/legacy-modes/mode/jinja2').then((module) => new LanguageSupport(StreamLanguage.define(module.jinja2))),
+}
+
+const loaded = new Map<LazyLanguage, Extension>()
+
+const isLazy = (language: CodeLanguage): language is LazyLanguage => typeof language === 'string' && language in LAZY
+
+/** Loads a language the editor carries by name but not at start; the others are there already. */
+export async function loadCodeLanguage(language: CodeLanguageName): Promise<void> {
+    if (!isLazy(language) || loaded.has(language)) return
+    loaded.set(language, await LAZY[language]())
+}
+
+const MEDIA_TYPES: [RegExp, CodeLanguageName][] = [
+    [/^application\/(?:[\w.-]+\+)?json$/, 'json'],
+    [/^(?:application|text)\/(?:x-)?(?:[\w.-]+\+)?yaml$/, 'yaml'],
+    [/^application\/jq$/, 'jq'],
+    [/^text\/(?:x-)?markdown$/, 'markdown'],
+    [/^(?:application|text)\/(?:x-)?sql$/, 'sql'],
+    [/^(?:text\/x-shellscript|application\/x-sh|text\/x-sh)$/, 'shell'],
+    [/^text\/(?:x-)?jinja2?$/, 'jinja'],
+]
+
+/**
+ * The language a media type is written in, such as a JSON Schema's `contentMediaType`: JSON and
+ * YAML with any `+json` or `+yaml` suffix, jq, markdown, SQL, shell and Jinja; anything else is text.
+ */
+export function languageForMediaType(mediaType: string | null | undefined): CodeLanguageName {
+    const type = mediaType?.split(';')[0].trim().toLowerCase() ?? ''
+    return MEDIA_TYPES.find(([pattern]) => pattern.test(type))?.[1] ?? 'text'
+}
+
 const built = new WeakMap<CodeLanguageSpec, LanguageSupport>()
 
 function languageExtension(language: CodeLanguage): Extension {
+    if (isLazy(language)) return loaded.get(language) ?? []
     if (typeof language === 'string') return NAMED[language]()
     if (language instanceof LanguageSupport) return language
     let support = built.get(language)
@@ -218,6 +281,7 @@ const THEME = EditorView.theme({
         overflow: 'hidden',
     },
     '.cm-tooltip-hover .cm-hover': { padding: '0.375rem 0.625rem', maxWidth: 'min(28rem, 80vw)' },
+    '.cm-hover-detail': { color: 'var(--muted-foreground)', fontFamily: 'var(--font-mono)' },
     '.cm-diagnostic': { padding: '0.375rem 0.625rem', borderLeft: '3px solid transparent', marginLeft: '0' },
     '.cm-diagnostic-error': { borderLeftColor: 'var(--critical)' },
     '.cm-diagnostic-warning': { borderLeftColor: 'var(--warning)' },
@@ -301,7 +365,7 @@ const NO_MARKS: readonly CodeMark[] = []
 const setMarks = StateEffect.define<readonly CodeMark[]>()
 
 /** A mark's range in the document, or null for a whole-line mark or one outside the document. */
-function range(state: EditorState, mark: CodeMark): { from: number; to: number } | null {
+function range(state: EditorState, mark: CodeRange): { from: number; to: number } | null {
     if (mark.from === undefined) return null
     const clamp = (pos: number) => Math.max(0, Math.min(pos, state.doc.length))
     if (mark.line === undefined) {
@@ -430,6 +494,14 @@ export interface CodeEditorProps {
     variant?: 'field' | 'pane'
     /** A JSON Schema (2020-12) a JSON or YAML document is checked against and completed from. */
     schema?: JsonSchema
+    /**
+     * Finds the schema a document names for itself, when `schema` is not given: a top-level `$schema`
+     * key, or a `# yaml-language-server: $schema=<address>` line in YAML. The editor fetches nothing;
+     * a document in the JSON Schema 2020-12 dialect is checked against it without this.
+     */
+    resolveSchema?: CodeSchemaResolver
+    /** Selects a range and scrolls it into view, such as where a check failed; a new object moves there again. */
+    reveal?: CodeRange | null
     /** The words the schema check says, in English unless given. */
     words?: Partial<CodeSchemaWords>
     /** CodeMirror's own words (the find bar, the fold marks), by their English text, to translate them. */
@@ -478,7 +550,9 @@ export function CodeEditor({
     indentGuides = false,
     size = 'md',
     variant = 'field',
-    schema,
+    schema: given,
+    resolveSchema,
+    reveal,
     words,
     phrases,
     placeholder,
@@ -490,8 +564,14 @@ export function CodeEditor({
     const view = useRef<EditorView | null>(null)
     const report = useRef(onChange)
     report.current = onChange
-    const props = useRef({ marks, completions, links, hover, onRun, keys, schema, words, language })
-    props.current = { marks, completions, links, hover, onRun, keys, schema, words, language }
+    const [address, setAddress] = useState<string | undefined>(() =>
+        given === undefined && (language === 'json' || language === 'yaml') ? namedSchema(value, language) : undefined,
+    )
+    const [named, setNamed] = useState<{ address: string; schema: JsonSchema } | undefined>()
+    const schema = given ?? (named !== undefined && named.address === address ? named.schema : undefined)
+    const [languageReady, setLanguageReady] = useState(0)
+    const props = useRef({ marks, completions, links, hover, onRun, keys, schema, words, language, resolveSchema })
+    props.current = { marks, completions, links, hover, onRun, keys, schema, words, language, resolveSchema }
     const compartments = useRef({
         language: new Compartment(),
         readOnly: new Compartment(),
@@ -552,7 +632,13 @@ export function CodeEditor({
             if (schemaLanguage === undefined) return []
             // One source for the life of the configuration: the autocompletion restarts when its sources change.
             const data = [{ autocomplete: schemaCompletion(() => props.current.schema, schemaLanguage) }]
-            return EditorState.languageData.of(() => data)
+            return [
+                EditorState.languageData.of(() => data),
+                hoverTooltip(
+                    schemaHover(() => props.current.schema, schemaLanguage),
+                    { hoverTime: 300 },
+                ),
+            ]
         },
     }
 
@@ -592,7 +678,11 @@ export function CodeEditor({
                     placeholder !== undefined ? placeholderText(placeholder) : [],
                     EditorView.contentAttributes.of({ 'aria-label': label }),
                     EditorView.updateListener.of((update) => {
-                        if (update.docChanged) report.current?.(update.state.doc.toString())
+                        if (!update.docChanged) return
+                        const text = update.state.doc.toString()
+                        report.current?.(text)
+                        const lang = props.current.language
+                        if (lang === 'json' || lang === 'yaml') setAddress(namedSchema(text, lang))
                     }),
                 ],
             }),
@@ -662,7 +752,68 @@ export function CodeEditor({
 
     useEffect(() => {
         view.current?.dispatch({ effects: compartments.current.language.reconfigure(languageExtension(language)) })
+        if (!isLazy(language) || loaded.has(language)) return
+        let live = true
+        loadCodeLanguage(language).then(
+            () => {
+                if (live) setLanguageReady((count) => count + 1)
+            },
+            () => undefined,
+        )
+        return () => {
+            live = false
+        }
     }, [language])
+
+    // A language that loaded after the editor was made is put in once it is there.
+    useEffect(() => {
+        if (languageReady > 0) view.current?.dispatch({ effects: compartments.current.language.reconfigure(languageExtension(language)) })
+    }, [languageReady])
+
+    useEffect(() => {
+        if (language !== 'json' && language !== 'yaml') setAddress(undefined)
+        else setAddress(namedSchema(view.current?.state.doc.toString() ?? value, language))
+    }, [language])
+
+    // The schema a document names is found once per address; the 2020-12 dialect is the checker's own.
+    useEffect(() => {
+        if (given !== undefined || address === undefined) return
+        let live = true
+        const find = props.current.resolveSchema
+        Promise.resolve(find?.(address))
+            .then((found) => found ?? (address.replace(/#$/, '') === DRAFT_2020 ? { $id: DRAFT_2020 } : undefined))
+            .then(
+                (found) => {
+                    if (live) setNamed(found === undefined ? undefined : { address, schema: found })
+                },
+                () => undefined,
+            )
+        return () => {
+            live = false
+        }
+    }, [address, given === undefined])
+
+    useEffect(() => {
+        const editor = view.current
+        if (editor === null || reveal === null || reveal === undefined) return
+        let at = range(editor.state, reveal)
+        if (
+            at === null &&
+            reveal.from === undefined &&
+            reveal.line !== undefined &&
+            reveal.line >= 1 &&
+            reveal.line <= editor.state.doc.lines
+        ) {
+            const line = editor.state.doc.line(reveal.line)
+            at = { from: line.from, to: line.to }
+        }
+        if (at === null) return
+        editor.dispatch({
+            selection: { anchor: at.from, head: at.to },
+            effects: EditorView.scrollIntoView(at.from, { y: 'center' }),
+        })
+        editor.focus()
+    }, [reveal])
 
     useEffect(() => {
         view.current?.dispatch({
