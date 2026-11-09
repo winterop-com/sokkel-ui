@@ -54,8 +54,9 @@ export function ChartGrid({
     const panels = useMemo(() => {
         const field = kept.series ?? kept.path?.[0] ?? kept.x
         const named = field === undefined ? [] : distinct(kept.rows, field, field === kept.series ? kept.seriesOrder : kept.order)
+        const tokens = kept.palette === undefined || kept.palette.length === 0 ? SERIES_ORDER : kept.palette
         const colors = {
-            ...Object.fromEntries(named.map((name, index) => [name, SERIES_ORDER[index % SERIES_ORDER.length]])),
+            ...Object.fromEntries(named.map((name, index) => [name, tokens[index % tokens.length]])),
             ...kept.colors,
         }
         const order = kept.x === undefined ? kept.order : distinct(kept.rows, kept.x, kept.order)

@@ -1,6 +1,6 @@
 import { asShares, formatNumber, pivot, type Series } from '../data'
 import { SERIES_ORDER, tooltipMarkup, type ChartLook } from '../look'
-import { colorOf, legendColor, measureName, unitAt, type ChartBuilder, type ChartSpec } from './spec'
+import { colorOf, legendColor, measureName, paletteToken, unitAt, type ChartBuilder, type ChartSpec } from './spec'
 import type { LegendItem } from '../ChartLegend'
 
 /** The figure as a tooltip or a label writes it, with the spec's unit, or the unit of the `field`th `y` field. */
@@ -171,59 +171,67 @@ function lines(filled: boolean): ChartBuilder {
 export const line = lines(false)
 export const area = lines(true)
 
-/** A ring of slices, one per category, each its share of the whole, with the total in its middle when `total` names it. */
-export const donut: ChartBuilder = (spec, look) => {
-    const { categories, series } = shaped(spec)
-    const values = series[0]?.values ?? []
-    const total = values.reduce<number>((sum, value) => sum + (value ?? 0), 0)
-    return {
-        ...(spec.total === undefined
-            ? {}
-            : {
-                  title: {
-                      show: true,
-                      text: written(spec, total),
-                      subtext: spec.total,
-                      left: 'center',
-                      top: 'center',
-                      itemGap: 2,
-                      textStyle: { fontSize: look.size.stat, fontWeight: 600, color: look.foreground },
-                      subtextStyle: { fontSize: look.size.label, color: look.muted },
-                  },
-              }),
-        tooltip: {
-            trigger: 'item',
-            formatter: (point: { name: string; value: number; color: string }) =>
-                tooltipMarkup('', [
-                    {
-                        label: point.name,
-                        value: `${written(spec, point.value)} (${total === 0 ? '0' : ((point.value / total) * 100).toFixed(1)}%)`,
-                        color: point.color,
-                    },
-                ]),
-        },
-        series: [
-            {
-                type: 'pie',
-                radius: ['58%', '82%'],
-                padAngle: 1,
-                label: { show: false },
-                data: categories.map((name, index) => ({
-                    name,
-                    value: values[index],
-                    itemStyle: { color: colorOf(spec, look, name, index), borderColor: look.card, borderWidth: 2 },
-                })),
+/** Slices of a circle, one per category, each its share of the whole: a ring round a hole, or a full pie. */
+const slices =
+    (hole: boolean): ChartBuilder =>
+    (spec, look) => {
+        const { categories, series } = shaped(spec)
+        const values = series[0]?.values ?? []
+        const total = values.reduce<number>((sum, value) => sum + (value ?? 0), 0)
+        return {
+            ...(spec.total === undefined || !hole
+                ? {}
+                : {
+                      title: {
+                          show: true,
+                          text: written(spec, total),
+                          subtext: spec.total,
+                          left: 'center',
+                          top: 'center',
+                          itemGap: 2,
+                          textStyle: { fontSize: look.size.stat, fontWeight: 600, color: look.foreground },
+                          subtextStyle: { fontSize: look.size.label, color: look.muted },
+                      },
+                  }),
+            tooltip: {
+                trigger: 'item',
+                formatter: (point: { name: string; value: number; color: string }) =>
+                    tooltipMarkup('', [
+                        {
+                            label: point.name,
+                            value: `${written(spec, point.value)} (${total === 0 ? '0' : ((point.value / total) * 100).toFixed(1)}%)`,
+                            color: point.color,
+                        },
+                    ]),
             },
-        ],
+            series: [
+                {
+                    type: 'pie',
+                    radius: hole ? ['58%', '82%'] : [0, '82%'],
+                    padAngle: 1,
+                    label: { show: false },
+                    data: categories.map((name, index) => ({
+                        name,
+                        value: values[index],
+                        itemStyle: { color: colorOf(spec, look, name, index), borderColor: look.card, borderWidth: hole ? 2 : 1 },
+                    })),
+                },
+            ],
+        }
     }
-}
+
+/** A ring of slices, one per category, each its share of the whole, with the total in its middle when `total` names it. */
+export const donut = slices(true)
+
+/** A pie: slices of a whole circle, one per category, each its share of the whole; `total` is left to the ring. */
+export const pie = slices(false)
 
 /** A grid of cells, `x` along and `series` down, each cell's color its combined `y`, with the scale beside it by `showScale`. */
 export const heatmap: ChartBuilder = (spec, look) => {
     const { categories, series } = shaped(spec)
     const cells = series.flatMap((entry, row) => entry.values.map((value, column) => [column, row, value]))
     const values = cells.map((cell) => cell[2]).filter((value): value is number => typeof value === 'number')
-    const token = spec.colors?.value ?? 'chart-2'
+    const token = spec.colors?.value ?? paletteToken(spec, 0) ?? 'chart-2'
     return {
         tooltip: {
             trigger: 'item',

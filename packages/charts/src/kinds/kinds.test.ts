@@ -187,6 +187,27 @@ describe('the chart kinds', () => {
         ])
     })
 
+    it('draws a pie as a whole circle and a donut round a hole', () => {
+        type Slices = { series: { radius: unknown }[] }
+        const spec: ChartSpec = { rows: ROWS, x: 'job', y: 'duration' }
+        expect((KINDS.pie.build(spec, LOOK) as unknown as Slices).series[0].radius).toEqual([0, '82%'])
+        expect((KINDS.donut.build(spec, LOOK) as unknown as Slices).series[0].radius).toEqual(['58%', '82%'])
+        expect(chartLegend('pie', spec).map((item) => item.key)).toEqual(['nightly-export', 'sync-inventory', 'rebuild-index'])
+    })
+
+    it('colors series from the palette in turn, after the colors named', () => {
+        type Bars = { series: { name: string; itemStyle: { color: string } }[] }
+        const spec: ChartSpec = { rows: ROWS, x: 'job', series: 'state', palette: ['kind-teal'], colors: { failed: 'status-failed' } }
+        const option = KINDS.bar.build(spec, LOOK) as unknown as Bars
+        expect(option.series.map((entry) => [entry.name, entry.itemStyle.color])).toEqual([
+            ['succeeded', 'kind-teal'],
+            ['failed', 'status-failed'],
+        ])
+        expect(chartLegend('bar', spec).map((item) => item.color)).toEqual(['var(--kind-teal)', 'var(--status-failed)'])
+        const pie = chartLegend('pie', { rows: ROWS, x: 'job', palette: ['kind-blue', 'kind-pink'] })
+        expect(pie.map((item) => item.color)).toEqual(['var(--kind-blue)', 'var(--kind-pink)', 'var(--kind-blue)'])
+    })
+
     it('reads a bullet target combined as its figure is', () => {
         const legend = chartLegend('bullet', SPECS.bullet)
         expect(legend.map((item) => [item.key, item.values])).toEqual([
