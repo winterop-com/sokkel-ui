@@ -71,6 +71,38 @@ function Steps({ readOnly = false }: { readOnly?: boolean }) {
     )
 }
 
+function Recipients() {
+    const recipients = useRepeated<string>(['ada@example.org', 'grace@example.org'], () => '')
+    return (
+        <TooltipProvider>
+            <Stack gap="lg" className="max-w-xl">
+                <RepeatedGroup
+                    label="Recipients"
+                    description="Who send-digest mails each morning, one address an answer."
+                    rows={recipients.rows}
+                    onAdd={() => recipients.add()}
+                    onRemove={recipients.remove}
+                    min={1}
+                    words={{ item: (index) => `Recipient ${String(index + 1)}` }}
+                >
+                    {(key, index) => (
+                        <TextField
+                            id={`${key}-address`}
+                            label="Address"
+                            mono
+                            value={recipients.rows[index].value}
+                            onChange={(address) => recipients.set(key, address)}
+                        />
+                    )}
+                </RepeatedGroup>
+            </Stack>
+        </TooltipProvider>
+    )
+}
+
+/** A question answered more than once: a row of one control for each answer, each with Remove, and Add for another. */
+export const OneControl: StoryObj = { name: 'One control', render: () => <Recipients /> }
+
 /** A run's three steps, each with its code and retries: Add, Move up, Move down and Remove, which goes at the last step. */
 export const Editable: StoryObj = { name: 'Steps', render: () => <Steps /> }
 

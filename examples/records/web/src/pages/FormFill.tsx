@@ -4,6 +4,7 @@ import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
 import { DateField } from '@winterop-com/sokkel-ui/DateField'
 import { Field } from '@winterop-com/sokkel-ui/Field'
 import { FormBar } from '@winterop-com/sokkel-ui/FormBar'
+import { useRepeated } from '@winterop-com/sokkel-ui/hooks/use-repeated'
 import { useStored } from '@winterop-com/sokkel-ui/hooks/use-stored'
 import { IssueCount, type IssueEntry } from '@winterop-com/sokkel-ui/IssueMark'
 import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
@@ -11,6 +12,7 @@ import { NumberField } from '@winterop-com/sokkel-ui/NumberField'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import { PageState } from '@winterop-com/sokkel-ui/PageState'
 import { PeriodPicker } from '@winterop-com/sokkel-ui/PeriodPicker'
+import { RepeatedGroup } from '@winterop-com/sokkel-ui/RepeatedGroup'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Input } from '@winterop-com/sokkel-ui/primitives/input'
 import { NativeSelect, NativeSelectOption } from '@winterop-com/sokkel-ui/primitives/native-select'
@@ -33,6 +35,7 @@ import {
     answerIssue,
     cellKey,
     formOf,
+    isAnswered,
     KIND,
     lastWholePeriod,
     questionCount,
@@ -104,6 +107,8 @@ function Filling({ form, householdId: givenHousehold, keepPlace }: { form: Form;
     const [seedText, setSeedText] = useState('')
     const [seed, setSeed] = useState<number | null>(null)
     const [openIssue, setOpenIssue] = useState<string | null>(null)
+    // Counts each fill and clear, so a repeated question's rows start again from the answers set.
+    const [round, setRound] = useState(0)
     const { rows: homes } = useCollection(households)
     const household = homes?.find((home) => home.id === householdId)
     const offered = (homes ?? []).filter((home) => home.status === 'active' || home.id === householdId)
@@ -138,13 +143,13 @@ function Filling({ form, householdId: givenHousehold, keepPlace }: { form: Form;
         const value = answers[question.id] ?? null
         const own = fieldIssues[question.id] ?? answerIssue(question, value) ?? serverIssues[question.id] ?? null
         if (own !== null) issues.push({ id: question.id, label: question.label, text: own })
-        else if (tried && question.required === true && (value === null || value === ''))
+        else if (tried && question.required === true && !isAnswered(value))
             issues.push({ id: question.id, label: question.label, text: 'Answer this question.' })
     }
     const issueOf = (id: string) => issues.find((issue) => issue.id === id)?.text ?? null
     const answered =
         form.grid === undefined
-            ? asked.filter((question) => (answers[question.id] ?? null) !== null && answers[question.id] !== '').length
+            ? asked.filter((question) => isAnswered(answers[question.id])).length
             : Object.values(answers).filter((value) => value !== null).length
     const total = form.grid === undefined ? asked.length : questionCount(form)
     useFoot(`${String(answered)} of ${String(total)} questions answered`, undefined, [answered, total])
@@ -153,6 +158,7 @@ function Filling({ form, householdId: givenHousehold, keepPlace }: { form: Form;
         const typed = Number.parseInt(seedText, 10)
         const used = Number.isInteger(typed) ? typed : 1000 + Math.floor(Math.random() * 9000)
         setAnswers(testAnswers(form, used))
+        setRound((last) => last + 1)
         setSeed(used)
         setSeedText(String(used))
         if (place === null) setPlace(form.id === 'FRM-STOCK' ? (pathOf(testPlace(used))[1]?.id ?? testPlace(used)) : testPlace(used))
@@ -163,6 +169,7 @@ function Filling({ form, householdId: givenHousehold, keepPlace }: { form: Form;
 
     const clear = () => {
         setAnswers({})
+        setRound((last) => last + 1)
         setFieldIssues({})
         setServerIssues({})
         setTried(false)
@@ -172,9 +179,7 @@ function Filling({ form, householdId: givenHousehold, keepPlace }: { form: Form;
 
     const send = () => {
         setTried(true)
-        const missing = asked.some(
-            (question) => question.required === true && ((answers[question.id] ?? null) === null || answers[question.id] === ''),
-        )
+        const missing = asked.some((question) => question.required === true && !isAnswered(answers[question.id]))
         if (
             issues.length > 0 ||
             missing ||
@@ -374,7 +379,7 @@ function Filling({ form, householdId: givenHousehold, keepPlace }: { form: Form;
                         >
                             {section.questions.map((question) => (
                                 <QuestionField
-                                    key={question.id}
+                                    key={question.repeats === true ? `${question.id}-${String(round)}` : question.id}
                                     question={question}
                                     value={answers[question.id] ?? null}
                                     context={context}
@@ -455,6 +460,8 @@ function QuestionField({
         error,
         ...hold,
     }
+    if (question.repeats === true)
+        return <RepeatedAnswer question={question} value={Array.isArray(value) ? value : []} onAnswer={onAnswer} error={error} />
     if (question.type === 'computed' && question.formula !== undefined) {
         const worked = question.formula.compute(answers, context)
         return (
@@ -543,6 +550,55 @@ function QuestionField({
             value={typeof value === 'string' ? value : ''}
             onChange={(next) => onAnswer(next)}
         />
+    )
+}
+
+/** A question answered more than once: a row of its text field for each answer, each with Remove, and Add for another. */
+function RepeatedAnswer({
+    question,
+    value,
+    onAnswer,
+    error,
+}: {
+    question: Question
+    value: readonly string[]
+    onAnswer: (value: readonly string[]) => void
+    error: string | null
+}) {
+    const answers = useRepeated<string>(value.length === 0 ? [''] : value, () => '')
+    const item = (index: number) => `Answer ${String(index + 1)}`
+    const keep = (next: readonly string[]) => onAnswer(next.some((one) => one.trim() !== '') ? next : [])
+    return (
+        <RepeatedGroup
+            label={question.label}
+            description={question.description}
+            rows={answers.rows}
+            onAdd={() => {
+                answers.add()
+                keep([...answers.values, ''])
+            }}
+            onRemove={(key) => {
+                answers.remove(key)
+                keep(answers.rows.filter((row) => row.key !== key).map((row) => row.value))
+            }}
+            min={1}
+            words={{ item }}
+        >
+            {(key, index) => (
+                <Input
+                    id={index === 0 ? question.id : `${question.id}-${key}`}
+                    aria-label={`${question.label}, ${item(index)}`}
+                    aria-invalid={error !== null || undefined}
+                    className="font-mono"
+                    value={answers.rows[index].value}
+                    onChange={(event) => {
+                        const next = event.target.value
+                        answers.set(key, next)
+                        keep(answers.rows.map((row) => (row.key === key ? next : row.value)))
+                    }}
+                />
+            )}
+        </RepeatedGroup>
     )
 }
 

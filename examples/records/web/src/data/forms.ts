@@ -30,8 +30,8 @@ export const KIND: Record<FormKind, { label: string; color: KindColor; group: st
 
 export type QuestionType = 'text' | 'multiline' | 'integer' | 'decimal' | 'date' | 'time' | 'yesno' | 'choice' | 'computed'
 
-/** What a question holds: text, a number, yes or no, or nothing yet. */
-export type AnswerValue = string | number | boolean | null
+/** What a question holds: text, a number, yes or no, the texts of a question answered more than once, or nothing yet. */
+export type AnswerValue = string | number | boolean | readonly string[] | null
 
 export type Answers = Readonly<Record<string, AnswerValue>>
 
@@ -62,6 +62,8 @@ export interface Question {
     formula?: Formula
     /** A yes or no that keeps no No. */
     yesOnly?: boolean
+    /** A text question answered more than once, its answer a list. */
+    repeats?: boolean
 }
 
 export interface FormSection {
@@ -293,10 +295,11 @@ export const FORMS: readonly Form[] = [
                 questions: [
                     {
                         id: 'bottle',
-                        label: 'Bottle number',
+                        label: 'Bottle numbers',
                         type: 'text',
                         required: true,
-                        help: 'As written on the bottle, such as B-2041.',
+                        repeats: true,
+                        description: 'One for each bottle the sample fills, as written on it, such as B-2041.',
                     },
                     { id: 'taken', label: 'Taken at', type: 'time', required: true },
                     { id: 'preserved', label: 'Kept cool on the way', type: 'yesno' },
@@ -433,9 +436,18 @@ export function questionCount(form: Form): number {
 /** A grid's key for one cell: the row and the category. */
 export const cellKey = (row: string, category: string) => `${row}.${category}`
 
+/** Whether a question holds an answer: not nothing, not empty text, and for a repeated one at least one text. */
+export function isAnswered(value: AnswerValue | undefined): boolean {
+    if (value === undefined || value === null || value === '') return false
+    if (Array.isArray(value)) return value.some((one) => one.trim() !== '')
+    return true
+}
+
 /** What is wrong with an answer, or null. Required questions left empty are said by `unanswered`. */
 export function answerIssue(question: Question, value: AnswerValue): string | null {
-    if (value === null || value === '') return null
+    if (!isAnswered(value)) return null
+    if (question.repeats === true) return Array.isArray(value) ? null : 'Give the answers as a list of texts.'
+    if (Array.isArray(value)) return 'This question takes one answer, not a list.'
     if (question.type === 'integer' || question.type === 'decimal') {
         if (typeof value !== 'number' || !Number.isFinite(value)) return `${String(value)} is not a number.`
         if (question.type === 'integer' && !Number.isInteger(value))
@@ -498,6 +510,8 @@ export function testAnswers(form: Form, seed: number): Record<string, AnswerValu
         else if (question.type === 'time')
             answers[question.id] =
                 `${String(7 + Math.floor(next() * 10)).padStart(2, '0')}:${String(Math.floor(next() * 60)).padStart(2, '0')}`
+        else if (question.type === 'text' && question.repeats === true)
+            answers[question.id] = Array.from({ length: 1 + Math.floor(next() * 3) }, () => `B-${String(2000 + Math.floor(next() * 900))}`)
         else if (question.type === 'text') answers[question.id] = `B-${String(2000 + Math.floor(next() * 900))}`
         else if (question.type === 'multiline')
             answers[question.id] = next() < 0.5 ? 'The path to the gauge was clear. Nothing else to report.' : ''

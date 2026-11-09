@@ -50,6 +50,7 @@ export function onDay(text: string): string {
 /** An answer as the record shows it: yes or no in words, a choice by its label, a number with its unit. */
 export function answerText(question: Question | undefined, value: AnswerValue): string {
     if (value === null || value === '') return ''
+    if (Array.isArray(value)) return value.filter((one) => one.trim() !== '').join(', ')
     if (typeof value === 'boolean') return value ? 'Yes' : 'No'
     if (question?.options !== undefined) return question.options.find((option) => option.value === value)?.label ?? String(value)
     if (typeof value === 'number') {

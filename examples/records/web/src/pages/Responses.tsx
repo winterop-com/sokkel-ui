@@ -18,12 +18,12 @@ import { useCollection } from 'tidevann-shared/backend'
 import { go } from 'tidevann-shared/router'
 
 import { forward, forwardAll, receipts, STATE_WORDS, STATES, withdraw, type Receipt, type ReceiptState } from '../data/backend'
-import { formOf, FORMS } from '../data/forms'
+import { formOf, FORMS, isAnswered } from '../data/forms'
 import { placeName } from '../data/geo'
 import { count, KindBadge, STATE_DOT, StateChip, useFoot, when } from '../ui'
 import { ReceiptActions, ReceiptBody } from './Receipt'
 
-const answersOf = (receipt: Receipt) => Object.values(receipt.answers).filter((value) => value !== null && value !== '').length
+const answersOf = (receipt: Receipt) => Object.values(receipt.answers).filter(isAnswered).length
 
 const COLUMNS: DataColumn<Receipt>[] = [
     {
