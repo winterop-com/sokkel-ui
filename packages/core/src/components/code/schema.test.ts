@@ -204,3 +204,58 @@ describe('schema completion in place', () => {
         expect(validate(meta, { type: 'object', required: 'code' }).map((issue) => issue.path)).toContainEqual(['required'])
     })
 })
+
+describe('a schema that picks a branch by a sibling value', () => {
+    // As a pipeline's document schema attaches each block's config: allOf of if/then on the step.
+    const PIPELINE: JsonSchema = {
+        type: 'object',
+        properties: {
+            steps: {
+                type: 'array',
+                items: {
+                    type: 'object',
+                    properties: { block: { enum: ['http', 'shell'] }, config: { type: 'object' } },
+                    allOf: [
+                        {
+                            if: { properties: { block: { const: 'http' } }, required: ['block'] },
+                            // oxlint-disable-next-line unicorn/no-thenable -- `then` is the schema keyword
+                            then: {
+                                properties: { config: { properties: { url: { type: 'string' }, method: { enum: ['GET', 'POST'] } } } },
+                            },
+                        },
+                        {
+                            if: { properties: { block: { const: 'shell' } }, required: ['block'] },
+                            // oxlint-disable-next-line unicorn/no-thenable -- `then` is the schema keyword
+                            then: {
+                                properties: { config: { properties: { command: { type: 'string', description: 'What the step runs.' } } } },
+                            },
+                        },
+                    ],
+                },
+            },
+        },
+    }
+    const doc = 'steps:\n  - block: http\n    config:\n      u\n  - block: shell\n    config:\n      c\n'
+
+    const keysAt = (marker: string) => {
+        const state = yamlState(doc)
+        const pos = doc.indexOf(marker) + marker.length
+        const result = schemaCompletion(() => PIPELINE, 'yaml')(new CompletionContext(state, pos, true))
+        return (result?.options ?? []).map((option) => option.label)
+    }
+
+    it('reads each list item at its own index', () => {
+        const state = yamlState(doc)
+        expect(yamlSlot(state, doc.indexOf('      c') + 7).path).toEqual(['steps', 1, 'config'])
+    })
+
+    it("offers a step's config only the keys of its own block", () => {
+        expect(keysAt('      u')).toEqual(['url', 'method'])
+        expect(keysAt('      c')).toEqual(['command'])
+    })
+
+    it('follows both branches when the document is not known', () => {
+        const names = schemasAt(PIPELINE, ['steps', 0, 'config']).flatMap((each) => Object.keys(each.properties ?? {}))
+        expect(names).toEqual(expect.arrayContaining(['url', 'method', 'command']))
+    })
+})
