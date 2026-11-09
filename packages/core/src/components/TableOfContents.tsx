@@ -1,6 +1,8 @@
+import { CheckCircle2, CircleAlert } from 'lucide-react'
 import { useEffect, useState, type ReactNode, type RefObject } from 'react'
 
 import { cn } from '../lib/cn'
+import { Dot } from './Dot'
 import { GroupLabel } from './GroupLabel'
 
 /** One entry of a table of contents: the heading's id, its text, its level, and a mark before it such as its state. */
@@ -9,7 +11,12 @@ export interface ContentsEntry {
     label: string
     level: number
     icon?: ReactNode
+    /** A form section's state, drawn as its mark: filled in, with issues to fix, or not started. Derive it from the section's own fields, so it never says complete over an error. */
+    state?: ContentsState
 }
+
+/** A section's state in a form's table of contents. */
+export type ContentsState = 'complete' | 'issues' | 'open'
 
 /** The nearest ancestor that scrolls, or null when the window does. */
 function scroller(element: HTMLElement): HTMLElement | null {
@@ -59,10 +66,23 @@ export function useActiveHeading(container: RefObject<HTMLElement | null>, ids: 
 /** The words a table of contents says. */
 export interface TableOfContentsWords {
     title: string
+    /** What each section state's mark says. */
+    state: Record<ContentsState, string>
 }
 
 const WORDS: TableOfContentsWords = {
     title: 'On this page',
+    state: { complete: 'Complete', issues: 'Needs attention', open: 'Not started' },
+}
+
+function StateMark({ state, words }: { state: ContentsState; words: TableOfContentsWords }) {
+    if (state === 'complete') return <CheckCircle2 className="size-4 text-good-ink" aria-label={words.state.complete} />
+    if (state === 'issues') return <CircleAlert className="size-4 text-critical-ink" aria-label={words.state.issues} />
+    return (
+        <span className="flex size-4 items-center justify-center" aria-label={words.state.open}>
+            <Dot outline />
+        </span>
+    )
 }
 
 export interface TableOfContentsProps {
@@ -80,7 +100,7 @@ export interface TableOfContentsProps {
  * `useActiveHeading` says which entry is current as the page scrolls.
  */
 export function TableOfContents({ entries, active, onJump, className, words: given }: TableOfContentsProps) {
-    const words = { ...WORDS, ...given }
+    const words = { ...WORDS, ...given, state: { ...WORDS.state, ...given?.state } }
     if (entries.length === 0) return null
     const top = Math.min(...entries.map((entry) => entry.level))
     return (
@@ -107,8 +127,10 @@ export function TableOfContents({ entries, active, onJump, className, words: giv
                                         : 'border-transparent text-muted-foreground hover:border-border-strong hover:text-foreground',
                                 )}
                             >
-                                {entry.icon !== undefined && (
-                                    <span className="flex size-4 shrink-0 items-center justify-center">{entry.icon}</span>
+                                {(entry.icon !== undefined || entry.state !== undefined) && (
+                                    <span className="flex size-4 shrink-0 items-center justify-center">
+                                        {entry.state !== undefined ? <StateMark state={entry.state} words={words} /> : entry.icon}
+                                    </span>
                                 )}
                                 <span className="min-w-0 truncate">{entry.label}</span>
                             </a>

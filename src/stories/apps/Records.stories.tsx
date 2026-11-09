@@ -5,7 +5,6 @@ import {
     ArrowRight,
     ArrowUpRight,
     CheckCircle2,
-    CircleAlert,
     ClipboardList,
     Download,
     FilePlus2,
@@ -68,8 +67,7 @@ import { PEOPLE_OPTIONS } from '../fixtures/filters'
 import { pictureOf } from '../fixtures/portraits'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { NUMBER, regionName, regions } from '../map/data'
-import { Dot } from '@winterop-com/sokkel-ui/Dot'
-import { Center, Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { TableOfContents } from '@winterop-com/sokkel-ui/TableOfContents'
 
 /**
@@ -469,11 +467,12 @@ function Records() {
     )
 }
 
-const OUTLINE: { id: string; label: string; state: 'done' | 'error' | 'open' }[] = [
-    { id: 'where', label: 'Where and when', state: 'done' },
-    { id: 'measurements', label: 'Measurements', state: 'error' },
-    { id: 'conditions', label: 'Site check', state: 'open' },
-    { id: 'notes', label: 'Notes', state: 'open' },
+/** The form's sections, each filled in or not; one with a field in error says so whatever it holds. */
+const OUTLINE: { id: string; label: string; filled: boolean }[] = [
+    { id: 'where', label: 'Where and when', filled: true },
+    { id: 'measurements', label: 'Measurements', filled: true },
+    { id: 'conditions', label: 'Site check', filled: false },
+    { id: 'notes', label: 'Notes', filled: false },
 ]
 
 const CHECKS = [
@@ -635,7 +634,12 @@ function VisitForm() {
                             id: part.id,
                             label: part.label,
                             level: 1,
-                            icon: <OutlineMark state={part.state} />,
+                            state:
+                                (part.id === 'where' && timeError !== undefined) || (part.id === 'measurements' && levelError !== undefined)
+                                    ? 'issues'
+                                    : part.filled
+                                      ? 'complete'
+                                      : 'open',
                         }))}
                         active="measurements"
                         onJump={() => undefined}
@@ -667,16 +671,6 @@ function VisitForm() {
                 </Button>
             </FormBar>
         </Stack>
-    )
-}
-
-function OutlineMark({ state }: { state: 'done' | 'error' | 'open' }) {
-    if (state === 'done') return <CheckCircle2 className="size-4 text-good-ink" aria-label="Complete" />
-    if (state === 'error') return <CircleAlert className="size-4 text-critical-ink" aria-label="Needs attention" />
-    return (
-        <Center as="span" className="size-4 shrink-0" aria-label="Not started">
-            <Dot outline />
-        </Center>
     )
 }
 
