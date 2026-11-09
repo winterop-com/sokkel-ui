@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.11.0** is the latest release (2026-11-09): 0.10.19 under the minor version its breaking
+- **0.11.1** is the latest release (2026-11-09): `Link` gives every link a tab index, so links stay in
+  the Tab order in WebKit.
+- **0.11.0** (2026-11-09): 0.10.19 under the minor version its breaking
   changes call for. From here a breaking change before 1.0 moves the minor version.
 - **0.10.19** (2026-11-09): the rest of a pipeline app's gaps. One app-wide
   `LinkProvider` for every internal link (`renderLink` is gone), `JsonTree` caps long lists, shared
