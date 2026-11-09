@@ -36,8 +36,8 @@ export interface BannerProps {
 
 /**
  * A strip across the top of a screen or the app for a state that holds until it changes: the
- * server is not answering, a read-only instance, a pending upgrade. One line, truncated on a
- * phone, with its actions at the end and an optional dismiss.
+ * server is not answering, a read-only instance, a pending upgrade. One line where it fits; on a
+ * phone the words wrap rather than lose what is needed to act, and the actions move under them.
  */
 export function Banner({ tone = 'info', icon, actions, onDismiss, className, words: given, children }: BannerProps) {
     const words = { ...WORDS, ...given }
@@ -45,11 +45,11 @@ export function Banner({ tone = 'info', icon, actions, onDismiss, className, wor
     return (
         <div
             role={tone === 'critical' ? 'alert' : 'status'}
-            className={cn('flex shrink-0 items-center gap-2 border-b px-3 py-1.5', TONE[tone], className)}
+            className={cn('flex shrink-0 flex-wrap items-center gap-x-2 gap-y-1 border-b px-3 py-1.5', TONE[tone], className)}
         >
             {icon ?? <Icon className="size-4 shrink-0" aria-hidden />}
-            <p className="min-w-0 flex-1 truncate text-sm">{children}</p>
-            {actions !== undefined && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+            <p className="min-w-0 flex-1 basis-3xs text-sm">{children}</p>
+            {actions !== undefined && <div className="ms-auto flex shrink-0 items-center gap-2">{actions}</div>}
             {onDismiss !== undefined && (
                 <IconButton label={words.dismiss} className="shrink-0 text-current" onClick={onDismiss}>
                     <X aria-hidden />
