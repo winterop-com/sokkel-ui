@@ -120,9 +120,6 @@ to `plan.md` when it ships.
   1280 and 344 wide, every theme in both schemes) and a review of the twelve example apps on the
   web. Each round below is a PR or a few, smallest and surest first. Every fix goes in the
   component, never the story, with a test or story that shows it.
-    - **Round 1, wrong behavior in the core:**
-        - Calendar week at 344: the toolbar title shrinks to "Thu ..." and no month or year shows.
-          Give `ToolbarTitle` priority, the view switch and arrows moving to a second line first.
     - **Round 2, the examples' own wrong behavior** (no library change except the first two):
         - Following a sidebar link from a dirty editor drops its draft with no question (dataviz
           chart builder, metrics panel editor, analytics report name). `useUnsavedChanges` blocks
