@@ -43,7 +43,7 @@ import { Reports } from './pages/Reports'
 import { Revenue } from './pages/Revenue'
 import { Settings } from './pages/Settings'
 import { useApp } from './state'
-import { go, PRESETS, readView } from './view'
+import { go, PRESETS } from './view'
 import { standing } from './world'
 
 const PAGES = ['overview', 'revenue', 'customers', 'funnels', 'reports', 'goals'] as const
@@ -62,13 +62,12 @@ const LABELS: Record<PageId | 'settings' | 'missing', string> = {
 
 /** Tidevann's analytics: the rail of its pages, the palette, the page the address names, and the live stream's state at the foot. */
 export function Analytics({ frame }: { frame: Frame }) {
-    const { world, error, view, href, prefs, setPrefs, setView, stream, money } = useApp()
+    const { world, error, view, settingsOpen, href, prefs, setPrefs, setView, stream, money } = useApp()
     const { settings: look, setSettings: setLook } = frame.appearance
     // Settings open as a dialog over the page they were opened from, which keeps its whole address,
     // range and segment included, to go back to.
-    const onSettings = view.path[0] === 'settings'
-    const settings = useOverlayRoute(onSettings ? ['settings'] : frame.route, 'settings')
-    const shown = onSettings ? readView(`#/${settings.route.join('/')}`, prefs) : view
+    const settings = useOverlayRoute(settingsOpen ? ['settings'] : frame.route, 'settings')
+    const shown = view
     const [first = 'overview', second] = shown.path
     const page: PageId | 'missing' = (PAGES as readonly string[]).includes(first) ? (first as PageId) : 'missing'
     const views = useCollection(invoiceViews).rows ?? []
