@@ -1,8 +1,9 @@
 import { Tooltip } from '@base-ui/react/tooltip'
-import { ChevronRight, PanelLeftClose, PanelLeftOpen, X, type LucideIcon } from 'lucide-react'
+import { ChevronLeft, ChevronRight, PanelLeftClose, PanelLeftOpen, X, type LucideIcon } from 'lucide-react'
 import {
     Fragment,
     useContext,
+    useEffect,
     useId,
     useRef,
     useState,
@@ -61,12 +62,56 @@ export interface RailGroup {
     entries: RailEntry[]
 }
 
-/** The words the rail says; `unread` names the dot of an entry with something new and no count. */
+/**
+ * Content the expanded rail holds in place of its places, such as a music library's tree of artists
+ * and albums, drawn under a row back to the places.
+ */
+export interface RailBody {
+    /** What the body holds, scrolled by the rail between its search and its foot. */
+    content: ReactNode
+    /** A heading under the row back to the places, naming what the body holds. */
+    title?: string
+    /** What stands over the content without scrolling with it, such as the search over a tree. */
+    search?: ReactNode
+}
+
+/** What the expanded rail shows between its head and its foot: its places, or its `body`. */
+export type RailView = 'places' | 'body'
+
+/** Whether a rail has a body and whether it is drawn collapsed, which decide what it shows. */
+export interface RailState {
+    body: boolean
+    collapsed: boolean
+}
+
+/**
+ * What the rail draws between its head and its foot: the places' icons while collapsed, since a
+ * body has no icon form, else the body when it has one and shows it, else the places.
+ */
+export function railShows(state: RailState, view: RailView): 'icons' | RailView {
+    if (state.collapsed) return 'icons'
+    return state.body && view === 'body' ? 'body' : 'places'
+}
+
+/**
+ * The view a rail holding its own goes to as its state changes: back to the body when a body is
+ * given anew or the rail collapses, so a page that brings a body and an expanded rail both show it.
+ */
+export function railViewAfter(view: RailView, before: RailState, now: RailState): RailView {
+    if ((now.body && !before.body) || (now.collapsed && !before.collapsed)) return 'body'
+    return view
+}
+
+/**
+ * The words the rail says; `unread` names the dot of an entry with something new and no count,
+ * and `places` is the row over a body that goes back to the places.
+ */
 export interface RailWords {
     collapse: string
     expand: string
     resize: string
     unread: string
+    places: string
 }
 
 const WORDS: RailWords = {
@@ -74,6 +119,7 @@ const WORDS: RailWords = {
     expand: 'Expand the navigation',
     resize: 'Resize the navigation',
     unread: 'Unread',
+    places: 'All places',
 }
 
 export interface RailProps {
@@ -112,6 +158,15 @@ export interface RailProps {
     defaultExpanded?: string[]
     /** The parent whose flyout stands open at the start in a collapsed rail or a strip. */
     defaultFlyout?: string
+    /**
+     * Content the expanded rail holds in place of `groups`, such as a music library's tree of
+     * artists and albums with its search, under a row back to the places. The groups are still the
+     * app's places: the collapsed rail draws their icons, and the palette lists them.
+     */
+    body?: RailBody
+    /** Whether the expanded rail shows its places or its `body`, held from outside with `onViewChange`. */
+    view?: RailView
+    onViewChange?: (view: RailView) => void
 }
 
 /**
@@ -159,6 +214,17 @@ export interface RailProps {
  * window. With `trafficLights` the head leaves room at its start for the window's buttons; a
  * collapsed rail or a strip, narrower than that room, keeps its head empty under the buttons, its
  * mark just below it and its edge undrawn between them.
+ *
+ * With a `body`, the expanded rail holds the app's own content in place of its groups, such as a
+ * music library's tree of artists and albums, keeping its head, width, edge and foot: a row at the
+ * top ("All places", `words.places`) shows the places, its `title` under that row, its `search`
+ * standing still over the content as the content scrolls. Shown the places, a place chosen there
+ * brings the body back, and so does a body given anew, as a page that holds one is reached again.
+ * Collapsed, the rail draws the places' icons, since a body has no icon form, and expanding it
+ * shows the body. The body stays mounted while the places or the icons show, so it comes back as
+ * it was left, a tree's open levels and its scroll with it. The shell's drawer draws the body, as
+ * it draws the rail expanded. Left to itself the rail holds which it shows; `view` with
+ * `onViewChange` holds it from outside. A strip draws no body.
  */
 export function Rail({
     mark,
@@ -185,6 +251,9 @@ export function Rail({
     onExpandedChange,
     defaultExpanded = [],
     defaultFlyout,
+    body,
+    view,
+    onViewChange,
 }: RailProps) {
     const aside = useRef<HTMLElement>(null)
     const footCell = useContext(ShellFootCell)
@@ -204,6 +273,29 @@ export function Rail({
         else onCollapsedChange?.(next)
     }
     const collapsible = narrowed || onCollapsedChange !== undefined
+    const state = { body: body !== undefined, collapsed }
+    const [ownView, setOwnView] = useState<RailView>('body')
+    const [stateBefore, setStateBefore] = useState(state)
+    if (stateBefore.body !== state.body || stateBefore.collapsed !== state.collapsed) {
+        setStateBefore(state)
+        setOwnView(railViewAfter(ownView, stateBefore, state))
+    }
+    const shows = railShows(state, view ?? ownView)
+    const places = useRef<HTMLDivElement>(null)
+    const backPressed = useRef(false)
+    const setView = (next: RailView) => {
+        backPressed.current = next === 'places'
+        if (view === undefined) setOwnView(next)
+        onViewChange?.(next)
+    }
+    // The back row goes as it is pressed, so the focus moves to the place shown, or else the first.
+    useEffect(() => {
+        const list = places.current
+        if (!backPressed.current || list === null) return
+        backPressed.current = false
+        const target = list.querySelector<HTMLElement>('[aria-current="page"]') ?? list.querySelector<HTMLElement>('a, button')
+        target?.focus()
+    })
     const lights = useTrafficLights(desktop)
     const drag = desktop === undefined ? undefined : ''
     const words = { ...WORDS, ...given }
@@ -328,7 +420,38 @@ export function Rail({
                     )}
                 </div>
                 {under && <div className="flex shrink-0 justify-center py-1">{expand}</div>}
-                <div className="min-h-0 flex-1 overflow-y-auto pb-3">
+                {body !== undefined && (
+                    // Kept while the places or the icons show, so the body comes back as it was left.
+                    <div data-rail-body="" hidden={shows !== 'body'} className="flex min-h-0 flex-1 flex-col">
+                        <div className="flex shrink-0 flex-col px-2 pb-2">
+                            <button type="button" className={rowClass('idle')} onClick={() => setView('places')}>
+                                <ChevronLeft className="size-4 shrink-0" aria-hidden />
+                                <span className="truncate">{words.places}</span>
+                            </button>
+                            {body.title !== undefined && (
+                                <GroupLabel as="h2" className="truncate px-2 pt-4 pb-1.5">
+                                    {body.title}
+                                </GroupLabel>
+                            )}
+                            {body.search !== undefined && <div className="pt-1">{body.search}</div>}
+                        </div>
+                        <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-3">{body.content}</div>
+                    </div>
+                )}
+                <div
+                    ref={places}
+                    data-rail-places=""
+                    hidden={shows === 'body'}
+                    className="min-h-0 flex-1 overflow-y-auto pb-3"
+                    // A place chosen while a body waits brings the body back, as the page that holds it is reached again.
+                    onClick={
+                        body === undefined
+                            ? undefined
+                            : (event) => {
+                                  if ((event.target as HTMLElement).closest('a') !== null) setView('body')
+                              }
+                    }
+                >
                     {groups.map((group) => (
                         <nav key={group.id} aria-label={group.title ?? name} className="flex flex-col gap-1 px-2">
                             {group.title !== undefined &&

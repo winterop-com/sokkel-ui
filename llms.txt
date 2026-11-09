@@ -74,7 +74,9 @@ Every app stands in the same frame, so a person moving between apps finds everyt
 place. It has four parts, and an app has all four from its first screen:
 
 - **`Shell` with a `Rail`** of the app's places down the left; `markHref` makes the rail's mark a
-  link home, and a collapsed rail expands from its mark or by pulling its edge. `TopBar` holds a
+  link home, and a collapsed rail expands from its mark or by pulling its edge. A place that is a
+  hierarchy to browse puts it in the rail itself with `body` (a `Tree` and its search, under an All
+  places row back to the places), keeping one left column. `TopBar` holds a
   search field at its start (`search={<SearchField .../>}`, which `/` focuses) and the palette's
   button at its end. A new `contentKey` on `Shell` mounts the page afresh, as after a reconnect.
 - **The command palette**, always there: `Shell`'s `palette` takes its groups and opens it on ⌘K

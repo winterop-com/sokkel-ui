@@ -9,7 +9,10 @@ reaches into a package's `src/`. Each is a Tidevann product, in a folder of its 
 examples/
   shared/        the fake backend, the window frame, the hash route and the Tidevann mark
   tasks/         lists, a quick add and tasks edited in place
-  runs/          job runs in a table, with a run opened beside it
+  runs/          a jobs console: an overview, runs, a run's page, jobs, schedules and settings
+  records/       a records app: forms filled in sections, responses and receipts, households and
+                 their visits, places on a map, an API playground and metadata health (GAPS.md
+                 maps the records app it rehearses onto the library)
   example.mk     the targets every example's Makefile includes
 ```
 
@@ -31,7 +34,7 @@ From the repository root, after `make build` builds the packages, every example 
 targets as `make <example>-<target>`; `make examples-list` names them:
 
 ```sh
-make tasks-web          # build the web app and serve it (Tasks on port 4180, Runs on 4181)
+make tasks-web          # build the web app and serve it (Tasks on port 4180, Runs on 4181, Records on 4182)
 make tasks-dev          # the web app's dev server
 make tasks-electron     # open it in Electron
 make tasks-tauri        # open it in Tauri
@@ -52,7 +55,10 @@ Nothing needs Node: every script runs its tools under bun (`bun --bun tsc`, `vit
 
 - **The packages:** each `web/` installs the core package through `file:../../../packages/core`,
   which bun installs as a copy, with its own dependencies in the app's `node_modules`. Run
-  `bun install` again after rebuilding the packages to refresh the copy. `styles.css` is Tailwind
+  `bun install` again after rebuilding the packages to refresh the copy. An add-on is installed the
+  same way (`file:../../../packages/charts`), with an `overrides` entry pointing the core at the
+  same folder, since an add-on names the core as a `workspace:*` peer, which bun cannot find outside
+  the workspace; the add-on's `styles.css` is imported after the core's in `app.css`. `styles.css` is Tailwind
   source, so the app runs Tailwind v4 through `@tailwindcss/vite`, and its `app.css` adds
   `examples/shared` as a source.
 - **What they share:** `examples/shared/` is the local package `tidevann-shared`, installed the same

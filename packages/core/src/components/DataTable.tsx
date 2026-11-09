@@ -58,7 +58,7 @@ export type { CellAt, EditedValue, EditOption, EditorKind, EditValue, TableEditi
 
 /** How one kind of editor reads and saves a column's cells. */
 type CellEditing<T, K extends EditorKind, V = EditedValue<K>> = {
-    /** Which control edits a cell: a line of text, several lines, a number, a date (`YYYY-MM-DD`), or one of `options`. */
+    /** Which control edits a cell: a line of text, several lines, a number, a date (`YYYY-MM-DD`), a time of day (`HH:mm`), or one of `options`. */
     editor: K
     /** The value a cell's editor starts from. */
     value: (row: T) => V
@@ -82,6 +82,7 @@ export type DataCellEdit<T> =
     | (CellEditing<T, 'multiline'> & { options?: undefined })
     | (CellEditing<T, 'number'> & { options?: undefined })
     | (CellEditing<T, 'date'> & { options?: undefined })
+    | (CellEditing<T, 'time'> & { options?: undefined })
     | (CellEditing<T, 'select'> & {
           /** The choices, the same for every row or a row's own. */
           options: readonly EditOption[] | ((row: T) => readonly EditOption[])
@@ -565,6 +566,11 @@ export interface DataTableProps<T> {
     onOpen?: (row: T) => void
     /** The row shown elsewhere, drawn as chosen. */
     opened?: (row: T) => boolean
+    /**
+     * A chevron at the end of every row, saying that a press (`onOpen`) leaves the list for the
+     * row's own page rather than showing it beside the list.
+     */
+    chevron?: boolean
     /** What a row's menu offers: from the button at its end, and on a right-click anywhere on it. */
     rowActions?: (row: T) => DataAction[]
     /** When the menu button at a row's end shows: always, only while the pointer is over the row, or never (right-click only). */
@@ -780,6 +786,7 @@ export function DataTable<T>({
     onColumnOrderChange,
     onOpen,
     opened,
+    chevron = false,
     rowActions,
     actionButton = 'always',
     actionIcon = <EllipsisIcon />,
@@ -1026,10 +1033,11 @@ export function DataTable<T>({
         rowActions === undefined || rows.length === 0
             ? 0
             : rowActions(rows[0]).filter((action) => !('separator' in action) && action.inline === true).length
-    const endWidth =
+    const menuWidth =
         rowActions === undefined || (actionButton === 'none' && inlineSlots === 0)
             ? undefined
-            : `${String((actionButton === 'none' ? 0.5 : 2.5) + inlineSlots * 1.75)}rem`
+            : (actionButton === 'none' ? 0.5 : 2.5) + inlineSlots * 1.75
+    const endWidth = menuWidth === undefined && !chevron ? undefined : `${String((menuWidth ?? 0.5) + (chevron ? 1.5 : 0))}rem`
     const track = (column: DataColumn<T>) => (widths[column.id] === undefined ? column.width : `${String(widths[column.id])}px`)
     const template = [selectable ? CHECK : undefined, ...shown.map(track), endWidth].filter(Boolean).join(' ')
     // The rows are never narrower than their columns' least widths, so a widened column scrolls the table sideways.
@@ -1526,7 +1534,8 @@ export function DataTable<T>({
                             )}
                             {tree && treeControl(entry)}
                             {leadsOf(entry, false)}
-                            <span className="min-w-0 flex-1 truncate text-sm font-medium">{title?.cell(entry.row)}</span>
+                            {/* The title keeps to its line: a cell of two lines, a name over its code, shows its first. */}
+                            <span className="h-6 min-w-0 flex-1 truncate text-sm leading-6 font-medium">{title?.cell(entry.row)}</span>
                             {menu}
                         </div>
                         {stackedLines(entry, false)}
@@ -2132,6 +2141,7 @@ export function DataTable<T>({
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
                                             )}
+                                            {chevron && <ChevronRightIcon aria-hidden className="size-4 shrink-0 text-faint" />}
                                         </span>
                                     )}
                                 </div>
@@ -2246,7 +2256,11 @@ function MenuItems({ actions, kind }: { actions: DataAction[]; kind: 'dropdown' 
                 key={action.id}
                 variant={action.destructive === true ? 'destructive' : 'default'}
                 disabled={action.disabled}
-                onClick={action.onSelect}
+                // A press reaches the row through React's tree from the menu's portal; it does the item's work alone, never the row's open.
+                onClick={(event) => {
+                    event.stopPropagation()
+                    action.onSelect()
+                }}
             >
                 {action.icon}
                 {action.label}

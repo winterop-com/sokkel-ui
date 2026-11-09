@@ -98,8 +98,14 @@ afterEach(() => {
 const LOOK: ThemeSettings = { theme: 'paper', scheme: 'dark', density: 'compact', corners: '4px', typeface: 'geist', motion: 'off' }
 
 describe('the option lists', () => {
-    it('offer every theme in the tokens, tidevann first, with a label and a swatch', () => {
-        expect(THEMES[0]).toEqual({ value: 'tidevann', label: 'Tidevann', swatch: true })
+    it('offer every theme in the tokens, tidevann first, with a label, a line on how it looks and a swatch', () => {
+        expect(THEMES[0]).toEqual({
+            value: 'tidevann',
+            label: 'Tidevann',
+            description: 'Cool gray surfaces and one calm blue. The default.',
+            swatch: true,
+        })
+        expect(THEMES.every((theme) => theme.description !== undefined)).toBe(true)
         expect(THEMES[0]?.value).toBe(DEFAULT_APPEARANCE.theme)
         expect(THEMES.map((theme) => theme.value)).toContain('paper')
         for (const theme of THEMES) expect(theme.label).not.toBe('')

@@ -23,7 +23,7 @@ import { ShortcutRegistry } from '../hooks/use-shortcuts'
 import { trafficLightsStyle, useTrafficLights, windowPressHandler, type DesktopWindow } from '../lib/desktop'
 import { useDesktopFullscreen } from '../lib/fullscreen'
 import { createShortcutRegistry, topLayer, type KeyBinding, type ShortcutGroup } from '../lib/shortcuts'
-import type { CommandPaletteWords, PaletteFilter, PaletteGroup, PaletteSearch } from './CommandPalette'
+import type { CommandPaletteWords, PaletteFilter, PaletteFoot, PaletteGroup, PaletteSearch } from './CommandPalette'
 import type { ShortcutsDialogWords } from './ShortcutsDialog'
 import {
     ShellDesktop,
@@ -90,6 +90,8 @@ export interface ShellProps {
     paletteSearch?: PaletteSearch
     /** How the palette matches its commands to what is typed, as `CommandPalette`'s `filter`. */
     paletteFilter?: PaletteFilter
+    /** The strip at the palette's foot, with the app's mark and name and the keys it answers, as `CommandPalette`'s `foot`. */
+    paletteFoot?: PaletteFoot
     /**
      * The keys the app answers itself, listed in the shortcuts dialog after the keys bound with
      * `useShortcuts`; given, even empty, the shell holds the dialog and opens it on `?`.
@@ -202,6 +204,7 @@ export function Shell({
     paletteWords,
     paletteSearch,
     paletteFilter,
+    paletteFoot,
     shortcuts,
     shortcutsOpen,
     defaultShortcutsOpen = false,
@@ -308,6 +311,7 @@ export function Shell({
                 groups={groups}
                 search={paletteSearch}
                 filter={paletteFilter}
+                foot={paletteFoot}
                 words={paletteWords}
             />
         </Suspense>

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 
 import type { ThemeOption, ThemeSettings } from '../lib/appearance'
 import { cn } from '../lib/cn'
+import { ChoiceList } from './ChoiceList'
 import { Segmented } from './Segmented'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 
@@ -53,6 +54,11 @@ export interface ThemePickerProps {
     typefaces?: readonly ThemeOption[]
     /** Offers the system's scheme beside dark and light, which follows the device until one is chosen. */
     system?: boolean
+    /**
+     * Lists the themes as rows, each with its swatch, its name and the line saying how it looks,
+     * the chosen one filled, in place of a select; for a settings section with room for them.
+     */
+    themeList?: boolean
     className?: string
     words?: Partial<ThemePickerWords>
 }
@@ -64,7 +70,8 @@ export interface ThemePickerProps {
  *
  * The theme and scheme are always offered, the system's scheme as a third when `system` is set. Density offers regular and compact unless given its
  * own options; corners and typeface show only when given options. A theme marked `swatch` is
- * drawn as a small sample of its background, text and accent.
+ * drawn as a small sample of its background, text and accent, and one with a `description` says
+ * how it looks on a line under its name. `themeList` lists the themes as rows in place of a select.
  */
 export function ThemePicker({
     value,
@@ -74,6 +81,7 @@ export function ThemePicker({
     corners,
     typefaces,
     system = false,
+    themeList = false,
     className,
     words: given,
 }: ThemePickerProps) {
@@ -86,7 +94,20 @@ export function ThemePicker({
     return (
         <div data-slot="theme-picker" className={cn('flex flex-col gap-4', className)}>
             <Row label={words.theme}>
-                <Choice label={words.theme} value={value.theme} options={themes} onValueChange={(next) => set('theme', next)} />
+                {themeList ? (
+                    <ChoiceList
+                        label={words.theme}
+                        value={value.theme}
+                        options={themes.map((option) => ({
+                            value: option.value,
+                            label: <OptionLabel option={option} swatches={themes.some((one) => one.swatch === true)} />,
+                            description: option.description,
+                        }))}
+                        onValueChange={(next) => set('theme', next)}
+                    />
+                ) : (
+                    <Choice label={words.theme} value={value.theme} options={themes} onValueChange={(next) => set('theme', next)} />
+                )}
             </Row>
             <Row label={words.scheme}>
                 <Segmented
@@ -186,7 +207,14 @@ function Choice({
             <SelectContent alignItemWithTrigger={false} className="max-h-80">
                 {options.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
-                        <OptionLabel option={option} swatches={swatches} />
+                        {option.description === undefined ? (
+                            <OptionLabel option={option} swatches={swatches} />
+                        ) : (
+                            <span className="flex min-w-0 flex-col">
+                                <OptionLabel option={option} swatches={swatches} />
+                                <span className="text-xs text-muted-foreground">{option.description}</span>
+                            </span>
+                        )}
                     </SelectItem>
                 ))}
             </SelectContent>
