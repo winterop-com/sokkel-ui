@@ -41,7 +41,7 @@ describe('isInternalLink', () => {
 
 describe('Link', () => {
     it('is a plain anchor with no provider', () => {
-        expect(renderToStaticMarkup(<Link href="/runs">Runs</Link>)).toBe('<a href="/runs">Runs</a>')
+        expect(renderToStaticMarkup(<Link href="/runs">Runs</Link>)).toBe('<a tabindex="0" href="/runs">Runs</a>')
     })
 
     it("draws an internal link through the provider's render, with every prop it was given", () => {
@@ -55,12 +55,12 @@ describe('Link', () => {
                 return routed(props)
             },
         )
-        expect(html).toBe('<a data-routed="" href="/runs" class="face" aria-current="page">Runs</a>')
+        expect(html).toBe('<a data-routed="" tabindex="0" href="/runs" class="face" aria-current="page">Runs</a>')
         expect(seen?.onClick).toBeTypeOf('function')
     })
 
     it('leaves an external link a plain anchor', () => {
-        expect(drawn(<Link href="https://example.org">Out</Link>)).toBe('<a href="https://example.org">Out</a>')
+        expect(drawn(<Link href="https://example.org">Out</Link>)).toBe('<a tabindex="0" href="https://example.org">Out</a>')
         expect(drawn(<Link href="/runs" target="_blank" rel="noreferrer" />)).not.toContain('data-routed')
         expect(drawn(<Link href="/runs.csv" download />)).not.toContain('data-routed')
         expect(drawn(<Link>No address</Link>)).toBe('<a>No address</a>')
@@ -157,5 +157,20 @@ describe('the components drawing links', () => {
 
     it("keep a contents list's jumps in the page, outside the router", () => {
         expect(drawn(<TableOfContents entries={[{ id: 'steps', label: 'Steps', level: 2 }]} />)).not.toContain('data-routed')
+    })
+})
+
+describe('a link in the Tab order', () => {
+    it('carries tab index 0 routed or plain, and keeps one it is given', () => {
+        expect(drawn(<Link href="/runs">Runs</Link>)).toContain('tabindex="0"')
+        expect(renderToStaticMarkup(<Link href="https://example.org">Docs</Link>)).toContain('tabindex="0"')
+        expect(
+            drawn(
+                <Link href="/runs" tabIndex={-1}>
+                    Runs
+                </Link>,
+            ),
+        ).toContain('tabindex="-1"')
+        expect(renderToStaticMarkup(<Link>Runs</Link>)).not.toContain('tabindex')
     })
 })

@@ -78,8 +78,10 @@ export function LinkProvider({ render, internal = isInternalLink, children }: Li
 export function useLink(): (props: LinkProps) => ReactNode {
     const settings = useContext(LinkContext)
     return useCallback(
-        (props: LinkProps) => {
-            const { href } = props
+        (given: LinkProps) => {
+            const { href } = given
+            // WebKit leaves links out of the Tab order unless they carry a tab index.
+            const props = href !== undefined && given.tabIndex === undefined ? { tabIndex: 0, ...given } : given
             if (settings === null || href === undefined) return <a {...props} />
             const routed = { ...props, href }
             return settings.internal(routed) ? settings.render(routed) : <a {...props} />
