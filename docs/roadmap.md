@@ -6,7 +6,13 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.10.18** is the latest release (2026-11-09): the records app's gap map closed, and the first
+- **0.10.19** is the latest release (2026-11-09): the rest of a pipeline app's gaps. One app-wide
+  `LinkProvider` for every internal link (`renderLink` is gone), `JsonTree` caps long lists, shared
+  `CodeEditor` documents, `SecretField`, `RepeatedGroup` required and issues, graph `routing` and
+  `spacing` with node width bounds and `MiniGraph`. Every table now draws through `DataTable`, every
+  dashboard panel through `Chart` and a kind, and schema checks warn in development that they need
+  `'unsafe-eval'`.
+- **0.10.18** (2026-11-09): the records app's gap map closed, and the first
   gaps from a pipeline app's move: schema completion that follows `allOf` and decides `if`/`then`,
   `deferred` values left unchecked, `PlainMarkdown`, merged completions. Sheets resize (their `size`
   presets are gone), `DataTable` gets a row `detail` and column `band`s, two themes (`steel`,
