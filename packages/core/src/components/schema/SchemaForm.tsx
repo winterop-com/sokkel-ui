@@ -1,6 +1,6 @@
 import { IconButton } from '../IconButton'
 import { ArrowDown, ArrowUp, Plus, X } from 'lucide-react'
-import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../../lib/cn'
 import { Banner } from '../Banner'
@@ -534,11 +534,50 @@ function edge(form: SchemaFormState, path: Path): string | undefined {
 }
 
 /** The control for one value that has no fields of its own. */
+/** What an app's own control for a schema field is given: where it is, what it holds, and how to change it. */
+export interface SchemaFieldControl {
+    path: Path
+    /** The field's schema, its references followed. */
+    schema: JsonSchema
+    value: unknown
+    set: (value: unknown) => void
+    /** Marks the field as left, so its issues show; call it on blur. */
+    touch: () => void
+    /** The id the field's label points at; give it to the control's input. */
+    id: string
+    invalid: boolean
+    readOnly: boolean
+    /** The field's name, for a control drawn without its own label, such as a list's item. */
+    label?: string
+}
+
+/** An app's own control for a field, or undefined to draw the form's own. */
+export type SchemaFieldRenderer = (field: SchemaFieldControl) => ReactNode | undefined
+
+const FieldRendererContext = createContext<SchemaFieldRenderer | undefined>(undefined)
+
 function Control({ form, path, at, label }: { form: SchemaFormState; path: Path; at: JsonSchema; label?: string }) {
     const kind = kindOf(at, form.schema)
     const value = valueAt(form.value, path)
     const id = form.id(path)
     const invalid = worst(form.shown(path)) === 'critical' || undefined
+    const custom = useContext(FieldRendererContext)?.({
+        path,
+        schema: at,
+        value,
+        set: (next) => form.set(path, next),
+        touch: () => form.touch(path),
+        id,
+        invalid: invalid === true,
+        readOnly: at.readOnly === true,
+        label,
+    })
+    if (custom !== undefined && custom !== null)
+        return (
+            <Marked form={form} path={path}>
+                {custom}
+            </Marked>
+        )
     const common = { id, 'aria-label': label, 'aria-invalid': invalid, onBlur: () => form.touch(path), readOnly: at.readOnly === true }
     switch (kind) {
         case 'enum': {
@@ -911,6 +950,12 @@ export interface SchemaFormProps {
     form: SchemaFormState
     /** Marks each issue on a strip along the scroll area's edge while the form scrolls (`IssueMarks`). */
     marks?: boolean
+    /**
+     * An app's own control for a field, such as a file, a typed date, a searchable choice or code
+     * by its `contentMediaType`: called for each field, it answers a control or undefined for the
+     * form's own. The form keeps the label, the help and the issue marks around it.
+     */
+    field?: SchemaFieldRenderer
     className?: string
 }
 
@@ -926,7 +971,7 @@ export interface SchemaFormProps {
  * the submit verb. While the form scrolls, a strip along the scroll area's edge marks where each
  * issue sits.
  */
-export function SchemaForm({ form, marks = true, className }: SchemaFormProps) {
+export function SchemaForm({ form, marks = true, field, className }: SchemaFormProps) {
     const root = fieldSchema(form.schema, form.schema)
     const whole = form.shown([])
     return (
@@ -942,7 +987,9 @@ export function SchemaForm({ form, marks = true, className }: SchemaFormProps) {
                     ))}
                 </Banner>
             )}
-            <Fields form={form} path={[]} schema={root} />
+            <FieldRendererContext value={field}>
+                <Fields form={form} path={[]} schema={root} />
+            </FieldRendererContext>
         </div>
     )
 }

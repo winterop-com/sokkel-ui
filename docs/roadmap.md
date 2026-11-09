@@ -141,8 +141,6 @@ to `plan.md` when it ships.
         - A delta says what it compares against ("vs the previous 6 hours"); one look for the main
           figures and a quieter one for the rest; fewer solid fills on a phone's first screen.
     - **Round 6, data entry:**
-        - A field kind for `SchemaForm`: an app maps a schema field to a control of its own, so a
-          file, a date, a searchable choice or an upload works in a generated form.
         - One attachment model for a field: stored files with their ids, new files, replacements
           and removals, wired to `useUploads`, so cancel in the field also aborts the upload.
         - A submit that waits on checks, uploads and pending async checks, shows server errors on

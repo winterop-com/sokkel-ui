@@ -2,9 +2,16 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { RotateCw } from 'lucide-react'
 import { useState } from 'react'
 
+import { CodeEditor, languageForMediaType } from '@winterop-com/sokkel-ui/CodeEditor'
 import { DialogShell } from '@winterop-com/sokkel-ui/DialogShell'
 import type { JsonSchema } from '@winterop-com/sokkel-ui/schema/read'
-import { SchemaForm, SchemaIssueCount, useSchemaForm, type ServerIssue } from '@winterop-com/sokkel-ui/schema/SchemaForm'
+import {
+    SchemaForm,
+    SchemaIssueCount,
+    useSchemaForm,
+    type SchemaFieldRenderer,
+    type ServerIssue,
+} from '@winterop-com/sokkel-ui/schema/SchemaForm'
 import type { Path } from '@winterop-com/sokkel-ui/schema/issues'
 
 /**
@@ -181,6 +188,67 @@ function NewPipeline() {
 
 /** A nested object, a set of choices, a list of values, a list of objects, and a map edited as JSON; the strip beside the body marks where each issue sits down the form. */
 export const NestedAndLists: StoryObj = { name: 'Nested and lists', render: () => <NewPipeline /> }
+
+const STEP: JsonSchema = {
+    type: 'object',
+    required: ['code', 'script'],
+    properties: {
+        code: { type: 'string', title: 'Code', pattern: '^[a-z][a-z-]*$' },
+        script: {
+            type: 'string',
+            title: 'Script',
+            contentMediaType: 'text/x-shellscript',
+            description: 'Runs on the worker, in the step folder.',
+        },
+        query: { type: 'string', title: 'Query', contentMediaType: 'application/sql', description: 'Picks the rows the step uploads.' },
+    },
+}
+
+/** A field that names the media type it holds is edited as code in that language; every other field is the form's own. */
+const codeFields: SchemaFieldRenderer = (field) => {
+    const type = field.schema.contentMediaType
+    if (typeof type !== 'string') return undefined
+    return (
+        <CodeEditor
+            label={field.label ?? String(field.path[field.path.length - 1])}
+            language={languageForMediaType(type)}
+            value={typeof field.value === 'string' ? field.value : ''}
+            onChange={field.set}
+            readOnly={field.readOnly}
+            invalid={field.invalid}
+            className="h-32"
+        />
+    )
+}
+
+function NewStep() {
+    const form = useSchemaForm(STEP, {
+        initial: {
+            code: 'upload',
+            script: '#!/usr/bin/env bash\nset -euo pipefail\naws s3 cp out/orders.csv "s3://larkspur-exports/$(date +%F)/"',
+            query: "select id, total from orders\nwhere state = 'succeeded'",
+        },
+    })
+    return (
+        <DialogShell
+            open
+            onOpenChange={() => undefined}
+            width="lg"
+            title="New step"
+            count={<SchemaIssueCount form={form} />}
+            confirm={{ label: 'Create', onConfirm: () => form.submit() }}
+        >
+            <SchemaForm form={form} field={codeFields} />
+        </DialogShell>
+    )
+}
+
+/**
+ * The app's own control for some fields through `field`: a string whose schema names its
+ * `contentMediaType` is edited in `CodeEditor` in that language, here shell and SQL, while the
+ * form keeps the label, the help and the issue marks around it.
+ */
+export const OwnControls: StoryObj = { name: 'Own controls', render: () => <NewStep /> }
 
 const BROKEN: JsonSchema = {
     type: 'object',
