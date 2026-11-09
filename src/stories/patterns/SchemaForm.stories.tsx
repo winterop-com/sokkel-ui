@@ -13,6 +13,7 @@ import {
     type ServerIssue,
 } from '@winterop-com/sokkel-ui/schema/SchemaForm'
 import type { Path } from '@winterop-com/sokkel-ui/schema/issues'
+import { useSubmit } from '@winterop-com/sokkel-ui/hooks/use-submit'
 
 /**
  * A form drawn from a JSON Schema: a field per property, checked against the schema as it is
@@ -84,6 +85,46 @@ function NewJob({
     )
 }
 
+/** A pretend server that has a job called nightly-export already. */
+const createJob = (value: unknown): Promise<readonly ServerIssue[]> =>
+    Promise.resolve(
+        (value as { code?: string }).code === 'nightly-export'
+            ? [
+                  {
+                      path: ['code'],
+                      text: 'nightly-export is taken',
+                      detail: 'Codes are unique in the larkspur project. Try nightly-export-2.',
+                  },
+              ]
+            : [],
+    )
+
+function SendingJob() {
+    const submit = useSubmit({ check: () => form.submit(), waiting: () => form.checking, send: () => createJob(form.value) })
+    const form = useSchemaForm(JOB, {
+        initial: {
+            code: 'nightly-export',
+            name: 'Nightly export',
+            endpoint: 'https://hooks.example.org/larkspur/export',
+            schedule: '0 2 * * *',
+            timeout: 300,
+        },
+        issues: submit.issues,
+    })
+    return (
+        <DialogShell
+            open
+            onOpenChange={() => undefined}
+            title="New job"
+            description="Calls the endpoint on its schedule, in the larkspur project."
+            count={<SchemaIssueCount form={form} />}
+            confirm={{ label: submit.done ? 'Created' : 'Create', busy: submit.busy, busyLabel: 'Creating', onConfirm: submit.submit }}
+        >
+            <SchemaForm form={form} />
+        </DialogShell>
+    )
+}
+
 /** An empty form, each field drawn from its schema: text, a code in mono, a number, a choice and a switch. */
 export const Empty: StoryObj = { name: 'Empty', render: () => <NewJob /> }
 
@@ -119,6 +160,12 @@ export const ServerRefusal: StoryObj = {
         />
     ),
 }
+
+/**
+ * Create sent through `useSubmit`: the checks run first, a second press while it is sent is
+ * ignored, and the server's refusal comes back at its field, here a code that is taken.
+ */
+export const Sending: StoryObj = { name: 'Sending', render: () => <SendingJob /> }
 
 const PIPELINE: JsonSchema = {
     type: 'object',
