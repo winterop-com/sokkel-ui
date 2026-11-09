@@ -56,6 +56,9 @@ export const PRIVATE: Record<PackageDir, Record<string, string>> = {
         'components/settings-parts':
             'what `SettingsDialog` and `SettingsView` share: the search, the sections, the rows and the reset; their types are exported by both',
         'components/shell-context': 'the contexts `Shell` hands the parts drawn inside it',
+        'components/ui/context-menu-engine': "Base UI's context menu, which `primitives/context-menu` loads on first use",
+        'components/ui/deferred-menu': "the stand-in triggers menus draw until Base UI's menu has loaded, and the loading",
+        'components/ui/menu-engine': "Base UI's menu, which `primitives/dropdown-menu` and `AccountMenu` load on first use",
         'hooks/use-drag-size': "the drag on a resizable edge, for the library's own panels",
         'hooks/use-file-drop': 'files dragged onto `DropZone` and `FileField`, which take them',
         'lib/css-pixels': 'a length token in pixels, for a part that hands a size to an engine',
