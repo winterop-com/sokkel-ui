@@ -3,14 +3,13 @@ import { CORNERS, DEFAULT_APPEARANCE, THEMES, TYPEFACES } from '@winterop-com/so
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Switch } from '@winterop-com/sokkel-ui/primitives/switch'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
-import { type SettingsGroup, SettingsView } from '@winterop-com/sokkel-ui/SettingsView'
+import { SettingsDialog, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsDialog'
 import { ThemePicker } from '@winterop-com/sokkel-ui/ThemePicker'
 import { ChartColumn, Database, Hash, Palette } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { resetAll } from 'tidevann-shared/backend'
 import type { Frame } from 'tidevann-shared/frame'
-import { go } from 'tidevann-shared/router'
 
 import { preferences } from '../backend'
 import { AGGREGATES, counted, type Dataset, DEFAULT_PREFERENCES, type NumberStyle, type Preferences } from '../model'
@@ -31,7 +30,19 @@ const DECIMALS: readonly { value: Preferences['decimals']; label: string }[] = [
 ]
 
 /** The visualizer's preferences as a page: chart colors, how figures are written, new charts, the look and the demo's data. */
-export function SettingsPage({ prefs, frame, datasets }: { prefs: Preferences; frame: Frame; datasets: readonly Dataset[] }) {
+export function SettingsPage({
+    prefs,
+    frame,
+    datasets,
+    open,
+    onClose,
+}: {
+    prefs: Preferences
+    frame: Frame
+    datasets: readonly Dataset[]
+    open: boolean
+    onClose: () => void
+}) {
     const [active, setActive] = useState('charts')
     const [search, setSearch] = useState('')
     const [resetting, setResetting] = useState(false)
@@ -186,7 +197,11 @@ export function SettingsPage({ prefs, frame, datasets }: { prefs: Preferences; f
 
     return (
         <>
-            <SettingsView
+            <SettingsDialog
+                open={open}
+                onOpenChange={(next) => {
+                    if (!next) onClose()
+                }}
                 groups={groups}
                 active={active}
                 onActiveChange={setActive}
@@ -204,7 +219,6 @@ export function SettingsPage({ prefs, frame, datasets }: { prefs: Preferences; f
                     if (section === 'appearance') setSettings({ ...DEFAULT_APPEARANCE, scheme: settings.scheme })
                     toast.success('Back to the defaults')
                 }}
-                onDone={() => go('/datasets')}
             />
             <ConfirmDialog
                 open={resetting}

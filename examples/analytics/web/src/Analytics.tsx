@@ -30,6 +30,7 @@ import { useMemo } from 'react'
 import { useCollection } from 'tidevann-shared/backend'
 import type { Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
+import { useOverlayRoute } from 'tidevann-shared/router'
 import { funnels, invoiceViews, reports } from './collections'
 import { EVERYONE, levels } from './metrics'
 import { PLAN_NAMES, counted } from './model'
@@ -42,13 +43,13 @@ import { Reports } from './pages/Reports'
 import { Revenue } from './pages/Revenue'
 import { Settings } from './pages/Settings'
 import { useApp } from './state'
-import { go, PRESETS } from './view'
+import { go, PRESETS, readView } from './view'
 import { standing } from './world'
 
-const PAGES = ['overview', 'revenue', 'customers', 'funnels', 'reports', 'goals', 'settings'] as const
+const PAGES = ['overview', 'revenue', 'customers', 'funnels', 'reports', 'goals'] as const
 type PageId = (typeof PAGES)[number]
 
-const LABELS: Record<PageId | 'missing', string> = {
+const LABELS: Record<PageId | 'settings' | 'missing', string> = {
     overview: 'Overview',
     revenue: 'Revenue',
     customers: 'Customers',
@@ -63,7 +64,12 @@ const LABELS: Record<PageId | 'missing', string> = {
 export function Analytics({ frame }: { frame: Frame }) {
     const { world, error, view, href, prefs, setPrefs, setView, stream, money } = useApp()
     const { settings: look, setSettings: setLook } = frame.appearance
-    const [first = 'overview', second] = view.path
+    // Settings open as a dialog over the page they were opened from, which keeps its whole address,
+    // range and segment included, to go back to.
+    const onSettings = view.path[0] === 'settings'
+    const settings = useOverlayRoute(onSettings ? ['settings'] : frame.route, 'settings')
+    const shown = onSettings ? readView(`#/${settings.route.join('/')}`, prefs) : view
+    const [first = 'overview', second] = shown.path
     const page: PageId | 'missing' = (PAGES as readonly string[]).includes(first) ? (first as PageId) : 'missing'
     const views = useCollection(invoiceViews).rows ?? []
     const savedFunnels = useCollection(funnels).rows ?? []
@@ -74,7 +80,7 @@ export function Analytics({ frame }: { frame: Frame }) {
         const now = levels(world, EVERYONE, [world.now])
         return { paying: now.paying[0] ?? 0, mrr: now.mrr[0] ?? 0 }
     }, [world])
-    const entry = (id: PageId, icon: LucideIcon, description: string, count?: number) => ({
+    const entry = (id: PageId | 'settings', icon: LucideIcon, description: string, count?: number) => ({
         id,
         label: LABELS[id],
         icon,
@@ -224,7 +230,7 @@ export function Analytics({ frame }: { frame: Frame }) {
             <Empty>
                 <EmptyHeader>
                     <EmptyTitle>Nothing at this address</EmptyTitle>
-                    <EmptyDescription>There is no page at #/{view.path.join('/')}.</EmptyDescription>
+                    <EmptyDescription>There is no page at #/{shown.path.join('/')}.</EmptyDescription>
                 </EmptyHeader>
                 <Button size="sm" variant="outline" onClick={() => go(href(''))}>
                     Go to the overview
@@ -249,7 +255,7 @@ export function Analytics({ frame }: { frame: Frame }) {
             paletteSearch={search}
             paletteFilter="terms"
             desktop={frame.desktop}
-            route={view.path.join('/')}
+            route={shown.path.join('/')}
             rail={
                 <Rail
                     mark={<TidevannMark />}
@@ -292,11 +298,8 @@ export function Analytics({ frame }: { frame: Frame }) {
                 </StatusLine>
             }
         >
-            {page === 'settings' && world !== undefined ? (
-                <Settings frame={frame} />
-            ) : (
-                <Page className={fills ? 'h-full' : undefined}>{content}</Page>
-            )}
+            <Page className={fills ? 'h-full' : undefined}>{content}</Page>
+            {settings.open && world !== undefined && <Settings frame={frame} open onClose={settings.close} />}
         </Shell>
     )
 }

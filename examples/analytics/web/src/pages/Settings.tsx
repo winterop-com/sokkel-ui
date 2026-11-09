@@ -1,7 +1,7 @@
 import { ConfirmDialog } from '@winterop-com/sokkel-ui/DialogShell'
 import { InlineEdit } from '@winterop-com/sokkel-ui/InlineEdit'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
-import { SettingsView, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsView'
+import { SettingsDialog, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsDialog'
 import { ThemePicker } from '@winterop-com/sokkel-ui/ThemePicker'
 import { DEFAULT_APPEARANCE, THEMES } from '@winterop-com/sokkel-ui/lib/appearance'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
@@ -15,7 +15,7 @@ import type { Frame } from 'tidevann-shared/frame'
 import { LIVE_LIMIT } from '../backend'
 import { DEFAULT_PREFS, RATES, type Currency, type Pace, type Prefs } from '../model'
 import { useLoaded } from '../state'
-import { go, PRESETS } from '../view'
+import { PRESETS } from '../view'
 
 /** What Reset to defaults puts back; the feed's read mark stays. */
 const HELD: (keyof Omit<Prefs, 'id' | 'feedSeen'>)[] = ['pace', 'currency', 'range', 'compare', 'bigOrder', 'notifyChurn', 'workspace']
@@ -26,8 +26,8 @@ function Toggle({ label, on, onChange }: { label: string; on: boolean; onChange:
 }
 
 /** The person's settings, kept by the backend as each is changed; the look is kept in this browser. */
-export function Settings({ frame }: { frame: Frame }) {
-    const { prefs, setPrefs, world, href } = useLoaded()
+export function Settings({ frame, open, onClose }: { frame: Frame; open: boolean; onClose: () => void }) {
+    const { prefs, setPrefs, world } = useLoaded()
     const { settings: look, setSettings: setLook } = frame.appearance
     const [active, setActive] = useState('general')
     const [search, setSearch] = useState('')
@@ -213,7 +213,11 @@ export function Settings({ frame }: { frame: Frame }) {
 
     return (
         <>
-            <SettingsView
+            <SettingsDialog
+                open={open}
+                onOpenChange={(next) => {
+                    if (!next) onClose()
+                }}
                 groups={groups}
                 active={active}
                 onActiveChange={setActive}
@@ -225,7 +229,6 @@ export function Settings({ frame }: { frame: Frame }) {
                     setLook({ ...DEFAULT_APPEARANCE })
                     void setPrefs(Object.fromEntries(HELD.map((key) => [key, DEFAULT_PREFS[key]])))
                 }}
-                onDone={() => go(href('overview'))}
             />
             <ConfirmDialog
                 open={resetting}

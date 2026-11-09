@@ -6,7 +6,7 @@ import { Input } from '@winterop-com/sokkel-ui/primitives/input'
 import { Switch } from '@winterop-com/sokkel-ui/primitives/switch'
 import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
-import { SettingsView, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsView'
+import { SettingsDialog, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsDialog'
 import { SliderField } from '@winterop-com/sokkel-ui/SliderField'
 import { ThemePicker } from '@winterop-com/sokkel-ui/ThemePicker'
 import { ArrowDownToLine, Boxes, Cpu, Database, FolderOpen, Palette } from 'lucide-react'
@@ -14,7 +14,6 @@ import { useEffect, useState } from 'react'
 
 import { resetAll } from 'tidevann-shared/backend'
 import type { Frame } from 'tidevann-shared/frame'
-import { go } from 'tidevann-shared/router'
 import { log } from '../data/backend'
 import { diskOf, validRoot } from '../data/disk'
 import { DEFAULT_PREFS, type Prefs } from '../data/model'
@@ -62,7 +61,7 @@ const HELD: Record<string, (keyof Omit<Prefs, 'id'>)[]> = {
 }
 
 /** The app's settings, kept by the backend as each is changed; the look is kept in this browser. */
-export function SettingsPage({ frame }: { frame: Frame }) {
+export function SettingsPage({ frame, open, onClose }: { frame: Frame; open: boolean; onClose: () => void }) {
     const { prefs, setPrefs, models } = useApp()
     const { settings: look, setSettings: setLook } = frame.appearance
     const [active, setActive] = useState('library')
@@ -291,7 +290,11 @@ export function SettingsPage({ frame }: { frame: Frame }) {
 
     return (
         <>
-            <SettingsView
+            <SettingsDialog
+                open={open}
+                onOpenChange={(next) => {
+                    if (!next) onClose()
+                }}
                 groups={groups}
                 active={active}
                 onActiveChange={setActive}
@@ -306,7 +309,6 @@ export function SettingsPage({ frame }: { frame: Frame }) {
                     const keys = section === undefined ? Object.values(HELD).flat() : (HELD[section] ?? [])
                     if (keys.length > 0) save(Object.fromEntries(keys.map((key) => [key, DEFAULT_PREFS[key]])))
                 }}
-                onDone={() => go('/library')}
             />
             <ConfirmDialog
                 open={resetting}

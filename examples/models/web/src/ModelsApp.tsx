@@ -33,7 +33,7 @@ import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 
 import type { Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
-import { go } from 'tidevann-shared/router'
+import { go, useOverlayRoute } from 'tidevann-shared/router'
 import { log } from './data/backend'
 import { bytes, counted, uptime } from './data/format'
 import { chatWith } from './actions'
@@ -53,10 +53,10 @@ import { useApp } from './state'
 const DiskPage = lazy(() => import('./pages/Disk').then((module) => ({ default: module.DiskPage })))
 const ComparePage = lazy(() => import('./pages/Compare').then((module) => ({ default: module.ComparePage })))
 
-const PAGES = ['library', 'disk', 'discover', 'downloads', 'chat', 'compare', 'runner', 'settings'] as const
+const PAGES = ['library', 'disk', 'discover', 'downloads', 'chat', 'compare', 'runner'] as const
 type PageId = (typeof PAGES)[number]
 
-const LABELS: Record<PageId, string> = {
+const LABELS: Record<PageId | 'settings', string> = {
     library: 'Models',
     disk: 'Disk usage',
     discover: 'Discover',
@@ -101,7 +101,9 @@ export function ModelsApp({ frame }: { frame: Frame }) {
     const app = useApp()
     const { models, conversations, downloads, runner, loaded, prefs } = app
     const { settings: look, setSettings: setLook } = frame.appearance
-    const [first = 'library', ...rest] = frame.route
+    // Settings open as a dialog over the page they were opened from.
+    const settings = useOverlayRoute(frame.route, 'settings', ['library'])
+    const [first = 'library', ...rest] = settings.route
     const page: PageId | 'missing' = (PAGES as readonly string[]).includes(first) ? (first as PageId) : 'missing'
     const second = rest.length === 0 ? undefined : rest.join('/')
     const [checking, setChecking] = useState(false)
@@ -129,7 +131,7 @@ export function ModelsApp({ frame }: { frame: Frame }) {
     const pulling = downloads.filter((one) => one.state === 'running' || one.state === 'queued' || one.state === 'paused')
     const status = runner?.status ?? 'down'
     const ready = loaded.filter((one) => one.state === 'ready')
-    const entry = (id: PageId, icon: typeof Play, count?: number, keywords?: string[]) => ({
+    const entry = (id: PageId | 'settings', icon: typeof Play, count?: number, keywords?: string[]) => ({
         id,
         label: LABELS[id],
         icon,
@@ -247,7 +249,6 @@ export function ModelsApp({ frame }: { frame: Frame }) {
     const fills =
         page === 'chat' ||
         page === 'compare' ||
-        page === 'settings' ||
         (page !== 'missing' && second === undefined && ['library', 'downloads', 'discover'].includes(page))
     let content
     if (page === 'library') content = second === undefined ? <LibraryPage /> : <ModelPage id={second} />
@@ -261,7 +262,7 @@ export function ModelsApp({ frame }: { frame: Frame }) {
             <Empty>
                 <EmptyHeader>
                     <EmptyTitle>Nothing at this address</EmptyTitle>
-                    <EmptyDescription>The app has no page at #/{frame.route.join('/')}.</EmptyDescription>
+                    <EmptyDescription>The app has no page at #/{settings.route.join('/')}.</EmptyDescription>
                 </EmptyHeader>
                 <Button size="sm" variant="outline" onClick={() => go('/library')}>
                     Go to the models
@@ -276,7 +277,7 @@ export function ModelsApp({ frame }: { frame: Frame }) {
             shortcuts={SHORTCUTS}
             paletteWords={{ placeholder: 'Go to a page, open a model or a conversation' }}
             desktop={frame.desktop}
-            route={frame.route.join('/')}
+            route={settings.route.join('/')}
             panel={talk === undefined ? undefined : <ChatSettingsPanel conversation={talk} />}
             panelOpen={talk !== undefined && panelOpen}
             onPanelOpenChange={setPanelOpen}
@@ -375,15 +376,14 @@ export function ModelsApp({ frame }: { frame: Frame }) {
             }
         >
             <AppKeys newChat={newChat} />
-            {page === 'settings' ? (
-                <SettingsPage frame={frame} />
-            ) : page === 'chat' ? (
+            {page === 'chat' ? (
                 <ChatPage id={second} />
             ) : (
                 <Page className={fills ? 'h-full' : undefined}>
                     <Suspense fallback={null}>{content}</Suspense>
                 </Page>
             )}
+            {settings.open && <SettingsPage frame={frame} open onClose={settings.close} />}
         </Shell>
     )
 }
