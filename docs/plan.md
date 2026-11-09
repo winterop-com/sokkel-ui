@@ -42,8 +42,12 @@ spinner after a moment, `Chart` and `ChartGrid` load the kinds' builders beside 
 preview loads when the switcher shows it, `useSchemaForm` and `CodeEditor` load ajv (`loadSchemaChecks`
 ahead), the form taking input at once and refusing a submit until its checks are there,
 `TimeRangePicker` and the date fields load the calendar when first pointed at or focused, the
-highlighter loads Shiki with the first code drawn plain until then, and `MediaBar` loads its
-fullscreen view after the bar is drawn. A module that only asks whether a node is a part tells it by a mark, so it
+highlighter loads Shiki with the first code drawn plain until then, `MediaBar` loads its
+fullscreen view after the bar is drawn, and every menu (`primitives/dropdown-menu`,
+`primitives/context-menu`, `AccountMenu` and the parts drawn with them) loads Base UI's menu once
+the page is drawn, its trigger drawn until then by a stand-in that looks and reads the same, a press
+or a right click on it opening the menu as soon as the menu is there. A menu bar has the menu at
+once (`primitives/menubar` imports it), as its keys need. A module that only asks whether a node is a part tells it by a mark, so it
 need not import the part (`isSoundVisualizer`), and `chartLegend` has a module of its own, since it
 reads every kind.
 
