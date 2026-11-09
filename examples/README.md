@@ -16,6 +16,9 @@ examples/
   metrics/       live dashboards over a simulated source, a panel editor with a live preview, and alerts
   status/        a live operations board: services, regions and incidents changing as the page
                  watches, on-call, and the public status page with its subscribe form
+  dataviz/       a data visualizer: datasets imported, edited and filtered, a chart builder with a
+                 live preview and suggested views, charts saved, downloaded and shared as links
+                 that carry their data, and boards filtered together and presented
   example.mk     the targets every example's Makefile includes
 ```
 
@@ -37,7 +40,7 @@ From the repository root, after `make build` builds the packages, every example 
 targets as `make <example>-<target>`; `make examples-list` names them:
 
 ```sh
-make tasks-web          # build the web app and serve it (Tasks on 4180, Runs on 4181, Records on 4182, Metrics on 4185, Status on 4190)
+make tasks-web          # build the web app and serve it (Tasks on 4180, Runs on 4181, Records on 4182, Dataviz on 4184, Metrics on 4185, Status on 4190)
 make tasks-dev          # the web app's dev server
 make tasks-electron     # open it in Electron
 make tasks-tauri        # open it in Tauri
