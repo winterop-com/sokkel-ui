@@ -160,6 +160,16 @@ function useFileIds() {
     }
 }
 
+/** A file the field already holds on the server, such as an attachment of a record being edited. */
+export interface StoredFile {
+    id: string
+    name: string
+    /** Its size in bytes, said beside its name. */
+    size?: number
+    /** A picture of it, for an image. */
+    image?: string
+}
+
 export interface FileFieldProps {
     id: string
     label: string
@@ -195,6 +205,14 @@ export interface FileFieldProps {
     previews?: boolean
     /** Hears the files refused by a pick or a drop, with why. */
     onRefuse?: (refused: FileRefusal[]) => void
+    /** Files the field holds already, listed before the new ones and counted against `maxFiles`. */
+    stored?: readonly StoredFile[]
+    /** Takes a stored file out; with `maxFiles` of 1, a new file chosen takes it out too. */
+    onRemoveStored?: (id: string) => void
+    /** Stops a file going up, its upload aborted, in place of removing it. */
+    onCancel?: (file: File) => void
+    /** Why a file failed to go up, said in place of its size; nothing while it has not. */
+    failed?: (file: File) => string | undefined
     /** Files said as refused on the first render, for a still view of a refusal. */
     defaultRefused?: readonly { file: File; reason: RefusalReason }[]
     disabled?: boolean
@@ -214,8 +232,10 @@ export interface FileFieldProps {
  * the label names the button. With `maxFiles` of 1 a file chosen takes the place of the one held.
  *
  * The field holds `File`s and sends none: an app that sends them as they are chosen says how far
- * each has got through `progress`, and the list draws a ring for it, its button then cancelling;
- * `useUploads` runs such uploads.
+ * each has got through `progress`, and the list draws a ring for it, its button then cancelling
+ * (`onCancel`); `useUploads` runs such uploads, and `useAttachmentField` ties both to the field.
+ * Files held already, as when a record is edited, come as `stored`, listed first and removed
+ * through `onRemoveStored`.
  */
 export function FileField({
     id,
@@ -237,6 +257,10 @@ export function FileField({
     progress,
     previews: showPreviews = true,
     onRefuse,
+    stored = [],
+    onRemoveStored,
+    onCancel,
+    failed,
     defaultRefused = [],
     disabled = false,
     className,
@@ -254,14 +278,25 @@ export function FileField({
 
     const add = (list: readonly File[]) => {
         if (disabled || list.length === 0) return
-        const checked = checkFiles(list, { accept, maxSize, maxFiles }, many ? value.length : 0)
+        const checked = checkFiles(list, { accept, maxSize, maxFiles }, many ? value.length + stored.length : 0)
         setRefused(checked.refused)
         if (checked.refused.length > 0) {
             onRefuse?.(checked.refused.map((one) => ({ ...one, message: refusalText(one.reason, one.file, limits, words) })))
         }
-        if (checked.taken.length > 0) onChange(many ? [...value, ...checked.taken] : checked.taken)
+        if (checked.taken.length === 0) return
+        if (!many) for (const held of stored) onRemoveStored?.(held.id)
+        onChange(many ? [...value, ...checked.taken] : checked.taken)
     }
-    const remove = (fileId: string) => onChange(value.filter((file) => idOf(file) !== fileId))
+    const STORED = 'stored:'
+    const remove = (fileId: string) => {
+        if (fileId.startsWith(STORED)) onRemoveStored?.(fileId.slice(STORED.length))
+        else onChange(value.filter((file) => idOf(file) !== fileId))
+    }
+    const cancel = (fileId: string) => {
+        const file = value.find((one) => idOf(one) === fileId)
+        if (file !== undefined && onCancel !== undefined) onCancel(file)
+        else remove(fileId)
+    }
     const drop = useFileDrop(add, !disabled)
     const over = drop.over
 
@@ -349,22 +384,30 @@ export function FileField({
                     ))}
                 </ul>
             )}
-            {value.length > 0 && (
+            {value.length + stored.length > 0 && (
                 <AttachmentList
-                    files={value.map((file) => {
-                        const share = progress?.(file)
-                        const uploading = share !== undefined && share < 1
-                        return {
-                            id: idOf(file),
-                            name: file.name,
-                            detail: formatSize(file.size),
-                            image: previews.get(file),
-                            uploading,
-                            progress: uploading ? share : undefined,
-                        }
-                    })}
+                    files={[
+                        ...stored.map((held) => ({
+                            id: `${STORED}${held.id}`,
+                            name: held.name,
+                            detail: held.size === undefined ? undefined : formatSize(held.size),
+                            image: held.image,
+                        })),
+                        ...value.map((file) => {
+                            const share = progress?.(file)
+                            const uploading = share !== undefined && share < 1
+                            return {
+                                id: idOf(file),
+                                name: file.name,
+                                detail: failed?.(file) ?? formatSize(file.size),
+                                image: previews.get(file),
+                                uploading,
+                                progress: uploading ? share : undefined,
+                            }
+                        }),
+                    ]}
                     onRemove={disabled ? undefined : remove}
-                    onCancel={disabled ? undefined : remove}
+                    onCancel={disabled ? undefined : cancel}
                     words={words.files}
                 />
             )}
