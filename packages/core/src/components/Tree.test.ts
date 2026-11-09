@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 
-import { isBranch, treeAncestors, treeHolding, treeMatches, visibleRows, type TreeLoad, type TreeNode } from './Tree'
+import { canMoveInto, dropInto, isBranch, treeAncestors, treeHolding, treeMatches, visibleRows, type TreeLoad, type TreeNode } from './Tree'
 
 const NODES: TreeNode[] = [
     {
@@ -67,5 +67,28 @@ describe('a tree', () => {
         const lazy: TreeNode[] = [{ id: 'harbor', label: 'Harbor', hasChildren: true }]
         const done = new Map<string, TreeLoad>([['harbor', { state: 'done', children: [{ id: 'reports', label: 'Reports' }] }]])
         expect([...treeHolding(lazy, new Set(['reports']), done)]).toEqual(['harbor'])
+    })
+})
+
+describe('moving a node', () => {
+    test('goes into another branch or the top level', () => {
+        expect(canMoveInto(NODES, 'orders', 'harbor')).toBe(true)
+        expect(canMoveInto(NODES, 'orders', null)).toBe(true)
+        expect(canMoveInto(NODES, 'exports', 'reports')).toBe(true)
+    })
+
+    test('never into itself, below itself, or where it already is', () => {
+        expect(canMoveInto(NODES, 'larkspur', 'larkspur')).toBe(false)
+        expect(canMoveInto(NODES, 'larkspur', 'exports')).toBe(false)
+        expect(canMoveInto(NODES, 'orders', 'exports')).toBe(false)
+        expect(canMoveInto(NODES, 'harbor', null)).toBe(false)
+        expect(canMoveInto(NODES, 'missing', null)).toBe(false)
+    })
+
+    test('lands inside a branch it is held over, and beside a leaf in its parent', () => {
+        expect(dropInto({ node: NODES[1], parent: null })).toBe('harbor')
+        expect(dropInto({ node: { id: 'imports', label: 'Imports folder' }, parent: 'larkspur' })).toBe('larkspur')
+        expect(dropInto({ node: { id: 'loose', label: 'Loose note' }, parent: null })).toBeNull()
+        expect(dropInto({ node: { id: 'empty', label: 'Empty folder', children: [] }, parent: 'harbor' })).toBe('empty')
     })
 })

@@ -111,4 +111,12 @@ describe('SplitPane', () => {
         expect(renderToStaticMarkup(<SplitPane first="a" second="b" share={0.95} maxShare={0.7} />)).toContain('style="width:70%"')
         expect(renderToStaticMarkup(<SplitPane first="a" second="b" share={0.05} minShare={0.25} />)).toContain('style="width:25%"')
     })
+
+    it('shows one pane alone at any width with `only`, the other kept mounted and hidden, and no rule', () => {
+        const html = renderToStaticMarkup(<SplitPane only="second" first="editor" second="preview" />)
+        expect(html).toMatch(/data-slot="split-pane-first"[^>]*class="[^"]*\bhidden\b[^"]*">editor</)
+        expect(html).toContain('preview')
+        expect(html).not.toContain('split-pane-rule')
+        expect(html).not.toContain('style="width')
+    })
 })

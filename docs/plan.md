@@ -256,6 +256,11 @@ output is read by one parser, `lib/ansi`, which `AnsiText` and an `ansi` fence s
 colors in the kind and status inks, 256-color and 24-bit color as they are. `Markdown` embeds an
 app's own parts in a text where it has `<!-- part:ID -->` (another word through `partMarker`),
 through its `parts` map or function, so the text stays one document with its headings and anchors.
+Notes that link to each other are read by one module, `lib/wiki-links`: `[[Note]]`,
+`[[Note|words]]` and `[[Note#Heading]]` link to a note by its name and `#tag` tags it, neither read
+inside code. `Markdown`'s `links` draws them as links the app follows (`onOpen`, a link to a note
+`exists` denies drawn faint, `onTag` for the tags), and `wikiLinksIn`, `tagsIn` and `mentionsOf`
+give an app a note's links, its tags and where a name is written unlinked, for backlinks.
 
 ## Typefaces
 
@@ -476,7 +481,13 @@ share held within `minShare` and `maxShare`, the second's what is left. It holds
 `defaultShare` and keeps it by `id` in storage; `share` with `onShareChange` holds it from outside.
 Narrower than `narrowBelow`, measured on itself, it stacks its panes or shows the one `narrow` names,
 as a phone shows a list or the message opened from it, and `useSplitPane` tells a pane it is alone.
-Mail's list beside its reading pane, the query workbench and a chat's history are split by it.
+`only` shows one pane alone at any width, the other kept mounted, as a reader turns it off.
+Mail's list beside its reading pane, the query workbench and a chat's history are split by it, and so
+is `EditPreview`'s `pane` variant: an editor and its live preview edge to edge in a pane of the
+app's, the share kept by `id`, with `view` showing both or either alone. `DocumentTabs` is the strip
+of documents open in a work area over such a pane: a tab each with its icon, its name cut short and
+a close button (a dot while unsaved), the shown one joined to the content, a middle click closing,
+the arrows moving along it, and the strip scrolling sideways past its room with `end` held at its end.
 
 `WindowedPane` gives any pane an expand button that opens the same content near full screen, in a
 window with a margin, a title, a close button and Escape, the pane keeping its height in place
@@ -523,7 +534,10 @@ to try again when it fails; the app's `search` looks through the whole hierarchy
 lists each match with its path, and choosing one opens the tree down to it. TreeSelect names its
 choice by its path, from `trails` when the choice's level has not loaded yet. Past a few hundred
 visible rows a tree draws only those in view of its nearest scrolling box, so fifty thousand open
-rows scroll as smoothly as fifty.
+rows scroll as smoothly as fifty. As a file tree a node wears an `icon` (an open branch its
+`openIcon`), `actions` gives each row the menu a table's rows have, from a button at its end or a
+right-click, and `onMove` lets a row be dragged into a branch or beside a top-level row to the top
+level, a closed branch opening as a row is held over it; nothing goes into itself (`canMoveInto`).
 
 PersonAvatar draws a person as their picture, or as their initials on their color. A picture takes
 the initials' place only once it has loaded (Base UI's avatar tracks it), so until then, and for good
@@ -537,9 +551,12 @@ icon's corner), ChannelList, ChannelHeader, Conversation and ThreadView (the col
 conversation and of a thread), ConversationStart, ChatMessage with ChatDay, and MessageComposer.
 An app's own navigation strip is the library's `Rail`, with no hand-drawn badge.
 
-CodeEditor is the one code editor, on CodeMirror 6. It carries JSON, YAML and jq (a stream language
-written from the jq manual) by name and takes any other language as a CodeMirror `LanguageSupport` or
-a stream parser (`defineLanguage`). An app adds words to complete (a list or a function of the word,
+CodeEditor is the one code editor, on CodeMirror 6. It carries JSON, YAML, jq (a stream language
+written from the jq manual) and markdown (a stream language of its own, with `[[links]]` between
+notes and `#tags`) by name and takes any other language as a CodeMirror `LanguageSupport` or
+a stream parser (`defineLanguage`). `links` completes a `[[link]]` from the names an app gives as it
+is typed, the closing brackets put in with the name, and `size="lg"` sets long writing a step over
+the body. An app adds words to complete (a list or a function of the word,
 each with a detail, docs and a kind), docs on hover, ranged marks drawn as lint (an underline, a
 gutter dot, the message on hover), `onRun` on Mod-Enter and any other `keys`, a themed find bar, a
 fold gutter, bracket colors by depth and indent guides; the last three turn off past a megabyte. Given
@@ -583,6 +600,10 @@ An editor also refuses a connection with the reason said on the canvas, adds a s
 button at a node's output or an edge's middle, takes blocks dragged in from a palette, and chooses
 several nodes with Shift. BlockPalette, BlockPicker, GraphOverlay, GraphNotice, GraphToolbar and
 useGraphHistory are its parts; the Pipeline editor stories show each way of building a pipeline.
+NetworkGraph draws things linked with no direction to read, such as notes: a dot each in its group's
+color, larger the more links it has, its name under it, straight lines between them, laid out by
+elk's stress algorithm (`layoutNetwork`) after a spiral holds the first frame; pointing at a dot
+lights its neighbors and fades the rest, and `current` rings the one the reader stands on.
 
 ## Terminals
 

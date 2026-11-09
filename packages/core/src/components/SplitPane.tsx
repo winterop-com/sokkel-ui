@@ -32,7 +32,7 @@ export type SplitPaneNarrow = 'stack' | 'first' | 'second'
 export interface SplitPaneState {
     /** Whether the split is narrower than its `narrowBelow`. */
     narrow: boolean
-    /** The pane shown alone while the split is narrow, or null while both are shown. */
+    /** The pane shown alone, by `only` or while the split is narrow, or null while both are shown. */
     alone: 'first' | 'second' | null
 }
 
@@ -137,6 +137,8 @@ export interface SplitPaneProps {
     resizable?: boolean
     /** What the split does once it is narrow: stacks its panes, or shows only the first or the second. */
     narrow?: SplitPaneNarrow
+    /** Shows one pane alone at any width, the other kept as it was, such as an editor while its preview is off. */
+    only?: 'first' | 'second'
     /** The width in pixels below which the split is narrow. */
     narrowBelow?: number
     className?: string
@@ -157,7 +159,9 @@ export interface SplitPaneProps {
  * Narrower than `narrowBelow` pixels, measured on the split itself rather than the window so it
  * holds in any container, a split across stacks its panes one over the other with the same share
  * of the height (`narrow="stack"`), or shows only the pane `narrow` names, as a phone shows a list
- * or the message opened from it. `useSplitPane` tells a pane whether it is shown alone.
+ * or the message opened from it. `only` shows one pane alone at any width, as a reader turns the
+ * other off; the hidden pane stays mounted, so it comes back as it was left. `useSplitPane` tells a
+ * pane whether it is shown alone.
  *
  * What a pane is given as one element fills the pane's height, as a cell of a row does, and each pane
  * scrolls what does not fit in it. The rule between the panes lies where a rule of the first pane's
@@ -175,6 +179,7 @@ export function SplitPane({
     id,
     resizable = true,
     narrow: whenNarrow = 'stack',
+    only,
     narrowBelow = 640,
     className,
     words: given,
@@ -198,7 +203,7 @@ export function SplitPane({
     const { root, room } = useRoom()
     const firstPane = useRef<HTMLDivElement>(null)
     const narrow = room !== null && room.width < narrowBelow
-    const alone = narrow && whenNarrow !== 'stack' ? whenNarrow : null
+    const alone = only ?? (narrow && whenNarrow !== 'stack' ? whenNarrow : null)
     const across = direction === 'across' && !(narrow && whenNarrow === 'stack')
     const length = room === null ? 0 : across ? room.width : room.height
     const pixels = (value: number) => Math.round(value * length)

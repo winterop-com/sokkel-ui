@@ -202,6 +202,10 @@
             "types": "./dist/components/Dock.d.ts",
             "import": "./dist/components/Dock.js"
         },
+        "./DocumentTabs": {
+            "types": "./dist/components/DocumentTabs.d.ts",
+            "import": "./dist/components/DocumentTabs.js"
+        },
         "./Dot": {
             "types": "./dist/components/Dot.d.ts",
             "import": "./dist/components/Dot.js"
@@ -1189,6 +1193,10 @@
         "./lib/title-lines": {
             "types": "./dist/lib/title-lines.d.ts",
             "import": "./dist/lib/title-lines.js"
+        },
+        "./lib/wiki-links": {
+            "types": "./dist/lib/wiki-links.d.ts",
+            "import": "./dist/lib/wiki-links.js"
         }
     },
     "publishConfig": {

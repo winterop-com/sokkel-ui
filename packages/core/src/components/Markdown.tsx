@@ -8,6 +8,7 @@ import remarkGfm from 'remark-gfm'
 import { cn } from '../lib/cn'
 import { hasMath, markdownSchema, normalizeMath } from '../lib/math'
 import { TABLE_HEAD_TEXT } from '../lib/table'
+import { tagMatches, wikiLinksIn } from '../lib/wiki-links'
 import { Code } from './Code'
 import type { CodeBlockWords } from './ui/code-block'
 import { MermaidDiagram, type MermaidDiagramWords } from './MermaidDiagram'
@@ -143,6 +144,74 @@ function remarkParts(word: string) {
             })
         }
         visit(tree, false)
+    }
+}
+
+/**
+ * Links between notes and tags on them, followed by the app: `[[Note]]`, `[[Note|words]]` and
+ * `[[Note#Heading]]` call `onOpen`, and with `onTag` each `#tag` calls it.
+ */
+export interface MarkdownLinks {
+    /** Follows a `[[link]]`: the note it names, and the heading after its `#`, if any. */
+    onOpen: (target: string, heading?: string) => void
+    /** Whether the note a link names exists; a link to one that does not is drawn faint, so a press can offer to make it. */
+    exists?: (target: string) => boolean
+    /** Follows a `#tag`, named without its `#`; without it a tag stays text. */
+    onTag?: (tag: string) => void
+}
+
+/** Turns each `[[link]]`, and each `#tag` when tags are followed, into a link element the renderer below draws. */
+function remarkWikiLinks(tags: boolean) {
+    const split = (value: string): MdastNode[] => {
+        const found = [
+            ...wikiLinksIn(value).map((link) => ({
+                from: link.from,
+                to: link.to,
+                node: {
+                    type: 'wikiLink',
+                    children: [
+                        {
+                            type: 'text',
+                            value: link.label ?? (link.heading === undefined ? link.target : `${link.target} › ${link.heading}`),
+                        },
+                    ],
+                    data: { hName: 'a', hProperties: { href: '#', dataWikiLink: link.target, dataHeading: link.heading } },
+                },
+            })),
+            ...(tags
+                ? tagMatches(value).map((match) => ({
+                      from: match.from,
+                      to: match.to,
+                      node: {
+                          type: 'tagLink',
+                          children: [{ type: 'text', value: `#${match.tag}` }],
+                          data: { hName: 'a', hProperties: { href: '#', dataTag: match.tag } },
+                      },
+                  }))
+                : []),
+        ].sort((a, b) => a.from - b.from)
+        if (found.length === 0) return [{ type: 'text', value }]
+        const out: MdastNode[] = []
+        let at = 0
+        for (const { from, to, node } of found) {
+            if (from < at) continue
+            if (from > at) out.push({ type: 'text', value: value.slice(at, from) })
+            out.push(node)
+            at = to
+        }
+        if (at < value.length) out.push({ type: 'text', value: value.slice(at) })
+        return out
+    }
+    return () => (tree: MdastNode) => {
+        const visit = (node: MdastNode) => {
+            if (node.children === undefined || node.type === 'link' || node.type === 'linkReference') return
+            node.children = node.children.flatMap((child) => {
+                if (child.type === 'text') return split(child.value ?? '')
+                visit(child)
+                return [child]
+            })
+        }
+        visit(tree)
     }
 }
 
@@ -292,6 +361,8 @@ export interface MarkdownProps {
     parts?: MarkdownParts
     /** The word a part's marker starts with: `part` by default. */
     partMarker?: string
+    /** Draws `[[links]]` between notes, and `#tags` with `onTag`, as links the app follows. */
+    links?: MarkdownLinks
     className?: string
     words?: Partial<MarkdownWords>
 }
@@ -326,6 +397,12 @@ export interface MarkdownProps {
  *
  * `inlineCode` picks how code inside a sentence is drawn, and `caret` marks where a streaming
  * answer's next words will land.
+ *
+ * `links` draws the links of linked notes: `[[Note]]` as a link to the note of that name,
+ * `[[Note|words]]` showing the words, `[[Note#Heading]]` naming the heading too, each followed by
+ * `onOpen`, and a link to a note `exists` says is not there drawn faint. With `onTag` each `#tag` is
+ * a chip that follows the tag. Neither is read in code. `wikiLinksIn` and `tagsIn` in
+ * `lib/wiki-links` read the same links and tags from the text, for backlinks and a list of tags.
  */
 export const Markdown = memo(function Markdown({
     content,
@@ -338,6 +415,7 @@ export const Markdown = memo(function Markdown({
     scale = 'message',
     parts,
     partMarker: word = 'part',
+    links,
     className,
     words: given,
 }: MarkdownProps) {
@@ -391,11 +469,48 @@ export const Markdown = memo(function Markdown({
                     {children}
                 </th>
             ),
-            a: ({ children, node: _node, ...props }) => (
-                <a {...props} target="_blank" rel="noreferrer noopener">
-                    {children}
-                </a>
-            ),
+            a: ({ children, node: _node, ...props }) => {
+                const record = props as Record<string, unknown>
+                const target = record['data-wiki-link'] as string | undefined
+                const tag = record['data-tag'] as string | undefined
+                if (target !== undefined && links !== undefined) {
+                    const heading = record['data-heading'] as string | undefined
+                    return (
+                        <a
+                            {...props}
+                            className={cn(links.exists?.(target) === false && 'opacity-60')}
+                            onClick={(event) => {
+                                event.preventDefault()
+                                links.onOpen(target, heading)
+                            }}
+                        >
+                            {children}
+                        </a>
+                    )
+                }
+                if (tag !== undefined && links?.onTag !== undefined) {
+                    const onTag = links.onTag
+                    return (
+                        <a
+                            {...props}
+                            // The chip carries no underline, which the text's links take from the block around them.
+                            style={{ textDecorationLine: 'none' }}
+                            className="rounded-sm bg-primary/12 px-1"
+                            onClick={(event) => {
+                                event.preventDefault()
+                                onTag(tag)
+                            }}
+                        >
+                            {children}
+                        </a>
+                    )
+                }
+                return (
+                    <a {...props} target="_blank" rel="noreferrer noopener">
+                        {children}
+                    </a>
+                )
+            },
             pre: ({ children }) => {
                 const { language, value } = fence(children)
                 if (language === 'mermaid') {
@@ -408,15 +523,20 @@ export const Markdown = memo(function Markdown({
                 return <Code value={value} language={language} words={words.code} />
             },
         }),
-        [streaming, words, parts],
+        [streaming, words, parts, links],
     )
     const needsMath = useMemo(() => math && hasMath(content), [math, content])
     const katex = useMathEngine(needsMath)
     const source = useMemo(() => (math ? normalizeMath(content) : content), [math, content])
-    const remark: Options['remarkPlugins'] = useMemo(
-        () => (katex === undefined || !math ? [remarkGfm, remarkParts(word)] : [remarkGfm, remarkParts(word), katex.remarkMath]),
-        [katex, math, word],
-    )
+    const linked = links !== undefined
+    const tagged = links?.onTag !== undefined
+    const remark: Options['remarkPlugins'] = useMemo(() => {
+        const plugins: NonNullable<Options['remarkPlugins']> = [remarkGfm, remarkParts(word)]
+        if (katex !== undefined && math) plugins.push(katex.remarkMath)
+        // After math, so a formula's text is never read for links or tags.
+        if (linked) plugins.push(remarkWikiLinks(tagged))
+        return plugins
+    }, [katex, math, word, linked, tagged])
     const rehype = useMemo(() => {
         const plugins: NonNullable<Options['rehypePlugins']> = []
         if (allowHtml) plugins.push(rehypeRaw, [rehypeSanitize, markdownSchema])
