@@ -294,6 +294,14 @@
             "types": "./dist/components/Inspector.d.ts",
             "import": "./dist/components/Inspector.js"
         },
+        "./ExampleList": {
+            "types": "./dist/components/ExampleList.d.ts",
+            "import": "./dist/components/ExampleList.js"
+        },
+        "./FoldingRail": {
+            "types": "./dist/components/FoldingRail.d.ts",
+            "import": "./dist/components/FoldingRail.js"
+        },
         "./IssueMark": {
             "types": "./dist/components/IssueMark.d.ts",
             "import": "./dist/components/IssueMark.js"

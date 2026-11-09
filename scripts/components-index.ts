@@ -195,6 +195,8 @@ const CORE_AREAS: Record<string, string> = {
     ServerMenu: 'Frame and navigation',
     // Page layout: what a page is arranged with.
     Inspector: 'Page layout',
+    FoldingRail: 'Page layout',
+    ExampleList: 'Page layout',
     DetailSheet: 'Page layout',
     Layout: 'Page layout',
     PageHeader: 'Page layout',

@@ -495,6 +495,9 @@ share held within `minShare` and `maxShare`, the second's what is left. It holds
 Narrower than `narrowBelow`, measured on itself, it stacks its panes or shows the one `narrow` names,
 as a phone shows a list or the message opened from it, and `useSplitPane` tells a pane it is alone.
 `only` shows one pane alone at any width, the other kept mounted, as a reader turns it off.
+`FoldingRail` is the side a tool keeps beside its main content: a rail with a head that resizes from
+its inner edge and folds to a strip with its name written down it, under the content in a narrow
+container. `ExampleList` fills one with runnable examples under headings, in tabs per language.
 Mail's list beside its reading pane, the query workbench and a chat's history are split by it, and so
 is `EditPreview`'s `pane` variant: an editor and its live preview edge to edge in a pane of the
 app's, the share kept by `id`, with `view` showing both or either alone. `DocumentTabs` is the strip
