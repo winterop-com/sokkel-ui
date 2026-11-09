@@ -802,15 +802,15 @@ function EditableJobs({ cellFocus, count, fill = true }: { cellFocus?: CellFocus
 export const EditableCells: StoryObj = { parameters: { frame: 'none' }, name: 'Editable cells', render: () => <EditableJobs /> }
 
 const CELL_LOOKS: { look: CellFocus; name: string }[] = [
-    { look: 'ring', name: 'A · Ring: a 2px ring in the focus color, as now' },
+    { look: 'ring', name: 'A · Ring: a 2px ring in the focus color' },
     { look: 'soft', name: 'B · Soft: the cell washed, with a quiet outline' },
-    { look: 'underline', name: 'C · Underline: a line in the focus color under the cell' },
+    { look: 'underline', name: 'C · Underline: a line in the focus color under the cell (the default)' },
     { look: 'row', name: 'D · Row: the whole row washed, a quiet line under the cell' },
 ]
 
 /**
- * Four ways to mark the active cell of an editable table, for the owner to choose from: press a
- * cell in each to see its look (only the table that has the focus marks its cell). A press on a
+ * Four ways to mark the active cell of an editable table, `cellFocus`: press a cell in each to see
+ * its look (only the table that has the focus marks its cell). The underline is the default. A press on a
  * table's empty ground, past its rows, leaves it.
  */
 export const CellLooks: StoryObj = {

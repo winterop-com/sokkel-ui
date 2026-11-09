@@ -650,7 +650,7 @@ export interface DataTableProps<T> {
      * things on a phone, such as tasks.
      */
     stackLayout?: 'labeled' | 'compact'
-    /** How an editable table marks its active cell while it has the focus: `ring` (the default), `soft`, `underline`, or `row`, which washes the cell's row. */
+    /** How an editable table marks its active cell while it has the focus: `underline` (the default), a line in the focus color under it, `ring`, `soft`, or `row`, which washes the cell's row. */
     cellFocus?: CellFocus
     /** `auto` lets a row grow to fit its tallest cell; every row is then drawn, not only those in view. */
     rowHeight?: 'fixed' | 'auto'
@@ -818,7 +818,7 @@ export function DataTable<T>({
     cardHeight = '16rem',
     stackBelow = 576,
     stackLayout = 'labeled',
-    cellFocus = 'ring',
+    cellFocus = 'underline',
     minWidth: ownMinWidth,
     rowHeight: rowSizing = 'fixed',
     resizable = true,

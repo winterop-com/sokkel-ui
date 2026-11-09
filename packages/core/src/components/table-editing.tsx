@@ -406,7 +406,7 @@ export const tableEditing: TableEditing = {
                 opens && 'cursor-text',
                 // The active cell is marked while the table has the focus, by a press as well as a key.
                 CELL_FOCUS[table.cellFocus],
-                edit?.error != null && 'bg-critical/8 ring-2 ring-critical ring-inset',
+                edit?.error != null && 'bg-critical/8 shadow-[inset_0_-2px_0_var(--critical)]',
             ),
         }
     },
