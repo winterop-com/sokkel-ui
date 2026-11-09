@@ -46,7 +46,9 @@ import {
     steppedZoom,
     wheelZoomFactor,
     type GraphDirection,
+    type GraphLayoutStyle,
 } from './layout'
+import type { GraphSizing } from './use-node-graph'
 
 /**
  * Where a canvas stands. A `stage` fills its box and the wheel zooms it. A `fitted` canvas is as
@@ -133,8 +135,12 @@ export function fitDirection(width: number | undefined): GraphDirection {
     return width !== undefined && width > 0 && width < NARROW_GRAPH ? 'down' : 'right'
 }
 
-/** What every ready-made graph view takes besides its data. */
-export interface GraphViewProps {
+/**
+ * What every ready-made graph view takes besides its data: the choice, the direction and frame, how
+ * edges are routed and how much room the layout keeps (`routing`, `spacing`), and the bounds each
+ * node box is sized from its words between (`minNodeWidth`, `maxNodeWidth`).
+ */
+export interface GraphViewProps extends GraphLayoutStyle, GraphSizing {
     /** The id of the chosen node, or null for none. */
     selected?: string | null
     /** Called with the node chosen, or null when the ground was clicked. */

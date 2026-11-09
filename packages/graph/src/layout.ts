@@ -49,9 +49,44 @@ export interface PlacedGraph {
     edges: PlacedEdge[]
 }
 
-/** The gap between two ranks, and between two nodes of one rank. */
+/** The gap between two ranks, and between two nodes of one rank, at the normal spacing. */
 export const RANK_GAP = 40
 export const NODE_GAP = 20
+
+/**
+ * How the edges between ranks are routed: in right-angled steps with rounded corners, as straight
+ * runs that bend where they must, or as curves.
+ */
+export type GraphRouting = 'orthogonal' | 'polyline' | 'splines'
+
+/** How much room a graph keeps between its ranks, its nodes and its edges. */
+export type GraphSpacing = 'compact' | 'normal' | 'roomy'
+
+/** How a graph is laid out besides its direction. */
+export interface GraphLayoutStyle {
+    /** `orthogonal` when left out. */
+    routing?: GraphRouting
+    /** `normal` when left out. */
+    spacing?: GraphSpacing
+}
+
+/** The gaps one spacing keeps, in pixels: between ranks, between nodes of a rank, and around edges. */
+export interface SpacingGaps {
+    rank: number
+    node: number
+    edgeNode: number
+    edgeEdge: number
+}
+
+/** The gaps each spacing keeps. */
+export const GRAPH_SPACING: Record<GraphSpacing, SpacingGaps> = {
+    compact: { rank: 24, node: 12, edgeNode: 8, edgeEdge: 6 },
+    normal: { rank: RANK_GAP, node: NODE_GAP, edgeNode: 14, edgeEdge: 10 },
+    roomy: { rank: 72, node: 36, edgeNode: 20, edgeEdge: 14 },
+}
+
+/** The name elk gives each routing. */
+const ELK_ROUTING: Record<GraphRouting, string> = { orthogonal: 'ORTHOGONAL', polyline: 'POLYLINE', splines: 'SPLINES' }
 
 /** The edges whose two ends are both in the shape, which are the only ones that can be placed. */
 function knownEdges(shape: GraphShape): LayoutEdge[] {
@@ -111,12 +146,13 @@ function labelRoom(shape: GraphShape, direction: GraphDirection): number {
  * of a rank stacked in the order given and centered on the widest rank. It crosses whatever edges
  * cross; it is what a canvas draws until elk answers.
  */
-export function rankLayout(shape: GraphShape, direction: GraphDirection = 'right'): PlacedGraph {
+export function rankLayout(shape: GraphShape, direction: GraphDirection = 'right', spacing: GraphSpacing = 'normal'): PlacedGraph {
     const ranks = ranksOf(shape)
     const down = direction === 'down'
     const along = (node: LayoutNode) => (down ? node.height : node.width)
     const across = (node: LayoutNode) => (down ? node.width : node.height)
-    const gap = RANK_GAP + labelRoom(shape, direction)
+    const gaps = GRAPH_SPACING[spacing]
+    const gap = gaps.rank + labelRoom(shape, direction)
 
     const groups: LayoutNode[][] = []
     for (const node of shape.nodes) {
@@ -125,7 +161,7 @@ export function rankLayout(shape: GraphShape, direction: GraphDirection = 'right
     }
     const columns = Array.from(groups, (group) => group ?? [])
     const depth = columns.map((group) => group.reduce((most, node) => Math.max(most, along(node)), 0))
-    const breadth = columns.map((group) => group.reduce((sum, node) => sum + across(node), 0) + Math.max(0, group.length - 1) * NODE_GAP)
+    const breadth = columns.map((group) => group.reduce((sum, node) => sum + across(node), 0) + Math.max(0, group.length - 1) * gaps.node)
     const widest = Math.max(0, ...breadth)
 
     const placed = new Map<string, PlacedNode>()
@@ -135,7 +171,7 @@ export function rankLayout(shape: GraphShape, direction: GraphDirection = 'right
         for (const node of group) {
             const main = start + ((depth[rank] ?? 0) - along(node)) / 2
             placed.set(node.id, { ...node, x: down ? offset : main, y: down ? main : offset })
-            offset += across(node) + NODE_GAP
+            offset += across(node) + gaps.node
         }
         start += (depth[rank] ?? 0) + gap
     })
@@ -172,31 +208,35 @@ export interface ElkEngine {
     layout: (graph: ElkGraph) => Promise<ElkLaidOut>
 }
 
-/** The layered layout elk is asked for, in the order the nodes and edges were given. */
-export function elkOptions(direction: GraphDirection): Record<string, string> {
+/** The layered layout elk is asked for, in the order the nodes and edges were given, routed and spaced as the style says. */
+export function elkOptions(
+    direction: GraphDirection,
+    { routing = 'orthogonal', spacing = 'normal' }: GraphLayoutStyle = {},
+): Record<string, string> {
+    const gaps = GRAPH_SPACING[spacing]
     return {
         'elk.algorithm': 'layered',
         'elk.direction': direction === 'right' ? 'RIGHT' : 'DOWN',
         'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
         'elk.layered.considerModelOrder.strategy': 'NODES_AND_EDGES',
         'elk.layered.cycleBreaking.strategy': 'MODEL_ORDER',
-        'elk.layered.spacing.nodeNodeBetweenLayers': String(RANK_GAP),
-        'elk.spacing.nodeNode': String(NODE_GAP),
-        'elk.edgeRouting': 'ORTHOGONAL',
-        'elk.spacing.edgeNode': '14',
-        'elk.spacing.edgeEdge': '10',
-        'elk.layered.spacing.edgeNodeBetweenLayers': '14',
-        'elk.layered.spacing.edgeEdgeBetweenLayers': '10',
+        'elk.layered.spacing.nodeNodeBetweenLayers': String(gaps.rank),
+        'elk.spacing.nodeNode': String(gaps.node),
+        'elk.edgeRouting': ELK_ROUTING[routing],
+        'elk.spacing.edgeNode': String(gaps.edgeNode),
+        'elk.spacing.edgeEdge': String(gaps.edgeEdge),
+        'elk.layered.spacing.edgeNodeBetweenLayers': String(gaps.edgeNode),
+        'elk.layered.spacing.edgeEdgeBetweenLayers': String(gaps.edgeEdge),
         'elk.spacing.edgeLabel': '4',
         'elk.edgeLabels.placement': 'CENTER',
     }
 }
 
 /** The graph elk is handed for a shape. */
-export function toElk(shape: GraphShape, direction: GraphDirection = 'right'): ElkGraph {
+export function toElk(shape: GraphShape, direction: GraphDirection = 'right', style: GraphLayoutStyle = {}): ElkGraph {
     return {
         id: 'root',
-        layoutOptions: elkOptions(direction),
+        layoutOptions: elkOptions(direction, style),
         children: shape.nodes.map((node) => ({ id: node.id, width: node.width, height: node.height })),
         edges: knownEdges(shape).map((edge) => ({
             id: edge.id,
@@ -253,10 +293,15 @@ export function loadElk(): Promise<ElkEngine> {
 }
 
 /** Place a graph with elk, loading it first unless an engine is given. */
-export async function layoutGraph(shape: GraphShape, direction: GraphDirection = 'right', elk?: ElkEngine): Promise<PlacedGraph> {
+export async function layoutGraph(
+    shape: GraphShape,
+    direction: GraphDirection = 'right',
+    elk?: ElkEngine,
+    style: GraphLayoutStyle = {},
+): Promise<PlacedGraph> {
     if (shape.nodes.length === 0) return { nodes: [], edges: [] }
     const using = elk ?? (await loadElk())
-    return fromElk(shape, await using.layout(toElk(shape, direction)))
+    return fromElk(shape, await using.layout(toElk(shape, direction, style)))
 }
 
 /** How long elk tries to keep each edge of a network, center to center. */
@@ -315,10 +360,12 @@ export async function layoutNetwork(shape: GraphShape, elk?: ElkEngine): Promise
     return { ...placed, edges: placed.edges.map((edge) => ({ id: edge.id, source: edge.source, target: edge.target })) }
 }
 
-/** What decides a graph's geometry: its nodes and their sizes, its edges and labels, and its direction. */
-export function shapeSignature(shape: GraphShape, direction: GraphDirection): string {
+/** What decides a graph's geometry: its nodes and their sizes, its edges and labels, its direction, routing and spacing. */
+export function shapeSignature(shape: GraphShape, direction: GraphDirection, style: GraphLayoutStyle = {}): string {
     return [
         direction,
+        style.routing ?? 'orthogonal',
+        style.spacing ?? 'normal',
         shape.nodes.map((node) => `${node.id}:${String(node.width)}x${String(node.height)}`).join(','),
         shape.edges
             .map((edge) => `${edge.source}>${edge.target}${edge.label === undefined ? '' : `:${String(edge.label.width)}`}`)
@@ -350,6 +397,79 @@ export function routedPath(points: readonly GraphPoint[], radius = 6): string {
     }
     parts.push(`L ${at(last)}`)
     return parts.join(' ')
+}
+
+/** The path a route is drawn along: straight runs between its points. */
+export function polylinePath(points: readonly GraphPoint[]): string {
+    if (points.length < 2) return ''
+    return points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${pointAt(point)}`).join(' ')
+}
+
+/**
+ * The path a curved route is drawn along. elk answers a spline as a start and runs of three points
+ * (two controls and an end), drawn as cubic curves; any other run of points is drawn as a smooth
+ * curve through each of them.
+ */
+export function splinePath(points: readonly GraphPoint[]): string {
+    const first = points[0]
+    if (first === undefined || points.length < 2) return ''
+    if (points.length === 2) return polylinePath(points)
+    const parts = [`M ${pointAt(first)}`]
+    if ((points.length - 1) % 3 === 0) {
+        for (let index = 1; index < points.length; index += 3)
+            parts.push(
+                `C ${pointAt(points[index] as GraphPoint)} ${pointAt(points[index + 1] as GraphPoint)} ${pointAt(points[index + 2] as GraphPoint)}`,
+            )
+        return parts.join(' ')
+    }
+    // Catmull-Rom through every point, as cubic curves.
+    for (let index = 0; index < points.length - 1; index += 1) {
+        const before = points[Math.max(0, index - 1)] as GraphPoint
+        const from = points[index] as GraphPoint
+        const to = points[index + 1] as GraphPoint
+        const after = points[Math.min(points.length - 1, index + 2)] as GraphPoint
+        const one = { x: from.x + (to.x - before.x) / 6, y: from.y + (to.y - before.y) / 6 }
+        const two = { x: to.x - (after.x - from.x) / 6, y: to.y - (after.y - from.y) / 6 }
+        parts.push(`C ${pointAt(one)} ${pointAt(two)} ${pointAt(to)}`)
+    }
+    return parts.join(' ')
+}
+
+/** The path a route is drawn along in a routing. */
+export function edgePath(points: readonly GraphPoint[], routing: GraphRouting = 'orthogonal'): string {
+    if (routing === 'splines') return splinePath(points)
+    if (routing === 'polyline') return polylinePath(points)
+    return routedPath(points)
+}
+
+/**
+ * A route between two placed nodes before elk has given one: out of the source's far side and into
+ * the target's near side, straight for a polyline, else through two points halfway along, which make
+ * a step drawn orthogonal and an S drawn as a spline.
+ */
+export function roughRoute(
+    source: { x: number; y: number; width: number; height: number },
+    target: { x: number; y: number; width: number; height: number },
+    direction: GraphDirection = 'right',
+    routing: GraphRouting = 'orthogonal',
+): GraphPoint[] {
+    const down = direction === 'down'
+    const start = down
+        ? { x: source.x + source.width / 2, y: source.y + source.height }
+        : { x: source.x + source.width, y: source.y + source.height / 2 }
+    const end = down ? { x: target.x + target.width / 2, y: target.y } : { x: target.x, y: target.y + target.height / 2 }
+    if (routing === 'polyline') return [start, end]
+    if (down) {
+        const middle = (start.y + end.y) / 2
+        return [start, { x: start.x, y: middle }, { x: end.x, y: middle }, end]
+    }
+    const middle = (start.x + end.x) / 2
+    return [start, { x: middle, y: start.y }, { x: middle, y: end.y }, end]
+}
+
+/** A point as a path writes it, to a tenth of a pixel. */
+function pointAt(point: GraphPoint): string {
+    return `${String(Math.round(point.x * 10) / 10)} ${String(Math.round(point.y * 10) / 10)}`
 }
 
 /** The middle of a route, by length, which is where a label stands until elk has placed one. */

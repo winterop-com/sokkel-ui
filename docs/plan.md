@@ -666,6 +666,18 @@ color, larger the more links it has, its name under it, straight lines between t
 elk's stress algorithm (`layoutNetwork`) after a spiral holds the first frame; pointing at a dot
 lights its neighbors and fades the rest, and `current` rings the one the reader stands on.
 
+Every view takes how elk lays it out besides its direction: `routing` (`orthogonal` steps with
+rounded corners by default, `polyline` or `splines`, each drawn as elk routed it, and in the same
+manner before elk answers) and `spacing` (`compact`, `normal`, `roomy`, the gaps in `GRAPH_SPACING`).
+A node box is as wide as its words in the node's own fonts, between `minNodeWidth` (96) and
+`maxNodeWidth` (280); past the widest its words end in an ellipsis and show whole on pointing, and
+elk is handed the measured widths. MiniGraph draws a pipeline or a run small, for a list row, a
+card or a preview: a box per step in its state's color, laid out by elk like the full graph and
+scaled to its box, as a still SVG with no React Flow under it. React Flow is the engine for an
+interactive graph; a mini graph has nothing to press, pan or zoom, and a canvas with its own store
+and observers per row would make a list of fifty rows heavy, so it is drawn as a sparkline is.
+Placements are kept by shape, so many rows of one pipeline ask elk once.
+
 ## Terminals
 
 Their own package, `@winterop-com/sokkel-ui-terminal`, on xterm.js, so an app that shows no terminal

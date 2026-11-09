@@ -38,6 +38,10 @@ export function RunGraph({
     direction: given,
     frame = 'stage',
     formatDuration = sayDuration,
+    routing,
+    spacing,
+    minNodeWidth,
+    maxNodeWidth,
     words,
     className,
 }: RunGraphProps) {
@@ -65,7 +69,7 @@ export function RunGraph({
             step.needs.map((need) => ({ source: need, target: step.code, tone: toneInto(status.get(step.code)) })),
         )
     }, [steps])
-    const graph = useNodeGraph(items, links, { direction, selected })
+    const graph = useNodeGraph(items, links, { direction, selected, routing, spacing, minNodeWidth, maxNodeWidth })
     return (
         <GraphCanvas
             nodes={graph.nodes}

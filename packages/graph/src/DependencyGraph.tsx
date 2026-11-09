@@ -35,6 +35,10 @@ export function DependencyGraph({
     onSelect,
     direction: given,
     frame = 'stage',
+    routing,
+    spacing,
+    minNodeWidth,
+    maxNodeWidth,
     words,
     className,
 }: DependencyGraphProps) {
@@ -56,7 +60,7 @@ export function DependencyGraph({
         [nodes],
     )
     const links = useMemo<GraphLink[]>(() => edges.map((edge) => ({ source: edge.from, target: edge.to, arrow: true })), [edges])
-    const graph = useNodeGraph(items, links, { direction, selected })
+    const graph = useNodeGraph(items, links, { direction, selected, routing, spacing, minNodeWidth, maxNodeWidth })
     return (
         <GraphCanvas
             nodes={graph.nodes}

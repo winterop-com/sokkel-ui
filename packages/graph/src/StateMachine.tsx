@@ -73,6 +73,10 @@ export function StateMachine({
     onSelect,
     direction = 'right',
     frame = 'stage',
+    routing,
+    spacing,
+    minNodeWidth,
+    maxNodeWidth,
     words,
     className,
 }: StateMachineProps) {
@@ -100,7 +104,7 @@ export function StateMachine({
         ],
         [transitions, finals, initial],
     )
-    const graph = useNodeGraph(items, links, { direction, selected })
+    const graph = useNodeGraph(items, links, { direction, selected, routing, spacing, minNodeWidth, maxNodeWidth })
     return (
         <GraphCanvas
             nodes={graph.nodes}

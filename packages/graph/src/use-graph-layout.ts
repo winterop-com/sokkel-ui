@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 
-import { layoutGraph, rankLayout, shapeSignature, type GraphDirection, type GraphShape, type PlacedGraph } from './layout'
+import {
+    layoutGraph,
+    rankLayout,
+    shapeSignature,
+    type GraphDirection,
+    type GraphLayoutStyle,
+    type GraphShape,
+    type PlacedGraph,
+} from './layout'
 
 /** A placed graph, and whether elk has answered for it. */
 export interface GraphPlacement extends PlacedGraph {
@@ -10,18 +18,24 @@ export interface GraphPlacement extends PlacedGraph {
 /**
  * Where a graph's nodes stand. The rank layout places them at once, so the graph draws on its first
  * frame; elk is loaded on the first call and moves them once it answers. A shape is placed again only
- * when its signature changes (its nodes, their sizes, its edges, the direction), so a status changing
- * on a node moves nothing. If elk fails, the rank layout stays and the placement still settles.
- * While `ready` is false, as it is until the node sizes are measured in their fonts, elk is not asked.
+ * when its signature changes (its nodes, their sizes, its edges, the direction, routing and spacing),
+ * so a status changing on a node moves nothing. If elk fails, the rank layout stays and the placement
+ * still settles. While `ready` is false, as it is until the node sizes are measured in their fonts,
+ * elk is not asked.
  */
-export function useGraphLayout(shape: GraphShape, direction: GraphDirection = 'right', ready = true): GraphPlacement {
-    const signature = shapeSignature(shape, direction)
+export function useGraphLayout(
+    shape: GraphShape,
+    direction: GraphDirection = 'right',
+    ready = true,
+    style: GraphLayoutStyle = {},
+): GraphPlacement {
+    const signature = shapeSignature(shape, direction, style)
     const [answer, setAnswer] = useState<{ signature: string; placed: PlacedGraph | null } | null>(null)
 
     useEffect(() => {
         if (!ready) return
         let current = true
-        layoutGraph(shape, direction).then(
+        layoutGraph(shape, direction, undefined, style).then(
             (placed) => {
                 if (current) setAnswer({ signature, placed })
             },
@@ -37,7 +51,7 @@ export function useGraphLayout(shape: GraphShape, direction: GraphDirection = 'r
     }, [signature, ready])
 
     // oxlint-disable-next-line react/exhaustive-deps
-    const rough = useMemo(() => rankLayout(shape, direction), [signature])
+    const rough = useMemo(() => rankLayout(shape, direction, style.spacing), [signature])
     const settled = ready && answer?.signature === signature
     const placed = settled && answer.placed !== null ? answer.placed : rough
     return useMemo(() => ({ ...placed, settled }), [placed, settled])

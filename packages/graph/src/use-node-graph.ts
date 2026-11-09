@@ -3,9 +3,17 @@ import { useMemo } from 'react'
 
 import type { GraphEdgeData } from './GraphEdge'
 import { graphNodeSize, type GraphNodeData } from './GraphNode'
-import type { GraphDirection, GraphShape } from './layout'
+import type { GraphDirection, GraphLayoutStyle, GraphShape } from './layout'
 import { useMeasure } from './measure'
 import { useGraphLayout } from './use-graph-layout'
+
+/** How wide a graph draws its node boxes: each from its words, between the two bounds. */
+export interface GraphSizing {
+    /** The narrowest a box is drawn, 96 when left out. */
+    minNodeWidth?: number
+    /** The widest a box is drawn, 280 when left out; past it the words end in an ellipsis and show whole on pointing. */
+    maxNodeWidth?: number
+}
 
 /** One node of a graph given as data: a node box by default, or a node kind of the canvas's with its own size. */
 export interface GraphItem {
@@ -43,13 +51,18 @@ export function useNodeGraph(
         direction = 'right',
         selected = null,
         positions,
+        routing,
+        spacing,
+        minNodeWidth,
+        maxNodeWidth,
     }: {
         direction?: GraphDirection
         /** The chosen node, or every chosen node. */
         selected?: string | readonly string[] | null
         /** Where nodes were moved to, by id, over where the layout put them. */
         positions?: Readonly<Record<string, { x: number; y: number }>>
-    } = {},
+    } & GraphLayoutStyle &
+        GraphSizing = {},
 ): { nodes: Node[]; edges: Edge[]; settled: boolean } {
     const { measure, ready } = useMeasure()
 
@@ -65,7 +78,10 @@ export function useNodeGraph(
 
     const shape = useMemo<GraphShape>(
         () => ({
-            nodes: items.map((item) => ({ id: item.id, ...(item.size ?? graphNodeSize(item.data, measure)) })),
+            nodes: items.map((item) => ({
+                id: item.id,
+                ...(item.size ?? graphNodeSize(item.data, measure, { min: minNodeWidth, max: maxNodeWidth })),
+            })),
             edges: links.map((link, index) => ({
                 id: ids[index] as string,
                 source: link.source,
@@ -81,10 +97,11 @@ export function useNodeGraph(
                       }),
             })),
         }),
-        [items, links, ids, measure],
+        [items, links, ids, measure, minNodeWidth, maxNodeWidth],
     )
 
-    const placed = useGraphLayout(shape, direction, ready)
+    const style = useMemo<GraphLayoutStyle>(() => ({ routing, spacing }), [routing, spacing])
+    const placed = useGraphLayout(shape, direction, ready, style)
 
     const nodes = useMemo<Node[]>(() => {
         const byId = new Map(items.map((item) => [item.id, item]))
@@ -121,6 +138,7 @@ export function useNodeGraph(
             // A route elk drew no longer fits an edge whose node was moved.
             const routed = positions?.[edge.source] === undefined && positions?.[edge.target] === undefined
             const data: GraphEdgeData = {
+                ...(routing === undefined ? {} : { routing }),
                 ...(edge.points === undefined || !routed ? {} : { points: edge.points }),
                 ...(edge.labelAt === undefined || !routed ? {} : { labelAt: edge.labelAt }),
                 ...(link.label === undefined ? {} : { label: link.label }),
@@ -130,7 +148,7 @@ export function useNodeGraph(
             }
             return [{ id: edge.id, source: edge.source, target: edge.target, type: 'graph', data }]
         })
-    }, [links, ids, placed, positions])
+    }, [links, ids, placed, positions, routing])
 
     return { nodes, edges, settled: placed.settled }
 }

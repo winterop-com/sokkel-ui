@@ -43,7 +43,7 @@ in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second 
 - [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 242 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 10 modules
-- [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 12 modules
+- [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 13 modules
 - [`@winterop-com/sokkel-ui-terminal`](#winterop-com-sokkel-ui-terminal): 2 modules
 - [`@winterop-com/sokkel-ui-media`](#winterop-com-sokkel-ui-media): 17 modules
 
@@ -471,6 +471,7 @@ in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second 
 | **GraphNode**, GraphHandles, GraphNodeBox | `@winterop-com/sokkel-ui-graph/GraphNode` | A node box as React Flow's node component, with the handles its edges end at. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/graphs-canvas--empty) |
 | **GraphOverlay**, GraphNotice | `@winterop-com/sokkel-ui-graph/GraphOverlay` | Something held over a canvas at a place in the graph, such as a `BlockPicker`: it follows the place as the view pans and zooms, opens beside it on the side with room, and stays inside the canvas, whose height it gives its content as `--graph-overlay-room`. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/graphs-pipeline-editor--empty) |
 | **GraphToolbar**, GraphToolbarButton | `@winterop-com/sokkel-ui-graph/GraphToolbar` | The tools of a graph editor in one bar: undo and redo, a tidy layout, the view's zoom and fit, and how many steps have a problem, with the app's own buttons after them. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/graphs-pipeline-editor--empty) |
+| **MiniGraph** | `@winterop-com/sokkel-ui-graph/MiniGraph` | A pipeline drawn small, for a list row, a card or a preview: a box per step, filled in its state's color, and the edges between them, laid out by elk as the full graph is and scaled to fit its box. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/graphs-mini-graph--pipeline) |
 | **NetworkGraph** | `@winterop-com/sokkel-ui-graph/NetworkGraph` | Things and the links between them with no direction to read them in, such as notes that link to each other: each a dot in its group's color, larger the more links it has, its name under it, and each link a straight line between two dots. elk lays it out by stress, so linked things gather and the rest spread, each separate part laid out alone and the nodes with no link in a row under them; a spiral holds the first frame until elk answers, and the view zooms out as far as it must to show the whole of it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/graphs-network--short) |
 | **PipelineGraph** | `@winterop-com/sokkel-ui-graph/PipelineGraph` | A pipeline's steps as a graph, each step after the steps it needs. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/graphs-pipeline--short) |
 | **RunGraph** | `@winterop-com/sokkel-ui-graph/RunGraph` | A run of a pipeline as a graph: each step with its status, its duration and, while it runs, its progress. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/graphs-run--running) |
