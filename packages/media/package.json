@@ -70,6 +70,10 @@
             "types": "./dist/queue.d.ts",
             "import": "./dist/queue.js"
         },
+        "./ReorderableTrackList": {
+            "types": "./dist/ReorderableTrackList.d.ts",
+            "import": "./dist/ReorderableTrackList.js"
+        },
         "./timeline": {
             "types": "./dist/timeline.d.ts",
             "import": "./dist/timeline.js"

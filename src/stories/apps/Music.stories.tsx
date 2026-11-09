@@ -418,7 +418,14 @@ function QueueBody({ history = false }: { history?: boolean }) {
                     </div>
                 </Row>
             </PanelSection>
-            <PanelSection title={`Up next, ${String(NEXT_UP.length)} tracks, ${String(Math.round(next / 60))} min`}>
+            <PanelSection
+                title={`Up next, ${String(NEXT_UP.length)} tracks, ${String(Math.round(next / 60))} min`}
+                actions={
+                    <Button size="xs" variant="ghost">
+                        Clear
+                    </Button>
+                }
+            >
                 <TrackList tracks={NEXT_UP} variant="plain" onPlay={() => undefined} className="-mx-2" />
             </PanelSection>
             <PanelSection title="Then, from Morning run">
@@ -823,7 +830,7 @@ export const LibraryRail: StoryObj = { name: 'Library rail', render: () => <Libr
  */
 export const LibraryCollapsed: StoryObj = { name: 'Library collapsed', render: () => <LibraryApp collapsed drawer /> }
 
-/** The queue in the side panel beside the album, its button pressed in the bar; on a phone the queue is the page. */
+/** The queue in the side panel beside the album, its button pressed in the bar, with Clear at the end of Up next's heading; on a phone the queue is the page. */
 export const Queue: StoryObj = { name: 'Queue', render: () => <MusicApp view="queue" /> }
 
 /**

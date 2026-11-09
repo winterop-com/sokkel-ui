@@ -218,8 +218,9 @@ export interface RateMenuProps {
 }
 
 /**
- * The playback speed as a button that says it ("1.25x") and opens a menu of `rates`. `container`
- * holds the menu inside an element that may go fullscreen, where a menu on the body would not show.
+ * The playback speed as a button that says it ("1.25x") and opens a menu of `rates`, which closes
+ * on a choice. `container` holds the menu inside an element that may go fullscreen, where a menu on
+ * the body would not show.
  */
 export function RateMenu({
     rate,
@@ -255,7 +256,7 @@ export function RateMenu({
             <DropdownMenuContent container={container} side="top" align="end" className="w-auto min-w-24">
                 <DropdownMenuRadioGroup value={String(rate)} onValueChange={(value: string) => onRateChange(Number(value))}>
                     {rates.map((option) => (
-                        <DropdownMenuRadioItem key={option} value={String(option)} className="font-mono tabular-nums">
+                        <DropdownMenuRadioItem key={option} value={String(option)} className="font-mono tabular-nums" closeOnClick>
                             {format(option)}
                         </DropdownMenuRadioItem>
                     ))}

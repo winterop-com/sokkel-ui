@@ -27,6 +27,8 @@ import { Field } from '@winterop-com/sokkel-ui/Field'
 import { FilterChip, type FilterOption } from '@winterop-com/sokkel-ui/FilterChip'
 import { Inspector, InspectorSection } from '@winterop-com/sokkel-ui/Inspector'
 import { Markdown } from '@winterop-com/sokkel-ui/Markdown'
+import { AnswerColumn, type AnswerState } from '@winterop-com/sokkel-ui/AnswerColumn'
+import { UsageLine } from '@winterop-com/sokkel-ui/UsageLine'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
@@ -80,11 +82,21 @@ We now parse amounts with the source's locale in \`transform\`, so those rows pa
 
 Ask ada if anything looks off.`
 
-const ANSWERS: { model: string; state: Status; text: string; tokens: number; latency: string; first: string; rate: string }[] = [
-    { model: 'tide-large', state: 'succeeded', text: ANSWER, tokens: 112, latency: '2.31 s', first: '240 ms', rate: '48 tok/s' },
+const ANSWERS: {
+    model: string
+    detail: string
+    state: AnswerState
+    text: string
+    tokens: number
+    latency: number
+    first: number
+    rate: number
+}[] = [
+    { model: 'tide-large', detail: '128k context', state: 'done', text: ANSWER, tokens: 112, latency: 2_310, first: 240, rate: 48.4 },
     {
         model: 'tide-medium',
-        state: 'succeeded',
+        detail: '64k context',
+        state: 'done',
         text: `nightly-export stopped at the \`validate\` step: **37 of 2,184 rows** had an \`amount\` that was not a number, mostly decimal commas like \`12,50\`.
 
 - \`transform\` now parses amounts with the source's locale.
@@ -92,18 +104,19 @@ const ANSWERS: { model: string; state: Status; text: string; tokens: number; lat
 
 The next run is tonight at 02:00. Questions go to ada.`,
         tokens: 86,
-        latency: '1.12 s',
-        first: '130 ms',
-        rate: '77 tok/s',
+        latency: 1_120,
+        first: 130,
+        rate: 76.8,
     },
     {
         model: 'tide-small',
-        state: 'running',
+        detail: '32k context',
+        state: 'streaming',
         text: `Last night nightly-export failed in \`validate\`. 37 rows had amounts that were not numbers, because they used a comma as the decimal`,
         tokens: 31,
-        latency: '0.62 s',
-        first: '70 ms',
-        rate: '50 tok/s',
+        latency: 620,
+        first: 70,
+        rate: 50.2,
     },
 ]
 
@@ -400,34 +413,6 @@ function Parameters() {
     )
 }
 
-/** The answer's facts in one quiet line: tokens, time, time to the first token, and speed. */
-function Usage({
-    tokens,
-    latency,
-    first,
-    rate,
-    live = false,
-}: {
-    tokens: number
-    latency: string
-    first: string
-    rate?: string
-    live?: boolean
-}) {
-    return (
-        <Row gap="lg" rowGap="2xs" wrap className="font-mono text-xs text-muted-foreground tabular-nums">
-            <span>
-                <span className="text-foreground">{tokens}</span> tokens{live ? ' so far' : ''}
-            </span>
-            <span>
-                <span className="text-foreground">{latency}</span>
-            </span>
-            <span>first token {first}</span>
-            {rate !== undefined && <span>{rate}</span>}
-        </Row>
-    )
-}
-
 function PromptPage() {
     const [prompt, setPrompt] = useState(PROMPT)
     const [log, setLog] = useState(LOG)
@@ -476,7 +461,13 @@ function PromptPage() {
                 <Stack gap="lg">
                     <Markdown content={answer.text} />
                     <div className="border-t border-border pt-3">
-                        <Usage tokens={answer.tokens} latency={answer.latency} first={answer.first} rate={answer.rate} />
+                        <UsageLine
+                            input={184}
+                            output={answer.tokens}
+                            firstToken={answer.first}
+                            rate={answer.rate}
+                            latency={answer.latency}
+                        />
                     </div>
                 </Stack>
             </Section>
@@ -520,30 +511,16 @@ function ComparePage() {
             </Surface>
             <Columns count={3} gap="inspector">
                 {ANSWERS.map((answer) => (
-                    <Section
+                    <AnswerColumn
                         key={answer.model}
-                        title={<span className="font-mono">{answer.model}</span>}
-                        actions={<StatusChip status={answer.state} label={answer.state === 'running' ? 'streaming' : 'done'} />}
-                        flush
-                        fill
-                    >
-                        <Stack gap="none" className="h-full min-h-72">
-                            <div className="flex-1 p-(--density-panel-pad)">
-                                <Markdown content={answer.text} streaming={answer.state === 'running'} />
-                                {answer.state === 'running' && (
-                                    <span aria-hidden className="ml-0.5 inline-block h-4 w-1.5 translate-y-0.5 rounded-mini bg-primary" />
-                                )}
-                            </div>
-                            <div className="border-t border-border px-(--density-panel-pad) py-2.5">
-                                <Usage
-                                    tokens={answer.tokens}
-                                    latency={answer.latency}
-                                    first={answer.first}
-                                    live={answer.state === 'running'}
-                                />
-                            </div>
-                        </Stack>
-                    </Section>
+                        model={answer.model}
+                        detail={answer.detail}
+                        state={answer.state}
+                        content={answer.text}
+                        usage={{ input: 184, output: answer.tokens, firstToken: answer.first, rate: answer.rate, latency: answer.latency }}
+                        onStop={() => undefined}
+                        onRetry={() => undefined}
+                    />
                 ))}
             </Columns>
         </Page>

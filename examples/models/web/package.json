@@ -1,0 +1,40 @@
+{
+    "name": "sokkel-ui-example-models",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "bun --bun vite",
+        "build": "bun --bun tsc --noEmit && bun --bun vite build",
+        "preview": "bun --bun vite preview"
+    },
+    "dependencies": {
+        "@winterop-com/sokkel-ui": "file:../../../packages/core",
+        "@winterop-com/sokkel-ui-charts": "file:../../../packages/charts",
+        "katex": "^0.16.47",
+        "lucide-react": "^1.68.0",
+        "mermaid": "^12.3.0",
+        "react": "^19.3.1",
+        "react-dom": "^19.3.1",
+        "react-markdown": "^10.1.0",
+        "rehype-katex": "^7.0.1",
+        "rehype-raw": "^7.0.0",
+        "rehype-sanitize": "^6.0.0",
+        "remark-gfm": "^4.0.1",
+        "remark-math": "^6.0.0",
+        "shiki": "^4.6.0",
+        "tidevann-shared": "file:../../shared"
+    },
+    "devDependencies": {
+        "@tailwindcss/vite": "^4.3.4",
+        "@types/react": "^19.3.0",
+        "@types/react-dom": "^19.3.0",
+        "@vitejs/plugin-react": "^6.2.1",
+        "tailwindcss": "^4.3.4",
+        "typescript": "^7.0.2",
+        "vite": "^8.3.5"
+    },
+    "overrides": {
+        "@winterop-com/sokkel-ui": "file:../../../packages/core"
+    }
+}

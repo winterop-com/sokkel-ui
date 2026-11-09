@@ -19,9 +19,9 @@ The library is six packages, built from one Bun workspace and released together 
 - `@winterop-com/sokkel-ui-terminal` (`packages/terminal`): `TerminalView` and `Terminal`, on
   xterm.js.
 - `@winterop-com/sokkel-ui-media` (`packages/media`): the music and video app parts, `MediaBar`
-  with its layouts and fullscreen view, `TrackList`, `ChapterList`, `Lyrics`, `MediaCard`,
-  `Artwork`, `useMediaSession`, `useQueue`, `VideoStatsOverlay`, `UpNext`, and `hlsSource`, which
-  plays an HTTP live stream in `VideoPlayer` through hls.js, an optional peer.
+  with its layouts and fullscreen view, `TrackList`, `ReorderableTrackList`, `ChapterList`,
+  `Lyrics`, `MediaCard`, `Artwork`, `useMediaSession`, `useQueue`, `VideoStatsOverlay`, `UpNext`,
+  and `hlsSource`, which plays an HTTP live stream in `VideoPlayer` through hls.js, an optional peer.
 
 An app installs the core and the add-ons it draws with, so an engine is installed only by an app
 that uses it, and the music and video parts only by an app that plays music or video. Each add-on
@@ -367,7 +367,8 @@ carries no chip; `lib/status` holds the map's types, the run states and each col
 A button that cannot be pressed now says why: `reason` on `Button`, `IconButton` and `SplitButton`
 disables it and shows the reason on hover and focus, the button kept in the tab order so a keyboard
 reaches it. `SplitButton` joins the main action to a menu of other ways; `DownloadButton` goes from
-idle through n of m on a `ProgressRing`, with a cancel, to kept, its state held by the app.
+idle through n of m (or a share, for bytes) on a `ProgressRing`, with a cancel and, when the app can
+hold one, a pause and a resume, to kept, its state held by the app.
 `RelativeTime` says a time as "3 minutes ago" through `Intl.RelativeTimeFormat`, the instant on
 hover, ticking on its own clock unless the app passes `now`. `ApiLink` names the request behind a
 screen as a copyable chip. `TagChips` shows as many tags as fit the room its row has left and a +N
@@ -505,7 +506,12 @@ draws again only what reads the changed fact. `useUploads` runs the app's
 it refuses the rest, cancels through the signal (and drops what an uploader that ignores it answers
 later), and hands `AttachmentList`, `Composer` and `UploadTray` their files. `ConversationHistory`, the list
 beside a chat, is a `DataTable` list grouped under Pinned, Today and Earlier, with rename in place,
-pin, and delete after a question.
+pin, and delete after a question. `UsageLine` says under a model's answer what it cost and how fast
+it came (tokens in and out, the time to the first token, the rate, the whole time), counting so far
+while it streams, and `AnswerColumn` is one model's answer among several sent the same prompt: the
+model over a fact about it, the state as a chip, its thinking folded as `AssistantReply` folds it, the
+answer streaming with `Markdown`'s caret, and the usage line pinned under it, with Stop, Run again,
+Copy and Remove in its head.
 
 `FileField` takes files in a form, in a `Field` as the other inputs are: a zone they are dropped on
 (the drag `DropZone`'s, from `use-file-drop`) with a button that opens the picker, the limits under
@@ -777,7 +783,11 @@ reader put it while they scroll and for four seconds after (`useFollow`, with th
 `follow`). TrackList's `progress` shows how far the playing row has played, the time left in place
 of its length or a line along its foot. An album over several discs gives each track its `disc`, and
 the list heads each disc where its tracks begin ("Disc 1", "Disc 2", from `words.disc`); a list on
-one disc draws no head.
+one disc draws no head. `ReorderableTrackList`, a module of its own so a page that only lists tracks
+does not carry it, is the list a listener orders, a playlist or what a queue plays next: each row
+ends in a grip that drags it, the rest moving aside and the box scrolling at its edges, Escape
+putting it back, and the arrows move a focused grip's row a place; it calls `onMove(from, to)` and
+draws the order it is given.
 
 Lyrics are read by `parseLyrics` in `lrc`: LRC's timed lines, several stamps on one line, the
 `offset` tag and the metadata tags, word stamps dropped; plain text, or LRC stamped all at zero,
