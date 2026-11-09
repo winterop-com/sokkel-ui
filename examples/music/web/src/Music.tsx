@@ -35,7 +35,7 @@ import { useState } from 'react'
 
 import type { Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
-import { go } from 'tidevann-shared/router'
+import { go, useOverlayRoute } from 'tidevann-shared/router'
 import { ALBUM_BY_ID, ALBUMS, ARTIST_BY_ID, ARTISTS, albumsOfArtist, SONGS, songsOfAlbum } from './catalog'
 import { downloads, favorites, playlists, setFavorite, setSettings, useRows, useSettings } from './data'
 import { startRadio } from './parts/actions'
@@ -56,7 +56,7 @@ import { Tracks } from './pages/Tracks'
 import { currentSong, next, playSongs, previous, seekBy, setRepeat, setShuffle, togglePlay, usePlayer } from './player'
 import { searchGroups } from './search'
 
-const PLACES = ['albums', 'artists', 'tracks', 'favorites', 'downloads', 'radio', 'playlists', 'settings', 'search'] as const
+const PLACES = ['albums', 'artists', 'tracks', 'favorites', 'downloads', 'radio', 'playlists', 'search'] as const
 type Place = (typeof PLACES)[number]
 
 const LABELS: Record<Place, string> = {
@@ -67,7 +67,6 @@ const LABELS: Record<Place, string> = {
     downloads: 'Downloads',
     radio: 'Radio',
     playlists: 'Playlists',
-    settings: 'Settings',
     search: 'Search',
 }
 
@@ -155,7 +154,9 @@ export function Music({ frame }: { frame: Frame }) {
     const { settings: look, setSettings: setLook } = frame.appearance
     const song = currentSong(state)
 
-    const [first, second] = frame.route
+    // Settings open as a dialog over the page they were opened from.
+    const settings = useOverlayRoute(frame.route, 'settings', ['albums'])
+    const [first, second] = settings.route
     const place: Place = PLACES.includes(first as Place) ? (first as Place) : 'albums'
     const album = place === 'albums' && second !== undefined ? ALBUM_BY_ID.get(second) : undefined
     const artist = place === 'artists' && second !== undefined ? ARTIST_BY_ID.get(second) : undefined
@@ -367,10 +368,8 @@ export function Music({ frame }: { frame: Frame }) {
             ) : (
                 <PlaylistPage id={second} />
             )
-        ) : place === 'search' ? (
-            <Results query={decodeURIComponent(second ?? '')} />
         ) : (
-            <Settings appearance={frame.appearance} />
+            <Results query={decodeURIComponent(second ?? '')} />
         )
 
     const openSearch = (kind: string, id: string) => {
@@ -398,7 +397,7 @@ export function Music({ frame }: { frame: Frame }) {
             }}
             shortcuts={[]}
             desktop={frame.desktop}
-            route={frame.route.join('/')}
+            route={settings.route.join('/')}
             panel={options.queueOpen ? <QueuePanel /> : undefined}
             panelOpen={options.queueOpen}
             onPanelOpenChange={(queueOpen) => setSettings({ queueOpen })}
@@ -479,7 +478,8 @@ export function Music({ frame }: { frame: Frame }) {
                 }}
                 onQueue={toggleQueue}
             />
-            {place === 'settings' ? page : <Page className="@container">{page}</Page>}
+            <Page className="@container">{page}</Page>
+            {settings.open && <Settings appearance={frame.appearance} open onClose={settings.close} />}
         </Shell>
     )
 }

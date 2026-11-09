@@ -25,7 +25,7 @@ import { useEffect, useState } from 'react'
 
 import type { Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
-import { go } from 'tidevann-shared/router'
+import { go, useOverlayRoute } from 'tidevann-shared/router'
 import { CHANNELS, VIDEOS, channelById, channelOf, videoById, type Channel, type Video } from './catalog'
 import { posterOf, useMaking } from './clips'
 import { downloads, follows, playlists, ratings, setPrefs, useRows, usePrefs, watched, WATCH_LATER } from './data'
@@ -63,7 +63,9 @@ export const videoText = (video: Video) => `${video.title} ${channelOf(video).na
 export function Site({ frame }: { frame: Frame }) {
     const prefs = usePrefs()
     const { settings: look, setSettings: setLook } = frame.appearance
-    const route = frame.route
+    // Settings open as a dialog over the page they were opened from.
+    const settings = useOverlayRoute(frame.route, 'settings')
+    const route = settings.route
     const [first = 'home', second, third, fourth] = route
     const { rows: followed } = useRows(follows)
     const { rows: lists } = useRows(playlists)
@@ -238,9 +240,7 @@ export function Site({ frame }: { frame: Frame }) {
                   ? [{ label: 'Search' }]
                   : [
                         {
-                            label:
-                                groups.flatMap((group) => group.entries).find((one) => one.id === first)?.label ??
-                                (first === 'settings' ? 'Settings' : 'Not found'),
+                            label: groups.flatMap((group) => group.entries).find((one) => one.id === first)?.label ?? 'Not found',
                         },
                     ]
 
@@ -271,7 +271,6 @@ export function Site({ frame }: { frame: Frame }) {
     else if (first === 'playlist' && second !== undefined) content = <Playlist key={second} id={second} />
     else if (first === 'downloads') content = <Downloads />
     else if (first === 'search') content = <Search query={decodeURIComponent(second ?? '')} />
-    else if (first === 'settings') content = <Settings frame={frame} />
     else content = <NotFound />
 
     return (
@@ -334,7 +333,8 @@ export function Site({ frame }: { frame: Frame }) {
                 </StatusLine>
             }
         >
-            {first === 'settings' ? content : <Page>{content}</Page>}
+            <Page>{content}</Page>
+            {settings.open && <Settings frame={frame} open onClose={settings.close} />}
         </Shell>
     )
 }
