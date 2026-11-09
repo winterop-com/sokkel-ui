@@ -272,7 +272,7 @@ export function Notes({ frame }: { frame: Frame }) {
               ? `Saved at ${clock(save.at)}`
               : save.state === 'failed'
                 ? `Not saved: ${save.reason}`
-                : 'Kept in this browser'
+                : 'All changes saved'
 
     let content
     if (page === 'note')

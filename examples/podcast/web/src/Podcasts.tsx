@@ -366,7 +366,7 @@ export function Podcasts({ frame }: { frame: Frame }) {
             }
             bottom={<Player fullscreen={fullscreen} onFullscreenChange={setFullscreen} queueShown={page === 'queue'} />}
             foot={
-                <StatusLine note={running > 0 ? `Downloading ${String(running)}` : 'Kept in this browser'} live={running > 0}>
+                <StatusLine note={running > 0 ? `Downloading ${String(running)}` : 'All changes saved'} live={running > 0}>
                     <StatusItem label="new">{fresh}</StatusItem>
                     <StatusItem label="queued">{state.player.queue.length}</StatusItem>
                     <StatusItem label="downloaded">{kept}</StatusItem>

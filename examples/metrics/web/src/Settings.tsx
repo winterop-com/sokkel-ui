@@ -203,7 +203,7 @@ export function SettingsPage({ prefs, frame, open, onClose }: { prefs: Preferenc
                 onActiveChange={setActive}
                 search={search}
                 onSearchChange={setSearch}
-                footer="Kept in this browser as they are changed"
+                footer="Saved as each is changed"
                 onReset={(section) => {
                     if (section === 'dashboards')
                         set({ range: DEFAULT_PREFERENCES.range, refresh: DEFAULT_PREFERENCES.refresh, zone: DEFAULT_PREFERENCES.zone })

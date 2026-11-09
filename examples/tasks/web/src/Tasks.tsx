@@ -219,7 +219,7 @@ export function TasksDemo({ frame }: { frame: Frame }) {
             }
             top={<TopBar trail={[{ label: 'Tasks', href: '#/inbox' }, { label }]} />}
             foot={
-                <StatusLine note="Kept in this browser">
+                <StatusLine note="All changes saved">
                     <StatusItem label="open">{all.filter((task) => !task.done).length}</StatusItem>
                 </StatusLine>
             }

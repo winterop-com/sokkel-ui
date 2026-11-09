@@ -242,7 +242,7 @@ export function Visualizer({ frame }: { frame: Frame }) {
                 }
                 top={<TopBar trail={trail} />}
                 foot={
-                    <StatusLine note="Kept in this browser">
+                    <StatusLine note="All changes saved">
                         <StatusItem label="datasets">{allDatasets.length}</StatusItem>
                         <StatusItem label="charts">{allCharts.length}</StatusItem>
                         <StatusItem label="boards">{allBoards.length}</StatusItem>
