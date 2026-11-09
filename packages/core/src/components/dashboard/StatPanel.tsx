@@ -119,6 +119,8 @@ export interface StatPanelProps {
     sparkline?: readonly number[]
     /** The change written for a reader: `+12%`, `-0.4s`. */
     delta?: string
+    /** What the change is against, such as "vs previous 6 hours": said under the value and with the change. */
+    compared?: string
     /** Whether the change is an improvement; leaves it neutral when omitted. */
     good?: boolean
     /** The value the reading aims for, drawn as a meter under it with the target written out. */
@@ -161,6 +163,7 @@ export function StatPanel({
     colorMode = 'value',
     sparkline,
     delta,
+    compared,
     good,
     target,
     targetRange,
@@ -238,6 +241,7 @@ export function StatPanel({
                 </h3>
                 {delta !== undefined && value !== null && (
                     <span
+                        title={compared === undefined ? undefined : `${delta} ${compared}`}
                         className={cn(
                             'flex shrink-0 items-center gap-0.5 text-xs font-medium tabular-nums',
                             filled
@@ -251,6 +255,7 @@ export function StatPanel({
                     >
                         {rising ? <ArrowUpRight className="size-3.5" aria-hidden /> : <ArrowDownRight className="size-3.5" aria-hidden />}
                         {delta}
+                        {compared !== undefined && <span className="sr-only"> {compared}</span>}
                     </span>
                 )}
                 {info !== undefined && (
@@ -298,6 +303,9 @@ export function StatPanel({
                                 <span className={cn('text-sm font-medium', !filled && !inked && 'text-muted-foreground')}>{unit}</span>
                             )}
                         </p>
+                        {compared !== undefined && delta !== undefined && value !== null && (
+                            <p className={cn('truncate text-xs', filled ? 'text-on-fill/85' : 'text-muted-foreground')}>{compared}</p>
+                        )}
                         {stale !== undefined && stale !== false && <StaleMark stale={stale} words={words} />}
                         {note !== undefined && (
                             <p className={cn('truncate text-xs', filled ? 'text-on-fill/85' : 'text-muted-foreground')}>{note}</p>

@@ -140,8 +140,8 @@ to `plan.md` when it ships.
           clipping the second slightly at 344, since the fit stops at its least zoom. Stack wide
           ranks, or let a narrow fit zoom out further.
     - **Round 5, dashboards:**
-        - A delta says what it compares against ("vs the previous 6 hours"); one look for the main
-          figures and a quieter one for the rest; fewer solid fills on a phone's first screen.
+        - One look for a dashboard's main figures and a quieter one for the rest, and fewer solid
+          fills on a phone's first screen (a delta now says what it compares against, `compared`).
     - **Round 6, data entry:**
         - Interaction tests for the above: a bad submit focusing the first issue, a server error,
           removing a repeated item, cancelling and retrying an upload, editing stored files.
