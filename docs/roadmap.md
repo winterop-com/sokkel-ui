@@ -6,7 +6,12 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.10.7** is the latest release (2026-11-08): the review's missing parts (`DateField`,
+- **0.10.8** is the latest release (2026-11-09): twelve example apps in `examples/`, published
+  beside Storybook, and what they asked of the library: video parts for a watch page, podcast
+  parts, a file tree, document tabs, linked notes, a network graph, period and server parts for a
+  records app, panel menus, an uptime bar, a usage line and answer columns, a rail with a body,
+  about 3 kB of CSS and 5 to 11 kB of start JavaScript cut from every page, and fifteen small fixes.
+- **0.10.7** (2026-11-08): the review's missing parts (`DateField`,
   `TimeField`, `DateTimeField`, `NumberField`, `InlineEdit` and editable `DataTable` cells through
   `tableEditing`, `FilterBar`, `SavedViews`, several values in `AsyncSelect`, `FileField`,
   `useUnsavedChanges`, `Toolbar` overflow, a lightbox gallery with zoom, mentions in both
