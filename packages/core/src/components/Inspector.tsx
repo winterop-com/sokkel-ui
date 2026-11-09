@@ -84,7 +84,7 @@ export function Inspector({
     const tool =
         'flex size-7 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-ring'
     return (
-        <div className="flex shrink-0 self-stretch">
+        <div className="flex max-w-full shrink-0 self-stretch">
             {resizable && held.changeable && (
                 <ResizeHandle
                     target={panel}
@@ -100,7 +100,10 @@ export function Inspector({
             <aside
                 ref={panel}
                 style={{ width: held.style }}
-                className={cn('flex min-h-0 flex-col overflow-hidden rounded-surface border border-border-strong bg-card', className)}
+                className={cn(
+                    'flex min-h-0 min-w-0 flex-col overflow-hidden rounded-surface border border-border-strong bg-card',
+                    className,
+                )}
             >
                 <header className="flex flex-col gap-3 border-b border-border p-(--density-inspector-pad)">
                     <div className="flex items-start gap-2">
