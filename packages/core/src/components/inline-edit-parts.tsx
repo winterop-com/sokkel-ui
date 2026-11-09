@@ -57,7 +57,8 @@ export interface InlineEditorProps {
 const keep = (event: SyntheticEvent) => event.stopPropagation()
 
 const SHAPE: Record<EditorLook, string> = {
-    cell: 'h-full rounded-none border-0 bg-field px-3 ring-2 ring-ring ring-inset focus-visible:ring-2',
+    // A cell keeps its place too: its field's ground and a line under it, as the active cell is marked.
+    cell: 'h-full rounded-none border-0 border-b-2 border-ring bg-field px-3 focus-visible:border-ring focus-visible:ring-0',
     field: 'h-8 px-2.5',
     // A title keeps its place: no box, only a rule under it, so its text stays where the title's was.
     // It is as wide as its text, as the title is, so a heading that sizes to its content gives it room.
@@ -65,11 +66,11 @@ const SHAPE: Record<EditorLook, string> = {
 }
 
 /** A typed field's frame over a table cell: the cell's own box, its figures at the end. */
-const CELL_FRAME = 'h-full rounded-none border-0 px-3 ring-2 ring-ring ring-inset focus-within:ring-2'
+const CELL_FRAME = 'h-full rounded-none border-0 border-b-2 border-ring px-3 focus-within:border-ring focus-within:ring-0'
 
 /** A refused editor's edge: the issue edge for a field, the rule in the critical ink for a title. */
 const REFUSED: Record<EditorLook, string> = {
-    cell: 'ring-critical focus-visible:ring-critical focus-within:ring-critical',
+    cell: 'border-critical focus-visible:border-critical focus-within:border-critical',
     field: ISSUE_EDGE.critical,
     title: 'border-critical focus-visible:border-critical aria-invalid:ring-0',
 }
