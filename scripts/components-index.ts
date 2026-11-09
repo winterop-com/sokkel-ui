@@ -41,6 +41,7 @@ export const PRIVATE: Record<PackageDir, Record<string, string>> = {
         'components/day-pick': 'the calendar the date fields pick from, loaded on first use',
         'components/entry':
             'what the typed fields share: the value held as text, its issues and its frame; `EntryFieldProps` is exported by each field',
+        'components/field-rows': 'the gap `Columns` with `fields` hands each `Field` so a row of fields lines up',
         'components/inline-edit-parts': 'the editors `InlineEdit` and the cells `tableEditing` edits share',
         'components/option-list':
             'the searchable list `FilterChip`, `FilterBar` and their menus draw values in; `FilterOption` is exported by `FilterChip`',
@@ -184,6 +185,7 @@ const CORE_AREAS: Record<string, string> = {
     ThemePicker: 'Frame and navigation',
     ThemeToggle: 'Frame and navigation',
     TopBar: 'Frame and navigation',
+    ServerMenu: 'Frame and navigation',
     // Page layout: what a page is arranged with.
     Inspector: 'Page layout',
     DetailSheet: 'Page layout',
@@ -198,6 +200,9 @@ const CORE_AREAS: Record<string, string> = {
     GroupLabel: 'Page layout',
     // Forms and inputs.
     AddressInput: 'Forms and inputs',
+    ComputedField: 'Forms and inputs',
+    PeriodPicker: 'Forms and inputs',
+    YesNoField: 'Forms and inputs',
     AsyncSelect: 'Forms and inputs',
     CapabilityPicker: 'Forms and inputs',
     CheckboxField: 'Forms and inputs',
@@ -245,6 +250,7 @@ const CORE_AREAS: Record<string, string> = {
     Dot: 'Data display',
     DueText: 'Data display',
     Highlight: 'Data display',
+    TextLink: 'Data display',
     IssueMark: 'Data display',
     IssueMarks: 'Data display',
     ItemCard: 'Data display',
@@ -304,6 +310,7 @@ const CORE_AREAS: Record<string, string> = {
     AnsiText: 'Code, text and documents',
     Code: 'Code, text and documents',
     CodeEditor: 'Code, text and documents',
+    ApiPlayground: 'Code, text and documents',
     DiffView: 'Code, text and documents',
     EditPreview: 'Code, text and documents',
     LogView: 'Code, text and documents',

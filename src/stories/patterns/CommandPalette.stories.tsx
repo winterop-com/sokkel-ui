@@ -18,7 +18,13 @@ import {
 } from 'lucide-react'
 import { useCallback, useState } from 'react'
 
-import { CommandPalette, usePaletteShortcut, type PaletteFilter, type PaletteGroup } from '@winterop-com/sokkel-ui/CommandPalette'
+import {
+    CommandPalette,
+    usePaletteShortcut,
+    type PaletteFilter,
+    type PaletteFoot,
+    type PaletteGroup,
+} from '@winterop-com/sokkel-ui/CommandPalette'
 import { useCommands } from '@winterop-com/sokkel-ui/hooks/use-commands'
 import type { Scheme } from '@winterop-com/sokkel-ui/lib/appearance'
 import { appearanceCommands, placeCommands } from '@winterop-com/sokkel-ui/lib/commands'
@@ -137,11 +143,13 @@ function Palette({
     groups = GROUPS,
     query,
     filter,
+    foot,
 }: {
     initial: boolean
     groups?: PaletteGroup[]
     query?: string
     filter?: PaletteFilter
+    foot?: PaletteFoot
 }) {
     const [open, setOpen] = useState(initial)
     const show = useCallback(() => setOpen(true), [])
@@ -151,7 +159,7 @@ function Palette({
             <Button variant="outline" size="sm" onClick={show}>
                 Open the palette <Kbd>⌘K</Kbd>
             </Button>
-            <CommandPalette open={open} onOpenChange={setOpen} groups={groups} defaultQuery={query} filter={filter} />
+            <CommandPalette open={open} onOpenChange={setOpen} groups={groups} defaultQuery={query} filter={filter} foot={foot} />
         </Stack>
     )
 }
@@ -164,6 +172,12 @@ export const Closed: StoryObj = { render: () => <Palette initial={false} /> }
 export const Short: StoryObj = { render: () => <Palette initial groups={SHORT} /> }
 /** Many commands: the list scrolls and fades at its bottom edge. */
 export const Open: StoryObj = { name: 'Long', render: () => <Palette initial /> }
+/**
+ * A strip at the foot (`foot`): the app's mark and name at its start, and at its end the key that
+ * opens the chosen row and the keys that open and close the palette, as the device writes them. On a
+ * touch screen the keys give way to Close.
+ */
+export const Foot: StoryObj = { render: () => <Palette initial foot={{ mark: <TidevannMark />, name: 'Tidevann' }} /> }
 /** A search narrowing the long list to what matches. */
 export const Searching: StoryObj = { render: () => <Palette initial query="new" /> }
 /**

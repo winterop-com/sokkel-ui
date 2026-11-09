@@ -1,0 +1,14 @@
+{
+    "name": "sokkel-ui-example-records-tauri",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "check": "cd ../web && bun install && bun run build && cd ../tauri/src-tauri && cargo check",
+        "dev": "bun --bun tauri dev",
+        "build": "bun --bun tauri build"
+    },
+    "devDependencies": {
+        "@tauri-apps/cli": "^2"
+    }
+}
