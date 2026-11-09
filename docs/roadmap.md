@@ -152,9 +152,8 @@ to `plan.md` when it ships.
         - Interaction tests for the above: a bad submit focusing the first issue, a server error,
           removing a repeated item, cancelling and retrying an upload, editing stored files.
     - **Round 7, cold loads:** the notes example's entry script is 1.5 MB (466 kB gzipped) on its
-      list page; find what it pulls in at start. The analytics and status dashboards fetch the map
-      engine and its worker (about 1.5 MB) for a map below the fold; load a map when it nears the
-      screen.
+      list page; find what it pulls in at start. (A map now loads its engine only as it nears the
+      screen.)
     - **Not covered yet:** the Electron and Tauri shells, browsers other than Chromium, and real
       touch devices. Run that pass before calling the examples checked on every platform.
 
