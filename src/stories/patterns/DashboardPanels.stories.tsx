@@ -45,7 +45,8 @@ import { RUN_ROWS, RUN_STATES, STATE_COLORS } from '../fixtures/runRows'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import { places, regions, sites } from '../map/data'
 import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
-import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
 
 /**
  * The panels a monitoring dashboard is made of: stat tiles colored by thresholds, gauges, bar
@@ -584,3 +585,95 @@ export const Rows: StoryObj = {
         </Ground>
     ),
 }
+
+/** One option of the hierarchy comparison: its letter and name over the panels it draws. */
+function Option({ name, children }: { name: string; children: ReactNode }) {
+    return (
+        <Stack gap="sm">
+            <GroupLabel>{name}</GroupLabel>
+            {children}
+        </Stack>
+    )
+}
+
+function Hierarchy() {
+    return (
+        <Ground title="Figure hierarchy">
+            <Columns count={3} min="md">
+                <Option name="A · As now: every reading a tile, solid fills for several">
+                    <DashboardGrid dense>
+                        <StatPanel
+                            title="Runs"
+                            value={3526}
+                            color="chart-2"
+                            colorMode="background"
+                            sparkline={RUNS}
+                            delta="+6%"
+                            compared="vs yesterday"
+                            good
+                        />
+                        <StatPanel
+                            title="Success rate"
+                            value={99.3}
+                            unit="%"
+                            decimals={1}
+                            thresholds={HIGH_IS_GOOD}
+                            colorMode="background"
+                        />
+                        <StatPanel title="Failed now" value={2} thresholds={FAILED_IS_BAD} colorMode="background" />
+                        <StatPanel
+                            title="Median run"
+                            value={4.2}
+                            unit="s"
+                            color="chart-4"
+                            colorMode="background"
+                            sparkline={DURATIONS.p50}
+                        />
+                        <StatPanel title="Queue depth" value={30} thresholds={QUEUE_STEPS} sparkline={QUEUE['worker-3']} />
+                        <StatPanel title="Paused jobs" value={1} />
+                    </DashboardGrid>
+                </Option>
+                <Option name="B · Ink by default, a fill only for what needs attention">
+                    <DashboardGrid dense>
+                        <StatPanel title="Runs" value={3526} color="chart-2" sparkline={RUNS} delta="+6%" compared="vs yesterday" good />
+                        <StatPanel title="Success rate" value={99.3} unit="%" decimals={1} thresholds={HIGH_IS_GOOD} />
+                        <StatPanel title="Failed now" value={2} thresholds={FAILED_IS_BAD} colorMode="background" href="#failed-runs" />
+                        <StatPanel title="Median run" value={4.2} unit="s" colorMode="none" sparkline={DURATIONS.p50} />
+                        <StatPanel title="Queue depth" value={30} thresholds={QUEUE_STEPS} sparkline={QUEUE['worker-3']} />
+                        <StatPanel title="Paused jobs" value={1} colorMode="none" />
+                    </DashboardGrid>
+                </Option>
+                <Option name="C · Two tiers: the main figures as one strip, the rest as quiet tiles">
+                    <Stack gap="sm">
+                        <KpiRow
+                            items={[
+                                { id: 'runs', label: 'Runs', value: '3,526', change: '+6%', good: true },
+                                { id: 'success', label: 'Success rate', value: '99.3', unit: '%', change: '+0.4 pts', good: true },
+                                { id: 'median', label: 'Median run', value: '4.2', unit: 's', change: '+0.3s', good: false },
+                            ]}
+                        />
+                        <DashboardGrid dense>
+                            <StatPanel title="Failed now" value={2} thresholds={FAILED_IS_BAD} colorMode="background" href="#failed-runs" />
+                            <StatPanel
+                                title="Queue depth"
+                                value={30}
+                                thresholds={QUEUE_STEPS}
+                                colorMode="none"
+                                sparkline={QUEUE['worker-3']}
+                            />
+                            <StatPanel title="Paused jobs" value={1} colorMode="none" />
+                        </DashboardGrid>
+                    </Stack>
+                </Option>
+            </Columns>
+        </Ground>
+    )
+}
+
+/**
+ * Three ways to give a dashboard's figures a hierarchy, side by side over the same readings, one
+ * of them past its threshold (two runs failed): A as the dashboards draw them now, B with values
+ * inked and a solid fill only where something needs attention, and C with the main figures as one
+ * quiet strip over plain supporting tiles. For the owner to choose from.
+ */
+export const FigureHierarchy: StoryObj = { name: 'Figure hierarchy', render: () => <Hierarchy /> }
