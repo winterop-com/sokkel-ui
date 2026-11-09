@@ -233,14 +233,6 @@ to `plan.md` when it ships.
         them in Tauri on the system WebKit, as in Chromium. Native HLS (MPEG-TS, `startAt`, stalls and
         giving up) and full screen with a cover, in the browser and through a desktop call, were
         checked headless in WebKit the same day.
-- **Gaps from a query app (2026-11-08)**, found moving an app with a jq editor onto 0.10.6:
-    - **Diagrams and math in every Markdown build.** An app that renders `Markdown` with
-      `math={false}` and no diagram fences still gets chunks for Mermaid (with cytoscape and elk)
-      and KaTeX in its build. They are lazy and never fetched, but they grow its `dist/` from 8.7 MB
-      to 14 MB, which ships with every release of an app that packages its build. Give the app a
-      way the bundler can see, so neither enters its build: a `Markdown` entry point that never
-      names their imports, with diagrams and math as plug-ins the app passes in, or something like
-      it.
 - **Dashboard panels on the chart kinds.** `BarPanel`, `TimeSeriesPanel` and `ComboPanel` build
   ECharts options of their own and have drifted from the kinds (stack corners, for one); make them
   thin panels over the kinds, adding what the kinds lack first.

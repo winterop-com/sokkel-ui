@@ -39,6 +39,7 @@ export const PRIVATE: Record<PackageDir, Record<string, string>> = {
         'components/code/guides': "`CodeEditor`'s bracket colors and indent guides",
         'components/code/markdown': "`CodeEditor`'s markdown language, which it carries by name",
         'components/code/schema': "`CodeEditor`'s JSON Schema checks and completion; `CodeSchemaWords` is exported by `CodeEditor`",
+        'components/markdown-view': '`Markdown` and `PlainMarkdown` as drawn, without their engines; both export its types',
         'components/day-pick': 'the calendar the date fields pick from, loaded on first use',
         'components/entry':
             'what the typed fields share: the value held as text, its issues and its frame; `EntryFieldProps` is exported by each field',
@@ -326,6 +327,7 @@ const CORE_AREAS: Record<string, string> = {
     EditPreview: 'Code, text and documents',
     LogView: 'Code, text and documents',
     Markdown: 'Code, text and documents',
+    PlainMarkdown: 'Code, text and documents',
     MermaidDiagram: 'Code, text and documents',
     ProseText: 'Code, text and documents',
     ShowMore: 'Code, text and documents',
