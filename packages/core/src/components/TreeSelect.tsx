@@ -40,6 +40,7 @@ const WORDS: TreeSelectWords = {
     clear: 'Clear',
     empty: 'Nothing matches.',
     selected: (count) => `${count} chosen`,
+    actions: 'Actions',
     loading: 'Loading',
     failed: 'This level did not load.',
     retry: 'Try again',

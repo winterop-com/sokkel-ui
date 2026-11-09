@@ -1,5 +1,6 @@
 import { TextField } from '@winterop-com/sokkel-ui/TextField'
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import { FileText, Folder, FolderOpen, FolderPlus, Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 
 import { Field } from '@winterop-com/sokkel-ui/Field'
@@ -210,6 +211,75 @@ function LazyPicker({ open, query }: { open?: boolean; query?: string }) {
     )
 }
 
+/** A folder or a note in a vault, as a flat row naming its folder. */
+interface Item {
+    id: string
+    label: string
+    parent: string | null
+    folder?: boolean
+}
+
+const VAULT: Item[] = [
+    { id: 'daily', label: 'Daily', parent: null, folder: true },
+    { id: 'd-09', label: '2026-11-09', parent: 'daily' },
+    { id: 'd-08', label: '2026-11-08', parent: 'daily' },
+    { id: 'runbooks', label: 'Runbooks', parent: null, folder: true },
+    { id: 'retry', label: 'Retry a run', parent: 'runbooks' },
+    { id: 'export', label: 'Nightly export', parent: 'runbooks' },
+    { id: 'projects', label: 'Projects', parent: null, folder: true },
+    { id: 'harbor', label: 'harbor', parent: 'projects', folder: true },
+    { id: 'harbor-plan', label: 'Plan for the quarter', parent: 'harbor' },
+    { id: 'juniper', label: 'juniper', parent: 'projects', folder: true },
+    { id: 'inbox', label: 'Questions for margaret', parent: null },
+]
+
+function nodesOf(items: readonly Item[], parent: string | null): TreeNode[] {
+    return items
+        .filter((item) => item.parent === parent)
+        .sort((a, b) => Number(b.folder ?? false) - Number(a.folder ?? false) || a.label.localeCompare(b.label))
+        .map((item) =>
+            item.folder === true
+                ? { id: item.id, label: item.label, icon: Folder, openIcon: FolderOpen, children: nodesOf(items, item.id) }
+                : { id: item.id, label: item.label, icon: FileText },
+        )
+}
+
+/** A vault's folders and notes: icons, a menu on each row, and rows dragged into a folder or out to the top. */
+function FileTree() {
+    const [items, setItems] = useState(VAULT)
+    const [chosen, setChosen] = useState<string[]>(['retry'])
+    const [made, setMade] = useState(0)
+    const rename = (id: string) =>
+        setItems((now) => now.map((item) => (item.id === id ? { ...item, label: `${item.label} (renamed)` } : item)))
+    const remove = (id: string) => setItems((now) => now.filter((item) => item.id !== id && item.parent !== id))
+    const addFolder = (into: string) => {
+        setMade(made + 1)
+        setItems((now) => [...now, { id: `folder-${String(made)}`, label: `New folder ${String(made + 1)}`, parent: into, folder: true }])
+    }
+    return (
+        <Section title="Vault" meta={`${items.filter((item) => item.folder !== true).length} notes`} flush className="mx-auto max-w-sm">
+            <div className="p-1">
+                <Tree
+                    label="Vault"
+                    nodes={nodesOf(items, null)}
+                    selected={chosen}
+                    onSelect={setChosen}
+                    defaultExpanded={['daily', 'runbooks']}
+                    actions={(node) => [
+                        ...(node.children === undefined
+                            ? []
+                            : [{ id: 'folder', label: 'New folder', icon: <FolderPlus />, onSelect: () => addFolder(node.id) }]),
+                        { id: 'rename', label: 'Rename', icon: <Pencil />, onSelect: () => rename(node.id) },
+                        { id: 'line', separator: true },
+                        { id: 'delete', label: 'Delete', icon: <Trash2 />, destructive: true, onSelect: () => remove(node.id) },
+                    ]}
+                    onMove={(id, into) => setItems((now) => now.map((item) => (item.id === id ? { ...item, parent: into } : item)))}
+                />
+            </div>
+        </Section>
+    )
+}
+
 const EVERY_BRANCH = branchIds()
 const NUMBER = new Intl.NumberFormat('en-US')
 
@@ -251,5 +321,11 @@ export const LazySelect: StoryObj = { name: 'Lazy select', render: () => <LazyPi
 export const LazyOpen: StoryObj = { name: 'Lazy, open', render: () => <LazyPicker open /> }
 /** A search over the whole geography, loaded or not: each match with its path, broadest first. */
 export const Searched: StoryObj = { name: 'Searched', render: () => <LazyPicker open query="lavi" /> }
+/**
+ * A vault's folders and notes, each with its icon (an open folder while open). A row's menu opens
+ * from the button at its end or a right-click; a row dragged onto a folder moves into it, held over
+ * a closed one opens it, and dragged beside a top-level row it moves to the top.
+ */
+export const Files: StoryObj = { name: 'File tree', render: () => <FileTree /> }
 /** Every level of the geography open: over fifty thousand rows, drawn only while in view. */
 export const FiftyThousand: StoryObj = { name: 'Fifty thousand', parameters: { frame: 'none' }, render: () => <Large /> }

@@ -529,7 +529,10 @@ to try again when it fails; the app's `search` looks through the whole hierarchy
 lists each match with its path, and choosing one opens the tree down to it. TreeSelect names its
 choice by its path, from `trails` when the choice's level has not loaded yet. Past a few hundred
 visible rows a tree draws only those in view of its nearest scrolling box, so fifty thousand open
-rows scroll as smoothly as fifty.
+rows scroll as smoothly as fifty. As a file tree a node wears an `icon` (an open branch its
+`openIcon`), `actions` gives each row the menu a table's rows have, from a button at its end or a
+right-click, and `onMove` lets a row be dragged into a branch or beside a top-level row to the top
+level, a closed branch opening as a row is held over it; nothing goes into itself (`canMoveInto`).
 
 PersonAvatar draws a person as their picture, or as their initials on their color. A picture takes
 the initials' place only once it has loaded (Base UI's avatar tracks it), so until then, and for good
