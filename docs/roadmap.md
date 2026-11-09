@@ -121,9 +121,6 @@ to `plan.md` when it ships.
   web. Each round below is a PR or a few, smallest and surest first. Every fix goes in the
   component, never the story, with a test or story that shows it.
     - **Round 1, wrong behavior in the core:**
-        - `SchemaForm`: a `readOnly` array still offers Remove on each item, and its items do not
-          inherit read-only, as list or records. Carry `readOnly` down through arrays and nested
-          objects, and test that a read-only group cannot be changed or removed.
         - Records form: a section's mark in the section list says complete while a field in it has
           an error. Derive the mark from the section's own field issues.
         - `Banner` is one truncated line, so at 344 a warning or a critical banner loses the words

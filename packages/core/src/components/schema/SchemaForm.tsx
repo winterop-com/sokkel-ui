@@ -642,6 +642,15 @@ function Title({ label, mono, hint, required }: { label: string; mono: boolean; 
     )
 }
 
+/** A read-only schema's own properties marked read-only too, so a locked object or item locks what it holds. */
+function lock(schema: JsonSchema): JsonSchema {
+    const properties =
+        schema.properties === undefined
+            ? undefined
+            : Object.fromEntries(Object.entries(schema.properties).map(([name, child]) => [name, { ...child, readOnly: true }]))
+    return { ...schema, readOnly: true, properties }
+}
+
 /** One property of an object: its label, its help, and the control or the fields it opens into. */
 function Property({
     form,
@@ -661,6 +670,7 @@ function Property({
     const { label, mono, hint } = labelOf(at, name)
     const span = short(at, kind) ? undefined : '@lg:col-span-2'
     const value = valueAt(form.value, path)
+    const locked = at.readOnly === true
 
     if (kind === 'object')
         return (
@@ -669,7 +679,7 @@ function Property({
                     <Title label={label} mono={mono} hint={hint} required={required} />
                 </legend>
                 {at.description !== undefined && <p className="-mt-1 text-xs text-muted-foreground">{at.description}</p>}
-                <Fields form={form} path={path} schema={at} />
+                <Fields form={form} path={path} schema={locked ? lock(at) : at} />
             </fieldset>
         )
 
@@ -700,7 +710,8 @@ function Property({
         )
 
     const items = Array.isArray(value) ? value : []
-    const itemSchema = at.items === undefined ? {} : fieldSchema(at.items, form.schema)
+    const resolvedItem = at.items === undefined ? {} : fieldSchema(at.items, form.schema)
+    const itemSchema = locked ? lock(resolvedItem) : resolvedItem
 
     if (kind === 'choices')
         return (
@@ -714,6 +725,7 @@ function Property({
                             <label key={key} className="flex items-center gap-2 text-sm">
                                 <Checkbox
                                     checked={on}
+                                    disabled={locked}
                                     onCheckedChange={(checked) => {
                                         form.set(path, checked ? [...items, one] : items.filter((item) => JSON.stringify(item) !== key))
                                         form.touch(path)
@@ -741,7 +753,7 @@ function Property({
                     form={form}
                     path={path}
                     title={<Title label={label} mono={mono} hint={hint} required={required} />}
-                    onAdd={at.readOnly === true ? undefined : addOne}
+                    onAdd={locked ? undefined : addOne}
                 />
                 {at.description !== undefined && <p className="-mt-1 text-xs text-muted-foreground">{at.description}</p>}
                 {items.map((_, index) =>
@@ -750,29 +762,33 @@ function Property({
                             <div className="min-w-0 flex-1">
                                 <Control form={form} path={[...path, index]} at={itemSchema} label={`${label} ${String(index + 1)}`} />
                             </div>
-                            <IconButton
-                                label={`${form.words.remove} ${form.words.item(index)}`}
-                                type="button"
-                                size="icon"
-                                onClick={() => removeAt(index)}
-                            >
-                                <X aria-hidden />
-                            </IconButton>
+                            {!locked && (
+                                <IconButton
+                                    label={`${form.words.remove} ${form.words.item(index)}`}
+                                    type="button"
+                                    size="icon"
+                                    onClick={() => removeAt(index)}
+                                >
+                                    <X aria-hidden />
+                                </IconButton>
+                            )}
                         </div>
                     ) : (
                         <section key={index} className="flex min-w-0 flex-col gap-3 rounded-surface border border-border p-3">
                             <div className="-my-1 flex items-center gap-2">
                                 <span className="text-xs font-medium text-muted-foreground">{form.words.item(index)}</span>
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    className="ml-auto text-muted-foreground"
-                                    onClick={() => removeAt(index)}
-                                >
-                                    <X aria-hidden />
-                                    {form.words.remove}
-                                </Button>
+                                {!locked && (
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        className="ml-auto text-muted-foreground"
+                                        onClick={() => removeAt(index)}
+                                    >
+                                        <X aria-hidden />
+                                        {form.words.remove}
+                                    </Button>
+                                )}
                             </div>
                             <Fields form={form} path={[...path, index]} schema={itemSchema} />
                         </section>
