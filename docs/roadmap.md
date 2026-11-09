@@ -129,8 +129,6 @@ to `plan.md` when it ships.
         - `RunGraph`, lineage and branching pipelines lose their downstream steps on a phone, the
           failed step among them. Lay them out top to bottom when narrow, or open on the failed
           step, as `NetworkGraph` already fits.
-        - `MediaBar` with skip, sleep timer and full screen leaves the title a few letters at 344.
-          Keep a minimum for the title, moving the secondary controls into a menu or a second row.
         - Workspace at 1024: the rail stays open beside the inspector and the list falls to three
           tall cards. Collapse the rail first when the inspector opens, and stack rows compactly
           before full labeled cards.
