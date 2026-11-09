@@ -6,7 +6,12 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.10.14** is the latest release (2026-11-09): rounds 3 to 5 of the review. Charts read at
+- **0.10.15** is the latest release (2026-11-09): round 6 of the review and a fix to 0.10.14.
+  `DashboardGrid` is its own container again, so an app's `className` places it; `SchemaForm`
+  lists keep each item's identity and move items, and take an app's own control through `field`;
+  `useAttachmentField`, `useSubmit`, `RepeatedGroup` and `useRepeated` are new; a map loads its
+  engine as it nears the screen.
+- **0.10.14** (2026-11-09): rounds 3 to 5 of the review. Charts read at
   12 px and fit radar names and tick steps to their width; run, pipeline and dependency graphs
   read top to bottom in a box under 560 px; a narrow `VideoPlayer` keeps speed and quality in a
   More menu; `DashboardGrid` lays out by its own width; dashboard panels say when their query
