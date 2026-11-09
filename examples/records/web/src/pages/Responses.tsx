@@ -10,6 +10,7 @@ import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { Page } from '@winterop-com/sokkel-ui/Shell'
 import { StatusItem } from '@winterop-com/sokkel-ui/StatusLine'
 import { Toolbar } from '@winterop-com/sokkel-ui/Toolbar'
+import { useStored } from '@winterop-com/sokkel-ui/hooks/use-stored'
 import { ArrowUpRight, Copy, RefreshCw, Send, Undo2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -77,6 +78,7 @@ export function Responses({ state }: { state?: string }) {
     const [forms, setForms] = useState<string[]>([])
     const [query, setQuery] = useState('')
     const [opened, setOpened] = useState<string | null>(null)
+    const [sheetWidth, setSheetWidth] = useStored('response-sheet-width', 576)
     const [busy, setBusy] = useState(false)
     const all = rows ?? []
     const chosen = (STATES as readonly string[]).includes(state ?? '') ? (state as ReceiptState) : 'all'
@@ -250,7 +252,8 @@ export function Responses({ state }: { state?: string }) {
                     onOpenChange={(next) => !next && setOpened(null)}
                     code={open.receipt}
                     title={openForm?.title ?? open.formId}
-                    size="lg"
+                    size={sheetWidth}
+                    onSizeChange={setSheetWidth}
                     chips={
                         <>
                             {openForm !== undefined && <KindBadge form={openForm} />}

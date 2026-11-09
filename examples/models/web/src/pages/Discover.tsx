@@ -208,7 +208,7 @@ export function DiscoverPage() {
                 code={open === undefined ? undefined : `${open.publisher} · ${SOURCES[open.source].label}`}
                 description={open?.summary}
                 chips={open === undefined ? undefined : <TagChips tags={[...new Set([...open.capabilities, ...open.tags])]} />}
-                size="lg"
+                defaultSize={576}
             >
                 {open !== undefined && (
                     <Stack gap="page">

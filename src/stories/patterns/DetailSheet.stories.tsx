@@ -99,3 +99,36 @@ function RunSheet() {
 
 /** A failed run open from its list: its kind, state and project as chips beside the full page and the request, its facts and steps in the body, and Run again at the foot. */
 export const Open: StoryObj = { render: () => <RunSheet /> }
+
+function HeldSheet() {
+    const [open, setOpen] = useState(true)
+    const [width, setWidth] = useState(480)
+    return (
+        <TooltipProvider>
+            <Button variant="outline" onClick={() => setOpen(true)}>
+                Open the job
+            </Button>
+            <DetailSheet
+                open={open}
+                onOpenChange={setOpen}
+                code="sync-inventory"
+                title="Sync inventory"
+                description="Pulls the stock counts from the warehouse every hour."
+                size={width}
+                onSizeChange={setWidth}
+            >
+                <DescriptionList
+                    items={[
+                        { term: 'Width', value: `${width} px`, numeric: true },
+                        { term: 'Schedule', value: 'every hour' },
+                        { term: 'Owner', value: 'grace' },
+                        { term: 'Service', value: 'worker', code: true },
+                    ]}
+                />
+            </DetailSheet>
+        </TooltipProvider>
+    )
+}
+
+/** The width held by the page: the sheet opens at 480 pixels, its left edge drags it wider, and the page hears each width, as an app keeps it with `useStored`. */
+export const Held: StoryObj = { name: 'Held width', render: () => <HeldSheet /> }

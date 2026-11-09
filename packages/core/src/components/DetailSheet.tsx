@@ -1,16 +1,22 @@
 import { XIcon } from 'lucide-react'
 import { useRef, type ReactNode } from 'react'
 
+import { usePanelSize } from '../hooks/use-panel-size'
 import { cn } from '../lib/cn'
 import { IconButton } from './IconButton'
+import { ResizeHandle } from './ResizeHandle'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from './ui/sheet'
 
 /** The words a detail sheet says. */
 export interface DetailSheetWords {
     close: string
+    resize: string
 }
 
-const WORDS: DetailSheetWords = { close: 'Close' }
+const WORDS: DetailSheetWords = { close: 'Close', resize: 'Resize the sheet' }
+
+/** The share of the window a sheet may be dragged to when no `maxSize` is given. */
+const MOST = 0.92
 
 export interface DetailSheetProps {
     open: boolean
@@ -26,7 +32,16 @@ export interface DetailSheetProps {
     actions?: ReactNode
     /** The verbs pinned at the sheet's foot. */
     foot?: ReactNode
-    size?: 'md' | 'lg' | 'xl'
+    /** The width in pixels, held from outside with `onSizeChange`. */
+    size?: number
+    onSizeChange?: (size: number) => void
+    /** Whether the left edge drags to resize the sheet. */
+    resizable?: boolean
+    minSize?: number
+    /** The widest a drag takes the sheet; most of the window when not given. */
+    maxSize?: number
+    /** The width the sheet opens at and a double click on the edge returns to. */
+    defaultSize?: number
     className?: string
     children: ReactNode
     words?: Partial<DetailSheetWords>
@@ -40,7 +55,13 @@ export interface DetailSheetProps {
  *
  * The body is the same parts the thing's own page draws, so the sheet and the page say one thing
  * the same way. It takes the focus as the sheet opens, so the keys scroll it and Tab reaches the
- * actions next. `size` sets how wide it opens on a wide window; on a phone it takes the whole width.
+ * actions next.
+ *
+ * Its left edge drags to resize it, from `minSize` to most of the window, and a double click on the
+ * edge puts it back. Left to itself it holds its own width while it stays mounted, opening at
+ * `defaultSize`; `size` with `onSizeChange` holds it from outside, such as kept with `useStored`,
+ * and `resizable={false}` keeps it at its width. It never runs wider than the window, and on a
+ * phone it takes the whole width with no edge to drag.
  */
 export function DetailSheet({
     open,
@@ -51,7 +72,12 @@ export function DetailSheet({
     chips,
     actions,
     foot,
-    size = 'xl',
+    size,
+    onSizeChange,
+    resizable = true,
+    minSize = 384,
+    maxSize,
+    defaultSize = 896,
     className,
     children,
     words: given,
@@ -59,9 +85,34 @@ export function DetailSheet({
     const words = { ...WORDS, ...given }
     const lined = chips !== undefined || actions !== undefined
     const body = useRef<HTMLDivElement>(null)
+    const sheet = useRef<HTMLDivElement>(null)
+    const widest = maxSize ?? (typeof window === 'undefined' ? defaultSize : Math.max(minSize, Math.round(window.innerWidth * MOST)))
+    const held = usePanelSize({ size, onSizeChange, rest: defaultSize, fallback: defaultSize, min: minSize, max: widest })
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
-            <SheetContent side="right" size={size} flush showCloseButton={false} initialFocus={body} className={className}>
+            <SheetContent
+                ref={sheet}
+                side="right"
+                size="xl"
+                flush
+                showCloseButton={false}
+                initialFocus={body}
+                style={{ width: held.style, maxWidth: '100%' }}
+                className={className}
+            >
+                {resizable && held.changeable && (
+                    <ResizeHandle
+                        target={sheet}
+                        size={held.size}
+                        onSize={held.set}
+                        onReset={held.reset}
+                        min={minSize}
+                        max={widest}
+                        grows={-1}
+                        label={words.resize}
+                        className="absolute inset-y-0 -left-1 mx-0 max-sm:hidden"
+                    />
+                )}
                 <header className="flex shrink-0 items-start gap-2 border-b border-border px-4 py-3">
                     <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                         {code !== undefined && <span className="truncate font-mono text-xs text-muted-foreground">{code}</span>}

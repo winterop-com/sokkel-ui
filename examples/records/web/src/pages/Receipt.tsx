@@ -10,6 +10,7 @@ import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Section } from '@winterop-com/sokkel-ui/Section'
 import { Page } from '@winterop-com/sokkel-ui/Shell'
 import { SourceSheet } from '@winterop-com/sokkel-ui/SourceSheet'
+import { useStored } from '@winterop-com/sokkel-ui/hooks/use-stored'
 import { Timeline } from '@winterop-com/sokkel-ui/Timeline'
 import { TextLink } from '@winterop-com/sokkel-ui/TextLink'
 import { FileJson, Send, Undo2 } from 'lucide-react'
@@ -258,6 +259,7 @@ export function ReceiptPage({ code }: { code: string }) {
     const receipt = receiptOf(rows, code)
     const form = formOf(receipt?.formId)
     const [raw, setRaw] = useState(false)
+    const [sourceWidth, setSourceWidth] = useStored('source-sheet-width', 576)
     useFoot(
         receipt === undefined
             ? undefined
@@ -312,6 +314,8 @@ export function ReceiptPage({ code }: { code: string }) {
                             onOpenChange={setRaw}
                             title="Raw record"
                             description="The record exactly as the server stored it."
+                            size={sourceWidth}
+                            onSizeChange={setSourceWidth}
                             value={receipt}
                             language="json"
                         />
