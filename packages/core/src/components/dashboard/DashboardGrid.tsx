@@ -17,11 +17,11 @@ export type PanelSpan = 'sixth' | 'quarter' | 'third' | 'half' | 'two-thirds' | 
 
 /** The grid classes for a panel's span. */
 export const SPAN: Record<PanelSpan, string> = {
-    sixth: 'col-span-1 @2xl/dashboard:col-span-2',
-    quarter: 'col-span-full @2xl/dashboard:col-span-3',
-    third: 'col-span-full @2xl/dashboard:col-span-6 @4xl/dashboard:col-span-4',
-    half: 'col-span-full @2xl/dashboard:col-span-6',
-    'two-thirds': 'col-span-full @2xl/dashboard:col-span-6 @4xl/dashboard:col-span-8',
+    sixth: 'col-span-6 @2xl/dashboard:col-span-4 @4xl/dashboard:col-span-2',
+    quarter: 'col-span-12 @2xl/dashboard:col-span-6 @4xl/dashboard:col-span-3',
+    third: 'col-span-12 @4xl/dashboard:col-span-4',
+    half: 'col-span-12 @4xl/dashboard:col-span-6',
+    'two-thirds': 'col-span-12 @4xl/dashboard:col-span-8',
     full: 'col-span-full',
 }
 
@@ -32,23 +32,23 @@ export interface DashboardGridProps {
 }
 
 /**
- * The grid a dashboard's panels sit in: twelve columns when the grid is wide, six when it is
- * tablet-wide, two when phone-wide, by the grid's own width, not the window's, so a dashboard beside
- * a rail or a panel lays out for the room it has. Panels in a row stretch to the same height. On a phone a wide panel spans both
- * columns while stat tiles and gauges stand two to a row. A dense grid packs panels with small gaps.
+ * The grid a dashboard's panels sit in: twelve columns, a panel's span following the grid's own
+ * width, not the window's, so a dashboard beside a rail or a panel lays out for the room it has.
+ * Wide, the spans are as named; tablet-wide, a sixth takes a third and a quarter half, the rest the
+ * whole row; phone-wide, every panel takes the row but a sixth, which takes half, so stat tiles
+ * and gauges stand two to a row. The grid is its own container, so `className` places it in the
+ * page. Panels in a row stretch to the same height. A dense grid packs panels with small gaps.
  */
 export function DashboardGrid({ dense = false, children, className }: DashboardGridProps) {
     return (
-        <div className="@container/dashboard min-w-0">
-            <div
-                className={cn(
-                    'grid grid-cols-2 @2xl/dashboard:grid-cols-6 @4xl/dashboard:grid-cols-12',
-                    dense ? 'gap-1.5' : 'gap-(--density-section-gap)',
-                    className,
-                )}
-            >
-                {children}
-            </div>
+        <div
+            className={cn(
+                '@container/dashboard grid w-full min-w-0 grid-cols-12',
+                dense ? 'gap-1.5' : 'gap-(--density-section-gap)',
+                className,
+            )}
+        >
+            {children}
         </div>
     )
 }

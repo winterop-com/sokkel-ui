@@ -130,7 +130,7 @@ export function GaugePanel({
             loading={loading}
             bodyClassName={cn('h-32 max-md:h-28', bodyClassName)}
             words={words}
-            className={cn(SPAN[span], span !== 'full' && 'max-md:col-span-1', className)}
+            className={cn(SPAN[span], span !== 'full' && '@max-2xl/dashboard:col-span-6', className)}
         >
             {(state) => <EChart option={option} label={typeof title === 'string' ? title : 'Gauge'} {...state} />}
         </ChartFrame>
