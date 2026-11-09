@@ -50,6 +50,11 @@ export interface ActivityListProps {
     /** An item was acted on, so it counts as read. */
     onRead?: (id: string) => void
     onReadAll?: () => void
+    /**
+     * Draws the list's own head, its title, unread count and Mark all read; off for a list set in a
+     * panel whose head says what it holds, such as a dashboard panel.
+     */
+    head?: boolean
     className?: string
     words?: Partial<ActivityWords>
 }
@@ -60,23 +65,25 @@ export interface ActivityListProps {
  * such as opening the failed job or restoring what was deleted; acting on one marks it read.
  * Items stay until read. Arriving items are not announced; the bell's name says the count.
  */
-export function ActivityList({ items, onRead, onReadAll, className, words: given }: ActivityListProps) {
+export function ActivityList({ items, onRead, onReadAll, head = true, className, words: given }: ActivityListProps) {
     const words = { ...WORDS, ...given }
     const unread = items.filter((item) => item.unread === true).length
     let group: string | undefined
     return (
         <div className={cn('flex min-h-0 flex-col', className)}>
-            <div className="flex h-(--density-panel-head) shrink-0 items-center gap-2 border-b border-border px-3">
-                <p className="flex-1 text-[length:var(--table-head-size)] font-[number:var(--table-head-weight)]">
-                    {words.title}
-                    {unread > 0 && <span className="ml-2 font-mono text-xs font-normal text-muted-foreground">{unread}</span>}
-                </p>
-                {onReadAll !== undefined && (
-                    <Button variant="ghost" size="xs" disabled={unread === 0} onClick={onReadAll}>
-                        {words.markAllRead}
-                    </Button>
-                )}
-            </div>
+            {head && (
+                <div className="flex h-(--density-panel-head) shrink-0 items-center gap-2 border-b border-border px-3">
+                    <p className="flex-1 text-[length:var(--table-head-size)] font-[number:var(--table-head-weight)]">
+                        {words.title}
+                        {unread > 0 && <span className="ml-2 font-mono text-xs font-normal text-muted-foreground">{unread}</span>}
+                    </p>
+                    {onReadAll !== undefined && (
+                        <Button variant="ghost" size="xs" disabled={unread === 0} onClick={onReadAll}>
+                            {words.markAllRead}
+                        </Button>
+                    )}
+                </div>
+            )}
             {items.length === 0 ? (
                 <p className="px-3 py-6 text-center text-sm text-muted-foreground">{words.empty}</p>
             ) : (

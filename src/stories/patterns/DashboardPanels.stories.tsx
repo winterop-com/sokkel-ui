@@ -1,7 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { Feature } from 'geojson'
+import { CircleAlert, CircleCheck, Pause, Plus, TriangleAlert } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
+import { ActivityList, type ActivityItem } from '@winterop-com/sokkel-ui/ActivityList'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { BarGauge } from '@winterop-com/sokkel-ui-charts/dashboard/BarGauge'
 import { BarPanel } from '@winterop-com/sokkel-ui-charts/dashboard/BarPanel'
 import { ChartPanel } from '@winterop-com/sokkel-ui-charts/dashboard/ChartPanel'
@@ -293,6 +296,62 @@ export const MapPanel: StoryObj = {
         </Ground>
     ),
 }
+
+const ACTIVITY: ActivityItem[] = [
+    { id: 'failed', icon: <CircleAlert />, tone: 'critical', text: 'nightly-export failed at validate', when: '2m ago', unread: true },
+    { id: 'queue', icon: <TriangleAlert />, tone: 'warning', text: 'worker-3 queue passed 20', when: '14m ago', unread: true },
+    { id: 'done', icon: <CircleCheck />, tone: 'good', text: 'rebuild-index succeeded in 6m 03s', when: '25m ago' },
+    { id: 'paused', icon: <Pause />, tone: 'quiet', text: 'ada paused send-digest', when: '1h ago' },
+    { id: 'added', icon: <Plus />, tone: 'info', text: 'grace added the job sync-inventory', when: '3h ago' },
+]
+
+function ActivityBeside() {
+    const [items, setItems] = useState(ACTIVITY)
+    const unread = items.filter((item) => item.unread === true).length
+    return (
+        <Ground title="Activity panel">
+            <DashboardGrid>
+                <TimeSeriesPanel
+                    title="Runs and failures"
+                    subtitle="today"
+                    span="two-thirds"
+                    x={TIMES}
+                    series={RUN_SERIES}
+                    bodyClassName="h-72"
+                />
+                <DashboardPanel
+                    title="Activity"
+                    subtitle={`${String(unread)} unread`}
+                    span="third"
+                    flush
+                    actions={
+                        <Button
+                            variant="ghost"
+                            size="xs"
+                            disabled={unread === 0}
+                            onClick={() => setItems((was) => was.map((item) => ({ ...item, unread: false })))}
+                        >
+                            Mark all read
+                        </Button>
+                    }
+                >
+                    <ActivityList
+                        items={items}
+                        head={false}
+                        onRead={(id) => setItems((was) => was.map((item) => (item.id === id ? { ...item, unread: false } : item)))}
+                    />
+                </DashboardPanel>
+            </DashboardGrid>
+        </Ground>
+    )
+}
+
+/**
+ * An activity list in a panel beside a chart: the panel's head names it, says how many are unread
+ * and holds Mark all read, so the list draws no head of its own, and it fills the panel the chart
+ * stretches.
+ */
+export const ActivityPanel: StoryObj = { name: 'Activity panel', render: () => <ActivityBeside /> }
 
 const PROJECTS = [
     { value: 'harbor', label: 'harbor' },
