@@ -598,6 +598,10 @@ An editor also refuses a connection with the reason said on the canvas, adds a s
 button at a node's output or an edge's middle, takes blocks dragged in from a palette, and chooses
 several nodes with Shift. BlockPalette, BlockPicker, GraphOverlay, GraphNotice, GraphToolbar and
 useGraphHistory are its parts; the Pipeline editor stories show each way of building a pipeline.
+NetworkGraph draws things linked with no direction to read, such as notes: a dot each in its group's
+color, larger the more links it has, its name under it, straight lines between them, laid out by
+elk's stress algorithm (`layoutNetwork`) after a spiral holds the first frame; pointing at a dot
+lights its neighbors and fades the rest, and `current` rings the one the reader stands on.
 
 ## Terminals
 

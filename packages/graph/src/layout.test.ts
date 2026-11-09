@@ -7,11 +7,13 @@ import {
     fittedZoom,
     fromElk,
     layoutGraph,
+    layoutNetwork,
     MAX_ZOOM,
     MIN_ZOOM,
     rankLayout,
     ranksOf,
     shapeSignature,
+    spiralLayout,
     startOfOverflow,
     steppedZoom,
     toElk,
@@ -147,5 +149,34 @@ describe('the fit', () => {
         expect(steppedZoom(MIN_ZOOM, 'out')).toBe(MIN_ZOOM)
         expect(wheelZoomFactor(-1000)).toBeCloseTo(1.15)
         expect(wheelZoomFactor(1, 1)).toBeLessThan(1)
+    })
+})
+
+describe('a network', () => {
+    const NETWORK: GraphShape = {
+        nodes: [box('lone'), box('hub'), box('a'), box('b'), box('c')],
+        edges: [edge('hub', 'a'), edge('hub', 'b'), edge('hub', 'c'), edge('a', 'b')],
+    }
+
+    test('is placed at once along a spiral, the node with the most edges in the middle', () => {
+        const placed = spiralLayout(NETWORK)
+        expect(placed.nodes.map((node) => node.id)).toEqual(['lone', 'hub', 'a', 'b', 'c'])
+        expect(placed.nodes[1]).toMatchObject({ x: 0, y: 0 })
+        expect(new Set(placed.nodes.map((node) => `${String(node.x)},${String(node.y)}`)).size).toBe(5)
+    })
+
+    test('is laid out by elk with straight edges, an engine handed in', async () => {
+        const fake: ElkEngine = {
+            layout: (graph) => {
+                expect(graph.layoutOptions['elk.algorithm']).toBe('stress')
+                return Promise.resolve({
+                    children: graph.children.map((child, index) => ({ id: child.id, x: index * 10, y: 5 })),
+                    edges: graph.edges.map((one) => ({ id: one.id, sections: [{ startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } }] })),
+                })
+            },
+        }
+        const placed = await layoutNetwork(NETWORK, fake)
+        expect(placed.nodes.map((node) => node.x)).toEqual([0, 10, 20, 30, 40])
+        expect(placed.edges.every((one) => one.points === undefined)).toBe(true)
     })
 })
