@@ -19,12 +19,17 @@ export const Stacked: StoryObj = {
     ),
 }
 
-/** The name and its code on one line; a narrow panel cuts the code short before the name. */
+/** The name and its code on one line; a narrow panel cuts the name short before the code, which keeps at least half the row. */
 export const Inline: StoryObj = {
     render: () => (
         <Stack gap="xl">
             <ItemHeading name="Nightly export" code="nightly-export" variant="inline" />
             <ItemHeading name="Sync inventory with the three warehouses" code="sync-inventory" variant="inline" />
+            <ItemHeading
+                name="Import the orders from the harbor, juniper and larkspur warehouses every hour, then rebuild the index"
+                code="import-orders-from-every-warehouse"
+                variant="inline"
+            />
         </Stack>
     ),
 }
@@ -63,7 +68,7 @@ export const WithParts: StoryObj = {
     ),
 }
 
-/** The dialog size, heading a dialog about one service. */
+/** The dialog size inside the dialog's title, the action said before the service's name. */
 export const InADialog: StoryObj = {
     name: 'In a dialog',
     render: () => (
@@ -75,7 +80,7 @@ export const InADialog: StoryObj = {
                     name="Worker"
                     code="worker"
                     size="dialog"
-                    as="div"
+                    lead="Restart"
                     glyph={<Server />}
                     chips={<StatusChip status="running" />}
                 />

@@ -1,5 +1,5 @@
 import { TriangleAlert } from 'lucide-react'
-import { useId, type ReactNode } from 'react'
+import { useId, type ComponentProps, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { PaneHeader } from './PaneHeader'
@@ -125,23 +125,24 @@ const SURFACE_TONE: Record<SurfaceTone, string> = {
     inset: 'border-border bg-background',
 }
 
-export interface SurfaceProps {
+export interface SurfaceProps extends ComponentProps<'div'> {
     /** `card` raises the content on the card's ground; `well` sets it on a panel's ground, `inset` on the page's. */
     tone?: SurfaceTone
     /** Pads the content by the density's panel padding, for fields or text rather than a list or a graph. */
     pad?: boolean
     children: ReactNode
-    className?: string
 }
 
 /**
  * A bordered surface with no heading of its own, for content that is a surface: a graph, a list, a
  * group of fields. It clips nothing, so the focus ring of a control at its edge shows whole.
  * Unpadded, its first and last children take its corners, so content drawn to the edge keeps them.
+ * It takes a `ref` and a div's props, so a surface that scrolls (a log) can follow its own scroll.
  */
-export function Surface({ tone = 'card', pad = false, children, className }: SurfaceProps) {
+export function Surface({ tone = 'card', pad = false, children, className, ...props }: SurfaceProps) {
     return (
         <div
+            {...props}
             data-tone={tone}
             className={cn(
                 'rounded-surface border',

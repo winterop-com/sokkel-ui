@@ -57,13 +57,15 @@ export function Dot({ kind, color, status, outline = false, size = 'lg', label, 
     const ring =
         focusable && 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid'
     const tabIndex = focusable ? 0 : undefined
+    // Both forms sit on the middle of the text's x-height in a line of text and on the center in a
+    // flex row, so a bare dot and one with its word line up in the same row.
     const dot = (
         <span
             {...(name === undefined ? { 'aria-hidden': true } : { role: 'img', 'aria-label': name })}
             tabIndex={word === undefined ? tabIndex : undefined}
             style={style}
             className={cn(
-                'inline-block shrink-0 rounded-full',
+                'inline-block shrink-0 rounded-full align-middle',
                 SIZE[size],
                 outline ? cn('border', ink === undefined && 'border-border-strong') : kind !== undefined && KIND_FILL[kind],
                 word === undefined && ring,
@@ -78,7 +80,7 @@ export function Dot({ kind, color, status, outline = false, size = 'lg', label, 
             <span
                 data-slot="dot"
                 tabIndex={tabIndex}
-                className={cn('inline-flex min-w-0 items-center gap-1.5 rounded-chip', ring, className)}
+                className={cn('inline-flex min-w-0 items-center gap-1.5 rounded-chip align-middle', ring, className)}
             >
                 {dot}
                 <span className="truncate">{word}</span>

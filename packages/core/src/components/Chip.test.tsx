@@ -1,8 +1,10 @@
+import { Children, createRef, isValidElement, type ReactElement, type ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { Chip } from './Chip'
 import { Dot } from './Dot'
+import { Surface } from './Section'
 import { StatusChip } from './StatusChip'
 
 describe('Chip', () => {
@@ -43,7 +45,52 @@ describe('Chip', () => {
         )
         expect(html).toContain('aria-label="Fjern"')
     })
+
+    it('names its select button by selectLabel and its remove button by a function of its words', () => {
+        const html = renderToStaticMarkup(
+            <Chip
+                onSelect={() => undefined}
+                selectLabel="Filter by harbor"
+                onRemove={() => undefined}
+                words={{ remove: (text) => `Remove ${text}` }}
+            >
+                harbor
+            </Chip>,
+        )
+        expect(html).toMatch(/<button[^>]*data-slot="chip-select"[^>]*aria-label="Filter by harbor"[^>]*title="Filter by harbor"/)
+        expect(html).toContain('aria-label="Remove harbor"')
+    })
+
+    it('stops both presses at the chip and passes the event on', () => {
+        const selected = vi.fn()
+        const removed = vi.fn()
+        const buttons = findButtons(
+            Chip({ children: 'harbor', onSelect: selected, onRemove: removed }) as ReactElement<{ children?: ReactNode }>,
+        )
+        expect(buttons).toHaveLength(2)
+        for (const button of buttons) {
+            const event = { stopPropagation: vi.fn() }
+            button.props.onClick(event)
+            expect(event.stopPropagation).toHaveBeenCalled()
+            const key = { key: 'Enter', stopPropagation: vi.fn() }
+            button.props.onKeyDown(key)
+            expect(key.stopPropagation).toHaveBeenCalled()
+        }
+        expect(selected).toHaveBeenCalledWith(expect.objectContaining({ stopPropagation: expect.any(Function) }))
+        expect(removed).toHaveBeenCalledWith(expect.objectContaining({ stopPropagation: expect.any(Function) }))
+    })
 })
+
+interface ButtonProps {
+    onClick: (event: unknown) => void
+    onKeyDown: (event: unknown) => void
+}
+
+function findButtons(node: ReactNode): ReactElement<ButtonProps>[] {
+    if (!isValidElement<{ children?: ReactNode }>(node)) return Array.isArray(node) ? node.flatMap(findButtons) : []
+    if (node.type === 'button') return [node as ReactElement<ButtonProps>]
+    return Children.toArray(node.props.children).flatMap(findButtons)
+}
 
 describe('Dot', () => {
     it('is hidden alone, and an image named by its label', () => {
@@ -76,6 +123,11 @@ describe('Dot', () => {
         expect(html).toContain('tabindex="0"')
         expect(html).toContain('aria-label="Last run failed"')
     })
+
+    it('sits on the same line alone and with its word', () => {
+        expect(renderToStaticMarkup(<Dot status="failed" />)).toContain('align-middle')
+        expect(renderToStaticMarkup(<Dot status="failed" say />)).toMatch(/^<span data-slot="dot"[^>]*align-middle/)
+    })
 })
 
 describe('StatusChip', () => {
@@ -83,5 +135,31 @@ describe('StatusChip', () => {
         const html = renderToStaticMarkup(<StatusChip status="failed" dot />)
         expect(html).toMatch(/\bsize-2\b(?!\.)/)
         expect(html).toContain('background:var(--status-failed)')
+    })
+
+    it("pulses a running state's dot and no other", () => {
+        expect(renderToStaticMarkup(<StatusChip status="running" dot />)).toContain('animate-pulse')
+        expect(renderToStaticMarkup(<StatusChip status="failed" dot />)).not.toContain('animate-pulse')
+    })
+})
+
+describe('Surface', () => {
+    it("takes a ref and a div's props, such as a scrolling log's", () => {
+        const ref = createRef<HTMLDivElement>()
+        const onScroll = () => undefined
+        const element = Surface({ ref, onScroll, children: 'log', className: 'overflow-auto' }) as ReactElement<{
+            ref?: unknown
+            onScroll?: unknown
+        }>
+        expect(element.props.ref).toBe(ref)
+        expect(element.props.onScroll).toBe(onScroll)
+        const html = renderToStaticMarkup(
+            <Surface id="run-log" aria-label="Run log" tone="inset">
+                log
+            </Surface>,
+        )
+        expect(html).toContain('id="run-log"')
+        expect(html).toContain('aria-label="Run log"')
+        expect(html).toContain('data-tone="inset"')
     })
 })
