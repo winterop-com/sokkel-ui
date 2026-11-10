@@ -1,5 +1,6 @@
 import { Tooltip } from '@base-ui/react/tooltip'
 import { CircleHelp } from 'lucide-react'
+import type { ReactNode } from 'react'
 
 import { Switch } from './ui/switch'
 
@@ -8,6 +9,8 @@ export interface SwitchFieldProps {
     label: string
     /** What turning it on does, shown on hover or focus of the help mark. */
     explain?: string
+    /** Why the setting cannot be changed now; given, the switch is disabled and the reason shows under the label in place of the help mark. */
+    reason?: ReactNode
     checked?: boolean
     defaultChecked?: boolean
     onCheckedChange?: (checked: boolean) => void
@@ -15,37 +18,50 @@ export interface SwitchFieldProps {
 }
 
 /**
- * An on/off setting: its label and the switch at the row's right edge. What it does, where the
- * label alone does not say, is a tooltip on a help mark beside the label rather than a line under
- * it.
+ * An on/off setting: its label and the switch at the row's right edge. The whole row is the label,
+ * so a press anywhere on it turns the switch. What it does, where the label alone does not say, is
+ * a tooltip on a help mark beside the label rather than a line under it. `reason` disables the
+ * switch and says why in a line under the label, where it can be read without hovering.
  */
-export function SwitchField({ id, label, explain, checked, defaultChecked, onCheckedChange, disabled }: SwitchFieldProps) {
+export function SwitchField({ id, label, explain, reason, checked, defaultChecked, onCheckedChange, disabled }: SwitchFieldProps) {
+    const held = reason !== undefined && reason !== null && reason !== false
+    const reasonId = `${id}-reason`
     return (
-        <div className="flex min-h-(--density-control) items-center justify-between gap-4 text-sm">
-            <span className="flex items-center gap-1.5">
-                <label htmlFor={id}>{label}</label>
-                {explain !== undefined && (
-                    <Tooltip.Root>
-                        <Tooltip.Trigger
-                            render={(props) => (
-                                <button
-                                    {...props}
-                                    type="button"
-                                    aria-label={explain}
-                                    className="flex size-4 items-center justify-center rounded-full text-faint hover:text-muted-foreground"
-                                >
-                                    <CircleHelp className="size-3.5" aria-hidden />
-                                </button>
-                            )}
-                        />
-                        <Tooltip.Portal>
-                            <Tooltip.Positioner sideOffset={6}>
-                                <Tooltip.Popup className="max-w-64 rounded-md bg-popover px-2 py-1 text-xs text-popover-foreground shadow-pop">
-                                    {explain}
-                                </Tooltip.Popup>
-                            </Tooltip.Positioner>
-                        </Tooltip.Portal>
-                    </Tooltip.Root>
+        <label
+            htmlFor={id}
+            className="flex min-h-(--density-control) cursor-pointer items-center justify-between gap-4 text-sm has-disabled:cursor-not-allowed"
+        >
+            <span className="flex min-w-0 flex-col">
+                <span className="flex items-center gap-1.5">
+                    <span id={`${id}-label`}>{label}</span>
+                    {explain !== undefined && !held && (
+                        <Tooltip.Root>
+                            <Tooltip.Trigger
+                                render={(props) => (
+                                    <button
+                                        {...props}
+                                        type="button"
+                                        aria-label={explain}
+                                        className="flex size-4 items-center justify-center rounded-full text-faint hover:text-muted-foreground"
+                                    >
+                                        <CircleHelp className="size-3.5" aria-hidden />
+                                    </button>
+                                )}
+                            />
+                            <Tooltip.Portal>
+                                <Tooltip.Positioner sideOffset={6}>
+                                    <Tooltip.Popup className="max-w-64 rounded-md bg-popover px-2 py-1 text-xs text-popover-foreground shadow-pop">
+                                        {explain}
+                                    </Tooltip.Popup>
+                                </Tooltip.Positioner>
+                            </Tooltip.Portal>
+                        </Tooltip.Root>
+                    )}
+                </span>
+                {held && (
+                    <span id={reasonId} className="text-help text-muted-foreground">
+                        {reason}
+                    </span>
                 )}
             </span>
             <Switch
@@ -53,8 +69,10 @@ export function SwitchField({ id, label, explain, checked, defaultChecked, onChe
                 checked={checked}
                 defaultChecked={defaultChecked}
                 onCheckedChange={(value) => onCheckedChange?.(value)}
-                disabled={disabled}
+                disabled={held || disabled}
+                aria-labelledby={`${id}-label`}
+                aria-describedby={held ? reasonId : undefined}
             />
-        </div>
+        </label>
     )
 }

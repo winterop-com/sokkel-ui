@@ -37,6 +37,10 @@ const ICON_SIZE = { xs: 'icon-xs', sm: 'icon-sm', default: 'icon', lg: 'icon-lg'
 export interface SplitButtonProps {
     /** The main action's label, with an icon before it if wanted. */
     children: ReactNode
+    /** The main half's accessible name, where its face is shorter: "New" on the face, "New pipeline" here. */
+    label?: string
+    /** The main half's title, shown on hover by the browser. */
+    title?: string
     onClick?: () => void
     items: readonly SplitButtonItem[]
     variant?: 'default' | 'outline' | 'secondary' | 'ghost' | 'destructive'
@@ -55,10 +59,13 @@ export interface SplitButtonProps {
  * The main action and a menu of other ways to do it, joined as one control: Run now beside Run
  * with options and Run from a step. Pressing the main half does the action; the chevron opens the
  * menu under the whole control. Variants and sizes are Button's; `reason` disables both halves and
- * says why on hover and focus, and `disabled` without a reason disables them quietly.
+ * says why on hover and focus, and `disabled` without a reason disables them quietly. `label` and
+ * `title` name the main half apart from its face, for a face that leans on the page around it.
  */
 export function SplitButton({
     children,
+    label,
+    title,
     onClick,
     items,
     variant = 'default',
@@ -77,7 +84,7 @@ export function SplitButton({
     const separator = SEPARATOR[variant]
     return (
         <ButtonGroup ref={group} data-slot="split-button" className={className}>
-            <Button variant={variant} size={size} onClick={onClick} disabled={disabled} reason={reason}>
+            <Button variant={variant} size={size} onClick={onClick} disabled={disabled} reason={reason} aria-label={label} title={title}>
                 {children}
             </Button>
             {separator !== undefined && <ButtonGroupSeparator className={cn('data-vertical:my-0', separator)} />}

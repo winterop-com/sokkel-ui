@@ -399,7 +399,11 @@ carries no chip; `lib/status` holds the map's types, the run states and each col
 
 A button that cannot be pressed now says why: `reason` on `Button`, `IconButton` and `SplitButton`
 disables it and shows the reason on hover and focus, the button kept in the tab order so a keyboard
-reaches it. `SplitButton` joins the main action to a menu of other ways; `DownloadButton` goes from
+reaches it; `SwitchField` takes `reason` too, said in a line under its label, and its whole row is
+the label. `IconButton`'s `tooltip` says a longer sentence than its name, `shortcut` draws the key
+that does the same as a `Kbd` in the tooltip, and `destructive` tints it in the critical tone under
+the pointer. `SplitButton` joins the main action to a menu of other ways, its main half named apart
+from a short face by `label` and `title`; `DownloadButton` goes from
 idle through n of m (or a share, for bytes) on a `ProgressRing`, with a cancel and, when the app can
 hold one, a pause and a resume, to kept, its state held by the app.
 `RelativeTime` says a time as "3 minutes ago" through `Intl.RelativeTimeFormat`, the instant on
