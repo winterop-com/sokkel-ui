@@ -51,6 +51,25 @@ export const Actions: StoryObj = {
     ),
 }
 
+/** A long title alone with its actions: the title wraps beside them, and they stay on its row. */
+export const LongTitle: StoryObj = {
+    name: 'Long title',
+    render: () => (
+        <PageHeader
+            title="Every nightly export of harbor, juniper and larkspur that failed at validate this week"
+            actions={
+                <>
+                    <Button size="sm" variant="outline">
+                        <Upload aria-hidden />
+                        Import
+                    </Button>
+                    <Button size="sm">New</Button>
+                </>
+            }
+        />
+    ),
+}
+
 /**
  * One thing's page: its name over its code, a sentence on what it does, a line of small facts and
  * three actions, which on a phone wrap under the title and then onto as many lines as they need.
