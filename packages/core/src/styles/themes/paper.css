@@ -17,6 +17,7 @@ html[data-theme='paper'],
     --popover-foreground: oklch(0.2 0.02 60);
     --primary: oklch(0.55 0.13 80);
     --primary-foreground: oklch(0.98 0.01 85);
+    --brand: #dfb863;
     --primary-ink: oklch(0.5 0.13 80);
     --secondary: oklch(0.94 0.014 85);
     --secondary-foreground: oklch(0.24 0.02 60);
@@ -91,6 +92,7 @@ html.dark[data-theme='paper'],
     --popover-foreground: oklch(0.95 0.012 85);
     --primary: oklch(0.8 0.13 80);
     --primary-foreground: oklch(0.17 0.015 70);
+    --brand: #dfb863;
     --primary-ink: var(--primary);
     --secondary: oklch(0.29 0.017 70);
     --secondary-foreground: oklch(0.95 0.012 85);

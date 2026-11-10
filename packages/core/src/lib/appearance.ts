@@ -147,9 +147,37 @@ export function motionReduced(attribute: string | null | undefined, system: bool
     return system
 }
 
-/** Puts `.dark` on `<html>` for the dark scheme and takes it off for the light one. */
+/**
+ * Runs `change` with every transition on the page held off, when `root` is the page's own `<html>`:
+ * a color that eases would otherwise fade into the new look a frame behind the page around it.
+ */
+function withoutTransitions(root: AppearanceRoot, change: () => void): void {
+    if (typeof document === 'undefined' || root !== document.documentElement || document.head === null) {
+        change()
+        return
+    }
+    const hold = document.createElement('style')
+    hold.textContent = '*,*::before,*::after{transition:none!important}'
+    document.head.appendChild(hold)
+    change()
+    // Reading a computed style makes the browser draw the new look with the hold in place.
+    void globalThis.getComputedStyle(document.body ?? document.documentElement).opacity
+    setTimeout(() => hold.remove(), 1)
+}
+
+/** Whether `root` wears the dark scheme and which theme it wears now, where it can tell. */
+function wornOn(root: AppearanceRoot): { dark?: boolean; theme?: string | null } {
+    const element = root as unknown as Partial<Element>
+    return { dark: element.classList?.contains?.('dark'), theme: element.getAttribute?.('data-theme') }
+}
+
+/** Puts `.dark` on `<html>` for the dark scheme and takes it off for the light one, with no transition easing the change. */
 export function applyScheme(resolved: ResolvedScheme, root: AppearanceRoot | undefined = rootElement()): void {
-    root?.classList.toggle('dark', resolved === 'dark')
+    if (root === undefined) return
+    const dark = resolved === 'dark'
+    const wear = () => root.classList.toggle('dark', dark)
+    if (wornOn(root).dark === dark) wear()
+    else withoutTransitions(root, wear)
 }
 
 /**
@@ -160,9 +188,16 @@ export function applyScheme(resolved: ResolvedScheme, root: AppearanceRoot | und
  */
 export function applyAppearance(settings: ThemeSettings, root: AppearanceRoot | undefined = rootElement()): void {
     if (root === undefined) return
-    applyScheme(resolveScheme(settings.scheme), root)
-    if (settings.theme === BASE_THEME) root.removeAttribute('data-theme')
-    else root.setAttribute('data-theme', settings.theme)
+    const dark = resolveScheme(settings.scheme) === 'dark'
+    const theme = settings.theme === BASE_THEME ? null : settings.theme
+    const recolor = () => {
+        root.classList.toggle('dark', dark)
+        if (theme === null) root.removeAttribute('data-theme')
+        else root.setAttribute('data-theme', theme)
+    }
+    const worn = wornOn(root)
+    if (worn.dark === dark && worn.theme === theme) recolor()
+    else withoutTransitions(root, recolor)
     root.setAttribute('data-density', settings.density)
     if (settings.motion === undefined || settings.motion === 'system') root.removeAttribute('data-motion')
     else root.setAttribute('data-motion', settings.motion)
@@ -347,12 +382,24 @@ export function storeAppearance(settings: ThemeSettings): void {
     notify()
 }
 
+/** What an app offers of the look, where it offers less than the library has. */
+export interface AppearanceOffer {
+    /** The themes the app offers; a kept theme outside them gives way to the default theme when it is one of them, else to the first. */
+    themes?: readonly string[]
+}
+
+/** `theme`, or the one an app offering only `themes` wears in its place. */
+export function offeredTheme(theme: string, defaults: Partial<ThemeSettings>, themes: readonly string[] | undefined): string {
+    if (themes === undefined || themes.length === 0 || themes.includes(theme)) return theme
+    return defaults.theme !== undefined && themes.includes(defaults.theme) ? defaults.theme : themes[0]
+}
+
 /** The kept look over `defaults` over the library's, the scheme following the system until one is chosen. */
-export function readAppearance(defaults: Partial<ThemeSettings> = {}): ThemeSettings {
+export function readAppearance(defaults: Partial<ThemeSettings> = {}, offer: AppearanceOffer = {}): ThemeSettings {
+    const look = { ...DEFAULT_APPEARANCE, ...defaults, ...parseAppearance(readStoredAppearanceText()) }
     return {
-        ...DEFAULT_APPEARANCE,
-        ...defaults,
-        ...parseAppearance(readStoredAppearanceText()),
+        ...look,
+        theme: offeredTheme(look.theme, defaults, offer.themes),
         scheme: readStoredScheme() ?? defaults.scheme ?? 'system',
     }
 }
@@ -374,8 +421,10 @@ function scriptWith(defaults: string): string {
         `var r=document.documentElement,l=window.localStorage,o=${defaults}||{},`,
         `a=Object.assign(${scriptJson(base)},o,JSON.parse(l.getItem(${scriptJson(APPEARANCE_KEY)})||'{}')),`,
         `s=l.getItem(${scriptJson(SCHEME_KEY)})||o.scheme||'system',`,
+        "k=typeof o.themes==='string'?o.themes.split(/\\s+/).filter(Boolean):o.themes,",
         `f=${scriptJson(FACES)},`,
         `d=s==='dark'||(s!=='light'&&window.matchMedia(${scriptJson(DARK_QUERY)}).matches);`,
+        'if(k&&k.length&&k.indexOf(a.theme)<0)a.theme=o.theme&&k.indexOf(o.theme)>=0?o.theme:k[0];',
         "r.classList.toggle('dark',d);",
         `if(typeof a.theme==='string'&&a.theme!==${scriptJson(BASE_THEME)})r.setAttribute('data-theme',a.theme);`,
         "if(typeof a.density==='string')r.setAttribute('data-density',a.density);",
@@ -392,15 +441,15 @@ function scriptWith(defaults: string): string {
 /**
  * A script for `<head>`, run before the page draws, that writes the kept look on `<html>` as
  * `applyAppearance` will, so the page never shows the wrong scheme first. `defaults` are the same
- * ones given to `useAppearance`. It only sets: `<html>` starts with nothing on it. It reads the
+ * ones given to `useAppearance`, and `offer` the same offer. It only sets: `<html>` starts with nothing on it. It reads the
  * look from `localStorage`, where `setAppearanceStorage` keeps the last known copy too.
  *
  * A page that refuses inline script (a browser extension's pages, a strict Content Security
  * Policy) loads the same script from a file instead: `appearanceScriptFile`, which the core package
  * ships built as `@winterop-com/sokkel-ui/appearance.js`.
  */
-export function appearanceScript(defaults: Partial<ThemeSettings> = {}): string {
-    return scriptWith(scriptJson(defaults))
+export function appearanceScript(defaults: Partial<ThemeSettings> = {}, offer: AppearanceOffer = {}): string {
+    return scriptWith(scriptJson(offer.themes === undefined ? defaults : { ...defaults, themes: offer.themes }))
 }
 
 /**
@@ -410,7 +459,8 @@ export function appearanceScript(defaults: Partial<ThemeSettings> = {}): string 
  * module, loaded first in `<head>` with neither `async` nor `defer`, so it runs before the page
  * draws. It takes the defaults `useAppearance` is given from its own data attributes:
  * `<script src="appearance.js" data-theme="paper" data-scheme="dark"></script>`, and `data-density`,
- * `data-corners`, `data-typeface` and `data-motion` likewise.
+ * `data-corners`, `data-typeface` and `data-motion` likewise. `data-themes="amber paper contrast"`
+ * names the themes the app offers, as `useAppearance`'s `themes` does.
  */
 export function appearanceScriptFile(): string {
     return scriptWith('(document.currentScript||{}).dataset')

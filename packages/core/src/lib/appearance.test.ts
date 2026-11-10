@@ -5,11 +5,13 @@ import {
     appearanceScript,
     appearanceScriptFile,
     applyAppearance,
+    applyScheme,
     type AppearanceRoot,
     type AppearanceStorage,
     CORNERS,
     DEFAULT_APPEARANCE,
     FACES,
+    offeredTheme,
     motionReduced,
     parseAppearance,
     readAppearance,
@@ -428,5 +430,92 @@ describe('motionReduced', () => {
         expect(motionReduced(null, true)).toBe(true)
         expect(motionReduced(null, false)).toBe(false)
         expect(motionReduced('system', true)).toBe(true)
+    })
+})
+
+describe('a change of look', () => {
+    afterEach(() => {
+        vi.unstubAllGlobals()
+        vi.useRealTimers()
+    })
+
+    /** A page whose `<html>` keeps its classes and attributes, and whose head keeps the style elements added to it. */
+    function page() {
+        const classes = new Set<string>()
+        const attributes = new Map<string, string>()
+        const held: { textContent: string; removed: boolean }[] = []
+        const root = {
+            classList: {
+                toggle: (name: string, on?: boolean) => (on ? classes.add(name) : classes.delete(name)),
+                contains: (name: string) => classes.has(name),
+            },
+            setAttribute: (name: string, value: string) => attributes.set(name, value),
+            removeAttribute: (name: string) => attributes.delete(name),
+            getAttribute: (name: string) => attributes.get(name) ?? null,
+            style: { setProperty: () => undefined, removeProperty: () => undefined },
+        }
+        const document = {
+            documentElement: root,
+            body: root,
+            head: { appendChild: (style: (typeof held)[number]) => held.push(style) },
+            createElement: () => {
+                const style = { textContent: '', removed: false, remove: () => (style.removed = true) }
+                return style
+            },
+        }
+        vi.stubGlobal('document', document)
+        vi.stubGlobal('getComputedStyle', () => ({ opacity: '1' }))
+        vi.useFakeTimers()
+        return { root, held }
+    }
+
+    it('holds every transition off while the scheme or theme changes, and lets them go after', () => {
+        const { root, held } = page()
+        applyAppearance({ ...DEFAULT_APPEARANCE, scheme: 'dark', theme: 'amber' }, root)
+        expect(held).toHaveLength(1)
+        expect(held[0].textContent).toContain('transition:none!important')
+        expect(held[0].removed).toBe(false)
+        vi.runAllTimers()
+        expect(held[0].removed).toBe(true)
+    })
+
+    it('holds nothing when the colors stay as they are', () => {
+        const { root, held } = page()
+        applyAppearance({ ...DEFAULT_APPEARANCE, scheme: 'dark', theme: 'amber' }, root)
+        applyAppearance({ ...DEFAULT_APPEARANCE, scheme: 'dark', theme: 'amber', density: 'compact' }, root)
+        applyScheme('dark', root)
+        expect(held).toHaveLength(1)
+        applyScheme('light', root)
+        expect(held).toHaveLength(2)
+    })
+})
+
+describe('an app offering some of the themes', () => {
+    it('wears a kept theme it offers, and else its default or its first', () => {
+        expect(offeredTheme('paper', {}, ['amber', 'paper'])).toBe('paper')
+        expect(offeredTheme('neon', { theme: 'paper' }, ['amber', 'paper'])).toBe('paper')
+        expect(offeredTheme('neon', { theme: 'steel' }, ['amber', 'paper'])).toBe('amber')
+        expect(offeredTheme('neon', {}, undefined)).toBe('neon')
+    })
+
+    it('has the script before paint wear the same theme', () => {
+        const run = (script: string, kept: string, dataset?: Record<string, string>) => {
+            const attributes = new Map<string, string>()
+            const root = {
+                classList: { toggle: () => undefined },
+                setAttribute: (name: string, value: string) => attributes.set(name, value),
+                style: { setProperty: () => undefined },
+            }
+            const storage = { getItem: (key: string) => (key === APPEARANCE_KEY ? JSON.stringify({ theme: kept }) : null) }
+            new Function('document', 'window', script)(
+                { documentElement: root, currentScript: dataset === undefined ? null : { dataset } },
+                { localStorage: storage, matchMedia: () => ({ matches: false }) },
+            )
+            return attributes.get('data-theme')
+        }
+        expect(run(appearanceScript({ theme: 'paper' }, { themes: ['amber', 'paper'] }), 'neon')).toBe('paper')
+        expect(run(appearanceScript({}, { themes: ['amber', 'paper'] }), 'paper')).toBe('paper')
+        expect(run(appearanceScriptFile(), 'neon', { themes: 'amber paper' })).toBe('amber')
+        expect(run(appearanceScriptFile(), 'neon', {})).toBe('neon')
     })
 })

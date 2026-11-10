@@ -17,6 +17,7 @@ html[data-theme='contrast'],
     --popover-foreground: oklch(0 0 0);
     --primary: oklch(0.5 0.14 80);
     --primary-foreground: oklch(1 0 0);
+    --brand: #dfb863;
     --primary-ink: oklch(0.44 0.14 80);
     --secondary: oklch(0.93 0 0);
     --secondary-foreground: oklch(0 0 0);
@@ -117,6 +118,7 @@ html.dark[data-theme='contrast'],
     --popover-foreground: oklch(1 0 0);
     --primary: oklch(0.85 0.14 80);
     --primary-foreground: oklch(0 0 0);
+    --brand: #dfb863;
     --primary-ink: var(--primary);
     --secondary: oklch(0.22 0 0);
     --secondary-foreground: oklch(1 0 0);

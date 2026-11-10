@@ -17,6 +17,7 @@ html[data-theme='neon'],
     --popover-foreground: oklch(0.225 0.05 300);
     --primary: oklch(0.545 0.22 358);
     --primary-foreground: oklch(0.99 0.006 300);
+    --brand: #d63a80;
     --primary-ink: oklch(0.5 0.205 358);
     --secondary: oklch(0.925 0.024 300);
     --secondary-foreground: oklch(0.26 0.05 300);
@@ -105,6 +106,7 @@ html.dark[data-theme='neon'],
     --popover-foreground: oklch(0.93 0.037 299);
     --primary: oklch(0.665 0.245 358);
     --primary-foreground: oklch(0.14 0.045 296);
+    --brand: #d63a80;
     --primary-ink: var(--primary);
     --secondary: oklch(0.262 0.077 297);
     --secondary-foreground: oklch(0.93 0.037 299);

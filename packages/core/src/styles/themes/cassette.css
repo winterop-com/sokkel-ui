@@ -17,6 +17,7 @@ html[data-theme='cassette'],
     --popover-foreground: oklch(0.235 0.02 80);
     --primary: oklch(0.565 0.153 50);
     --primary-foreground: oklch(0.99 0.002 286);
+    --brand: #dd7b2b;
     --primary-ink: oklch(0.51 0.148 45);
     --secondary: oklch(0.915 0.004 286);
     --secondary-foreground: oklch(0.27 0.02 80);
@@ -105,6 +106,7 @@ html.dark[data-theme='cassette'],
     --popover-foreground: oklch(0.875 0.025 86);
     --primary: oklch(0.758 0.169 57);
     --primary-foreground: oklch(0.15 0.012 60);
+    --brand: #dd7b2b;
     --primary-ink: var(--primary);
     --secondary: oklch(0.272 0.009 286);
     --secondary-foreground: oklch(0.875 0.025 86);
