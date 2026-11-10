@@ -4,7 +4,15 @@ import { MarkdownView, type MarkdownProps, type MathEngine } from './markdown-vi
 import { MermaidDiagram } from './MermaidDiagram'
 
 export { headingId, markdownHeadings } from './markdown-view'
-export type { CalloutKind, InlineCode, MarkdownHeading, MarkdownLinks, MarkdownParts, MarkdownProps, MarkdownWords } from './markdown-view'
+export type {
+    CalloutKind,
+    MarkdownInlineCode,
+    MarkdownHeading,
+    MarkdownLinks,
+    MarkdownParts,
+    MarkdownProps,
+    MarkdownWords,
+} from './markdown-view'
 
 let engine: Promise<MathEngine> | undefined
 let ready: MathEngine | undefined

@@ -282,6 +282,10 @@
             "types": "./dist/components/ImageLightbox.d.ts",
             "import": "./dist/components/ImageLightbox.js"
         },
+        "./InlineCode": {
+            "types": "./dist/components/InlineCode.d.ts",
+            "import": "./dist/components/InlineCode.js"
+        },
         "./InlineEdit": {
             "types": "./dist/components/InlineEdit.d.ts",
             "import": "./dist/components/InlineEdit.js"
