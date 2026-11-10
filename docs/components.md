@@ -178,7 +178,7 @@ in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second 
 
 | Component | Import | What it is | Story |
 | --- | --- | --- | --- |
-| **AccountMenu** | `@winterop-com/sokkel-ui/AccountMenu` | The account control in the rail's foot cell: a full-cell row with the initial, the name and a chevron, opening upward into a menu headed by who is signed in and where. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-account-menu--signed-in) |
+| **AccountMenu** | `@winterop-com/sokkel-ui/AccountMenu` | The account control in the rail's foot cell: a full-cell row with the initial, the name (with `detail`, such as a role, muted beside it) and a chevron, opening upward into a menu headed by who is signed in and where. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-account-menu--signed-in) |
 | **AppBar** | `@winterop-com/sokkel-ui/AppBar` | The app's bar along the top of a screen drawn without `Shell`, such as a page a dialog opens over or a screen of its own: the app's mark, the trail to the screen, the search and the actions, in the bar the shell draws, so the screen reads as the same app. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-app-bar--bar) |
 | **CommandPalette** | `@winterop-com/sokkel-ui/CommandPalette` | The command palette: one search over everything an app can do, grouped, each row with its icon, a hint in words or a code, and the keys that run it directly. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-command-palette--closed) |
 | **Dock** | `@winterop-com/sokkel-ui/Dock` | A panel along the bottom of the content, for a log, a terminal or a result: a head bar with the title, tools and a fold control, and its content scrolling under it. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/apps-workspace--list-and-panel) |
@@ -195,7 +195,7 @@ in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second 
 | **TableOfContents** | `@winterop-com/sokkel-ui/TableOfContents` | An "on this page" list beside a long page or form: its headings, the deeper ones indented, the one the reader is in marked with a bar, each with an optional mark such as a part's state. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-docs--callout) |
 | **ThemePicker** | `@winterop-com/sokkel-ui/ThemePicker` | The appearance controls an app's settings show: the named theme, dark or light, the density, the corners, the typeface and the motion. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/themes-theme-picker--basic) |
 | **ThemeToggle** | `@winterop-com/sokkel-ui/ThemeToggle` | The light and dark switch for a top bar: the icon shows the scheme in use, and the name and tooltip say what a press does. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-app-controls--theme) |
-| **TopBar** | `@winterop-com/sokkel-ui/TopBar` | What the shell's top bar holds: a search field and the trail to the current screen at the left, the button that opens the command palette and the screen's actions at the right. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/charts-area--single) |
+| **TopBar** | `@winterop-com/sokkel-ui/TopBar` | What the shell's top bar holds: a search field and the trail to the current screen at the left, the button that opens the command palette and the screen's actions at the right. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-top-bar--current) |
 
 ### Page layout
 
