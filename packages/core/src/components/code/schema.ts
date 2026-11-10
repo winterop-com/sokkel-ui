@@ -394,14 +394,48 @@ export function yamlSlot(state: EditorState, pos: number): Slot {
 }
 
 /** A schema with its local `$ref` followed, its `allOf` left in place. */
+/** The schema an anchor names: the one carrying it as `$anchor` or `$dynamicAnchor`, the root first. */
+function anchored(root: JsonSchema, name: string): JsonSchema | undefined {
+    const seen = new Set<unknown>()
+    const search = (node: unknown): JsonSchema | undefined => {
+        if (typeof node !== 'object' || node === null || seen.has(node)) return undefined
+        seen.add(node)
+        const record = node as Record<string, unknown>
+        if (!Array.isArray(node) && (record.$anchor === name || record.$dynamicAnchor === name)) return node as JsonSchema
+        for (const child of Object.values(record)) {
+            const found = search(child)
+            if (found !== undefined) return found
+        }
+        return undefined
+    }
+    return search(root)
+}
+
+/** The schema a reference inside the document names: `#`, a JSON Pointer such as `#/$defs/step`, or an anchor such as `#meta`. */
+function resolveLocal(root: JsonSchema, ref: string): JsonSchema | undefined {
+    if (!ref.startsWith('#')) return undefined
+    const rest = ref.slice(1)
+    if (rest === '') return root
+    if (!rest.startsWith('/')) return anchored(root, decodeURIComponent(rest))
+    let node: unknown = root
+    for (const raw of rest.slice(1).split('/')) {
+        const part = decodeURIComponent(raw).replaceAll('~1', '/').replaceAll('~0', '~')
+        if (typeof node !== 'object' || node === null) return undefined
+        node = (node as Record<string, unknown>)[part]
+    }
+    return typeof node === 'object' && node !== null && !Array.isArray(node) ? (node as JsonSchema) : undefined
+}
+
 function followRef(schema: JsonSchema, root: JsonSchema): JsonSchema {
     let current = schema
-    for (let hops = 0; current.$ref !== undefined && hops < 16; hops += 1) {
-        const match = /^#\/(\$defs|definitions)\/(.+)$/.exec(current.$ref)
-        const target = match === null ? undefined : root[match[1] === '$defs' ? '$defs' : 'definitions']?.[match[2]]
+    for (let hops = 0; hops < 16; hops += 1) {
+        const ref =
+            typeof current.$ref === 'string' ? current.$ref : typeof current.$dynamicRef === 'string' ? current.$dynamicRef : undefined
+        if (ref === undefined) break
+        const target = resolveLocal(root, ref)
         if (target === undefined) break
-        const { $ref: _ref, ...rest } = current
-        current = { ...(target as JsonSchema), ...rest }
+        const { $ref: _ref, $dynamicRef: _dynamic, ...rest } = current
+        current = { ...target, ...rest }
     }
     return current
 }
