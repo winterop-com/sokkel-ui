@@ -54,6 +54,9 @@ export function IconButton({
 }: IconButtonProps) {
     const held = reason !== undefined && reason !== null && reason !== false
     const said = tooltip ?? label
+    // `aria-pressed` reaches here through the spread despite the type; `pressed` wins, and it stands in.
+    const given = (props as { 'aria-pressed'?: boolean | 'true' | 'false' | 'mixed' })['aria-pressed']
+    const on = pressed ?? (given === undefined ? undefined : given === true || given === 'true')
     return (
         <Tooltip>
             <TooltipTrigger
@@ -63,12 +66,12 @@ export function IconButton({
                         variant={variant}
                         size={size}
                         aria-label={label}
-                        aria-pressed={pressed}
+                        aria-pressed={on}
                         disabled={held || disabled}
                         focusableWhenDisabled={held || props.focusableWhenDisabled}
                         className={cn(
                             variant === 'ghost' && 'text-muted-foreground',
-                            pressed === true && 'bg-muted text-foreground',
+                            on === true && 'bg-muted text-foreground',
                             destructive && 'not-aria-disabled:hover:bg-critical/10 not-aria-disabled:hover:text-critical-ink',
                             className,
                         )}

@@ -280,6 +280,11 @@ export interface ToolbarProps {
      * a face, a label and related ways (`more`, a split button) as any item takes them.
      */
     primary?: ToolbarItem
+    /**
+     * Keeps the row to one line: its tools never wrap onto a second, and the search and the room for
+     * `items` give way instead, `items` folding into More. Off by default, so a phone sees every tool.
+     */
+    nowrap?: boolean
     /** Draws `items` and `primary` in the row by their words alone, the icons kept for the entries in More. */
     wordsOnly?: boolean
     /** Opens More on the first render, for a still view of it. */
@@ -320,6 +325,7 @@ export function Toolbar({
     itemsLead,
     primary,
     wordsOnly = false,
+    nowrap = false,
     defaultMoreOpen = false,
     itemVariant = 'ghost',
     itemsAlign = 'start',
@@ -368,8 +374,8 @@ export function Toolbar({
                 className,
             )}
         >
-            <div className="flex min-h-8 min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
-                {search !== undefined && <div className="w-full @md/toolbar:w-64">{search}</div>}
+            <div className={cn('flex min-h-8 min-w-0 items-center gap-x-3 gap-y-2', nowrap ? 'flex-nowrap' : 'flex-wrap')}>
+                {search !== undefined && <div className={cn(nowrap ? 'min-w-24 shrink' : 'w-full', '@md/toolbar:w-64')}>{search}</div>}
                 {children}
                 {(items !== undefined || primary !== undefined) && (
                     <div
@@ -421,7 +427,11 @@ export function Toolbar({
                         )}
                     </div>
                 )}
-                {end !== undefined && <div className="ml-auto flex min-w-0 flex-wrap items-center gap-2">{end}</div>}
+                {end !== undefined && (
+                    <div className={cn('ml-auto flex min-w-0 items-center gap-2', nowrap ? 'shrink-0 flex-nowrap' : 'flex-wrap')}>
+                        {end}
+                    </div>
+                )}
             </div>
         </div>
     )

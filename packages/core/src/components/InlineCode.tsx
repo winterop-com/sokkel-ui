@@ -46,7 +46,7 @@ export function InlineCode({ value, tone = 'neutral', bare = false, size, classN
             title={value}
             data-tone={tone}
             className={cn(
-                'inline-block max-w-full truncate align-bottom font-mono',
+                'inline-block max-w-full min-w-0 truncate align-bottom font-mono',
                 !bare && 'rounded-mini px-1',
                 !bare && WASH[tone],
                 INK[tone],

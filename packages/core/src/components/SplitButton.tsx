@@ -27,8 +27,8 @@ const WORDS: SplitButtonWords = { more: 'More ways' }
 /** The icon button's size beside each text size, so both halves stand the same height. */
 /** The line between the halves of a filled button, its own ground mixed with its ink. */
 const SEPARATOR: Partial<Record<string, string>> = {
-    default: 'bg-[color-mix(in_oklch,var(--primary),var(--primary-foreground)_30%)]',
-    secondary: 'bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_15%)]',
+    default: 'bg-[color-mix(in_oklab,var(--primary),var(--primary-foreground)_30%)]',
+    secondary: 'bg-[color-mix(in_oklab,var(--secondary),var(--foreground)_15%)]',
     destructive: 'bg-destructive/25',
 }
 

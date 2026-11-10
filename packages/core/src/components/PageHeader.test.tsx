@@ -7,7 +7,21 @@ describe('a page header', () => {
     it('keeps its actions to their own width unless asked', () => {
         const html = renderToStaticMarkup(<PageHeader title="Jobs" actions={<button type="button">New</button>} />)
         expect(html).toMatch(/data-slot="page-header-actions" class="[^"]*shrink-0/)
-        expect(html).toContain('flex-[1_1_16rem]')
+    })
+
+    it('lets a title alone take its own width, and a title with more under it a fair share', () => {
+        expect(renderToStaticMarkup(<PageHeader title="Pipelines" actions={<button type="button">New</button>} />)).toContain(
+            'flex-[1_1_auto]',
+        )
+        expect(renderToStaticMarkup(<PageHeader title="Jobs" description="Every job of harbor." />)).toContain('flex-[1_1_16rem]')
+    })
+
+    it('cuts a code standing as the title short, with the whole of it on hover', () => {
+        const html = renderToStaticMarkup(<PageHeader title="nightly-export" code="nightly-export" />)
+        expect(html).toMatch(/<h1[^>]*title="nightly-export"[^>]*class="[^"]*truncate/)
+        expect(renderToStaticMarkup(<PageHeader title="nightly-export" code="nightly-export" singleLine={false} />)).not.toContain(
+            'truncate',
+        )
     })
 
     it('gives the actions the room the title leaves with actionsFill', () => {

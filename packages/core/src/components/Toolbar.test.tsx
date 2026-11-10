@@ -114,6 +114,11 @@ describe('a toolbar row', () => {
         expect(html.slice(html.indexOf('data-slot="toolbar-primary"'))).toContain('aria-disabled="true"')
     })
 
+    it('keeps the row to one line with nowrap', () => {
+        expect(renderToStaticMarkup(<Toolbar items={[{ id: 'export', label: 'Export' }]} nowrap />)).toContain('flex-nowrap')
+        expect(renderToStaticMarkup(<Toolbar items={[{ id: 'export', label: 'Export' }]} />)).not.toContain('flex-nowrap')
+    })
+
     it('draws the tools by their words alone when asked', () => {
         const icon = <svg data-testid="glyph" />
         const item = { id: 'export', label: 'Export', icon }
