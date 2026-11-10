@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react'
 
-import { RUN_STATUS_MAP, resolveStatus, STATUS_CSS, type StatusColor, type StatusMap } from '../lib/status'
+import { RUN_STATUS_MAP, resolveStatus, STATUS_CSS, STATUS_INK_CSS, type StatusColor, type StatusMap } from '../lib/status'
 
 /** The app's states, over the run states, for every status part inside the provider. */
 const StatusMapContext = createContext<StatusMap>(RUN_STATUS_MAP)
@@ -28,6 +28,8 @@ export interface StatusLook {
     color: StatusColor
     /** The color as the raw token, for a part that takes a CSS color (`Stat`'s and `Segmented`'s `dot`). */
     css: string
+    /** The color's ink as the raw token, for words or an outline in the color. */
+    ink: string
 }
 
 /**
@@ -38,5 +40,5 @@ export interface StatusLook {
 export function useStatus(status: string, statuses?: StatusMap): StatusLook {
     const provided = useContext(StatusMapContext)
     const { label, color } = resolveStatus(status, statuses === undefined ? provided : { ...provided, ...statuses })
-    return { label, color, css: STATUS_CSS[color] }
+    return { label, color, css: STATUS_CSS[color], ink: STATUS_INK_CSS[color] }
 }

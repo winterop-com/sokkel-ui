@@ -98,7 +98,7 @@ export function Stat({
                     tile ? 'text-label text-foreground' : 'text-xs text-muted-foreground',
                 )}
             >
-                {dot !== undefined && <Dot color={dot} size={tile ? 'md' : 'sm'} />}
+                {dot !== undefined && <Dot color={dot} size={tile ? 'lg' : 'sm'} />}
                 <span className="truncate">{label}</span>
             </span>
             <div className={cn(through, 'flex items-baseline gap-2', tile && 'mt-1')}>

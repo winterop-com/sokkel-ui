@@ -351,7 +351,7 @@ Shell, Rail, AppBar, SubNav, Page, PageHeader, PaneHeader, Toolbar, Section, Sur
 components (Stack, Row, Columns, Split, Fill), SplitPane, Field, TextField, DateField, TimeField,
 DateTimeField, NumberField, InlineField, SliderField, CheckboxField, CheckboxList, ChoiceList,
 CodeField, SwitchField, SearchField, QuickAdd, FileField, FilterChip, FilterBar, SavedViews, FormBar, InlineEdit,
-SelectionBar, DataTable, StatusChip, PersonAvatar, PersonRow, MetaLine, DueText, AttachmentList,
+SelectionBar, DataTable, StatusChip, Chip, PersonAvatar, PersonRow, MetaLine, DueText, AttachmentList,
 IconButton, StarButton, SplitButton, DownloadButton, AccountMenu, SidePanel, DialogShell,
 ConfirmDialog, TreeSelect, AsyncSelect, CapabilityPicker, SignIn, RelativeTime, ApiLink, TagChips,
 DetailSheet, UptimeBar.
@@ -398,6 +398,13 @@ run state's) in a map, given to one chip as `statuses` or set once for the app b
 `Timeline`'s event `tone` read the same map, and `useStatus` gives a part that takes a CSS color
 (`Stat`'s and `Segmented`'s `dot`) the state's color as its raw token, never a `--color-*` name,
 which exists only once a class uses it. A state no map knows is said by its name and drawn neutral.
+A `Dot` alone is decoration; `label` names it as an image, `tip` explains it in a tooltip a
+keyboard reaches with `focusable`, `say` writes the word beside it where the state is news, and
+`outline` draws it hollow in the tone's ink for a state not known. Its sizes are 6px, 8px (`md`, the
+status dot, which `StatusChip`'s `dot` draws too) and 10px (`lg`, the default). `Chip` says any
+other short value: neutral, good, critical, warning or info in its own ink, or `absent`, dashed;
+`mono` and `icon` set its face, `onSelect` makes it a button and `onRemove` ends it in a named
+remove button.
 `StatusProvider` and `useStatus` are a module of their own, so a part that draws a state's color
 carries no chip; `lib/status` holds the map's types, the run states and each color as a CSS color.
 

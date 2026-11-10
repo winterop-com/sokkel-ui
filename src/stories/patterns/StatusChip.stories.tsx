@@ -47,6 +47,25 @@ export const RunStates: StoryObj = {
     ),
 }
 
+/** Every run state with its status dot, the 8px dot a status dot beside the chip draws. */
+export const WithDot: StoryObj = {
+    name: 'With a dot',
+    render: () => (
+        <Stack gap="md">
+            <Row gap="xs" wrap>
+                {RUN_STATES.map((status) => (
+                    <StatusChip key={status} status={status} dot />
+                ))}
+            </Row>
+            <Row gap="xs">
+                <Dot status="failed" size="md" label="failed" />
+                <span className="font-mono">sync-inventory</span>
+                <StatusChip status="failed" dot />
+            </Row>
+        </Stack>
+    ),
+}
+
 /** An app's own states given to each chip, a state no map knows drawn neutral by its name, and a label that says more. */
 export const AppStates: StoryObj = {
     name: 'App states',
