@@ -259,6 +259,15 @@ answering) stands between the top bar and the content, scrolling with neither. T
 the safe-area insets on all four sides, for a home-screen web app and a notch; they are zero unless
 the app's page sets `viewport-fit=cover` in its viewport meta.
 
+`SidePanel`'s tabs are a tablist (Base UI's tabs, as `Tabs` uses) and its content their tabpanel,
+labelled by the shown tab, the arrows moving between the tabs. A panel with one tab is headed by a
+title naming it, as there is nothing to switch to; `soleTab="tab"` keeps a tablist of one for a
+panel whose tabs come and go, so its header keeps its shape. Below `lg` the shell draws the panel as
+a sheet from the right; with `panelStrip`, below `md` its tabs stand in a strip at the foot of the
+screen in place of the toggle (each tab a finger's height, with the tab's `icon` over its label),
+a tab raising the panel as a sheet from the strip on that tab and the open tab lowering it, and the
+sheet's content the tabpanel of the strip's tab.
+
 In a desktop window whose native title bar is hidden (Electron's `hiddenInset`, Tauri's
 `Overlay`), `Shell`'s `desktop` makes its top strip, the rail's head, the top bar and an open
 panel's header, the window's title bar. Electron moves the window from it through

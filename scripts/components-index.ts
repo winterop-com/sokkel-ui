@@ -47,6 +47,8 @@ export const PRIVATE: Record<PackageDir, Record<string, string>> = {
             'what the typed fields share: the value held as text, its issues and its frame; `EntryFieldProps` is exported by each field',
         'components/field-rows': 'the gap `Columns` with `fields` hands each `Field` so a row of fields lines up',
         'components/inline-edit-parts': 'the editors `InlineEdit` and the cells `tableEditing` edits share',
+        'components/panel-strip':
+            "the strip of a `SidePanel`'s tabs `Shell` draws on a phone with `panelStrip` and the types the context names",
         'components/option-list':
             'the searchable list `FilterChip`, `FilterBar` and their menus draw values in; `FilterOption` is exported by `FilterChip`',
         'components/Mentions':

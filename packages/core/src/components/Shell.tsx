@@ -25,11 +25,13 @@ import { useDesktopFullscreen } from '../lib/fullscreen'
 import { createShortcutRegistry, topLayer, type KeyBinding, type ShortcutGroup } from '../lib/shortcuts'
 import type { CommandPaletteWords, PaletteFilter, PaletteFoot, PaletteGroup, PaletteSearch } from './CommandPalette'
 import type { ShortcutsDialogWords } from './ShortcutsDialog'
+import { PanelTabStrip, type PanelStrip, type PanelTabs } from './panel-strip'
 import {
     ShellDesktop,
     ShellDrawer,
     ShellFootCell,
     ShellPalette,
+    ShellPanelStrip,
     ShellRailAsk,
     ShellRailMode,
     ShellScroller,
@@ -62,6 +64,11 @@ export interface ShellProps {
     bottom?: ReactNode
     /** A strip between the top bar and the content, such as a `Banner`, that does not scroll with the content. */
     banner?: ReactNode
+    /**
+     * Below `md`, draws a `SidePanel`'s tabs as a strip at the foot of the screen in place of the
+     * panel's toggle: a tab raises the panel as a sheet on that tab, the open tab lowers it again.
+     */
+    panelStrip?: boolean
     /** Whether the panel shows; held inside the shell when not given. */
     panelOpen?: boolean
     onPanelOpenChange?: (open: boolean) => void
@@ -149,6 +156,11 @@ export interface ShellProps {
  * `panelOpen` with `onPanelOpenChange` holds it from outside, which is how a panel's own close
  * button closes it.
  *
+ * With `panelStrip`, below `md` a `SidePanel`'s tabs stand in a strip at the foot of the screen, under
+ * the foot, in place of the toggle: pressing a tab raises the panel as a sheet from the strip on that
+ * tab, another tab switches the sheet to it, and the open tab, a press above the sheet or Escape
+ * lowers it. The strip stays in reach while the sheet is up, and each tab is a finger's height.
+ *
  * With `palette`, the shell holds the app's command palette: ⌘K on a Mac and Ctrl+K elsewhere open
  * it, from a field too, and close it again; so does the top bar's palette button, unless the app
  * gives `TopBar` its own `onSearch`. Left to itself it does not open over a dialog, a menu or an
@@ -192,6 +204,7 @@ export function Shell({
     panel,
     bottom,
     banner,
+    panelStrip = false,
     panelOpen,
     onPanelOpenChange,
     drawerOpen,
@@ -353,12 +366,23 @@ export function Shell({
         shortcutRegistry.set('shell', own, { fallback: true })
     }, [shortcutRegistry, hasPalette, hasShortcuts, words.openPalette, words.openShortcuts, togglePalette, openShortcuts])
     const mobile = useIsMobile()
+    // The side panel's tabs, handed up for the strip, and the ids the strip and the panel share.
+    const [stripTabs, setStripTabs] = useState<PanelTabs | null>(null)
+    const stripBase = useId()
+    const stripping = panelStrip && panel !== undefined && mobile && stripTabs !== null && stripTabs.tabs.length > 0
+    const stripContext = useMemo<PanelStrip | undefined>(
+        () =>
+            panelStrip
+                ? { publish: setStripTabs, shown: stripping, tabId: (id) => `${stripBase}-tab-${id}`, panelId: `${stripBase}-panel` }
+                : undefined,
+        [panelStrip, stripping, stripBase],
+    )
     // A hidden rail opens as the drawer at every width.
     const drawerRef = useOverlay(drawer && (mobile || railHidden), { onClose: closeDrawer })
     const panelRef = useOverlay(panel !== undefined && !wide && open, { onClose: () => setOpen(false), inert: false })
     const [main, setMain] = useState<HTMLElement | null>(null)
 
-    const toggle = panel !== undefined && (
+    const toggle = panel !== undefined && !stripping && (
         <button
             type="button"
             aria-label={open ? words.hidePanel : words.showPanel}
@@ -405,7 +429,7 @@ export function Shell({
                     data-window-drag={desktop === undefined ? undefined : ''}
                     className={cn(
                         'flex h-shell-top shrink-0 items-center gap-2 border-b border-border-strong bg-sidebar px-3',
-                        panel !== undefined && !(open && wide) && 'pr-12',
+                        panel !== undefined && !(open && wide) && !stripping && 'pr-12',
                         // The room for the window's buttons is the rail's to leave where a rail shows, and
                         // the top bar's where none does or a collapsed rail or a strip is narrower than it.
                         lights &&
@@ -457,7 +481,12 @@ export function Shell({
                     ref={panelRef}
                     inert={!open}
                     aria-hidden={!open || undefined}
-                    className={cn('fixed inset-0 z-40 outline-none', !open && 'pointer-events-none')}
+                    className={cn(
+                        'fixed inset-0 z-40 outline-none',
+                        // The sheet rises from the strip, which stays in reach under it.
+                        stripping && 'bottom-[calc(var(--spacing-shell-tabs)+env(safe-area-inset-bottom))] overflow-hidden',
+                        !open && 'pointer-events-none',
+                    )}
                 >
                     <button
                         type="button"
@@ -466,19 +495,55 @@ export function Shell({
                         className={cn('absolute inset-0 bg-scrim transition-opacity duration-200', open ? 'opacity-100' : 'opacity-0')}
                         onClick={() => setOpen(false)}
                     />
-                    <div
-                        data-overlay
-                        className={cn(
-                            'absolute inset-y-0 right-0 flex max-w-[calc(100vw-3rem)] bg-sidebar pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] shadow-pop transition-transform duration-200 ease-out [&>*]:max-w-full',
-                            open ? 'translate-x-0' : 'translate-x-full shadow-none',
-                        )}
-                    >
-                        {panel}
-                    </div>
+                    {stripping ? (
+                        <div
+                            data-overlay
+                            className={cn(
+                                'absolute inset-x-0 top-[calc(env(safe-area-inset-top)+var(--spacing-shell-top))] bottom-0 flex overflow-hidden rounded-t-surface bg-sidebar pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)] shadow-pop transition-transform duration-200 ease-out',
+                                open ? 'translate-y-0' : 'translate-y-full shadow-none',
+                            )}
+                        >
+                            {panel}
+                        </div>
+                    ) : (
+                        <div
+                            data-overlay
+                            className={cn(
+                                'absolute inset-y-0 right-0 flex max-w-[calc(100vw-3rem)] bg-sidebar pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] shadow-pop transition-transform duration-200 ease-out [&>*]:max-w-full',
+                                open ? 'translate-x-0' : 'translate-x-full shadow-none',
+                            )}
+                        >
+                            {panel}
+                        </div>
+                    )}
                 </div>
             )}
         </>
     )
+
+    const pressTab = (id: string) => {
+        if (stripTabs === null) return
+        if (open && id === stripTabs.active) {
+            setOpen(false)
+            return
+        }
+        if (id !== stripTabs.active) stripTabs.choose(id)
+        if (!open) setOpen(true)
+    }
+    const tabStrip = (inGrid: boolean) =>
+        stripping &&
+        stripTabs !== null && (
+            <PanelTabStrip
+                tabs={stripTabs.tabs}
+                active={stripTabs.active}
+                open={open}
+                label={words.panelTabs}
+                tabId={(id) => `${stripBase}-tab-${id}`}
+                panelId={`${stripBase}-panel`}
+                onPress={pressTab}
+                className={inGrid ? 'col-span-full row-start-4' : undefined}
+            />
+        )
 
     // A press anywhere in the frame is handed to the window when it lands in the top strip.
     const frame = { style: trafficLightsStyle(desktop), onMouseDown: windowPressHandler(desktop) }
@@ -490,7 +555,9 @@ export function Shell({
                         <ShellRailAsk value={askRail}>
                             <ShellRailMode value={railMode ?? (crowded ? 'collapsed' : undefined)}>
                                 <ShellScroller value={main}>
-                                    <CommandRegistry value={commandRegistry.registry}>{node}</CommandRegistry>
+                                    <ShellPanelStrip value={stripContext}>
+                                        <CommandRegistry value={commandRegistry.registry}>{node}</CommandRegistry>
+                                    </ShellPanelStrip>
                                 </ShellScroller>
                             </ShellRailMode>
                         </ShellRailAsk>
@@ -519,6 +586,7 @@ export function Shell({
                     {content}
                     {panels}
                 </div>
+                {tabStrip(false)}
             </div>,
         )
 
@@ -527,7 +595,7 @@ export function Shell({
     return provide(
         <div
             {...frame}
-            className="group/shell relative grid h-svh min-h-0 grid-cols-[auto_minmax(0,1fr)] grid-rows-[minmax(0,1fr)_auto_auto] overflow-hidden bg-background pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] text-foreground"
+            className="group/shell relative grid h-svh min-h-0 grid-cols-[auto_minmax(0,1fr)] grid-rows-[minmax(0,1fr)_auto_auto_auto] overflow-hidden bg-background pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] text-foreground"
         >
             {toggle}
             {!railHidden && (
@@ -550,6 +618,7 @@ export function Shell({
                     className="col-start-2 row-start-3 hidden h-shell-foot border-t border-page-foot-line bg-page-foot-ground md:block md:peer-empty:hidden"
                 />
             )}
+            {tabStrip(true)}
         </div>,
     )
 }
@@ -559,6 +628,8 @@ export interface ShellWords {
     close: string
     showPanel: string
     hidePanel: string
+    /** The name of the strip of the panel's tabs on a phone. */
+    panelTabs: string
     /** What ⌘K or Ctrl+K does, as the shortcuts dialog lists it. */
     openPalette: string
     /** What `?` does, as the shortcuts dialog lists it. */
@@ -570,6 +641,7 @@ const WORDS: ShellWords = {
     close: 'Close the navigation',
     showPanel: 'Show the panel',
     hidePanel: 'Hide the panel',
+    panelTabs: 'Panel',
     openPalette: 'Open the command palette',
     openShortcuts: 'Show the keyboard shortcuts',
 }
