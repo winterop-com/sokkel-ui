@@ -464,8 +464,11 @@ for the rest, and `DescriptionList`'s `row` layout sets its facts in one wrappin
 `SignIn` is every app's door: a brand pane, dark in every scheme on `--brand-ground`, with art over
 its upper part and the mark, the name and a few facts at its foot, beside a centered form of a
 username and password (or a token, or the app's own fields), an optional server address, an error
-over the submit and other ways in under a rule. The seam between the panes drags, the form rises
-into place as it opens, and the username can be kept in the browser. Each field is led by an icon
+over the submit and other ways in under a rule. The seam between the panes drags, and its width can
+be kept in the browser; the form rises into place as it opens, with focus in its first empty field,
+and the username can be kept in the browser once a sign-in goes through. A try under way holds the
+fields without taking focus from them, and a refusal puts focus back in the password. The fields are
+named and marked required, for the browser's password manager. Each field is led by an icon
 unless `icons` is off, and `optional` lets the password, or every credential, be left empty for a
 server that needs none. An app that finds its server itself says so in the server field's place
 (`looking`), then offers a link to a different server (`found`) that brings the field back; with the

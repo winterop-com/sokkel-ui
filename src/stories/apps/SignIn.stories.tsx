@@ -25,7 +25,11 @@ const BRAND = {
     ],
 }
 
-/** The sign-in, then the app: any username with the password "tide" signs in after a moment; any other is refused. */
+/**
+ * The sign-in, then the app: any username with the password "tide" signs in after a moment; any
+ * other is refused, and focus goes back to the password. A username that signs in is filled in next
+ * time, and the seam's dragged width is kept until a double click puts it back.
+ */
 function Door({ signedIn: start = false, method = 'password' }: { signedIn?: boolean; method?: 'password' | 'token' }) {
     const [signedIn, setSignedIn] = useState(start)
     const [busy, setBusy] = useState(false)
@@ -49,7 +53,9 @@ function Door({ signedIn: start = false, method = 'password' }: { signedIn?: boo
             method={method}
             description={method === 'token' ? 'Paste a token from Settings, Access tokens.' : 'Enter your credentials to continue.'}
             remember={method === 'password'}
+            rememberKey={method === 'password' ? 'tidevann.sign-in.user' : undefined}
             resizable
+            widthKey="tidevann.sign-in.width"
             busy={busy}
             error={error}
             onSubmit={(values) => {
