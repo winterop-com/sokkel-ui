@@ -6,7 +6,10 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.14.3** is the latest release (2026-11-10): `StatusProvider` takes `dot` and `fallback`, and
+- **0.14.4** is the latest release (2026-11-10): frame fixes (collapsed rail names, the palette's first
+  row, Ctrl+K on a Mac, 44px drawer rows, an app's shortcuts kept) and `TopBar` `trailEnds`, `ServerMenu`
+  states, `quiet`, `checks` and `onPress`, `AccountMenu` `detail`.
+- **0.14.3** (2026-11-10): `StatusProvider` takes `dot` and `fallback`, and
   `StatusChip` marks its state and passes props through.
 - **0.14.2** (2026-11-10): a typeless `$ref` reads "any", `WindowedPaneButton`
   takes a size, `useControlledDocument`, and phrases for an app's formats.
