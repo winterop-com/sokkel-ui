@@ -324,11 +324,19 @@ function narrowed(
     const rank = (index: number) => {
         const chunk = chunks[index]
         const wrongType = chunk.some((other) => other.keyword === 'type' && other.instancePath === base)
-        return (wrongType ? 1_000_000 : 0) + chunk.length
+        return (wrongType ? 1_000_000 : 0) + withoutExplainedPatterns(chunk).length
     }
     const best = candidates.reduce((pick, index) => (rank(index) < rank(pick) ? index : pick))
     const kept = fitting(chunks[best], made, document)
     return { start, kept: kept.length > 0 ? kept : [error] }
+}
+
+/** The errors without a `pattern` at a place where a `format` also failed: the format names what the raw pattern only spells out. */
+function withoutExplainedPatterns<E extends { instancePath: string; keyword: string }>(errors: E[]): E[] {
+    return errors.filter(
+        (error) =>
+            error.keyword !== 'pattern' || !errors.some((other) => other.keyword === 'format' && other.instancePath === error.instancePath),
+    )
 }
 
 /** The errors with every failed `anyOf` and `oneOf`, at any depth, narrowed to the branch that fits the value. */
@@ -362,14 +370,17 @@ function withoutSettledIfs(errors: ErrorObject[]): ErrorObject[] {
  * `oneOf`, at any depth, reports only the branch that fits the value: the one whose `const` (or
  * one-value `enum`) properties match it, else the one with the fewest errors; so a nullable field
  * reports what is wrong with the real branch, not that the value is not null. An `if` whose
- * `then` or `else` said what is wrong adds nothing of its own. Formats an app registers with
+ * `then` or `else` said what is wrong adds nothing of its own, and neither does a `pattern` where
+ * a `format` failed on the same value. Formats an app registers with
  * `registerSchemaFormats` are checked; any other unknown format is passed over.
  */
 export function validate(schema: JsonSchema, value: unknown): SchemaIssue[] {
     const document = prune(value)
     const made = compile(schema)
     if (made instanceof Error) return [{ kind: 'unchecked', reason: made.message, path: [], tone: 'critical' }]
-    const errors = withoutSettledIfs(fitting(made.check(document) ? [] : [...(made.check.errors ?? [])], made, document))
+    const errors = withoutExplainedPatterns(
+        withoutSettledIfs(fitting(made.check(document) ? [] : [...(made.check.errors ?? [])], made, document)),
+    )
     const issues = errors
         .filter((error) => !(error.keyword === 'type' && error.params.type === 'null'))
         .filter(

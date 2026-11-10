@@ -6,6 +6,14 @@ import { JQ_BUILTINS } from '@winterop-com/sokkel-ui/code/jq'
 import { Field } from '@winterop-com/sokkel-ui/Field'
 import { SourceSheet } from '@winterop-com/sokkel-ui/SourceSheet'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@winterop-com/sokkel-ui/primitives/dialog'
 import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /** Editing code in a form or a pane, and a record's source one press away. */
@@ -412,6 +420,23 @@ function Source({ open: initial }: { open: boolean }) {
     )
 }
 
+function InDialog() {
+    return (
+        <Dialog defaultOpen>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>nightly-export</DialogTitle>
+                    <DialogDescription>The job as the server stores it.</DialogDescription>
+                </DialogHeader>
+                <Field id="stored" label="Stored record">
+                    <CodeEditor label="Stored record" language="json" value={JSON.stringify(RECORD, null, 2)} readOnly className="h-64" />
+                </Field>
+                <DialogFooter showCloseButton />
+            </DialogContent>
+        </Dialog>
+    )
+}
+
 const meta: Meta = { title: 'Patterns/Editor', parameters: { frame: 'padded' } }
 export default meta
 
@@ -451,4 +476,6 @@ export const NamedSchema: StoryObj = { name: 'Named schema', render: () => <Name
  * notes by name, and the one chosen goes in with its closing brackets.
  */
 export const Markdown: StoryObj = { name: 'Markdown', render: () => <MarkdownNote /> }
+/** A read-only record in a dialog: the field and its line numbers one ground over the dialog's surface. */
+export const InADialog: StoryObj = { name: 'In a dialog', render: () => <InDialog /> }
 export const SourceOpen: StoryObj = { name: 'Source sheet, open', render: () => <Source open /> }

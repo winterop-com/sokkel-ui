@@ -61,14 +61,40 @@ function refName(schema: JsonSchema): string | undefined {
     return schema.$ref?.split('/').pop()
 }
 
-/** A schema's type in a few words: `string, email`, `array of Address`, `integer or null`, `one of 2`. */
+/** A string held only to a pattern, the shape a placeholder such as `${steps.fetch.rows}` is allowed in beside a field's real type. */
+function patternOnly(schema: JsonSchema): boolean {
+    return (
+        schema.type === 'string' &&
+        schema.pattern !== undefined &&
+        schema.format === undefined &&
+        schema.enum === undefined &&
+        schema.const === undefined
+    )
+}
+
+/**
+ * A choice's type in a few words: its branches' joined (`string or integer`), a branch that is
+ * only a patterned string left out beside one that is more, and `one of 4` past three.
+ */
+function choiceLabel(variants: JsonSchema[], root: JsonSchema, word: string): string {
+    const resolved = variants.map((variant) => resolve(variant, root))
+    const nullable = resolved.some((variant) => variant.type === 'null')
+    const real = variants.filter((_, index) => resolved[index].type !== 'null')
+    const typed = variants.filter((_, index) => resolved[index].type !== 'null' && !patternOnly(resolved[index]))
+    const kept = typed.length === 1 ? typed : real
+    const labels = [...new Set(kept.map((variant) => typeLabel(variant, root)))]
+    const label = labels.length === 0 ? 'null' : labels.length > 3 ? `${word} of ${String(kept.length)}` : labels.join(' or ')
+    return nullable && labels.length > 0 && !label.endsWith(' or null') ? `${label} or null` : label
+}
+
+/** A schema's type in a few words: `string, email`, `array of Address`, `integer or null`, `string or number`. */
 export function typeLabel(schema: JsonSchema, root: JsonSchema): string {
     const name = refName(schema)
     const resolved = resolve(schema, root)
     if (resolved.const !== undefined) return 'constant'
     if (resolved.enum !== undefined) return 'one of the values'
-    if (resolved.oneOf !== undefined) return `one of ${resolved.oneOf.length}`
-    if (resolved.anyOf !== undefined) return `any of ${resolved.anyOf.length}`
+    if (resolved.oneOf !== undefined) return choiceLabel(resolved.oneOf, root, 'one')
+    if (resolved.anyOf !== undefined) return choiceLabel(resolved.anyOf, root, 'any')
     const types = Array.isArray(resolved.type) ? resolved.type : resolved.type === undefined ? [] : [resolved.type]
     const nullable = types.includes('null')
     const main = types.filter((type) => type !== 'null')

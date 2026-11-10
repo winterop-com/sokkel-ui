@@ -351,6 +351,7 @@ const THEME = EditorView.theme({
     '.cm-tooltip.cm-tooltip-autocomplete > ul': { fontFamily: 'var(--font-mono)', maxHeight: '16rem' },
     '.cm-tooltip.cm-tooltip-autocomplete > ul > li': { padding: '0.125rem 0.5rem' },
     '.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected]': { backgroundColor: 'var(--accent)', color: 'var(--accent-foreground)' },
+    '.cm-completion-deprecated .cm-completionLabel': { textDecoration: 'line-through', color: 'var(--muted-foreground)' },
     '.cm-completionDetail': { color: 'var(--muted-foreground)', fontStyle: 'normal', marginLeft: '0.75rem' },
     '.cm-completionMatchedText': { textDecoration: 'none', fontWeight: '600' },
     '.cm-completionIcon': { color: 'var(--muted-foreground)', opacity: '1' },
@@ -421,6 +422,13 @@ const SIZES = {
 
 /** A document past this many characters drops folding, bracket colors and indent guides, which walk the whole of it. */
 export const LARGE_DOCUMENT = 1_000_000
+
+/** Read-only and not editable; still focusable, so a click or Tab puts the caret in and its line is shaded. */
+export const codeReadOnly = (readOnly: boolean) => [
+    EditorState.readOnly.of(readOnly),
+    EditorView.editable.of(!readOnly),
+    readOnly ? EditorView.contentAttributes.of({ tabindex: '0' }) : [],
+]
 
 const NO_MARKS: readonly CodeMark[] = []
 
@@ -796,7 +804,15 @@ export function CodeEditor({
         schema: () => {
             if (schemaLanguage === undefined) return []
             // One source for the life of the configuration: the autocompletion restarts when its sources change.
-            const data = [{ autocomplete: schemaCompletion(() => props.current.schema, schemaLanguage) }]
+            const data = [
+                {
+                    autocomplete: schemaCompletion(
+                        () => props.current.schema,
+                        schemaLanguage,
+                        () => ({ ...SCHEMA_WORDS, ...props.current.words }),
+                    ),
+                },
+            ]
             return [
                 EditorState.languageData.of(() => data),
                 hoverTooltip(
@@ -853,13 +869,18 @@ export function CodeEditor({
                     bracketMatching(),
                     parts.active.of(activeLine ? highlightActiveLine() : []),
                     syntaxHighlighting(HIGHLIGHT),
-                    autocompletion({ icons: true, override: [offer] }),
+                    autocompletion({
+                        icons: true,
+                        override: [offer],
+                        optionClass: (option) =>
+                            (option as { deprecated?: boolean }).deprecated === true ? 'cm-completion-deprecated' : '',
+                    }),
                     keymap.of([...completionKeymap, ...defaultKeymap, ...(link === undefined ? historyKeymap : []), indentWithTab]),
                     parts.search.of(extensions.search()),
                     parts.language.of(languageExtension(language)),
                     parts.schema.of(extensions.schema()),
                     parts.lint.of(extensions.lint()),
-                    parts.readOnly.of([EditorState.readOnly.of(readOnly), EditorView.editable.of(!readOnly)]),
+                    parts.readOnly.of(codeReadOnly(readOnly)),
                     parts.size.of(SIZES[size]),
                     marksField,
                     EditorState.languageData.of(() => given),
@@ -1044,7 +1065,7 @@ export function CodeEditor({
 
     useEffect(() => {
         view.current?.dispatch({
-            effects: compartments.current.readOnly.reconfigure([EditorState.readOnly.of(readOnly), EditorView.editable.of(!readOnly)]),
+            effects: compartments.current.readOnly.reconfigure(codeReadOnly(readOnly)),
         })
     }, [readOnly])
 
@@ -1125,7 +1146,9 @@ export function CodeEditor({
                 variant === 'field'
                     ? 'min-h-24 rounded-control border border-input bg-field [--editor-paper:var(--field)] focus-within:border-ring/80 aria-invalid:border-destructive'
                     : 'h-full min-h-0 bg-background [--editor-paper:var(--background)]',
-                readOnly && variant === 'field' && 'bg-muted/40 [--editor-paper:color-mix(in_oklab,var(--muted)_40%,var(--background))]',
+                readOnly &&
+                    variant === 'field' &&
+                    'bg-(--editor-paper) [--editor-paper:color-mix(in_oklab,var(--muted)_40%,var(--background))]',
                 className,
             )}
         />
