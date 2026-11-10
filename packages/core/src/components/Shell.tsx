@@ -339,7 +339,16 @@ export function Shell({
     useEffect(() => {
         const own: KeyBinding[] = []
         if (hasPalette)
-            own.push({ id: 'palette', key: 'k', mod: true, inFields: true, inDialogs: true, label: words.openPalette, run: togglePalette })
+            own.push({
+                id: 'palette',
+                key: 'k',
+                mod: true,
+                alsoCtrl: true,
+                inFields: true,
+                inDialogs: true,
+                label: words.openPalette,
+                run: togglePalette,
+            })
         if (hasShortcuts) own.push({ id: 'shortcuts', key: '?', label: words.openShortcuts, run: openShortcuts })
         shortcutRegistry.set('shell', own, { fallback: true })
     }, [shortcutRegistry, hasPalette, hasShortcuts, words.openPalette, words.openShortcuts, togglePalette, openShortcuts])

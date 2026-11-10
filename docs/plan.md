@@ -211,14 +211,18 @@ binding names its key by the character it types (`KeyboardEvent.key`), so `?`, `
 a Norwegian keyboard as on an American one: a character that is not a letter is matched as itself
 whatever Shift, Option or AltGr the layout took, a letter by its case with `shift` saying so, and a
 letter key that Option or a non-Latin layout turned into another character by its place. `mod` is
-⌘ on a Mac and Ctrl elsewhere, the other one refusing the press. Keys are quiet while typing in a
+⌘ on a Mac and Ctrl elsewhere, the other one refusing the press, save a binding with `alsoCtrl`,
+which a Mac's Ctrl answers too: the palette's, so ⌘K and Ctrl K both open it there, while Ctrl
+keeps its editing keys in a field for every other binding. Keys are quiet while typing in a
 field, where a slider keeps its arrows and a button its Space, and while a dialog, a sheet, a menu,
 an overlay or the shell's palette is open, unless a binding asks (`inFields`, `inDialogs`); `scope`
 hears a binding only inside an element marked `data-shortcut-scope`, before the same key outside it.
 A later screen's binding comes before an earlier one's, and the shell's own (the palette's ⌘K or
 Ctrl K, which a second press closes; `?`) come last. `ShortcutsDialog` lists every binding with a
 `label` under its `group`, its keys written by `keyLabels` as the device writes them, then the
-groups an app gives for keys it answers itself; `Shell`'s `shortcuts` makes the shell hold it,
+groups an app gives for keys it answers itself, each shortcut known by its id and keys together: an
+app's on a bound one's id but other keys is listed beside it, and one on the same id and keys is
+listed once, in the app's words and group; `Shell`'s `shortcuts` makes the shell hold it,
 opened on `?`, bound once, and from the account menu, and `shortcutsOpen` with
 `onShortcutsOpenChange` holds it from outside, as for a palette row built beside the shell.
 `useShell()` gives a screen inside the shell `openPalette` and `openShortcuts`. `SearchField`'s `/`
@@ -239,7 +243,8 @@ return, the shell's content when no ref is given. `useReducedMotion()` says whet
 reduced, from the look's own `motion` and else the system's, following both, for motion a script
 draws.
 
-On a phone the shell's drawer draws the rail expanded, its account with it, even where the app holds
+On a phone the shell's drawer draws the rail expanded, its rows a finger tall (`--spacing-finger`)
+below `md`, its account with it, even where the app holds
 the rail `collapsed`; its head's end closes it, and a row chosen in the account menu closes it too.
 Besides a press on a link it closes when the app's `route` (a location's path or key) changes, so
 the palette and the app's own navigation leave it the same way; `drawerOpen` with

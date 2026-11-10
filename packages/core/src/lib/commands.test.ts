@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { PaletteCommand } from '../components/CommandPalette'
 import type { RailGroup } from '../components/Rail'
 import { DEFAULT_APPEARANCE, THEMES } from './appearance'
-import { appearanceCommands, filterCommands, mergeCommands, placeCommands, termScore } from './commands'
+import { activeRow, appearanceCommands, filterCommands, mergeCommands, placeCommands, termScore } from './commands'
 
 const GROUPS: RailGroup[] = [
     { id: 'work', entries: [{ id: 'runs', label: 'Runs', href: '/runs' }] },
@@ -203,5 +203,25 @@ describe('filterCommands', () => {
     it('leaves the groups as they are for an empty query', () => {
         const given = [{ title: 'Go to', commands: [command('Runs')] }]
         expect(filterCommands(given, ' ', termScore)).toEqual(given)
+    })
+})
+
+describe('activeRow', () => {
+    it('keeps the chosen row while it is drawn', () => {
+        expect(activeRow('Runs runs', ['Jobs jobs', 'Runs runs'])).toBe('Runs runs')
+    })
+
+    it('chooses the first row when none is chosen, as the palette opens', () => {
+        expect(activeRow('', ['Jobs jobs', 'Runs runs'])).toBe('Jobs jobs')
+    })
+
+    it("chooses the first of the search's results once they are the only rows, the chosen command gone", () => {
+        expect(activeRow('Runs runs', ['search run run-4812', 'search run run-4813'])).toBe('search run run-4812')
+    })
+
+    it('chooses the first of results that arrive later, after the list stood empty', () => {
+        const empty = activeRow('Runs runs', [])
+        expect(empty).toBe('')
+        expect(activeRow(empty, ['search run run-4812'])).toBe('search run run-4812')
     })
 })

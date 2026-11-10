@@ -115,3 +115,28 @@ describe('Rail with a body', () => {
         expect(html).not.toContain('aria-label="The tree"')
     })
 })
+
+describe('Rail collapsed', () => {
+    const anchors = (html: string) => html.match(/<a [^>]*>/g) ?? []
+
+    it('names each link by its entry, its icon being all it draws', () => {
+        const html = renderToStaticMarkup(<Rail name="Tidevann" groups={GROUPS} collapsed onCollapsedChange={() => undefined} />)
+        const links = anchors(html)
+        expect(links.find((link) => link.includes('href="#library"'))).toContain('aria-label="Library"')
+        expect(links.find((link) => link.includes('href="#radio"'))).toContain('aria-label="Radio"')
+        expect(links.find((link) => link.includes('href="#library"'))).toContain('aria-current="page"')
+    })
+
+    it('draws the expanded links by their words, with no label over them', () => {
+        const html = renderToStaticMarkup(<Rail name="Tidevann" groups={GROUPS} onCollapsedChange={() => undefined} />)
+        expect(anchors(html).find((link) => link.includes('href="#radio"'))).not.toContain('aria-label')
+        expect(html).toContain('>Radio<')
+    })
+
+    it("makes an expanded row a finger tall below md and keeps the desktop's row height", () => {
+        const html = renderToStaticMarkup(<Rail name="Tidevann" groups={GROUPS} onCollapsedChange={() => undefined} />)
+        const radio = anchors(html).find((link) => link.includes('href="#radio"')) ?? ''
+        expect(radio).toContain('h-(--density-row)')
+        expect(radio).toContain('max-md:h-finger')
+    })
+})

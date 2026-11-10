@@ -23,7 +23,7 @@ import { ResizeHandle } from './ResizeHandle'
 import { Count } from './Count'
 import { Dot } from './Dot'
 import { GroupLabel } from './GroupLabel'
-import { Link } from './Link'
+import { Link, type LinkProps } from './Link'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 
 /** One place the rail leads to. */
@@ -175,8 +175,9 @@ export interface RailProps {
  * a player, the foot cell is drawn at the window's bottom edge under that strip, as wide as the rail.
  *
  * Expanded, an entry is its icon and its label, with its `description` on a quieter line under the
- * label when it has one, and the active one wears a slim accent bar on its left edge over a faint wash. Collapsed, the rail is icons alone, each naming itself in a
- * tooltip, the groups divided by a rule, and the mark itself is the control that expands it.
+ * label when it has one, and the active one wears a slim accent bar on its left edge over a faint wash. Collapsed, the rail is icons alone, each link named by
+ * its entry's label and showing it in a tooltip at its right, the groups divided by a rule, and the
+ * mark itself is the control that expands it.
  *
  * As a `strip`, it is the narrow column a team chat keeps on its far left, beside its own list of
  * channels: each entry an icon with its short label under it, the active one's icon on a soft
@@ -193,7 +194,8 @@ export interface RailProps {
  * `markHref` makes the expanded rail's mark and name, and a strip's tile, a link to the app's home.
  *
  * In the shell's drawer on a narrow window the rail is drawn expanded, even where the app holds it
- * `collapsed`, its edge is not drawn, and the control at its head's end closes the drawer.
+ * `collapsed`, its edge is not drawn, and the control at its head's end closes the drawer. Below
+ * `md` its rows are a finger tall (`--spacing-finger`); on a desktop they keep the density's row.
  *
  * An entry with `entries` is a parent. Expanded, a chevron at its row's end folds and unfolds its
  * entries, indented under it and lined up under its label; a parent without an `href` of its own
@@ -596,7 +598,7 @@ function TipText({ entry }: { entry: RailEntry }) {
 function rowClass(state: 'active' | 'holding' | 'idle', inset: 'none' | 'icon' | 'text' = 'none', described = false): string {
     return cn(
         'flex w-full gap-3 rounded-l-sm rounded-r-md border-l-2 pr-3 text-left text-sm',
-        described ? 'min-h-(--density-row) items-start py-1.5' : 'h-(--density-row) items-center',
+        described ? 'min-h-(--density-row) items-start py-1.5 max-md:min-h-finger' : 'h-(--density-row) items-center max-md:h-finger',
         inset === 'none' ? 'pl-2.5' : inset === 'icon' ? 'pl-9.5' : 'pl-5.5',
         state === 'active'
             ? 'border-sidebar-primary bg-sidebar-accent font-medium text-sidebar-accent-foreground'
@@ -922,31 +924,32 @@ function RailLink({ entry, collapsed, unread }: { entry: RailEntry; collapsed: b
     if (collapsed) {
         return (
             <Tooltip.Root>
+                {/* The link names itself, its icon being all it draws; the tooltip shows the name to the eye. */}
                 <Tooltip.Trigger
                     render={(props) => (
-                        <span {...props} className="mx-auto">
-                            {renderLink(
-                                entry,
-                                <>
-                                    <EntryMark entry={entry} initial />
-                                    {counted && (
-                                        <Count
-                                            value={entry.count ?? 0}
-                                            size="sm"
-                                            shape="round"
-                                            className="absolute -top-1 -right-1.5 ring-2 ring-sidebar"
-                                        />
-                                    )}
-                                    {dotted && <UnreadDot label={unread} className="absolute top-1 right-1" />}
-                                </>,
-                                cn(
-                                    'relative flex h-(--density-row) w-9 items-center justify-center rounded-md',
-                                    entry.active
-                                        ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                                        : 'text-muted-foreground hover:bg-hover hover:text-foreground',
-                                ),
+                        <Link
+                            {...(props as LinkProps)}
+                            href={entry.href}
+                            aria-label={entry.label}
+                            aria-current={entry.active ? 'page' : undefined}
+                            className={cn(
+                                'relative mx-auto flex h-(--density-row) w-9 items-center justify-center rounded-md',
+                                entry.active
+                                    ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                                    : 'text-muted-foreground hover:bg-hover hover:text-foreground',
                             )}
-                        </span>
+                        >
+                            <EntryMark entry={entry} initial />
+                            {counted && (
+                                <Count
+                                    value={entry.count ?? 0}
+                                    size="sm"
+                                    shape="round"
+                                    className="absolute -top-1 -right-1.5 ring-2 ring-sidebar"
+                                />
+                            )}
+                            {dotted && <UnreadDot label={unread} className="absolute top-1 right-1" />}
+                        </Link>
                     )}
                 />
                 <Tooltip.Portal>
