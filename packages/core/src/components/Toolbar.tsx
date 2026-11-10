@@ -135,8 +135,19 @@ export type ToolbarItemVariant = 'ghost' | 'outline'
 const DESTRUCTIVE = 'not-aria-disabled:hover:bg-critical/10 not-aria-disabled:hover:text-critical-ink'
 
 /** A tool as the row draws it: the app's own node, a split button for one with related ways, or a plain button. */
-function Inline({ item, variant, words }: { item: ToolbarItem; variant: ToolbarItemVariant; words: ToolbarWords }) {
+function Inline({
+    item,
+    variant,
+    words,
+    icons = true,
+}: {
+    item: ToolbarItem
+    variant: ToolbarItemVariant | 'default'
+    words: ToolbarWords
+    icons?: boolean
+}) {
     if (item.render !== undefined) return item.render
+    const icon = icons ? item.icon : undefined
     const named = item.face !== undefined
     const title = named && !said(item.reason) ? item.label : undefined
     if (item.more !== undefined) {
@@ -152,7 +163,7 @@ function Inline({ item, variant, words }: { item: ToolbarItem; variant: ToolbarI
                 reason={item.reason}
                 words={{ more: words.moreWays }}
             >
-                {item.icon}
+                {icon}
                 {item.face ?? item.label}
             </SplitButton>
         )
@@ -169,7 +180,7 @@ function Inline({ item, variant, words }: { item: ToolbarItem; variant: ToolbarI
             onClick={item.onSelect}
             className={cn(item.pressed === true && 'bg-muted text-foreground', item.destructive === true && DESTRUCTIVE)}
         >
-            {item.icon}
+            {icon}
             {item.face ?? item.label}
         </Button>
     )
@@ -264,6 +275,13 @@ export interface ToolbarProps {
     items?: readonly ToolbarItem[]
     /** A part before `items` in their room that never moves into More, such as a status chip. */
     itemsLead?: ReactNode
+    /**
+     * The primary action after `items` and More, drawn filled, that never moves into More: a reason,
+     * a face, a label and related ways (`more`, a split button) as any item takes them.
+     */
+    primary?: ToolbarItem
+    /** Draws `items` and `primary` in the row by their words alone, the icons kept for the entries in More. */
+    wordsOnly?: boolean
     /** Opens More on the first render, for a still view of it. */
     defaultMoreOpen?: boolean
     /** How `items` drawn as plain buttons look, and More with them: `ghost` (the default) or `outline`. */
@@ -300,6 +318,8 @@ export function Toolbar({
     children,
     items,
     itemsLead,
+    primary,
+    wordsOnly = false,
     defaultMoreOpen = false,
     itemVariant = 'ghost',
     itemsAlign = 'start',
@@ -312,6 +332,8 @@ export function Toolbar({
     const room = useRef<HTMLDivElement>(null)
     const ruler = useRef<HTMLDivElement>(null)
     const leader = useRef<HTMLDivElement>(null)
+    const trailer = useRef<HTMLDivElement>(null)
+    const icons = !wordsOnly
     const [fit, setFit] = useState(items?.length ?? 0)
     const count = items?.length ?? 0
     const led = itemsLead !== undefined && itemsLead !== null && itemsLead !== false
@@ -324,7 +346,8 @@ export function Toolbar({
             const more = boxes.pop()?.offsetWidth ?? 0
             const widths = boxes.map((one) => one.offsetWidth)
             const lead = leader.current === null ? 0 : leader.current.offsetWidth + ITEM_GAP
-            setFit(toolbarSplit(widths, widths, box.clientWidth - lead, ITEM_GAP, more).inline.length)
+            const last = trailer.current === null ? 0 : trailer.current.offsetWidth + ITEM_GAP
+            setFit(toolbarSplit(widths, widths, box.clientWidth - lead - last, ITEM_GAP, more).inline.length)
         }
         update()
         if (typeof ResizeObserver === 'undefined') return
@@ -332,8 +355,9 @@ export function Toolbar({
         observer.observe(box)
         observer.observe(measure)
         if (leader.current !== null) observer.observe(leader.current)
+        if (trailer.current !== null) observer.observe(trailer.current)
         return () => observer.disconnect()
-    }, [count, led])
+    }, [count, led, primary !== undefined])
     const inline = items?.slice(0, fit) ?? []
     const overflow = items?.slice(fit) ?? []
     return (
@@ -347,7 +371,7 @@ export function Toolbar({
             <div className="flex min-h-8 min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
                 {search !== undefined && <div className="w-full @md/toolbar:w-64">{search}</div>}
                 {children}
-                {items !== undefined && (
+                {(items !== undefined || primary !== undefined) && (
                     <div
                         ref={room}
                         data-slot="toolbar-items"
@@ -363,9 +387,9 @@ export function Toolbar({
                             inert
                             className="pointer-events-none invisible absolute top-0 left-0 flex h-0 w-max items-center gap-2 overflow-hidden"
                         >
-                            {items.map((item) => (
+                            {(items ?? []).map((item) => (
                                 <div key={item.id} className="flex shrink-0 items-center">
-                                    <Inline item={item} variant={itemVariant} words={words} />
+                                    <Inline item={item} variant={itemVariant} words={words} icons={icons} />
                                 </div>
                             ))}
                             <div className="flex shrink-0 items-center">{moreButton(words.more, itemVariant)}</div>
@@ -377,7 +401,7 @@ export function Toolbar({
                         )}
                         {inline.map((item) => (
                             <div key={item.id} className="flex shrink-0 items-center">
-                                <Inline item={item} variant={itemVariant} words={words} />
+                                <Inline item={item} variant={itemVariant} words={words} icons={icons} />
                             </div>
                         ))}
                         {overflow.length > 0 && (
@@ -389,6 +413,11 @@ export function Toolbar({
                                     <Entries items={overflow} />
                                 </DropdownMenuContent>
                             </DropdownMenu>
+                        )}
+                        {primary !== undefined && (
+                            <div ref={trailer} data-slot="toolbar-primary" className="flex shrink-0 items-center">
+                                <Inline item={primary} variant="default" words={words} icons={icons} />
+                            </div>
                         )}
                     </div>
                 )}
