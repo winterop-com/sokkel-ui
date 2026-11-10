@@ -1,0 +1,4 @@
+{
+    "name": "Studio",
+    "summary": "An editor for pipelines, schemas and queries: checked and completed as typed, a live graph of the steps, runs with their log, and SQL over the runs."
+}
