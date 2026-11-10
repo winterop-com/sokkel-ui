@@ -156,7 +156,13 @@ The rail's mark and name lead home (`markHref`); collapsed, the mark expands
 it, and so does its edge, pulled outward (the rail following the pointer and keeping the width it is
 let go at) or with Enter, Space or the right arrow. `TopBar` holds a search field at its start
 (`search`, a `SearchField` or a `Search`, which `/` focuses), the trail after it, and the palette's
-button at its end with the keys that open it; on a phone the field gives way to that button. The
+button at its end with the keys that open it; on a phone the field gives way to that button. Its
+trail ends at the current screen, or with `trailEnds="ancestor"` at the screen above, every crumb a
+link and the last one the way back on a phone, for an app whose page heading names the screen.
+`ServerMenu` in the bar's actions takes the app's own states (`states`, such as degraded), a
+`quiet` face that is a silent dot until something is wrong, the `checks` behind the state in a
+tooltip, and `onPress` to open the app's own pane in place of its menu. The account menu takes a
+`detail`, such as a role, muted beside the name. The
 account menu offers Light, Dark and System in itself (`scheme`, `onSchemeChange`), staying open as
 one is chosen; an app's own rows (`extra`) carry their icons, and where no one is signed in
 `onSignIn` stands in Sign out's place with an icon of its own. On a phone its rows are a finger's

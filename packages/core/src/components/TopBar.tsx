@@ -1,4 +1,4 @@
-import { ChevronRight, Search } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Search } from 'lucide-react'
 import { Fragment, useContext, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
@@ -15,8 +15,19 @@ export interface Crumb {
     code?: boolean
 }
 
+/** What the trail's last crumb is: the current screen, or the last screen above it. */
+export type TrailEnd = 'current' | 'ancestor'
+
 export interface TopBarProps {
     trail?: readonly Crumb[]
+    /**
+     * `current` (the default): the last crumb is the current screen, plain words marked as the page,
+     * and on a phone it is the only crumb shown. `ancestor`: the trail holds only the screens above
+     * the current one, whose own heading names it, so every crumb with an `href` is a link, a chevron
+     * follows the last, and on a phone the last crumb alone is shown as the way back, after a chevron
+     * pointing back.
+     */
+    trailEnds?: TrailEnd
     /** The app's mark before the trail, for a screen without the rail that carries it. */
     mark?: ReactNode
     /**
@@ -55,10 +66,21 @@ const WORDS: TopBarWords = { search: 'Search', palette: 'Open the command palett
  * What the shell's top bar holds: a search field and the trail to the current screen at the left,
  * the button that opens the command palette and the screen's actions at the right. The field
  * stands first, so it stays in one place from screen to screen. On a phone the trail keeps only
- * its last step and the palette's button becomes an icon. `mark` puts the app's mark before the
+ * its last step and the palette's button becomes an icon. With `trailEnds="ancestor"` the trail
+ * holds only the screens above the current one, every crumb a link, and on a phone its last crumb
+ * is the way back. `mark` puts the app's mark before the
  * rest where no rail shows it; `AppBar` is the bar itself for a screen drawn without `Shell`.
  */
-export function TopBar({ trail = [], mark, onSearch, search: field, shortcut: shortcutGiven, actions, words: given }: TopBarProps) {
+export function TopBar({
+    trail = [],
+    trailEnds = 'current',
+    mark,
+    onSearch,
+    search: field,
+    shortcut: shortcutGiven,
+    actions,
+    words: given,
+}: TopBarProps) {
     const words = { ...WORDS, ...given }
     const shellPalette = useContext(ShellPalette)
     const search = onSearch ?? shellPalette
@@ -78,14 +100,18 @@ export function TopBar({ trail = [], mark, onSearch, search: field, shortcut: sh
                     <ol className="flex min-w-0 items-center gap-1 text-sm">
                         {trail.map((crumb, index) => {
                             const last = index === trail.length - 1
+                            const current = last && trailEnds === 'current'
                             const face = cn('truncate', crumb.code === true && 'font-mono')
                             return (
                                 <Fragment key={`${crumb.label}-${index}`}>
-                                    <li className={cn('flex min-w-0', !last && 'max-md:hidden')}>
-                                        {last || crumb.href === undefined ? (
+                                    <li className={cn('flex min-w-0 items-center', !last && 'max-md:hidden')}>
+                                        {last && trailEnds === 'ancestor' && crumb.href !== undefined && (
+                                            <ChevronLeft aria-hidden className="mr-0.5 size-4 shrink-0 text-faint md:hidden" />
+                                        )}
+                                        {current || crumb.href === undefined ? (
                                             <span
-                                                aria-current={last ? 'page' : undefined}
-                                                className={cn(face, last ? 'font-medium' : 'text-muted-foreground')}
+                                                aria-current={current ? 'page' : undefined}
+                                                className={cn(face, current ? 'font-medium' : 'text-muted-foreground')}
                                             >
                                                 {crumb.label}
                                             </span>
@@ -95,7 +121,7 @@ export function TopBar({ trail = [], mark, onSearch, search: field, shortcut: sh
                                             </Link>
                                         )}
                                     </li>
-                                    {!last && (
+                                    {!current && (
                                         <li aria-hidden className="hidden text-faint md:flex">
                                             <ChevronRight className="size-3.5" />
                                         </li>
