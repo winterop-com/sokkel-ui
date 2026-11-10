@@ -576,8 +576,14 @@ the arrows moving along it, and the strip scrolling sideways past its room with 
 
 `WindowedPane` gives any pane an expand button that opens the same content near full screen, in a
 window with a margin, a title, a close button and Escape, the pane keeping its height in place
-until the content comes back; `MermaidDiagram`, an expandable `DashboardPanel` and `ChartFrame` open
-through it, so there is one way to open a pane near full screen. `fullscreen` on the pane, the frame
+until the content comes back. `keepPane` keeps the pane as it is instead while the window draws a
+copy of its own, the content given as a function of where it is drawn when the two differ, so two
+editors over one `SharedDocument` edit it live in the pane and the window. `aside` sets a part
+beside the content in the window only, such as a reference beside an editor, resizable and under
+the content in a narrow window; `button="sticky"` holds the expand button at the top of a long
+pane as it scrolls, and `frame="inset"` sets the pane inset on the page with `Surface`'s inset
+tone. `MermaidDiagram`, an expandable `DashboardPanel` and `ChartFrame` open through it, so
+there is one way to open a pane near full screen. `fullscreen` on the pane, the frame
 and the dashboard panels also puts the page in full screen while the window is open. A map's own
 full screen control puts the map itself in full screen instead, keeping the same canvas and camera.
 `useStored` keeps a value in `localStorage` as JSON under an app prefix (`setStoredPrefix`), in

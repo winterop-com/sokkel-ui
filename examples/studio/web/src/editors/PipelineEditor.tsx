@@ -1,5 +1,8 @@
 import { CodeEditor, useSharedText, type CodeMark, type CodeProblem, type CodeRange } from '@winterop-com/sokkel-ui/CodeEditor'
+import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
 import type { Issue } from '@winterop-com/sokkel-ui/IssueMark'
+import { Stack } from '@winterop-com/sokkel-ui/Layout'
+import { Section } from '@winterop-com/sokkel-ui/Section'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { SplitPane } from '@winterop-com/sokkel-ui/SplitPane'
 import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
@@ -14,13 +17,40 @@ import { useEffect, useMemo, useState } from 'react'
 
 import { go } from 'tidevann-shared/router'
 import { counted, type WorkFile } from '../model'
-import { describeWord, holdsReference, PIPELINE_SCHEMA, readPipeline, referenceWords } from '../pipeline'
+import {
+    describeWord,
+    holdsReference,
+    KIND_DOCS,
+    PIPELINE_SCHEMA,
+    readPipeline,
+    referenceWords,
+    RUN_FIELDS,
+    STEP_FIELDS,
+    STEP_KINDS,
+} from '../pipeline'
 import { useStudio } from '../state'
 import { EditorPane, Pane, RunLog } from './parts'
 import { Problems } from './Problems'
 
 type GraphView = 'steps' | 'run'
 type Below = 'problems' | 'log'
+
+/** What a pipeline is written with: the kinds of step, and what a reference can name. */
+function PipelineReference() {
+    return (
+        <Stack gap="xl">
+            <Section variant="flat" title="Step kinds">
+                <DescriptionList layout="stacked" items={STEP_KINDS.map((kind) => ({ term: kind, value: KIND_DOCS[kind] }))} />
+            </Section>
+            <Section variant="flat" title="Step fields" description="Named as ${steps.<id>.<field>}.">
+                <DescriptionList layout="stacked" items={Object.entries(STEP_FIELDS).map(([term, value]) => ({ term, value }))} />
+            </Section>
+            <Section variant="flat" title="Run fields" description="Named as ${run.<field>}.">
+                <DescriptionList layout="stacked" items={Object.entries(RUN_FIELDS).map(([term, value]) => ({ term, value }))} />
+            </Section>
+        </Stack>
+    )
+}
 
 /**
  * A pipeline: its YAML checked and completed against the pipeline schema as it is typed, the
@@ -188,6 +218,7 @@ export function PipelineEditor({ file }: { file: WorkFile }) {
                     name={file.name}
                     popped={popped}
                     onPoppedChange={setPopped}
+                    reference={<PipelineReference />}
                     actions={
                         <>
                             <Button size="sm" variant="ghost" disabled={!dirty.has(file.id)} onClick={() => void save(file.id)}>

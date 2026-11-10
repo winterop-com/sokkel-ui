@@ -4,6 +4,8 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 import { cn } from '../lib/cn'
 import { enterFullscreen, exitFullscreen } from '../lib/fullscreen'
 import { IconButton } from './IconButton'
+import { Surface } from './Section'
+import { SplitPane } from './SplitPane'
 import { Dialog, DialogContent, DialogTitle } from './ui/dialog'
 
 export interface WindowedPaneWords {
@@ -53,15 +55,35 @@ export function WindowedPaneButton({ className }: WindowedPaneButtonProps) {
     )
 }
 
+/** Where a `WindowedPane`'s content is drawn: in the pane in its place, or in the window. */
+export type WindowedPaneWhere = 'pane' | 'window'
+
 export interface WindowedPaneProps {
     /** The window's title, and the name of what the pane holds. */
     title: ReactNode
-    children: ReactNode
+    /** The content, or a function of where it is drawn for content that differs between the pane and the window. */
+    children: ReactNode | ((where: WindowedPaneWhere) => ReactNode)
+    /**
+     * A part drawn beside the content in the window only, such as a reference beside an editor: the
+     * window splits, resizable, and stacks it under the content when the window is narrow.
+     */
+    aside?: ReactNode
+    /**
+     * The pane keeps its content while the window is open, and the window draws a copy of its own,
+     * so the pane stays in place showing the same thing; editors over one `SharedDocument` then
+     * edit it live in both. By default the content moves into the window and back.
+     */
+    keepPane?: boolean
+    /** `inset` draws the pane inset on the page's ground with a hairline edge, as `Surface`'s `inset` tone does. */
+    frame?: 'none' | 'inset'
     open?: boolean
     defaultOpen?: boolean
     onOpenChange?: (open: boolean) => void
-    /** `corner`: the pane draws the expand button over its top right corner; `none`: the content does. */
-    button?: 'corner' | 'none'
+    /**
+     * `corner`: the pane draws the expand button over its top right corner; `sticky`: the same, held
+     * at the top of the pane's visible part while a long pane scrolls; `none`: the content does.
+     */
+    button?: 'corner' | 'sticky' | 'none'
     /**
      * Opening the window also takes the screen: the page goes full screen through `lib/fullscreen`
      * (the browser's, or a desktop shell's own once the app hands it over), and leaves it as the
@@ -79,16 +101,21 @@ export interface WindowedPaneProps {
  * not the close button, so one Escape closes it however it was opened. While the content is in the
  * window, the pane keeps its height in place and says so, and the content comes back when the
  * window closes. The content is drawn once, in one place or the other, so it fills the room it is
- * given.
+ * given; `keepPane` draws it in both instead, the pane keeping its own while the window shows a copy.
+ * `aside` sets a part beside the content in the window only.
  *
  * `button="none"` leaves the button to the content, which places `WindowedPaneButton` in its own
  * toolbar; `useWindowedPane` tells it whether it is in the window. Open or closed is held by the
  * pane unless `open` and `onOpenChange` hold it. `fullscreen` puts the page in full screen while
- * the window is open, so the window fills the screen less its margin.
+ * the window is open, so the window fills the screen less its margin. `button="sticky"` keeps the
+ * corner button reachable down a long pane, and `frame="inset"` sets the pane inset on the page.
  */
 export function WindowedPane({
     title,
     children,
+    aside,
+    keepPane = false,
+    frame = 'none',
     open: heldOpen,
     defaultOpen = false,
     onOpenChange,
@@ -119,25 +146,43 @@ export function WindowedPane({
         if (heldOpen === undefined) setOwnOpen(next)
         onOpenChange?.(next)
     }
+    const content = (where: WindowedPaneWhere) => (typeof children === 'function' ? children(where) : children)
+    const inPane = !open || keepPane ? content('pane') : null
+    const corner = (
+        <span className="pointer-events-auto absolute top-2 right-2 z-10 rounded-md bg-background opacity-0 ring-1 ring-foreground/10 transition-opacity group-focus-within/windowed:opacity-100 group-hover/windowed:opacity-100 pointer-coarse:opacity-100">
+            <WindowedPaneButton />
+        </span>
+    )
+    const windowBody = (
+        <div ref={body} tabIndex={-1} className="flex min-h-0 flex-1 flex-col overflow-auto p-4 outline-none">
+            {open && content('window')}
+        </div>
+    )
     return (
         <>
             <WindowedContext.Provider value={{ windowed: false, setOpen, words }}>
                 <div ref={place} data-slot="windowed-pane" className={cn('group/windowed relative min-h-0 min-w-0', className)}>
-                    {open ? (
+                    {/* A row of no height that sticks to the top of what scrolls the pane, the button hanging from it. */}
+                    {button === 'sticky' && (!open || keepPane) && (
+                        <div data-slot="windowed-pane-sticky" className="pointer-events-none sticky top-0 z-10 h-0">
+                            {corner}
+                        </div>
+                    )}
+                    {inPane === null ? (
                         <div
                             className="flex h-full min-h-24 items-center justify-center rounded-surface border border-dashed border-border px-4 text-center text-sm text-muted-foreground"
                             style={height === undefined ? undefined : { height }}
                         >
                             {words.away}
                         </div>
+                    ) : frame === 'inset' ? (
+                        <Surface tone="inset" className="h-full min-h-0 min-w-0">
+                            {inPane}
+                        </Surface>
                     ) : (
-                        children
+                        inPane
                     )}
-                    {!open && button === 'corner' && (
-                        <span className="absolute top-2 right-2 z-10 rounded-md bg-background opacity-0 ring-1 ring-foreground/10 transition-opacity group-focus-within/windowed:opacity-100 group-hover/windowed:opacity-100 pointer-coarse:opacity-100">
-                            <WindowedPaneButton />
-                        </span>
-                    )}
+                    {button === 'corner' && (!open || keepPane) && corner}
                 </div>
             </WindowedContext.Provider>
             <Dialog open={open} onOpenChange={setOpen}>
@@ -154,9 +199,21 @@ export function WindowedPane({
                         </IconButton>
                     </div>
                     <WindowedContext.Provider value={{ windowed: true, setOpen, words }}>
-                        <div ref={body} tabIndex={-1} className="flex min-h-0 flex-1 flex-col overflow-auto p-4 outline-none">
-                            {children}
-                        </div>
+                        {aside === undefined ? (
+                            windowBody
+                        ) : (
+                            <SplitPane
+                                defaultShare={0.7}
+                                narrowBelow={720}
+                                className="overflow-hidden rounded-b-[inherit]"
+                                first={windowBody}
+                                second={
+                                    <aside data-slot="windowed-pane-aside" className="min-h-0 bg-panel-ground p-(--density-panel-pad)">
+                                        {aside}
+                                    </aside>
+                                }
+                            />
+                        )}
                     </WindowedContext.Provider>
                 </DialogContent>
             </Dialog>
