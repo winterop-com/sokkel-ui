@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.12.4** is the latest release (2026-11-10): `Toolbar` and `PageHeader` take a `primary` item and
+- **0.12.5** is the latest release (2026-11-10): schema completion follows any local reference, so a
+  JSON Schema edited against a meta-schema completes inside `properties` and `items`.
+- **0.12.4** (2026-11-10): `Toolbar` and `PageHeader` take a `primary` item and
   `wordsOnly`.
 - **0.12.3** (2026-11-10): a shut `SplitButton`'s chevron, a dialog drawn open
   focusing its first field, and no hover wash on a shut button.
