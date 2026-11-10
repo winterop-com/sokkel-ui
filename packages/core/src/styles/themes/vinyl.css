@@ -17,6 +17,7 @@ html[data-theme='vinyl'],
     --popover-foreground: oklch(0.255 0.022 67);
     --primary: oklch(0.435 0.131 30);
     --primary-foreground: oklch(0.96 0.014 87);
+    --brand: #a04034;
     --primary-ink: oklch(0.435 0.131 30);
     --secondary: oklch(0.905 0.027 88);
     --secondary-foreground: oklch(0.29 0.024 67);
@@ -105,6 +106,7 @@ html.dark[data-theme='vinyl'],
     --popover-foreground: oklch(0.925 0.021 86);
     --primary: oklch(0.7 0.145 32);
     --primary-foreground: oklch(0.185 0.022 45);
+    --brand: #a04034;
     --primary-ink: var(--primary);
     --secondary: oklch(0.305 0.025 55);
     --secondary-foreground: oklch(0.925 0.021 86);

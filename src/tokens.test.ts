@@ -71,6 +71,16 @@ describe('the tinted surfaces', () => {
     }
 })
 
+describe('the brand', () => {
+    for (const [theme, schemes] of Object.entries(tokens.themes)) {
+        it(`is ${theme}'s own in both schemes`, () => {
+            expect(schemes.light?.brand, 'light').toBeDefined()
+            expect(schemes.dark?.brand, 'dark').toBeDefined()
+            if (theme !== 'tidevann') expect(schemes.light?.brand).not.toBe(tokens.themes.tidevann.light?.brand)
+        })
+    }
+})
+
 describe('the terminal', () => {
     const base = tokens.themes.tidevann
     for (const [theme, schemes] of Object.entries(tokens.themes).filter(([name]) => name !== 'tidevann')) {
