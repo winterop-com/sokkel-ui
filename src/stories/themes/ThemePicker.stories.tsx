@@ -13,12 +13,22 @@ export default meta
 
 const START: ThemeSettings = { theme: 'paper', scheme: 'dark', density: 'regular', corners: 'theme', typeface: 'theme' }
 
-function Picker({ full, list = false, words }: { full: boolean; list?: boolean; words?: Partial<ThemePickerWords> }) {
+function Picker({
+    full,
+    list = false,
+    cards = false,
+    words,
+}: {
+    full: boolean
+    list?: boolean
+    cards?: boolean
+    words?: Partial<ThemePickerWords>
+}) {
     const [settings, setSettings] = useState(START)
     return (
         <div
             className={
-                list
+                list || cards
                     ? 'w-full max-w-md rounded-surface border border-border-strong bg-card p-4'
                     : 'w-full max-w-xs rounded-surface border border-border-strong bg-card p-4'
             }
@@ -30,6 +40,7 @@ function Picker({ full, list = false, words }: { full: boolean; list?: boolean; 
                 corners={full ? CORNERS : undefined}
                 typefaces={full ? TYPEFACES : undefined}
                 themeList={list}
+                themeCards={cards}
                 words={words}
             />
         </div>
@@ -47,6 +58,9 @@ export const Full: StoryObj = { render: () => <Picker full /> }
  * as a settings section with room for them lists them; the select says the same line under each name.
  */
 export const ThemeList: StoryObj = { name: 'Theme list', render: () => <Picker full={false} list /> }
+
+/** The themes as cards (`themeCards`), each a small page in its own theme's background, card, lines, text and brand. */
+export const ThemeCards: StoryObj = { name: 'Theme cards', render: () => <Picker full={false} cards /> }
 
 /** The words in Norwegian, as an app that translates them passes them. */
 export const Translated: StoryObj = {

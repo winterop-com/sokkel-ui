@@ -602,6 +602,14 @@
             "types": "./dist/components/ThemePicker.d.ts",
             "import": "./dist/components/ThemePicker.js"
         },
+        "./ThemeCards": {
+            "types": "./dist/components/ThemeCards.d.ts",
+            "import": "./dist/components/ThemeCards.js"
+        },
+        "./SchemeChoice": {
+            "types": "./dist/components/SchemeChoice.d.ts",
+            "import": "./dist/components/SchemeChoice.js"
+        },
         "./ThemeToggle": {
             "types": "./dist/components/ThemeToggle.d.ts",
             "import": "./dist/components/ThemeToggle.js"

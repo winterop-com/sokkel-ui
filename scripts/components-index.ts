@@ -195,6 +195,8 @@ const CORE_AREAS: Record<string, string> = {
     TableOfContents: 'Frame and navigation',
     SchemeToggle: 'Frame and navigation',
     ThemePicker: 'Frame and navigation',
+    ThemeCards: 'Frame and navigation',
+    SchemeChoice: 'Frame and navigation',
     ThemeToggle: 'Frame and navigation',
     TopBar: 'Frame and navigation',
     ServerMenu: 'Frame and navigation',
