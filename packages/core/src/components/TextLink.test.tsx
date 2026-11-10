@@ -51,4 +51,13 @@ describe('InlineCode', () => {
         expect(html).toContain('data-tone="critical"')
         expect(html).toContain('truncate')
     })
+
+    it('drops its wash and padding when bare, keeping the tone ink, and sets the face size', () => {
+        const html = renderToStaticMarkup(<InlineCode value="sync-inventory" tone="muted" bare size="xs" />)
+        expect(html).toContain('text-muted-foreground')
+        expect(html).toContain('text-xs')
+        expect(html).not.toContain('bg-muted')
+        expect(html).not.toContain('px-1')
+        expect(renderToStaticMarkup(<InlineCode value="run-4812" />)).toContain('bg-muted')
+    })
 })

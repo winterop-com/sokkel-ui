@@ -23,16 +23,34 @@ export const InText: StoryObj = {
     ),
 }
 
-/** Neutral and each status tone. */
+/** Neutral, muted and each status tone. */
 export const Tones: StoryObj = {
     render: () => (
         <Row gap="md" wrap className="text-sm">
             <InlineCode value="run-4812" />
+            <InlineCode value="harbor" tone="muted" />
             <InlineCode value="exit 1" tone="critical" />
             <InlineCode value="retry 2 of 3" tone="warning" />
             <InlineCode value="queued" tone="info" />
             <InlineCode value="exit 0" tone="good" />
         </Row>
+    ),
+}
+
+/** Bare, with no wash: a job's code in muted ink at the small face beside its name, and each tone's ink alone. */
+export const Bare: StoryObj = {
+    render: () => (
+        <Stack gap="md">
+            <Row gap="sm" className="items-baseline">
+                <span className="text-base font-semibold">Sync inventory</span>
+                <InlineCode value="sync-inventory" tone="muted" bare size="xs" />
+            </Row>
+            <Row gap="md" wrap className="text-sm">
+                <InlineCode value="run-4812" bare />
+                <InlineCode value="exit 1" tone="critical" bare />
+                <InlineCode value="exit 0" tone="good" bare />
+            </Row>
+        </Stack>
     ),
 }
 
