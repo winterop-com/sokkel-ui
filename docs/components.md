@@ -40,7 +40,7 @@ viewer's caption settings through `useStored` or an app's store, with the option
 in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second by `useVideoStats`
 (`@winterop-com/sokkel-ui/media/video-stats`) for `VideoStatsOverlay`.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 249 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 250 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 10 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 13 modules
@@ -255,6 +255,7 @@ in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second 
 | **SecretField** | `@winterop-com/sokkel-ui/SecretField` | A secret a form sets but never reads back, such as a connection's token or password. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-secret-field--not-set) |
 | **SecretReveal** | `@winterop-com/sokkel-ui/SecretReveal` | A secret shown once, as it is created: an API token, a signing key, a recovery code. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-access--secret) |
 | **Segmented** | `@winterop-com/sokkel-ui/Segmented` | A choice from a small fixed set, drawn as one control with every option in view. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-controls--playground) |
+| **SelectField** | `@winterop-com/sokkel-ui/SelectField` | A labeled choice from a list: a `Field` with the library's select inside, wired together, laid out as `TextField` and `NumberField` are. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-select-field--plain) |
 | **SettingRow** | `@winterop-com/sokkel-ui/SettingRow` | One setting: its title and what it does, and its control, placed by `layout`. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-slider-field--plain) |
 | **SignIn** | `@winterop-com/sokkel-ui/SignIn` | A sign-in screen in two panes the window's height. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-sign-in--password) |
 | **SliderField** | `@winterop-com/sokkel-ui/SliderField` | A number chosen on a slider, its value written out in figures so the setting reads without dragging. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-inputs-slider-field--plain) |

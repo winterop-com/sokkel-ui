@@ -372,7 +372,7 @@ toggle-group, tooltip, trace.
 ## Patterns
 
 Shell, Rail, AppBar, SubNav, Page, PageHeader, PaneHeader, Toolbar, Section, Surface, the layout
-components (Stack, Row, Columns, Split, Fill), SplitPane, Field, TextField, DateField, TimeField,
+components (Stack, Row, Columns, Split, Fill), SplitPane, Field, TextField, SelectField, DateField, TimeField,
 DateTimeField, NumberField, InlineField, SliderField, CheckboxField, CheckboxList, ChoiceList,
 CodeField, SwitchField, SearchField, QuickAdd, FileField, FilterChip, FilterBar, SavedViews, FormBar, InlineEdit,
 SelectionBar, DataTable, StatusChip, Chip, PersonAvatar, PersonRow, MetaLine, DueText, AttachmentList,

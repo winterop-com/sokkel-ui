@@ -486,6 +486,10 @@
             "types": "./dist/components/Segmented.d.ts",
             "import": "./dist/components/Segmented.js"
         },
+        "./SelectField": {
+            "types": "./dist/components/SelectField.d.ts",
+            "import": "./dist/components/SelectField.js"
+        },
         "./SelectionBar": {
             "types": "./dist/components/SelectionBar.d.ts",
             "import": "./dist/components/SelectionBar.js"

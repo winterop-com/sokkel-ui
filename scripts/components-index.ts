@@ -248,6 +248,7 @@ const CORE_AREAS: Record<string, string> = {
     SecretField: 'Forms and inputs',
     SecretReveal: 'Forms and inputs',
     Segmented: 'Forms and inputs',
+    SelectField: 'Forms and inputs',
     ChipBar: 'Forms and inputs',
     SettingRow: 'Forms and inputs',
     SliderField: 'Forms and inputs',
