@@ -1,6 +1,6 @@
 {
     "name": "@winterop-com/sokkel-ui-graph",
-    "version": "0.12.2",
+    "version": "0.12.3",
     "description": "Interactive graphs on React Flow, laid out by elk, for sokkel-ui.",
     "license": "SEE LICENSE IN LICENSE",
     "repository": {
