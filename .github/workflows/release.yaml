@@ -32,7 +32,11 @@ jobs:
             - run: bun run lint
             - run: bun run typecheck
             - run: bun run test
+            - run: bun scripts/build-tokens.ts --check
+            - run: bun run components -- --check
             - run: bun run build
+            # The size budgets, as CI checks them: a release never ships over budget while main is red on it.
+            - run: bun run size
             # bun packs each package with its `workspace:` dependency on the core written as the version,
             # and npm publishes the tarballs, core first, since the add-ons name it as a peer.
             - name: Pack the packages
