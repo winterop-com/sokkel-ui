@@ -63,11 +63,15 @@ function NewJob({
     issues,
     submitted = false,
     open,
+    requiredMark,
+    fallbacks,
 }: {
     initial?: unknown
     issues?: readonly ServerIssue[]
     submitted?: boolean
     open?: Path
+    requiredMark?: 'star' | 'word'
+    fallbacks?: boolean
 }) {
     const form = useSchemaForm(JOB, { initial, issues, defaultSubmitted: submitted, defaultOpen: open })
     const [created, setCreated] = useState(false)
@@ -80,7 +84,7 @@ function NewJob({
             count={<SchemaIssueCount form={form} />}
             confirm={{ label: created ? 'Created' : 'Create', onConfirm: () => setCreated(form.submit()) }}
         >
-            <SchemaForm form={form} />
+            <SchemaForm form={form} requiredMark={requiredMark} fallbacks={fallbacks} />
         </DialogShell>
     )
 }
@@ -127,6 +131,12 @@ function SendingJob() {
 
 /** An empty form, each field drawn from its schema: text, a code in mono, a number, a choice and a switch. */
 export const Empty: StoryObj = { name: 'Empty', render: () => <NewJob /> }
+
+/**
+ * The same form marking each required field by the word after its label rather than a star in it,
+ * and saying under Priority the default that applies when it is left empty.
+ */
+export const RequiredWord: StoryObj = { name: 'Required word', render: () => <NewJob requiredMark="word" fallbacks /> }
 
 /** Values typed in and Create pressed: the marks, the count beside the verb, and the first mark open with its fix. */
 export const AfterCreate: StoryObj = {

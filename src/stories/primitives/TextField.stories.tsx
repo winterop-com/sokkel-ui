@@ -74,6 +74,39 @@ export const Described: StoryObj = {
     ),
 }
 
+/**
+ * Required fields marked by the word after the label rather than a star in it, so a screen reader
+ * names the input by its label alone and hears that it is required from the input itself.
+ */
+export const RequiredWord: StoryObj = {
+    name: 'Required word',
+    render: () => (
+        <Stack gap="lg" className="max-w-md">
+            <TextField id="word-name" label="Name" required requiredMark="word" defaultValue="Sync inventory" />
+            <TextField id="word-code" label="Code" required requiredMark="word" mono defaultValue="sync-inventory" />
+            <TextField id="word-owner" label="Owner" requiredMark="word" placeholder="grace" />
+        </Stack>
+    ),
+}
+
+/** What applies when a field is left empty, said under the input after its help. */
+export const Fallback: StoryObj = {
+    render: () => (
+        <Stack gap="lg" className="max-w-md">
+            <TextField
+                id="fallback-timeout"
+                label="Timeout"
+                hint="minutes"
+                help="A run still going after this long is cancelled."
+                fallback="Default is 30 minutes"
+                inputMode="numeric"
+                numeric
+            />
+            <TextField id="fallback-service" label="Service" fallback="Default is api" mono />
+        </Stack>
+    ),
+}
+
 /** A refused value marked at the input's end, and a warning beside a value that is allowed. */
 export const WithError: StoryObj = {
     name: 'Error',

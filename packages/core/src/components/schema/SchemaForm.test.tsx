@@ -84,3 +84,28 @@ describe('a read-only form or list of records', () => {
         for (const input of inputs) expect(input).toMatch(/readonly/i)
     })
 })
+
+describe('how fields are marked', () => {
+    const schema: JsonSchema = {
+        type: 'object',
+        required: ['job'],
+        properties: { job: { type: 'string', title: 'Job' }, retries: { type: 'integer', title: 'Retries', default: 3 } },
+    }
+
+    function Look({ requiredMark, fallbacks }: { requiredMark?: 'star' | 'word'; fallbacks?: boolean }) {
+        const form = useSchemaForm(schema, { initial: {} })
+        return <SchemaForm form={form} marks={false} requiredMark={requiredMark} fallbacks={fallbacks} />
+    }
+
+    it('marks a required field by the word outside its label, and its control as required', () => {
+        const html = renderToStaticMarkup(<Look requiredMark="word" />)
+        expect(html).not.toContain('text-critical-ink')
+        expect(html).toMatch(/<\/label><span[^>]*>required<\/span>/)
+        expect(html).toMatch(/<input[^>]*aria-required="true"/)
+    })
+
+    it("says a field's default under it with fallbacks, and not without", () => {
+        expect(renderToStaticMarkup(<Look fallbacks />)).toContain('Default is 3')
+        expect(renderToStaticMarkup(<Look />)).not.toContain('Default is 3')
+    })
+})

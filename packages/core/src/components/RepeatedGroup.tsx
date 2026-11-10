@@ -2,6 +2,7 @@ import { ArrowDown, ArrowUp, Plus, X } from 'lucide-react'
 import { useId, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import type { RequiredMark } from './Field'
 import { IconButton } from './IconButton'
 import { IssueMark, worst, type Issue } from './IssueMark'
 import { Button } from './ui/button'
@@ -14,7 +15,7 @@ export interface RepeatedGroupWords {
     moveDown: string
     /** A row's name: its place, counted from 1. */
     item: (index: number) => string
-    /** Said after the name of a required group, for a screen reader; the star is drawn. */
+    /** Said after the name of a required group: to a screen reader beside the star, or drawn as the `word` mark. */
     required: string
 }
 
@@ -36,6 +37,8 @@ export interface RepeatedGroupProps {
     id?: string
     /** Marked by a star after the name, as a required field is. */
     required?: boolean
+    /** How `required` is marked: a star after the name, or the word after it and outside it, as `Field` takes. */
+    requiredMark?: RequiredMark
     /** Why the group as a whole is refused (too few rows, one twice), as one critical issue. */
     error?: string | null
     issues?: readonly Issue[]
@@ -77,6 +80,7 @@ export function RepeatedGroup({
     description,
     id,
     required = false,
+    requiredMark = 'star',
     error,
     issues: issuesGiven = [],
     issueOpen,
@@ -104,7 +108,7 @@ export function RepeatedGroup({
             <div className="flex min-h-7 items-center gap-2">
                 <span id={titleId} tabIndex={-1} className="flex min-w-0 items-baseline gap-1 text-sm font-medium outline-none">
                     <span className="min-w-0 truncate">{label}</span>
-                    {required && (
+                    {required && requiredMark === 'star' && (
                         <>
                             <span className="shrink-0 text-critical-ink" aria-hidden>
                                 *
@@ -113,6 +117,7 @@ export function RepeatedGroup({
                         </>
                     )}
                 </span>
+                {required && requiredMark === 'word' && <span className="shrink-0 text-xs text-muted-foreground">{words.required}</span>}
                 {worst(issues) !== null && (
                     <span className="relative flex size-7 shrink-0 items-center">
                         <IssueMark issues={issues} open={issueOpen} onOpenChange={onIssueOpenChange} className="inset-0 right-0" />
