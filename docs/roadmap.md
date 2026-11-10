@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.15.3** is the latest release (2026-11-10): `ThemeCards` and `SchemeChoice`, the theme and the
+- **0.15.4** is the latest release (2026-11-10): `DataTable` row labels and tones, content-sized
+  columns, a Load more button, `hasDetail`, a stack width as a length, and an empty list without heads.
+- **0.15.3** (2026-11-10): `ThemeCards` and `SchemeChoice`, the theme and the
   scheme as separate settings rows.
 - **0.15.2** (2026-11-10): a settings section takes `lead` and `foot`, and the
   settings search is named apart from its placeholder.
