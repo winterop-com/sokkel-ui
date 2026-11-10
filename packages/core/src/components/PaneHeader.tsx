@@ -18,6 +18,8 @@ export interface PaneHeaderProps {
     title?: ReactNode
     /** The heading's level in the page's outline. */
     as?: 'h1' | 'h2' | 'h3' | 'p'
+    /** The heading's id, for what it names to point at with `aria-labelledby`. */
+    headingId?: string
     /** A count or a short fact beside the title, drawn quieter than it. */
     meta?: ReactNode
     /** A sentence under the title: what the pane holds. */
@@ -52,6 +54,7 @@ export interface PaneHeaderProps {
 export function PaneHeader({
     title,
     as: Heading = 'h2',
+    headingId,
     meta,
     description,
     code,
@@ -86,7 +89,9 @@ export function PaneHeader({
                         // The meta stays beside the title while both fit with the title at 6rem or its
                         // own width, and drops under it otherwise, cut short where it is wider still.
                         <div className="flex min-w-0 flex-wrap items-center gap-x-2">
-                            <Heading className={cn('max-w-max min-w-0 grow basis-24', TITLE[large ? 'large' : variant])}>{title}</Heading>
+                            <Heading id={headingId} className={cn('max-w-max min-w-0 grow basis-24', TITLE[large ? 'large' : variant])}>
+                                {title}
+                            </Heading>
                             {meta !== undefined && <span className="min-w-0 truncate font-mono text-xs text-muted-foreground">{meta}</span>}
                         </div>
                     )}

@@ -387,7 +387,11 @@ edges the one that asks for work. `UptimeBar` is a thing's record over the last 
 its state's color or by its uptime, the oldest giving way in a box too narrow for them all, and the
 day pointed at said under it with its note. `Badge` takes a `kind` color for a categorical value, such as the
 sort of form a card is, and `Segmented` options carry a count and a state's dot. `Section`,
-`PaneHeader` and `Field` take a `description`, a field's between its label and its control.
+`PaneHeader` and `Field` take a `description`, a field's between its label and its control. A
+`Section`'s `tone` draws its body on a graph canvas's ground and dot grid (`graph`), for a fitted graph
+or any drawing with no ground of its own, or marks it with a rule in the critical tone across its top
+and a warning mark before its title (`critical`). A section is labelled by its heading, whose id
+`headingId` sets, and `bodyClassName` lays out its body's content.
 `DetailSheet` is one thing's detail in a sheet from the right, its chips and actions on one line
 under the title, its body the parts its own page draws; `SourceSheet` is one.
 

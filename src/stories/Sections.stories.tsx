@@ -12,8 +12,10 @@ import { Section, Surface } from '@winterop-com/sokkel-ui/Section'
 import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
 import { StatusChip, type Status } from '@winterop-com/sokkel-ui/StatusChip'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { PipelineGraph, type PipelineStep } from '@winterop-com/sokkel-ui-graph/PipelineGraph'
+import { RunGraph, type RunStep } from '@winterop-com/sokkel-ui-graph/RunGraph'
 import { TidevannMark } from './fixtures/TidevannMark'
-import { Columns, Row, Split } from '@winterop-com/sokkel-ui/Layout'
+import { Columns, Row, Split, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /**
  * A job's overview page in the three ways a page can be divided, drawn with the shell and
@@ -69,7 +71,7 @@ const COLUMNS: DataColumn<Run>[] = [
     { id: 'took', header: 'Took', width: '4rem', align: 'end', cell: (run) => <span className="font-mono text-xs">{run.took}</span> },
 ]
 
-function Graph() {
+function Drawing() {
     return (
         <div className="relative h-44">
             <Row gap="3xl" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
@@ -129,7 +131,7 @@ function Overview({ layout }: { layout: 'flat' | 'boxed' | 'hybrid' }) {
         layout === 'boxed' ? (
             <>
                 <Section variant="boxed" title="Graph" actions={tool} flush>
-                    <Graph />
+                    <Drawing />
                 </Section>
                 <Split
                     align="stretch"
@@ -149,7 +151,7 @@ function Overview({ layout }: { layout: 'flat' | 'boxed' | 'hybrid' }) {
         ) : layout === 'flat' ? (
             <>
                 <Section title="Graph" actions={tool}>
-                    <Graph />
+                    <Drawing />
                 </Section>
                 <Split
                     align="stretch"
@@ -170,7 +172,7 @@ function Overview({ layout }: { layout: 'flat' | 'boxed' | 'hybrid' }) {
             <>
                 <Section title="Graph" actions={tool}>
                     <Surface>
-                        <Graph />
+                        <Drawing />
                     </Surface>
                 </Section>
                 <Split
@@ -227,6 +229,68 @@ type Story = StoryObj<typeof Overview>
 export const Flat: Story = { args: { layout: 'flat' } }
 export const Boxed: Story = { args: { layout: 'boxed' } }
 export const Hybrid: Story = { args: { layout: 'hybrid' } }
+
+/** The steps of nightly-export, one after another. */
+const STEPS: PipelineStep[] = [
+    { code: 'fetch', name: 'Fetch orders', kind: 'http', needs: [] },
+    { code: 'transform', name: 'Join and reshape', kind: 'sql', needs: ['fetch'] },
+    { code: 'validate', kind: 'schema', needs: ['transform'] },
+    { code: 'upload', name: 'Upload to storage', kind: 's3', needs: ['validate'] },
+    { code: 'notify', kind: 'webhook', needs: ['upload'] },
+]
+
+/** A run of nightly-export that failed at validate, so upload and notify were skipped. */
+const FAILED_RUN: RunStep[] = [
+    { ...STEPS[0], status: 'succeeded', duration_ms: 1840 },
+    { ...STEPS[1], status: 'succeeded', duration_ms: 19_250 },
+    { ...STEPS[2], status: 'failed', duration_ms: 310 },
+    { ...STEPS[3], status: 'skipped' },
+    { ...STEPS[4], status: 'skipped' },
+]
+
+/** A box whose body is a graph's dot grid, under a pipeline graph fitted to its drawing; the heading's id is given. */
+export const Graph: StoryObj = {
+    parameters: { frame: 'padded' },
+    render: () => (
+        <Section title="Steps" meta="5" tone="graph" headingId="nightly-export-steps" actions={tool} flush>
+            <PipelineGraph steps={STEPS} frame="fitted" words={{ label: 'nightly-export' }} />
+        </Section>
+    ),
+}
+
+/**
+ * A failed run: the critical box says what went wrong, with a rule across its top and a warning mark
+ * before its title, over the run's graph on the dot grid.
+ */
+export const Critical: StoryObj = {
+    parameters: { frame: 'padded' },
+    render: () => (
+        <Stack gap="lg">
+            <Section
+                title="Run 01a1a5c2 failed"
+                meta="0.3s"
+                tone="critical"
+                actions={
+                    <Button variant="outline" size="sm">
+                        Retry
+                    </Button>
+                }
+            >
+                <DescriptionList
+                    items={[
+                        { term: 'Step', value: 'validate', code: true },
+                        { term: 'Reason', value: '37 of 2,184 rows refused: the field sku is empty' },
+                        { term: 'Started by', value: 'grace' },
+                        { term: 'Skipped', value: 'upload, notify', code: true },
+                    ]}
+                />
+            </Section>
+            <Section title="Run" meta="5 steps" tone="graph" flush>
+                <RunGraph steps={FAILED_RUN} frame="fitted" selected="validate" words={{ label: 'Run 01a1a5c2' }} />
+            </Section>
+        </Stack>
+    ),
+}
 
 const LOG = Array.from({ length: 40 }, (_, at) => `02:00:${String(at).padStart(2, '0')}  validate  row ${String(at * 61 + 7)} checked`)
 
