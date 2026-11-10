@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.15.2** is the latest release (2026-11-10): a settings section takes `lead` and `foot`, and the
+- **0.15.3** is the latest release (2026-11-10): `ThemeCards` and `SchemeChoice`, the theme and the
+  scheme as separate settings rows.
+- **0.15.2** (2026-11-10): a settings section takes `lead` and `foot`, and the
   settings search is named apart from its placeholder.
 - **0.15.1** (2026-11-10): a finger-sized palette button on a phone, `TopBar`
   `palette={false}`, `AccountMenu`'s detail giving way to the name, and a head on `ServerMenu`'s tooltip.
