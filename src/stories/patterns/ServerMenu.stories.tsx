@@ -62,9 +62,17 @@ const UNHEALTHY: ServerCheck[] = [
     { name: 'scheduler', state: 'degraded', detail: 'last run skipped' },
 ]
 
-type Server = Partial<Omit<ServerMenuProps, 'state' | 'onCheck'>>
+type Server = Partial<Omit<ServerMenuProps, 'state' | 'onCheck' | 'recheck'>>
 
-function App({ initial, defaultOpen = false, ...server }: { initial: ServerState } & Server) {
+/** The moment the stories stand at, so a time said relative to it reads the same every time. */
+const NOW = new Date('2026-11-10T10:00:00Z')
+
+function App({
+    initial,
+    defaultOpen = false,
+    recheckOnOpen = false,
+    ...server
+}: { initial: ServerState; recheckOnOpen?: boolean } & Server) {
     const [state, setState] = useState(initial)
     const check = () => {
         setState('checking')
@@ -84,6 +92,7 @@ function App({ initial, defaultOpen = false, ...server }: { initial: ServerState
                                 state={state}
                                 facts={FACTS}
                                 onCheck={check}
+                                recheck={recheckOnOpen ? check : undefined}
                                 defaultOpen={defaultOpen}
                                 {...server}
                             >
@@ -122,6 +131,27 @@ export const Checking: StoryObj = { render: () => <App initial="checking" defaul
  */
 export const Degraded: StoryObj = {
     render: () => <App initial="degraded" name="Tidevann" version="3.1.0" states={STATES} checks={DEGRADED} defaultOpen />,
+}
+
+/**
+ * The tooltip's head: the name, the environment and the version, and when the server was last
+ * asked, two minutes before the story's fixed moment. Opening the tooltip asks the server again.
+ */
+export const LastChecked: StoryObj = {
+    name: 'Last checked',
+    render: () => (
+        <App
+            initial="healthy"
+            name="Tidevann"
+            environment="production"
+            version="3.1.0"
+            states={STATES}
+            checks={HEALTHY}
+            checkedAt={new Date(NOW.getTime() - 2 * 60_000)}
+            now={NOW}
+            recheckOnOpen
+        />
+    ),
 }
 
 /** A quiet face while all is well: the dot alone, the name and version kept in the menu and the tooltip's checks. */

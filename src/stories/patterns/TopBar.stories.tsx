@@ -1,9 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { CalendarClock, Play, Workflow } from 'lucide-react'
 
+import { placeCommands } from '@winterop-com/sokkel-ui/lib/commands'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
+import { Section, Surface } from '@winterop-com/sokkel-ui/Section'
 import { Page, Shell } from '@winterop-com/sokkel-ui/Shell'
 import { TopBar, type TopBarProps } from '@winterop-com/sokkel-ui/TopBar'
 import { TidevannMark } from '../fixtures/TidevannMark'
@@ -60,5 +62,33 @@ export const Ancestors: StoryObj = {
                 { label: 'Runs', href: '#' },
             ]}
         />
+    ),
+}
+
+/**
+ * A top bar drawn as a specimen on a page of a shell that holds the palette: the shell's own bar
+ * keeps the palette's button, and the specimen, given `palette={false}`, leaves it out.
+ */
+export const Specimen: StoryObj = {
+    render: () => (
+        <TooltipProvider>
+            <Shell
+                rail={<Rail mark={<TidevannMark />} name="Tidevann" groups={PLACES} />}
+                palette={placeCommands(PLACES, () => undefined)}
+                top={<TopBar trail={[{ label: 'harbor', href: '#' }, { label: 'Parts' }]} />}
+            >
+                <Page>
+                    <PageHeader title="Parts" description="The pieces Tidevann's screens are made of." />
+                    <Section title="Top bar" description="The trail to the current screen, without the palette's button.">
+                        <Surface pad>
+                            <TopBar
+                                palette={false}
+                                trail={[{ label: 'harbor', href: '#' }, { label: 'Runs', href: '#' }, { label: 'Run 1842' }]}
+                            />
+                        </Surface>
+                    </Section>
+                </Page>
+            </Shell>
+        </TooltipProvider>
     ),
 }

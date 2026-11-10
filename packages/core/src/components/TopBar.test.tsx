@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 
+import { ShellPalette } from './shell-context'
 import { TopBar } from './TopBar'
 
 const links = (html: string) => html.match(/<a /g)?.length ?? 0
@@ -41,5 +42,30 @@ describe('TopBar trail', () => {
         expect(items[2]).not.toContain('max-md:hidden')
         expect(html.match(/lucide-chevron-left/g)).toHaveLength(1)
         expect(html.match(/lucide-chevron-right/g)).toHaveLength(2)
+    })
+})
+
+describe('TopBar palette button', () => {
+    it('is a finger square below md and keeps its desktop height', () => {
+        const html = renderToStaticMarkup(<TopBar onSearch={() => undefined} />)
+        expect(html).toContain('aria-label="Search"')
+        expect(html).toMatch(/<button[^>]*class="[^"]*\bh-8\b[^"]*max-md:size-finger/)
+        expect(html).not.toContain('max-md:size-8')
+    })
+
+    it('is left out with palette={false}, even in a shell that holds a palette', () => {
+        const html = renderToStaticMarkup(
+            <ShellPalette.Provider value={() => undefined}>
+                <TopBar palette={false} trail={[{ label: 'Runs' }]} />
+            </ShellPalette.Provider>,
+        )
+        expect(html).not.toContain('<button')
+        expect(html).toContain('>Runs</span>')
+        const shown = renderToStaticMarkup(
+            <ShellPalette.Provider value={() => undefined}>
+                <TopBar trail={[{ label: 'Runs' }]} />
+            </ShellPalette.Provider>,
+        )
+        expect(shown).toContain('<button')
     })
 })

@@ -30,7 +30,7 @@ const PLACES: RailGroup[] = [
 ]
 
 /** The menu open in the foot of Tidevann's rail, at the full height of the window. */
-function Foot(props: Omit<AccountMenuProps, 'scheme' | 'onSchemeChange'>) {
+function Foot({ railSize, ...props }: Omit<AccountMenuProps, 'scheme' | 'onSchemeChange'> & { railSize?: number }) {
     const [scheme, setScheme] = useState<Scheme>('system')
     return (
         <TooltipProvider>
@@ -39,6 +39,7 @@ function Foot(props: Omit<AccountMenuProps, 'scheme' | 'onSchemeChange'>) {
                     mark={<TidevannMark />}
                     name="Tidevann"
                     groups={PLACES}
+                    defaultSize={railSize}
                     foot={<AccountMenu {...props} scheme={scheme} onSchemeChange={setScheme} defaultOpen />}
                 />
             </Row>
@@ -74,6 +75,26 @@ export const Role: StoryObj = {
             image={pictureOf('grace')}
             detail="admin"
             where="tidevann.example.org"
+            onSettings={() => undefined}
+            onShortcuts={() => undefined}
+            onSignOut={() => undefined}
+        />
+    ),
+}
+
+/**
+ * A rail at its narrowest: the name keeps the row's room and the role gives way in the face,
+ * still said beside the name in the menu's head.
+ */
+export const NarrowRail: StoryObj = {
+    name: 'Narrow rail',
+    render: () => (
+        <Foot
+            name="margaret"
+            image={pictureOf('margaret')}
+            detail="admin"
+            where="tidevann.example.org"
+            railSize={200}
             onSettings={() => undefined}
             onShortcuts={() => undefined}
             onSignOut={() => undefined}

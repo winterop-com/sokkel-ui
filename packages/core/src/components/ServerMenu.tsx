@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import { cn } from '../lib/cn'
 import type { StatusColor, StatusMap } from '../lib/status'
 import { Dot } from './Dot'
+import { relativeTime } from './RelativeTime'
 import { useStatus } from './StatusProvider'
 import { Badge } from './ui/badge'
 import { Button } from './ui/button'
@@ -33,6 +34,8 @@ export interface ServerMenuWords {
     check: string
     /** The trigger's name for a screen reader, before the state. */
     label: string
+    /** The tooltip's line saying when the server was last asked, given how long ago in words. */
+    checkedAt: (ago: string) => string
 }
 
 const WORDS: ServerMenuWords = {
@@ -41,6 +44,7 @@ const WORDS: ServerMenuWords = {
     checking: 'Checking',
     check: 'Check again',
     label: 'Server',
+    checkedAt: (ago) => `Checked ${ago}`,
 }
 
 /** One thing the app checks on the server, such as a service it depends on. */
@@ -60,6 +64,8 @@ export interface ServerMenuProps {
     name: string
     /** The version it answers with, drawn in the code face beside the name. */
     version?: string
+    /** Which deployment it is, such as `production` or `staging`, said beside the name in the tooltip and the menu. */
+    environment?: string
     /** `up`, `down`, `checking`, or a state named in `states`. */
     state: ServerState
     /**
@@ -73,8 +79,22 @@ export interface ServerMenuProps {
      * in the menu and in the face's accessible name.
      */
     quiet?: boolean
-    /** Every check behind the state, each with its dot, name, state and detail, listed in a tooltip on the face and in the menu. */
+    /**
+     * Every check behind the state, each with its dot, name, state and detail, listed in a tooltip on
+     * the face, under a head with the name, the environment and the version, and in the menu.
+     */
     checks?: readonly ServerCheck[]
+    /** When the server was last asked, said in the tooltip relative to `now`, "Checked 2 minutes ago". */
+    checkedAt?: Date | number
+    /** The moment `checkedAt` is said against; without it, the clock as the tooltip opens. */
+    now?: Date
+    /** The locale the time is said in; without it, the reader's. */
+    locale?: string
+    /**
+     * Called as the tooltip opens, while the server is not being asked already, so the app can ask
+     * again and the tooltip shows a fresh answer.
+     */
+    recheck?: () => void
     /**
      * Pressing the face calls this in place of opening the menu, as for an app that opens its own
      * pane about the server; the menu, and with it `facts`, `onCheck` and `children`, is not drawn.
@@ -100,7 +120,9 @@ export interface ServerMenuProps {
  *
  * `states` adds the app's own states, such as degraded and unhealthy; `quiet` draws a face that is a
  * silent dot until something is wrong; `checks` lists every check behind the state in a tooltip on
- * the face and in the menu; and `onPress` makes the face a button that calls the app, in place of
+ * the face and in the menu, the tooltip headed by the name, `environment` and version and, given
+ * `checkedAt`, when the server was last asked; `recheck` lets the app ask again as the tooltip
+ * opens; and `onPress` makes the face a button that calls the app, in place of
  * the menu.
  */
 export function ServerMenu({
@@ -108,8 +130,13 @@ export function ServerMenu({
     version,
     state,
     states,
+    environment,
     quiet = false,
     checks = [],
+    checkedAt,
+    now,
+    locale,
+    recheck,
     onPress,
     facts = [],
     onCheck,
@@ -151,25 +178,37 @@ export function ServerMenu({
         className: cn('min-w-0 gap-2 px-2', className),
     } as const
     const button = <Button {...buttonProps} />
+    const tip = checks.length > 0 || checkedAt !== undefined
     const tipped = (trigger: ReactNode) =>
-        checks.length === 0 ? (
+        !tip ? (
             trigger
         ) : (
-            <Tooltip>
+            <Tooltip
+                onOpenChange={(open) => {
+                    if (open && !checking) recheck?.()
+                }}
+            >
                 {trigger}
-                <TooltipContent side="bottom" align="end" className="max-w-sm">
-                    <CheckList checks={checks} states={known} />
+                <TooltipContent side="bottom" align="end" className="flex max-w-sm flex-col items-stretch gap-1.5">
+                    <TipHead
+                        name={name}
+                        environment={environment}
+                        version={version}
+                        checkedAt={checkedAt}
+                        now={now}
+                        locale={locale}
+                        words={words}
+                    />
+                    {checks.length > 0 && <CheckList checks={checks} states={known} />}
                 </TooltipContent>
             </Tooltip>
         )
     if (onPress !== undefined)
-        return tipped(
-            checks.length === 0 ? <Button {...buttonProps}>{face}</Button> : <TooltipTrigger render={button}>{face}</TooltipTrigger>,
-        )
+        return tipped(!tip ? <Button {...buttonProps}>{face}</Button> : <TooltipTrigger render={button}>{face}</TooltipTrigger>)
     return (
         <DropdownMenu defaultOpen={defaultOpen}>
             {tipped(
-                checks.length === 0 ? (
+                !tip ? (
                     <DropdownMenuTrigger render={button}>{face}</DropdownMenuTrigger>
                 ) : (
                     <TooltipTrigger render={<DropdownMenuTrigger render={button} />}>{face}</TooltipTrigger>
@@ -185,6 +224,7 @@ export function ServerMenu({
                 <div className="flex flex-col gap-1 px-2 pb-1.5 text-help text-muted-foreground">
                     <span className="font-medium text-foreground">
                         {name}
+                        {environment !== undefined && <span className="ml-1.5 font-normal text-muted-foreground">{environment}</span>}
                         {quiet && version !== undefined && (
                             <span className="ml-1.5 font-mono font-normal text-muted-foreground">{version}</span>
                         )}
@@ -211,6 +251,41 @@ export function ServerMenu({
                 {children}
             </DropdownMenuContent>
         </DropdownMenu>
+    )
+}
+
+/** The tooltip's head: the name, the environment and the version on a line, and when the server was last asked under it. */
+function TipHead({
+    name,
+    environment,
+    version,
+    checkedAt,
+    now,
+    locale,
+    words,
+}: {
+    name: string
+    environment?: string
+    version?: string
+    checkedAt?: Date | number
+    now?: Date
+    locale?: string
+    words: ServerMenuWords
+}) {
+    const when = checkedAt === undefined ? undefined : new Date(checkedAt)
+    return (
+        <div className="flex min-w-0 flex-col">
+            <p className="flex min-w-0 items-baseline gap-1.5">
+                <span className="min-w-0 truncate font-medium">{name}</span>
+                {environment !== undefined && <span className="opacity-80">{environment}</span>}
+                {version !== undefined && <span className="font-mono opacity-80">{version}</span>}
+            </p>
+            {when !== undefined && !Number.isNaN(when.getTime()) && (
+                <p className="opacity-80">
+                    <time dateTime={when.toISOString()}>{words.checkedAt(relativeTime(when, now ?? new Date(), { locale }))}</time>
+                </p>
+            )}
+        </div>
     )
 }
 
