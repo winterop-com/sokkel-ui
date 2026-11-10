@@ -666,7 +666,9 @@ put in with the default selected. A document can name its own schema, by a top-l
 a `# yaml-language-server: $schema=` line: the app finds it by address with `resolveSchema`, the
 editor fetching nothing, and a schema document in the 2020-12 dialect is checked against that
 dialect's meta-schema, which ajv carries. A key's type and description show on hover. `reveal`
-selects a range and scrolls it into view. `variant="pane"` fills a pane edge to edge; the Query app
+selects a range and scrolls it into view, and `onProblems` hears every problem the editor shows (the
+schema's findings and the marks with a message) by line and column as they change, for a problems
+list beside it whose rows go to each through `reveal`. `variant="pane"` fills a pane edge to edge; the Query app
 shows it in panes. Two editors edit one document as Monaco's views share a model: `doc` takes a
 `SharedDocument` (`useSharedDocument`) in place of `value`, which holds the text and one undo history
 in a CodeMirror state no view draws, hands each edit to every other editor, and keeps each editor's

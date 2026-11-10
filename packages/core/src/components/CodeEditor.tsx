@@ -21,7 +21,7 @@ import {
     syntaxHighlighting,
     type StreamParser,
 } from '@codemirror/language'
-import { diagnosticCount, linter, lintGutter, setDiagnostics, type Diagnostic } from '@codemirror/lint'
+import { diagnosticCount, forEachDiagnostic, linter, lintGutter, setDiagnostics, type Diagnostic } from '@codemirror/lint'
 import { openSearchPanel, search as searchPanel, searchKeymap, SearchQuery, setSearchQuery } from '@codemirror/search'
 import { Compartment, EditorState, Prec, RangeSetBuilder, StateEffect, StateField, type Extension } from '@codemirror/state'
 import {
@@ -82,6 +82,43 @@ export interface CodeMark {
     to?: number
     tone: 'error' | 'warning' | 'info'
     message?: string
+}
+
+/**
+ * One thing the editor's checks found, as a problems list shows it: the line and column it starts
+ * at and ends before (counted from 1), the same as offsets into the document (from 0), how bad it is
+ * and what it says. Pass `{ line, from: column, to: endColumn }` or `{ from, to }` back as `reveal`
+ * to go to it.
+ */
+export interface CodeProblem {
+    line: number
+    column: number
+    endLine: number
+    endColumn: number
+    from: number
+    to: number
+    tone: 'error' | 'warning' | 'info'
+    message: string
+}
+
+/** The diagnostics a state holds (the schema's findings and the marks with a message) as problems, in the document's order. */
+export function codeProblems(state: EditorState): CodeProblem[] {
+    const found: CodeProblem[] = []
+    forEachDiagnostic(state, (diagnostic, from, to) => {
+        const start = state.doc.lineAt(from)
+        const end = state.doc.lineAt(to)
+        found.push({
+            line: start.number,
+            column: from - start.from + 1,
+            endLine: end.number,
+            endColumn: to - end.from + 1,
+            from,
+            to,
+            tone: diagnostic.severity === 'error' || diagnostic.severity === 'warning' ? diagnostic.severity : 'info',
+            message: diagnostic.message,
+        })
+    })
+    return found.sort((a, b) => a.from - b.from || a.to - b.to)
 }
 
 /** A word the editor offers while typing. */
@@ -527,6 +564,11 @@ export interface CodeEditorProps {
     resolveSchema?: CodeSchemaResolver
     /** Selects a range and scrolls it into view, such as where a check failed; a new object moves there again. */
     reveal?: CodeRange | null
+    /**
+     * Called with every problem the editor shows (what the schema finds and the marks with a
+     * message) each time they change, an empty list once there are none, for a problems list beside it.
+     */
+    onProblems?: (problems: readonly CodeProblem[]) => void
     /** The words the schema check says, in English unless given. */
     words?: Partial<CodeSchemaWords>
     /** CodeMirror's own words (the find bar, the fold marks), by their English text, to translate them. */
@@ -551,7 +593,8 @@ export interface CodeEditorProps {
  * any other key. `search` opens a find and replace bar on Mod-f, `folding` adds a fold gutter,
  * `bracketColors` and `indentGuides` help read deep structure (the three off past a megabyte), and
  * `schema` checks JSON or YAML against a JSON Schema (2020-12) and completes its property names and
- * values. `wrap` folds long lines at the editor's edge, for prose such as a prompt. The value is
+ * values. `onProblems` hears what the checks find, for a problems list beside the editor whose rows
+ * go to each through `reveal`. `wrap` folds long lines at the editor's edge, for prose such as a prompt. The value is
  * controlled: a new `value` replaces the document, and an edit is reported through `onChange`.
  *
  * `doc` edits a document shared with other editors in place of `value`, as a pane and the window
@@ -589,6 +632,7 @@ export function CodeEditor({
     deferred,
     resolveSchema,
     reveal,
+    onProblems,
     words,
     phrases,
     placeholder,
@@ -624,6 +668,7 @@ export function CodeEditor({
         language,
         resolveSchema,
         onBlur,
+        onProblems,
     })
     props.current = {
         marks,
@@ -639,6 +684,18 @@ export function CodeEditor({
         language,
         resolveSchema,
         onBlur,
+        onProblems,
+    }
+    // The problems last reported, so a change of anything else reports nothing.
+    const reported = useRef<string | undefined>(undefined)
+    const reportProblems = (state: EditorState) => {
+        const tell = props.current.onProblems
+        if (tell === undefined) return
+        const problems = codeProblems(state)
+        const key = JSON.stringify(problems)
+        if (key === reported.current) return
+        reported.current = key
+        tell(problems)
     }
     const compartments = useRef({
         language: new Compartment(),
@@ -773,6 +830,7 @@ export function CodeEditor({
                     EditorView.contentAttributes.of(id === undefined ? { 'aria-label': label } : { 'aria-label': label, id }),
                     EditorView.domEventHandlers({ blur: () => void props.current.onBlur?.() }),
                     EditorView.updateListener.of((update) => {
+                        if (update.transactions.length > 0) reportProblems(update.state)
                         if (!update.docChanged) return
                         const text = update.state.doc.toString()
                         report.current?.(text)
@@ -786,6 +844,7 @@ export function CodeEditor({
         const detach = link?.attach(editor)
         editor.dispatch({ effects: setMarks.of(marks) })
         if (diagnosing) editor.dispatch(setDiagnostics(editor.state, diagnose(editor.state)))
+        reportProblems(editor.state)
         if (search && defaultSearch !== undefined) {
             openSearchPanel(editor)
             editor.dispatch({ effects: setSearchQuery.of(new SearchQuery({ search: defaultSearch })) })
