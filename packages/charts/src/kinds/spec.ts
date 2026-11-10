@@ -116,6 +116,37 @@ export interface ChartSpec {
     scale?: string | readonly string[]
     /** A gauge's figure written at the small figure size, for a dial in a small box. */
     small?: boolean
+    /**
+     * A fan's bands from the outermost in, each from its `low` field to its `high` field, such as
+     * `[{ low: 'q10', high: 'q90' }, { low: 'q25', high: 'q75' }]`.
+     */
+    bands?: readonly ChartBand[]
+    /** The field drawn as dots, not a line: a fan's observed truth against its forecast. */
+    points?: string
+    /** The field drawn as a solid line on the rows before a fan's forecast starts: what came before. */
+    history?: string
+    /** Lines down the chart at categories of `x`, each dashed and labeled: where a forecast starts, a release. */
+    marks?: readonly ChartMark[]
+}
+
+/** One band of a fan; see `ChartSpec.bands`. */
+export interface ChartBand {
+    /** The field the band starts at. */
+    low: string
+    /** The field the band ends at. */
+    high: string
+    /** What the band is called in the legend and tooltip; the fields' figures by default, `10-90` for `q10` and `q90`. */
+    label?: string
+}
+
+/** A line down the chart at one category; see `ChartSpec.marks`. */
+export interface ChartMark {
+    /** The category of `x` it stands at. */
+    x: string
+    /** What it marks, written at its top. */
+    label?: string
+    /** A color token; the muted foreground by default. */
+    color?: string
 }
 
 /** How a two-axis chart draws one series; see `ChartSpec.layers`. */
@@ -210,6 +241,7 @@ export interface ChartWords {
     outlier: string
     ofFirst: string
     target: string
+    observed: string
 }
 
 const WORDS: ChartWords = {
@@ -226,6 +258,7 @@ const WORDS: ChartWords = {
     outlier: 'Outlier',
     ofFirst: 'of first',
     target: 'Target',
+    observed: 'Observed',
 }
 
 /** The spec's words over the English defaults. */

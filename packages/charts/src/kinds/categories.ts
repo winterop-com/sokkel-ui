@@ -46,13 +46,11 @@ function valueRange(spec: ChartSpec) {
 }
 
 /** The spec's steps after the first, each a dashed line across the chart at its value, in its color and labeled with its figure. */
-export function stepLines(spec: ChartSpec, look: ChartLook) {
-    const steps = (spec.steps ?? []).slice(1).filter((step) => step.value !== undefined)
-    if (steps.length === 0) return undefined
-    return {
-        silent: true,
-        symbol: 'none',
-        data: steps.map((step) => {
+function stepMarks(spec: ChartSpec, look: ChartLook) {
+    return (spec.steps ?? [])
+        .slice(1)
+        .filter((step) => step.value !== undefined)
+        .map((step) => {
             const color = step.color === undefined ? look.muted : look.token(step.color)
             return {
                 yAxis: step.value,
@@ -66,8 +64,40 @@ export function stepLines(spec: ChartSpec, look: ChartLook) {
                     fontSize: look.size.small,
                 },
             }
-        }),
-    }
+        })
+}
+
+/** The spec's marks, each a dashed line down the chart at its category, in its color and labeled at its top. */
+function categoryMarks(spec: ChartSpec, look: ChartLook) {
+    return (spec.marks ?? []).map((mark) => {
+        const color = mark.color === undefined ? look.muted : look.token(mark.color)
+        return {
+            xAxis: mark.x,
+            lineStyle: { color, type: 'dashed', width: 1 },
+            label: {
+                show: mark.label !== undefined,
+                position: 'end',
+                formatter: () => mark.label ?? '',
+                color,
+                fontFamily: look.font,
+                fontSize: look.size.small,
+            },
+        }
+    })
+}
+
+/** The room above the grid a chart leaves for its marks' labels. */
+export const markRoom = (spec: ChartSpec, look: ChartLook): number =>
+    spec.marks?.some((mark) => mark.label !== undefined) === true ? look.size.small + 12 : 10
+
+/**
+ * The spec's lines across and down the chart: the steps after the first, dashed across at their
+ * values, and the marks, dashed down at their categories.
+ */
+export function stepLines(spec: ChartSpec, look: ChartLook) {
+    const data = [...stepMarks(spec, look), ...categoryMarks(spec, look)]
+    if (data.length === 0) return undefined
+    return { silent: true, symbol: 'none', data }
 }
 
 /** A tooltip listing every series at the category under the pointer. */
@@ -180,8 +210,8 @@ export function edgeAxis(spec: ChartSpec, categories: string[]) {
 /**
  * A line per series across the categories, or areas filled under them, evenly or fading by `fill`;
  * `stacks` puts series in stacks of their own, a `dashed` series is drawn as a reference with no
- * area, the steps after the first are dashed lines across at their values, and `min` and `max` fix
- * the value axis.
+ * area, the steps after the first are dashed lines across at their values, the `marks` dashed
+ * lines down at their categories, and `min` and `max` fix the value axis.
  */
 function lines(filled: boolean): ChartBuilder {
     return (spec, look) => {
@@ -189,7 +219,7 @@ function lines(filled: boolean): ChartBuilder {
         const marks = stepLines(spec, look)
         return {
             tooltip: { ...axisTooltip(spec), axisPointer: { type: 'line' } },
-            grid: { left: 4, right: 10, top: 10, bottom: 4 },
+            grid: { left: 4, right: 10, top: markRoom(spec, look), bottom: 4 },
             xAxis: edgeAxis(spec, categories),
             yAxis: { type: 'value', ...valueRange(spec), ...valueLabels(spec) },
             series: series.map((entry, index) => {

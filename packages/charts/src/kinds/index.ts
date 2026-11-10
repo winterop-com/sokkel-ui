@@ -3,6 +3,7 @@ import { bullet, bulletLegend } from './bullet'
 import { calendar } from './calendar'
 import { area, bar, donut, donutLegend, heatmap, line, pie } from './categories'
 import { dual } from './dual'
+import { fan, fanLegend } from './fan'
 import { sankey, sankeyLegend } from './flows'
 import { funnel, funnelLegend } from './funnel'
 import { gauge } from './gauge'
@@ -49,9 +50,22 @@ export const KINDS = {
     stream: { build: stream },
     step: { build: step },
     range: { build: range, legend: rangeLegend },
+    fan: { build: fan, legend: fanLegend },
     linked: { build: linked },
 } satisfies Record<string, ChartKindDef>
 
 export type ChartKind = keyof typeof KINDS
 
-export type { ChartAxis, ChartBuilder, ChartKindDef, ChartLayer, ChartSpec, ChartStep, ChartWords, GaugeDial, LinkedPanel } from './spec'
+export type {
+    ChartAxis,
+    ChartBand,
+    ChartBuilder,
+    ChartKindDef,
+    ChartLayer,
+    ChartMark,
+    ChartSpec,
+    ChartStep,
+    ChartWords,
+    GaugeDial,
+    LinkedPanel,
+} from './spec'

@@ -93,6 +93,7 @@ export const PRIVATE: Record<PackageDir, Record<string, string>> = {
         'kinds/calendar': KIND_BUILDER,
         'kinds/categories': KIND_BUILDER,
         'kinds/dual': KIND_BUILDER,
+        'kinds/fan': KIND_BUILDER,
         'kinds/flows': KIND_BUILDER,
         'kinds/funnel': KIND_BUILDER,
         'kinds/gauge': KIND_BUILDER,
