@@ -66,6 +66,21 @@ export const SignedIn: StoryObj = {
     ),
 }
 
+/** A role beside the name: "admin", muted, in the rail's foot and in the menu's head. */
+export const Role: StoryObj = {
+    render: () => (
+        <Foot
+            name="grace"
+            image={pictureOf('grace')}
+            detail="admin"
+            where="tidevann.example.org"
+            onSettings={() => undefined}
+            onShortcuts={() => undefined}
+            onSignOut={() => undefined}
+        />
+    ),
+}
+
 /** No one signed in: the neutral figure for the avatar, and Sign in with its own icon where Sign out would stand. */
 export const Local: StoryObj = {
     render: () => <Foot name="Local" where="No server" local onSettings={() => undefined} onSignIn={() => undefined} />,

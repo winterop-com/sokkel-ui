@@ -22,6 +22,11 @@ export interface AccountMenuProps {
     name: string
     /** The person's picture, drawn over the initial once it has loaded. */
     image?: string
+    /**
+     * A short word about the account in the muted face beside the name, such as its role ("admin"),
+     * in the expanded face and the menu's head; a collapsed face, the avatar alone, leaves it out.
+     */
+    detail?: string
     /** Where they are signed in: a host, an instance, a version, in the code face. */
     where?: string
     collapsed?: boolean
@@ -50,8 +55,8 @@ export interface AccountMenuProps {
 }
 
 /**
- * The account control in the rail's foot cell: a full-cell row with the initial, the name and a
- * chevron, opening upward into a menu headed by who is signed in and where. Given `image`, the
+ * The account control in the rail's foot cell: a full-cell row with the initial, the name (with
+ * `detail`, such as a role, muted beside it) and a chevron, opening upward into a menu headed by who is signed in and where. Given `image`, the
  * picture takes the initial's place once it has loaded; until then, or when it fails, the initial
  * stays.
  *
@@ -70,6 +75,7 @@ export interface AccountMenuProps {
 export function AccountMenu({
     name,
     image,
+    detail,
     where,
     collapsed: kept = false,
     local = false,
@@ -138,7 +144,10 @@ export function AccountMenu({
                 {avatar('size-6')}
                 {!collapsed && (
                     <>
-                        <span className="min-w-0 flex-1 truncate text-left font-medium">{name}</span>
+                        <span className="flex min-w-0 flex-1 items-baseline gap-1.5 text-left">
+                            <span className="min-w-0 truncate font-medium">{name}</span>
+                            {detail !== undefined && <span className="min-w-0 truncate text-xs text-muted-foreground">{detail}</span>}
+                        </span>
                         <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" aria-hidden />
                     </>
                 )}
@@ -152,7 +161,12 @@ export function AccountMenu({
                         <div className="flex items-center gap-2.5 px-2 py-2">
                             {avatar('size-8')}
                             <div className="min-w-0">
-                                <p className="truncate text-sm font-medium">{name}</p>
+                                <p className="flex min-w-0 items-baseline gap-1.5 text-sm">
+                                    <span className="min-w-0 truncate font-medium">{name}</span>
+                                    {detail !== undefined && (
+                                        <span className="min-w-0 truncate text-xs text-muted-foreground">{detail}</span>
+                                    )}
+                                </p>
                                 {where !== undefined && <p className="truncate font-mono text-xs text-muted-foreground">{where}</p>}
                             </div>
                         </div>
