@@ -278,7 +278,15 @@ const THEME = EditorView.theme({
     '.cm-scroller': { fontFamily: 'var(--font-mono)', fontSizeAdjust: 'none' },
     '.cm-content': { padding: '0.5rem 0', caretColor: 'var(--foreground)' },
     '.cm-line': { padding: '0 0.75rem' },
-    '.cm-gutters': { backgroundColor: 'var(--editor-gutter)', color: 'var(--editor-gutter-ink)', border: 'none', fontSizeAdjust: 'none' },
+    // Opaque, so text scrolled sideways under the line numbers never shows through: the gutter's wash
+    // over the editor's wash over the box's own ground.
+    '.cm-gutters': {
+        background:
+            'linear-gradient(var(--editor-gutter), var(--editor-gutter)), linear-gradient(var(--editor-ground), var(--editor-ground)), var(--editor-paper, var(--background))',
+        color: 'var(--editor-gutter-ink)',
+        border: 'none',
+        fontSizeAdjust: 'none',
+    },
     '.cm-lineNumbers .cm-gutterElement': { padding: '0 0.5rem 0 0.75rem', minWidth: '2.5rem' },
     '.cm-foldGutter .cm-gutterElement': { padding: '0 0.25rem', cursor: 'pointer' },
     '.cm-foldGutter .cm-gutterElement:hover': { color: 'var(--foreground)' },
@@ -520,6 +528,8 @@ export interface CodeEditorProps {
     language?: CodeLanguage
     readOnly?: boolean
     lineNumbers?: boolean
+    /** Shades the caret's line while the editor has focus; on by default, off for an app whose people turn it off. */
+    activeLine?: boolean
     /** Folds long lines at the editor's edge instead of scrolling sideways. */
     wrap?: boolean
     marks?: readonly CodeMark[]
@@ -613,6 +623,7 @@ export function CodeEditor({
     language = 'text',
     readOnly = false,
     lineNumbers: numbered = true,
+    activeLine = true,
     wrap = false,
     marks = NO_MARKS,
     completions,
@@ -706,6 +717,7 @@ export function CodeEditor({
         search: new Compartment(),
         look: new Compartment(),
         folding: new Compartment(),
+        active: new Compartment(),
         size: new Compartment(),
         lint: new Compartment(),
         schema: new Compartment(),
@@ -802,7 +814,7 @@ export function CodeEditor({
                 selection: link?.selection(),
                 extensions: [
                     shared,
-                    parts.gutter.of(numbered ? [lineNumbers(), highlightActiveLineGutter()] : []),
+                    parts.gutter.of(numbered ? [lineNumbers(), ...(activeLine ? [highlightActiveLineGutter()] : [])] : []),
                     parts.folding.of(extensions.folding()),
                     parts.look.of(extensions.look()),
                     parts.wrap.of(wrap ? EditorView.lineWrapping : []),
@@ -811,7 +823,7 @@ export function CodeEditor({
                     drawSelection(),
                     indentOnInput(),
                     bracketMatching(),
-                    highlightActiveLine(),
+                    parts.active.of(activeLine ? highlightActiveLine() : []),
                     syntaxHighlighting(HIGHLIGHT),
                     autocompletion({ icons: true, override: [offer] }),
                     keymap.of([...completionKeymap, ...defaultKeymap, ...(link === undefined ? historyKeymap : []), indentWithTab]),
@@ -1003,9 +1015,14 @@ export function CodeEditor({
 
     useEffect(() => {
         view.current?.dispatch({
-            effects: compartments.current.gutter.reconfigure(numbered ? [lineNumbers(), highlightActiveLineGutter()] : []),
+            effects: [
+                compartments.current.gutter.reconfigure(
+                    numbered ? [lineNumbers(), ...(activeLine ? [highlightActiveLineGutter()] : [])] : [],
+                ),
+                compartments.current.active.reconfigure(activeLine ? highlightActiveLine() : []),
+            ],
         })
-    }, [numbered])
+    }, [numbered, activeLine])
 
     useEffect(() => {
         view.current?.dispatch({ effects: compartments.current.wrap.reconfigure(wrap ? EditorView.lineWrapping : []) })
@@ -1071,9 +1088,9 @@ export function CodeEditor({
             className={cn(
                 'overflow-hidden [&_.cm-editor]:h-full',
                 variant === 'field'
-                    ? 'min-h-24 rounded-control border border-input bg-field focus-within:border-ring/80 aria-invalid:border-destructive'
-                    : 'h-full min-h-0 bg-background',
-                readOnly && variant === 'field' && 'bg-muted/40',
+                    ? 'min-h-24 rounded-control border border-input bg-field [--editor-paper:var(--field)] focus-within:border-ring/80 aria-invalid:border-destructive'
+                    : 'h-full min-h-0 bg-background [--editor-paper:var(--background)]',
+                readOnly && variant === 'field' && 'bg-muted/40 [--editor-paper:color-mix(in_oklab,var(--muted)_40%,var(--background))]',
                 className,
             )}
         />
