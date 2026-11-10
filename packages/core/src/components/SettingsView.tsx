@@ -89,7 +89,14 @@ export function SettingsView({
     const { visible, sections, shown } = shownSettings(groups, search, active)
     const all = resetScope === 'all'
     const searchField = (
-        <SearchField value={search} onChange={onSearchChange} placeholder={say.search} shortcut={false} words={{ clear: say.clear }} />
+        <SearchField
+            value={search}
+            onChange={onSearchChange}
+            placeholder={say.search}
+            label={say.searchLabel}
+            shortcut={false}
+            words={{ clear: say.clear }}
+        />
     )
 
     // A section chosen anew starts at its top, as a page reached by a link does.
