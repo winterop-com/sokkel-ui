@@ -12,30 +12,33 @@ const STATES: StatusMap = {
 describe('resolveStatus', () => {
     it('knows every run state by its name, in its own color', () => {
         for (const status of RUN_STATUSES) expect(resolveStatus(status).color).toBe(status)
-        expect(resolveStatus('completed_with_errors')).toEqual({ label: 'completed with errors', color: 'completed_with_errors' })
+        expect(resolveStatus('completed_with_errors')).toMatchObject({ label: 'completed with errors', color: 'completed_with_errors' })
     })
 
     it("says an app's state in its words, or by its name, in its color", () => {
-        expect(resolveStatus('review', STATES)).toEqual({ label: 'in review', color: 'warning' })
-        expect(resolveStatus('published', STATES)).toEqual({ label: 'published', color: 'good' })
-        expect(resolveStatus('archived', STATES)).toEqual({ label: 'archived', color: 'skipped' })
+        expect(resolveStatus('review', STATES)).toMatchObject({ label: 'in review', color: 'warning' })
+        expect(resolveStatus('published', STATES)).toMatchObject({ label: 'published', color: 'good' })
+        expect(resolveStatus('archived', STATES)).toMatchObject({ label: 'archived', color: 'skipped' })
     })
 
     it("keeps the run states beside an app's own", () => {
-        expect(resolveStatus('running', STATES)).toEqual({ label: 'running', color: 'running' })
+        expect(resolveStatus('running', STATES)).toMatchObject({ label: 'running', color: 'running' })
     })
 
     it("takes an app's words and color for a run state it names", () => {
-        expect(resolveStatus('failed', { failed: { label: 'feilet', color: 'critical' } })).toEqual({ label: 'feilet', color: 'critical' })
+        expect(resolveStatus('failed', { failed: { label: 'feilet', color: 'critical' } })).toMatchObject({
+            label: 'feilet',
+            color: 'critical',
+        })
     })
 
     it('draws a state no map knows neutral, said by its name', () => {
-        expect(resolveStatus('on_hold', STATES)).toEqual({ label: 'on hold', color: 'neutral' })
+        expect(resolveStatus('on_hold', STATES)).toMatchObject({ label: 'on hold', color: 'neutral' })
     })
 
     it("never takes a state from a map's prototype", () => {
-        expect(resolveStatus('constructor', STATES)).toEqual({ label: 'constructor', color: 'neutral' })
-        expect(resolveStatus('toString')).toEqual({ label: 'toString', color: 'neutral' })
+        expect(resolveStatus('constructor', STATES)).toMatchObject({ label: 'constructor', color: 'neutral' })
+        expect(resolveStatus('toString')).toMatchObject({ label: 'toString', color: 'neutral' })
     })
 })
 

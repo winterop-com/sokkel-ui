@@ -21,6 +21,8 @@ export interface StatusDefinition {
     /** The words, in lower case as a chip says them. Without it the state's own name is said, underscores as spaces. */
     label?: string
     color: StatusColor
+    /** Whether the state is happening now, so its dot pulses; by default only the running color is. */
+    live?: boolean
 }
 
 /** The states an app knows, by the value its data holds. */
@@ -30,6 +32,7 @@ export type StatusMap = Readonly<Record<string, StatusDefinition>>
 export interface ResolvedStatus {
     label: string
     color: StatusColor
+    live: boolean
 }
 
 export const RUN_STATUSES: readonly RunStatus[] = [
@@ -99,7 +102,8 @@ export function isStatusColor(value: string): value is StatusColor {
  */
 export function resolveStatus(status: string, map: StatusMap = RUN_STATUS_MAP): ResolvedStatus {
     const found = entry(map, status) ?? entry(RUN_STATUS_MAP, status)
-    return { label: found?.label ?? status.replaceAll('_', ' '), color: found?.color ?? 'neutral' }
+    const color = found?.color ?? 'neutral'
+    return { label: found?.label ?? status.replaceAll('_', ' '), color, live: found?.live ?? color === 'running' }
 }
 
 /** A map's own entry for a state, never one its prototype lends, such as `constructor`. */

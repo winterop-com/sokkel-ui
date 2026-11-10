@@ -137,9 +137,19 @@ describe('StatusChip', () => {
         expect(html).toContain('background:var(--status-failed)')
     })
 
-    it("pulses a running state's dot and no other", () => {
-        expect(renderToStaticMarkup(<StatusChip status="running" dot />)).toContain('animate-pulse')
-        expect(renderToStaticMarkup(<StatusChip status="failed" dot />)).not.toContain('animate-pulse')
+    it("pulses a running state's dot and no other, and any state its definition marks live", () => {
+        expect(renderToStaticMarkup(<StatusChip status="running" dot />)).toContain('animate-live')
+        expect(renderToStaticMarkup(<StatusChip status="failed" dot />)).not.toContain('animate-live')
+        expect(renderToStaticMarkup(<StatusChip status="sending" statuses={{ sending: { color: 'info', live: true } }} dot />)).toContain(
+            'animate-live',
+        )
+    })
+
+    it('draws a bare dot and a worded one in the same one-line box', () => {
+        expect(renderToStaticMarkup(<Dot status="running" label="running" />)).toMatch(
+            /data-slot="dot"[^>]*role="img"[^>]*class="[^"]*h-\[1lh\]/,
+        )
+        expect(renderToStaticMarkup(<Dot status="running" say />)).toMatch(/data-slot="dot"[^>]*class="[^"]*h-\[1lh\]/)
     })
 })
 

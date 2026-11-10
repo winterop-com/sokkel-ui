@@ -30,6 +30,8 @@ export interface StatusLook {
     css: string
     /** The color's ink as the raw token, for words or an outline in the color. */
     ink: string
+    /** Whether the state is happening now, so its dot pulses. */
+    live: boolean
 }
 
 /**
@@ -39,6 +41,6 @@ export interface StatusLook {
  */
 export function useStatus(status: string, statuses?: StatusMap): StatusLook {
     const provided = useContext(StatusMapContext)
-    const { label, color } = resolveStatus(status, statuses === undefined ? provided : { ...provided, ...statuses })
-    return { label, color, css: STATUS_CSS[color], ink: STATUS_INK_CSS[color] }
+    const { label, color, live } = resolveStatus(status, statuses === undefined ? provided : { ...provided, ...statuses })
+    return { label, color, css: STATUS_CSS[color], ink: STATUS_INK_CSS[color], live }
 }

@@ -23,3 +23,14 @@
     animation-duration: 0s !important;
     animation-delay: 0s !important;
 }
+
+/* A live state's mark breathing: a status dot of a run that is going, queued or sending. */
+@keyframes live {
+    50% {
+        opacity: 0.35;
+    }
+}
+
+@utility animate-live {
+    animation: live 1.6s ease-in-out infinite;
+}
