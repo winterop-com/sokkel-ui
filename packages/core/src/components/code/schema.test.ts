@@ -10,6 +10,8 @@ import {
     jsonKeys,
     jsonSlot,
     namedSchema,
+    pathRange,
+    problemsOf,
     readDocument,
     schemaCompletion,
     schemaDiagnostics,
@@ -285,5 +287,32 @@ describe('a schema that refers to itself', () => {
         const pos = doc.indexOf('{ "') + 3
         const result = await schemaCompletion(() => META, 'json')(new CompletionContext(jsonState(doc), pos, true))
         expect(result?.options.map((option) => option.label)).toEqual(expect.arrayContaining(['type', 'title', 'items']))
+    })
+})
+
+describe('problems and places', () => {
+    it('lists what a check finds by line and column, in the order of the text, with the path it is about', () => {
+        const doc = 'code: nightly-export\nsteps:\n  - name: fetch\n    retries: many\n  - name: compress\nowner: ada\n'
+        const state = yamlState(doc)
+        const problems = problemsOf(state, schemaDiagnostics(state, 'yaml', SCHEMA, validate))
+        expect(problems.map((each) => [each.line, each.column, each.tone, each.path])).toEqual([
+            [4, 14, 'error', ['steps', 0, 'retries']],
+            [5, 11, 'error', ['steps', 1, 'name']],
+            [6, 1, 'error', ['owner']],
+        ])
+        expect(problems[0].message).toBe('Expected an integer')
+    })
+
+    it('finds where the value at a path is written, its key included', () => {
+        const doc = 'code: nightly-export\nsteps:\n  - name: fetch\n    retries: 3\n  - name: upload\n'
+        const state = yamlState(doc)
+        const at = pathRange(state, 'yaml', ['steps', 1])
+        expect(at === null ? null : doc.slice(at.from, at.to).trim()).toBe('name: upload')
+        const key = pathRange(state, 'yaml', ['steps', 0, 'retries'])
+        expect(key === null ? null : doc.slice(key.from, key.to)).toBe('retries: 3')
+        expect(pathRange(state, 'yaml', ['steps', 4])).toBeNull()
+        const json = jsonState('{"steps": [{"name": "fetch"}]}')
+        const named = pathRange(json, 'json', ['steps', 0, 'name'])
+        expect(named === null ? null : json.doc.sliceString(named.from, named.to)).toBe('"name": "fetch"')
     })
 })

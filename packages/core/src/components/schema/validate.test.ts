@@ -105,3 +105,17 @@ describe('pointer', () => {
         expect(pointer(['a/b', 0, 'c~d'])).toBe('/a~1b/0/c~0d')
     })
 })
+
+describe('a conditional', () => {
+    it('says what is wrong inside the branch that applies, not that the branch failed', () => {
+        const schema: JsonSchema = {
+            type: 'object',
+            properties: { kind: { enum: ['fetch', 'notify'] }, with: { type: 'object' } },
+            if: { properties: { kind: { const: 'fetch' } } },
+            // oxlint-disable-next-line unicorn/no-thenable -- `then` is the schema keyword
+            then: { properties: { with: { required: ['url'] } } },
+        }
+        const found = validate(schema, { kind: 'fetch', with: {} })
+        expect(found.map((issue) => [issue.kind, issue.path])).toEqual([['required', ['with', 'url']]])
+    })
+})

@@ -47,18 +47,23 @@ import { jq } from './code/jq'
 import { markdown } from './code/markdown'
 import {
     namedSchema,
+    pathRange,
+    problemsOf,
+    readDocument,
     SCHEMA_WORDS,
     schemaCompletion,
     schemaDiagnostics,
     schemaHover,
+    type CodeProblem,
     type CodeSchemaWords,
+    type PathDiagnostic,
     type SchemaLanguage,
 } from './code/schema'
 import { sharedLink, type SharedDocument } from './code/shared'
 import { loadedValidate, loadValidate } from './schema/checker'
 import type { JsonSchema } from './schema/read'
 
-export type { CodeSchemaWords } from './code/schema'
+export type { CodeProblem, CodeSchemaWords } from './code/schema'
 export { createSharedDocument, useSharedDocument, useSharedText, type SharedDocument } from './code/shared'
 
 /** The languages the editor carries by name. */
@@ -99,12 +104,14 @@ export interface CodeCompletion {
 
 /**
  * A place to select and bring into view: a whole `line` counted from 1, columns `from` and `to` on
- * it, or, without `line`, offsets into the document counted from 0.
+ * it, or, without `line`, offsets into the document counted from 0. In a JSON or YAML document
+ * `path` names a value instead, such as `['steps', 2]`, selected with its key.
  */
 export interface CodeRange {
     line?: number
     from?: number
     to?: number
+    path?: readonly (string | number)[]
 }
 
 /** A schema a document names by its `$schema` address, found by the app; nothing when it has none. */
@@ -517,6 +524,16 @@ export interface CodeEditorProps {
     variant?: 'field' | 'pane'
     /** A JSON Schema (2020-12) a JSON or YAML document is checked against and completed from. */
     schema?: JsonSchema
+    /**
+     * Hears every problem the editor shows (the marks with a message, what the schema finds, a
+     * syntax error) each time they change, in the order of the text, for a problems list beside it.
+     */
+    onProblems?: (problems: readonly CodeProblem[]) => void
+    /**
+     * Hears a JSON or YAML document read into a value, shortly after each edit and once at the start,
+     * for a view drawn from it such as a graph; not called while the text does not read.
+     */
+    onDocument?: (value: unknown) => void
     /** Leaves a value unchecked by the schema, and anything inside it, such as one holding a reference filled in later. */
     deferred?: (value: unknown) => boolean
     /**
@@ -553,6 +570,9 @@ export interface CodeEditorProps {
  * `schema` checks JSON or YAML against a JSON Schema (2020-12) and completes its property names and
  * values. `wrap` folds long lines at the editor's edge, for prose such as a prompt. The value is
  * controlled: a new `value` replaces the document, and an edit is reported through `onChange`.
+ * `onProblems` hears what the editor marks, for a problems list whose rows `reveal` the place, and
+ * `onDocument` the JSON or YAML document read into a value, for a view drawn from it; `reveal`
+ * takes a value's `path` as well as a line.
  *
  * `doc` edits a document shared with other editors in place of `value`, as a pane and the window
  * it opens into (`WindowedPane`) edit one document: `useSharedDocument` makes one, `useSharedText`
@@ -587,6 +607,8 @@ export function CodeEditor({
     variant = 'field',
     schema: given,
     deferred,
+    onProblems,
+    onDocument,
     resolveSchema,
     reveal,
     words,
@@ -624,6 +646,8 @@ export function CodeEditor({
         language,
         resolveSchema,
         onBlur,
+        onProblems,
+        onDocument,
     })
     props.current = {
         marks,
@@ -639,6 +663,8 @@ export function CodeEditor({
         language,
         resolveSchema,
         onBlur,
+        onProblems,
+        onDocument,
     }
     const compartments = useRef({
         language: new Compartment(),
@@ -666,10 +692,33 @@ export function CodeEditor({
      */
     const diagnose = (state: EditorState): Diagnostic[] => {
         const { marks: given, schema: against, words, language: lang, deferred: unchecked } = props.current
-        const found = markDiagnostics(state, given)
+        const found: PathDiagnostic[] = markDiagnostics(state, given)
         const check = loadedValidate()
-        if (against === undefined || (lang !== 'json' && lang !== 'yaml') || check === undefined) return found
-        return [...found, ...schemaDiagnostics(state, lang, against, check, { ...SCHEMA_WORDS, ...words }, unchecked)]
+        if (against !== undefined && (lang === 'json' || lang === 'yaml') && check !== undefined)
+            found.push(...schemaDiagnostics(state, lang, against, check, { ...SCHEMA_WORDS, ...words }, unchecked))
+        tell(problemsOf(state, found))
+        return found
+    }
+
+    /** The problems last told, so `onProblems` hears a list only when it changes. */
+    const told = useRef<string | undefined>(undefined)
+    const tell = (problems: CodeProblem[]) => {
+        const key = JSON.stringify(problems)
+        if (key === told.current) return
+        told.current = key
+        props.current.onProblems?.(problems)
+    }
+
+    /** Reads a JSON or YAML document for `onDocument`, a moment after the last edit. */
+    const reading = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+    const readSoon = (editor: EditorView, wait: number) => {
+        clearTimeout(reading.current)
+        reading.current = setTimeout(() => {
+            const { onDocument: hear, language: lang } = props.current
+            if (hear === undefined || (lang !== 'json' && lang !== 'yaml') || view.current !== editor) return
+            const read = readDocument(editor.state, lang)
+            if (read !== null && read.broken === undefined) hear(read.value)
+        }, wait)
     }
 
     const extensions = {
@@ -776,6 +825,7 @@ export function CodeEditor({
                         if (!update.docChanged) return
                         const text = update.state.doc.toString()
                         report.current?.(text)
+                        readSoon(update.view, 300)
                         const lang = props.current.language
                         if (lang === 'json' || lang === 'yaml') setAddress(namedSchema(text, lang))
                     }),
@@ -786,11 +836,14 @@ export function CodeEditor({
         const detach = link?.attach(editor)
         editor.dispatch({ effects: setMarks.of(marks) })
         if (diagnosing) editor.dispatch(setDiagnostics(editor.state, diagnose(editor.state)))
+        else tell([])
+        readSoon(editor, 0)
         if (search && defaultSearch !== undefined) {
             openSearchPanel(editor)
             editor.dispatch({ effects: setSearchQuery.of(new SearchQuery({ search: defaultSearch })) })
         }
         return () => {
+            clearTimeout(reading.current)
             detach?.()
             editor.destroy()
             view.current = null
@@ -917,7 +970,11 @@ export function CodeEditor({
     useEffect(() => {
         const editor = view.current
         if (editor === null || reveal === null || reveal === undefined) return
-        let at = range(editor.state, reveal)
+        const lang = props.current.language
+        let at =
+            reveal.path !== undefined && (lang === 'json' || lang === 'yaml')
+                ? pathRange(editor.state, lang, reveal.path)
+                : range(editor.state, reveal)
         if (
             at === null &&
             reveal.from === undefined &&
@@ -1001,7 +1058,10 @@ export function CodeEditor({
         if (editor === null) return
         editor.dispatch({ effects: setMarks.of(marks) })
         if (diagnosing) editor.dispatch(setDiagnostics(editor.state, diagnose(editor.state)))
-        else if (diagnosticCount(editor.state) > 0) editor.dispatch(setDiagnostics(editor.state, []))
+        else {
+            if (diagnosticCount(editor.state) > 0) editor.dispatch(setDiagnostics(editor.state, []))
+            tell([])
+        }
     }, [marks, schema, words, language])
 
     return (

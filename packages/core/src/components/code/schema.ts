@@ -271,7 +271,7 @@ export function schemaDiagnostics(
     check: typeof validate,
     words: CodeSchemaWords = SCHEMA_WORDS,
     deferred?: DeferredValue,
-): Diagnostic[] {
+): PathDiagnostic[] {
     if (state.doc.length === 0) return []
     const read = readDocument(state, language)
     if (read === null) return []
@@ -280,7 +280,56 @@ export function schemaDiagnostics(
         ...place(issue, read.spans, state),
         severity: issue.tone === 'critical' ? 'error' : 'warning',
         message: words.say(issue),
+        path: issue.kind === 'additional' ? [...issue.path, issue.property] : issue.path,
     }))
+}
+
+/** A diagnostic with the path of the value it is about, when a schema check found it. */
+export type PathDiagnostic = Diagnostic & { path?: Path }
+
+/** One thing an editor finds wrong, placed in its text: what a problems list shows and reveals. */
+export interface CodeProblem {
+    /** Offsets into the document, counted from 0. */
+    from: number
+    to: number
+    /** The line it starts on and the column on it, both counted from 1. */
+    line: number
+    column: number
+    tone: 'error' | 'warning' | 'info'
+    message: string
+    /** The path of the value it is about in a JSON or YAML document, when a schema check found it. */
+    path?: Path
+}
+
+/** Diagnostics as problems, in the order of the text. */
+export function problemsOf(state: EditorState, diagnostics: readonly PathDiagnostic[]): CodeProblem[] {
+    return diagnostics
+        .map((each) => {
+            const line = state.doc.lineAt(Math.min(each.from, state.doc.length))
+            const tone: CodeProblem['tone'] = each.severity === 'error' || each.severity === 'warning' ? each.severity : 'info'
+            return {
+                from: each.from,
+                to: each.to,
+                line: line.number,
+                column: each.from - line.from + 1,
+                tone,
+                message: each.message,
+                ...(each.path === undefined ? {} : { path: each.path }),
+            }
+        })
+        .sort((a, b) => a.from - b.from || a.to - b.to)
+}
+
+/**
+ * Where the value at a path is written in a JSON or YAML document, its key included; null when the
+ * document has no such value or cannot be read.
+ */
+export function pathRange(state: EditorState, language: SchemaLanguage, path: Path): { from: number; to: number } | null {
+    const read = readDocument(state, language)
+    if (read === null) return null
+    const span = read.spans.get(pointer(path))
+    if (span === undefined) return null
+    return { from: span.key?.from ?? span.from, to: span.to }
 }
 
 /** Where the cursor is in the document's structure: the path to the object or array it is in, and whether it is at a key or a value. */

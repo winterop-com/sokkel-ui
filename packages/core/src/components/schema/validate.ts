@@ -179,7 +179,8 @@ function deprecated(schema: JsonSchema, value: unknown, root: JsonSchema, path: 
  * Empty strings are read as absent, the way a form leaves a cleared field. A schema that cannot be
  * compiled, because it is broken or because the page's Content Security Policy forbids the code ajv
  * generates, gives one `unchecked` issue at the root, so a form fails closed rather than open. A nullable `anyOf`
- * reports what is wrong with the real branch, not that the value is not null.
+ * reports what is wrong with the real branch, not that the value is not null, and a conditional
+ * what is wrong inside the branch that applies, not that the branch failed.
  */
 export function validate(schema: JsonSchema, value: unknown): SchemaIssue[] {
     const document = prune(value)
@@ -188,6 +189,8 @@ export function validate(schema: JsonSchema, value: unknown): SchemaIssue[] {
     const errors = check(document) ? [] : (check.errors ?? [])
     const issues = errors
         .filter((error) => !(error.keyword === 'type' && error.params.type === 'null'))
+        // A failed `if` branch is said by the errors inside its `then` or `else`; the branch's own adds only noise.
+        .filter((error) => error.keyword !== 'if')
         .filter(
             (error) =>
                 !['anyOf', 'oneOf'].includes(error.keyword) ||

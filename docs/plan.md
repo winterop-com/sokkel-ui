@@ -669,7 +669,13 @@ dialect's meta-schema, which ajv carries. `JSON_SCHEMA_2020_12` (`json-schema`) 
 meta-schema as one object, its vocabularies merged and its references kept inside it, so an app
 that edits a JSON Schema passes it as `schema` and gets the keywords completed at the top and in
 every subschema as well as the checks. A key's type and description show on hover. `reveal`
-selects a range and scrolls it into view. `variant="pane"` fills a pane edge to edge; the Query app
+selects a range and scrolls it into view, or in JSON and YAML the value at a `path` with its key.
+`onProblems` hears every problem the editor marks, by line and column with the path of the value
+it is about, for a problems list whose rows reveal their place, and `onDocument` the document read
+into a value, for a view drawn from it such as a pipeline's graph. A failed `if` is said by what is
+wrong inside the branch that applies, never as the branch failing. The Editors section of Storybook
+shows whole editor apps built from these parts: a pipeline, a schema with a value tried against it,
+a query console, a run log and a shared buffer. `variant="pane"` fills a pane edge to edge; the Query app
 shows it in panes. Two editors edit one document as Monaco's views share a model: `doc` takes a
 `SharedDocument` (`useSharedDocument`) in place of `value`, which holds the text and one undo history
 in a CodeMirror state no view draws, hands each edit to every other editor, and keeps each editor's
