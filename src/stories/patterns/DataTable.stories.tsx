@@ -14,12 +14,14 @@ import {
 } from 'lucide-react'
 import { useCallback, useMemo, useRef, useState } from 'react'
 
+import { Chip, type ChipTone } from '@winterop-com/sokkel-ui/Chip'
 import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
 import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
 import {
     type CellFocus,
     type DataAction,
     type DataColumn,
+    type DataRowTone,
     DataTable,
     type DataSort,
     findInTree,
@@ -29,6 +31,7 @@ import {
 import { FileTypeIcon, formatSize } from '@winterop-com/sokkel-ui/FileList'
 import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
+import { Section } from '@winterop-com/sokkel-ui/Section'
 import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Checkbox } from '@winterop-com/sokkel-ui/primitives/checkbox'
@@ -281,6 +284,15 @@ export const NoHover: StoryObj = {
     render: () => <DataTable variant="list" columns={LIST_COLUMNS} rows={LIST_RUNS} rowKey={(run) => run.id} hover={false} />,
 }
 
+/**
+ * A list that turns to cards below a width of its own box (`stackBelow="64rem"`), such as the
+ * width an app's listings go to cards under; the box's width, never the window's.
+ */
+export const StackWidth: StoryObj = {
+    name: 'Stack width',
+    render: () => <DataTable variant="list" columns={LIST_COLUMNS} rows={LIST_RUNS} rowKey={(run) => run.id} stackBelow="64rem" />,
+}
+
 /** Rows that grow to fit a cell longer than one line, here each run's note. */
 export const TallRows: StoryObj = {
     name: 'Tall rows',
@@ -353,6 +365,174 @@ export const RowDetail: StoryObj = {
                 )
             }
         />
+    ),
+}
+
+interface AccountToken {
+    id: string
+    name: string
+    scope: string
+    expires: string
+    state: 'active' | 'expiring' | 'expired' | 'revoked'
+}
+
+interface Account {
+    id: string
+    name: string
+    email: string
+    role: 'Admin' | 'Editor' | 'Viewer'
+    active: boolean
+    about: string
+    tokens: AccountToken[]
+}
+
+const ACCOUNTS: Account[] = [
+    {
+        id: 'ada',
+        name: 'ada',
+        email: 'ada@example.org',
+        role: 'Admin',
+        active: true,
+        about: 'Runs the harbor and juniper projects and keeps the scheduler fed.',
+        tokens: [
+            { id: 'ada-1', name: 'deploy-harbor', scope: 'jobs:write', expires: '2027-03-01', state: 'active' },
+            { id: 'ada-2', name: 'nightly-export', scope: 'runs:read', expires: '2026-11-14', state: 'expiring' },
+            { id: 'ada-3', name: 'laptop', scope: 'all', expires: '2026-06-30', state: 'expired' },
+        ],
+    },
+    {
+        id: 'grace',
+        name: 'grace',
+        email: 'grace@example.org',
+        role: 'Editor',
+        active: true,
+        about: 'Writes the import-orders and sync-inventory jobs for larkspur.',
+        tokens: [
+            { id: 'grace-1', name: 'sync-inventory', scope: 'jobs:write', expires: '2027-01-15', state: 'active' },
+            { id: 'grace-2', name: 'import-orders', scope: 'jobs:write', expires: '2026-09-01', state: 'revoked' },
+        ],
+    },
+    {
+        id: 'linus',
+        name: 'linus',
+        email: 'linus@example.org',
+        role: 'Viewer',
+        active: true,
+        about: 'Reads the run history for the weekly digest.',
+        tokens: [],
+    },
+    {
+        id: 'margaret',
+        name: 'margaret',
+        email: 'margaret@example.org',
+        role: 'Editor',
+        active: false,
+        about: 'Switched off since she moved to another team; her tokens were revoked with her account.',
+        tokens: [{ id: 'margaret-1', name: 'rebuild-index', scope: 'jobs:write', expires: '2026-12-31', state: 'revoked' }],
+    },
+]
+
+const TOKEN_STATES: Record<AccountToken['state'], { label: string; tone: ChipTone }> = {
+    active: { label: 'Active', tone: 'good' },
+    expiring: { label: 'Expires soon', tone: 'warning' },
+    expired: { label: 'Expired', tone: 'neutral' },
+    revoked: { label: 'Revoked', tone: 'neutral' },
+}
+
+const TOKEN_COLUMNS: DataColumn<AccountToken>[] = [
+    { id: 'name', header: 'Token', width: 'content', cell: (token) => <span className="font-mono">{token.name}</span> },
+    { id: 'scope', header: 'Scope', width: 'minmax(6rem,1fr)', cell: (token) => <span className="font-mono">{token.scope}</span> },
+    { id: 'expires', header: 'Expires', width: '7rem', cell: (token) => <span className="tabular-nums">{token.expires}</span> },
+    {
+        id: 'state',
+        header: 'State',
+        width: '8rem',
+        cell: (token) => <Chip tone={TOKEN_STATES[token.state].tone}>{TOKEN_STATES[token.state].label}</Chip>,
+    },
+]
+
+/** A revoked or expired token is dimmed, one about to expire is tinted. */
+const tokenTone = (token: AccountToken): DataRowTone | undefined =>
+    token.state === 'revoked' || token.state === 'expired' ? 'muted' : token.state === 'expiring' ? 'warning' : undefined
+
+const ACCOUNT_COLUMNS: DataColumn<Account>[] = [
+    {
+        id: 'name',
+        header: 'Account',
+        width: 'content',
+        cell: (account) => (
+            <Stack gap="none">
+                <span className="font-medium">{account.name}</span>
+                <span className="font-mono text-xs text-muted-foreground">{account.email}</span>
+            </Stack>
+        ),
+        stackLabel: false,
+    },
+    { id: 'role', header: 'Role', width: '6rem', cell: (account) => account.role, stack: 'secondary' },
+    {
+        id: 'about',
+        header: 'About',
+        width: 'minmax(0,1fr)',
+        cell: (account) => <span className="text-muted-foreground">{account.about}</span>,
+        stack: 'primary',
+    },
+    {
+        id: 'tokens',
+        header: 'Tokens',
+        width: '5rem',
+        align: 'end',
+        cell: (account) => account.tokens.length,
+        stack: 'secondary',
+    },
+]
+
+/** Accounts, each opening into its own table of tokens. */
+function AccountList({ framed = true }: { framed?: boolean }) {
+    return (
+        <DataTable
+            variant="list"
+            rowHeight="auto"
+            framed={framed}
+            columns={ACCOUNT_COLUMNS}
+            rows={ACCOUNTS}
+            rowKey={(account) => account.id}
+            rowTone={(account) => (account.active ? undefined : 'muted')}
+            hasDetail={(account) => account.tokens.length > 0}
+            expandLabel={(account, open) => `${open ? 'Hide' : 'Show'} the tokens of ${account.name}`}
+            defaultExpanded={new Set(['ada'])}
+            detail={(account) => (
+                <DataTable
+                    variant="list"
+                    columns={TOKEN_COLUMNS}
+                    rows={account.tokens}
+                    rowKey={(token) => token.id}
+                    rowTone={tokenTone}
+                    empty="No tokens."
+                />
+            )}
+        />
+    )
+}
+
+/**
+ * Accounts that open into their tokens (`detail`, with `hasDetail` so a token table is built only
+ * for an opened account). The disclosure names its account (`expandLabel`), in its tooltip too; the
+ * account column is as wide as its widest name (`width: 'content'`) and the about line shares the
+ * rest. Margaret's account is switched off and dimmed, as are revoked and expired tokens
+ * (`rowTone`); a token about to expire is tinted.
+ */
+export const AccountTokens: StoryObj = { name: 'Account tokens', render: () => <AccountList /> }
+
+/**
+ * A titled listing with its count: a boxed `Section` with the count in its head, around a list
+ * drawn without a frame of its own (`framed={false}`), its column heads under the section's head.
+ */
+export const InSection: StoryObj = {
+    name: 'In a section',
+    render: () => (
+        <Section title="Accounts" meta={ACCOUNTS.length} flush>
+            <AccountList framed={false} />
+        </Section>
     ),
 }
 
@@ -725,6 +905,40 @@ function LoadMore() {
 
 /** Progressive loading: the bar counts what has loaded, and placeholder rows stand in while more arrive. */
 export const LoadsMore: StoryObj = { parameters: { frame: 'none' }, name: 'Load more', render: () => <LoadMore /> }
+
+/** Runs twenty at a time, more only when the reader asks for them. */
+function LoadByButton() {
+    const all = makeRuns(120)
+    const [count, setCount] = useState(20)
+    const [loading, setLoading] = useState(false)
+    const timer = useRef<number | undefined>(undefined)
+    const more = useCallback(() => {
+        setLoading(true)
+        window.clearTimeout(timer.current)
+        timer.current = window.setTimeout(() => {
+            setCount((now) => Math.min(all.length, now + 20))
+            setLoading(false)
+        }, 600)
+    }, [all.length])
+    return (
+        <DataTable
+            variant="list"
+            rowHeight="auto"
+            columns={COLUMNS.slice(0, 5)}
+            rows={all.slice(0, count)}
+            rowKey={(run) => run.id}
+            hasMore={count < all.length}
+            loading={loading}
+            onLoadMore={more}
+            loadMore="button"
+            loadMoreCount={Math.min(20, all.length - count)}
+            foot={`${String(count)} of ${String(all.length)}`}
+        />
+    )
+}
+
+/** Loading more by a button after the last row (`loadMore="button"`), for a list whose reader decides when to see more. */
+export const LoadMoreButton: StoryObj = { name: 'Load more button', render: () => <LoadByButton /> }
 
 /** The first rows still on their way: placeholder rows fill the table. */
 export const Loading: StoryObj = {
