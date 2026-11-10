@@ -662,7 +662,13 @@ fold gutter, bracket colors by depth and indent guides; the last three turn off 
 a JSON Schema (2020-12), JSON and YAML are checked by the same ajv rules as SchemaForm, each issue
 placed on the key or value it is about, and the schema's property names and enum values complete as
 they are typed, a key already written left out, a required one first, `allOf` parts followed and each `if` decided against the document, so a key's `then` offers only the branch that applies, and a key with a default
-put in with the default selected. A document can name its own schema, by a top-level `$schema` or
+put in with the default selected. A failed `anyOf` or `oneOf`, at any depth, reports only the branch
+that fits the document, the one whose `const` properties (a `kind`) match it, else the one with the
+fewest errors, and an `if` whose `then` said what is wrong adds nothing of its own, so one wrong field
+in one document of two is one problem, not the other document's every key. An app adds its own
+string formats with `registerSchemaFormats` (`schema/formats`: a pattern, a test, or `true` for any
+string), for forms and editors alike; a format no one registered is not checked, and logs nothing.
+A document can name its own schema, by a top-level `$schema` or
 a `# yaml-language-server: $schema=` line: the app finds it by address with `resolveSchema`, the
 editor fetching nothing, and a schema document in the 2020-12 dialect is checked against that
 dialect's meta-schema, which ajv carries. `JSON_SCHEMA_2020_12` (`json-schema`) is that
@@ -673,8 +679,7 @@ selects a range and scrolls it into view, or in JSON and YAML the value at a `pa
 and `onProblems` hears every problem the editor shows (the schema's findings and the marks with a
 message) by line and column as they change, a schema's finding with the path of the value it is
 about, for a problems list beside it whose rows go to each through `reveal`. `onDocument` hears the
-document read into a value, for a view drawn from it such as a pipeline's graph. A failed `if` is
-said by what is wrong inside the branch that applies, never as the branch failing. The Editors
+document read into a value, for a view drawn from it such as a pipeline's graph. The Editors
 section of Storybook shows whole editor apps built from these parts: a pipeline, a schema with a
 value tried against it, a query console, a run log and a shared buffer. `variant="pane"` fills a pane edge to edge; the Query app
 shows it in panes. Two editors edit one document as Monaco's views share a model: `doc` takes a
