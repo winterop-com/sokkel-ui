@@ -6,7 +6,11 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.13.2** is the latest release (2026-11-10): an Editors section of whole editor apps in Storybook,
+- **0.14.0** is the latest release (2026-11-10): `WindowedPane` keeps its pane, takes an aside, a sticky
+  button and an inset frame; fixes to `ItemHeading`, `Chip`, `Surface`, `StatusChip` and `Dot` from
+  their first use; and the editor's review: a read-only caret line, a one-tone gutter, empty values
+  marked at their key, a format over a raw pattern, deprecated keys and choice labels.
+- **0.13.2** (2026-11-10): an Editors section of whole editor apps in Storybook,
   the studio example, and `CodeEditor`'s `onDocument`, `reveal` by path and a path on each problem.
 - **0.13.1** (2026-11-10): what a pipeline app's move off Monaco needed. Schema
   checks report only the branch that fits, apps register formats (`registerSchemaFormats`),
