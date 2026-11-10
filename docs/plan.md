@@ -665,7 +665,10 @@ they are typed, a key already written left out, a required one first, `allOf` pa
 put in with the default selected. A document can name its own schema, by a top-level `$schema` or
 a `# yaml-language-server: $schema=` line: the app finds it by address with `resolveSchema`, the
 editor fetching nothing, and a schema document in the 2020-12 dialect is checked against that
-dialect's meta-schema, which ajv carries. A key's type and description show on hover. `reveal`
+dialect's meta-schema, which ajv carries. `JSON_SCHEMA_2020_12` (`json-schema`) is that
+meta-schema as one object, its vocabularies merged and its references kept inside it, so an app
+that edits a JSON Schema passes it as `schema` and gets the keywords completed at the top and in
+every subschema as well as the checks. A key's type and description show on hover. `reveal`
 selects a range and scrolls it into view. `variant="pane"` fills a pane edge to edge; the Query app
 shows it in panes. Two editors edit one document as Monaco's views share a model: `doc` takes a
 `SharedDocument` (`useSharedDocument`) in place of `value`, which holds the text and one undo history
