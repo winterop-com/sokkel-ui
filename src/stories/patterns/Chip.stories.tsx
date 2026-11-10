@@ -57,7 +57,7 @@ export const MonoAndIcons: StoryObj = {
     ),
 }
 
-/** Chips a press acts on: a tag that filters by itself, and tags a job carries, each with a remove button. */
+/** Chips a press acts on: a tag that filters by itself, named for what the press does, and tags a job carries, each with a remove button named for its tag. */
 export const Interactive: StoryObj = {
     render: function Render() {
         const [tags, setTags] = useState(['nightly', 'harbor', 'export', 'critical-path'])
@@ -71,7 +71,9 @@ export const Interactive: StoryObj = {
                             mono
                             tone={tag === filter ? 'info' : 'neutral'}
                             onSelect={() => setFilter(tag === filter ? undefined : tag)}
+                            selectLabel={tag === filter ? 'Clear the filter' : `Filter by ${tag}`}
                             onRemove={() => setTags(tags.filter((other) => other !== tag))}
+                            words={{ remove: (text) => `Remove ${text}` }}
                         >
                             {tag}
                         </Chip>

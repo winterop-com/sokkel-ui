@@ -20,8 +20,9 @@ export function Pane({ title, meta, actions, children }: { title: ReactNode; met
 }
 
 /**
- * The editor's pane, which opens into a window over the page: the same document goes on in the
- * window at the caret it left, while the rest of the page follows each edit.
+ * The editor's pane, which opens into a window over the page: the pane stays as it is under the
+ * window, whose own editor goes on in the same document at the caret the pane left, with the
+ * reference beside it when the editor has one, while the rest of the page follows each edit.
  */
 export function EditorPane({
     id,
@@ -29,6 +30,7 @@ export function EditorPane({
     popped,
     onPoppedChange,
     actions,
+    reference,
     children,
 }: {
     id: string
@@ -36,6 +38,8 @@ export function EditorPane({
     popped: boolean
     onPoppedChange: (popped: boolean) => void
     actions?: ReactNode
+    /** Drawn beside the editor in the window. */
+    reference?: ReactNode
     children: ReactNode
 }) {
     const { dirty } = useStudio()
@@ -43,6 +47,8 @@ export function EditorPane({
         <WindowedPane
             title={name}
             button="none"
+            keepPane
+            aside={reference}
             open={popped}
             onOpenChange={onPoppedChange}
             className="h-full"

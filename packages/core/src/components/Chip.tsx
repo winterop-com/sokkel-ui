@@ -1,5 +1,5 @@
 import { X } from 'lucide-react'
-import type { ReactNode } from 'react'
+import type { KeyboardEvent, MouseEvent, ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 
@@ -21,11 +21,23 @@ const TONE: Record<ChipTone, string> = {
 const RING = 'focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring focus-visible:outline-solid'
 
 export interface ChipWords {
-    /** The remove button's name and tooltip. */
-    remove: string
+    /** The remove button's name and tooltip, or a function of the chip's words ("Remove harbor"). */
+    remove: string | ((text: string) => string)
 }
 
 const WORDS: ChipWords = { remove: 'Remove' }
+
+/** The chip's words as text, for a name that says them; empty when they are not plain text. */
+function textOf(children: ReactNode): string {
+    if (typeof children === 'string' || typeof children === 'number') return String(children)
+    if (Array.isArray(children)) return children.map(textOf).join('')
+    return ''
+}
+
+/** Keeps a press of a chip's button from also pressing a row or a card around the chip. */
+function holdKeys(event: KeyboardEvent<HTMLButtonElement>) {
+    if (event.key === 'Enter' || event.key === ' ') event.stopPropagation()
+}
 
 export interface ChipProps {
     children: ReactNode
@@ -37,10 +49,15 @@ export interface ChipProps {
     icon?: ReactNode
     /** Said on hover: the whole value when the chip cuts it short, or what it means. */
     title?: string
-    /** Makes the chip a button, pressed to open or filter by what it says. */
-    onSelect?: () => void
-    /** Gives the chip a remove button at its end, named by `words.remove`. */
-    onRemove?: () => void
+    /**
+     * Makes the chip a button, pressed to open or filter by what it says. The press stops there, so
+     * a row or a card around the chip is not pressed too.
+     */
+    onSelect?: (event: MouseEvent<HTMLButtonElement>) => void
+    /** The select button's name and tooltip, saying what a press does ("Filter by harbor"); the chip's words by default. */
+    selectLabel?: string
+    /** Gives the chip a remove button at its end, named by `words.remove`. The press stops there, as `onSelect`'s does. */
+    onRemove?: (event: MouseEvent<HTMLButtonElement>) => void
     words?: Partial<ChipWords>
     className?: string
 }
@@ -48,12 +65,25 @@ export interface ChipProps {
 /**
  * A short value as a chip: a tag on a job, a state that has no run color, a value that is absent.
  * Its tone is neutral, a semantic color's wash with its own ink, or `absent`, dashed. `mono` sets
- * the words in the code face and `icon` goes before them. With `onSelect` the chip is a button;
- * with `onRemove` it ends in a remove button, its own stop in the tab order with its own focus
- * ring. A long value ends in an ellipsis inside the room it is given.
+ * the words in the code face and `icon` goes before them. With `onSelect` the chip is a button,
+ * named by `selectLabel` where a press does more than its words say; with `onRemove` it ends in a
+ * remove button, its own stop in the tab order with its own focus ring. Neither press reaches a
+ * row or card around the chip. A long value ends in an ellipsis inside the room it is given.
  */
-export function Chip({ children, tone = 'neutral', mono = false, icon, title, onSelect, onRemove, words: given, className }: ChipProps) {
+export function Chip({
+    children,
+    tone = 'neutral',
+    mono = false,
+    icon,
+    title,
+    onSelect,
+    selectLabel,
+    onRemove,
+    words: given,
+    className,
+}: ChipProps) {
     const words = { ...WORDS, ...given }
+    const remove = typeof words.remove === 'function' ? words.remove(textOf(children)) : words.remove
     const face = (
         <>
             {icon}
@@ -77,7 +107,13 @@ export function Chip({ children, tone = 'neutral', mono = false, icon, title, on
                 <button
                     type="button"
                     data-slot="chip-select"
-                    onClick={onSelect}
+                    aria-label={selectLabel}
+                    title={selectLabel}
+                    onClick={(event) => {
+                        event.stopPropagation()
+                        onSelect(event)
+                    }}
+                    onKeyDown={holdKeys}
                     className={cn(
                         'flex h-full min-w-0 cursor-pointer items-center gap-1 rounded-chip pl-1.5 hover:underline hover:underline-offset-2',
                         onRemove === undefined && 'pr-1.5',
@@ -91,9 +127,13 @@ export function Chip({ children, tone = 'neutral', mono = false, icon, title, on
                 <button
                     type="button"
                     data-slot="chip-remove"
-                    aria-label={words.remove}
-                    title={words.remove}
-                    onClick={onRemove}
+                    aria-label={remove}
+                    title={remove}
+                    onClick={(event) => {
+                        event.stopPropagation()
+                        onRemove(event)
+                    }}
+                    onKeyDown={holdKeys}
                     className={cn(
                         'mx-0.5 flex shrink-0 cursor-pointer items-center rounded-mini p-0.5 opacity-70 hover:bg-hover hover:opacity-100',
                         RING,
