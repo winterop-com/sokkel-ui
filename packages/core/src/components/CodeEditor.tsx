@@ -47,11 +47,14 @@ import { jq } from './code/jq'
 import { markdown } from './code/markdown'
 import {
     namedSchema,
+    pathRange,
+    readDocument,
     SCHEMA_WORDS,
     schemaCompletion,
     schemaDiagnostics,
     schemaHover,
     type CodeSchemaWords,
+    type PathDiagnostic,
     type SchemaLanguage,
 } from './code/schema'
 import { sharedLink, type SharedDocument } from './code/shared'
@@ -99,6 +102,8 @@ export interface CodeProblem {
     to: number
     tone: 'error' | 'warning' | 'info'
     message: string
+    /** The path of the value it is about in a JSON or YAML document, when the schema check found it. */
+    path?: readonly (string | number)[]
 }
 
 /** The diagnostics a state holds (the schema's findings and the marks with a message) as problems, in the document's order. */
@@ -116,6 +121,7 @@ export function codeProblems(state: EditorState): CodeProblem[] {
             to,
             tone: diagnostic.severity === 'error' || diagnostic.severity === 'warning' ? diagnostic.severity : 'info',
             message: diagnostic.message,
+            ...((diagnostic as PathDiagnostic).path === undefined ? {} : { path: (diagnostic as PathDiagnostic).path }),
         })
     })
     return found.sort((a, b) => a.from - b.from || a.to - b.to)
@@ -136,12 +142,14 @@ export interface CodeCompletion {
 
 /**
  * A place to select and bring into view: a whole `line` counted from 1, columns `from` and `to` on
- * it, or, without `line`, offsets into the document counted from 0.
+ * it, or, without `line`, offsets into the document counted from 0. In a JSON or YAML document
+ * `path` names a value instead, such as `['steps', 2]`, selected with its key.
  */
 export interface CodeRange {
     line?: number
     from?: number
     to?: number
+    path?: readonly (string | number)[]
 }
 
 /** A schema a document names by its `$schema` address, found by the app; nothing when it has none. */
@@ -278,7 +286,15 @@ const THEME = EditorView.theme({
     '.cm-scroller': { fontFamily: 'var(--font-mono)', fontSizeAdjust: 'none' },
     '.cm-content': { padding: '0.5rem 0', caretColor: 'var(--foreground)' },
     '.cm-line': { padding: '0 0.75rem' },
-    '.cm-gutters': { backgroundColor: 'var(--editor-gutter)', color: 'var(--editor-gutter-ink)', border: 'none', fontSizeAdjust: 'none' },
+    // Opaque, so text scrolled sideways under the line numbers never shows through: the gutter's wash
+    // over the editor's wash over the box's own ground.
+    '.cm-gutters': {
+        background:
+            'linear-gradient(var(--editor-gutter), var(--editor-gutter)), linear-gradient(var(--editor-ground), var(--editor-ground)), var(--editor-paper, var(--background))',
+        color: 'var(--editor-gutter-ink)',
+        border: 'none',
+        fontSizeAdjust: 'none',
+    },
     '.cm-lineNumbers .cm-gutterElement': { padding: '0 0.5rem 0 0.75rem', minWidth: '2.5rem' },
     '.cm-foldGutter .cm-gutterElement': { padding: '0 0.25rem', cursor: 'pointer' },
     '.cm-foldGutter .cm-gutterElement:hover': { color: 'var(--foreground)' },
@@ -520,6 +536,8 @@ export interface CodeEditorProps {
     language?: CodeLanguage
     readOnly?: boolean
     lineNumbers?: boolean
+    /** Shades the caret's line while the editor has focus; on by default, off for an app whose people turn it off. */
+    activeLine?: boolean
     /** Folds long lines at the editor's edge instead of scrolling sideways. */
     wrap?: boolean
     marks?: readonly CodeMark[]
@@ -569,6 +587,11 @@ export interface CodeEditorProps {
      * message) each time they change, an empty list once there are none, for a problems list beside it.
      */
     onProblems?: (problems: readonly CodeProblem[]) => void
+    /**
+     * Hears a JSON or YAML document read into a value, shortly after each edit and once at the start,
+     * for a view drawn from it such as a graph; not called while the text does not read.
+     */
+    onDocument?: (value: unknown) => void
     /** The words the schema check says, in English unless given. */
     words?: Partial<CodeSchemaWords>
     /** CodeMirror's own words (the find bar, the fold marks), by their English text, to translate them. */
@@ -594,7 +617,8 @@ export interface CodeEditorProps {
  * `bracketColors` and `indentGuides` help read deep structure (the three off past a megabyte), and
  * `schema` checks JSON or YAML against a JSON Schema (2020-12) and completes its property names and
  * values. `onProblems` hears what the checks find, for a problems list beside the editor whose rows
- * go to each through `reveal`. `wrap` folds long lines at the editor's edge, for prose such as a prompt. The value is
+ * go to each through `reveal`, which takes a JSON or YAML value's `path` as well as a line, and
+ * `onDocument` the document read into a value, for a view drawn from it. `wrap` folds long lines at the editor's edge, for prose such as a prompt. The value is
  * controlled: a new `value` replaces the document, and an edit is reported through `onChange`.
  *
  * `doc` edits a document shared with other editors in place of `value`, as a pane and the window
@@ -613,6 +637,7 @@ export function CodeEditor({
     language = 'text',
     readOnly = false,
     lineNumbers: numbered = true,
+    activeLine = true,
     wrap = false,
     marks = NO_MARKS,
     completions,
@@ -633,6 +658,7 @@ export function CodeEditor({
     resolveSchema,
     reveal,
     onProblems,
+    onDocument,
     words,
     phrases,
     placeholder,
@@ -669,6 +695,7 @@ export function CodeEditor({
         resolveSchema,
         onBlur,
         onProblems,
+        onDocument,
     })
     props.current = {
         marks,
@@ -685,6 +712,18 @@ export function CodeEditor({
         resolveSchema,
         onBlur,
         onProblems,
+        onDocument,
+    }
+    /** Reads a JSON or YAML document for `onDocument`, a moment after the last edit. */
+    const reading = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+    const readSoon = (editor: EditorView, wait: number) => {
+        clearTimeout(reading.current)
+        reading.current = setTimeout(() => {
+            const { onDocument: hear, language: lang } = props.current
+            if (hear === undefined || (lang !== 'json' && lang !== 'yaml') || view.current !== editor) return
+            const read = readDocument(editor.state, lang)
+            if (read !== null && read.broken === undefined) hear(read.value)
+        }, wait)
     }
     // The problems last reported, so a change of anything else reports nothing.
     const reported = useRef<string | undefined>(undefined)
@@ -706,6 +745,7 @@ export function CodeEditor({
         search: new Compartment(),
         look: new Compartment(),
         folding: new Compartment(),
+        active: new Compartment(),
         size: new Compartment(),
         lint: new Compartment(),
         schema: new Compartment(),
@@ -723,7 +763,7 @@ export function CodeEditor({
      */
     const diagnose = (state: EditorState): Diagnostic[] => {
         const { marks: given, schema: against, words, language: lang, deferred: unchecked } = props.current
-        const found = markDiagnostics(state, given)
+        const found: PathDiagnostic[] = markDiagnostics(state, given)
         const check = loadedValidate()
         if (against === undefined || (lang !== 'json' && lang !== 'yaml') || check === undefined) return found
         return [...found, ...schemaDiagnostics(state, lang, against, check, { ...SCHEMA_WORDS, ...words }, unchecked)]
@@ -802,7 +842,7 @@ export function CodeEditor({
                 selection: link?.selection(),
                 extensions: [
                     shared,
-                    parts.gutter.of(numbered ? [lineNumbers(), highlightActiveLineGutter()] : []),
+                    parts.gutter.of(numbered ? [lineNumbers(), ...(activeLine ? [highlightActiveLineGutter()] : [])] : []),
                     parts.folding.of(extensions.folding()),
                     parts.look.of(extensions.look()),
                     parts.wrap.of(wrap ? EditorView.lineWrapping : []),
@@ -811,7 +851,7 @@ export function CodeEditor({
                     drawSelection(),
                     indentOnInput(),
                     bracketMatching(),
-                    highlightActiveLine(),
+                    parts.active.of(activeLine ? highlightActiveLine() : []),
                     syntaxHighlighting(HIGHLIGHT),
                     autocompletion({ icons: true, override: [offer] }),
                     keymap.of([...completionKeymap, ...defaultKeymap, ...(link === undefined ? historyKeymap : []), indentWithTab]),
@@ -834,6 +874,7 @@ export function CodeEditor({
                         if (!update.docChanged) return
                         const text = update.state.doc.toString()
                         report.current?.(text)
+                        readSoon(update.view, 300)
                         const lang = props.current.language
                         if (lang === 'json' || lang === 'yaml') setAddress(namedSchema(text, lang))
                     }),
@@ -845,11 +886,13 @@ export function CodeEditor({
         editor.dispatch({ effects: setMarks.of(marks) })
         if (diagnosing) editor.dispatch(setDiagnostics(editor.state, diagnose(editor.state)))
         reportProblems(editor.state)
+        readSoon(editor, 0)
         if (search && defaultSearch !== undefined) {
             openSearchPanel(editor)
             editor.dispatch({ effects: setSearchQuery.of(new SearchQuery({ search: defaultSearch })) })
         }
         return () => {
+            clearTimeout(reading.current)
             detach?.()
             editor.destroy()
             view.current = null
@@ -976,7 +1019,11 @@ export function CodeEditor({
     useEffect(() => {
         const editor = view.current
         if (editor === null || reveal === null || reveal === undefined) return
-        let at = range(editor.state, reveal)
+        const lang = props.current.language
+        let at =
+            reveal.path !== undefined && (lang === 'json' || lang === 'yaml')
+                ? pathRange(editor.state, lang, reveal.path)
+                : range(editor.state, reveal)
         if (
             at === null &&
             reveal.from === undefined &&
@@ -1003,9 +1050,14 @@ export function CodeEditor({
 
     useEffect(() => {
         view.current?.dispatch({
-            effects: compartments.current.gutter.reconfigure(numbered ? [lineNumbers(), highlightActiveLineGutter()] : []),
+            effects: [
+                compartments.current.gutter.reconfigure(
+                    numbered ? [lineNumbers(), ...(activeLine ? [highlightActiveLineGutter()] : [])] : [],
+                ),
+                compartments.current.active.reconfigure(activeLine ? highlightActiveLine() : []),
+            ],
         })
-    }, [numbered])
+    }, [numbered, activeLine])
 
     useEffect(() => {
         view.current?.dispatch({ effects: compartments.current.wrap.reconfigure(wrap ? EditorView.lineWrapping : []) })
@@ -1071,9 +1123,9 @@ export function CodeEditor({
             className={cn(
                 'overflow-hidden [&_.cm-editor]:h-full',
                 variant === 'field'
-                    ? 'min-h-24 rounded-control border border-input bg-field focus-within:border-ring/80 aria-invalid:border-destructive'
-                    : 'h-full min-h-0 bg-background',
-                readOnly && variant === 'field' && 'bg-muted/40',
+                    ? 'min-h-24 rounded-control border border-input bg-field [--editor-paper:var(--field)] focus-within:border-ring/80 aria-invalid:border-destructive'
+                    : 'h-full min-h-0 bg-background [--editor-paper:var(--background)]',
+                readOnly && variant === 'field' && 'bg-muted/40 [--editor-paper:color-mix(in_oklab,var(--muted)_40%,var(--background))]',
                 className,
             )}
         />

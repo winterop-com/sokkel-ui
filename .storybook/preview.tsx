@@ -76,13 +76,15 @@ const preview: Preview = {
         layout: 'fullscreen',
         backgrounds: { disable: true },
         controls: { disable: true },
-        // What the library builds first: whole apps, then the patterns and the engine packages, then
+        // What the library builds first: whole apps and the editor apps, then the patterns and the engine packages, then
         // the building blocks (themes, primitives, foundations), and research last.
         options: {
             storySort: {
                 order: [
                     'Apps',
                     ['Workspace', 'Dashboards', 'Music', 'Video', 'Query', '*'],
+                    'Editors',
+                    ['Pipeline', 'Schema', 'Query', 'Run log', 'Shared buffer', '*'],
                     'Patterns',
                     'Charts',
                     'Maps',

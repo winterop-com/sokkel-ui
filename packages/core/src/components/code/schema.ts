@@ -271,7 +271,7 @@ export function schemaDiagnostics(
     check: typeof validate,
     words: CodeSchemaWords = SCHEMA_WORDS,
     deferred?: DeferredValue,
-): Diagnostic[] {
+): PathDiagnostic[] {
     if (state.doc.length === 0) return []
     const read = readDocument(state, language)
     if (read === null) return []
@@ -280,7 +280,23 @@ export function schemaDiagnostics(
         ...place(issue, read.spans, state),
         severity: issue.tone === 'critical' ? 'error' : 'warning',
         message: words.say(issue),
+        path: issue.kind === 'additional' ? [...issue.path, issue.property] : issue.path,
     }))
+}
+
+/** A diagnostic with the path of the value it is about, when a schema check found it. */
+export type PathDiagnostic = Diagnostic & { path?: Path }
+
+/**
+ * Where the value at a path is written in a JSON or YAML document, its key included; null when the
+ * document has no such value or cannot be read.
+ */
+export function pathRange(state: EditorState, language: SchemaLanguage, path: Path): { from: number; to: number } | null {
+    const read = readDocument(state, language)
+    if (read === null) return null
+    const span = read.spans.get(pointer(path))
+    if (span === undefined) return null
+    return { from: span.key?.from ?? span.from, to: span.to }
 }
 
 /** Where the cursor is in the document's structure: the path to the object or array it is in, and whether it is at a key or a value. */
