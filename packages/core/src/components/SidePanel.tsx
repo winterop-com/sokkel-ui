@@ -1,15 +1,19 @@
-import { useContext, useRef, useState, type ReactNode } from 'react'
+import { Tabs as TabsPrimitive } from '@base-ui/react/tabs'
+import type { LucideIcon } from 'lucide-react'
+import { useContext, useEffect, useId, useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { usePanelSize } from '../hooks/use-panel-size'
 import { ResizeHandle } from './ResizeHandle'
-import { ShellDesktop } from './shell-context'
+import { ShellDesktop, ShellPanelStrip } from './shell-context'
 import { GroupLabel } from './GroupLabel'
 
 /** One tab of a side panel. */
 export interface SidePanelTab {
     id: string
     label: string
+    /** Drawn over the label in the shell's tab strip on a phone (`Shell`'s `panelStrip`). */
+    icon?: LucideIcon
     content: ReactNode
 }
 
@@ -37,6 +41,11 @@ export interface SidePanelProps {
     maxSize?: number
     /** The width in pixels the panel starts at and a double click on the edge returns to: 352 unless `width` is given. */
     defaultSize?: number
+    /**
+     * How a panel with one tab heads it: `title`, a heading naming the panel, or `tab`, a tablist of
+     * one, for a panel whose tabs come and go, so its header does not change shape with them.
+     */
+    soleTab?: 'title' | 'tab'
     className?: string
     words?: Partial<SidePanelWords>
 }
@@ -45,6 +54,12 @@ export interface SidePanelProps {
  * The right-hand panel beside a page: a header bar the height of the shell's top bar, with the
  * panel's tabs (or its title when it has one tab), then the content scrolling under it. The shell's
  * toggle in the header's right corner shows and hides the panel; the panel has no close of its own.
+ *
+ * The tabs are a tablist and the content their tabpanel, labelled by the shown tab; the arrows,
+ * Home and End move between the tabs and Enter or Space shows one, as `Tabs` does. One tab is a
+ * heading naming the panel, or a tablist of one with `soleTab="tab"`. In a `Shell` with
+ * `panelStrip`, on a phone the tabs move to the strip at the foot of the screen, the header names
+ * the shown tab, and the content is the tabpanel of the strip's tab.
  *
  * The header lines up with the shell's top bar, so the panel reads as a column of the shell, not
  * as a card dropped beside the page.
@@ -69,6 +84,7 @@ export function SidePanel({
     minSize = 280,
     maxSize = 640,
     defaultSize,
+    soleTab = 'title',
     className,
     words: given,
 }: SidePanelProps) {
@@ -80,6 +96,30 @@ export function SidePanel({
         if (active === undefined) setOwn(id)
         onActiveChange?.(id)
     }
+    const strip = useContext(ShellPanelStrip)
+    const sheet = strip?.shown === true
+    const base = useId()
+    const tabId = (id: string) => (strip !== undefined && sheet ? strip.tabId(id) : `${base}-tab-${id}`)
+    const panelId = strip !== undefined && sheet ? strip.panelId : `${base}-panel`
+    const titleId = `${base}-title`
+    const titled = !sheet && tabs.length === 1 && soleTab === 'title'
+    // The tabs handed up to the shell's strip, named by their ids and labels so a new array of the same tabs hands nothing new.
+    const publish = strip?.publish
+    const latest = useRef({ tabs, choose })
+    useEffect(() => {
+        latest.current = { tabs, choose }
+    })
+    const signature = tabs.map((tab) => `${tab.id}\u0000${tab.label}`).join('\u0001')
+    const currentId = current?.id
+    useEffect(() => {
+        if (publish === undefined || currentId === undefined) return
+        publish({
+            tabs: latest.current.tabs.map(({ id, label, icon }) => ({ id, label, icon })),
+            active: currentId,
+            choose: (id) => latest.current.choose(id),
+        })
+    }, [publish, signature, currentId])
+    useEffect(() => (publish === undefined ? undefined : () => publish(null)), [publish])
     const panel = useRef<HTMLElement>(null)
     const desktop = useContext(ShellDesktop)
     const held = usePanelSize({
@@ -92,7 +132,7 @@ export function SidePanel({
     })
     return (
         <>
-            {resizable && held.changeable && (
+            {resizable && held.changeable && !sheet && (
                 <ResizeHandle
                     target={panel}
                     size={held.size}
@@ -106,38 +146,55 @@ export function SidePanel({
             )}
             <aside
                 ref={panel}
-                className={cn('flex h-full shrink-0 flex-col border-l border-border-strong bg-sidebar', className)}
-                style={{ width: held.style }}
+                aria-labelledby={titled ? titleId : undefined}
+                className={cn(
+                    'flex h-full shrink-0 flex-col border-l border-border-strong bg-sidebar',
+                    sheet && 'w-full border-l-0',
+                    className,
+                )}
+                style={sheet ? undefined : { width: held.style }}
             >
                 <div
                     data-window-drag={desktop === undefined ? undefined : ''}
-                    className="flex h-shell-top shrink-0 items-center gap-1 border-b border-border-strong pr-12 pl-2"
+                    className={cn(
+                        'flex h-shell-top shrink-0 items-center gap-1 border-b border-border-strong pl-2',
+                        sheet ? 'pr-2' : 'pr-12',
+                    )}
                 >
-                    {tabs.length === 1 ? (
-                        <h2 className="truncate px-1.5 text-sm font-medium">{current?.label}</h2>
+                    {titled || sheet ? (
+                        <h2 id={titleId} className="truncate px-1.5 text-sm font-medium">
+                            {current?.label}
+                        </h2>
                     ) : (
-                        <div role="tablist" className="flex min-w-0 items-center gap-1">
-                            {tabs.map((tab) => (
-                                <button
-                                    key={tab.id}
-                                    type="button"
-                                    role="tab"
-                                    aria-selected={tab.id === current?.id}
-                                    className={cn(
-                                        'h-7 rounded-md px-2.5 text-sm',
-                                        tab.id === current?.id
-                                            ? 'bg-secondary font-medium text-foreground'
-                                            : 'text-muted-foreground hover:bg-hover hover:text-foreground',
-                                    )}
-                                    onClick={() => choose(tab.id)}
-                                >
-                                    {tab.label}
-                                </button>
-                            ))}
-                        </div>
+                        <TabsPrimitive.Root value={current?.id} onValueChange={(id) => choose(String(id))} className="flex min-w-0">
+                            <TabsPrimitive.List className="flex min-w-0 items-center gap-1">
+                                {tabs.map((tab) => (
+                                    <TabsPrimitive.Tab
+                                        key={tab.id}
+                                        value={tab.id}
+                                        id={tabId(tab.id)}
+                                        aria-controls={panelId}
+                                        className={cn(
+                                            'h-7 shrink-0 rounded-md px-2.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid',
+                                            tab.id === current?.id
+                                                ? 'bg-secondary font-medium text-foreground'
+                                                : 'text-muted-foreground hover:bg-hover hover:text-foreground',
+                                        )}
+                                    >
+                                        {tab.label}
+                                    </TabsPrimitive.Tab>
+                                ))}
+                            </TabsPrimitive.List>
+                        </TabsPrimitive.Root>
                     )}
                 </div>
-                <div className="min-h-0 flex-1 overflow-y-auto">{current?.content}</div>
+                {titled || current === undefined ? (
+                    <div className="min-h-0 flex-1 overflow-y-auto">{current?.content}</div>
+                ) : (
+                    <div role="tabpanel" id={panelId} aria-labelledby={tabId(current.id)} className="min-h-0 flex-1 overflow-y-auto">
+                        {current.content}
+                    </div>
+                )}
             </aside>
         </>
     )

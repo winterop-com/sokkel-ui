@@ -16,6 +16,7 @@ import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import { PaneHeader } from '@winterop-com/sokkel-ui/PaneHeader'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
+import { SidePanel } from '@winterop-com/sokkel-ui/SidePanel'
 import { Page, Shell, useRailMode, type RailMode } from '@winterop-com/sokkel-ui/Shell'
 import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 import { StatusItem, StatusLine } from '@winterop-com/sokkel-ui/StatusLine'
@@ -34,6 +35,7 @@ import {
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@winterop-com/sokkel-ui/primitives/resizable'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { routerLink } from '../fixtures/router'
+import { runPanelTabs } from '../fixtures/runPanel'
 import { JOBS, makeRuns, PROJECTS, startedAt, STEPS, type TableRun } from '../fixtures/tableRuns'
 import { TidevannMark } from '../fixtures/TidevannMark'
 import clip from '../media/fixtures/clip.webm?url'
@@ -218,7 +220,8 @@ function WorkPage({ mode }: { mode: RailMode }) {
  * name lead to Runs, the app's home. `search` puts a field at the top bar's start, beside the
  * palette's button at its end; `overlay` gives the app a search of its own over the page. `work`
  * draws Runs as a work page asking the shell for the rail in that mode; every other place is a
- * plain page, so leaving Runs brings the rail back as the app holds it.
+ * plain page, so leaving Runs brings the rail back as the app holds it. `strip` gives the frame a
+ * run's side panel with its tabs in the shell's strip on a phone, the sheet `down` or `up`.
  */
 function Frame({
     banner,
@@ -228,6 +231,7 @@ function Frame({
     search = false,
     overlay = false,
     work,
+    strip,
 }: {
     banner?: ReactNode
     contentKey?: number
@@ -236,7 +240,9 @@ function Frame({
     search?: boolean
     overlay?: boolean
     work?: RailMode
+    strip?: 'down' | 'up'
 }) {
+    const [sheetUp, setSheetUp] = useState(true)
     const [collapsed, setCollapsed] = useState(start)
     const [drawerOpen, setDrawerOpen] = useState(drawer)
     const [place, setPlace] = useState('runs')
@@ -255,6 +261,10 @@ function Frame({
                 onDrawerOpenChange={setDrawerOpen}
                 banner={banner}
                 contentKey={contentKey}
+                panel={strip === undefined ? undefined : <SidePanel tabs={runPanelTabs()} />}
+                panelStrip={strip !== undefined}
+                panelOpen={strip === 'up' ? sheetUp : undefined}
+                onPanelOpenChange={strip === 'up' ? setSheetUp : undefined}
                 palette={placeCommands(GROUPS, (href) => go(href))}
                 // The palette opens where nothing stands over the page, and over the app's own search, which it replaces.
                 mayOpenPalette={overlay ? (over) => over === null || searching : undefined}
@@ -362,6 +372,25 @@ export const WithBanner: StoryObj = {
  * the palette close it, and the focus goes back to the menu button.
  */
 export const Drawer: StoryObj = { render: () => <Frame collapsed drawer /> }
+
+/**
+ * A run's side panel with `panelStrip`, at a phone's width: its tabs, Details, Log and Outputs,
+ * stand in a strip at the foot of the screen in place of the panel's toggle, the sheet down. A tab
+ * raises the sheet on it, another switches it, and the open tab lowers it again. From `md` up the
+ * strip is gone and the panel is as it always is.
+ */
+export const PanelTabs: StoryObj = {
+    name: 'Panel tabs',
+    globals: { viewport: { value: 'w390', isRotated: false } },
+    render: () => <Frame strip="down" />,
+}
+
+/** The same strip with the sheet up on Details, raised from the strip, which stays in reach under it. */
+export const PanelTabsOpen: StoryObj = {
+    name: 'Panel tabs open',
+    globals: { viewport: { value: 'w390', isRotated: false } },
+    render: () => <Frame strip="up" />,
+}
 
 /**
  * The app's own search open over the page. ⌘K or Ctrl+K opens the palette in its place:

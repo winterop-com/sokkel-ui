@@ -1,6 +1,7 @@
 import { createContext } from 'react'
 
 import type { DesktopWindow } from '../lib/desktop'
+import type { PanelStrip } from './panel-strip'
 
 /**
  * The cell at the shell's bottom-left corner that a rail's foot is drawn in while the shell has a
@@ -42,3 +43,6 @@ export const ShellRailAsk = createContext<((id: string, mode: RailMode) => () =>
  * account in its foot, which follows the rail rather than the app; undefined while nothing is asked.
  */
 export const RailCollapsed = createContext<boolean | undefined>(undefined)
+
+/** The shell's tab strip, for the side panel inside; undefined where the shell draws none. */
+export const ShellPanelStrip = createContext<PanelStrip | undefined>(undefined)

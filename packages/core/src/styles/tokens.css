@@ -240,6 +240,7 @@
     --color-page-foot-line: var(--page-foot-line);
     --color-page-foot-ink: var(--page-foot-ink);
     --spacing-shell-foot: 46px;
+    --spacing-shell-tabs: 56px;
 }
 
 :root,
