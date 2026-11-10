@@ -209,6 +209,32 @@ export const StatusLead: StoryObj = {
     ),
 }
 
+/**
+ * The jobs of project juniper with a primary action given as an item: New, named New job, filled and
+ * split with Import, never folding while Export and Pin fold into More by their words alone.
+ */
+export const Primary: StoryObj = {
+    render: () => (
+        <PageHeader
+            title="Jobs"
+            count="5 jobs"
+            wordsOnly
+            items={[
+                { id: 'export', label: 'Export the list', face: 'Export', icon: <Download aria-hidden />, onSelect: () => undefined },
+                { id: 'pin', label: 'Pin to the sidebar', face: 'Pin', icon: <Pin aria-hidden />, onSelect: () => undefined },
+            ]}
+            primary={{
+                id: 'new',
+                label: 'New job',
+                face: 'New',
+                icon: <Plus aria-hidden />,
+                onSelect: () => undefined,
+                more: [{ label: 'Import a job', icon: <Upload aria-hidden />, onSelect: () => undefined }],
+            }}
+        />
+    ),
+}
+
 /** A page reached from another: back level with the title, and the places above it, each a link back up. */
 export const Trail: StoryObj = {
     render: () => (

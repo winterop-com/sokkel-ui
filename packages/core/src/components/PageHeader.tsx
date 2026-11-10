@@ -45,6 +45,10 @@ export interface PageHeaderProps {
      * room for them, drawn as outline buttons; the actions then take the room the title leaves.
      */
     items?: readonly ToolbarItem[]
+    /** The primary action after `items`, drawn filled, that never folds: the item `Toolbar` takes as `primary`. */
+    primary?: ToolbarItem
+    /** Draws `items` and `primary` by their words alone, their icons kept for More. */
+    wordsOnly?: boolean
     /**
      * The actions take the room the title leaves rather than their own width, for one part in
      * `actions` that spans it, measures itself and folds what does not fit, such as a `Toolbar`
@@ -97,6 +101,8 @@ export function PageHeader({
     lead,
     actions,
     items,
+    primary,
+    wordsOnly,
     actionsFill,
     trail,
     onBack,
@@ -109,7 +115,7 @@ export function PageHeader({
     const beside = aside !== undefined && aside !== null
     const led = lead !== undefined && lead !== null && lead !== false
     const trailed = trail !== undefined && trail.length > 0
-    const folding = items !== undefined && items.length > 0
+    const folding = (items !== undefined && items.length > 0) || primary !== undefined
     const fill = actionsFill ?? folding
     // Beside a back button or an aside the header is a grid: the button level with the title, the
     // aside down the side of every line, and every other line in the last column so it starts where
@@ -187,6 +193,8 @@ export function PageHeader({
                 <div data-slot="page-header-actions" className="flex min-w-0 flex-[1_1_8rem] items-center justify-end gap-2">
                     <Toolbar
                         items={items}
+                        primary={primary}
+                        wordsOnly={wordsOnly}
                         itemsLead={led ? lead : undefined}
                         itemVariant="outline"
                         itemsAlign="end"

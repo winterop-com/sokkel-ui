@@ -94,6 +94,32 @@ describe('a toolbar row', () => {
         expect(html).toContain('data-slot="toolbar-items-lead"')
         expect(html.indexOf('<span>failed</span>')).toBeLessThan(html.lastIndexOf('>Export<'))
     })
+
+    it('draws the primary filled after the tools, named apart from its face, out of the folding', () => {
+        const html = renderToStaticMarkup(
+            <Toolbar
+                items={[{ id: 'export', label: 'Export' }]}
+                primary={{ id: 'new', label: 'New job', face: 'New', more: [{ label: 'Import a job', onSelect: noop }] }}
+            />,
+        )
+        const primary = html.slice(html.indexOf('data-slot="toolbar-primary"'))
+        expect(html.indexOf('data-slot="toolbar-primary"')).toBeGreaterThan(html.lastIndexOf('>Export<'))
+        expect(primary).toContain('bg-primary')
+        expect(primary).toContain('aria-label="New job"')
+        expect(primary).toContain('data-slot="split-button"')
+    })
+
+    it('shuts a primary with a reason, reachable', () => {
+        const html = renderToStaticMarkup(<Toolbar primary={{ id: 'run', label: 'Run', reason: 'The job is paused' }} />)
+        expect(html.slice(html.indexOf('data-slot="toolbar-primary"'))).toContain('aria-disabled="true"')
+    })
+
+    it('draws the tools by their words alone when asked', () => {
+        const icon = <svg data-testid="glyph" />
+        const item = { id: 'export', label: 'Export', icon }
+        expect(renderToStaticMarkup(<Toolbar items={[item]} />)).toContain('data-testid="glyph"')
+        expect(renderToStaticMarkup(<Toolbar items={[item]} wordsOnly />)).not.toContain('data-testid="glyph"')
+    })
 })
 
 const ITEMS = ['run', 'export', 'share', 'archive']
