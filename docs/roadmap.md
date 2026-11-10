@@ -6,7 +6,13 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.11.4** is the latest release (2026-11-10): every theme its own brand, a change of look with
+- **0.12.0** is the latest release (2026-11-10): a pipeline app's design-system leaves. `PageHeader`
+  takes `aside` and folding `items`, `SearchField` a `label` and `disabled`, `TextLink` variants, a
+  button form and marked external links, `InlineCode`, `DialogShell` a footer without a confirm,
+  `closeOnOutsidePress` and `initialFocus`, `IconButton` `tooltip`, `shortcut` and `destructive`,
+  `SplitButton` a `label`, `SwitchField` a `reason` and a whole-row label, and `useCopy` no longer
+  throws without a clipboard. Markdown's `InlineCode` type is now `MarkdownInlineCode`.
+- **0.11.4** (2026-11-10): every theme its own brand, a change of look with
   transitions held off, and an app's offered themes honored before paint.
 - **0.11.3** (2026-11-09): `Table` takes `containerClassName`.
 - **0.11.2** (2026-11-09): a module's `sources/*.css` lists its classes inline,
