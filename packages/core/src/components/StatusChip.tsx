@@ -26,6 +26,9 @@ const CHIP: Record<StatusColor, string> = {
     completed_with_errors: 'bg-status-completed-with-errors/15 text-status-completed-with-errors-ink',
 }
 
+/** A running state's dot pulses, as a running node does; motion.css stills it with the motion setting. */
+const LIVE = 'animate-pulse'
+
 export interface StatusChipProps {
     /** A run state, or any state the app names in `statuses` or a `StatusProvider`. */
     status: Status | (string & {})
@@ -33,7 +36,7 @@ export interface StatusChipProps {
     label?: string
     /** States for this chip alone, over the provider's. */
     statuses?: StatusMap
-    /** A status dot before the word, the 8px `Dot` a status dot beside it draws. */
+    /** A status dot before the word, the 8px `Dot` a status dot beside it draws; a running state's pulses. */
     dot?: boolean
     className?: string
 }
@@ -55,7 +58,7 @@ export function StatusChip({ status, label, statuses, dot = false, className }: 
                 className,
             )}
         >
-            {dot && <Dot color={look.css} size="md" />}
+            {dot && <Dot color={look.css} size="md" className={cn(look.color === 'running' && LIVE)} />}
             {label ?? look.label}
         </span>
     )
