@@ -94,6 +94,10 @@
             "types": "./dist/components/BarList.d.ts",
             "import": "./dist/components/BarList.js"
         },
+        "./Callout": {
+            "types": "./dist/components/Callout.d.ts",
+            "import": "./dist/components/Callout.js"
+        },
         "./CapabilityPicker": {
             "types": "./dist/components/CapabilityPicker.d.ts",
             "import": "./dist/components/CapabilityPicker.js"

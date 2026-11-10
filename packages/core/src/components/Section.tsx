@@ -61,12 +61,40 @@ export function Section({
     )
 }
 
+export type SurfaceTone = 'card' | 'well' | 'inset'
+
+const SURFACE_TONE: Record<SurfaceTone, string> = {
+    card: 'border-border-strong bg-card',
+    well: 'border-border bg-panel-ground',
+    inset: 'border-border bg-background',
+}
+
 export interface SurfaceProps {
+    /** `card` raises the content on the card's ground; `well` sets it on a panel's ground, `inset` on the page's. */
+    tone?: SurfaceTone
+    /** Pads the content by the density's panel padding, for fields or text rather than a list or a graph. */
+    pad?: boolean
     children: ReactNode
     className?: string
 }
 
-/** A bordered surface with no heading of its own, for content that is a surface: a graph, a list. */
-export function Surface({ children, className }: SurfaceProps) {
-    return <div className={cn('overflow-hidden rounded-surface border border-border-strong bg-card', className)}>{children}</div>
+/**
+ * A bordered surface with no heading of its own, for content that is a surface: a graph, a list, a
+ * group of fields. It clips nothing, so the focus ring of a control at its edge shows whole.
+ * Unpadded, its first and last children take its corners, so content drawn to the edge keeps them.
+ */
+export function Surface({ tone = 'card', pad = false, children, className }: SurfaceProps) {
+    return (
+        <div
+            data-tone={tone}
+            className={cn(
+                'rounded-surface border',
+                SURFACE_TONE[tone],
+                pad ? 'p-(--density-panel-pad)' : '[&>:first-child]:rounded-t-[inherit] [&>:last-child]:rounded-b-[inherit]',
+                className,
+            )}
+        >
+            {children}
+        </div>
+    )
 }

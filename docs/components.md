@@ -40,7 +40,7 @@ viewer's caption settings through `useStored` or an app's store, with the option
 in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second by `useVideoStats`
 (`@winterop-com/sokkel-ui/media/video-stats`) for `VideoStatsOverlay`.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 244 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 245 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 10 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 13 modules
@@ -303,6 +303,7 @@ in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second 
 | Component | Import | What it is | Story |
 | --- | --- | --- | --- |
 | **Banner** | `@winterop-com/sokkel-ui/Banner` | A strip across the top of a screen or the app for a state that holds until it changes: the server is not answering, a read-only instance, a pending upgrade. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-attachment-list--files) |
+| **Callout** | `@winterop-com/sokkel-ui/Callout` | A boxed note inside a page or a panel: what a reader should know about what is around it, in a tone. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-feedback--banners) |
 | **ConfirmCard** | `@winterop-com/sokkel-ui/ConfirmCard` | An action an assistant holds until a person answers: what it will do in a sentence, the call in the code face, and Approve and Deny. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-assistant-reply--card) |
 | **CopyButton** | `@winterop-com/sokkel-ui/CopyButton` | A button that copies a value. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-controls--playground) |
 | **DialogShell**, ConfirmDialog | `@winterop-com/sokkel-ui/DialogShell` | Every dialog's frame: a title (and an optional line under it), the body that scrolls when it is taller than the window, and a footer with Cancel and the one confirming verb at the right. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-dialogs--confirm) |
