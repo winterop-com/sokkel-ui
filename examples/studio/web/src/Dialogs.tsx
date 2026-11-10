@@ -133,7 +133,11 @@ function CloseDialog({ ids, onClose }: { ids: readonly string[]; onClose: () => 
             width="sm"
             phone="fit"
             title={one ? `Save the changes to ${names[0] ?? ''}?` : `Save the changes to ${String(names.length)} files?`}
-            description={one ? 'They are lost if the tab closes without saving.' : `${names.join(', ')} hold changes that are lost if their tabs close without saving.`}
+            description={
+                one
+                    ? 'They are lost if the tab closes without saving.'
+                    : `${names.join(', ')} hold changes that are lost if their tabs close without saving.`
+            }
             actions={
                 <Button
                     variant="outline"

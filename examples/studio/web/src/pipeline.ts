@@ -23,6 +23,7 @@ export const KIND_DOCS: Record<StepKind, string> = {
 const ref = (name: string): JsonSchema => ({ $ref: `#/$defs/${name}` })
 const when = (kind: StepKind): JsonSchema => ({
     if: { properties: { kind: { const: kind } }, required: ['kind'] },
+    // oxlint-disable-next-line unicorn/no-thenable -- `then` is the schema keyword
     then: { required: ['with'], properties: { with: ref(kind) } },
 })
 
@@ -34,7 +35,7 @@ export const PIPELINE_SCHEMA: JsonSchema = {
     required: ['name', 'steps'],
     additionalProperties: false,
     properties: {
-        name: { type: 'string', pattern: '^[a-z][a-z0-9-]*$', description: 'The pipeline\'s name, lowercase with dashes, as runs list it.' },
+        name: { type: 'string', pattern: '^[a-z][a-z0-9-]*$', description: "The pipeline's name, lowercase with dashes, as runs list it." },
         description: { type: 'string', description: 'What the pipeline is for, in a sentence.' },
         project: { enum: ['harbor', 'juniper', 'larkspur'], description: 'The project whose buckets and channels it uses.' },
         schedule: {
@@ -55,7 +56,11 @@ export const PIPELINE_SCHEMA: JsonSchema = {
             required: ['id', 'kind'],
             additionalProperties: false,
             properties: {
-                id: { type: 'string', pattern: '^[a-z][a-z0-9-]*$', description: 'The step\'s name in this pipeline, which needs and references use.' },
+                id: {
+                    type: 'string',
+                    pattern: '^[a-z][a-z0-9-]*$',
+                    description: "The step's name in this pipeline, which needs and references use.",
+                },
                 kind: { enum: [...STEP_KINDS], description: 'What the step does; its kind decides what goes in with.' },
                 needs: {
                     type: 'array',
@@ -63,9 +68,20 @@ export const PIPELINE_SCHEMA: JsonSchema = {
                     items: { type: 'string' },
                     description: 'The steps that finish before this one starts.',
                 },
-                retries: { type: 'integer', minimum: 0, maximum: 5, default: 0, description: 'How many times a failed try is tried again, up to 5.' },
-                timeout: { type: 'string', pattern: '^[0-9]+(s|m|h)$', default: '10m', description: 'How long one try may take: 30s, 10m, 1h.' },
-                with: { type: 'object', description: 'The step\'s settings, which its kind decides.' },
+                retries: {
+                    type: 'integer',
+                    minimum: 0,
+                    maximum: 5,
+                    default: 0,
+                    description: 'How many times a failed try is tried again, up to 5.',
+                },
+                timeout: {
+                    type: 'string',
+                    pattern: '^[0-9]+(s|m|h)$',
+                    default: '10m',
+                    description: 'How long one try may take: 30s, 10m, 1h.',
+                },
+                with: { type: 'object', description: "The step's settings, which its kind decides." },
             },
             allOf: STEP_KINDS.map(when),
         },
@@ -112,7 +128,12 @@ export const PIPELINE_SCHEMA: JsonSchema = {
                     default: 'fail',
                     description: 'What refused rows do: fail the run past max_rejected, be left out, or pass with a warning.',
                 },
-                max_rejected: { type: 'integer', minimum: 0, default: 0, description: 'How many refused rows fail allows before it fails.' },
+                max_rejected: {
+                    type: 'integer',
+                    minimum: 0,
+                    default: 0,
+                    description: 'How many refused rows fail allows before it fails.',
+                },
             },
         },
         upload: {
@@ -149,7 +170,7 @@ export const holdsReference = (value: unknown): boolean => typeof value === 'str
 
 /** What a run of a pipeline offers its references beside params and steps. */
 export const RUN_FIELDS: Record<string, string> = {
-    id: 'The run\'s number.',
+    id: "The run's number.",
     date: 'The day the run started, as 2026-11-10.',
     started: 'When the run started, to the second.',
     by: 'Who started the run.',
@@ -253,11 +274,17 @@ export function readPipeline(text: string): Pipeline {
         for (const node of needNodes.get(step.id) ?? []) {
             if (!isScalar(node) || typeof node.value !== 'string' || !node.range) continue
             const need = node.value
-            if (need === step.id) marks.push({ from: node.range[0], to: node.range[1], tone: 'error', message: 'A step cannot need itself.' })
+            if (need === step.id)
+                marks.push({ from: node.range[0], to: node.range[1], tone: 'error', message: 'A step cannot need itself.' })
             else if (!ids.has(need))
                 marks.push({ from: node.range[0], to: node.range[1], tone: 'error', message: `No step is named ${need}.` })
             else if (before(steps, need).has(step.id))
-                marks.push({ from: node.range[0], to: node.range[1], tone: 'error', message: `${need} already comes after ${step.id}, so this makes a loop.` })
+                marks.push({
+                    from: node.range[0],
+                    to: node.range[1],
+                    tone: 'error',
+                    message: `${need} already comes after ${step.id}, so this makes a loop.`,
+                })
         }
     // Each reference in a string names a param, a step this one comes after, or the run.
     visit(doc, {
@@ -324,7 +351,7 @@ function checkReference(
 /** The words a reference completes from: the roots, the params, the steps and their fields, and the run's. */
 export function referenceWords(pipeline: Pipeline): CodeCompletion[] {
     return [
-        { label: 'params', detail: 'root', docs: 'The pipeline\'s params.', kind: 'keyword' },
+        { label: 'params', detail: 'root', docs: "The pipeline's params.", kind: 'keyword' },
         { label: 'steps', detail: 'root', docs: 'What the steps hand on.', kind: 'keyword' },
         { label: 'run', detail: 'root', docs: 'The run this is.', kind: 'keyword' },
         ...Object.entries(pipeline.params).map(([name, value]) => ({
@@ -346,8 +373,7 @@ export function describeWord(pipeline: Pipeline, word: string): string | null {
         return step === undefined || step.kind === word ? kind : `${kind} Also a ${step.kind} step here.`
     }
     const step = pipeline.steps.find((one) => one.id === word)
-    if (step !== undefined)
-        return `A ${step.kind} step${step.needs.length === 0 ? ', first to run' : `, after ${step.needs.join(', ')}`}.`
+    if (step !== undefined) return `A ${step.kind} step${step.needs.length === 0 ? ', first to run' : `, after ${step.needs.join(', ')}`}.`
     if (word in pipeline.params) return `A param, ${String(pipeline.params[word])}.`
     return null
 }

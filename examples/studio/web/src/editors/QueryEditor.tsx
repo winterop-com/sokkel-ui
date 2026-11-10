@@ -50,7 +50,11 @@ export function QueryEditor({ file }: { file: WorkFile }) {
             setOutcome({ state: 'done', result: runQuery(source, tables), at: Date.now() })
         } catch (error) {
             if (error instanceof SqlError)
-                setOutcome({ state: 'failed', message: error.message, mark: { from: error.from, to: Math.max(error.to, error.from + 1), tone: 'error', message: error.message } })
+                setOutcome({
+                    state: 'failed',
+                    message: error.message,
+                    mark: { from: error.from, to: Math.max(error.to, error.from + 1), tone: 'error', message: error.message },
+                })
             else setOutcome({ state: 'failed', message: String(error), mark: { line: 1, tone: 'error' } })
         }
     }
@@ -62,7 +66,13 @@ export function QueryEditor({ file }: { file: WorkFile }) {
             {
                 title: file.name,
                 commands: [
-                    { id: 'query-run', label: 'Run the query', icon: Play, keys: keyLabels({ key: 'Enter', mod: true }), onSelect: () => execute() },
+                    {
+                        id: 'query-run',
+                        label: 'Run the query',
+                        icon: Play,
+                        keys: keyLabels({ key: 'Enter', mod: true }),
+                        onSelect: () => execute(),
+                    },
                     { id: 'query-pop', label: 'Pop out the editor', icon: Maximize2, onSelect: () => setPopped(true) },
                 ],
             },
@@ -76,7 +86,9 @@ export function QueryEditor({ file }: { file: WorkFile }) {
         if (table !== undefined) return `${table.name}: ${table.description} ${counted(table.rows.length, 'row')}.`
         const owners = tables.filter((one) => one.columns.some((column) => column.name === lower))
         if (owners.length === 0) return null
-        return owners.map((one) => `${one.name}.${lower}: ${one.columns.find((column) => column.name === lower)?.description ?? ''}`).join('\n')
+        return owners
+            .map((one) => `${one.name}.${lower}: ${one.columns.find((column) => column.name === lower)?.description ?? ''}`)
+            .join('\n')
     }
 
     const rows = outcome?.state === 'done' ? resultRows(outcome.result.rows) : []

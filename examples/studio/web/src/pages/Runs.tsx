@@ -22,9 +22,23 @@ const took = (run: Run) => (run.finished === undefined ? 'running' : sayDuration
 
 const COLUMNS: DataColumn<Run>[] = [
     { id: 'number', header: 'Run', width: '5rem', cell: (run) => String(run.number), sortValue: (run) => run.number },
-    { id: 'pipeline', header: 'Pipeline', width: 'minmax(10rem,1fr)', stack: 'primary', cell: (run) => run.pipeline, sortValue: (run) => run.pipeline },
+    {
+        id: 'pipeline',
+        header: 'Pipeline',
+        width: 'minmax(10rem,1fr)',
+        stack: 'primary',
+        cell: (run) => run.pipeline,
+        sortValue: (run) => run.pipeline,
+    },
     { id: 'project', header: 'Project', width: '7rem', stack: 'secondary', cell: (run) => run.project, sortValue: (run) => run.project },
-    { id: 'state', header: 'State', width: '8rem', stack: 'secondary', cell: (run) => <StatusChip status={run.state} />, sortValue: (run) => run.state },
+    {
+        id: 'state',
+        header: 'State',
+        width: '8rem',
+        stack: 'secondary',
+        cell: (run) => <StatusChip status={run.state} />,
+        sortValue: (run) => run.state,
+    },
     {
         id: 'failed',
         header: 'Failed at',
@@ -43,11 +57,16 @@ export function RunsPage() {
     const { runs, files, open } = useStudio()
     const [query, setQuery] = useState('')
     const typed = query.trim().toLowerCase()
-    const shown = typed === '' ? runs : runs.filter((run) => `${run.pipeline} ${run.project} ${run.state} ${run.failed?.step ?? ''}`.includes(typed))
+    const shown =
+        typed === '' ? runs : runs.filter((run) => `${run.pipeline} ${run.project} ${run.state} ${run.failed?.step ?? ''}`.includes(typed))
     const first = files.find((file) => file.kind === 'pipeline')
     return (
         <Stack gap="page" className="h-full min-h-0">
-            <PageHeader title="Runs" count={runs.length} description="The pipelines run from the studio, each with its steps and its log." />
+            <PageHeader
+                title="Runs"
+                count={runs.length}
+                description="The pipelines run from the studio, each with its steps and its log."
+            />
             {runs.length === 0 ? (
                 <Empty>
                     <EmptyHeader>
@@ -139,7 +158,6 @@ export function RunPage({ id }: { id: string }) {
             <PageHeader
                 title={run.pipeline}
                 code={`run ${String(run.number)}`}
-                trail={[{ label: 'Runs', href: '#/runs' }, { label: `Run ${String(run.number)}` }]}
                 meta={
                     <MetaLine
                         items={[
@@ -153,7 +171,12 @@ export function RunPage({ id }: { id: string }) {
                 }
                 actions={
                     <>
-                        <Button size="sm" variant="outline" reason={file === undefined ? 'The pipeline was deleted.' : undefined} onClick={() => file && open(file.id)}>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            reason={file === undefined ? 'The pipeline was deleted.' : undefined}
+                            onClick={() => file && open(file.id)}
+                        >
                             <FileCode aria-hidden />
                             Open pipeline
                         </Button>
@@ -172,7 +195,11 @@ export function RunPage({ id }: { id: string }) {
                 }
             />
             {run.failed !== undefined && (
-                <Problem title={`${run.failed.step} failed`} detail="The steps after it were skipped; notify steps still ran." technical={run.failed.reason} />
+                <Problem
+                    title={`${run.failed.step} failed`}
+                    detail="The steps after it were skipped; notify steps still ran."
+                    technical={run.failed.reason}
+                />
             )}
             <SplitPane
                 id="studio-run"

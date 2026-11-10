@@ -16,10 +16,22 @@ function seeded(seed: number): () => number {
 }
 
 const JOBS = [
-    { name: 'nightly-export', project: 'harbor', owner: 'ada', schedule: '0 2 * * *', steps: ['fetch', 'transform', 'validate', 'upload', 'notify'] },
+    {
+        name: 'nightly-export',
+        project: 'harbor',
+        owner: 'ada',
+        schedule: '0 2 * * *',
+        steps: ['fetch', 'transform', 'validate', 'upload', 'notify'],
+    },
     { name: 'import-orders', project: 'harbor', owner: 'grace', schedule: '*/30 * * * *', steps: ['fetch', 'validate', 'upload'] },
     { name: 'sync-inventory', project: 'juniper', owner: 'linus', schedule: '0 * * * *', steps: ['fetch', 'transform', 'upload'] },
-    { name: 'rebuild-index', project: 'juniper', owner: 'margaret', schedule: '0 4 * * 0', steps: ['fetch', 'transform', 'upload', 'notify'] },
+    {
+        name: 'rebuild-index',
+        project: 'juniper',
+        owner: 'margaret',
+        schedule: '0 4 * * 0',
+        steps: ['fetch', 'transform', 'upload', 'notify'],
+    },
     { name: 'send-digest', project: 'larkspur', owner: 'ada', schedule: '0 8 * * 1-5', steps: ['fetch', 'transform', 'notify'] },
 ]
 
@@ -112,7 +124,7 @@ export function tablesWith(studioRuns: readonly Run[]): Table[] {
             name: 'runs',
             description: 'Every run of every pipeline, the scheduled ones and those started here.',
             columns: [
-                { name: 'id', type: 'integer', description: 'The run\'s number.' },
+                { name: 'id', type: 'integer', description: "The run's number." },
                 { name: 'pipeline', type: 'text', description: 'The pipeline it ran.' },
                 { name: 'project', type: 'text', description: 'harbor, juniper or larkspur.' },
                 { name: 'state', type: 'text', description: 'running, succeeded, failed or cancelled.' },
@@ -127,7 +139,7 @@ export function tablesWith(studioRuns: readonly Run[]): Table[] {
             description: 'Each step of each run, as far as it got.',
             columns: [
                 { name: 'run_id', type: 'integer', description: 'The run, as runs.id.' },
-                { name: 'step', type: 'text', description: 'The step\'s id in its pipeline.' },
+                { name: 'step', type: 'text', description: "The step's id in its pipeline." },
                 { name: 'kind', type: 'text', description: 'fetch, transform, validate, upload or notify.' },
                 { name: 'state', type: 'text', description: 'succeeded, failed, skipped, cancelled or running.' },
                 { name: 'duration_ms', type: 'integer', description: 'How long it ran; null when it did not.' },
@@ -139,7 +151,7 @@ export function tablesWith(studioRuns: readonly Run[]): Table[] {
             name: 'jobs',
             description: 'The scheduled pipelines and who looks after each.',
             columns: [
-                { name: 'name', type: 'text', description: 'The pipeline\'s name, as runs.pipeline.' },
+                { name: 'name', type: 'text', description: "The pipeline's name, as runs.pipeline." },
                 { name: 'project', type: 'text', description: 'harbor, juniper or larkspur.' },
                 { name: 'owner', type: 'text', description: 'Who looks after it.' },
                 { name: 'schedule', type: 'text', description: 'When it runs, as a cron line.' },

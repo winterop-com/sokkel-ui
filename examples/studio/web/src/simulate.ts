@@ -96,7 +96,7 @@ function attempt(step: StepInfo, fill: (text: string) => string, before: readonl
                 rejected += refused
                 lines.push({
                     level: refused > 0 ? 'warn' : 'info',
-                    text: `${asString(rule.field)} ${asString(rule.check)}: ${refused === 0 ? 'every row passes' : `${String(refused)} rows refused`}`,
+                    text: `${asString(rule.check)} check on ${asString(rule.field)}: ${refused === 0 ? 'every row passes' : `${String(refused)} rows refused`}`,
                 })
             }
             const onInvalid = asString(config.on_invalid, 'fail')
@@ -182,7 +182,14 @@ export async function startRun(file: WorkFile, text: string, number: number, dra
         started,
         by: ME,
         steps,
-        log: [{ at: 0, step: null, level: 'info', text: `run ${String(number)} of ${pipeline.name || file.name} started by ${ME}${draft ? ', from unsaved changes' : ''}` }],
+        log: [
+            {
+                at: 0,
+                step: null,
+                level: 'info',
+                text: `run ${String(number)} of ${pipeline.name || file.name} started by ${ME}${draft ? ', from unsaved changes' : ''}`,
+            },
+        ],
         draft,
     }
     const run = await runRows.create(first)
@@ -192,8 +199,7 @@ export async function startRun(file: WorkFile, text: string, number: number, dra
         value.replace(/\$\{([^}]*)\}/g, (_, reference: string) => {
             const [root, name = '', field = ''] = reference.trim().split('.')
             if (root === 'params') return String(pipeline.params[name] ?? '')
-            if (root === 'run')
-                return { id: String(number), date, started: new Date(started).toISOString(), by: ME }[name] ?? ''
+            if (root === 'run') return { id: String(number), date, started: new Date(started).toISOString(), by: ME }[name] ?? ''
             if (root === 'steps') return String(results.get(name)?.[field as keyof Done] ?? '')
             return ''
         })
@@ -216,11 +222,16 @@ export async function startRun(file: WorkFile, text: string, number: number, dra
             save({
                 state: failedStep === undefined ? 'succeeded' : 'failed',
                 finished: Date.now(),
-                log: log(null, failedStep === undefined ? 'info' : 'error', failedStep === undefined ? 'run succeeded' : `run failed at ${failedStep.id}`),
+                log: log(
+                    null,
+                    failedStep === undefined ? 'info' : 'error',
+                    failedStep === undefined ? 'run succeeded' : `run failed at ${failedStep.id}`,
+                ),
             })
             return
         }
-        const blocked = step.kind !== 'notify' && step.needs.some((need) => current.steps.find((one) => one.id === need)?.state !== 'succeeded')
+        const blocked =
+            step.kind !== 'notify' && step.needs.some((need) => current.steps.find((one) => one.id === need)?.state !== 'succeeded')
         if (blocked) {
             save({
                 steps: current.steps.map((one) => (one.id === step.id ? { ...one, state: 'skipped' } : one)),
@@ -234,6 +245,7 @@ export async function startRun(file: WorkFile, text: string, number: number, dra
             log: log(step.id, 'info', `started${step.retries > 0 ? `, up to ${String(step.retries + 1)} tries` : ''}`),
         })
         const took = 500 + (hash(`${step.id}${step.kind}`) % 900)
+        const begun = Date.now()
         timers.set(
             run.id,
             window.setTimeout(() => {
@@ -256,22 +268,32 @@ export async function startRun(file: WorkFile, text: string, number: number, dra
                     outcome = attempt(step, fill, before, project)
                     for (let tried = 1; !outcome.ok && tried <= step.retries; tried += 1) {
                         for (const line of outcome.lines) lines = [...lines, { at: Date.now() - started, step: step.id, ...line }]
-                        lines = [...lines, { at: Date.now() - started, step: step.id, level: 'warn', text: `try ${String(tried)} failed; trying again` }]
+                        lines = [
+                            ...lines,
+                            { at: Date.now() - started, step: step.id, level: 'warn', text: `try ${String(tried)} failed; trying again` },
+                        ]
                         outcome = attempt(step, fill, before, project)
                     }
                 }
                 for (const line of outcome.lines) lines = [...lines, { at: Date.now() - started, step: step.id, ...line }]
-                const duration = took * 2 * (1 + step.retries * (outcome.ok ? 0 : 1))
+                const duration = Date.now() - begun
                 results.set(step.id, { rows: outcome.rows, rejected: outcome.rejected, output: outcome.output })
                 current = { ...current, log: lines }
                 save({
                     steps: current.steps.map((one) =>
                         one.id === step.id
-                            ? { ...one, state: outcome.ok ? 'succeeded' : 'failed', duration_ms: duration, ...(outcome.rows === undefined ? {} : { rows: outcome.rows }) }
+                            ? {
+                                  ...one,
+                                  state: outcome.ok ? 'succeeded' : 'failed',
+                                  duration_ms: duration,
+                                  ...(outcome.rows === undefined ? {} : { rows: outcome.rows }),
+                              }
                             : one,
                     ),
                     log: log(step.id, outcome.ok ? 'info' : 'error', outcome.ok ? 'succeeded' : 'failed'),
-                    ...(outcome.ok || current.failed !== undefined ? {} : { failed: { step: step.id, reason: outcome.reason ?? 'It failed.' } }),
+                    ...(outcome.ok || current.failed !== undefined
+                        ? {}
+                        : { failed: { step: step.id, reason: outcome.reason ?? 'It failed.' } }),
                 })
                 next(index + 1)
             }, took),

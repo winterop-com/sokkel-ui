@@ -149,7 +149,7 @@ type Expr = { from: number; to: number } & (
     | { t: 'like'; e: Expr; pattern: Expr; not: boolean }
     | { t: 'isnull'; e: Expr; not: boolean }
     | { t: 'between'; e: Expr; lo: Expr; hi: Expr; not: boolean }
-    | { t: 'case'; whens: { when: Expr; then: Expr }[]; otherwise?: Expr }
+    | { t: 'case'; whens: { when: Expr; result: Expr }[]; otherwise?: Expr }
 )
 
 type Item = { star: true; table?: string; from: number; to: number } | { star: false; e: Expr; name: string }
@@ -416,11 +416,11 @@ class Parser {
         if (this.take('true')) return { t: 'lit', v: true, from, to }
         if (this.take('false')) return { t: 'lit', v: false, from, to }
         if (this.take('case')) {
-            const whens: { when: Expr; then: Expr }[] = []
+            const whens: { when: Expr; result: Expr }[] = []
             while (this.take('when')) {
                 const when = this.expr()
                 this.expect('then', 'THEN')
-                whens.push({ when, then: this.expr() })
+                whens.push({ when, result: this.expr() })
             }
             if (whens.length === 0) throw new SqlError('CASE takes at least one WHEN.', this.token.from, this.token.to)
             const otherwise = this.take('else') ? this.expr() : undefined
@@ -432,11 +432,7 @@ class Parser {
             if (this.take('(')) {
                 const name = token.text.toLowerCase()
                 if (!AGGREGATES.has(name) && !SCALARS.has(name))
-                    throw new SqlError(
-                        `No function is named ${token.text}. There are ${[...AGGREGATES, ...SCALARS].join(', ')}.`,
-                        from,
-                        to,
-                    )
+                    throw new SqlError(`No function is named ${token.text}. There are ${[...AGGREGATES, ...SCALARS].join(', ')}.`, from, to)
                 const distinct = this.take('distinct')
                 const args: Expr[] = []
                 let star = false
@@ -498,7 +494,7 @@ function hasAggregate(e: Expr | undefined): boolean {
         case 'between':
             return hasAggregate(e.e) || hasAggregate(e.lo) || hasAggregate(e.hi)
         case 'case':
-            return e.whens.some((w) => hasAggregate(w.when) || hasAggregate(w.then)) || hasAggregate(e.otherwise)
+            return e.whens.some((w) => hasAggregate(w.when) || hasAggregate(w.result)) || hasAggregate(e.otherwise)
         default:
             return false
     }
@@ -571,7 +567,7 @@ export function runQuery(source: string, tables: readonly Table[]): QueryResult 
             case 'case':
                 for (const w of e.whens) {
                     bind(w.when, allowOutput)
-                    bind(w.then, allowOutput)
+                    bind(w.result, allowOutput)
                 }
                 bind(e.otherwise, allowOutput)
                 return
@@ -676,7 +672,7 @@ export function runQuery(source: string, tables: readonly Table[]): QueryResult 
                 return e.not ? !inside : inside
             }
             case 'case': {
-                for (const w of e.whens) if (truthy(evaluate(w.when, context, output))) return evaluate(w.then, context, output)
+                for (const w of e.whens) if (truthy(evaluate(w.when, context, output))) return evaluate(w.result, context, output)
                 return e.otherwise === undefined ? null : evaluate(e.otherwise, context, output)
             }
             case 'call': {

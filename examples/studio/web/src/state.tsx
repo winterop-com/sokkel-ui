@@ -9,7 +9,6 @@ import { go } from 'tidevann-shared/router'
 import { files as fileRows, prefs as prefRows, runs as runRows } from './backend'
 import { DEFAULT_PREFS, kindOf, type FileKind, type Prefs, type Project, type Run, type WorkFile } from './model'
 import { template } from './seed'
-import { cancelRun, startRun } from './simulate'
 
 /** A question the studio is asking in a dialog. */
 export type Asking =
@@ -237,6 +236,8 @@ export function StudioProvider({ children }: { children: ReactNode }) {
             const doc = docFor(file)
             const number = (runsRef.current[0]?.number ?? 0) + 1
             try {
+                // The runner reads YAML, so it loads with the first run.
+                const { startRun } = await import('./simulate')
                 return await startRun(file, doc.text, number, doc.text !== file.text)
             } catch (error) {
                 failed('The run did not start')(error)
@@ -269,7 +270,7 @@ export function StudioProvider({ children }: { children: ReactNode }) {
             moveFile,
             deleteFile,
             run,
-            cancel: cancelRun,
+            cancel: (going: Run) => void import('./simulate').then(({ cancelRun }) => cancelRun(going)),
             asking,
             ask,
         }),

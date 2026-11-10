@@ -17,43 +17,60 @@ import { keyLabels } from '@winterop-com/sokkel-ui/lib/keys'
 import { STATUS_CSS } from '@winterop-com/sokkel-ui/lib/status'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from '@winterop-com/sokkel-ui/primitives/empty'
-import { FileCode, FilePlus, FolderInput, FolderOpen, History, Pencil, Save, Settings as SettingsIcon, Sheet, SquareTerminal, Trash2 } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import {
+    FileCode,
+    FilePlus,
+    FolderInput,
+    FolderOpen,
+    History,
+    Pencil,
+    Save,
+    Settings as SettingsIcon,
+    Sheet,
+    SquareTerminal,
+    Trash2,
+} from 'lucide-react'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 
 import type { Frame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
 import { go, useOverlayRoute } from 'tidevann-shared/router'
 import { Dialogs } from './Dialogs'
 import { clock, counted, kindOf, KINDS, PROJECTS, type FileKind, type Project, type WorkFile } from './model'
-import { RunPage, RunsPage } from './pages/Runs'
-import { WorkArea } from './pages/WorkArea'
 import { Settings } from './Settings'
 import { tabHref, useStudio } from './state'
 import { tablesWith } from './tables'
 
+// The editors (CodeMirror) and the graphs (React Flow and elk) load the first time a page draws them.
+const WorkArea = lazy(() => import('./pages/WorkArea').then((module) => ({ default: module.WorkArea })))
+const RunsPage = lazy(() => import('./pages/Runs').then((module) => ({ default: module.RunsPage })))
+const RunPage = lazy(() => import('./pages/Runs').then((module) => ({ default: module.RunPage })))
+
 /** The rail's tree: each project's files by kind, then the tables a query reads. */
-function workspaceTree(files: readonly WorkFile[], dirty: ReadonlySet<string>, tables: readonly { name: string; rows: readonly unknown[] }[]): TreeNode[] {
+function workspaceTree(
+    files: readonly WorkFile[],
+    dirty: ReadonlySet<string>,
+    tables: readonly { name: string; rows: readonly unknown[] }[],
+): TreeNode[] {
     return [
-        ...PROJECTS.map(
-            (project): TreeNode => ({
-                id: `project:${project}`,
-                label: project,
-                icon: FolderOpen,
-                children: KINDS.map((kind) => ({
-                    id: `group:${project}:${kind.kind}`,
-                    label: kind.plural,
-                    children: files
-                        .filter((file) => file.project === project && file.kind === kind.kind)
-                        .sort((a, b) => a.name.localeCompare(b.name))
-                        .map((file) => ({
-                            id: file.id,
-                            label: file.name,
-                            icon: kind.icon,
-                            ...(dirty.has(file.id) ? { meta: <Dot color={STATUS_CSS.warning} size="sm" label="Not saved" /> } : {}),
-                        })),
-                })),
-            }),
-        ),
+        ...PROJECTS.map((project): TreeNode => ({
+            id: `project:${project}`,
+            label: project,
+            icon: FolderOpen,
+            children: KINDS.map((kind) => ({
+                id: `group:${project}:${kind.kind}`,
+                label: kind.plural,
+                children: files
+                    .filter((file) => file.project === project && file.kind === kind.kind)
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map((file) => ({
+                        id: file.id,
+                        label: file.name,
+                        icon: kind.icon,
+                        ...(dirty.has(file.id) ? { meta: <Dot color={STATUS_CSS.warning} size="sm" label="Not saved" /> } : {}),
+                    })),
+            })),
+        })),
         {
             id: 'tables',
             label: 'Tables',
@@ -89,10 +106,20 @@ export function Studio({ frame }: { frame: Frame }) {
 
     // The workspace's own address opens the tab last shown.
     useEffect(() => {
-        if (first === undefined && prefs.active !== null && !state.loading) window.location.replace(`#${tabHref(prefs.active)}`)
-    }, [first, prefs.active, state.loading])
+        if (first === undefined && !settings.open && prefs.active !== null && !state.loading)
+            window.location.replace(`#${tabHref(prefs.active)}`)
+    }, [first, settings.open, prefs.active, state.loading])
 
-    const page = first === 'file' || first === 'table' ? 'work' : first === 'runs' ? (second === undefined ? 'runs' : 'run') : first === undefined ? 'home' : 'missing'
+    const page =
+        first === 'file' || first === 'table'
+            ? 'work'
+            : first === 'runs'
+              ? second === undefined
+                  ? 'runs'
+                  : 'run'
+              : first === undefined
+                ? 'home'
+                : 'missing'
     const tab = first === 'table' ? `table:${second ?? ''}` : (second ?? '')
     const file = first === 'file' ? byId.get(second ?? '') : undefined
     const going = runs.filter((run) => run.state === 'running').length
@@ -125,9 +152,7 @@ export function Studio({ frame }: { frame: Frame }) {
         return [
             { id: 'open', label: 'Open', icon: <FileCode />, onSelect: () => open(one.id) },
             { id: 'rename', label: 'Rename', icon: <Pencil />, onSelect: () => ask({ kind: 'rename', id: one.id }) },
-            ...(dirty.has(one.id)
-                ? [{ id: 'save', label: 'Save', icon: <Save />, onSelect: () => void state.save(one.id) }]
-                : []),
+            ...(dirty.has(one.id) ? [{ id: 'save', label: 'Save', icon: <Save />, onSelect: () => void state.save(one.id) }] : []),
             { id: 'line', separator: true as const },
             ...PROJECTS.filter((project) => project !== one.project).map((project) => ({
                 id: `move-${project}`,
@@ -205,13 +230,23 @@ export function Studio({ frame }: { frame: Frame }) {
     useShortcuts(
         [
             { id: 'open-file', key: 'p', mod: true, inFields: true, label: 'Open a file', group: 'Studio', run: () => setSwitching(true) },
-            { id: 'save-all', key: 's', mod: true, shift: true, inFields: true, label: 'Save all', group: 'Studio', run: () => void saveAll() },
+            {
+                id: 'save-all',
+                key: 's',
+                mod: true,
+                shift: true,
+                inFields: true,
+                label: 'Save all',
+                group: 'Studio',
+                run: () => void saveAll(),
+            },
         ],
         [saveAll],
     )
 
     const trail: Crumb[] = []
-    if (page === 'work' && file !== undefined) trail.push({ label: file.project }, { label: kindOf(file.kind).plural }, { label: file.name, code: true })
+    if (page === 'work' && file !== undefined)
+        trail.push({ label: file.project }, { label: kindOf(file.kind).plural }, { label: file.name, code: true })
     else if (page === 'work' && first === 'table') trail.push({ label: 'Tables' }, { label: second ?? '', code: true })
     else if (page === 'runs' || page === 'run') {
         const run = runs.find((one) => one.id === second)
@@ -243,12 +278,7 @@ export function Studio({ frame }: { frame: Frame }) {
                 <RunPage id={second ?? ''} />
             </Page>
         )
-    else
-        content = (
-            <Page className="h-full min-h-0">
-                {page === 'home' ? <Home onOpen={() => setSwitching(true)} /> : <Gone />}
-            </Page>
-        )
+    else content = <Page className="h-full min-h-0">{page === 'home' ? <Home onOpen={() => setSwitching(true)} /> : <Gone />}</Page>
 
     return (
         <Shell
@@ -267,7 +297,10 @@ export function Studio({ frame }: { frame: Frame }) {
                         search: (
                             <Row gap="2xs">
                                 <SearchField value={filter} onChange={setFilter} placeholder="Filter" className="min-w-0 flex-1" />
-                                <IconButton label="New file" onClick={() => ask({ kind: 'new', project, fileKind: file?.kind ?? 'pipeline' })}>
+                                <IconButton
+                                    label="New file"
+                                    onClick={() => ask({ kind: 'new', project, fileKind: file?.kind ?? 'pipeline' })}
+                                >
                                     <FilePlus />
                                 </IconButton>
                             </Row>
@@ -334,14 +367,18 @@ export function Studio({ frame }: { frame: Frame }) {
                 />
             }
             foot={
-                <StatusLine note={saying} tone={saving.state === 'failed' ? 'warn' : undefined} live={saving.state === 'saving' || going > 0}>
+                <StatusLine
+                    note={saying}
+                    tone={saving.state === 'failed' ? 'warn' : undefined}
+                    live={saving.state === 'saving' || going > 0}
+                >
                     {going > 0 && <StatusItem label="running">{going}</StatusItem>}
                     {openTabs.length > 0 && <StatusItem label="open">{openTabs.length}</StatusItem>}
                     <StatusItem label="files">{files.length}</StatusItem>
                 </StatusLine>
             }
         >
-            {content}
+            <Suspense fallback={null}>{content}</Suspense>
             {settings.open && <Settings frame={frame} open onClose={settings.close} />}
             <Dialogs />
             {guard.dialog}
@@ -355,7 +392,6 @@ export function Studio({ frame }: { frame: Frame }) {
             />
         </Shell>
     )
-
 }
 
 /** The workspace with no tab open: a way to open a file or make one. */

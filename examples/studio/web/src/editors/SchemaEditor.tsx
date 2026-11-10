@@ -5,6 +5,7 @@ import { SplitPane } from '@winterop-com/sokkel-ui/SplitPane'
 import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 import { useCommands } from '@winterop-com/sokkel-ui/hooks/use-commands'
 import type { JsonSchema } from '@winterop-com/sokkel-ui/schema/read'
+import { validate } from '@winterop-com/sokkel-ui/schema/validate'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Maximize2, RotateCcw, Save } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -48,9 +49,12 @@ export function SchemaEditor({ file }: { file: WorkFile }) {
     const [below, setBelow] = useState<Below>('value')
 
     // The schema is tried only once it reads and the meta-schema finds no error in it.
-    const parsed = useMemo(() => readSchema(text), [text])
-    const errors = problems.filter((problem) => problem.tone === 'error').length
-    const schema = errors === 0 ? parsed : undefined
+    const schema = useMemo(() => {
+        const parsed = readSchema(text)
+        return parsed !== undefined && validate(JSON_SCHEMA_2020_12, parsed).every((issue) => issue.tone !== 'critical')
+            ? parsed
+            : undefined
+    }, [text])
 
     const kept = useCollection(samples)
     const stored = kept.rows?.find((row) => row.id === file.id)?.text
@@ -183,7 +187,11 @@ export function SchemaEditor({ file }: { file: WorkFile }) {
                                 <Problems
                                     problems={valueProblems}
                                     onReveal={(problem) => setRevealValue({ from: problem.from, to: problem.to })}
-                                    empty={schema === undefined ? 'Fix the schema first; the value is tried once it is valid.' : 'The value passes the schema.'}
+                                    empty={
+                                        schema === undefined
+                                            ? 'Fix the schema first; the value is tried once it is valid.'
+                                            : 'The value passes the schema.'
+                                    }
                                 />
                             )}
                         </Pane>

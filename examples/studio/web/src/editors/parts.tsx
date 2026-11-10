@@ -10,17 +10,7 @@ import type { Run } from '../model'
 import { useStudio } from '../state'
 
 /** A pane: its head with a title, a short note and its actions, and its content filling the rest. */
-export function Pane({
-    title,
-    meta,
-    actions,
-    children,
-}: {
-    title: ReactNode
-    meta?: ReactNode
-    actions?: ReactNode
-    children: ReactNode
-}) {
+export function Pane({ title, meta, actions, children }: { title: ReactNode; meta?: ReactNode; actions?: ReactNode; children: ReactNode }) {
     return (
         <Stack gap="none" className="h-full min-h-0">
             <PaneHeader title={title} meta={meta} actions={actions} />
@@ -50,7 +40,14 @@ export function EditorPane({
 }) {
     const { dirty } = useStudio()
     return (
-        <WindowedPane title={name} button="none" open={popped} onOpenChange={onPoppedChange} className="h-full" words={{ expand: 'Pop out' }}>
+        <WindowedPane
+            title={name}
+            button="none"
+            open={popped}
+            onOpenChange={onPoppedChange}
+            className="h-full"
+            words={{ expand: 'Pop out' }}
+        >
             <Pane
                 title={name}
                 meta={dirty.has(id) ? 'Unsaved changes' : 'Saved'}

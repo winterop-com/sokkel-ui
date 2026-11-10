@@ -10,14 +10,12 @@ export interface ResultRow {
 }
 
 /** The rows of a result, each keyed by where it stands. */
-export const resultRows = (rows: readonly (readonly Value[])[]): ResultRow[] => rows.map((values, index) => ({ key: String(index), values }))
+export const resultRows = (rows: readonly (readonly Value[])[]): ResultRow[] =>
+    rows.map((values, index) => ({ key: String(index), values }))
 
 /** A cell's value as the results show it: null quiet, a number in figures. */
 export function sayValue(value: Value) {
-    if (value === null)
-        return (
-            <InlineCode value="null" tone="muted" bare />
-        )
+    if (value === null) return <InlineCode value="null" tone="muted" bare />
     if (typeof value === 'number')
         return Number.isInteger(value) ? value.toLocaleString('en-US') : value.toLocaleString('en-US', { maximumFractionDigits: 3 })
     return String(value)

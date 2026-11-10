@@ -95,7 +95,12 @@ export function Settings({ frame, open, onClose }: { frame: Frame; open: boolean
                             layout: 'below',
                             keywords: ['dark', 'light', 'scheme', 'density', 'compact'],
                             control: (
-                                <ThemePicker value={look} onChange={setLook} themes={THEMES.filter((theme) => CARRIED.includes(theme.value))} system />
+                                <ThemePicker
+                                    value={look}
+                                    onChange={setLook}
+                                    themes={THEMES.filter((theme) => CARRIED.includes(theme.value))}
+                                    system
+                                />
                             ),
                         },
                     ],
@@ -113,12 +118,7 @@ export function Settings({ frame, open, onClose }: { frame: Frame; open: boolean
                                     ? `${counted(prefs.tabs.length, 'tab')} open; those with changes not saved ask first.`
                                     : `${counted(prefs.tabs.length, 'tab')} open.`,
                             control: (
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    disabled={prefs.tabs.length === 0}
-                                    onClick={() => close(prefs.tabs)}
-                                >
+                                <Button size="sm" variant="outline" disabled={prefs.tabs.length === 0} onClick={() => close(prefs.tabs)}>
                                     Close all
                                 </Button>
                             ),

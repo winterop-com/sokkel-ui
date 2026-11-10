@@ -131,7 +131,10 @@ export function WorkArea({ tab }: { tab: string }) {
                                         Save all
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem disabled={prefs.tabs.length < 2} onClick={() => close(prefs.tabs.filter((one) => one !== tab))}>
+                                    <DropdownMenuItem
+                                        disabled={prefs.tabs.length < 2}
+                                        onClick={() => close(prefs.tabs.filter((one) => one !== tab))}
+                                    >
                                         <X />
                                         Close the others
                                     </DropdownMenuItem>

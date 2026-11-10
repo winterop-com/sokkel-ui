@@ -23,7 +23,16 @@ export function TableView({ table }: { table: Table }) {
     const names = table.columns.map((column) => column.name)
     const all = useMemo(() => resultRows(table.rows.map((row) => names.map((name) => row[name] ?? null))), [table])
     const typed = query.trim().toLowerCase()
-    const rows = typed === '' ? all : all.filter((row) => row.values.some((value) => String(value ?? '').toLowerCase().includes(typed)))
+    const rows =
+        typed === ''
+            ? all
+            : all.filter((row) =>
+                  row.values.some((value) =>
+                      String(value ?? '')
+                          .toLowerCase()
+                          .includes(typed),
+                  ),
+              )
     return (
         <SplitPane
             id="studio-table"

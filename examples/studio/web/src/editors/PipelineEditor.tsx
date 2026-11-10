@@ -99,7 +99,14 @@ export function PipelineEditor({ file }: { file: WorkFile }) {
                     { id: 'pipeline-pop', label: 'Pop out the editor', icon: Maximize2, onSelect: () => setPopped(true) },
                     ...(latest === undefined
                         ? []
-                        : [{ id: 'pipeline-last', label: `Open run ${String(latest.number)}`, icon: History, onSelect: () => go(`/runs/${latest.id}`) }]),
+                        : [
+                              {
+                                  id: 'pipeline-last',
+                                  label: `Open run ${String(latest.number)}`,
+                                  icon: History,
+                                  onSelect: () => go(`/runs/${latest.id}`),
+                              },
+                          ]),
                 ],
             },
         ],
@@ -147,7 +154,13 @@ export function PipelineEditor({ file }: { file: WorkFile }) {
         </Empty>
     ) : graph === 'run' && latest !== undefined ? (
         <RunGraph
-            steps={latest.steps.map((step) => ({ code: step.id, kind: step.kind, needs: step.needs, status: step.state, duration_ms: step.duration_ms }))}
+            steps={latest.steps.map((step) => ({
+                code: step.id,
+                kind: step.kind,
+                needs: step.needs,
+                status: step.state,
+                duration_ms: step.duration_ms,
+            }))}
             selected={selected}
             onSelect={setSelected}
         />
@@ -244,7 +257,12 @@ export function PipelineEditor({ file }: { file: WorkFile }) {
                                     onValueChange={setBelow}
                                     options={[
                                         { value: 'problems', label: 'Problems', count: problems.length },
-                                        { value: 'log', label: 'Log', disabled: latest === undefined, hint: latest === undefined ? 'Not run yet' : undefined },
+                                        {
+                                            value: 'log',
+                                            label: 'Log',
+                                            disabled: latest === undefined,
+                                            hint: latest === undefined ? 'Not run yet' : undefined,
+                                        },
                                     ]}
                                 />
                             }
