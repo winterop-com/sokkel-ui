@@ -236,4 +236,21 @@ describe('formats', () => {
         }
         expect(found(sized, { size: '12 parsecs', at: 'anything' })).toEqual(['/size format'])
     })
+
+    it('carries the phrase a format was registered with on its issue', () => {
+        registerSchemaFormats({
+            'cron-line': { test: /^\S+ \S+ \S+ \S+ \S+$/, say: 'Expected a schedule such as 0 3 * * *' },
+            'job-code': { test: (value) => /^[a-z-]+$/.test(value) },
+        })
+        const schema: JsonSchema = {
+            type: 'object',
+            properties: { at: { type: 'string', format: 'cron-line' }, job: { type: 'string', format: 'job-code' } },
+        }
+        const issues = validate(schema, { at: 'nightly', job: 'Send Digest' })
+        expect(issues.map((issue) => (issue.kind === 'format' ? [issue.format, issue.phrase] : issue.kind))).toEqual([
+            ['cron-line', 'Expected a schedule such as 0 3 * * *'],
+            ['job-code', undefined],
+        ])
+        expect(validate(schema, { at: '0 3 * * *', job: 'send-digest' })).toEqual([])
+    })
 })

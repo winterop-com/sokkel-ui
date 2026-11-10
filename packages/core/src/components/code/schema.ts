@@ -67,7 +67,7 @@ export const SCHEMA_WORDS: CodeSchemaWords = {
             case 'pattern':
                 return `Must match ${issue.pattern}`
             case 'format':
-                return `Expected the ${issue.format} format`
+                return issue.phrase ?? `Expected the ${issue.format} format`
             case 'minItems':
                 return `Needs at least ${plural(issue.limit, 'item')}`
             case 'maxItems':
@@ -791,12 +791,11 @@ export function schemaHover(schema: () => JsonSchema | undefined, language: Sche
         if (read === null) return null
         const span = [...read.spans.values()].find((each) => each.key !== undefined && each.key.from <= pos && pos <= each.key.to)
         if (span?.key === undefined) return null
-        const described = schemasAt(current, span.path, current, { value: read.value }).find(
-            (each) => each.description !== undefined || each.type !== undefined,
-        )
-        if (described === undefined) return null
-        const kind = typeLabel(described, current)
-        const description = described.description
+        const found = schemasAt(current, span.path, current, { value: read.value })
+        const typed = found.find((each) => ['type', 'anyOf', 'oneOf', 'enum', 'const', 'properties'].some((key) => each[key] !== undefined))
+        const description = found.find((each) => each.description !== undefined)?.description
+        if (typed === undefined && description === undefined) return null
+        const kind = typeLabel(typed ?? {}, current)
         return {
             pos: span.key.from,
             end: span.key.to,

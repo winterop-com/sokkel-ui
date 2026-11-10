@@ -62,7 +62,7 @@ import { loadedValidate, loadValidate } from './schema/checker'
 import type { JsonSchema } from './schema/read'
 
 export type { CodeSchemaWords } from './code/schema'
-export { createSharedDocument, useSharedDocument, useSharedText, type SharedDocument } from './code/shared'
+export { createSharedDocument, useControlledDocument, useSharedDocument, useSharedText, type SharedDocument } from './code/shared'
 
 /** The languages the editor carries by name. */
 export type CodeLanguageName = 'json' | 'yaml' | 'jq' | 'markdown' | 'sql' | 'shell' | 'jinja' | 'text'

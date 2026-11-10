@@ -24,7 +24,8 @@ export type SchemaIssueKind =
     | { kind: 'minLength'; limit: number }
     | { kind: 'maxLength'; limit: number }
     | { kind: 'pattern'; pattern: string }
-    | { kind: 'format'; format: string }
+    /** `phrase` is the words the format was registered with, when it was given some. */
+    | { kind: 'format'; format: string; phrase?: string }
     | { kind: 'minItems'; limit: number }
     | { kind: 'maxItems'; limit: number }
     | { kind: 'uniqueItems' }

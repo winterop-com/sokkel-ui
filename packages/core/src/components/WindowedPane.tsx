@@ -38,6 +38,8 @@ export function useWindowedPane(): Windowed | null {
 }
 
 export interface WindowedPaneButtonProps {
+    /** `IconButton`'s size: `icon-sm` matches a `Section` head's tools, which take `IconButton`'s default. */
+    size?: 'icon-xs' | 'icon-sm' | 'icon'
     className?: string
 }
 
@@ -45,11 +47,11 @@ export interface WindowedPaneButtonProps {
  * The expand button of the `WindowedPane` around it, for a pane that sets it in a toolbar of its
  * own (with `button="none"` on the pane). Draws nothing outside a pane or inside the window.
  */
-export function WindowedPaneButton({ className }: WindowedPaneButtonProps) {
+export function WindowedPaneButton({ size = 'icon-xs', className }: WindowedPaneButtonProps) {
     const pane = useWindowedPane()
     if (pane === null || pane.windowed) return null
     return (
-        <IconButton label={pane.words.expand} size="icon-xs" onClick={() => pane.setOpen(true)} className={className}>
+        <IconButton label={pane.words.expand} size={size} onClick={() => pane.setOpen(true)} className={className}>
             <Maximize2 />
         </IconButton>
     )
