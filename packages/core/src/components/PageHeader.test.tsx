@@ -13,6 +13,9 @@ describe('a page header', () => {
         expect(renderToStaticMarkup(<PageHeader title="Pipelines" actions={<button type="button">New</button>} />)).toContain(
             'flex-[1_1_auto]',
         )
+        expect(renderToStaticMarkup(<PageHeader title="Pipelines" actions={<button type="button">New</button>} />)).toContain(
+            '@lg/page-header:flex-[1_1_0%]',
+        )
         expect(renderToStaticMarkup(<PageHeader title="Jobs" description="Every job of harbor." />)).toContain('flex-[1_1_16rem]')
     })
 

@@ -120,9 +120,14 @@ export function PageHeader({
     const trailed = trail !== undefined && trail.length > 0
     const folding = (items !== undefined && items.length > 0) || primary !== undefined
     const fill = actionsFill ?? folding
-    // A title with more under it takes a fair share of the row; a title alone takes its own width,
-    // so a short one keeps its actions beside it on a phone.
-    const basis = fill ? 'flex-[0_1_auto]' : description !== undefined || meta !== undefined ? 'flex-[1_1_16rem]' : 'flex-[1_1_auto]'
+    // A title with more under it takes a fair share of the row. A title alone takes its own width in a
+    // narrow header, so a short one keeps its actions beside it on a phone, and in a wide one the room
+    // its actions leave, wrapping there rather than pushing them under it.
+    const basis = fill
+        ? 'flex-[0_1_auto]'
+        : description !== undefined || meta !== undefined
+          ? 'flex-[1_1_16rem]'
+          : 'flex-[1_1_auto] @lg/page-header:flex-[1_1_0%] @lg/page-header:min-w-32'
     // Beside a back button or an aside the header is a grid: the button level with the title, the
     // aside down the side of every line, and every other line in the last column so it starts where
     // the title starts.
@@ -130,101 +135,114 @@ export function PageHeader({
     const column = grid && COLUMN[Number(back) + Number(beside)]
     const rows = Number(trailed) + 1 + Number(showCode) + Number(description !== undefined) + Number(meta !== undefined)
     return (
-        <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
-            <div
-                className={cn(
-                    'min-w-0',
-                    basis,
-                    grid && 'grid items-center gap-x-2',
-                    grid && (back && beside ? 'grid-cols-[auto_auto_minmax(0,1fr)]' : 'grid-cols-[auto_minmax(0,1fr)]'),
-                    beside && 'gap-x-3',
-                )}
-            >
-                {back && (
-                    <IconButton label={said.back} onClick={onBack} className={cn('col-start-1', trailed ? 'row-start-2' : 'row-start-1')}>
-                        <ChevronLeft aria-hidden />
-                    </IconButton>
-                )}
-                {beside && (
-                    <div className={cn('row-start-1 flex shrink-0 items-center', COLUMN[Number(back)], ROWS[rows - 1])}>{aside}</div>
-                )}
-                {trailed && (
-                    <nav aria-label={said.trail} className={cn('min-w-0', column)}>
-                        <ol className="flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
-                            {trail.map((crumb, index) => {
-                                const face = cn('truncate', crumb.code === true && 'font-mono')
-                                return (
-                                    <li key={`${crumb.label}-${String(index)}`} className="flex min-w-0 items-center gap-1">
-                                        {crumb.href === undefined ? (
-                                            <span className={face}>{crumb.label}</span>
-                                        ) : (
-                                            <Link href={crumb.href} className={cn(face, 'transition-colors hover:text-foreground')}>
-                                                {crumb.label}
-                                            </Link>
-                                        )}
-                                        <ChevronRight className="size-3 shrink-0 text-faint" aria-hidden />
-                                    </li>
-                                )
-                            })}
-                        </ol>
-                    </nav>
-                )}
-                <div className={cn('flex min-w-0 items-baseline gap-2', column)}>
-                    <h1
-                        title={oneLine && typeof title === 'string' ? title : undefined}
-                        className={cn(
-                            'min-w-0 font-heading text-page-title text-page-title-ink',
-                            oneLine ? 'truncate' : 'text-pretty break-words',
-                            !showCode && code !== undefined && 'font-mono',
-                        )}
-                    >
-                        {title}
-                    </h1>
-                    {count !== undefined && <span className="shrink-0 text-xs text-muted-foreground tabular-nums">{count}</span>}
-                </div>
-                {showCode && (
-                    <p title={code} className={cn('truncate font-mono text-xs text-muted-foreground', column)}>
-                        {code}
-                    </p>
-                )}
-                {description !== undefined && <p className={cn('mt-1 max-w-prose text-sm text-muted-foreground', column)}>{description}</p>}
-                {meta !== undefined && (
-                    <div className={cn('mt-1.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground', column)}>
-                        {meta}
+        <div className="@container/page-header">
+            <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
+                <div
+                    className={cn(
+                        'min-w-0',
+                        basis,
+                        grid && 'grid items-center gap-x-2',
+                        grid && (back && beside ? 'grid-cols-[auto_auto_minmax(0,1fr)]' : 'grid-cols-[auto_minmax(0,1fr)]'),
+                        beside && 'gap-x-3',
+                    )}
+                >
+                    {back && (
+                        <IconButton
+                            label={said.back}
+                            onClick={onBack}
+                            className={cn('col-start-1', trailed ? 'row-start-2' : 'row-start-1')}
+                        >
+                            <ChevronLeft aria-hidden />
+                        </IconButton>
+                    )}
+                    {beside && (
+                        <div className={cn('row-start-1 flex shrink-0 items-center', COLUMN[Number(back)], ROWS[rows - 1])}>{aside}</div>
+                    )}
+                    {trailed && (
+                        <nav aria-label={said.trail} className={cn('min-w-0', column)}>
+                            <ol className="flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
+                                {trail.map((crumb, index) => {
+                                    const face = cn('truncate', crumb.code === true && 'font-mono')
+                                    return (
+                                        <li key={`${crumb.label}-${String(index)}`} className="flex min-w-0 items-center gap-1">
+                                            {crumb.href === undefined ? (
+                                                <span className={face}>{crumb.label}</span>
+                                            ) : (
+                                                <Link href={crumb.href} className={cn(face, 'transition-colors hover:text-foreground')}>
+                                                    {crumb.label}
+                                                </Link>
+                                            )}
+                                            <ChevronRight className="size-3 shrink-0 text-faint" aria-hidden />
+                                        </li>
+                                    )
+                                })}
+                            </ol>
+                        </nav>
+                    )}
+                    <div className={cn('flex min-w-0 items-baseline gap-2', column)}>
+                        <h1
+                            title={oneLine && typeof title === 'string' ? title : undefined}
+                            className={cn(
+                                'min-w-0 font-heading text-page-title text-page-title-ink',
+                                oneLine ? 'truncate' : 'text-pretty break-words',
+                                !showCode && code !== undefined && 'font-mono',
+                            )}
+                        >
+                            {title}
+                        </h1>
+                        {count !== undefined && <span className="shrink-0 text-xs text-muted-foreground tabular-nums">{count}</span>}
                     </div>
+                    {showCode && (
+                        <p title={code} className={cn('truncate font-mono text-xs text-muted-foreground', column)}>
+                            {code}
+                        </p>
+                    )}
+                    {description !== undefined && (
+                        <p className={cn('mt-1 max-w-prose text-sm text-muted-foreground', column)}>{description}</p>
+                    )}
+                    {meta !== undefined && (
+                        <div
+                            className={cn(
+                                'mt-1.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground',
+                                column,
+                            )}
+                        >
+                            {meta}
+                        </div>
+                    )}
+                </div>
+                {/* At least room for More and the primary action beside the title before the actions wrap under it. */}
+                {folding ? (
+                    <div data-slot="page-header-actions" className="flex min-w-0 flex-[1_1_8rem] items-center justify-end gap-2">
+                        <Toolbar
+                            items={items}
+                            primary={primary}
+                            wordsOnly={wordsOnly}
+                            itemsLead={led ? lead : undefined}
+                            itemVariant="outline"
+                            itemsAlign="end"
+                            className="flex-1"
+                            words={{ more: said.more, moreWays: said.moreWays }}
+                        />
+                        {actions !== undefined && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+                    </div>
+                ) : fill ? (
+                    (actions !== undefined || led) && (
+                        <div data-slot="page-header-actions" className="flex min-w-0 flex-[1_1_8rem] items-center gap-2">
+                            {led && <div className="flex shrink-0 items-center">{lead}</div>}
+                            <div className="min-w-0 flex-1">{actions}</div>
+                        </div>
+                    )
+                ) : (
+                    (actions !== undefined || led) && (
+                        // No wider than the header, so a group wrapped under the title wraps its own buttons too.
+                        <div data-slot="page-header-actions" className="flex max-w-full shrink-0 flex-wrap items-center gap-2">
+                            {lead}
+                            {actions}
+                        </div>
+                    )
                 )}
             </div>
-            {/* At least room for More and the primary action beside the title before the actions wrap under it. */}
-            {folding ? (
-                <div data-slot="page-header-actions" className="flex min-w-0 flex-[1_1_8rem] items-center justify-end gap-2">
-                    <Toolbar
-                        items={items}
-                        primary={primary}
-                        wordsOnly={wordsOnly}
-                        itemsLead={led ? lead : undefined}
-                        itemVariant="outline"
-                        itemsAlign="end"
-                        className="flex-1"
-                        words={{ more: said.more, moreWays: said.moreWays }}
-                    />
-                    {actions !== undefined && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
-                </div>
-            ) : fill ? (
-                (actions !== undefined || led) && (
-                    <div data-slot="page-header-actions" className="flex min-w-0 flex-[1_1_8rem] items-center gap-2">
-                        {led && <div className="flex shrink-0 items-center">{lead}</div>}
-                        <div className="min-w-0 flex-1">{actions}</div>
-                    </div>
-                )
-            ) : (
-                (actions !== undefined || led) && (
-                    // No wider than the header, so a group wrapped under the title wraps its own buttons too.
-                    <div data-slot="page-header-actions" className="flex max-w-full shrink-0 flex-wrap items-center gap-2">
-                        {lead}
-                        {actions}
-                    </div>
-                )
-            )}
         </div>
     )
 }
