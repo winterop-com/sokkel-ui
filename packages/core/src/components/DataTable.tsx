@@ -50,6 +50,7 @@ import { NativeSelect, NativeSelectOption } from './ui/native-select'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { Skeleton } from './ui/skeleton'
 import { Spinner } from './ui/spinner'
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 import { TABLE_HEAD_ROW, TABLE_HEAD_TEXT, columnBands, columnName, columnOrder } from '../lib/table'
 import type { CellAt, EditedValue, EditOption, EditorKind, EditValue } from '../lib/edit'
 import type { CellEdit, CellFocus, OpenCell, TableEditing, TableEditingContext } from './table-editing'
@@ -111,8 +112,14 @@ export interface DataColumn<T> {
      * marking where each band starts; a stacked card names the column by its band and its header.
      */
     band?: string
-    /** A CSS grid track: `8rem`, `minmax(12rem,1fr)`. */
+    /**
+     * A CSS grid track (`8rem`, `minmax(12rem,1fr)`), or `content`: as wide as the widest of its
+     * head and the cells drawn, up to `maxWidth`, the other columns sharing what is left. A dragged
+     * width wins over either.
+     */
     width: string
+    /** The widest a `content` column grows, as a CSS length; 20rem by default. */
+    maxWidth?: string
     cell: (row: T) => ReactNode
     align?: 'start' | 'center' | 'end'
     /**
@@ -204,6 +211,8 @@ export interface DataTableWords {
     selectRow: string
     expand: string
     collapse: string
+    /** The button that loads more rows, with `loadMore="button"`: how many the next load brings, when the app says. */
+    loadMore: (count: number | undefined) => string
     /** A branch's control while its children load. */
     loadingChildren: string
     /** A column's resize handle. */
@@ -253,6 +262,7 @@ const WORDS: DataTableWords = {
     selectRow: 'Select row',
     expand: 'Expand',
     collapse: 'Collapse',
+    loadMore: (count) => (count === undefined ? 'Load more' : `Load ${count.toLocaleString('en-US')} more`),
     loadingChildren: 'Loading',
     resize: (column) => `Resize ${column}`,
     moveUp: (column) => `Move ${column} up`,
@@ -506,6 +516,8 @@ export function stackColumns<C extends { stack?: DataColumn<unknown>['stack'] }>
 }
 
 function trackMin(width: string): string {
+    // A measured `content` column's track is its least width already.
+    if (width.startsWith('min(')) return width
     const floor = /^minmax\(\s*([^,]+?)\s*,/.exec(width)?.[1] ?? width
     return /^\d*\.?\d+(px|rem|em|ch)$/.test(floor) ? floor : '0px'
 }
@@ -553,6 +565,20 @@ const STACK_EDIT_LINE = 36
 /** The height of a stacked card's title line. */
 const STACK_TITLE = 24
 const NO_EDITS: ReadonlyMap<string, CellEdit> = new Map()
+/** A muted row's content, dimmed as a control that is off is: a table row's cells, keeping their grounds, and a listed row's lines. */
+const MUTED_CELLS = '[&>[data-track]>*]:opacity-60'
+const MUTED_ITEM = '*:opacity-60'
+/** The widest a `content` column grows when it names no `maxWidth`. */
+const CONTENT_MAX = '20rem'
+
+/** How a row reads: `muted` dims it, such as an account switched off; the status tones tint it. */
+export type DataRowTone = 'muted' | 'critical' | 'warning'
+
+/** A toned row's ground: the status tones mixed into the card, opaque so a pinned cell keeps it as rows scroll under. */
+const TONE_GROUND: Record<Exclude<DataRowTone, 'muted'>, string> = {
+    critical: 'bg-[color-mix(in_oklab,var(--critical)_8%,var(--card))]',
+    warning: 'bg-[color-mix(in_oklab,var(--warning)_10%,var(--card))]',
+}
 
 export interface DataTableProps<T> {
     columns: DataColumn<T>[]
@@ -573,6 +599,22 @@ export interface DataTableProps<T> {
      * with a detail opens and closes as a branch does, and its open state is held in `expanded`.
      */
     detail?: (row: T) => ReactNode
+    /**
+     * Whether a row has a `detail`, so it draws the control that opens it; given, `detail` is called
+     * only for the rows opened, so it may be costly. Without it every row's `detail` is asked.
+     */
+    hasDetail?: (row: T) => boolean
+    /**
+     * The name of a row's control that opens or closes it, its accessible name and its tooltip, such
+     * as `Show the tokens of ada`; `words.expand` and `words.collapse` by default.
+     */
+    expandLabel?: (row: T, open: boolean) => string
+    /**
+     * How a row reads: `muted` dims its content, such as an account switched off or a token revoked;
+     * `critical` and `warning` tint its ground in the status's tone. Selection and the pointer's tint
+     * draw over either.
+     */
+    rowTone?: (row: T) => DataRowTone | undefined
     expanded?: ReadonlySet<string>
     defaultExpanded?: ReadonlySet<string>
     onExpandedChange?: (expanded: ReadonlySet<string>) => void
@@ -640,8 +682,15 @@ export interface DataTableProps<T> {
     onPageSizeChange?: (size: number) => void
     /** The sizes the pager offers. */
     pageSizes?: number[]
-    /** More rows exist than are given; nearing the end asks for them with `onLoadMore`. */
+    /** More rows exist than are given; nearing the end asks for them with `onLoadMore`, or the button does with `loadMore="button"`. */
     hasMore?: boolean
+    /**
+     * How more rows are asked for while `hasMore`: `end`, the default, as the end of what has loaded
+     * comes near; `button`, from a Load more button after the last row, for a list whose reader decides.
+     */
+    loadMore?: 'end' | 'button'
+    /** How many rows the next load brings, said on the Load more button. */
+    loadMoreCount?: number
     /** Rows are on their way: placeholder rows show at the end, or fill the table when it has none yet. */
     loading?: boolean
     onLoadMore?: () => void
@@ -663,12 +712,13 @@ export interface DataTableProps<T> {
     /** Every card's height, one for all so the grid draws only what is in view. */
     cardHeight?: string
     /**
-     * Below this width of its own box, in pixels, and once the box is narrower than `minWidth` too,
-     * the table shows each row as a card: the first column its title and every other a labeled
-     * line. A table whose columns fit stays a table, so a small panel on a wide
-     * screen keeps its rows. `false` keeps the table, which then scrolls sideways.
+     * Below this width of its own box, in pixels or as a CSS length such as `64rem`, and once the box
+     * is narrower than `minWidth` too, the table shows each row as a card: the first column its title
+     * and every other a labeled line. A table whose columns fit stays a table, so a small panel on a
+     * wide screen keeps its rows. It is the box's width, never the window's, so the table holds up in
+     * any container. `false` keeps the table, which then scrolls sideways.
      */
-    stackBelow?: number | false
+    stackBelow?: number | string | false
     /**
      * The narrowest the columns go before the table scrolls sideways, and never narrower than the
      * columns' own least widths. `auto`: just the columns' least widths, and the table stacks below
@@ -707,7 +757,9 @@ export interface DataTableProps<T> {
     foot?: ReactNode
     /**
      * What the table shows with no rows: a sentence, drawn as the table's own line, or a node such
-     * as an `Empty` with an icon and an action, drawn under the column heads. `words.empty` by default.
+     * as an `Empty` with an icon and an action. Given, it stands alone, without the column heads,
+     * unless the bar holds a `search` or a `toolbar` whose filters may have emptied the table.
+     * `words.empty` by default, under the column heads.
      */
     empty?: ReactNode
     /** Tints the row under the pointer. */
@@ -823,6 +875,9 @@ export function DataTable<T>({
     hasChildren,
     loadChildren,
     detail,
+    hasDetail: givenHasDetail,
+    expandLabel,
+    rowTone,
     expanded: expandedValue,
     defaultExpanded = EMPTY,
     onExpandedChange,
@@ -859,6 +914,8 @@ export function DataTable<T>({
     onPageSizeChange,
     pageSizes = [25, 50, 100],
     hasMore = false,
+    loadMore = 'end',
+    loadMoreCount,
     loading = false,
     onLoadMore,
     onSelectAllPages,
@@ -915,15 +972,17 @@ export function DataTable<T>({
     const treeKids = tree ? kids : undefined
     // Rows open into children, a detail of their own, or both; each such row draws the control that opens it.
     const opens = tree || detail !== undefined
+    // Whether a row has a detail: the app says, or else its detail is asked.
     const hasDetail = useMemo(
         () =>
             detail === undefined
                 ? undefined
-                : (row: T) => {
+                : (givenHasDetail ??
+                  ((row: T) => {
                       const said = detail(row)
                       return said !== undefined && said !== null && said !== false
-                  },
-        [detail],
+                  })),
+        [detail, givenHasDetail],
     )
 
     const shown = ordered.filter((column, index) => index === 0 || !hidden.has(column.id))
@@ -1023,7 +1082,9 @@ export function DataTable<T>({
     const probe = useRef<HTMLDivElement>(null)
     const cardProbe = useRef<HTMLDivElement>(null)
     const widthProbe = useRef<HTMLDivElement>(null)
+    const stackProbe = useRef<HTMLDivElement>(null)
     const [columnsWidth, setColumnsWidth] = useState(768)
+    const [stackWidth, setStackWidth] = useState(typeof stackBelow === 'number' ? stackBelow : 576)
     const [rowHeight, setRowHeight] = useState(40)
     const [cardBox, setCardBox] = useState({ width: 192, height: 256 })
     const [view, setView] = useState({ top: 0, height: 800, width: 1200, full: 0 })
@@ -1036,6 +1097,7 @@ export function DataTable<T>({
             setRowHeight(measure.offsetHeight || 40)
             setCardBox({ width: measureCard.offsetWidth || 192, height: measureCard.offsetHeight || 256 })
             setColumnsWidth(widthProbe.current?.offsetWidth || 768)
+            if (stackProbe.current !== null) setStackWidth(stackProbe.current.offsetWidth)
             setView({ top: box.scrollTop, height: box.clientHeight, width: box.clientWidth, full: box.scrollHeight })
         }
         update()
@@ -1043,6 +1105,7 @@ export function DataTable<T>({
         observer.observe(box)
         observer.observe(measure)
         observer.observe(measureCard)
+        if (stackProbe.current !== null) observer.observe(stackProbe.current)
         return () => observer.disconnect()
     }, [])
     const [shownView, setShownView] = useHeld(viewValue, defaultView, onViewChange)
@@ -1053,7 +1116,7 @@ export function DataTable<T>({
         !chosenGrid &&
         stackBelow !== false &&
         view.width > 0 &&
-        view.width < (minWidth === 'auto' ? stackBelow : Math.min(stackBelow, columnsWidth))
+        view.width < (minWidth === 'auto' ? stackWidth : Math.min(stackWidth, columnsWidth))
     const gridView = chosenGrid || stacked
     // A stacked card: the leads and the title, then the primary values, the lines, and the secondary facts on one line.
     const compact = stackLayout === 'compact'
@@ -1083,9 +1146,10 @@ export function DataTable<T>({
     // Details are drawn under their rows at their own heights, so a table with them draws every row.
     const detailed = detail !== undefined && !chosenGrid
     const nearEnd = view.top + view.height >= ((auto && !gridView) || detailed ? view.full : lines * lineHeight) - lineHeight * over
+    const moreByButton = loadMore === 'button'
     useEffect(() => {
-        if (hasMore && !loading && nearEnd) onLoadMore?.()
-    }, [hasMore, loading, nearEnd, onLoadMore])
+        if (hasMore && !moreByButton && !loading && nearEnd) onLoadMore?.()
+    }, [hasMore, moreByButton, loading, nearEnd, onLoadMore])
 
     // Rows that grow are all drawn, as their heights are not known before they are.
     // A narrow list is a plain list of rows as tall as their lines.
@@ -1100,6 +1164,24 @@ export function DataTable<T>({
 
     const [active, setActive] = useState<string | undefined>(undefined)
     const anchor = useRef<string | undefined>(undefined)
+
+    // `content` columns not dragged: drawn at `fit-content` while their cells are measured, then at the widest.
+    const contentColumns = gridView ? [] : shown.filter((column) => column.width === 'content' && widths[column.id] === undefined)
+    const contentKey = contentColumns.map((column) => column.id).join(' ')
+    const [contentWidths, setContentWidths] = useState<Readonly<Record<string, number>> | null>(null)
+    useLayoutEffect(() => setContentWidths(null), [rows, contentKey, rowHeight, columnHeads])
+    useLayoutEffect(() => {
+        const box = scroller.current
+        if (contentWidths !== null || contentColumns.length === 0 || box === null) return
+        const next: Record<string, number> = {}
+        for (const column of contentColumns) {
+            let widest = 0
+            for (const cell of box.querySelectorAll(`[data-track="${CSS.escape(column.id)}"]`))
+                widest = Math.max(widest, cell.getBoundingClientRect().width)
+            if (widest > 0) next[column.id] = Math.ceil(Math.max(widest, column.minSize ?? 0))
+        }
+        setContentWidths(next)
+    })
 
     // A row with no actions, or only separators, has no menu at all: no button and no right-click menu.
     const actionsOf = (row: T): DataAction[] | undefined => {
@@ -1117,7 +1199,14 @@ export function DataTable<T>({
             ? undefined
             : (actionButton === 'none' ? 0.5 : 2.5) + inlineSlots * 1.75
     const endWidth = menuWidth === undefined && !chevron ? undefined : `${String((menuWidth ?? 0.5) + (chevron ? 1.5 : 0))}rem`
-    const track = (column: DataColumn<T>) => (widths[column.id] === undefined ? column.width : `${String(widths[column.id])}px`)
+    const track = (column: DataColumn<T>) => {
+        const dragged = widths[column.id]
+        if (dragged !== undefined) return `${String(dragged)}px`
+        if (column.width !== 'content') return column.width
+        const most = column.maxWidth ?? CONTENT_MAX
+        const need = contentWidths?.[column.id]
+        return need === undefined ? `fit-content(${most})` : `min(${String(need)}px, ${most})`
+    }
     const template = [selectable ? CHECK : undefined, ...shown.map(track), endWidth].filter(Boolean).join(' ')
     // The rows are never narrower than their columns' least widths, so a widened column scrolls the table sideways.
     const least = [selectable ? CHECK : undefined, ...shown.map((column) => trackMin(track(column))), endWidth].filter(Boolean)
@@ -1315,6 +1404,9 @@ export function DataTable<T>({
     // A head drawn as a node may take several lines, so the head row grows to fit it.
     const tallHeads = shown.some((column) => column.head !== undefined)
 
+    /** The name of a row's control that opens or closes it, the row's own when the app gives one. */
+    const branchLabel = (entry: FlatRow<T>) => expandLabel?.(entry.row, entry.open) ?? (entry.open ? words.collapse : words.expand)
+
     /** A tree row's indent and its control: open or close, or a spinner while its children load. */
     const treeControl = (entry: FlatRow<T>) => (
         <span className="flex shrink-0 items-center" style={{ paddingLeft: `${String(entry.depth * 1.25)}rem` }}>
@@ -1323,19 +1415,26 @@ export function DataTable<T>({
                     <Spinner className="size-3.5" aria-label={words.loadingChildren} />
                 </span>
             ) : entry.branch ? (
-                <button
-                    type="button"
-                    tabIndex={-1}
-                    aria-label={entry.open ? words.collapse : words.expand}
-                    onClick={(event) => {
-                        event.stopPropagation()
-                        setActive(entry.key)
-                        openBranch(entry.key, !entry.open)
-                    }}
-                    className="mr-1 flex size-5 items-center justify-center rounded-sm text-muted-foreground hover:bg-accent hover:text-foreground"
-                >
-                    <ChevronRightIcon className={cn('size-3.5 transition-transform', entry.open && 'rotate-90')} />
-                </button>
+                <Tooltip>
+                    <TooltipTrigger
+                        render={
+                            <button
+                                type="button"
+                                tabIndex={-1}
+                                aria-label={branchLabel(entry)}
+                                onClick={(event) => {
+                                    event.stopPropagation()
+                                    setActive(entry.key)
+                                    openBranch(entry.key, !entry.open)
+                                }}
+                                className="mr-1 flex size-5 items-center justify-center rounded-sm text-muted-foreground hover:bg-accent hover:text-foreground"
+                            />
+                        }
+                    >
+                        <ChevronRightIcon className={cn('size-3.5 transition-transform', entry.open && 'rotate-90')} />
+                    </TooltipTrigger>
+                    <TooltipContent>{branchLabel(entry)}</TooltipContent>
+                </Tooltip>
             ) : (
                 <span className="mr-1 size-5" />
             )}
@@ -1454,6 +1553,13 @@ export function DataTable<T>({
             </div>
         )
     }
+
+    // An empty table given its own words says them alone, unless the bar's search or tools may have emptied it.
+    const bare = drawn.length === 0 && !loading && empty !== undefined && search === undefined && toolbar === undefined
+    const showHeads = !gridView && columnHeads && !bare
+    // With the Load more button, the button's spinner stands for the rows on their way once some are drawn.
+    const moreButton = moreByButton && hasMore && flat.length > 0
+    const placeholders = loading && !(moreByButton && flat.length > 0)
 
     /** A press on a part of a stacked row that is its own control, kept from opening the row. */
     const keep = (event: MouseEvent) => event.stopPropagation()
@@ -1703,9 +1809,17 @@ export function DataTable<T>({
         const box = boxFor(entry)
         const menu = menuFor(actions, stacked ? 'ghost' : 'secondary')
         const title = stackParts.title
+        const tone = rowTone?.(entry.row)
         // Stacked, the box, the title and the menu share the first line, and every line starts at the box's edge.
         const stackedCard = (
-            <div className="flex h-full flex-col rounded-surface border border-border bg-card px-3 py-2 group-hover/card:bg-hover">
+            <div
+                data-tone={tone}
+                className={cn(
+                    'flex h-full flex-col rounded-surface border border-border px-3 py-2 group-hover/card:bg-hover',
+                    tone !== undefined && tone !== 'muted' ? TONE_GROUND[tone] : 'bg-card',
+                    tone === 'muted' && MUTED_ITEM,
+                )}
+            >
                 {compact ? (
                     compactRow(entry, false, box, menu)
                 ) : (
@@ -1988,8 +2102,14 @@ export function DataTable<T>({
                     <div ref={probe} className="h-(--density-row) w-px" />
                     <div ref={cardProbe} style={{ width: cardWidth, height: cardHeight }} />
                     <div ref={widthProbe} style={{ width: rowMin }} />
+                    <div
+                        ref={stackProbe}
+                        style={{
+                            width: stackBelow === false ? 0 : typeof stackBelow === 'number' ? `${String(stackBelow)}px` : stackBelow,
+                        }}
+                    />
                 </div>
-                {!gridView && columnHeads && banded && (
+                {showHeads && banded && (
                     <div
                         role="row"
                         className={cn(
@@ -2030,7 +2150,7 @@ export function DataTable<T>({
                         {endWidth !== undefined && <span aria-hidden className={cn(pinnedEnd, 'right-0 h-full')} />}
                     </div>
                 )}
-                {!gridView && columnHeads && (
+                {showHeads && (
                     <div
                         role="row"
                         aria-rowindex={1}
@@ -2065,6 +2185,7 @@ export function DataTable<T>({
                                         head.current = element
                                     }}
                                     role="columnheader"
+                                    data-track={column.id}
                                     aria-sort={sorted === 'asc' ? 'ascending' : sorted === 'desc' ? 'descending' : undefined}
                                     className={cn(
                                         'relative flex h-full min-w-0 items-center',
@@ -2169,6 +2290,7 @@ export function DataTable<T>({
                             const actions = actionsOf(entry.row)
                             const box = boxFor(entry)
                             const menu = menuFor(actions, 'ghost')
+                            const tone = rowTone?.(entry.row)
                             return withDetail(
                                 entry,
                                 withMenu(
@@ -2177,6 +2299,7 @@ export function DataTable<T>({
                                     <li
                                         key={entry.key}
                                         role="row"
+                                        data-tone={tone}
                                         aria-selected={selectable ? chosen : opened === undefined ? undefined : isOpened}
                                         aria-expanded={entry.branch ? entry.open : undefined}
                                         aria-level={tree ? entry.depth + 1 : undefined}
@@ -2188,6 +2311,8 @@ export function DataTable<T>({
                                             // A row and its open detail read as one item, with no line between them.
                                             '[&:has(+[data-detail])]:border-b-0',
                                             compact ? 'py-2' : 'py-2.5',
+                                            tone !== undefined && tone !== 'muted' && TONE_GROUND[tone],
+                                            tone === 'muted' && MUTED_ITEM,
                                             hover && 'hover:bg-hover',
                                             pressable && 'cursor-pointer',
                                             (chosen || isOpened) && 'bg-secondary hover:bg-secondary',
@@ -2246,7 +2371,7 @@ export function DataTable<T>({
                         <div style={{ height: firstLine * lineHeight }} />
                         <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${String(perLine)}, minmax(0, 1fr))` }}>
                             {flat.slice(first, last).map((entry) => cardFor(entry))}
-                            {loading &&
+                            {placeholders &&
                                 Array.from(
                                     { length: flat.length === 0 ? perLine * Math.max(1, Math.ceil(view.height / lineHeight)) : perLine },
                                     (_, index) => (
@@ -2270,11 +2395,18 @@ export function DataTable<T>({
                             const actions = actionsOf(entry.row)
                             // Every other line on the zebra's ground, counted from the table's first line so a
                             // line keeps its stripe as the table scrolls; a row's detail shares its ground.
-                            const ground = (first + offset) % 2 === 1 ? 'bg-table-zebra' : 'bg-card'
+                            const tone = rowTone?.(entry.row)
+                            const ground =
+                                tone !== undefined && tone !== 'muted'
+                                    ? TONE_GROUND[tone]
+                                    : (first + offset) % 2 === 1
+                                      ? 'bg-table-zebra'
+                                      : 'bg-card'
                             const row = (
                                 <div
                                     key={entry.key}
                                     role="row"
+                                    data-tone={tone}
                                     aria-rowindex={first + offset + 2}
                                     aria-selected={selectable ? chosen : opened === undefined ? undefined : isOpened}
                                     aria-expanded={entry.branch ? entry.open : undefined}
@@ -2286,6 +2418,7 @@ export function DataTable<T>({
                                     className={cn(
                                         'group/row grid cursor-default items-center border-b border-border text-sm',
                                         ground,
+                                        tone === 'muted' && MUTED_CELLS,
                                         spaced,
                                         list && first + offset === drawn.length - 1 && 'border-b-0',
                                         every ? 'min-h-(--density-row) scroll-mt-(--density-row)' : 'h-(--density-row)',
@@ -2321,6 +2454,7 @@ export function DataTable<T>({
                                             <span
                                                 key={column.id}
                                                 role="gridcell"
+                                                data-track={column.id}
                                                 data-pinned={pinnedHere || undefined}
                                                 data-filled={filled === undefined ? undefined : filled.solid === true ? 'solid' : 'tint'}
                                                 {...cellProps}
@@ -2424,7 +2558,7 @@ export function DataTable<T>({
                         })}
                     </div>
                 )}
-                {loading &&
+                {placeholders &&
                     !gridView &&
                     Array.from({ length: flat.length === 0 ? Math.max(3, Math.ceil(view.height / rowHeight)) : 3 }, (_, index) => (
                         <div
@@ -2442,6 +2576,15 @@ export function DataTable<T>({
                             {endWidth !== undefined && <span />}
                         </div>
                     ))}
+                {moreButton && (
+                    // Kept in view as the table scrolls sideways.
+                    <div className="sticky left-0 flex justify-center px-(--density-panel-pad) py-3">
+                        <Button variant="outline" size="sm" disabled={loading} onClick={() => onLoadMore?.()}>
+                            {loading && <Spinner />}
+                            {words.loadMore(loadMoreCount)}
+                        </Button>
+                    </div>
+                )}
             </div>
             {foot !== undefined && (
                 <div className="shrink-0 border-t border-border-strong px-(--density-panel-pad) py-1.5 font-mono text-xs text-muted-foreground">

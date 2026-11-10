@@ -494,8 +494,20 @@ head and may carry a foot line. Rows gather under group heads by a field or a ke
 group, rows sort within their group, and a head's box selects the group, in the table, the list and
 the grid alike. Below its stack width a row becomes a card of labeled lines, or with `stackLayout="compact"` a
 row of its leads (a done box) and its title over one quiet line of the other columns, its values
-edited on a press rather than drawn as fields; a stacked list keeps each row's box and menu. With no
-rows it says `empty`, a sentence or a node such as an `Empty` with an action. `QuickAdd` is the
+edited on a press rather than drawn as fields; a stacked list keeps each row's box and menu. The
+stack width is the table's own box's, never the window's, in pixels or a CSS length (`stackBelow="64rem"`
+for an app whose listings go to cards under its own width). With no
+rows it says `empty`, a sentence or a node such as an `Empty` with an action, alone without the column
+heads unless a search or tools in the bar may have emptied it. A row opens into a `detail` of its own,
+such as its own nested `DataTable`; `hasDetail` says which rows have one, so `detail` is built only for
+the rows opened, and `expandLabel` names a row's disclosure, in its tooltip too ("Show the tokens of
+ada"). `rowTone` dims a row (`muted`, an account switched off, a token revoked) or tints it in a
+status's tone (`critical`, `warning`), from tokens, so an app sets no color of its own. A column of
+`width: 'content'` is as wide as its widest cell, up to its `maxWidth`, the other columns sharing what
+is left, and a dragged width wins. More rows load as the end comes near, or with `loadMore="button"`
+from a Load more button that says how many come next, for a list whose reader decides. A titled
+listing with a count is a boxed `Section` with the count in its head around a `DataTable` with
+`framed={false}`, the section's head as tall as the list's head row. `QuickAdd` is the
 field at a list's top that adds a row on Enter, holding the text with a spinner while the app's
 promise runs and with the reason in its issue mark when it is refused. Its column menu hides columns and moves them a place earlier or later, the first
 column staying first as each row's title, and the order is held like the widths (`columnOrder`).
