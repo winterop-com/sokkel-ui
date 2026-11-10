@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { chartLegend } from '../chart-legend'
 import type { ChartLook } from '../look'
+import { bandLabel, fanShape } from './fan'
 import { dialSplits } from './gauge'
 import { linkedLayout, SHARED_SCALE } from './linked'
 import { ringFigures } from './rings'
@@ -250,6 +251,102 @@ describe('the chart kinds', () => {
         ])
         const steps = KINDS.step.build({ ...spec, fill: 'none' }, LOOK) as unknown as Lines
         expect(steps.series.every((entry) => entry.areaStyle === undefined)).toBe(true)
+    })
+
+    const WEEKS = [
+        { week: 'w1', observed: 10, median: null, q10: null, q25: null, q75: null, q90: null },
+        { week: 'w2', observed: 12, median: null, q10: null, q25: null, q75: null, q90: null },
+        { week: 'w3', observed: 13, median: 14, q10: 8, q25: 11, q75: 17, q90: 20 },
+        { week: 'w4', observed: null, median: 15, q10: 7, q25: 11, q75: 19, q90: 23 },
+        { week: 'w5', median: 16, q10: 6, q25: 12, q75: 20 },
+    ]
+    const FAN: ChartSpec = {
+        rows: WEEKS,
+        x: 'week',
+        y: 'median',
+        bands: [
+            { low: 'q10', high: 'q90' },
+            { low: 'q25', high: 'q75' },
+        ],
+        points: 'observed',
+        history: 'observed',
+        marks: [{ x: 'w3', label: 'Forecast' }],
+    }
+
+    it('draws a fan: bands outer to inner, the median, the history line, the dots and the mark', () => {
+        type Fan = {
+            grid: { top: number }
+            series: {
+                type: string
+                name: string
+                data: (number | null)[]
+                stack?: string
+                areaStyle?: { opacity: number }
+                markLine?: { data: { xAxis?: string; label: { show: boolean } }[] }
+            }[]
+        }
+        const option = KINDS.fan.build(FAN, LOOK) as unknown as Fan
+        expect(option.series.map((entry) => [entry.type, entry.name])).toEqual([
+            ['line', '10-90'],
+            ['line', '10-90'],
+            ['line', '25-75'],
+            ['line', '25-75'],
+            ['line', 'Median'],
+            ['line', 'Observed'],
+            ['scatter', 'Observed'],
+            ['line', ''],
+        ])
+        const [outerLow, outerGap, innerLow, innerGap, median, history, dots, marks] = option.series
+        expect(outerLow.data).toEqual([null, null, 8, 7, 6])
+        // w5 has no q90, so the outer band leaves it out rather than closing at zero.
+        expect(outerGap.data).toEqual([null, null, 12, 16, null])
+        expect(innerLow.data).toEqual([null, null, 11, 11, 12])
+        expect(innerGap.data).toEqual([null, null, 6, 8, 8])
+        expect((innerGap.areaStyle?.opacity ?? 0) > (outerGap.areaStyle?.opacity ?? 0)).toBe(true)
+        expect(outerLow.stack).not.toBe(innerLow.stack)
+        expect(median.data).toEqual([null, null, 14, 15, 16])
+        expect(history.data).toEqual([10, 12, null, null, null])
+        expect(dots.data).toEqual([null, null, 13, null, null])
+        expect(marks.data).toEqual([])
+        expect(marks.markLine?.data.map((line) => [line.xAxis, line.label.show])).toEqual([['w3', true]])
+        expect(option.grid.top).toBeGreaterThan(10)
+        expect(chartLegend('fan', FAN).map((item) => [item.key, item.color])).toEqual([
+            ['Median', 'var(--chart-2)'],
+            ['10-90', 'color-mix(in oklab, var(--chart-2) 24%, var(--card))'],
+            ['25-75', 'color-mix(in oklab, var(--chart-2) 48%, var(--card))'],
+            ['Observed', 'var(--foreground)'],
+        ])
+    })
+
+    it('draws dots on every observed row of a fan with no history, and a fan per series', () => {
+        const bare = fanShape({ ...FAN, history: undefined })
+        expect(bare.fans[0].points).toEqual([10, 12, 13, null, null])
+        expect(bare.fans[0].start).toBe(2)
+        const rows = [...WEEKS.map((row) => ({ ...row, project: 'harbor' })), { week: 'w4', project: 'juniper', median: 5, q10: 1, q90: 9 }]
+        const spec: ChartSpec = { ...FAN, rows, series: 'project' }
+        const shaped = fanShape(spec)
+        expect(shaped.fans.map((entry) => [entry.name, entry.start])).toEqual([
+            ['harbor', 2],
+            ['juniper', 3],
+        ])
+        expect(shaped.fans[1].history).toEqual([null, null, null, null, null])
+        const option = KINDS.fan.build(spec, LOOK, new Set(['harbor'])) as unknown as Option
+        expect(new Set(option.series.map((entry) => entry.name))).toEqual(new Set(['harbor', 'juniper', 'Observed', '']))
+        expect(chartLegend('fan', spec).map((item) => item.key)).toEqual(['harbor', 'juniper', 'Observed'])
+    })
+
+    it('names a band by its fields, or by its own label', () => {
+        expect(bandLabel({ low: 'q10', high: 'q90' })).toBe('10-90')
+        expect(bandLabel({ low: 'p2.5', high: 'p97.5' })).toBe('2.5-97.5')
+        expect(bandLabel({ low: 'lower', high: 'upper' })).toBe('lower-upper')
+        expect(bandLabel({ low: 'q10', high: 'q90', label: '80%' })).toBe('80%')
+    })
+
+    it('draws a mark down a line chart at its category', () => {
+        type Lines = { series: { markLine?: { data: { xAxis?: string; yAxis?: number }[] } }[] }
+        const option = KINDS.line.build({ ...BY_STATE, marks: [{ x: 'sync-inventory' }] }, LOOK) as unknown as Lines
+        expect(option.series[0].markLine?.data).toHaveLength(1)
+        expect(option.series[0].markLine?.data[0].xAxis).toBe('sync-inventory')
     })
 
     it('draws a dual chart of series by their layers, on the axes they name', () => {
