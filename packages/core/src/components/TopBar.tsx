@@ -36,6 +36,11 @@ export interface TopBarProps {
      */
     onSearch?: () => void
     /**
+     * Whether the palette's button is drawn (the default). `false` leaves it out even in a `Shell`
+     * with a `palette`, as for a top bar drawn as a specimen inside a page that has its own.
+     */
+    palette?: boolean
+    /**
      * A search field drawn at the bar's start, before the trail, such as `SearchField` or `Search`
      * with its results under it, which `/` focuses. The palette's button stays at the bar's end;
      * on a phone, where that button is an icon, the field gives way to it.
@@ -66,7 +71,7 @@ const WORDS: TopBarWords = { search: 'Search', palette: 'Open the command palett
  * What the shell's top bar holds: a search field and the trail to the current screen at the left,
  * the button that opens the command palette and the screen's actions at the right. The field
  * stands first, so it stays in one place from screen to screen. On a phone the trail keeps only
- * its last step and the palette's button becomes an icon. With `trailEnds="ancestor"` the trail
+ * its last step and the palette's button becomes an icon, a finger's size. With `trailEnds="ancestor"` the trail
  * holds only the screens above the current one, every crumb a link, and on a phone its last crumb
  * is the way back. `mark` puts the app's mark before the
  * rest where no rail shows it; `AppBar` is the bar itself for a screen drawn without `Shell`.
@@ -76,6 +81,7 @@ export function TopBar({
     trailEnds = 'current',
     mark,
     onSearch,
+    palette = true,
     search: field,
     shortcut: shortcutGiven,
     actions,
@@ -83,7 +89,7 @@ export function TopBar({
 }: TopBarProps) {
     const words = { ...WORDS, ...given }
     const shellPalette = useContext(ShellPalette)
-    const search = onSearch ?? shellPalette
+    const search = palette ? (onSearch ?? shellPalette) : undefined
     const shortcut = shortcutGiven ?? (shellPalette === undefined ? undefined : shortcutLabel('k'))
     return (
         <div className="flex h-full min-w-0 flex-1 items-center gap-3">
@@ -140,7 +146,7 @@ export function TopBar({
                     aria-label={field === undefined ? words.search : words.palette}
                     title={field === undefined ? undefined : words.palette}
                     className={cn(
-                        'flex h-8 shrink-0 items-center gap-2 rounded-control border border-border bg-field px-2.5 text-sm text-muted-foreground outline-none hover:border-border-strong hover:text-foreground focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring max-md:size-8 max-md:justify-center max-md:border-transparent max-md:bg-transparent max-md:px-0',
+                        'flex h-8 shrink-0 items-center gap-2 rounded-control border border-border bg-field px-2.5 text-sm text-muted-foreground outline-none hover:border-border-strong hover:text-foreground focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring max-md:size-finger max-md:justify-center max-md:border-transparent max-md:bg-transparent max-md:px-0',
                         field === undefined ? 'md:w-56' : 'md:px-2',
                     )}
                 >

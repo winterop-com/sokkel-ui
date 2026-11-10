@@ -24,7 +24,9 @@ export interface AccountMenuProps {
     image?: string
     /**
      * A short word about the account in the muted face beside the name, such as its role ("admin"),
-     * in the expanded face and the menu's head; a collapsed face, the avatar alone, leaves it out.
+     * in the expanded face and the menu's head. The name keeps its room: the face gives the word up
+     * first, and leaves it to the menu's head where the row is narrower than 13rem, as in a narrow
+     * rail; a collapsed face, the avatar alone, leaves it out.
      */
     detail?: string
     /** Where they are signed in: a host, an instance, a version, in the code face. */
@@ -139,14 +141,16 @@ export function AccountMenu({
         >
             <Menu.Trigger
                 aria-label={words.account}
-                className="mx-1.5 my-1 flex h-[calc(100%-0.5rem)] w-[calc(100%-0.75rem)] items-center gap-2.5 rounded-md pr-1.5 pl-2.5 text-sm outline-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring/50 data-popup-open:bg-hover"
+                className="@container mx-1.5 my-1 flex h-[calc(100%-0.5rem)] w-[calc(100%-0.75rem)] items-center gap-2.5 rounded-md pr-1.5 pl-2.5 text-sm outline-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring/50 data-popup-open:bg-hover"
             >
                 {avatar('size-6')}
                 {!collapsed && (
                     <>
                         <span className="flex min-w-0 flex-1 items-baseline gap-1.5 text-left">
-                            <span className="min-w-0 truncate font-medium">{name}</span>
-                            {detail !== undefined && <span className="min-w-0 truncate text-xs text-muted-foreground">{detail}</span>}
+                            <span className="max-w-full shrink-0 truncate font-medium">{name}</span>
+                            {detail !== undefined && (
+                                <span className="min-w-0 truncate text-xs text-muted-foreground @max-[13rem]:hidden">{detail}</span>
+                            )}
                         </span>
                         <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" aria-hidden />
                     </>

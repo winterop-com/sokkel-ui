@@ -61,4 +61,11 @@ describe('ServerMenu', () => {
         expect(pressed).toContain('data-slot="tooltip-trigger"')
         expect(pressed).not.toContain('aria-haspopup')
     })
+
+    it('draws a tooltip for when the server was last asked, even without checks', () => {
+        const plain = drawn(<ServerMenu name="Tidevann" state="up" />)
+        expect(plain).not.toContain('data-slot="tooltip-trigger"')
+        const asked = drawn(<ServerMenu name="Tidevann" state="up" checkedAt={new Date('2026-11-10T09:58:00Z')} />)
+        expect(asked).toContain('data-slot="tooltip-trigger"')
+    })
 })

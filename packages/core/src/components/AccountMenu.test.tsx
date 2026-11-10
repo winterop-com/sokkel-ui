@@ -19,4 +19,11 @@ describe('AccountMenu', () => {
         expect(html).not.toContain('admin')
         expect(html).not.toContain('>grace<')
     })
+
+    it('keeps the name its room and drops the detail from a narrow face', () => {
+        const html = renderToStaticMarkup(<AccountMenu name="grace" detail="admin" />)
+        expect(html).toMatch(/<button[^>]*class="@container /)
+        expect(html).toMatch(/<span class="max-w-full shrink-0 truncate font-medium">grace<\/span>/)
+        expect(html).toMatch(/<span class="[^"]*@max-\[13rem\]:hidden[^"]*">admin<\/span>/)
+    })
 })

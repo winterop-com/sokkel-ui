@@ -159,10 +159,14 @@ let go at) or with Enter, Space or the right arrow. `TopBar` holds a search fiel
 button at its end with the keys that open it; on a phone the field gives way to that button. Its
 trail ends at the current screen, or with `trailEnds="ancestor"` at the screen above, every crumb a
 link and the last one the way back on a phone, for an app whose page heading names the screen.
-`ServerMenu` in the bar's actions takes the app's own states (`states`, such as degraded), a
-`quiet` face that is a silent dot until something is wrong, the `checks` behind the state in a
-tooltip, and `onPress` to open the app's own pane in place of its menu. The account menu takes a
-`detail`, such as a role, muted beside the name. The
+On a phone the palette's button is a finger square; `palette={false}` leaves it out, as for a bar
+drawn as a specimen on a page of a shell that has its own. `ServerMenu` in the bar's actions takes
+the app's own states (`states`, such as degraded), a `quiet` face that is a silent dot until
+something is wrong, the `checks` behind the state in a tooltip headed by the name, `environment` and
+version and, with `checkedAt`, when it was last asked (`recheck` asks again as the tooltip opens),
+and `onPress` to open the app's own pane in place of its menu. The account menu takes a `detail`,
+such as a role, muted beside the name; the name keeps its room, and a row narrower than 13rem
+leaves the detail to the menu's head. The
 account menu offers Light, Dark and System in itself (`scheme`, `onSchemeChange`), staying open as
 one is chosen; an app's own rows (`extra`) carry their icons, and where no one is signed in
 `onSignIn` stands in Sign out's place with an icon of its own. On a phone its rows are a finger's
