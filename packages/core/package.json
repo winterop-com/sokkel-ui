@@ -798,6 +798,10 @@
             "types": "./dist/components/media/visualizer-mark.d.ts",
             "import": "./dist/components/media/visualizer-mark.js"
         },
+        "./schema/formats": {
+            "types": "./dist/components/schema/formats.d.ts",
+            "import": "./dist/components/schema/formats.js"
+        },
         "./schema/IOCard": {
             "types": "./dist/components/schema/IOCard.d.ts",
             "import": "./dist/components/schema/IOCard.js"

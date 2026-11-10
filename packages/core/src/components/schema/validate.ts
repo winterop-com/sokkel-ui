@@ -1,6 +1,7 @@
 import Ajv2020, { type ErrorObject, type ValidateFunction } from 'ajv/dist/2020'
 import addFormats from 'ajv-formats'
 
+import { schemaFormats, type SchemaFormats } from './formats'
 import { fieldSchema, given, pointer, valueAt, type Path, type SchemaIssue, type SchemaIssueKind } from './issues'
 import type { JsonSchema } from './read'
 
@@ -26,9 +27,39 @@ function repair(value: string, pattern: string): string | undefined {
     return candidates.find((candidate) => candidate !== '' && candidate !== value && test.test(candidate))
 }
 
-const ajv = new Ajv2020({ allErrors: true, strict: false, validateFormats: true })
-addFormats(ajv)
-const compiled = new WeakMap<JsonSchema, ValidateFunction | Error>()
+/** Ajv with the standard formats and the app's; it logs errors only, so a format no one registered is passed over in silence. */
+function checker(formats: SchemaFormats): Ajv2020 {
+    const made = new Ajv2020({
+        allErrors: true,
+        strict: false,
+        validateFormats: true,
+        logger: { log: () => {}, warn: () => {}, error: (...args: unknown[]) => console.error(...args) },
+    })
+    addFormats(made)
+    for (const [name, format] of Object.entries(formats)) made.addFormat(name, format)
+    return made
+}
+
+/** A compiled schema: the check, the schema it was compiled from, and the key ajv holds it under, for checking one branch of it. */
+interface Compiled {
+    check: ValidateFunction
+    body: JsonSchema
+    key: string
+}
+
+let ajv = checker({})
+let formatsVersion = 0
+let compiled = new WeakMap<JsonSchema, Compiled | Error>()
+let keys = 0
+
+/** Starts a fresh ajv when the registered formats have changed, so every schema compiles again with them. */
+function current(): void {
+    const { formats, version } = schemaFormats()
+    if (version === formatsVersion) return
+    formatsVersion = version
+    ajv = checker(formats)
+    compiled = new WeakMap()
+}
 
 declare const process: { env: { NODE_ENV?: string } }
 
@@ -53,20 +84,27 @@ function warnOfGeneratedCode(): void {
 }
 
 /** The schema compiled to a check, or why it could not be: a broken schema, or a page whose policy forbids generated code. */
-function compile(schema: JsonSchema): ValidateFunction | Error {
+function compile(schema: JsonSchema): Compiled | Error {
+    current()
     const known = compiled.get(schema)
     if (known !== undefined) return known
     const { $schema: _dialect, $id: id, ...body } = schema
     // A schema that is only the address of a dialect ajv carries, such as JSON Schema 2020-12, is that dialect's meta-schema.
     const carried = typeof id === 'string' && Object.keys(body).length === 0 ? ajv.getSchema(id) : undefined
     if (carried !== undefined) {
-        compiled.set(schema, carried)
-        return carried
+        const known: Compiled = { check: carried, body: carried.schema as JsonSchema, key: id as string }
+        compiled.set(schema, known)
+        return known
     }
-    let check: ValidateFunction | Error
+    let check: Compiled | Error
     try {
         warnOfGeneratedCode()
-        check = ajv.compile(body)
+        keys += 1
+        const key = `urn:sokkel-ui:schema:${keys}`
+        ajv.addSchema(body, key)
+        const made = ajv.getSchema(key)
+        if (made === undefined) throw new Error('The schema could not be compiled.')
+        check = { check: made, body, key }
     } catch (error) {
         check = error instanceof Error ? error : new Error(String(error))
         console.error('The schema could not be compiled, so no value passes it:', check)
@@ -173,19 +211,165 @@ function deprecated(schema: JsonSchema, value: unknown, root: JsonSchema, path: 
     return out
 }
 
+/** Whether an instance path is the given one or under it. */
+function within(at: string, base: string): boolean {
+    return at === base || at.startsWith(`${base}/`)
+}
+
+/** The part of a schema a schema path points at, following local references, or undefined when it cannot be found. */
+function schemaAt(root: JsonSchema, at: string): unknown {
+    if (!at.startsWith('#')) return undefined
+    let node: unknown = root
+    try {
+        for (const part of at.slice(1).split('/').slice(1)) {
+            const key = decodeURIComponent(part).replaceAll('~1', '/').replaceAll('~0', '~')
+            if (node === null || typeof node !== 'object') return undefined
+            node = (node as Record<string, unknown>)[key]
+        }
+    } catch {
+        return undefined
+    }
+    return node
+}
+
+/** A subschema with its local `$ref` followed, a few steps deep. */
+function followed(root: JsonSchema, node: unknown): JsonSchema | undefined {
+    let at = node
+    for (let step = 0; step < 8; step += 1) {
+        if (at === null || typeof at !== 'object') return undefined
+        const ref = (at as JsonSchema).$ref
+        if (typeof ref !== 'string' || !ref.startsWith('#')) return at as JsonSchema
+        at = schemaAt(root, ref)
+    }
+    return undefined
+}
+
+/** The properties a branch fixes to one value, by `const` or a one-value `enum`, in it or its `allOf`. */
+function discriminators(root: JsonSchema, branch: unknown): Map<string, unknown> {
+    const out = new Map<string, unknown>()
+    const visit = (node: unknown, depth: number) => {
+        const schema = followed(root, node)
+        if (schema === undefined || depth > 4) return
+        for (const [key, property] of Object.entries(schema.properties ?? {})) {
+            const fixed = followed(root, property)
+            if (fixed === undefined) continue
+            if ('const' in fixed) out.set(key, fixed.const)
+            else if (Array.isArray(fixed.enum) && fixed.enum.length === 1) out.set(key, fixed.enum[0])
+        }
+        for (const part of schema.allOf ?? []) visit(part, depth + 1)
+    }
+    visit(branch, 0)
+    return out
+}
+
+const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
+
+/**
+ * The errors of one failed `anyOf` or `oneOf` (at `at` in the list) narrowed to the branch that fits the
+ * value: the one whose fixed properties match it, else the one with the fewest errors, preferring a
+ * branch of the value's type. Ajv lists each branch's errors in order just before the combinator's
+ * own, so each branch is checked alone to learn how many are its. Undefined when they cannot be told apart.
+ */
+function narrowed(
+    errors: ErrorObject[],
+    at: number,
+    made: Compiled,
+    document: unknown,
+): { start: number; kept: ErrorObject[] } | undefined {
+    const error = errors[at]
+    const base = error.instancePath
+    const value = valueAt(document, parse(base))
+    const branches = schemaAt(made.body, error.schemaPath)
+    if (!Array.isArray(branches)) return undefined
+    const counts: number[] = []
+    for (let index = 0; index < branches.length; index += 1) {
+        let check: ValidateFunction | undefined
+        try {
+            check = ajv.getSchema(`${made.key}${error.schemaPath}/${index}`)
+        } catch {
+            return undefined
+        }
+        if (check === undefined) return undefined
+        counts.push(check(value) ? 0 : (check.errors?.length ?? 0))
+    }
+    const start = at - counts.reduce((sum, count) => sum + count, 0)
+    if (start < 0 || errors.slice(start, at).some((other) => !within(other.instancePath, base))) return undefined
+    const chunks = counts.map((count, index) => {
+        const from = start + counts.slice(0, index).reduce((sum, each) => sum + each, 0)
+        return errors.slice(from, from + count)
+    })
+    // More than one branch passed a oneOf: that is the whole complaint.
+    if (counts.some((count) => count === 0)) return { start, kept: [error] }
+    const fixed = branches.map((branch) => discriminators(made.body, branch))
+    const record = value !== null && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : undefined
+    const fits = fixed
+        .map((properties, index) => ({ properties, index }))
+        .filter(
+            ({ properties }) =>
+                record !== undefined && properties.size > 0 && [...properties].every(([key, want]) => same(record[key], want)),
+        )
+        .map(({ index }) => index)
+    if (fits.length === 0 && record !== undefined) {
+        // A fixed property every branch has, set to a value none takes: say which values it takes.
+        const shared = [...fixed[0].keys()].find((key) => fixed.every((properties) => properties.has(key)) && record[key] !== undefined)
+        if (shared !== undefined) {
+            const allowed = fixed
+                .map((properties) => properties.get(shared))
+                .filter((want, index, all) => all.findIndex((other) => same(other, want)) === index)
+            const path = `${base}/${shared.replaceAll('~', '~0').replaceAll('/', '~1')}`
+            return { start, kept: [{ ...error, keyword: 'enum', instancePath: path, params: { allowedValues: allowed } }] }
+        }
+    }
+    const candidates = fits.length > 0 ? fits : branches.map((_, index) => index)
+    const rank = (index: number) => {
+        const chunk = chunks[index]
+        const wrongType = chunk.some((other) => other.keyword === 'type' && other.instancePath === base)
+        return (wrongType ? 1_000_000 : 0) + chunk.length
+    }
+    const best = candidates.reduce((pick, index) => (rank(index) < rank(pick) ? index : pick))
+    const kept = fitting(chunks[best], made, document)
+    return { start, kept: kept.length > 0 ? kept : [error] }
+}
+
+/** The errors with every failed `anyOf` and `oneOf`, at any depth, narrowed to the branch that fits the value. */
+function fitting(errors: ErrorObject[], made: Compiled, document: unknown): ErrorObject[] {
+    const out = [...errors]
+    for (let at = out.length - 1; at >= 0; at -= 1) {
+        if (out[at].keyword !== 'anyOf' && out[at].keyword !== 'oneOf') continue
+        const found = narrowed(out, at, made, document)
+        if (found === undefined) continue
+        out.splice(found.start, at - found.start + 1, ...found.kept)
+        at = found.start
+    }
+    return out
+}
+
+/** The errors without an `if`'s "must match then" when its `then` or `else` said what is wrong, at or under the same place. */
+function withoutSettledIfs(errors: ErrorObject[]): ErrorObject[] {
+    return errors.filter(
+        (error) =>
+            error.keyword !== 'if' ||
+            !errors.some((other) => other !== error && other.keyword !== 'if' && within(other.instancePath, error.instancePath)),
+    )
+}
+
 /**
  * Everything a schema says is wrong with a value, each at its path, checked by ajv against
  * JSON Schema 2020-12 with the standard formats; and, as warnings, the deprecated fields it sets.
  * Empty strings are read as absent, the way a form leaves a cleared field. A schema that cannot be
  * compiled, because it is broken or because the page's Content Security Policy forbids the code ajv
- * generates, gives one `unchecked` issue at the root, so a form fails closed rather than open. A nullable `anyOf`
- * reports what is wrong with the real branch, not that the value is not null.
+ * generates, gives one `unchecked` issue at the root, so a form fails closed rather than open. A failed `anyOf` or
+ * `oneOf`, at any depth, reports only the branch that fits the value: the one whose `const` (or
+ * one-value `enum`) properties match it, else the one with the fewest errors; so a nullable field
+ * reports what is wrong with the real branch, not that the value is not null. An `if` whose
+ * `then` or `else` said what is wrong adds nothing of its own. Formats an app registers with
+ * `registerSchemaFormats` are checked; any other unknown format is passed over.
  */
 export function validate(schema: JsonSchema, value: unknown): SchemaIssue[] {
     const document = prune(value)
-    const check = compile(schema)
-    if (check instanceof Error) return [{ kind: 'unchecked', reason: check.message, path: [], tone: 'critical' }]
-    const errors = check(document) ? [] : (check.errors ?? [])
+    const made = compile(schema)
+    if (made instanceof Error) return [{ kind: 'unchecked', reason: made.message, path: [], tone: 'critical' }]
+    const errors = withoutSettledIfs(fitting(made.check(document) ? [] : [...(made.check.errors ?? [])], made, document))
     const issues = errors
         .filter((error) => !(error.keyword === 'type' && error.params.type === 'null'))
         .filter(
