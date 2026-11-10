@@ -34,6 +34,8 @@ export interface ShortcutsDialogProps {
  * Every keyboard shortcut, grouped, each with its keys drawn as keys: the keys bound with
  * `useShortcuts` (in the nearest `Shell`, or the page's) that have a label, written as this device
  * writes them, then the `groups` given for keys the app answers itself. Groups of one title are one.
+ * A shortcut is known by its id and keys together: one of the app's on the same id as a bound one
+ * but other keys is listed beside it, and one on the same id and keys is listed once, in the app's words.
  * `Shell` holds one, opened on `?` and from the account menu, when given `shortcuts`.
  */
 export function ShortcutsDialog({ open, onOpenChange, groups = NONE, words: given }: ShortcutsDialogProps) {
@@ -52,7 +54,10 @@ export function ShortcutsDialog({ open, onOpenChange, groups = NONE, words: give
                             <h3 className="text-xs font-medium text-muted-foreground">{group.title}</h3>
                             <dl className="flex flex-col gap-1.5">
                                 {group.shortcuts.map((shortcut) => (
-                                    <div key={shortcut.id} className="flex items-center justify-between gap-4">
+                                    <div
+                                        key={`${shortcut.id} ${shortcut.keys.join(' ')}`}
+                                        className="flex items-center justify-between gap-4"
+                                    >
                                         <dt className="text-sm">{shortcut.action}</dt>
                                         <dd>
                                             <KbdGroup>

@@ -70,6 +70,21 @@ describe('matchesChord', () => {
         expect(matchesChord(chord, press('k'), false)).toBe(false)
     })
 
+    it('takes Ctrl as well as ⌘ on a Mac for a chord that asks, never both, and Ctrl alone elsewhere', () => {
+        const chord = { key: 'k', mod: true, alsoCtrl: true }
+        expect(matchesChord(chord, press('k', { metaKey: true }), true)).toBe(true)
+        expect(matchesChord(chord, press('k', { ctrlKey: true }), true)).toBe(true)
+        expect(matchesChord(chord, press('k', { ctrlKey: true, metaKey: true }), true)).toBe(false)
+        expect(matchesChord(chord, press('k'), true)).toBe(false)
+        expect(matchesChord(chord, press('k', { ctrlKey: true }), false)).toBe(true)
+        expect(matchesChord(chord, press('k', { metaKey: true }), false)).toBe(false)
+    })
+
+    it("leaves Ctrl on a Mac to the field's own editing for a chord that does not ask", () => {
+        expect(matchesChord({ key: 'a', mod: true }, press('a', { ctrlKey: true }), true)).toBe(false)
+        expect(matchesChord({ key: 'k', alsoCtrl: true }, press('k', { ctrlKey: true }), true)).toBe(false)
+    })
+
     it('refuses a bare key pressed with a modifier', () => {
         expect(matchesChord({ key: 'k' }, press('k', { ctrlKey: true }), false)).toBe(false)
         expect(matchesChord({ key: 'k' }, press('k', { metaKey: true }), true)).toBe(false)
@@ -315,10 +330,7 @@ describe('shortcutGroups', () => {
                 bind({ id: 'hidden', key: 'x' }),
                 bind({ id: 'rerun', key: 'r', label: 'Run again', group: 'This run' }),
             ],
-            [
-                { title: 'General', shortcuts: [{ id: 'close', action: 'Close a dialog', keys: ['Esc'] }] },
-                { title: 'Editor', shortcuts: [{ id: 'palette', action: 'Twice', keys: ['⌘', 'K'] }] },
-            ],
+            [{ title: 'General', shortcuts: [{ id: 'close', action: 'Close a dialog', keys: ['Esc'] }] }],
             'General',
             true,
         )
@@ -332,5 +344,44 @@ describe('shortcutGroups', () => {
                 ],
             },
         ])
+    })
+
+    it("keeps an app's shortcut on the id of a bound one but other keys, both listed", () => {
+        const groups = shortcutGroups(
+            [bind({ id: 'search', key: '/', label: 'Search' })],
+            [{ title: 'Runs', shortcuts: [{ id: 'search', action: "Search this screen's listing", keys: ['S'] }] }],
+            'General',
+            true,
+        )
+        expect(groups).toEqual([
+            { title: 'General', shortcuts: [{ id: 'search', action: 'Search', keys: ['/'] }] },
+            { title: 'Runs', shortcuts: [{ id: 'search', action: "Search this screen's listing", keys: ['S'] }] },
+        ])
+    })
+
+    it("lists a bound shortcut the app names on the same id and keys once, in the app's words and group", () => {
+        const groups = shortcutGroups(
+            [
+                bind({ id: 'palette', key: 'k', mod: true, label: 'Open the command palette' }),
+                bind({ id: 'search', key: '/', label: 'Search' }),
+            ],
+            [{ title: 'Runs', shortcuts: [{ id: 'search', action: "Search this screen's listing", keys: ['/'] }] }],
+            'General',
+            true,
+        )
+        expect(groups).toEqual([
+            { title: 'General', shortcuts: [{ id: 'palette', action: 'Open the command palette', keys: ['⌘', 'K'] }] },
+            { title: 'Runs', shortcuts: [{ id: 'search', action: "Search this screen's listing", keys: ['/'] }] },
+        ])
+    })
+
+    it('lists two bindings of one id and keys once, as two search fields bind the same /', () => {
+        const groups = shortcutGroups(
+            [bind({ id: 'search', key: '/', label: 'Search' }), bind({ id: 'search', key: '/', label: 'Search' })],
+            [],
+            'General',
+            true,
+        )
+        expect(groups).toEqual([{ title: 'General', shortcuts: [{ id: 'search', action: 'Search', keys: ['/'] }] }])
     })
 })

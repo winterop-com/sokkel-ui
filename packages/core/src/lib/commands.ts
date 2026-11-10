@@ -5,6 +5,15 @@ import type { RailEntry, RailGroup } from '../components/Rail'
 import { THEMES, type Scheme, type ThemeOption, type ThemeSettings } from './appearance'
 
 /**
+ * The palette's active row among the rows it draws, in their order: the one chosen while it is still
+ * drawn, else the first, as rows appear or change (a search's results arriving after the commands
+ * went away among them); empty while no row is drawn.
+ */
+export function activeRow(chosen: string, rows: readonly string[]): string {
+    return rows.includes(chosen) ? chosen : (rows[0] ?? '')
+}
+
+/**
  * The palette's groups in the order it lists them. Groups of one title are drawn as one, at the
  * first one's place and with the lowest rank among them; within it, the first command of an id
  * stands and a later one of the same id is left out, so a screen's command overrides the app's

@@ -1,8 +1,8 @@
 import type { LucideIcon } from 'lucide-react'
-import { useMemo, useState, type ReactNode } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import { useSearch } from '../hooks/use-search'
-import { filterCommands, mergeCommands, termScore } from '../lib/commands'
+import { activeRow, filterCommands, mergeCommands, termScore } from '../lib/commands'
 import { keyLabels } from '../lib/keys'
 import type { SearchGroup, SearchResult, SearchSource } from '../lib/search'
 import { SearchResultBody } from './Search'
@@ -170,6 +170,8 @@ export interface CommandPaletteProps {
  * verb beside Enter following the chosen row (`verb` on a row or its group: Open, Switch, Run). A
  * row's `kind` (Page, Form, Receipt) ends it where its group's `kind` does not already say it. A
  * command that cannot run now is listed `disabled`, dimmed and passed over, with why in its hint.
+ * The first row is active whenever the rows change and the active one is gone, the search's results
+ * arriving on their own included, so Enter opens it without an arrow pressed first.
  */
 export function CommandPalette({
     open,
@@ -209,11 +211,22 @@ export function CommandPalette({
         return byValue
     }, [merged])
     const verb = verbs.get(chosen) ?? words.open
+    // cmdk leaves rows it does not filter (the search's results) out of its own choosing, so a list of
+    // results alone would have no active row for Enter: the first row drawn is chosen whenever the
+    // chosen one is not drawn.
+    const list = useRef<HTMLDivElement>(null)
+    useLayoutEffect(() => {
+        const rows = Array.from(list.current?.querySelectorAll('[cmdk-item]:not([aria-disabled="true"])') ?? [], (row) =>
+            row.getAttribute('data-value'),
+        ).filter((value): value is string => value !== null)
+        const next = activeRow(chosen, rows)
+        if (next !== chosen) setChosen(next)
+    })
     return (
         <CommandDialog open={open} onOpenChange={onOpenChange} title={words.title} description={words.placeholder}>
             <Command shouldFilter={score === undefined} className="p-(--palette-inset)" value={chosen} onValueChange={setChosen}>
                 <CommandInput placeholder={words.placeholder} value={query} onValueChange={setQuery} />
-                <CommandList className="max-h-[min(24rem,60svh)] scroll-fade-b pb-1.5">
+                <CommandList ref={list} className="max-h-[min(24rem,60svh)] scroll-fade-b pb-1.5">
                     {found.length === 0 && answer.state !== 'loading' && <CommandEmpty>{words.empty}</CommandEmpty>}
                     {listed.map((group, index) => (
                         <div key={group.title}>
