@@ -154,8 +154,8 @@ document.documentElement.dataset.theme = 'paper'
 ```
 
 An app whose settings offer every theme imports `@winterop-com/sokkel-ui/themes.css`, which holds
-them all. `ThemePicker` draws its swatches from the same files, so it shows a theme's swatch only
-once that theme's file is imported.
+them all. `ThemePicker` draws its swatches from the same files, and `ThemeCards` its cards, so each
+shows a theme only once that theme's file is imported.
 
 ### Importing
 
@@ -247,6 +247,9 @@ chosen, and wears them on `<html>` (`data-theme`, `.dark`, `data-density`, `data
 and the typeface variables). `ThemePicker` takes its settings and setter, with the option lists
 `THEMES` (every theme in the tokens), `CORNERS` and `TYPEFACES` from `lib/appearance`. Every call
 follows the same kept look, so a settings page calls `useAppearance()` again with the same defaults.
+A settings page that gives the theme and the scheme a row each uses the two parts the picker is
+made of: `ThemeCards` (each theme a card drawn in its own tokens) and `SchemeChoice` (system, light
+and dark).
 
 ```tsx
 import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'

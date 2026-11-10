@@ -3,7 +3,9 @@ import type { ReactNode } from 'react'
 import type { ThemeOption, ThemeSettings } from '../lib/appearance'
 import { cn } from '../lib/cn'
 import { ChoiceList } from './ChoiceList'
+import { SchemeChoice } from './SchemeChoice'
 import { Segmented } from './Segmented'
+import { ThemeCards } from './ThemeCards'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 
 export type { ThemeOption, ThemeSettings } from '../lib/appearance'
@@ -59,6 +61,8 @@ export interface ThemePickerProps {
      * the chosen one filled, in place of a select; for a settings section with room for them.
      */
     themeList?: boolean
+    /** Draws the themes as `ThemeCards`, each a small page in its own theme, in place of a select or a list. */
+    themeCards?: boolean
     className?: string
     words?: Partial<ThemePickerWords>
 }
@@ -71,7 +75,9 @@ export interface ThemePickerProps {
  * The theme and scheme are always offered, the system's scheme as a third when `system` is set. Density offers regular and compact unless given its
  * own options; corners and typeface show only when given options. A theme marked `swatch` is
  * drawn as a small sample of its background, text and accent, and one with a `description` says
- * how it looks on a line under its name. `themeList` lists the themes as rows in place of a select.
+ * how it looks on a line under its name. `themeList` lists the themes as rows in place of a select,
+ * and `themeCards` draws them as cards. An app that puts the theme and the scheme in two settings
+ * rows uses `ThemeCards` and `SchemeChoice` on their own, as this picker does.
  */
 export function ThemePicker({
     value,
@@ -82,6 +88,7 @@ export function ThemePicker({
     typefaces,
     system = false,
     themeList = false,
+    themeCards = false,
     className,
     words: given,
 }: ThemePickerProps) {
@@ -94,7 +101,14 @@ export function ThemePicker({
     return (
         <div data-slot="theme-picker" className={cn('flex flex-col gap-4', className)}>
             <Row label={words.theme}>
-                {themeList ? (
+                {themeCards ? (
+                    <ThemeCards
+                        value={value.theme}
+                        themes={themes}
+                        onValueChange={(next) => set('theme', next)}
+                        words={{ theme: words.theme }}
+                    />
+                ) : themeList ? (
                     <ChoiceList
                         label={words.theme}
                         value={value.theme}
@@ -110,16 +124,12 @@ export function ThemePicker({
                 )}
             </Row>
             <Row label={words.scheme}>
-                <Segmented
-                    label={words.scheme}
+                <SchemeChoice
                     value={value.scheme}
-                    options={[
-                        { value: 'dark', label: words.dark },
-                        { value: 'light', label: words.light },
-                        ...(system ? [{ value: 'system' as const, label: words.system }] : []),
-                    ]}
+                    schemes={system ? ['dark', 'light', 'system'] : ['dark', 'light']}
                     fill
                     onValueChange={(next) => set('scheme', next)}
+                    words={words}
                 />
             </Row>
             {levels.length > 0 && (
