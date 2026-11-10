@@ -647,10 +647,11 @@ in a CodeMirror state no view draws, hands each edit to every other editor, and 
 caret and selection its own; a new editor opens at the caret the last one left, so a pane opened
 again in its `WindowedPane` window goes on where it was (Patterns/Windowed pane).
 
-CodeMirror rather than Monaco, weighed on 2026-11-09 against an app that edits pipelines in Monaco,
-and still open until that app has moved onto it: the deciding question is whether schema-aware YAML
-(completion, hover and checks through `allOf` and `if`/`then`) holds up against monaco-yaml's.
-Both are MIT. CodeMirror is plain ES modules, where Monaco runs its languages in web workers that
+CodeMirror rather than Monaco, weighed on 2026-11-09 against an app that edited pipelines in Monaco
+and settled on 2026-11-10, when that app chose to move its editors onto `CodeEditor`: one editor for
+both, so a fix lands once; schema completion and JSON Schema 2020-12 checks that follow `$ref`,
+`$dynamicRef`, `allOf` and `if`/`then`; `deferred` values; shared documents across a pane and its
+window; and a look that follows the tokens. Both are MIT. CodeMirror is plain ES modules, where Monaco runs its languages in web workers that
 each app's bundler has to set up, and a page's security policy has to allow (`worker-src blob:`). It is styled with CSS, so the `code-*` tokens and a change of
 scheme reach it as they reach everything else, where Monaco takes literal colors and one theme for
 every editor on the page. It keeps no global state, where Monaco holds one model per address and
