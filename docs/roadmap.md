@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.12.3** is the latest release (2026-11-10): a shut `SplitButton`'s chevron, a dialog drawn open
+- **0.12.4** is the latest release (2026-11-10): `Toolbar` and `PageHeader` take a `primary` item and
+  `wordsOnly`.
+- **0.12.3** (2026-11-10): a shut `SplitButton`'s chevron, a dialog drawn open
   focusing its first field, and no hover wash on a shut button.
 - **0.12.2** (2026-11-10): `InlineCode` takes `muted`, `bare` and `size`; toolbar
   items take `reason`, `destructive`, a short `face` and related `more` ways; `PageHeader` takes a `lead`.
