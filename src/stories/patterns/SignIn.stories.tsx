@@ -113,7 +113,7 @@ export const Alternatives: StoryObj = {
     ),
 }
 
-/** The last try refused, the reason over the submit. */
+/** The last try refused, the reason over the submit and focus in the password to try again. */
 export const Refused: StoryObj = {
     render: () => (
         <SignIn
@@ -126,7 +126,7 @@ export const Refused: StoryObj = {
     ),
 }
 
-/** A try under way: the fields held and the submit saying so. */
+/** A try under way: the fields held, still focusable but taking no typing, and the submit saying so. */
 export const Busy: StoryObj = {
     render: () => (
         <SignIn {...BRAND} art={<FlowLines />} busy defaultValues={{ user: 'ada', password: 'tidewater' }} onSubmit={() => undefined} />

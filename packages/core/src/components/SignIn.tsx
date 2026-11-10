@@ -1,10 +1,11 @@
 import { ArrowRight, CircleAlert, Eye, EyeOff, Globe, KeyRound, Lock, User } from 'lucide-react'
-import { useId, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 
 import { useThemeName } from '../hooks/use-theme-name'
 import { cn } from '../lib/cn'
 import { trafficLightsStyle, useTrafficLights, windowPressHandler, type DesktopWindow } from '../lib/desktop'
 import { useDesktopFullscreen } from '../lib/fullscreen'
+import { readStored, writeStored } from '../lib/stored'
 import { CheckboxField } from './CheckboxField'
 import { Field } from './Field'
 import { ResizeHandle } from './ResizeHandle'
@@ -125,23 +126,61 @@ export function signInReady(values: SignInValues, { method, server, optional }: 
     return values.user.trim() !== '' && (optional === 'password' || values.password !== '')
 }
 
-/** The username kept under `key` in this browser, or empty; storage that refuses answers empty. */
+/** The username kept under `key` in this browser, or empty. */
 export function rememberedUser(key: string): string {
-    try {
-        return localStorage.getItem(key) ?? ''
-    } catch {
-        return ''
-    }
+    return readStored(key) ?? ''
 }
 
-/** Keeps the username under `key` for the next visit; an empty one forgets it. Storage that refuses is let be. */
+/** Keeps the username under `key` for the next visit; an empty one forgets it. Storage that refuses holds it until the page is left. */
 export function rememberUser(key: string, user: string): void {
-    try {
-        if (user === '') localStorage.removeItem(key)
-        else localStorage.setItem(key, user)
-    } catch {
-        // Storage refused: the form still works, only the next visit's prefill is lost.
-    }
+    writeStored(key, user === '' ? null : user)
+}
+
+/** A brand pane width kept in storage, in whole pixels no narrower than the pane goes, or null when none is kept or it is not a width. */
+export function keptWidth(raw: string | null): number | null {
+    if (raw === null || raw.trim() === '') return null
+    const width = Number(raw)
+    return Number.isFinite(width) && width > 0 ? Math.max(BRAND_MIN, Math.round(width)) : null
+}
+
+/** Whether an error is shown. */
+const shown = (error: ReactNode) => error !== undefined && error !== null && error !== false && error !== ''
+
+/**
+ * What becomes of a username waiting to be kept since a submit, given the error shown at that
+ * submit, whether the form was busy a render ago, and the form now: `keep` once a busy try ends
+ * with no error, `drop` once it ends with one or a new error comes, and `wait` otherwise. The form
+ * also keeps a waiting username when it is taken off the page, as a good sign-in usually does.
+ */
+export function rememberSettles(
+    errorAtSubmit: ReactNode,
+    wasBusy: boolean,
+    now: { busy: boolean; error: ReactNode },
+): 'keep' | 'drop' | 'wait' {
+    const failed = shown(now.error)
+    if (wasBusy && !now.busy) return failed ? 'drop' : 'keep'
+    if (failed && now.error !== errorAtSubmit) return 'drop'
+    return 'wait'
+}
+
+/** A field of the form's own. */
+export type SignInField = 'server' | 'user' | 'password' | 'token'
+
+/** The fields the form draws, in order: the server's address when asked, then the credentials unless the app gives its own. */
+export function signInFields({ method, server, own }: { method: 'password' | 'token'; server: boolean; own: boolean }): SignInField[] {
+    const credentials: SignInField[] = own ? [] : method === 'token' ? ['token'] : ['user', 'password']
+    return server ? ['server', ...credentials] : credentials
+}
+
+/** The field that takes focus as the form opens: the first one empty, or the first one when all are filled. */
+export function openingField(fields: readonly SignInField[], values: SignInValues): SignInField | undefined {
+    return fields.find((field) => values[field] === '') ?? fields[0]
+}
+
+/** The field that takes focus when an error comes: the one it is about, else the password or the token. */
+export function refusedField(fields: readonly SignInField[], about?: SignInField): SignInField | undefined {
+    if (about !== undefined && fields.includes(about)) return about
+    return fields.find((field) => field === 'password' || field === 'token') ?? fields[0]
 }
 
 /** A text input with an icon at its start, when given, and, for a secret, a button at its end that shows it. */
@@ -158,7 +197,10 @@ function IconInput({
     optional = false,
     autoFocus,
     autoComplete,
-    disabled,
+    name,
+    required = false,
+    held,
+    inputRef,
     words,
 }: {
     id: string
@@ -173,22 +215,30 @@ function IconInput({
     optional?: boolean
     autoFocus?: boolean
     autoComplete?: string
-    disabled: boolean
+    name: string
+    required?: boolean
+    /** While a try is under way: the field keeps focus but takes no typing. */
+    held: boolean
+    inputRef: (input: HTMLInputElement | null) => void
     words: SignInWords
 }) {
     const [shown, setShown] = useState(false)
     return (
         <Field id={id} label={label} hint={optional ? words.optional : undefined}>
-            <InputGroup className="h-11">
+            <InputGroup className={cn('h-11', held && 'opacity-50')}>
                 {icon !== null && <InputGroupAddon className="pl-3.5">{icon}</InputGroupAddon>}
                 <InputGroupInput
+                    ref={inputRef}
                     id={id}
+                    name={name}
                     type={secret && !shown ? 'password' : type}
                     value={value}
                     placeholder={placeholder}
                     autoFocus={autoFocus}
                     autoComplete={autoComplete}
-                    disabled={disabled}
+                    required={required}
+                    readOnly={held}
+                    aria-disabled={held || undefined}
                     spellCheck={mono || secret ? false : undefined}
                     className={cn('h-full', icon === null ? 'pl-3.5' : 'pl-2', mono && 'font-mono')}
                     onChange={(event) => onChange(event.target.value)}
@@ -199,7 +249,6 @@ function IconInput({
                             size="icon-xs"
                             aria-label={shown ? words.hide : words.show}
                             aria-pressed={shown}
-                            disabled={disabled}
                             onClick={() => setShown(!shown)}
                         >
                             {shown ? <EyeOff aria-hidden /> : <Eye aria-hidden />}
@@ -225,6 +274,8 @@ export interface SignInProps {
     /** `dark` draws the brand pane in the theme's dark tokens in either scheme; `page` follows the page. */
     brandScheme?: 'dark' | 'page'
     resizable?: boolean
+    /** The storage key the brand pane's dragged width is kept under in this browser, restored on the next visit; a double click on the seam forgets it. */
+    widthKey?: string
     reveal?: boolean
     /** A short line over the title in the primary ink, such as "Welcome to" and the app's name. */
     eyebrow?: ReactNode
@@ -263,7 +314,12 @@ export interface SignInProps {
     /** Called with every change to the values, held by the app or by the form, such as to ask a server address as it is typed. */
     onValuesChange?: (values: SignInValues) => void
     error?: ReactNode
+    /** The field `error` is about, which takes focus when it comes; the password, or the token, by default. */
+    errorField?: SignInField
+    /** Holds the form while a try is under way; the fields keep focus but take no typing, and the submit waits. */
     busy?: boolean
+    /** Puts focus in the form's first field as it opens, or the first one empty, such as the password once the username is remembered. */
+    autoFocus?: boolean
     onSubmit: (values: SignInValues) => void
     /** Other ways in, as buttons; each is drawn full width under the rule. */
     alternatives?: ReactNode
@@ -284,8 +340,11 @@ export interface SignInProps {
  * `description`, then the fields: a username and password with the password's show button, or one
  * token field (`method`), or the app's own fields as `children`, each field led by an icon unless
  * `icons` is off. `optional` lets the password, or every credential, be left empty, for a server
- * that needs none. `error` says why the last try was refused, over the submit; `busy` holds the form
- * while a try is under way. `alternatives` are other ways in, under a rule with "or", drawn full
+ * that needs none. `error` says why the last try was refused, over the submit, and puts focus in the
+ * password (or the token, or `errorField`) to try again; `busy` holds the form while a try is under
+ * way, its fields still focused but taking no typing. The first field, or the first one empty, takes
+ * focus as the form opens unless `autoFocus` is off. The fields are named and marked required for
+ * the browser and its password manager. `alternatives` are other ways in, under a rule with "or", drawn full
  * width.
  *
  * A `server` address stands above the credentials. Where the app finds the server itself, the
@@ -297,9 +356,12 @@ export interface SignInProps {
  *
  * `remember` adds a "Remember me" box whose answer reaches `onSubmit`, for the app to keep the
  * session longer than the browser's. `rememberKey` keeps the username in this browser under that
- * key and fills it in next time, only when the box is ticked if there is one. The password is never
+ * key and fills it in next time, only when the box is ticked if there is one, and only once the try
+ * has gone through: a busy try that ends with no error, or the form taken off the page after a
+ * submit with no error since. The password is never
  * kept by the form: the fields name themselves for the browser's password manager, which keeps it. `resizable` puts a seam between the panes to drag
- * the brand pane's width, from `brandWidth` (half by default), double click putting it back.
+ * the brand pane's width, from `brandWidth` (half by default), double click putting it back;
+ * `widthKey` keeps the dragged width in this browser for the next visit.
  * `reveal` lets the form's parts rise into place as the screen opens, held still when motion is
  * reduced.
  *
@@ -320,6 +382,7 @@ export function SignIn({
     brandWidth = '50%',
     brandScheme = 'dark',
     resizable = false,
+    widthKey,
     reveal = true,
     eyebrow,
     description,
@@ -337,7 +400,9 @@ export function SignIn({
     values: valuesGiven,
     onValuesChange,
     error,
+    errorField,
     busy = false,
+    autoFocus = true,
     onSubmit,
     alternatives,
     footer,
@@ -350,7 +415,15 @@ export function SignIn({
     const theme = useThemeName()
     const root = useRef<HTMLDivElement>(null)
     const brand = useRef<HTMLElement>(null)
-    const [dragged, setDragged] = useState<number | null>(null)
+    const [dragged, setDragged] = useState<number | null>(() => (widthKey === undefined ? null : keptWidth(readStored(widthKey))))
+    const drag = (width: number) => {
+        setDragged(width)
+        if (widthKey !== undefined) writeStored(widthKey, String(width))
+    }
+    const undrag = () => {
+        setDragged(null)
+        if (widthKey !== undefined) writeStored(widthKey, null)
+    }
     const [own, setOwn] = useState<SignInValues>(() => {
         const kept = rememberKey === undefined ? '' : rememberedUser(rememberKey)
         return { ...EMPTY, ...(kept === '' ? {} : { user: kept, remember: true }), ...defaultValues }
@@ -377,7 +450,45 @@ export function SignIn({
             : !serverField || values.server.trim() !== '') &&
         (readyGiven ?? true)
     const ready = filled && server !== 'looking' && !busy
-    const failed = error !== undefined && error !== null && error !== false
+    const failed = shown(error)
+    const fields = signInFields({ method, server: serverField, own: children !== undefined })
+    const inputs = useRef<Partial<Record<SignInField, HTMLInputElement | null>>>({})
+    const input = (field: SignInField) => (element: HTMLInputElement | null) => {
+        inputs.current[field] = element
+    }
+    const [opening] = useState(() => (autoFocus ? openingField(fields, values) : undefined))
+    /** Focus goes to the field to try again in as an error comes and the form is free. */
+    const refused = failed && !busy
+    const refusedAt = refusedField(fields, errorField)
+    useEffect(() => {
+        if (!refused || refusedAt === undefined) return
+        const element = inputs.current[refusedAt]
+        if (element === undefined || element === null) return
+        element.focus()
+        if (refusedAt === 'password' || refusedAt === 'token') element.select()
+    }, [refused, refusedAt])
+    /** The username waiting to be kept since the last submit, and the error shown at that submit. */
+    const pending = useRef<{ user: string; error: ReactNode } | null>(null)
+    const wasBusy = useRef(busy)
+    const keyRef = useRef(rememberKey)
+    useEffect(() => {
+        keyRef.current = rememberKey
+        const was = wasBusy.current
+        wasBusy.current = busy
+        const waiting = pending.current
+        if (waiting === null || rememberKey === undefined) return
+        const settled = rememberSettles(waiting.error, was, { busy, error })
+        if (settled === 'wait') return
+        if (settled === 'keep') rememberUser(rememberKey, waiting.user)
+        pending.current = null
+    }, [busy, error, rememberKey])
+    useEffect(
+        () => () => {
+            const waiting = pending.current
+            if (waiting !== null && keyRef.current !== undefined) rememberUser(keyRef.current, waiting.user)
+        },
+        [],
+    )
     const firstFact = facts[0]
     const icon = (node: ReactNode) => (icons ? node : null)
     /** What the probe heard, as the brand pane and the phone's bar say it. */
@@ -401,7 +512,7 @@ export function SignIn({
                   ...facts,
               ]
     const dark = brandScheme === 'dark'
-    const drag = desktop === undefined ? undefined : ''
+    const windowDrag = desktop === undefined ? undefined : ''
     const lights = useTrafficLights(desktop)
     useDesktopFullscreen(desktop)
     const maxBrand = () => Math.max(BRAND_MIN, (root.current?.offsetWidth ?? BRAND_MIN + FORM_ROOM) - FORM_ROOM)
@@ -440,15 +551,13 @@ export function SignIn({
             ref={root}
             data-slot="sign-in"
             className={cn('@container flex min-h-svh w-full bg-background text-foreground', className)}
-            style={
-                { ...trafficLightsStyle(desktop), '--brand-width': dragged === null ? brandWidth : `${String(dragged)}px` } as CSSProperties
-            }
+            style={{ ...trafficLightsStyle(desktop), '--brand-width': brandWidth } as CSSProperties}
             onMouseDown={windowPressHandler(desktop)}
         >
             <div className="flex w-full flex-1 flex-col @3xl:flex-row">
                 {ground(
                     <header
-                        data-window-drag={drag}
+                        data-window-drag={windowDrag}
                         className={cn(
                             'flex w-full items-center gap-3 border-b border-border px-5 py-4',
                             lights && 'ps-(--spacing-traffic-lights)',
@@ -474,8 +583,10 @@ export function SignIn({
                 )}
                 <aside
                     ref={brand}
-                    data-window-drag={drag}
+                    data-window-drag={windowDrag}
                     className="hidden shrink-0 @3xl:flex @3xl:w-(--brand-width) @3xl:max-w-[calc(100%-30rem)] @3xl:min-w-80"
+                    // The dragged width sits on the pane's own style, where the seam's drag writes it, so a reset clears both.
+                    style={dragged === null ? undefined : { width: dragged }}
                 >
                     {ground(
                         <div className="flex size-full flex-col gap-10 p-12">
@@ -504,10 +615,10 @@ export function SignIn({
                     <ResizeHandle
                         target={brand}
                         size={dragged ?? undefined}
-                        onSize={setDragged}
+                        onSize={drag}
                         min={BRAND_MIN}
                         max={maxBrand()}
-                        onReset={() => setDragged(null)}
+                        onReset={undrag}
                         label={words.seam}
                         className="hidden @3xl:block"
                     />
@@ -519,7 +630,12 @@ export function SignIn({
                         onSubmit={(event) => {
                             event.preventDefault()
                             if (!ready) return
-                            if (rememberKey !== undefined) rememberUser(rememberKey, !remember || values.remember ? values.user.trim() : '')
+                            if (rememberKey !== undefined) {
+                                const keep = !remember || values.remember
+                                // Forgetting happens at once; keeping waits until the try has gone through.
+                                if (!keep) rememberUser(rememberKey, '')
+                                pending.current = keep ? { user: values.user.trim(), error } : null
+                            }
                             onSubmit(values)
                         }}
                     >
@@ -536,12 +652,15 @@ export function SignIn({
                                     icon={icon(<Globe aria-hidden />)}
                                     type="url"
                                     mono
-                                    autoFocus={asked}
+                                    autoFocus={asked || opening === 'server'}
                                     autoComplete="url"
+                                    name="server"
+                                    required
+                                    inputRef={input('server')}
                                     placeholder={words.serverHint}
                                     value={values.server}
                                     onChange={set('server')}
-                                    disabled={busy}
+                                    held={busy}
                                     words={words}
                                 />
                             )}
@@ -575,11 +694,15 @@ export function SignIn({
                                         secret
                                         mono
                                         optional={credentialsOptional}
+                                        autoFocus={opening === 'token'}
                                         autoComplete="current-password"
+                                        name="token"
+                                        required={!credentialsOptional}
+                                        inputRef={input('token')}
                                         placeholder={words.tokenHint}
                                         value={values.token}
                                         onChange={set('token')}
-                                        disabled={busy}
+                                        held={busy}
                                         words={words}
                                     />
                                 ) : (
@@ -589,11 +712,15 @@ export function SignIn({
                                             label={words.user}
                                             icon={icon(<User aria-hidden />)}
                                             optional={credentialsOptional}
+                                            autoFocus={opening === 'user'}
                                             autoComplete="username"
+                                            name="username"
+                                            required={!credentialsOptional}
+                                            inputRef={input('user')}
                                             placeholder={words.userHint}
                                             value={values.user}
                                             onChange={set('user')}
-                                            disabled={busy}
+                                            held={busy}
                                             words={words}
                                         />
                                         <IconInput
@@ -602,11 +729,15 @@ export function SignIn({
                                             icon={icon(<Lock aria-hidden />)}
                                             secret
                                             optional={optional !== undefined}
+                                            autoFocus={opening === 'password'}
                                             autoComplete="current-password"
+                                            name="password"
+                                            required={optional === undefined}
+                                            inputRef={input('password')}
                                             placeholder={words.passwordHint}
                                             value={values.password}
                                             onChange={set('password')}
-                                            disabled={busy}
+                                            held={busy}
                                             words={words}
                                         />
                                     </>
@@ -627,7 +758,13 @@ export function SignIn({
                                     <AlertDescription className="text-destructive">{error}</AlertDescription>
                                 </Alert>
                             )}
-                            <Button type="submit" size="lg" disabled={!ready} className="h-11 w-full">
+                            {/* A shut submit stays focusable, so focus is kept through a try. */}
+                            <Button
+                                type="submit"
+                                size="lg"
+                                aria-disabled={!ready || undefined}
+                                className={cn('h-11 w-full', busy && 'cursor-progress')}
+                            >
                                 {busy && <Spinner data-icon="inline-start" />}
                                 {busy ? words.busy : words.submit}
                                 {!busy && <ArrowRight data-icon="inline-end" aria-hidden />}

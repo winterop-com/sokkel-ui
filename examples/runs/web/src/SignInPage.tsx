@@ -26,6 +26,8 @@ export function SignInPage({ frame }: { frame: Frame }) {
             art={<FlowLines />}
             remember
             rememberKey={storageKey('user')}
+            resizable
+            widthKey={storageKey('sign-in-width')}
             busy={busy}
             error={error}
             desktop={frame.desktop}
