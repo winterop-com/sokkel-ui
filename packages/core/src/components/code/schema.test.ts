@@ -259,3 +259,31 @@ describe('a schema that picks a branch by a sibling value', () => {
         expect(names).toEqual(expect.arrayContaining(['url', 'method', 'command']))
     })
 })
+
+describe('a schema that refers to itself', () => {
+    /** A schema for schemas, as a meta-schema is: its parts point back at the root, by `$ref` or by an anchor. */
+    const META: JsonSchema = {
+        $dynamicAnchor: 'meta',
+        type: 'object',
+        properties: {
+            type: { enum: ['string', 'integer', 'object', 'array'] },
+            title: { type: 'string' },
+            properties: { type: 'object', additionalProperties: { $ref: '#' } },
+            items: { $dynamicRef: '#meta' },
+            not: { $ref: '#/properties/items' },
+        },
+    }
+
+    it('walks into a part that points at the root, by a pointer, an anchor or a dynamic reference', () => {
+        expect(schemasAt(META, ['properties', 'id', 'type'])[0].enum).toContain('integer')
+        expect(schemasAt(META, ['items', 'type'])[0].enum).toContain('array')
+        expect(schemasAt(META, ['not', 'properties', 'id', 'items', 'title'])[0].type).toBe('string')
+    })
+
+    it('offers the keys of a schema nested inside one being written', async () => {
+        const doc = '{\n  "properties": {\n    "id": { "' + '' + '" }\n  }\n}'
+        const pos = doc.indexOf('{ "') + 3
+        const result = await schemaCompletion(() => META, 'json')(new CompletionContext(jsonState(doc), pos, true))
+        expect(result?.options.map((option) => option.label)).toEqual(expect.arrayContaining(['type', 'title', 'items']))
+    })
+})
