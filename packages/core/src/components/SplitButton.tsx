@@ -80,7 +80,7 @@ export function SplitButton({
 }: SplitButtonProps) {
     const words = { ...WORDS, ...given }
     const group = useRef<HTMLDivElement>(null)
-    const off = disabled || (reason !== undefined && reason !== null && reason !== false)
+    const held = reason !== undefined && reason !== null && reason !== false
     const separator = SEPARATOR[variant]
     return (
         <ButtonGroup ref={group} data-slot="split-button" className={className}>
@@ -88,30 +88,39 @@ export function SplitButton({
                 {children}
             </Button>
             {separator !== undefined && <ButtonGroupSeparator className={cn('data-vertical:my-0', separator)} />}
-            <DropdownMenu open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
-                <DropdownMenuTrigger render={<Button variant={variant} size={ICON_SIZE[size]} aria-label={words.more} disabled={off} />}>
+            {held ? (
+                // Shut as the face is: reachable, saying why, with no menu to open.
+                <Button variant={variant} size={ICON_SIZE[size]} aria-label={words.more} reason={reason}>
                     <ChevronDown aria-hidden />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent anchor={group} align="end" className="w-auto min-w-(--anchor-width)">
-                    {items.map((item, index) => (
-                        <DropdownMenuItem
-                            key={index}
-                            disabled={item.disabled}
-                            variant={item.destructive === true ? 'destructive' : 'default'}
-                            onClick={item.onSelect}
-                            className={cn(item.description !== undefined && 'items-start')}
-                        >
-                            {item.icon}
-                            <span className="flex min-w-0 flex-col">
-                                <span>{item.label}</span>
-                                {item.description !== undefined && (
-                                    <span className="text-help text-muted-foreground">{item.description}</span>
-                                )}
-                            </span>
-                        </DropdownMenuItem>
-                    ))}
-                </DropdownMenuContent>
-            </DropdownMenu>
+                </Button>
+            ) : (
+                <DropdownMenu open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
+                    <DropdownMenuTrigger
+                        render={<Button variant={variant} size={ICON_SIZE[size]} aria-label={words.more} disabled={disabled} />}
+                    >
+                        <ChevronDown aria-hidden />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent anchor={group} align="end" className="w-auto min-w-(--anchor-width)">
+                        {items.map((item, index) => (
+                            <DropdownMenuItem
+                                key={index}
+                                disabled={item.disabled}
+                                variant={item.destructive === true ? 'destructive' : 'default'}
+                                onClick={item.onSelect}
+                                className={cn(item.description !== undefined && 'items-start')}
+                            >
+                                {item.icon}
+                                <span className="flex min-w-0 flex-col">
+                                    <span>{item.label}</span>
+                                    {item.description !== undefined && (
+                                        <span className="text-help text-muted-foreground">{item.description}</span>
+                                    )}
+                                </span>
+                            </DropdownMenuItem>
+                        ))}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            )}
         </ButtonGroup>
     )
 }

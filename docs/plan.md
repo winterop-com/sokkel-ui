@@ -177,7 +177,8 @@ function. Only internal links go through `render` (`isInternalLink`): one that o
 (`target` other than `_self`), downloads (`download`) or names another origin (`https:` elsewhere,
 `//host`, `mailto:`, `tel:`) stays a plain anchor, as `ApiLink`, an external `TextLink`, a
 Markdown link and a map's credits are; the provider's `internal` replaces that test when an app's
-renderer takes those too. A contents list's jumps stay in the page and never reach the router.
+renderer takes those too, or leaves out paths on the app's own origin that its server answers and
+its router does not own, such as an API's documentation page. A contents list's jumps stay in the page and never reach the router.
 With no provider every link is a plain anchor, which a hash router follows as it is.
 
 A place whose content is a hierarchy to browse, such as a music library's artists and albums, puts
