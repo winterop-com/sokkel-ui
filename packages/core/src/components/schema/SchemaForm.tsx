@@ -110,7 +110,9 @@ function say(issue: SchemaIssue, schema: JsonSchema): { text: string; detail?: s
         case 'pattern':
             return { text: 'Not in the expected form', detail: schema.description ?? `It must match ${issue.pattern}.` }
         case 'format':
-            return FORMAT[issue.format] ?? { text: `Enter a value in the ${issue.format} format` }
+            return issue.phrase !== undefined
+                ? { text: issue.phrase }
+                : (FORMAT[issue.format] ?? { text: `Enter a value in the ${issue.format} format` })
         case 'minItems':
             return { text: `Add at least ${plural(issue.limit, 'item')}` }
         case 'maxItems':

@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Code } from '@winterop-com/sokkel-ui/Code'
-import { CodeEditor, useSharedDocument, useSharedText } from '@winterop-com/sokkel-ui/CodeEditor'
+import { CodeEditor, useControlledDocument, useSharedDocument, useSharedText } from '@winterop-com/sokkel-ui/CodeEditor'
 import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
 import { Fill, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { MermaidDiagram } from '@winterop-com/sokkel-ui/MermaidDiagram'
@@ -153,6 +154,42 @@ export const StickyButton: StoryObj = {
         </WindowedPane>
     ),
 }
+
+/** A job held by a value the page keeps, its editor in a section whose head carries the expand button. */
+function SectionHeadPane() {
+    const [saved, setSaved] = useState(CONFIG)
+    const [value, setValue] = useState(CONFIG)
+    const doc = useControlledDocument(value, setValue)
+    return (
+        <WindowedPane title="import-orders.yaml" button="none">
+            <Section
+                title="import-orders.yaml"
+                meta={value === saved ? 'Saved' : 'Unsaved changes'}
+                flush
+                actions={
+                    <>
+                        <Button size="sm" variant="ghost" disabled={value === saved} onClick={() => setValue(saved)}>
+                            Revert
+                        </Button>
+                        <Button size="sm" disabled={value === saved} onClick={() => setSaved(value)}>
+                            Save
+                        </Button>
+                        <WindowedPaneButton size="icon-sm" />
+                    </>
+                }
+            >
+                <CodeEditor doc={doc} label="Job" language="yaml" variant="pane" size="sm" />
+            </Section>
+        </WindowedPane>
+    )
+}
+
+/**
+ * The expand button set in a `Section` head (`button="none"`), at `size="icon-sm"` so it stands as
+ * tall as the head's other tools. The editor's document follows a value the page holds
+ * (`useControlledDocument`): Revert puts the saved text back in it, and each edit reports the text once.
+ */
+export const SectionHead: StoryObj = { name: 'Section head', render: () => <SectionHeadPane /> }
 
 /**
  * The pipeline opened in the window with the step kinds beside it (`aside`), drawn in the window

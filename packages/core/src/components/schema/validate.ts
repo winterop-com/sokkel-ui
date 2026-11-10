@@ -1,7 +1,7 @@
 import Ajv2020, { type ErrorObject, type ValidateFunction } from 'ajv/dist/2020'
 import addFormats from 'ajv-formats'
 
-import { schemaFormats, type SchemaFormats } from './formats'
+import { formatPhrase, formatTest, schemaFormats, type SchemaFormats } from './formats'
 import { fieldSchema, given, pointer, valueAt, type Path, type SchemaIssue, type SchemaIssueKind } from './issues'
 import type { JsonSchema } from './read'
 
@@ -36,7 +36,7 @@ function checker(formats: SchemaFormats): Ajv2020 {
         logger: { log: () => {}, warn: () => {}, error: (...args: unknown[]) => console.error(...args) },
     })
     addFormats(made)
-    for (const [name, format] of Object.entries(formats)) made.addFormat(name, format)
+    for (const [name, format] of Object.entries(formats)) made.addFormat(name, formatTest(format))
     return made
 }
 
@@ -174,7 +174,8 @@ function read(error: ErrorObject, document: unknown): SchemaIssue {
             const format = String(params.format)
             const text = typeof value === 'string' ? value.trim() : ''
             const fix = (format === 'uri' || format === 'url') && /^[^\s/:]+\.[^\s]+$/.test(text) ? `https://${text}` : undefined
-            return at({ kind: 'format', format }, fix)
+            const phrase = formatPhrase(format)
+            return at({ kind: 'format', format, ...(phrase === undefined ? {} : { phrase }) }, fix)
         }
         case 'minItems':
             return at({ kind: 'minItems', limit: Number(params.limit) })

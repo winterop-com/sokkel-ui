@@ -582,7 +582,8 @@ editors over one `SharedDocument` edit it live in the pane and the window. `asid
 beside the content in the window only, such as a reference beside an editor, resizable and under
 the content in a narrow window; `button="sticky"` holds the expand button at the top of a long
 pane as it scrolls, and `frame="inset"` sets the pane inset on the page with `Surface`'s inset
-tone. `MermaidDiagram`, an expandable `DashboardPanel` and `ChartFrame` open through it, so
+tone. `button="none"` leaves the button to the content, which sets `WindowedPaneButton` in a toolbar
+of its own; its `size` takes `IconButton`'s, `icon-sm` to match a `Section` head's tools. `MermaidDiagram`, an expandable `DashboardPanel` and `ChartFrame` open through it, so
 there is one way to open a pane near full screen. `fullscreen` on the pane, the frame
 and the dashboard panels also puts the page in full screen while the window is open. A map's own
 full screen control puts the map itself in full screen instead, keeping the same canvas and camera.
@@ -673,14 +674,18 @@ that fits the document, the one whose `const` properties (a `kind`) match it, el
 fewest errors, and an `if` whose `then` said what is wrong adds nothing of its own, so one wrong field
 in one document of two is one problem, not the other document's every key. An app adds its own
 string formats with `registerSchemaFormats` (`schema/formats`: a pattern, a test, or `true` for any
-string), for forms and editors alike; a format no one registered is not checked, and logs nothing.
+string, alone or as `{ test, say }`, `say` the phrase its issue reads, carried on the issue as
+`phrase` so an app's words can still translate it), for forms and editors alike; a format no one
+registered is not checked, and logs nothing.
 A document can name its own schema, by a top-level `$schema` or
 a `# yaml-language-server: $schema=` line: the app finds it by address with `resolveSchema`, the
 editor fetching nothing, and a schema document in the 2020-12 dialect is checked against that
 dialect's meta-schema, which ajv carries. `JSON_SCHEMA_2020_12` (`json-schema`) is that
 meta-schema as one object, its vocabularies merged and its references kept inside it, so an app
 that edits a JSON Schema passes it as `schema` and gets the keywords completed at the top and in
-every subschema as well as the checks. A key's type and description show on hover. `reveal`
+every subschema as well as the checks. A key's type and description show on hover and beside its
+completion, a `$ref` followed for its type: a definition with no type reads `any`, never its
+`$defs` key. `reveal`
 selects a range and scrolls it into view, or in JSON and YAML the value at a `path` with its key,
 and `onProblems` hears every problem the editor shows (the schema's findings and the marks with a
 message) by line and column as they change, a schema's finding with the path of the value it is
@@ -693,6 +698,9 @@ shows it in panes. Two editors edit one document as Monaco's views share a model
 in a CodeMirror state no view draws, hands each edit to every other editor, and keeps each editor's
 caret and selection its own; a new editor opens at the caret the last one left, so a pane opened
 again in its `WindowedPane` window goes on where it was (Patterns/Windowed pane).
+`useControlledDocument(value, onChange)` holds a shared document by a controlled value: a `value`
+that differs from the text replaces it without calling `onChange`, and an edit in any of its
+editors calls `onChange` once.
 
 CodeMirror rather than Monaco, weighed on 2026-11-09 against an app that edited pipelines in Monaco
 and settled on 2026-11-10, when that app chose to move its editors onto `CodeEditor`: one editor for

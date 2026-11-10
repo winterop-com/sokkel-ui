@@ -1,7 +1,7 @@
 import { history, redo, undo } from '@codemirror/commands'
 import { Annotation, EditorSelection, EditorState, Transaction, type ChangeSet } from '@codemirror/state'
 import type { EditorView } from '@codemirror/view'
-import { useState, useSyncExternalStore } from 'react'
+import { useEffect, useLayoutEffect, useState, useSyncExternalStore } from 'react'
 
 /** Marks a transaction a shared document hands a view, so the view does not hand it back. */
 const fromDocument = Annotation.define<boolean>()
@@ -168,4 +168,45 @@ export function useSharedDocument(text = ''): SharedDocument {
 /** The text of a shared document, drawn again as any of its editors changes it. */
 export function useSharedText(doc: SharedDocument): string {
     return useSyncExternalStore(doc.subscribe, () => doc.text)
+}
+
+/** A shared document held in step with a value kept outside it: the working of `useControlledDocument`. */
+export interface DocumentControl {
+    /** Puts a value from outside in the document when it differs, telling no listener of `listen`. */
+    apply: (value: string) => void
+    /** Calls `onChange` with the text after each edit made in a view; returns the way to stop. */
+    listen: (onChange: (text: string) => void) => () => void
+}
+
+/** Holds `doc` in step with a value kept outside it, never handing the outside's own text back. */
+export function controlDocument(doc: SharedDocument): DocumentControl {
+    let applying = false
+    return {
+        apply: (value) => {
+            if (value === doc.text) return
+            applying = true
+            try {
+                doc.setText(value)
+            } finally {
+                applying = false
+            }
+        },
+        listen: (onChange) =>
+            doc.subscribe((text) => {
+                if (!applying) onChange(text)
+            }),
+    }
+}
+
+/**
+ * A shared document held by a controlled `value` and `onChange`, for editors in a pane and its
+ * window over a value the app keeps: a `value` that differs from the text replaces it without
+ * calling `onChange`, and an edit in any of the editors calls `onChange` once with the new text.
+ */
+export function useControlledDocument(value: string, onChange: (text: string) => void): SharedDocument {
+    const doc = useSharedDocument(value)
+    const [control] = useState(() => controlDocument(doc))
+    useEffect(() => control.listen(onChange), [control, onChange])
+    useLayoutEffect(() => control.apply(value), [control, value])
+    return doc
 }

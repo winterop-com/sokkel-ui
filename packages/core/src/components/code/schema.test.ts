@@ -108,6 +108,16 @@ describe('schema completion', () => {
     it('walks the schema along a path', () => {
         expect(schemasAt(SCHEMA, ['steps', 0, 'name'])[0].enum).toContain('validate')
     })
+    it('says a field that refers to a definition with no type by what it takes, never by its key', () => {
+        const schema: JsonSchema = {
+            type: 'object',
+            $defs: { 'fetch.Payload': {} },
+            properties: { body: { anyOf: [{ $ref: '#/$defs/fetch.Payload' }, { type: 'null' }] } },
+        }
+        const doc = 'bo'
+        const found = schemaCompletion(() => schema, 'yaml')(new CompletionContext(yamlState(doc), doc.length, true))?.options ?? []
+        expect(found.find((option) => option.label === 'body')?.detail).toBe('any or null')
+    })
 })
 
 describe('schema completion in place', () => {
@@ -388,6 +398,17 @@ describe("a pipeline's steps, each configured by its block", () => {
         expect(diagnose(doc)).toEqual([['5 parsecs', 'Expected the humane-duration format']])
         expect(diagnose(doc.replace('5 parsecs', '5m'))).toEqual([])
         expect(diagnose(doc.replace('5 parsecs', '${steps.fetch.delay}'))).toEqual([])
+    })
+
+    it('says a failed format by the phrase it was registered with', () => {
+        const doc = 'steps:\n  - name: pause\n    block: wait\n    config:\n      for: 5 parsecs\n'
+        registerSchemaFormats({ 'humane-duration': { test: /^(?:\d+[smhd])+$/, say: 'Expected a duration such as 30s or 5m' } })
+        try {
+            expect(diagnose(doc)).toEqual([['5 parsecs', 'Expected a duration such as 30s or 5m']])
+            expect(diagnose(doc.replace('5 parsecs', '5m'))).toEqual([])
+        } finally {
+            registerSchemaFormats({ 'humane-duration': /^(?:\d+[smhd])+$/ })
+        }
     })
 
     it('describes a field by its own type, not by the reference beside it', () => {

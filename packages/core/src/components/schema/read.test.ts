@@ -6,6 +6,9 @@ const ROOT: JsonSchema = {
     type: 'object',
     $defs: {
         Address: { type: 'object', properties: { city: { type: 'string' } }, required: ['city'] },
+        'fetch.Payload': { description: 'Any JSON value.' },
+        'fetch.Method': { enum: ['GET', 'POST'] },
+        'fetch.Timeout': { type: 'integer' },
     },
 }
 
@@ -24,6 +27,15 @@ describe("a schema's type in words", () => {
         expect(typeLabel({ anyOf: five }, ROOT)).toBe('any of 5')
         expect(typeLabel({ enum: ['a', 'b'] }, ROOT)).toBe('one of the values')
         expect(typeLabel({ const: 'v1' }, ROOT)).toBe('constant')
+    })
+
+    test('follows a $ref for its type and never says a $defs key in place of one', () => {
+        const value = { $ref: '#/$defs/fetch.Payload' }
+        expect(typeLabel(value, ROOT)).toBe('any')
+        expect(typeLabel({ anyOf: [value, { type: 'null' }] }, ROOT)).toBe('any or null')
+        expect(typeLabel({ type: 'array', items: value }, ROOT)).toBe('array of any')
+        expect(typeLabel({ anyOf: [{ $ref: '#/$defs/fetch.Timeout' }, { type: 'null' }] }, ROOT)).toBe('integer or null')
+        expect(typeLabel({ $ref: '#/$defs/fetch.Method' }, ROOT)).toBe('one of the values')
     })
 })
 

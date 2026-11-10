@@ -1,7 +1,8 @@
+import type { ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 
-import { WindowedPane, type WindowedPaneWhere } from './WindowedPane'
+import { WindowedPane, WindowedPaneButton, type WindowedPaneWhere } from './WindowedPane'
 
 const where = (at: WindowedPaneWhere) => <p>{`drawn in the ${at}`}</p>
 
@@ -58,5 +59,19 @@ describe('WindowedPane', () => {
         )
         expect(corner).not.toContain('windowed-pane-sticky')
         expect(corner).toContain('aria-label="Expand"')
+    })
+
+    it('draws its own expand button at the size it is given, icon-xs by default', () => {
+        const at = (button: ReactNode) =>
+            renderToStaticMarkup(
+                <WindowedPane title="nightly-export.yaml" button="none">
+                    {button}
+                </WindowedPane>,
+            )
+        expect(at(<WindowedPaneButton />)).toContain('size-6')
+        const small = at(<WindowedPaneButton size="icon-sm" />)
+        expect(small).toContain('size-7')
+        expect(small).not.toContain('size-6')
+        expect(renderToStaticMarkup(<WindowedPaneButton />)).toBe('')
     })
 })

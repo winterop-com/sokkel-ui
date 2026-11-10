@@ -87,7 +87,11 @@ function choiceLabel(variants: JsonSchema[], root: JsonSchema, word: string): st
     return nullable && labels.length > 0 && !label.endsWith(' or null') ? `${label} or null` : label
 }
 
-/** A schema's type in a few words: `string, email`, `array of Address`, `integer or null`, `string or number`. */
+/**
+ * A schema's type in a few words: `string, email`, `array of Address`, `integer or null`, `string or
+ * number`. A `$ref` is followed for its type; only an object it names reads by its `$defs` key, and a
+ * target with no type reads `any`.
+ */
 export function typeLabel(schema: JsonSchema, root: JsonSchema): string {
     const name = refName(schema)
     const resolved = resolve(schema, root)
@@ -99,7 +103,7 @@ export function typeLabel(schema: JsonSchema, root: JsonSchema): string {
     const nullable = types.includes('null')
     const main = types.filter((type) => type !== 'null')
     let label: string
-    if (main.length === 0) label = name ?? (resolved.properties !== undefined ? 'object' : 'any')
+    if (main.length === 0) label = resolved.properties !== undefined ? 'object' : 'any'
     else if (main.length > 1) label = main.join(' or ')
     else if (main[0] === 'array') label = resolved.items === undefined ? 'array' : `array of ${typeLabel(resolved.items, root)}`
     else if (main[0] === 'object' && name !== undefined) label = name

@@ -60,7 +60,7 @@ export function EditorPane({
                 actions={
                     <>
                         {actions}
-                        <WindowedPaneButton />
+                        <WindowedPaneButton size="icon-sm" />
                     </>
                 }
             >
