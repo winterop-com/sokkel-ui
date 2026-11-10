@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.15.0** is the latest release (2026-11-10): `SignIn` focuses its first empty field, keeps its
+- **0.15.1** is the latest release (2026-11-10): a finger-sized palette button on a phone, `TopBar`
+  `palette={false}`, `AccountMenu`'s detail giving way to the name, and a head on `ServerMenu`'s tooltip.
+- **0.15.0** (2026-11-10): `SignIn` focuses its first empty field, keeps its
   fields focusable while busy (`aria-disabled`, not `disabled`), names its fields, keeps the seam's
   width (`widthKey`) and remembers a username only after a good sign-in.
 - **0.14.5** (2026-11-10): `SidePanel` tabs as a tablist, and `Shell`'s
