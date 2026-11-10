@@ -334,6 +334,10 @@
             "types": "./dist/components/JsonTree.d.ts",
             "import": "./dist/components/JsonTree.js"
         },
+        "./json-schema": {
+            "types": "./dist/components/json-schema.d.ts",
+            "import": "./dist/components/json-schema.js"
+        },
         "./Layout": {
             "types": "./dist/components/Layout.d.ts",
             "import": "./dist/components/Layout.js"
