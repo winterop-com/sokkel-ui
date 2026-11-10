@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import type { JsonSchema } from './read'
+import { registerSchemaFormats } from './formats'
 import { fieldSchema, pointer } from './issues'
 import { validate } from './validate'
 
@@ -103,5 +104,136 @@ describe('fieldSchema', () => {
 describe('pointer', () => {
     it('escapes as JSON Pointer does', () => {
         expect(pointer(['a/b', 0, 'c~d'])).toBe('/a~1b/0/c~0d')
+    })
+})
+
+const DOCUMENT: JsonSchema = {
+    oneOf: [{ $ref: '#/$defs/Pipeline' }, { $ref: '#/$defs/Triggers' }],
+    $defs: {
+        Pipeline: {
+            type: 'object',
+            required: ['kind', 'steps'],
+            additionalProperties: false,
+            properties: {
+                kind: { const: 'pipeline' },
+                params: { type: 'object' },
+                steps: { type: 'array', items: { $ref: '#/$defs/Step' } },
+            },
+        },
+        Triggers: {
+            type: 'object',
+            required: ['kind', 'triggers'],
+            additionalProperties: false,
+            properties: {
+                kind: { const: 'triggers' },
+                triggers: {
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        required: ['job', 'at'],
+                        properties: { job: { type: 'string' }, at: { type: 'string', pattern: '^\\d{2}:\\d{2}$' } },
+                    },
+                },
+            },
+        },
+        Step: {
+            type: 'object',
+            required: ['name', 'block'],
+            properties: { name: { type: 'string' }, block: { type: 'string' }, config: { type: 'object' } },
+            allOf: [
+                {
+                    if: { properties: { block: { const: 'http.request' } } },
+                    // oxlint-disable-next-line unicorn/no-thenable -- `then` is the schema keyword
+                    then: { properties: { config: { $ref: '#/$defs/HttpRequest' } } },
+                },
+                {
+                    if: { properties: { block: { const: 'send-digest' } } },
+                    // oxlint-disable-next-line unicorn/no-thenable -- `then` is the schema keyword
+                    then: { properties: { config: { $ref: '#/$defs/SendDigest' } } },
+                },
+            ],
+        },
+        HttpRequest: {
+            type: 'object',
+            required: ['url'],
+            additionalProperties: false,
+            properties: { url: { type: 'string', format: 'uri' }, follow_redirects: { type: 'boolean' } },
+        },
+        SendDigest: { type: 'object', additionalProperties: false, properties: { to: { type: 'string' } } },
+    },
+}
+
+const found = (schema: JsonSchema, value: unknown) =>
+    validate(schema, value)
+        .map((issue) => `${pointer(issue.path)} ${issue.kind}`)
+        .sort()
+
+describe('a schema with branches', () => {
+    it('reports only the branch whose fixed kind the document has', () => {
+        expect(
+            found(DOCUMENT, {
+                kind: 'pipeline',
+                params: {},
+                steps: [{ name: 'fetch', block: 'http.request', config: { url: 'https://api.example.org', follow_redirects: 3, nope: 1 } }],
+            }),
+        ).toEqual(['/steps/0/config additional', '/steps/0/config/follow_redirects type'])
+    })
+
+    it('reports the other document by its own kind', () => {
+        expect(found(DOCUMENT, { kind: 'triggers', triggers: [{ job: 'nightly-export', at: '2am' }, { at: '03:00' }] })).toEqual([
+            '/triggers/0/at pattern',
+            '/triggers/1/job required',
+        ])
+    })
+
+    it('passes a good document of either kind', () => {
+        expect(found(DOCUMENT, { kind: 'triggers', triggers: [{ job: 'sync-inventory', at: '03:00' }] })).toEqual([])
+        expect(found(DOCUMENT, { kind: 'pipeline', steps: [{ name: 'notify', block: 'send-digest', config: { to: 'ada' } }] })).toEqual([])
+    })
+
+    it('says which kinds there are when the document names none of them', () => {
+        expect(validate(DOCUMENT, { kind: 'schedule', steps: [] })).toEqual([
+            { kind: 'enum', values: ['pipeline', 'triggers'], path: ['kind'], tone: 'critical' },
+        ])
+    })
+
+    it('reports the closest branch when the document has no kind', () => {
+        expect(found(DOCUMENT, { steps: [] })).toEqual(['/kind required'])
+    })
+
+    it('narrows a branch inside a property, and prefers the branch of the value type', () => {
+        const schema: JsonSchema = {
+            type: 'object',
+            properties: {
+                target: {
+                    anyOf: [
+                        { type: 'string' },
+                        { type: 'object', required: ['host'], properties: { host: { type: 'string' }, port: { type: 'integer' } } },
+                    ],
+                },
+            },
+        }
+        expect(found(schema, { target: { host: 'api.example.org', port: 'x' } })).toEqual(['/target/port type'])
+    })
+})
+
+describe('formats', () => {
+    it('passes over an unknown format in silence, and checks one once it is registered', () => {
+        const schema: JsonSchema = { type: 'object', properties: { every: { type: 'string', format: 'humane-duration' } } }
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+        try {
+            expect(found(schema, { every: 'often' })).toEqual([])
+            expect(warn.mock.calls.flat().some((said) => String(said).includes('unknown format'))).toBe(false)
+        } finally {
+            warn.mockRestore()
+        }
+        registerSchemaFormats({ 'humane-duration': /^\d+[smhd]$/, size: (value) => /^\d+[KMG]?B$/.test(value), 'storage-uri': true })
+        expect(found(schema, { every: 'often' })).toEqual(['/every format'])
+        expect(found(schema, { every: '5m' })).toEqual([])
+        const sized: JsonSchema = {
+            type: 'object',
+            properties: { size: { type: 'string', format: 'size' }, at: { type: 'string', format: 'storage-uri' } },
+        }
+        expect(found(sized, { size: '12 parsecs', at: 'anything' })).toEqual(['/size format'])
     })
 })
