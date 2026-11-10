@@ -29,6 +29,7 @@ import {
     treeBranchKeys,
 } from '@winterop-com/sokkel-ui/DataTable'
 import { FileTypeIcon, formatSize } from '@winterop-com/sokkel-ui/FileList'
+import { ItemHeading } from '@winterop-com/sokkel-ui/ItemHeading'
 import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { Section } from '@winterop-com/sokkel-ui/Section'
@@ -534,6 +535,75 @@ export const InSection: StoryObj = {
             <AccountList framed={false} />
         </Section>
     ),
+}
+
+interface Job {
+    id: string
+    name: string
+    step: string
+    state: string
+    runs: number
+    about: string
+}
+
+const JOBS: Job[] = [
+    {
+        id: 'nightly-export',
+        name: 'Nightly export',
+        step: 'upload',
+        state: 'failed',
+        runs: 412,
+        about: 'Writes the day’s orders to files.example.org.',
+    },
+    {
+        id: 'sync-inventory',
+        name: 'Sync inventory',
+        step: 'transform',
+        state: 'running',
+        runs: 1_208,
+        about: 'Brings stock counts from every site.',
+    },
+    {
+        id: 'rebuild-index',
+        name: 'Rebuild index',
+        step: 'validate',
+        state: 'succeeded',
+        runs: 96,
+        about: 'Rebuilds the search index from scratch.',
+    },
+    { id: 'send-digest', name: 'Send digest', step: 'notify', state: 'queued', runs: 52, about: 'Sends the weekly digest to its readers.' },
+    {
+        id: 'import-orders',
+        name: 'Import orders',
+        step: 'fetch',
+        state: 'succeeded',
+        runs: 3_310,
+        about: 'Takes in the orders of every region.',
+    },
+]
+
+const JOB_COLUMNS: DataColumn<Job>[] = [
+    {
+        id: 'job',
+        header: 'Job',
+        width: 'content',
+        maxWidth: '24rem',
+        cell: (job) => <ItemHeading variant="inline" as="span" name={job.name} code={job.id} />,
+    },
+    { id: 'step', header: 'Step', width: 'content', cell: (job) => <span className="font-mono font-semibold">{job.step}</span> },
+    { id: 'state', header: 'State', width: '8rem', cell: (job) => <StatusChip status={job.state} /> },
+    { id: 'about', header: 'About', width: 'minmax(8rem,1fr)', cell: (job) => <span className="text-muted-foreground">{job.about}</span> },
+    { id: 'runs', header: 'Runs', width: '5rem', align: 'end', cell: (job) => job.runs.toLocaleString('en-US') },
+]
+
+/**
+ * Jobs whose heading and step are as wide as their widest cell (`width: 'content'`), measured again
+ * once the fonts have loaded; the about line shares the rest. Once the content columns and the
+ * least of the others no longer fit the box, the rows stack as cards.
+ */
+export const ContentWidths: StoryObj = {
+    name: 'Content widths',
+    render: () => <DataTable variant="list" columns={JOB_COLUMNS} rows={JOBS} rowKey={(job) => job.id} stackBelow="64rem" />,
 }
 
 const STATE_NAMES: Record<string, string> = { running: 'Running', queued: 'Queued', failed: 'Failed', succeeded: 'Succeeded' }

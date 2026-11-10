@@ -129,8 +129,20 @@ describe('a column as wide as its content', () => {
     const table = (widths?: Record<string, number>) =>
         renderToStaticMarkup(<DataTable columns={ACCOUNT_COLUMNS} rows={ACCOUNTS} rowKey={(row) => row.id} columnWidths={widths} />)
 
-    it('fits its content up to its widest until measured', () => {
-        expect(table()).toContain('grid-template-columns:fit-content(16rem) 1fr')
+    it('draws its cells at their own width while they are measured, however narrow the box', () => {
+        expect(table()).toContain('grid-template-columns:max-content 1fr')
+    })
+
+    it('counts its floor toward the least width before it is measured', () => {
+        const html = renderToStaticMarkup(
+            <DataTable
+                columns={[{ ...ACCOUNT_COLUMNS[0], minWidth: '12rem' }, ACCOUNT_COLUMNS[1]]}
+                rows={ACCOUNTS}
+                rowKey={(row) => row.id}
+                minWidth="auto"
+            />,
+        )
+        expect(html).toContain('min-width:calc(min(12rem, 16rem) + 0px)')
     })
 
     it('takes a dragged width over its content', () => {

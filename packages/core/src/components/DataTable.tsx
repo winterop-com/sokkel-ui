@@ -114,12 +114,18 @@ export interface DataColumn<T> {
     band?: string
     /**
      * A CSS grid track (`8rem`, `minmax(12rem,1fr)`), or `content`: as wide as the widest of its
-     * head and the cells drawn, up to `maxWidth`, the other columns sharing what is left. A dragged
-     * width wins over either.
+     * head and the cells drawn, up to `maxWidth`, the other columns sharing what is left. Its cells
+     * are measured at their own width, again once fonts load or a cell is cut short, and the width
+     * counts toward when the table stacks. A dragged width wins over either.
      */
     width: string
     /** The widest a `content` column grows, as a CSS length; 20rem by default. */
     maxWidth?: string
+    /**
+     * The narrowest a `content` column is drawn, as a CSS length, counted toward the table's least
+     * width before its cells are measured too: room for a heading whose own width says too little.
+     */
+    minWidth?: string
     cell: (row: T) => ReactNode
     align?: 'start' | 'center' | 'end'
     /**
@@ -496,7 +502,6 @@ export function movedColumn(columns: readonly { id: string }[], id: string, by: 
     return ids
 }
 
-/** The least width of a grid track: its own length, a `minmax` floor, or nothing for a fraction or `auto`. */
 /**
  * The columns of a stacked row by where they go: the leads before the title, the title (the first
  * column that is not a lead), the primary values under it, the labeled lines, and the facts that
@@ -515,11 +520,79 @@ export function stackColumns<C extends { stack?: DataColumn<unknown>['stack'] }>
     }
 }
 
+/** The least width of a grid track: its own length, a `minmax` floor, or nothing for a fraction or `auto`. */
 function trackMin(width: string): string {
-    // A measured `content` column's track is its least width already.
-    if (width.startsWith('min(')) return width
     const floor = /^minmax\(\s*([^,]+?)\s*,/.exec(width)?.[1] ?? width
     return /^\d*\.?\d+(px|rem|em|ch)$/.test(floor) ? floor : '0px'
+}
+
+/**
+ * A `content` column's track once its cells are measured: the widest cell (`need`, in pixels), no
+ * narrower than its `minWidth` and no wider than its `maxWidth`. With no measure yet it is the floor.
+ */
+export function contentTrack(need: number | undefined, column: { minWidth?: string; maxWidth?: string }): string {
+    const most = column.maxWidth ?? CONTENT_MAX
+    const at = need === undefined ? undefined : `${String(need)}px`
+    const floor = column.minWidth === undefined ? at : at === undefined ? column.minWidth : `max(${at}, ${column.minWidth})`
+    return floor === undefined ? '0px' : `min(${floor}, ${most})`
+}
+
+/**
+ * The least width of each drawn column, which the row's least width adds up: a dragged width, a
+ * `content` column's measured need (kept while the rows are stacked, so it still counts toward
+ * stacking), or a track's own floor.
+ */
+export function columnLeast(
+    column: { id: string; width: string; minWidth?: string; maxWidth?: string },
+    dragged: number | undefined,
+    needs: Readonly<Record<string, number>>,
+): string {
+    if (dragged !== undefined) return `${String(dragged)}px`
+    return column.width === 'content' ? contentTrack(needs[column.id], column) : trackMin(column.width)
+}
+
+/**
+ * Whether the rows stack as cards: below `stackBelow` (`stackWidth`, in pixels) once the columns'
+ * least width (`columnsWidth`) no longer fits too, or with `minWidth="auto"` below `stackBelow` or
+ * once the columns no longer fit, whichever is wider, so a list never scrolls sideways.
+ */
+export function stacksAt(width: number, stackWidth: number, columnsWidth: number, auto: boolean): boolean {
+    return width > 0 && width < (auto ? Math.max : Math.min)(stackWidth, columnsWidth)
+}
+
+/** The part of a document's fonts a table listens to: a promise when all have loaded, and an event for each load. */
+export interface FontLoads {
+    ready: Promise<unknown>
+    addEventListener: (type: 'loadingdone', listener: () => void) => void
+    removeEventListener: (type: 'loadingdone', listener: () => void) => void
+}
+
+/**
+ * Calls `onLoad` once the fonts already asked for have loaded, and again each time more finish
+ * loading, so widths measured in a fallback face are measured again in the real one. Returns the
+ * function that stops listening.
+ */
+export function watchFonts(fonts: FontLoads | undefined, onLoad: () => void): () => void {
+    let live = true
+    const loaded = () => live && onLoad()
+    fonts?.ready.then(loaded, loaded)
+    fonts?.addEventListener('loadingdone', loaded)
+    return () => {
+        live = false
+        fonts?.removeEventListener('loadingdone', loaded)
+    }
+}
+
+/**
+ * Whether a `content` column's cells have outgrown its measured width: some cell's content is cut
+ * (`scrollWidth` past `clientWidth`) in a column that was not already cut at its `maxWidth` when
+ * measured.
+ */
+export function outgrown(
+    cells: readonly { column: string; clientWidth: number; scrollWidth: number }[],
+    capped: ReadonlySet<string>,
+): boolean {
+    return cells.some((cell) => !capped.has(cell.column) && cell.scrollWidth > cell.clientWidth + 0.5)
 }
 
 /** The keys of the drawn rows from one key to another, either way round. */
@@ -721,8 +794,9 @@ export interface DataTableProps<T> {
     stackBelow?: number | string | false
     /**
      * The narrowest the columns go before the table scrolls sideways, and never narrower than the
-     * columns' own least widths. `auto`: just the columns' least widths, and the table stacks below
-     * `stackBelow` alone, for a short listing in a narrow place. `48rem` for a table, `auto` for a list.
+     * columns' own least widths, a `content` column's measured width among them. `auto`: just the
+     * columns' least widths, and the table stacks below `stackBelow` or once its columns no longer
+     * fit, never scrolling sideways, for a listing. `48rem` for a table, `auto` for a list.
      */
     minWidth?: string
     /**
@@ -1106,17 +1180,13 @@ export function DataTable<T>({
         observer.observe(measure)
         observer.observe(measureCard)
         if (stackProbe.current !== null) observer.observe(stackProbe.current)
+        if (widthProbe.current !== null) observer.observe(widthProbe.current)
         return () => observer.disconnect()
     }, [])
     const [shownView, setShownView] = useHeld(viewValue, defaultView, onViewChange)
     const chosenGrid = shownView === 'grid' && card !== undefined
     // A narrow box stacks the rows as cards, one to a line, each as tall as its columns need.
-    // Only when the columns no longer fit: a box narrower than both `stackBelow` and the columns' `minWidth`.
-    const stacked =
-        !chosenGrid &&
-        stackBelow !== false &&
-        view.width > 0 &&
-        view.width < (minWidth === 'auto' ? stackWidth : Math.min(stackWidth, columnsWidth))
+    const stacked = !chosenGrid && stackBelow !== false && stacksAt(view.width, stackWidth, columnsWidth, minWidth === 'auto')
     const gridView = chosenGrid || stacked
     // A stacked card: the leads and the title, then the primary values, the lines, and the secondary facts on one line.
     const compact = stackLayout === 'compact'
@@ -1165,14 +1235,23 @@ export function DataTable<T>({
     const [active, setActive] = useState<string | undefined>(undefined)
     const anchor = useRef<string | undefined>(undefined)
 
-    // `content` columns not dragged: drawn at `fit-content` while their cells are measured, then at the widest.
+    // `content` columns not dragged: drawn at `max-content` while their cells are measured, then at the widest.
     const contentColumns = gridView ? [] : shown.filter((column) => column.width === 'content' && widths[column.id] === undefined)
     const contentKey = contentColumns.map((column) => column.id).join(' ')
-    const [contentWidths, setContentWidths] = useState<Readonly<Record<string, number>> | null>(null)
-    useLayoutEffect(() => setContentWidths(null), [rows, contentKey, rowHeight, columnHeads])
+    // The widths last measured are kept while the rows are stacked, so they still count toward stacking.
+    const [contentWidths, setContentWidths] = useState<Readonly<Record<string, number>>>(NO_WIDTHS)
+    const [measuring, setMeasuring] = useState(true)
+    // Columns cut at their `maxWidth` once measured, whose cut cells call for no new measure; unknown until drawn so.
+    const capped = useRef<ReadonlySet<string> | undefined>(undefined)
+    // Fonts that load after a measure change what the cells need, a fallback face being narrower or wider.
+    const [fontLoads, setFontLoads] = useState(0)
+    useEffect(() => watchFonts(typeof document === 'undefined' ? undefined : document.fonts, () => setFontLoads((count) => count + 1)), [])
+    useLayoutEffect(() => setMeasuring(true), [rows, contentKey, rowHeight, columnHeads, fontLoads])
+    const contentCells = (box: HTMLElement, column: string) =>
+        box.querySelectorAll<HTMLElement>(`[role="gridcell"][data-track="${CSS.escape(column)}"] > :last-child`)
     useLayoutEffect(() => {
         const box = scroller.current
-        if (contentWidths !== null || contentColumns.length === 0 || box === null) return
+        if (!measuring || contentColumns.length === 0 || box === null) return
         const next: Record<string, number> = {}
         for (const column of contentColumns) {
             let widest = 0
@@ -1180,8 +1259,30 @@ export function DataTable<T>({
                 widest = Math.max(widest, cell.getBoundingClientRect().width)
             if (widest > 0) next[column.id] = Math.ceil(Math.max(widest, column.minSize ?? 0))
         }
-        setContentWidths(next)
+        capped.current = undefined
+        setContentWidths((before) => ({ ...before, ...next }))
+        setMeasuring(false)
     })
+    // A content cell whose own size changes, its value grown or its face loaded, is measured again once cut short.
+    const drawnFrom = view.top
+    useEffect(() => {
+        const box = scroller.current
+        if (measuring || contentColumns.length === 0 || box === null || typeof ResizeObserver === 'undefined') return
+        const cells = contentColumns.flatMap((column) =>
+            [...contentCells(box, column.id)].map((element) => ({ column: column.id, element })),
+        )
+        const sizes = () =>
+            cells.map(({ column, element }) => ({ column, clientWidth: element.clientWidth, scrollWidth: element.scrollWidth }))
+        // Cut right after a measure, a column is cut at its `maxWidth`.
+        capped.current ??= new Set(
+            sizes()
+                .filter((cell) => outgrown([cell], EMPTY))
+                .map((cell) => cell.column),
+        )
+        const observer = new ResizeObserver(() => outgrown(sizes(), capped.current ?? EMPTY) && setMeasuring(true))
+        for (const { element } of cells) observer.observe(element)
+        return () => observer.disconnect()
+    }, [measuring, contentKey, drawnFrom, rows])
 
     // A row with no actions, or only separators, has no menu at all: no button and no right-click menu.
     const actionsOf = (row: T): DataAction[] | undefined => {
@@ -1203,13 +1304,16 @@ export function DataTable<T>({
         const dragged = widths[column.id]
         if (dragged !== undefined) return `${String(dragged)}px`
         if (column.width !== 'content') return column.width
-        const most = column.maxWidth ?? CONTENT_MAX
-        const need = contentWidths?.[column.id]
-        return need === undefined ? `fit-content(${most})` : `min(${String(need)}px, ${most})`
+        const need = contentWidths[column.id]
+        return measuring || need === undefined ? 'max-content' : contentTrack(need, column)
     }
     const template = [selectable ? CHECK : undefined, ...shown.map(track), endWidth].filter(Boolean).join(' ')
     // The rows are never narrower than their columns' least widths, so a widened column scrolls the table sideways.
-    const least = [selectable ? CHECK : undefined, ...shown.map((column) => trackMin(track(column))), endWidth].filter(Boolean)
+    const least = [
+        selectable ? CHECK : undefined,
+        ...shown.map((column) => columnLeast(column, widths[column.id], contentWidths)),
+        endWidth,
+    ].filter(Boolean)
     if (list) least.push('2 * var(--density-panel-pad)', `${String(0.75 * (least.length - 1))}rem`)
     const rowMin = minWidth === 'auto' ? `calc(${least.join(' + ')})` : `max(${minWidth}, calc(${least.join(' + ')}))`
     const grid = { gridTemplateColumns: template, minWidth: rowMin }
