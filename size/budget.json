@@ -13,7 +13,7 @@
     },
     "dashboard": {
         "engines": ["echarts"],
-        "start": 197,
+        "start": 198,
         "lazy": 412,
         "css": 52
     },
