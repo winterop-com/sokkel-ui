@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { Archive, ArrowUpDown, ChevronLeft, ChevronRight, Copy, Download, Pin, Play, Share2 } from 'lucide-react'
+import { Archive, ArrowUpDown, ChevronLeft, ChevronRight, Copy, Download, Pin, Play, Share2, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 
 import { FilterChip } from '@winterop-com/sokkel-ui/FilterChip'
@@ -121,17 +121,37 @@ export const Pane: StoryObj = {
     },
 }
 
-/** A job's tools as items that give way: Run now, Export, Duplicate, Share, Pin as a toggle and Archive, moved in order into More when the row has no room for them. */
+/**
+ * A job's tools as items that give way: Run now with its related ways, Export, Duplicate, Share,
+ * Pin as a toggle, Archive shut with a reason and Delete, moved in order into More when the row has
+ * no room for them.
+ */
 function JobTools({ narrow = false }: { narrow?: boolean }) {
     const [pinned, setPinned] = useState(true)
     const [query, setQuery] = useState('')
     const items: ToolbarItem[] = [
-        { id: 'run', label: 'Run now', icon: <Play aria-hidden />, onSelect: () => undefined },
+        {
+            id: 'run',
+            label: 'Run now',
+            icon: <Play aria-hidden />,
+            onSelect: () => undefined,
+            more: [
+                { label: 'Run with options', onSelect: () => undefined },
+                { label: 'Run from a step', description: 'Starts at transform', onSelect: () => undefined },
+            ],
+        },
         { id: 'export', label: 'Export', icon: <Download aria-hidden />, onSelect: () => undefined },
         { id: 'duplicate', label: 'Duplicate', icon: <Copy aria-hidden />, onSelect: () => undefined },
         { id: 'share', label: 'Share', icon: <Share2 aria-hidden />, onSelect: () => undefined },
         { id: 'pin', label: 'Pinned', icon: <Pin aria-hidden />, pressed: pinned, onSelect: () => setPinned(!pinned) },
-        { id: 'archive', label: 'Archive', icon: <Archive aria-hidden />, disabled: true, onSelect: () => undefined },
+        {
+            id: 'archive',
+            label: 'Archive',
+            icon: <Archive aria-hidden />,
+            reason: 'A run of sync-inventory is going',
+            onSelect: () => undefined,
+        },
+        { id: 'delete', label: 'Delete', icon: <Trash2 aria-hidden />, destructive: true, onSelect: () => undefined },
     ]
     const toolbar = (
         <Toolbar
@@ -150,5 +170,8 @@ function JobTools({ narrow = false }: { narrow?: boolean }) {
 /** Tools that move into a More menu at their end, in order, as the toolbar narrows; measured on the toolbar, so they come back as it widens. */
 export const Overflow: StoryObj = { render: () => <JobTools /> }
 
-/** The same tools in a narrow pane with More open: plain entries, Pinned checked, and Archive shut. */
+/**
+ * The same tools in a narrow pane with More open: Run now and its related ways as a group, plain
+ * entries, Pinned checked, Archive shut with its reason under it, and Delete in the critical tint.
+ */
 export const OverflowOpen: StoryObj = { name: 'Overflow open', render: () => <JobTools narrow /> }

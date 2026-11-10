@@ -581,11 +581,15 @@ warning, and since the library has no router, the app's blocker awaits `confirmL
 through `ConfirmDialog` (the hook's `dialog`, drawn once in the page) and answers whether to leave;
 `useUnsavedGuard` does the same for a dialog's form. `Toolbar`'s `items` give way as it narrows,
 measured on the toolbar itself: those it has no room for move, in order, into a More menu at their
-end, a toggle checked there. `PageHeader`'s `items` are the same, outline buttons standing before
+end, a toggle checked there. An item with a `reason` is shut but reachable (`aria-disabled`, the
+reason in its tooltip and under its entry in More), `destructive` takes the critical tint, `face`
+gives it a shorter face than its `label`, which stays its name, and `more` makes it a split button
+whose related ways follow its own entry in More as a group. `PageHeader`'s `items` are the same, outline buttons standing before
 its `actions`, the primary one, which stays: the title takes the width it needs and the actions the
 rest, so they fold into More beside a phone's title rather than wrapping under it (`actionsFill`
 gives that room to an app's own measuring part). Its `aside` is a picture before the title block,
-such as a project's mark or an avatar. `ImageLightbox` moves between its `images` by the arrow keys, the
+such as a project's mark or an avatar, and its `lead` starts the actions with a part that is not a
+verb, such as a run's status chip, which never folds. `ImageLightbox` moves between its `images` by the arrow keys, the
 buttons at its sides and a swipe, saying "3 of 12"; it zooms by the wheel, a pinch and its buttons
 about the pointer, from the fit to four times it or twice the image's own pixels, a zoomed image
 moves by a drag without leaving a gap at an edge, and a double press goes between the fit and 100%.

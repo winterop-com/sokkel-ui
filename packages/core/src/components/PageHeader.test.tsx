@@ -32,6 +32,42 @@ describe('a page header', () => {
         expect(html).toContain('flex-[1_1_8rem]')
     })
 
+    it('says the whole code on hover where it is cut short', () => {
+        const html = renderToStaticMarkup(<PageHeader title="Sync inventory" code="juniper/jobs/sync-inventory" />)
+        expect(html).toMatch(/<p title="juniper\/jobs\/sync-inventory" class="truncate font-mono/)
+    })
+
+    it('names More and a split item chevron from its words', () => {
+        const html = renderToStaticMarkup(
+            <PageHeader
+                title="Sync inventory"
+                items={[{ id: 'run', label: 'Run now', more: [{ label: 'Run with options', onSelect: () => undefined }] }]}
+                words={{ more: 'More actions', moreWays: 'Other ways' }}
+            />,
+        )
+        expect(html).toContain('aria-label="More actions"')
+        expect(html).toContain('aria-label="Other ways"')
+    })
+
+    it('starts the actions with a lead that stays out of the folding', () => {
+        const folding = renderToStaticMarkup(
+            <PageHeader
+                title="nightly-export"
+                lead={<span>failed</span>}
+                items={[{ id: 'history', label: 'Run history' }]}
+                actions={<button type="button">Run</button>}
+            />,
+        )
+        expect(folding).toMatch(/data-slot="toolbar-items-lead"[^>]*><span>failed<\/span>/)
+        expect(folding.indexOf('<span>failed</span>')).toBeLessThan(folding.lastIndexOf('>Run history<'))
+        const plain = renderToStaticMarkup(
+            <PageHeader title="nightly-export" lead={<span>failed</span>} actions={<button type="button">Run</button>} />,
+        )
+        expect(plain).toMatch(/data-slot="page-header-actions"[^>]*><span>failed<\/span><button/)
+        const alone = renderToStaticMarkup(<PageHeader title="nightly-export" lead={<span>failed</span>} />)
+        expect(alone).toContain('data-slot="page-header-actions"')
+    })
+
     it('sets the aside down the side of every line after the back button', () => {
         const html = renderToStaticMarkup(
             <PageHeader
