@@ -54,7 +54,6 @@ export function ShareDialog({
             onOpenChange={onOpenChange}
             title="Share"
             description={`A link to ${name}. It carries the ${String(dataset.rows.length)} rows of ${dataset.name} and how the chart draws them, so whoever opens it sees the same chart, saved or not.`}
-            words={{ cancel: 'Close' }}
             footer={link === null ? undefined : <span className="text-xs text-muted-foreground">The link is {size} long.</span>}
         >
             <Field id="share-link" label="Link" error={error}>
