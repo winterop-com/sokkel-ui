@@ -20,6 +20,9 @@ export const Confirm: StoryObj = { render: () => <danger.ConfirmDelete /> }
 /** One field, prefilled; Rename is shut while the name is unchanged, and Enter renames. */
 export const Rename: StoryObj = { name: 'Rename', render: () => <small.Rename /> }
 
+/** A filled-in field first and the one still to write after it: `initialFocus` opens on the message. */
+export const InitialFocus: StoryObj = { name: 'Initial focus', render: () => <small.PublishOutput /> }
+
 /** Delete stays shut until the pipeline's code is typed exactly; the input checks when it matches. */
 export const TypeToConfirm: StoryObj = { name: 'Type to confirm', render: () => <danger.TypeToDelete /> }
 
@@ -38,6 +41,9 @@ export const ServerRefusal: StoryObj = { name: 'Server refusal', render: () => <
 /** Done, with the two ways on: open what was made, or make another. */
 export const Success: StoryObj = { render: () => <small.Created /> }
 
+/** A run's log to read, with nothing to confirm: the corner closes it, and Copy and Download stand alone in the footer. */
+export const RunLog: StoryObj = { name: 'Run log', render: () => <small.RunLog /> }
+
 /** A form from a JSON Schema after Create: the marks in the fields, and the count beside the verb. */
 export const Create: StoryObj = { render: () => <forms.CreateJob /> }
 
@@ -46,6 +52,9 @@ export const Duplicate: StoryObj = { name: 'Duplicate', render: () => <forms.Dup
 
 /** Cancel pressed on a changed form: discard, or keep editing with the changes. */
 export const UnsavedChanges: StoryObj = { name: 'Unsaved changes', render: () => <forms.UnsavedEdit /> }
+
+/** A half-written note that a press outside leaves open; Cancel, the close and Escape still close it. */
+export const OutsidePress: StoryObj = { name: 'Outside press', render: () => <small.RunNote /> }
 
 /** An editing dialog with a confirm opened on top of it for one of its rows. */
 export const Nested: StoryObj = { render: () => <forms.NestedConfirm /> }

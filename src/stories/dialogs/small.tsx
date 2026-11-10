@@ -1,20 +1,36 @@
 import { TextField } from '@winterop-com/sokkel-ui/TextField'
 import { PersonRow } from '@winterop-com/sokkel-ui/PersonRow'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
-import { CircleCheck, Database, FileText, Filter, Globe, Mail, RotateCw, ShieldCheck, Table2, Upload, Webhook } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import {
+    CircleCheck,
+    Database,
+    Download,
+    FileText,
+    Filter,
+    Globe,
+    Mail,
+    RotateCw,
+    ShieldCheck,
+    Table2,
+    Upload,
+    Webhook,
+} from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 
 import { CapabilityPicker, type Capability, type PickerItem } from '@winterop-com/sokkel-ui/CapabilityPicker'
+import { CopyButton } from '@winterop-com/sokkel-ui/CopyButton'
 import { CronField } from '@winterop-com/sokkel-ui/CronField'
 import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
 import { DialogShell } from '@winterop-com/sokkel-ui/DialogShell'
 import { Field } from '@winterop-com/sokkel-ui/Field'
 import { IssueCount, type Issue } from '@winterop-com/sokkel-ui/IssueMark'
+import { LogView, type LogLine } from '@winterop-com/sokkel-ui/LogView'
 import { Markdown } from '@winterop-com/sokkel-ui/Markdown'
 import { Problem } from '@winterop-com/sokkel-ui/Problem'
 import type { TreeNode } from '@winterop-com/sokkel-ui/Tree'
 import { TreeSelect } from '@winterop-com/sokkel-ui/TreeSelect'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { NativeSelect, NativeSelectOption } from '@winterop-com/sokkel-ui/primitives/native-select'
 import { Textarea } from '@winterop-com/sokkel-ui/primitives/textarea'
 import { describeCron } from '@winterop-com/sokkel-ui/lib/cron'
 import { Behind, wait } from './parts'
@@ -587,6 +603,149 @@ export function ReleaseNotes() {
                 confirm={{ label: 'Got it', onConfirm: () => setOpen(false) }}
             >
                 <Markdown content={NOTES} />
+            </DialogShell>
+        </Behind>
+    )
+}
+
+const RUN_LOG: LogLine[] = [
+    { at: '02:00:00.112', level: 'info', source: 'scheduler', text: 'Run #2291 of nightly-export started on worker-1' },
+    { at: '02:00:00.348', level: 'info', source: 'fetch', text: 'Reading orders changed since 2026-11-04 02:00 UTC' },
+    { at: '02:00:04.902', level: 'info', source: 'fetch', text: 'Read 48,213 rows from 3 tables' },
+    { at: '02:00:05.017', level: 'info', source: 'transform', text: 'Joining orders to customers and regions' },
+    { at: '02:00:11.640', level: 'warning', source: 'transform', text: '14 orders name a region that is gone; kept with the region empty' },
+    { at: '02:00:12.205', level: 'info', source: 'transform', text: 'Wrote 48,213 rows to nightly-export-2026-11-05.parquet' },
+    { at: '02:00:12.310', level: 'info', source: 'validate', text: 'Checking 6 rules against the export' },
+    { at: '02:00:13.877', level: 'info', source: 'validate', text: 'All 6 rules passed' },
+    { at: '02:00:13.902', level: 'info', source: 'upload', text: 'Uploading 18.4 MB to https://files.example.org/exports/' },
+    { at: '02:00:21.466', level: 'info', source: 'upload', text: 'Uploaded in 7.6 s' },
+    { at: '02:00:21.590', level: 'info', source: 'notify', text: 'Sent the digest to ada and grace' },
+    { at: '02:00:21.604', level: 'info', source: 'scheduler', text: 'Run #2291 succeeded in 21.5 s' },
+]
+
+const RUN_LOG_TEXT = RUN_LOG.map(
+    (line) => `${line.at ?? ''} ${(line.level ?? 'info').toUpperCase()} [${line.source ?? ''}] ${line.text}`,
+).join('\n')
+
+/** Saves text as a file, as a browser saves a download. */
+function saveText(name: string, text: string) {
+    const url = URL.createObjectURL(new Blob([text], { type: 'text/plain' }))
+    const link = document.createElement('a')
+    link.href = url
+    link.download = name
+    link.click()
+    URL.revokeObjectURL(url)
+}
+
+/** A run's log to read: nothing to confirm, so the corner closes it and Copy and Download are the footer's verbs. */
+export function RunLog() {
+    const [open, setOpen] = useState(true)
+    return (
+        <Behind action="View log" onAction={() => setOpen(true)}>
+            <DialogShell
+                open={open}
+                onOpenChange={setOpen}
+                width="xl"
+                title="Log of nightly-export #2291"
+                description="Succeeded on 5 November 2026 at 02:00 UTC, in 21.5 s."
+                footer="12 lines, 1 warning"
+                actions={
+                    <>
+                        <CopyButton value={RUN_LOG_TEXT} showLabel />
+                        <Button variant="outline" onClick={() => saveText('nightly-export-2291.log', RUN_LOG_TEXT)}>
+                            <Download aria-hidden />
+                            Download
+                        </Button>
+                    </>
+                }
+            >
+                <LogView lines={RUN_LOG} wrap />
+            </DialogShell>
+        </Behind>
+    )
+}
+
+/** Publishing a run's output: the project comes filled in, so opening focuses the message, the field still to write. */
+export function PublishOutput() {
+    const [open, setOpen] = useState(true)
+    const [project, setProject] = useState('larkspur')
+    const [message, setMessage] = useState('')
+    const messageRef = useRef<HTMLTextAreaElement>(null)
+    return (
+        <Behind
+            action="Publish output"
+            onAction={() => {
+                setMessage('')
+                setOpen(true)
+            }}
+        >
+            <DialogShell
+                open={open}
+                onOpenChange={setOpen}
+                title="Publish the output of nightly-export #2291"
+                description="The project gets the file, with the message beside it."
+                initialFocus={messageRef}
+                confirm={{
+                    label: 'Publish',
+                    onConfirm: () => setOpen(false),
+                    why: message.trim() === '' ? 'Say what the export holds.' : undefined,
+                }}
+            >
+                <DescriptionList
+                    items={[
+                        { term: 'File', value: 'nightly-export-2026-11-05.parquet', code: true },
+                        { term: 'Rows', value: '48,213', numeric: true },
+                        { term: 'Size', value: '18.4 MB', numeric: true },
+                    ]}
+                />
+                <Field id="publish-project" label="Project">
+                    <NativeSelect
+                        id="publish-project"
+                        className="w-full"
+                        value={project}
+                        onChange={(event) => setProject(event.target.value)}
+                    >
+                        {['harbor', 'juniper', 'larkspur'].map((one) => (
+                            <NativeSelectOption key={one} value={one}>
+                                {one}
+                            </NativeSelectOption>
+                        ))}
+                    </NativeSelect>
+                </Field>
+                <Field id="publish-message" label="Message">
+                    <Textarea
+                        ref={messageRef}
+                        id="publish-message"
+                        rows={3}
+                        value={message}
+                        placeholder="What changed since the last export"
+                        onChange={(event) => setMessage(event.target.value)}
+                    />
+                </Field>
+            </DialogShell>
+        </Behind>
+    )
+}
+
+/** A note on a run, half written: a press outside leaves it open, while Cancel, the close and Escape still close it. */
+export function RunNote() {
+    const [open, setOpen] = useState(true)
+    const [note, setNote] = useState('14 orders name a region that is gone. Asked grace whether')
+    return (
+        <Behind action="Add note" onAction={() => setOpen(true)}>
+            <DialogShell
+                open={open}
+                onOpenChange={setOpen}
+                title="Note on nightly-export #2291"
+                description="Shown on the run, to everyone in harbor."
+                closeOnOutsidePress={false}
+                confirm={{
+                    label: 'Save note',
+                    onConfirm: () => setOpen(false),
+                    why: note.trim() === '' ? 'Write the note first.' : undefined,
+                }}
+            >
+                <TextField id="run-note-text" label="Note" multiline rows={4} value={note} onChange={setNote} />
             </DialogShell>
         </Behind>
     )
