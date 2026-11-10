@@ -27,6 +27,12 @@ describe('a page header', () => {
         )
     })
 
+    it('keeps a wide header with folding actions to one line, the title at most 60% of it', () => {
+        const html = renderToStaticMarkup(<PageHeader title="nightly-export" code="nightly-export" items={[{ id: 'log', label: 'Log' }]} />)
+        expect(html).toContain('@lg/page-header:flex-nowrap')
+        expect(html).toContain('@lg/page-header:max-w-[60%]')
+    })
+
     it('gives the actions the room the title leaves with actionsFill', () => {
         const html = renderToStaticMarkup(<PageHeader title="Jobs" actionsFill actions={<div>tools</div>} />)
         expect(html).toMatch(/data-slot="page-header-actions" class="[^"]*flex-\[1_1_8rem\]/)

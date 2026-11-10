@@ -40,6 +40,13 @@ export interface ToolbarItem {
      * tool's own entry comes first and these after it, set apart as a group.
      */
     more?: readonly SplitButtonItem[]
+    /** The name of the split button's chevron for this tool's `more`, in place of the toolbar's `moreWays`. */
+    moreLabel?: string
+    /**
+     * The tool's look in the row in place of the toolbar's: `outline` for a primary that is quiet until
+     * it would do something, `default` filled, `ghost` bare.
+     */
+    variant?: 'default' | 'outline' | 'ghost'
     /** On or off, for a tool that toggles: pressed in the row, checked in More. */
     pressed?: boolean
     /** Drawn in the row in place of the plain button, such as a `FilterChip`. */
@@ -148,12 +155,13 @@ function Inline({
 }) {
     if (item.render !== undefined) return item.render
     const icon = icons ? item.icon : undefined
+    const look = item.variant ?? variant
     const named = item.face !== undefined
     const title = named && !said(item.reason) ? item.label : undefined
     if (item.more !== undefined) {
         return (
             <SplitButton
-                variant={variant}
+                variant={look}
                 size="sm"
                 label={named ? item.label : undefined}
                 title={title}
@@ -161,7 +169,7 @@ function Inline({
                 items={item.more}
                 disabled={item.disabled}
                 reason={item.reason}
-                words={{ more: words.moreWays }}
+                words={{ more: item.moreLabel ?? words.moreWays }}
             >
                 {icon}
                 {item.face ?? item.label}
@@ -170,7 +178,7 @@ function Inline({
     }
     return (
         <Button
-            variant={variant}
+            variant={look}
             size="sm"
             disabled={item.disabled}
             reason={item.reason}

@@ -71,6 +71,36 @@ export const LongTitle: StoryObj = {
 }
 
 /**
+ * A run named by its long code, with actions that fold: the code is cut short with the whole of it
+ * on hover, Download the log folds into More first, and Rerun, quiet while the run can still move,
+ * stays as the primary with its other ways under its chevron.
+ */
+export const LongCodeTitle: StoryObj = {
+    name: 'Long code title',
+    render: () => (
+        <PageHeader
+            title="nightly-export-harbor-juniper-larkspur-2026-11-10T02-00-00Z-retry-2"
+            code="nightly-export-harbor-juniper-larkspur-2026-11-10T02-00-00Z-retry-2"
+            lead={<StatusChip status="running" />}
+            items={[
+                { id: 'log', label: 'Download the log', face: 'Log', icon: <Download aria-hidden />, onSelect: () => undefined },
+                { id: 'cancel', label: 'Cancel the run', face: 'Cancel', destructive: true, onSelect: () => undefined },
+            ]}
+            primary={{
+                id: 'rerun',
+                label: 'Run nightly-export again',
+                face: 'Rerun',
+                variant: 'outline',
+                icon: <RotateCcw aria-hidden />,
+                onSelect: () => undefined,
+                moreLabel: 'More ways to run nightly-export again',
+                more: [{ label: 'Rerun from validate', onSelect: () => undefined }],
+            }}
+        />
+    ),
+}
+
+/**
  * One thing's page: its name over its code, a sentence on what it does, a line of small facts and
  * three actions, which on a phone wrap under the title and then onto as many lines as they need.
  */

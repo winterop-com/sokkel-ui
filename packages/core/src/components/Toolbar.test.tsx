@@ -114,6 +114,23 @@ describe('a toolbar row', () => {
         expect(html.slice(html.indexOf('data-slot="toolbar-primary"'))).toContain('aria-disabled="true"')
     })
 
+    it('draws an item in its own look, and names its chevron by its own label', () => {
+        const html = renderToStaticMarkup(
+            <Toolbar
+                primary={{
+                    id: 'rerun',
+                    label: 'Rerun',
+                    variant: 'outline',
+                    moreLabel: 'More ways to rerun',
+                    more: [{ label: 'Rerun from validate', onSelect: noop }],
+                }}
+            />,
+        )
+        const primary = html.slice(html.indexOf('data-slot="toolbar-primary"'))
+        expect(primary).not.toContain('bg-primary text-primary-foreground')
+        expect(primary).toContain('aria-label="More ways to rerun"')
+    })
+
     it('keeps the row to one line with nowrap', () => {
         expect(renderToStaticMarkup(<Toolbar items={[{ id: 'export', label: 'Export' }]} nowrap />)).toContain('flex-nowrap')
         expect(renderToStaticMarkup(<Toolbar items={[{ id: 'export', label: 'Export' }]} />)).not.toContain('flex-nowrap')
