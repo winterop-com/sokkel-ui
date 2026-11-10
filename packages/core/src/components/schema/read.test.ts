@@ -18,7 +18,10 @@ describe("a schema's type in words", () => {
 
     test('says nullable, choices and constants plainly', () => {
         expect(typeLabel({ type: ['integer', 'null'] }, ROOT)).toBe('integer or null')
-        expect(typeLabel({ oneOf: [{ type: 'string' }, { type: 'number' }] }, ROOT)).toBe('one of 2')
+        expect(typeLabel({ oneOf: [{ type: 'string' }, { type: 'number' }] }, ROOT)).toBe('string or number')
+        expect(typeLabel({ anyOf: [{ type: 'integer' }, { type: 'null' }] }, ROOT)).toBe('integer or null')
+        const five = [{ type: 'string' }, { type: 'number' }, { type: 'boolean' }, { type: 'array' }, { type: 'object' }]
+        expect(typeLabel({ anyOf: five }, ROOT)).toBe('any of 5')
         expect(typeLabel({ enum: ['a', 'b'] }, ROOT)).toBe('one of the values')
         expect(typeLabel({ const: 'v1' }, ROOT)).toBe('constant')
     })

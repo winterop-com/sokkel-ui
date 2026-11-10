@@ -36,6 +36,8 @@ export interface CodeSchemaWords {
     say: (issue: SchemaIssue) => string
     /** The text is not valid in the language. */
     syntax: (language: SchemaLanguage) => string
+    /** Beside a deprecated key offered in completion. */
+    deprecated: string
 }
 
 const plural = (count: number, unit: string) => `${String(count)} ${count === 1 ? unit : `${unit}s`}`
@@ -81,6 +83,7 @@ export const SCHEMA_WORDS: CodeSchemaWords = {
         }
     },
     syntax: (language) => `Not valid ${language === 'json' ? 'JSON' : 'YAML'}`,
+    deprecated: 'deprecated',
 }
 
 const text = (state: EditorState, node: SyntaxNode) => state.sliceDoc(node.from, node.to)
@@ -179,7 +182,11 @@ function yamlBlock(state: EditorState, node: SyntaxNode): string {
 
 /** A YAML tree read into a value. */
 function readYaml(state: EditorState, node: SyntaxNode | null, path: Path, spans: Map<string, Span>, key?: Span['key']): unknown {
-    if (node === null) return null
+    if (node === null) {
+        // A key with nothing after it holds null, written where its key is.
+        if (key !== undefined) spans.set(pointer(path), { from: key.from, to: key.to, key, path })
+        return null
+    }
     if (node.name === 'Tagged' || node.name === 'Anchored') {
         const inner = children(node).find((child) => !['Tag', 'Anchor'].includes(child.name)) ?? null
         return readYaml(state, inner, path, spans, key)
@@ -628,6 +635,8 @@ export function yamlKeys(state: EditorState, pos: number, column: number): Set<s
 /** An option as inserted: its text, and what to select of it once it is in. */
 interface Option extends Completion {
     insert: string
+    /** The schema marks the key deprecated: it is listed last, struck through. */
+    deprecated?: boolean
     /** Offsets into `insert` to select, or the one place to leave the cursor. */
     select?: [number, number]
 }
@@ -647,15 +656,18 @@ function keyOption(
     language: SchemaLanguage,
     column: number,
     required: boolean,
+    words: CodeSchemaWords,
 ): Option {
     const resolved = resolve(property, root)
     const kinds = types(resolved)
+    const deprecated = resolved.deprecated === true
     const option = {
         label: name,
-        detail: typeLabel(property, root),
+        detail: deprecated ? words.deprecated : typeLabel(property, root),
         info: resolved.description,
         type: 'property',
-        boost: required ? 1 : 0,
+        boost: deprecated ? -99 : required ? 1 : 0,
+        ...(deprecated ? { deprecated } : {}),
     }
     if (language === 'json') {
         const head = `${JSON.stringify(name)}: `
@@ -695,6 +707,7 @@ function schemaOptions(
     present: Set<string>,
     column: number,
     document?: { value: unknown },
+    words: CodeSchemaWords = SCHEMA_WORDS,
 ): Option[] {
     const json = language === 'json'
     if (slot.at === 'key') {
@@ -702,7 +715,9 @@ function schemaOptions(
         return schemasAt(schema, slot.path, schema, document).flatMap((each) =>
             Object.entries(each.properties ?? {})
                 .filter(([name]) => !seen.has(name) && seen.add(name) !== undefined)
-                .map(([name, property]) => keyOption(name, property, schema, language, column, each.required?.includes(name) ?? false)),
+                .map(([name, property]) =>
+                    keyOption(name, property, schema, language, column, each.required?.includes(name) ?? false, words),
+                ),
         )
     }
     const path = slot.key === undefined ? slot.path : [...slot.path, slot.key]
@@ -720,10 +735,15 @@ function schemaOptions(
 
 /**
  * Completes property names and enum values from a schema, for JSON or YAML. A key already in its
- * object is not offered again, a required one is listed first, and a key is put in with its default
+ * object is not offered again, a required one is listed first and a deprecated one last, marked
+ * `deprecated`; a key is put in with its default
  * selected, or opened for the object, list or string it takes.
  */
-export function schemaCompletion(schema: () => JsonSchema | undefined, language: SchemaLanguage) {
+export function schemaCompletion(
+    schema: () => JsonSchema | undefined,
+    language: SchemaLanguage,
+    words: () => CodeSchemaWords = () => SCHEMA_WORDS,
+) {
     return (context: CompletionContext): CompletionResult | null => {
         const current = schema()
         if (current === undefined) return null
@@ -740,7 +760,7 @@ export function schemaCompletion(schema: () => JsonSchema | undefined, language:
                   : yamlKeys(context.state, context.pos, column)
         // The document as written so far, so a conditional schema offers the keys of the branch that applies.
         const read = readDocument(context.state, language, 100)
-        const options = schemaOptions(current, language, slot, present, column, read === null ? undefined : { value: read.value })
+        const options = schemaOptions(current, language, slot, present, column, read === null ? undefined : { value: read.value }, words())
         if (options.length === 0) return null
         // Inside a JSON string an option replaces the whole string, its quotes included.
         const after = slot.quoted && context.state.sliceDoc(context.pos, context.pos + 1) === '"' ? 1 : 0

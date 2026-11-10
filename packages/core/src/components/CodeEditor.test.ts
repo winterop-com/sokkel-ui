@@ -27,6 +27,18 @@ describe('a large read-only document', () => {
     })
 })
 
+describe('a read-only editor', () => {
+    it('stays focusable, so a click puts the caret in and activeLine shades its line', async () => {
+        const { EditorView } = await import('@codemirror/view')
+        const { codeReadOnly } = await import('./CodeEditor')
+        const attributes = (readOnly: boolean) =>
+            EditorState.create({ extensions: codeReadOnly(readOnly) }).facet(EditorView.contentAttributes)
+        expect(attributes(true)).toContainEqual({ tabindex: '0' })
+        expect(attributes(false)).toEqual([])
+        expect(EditorState.create({ extensions: codeReadOnly(true) }).readOnly).toBe(true)
+    })
+})
+
 describe('languages by name', () => {
     it('reads a media type as the language it is written in', async () => {
         const { languageForMediaType } = await import('./CodeEditor')

@@ -5,6 +5,7 @@ import { EditorState, type TransactionSpec } from '@codemirror/state'
 import { describe, expect, it } from 'vitest'
 
 import type { JsonSchema } from '../schema/read'
+import { registerSchemaFormats } from '../schema/formats'
 import { validate } from '../schema/validate'
 import {
     jsonKeys,
@@ -307,5 +308,100 @@ describe('problems and places', () => {
         const json = jsonState('{"steps": [{"name": "fetch"}]}')
         const named = pathRange(json, 'json', ['steps', 0, 'name'])
         expect(named === null ? null : json.doc.sliceString(named.from, named.to)).toBe('"name": "fetch"')
+    })
+})
+
+describe("a pipeline's steps, each configured by its block", () => {
+    /** A field's value, or a reference to one filled in when the pipeline runs. */
+    const REFERENCE: JsonSchema = { type: 'string', pattern: '^\\$\\{[^}]+\\}$' }
+    const either = (schema: JsonSchema): JsonSchema => ({ anyOf: [schema, REFERENCE] })
+    const PIPELINE: JsonSchema = {
+        type: 'object',
+        properties: {
+            steps: {
+                type: 'array',
+                items: {
+                    type: 'object',
+                    required: ['name', 'block'],
+                    properties: {
+                        name: { type: 'string' },
+                        description: { type: 'string' },
+                        block: { enum: ['fetch', 'wait'] },
+                        config: {},
+                    },
+                    allOf: [
+                        {
+                            if: { properties: { block: { const: 'fetch' } }, required: ['block'] },
+                            // oxlint-disable-next-line unicorn/no-thenable -- `then` is the schema keyword
+                            then: {
+                                properties: {
+                                    config: {
+                                        type: 'object',
+                                        properties: {
+                                            retries: either({ type: 'integer', minimum: 0 }),
+                                            host: either({ type: 'string', format: 'hostname' }),
+                                            legacy: { type: 'string', deprecated: true },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                        {
+                            if: { properties: { block: { const: 'wait' } }, required: ['block'] },
+                            // oxlint-disable-next-line unicorn/no-thenable -- `then` is the schema keyword
+                            then: {
+                                properties: {
+                                    config: {
+                                        type: 'object',
+                                        properties: {
+                                            for: either({ type: 'string', format: 'humane-duration', pattern: '^(?:(?:\\d+[smhd])+)$' }),
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    ],
+                },
+            },
+        },
+    }
+    registerSchemaFormats({ 'humane-duration': /^(?:\d+[smhd])+$/ })
+
+    const diagnose = (doc: string) =>
+        schemaDiagnostics(yamlState(doc), 'yaml', PIPELINE, validate).map((each) => [doc.slice(each.from, each.to), each.message])
+
+    const options = (doc: string, marker: string) => {
+        const state = yamlState(doc)
+        const pos = doc.indexOf(marker) + marker.length
+        return schemaCompletion(() => PIPELINE, 'yaml')(new CompletionContext(state, pos, true))?.options ?? []
+    }
+
+    it('marks an empty config at its key, not the step around it', () => {
+        const doc = 'steps:\n  - name: wait-a-while\n    description: Waits before the upload\n    block: wait\n    config:\n'
+        expect(diagnose(doc)).toEqual([['config', 'Expected an object']])
+        const at = pathRange(yamlState(doc), 'yaml', ['steps', 0, 'config'])
+        expect(at === null ? null : doc.slice(at.from, at.to)).toBe('config')
+    })
+
+    it('says a value that fails a format once, by the format, never by its raw pattern', () => {
+        const doc = 'steps:\n  - name: pause\n    block: wait\n    config:\n      for: 5 parsecs\n'
+        expect(diagnose(doc)).toEqual([['5 parsecs', 'Expected the humane-duration format']])
+        expect(diagnose(doc.replace('5 parsecs', '5m'))).toEqual([])
+        expect(diagnose(doc.replace('5 parsecs', '${steps.fetch.delay}'))).toEqual([])
+    })
+
+    it('describes a field by its own type, not by the reference beside it', () => {
+        const doc = 'steps:\n  - name: get\n    block: fetch\n    config:\n      r\n'
+        const details = Object.fromEntries(options(doc, '      r').map((option) => [option.label, option.detail]))
+        expect(details).toMatchObject({ retries: 'integer', host: 'string, hostname' })
+    })
+
+    it('lists a deprecated key last, marked deprecated', () => {
+        const doc = 'steps:\n  - name: get\n    block: fetch\n    config:\n      r\n'
+        const found = options(doc, '      r')
+        const legacy = found.find((option) => option.label === 'legacy')
+        expect(legacy).toMatchObject({ detail: 'deprecated', deprecated: true })
+        const others = found.filter((option) => option !== legacy).map((option) => option.boost ?? 0)
+        expect(Math.min(...others)).toBeGreaterThan(legacy?.boost ?? 0)
     })
 })
