@@ -120,11 +120,13 @@ export function PageHeader({
     const trailed = trail !== undefined && trail.length > 0
     const folding = (items !== undefined && items.length > 0) || primary !== undefined
     const fill = actionsFill ?? folding
+    // Beside actions that fill, from 32rem up the row stays one line: the title takes its own width up
+    // to 60% of it, cut short or wrapped past that, and the actions the rest, folding what does not fit.
     // A title with more under it takes a fair share of the row. A title alone takes its own width in a
     // narrow header, so a short one keeps its actions beside it on a phone, and in a wide one the room
     // its actions leave, wrapping there rather than pushing them under it.
     const basis = fill
-        ? 'flex-[0_1_auto]'
+        ? 'flex-[0_1_auto] @lg/page-header:max-w-[60%]'
         : description !== undefined || meta !== undefined
           ? 'flex-[1_1_16rem]'
           : 'flex-[1_1_auto] @lg/page-header:flex-[1_1_0%] @lg/page-header:min-w-32'
@@ -136,7 +138,7 @@ export function PageHeader({
     const rows = Number(trailed) + 1 + Number(showCode) + Number(description !== undefined) + Number(meta !== undefined)
     return (
         <div className="@container/page-header">
-            <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
+            <div className={cn('flex flex-wrap items-end justify-between gap-x-4 gap-y-3', fill && '@lg/page-header:flex-nowrap')}>
                 <div
                     className={cn(
                         'min-w-0',
