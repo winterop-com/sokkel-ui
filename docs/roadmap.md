@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.14.2** is the latest release (2026-11-10): a typeless `$ref` reads "any", `WindowedPaneButton`
+- **0.14.3** is the latest release (2026-11-10): `StatusProvider` takes `dot` and `fallback`, and
+  `StatusChip` marks its state and passes props through.
+- **0.14.2** (2026-11-10): a typeless `$ref` reads "any", `WindowedPaneButton`
   takes a size, `useControlledDocument`, and phrases for an app's formats.
 - **0.14.1** (2026-11-10): a bare `Dot` lines up with a worded one, and a status
   definition takes `live`.
