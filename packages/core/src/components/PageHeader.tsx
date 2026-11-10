@@ -89,7 +89,8 @@ const ROWS = ['row-span-1', 'row-span-2', 'row-span-3', 'row-span-4', 'row-span-
  * the title, nearest last, each a link back up, and `onBack` draws a back button level with the
  * title, the rest of the header lined up after it.
  *
- * A long title wraps; `singleLine` keeps it to one line, cut short with the whole of it on hover.
+ * A long title wraps; `singleLine` keeps it to one line, cut short with the whole of it on hover,
+ * as a code standing as the title is by default.
  */
 export function PageHeader({
     title,
@@ -106,17 +107,22 @@ export function PageHeader({
     actionsFill,
     trail,
     onBack,
-    singleLine = false,
+    singleLine,
     words,
 }: PageHeaderProps) {
     const said = { ...WORDS, ...words }
     const showCode = code !== undefined && code !== title
+    // A code standing as the title is cut short rather than wrapped, unless the app says otherwise.
+    const oneLine = singleLine ?? (code !== undefined && code === title)
     const back = onBack !== undefined
     const beside = aside !== undefined && aside !== null
     const led = lead !== undefined && lead !== null && lead !== false
     const trailed = trail !== undefined && trail.length > 0
     const folding = (items !== undefined && items.length > 0) || primary !== undefined
     const fill = actionsFill ?? folding
+    // A title with more under it takes a fair share of the row; a title alone takes its own width,
+    // so a short one keeps its actions beside it on a phone.
+    const basis = fill ? 'flex-[0_1_auto]' : description !== undefined || meta !== undefined ? 'flex-[1_1_16rem]' : 'flex-[1_1_auto]'
     // Beside a back button or an aside the header is a grid: the button level with the title, the
     // aside down the side of every line, and every other line in the last column so it starts where
     // the title starts.
@@ -128,7 +134,7 @@ export function PageHeader({
             <div
                 className={cn(
                     'min-w-0',
-                    fill ? 'flex-[0_1_auto]' : 'flex-[1_1_16rem]',
+                    basis,
                     grid && 'grid items-center gap-x-2',
                     grid && (back && beside ? 'grid-cols-[auto_auto_minmax(0,1fr)]' : 'grid-cols-[auto_minmax(0,1fr)]'),
                     beside && 'gap-x-3',
@@ -165,10 +171,10 @@ export function PageHeader({
                 )}
                 <div className={cn('flex min-w-0 items-baseline gap-2', column)}>
                     <h1
-                        title={singleLine && typeof title === 'string' ? title : undefined}
+                        title={oneLine && typeof title === 'string' ? title : undefined}
                         className={cn(
                             'min-w-0 font-heading text-page-title text-page-title-ink',
-                            singleLine ? 'truncate' : 'text-pretty break-words',
+                            oneLine ? 'truncate' : 'text-pretty break-words',
                             !showCode && code !== undefined && 'font-mono',
                         )}
                     >
