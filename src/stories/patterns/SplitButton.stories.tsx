@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { ListStart, Play, SlidersHorizontal } from 'lucide-react'
+import { LayoutTemplate, ListStart, Play, Plus, SlidersHorizontal, Upload } from 'lucide-react'
 
 import { Row } from '@winterop-com/sokkel-ui/Layout'
 import { SplitButton, type SplitButtonItem } from '@winterop-com/sokkel-ui/SplitButton'
@@ -51,6 +51,23 @@ export const Sizes: StoryObj = {
                     </SplitButton>
                 </Specimen>
             ))}
+        </Row>
+    ),
+}
+
+const NEW: SplitButtonItem[] = [
+    { label: 'New from a template', icon: <LayoutTemplate aria-hidden />, onSelect: () => undefined },
+    { label: 'Import from a file', icon: <Upload aria-hidden />, onSelect: () => undefined },
+]
+
+/** A face that leans on the page, "New" on the jobs page, named in full for a screen reader and on hover. */
+export const Named: StoryObj = {
+    render: () => (
+        <Row>
+            <SplitButton items={NEW} label="New job" title="New job">
+                <Plus data-icon="inline-start" aria-hidden />
+                New
+            </SplitButton>
         </Row>
     ),
 }

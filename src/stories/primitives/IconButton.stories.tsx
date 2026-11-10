@@ -62,6 +62,37 @@ export const Pressed: StoryObj = {
     },
 }
 
+/** A tooltip that says more than the name, with the key that does the same drawn beside it. */
+export const Shortcut: StoryObj = {
+    render: () => (
+        <Row gap="2xs">
+            <IconButton label="Run again" tooltip="Run nightly-export again with the same inputs" shortcut="R">
+                <RotateCcw aria-hidden />
+            </IconButton>
+            <IconButton label="Edit" shortcut="E">
+                <Pencil aria-hidden />
+            </IconButton>
+            <IconButton label="Archive" tooltip="Archive nightly-export, keeping its runs" shortcut="A">
+                <Archive aria-hidden />
+            </IconButton>
+        </Row>
+    ),
+}
+
+/** An action that destroys: quiet until the pointer is on it, then tinted in the critical tone. */
+export const Destructive: StoryObj = {
+    render: () => (
+        <Row gap="2xs">
+            <IconButton label="Edit">
+                <Pencil aria-hidden />
+            </IconButton>
+            <IconButton label="Delete" tooltip="Delete sync-inventory and every run it has" destructive>
+                <Trash2 aria-hidden />
+            </IconButton>
+        </Row>
+    ),
+}
+
 /** Each variant and size; ghost is the default, for the quiet actions most rows carry. */
 export const Variants: StoryObj = {
     render: () => (
