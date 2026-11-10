@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.12.5** is the latest release (2026-11-10): schema completion follows any local reference, so a
+- **0.12.6** is the latest release (2026-11-10): a short `PageHeader` title keeps its actions on a
+  phone, a code title truncates, `Toolbar` takes `nowrap`, and three small fixes.
+- **0.12.5** (2026-11-10): schema completion follows any local reference, so a
   JSON Schema edited against a meta-schema completes inside `properties` and `items`.
 - **0.12.4** (2026-11-10): `Toolbar` and `PageHeader` take a `primary` item and
   `wordsOnly`.
