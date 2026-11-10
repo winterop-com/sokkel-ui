@@ -1,4 +1,4 @@
-import { useRef, type ReactNode, type RefObject } from 'react'
+import { useEffect, useRef, type ReactNode, type RefObject } from 'react'
 
 import { Button } from './ui/button'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog'
@@ -129,6 +129,16 @@ export function DialogShell({
     const shut = confirm?.why !== undefined || busy
     const held = busy || !dismissible
     const body = useRef<HTMLDivElement>(null)
+    // A dialog drawn open from its first render asks for its first field before its body is there,
+    // and the popup takes focus; this moves it on to the field once the body is drawn.
+    useEffect(() => {
+        if (!open || initialFocus !== undefined) return
+        const frame = requestAnimationFrame(() => {
+            const field = body.current?.querySelector<HTMLElement>(FIELD)
+            if (field != null && !body.current?.contains(document.activeElement)) field.focus()
+        })
+        return () => cancelAnimationFrame(frame)
+    }, [open, initialFocus])
     return (
         <Dialog
             open={open}

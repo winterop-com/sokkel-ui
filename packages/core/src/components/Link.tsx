@@ -18,7 +18,11 @@ export type LinkRender = (props: RoutedLinkProps) => ReactNode
 export interface LinkProviderProps {
     /** Draws every internal link inside, such as `(props) => <RouterLink to={props.href} {...props} />`. */
     render: LinkRender
-    /** Which links go through `render`; the others are plain anchors. By default `isInternalLink`. */
+    /**
+     * Which links go through `render`; the others are plain anchors. By default `isInternalLink`, which
+     * takes every path on the page's origin: leave out here the ones the server answers and the router
+     * does not own, such as `/docs`.
+     */
     internal?: (props: RoutedLinkProps) => boolean
     children: ReactNode
 }
