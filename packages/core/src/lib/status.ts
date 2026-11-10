@@ -97,12 +97,12 @@ export function isStatusColor(value: string): value is StatusColor {
 
 /**
  * A state looked up in the app's map, then among the run states. A state neither knows is said by
- * its own name, underscores as spaces, and drawn neutral, so a value the app has not mapped yet still
+ * its own name, underscores as spaces, and drawn in `fallback` (neutral by default), so a value the app has not mapped yet still
  * reads.
  */
-export function resolveStatus(status: string, map: StatusMap = RUN_STATUS_MAP): ResolvedStatus {
+export function resolveStatus(status: string, map: StatusMap = RUN_STATUS_MAP, fallback: StatusColor = 'neutral'): ResolvedStatus {
     const found = entry(map, status) ?? entry(RUN_STATUS_MAP, status)
-    const color = found?.color ?? 'neutral'
+    const color = found?.color ?? fallback
     return { label: found?.label ?? status.replaceAll('_', ' '), color, live: found?.live ?? color === 'running' }
 }
 
