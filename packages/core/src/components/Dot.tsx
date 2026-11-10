@@ -57,35 +57,31 @@ export function Dot({ kind, color, status, outline = false, size = 'lg', label, 
     const ring =
         focusable && 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring focus-visible:outline-solid'
     const tabIndex = focusable ? 0 : undefined
-    // Both forms sit on the middle of the text's x-height in a line of text and on the center in a
-    // flex row, so a bare dot and one with its word line up in the same row.
+    // Both forms are a box one line of text tall with the disc centered in it, so a bare dot and one
+    // with its word line up in any row, and a box an app grows (a tooltip trigger on a phone) grows
+    // around the disc rather than the disc itself.
     const dot = (
         <span
-            {...(name === undefined ? { 'aria-hidden': true } : { role: 'img', 'aria-label': name })}
-            tabIndex={word === undefined ? tabIndex : undefined}
+            aria-hidden
             style={style}
             className={cn(
-                'inline-block shrink-0 rounded-full align-middle',
+                'inline-block shrink-0 rounded-full',
                 SIZE[size],
                 outline ? cn('border', ink === undefined && 'border-border-strong') : kind !== undefined && KIND_FILL[kind],
-                word === undefined && ring,
-                word === undefined && className,
             )}
         />
     )
-    const mark =
-        word === undefined ? (
-            dot
-        ) : (
-            <span
-                data-slot="dot"
-                tabIndex={tabIndex}
-                className={cn('inline-flex min-w-0 items-center gap-1.5 rounded-chip align-middle', ring, className)}
-            >
-                {dot}
-                <span className="truncate">{word}</span>
-            </span>
-        )
+    const mark = (
+        <span
+            data-slot="dot"
+            {...(word === undefined && name !== undefined ? { role: 'img', 'aria-label': name } : {})}
+            tabIndex={tabIndex}
+            className={cn('inline-flex h-[1lh] min-w-0 items-center gap-1.5 rounded-chip align-middle', ring, className)}
+        >
+            {dot}
+            {word !== undefined && <span className="truncate">{word}</span>}
+        </span>
+    )
     if (tip === undefined) return mark
     return (
         <Tooltip>
