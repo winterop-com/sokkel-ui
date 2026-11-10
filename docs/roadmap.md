@@ -6,7 +6,10 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.13.0** is the latest release (2026-11-10): the last of a pipeline app's own parts. `Dot` takes a
+- **0.13.1** is the latest release (2026-11-10): what a pipeline app's move off Monaco needed. Schema
+  checks report only the branch that fits, apps register formats (`registerSchemaFormats`),
+  `JSON_SCHEMA_2020_12`, `CodeEditor`'s `onProblems` and `activeLine`, and an opaque gutter.
+- **0.13.0** (2026-11-10): the last of a pipeline app's own parts. `Dot` takes a
   label, a tooltip, a word and a hollow tone (its `md` is now 8px), `StatusChip` a `dot`, a new `Chip`,
   `Callout`, `ItemHeading`, `Surface` tones `well` and `inset` without clipping, `Section` tones `graph`
   and `critical` with `headingId` and `bodyClassName`, and `Field` a `requiredMark="word"` and a
