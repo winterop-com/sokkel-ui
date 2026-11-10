@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.12.0** is the latest release (2026-11-10): a pipeline app's design-system leaves. `PageHeader`
+- **0.12.1** is the latest release (2026-11-10): `CopyButton` takes a `variant`, `SecretReveal`
+  `autoFocus` and a name for its value.
+- **0.12.0** (2026-11-10): a pipeline app's design-system leaves. `PageHeader`
   takes `aside` and folding `items`, `SearchField` a `label` and `disabled`, `TextLink` variants, a
   button form and marked external links, `InlineCode`, `DialogShell` a footer without a confirm,
   `closeOnOutsidePress` and `initialFocus`, `IconButton` `tooltip`, `shortcut` and `destructive`,
