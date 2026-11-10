@@ -286,6 +286,7 @@ const CORE_AREAS: Record<string, string> = {
     UptimeBar: 'Data display',
     // Actions, dialogs and feedback.
     Banner: 'Actions, dialogs and feedback',
+    Callout: 'Actions, dialogs and feedback',
     ConfirmCard: 'Actions, dialogs and feedback',
     CopyButton: 'Actions, dialogs and feedback',
     DownloadButton: 'Actions, dialogs and feedback',

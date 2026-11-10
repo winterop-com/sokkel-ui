@@ -358,6 +358,13 @@ DetailSheet, UptimeBar.
 Every example arranges and builds its screens from these, never by hand, so a fix in one reaches
 them all.
 
+`Banner` is the strip at a screen's edge for a state that holds; `Callout` is a boxed note in the
+content beside what it is about, in five tones (neutral among them) with a hairline edge all the
+way round and no colored rule; `Problem` says what went wrong for a person, the raw message folded
+away. `Surface` sets content on a card's ground, a panel's (`well`) or the page's (`inset`) and
+clips nothing, so a focus ring at its edge shows whole; unpadded, its first and last children take
+its corners.
+
 `DateField`, `TimeField`, `DateTimeField` and `NumberField` are typed: each reads what is typed by
 one format, writes the value back in it once the field is left, and says text that does not read
 with the issue mark, keeping the value as it was. Dates and times cross the API as ISO strings with

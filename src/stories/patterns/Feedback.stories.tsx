@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
 import { Banner } from '@winterop-com/sokkel-ui/Banner'
+import { Callout } from '@winterop-com/sokkel-ui/Callout'
 import { CheckList } from '@winterop-com/sokkel-ui/CheckList'
 import { ListSkeleton, Pending } from '@winterop-com/sokkel-ui/Loading'
 import { Problem } from '@winterop-com/sokkel-ui/Problem'
@@ -46,6 +47,43 @@ function Banners() {
                 A newer version of the app is ready.
             </Banner>
             <Banner tone="good">All 18 jobs ran in the last hour.</Banner>
+        </Ground>
+    )
+}
+
+/**
+ * Boxed notes in the content, in each tone: a failed run of nightly-export with a way forward, then
+ * a warning, a fact, a success and a neutral note, and one without its icon.
+ */
+function Callouts() {
+    return (
+        <Ground>
+            <Callout
+                tone="critical"
+                title="nightly-export failed at upload"
+                actions={
+                    <Button size="sm" variant="outline">
+                        Retry
+                    </Button>
+                }
+            >
+                No answer from `https://files.example.org` within 30 seconds. The fetch, transform and validate steps succeeded.
+            </Callout>
+            <Callout tone="warning" title="sync-inventory is two runs behind">
+                The worker is busy with rebuild-index; queued runs start when it is done.
+            </Callout>
+            <Callout tone="info" title="Runs are kept for 30 days">
+                Download a run's output from its page to keep it longer.
+            </Callout>
+            <Callout tone="good" title="send-digest succeeded">
+                Sent to ada, grace, linus and margaret.
+            </Callout>
+            <Callout tone="neutral" title="import-orders reads from larkspur">
+                Set `source` on the job to read from another project.
+            </Callout>
+            <Callout tone="neutral" icon={false}>
+                The scheduler runs in UTC.
+            </Callout>
         </Ground>
     )
 }
@@ -127,6 +165,7 @@ const meta: Meta = { title: 'Patterns/Feedback' }
 export default meta
 
 export const Banners_: StoryObj = { name: 'Banner', render: () => <Banners /> }
+export const Callouts_: StoryObj = { name: 'Callout', render: () => <Callouts /> }
 export const Skeletons: StoryObj = { name: 'Loading', render: () => <Loading /> }
 export const Checks: StoryObj = { name: 'Check list', render: () => <Health /> }
 export const Problems_: StoryObj = { name: 'Problem', render: () => <Problems /> }
