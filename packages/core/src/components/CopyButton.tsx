@@ -21,6 +21,8 @@ export interface CopyButtonProps {
     words?: Partial<CopyButtonWords>
     showLabel?: boolean
     icon?: ReactNode
+    /** The button's look, as `IconButton` takes it: a ghost draws in muted ink, an outline in the body's. */
+    variant?: 'ghost' | 'outline'
 }
 
 /**
@@ -29,14 +31,22 @@ export interface CopyButtonProps {
  * and drops the tooltip, for a footer where the action wants saying; `icon` replaces the copy glyph,
  * such as a link for copying an address.
  */
-export function CopyButton({ value, size = 'icon-sm', className, words: given, showLabel = false, icon }: CopyButtonProps) {
+export function CopyButton({
+    value,
+    size = 'icon-sm',
+    className,
+    words: given,
+    showLabel = false,
+    icon,
+    variant = 'ghost',
+}: CopyButtonProps) {
     const words = { ...WORDS, ...given }
     const { copied, copy: write } = useCopy()
     const word = copied ? words.copied : words.copy
     const copy = () => write(value)
     if (showLabel)
         return (
-            <Button variant="ghost" size="sm" className={className} onClick={copy}>
+            <Button variant={variant} size="sm" className={className} onClick={copy}>
                 {copied ? <Check aria-hidden /> : (icon ?? <Copy aria-hidden />)}
                 {word}
             </Button>
@@ -46,10 +56,10 @@ export function CopyButton({ value, size = 'icon-sm', className, words: given, s
             <TooltipTrigger
                 render={
                     <Button
-                        variant="ghost"
+                        variant={variant}
                         size={size}
                         aria-label={word}
-                        className={cn('text-muted-foreground', className)}
+                        className={cn(variant === 'ghost' && 'text-muted-foreground', className)}
                         onClick={copy}
                     />
                 }

@@ -1,16 +1,19 @@
 import { TriangleAlert } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { CopyButton } from './CopyButton'
 
 export interface SecretRevealWords {
+    /** The value's name when the label is not plain text. */
+    secret: string
     warning: string
     copy: string
     copied: string
 }
 
 const WORDS: SecretRevealWords = {
+    secret: 'Secret',
     warning: 'Copy it now. It will not be shown again.',
     copy: 'Copy',
     copied: 'Copied',
@@ -24,6 +27,8 @@ export interface SecretRevealProps {
     note?: ReactNode
     className?: string
     words?: Partial<SecretRevealWords>
+    /** Focuses the value as it appears, such as after the create that made it took away what held focus. */
+    autoFocus?: boolean
 }
 
 /**
@@ -32,13 +37,25 @@ export interface SecretRevealProps {
  * button beside it and a warning under it that it will not be shown again. A label over it says
  * what the secret is.
  */
-export function SecretReveal({ value, label, note, className, words: given }: SecretRevealProps) {
+export function SecretReveal({ value, label, note, className, words: given, autoFocus = false }: SecretRevealProps) {
     const words = { ...WORDS, ...given }
+    const code = useRef<HTMLElement>(null)
+    useEffect(() => {
+        if (autoFocus) code.current?.focus()
+    }, [autoFocus])
     return (
         <div className={cn('flex flex-col gap-2', className)}>
             {label !== undefined && <span className="text-sm font-medium">{label}</span>}
             <div className="flex items-start gap-1 rounded-control border border-border-strong bg-panel-ground py-1 pr-1 pl-3 has-[code:focus-visible]:border-ring">
-                <code data-secret="" tabIndex={0} className="min-w-0 flex-1 py-1 font-mono text-sm break-all outline-none select-all">
+                <code
+                    ref={code}
+                    data-secret=""
+                    tabIndex={0}
+                    role="textbox"
+                    aria-readonly="true"
+                    aria-label={typeof label === 'string' ? label : words.secret}
+                    className="min-w-0 flex-1 py-1 font-mono text-sm break-all outline-none select-all"
+                >
                     {value}
                 </code>
                 <CopyButton value={value} words={{ copy: words.copy, copied: words.copied }} />
