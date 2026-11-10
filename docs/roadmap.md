@@ -6,7 +6,12 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.12.8** is the latest release (2026-11-10): a header with folding actions keeps one line on a
+- **0.13.0** is the latest release (2026-11-10): the last of a pipeline app's own parts. `Dot` takes a
+  label, a tooltip, a word and a hollow tone (its `md` is now 8px), `StatusChip` a `dot`, a new `Chip`,
+  `Callout`, `ItemHeading`, `Surface` tones `well` and `inset` without clipping, `Section` tones `graph`
+  and `critical` with `headingId` and `bodyClassName`, and `Field` a `requiredMark="word"` and a
+  `fallback`.
+- **0.12.8** (2026-11-10): a header with folding actions keeps one line on a
   wide screen; toolbar items take `variant` and `moreLabel`.
 - **0.12.7** (2026-11-10): a long `PageHeader` title alone wraps beside its
   actions in a wide header again.
