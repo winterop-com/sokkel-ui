@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.13.1** is the latest release (2026-11-10): what a pipeline app's move off Monaco needed. Schema
+- **0.13.2** is the latest release (2026-11-10): an Editors section of whole editor apps in Storybook,
+  the studio example, and `CodeEditor`'s `onDocument`, `reveal` by path and a path on each problem.
+- **0.13.1** (2026-11-10): what a pipeline app's move off Monaco needed. Schema
   checks report only the branch that fits, apps register formats (`registerSchemaFormats`),
   `JSON_SCHEMA_2020_12`, `CodeEditor`'s `onProblems` and `activeLine`, and an opaque gutter.
 - **0.13.0** (2026-11-10): the last of a pipeline app's own parts. `Dot` takes a
