@@ -72,4 +72,16 @@ describe('problems', () => {
             },
         ])
     })
+
+    it("carries the path of the value a schema's finding is about", async () => {
+        const { setDiagnostics } = await import('@codemirror/lint')
+        const { codeProblems } = await import('./CodeEditor')
+        const state = EditorState.create({ doc: 'job: nightly-export\nsteps:\n  - kind: fetchh\n' })
+        const marked = state.update(
+            setDiagnostics(state, [
+                { from: 37, to: 43, severity: 'error', message: 'Expected one of', path: ['steps', 0, 'kind'] } as never,
+            ]),
+        ).state
+        expect(codeProblems(marked)[0].path).toEqual(['steps', 0, 'kind'])
+    })
 })
