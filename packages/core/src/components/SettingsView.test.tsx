@@ -49,6 +49,41 @@ describe('SettingsView', () => {
             />,
         )
 
+    it('names its search apart from its placeholder', () => {
+        const page = view()
+        expect(page).toContain('placeholder="Search"')
+        expect(page).toContain('aria-label="Search the settings"')
+    })
+
+    it("draws a section's lead above its rows and its foot under them", () => {
+        const page = renderToStaticMarkup(
+            <SettingsView
+                groups={[
+                    {
+                        id: 'help',
+                        sections: [
+                            {
+                                id: 'keys',
+                                label: 'Shortcuts',
+                                lead: 'Anywhere but inside a text box.',
+                                foot: 'The instance could not be read.',
+                                settings: [{ id: 'palette', title: 'Command palette', control: null }],
+                            },
+                        ],
+                    },
+                ]}
+                active="keys"
+                onActiveChange={() => undefined}
+                search=""
+                onSearchChange={() => undefined}
+            />,
+        )
+        const lead = page.indexOf('Anywhere but inside a text box.')
+        expect(lead).toBeGreaterThan(-1)
+        expect(lead).toBeLessThan(page.indexOf('Command palette'))
+        expect(page.indexOf('The instance could not be read.')).toBeGreaterThan(page.indexOf('Command palette'))
+    })
+
     it('titles the page with the heading of the section and says changes are kept', () => {
         const page = view()
         expect(page).toContain('Look and feel</h1>')

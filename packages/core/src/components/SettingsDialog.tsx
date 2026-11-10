@@ -130,6 +130,7 @@ export function SettingsDialog({
                             value={search}
                             onChange={onSearchChange}
                             placeholder={say.search}
+                            label={say.searchLabel}
                             shortcut={false}
                             words={{ clear: say.clear }}
                         />

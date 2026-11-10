@@ -27,6 +27,10 @@ export interface SettingsSection {
     icon?: LucideIcon
     /** The heading over the section's rows; the label when absent. */
     heading?: string
+    /** Content above the section's rows: a line on what the whole section is for. */
+    lead?: ReactNode
+    /** Content under the section's rows: a refusal, a note on where else these settings apply. */
+    foot?: ReactNode
     settings: readonly Setting[]
     /**
      * `false` leaves Reset to defaults out while this section shows, for one with nothing to put
@@ -45,7 +49,10 @@ export interface SettingsGroup {
 /** The words settings say, in a dialog and on a page alike. */
 export interface SettingsWords {
     title: string
+    /** The search field's placeholder; the dialog's title already names what it searches. */
     search: string
+    /** The search field's accessible name, which says what it searches. */
+    searchLabel: string
     clear: string
     noMatch: string
     /** The footer's note, unless the app gives its own `footer`. */
@@ -69,7 +76,8 @@ export interface SettingsWords {
 
 export const SETTINGS_WORDS: SettingsWords = {
     title: 'Settings',
-    search: 'Search settings',
+    search: 'Search',
+    searchLabel: 'Search the settings',
     clear: 'Clear the search',
     noMatch: 'No setting matches the search.',
     saved: 'Changes are saved as you make them',
@@ -180,9 +188,9 @@ export interface SettingRowsProps {
     section: SettingsSection
 }
 
-/** A section's settings, one row each, ruled apart. */
+/** A section's settings, one row each, ruled apart, with the section's own lead above and foot under them. */
 export function SettingRows({ section }: SettingRowsProps) {
-    return (
+    const rows = (
         <div className="flex flex-col divide-y divide-border">
             {section.settings.map((setting) => (
                 <SettingRow
@@ -194,6 +202,14 @@ export function SettingRows({ section }: SettingRowsProps) {
                     layout={setting.layout}
                 />
             ))}
+        </div>
+    )
+    if (section.lead === undefined && section.foot === undefined) return rows
+    return (
+        <div className="flex flex-col gap-3">
+            {section.lead !== undefined && <div className="text-sm text-muted-foreground">{section.lead}</div>}
+            {rows}
+            {section.foot !== undefined && <div className="text-sm">{section.foot}</div>}
         </div>
     )
 }
