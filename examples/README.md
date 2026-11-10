@@ -34,6 +34,11 @@ examples/
                  WebM, kept in IndexedDB), a watch page with the channel, likes, saving, sharing,
                  downloads, comments and up next, theater mode and stats, channels, subscriptions,
                  a library with history and playlists, search, and player settings that stick
+  studio/        an editor for pipelines, schemas and queries: a workspace of files in the rail's
+                 tree, opened in tabs; pipelines checked and completed against their schema as typed,
+                 their problems listed, their steps drawn live and run with the log marked where they
+                 failed; JSON Schemas edited against the 2020-12 meta-schema beside a value tried
+                 against them; SQL over the runs; any editor popped out into a window
   podcast/       podcasts that really play: episodes spoken in the page with a transcript that
                  follows, chapters, speed, a sleep timer, the queue, New as an inbox, downloads,
                  Discover, stats and settings
@@ -73,7 +78,7 @@ From the repository root, after `make build` builds the packages, every example 
 targets as `make <example>-<target>`; `make examples-list` names them:
 
 ```sh
-make tasks-web          # build the web app and serve it (Tasks on 4180, Runs on 4181, Records on 4182, Models on 4183, Dataviz on 4184, Metrics on 4185, Music on 4186, Video on 4187, Notes on 4188, Podcasts on 4189, Status on 4190, Analytics on 4191)
+make tasks-web          # build the web app and serve it (Tasks on 4180, Runs on 4181, Records on 4182, Models on 4183, Dataviz on 4184, Metrics on 4185, Music on 4186, Video on 4187, Notes on 4188, Podcasts on 4189, Status on 4190, Analytics on 4191, Studio on 4192)
 make tasks-dev          # the web app's dev server
 make tasks-electron     # open it in Electron
 make tasks-tauri        # open it in Tauri
