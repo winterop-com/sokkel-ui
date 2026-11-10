@@ -122,6 +122,10 @@
             "types": "./dist/components/CheckList.d.ts",
             "import": "./dist/components/CheckList.js"
         },
+        "./Chip": {
+            "types": "./dist/components/Chip.d.ts",
+            "import": "./dist/components/Chip.js"
+        },
         "./ChipBar": {
             "types": "./dist/components/ChipBar.d.ts",
             "import": "./dist/components/ChipBar.js"

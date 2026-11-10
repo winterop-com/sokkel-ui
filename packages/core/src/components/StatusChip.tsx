@@ -1,5 +1,6 @@
 import { cn } from '../lib/cn'
 import type { RunStatus, StatusColor, StatusMap } from '../lib/status'
+import { Dot } from './Dot'
 import { useStatus } from './StatusProvider'
 
 export type { RunStatus, StatusColor, StatusDefinition, StatusMap } from '../lib/status'
@@ -32,6 +33,8 @@ export interface StatusChipProps {
     label?: string
     /** States for this chip alone, over the provider's. */
     statuses?: StatusMap
+    /** A status dot before the word, the 8px `Dot` a status dot beside it draws. */
+    dot?: boolean
     className?: string
 }
 
@@ -42,12 +45,17 @@ export interface StatusChipProps {
  * `statuses` or a `StatusProvider` around the app. `label` overrides the word, for one chip that
  * says more, such as a count.
  */
-export function StatusChip({ status, label, statuses, className }: StatusChipProps) {
+export function StatusChip({ status, label, statuses, dot = false, className }: StatusChipProps) {
     const look = useStatus(status, statuses)
     return (
         <span
-            className={cn('inline-flex items-center rounded-chip px-1.5 py-0.5 text-badge whitespace-nowrap', CHIP[look.color], className)}
+            className={cn(
+                'inline-flex items-center gap-1 rounded-chip px-1.5 py-0.5 text-badge whitespace-nowrap',
+                CHIP[look.color],
+                className,
+            )}
         >
+            {dot && <Dot color={look.css} size="md" />}
             {label ?? look.label}
         </span>
     )

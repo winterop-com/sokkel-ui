@@ -69,6 +69,24 @@ export const STATUS_CSS: Readonly<Record<StatusColor, string>> = {
     completed_with_errors: 'var(--status-completed-with-errors)',
 }
 
+/** Each color's ink as a CSS color: the darker shade words and an outline are drawn in. */
+export const STATUS_INK_CSS: Readonly<Record<StatusColor, string>> = {
+    good: 'var(--status-succeeded-ink)',
+    critical: 'var(--status-failed-ink)',
+    warning: 'var(--status-completed-with-errors-ink)',
+    info: 'var(--status-running-ink)',
+    neutral: 'var(--muted-foreground)',
+    succeeded: 'var(--status-succeeded-ink)',
+    failed: 'var(--status-failed-ink)',
+    running: 'var(--status-running-ink)',
+    queued: 'var(--status-queued-ink)',
+    pending: 'var(--status-pending-ink)',
+    waiting: 'var(--status-waiting-ink)',
+    cancelled: 'var(--status-cancelled-ink)',
+    skipped: 'var(--status-skipped-ink)',
+    completed_with_errors: 'var(--status-completed-with-errors-ink)',
+}
+
 /** Whether a value names a color a state can be drawn in. */
 export function isStatusColor(value: string): value is StatusColor {
     return Object.hasOwn(STATUS_CSS, value)

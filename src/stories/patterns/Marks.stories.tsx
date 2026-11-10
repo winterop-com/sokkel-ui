@@ -56,3 +56,42 @@ export const Dots: StoryObj = {
         </Stack>
     ),
 }
+
+/**
+ * A job's last run as a status dot in the three sizes: named for a screen reader, explained in a
+ * tooltip a keyboard reaches, its word said where the state is news, and hollow in the state's
+ * ink for a state not known yet.
+ */
+export const StatusDots: StoryObj = {
+    name: 'Status dots',
+    render: () => (
+        <Stack gap="lg" className="p-6 text-sm">
+            <Row gap="md">
+                {(['succeeded', 'failed', 'running', 'queued', 'cancelled', 'skipped'] as const).map((status) => (
+                    <Dot key={status} status={status} size="md" label={status} tip={`Last run ${status}`} focusable />
+                ))}
+            </Row>
+            <Row gap="md">
+                <Dot status="failed" size="sm" label="failed" />
+                <Dot status="failed" size="md" label="failed" />
+                <Dot status="failed" size="lg" label="failed" />
+                <Dot status="queued" size="md" outline label="unknown" tip="Not run since the schedule changed" focusable />
+                <Dot kind="violet" size="md" outline />
+            </Row>
+            <Stack gap="xs">
+                <Row gap="xs">
+                    <span className="font-mono">nightly-export</span>
+                    <Dot status="succeeded" size="md" label="succeeded" />
+                </Row>
+                <Row gap="xs">
+                    <span className="font-mono">sync-inventory</span>
+                    <Dot status="failed" size="md" say tip="Failed at upload, 02:14" focusable />
+                </Row>
+                <Row gap="xs">
+                    <span className="font-mono">rebuild-index</span>
+                    <Dot status="running" size="md" say="running, step 3 of 5" />
+                </Row>
+            </Stack>
+        </Stack>
+    ),
+}

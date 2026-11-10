@@ -258,6 +258,7 @@ const CORE_AREAS: Record<string, string> = {
     BarList: 'Data display',
     CheckList: 'Data display',
     ConsequenceList: 'Data display',
+    Chip: 'Data display',
     Count: 'Data display',
     DataTable: 'Data display',
     DescriptionList: 'Data display',
