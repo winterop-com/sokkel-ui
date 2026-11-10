@@ -288,14 +288,14 @@ const PROSE = cn(
 )
 
 /** How code inside a sentence is drawn. */
-export type InlineCode = 'chip' | 'plain' | 'wash'
+export type MarkdownInlineCode = 'chip' | 'plain' | 'wash'
 
 /**
  * `chip` fills each value; `plain` sets it in the code face alone; `wash` gives it a faint fill
  * with no padding to speak of and drops the fill in a table, whose cells already set the values
  * apart.
  */
-const INLINE_CODE: Record<InlineCode, string> = {
+const INLINE_CODE: Record<MarkdownInlineCode, string> = {
     chip: '[&_:not(pre)>code]:rounded-sm [&_:not(pre)>code]:bg-muted [&_:not(pre)>code]:px-1',
     plain: '[&_td]:tabular-nums',
     wash: '[&_:not(pre)>code]:rounded-sm [&_:not(pre)>code]:bg-secondary [&_:not(pre)>code]:px-0.5 [&_td_code]:bg-transparent [&_td_code]:px-0',
@@ -315,7 +315,7 @@ export interface MarkdownProps {
     /** Gives every heading an id made from its text. */
     anchors?: boolean
     /** How code inside a sentence is drawn: filled chips by default. */
-    inlineCode?: InlineCode
+    inlineCode?: MarkdownInlineCode
     /** A caret after the last words while `streaming`. */
     caret?: boolean
     /** Draws LaTeX math with KaTeX, loaded the first time a message holds math. On by default. */

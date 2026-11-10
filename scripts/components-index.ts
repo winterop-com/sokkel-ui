@@ -327,6 +327,7 @@ const CORE_AREAS: Record<string, string> = {
     AnsiText: 'Code, text and documents',
     Code: 'Code, text and documents',
     CodeEditor: 'Code, text and documents',
+    InlineCode: 'Code, text and documents',
     ApiPlayground: 'Code, text and documents',
     DiffView: 'Code, text and documents',
     DocumentTabs: 'Code, text and documents',

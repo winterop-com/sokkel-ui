@@ -18,7 +18,7 @@ import { Children, type ReactNode } from 'react'
 import { cn } from '../lib/cn'
 import { ConfirmCard, type ConfirmCardProps } from './ConfirmCard'
 import { Reasoning, wordCount } from './reasoning'
-import { Markdown, type InlineCode, type MarkdownWords } from './Markdown'
+import { Markdown, type MarkdownInlineCode, type MarkdownWords } from './Markdown'
 import { useCopy } from '../hooks/use-copy'
 import { Problem } from './Problem'
 import { Timeline, type TimelineEvent } from './Timeline'
@@ -140,7 +140,7 @@ function shown(node: ReactNode): boolean {
 }
 
 /** The inline-code look of each layout. */
-const INLINE: Record<AssistantReplyLayout, InlineCode> = { card: 'wash', steps: 'plain' }
+const INLINE: Record<AssistantReplyLayout, MarkdownInlineCode> = { card: 'wash', steps: 'plain' }
 
 /** A labeled Copy that says Copied for a moment after a press. */
 function CopyAction({ value, onCopy, words }: { value?: string; onCopy?: () => void; words: AssistantReplyWords }) {
