@@ -7,8 +7,16 @@ import { Label } from './ui/label'
 
 /** The words a field says. */
 export interface FieldWords {
+    /** Said by a star's screen reader text, or drawn after the label as the `word` mark. */
     required: string
 }
+
+/**
+ * How a required field is marked: `star`, a star in the label with the word said to a screen
+ * reader; `word`, the word drawn after the label and outside it, so the control's name stays the
+ * label alone.
+ */
+export type RequiredMark = 'star' | 'word'
 
 const WORDS: FieldWords = {
     required: 'required',
@@ -20,10 +28,14 @@ export interface FieldProps {
     /** A short note beside the label: a unit, a format, a default. */
     hint?: string
     required?: boolean
+    /** How `required` is marked; a star by default. */
+    requiredMark?: RequiredMark
     /** A sentence between the label and the control: what the question asks. */
     description?: ReactNode
     /** A sentence under the control. */
     help?: ReactNode
+    /** What applies when the field is left empty, as "Default is 3 retries": a line under the control, after the help. */
+    fallback?: ReactNode
     /** Why the value is refused, as one critical issue; shown only once it is set. */
     error?: string | null
     issues?: readonly Issue[]
@@ -51,7 +63,10 @@ function focusUnlabelable(id: string) {
 
 /**
  * A form control with its label, an optional hint beside the label, and help under the control. A
- * required field is marked by a star after its label, and says "required" to a screen reader.
+ * required field is marked by a star after its label, and says "required" to a screen reader;
+ * `requiredMark="word"` draws the word after the label instead, outside it, so the control is named
+ * by the label alone. Either way the control says it is required itself, with `aria-required`.
+ * `fallback` says under the control what applies when the field is left empty.
  * `description` is a sentence between the label and the control saying what the question asks, as a
  * long form explains its questions; `help` under the control says what a right answer looks like.
  *
@@ -74,8 +89,10 @@ export function Field({
     label,
     hint,
     required,
+    requiredMark = 'star',
     description,
     help,
+    fallback,
     error,
     issues: issuesGiven = [],
     issueOpen,
@@ -117,7 +134,7 @@ export function Field({
             <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
                 <Label htmlFor={id} className={cn(mono && 'font-mono')} onClick={() => focusUnlabelable(id)}>
                     {label}
-                    {required === true && (
+                    {required === true && requiredMark === 'star' && (
                         <>
                             <span className="-ml-1 text-critical-ink" aria-hidden>
                                 *
@@ -126,6 +143,7 @@ export function Field({
                         </>
                     )}
                 </Label>
+                {required === true && requiredMark === 'word' && <span className="text-xs text-muted-foreground">{words.required}</span>}
                 {hint !== undefined && (
                     <span className={cn('text-xs', keyHint ? 'font-mono text-muted-foreground' : 'text-faint')}>{hint}</span>
                 )}
@@ -138,10 +156,11 @@ export function Field({
                 lined && <span aria-hidden />
             )}
             {lined ? <div className="min-w-0 pt-1.5">{control}</div> : control}
-            {help !== undefined ? (
-                <p id={`${id}-help`} className={cn('text-help text-muted-foreground', lined && 'pt-1.5')}>
-                    {help}
-                </p>
+            {help !== undefined || fallback !== undefined ? (
+                <div className={cn('flex min-w-0 flex-col gap-0.5 text-help text-muted-foreground', lined && 'pt-1.5')}>
+                    {help !== undefined && <p id={`${id}-help`}>{help}</p>}
+                    {fallback !== undefined && <p id={`${id}-fallback`}>{fallback}</p>}
+                </div>
             ) : (
                 lined && <span aria-hidden />
             )}
@@ -149,13 +168,15 @@ export function Field({
     )
 }
 
-/** The `aria-describedby` a control in a `Field` takes, naming its description and its help; an issue speaks from its mark. */
+/** The `aria-describedby` a control in a `Field` takes, naming its description, its help and its fallback; an issue speaks from its mark. */
 export function describedBy(
     id: string,
-    { help, description }: { help?: unknown; description?: unknown; error?: string | null },
+    { help, description, fallback }: { help?: unknown; description?: unknown; fallback?: unknown; error?: string | null },
 ): string | undefined {
-    const ids = [description === undefined ? null : `${id}-description`, help === undefined ? null : `${id}-help`].filter(
-        (one) => one !== null,
-    )
+    const ids = [
+        description === undefined ? null : `${id}-description`,
+        help === undefined ? null : `${id}-help`,
+        fallback === undefined ? null : `${id}-fallback`,
+    ].filter((one) => one !== null)
     return ids.length === 0 ? undefined : ids.join(' ')
 }

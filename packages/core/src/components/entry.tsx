@@ -2,7 +2,7 @@ import { X } from 'lucide-react'
 import { useEffect, useRef, useState, type HTMLAttributes, type KeyboardEvent, type ReactNode, type RefObject } from 'react'
 
 import { cn } from '../lib/cn'
-import { describedBy, Field } from './Field'
+import { describedBy, Field, type RequiredMark } from './Field'
 import { worst, type Issue } from './IssueMark'
 import { Input } from './ui/input'
 
@@ -118,6 +118,10 @@ export interface EntryFieldProps<V> {
     help?: string
     /** A required field has no clear button. */
     required?: boolean
+    /** How `required` is marked: a star in the label, or the word after it. */
+    requiredMark?: RequiredMark
+    /** What applies when the field is left empty, under the input: "Default is 3 retries". */
+    fallback?: string
     /** Why the value is refused, as one critical issue, beside what the field finds itself. */
     error?: string | null
     issues?: readonly Issue[]
@@ -188,6 +192,8 @@ export function TypedField<V extends string | number>({
     description,
     help,
     required = false,
+    requiredMark,
+    fallback,
     error,
     issues: given = [],
     issueOpen,
@@ -293,7 +299,8 @@ export function TypedField<V extends string | number>({
                 readOnly={readOnly}
                 aria-label={bare && label !== '' ? label : undefined}
                 aria-invalid={tone === 'critical' || undefined}
-                aria-describedby={describedBy(id, { help, description })}
+                aria-required={required || undefined}
+                aria-describedby={describedBy(id, { help, description, fallback })}
                 onChange={(event) => entry.type(event.target.value)}
                 onFocus={onReach}
                 onBlur={() => {
@@ -315,7 +322,9 @@ export function TypedField<V extends string | number>({
             hint={hint}
             description={description}
             help={help}
+            fallback={fallback}
             required={required}
+            requiredMark={requiredMark}
             issues={issues}
             issueOpen={issueOpen}
             onIssueOpenChange={onIssueOpenChange}

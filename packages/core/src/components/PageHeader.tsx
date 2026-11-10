@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { IconButton } from './IconButton'
+import { identityOf } from './ItemHeading'
 import { Link } from './Link'
 import { Toolbar, type ToolbarItem } from './Toolbar'
 import type { Crumb } from './TopBar'
@@ -111,9 +112,10 @@ export function PageHeader({
     words,
 }: PageHeaderProps) {
     const said = { ...WORDS, ...words }
-    const showCode = code !== undefined && code !== title
+    const identity = identityOf(title, code)
+    const showCode = identity.code !== undefined
     // A code standing as the title is cut short rather than wrapped, unless the app says otherwise.
-    const oneLine = singleLine ?? (code !== undefined && code === title)
+    const oneLine = singleLine ?? identity.codeIsHeading
     const back = onBack !== undefined
     const beside = aside !== undefined && aside !== null
     const led = lead !== undefined && lead !== null && lead !== false
@@ -183,14 +185,14 @@ export function PageHeader({
                     )}
                     <div className={cn('flex min-w-0 items-baseline gap-2', column)}>
                         <h1
-                            title={oneLine && typeof title === 'string' ? title : undefined}
+                            title={oneLine && typeof identity.heading === 'string' ? identity.heading : undefined}
                             className={cn(
                                 'min-w-0 font-heading text-page-title text-page-title-ink',
                                 oneLine ? 'truncate' : 'text-pretty break-words',
-                                !showCode && code !== undefined && 'font-mono',
+                                identity.codeIsHeading && 'font-mono',
                             )}
                         >
-                            {title}
+                            {identity.heading}
                         </h1>
                         {count !== undefined && <span className="shrink-0 text-xs text-muted-foreground tabular-nums">{count}</span>}
                     </div>

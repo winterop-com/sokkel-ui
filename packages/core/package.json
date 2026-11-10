@@ -326,6 +326,10 @@
             "types": "./dist/components/ItemCard.d.ts",
             "import": "./dist/components/ItemCard.js"
         },
+        "./ItemHeading": {
+            "types": "./dist/components/ItemHeading.d.ts",
+            "import": "./dist/components/ItemHeading.js"
+        },
         "./JsonTree": {
             "types": "./dist/components/JsonTree.d.ts",
             "import": "./dist/components/JsonTree.js"

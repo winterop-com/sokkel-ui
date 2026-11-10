@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useId, useMemo, useRef, useState,
 
 import { cn } from '../../lib/cn'
 import { Banner } from '../Banner'
-import { Field } from '../Field'
+import { Field, type RequiredMark } from '../Field'
 import { IssueMarks } from '../IssueMarks'
 import { ISSUE_EDGE, IssueCount, IssueMark, worst, type Issue, type IssueAction, type IssueEntry } from '../IssueMark'
 import { NumberField } from '../NumberField'
@@ -62,6 +62,10 @@ export interface SchemaFormWords {
     item: (index: number) => string
     moveUp: string
     moveDown: string
+    /** Drawn after a required field's label when the form marks them with `requiredMark="word"`. */
+    required: string
+    /** What applies when a field with a schema `default` is left empty, for a form drawn with `fallbacks`. */
+    fallback: (value: unknown) => string
 }
 
 const FORMAT: Record<string, { text: string; detail?: string }> = {
@@ -135,6 +139,8 @@ const WORDS: SchemaFormWords = {
     item: (index) => `Item ${String(index + 1)}`,
     moveUp: 'Move up',
     moveDown: 'Move down',
+    required: 'required',
+    fallback: (value) => `Default is ${typeof value === 'string' ? value : literal(value)}`,
 }
 
 /** A form's value with every schema default and every nested object in place. */
@@ -620,17 +626,30 @@ export type SchemaFieldRenderer = (field: SchemaFieldControl) => ReactNode | und
 
 const FieldRendererContext = createContext<SchemaFieldRenderer | undefined>(undefined)
 
+/** How the form marks its fields: required ones by a star or the word, and whether a default is said under its field. */
+interface FieldLook {
+    requiredMark: RequiredMark
+    fallbacks: boolean
+    /** The word a required field is marked by. */
+    required: string
+}
+
+const FieldLookContext = createContext<FieldLook>({ requiredMark: 'star', fallbacks: false, required: WORDS.required })
+
 function Control({
     form,
     path,
     at,
     label,
     ask = true,
+    required = false,
 }: {
     form: SchemaFormState
     path: Path
     at: JsonSchema
     label?: string
+    /** The control says it is required, as its label's mark shows. */
+    required?: boolean
     /** Whether to ask the app's `field` for this field, false where its property already did. */
     ask?: boolean
 }) {
@@ -656,7 +675,14 @@ function Control({
                 {custom}
             </Marked>
         )
-    const common = { id, 'aria-label': label, 'aria-invalid': invalid, onBlur: () => form.touch(path), readOnly: at.readOnly === true }
+    const common = {
+        id,
+        'aria-label': label,
+        'aria-invalid': invalid,
+        'aria-required': required || undefined,
+        onBlur: () => form.touch(path),
+        readOnly: at.readOnly === true,
+    }
     switch (kind) {
         case 'enum': {
             const items = [
@@ -674,7 +700,13 @@ function Control({
                         }}
                         disabled={at.readOnly === true}
                     >
-                        <SelectTrigger id={id} aria-label={label} aria-invalid={invalid} className={cn('w-full', edge(form, path))}>
+                        <SelectTrigger
+                            id={id}
+                            aria-label={label}
+                            aria-invalid={invalid}
+                            aria-required={required || undefined}
+                            className={cn('w-full', edge(form, path))}
+                        >
                             <SelectValue placeholder={form.words.choose} />
                         </SelectTrigger>
                         <SelectContent>
@@ -698,6 +730,7 @@ function Control({
                         bare
                         id={id}
                         label={label ?? ''}
+                        required={required}
                         issues={form.shown(path)}
                         value={typeof value === 'number' ? value : null}
                         onValueChange={(next) => form.set(path, next ?? undefined)}
@@ -821,17 +854,19 @@ function ListHead({ form, path, title, onAdd }: { form: SchemaFormState; path: P
 }
 
 function Title({ label, mono, hint, required }: { label: string; mono: boolean; hint?: string; required: boolean }) {
+    const look = useContext(FieldLookContext)
     return (
         <span className="flex min-w-0 items-baseline gap-2">
             <span className={cn(mono && 'font-mono')}>
                 {label}
-                {required && (
+                {required && look.requiredMark === 'star' && (
                     <span className="text-critical-ink" aria-hidden>
                         {' '}
                         *
                     </span>
                 )}
             </span>
+            {required && look.requiredMark === 'word' && <span className="text-xs font-normal text-muted-foreground">{look.required}</span>}
             {hint !== undefined && <span className="font-mono text-xs font-normal text-muted-foreground">{hint}</span>}
         </span>
     )
@@ -866,6 +901,8 @@ function Property({
     const span = short(at, kind) ? undefined : '@lg:col-span-2'
     const value = valueAt(form.value, path)
     const locked = at.readOnly === true
+    const look = useContext(FieldLookContext)
+    const fallback = look.fallbacks && at.default !== undefined ? form.words.fallback(at.default) : undefined
 
     // The app's own control for any field, a whole object, list or choice among them, in the form's frame.
     const custom = useContext(FieldRendererContext)?.({
@@ -888,8 +925,11 @@ function Property({
                 hint={hint}
                 keyHint={hint !== undefined}
                 required={required}
+                requiredMark={look.requiredMark}
                 help={at.description}
+                fallback={fallback}
                 className={span}
+                words={{ required: form.words.required }}
             >
                 <Marked form={form} path={path}>
                     {custom}
@@ -973,6 +1013,7 @@ function Property({
                 id={form.id(path)}
                 label={<Title label={label} mono={mono} hint={hint} required={false} />}
                 required={required}
+                requiredMark={look.requiredMark}
                 description={at.description}
                 issues={form.shown(path)}
                 issueOpen={form.open === pointer(path)}
@@ -988,6 +1029,7 @@ function Property({
                     moveUp: form.words.moveUp,
                     moveDown: form.words.moveDown,
                     item: form.words.item,
+                    required: form.words.required,
                 }}
                 className="@lg:col-span-2"
             >
@@ -1062,10 +1104,13 @@ function Property({
             hint={hint}
             keyHint={hint !== undefined}
             required={required}
+            requiredMark={look.requiredMark}
             help={at.description}
+            fallback={fallback}
             className={span}
+            words={{ required: form.words.required }}
         >
-            <Control form={form} path={path} at={at} ask={false} />
+            <Control form={form} path={path} at={at} ask={false} required={required} />
         </Field>
     )
 }
@@ -1096,6 +1141,10 @@ export interface SchemaFormProps {
      * form's own. The form keeps the label, the help and the issue marks around it.
      */
     field?: SchemaFieldRenderer
+    /** How required fields are marked: a star in the label, or the word after it (`words.required`). */
+    requiredMark?: RequiredMark
+    /** Says a field's schema `default` under it, as what applies when it is left empty (`words.fallback`). */
+    fallbacks?: boolean
     className?: string
 }
 
@@ -1110,10 +1159,15 @@ export interface SchemaFormProps {
  * Nothing is inserted between fields, so the form keeps its height. Put `SchemaIssueCount` beside
  * the submit verb. While the form scrolls, a strip along the scroll area's edge marks where each
  * issue sits.
+ *
+ * `requiredMark="word"` marks each required field with the word after its label rather than a star
+ * in it, and `fallbacks` says each field's schema `default` under it, as what applies when it is
+ * left empty.
  */
-export function SchemaForm({ form, marks = true, field, className }: SchemaFormProps) {
+export function SchemaForm({ form, marks = true, field, requiredMark = 'star', fallbacks = false, className }: SchemaFormProps) {
     const root = fieldSchema(form.schema, form.schema)
     const whole = form.shown([])
+    const look = useMemo(() => ({ requiredMark, fallbacks, required: form.words.required }), [requiredMark, fallbacks, form.words.required])
     return (
         <div className={cn('flex min-w-0 flex-col gap-4', className)}>
             {marks && <IssueMarks list={form.list} />}
@@ -1127,9 +1181,11 @@ export function SchemaForm({ form, marks = true, field, className }: SchemaFormP
                     ))}
                 </Banner>
             )}
-            <FieldRendererContext value={field}>
-                <Fields form={form} path={[]} schema={root} />
-            </FieldRendererContext>
+            <FieldLookContext value={look}>
+                <FieldRendererContext value={field}>
+                    <Fields form={form} path={[]} schema={root} />
+                </FieldRendererContext>
+            </FieldLookContext>
         </div>
     )
 }

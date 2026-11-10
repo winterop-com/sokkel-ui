@@ -1,7 +1,7 @@
 import type { HTMLAttributes } from 'react'
 
 import { cn } from '../lib/cn'
-import { Field, describedBy } from './Field'
+import { Field, describedBy, type RequiredMark } from './Field'
 import { worst, type Issue } from './IssueMark'
 import { Input } from './ui/input'
 import { Textarea } from './ui/textarea'
@@ -18,6 +18,10 @@ export interface TextFieldProps {
     /** A sentence under the input. */
     help?: string
     required?: boolean
+    /** How `required` is marked: a star in the label, or the word after it. */
+    requiredMark?: RequiredMark
+    /** What applies when the field is left empty, under the input: "Default is 30 minutes". */
+    fallback?: string
     /** Why the value is refused, as one critical issue. */
     error?: string | null
     issues?: readonly Issue[]
@@ -61,6 +65,8 @@ export function TextField({
     description,
     help,
     required,
+    requiredMark,
+    fallback,
     error,
     issues = [],
     issueOpen,
@@ -98,7 +104,8 @@ export function TextField({
         onBlur,
         spellCheck: mono ? false : undefined,
         'aria-invalid': invalid,
-        'aria-describedby': describedBy(id, { help, description }),
+        'aria-required': required === true || undefined,
+        'aria-describedby': describedBy(id, { help, description, fallback }),
     }
     return (
         <Field
@@ -108,7 +115,9 @@ export function TextField({
             keyHint={keyHint}
             description={description}
             help={help}
+            fallback={fallback}
             required={required}
+            requiredMark={requiredMark}
             issues={all}
             issueOpen={issueOpen}
             onIssueOpenChange={onIssueOpenChange}

@@ -40,7 +40,7 @@ viewer's caption settings through `useStored` or an app's store, with the option
 in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second by `useVideoStats`
 (`@winterop-com/sokkel-ui/media/video-stats`) for `VideoStatsOverlay`.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 245 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 247 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 10 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 13 modules
@@ -282,6 +282,7 @@ in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second 
 | **IssueMark**, IssueCount | `@winterop-com/sokkel-ui/IssueMark` | The mark at the end of an input whose value has issues: pressing it opens what is wrong, what to do, and the actions that put it right. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-form-bar--end) |
 | **IssueMarks** | `@winterop-com/sokkel-ui/IssueMarks` | A strip along the right edge of a long form's scroll area with a mark for each issue at its field's place down the whole form, so a glance shows where the issues are and pressing one goes there. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-schema-form--empty) (in SchemaForm) |
 | **ItemCard** | `@winterop-com/sokkel-ui/ItemCard` | The card for one thing: a project, a job, an album, a plan. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-cards--plain) |
+| **ItemHeading** | `@winterop-com/sokkel-ui/ItemHeading` | The heading of one thing, as `ItemCard` draws it: its name, or its code when it has none, with the code drawn once in the code face, under the name (`stacked`) or beside it on one line (`inline`). | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-item-heading--stacked) |
 | **JsonTree** | `@winterop-com/sokkel-ui/JsonTree` | A JSON value as a tree that folds: objects and lists open to `open` levels deep, and a folded one shows how many entries it holds. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-data--description) |
 | **MetaLine** | `@winterop-com/sokkel-ui/MetaLine` | Small facts about a thing on one line, joined by a separator: an artist and a year, a count of views and an age. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-meta-line--facts) |
 | **PersonAvatar**, PresenceDot | `@winterop-com/sokkel-ui/PersonAvatar` | A person as a badge of their picture, or of their initials on a wash of their color: an assignee, an attendee, an author. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-person-avatar--sizes) |

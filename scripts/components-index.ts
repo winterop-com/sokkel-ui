@@ -269,6 +269,7 @@ const CORE_AREAS: Record<string, string> = {
     IssueMark: 'Data display',
     IssueMarks: 'Data display',
     ItemCard: 'Data display',
+    ItemHeading: 'Data display',
     JsonTree: 'Data display',
     MetaLine: 'Data display',
     PersonAvatar: 'Data display',

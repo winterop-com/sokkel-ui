@@ -1,9 +1,9 @@
 import { Check, MoreHorizontal } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { useClamped } from '../hooks/use-clamped'
 import { cn } from '../lib/cn'
-import { TITLE_LINES, type TitleLines } from '../lib/title-lines'
+import type { TitleLines } from '../lib/title-lines'
+import { ItemHeading, identityOf } from './ItemHeading'
 import { Link } from './Link'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from './ui/dropdown-menu'
 
@@ -47,7 +47,7 @@ export interface ItemCardProps {
 
 /**
  * The card for one thing: a project, a job, an album, a plan. Its title is the thing's name, or its
- * code when it has none; the code is drawn once, in the code face. An icon on a tile may lead the
+ * code when it has none; the code is drawn once, in the code face, as `ItemHeading` draws it. An icon on a tile may lead the
  * title; a description, a status and facts at the foot follow, and media, such as artwork, may sit
  * on top.
  *
@@ -74,11 +74,9 @@ export function ItemCard({
     words: given,
 }: ItemCardProps) {
     const words = { ...WORDS, ...given }
-    const heading = title ?? code
-    const showCode = title !== undefined && code !== undefined
+    const { heading } = identityOf(title, code)
     const interactive = href !== undefined || onSelect !== undefined
     const Cover = href !== undefined ? Link : 'button'
-    const [titleRef, clamped] = useClamped<HTMLHeadingElement>()
     return (
         <article
             data-selected={selected || undefined}
@@ -110,16 +108,7 @@ export function ItemCard({
                             {icon}
                         </span>
                     )}
-                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                        <h3
-                            ref={titleRef}
-                            title={clamped && typeof heading === 'string' ? heading : undefined}
-                            className={cn('text-section-title', TITLE_LINES[titleLines], title === undefined && 'font-mono')}
-                        >
-                            {heading}
-                        </h3>
-                        {showCode && <span className="truncate font-mono text-xs text-muted-foreground">{code}</span>}
-                    </div>
+                    <ItemHeading name={title} code={code} as="h3" lines={titleLines} className="flex-1" />
                     {selected === true && (
                         <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
                             <Check className="size-3.5" aria-hidden />
