@@ -125,6 +125,11 @@ export interface ChartSpec {
     points?: string
     /** The field drawn as a solid line on the rows before a fan's forecast starts: what came before. */
     history?: string
+    /**
+     * Whether a fan's median is drawn from the last `history` figure before the forecast, so history
+     * and forecast read as one line; true by default, false leaves the median starting on its own.
+     */
+    bridge?: boolean
     /** Lines down the chart at categories of `x`, each dashed and labeled: where a forecast starts, a release. */
     marks?: readonly ChartMark[]
 }
