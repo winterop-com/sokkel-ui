@@ -6,6 +6,7 @@ import { Chip } from './Chip'
 import { Dot } from './Dot'
 import { Surface } from './Section'
 import { StatusChip } from './StatusChip'
+import { StatusProvider } from './StatusProvider'
 
 describe('Chip', () => {
     it('draws its tone, neutral by default, and an absent value dashed', () => {
@@ -143,6 +144,19 @@ describe('StatusChip', () => {
         expect(renderToStaticMarkup(<StatusChip status="sending" statuses={{ sending: { color: 'info', live: true } }} dot />)).toContain(
             'animate-live',
         )
+    })
+
+    it('takes its dot and the color of an unknown state from the provider, marks its state, and passes props', () => {
+        const html = renderToStaticMarkup(
+            <StatusProvider dot fallback="pending">
+                <StatusChip status="parked" data-testid="chip" />
+            </StatusProvider>,
+        )
+        expect(html).toContain('data-status="parked"')
+        expect(html).toContain('data-testid="chip"')
+        expect(html).toContain('data-slot="dot"')
+        expect(html).toContain('bg-status-pending')
+        expect(renderToStaticMarkup(<StatusChip status="parked" />)).not.toContain('data-slot="dot"')
     })
 
     it('draws a bare dot and a worded one in the same one-line box', () => {

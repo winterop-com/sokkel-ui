@@ -1,7 +1,9 @@
+import type { ComponentProps } from 'react'
+
 import { cn } from '../lib/cn'
 import type { RunStatus, StatusColor, StatusMap } from '../lib/status'
 import { Dot } from './Dot'
-import { useStatus } from './StatusProvider'
+import { useStatus, useStatusDot } from './StatusProvider'
 
 export type { RunStatus, StatusColor, StatusDefinition, StatusMap } from '../lib/status'
 
@@ -29,16 +31,15 @@ const CHIP: Record<StatusColor, string> = {
 /** A live state's dot pulses; motion.css stills it with the motion setting. */
 const LIVE = 'animate-live'
 
-export interface StatusChipProps {
+export interface StatusChipProps extends Omit<ComponentProps<'span'>, 'children'> {
     /** A run state, or any state the app names in `statuses` or a `StatusProvider`. */
     status: Status | (string & {})
     /** The words, over the map's. */
     label?: string
     /** States for this chip alone, over the provider's. */
     statuses?: StatusMap
-    /** A status dot before the word, the 8px `Dot` a status dot beside it draws; a live state's pulses (`live` on its definition; the running color by default). */
+    /** A status dot before the word, the 8px `Dot` a status dot beside it draws; a live state's pulses (`live` on its definition; the running color by default). By default as the nearest `StatusProvider` says. */
     dot?: boolean
-    className?: string
 }
 
 /**
@@ -48,10 +49,14 @@ export interface StatusChipProps {
  * `statuses` or a `StatusProvider` around the app. `label` overrides the word, for one chip that
  * says more, such as a count.
  */
-export function StatusChip({ status, label, statuses, dot = false, className }: StatusChipProps) {
+export function StatusChip({ status, label, statuses, dot: given, className, ...props }: StatusChipProps) {
     const look = useStatus(status, statuses)
+    const provided = useStatusDot()
+    const dot = given ?? provided
     return (
         <span
+            data-status={status}
+            {...props}
             className={cn(
                 'inline-flex items-center gap-1 rounded-chip px-1.5 py-0.5 text-badge whitespace-nowrap',
                 CHIP[look.color],
