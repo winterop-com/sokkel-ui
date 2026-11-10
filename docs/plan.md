@@ -221,7 +221,10 @@ groups an app gives for keys it answers itself; `Shell`'s `shortcuts` makes the 
 opened on `?`, bound once, and from the account menu, and `shortcutsOpen` with
 `onShortcutsOpenChange` holds it from outside, as for a palette row built beside the shell.
 `useShell()` gives a screen inside the shell `openPalette` and `openShortcuts`. `SearchField`'s `/`
-is a binding too. The palette can be held from outside (`paletteOpen`, `onPaletteOpenChange`). Left
+is a binding too, on the field's own input, so no mark on the box finds it; an app that answers `/`
+itself turns `shortcut` off and can mark the input with a `data-*` attribute through `inputProps`,
+which passes any `aria-*` or `data-*` on. Its `label` names the field (as "Search jobs") where the
+placeholder stays Search, the page around it naming what is searched. The palette can be held from outside (`paletteOpen`, `onPaletteOpenChange`). Left
 to itself it opens only where nothing stands over the page; `mayOpenPalette(over)` is asked first
 with the layer on top (a dialog, a sheet, a menu or an overlay from `useOverlay`, or null) and
 decides in its place: no over an app's own full-screen view, yes over an app's own search, which
@@ -574,7 +577,11 @@ warning, and since the library has no router, the app's blocker awaits `confirmL
 through `ConfirmDialog` (the hook's `dialog`, drawn once in the page) and answers whether to leave;
 `useUnsavedGuard` does the same for a dialog's form. `Toolbar`'s `items` give way as it narrows,
 measured on the toolbar itself: those it has no room for move, in order, into a More menu at their
-end, a toggle checked there. `ImageLightbox` moves between its `images` by the arrow keys, the
+end, a toggle checked there. `PageHeader`'s `items` are the same, outline buttons standing before
+its `actions`, the primary one, which stays: the title takes the width it needs and the actions the
+rest, so they fold into More beside a phone's title rather than wrapping under it (`actionsFill`
+gives that room to an app's own measuring part). Its `aside` is a picture before the title block,
+such as a project's mark or an avatar. `ImageLightbox` moves between its `images` by the arrow keys, the
 buttons at its sides and a swipe, saying "3 of 12"; it zooms by the wheel, a pinch and its buttons
 about the pointer, from the fit to four times it or twice the image's own pixels, a zoomed image
 moves by a drag without leaving a gap at an edge, and a double press goes between the fit and 100%.

@@ -50,12 +50,15 @@ export function toolbarSplit<T>(
     return { inline: items.slice(0, count), overflow: items.slice(count) }
 }
 
+/** How the plain buttons in the row look: bare, or framed as a page header's actions are. */
+export type ToolbarItemVariant = 'ghost' | 'outline'
+
 /** A tool as the row draws it: the app's own node, or a plain button with its icon and label. */
-function Inline({ item }: { item: ToolbarItem }) {
+function Inline({ item, variant }: { item: ToolbarItem; variant: ToolbarItemVariant }) {
     if (item.render !== undefined) return item.render
     return (
         <Button
-            variant="ghost"
+            variant={variant}
             size="sm"
             disabled={item.disabled}
             aria-pressed={item.pressed}
@@ -88,8 +91,16 @@ function Entry({ item }: { item: ToolbarItem }) {
 }
 
 /** The More button, drawn by the menu's trigger and by the ruler alike. */
-function moreButton(label: string) {
-    return <Button variant="ghost" size="icon-sm" aria-label={label} title={label} className="text-muted-foreground" />
+function moreButton(label: string, variant: ToolbarItemVariant) {
+    return (
+        <Button
+            variant={variant}
+            size="icon-sm"
+            aria-label={label}
+            title={label}
+            className={cn(variant === 'ghost' && 'text-muted-foreground')}
+        />
+    )
 }
 
 export interface ToolbarProps {
@@ -104,6 +115,10 @@ export interface ToolbarProps {
     items?: readonly ToolbarItem[]
     /** Opens More on the first render, for a still view of it. */
     defaultMoreOpen?: boolean
+    /** How `items` drawn as plain buttons look, and More with them: `ghost` (the default) or `outline`. */
+    itemVariant?: ToolbarItemVariant
+    /** Where `items` stand in the room they have: after `children` (`start`, the default), or at its end. */
+    itemsAlign?: 'start' | 'end'
     /** Tools at the end of the row, such as a count, a sort or a view switch. */
     end?: ReactNode
     variant?: 'page' | 'pane'
@@ -120,7 +135,8 @@ export interface ToolbarProps {
  * `items` are tools that give way instead: they follow `children` in the room the row has left,
  * measured on the toolbar itself rather than the window, and those that do not fit move into a
  * More menu at their end, in order, as a plain entry, a checked one for a toggle, or the item's
- * own `menu`. As the toolbar widens they come back out.
+ * own `menu`. As the toolbar widens they come back out. `itemsAlign="end"` stands them at the end of
+ * their room and `itemVariant="outline"` frames them, for a row of actions such as a page header's.
  *
  * `variant="pane"` makes it a strip across the top of a pane, padded with a rule under it; on a
  * page it sits in the page's flow.
@@ -130,6 +146,8 @@ export function Toolbar({
     children,
     items,
     defaultMoreOpen = false,
+    itemVariant = 'ghost',
+    itemsAlign = 'start',
     end,
     variant = 'page',
     className,
@@ -174,7 +192,10 @@ export function Toolbar({
                     <div
                         ref={room}
                         data-slot="toolbar-items"
-                        className="relative flex min-w-0 flex-1 basis-24 items-center gap-2 has-data-[slot=toolbar-title]:basis-64"
+                        className={cn(
+                            'relative flex min-w-0 flex-1 basis-24 items-center gap-2 has-data-[slot=toolbar-title]:basis-64',
+                            itemsAlign === 'end' && 'justify-end',
+                        )}
                     >
                         {/* Every tool and More at their own widths, out of sight, so what fits is known before it is drawn. */}
                         <div
@@ -185,19 +206,19 @@ export function Toolbar({
                         >
                             {items.map((item) => (
                                 <div key={item.id} className="flex shrink-0 items-center">
-                                    <Inline item={item} />
+                                    <Inline item={item} variant={itemVariant} />
                                 </div>
                             ))}
-                            <div className="flex shrink-0 items-center">{moreButton(words.more)}</div>
+                            <div className="flex shrink-0 items-center">{moreButton(words.more, itemVariant)}</div>
                         </div>
                         {inline.map((item) => (
                             <div key={item.id} className="flex shrink-0 items-center">
-                                <Inline item={item} />
+                                <Inline item={item} variant={itemVariant} />
                             </div>
                         ))}
                         {overflow.length > 0 && (
                             <DropdownMenu defaultOpen={defaultMoreOpen}>
-                                <DropdownMenuTrigger render={moreButton(words.more)}>
+                                <DropdownMenuTrigger render={moreButton(words.more, itemVariant)}>
                                     <Ellipsis aria-hidden />
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-auto min-w-48">
