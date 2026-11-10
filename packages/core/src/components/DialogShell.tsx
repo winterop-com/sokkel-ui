@@ -1,4 +1,4 @@
-import { useRef, type ReactNode } from 'react'
+import { useRef, type ReactNode, type RefObject } from 'react'
 
 import { Button } from './ui/button'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog'
@@ -42,6 +42,21 @@ const FIELD = [
     'select:not([disabled])',
 ].join(', ')
 
+/** Which of the frame's parts a dialog draws, from what it was given. */
+export function shellParts({
+    confirm,
+    actions,
+    footer,
+    dismissible = true,
+}: Pick<DialogShellProps, 'confirm' | 'actions' | 'footer' | 'dismissible'>): { close: boolean; footer: boolean; cancel: boolean } {
+    const confirms = confirm !== undefined
+    return {
+        close: !confirms && dismissible,
+        footer: confirms || actions !== undefined || footer !== undefined,
+        cancel: confirms && dismissible,
+    }
+}
+
 export interface DialogShellProps {
     open: boolean
     onOpenChange: (open: boolean) => void
@@ -55,10 +70,17 @@ export interface DialogShellProps {
     confirm?: DialogConfirm
     /** Draws Back before the confirm, for a dialog of steps. */
     back?: () => void
-    /** More buttons, between Cancel and the confirm: a second way to finish. */
+    /**
+     * More buttons, between Cancel and the confirm: a second way to finish. Without a confirm they
+     * are the footer's only verbs (Copy, Download), with no Cancel, the corner's close closing.
+     */
     actions?: ReactNode
     /** When false there is no Cancel, and Escape and the backdrop leave the dialog open. */
     dismissible?: boolean
+    /** When false a press outside leaves the dialog open, while Cancel, the close and Escape still close it. */
+    closeOnOutsidePress?: boolean
+    /** The element focused when the dialog opens, in place of the first field in the body. */
+    initialFocus?: RefObject<HTMLElement | null>
     /** Something at the footer's left: a note, a secondary link. */
     footer?: ReactNode
     /** The form's `IssueCount`, set just before the verbs it stops. */
@@ -76,7 +98,10 @@ export interface DialogShellProps {
  * are always in reach; `phone="fit"` keeps a short one sized to its content inside the screen's
  * margins instead, as a confirm is. The verbs stand in a row at the right while they fit it, and
  * each takes the whole width, the confirm on top, once they do not. A shut confirm stays focusable and carries its reason as a tooltip rather
- * than going dead. Opening focuses the first field in the body. While the confirm is busy, Cancel, Back, Escape and the backdrop do nothing.
+ * than going dead. Opening focuses the first field in the body, or `initialFocus`. While the confirm is busy, Cancel, Back, Escape and the backdrop do nothing.
+ *
+ * A dialog with nothing to confirm, one thing to read, closes from the corner; its `actions` (Copy,
+ * Download) stand alone in the footer, with no Cancel.
  */
 export function DialogShell({
     open,
@@ -90,12 +115,15 @@ export function DialogShell({
     back,
     actions,
     dismissible = true,
+    closeOnOutsidePress = true,
+    initialFocus,
     footer,
     count,
     children,
     className,
     words: given,
 }: DialogShellProps) {
+    const parts = shellParts({ confirm, actions, footer, dismissible })
     const words = { ...WORDS, ...given }
     const busy = confirm?.busy === true
     const shut = confirm?.why !== undefined || busy
@@ -108,10 +136,11 @@ export function DialogShell({
                 if (!next && held) return
                 onOpenChange(next)
             }}
+            disablePointerDismissal={!closeOnOutsidePress}
         >
             <DialogContent
-                showCloseButton={confirm === undefined && dismissible}
-                initialFocus={() => body.current?.querySelector<HTMLElement>(FIELD) ?? true}
+                showCloseButton={parts.close}
+                initialFocus={initialFocus ?? (() => body.current?.querySelector<HTMLElement>(FIELD) ?? true)}
                 aria-busy={busy || undefined}
                 className={cn(
                     'flex max-h-[calc(100svh-4rem)] flex-col gap-4',
@@ -122,7 +151,7 @@ export function DialogShell({
                     className,
                 )}
             >
-                <DialogHeader className={confirm === undefined && dismissible ? 'pr-8' : undefined}>
+                <DialogHeader className={parts.close ? 'pr-8' : undefined}>
                     <DialogTitle>{title}</DialogTitle>
                     {description !== undefined && <DialogDescription>{description}</DialogDescription>}
                 </DialogHeader>
@@ -132,7 +161,7 @@ export function DialogShell({
                         {children}
                     </div>
                 )}
-                {confirm !== undefined && (
+                {parts.footer && (
                     <DialogFooter
                         className={cn(
                             'mt-auto items-center',
@@ -143,7 +172,7 @@ export function DialogShell({
                         {count}
                         {/* As wide as its verbs while they fit one row, else the whole width with a verb to each line. */}
                         <div className="flex w-fit max-w-full flex-wrap-reverse justify-end gap-2 *:grow">
-                            {dismissible && (
+                            {parts.cancel && (
                                 <DialogClose render={<Button variant="ghost" />} disabled={busy}>
                                     {words.cancel}
                                 </DialogClose>
@@ -154,20 +183,22 @@ export function DialogShell({
                                 </Button>
                             )}
                             {actions}
-                            <Button
-                                variant={confirm.destructive === true ? 'destructive' : 'default'}
-                                aria-disabled={shut || undefined}
-                                title={confirm.why}
-                                className={cn(
-                                    shut && 'cursor-not-allowed',
-                                    confirm.why !== undefined && 'opacity-50',
-                                    busy && 'cursor-progress',
-                                )}
-                                onClick={shut ? undefined : confirm.onConfirm}
-                            >
-                                {busy && <Spinner aria-hidden role={undefined} aria-label={undefined} />}
-                                {busy ? (confirm.busyLabel ?? confirm.label) : confirm.label}
-                            </Button>
+                            {confirm !== undefined && (
+                                <Button
+                                    variant={confirm.destructive === true ? 'destructive' : 'default'}
+                                    aria-disabled={shut || undefined}
+                                    title={confirm.why}
+                                    className={cn(
+                                        shut && 'cursor-not-allowed',
+                                        confirm.why !== undefined && 'opacity-50',
+                                        busy && 'cursor-progress',
+                                    )}
+                                    onClick={shut ? undefined : confirm.onConfirm}
+                                >
+                                    {busy && <Spinner aria-hidden role={undefined} aria-label={undefined} />}
+                                    {busy ? (confirm.busyLabel ?? confirm.label) : confirm.label}
+                                </Button>
+                            )}
                         </div>
                     </DialogFooter>
                 )}
@@ -185,6 +216,10 @@ export interface ConfirmDialogProps {
     confirm: DialogConfirm
     /** What the answer touches, when one line cannot say it: a list of what goes with it. */
     children?: ReactNode
+    /** When false a press outside leaves the question open; Cancel and Escape still close it. */
+    closeOnOutsidePress?: boolean
+    /** The element focused when the question opens, such as a field in its body. */
+    initialFocus?: RefObject<HTMLElement | null>
     words?: Partial<DialogShellWords>
 }
 
@@ -193,7 +228,17 @@ export interface ConfirmDialogProps {
  * there is no body unless one is given, and a destructive answer is drawn as one. On a phone it
  * stays sized to its content, never a full-screen sheet.
  */
-export function ConfirmDialog({ open, onOpenChange, question, detail, confirm, children, words }: ConfirmDialogProps) {
+export function ConfirmDialog({
+    open,
+    onOpenChange,
+    question,
+    detail,
+    confirm,
+    children,
+    closeOnOutsidePress,
+    initialFocus,
+    words,
+}: ConfirmDialogProps) {
     return (
         <DialogShell
             open={open}
@@ -203,6 +248,8 @@ export function ConfirmDialog({ open, onOpenChange, question, detail, confirm, c
             title={question}
             description={detail}
             confirm={confirm}
+            closeOnOutsidePress={closeOnOutsidePress}
+            initialFocus={initialFocus}
             words={words}
         >
             {children}

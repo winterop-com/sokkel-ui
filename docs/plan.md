@@ -484,6 +484,13 @@ undrawn; stacked as cards, an editable column's line is a field. An entry grid (
 table with a number column for each category, a total column and a group per part of the form, its
 heads summing each column, folding to a card per question on a narrow screen.
 
+`DialogShell` is every dialog's frame. A dialog with a confirm has Cancel beside it; one with
+nothing to confirm, one thing to read such as a run's log, closes from the corner and keeps its
+`actions` (Copy, Download) in the footer alone, with no Cancel. `closeOnOutsidePress={false}` keeps
+a press outside from closing a half-written form while Cancel, the close and Escape still close it,
+apart from `dismissible={false}`, which holds all of them. Opening focuses the first field in the
+body, or `initialFocus`, a ref to the element to focus instead. `ConfirmDialog` takes the same two.
+
 `SettingsDialog` holds an app's preferences: its sections in a navigation with a search over every
 setting (its title, description and `keywords`, which are never drawn, and its section's name, so a
 search for a section keeps it whole), the chosen section's rows beside it, and under both a footer drawn as `DialogShell`'s,
