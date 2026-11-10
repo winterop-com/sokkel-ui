@@ -14,9 +14,11 @@ export interface PageHeaderWords {
     trail: string
     /** The button that holds the `items` the header has no room for. */
     more: string
+    /** The chevron that opens a split item's related ways. */
+    moreWays: string
 }
 
-const WORDS: PageHeaderWords = { back: 'Back', trail: 'Where you are', more: 'More' }
+const WORDS: PageHeaderWords = { back: 'Back', trail: 'Where you are', more: 'More', moreWays: 'More ways' }
 
 export interface PageHeaderProps {
     /** The page's title: its text, or a part drawn in its place, such as an `InlineEdit` with `variant="title"`. */
@@ -34,6 +36,8 @@ export interface PageHeaderProps {
      * or an album's artwork; after the back button where there is one.
      */
     aside?: ReactNode
+    /** A part at the start of the actions, before every verb and never folded into More, such as a status chip. */
+    lead?: ReactNode
     /** Buttons, the primary one last. */
     actions?: ReactNode
     /**
@@ -73,7 +77,9 @@ const ROWS = ['row-span-1', 'row-span-2', 'row-span-3', 'row-span-4', 'row-span-
  * The title is the thing's name where it has one and its code otherwise; a code shown as the
  * title is not repeated under it. `description` is a sentence under the title saying what the
  * page holds; `meta` is a line of small facts under that, such as who wrote it and when. `aside`
- * is a picture before all of them, such as an avatar or artwork.
+ * is a picture before all of them, such as an avatar or artwork. `lead` starts the actions with a
+ * part that is not a verb, such as the run's status chip, which stays when the items fold. A code
+ * cut short says the whole of it on hover.
  *
  * A page reached from another can say where it sits: `trail` draws the places above it small over
  * the title, nearest last, each a link back up, and `onBack` draws a back button level with the
@@ -88,6 +94,7 @@ export function PageHeader({
     description,
     meta,
     aside,
+    lead,
     actions,
     items,
     actionsFill,
@@ -100,6 +107,7 @@ export function PageHeader({
     const showCode = code !== undefined && code !== title
     const back = onBack !== undefined
     const beside = aside !== undefined && aside !== null
+    const led = lead !== undefined && lead !== null && lead !== false
     const trailed = trail !== undefined && trail.length > 0
     const folding = items !== undefined && items.length > 0
     const fill = actionsFill ?? folding
@@ -162,7 +170,11 @@ export function PageHeader({
                     </h1>
                     {count !== undefined && <span className="shrink-0 text-xs text-muted-foreground tabular-nums">{count}</span>}
                 </div>
-                {showCode && <p className={cn('truncate font-mono text-xs text-muted-foreground', column)}>{code}</p>}
+                {showCode && (
+                    <p title={code} className={cn('truncate font-mono text-xs text-muted-foreground', column)}>
+                        {code}
+                    </p>
+                )}
                 {description !== undefined && <p className={cn('mt-1 max-w-prose text-sm text-muted-foreground', column)}>{description}</p>}
                 {meta !== undefined && (
                     <div className={cn('mt-1.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground', column)}>
@@ -173,19 +185,28 @@ export function PageHeader({
             {/* At least room for More and the primary action beside the title before the actions wrap under it. */}
             {folding ? (
                 <div data-slot="page-header-actions" className="flex min-w-0 flex-[1_1_8rem] items-center justify-end gap-2">
-                    <Toolbar items={items} itemVariant="outline" itemsAlign="end" className="flex-1" words={{ more: said.more }} />
+                    <Toolbar
+                        items={items}
+                        itemsLead={led ? lead : undefined}
+                        itemVariant="outline"
+                        itemsAlign="end"
+                        className="flex-1"
+                        words={{ more: said.more, moreWays: said.moreWays }}
+                    />
                     {actions !== undefined && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
                 </div>
             ) : fill ? (
-                actions !== undefined && (
-                    <div data-slot="page-header-actions" className="min-w-0 flex-[1_1_8rem]">
-                        {actions}
+                (actions !== undefined || led) && (
+                    <div data-slot="page-header-actions" className="flex min-w-0 flex-[1_1_8rem] items-center gap-2">
+                        {led && <div className="flex shrink-0 items-center">{lead}</div>}
+                        <div className="min-w-0 flex-1">{actions}</div>
                     </div>
                 )
             ) : (
-                actions !== undefined && (
+                (actions !== undefined || led) && (
                     // No wider than the header, so a group wrapped under the title wraps its own buttons too.
                     <div data-slot="page-header-actions" className="flex max-w-full shrink-0 flex-wrap items-center gap-2">
+                        {lead}
                         {actions}
                     </div>
                 )

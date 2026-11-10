@@ -1,19 +1,45 @@
 import { Ellipsis } from 'lucide-react'
-import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { Fragment, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { SplitButton, type SplitButtonItem } from './SplitButton'
 import { fitCount } from './TagChips'
 import { Button } from './ui/button'
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu'
+import {
+    DropdownMenu,
+    DropdownMenuCheckboxItem,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from './ui/dropdown-menu'
 
 /** A tool that moves into the More menu when the toolbar has no room for it. */
 export interface ToolbarItem {
     id: string
-    /** What the tool says, in the row and as its entry in More. */
+    /**
+     * What the tool is called: its accessible name, its entry in More, and its face in the row
+     * unless `face` is given.
+     */
     label: string
+    /** A shorter face in the row, where the page around it names the rest: "New" here, "New job" in `label`. */
+    face?: ReactNode
     icon?: ReactNode
     onSelect?: () => void
     disabled?: boolean
+    /**
+     * Why the tool cannot be used now; given, it is shut but stays reachable: `aria-disabled` and
+     * the reason in its tooltip in the row, and a shut entry with the reason under it in More.
+     */
+    reason?: ReactNode
+    /** For a tool that destroys: the critical tint under the pointer in the row, and in More. */
+    destructive?: boolean
+    /**
+     * Related ways to do the tool's action, drawn in the row as a `SplitButton`'s menu; in More the
+     * tool's own entry comes first and these after it, set apart as a group.
+     */
+    more?: readonly SplitButtonItem[]
     /** On or off, for a tool that toggles: pressed in the row, checked in More. */
     pressed?: boolean
     /** Drawn in the row in place of the plain button, such as a `FilterChip`. */
@@ -26,10 +52,13 @@ export interface ToolbarItem {
 export interface ToolbarWords {
     /** The button that holds the tools the row has no room for. */
     more: string
+    /** The name of the chevron that opens a split tool's related ways. */
+    moreWays: string
 }
 
 const WORDS: ToolbarWords = {
     more: 'More',
+    moreWays: 'More ways',
 }
 
 /** The gap between the tools that move into More, in pixels; `gap-2` below. */
@@ -50,44 +79,164 @@ export function toolbarSplit<T>(
     return { inline: items.slice(0, count), overflow: items.slice(count) }
 }
 
+/** One entry in More, as a tool or one of its related ways is listed there. */
+export interface ToolbarEntry {
+    key: string
+    label: ReactNode
+    icon?: ReactNode
+    /** A line under the label: the reason a shut entry gives, or how a related way differs. */
+    note?: ReactNode
+    onSelect?: () => void
+    /** Shut, by `disabled` or by a reason. */
+    shut: boolean
+    destructive: boolean
+    /** Checked or not, for a toggle. */
+    pressed?: boolean
+    /** Set in to line up with its tool's label: a related way without an icon under a tool with one. */
+    inset: boolean
+}
+
+/** A reason that says something, as `reason` props are read across the library. */
+function said(reason: ReactNode): boolean {
+    return reason !== undefined && reason !== null && reason !== false
+}
+
+/** What More lists for a tool: its own entry, then its related ways in order, all shut with it. */
+export function toolbarEntries(item: ToolbarItem): ToolbarEntry[] {
+    const shut = said(item.reason) || item.disabled === true
+    const own: ToolbarEntry = {
+        key: item.id,
+        label: item.label,
+        icon: item.icon,
+        note: said(item.reason) ? item.reason : undefined,
+        onSelect: item.onSelect,
+        shut,
+        destructive: item.destructive === true,
+        pressed: item.pressed,
+        inset: false,
+    }
+    const ways = (item.more ?? []).map((way, index): ToolbarEntry => ({
+        key: `${item.id}-${String(index)}`,
+        label: way.label,
+        icon: way.icon,
+        note: way.description,
+        onSelect: way.onSelect,
+        shut: shut || way.disabled === true,
+        destructive: way.destructive === true,
+        inset: item.icon !== undefined && way.icon === undefined,
+    }))
+    return [own, ...ways]
+}
+
 /** How the plain buttons in the row look: bare, or framed as a page header's actions are. */
 export type ToolbarItemVariant = 'ghost' | 'outline'
 
-/** A tool as the row draws it: the app's own node, or a plain button with its icon and label. */
-function Inline({ item, variant }: { item: ToolbarItem; variant: ToolbarItemVariant }) {
+/** The critical tint a destroying tool takes under the pointer, as `IconButton`'s `destructive`. */
+const DESTRUCTIVE = 'not-aria-disabled:hover:bg-critical/10 not-aria-disabled:hover:text-critical-ink'
+
+/** A tool as the row draws it: the app's own node, a split button for one with related ways, or a plain button. */
+function Inline({ item, variant, words }: { item: ToolbarItem; variant: ToolbarItemVariant; words: ToolbarWords }) {
     if (item.render !== undefined) return item.render
+    const named = item.face !== undefined
+    const title = named && !said(item.reason) ? item.label : undefined
+    if (item.more !== undefined) {
+        return (
+            <SplitButton
+                variant={variant}
+                size="sm"
+                label={named ? item.label : undefined}
+                title={title}
+                onClick={item.onSelect}
+                items={item.more}
+                disabled={item.disabled}
+                reason={item.reason}
+                words={{ more: words.moreWays }}
+            >
+                {item.icon}
+                {item.face ?? item.label}
+            </SplitButton>
+        )
+    }
     return (
         <Button
             variant={variant}
             size="sm"
             disabled={item.disabled}
+            reason={item.reason}
+            aria-label={named ? item.label : undefined}
+            title={title}
             aria-pressed={item.pressed}
             onClick={item.onSelect}
-            className={cn(item.pressed === true && 'bg-muted text-foreground')}
+            className={cn(item.pressed === true && 'bg-muted text-foreground', item.destructive === true && DESTRUCTIVE)}
         >
             {item.icon}
-            {item.label}
+            {item.face ?? item.label}
         </Button>
     )
 }
 
-/** A tool as More lists it: the app's own entry, a checked entry for a toggle, or a plain one. */
-function Entry({ item }: { item: ToolbarItem }) {
-    if (item.menu !== undefined) return item.menu
-    if (item.pressed !== undefined) {
+/** An entry's icon and label, with its note under the label where it has one. */
+function EntryFace({ entry }: { entry: ToolbarEntry }) {
+    return (
+        <>
+            {entry.icon}
+            {entry.note === undefined ? (
+                entry.label
+            ) : (
+                <span className="flex min-w-0 flex-col">
+                    <span>{entry.label}</span>
+                    <span className="text-help text-muted-foreground">{entry.note}</span>
+                </span>
+            )}
+        </>
+    )
+}
+
+/** One entry as More lists it: a checked entry for a toggle, or a plain one. */
+function Entry({ entry }: { entry: ToolbarEntry }) {
+    const tall = entry.note !== undefined && 'items-start'
+    if (entry.pressed !== undefined) {
         return (
-            <DropdownMenuCheckboxItem checked={item.pressed} disabled={item.disabled} onCheckedChange={() => item.onSelect?.()}>
-                {item.icon}
-                {item.label}
+            <DropdownMenuCheckboxItem
+                checked={entry.pressed}
+                disabled={entry.shut}
+                onCheckedChange={() => entry.onSelect?.()}
+                className={cn(tall)}
+            >
+                <EntryFace entry={entry} />
             </DropdownMenuCheckboxItem>
         )
     }
     return (
-        <DropdownMenuItem disabled={item.disabled} onClick={item.onSelect}>
-            {item.icon}
-            {item.label}
+        <DropdownMenuItem
+            disabled={entry.shut}
+            variant={entry.destructive ? 'destructive' : 'default'}
+            inset={entry.inset}
+            onClick={entry.onSelect}
+            className={cn(tall)}
+        >
+            <EntryFace entry={entry} />
         </DropdownMenuItem>
     )
+}
+
+/** A tool with related ways, listed in More as a group of its own. */
+function isSplit(item: ToolbarItem | undefined): boolean {
+    return item !== undefined && item.more !== undefined && item.menu === undefined
+}
+
+/** The tools in More, in order: the app's own entry, or a tool's entries, a split tool's as a group set apart by rules. */
+function Entries({ items }: { items: readonly ToolbarItem[] }) {
+    return items.map((item, index) => {
+        const rule = index > 0 && (isSplit(item) || isSplit(items[index - 1])) && <DropdownMenuSeparator />
+        const entries = item.menu !== undefined ? item.menu : toolbarEntries(item).map((entry) => <Entry key={entry.key} entry={entry} />)
+        return (
+            <Fragment key={item.id}>
+                {rule}
+                {isSplit(item) ? <DropdownMenuGroup>{entries}</DropdownMenuGroup> : entries}
+            </Fragment>
+        )
+    })
 }
 
 /** The More button, drawn by the menu's trigger and by the ruler alike. */
@@ -113,6 +262,8 @@ export interface ToolbarProps {
      * row has no room for them, so the row stays one line.
      */
     items?: readonly ToolbarItem[]
+    /** A part before `items` in their room that never moves into More, such as a status chip. */
+    itemsLead?: ReactNode
     /** Opens More on the first render, for a still view of it. */
     defaultMoreOpen?: boolean
     /** How `items` drawn as plain buttons look, and More with them: `ghost` (the default) or `outline`. */
@@ -135,7 +286,10 @@ export interface ToolbarProps {
  * `items` are tools that give way instead: they follow `children` in the room the row has left,
  * measured on the toolbar itself rather than the window, and those that do not fit move into a
  * More menu at their end, in order, as a plain entry, a checked one for a toggle, or the item's
- * own `menu`. As the toolbar widens they come back out. `itemsAlign="end"` stands them at the end of
+ * own `menu`. A tool with a `reason` is shut but stays reachable, saying why in its tooltip and
+ * under its entry; one with `more` is a split button in the row and a group in More, its own entry
+ * and then its related ways. `face` gives a tool a shorter face in the row than its `label`, which
+ * stays its name. As the toolbar widens they come back out. `itemsAlign="end"` stands them at the end of
  * their room and `itemVariant="outline"` frames them, for a row of actions such as a page header's.
  *
  * `variant="pane"` makes it a strip across the top of a pane, padded with a rule under it; on a
@@ -145,6 +299,7 @@ export function Toolbar({
     search,
     children,
     items,
+    itemsLead,
     defaultMoreOpen = false,
     itemVariant = 'ghost',
     itemsAlign = 'start',
@@ -156,8 +311,10 @@ export function Toolbar({
     const words = { ...WORDS, ...given }
     const room = useRef<HTMLDivElement>(null)
     const ruler = useRef<HTMLDivElement>(null)
+    const leader = useRef<HTMLDivElement>(null)
     const [fit, setFit] = useState(items?.length ?? 0)
     const count = items?.length ?? 0
+    const led = itemsLead !== undefined && itemsLead !== null && itemsLead !== false
     useLayoutEffect(() => {
         const box = room.current
         const measure = ruler.current
@@ -166,15 +323,17 @@ export function Toolbar({
             const boxes = [...measure.children] as HTMLElement[]
             const more = boxes.pop()?.offsetWidth ?? 0
             const widths = boxes.map((one) => one.offsetWidth)
-            setFit(toolbarSplit(widths, widths, box.clientWidth, ITEM_GAP, more).inline.length)
+            const lead = leader.current === null ? 0 : leader.current.offsetWidth + ITEM_GAP
+            setFit(toolbarSplit(widths, widths, box.clientWidth - lead, ITEM_GAP, more).inline.length)
         }
         update()
         if (typeof ResizeObserver === 'undefined') return
         const observer = new ResizeObserver(update)
         observer.observe(box)
         observer.observe(measure)
+        if (leader.current !== null) observer.observe(leader.current)
         return () => observer.disconnect()
-    }, [count])
+    }, [count, led])
     const inline = items?.slice(0, fit) ?? []
     const overflow = items?.slice(fit) ?? []
     return (
@@ -206,14 +365,19 @@ export function Toolbar({
                         >
                             {items.map((item) => (
                                 <div key={item.id} className="flex shrink-0 items-center">
-                                    <Inline item={item} variant={itemVariant} />
+                                    <Inline item={item} variant={itemVariant} words={words} />
                                 </div>
                             ))}
                             <div className="flex shrink-0 items-center">{moreButton(words.more, itemVariant)}</div>
                         </div>
+                        {led && (
+                            <div ref={leader} data-slot="toolbar-items-lead" className="flex shrink-0 items-center">
+                                {itemsLead}
+                            </div>
+                        )}
                         {inline.map((item) => (
                             <div key={item.id} className="flex shrink-0 items-center">
-                                <Inline item={item} variant={itemVariant} />
+                                <Inline item={item} variant={itemVariant} words={words} />
                             </div>
                         ))}
                         {overflow.length > 0 && (
@@ -222,9 +386,7 @@ export function Toolbar({
                                     <Ellipsis aria-hidden />
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-auto min-w-48">
-                                    {overflow.map((item) => (
-                                        <Entry key={item.id} item={item} />
-                                    ))}
+                                    <Entries items={overflow} />
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         )}

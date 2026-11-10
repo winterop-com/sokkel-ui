@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { CalendarClock, Copy, Download, History, ListPlus, Pin, Play, RotateCcw, Settings, Upload } from 'lucide-react'
+import { CalendarClock, Copy, Download, History, ListPlus, Pin, Play, Plus, RotateCcw, Settings, Trash2, Upload } from 'lucide-react'
 import { useState } from 'react'
 
 import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
@@ -111,6 +111,102 @@ export const Folding: StoryObj = {
             />
         )
     },
+}
+
+/**
+ * A listing's folding items with faces shorter than their names: New reads "New" beside the
+ * Jobs title and is named "New job", with New from a template and Import a job as its related
+ * ways, which fold into More after it as a group.
+ */
+export const ShortFaces: StoryObj = {
+    name: 'Short faces',
+    render: () => (
+        <PageHeader
+            title="Jobs"
+            count="5 jobs"
+            meta={<MetaLine items={['Project juniper']} />}
+            items={[
+                { id: 'import', label: 'Import jobs', face: 'Import', icon: <Upload aria-hidden />, onSelect: () => undefined },
+                { id: 'export', label: 'Export jobs', face: 'Export', icon: <Download aria-hidden />, onSelect: () => undefined },
+                {
+                    id: 'new',
+                    label: 'New job',
+                    face: 'New',
+                    icon: <Plus aria-hidden />,
+                    onSelect: () => undefined,
+                    more: [
+                        { label: 'New from a template', onSelect: () => undefined },
+                        { label: 'Copy a job from harbor', onSelect: () => undefined },
+                    ],
+                },
+            ]}
+        />
+    ),
+}
+
+/**
+ * A job's head with every kind of item: Run now split with its related ways, a schedule shut with
+ * the reason on hover and under its entry in More, and Delete in the critical tint. More is named
+ * More actions, and the long code under the title says the whole of it on hover when cut short.
+ */
+export const ItemStates: StoryObj = {
+    name: 'Item states',
+    render: () => (
+        <PageHeader
+            title="Sync inventory"
+            code="juniper/jobs/sync-inventory"
+            meta={<MetaLine items={['Project juniper', 'Owned by linus', 'Every hour']} />}
+            words={{ more: 'More actions' }}
+            items={[
+                {
+                    id: 'run',
+                    label: 'Run now',
+                    icon: <Play aria-hidden />,
+                    onSelect: () => undefined,
+                    more: [
+                        { label: 'Run with options', onSelect: () => undefined },
+                        { label: 'Run from a step', description: 'Starts at transform, with the last fetch', onSelect: () => undefined },
+                    ],
+                },
+                { id: 'history', label: 'Run history', icon: <History aria-hidden />, onSelect: () => undefined },
+                {
+                    id: 'schedule',
+                    label: 'Change the schedule',
+                    icon: <CalendarClock aria-hidden />,
+                    reason: 'Only linus can change the schedule',
+                    onSelect: () => undefined,
+                },
+                { id: 'duplicate', label: 'Duplicate', icon: <Copy aria-hidden />, onSelect: () => undefined },
+                { id: 'delete', label: 'Delete', icon: <Trash2 aria-hidden />, destructive: true, onSelect: () => undefined },
+            ]}
+        />
+    ),
+}
+
+/**
+ * A run of nightly-export: its state as a chip at the start of the actions, which stays as Retry,
+ * Download the log and Cancel fold into More, Cancel shut because the run has finished.
+ */
+export const StatusLead: StoryObj = {
+    name: 'Status lead',
+    render: () => (
+        <PageHeader
+            title="Run 4812"
+            code="nightly-export"
+            meta={<MetaLine items={['Started at 02:00', 'Stopped at validate after 4 min']} />}
+            lead={<StatusChip status="failed" />}
+            items={[
+                { id: 'log', label: 'Download the log', face: 'Log', icon: <Download aria-hidden />, onSelect: () => undefined },
+                { id: 'cancel', label: 'Cancel', reason: 'The run has finished', onSelect: () => undefined },
+            ]}
+            actions={
+                <Button size="sm">
+                    <RotateCcw aria-hidden />
+                    Retry
+                </Button>
+            }
+        />
+    ),
 }
 
 /** A page reached from another: back level with the title, and the places above it, each a link back up. */
