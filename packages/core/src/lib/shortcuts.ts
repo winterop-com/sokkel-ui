@@ -78,7 +78,8 @@ function letter(key: string): boolean {
 
 /**
  * Whether a press is a chord, by the character it typed. `apple` says whether `mod` is ⌘ (on a Mac)
- * or Ctrl (elsewhere); the other one held refuses the press.
+ * or Ctrl (elsewhere); the other one held refuses the press, save Ctrl on a Mac for a chord that
+ * takes it too (`alsoCtrl`).
  */
 export function matchesChord(chord: KeyChord, press: KeyPress, apple: boolean): boolean {
     const want = keyName(chord.key)
@@ -90,8 +91,10 @@ export function matchesChord(chord: KeyChord, press: KeyPress, apple: boolean): 
         ctrlKey = false
         altKey = false
     }
-    const command = apple ? press.metaKey : ctrlKey
-    const other = apple ? ctrlKey : press.metaKey
+    // On a Mac a chord that takes Ctrl too is held by either one, never by both.
+    const either = apple && chord.mod === true && chord.alsoCtrl === true && press.metaKey !== ctrlKey
+    const command = apple ? press.metaKey || either : ctrlKey
+    const other = apple ? ctrlKey && !either : press.metaKey
     if (command !== (chord.mod === true) || other) return false
     if (symbol) return got === want
     if ((chord.alt === true) !== altKey || (chord.shift === true) !== press.shiftKey) return false
@@ -237,8 +240,12 @@ export interface ShortcutGroup {
 /**
  * The groups the shortcuts dialog lists: every registered binding with a label and its keys as this
  * device writes them, those with a group of their own first (a screen's), then those without under
- * `general`, then the groups given. Groups of one title are one, at the first one's place; a
- * shortcut whose id is already listed is left out.
+ * `general`, then the groups given. Groups of one title are one, at the first one's place.
+ *
+ * A shortcut is known by its id and its keys together, so two of one id on different keys (a
+ * field's `/` and an app's own key for its search) are both listed. Where the groups given name one
+ * a binding already has, id and keys alike, the app's own words win: the binding is listed there,
+ * in the app's group, and not again.
  */
 export function shortcutGroups(
     registered: readonly KeyBinding[],
@@ -246,18 +253,23 @@ export function shortcutGroups(
     general: string,
     apple: boolean = isApple(),
 ): ShortcutGroup[] {
+    const identity = (shortcut: Pick<Shortcut, 'id' | 'keys'>) => `${shortcut.id}\u0000${shortcut.keys.join('\u0000')}`
+    const appGives = new Set(given.flatMap((group) => group.shortcuts.map(identity)))
     const groups = new Map<string, Shortcut[]>()
-    const ids = new Set<string>()
+    const listed = new Set<string>()
     const add = (title: string, shortcut: Shortcut) => {
-        if (ids.has(shortcut.id)) return
-        ids.add(shortcut.id)
+        const known = identity(shortcut)
+        if (listed.has(known)) return
+        listed.add(known)
         const held = groups.get(title) ?? []
         held.push(shortcut)
         groups.set(title, held)
     }
     const labeled = registered.filter((binding) => binding.label !== undefined)
-    for (const binding of [...labeled.filter((one) => one.group !== undefined), ...labeled.filter((one) => one.group === undefined)])
-        add(binding.group ?? general, { id: binding.id, action: binding.label ?? '', keys: keyLabels(binding, apple) })
+    for (const binding of [...labeled.filter((one) => one.group !== undefined), ...labeled.filter((one) => one.group === undefined)]) {
+        const shortcut = { id: binding.id, action: binding.label ?? '', keys: keyLabels(binding, apple) }
+        if (!appGives.has(identity(shortcut))) add(binding.group ?? general, shortcut)
+    }
     for (const group of given) for (const shortcut of group.shortcuts) add(group.title, shortcut)
     return [...groups.entries()].map(([title, shortcuts]) => ({ title, shortcuts }))
 }

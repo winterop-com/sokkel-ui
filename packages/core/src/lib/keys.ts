@@ -18,6 +18,11 @@ export function isApple(): boolean {
 export interface KeyChord {
     key: string
     mod?: boolean
+    /**
+     * With `mod`, Ctrl held in ⌘'s place answers on a Mac too, as the palette's Ctrl K does for a
+     * hand used to other platforms; elsewhere `mod` is Ctrl already. Written as ⌘ all the same.
+     */
+    alsoCtrl?: boolean
     shift?: boolean
     alt?: boolean
 }

@@ -23,6 +23,7 @@ import {
     usePaletteShortcut,
     type PaletteFilter,
     type PaletteFoot,
+    type PaletteSearch,
     type PaletteGroup,
 } from '@winterop-com/sokkel-ui/CommandPalette'
 import { useCommands } from '@winterop-com/sokkel-ui/hooks/use-commands'
@@ -40,6 +41,7 @@ import { Stack } from '@winterop-com/sokkel-ui/Layout'
 import { makeAlbums } from '../fixtures/albums'
 import { Artwork } from '@winterop-com/sokkel-ui-media/Artwork'
 import { ADA, GRACE, LINUS } from '../fixtures/portraits'
+import { searchTidevann } from '../fixtures/search'
 import { TidevannMark } from '../fixtures/TidevannMark'
 
 /** The palette open over an app, with places, actions and recent records. */
@@ -145,12 +147,14 @@ function Palette({
     query,
     filter,
     foot,
+    search,
 }: {
     initial: boolean
     groups?: PaletteGroup[]
     query?: string
     filter?: PaletteFilter
     foot?: PaletteFoot
+    search?: PaletteSearch
 }) {
     const [open, setOpen] = useState(initial)
     const show = useCallback(() => setOpen(true), [])
@@ -160,7 +164,15 @@ function Palette({
             <Button variant="outline" size="sm" onClick={show}>
                 Open the palette <Kbd>⌘K</Kbd>
             </Button>
-            <CommandPalette open={open} onOpenChange={setOpen} groups={groups} defaultQuery={query} filter={filter} foot={foot} />
+            <CommandPalette
+                open={open}
+                onOpenChange={setOpen}
+                groups={groups}
+                defaultQuery={query}
+                filter={filter}
+                foot={foot}
+                search={search}
+            />
         </Stack>
     )
 }
@@ -239,6 +251,22 @@ export const Searching: StoryObj = { render: () => <Palette initial query="new" 
 export const EveryWord: StoryObj = { name: 'Every word', render: () => <Palette initial query="run" filter="terms" /> }
 /** A search that matches nothing. */
 export const NoMatch: StoryObj = { name: 'No match', render: () => <Palette initial query="invoices" /> }
+/**
+ * A pasted run id no command holds: the app's search (`search`) finds the run, and the first of its
+ * results is active as they arrive, so Enter opens it without an arrow pressed first.
+ */
+export const SearchResults: StoryObj = {
+    name: 'Search results',
+    render: () => (
+        <Palette
+            initial
+            query="01a1a5b9"
+            filter="terms"
+            foot={{ mark: <TidevannMark />, name: 'Tidevann' }}
+            search={{ search: (query) => searchTidevann(query, 4), onOpen: () => undefined }}
+        />
+    ),
+}
 /** Records as two lines, a drawn cover or a picture at the start, a person's round; one-line commands keep their height. */
 export const TwoLines: StoryObj = { name: 'Two lines', render: () => <Palette initial groups={TWO_LINES} /> }
 

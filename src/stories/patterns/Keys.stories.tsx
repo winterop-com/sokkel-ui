@@ -40,11 +40,17 @@ const PLACES: RailGroup[] = [
     },
 ]
 
-/** Keys the app answers itself, outside the registry, listed after the bound ones. */
+/**
+ * Keys the app answers itself, outside the registry, listed after the bound ones, and the search's
+ * bound `/` in the app's own words, which take its place.
+ */
 const APP_KEYS: ShortcutGroup[] = [
     {
         title: 'General',
-        shortcuts: [{ id: 'close', action: 'Close a dialog or a menu', keys: ['Esc'] }],
+        shortcuts: [
+            { id: 'search', action: "Search this screen's listing", keys: ['/'] },
+            { id: 'close', action: 'Close a dialog or a menu', keys: ['Esc'] },
+        ],
     },
 ]
 
@@ -183,9 +189,9 @@ function KeysFrame({ dialog = false, palette = false }: { dialog?: boolean; pale
 export const ScreenKeys: StoryObj = { name: 'Screen keys', render: () => <KeysFrame /> }
 
 /**
- * The shell's shortcuts dialog over the page: the screen's keys under its group, the search's and
- * the shell's own under General with the key the app answers itself, each written as this device
- * writes it.
+ * The shell's shortcuts dialog over the page: the screen's keys under its group, the shell's own
+ * under General with the keys the app lists itself, each written as this device writes it. The app
+ * lists the search's `/` on its id in its own words, which stand in the bound one's place.
  */
 export const Dialog: StoryObj = { name: 'Shortcuts dialog', render: () => <KeysFrame dialog /> }
 
