@@ -399,6 +399,14 @@ sort of form a card is, and `Segmented` options carry a count and a state's dot.
 or any drawing with no ground of its own, or marks it with a rule in the critical tone across its top
 and a warning mark before its title (`critical`). A section is labelled by its heading, whose id
 `headingId` sets, and `bodyClassName` lays out its body's content.
+A required `Field` is marked by a star in its label, or with `requiredMark="word"` by the word
+after the label and outside it, so the control is named by its label alone and says it is required
+with `aria-required`; `fallback` says under the control what applies when the field is left empty.
+`SchemaForm` takes both, `requiredMark` and `fallbacks` (a schema `default` said under its field).
+`ItemHeading` is the heading `ItemCard` draws for one thing, on its own: the name, else the code,
+the code drawn once in the code face under the name (`stacked`) or beside it (`inline`), in a
+panel's or a dialog's size, with a leading `glyph`, `chips` and a one-line `description`.
+`PageHeader` decides its title and code by the same rule.
 `DetailSheet` is one thing's detail in a sheet from the right, its chips and actions on one line
 under the title, its body the parts its own page draws; `SourceSheet` is one.
 
