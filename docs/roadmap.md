@@ -6,7 +6,10 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.14.5** is the latest release (2026-11-10): `SidePanel` tabs as a tablist, and `Shell`'s
+- **0.15.0** is the latest release (2026-11-10): `SignIn` focuses its first empty field, keeps its
+  fields focusable while busy (`aria-disabled`, not `disabled`), names its fields, keeps the seam's
+  width (`widthKey`) and remembers a username only after a good sign-in.
+- **0.14.5** (2026-11-10): `SidePanel` tabs as a tablist, and `Shell`'s
   `panelStrip`, the panel's tabs at the foot of a phone's screen raising it as a sheet.
 - **0.14.4** (2026-11-10): frame fixes (collapsed rail names, the palette's first
   row, Ctrl+K on a Mac, 44px drawer rows, an app's shortcuts kept) and `TopBar` `trailEnds`, `ServerMenu`
