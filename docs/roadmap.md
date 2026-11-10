@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.14.1** is the latest release (2026-11-10): a bare `Dot` lines up with a worded one, and a status
+- **0.14.2** is the latest release (2026-11-10): a typeless `$ref` reads "any", `WindowedPaneButton`
+  takes a size, `useControlledDocument`, and phrases for an app's formats.
+- **0.14.1** (2026-11-10): a bare `Dot` lines up with a worded one, and a status
   definition takes `live`.
 - **0.14.0** (2026-11-10): `WindowedPane` keeps its pane, takes an aside, a sticky
   button and an inset frame; fixes to `ItemHeading`, `Chip`, `Surface`, `StatusChip` and `Dot` from
