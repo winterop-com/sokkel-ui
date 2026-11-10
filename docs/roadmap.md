@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.12.7** is the latest release (2026-11-10): a long `PageHeader` title alone wraps beside its
+- **0.12.8** is the latest release (2026-11-10): a header with folding actions keeps one line on a
+  wide screen; toolbar items take `variant` and `moreLabel`.
+- **0.12.7** (2026-11-10): a long `PageHeader` title alone wraps beside its
   actions in a wide header again.
 - **0.12.6** (2026-11-10): a short `PageHeader` title keeps its actions on a
   phone, a code title truncates, `Toolbar` takes `nowrap`, and three small fixes.
