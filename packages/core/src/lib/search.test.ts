@@ -171,4 +171,19 @@ describe('searchFor', () => {
     it('starts from nothing', () => {
         expect(searchFor(SEARCH_IDLE, 'Laos', true)).toEqual({ state: 'loading', query: 'Laos', groups: [] })
     })
+
+    it('keeps results stale while a query is refined in one open list', () => {
+        // Laos answered, then Lao typed: Laos's results wait dimmed while Lao is asked.
+        expect(searchFor(done, 'Lao', true)).toEqual({ state: 'loading', query: 'Lao', groups: LAOS })
+    })
+})
+
+describe('a cleared search', () => {
+    // `useSearch` holds SEARCH_IDLE once its query is emptied or its list closed, whatever it held before.
+    it('shows a query typed after clearing, or in a list opened again, as searching, not with old results', () => {
+        expect(searchFor(SEARCH_IDLE, 'Uganda', true)).toEqual({ state: 'loading', query: 'Uganda', groups: [] })
+        expect(searchFor(SEARCH_IDLE, 'Uganda')).toEqual({ state: 'loading', query: 'Uganda', groups: [] })
+        // The same query asked again after reopening starts from nothing too.
+        expect(searchFor(SEARCH_IDLE, 'Laos', true)).toEqual({ state: 'loading', query: 'Laos', groups: [] })
+    })
 })

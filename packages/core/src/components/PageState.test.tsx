@@ -101,3 +101,15 @@ describe('PageState tone', () => {
         ).toBe('content')
     })
 })
+
+describe('PageState headingLevel', () => {
+    it('draws a failure’s heading as a plain line by default', () => {
+        expect(failed()).toContain('<p class="font-medium">The server refused this read</p>')
+        expect(failed()).not.toContain('<h1')
+    })
+
+    it('makes the heading the page’s own h1, or an h2, when asked', () => {
+        expect(failed({ headingLevel: 'h1', status: 404 })).toContain('<h1 class="font-medium">Nothing is there</h1>')
+        expect(failed({ headingLevel: 'h2' })).toContain('<h2 class="font-medium">The server refused this read</h2>')
+    })
+})

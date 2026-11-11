@@ -61,15 +61,7 @@ export const STATUS_CSS: Readonly<Record<StatusColor, string>> = {
     warning: 'var(--warning)',
     info: 'var(--info)',
     neutral: 'var(--faint)',
-    succeeded: 'var(--status-succeeded)',
-    failed: 'var(--status-failed)',
-    running: 'var(--status-running)',
-    queued: 'var(--status-queued)',
-    pending: 'var(--status-pending)',
-    waiting: 'var(--status-waiting)',
-    cancelled: 'var(--status-cancelled)',
-    skipped: 'var(--status-skipped)',
-    completed_with_errors: 'var(--status-completed-with-errors)',
+    ...runTokens(''),
 }
 
 /** Each color's ink as a CSS color: the darker shade words and an outline are drawn in. */
@@ -79,15 +71,15 @@ export const STATUS_INK_CSS: Readonly<Record<StatusColor, string>> = {
     warning: 'var(--status-completed-with-errors-ink)',
     info: 'var(--status-running-ink)',
     neutral: 'var(--muted-foreground)',
-    succeeded: 'var(--status-succeeded-ink)',
-    failed: 'var(--status-failed-ink)',
-    running: 'var(--status-running-ink)',
-    queued: 'var(--status-queued-ink)',
-    pending: 'var(--status-pending-ink)',
-    waiting: 'var(--status-waiting-ink)',
-    cancelled: 'var(--status-cancelled-ink)',
-    skipped: 'var(--status-skipped-ink)',
-    completed_with_errors: 'var(--status-completed-with-errors-ink)',
+    ...runTokens('-ink'),
+}
+
+/** Each run state's own token, `--status-<state>` with the suffix, as a CSS color. */
+function runTokens(suffix: string): Record<RunStatus, string> {
+    return Object.fromEntries(RUN_STATUSES.map((status) => [status, `var(--status-${status.replaceAll('_', '-')}${suffix})`])) as Record<
+        RunStatus,
+        string
+    >
 }
 
 /** Whether a value names a color a state can be drawn in. */

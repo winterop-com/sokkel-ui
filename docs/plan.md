@@ -269,8 +269,13 @@ Results belong to the query they answer (`useSearch` tags each state with it): w
 comes an earlier query's results stay dimmed and out of reach, in `Search` and the palette alike, so
 the list does not jump yet nothing from the old query opens as the new one's; a failed search shows
 its failure (`words.failed`) over a Retry row, whatever was listed before, and the palette never says
-no command matches while its search waits or has failed. `Shell`'s `routeKey` moves the focus to a
-new page's first `h1` as the route changes, out of the field a result was opened from.
+no command matches while its search waits or has failed. Stale results stand only while a query is
+refined in one open list: emptying the field or closing the list lets them go, so a query typed
+after says it is searching. `Shell`'s `routeKey` moves the focus out of the field a result was
+opened from to the new page's first `h1` a reader can see (laid out, outside any inert or
+`aria-hidden` part) and that is none of the headings shown as the route changed, unless its words
+changed; a page still loading is waited for, up to 3 seconds and until the reader presses a key or
+the pointer.
 
 `useOverlay(open, { onClose })` makes an app's own overlay behave as a dialog: the page outside it
 inert, focus moved in, Escape closing the one on top, and focus back where it was; `Shell`'s drawer
@@ -417,7 +422,9 @@ headed by what the server answered, with `onRetry` for a way to read again, and 
 for a failed read of secondary data the page stands without, drawn in the warning tone and
 announced as a status rather than as the page's failure, its heading said of a part of the page
 (`partRefused`, "Part of this page could not be read") where the critical tone's says the server
-refused the page's read. `Surface` sets content on a card's ground, a panel's (`well`) or the page's (`inset`) and
+refused the page's read. `headingLevel="h1"` makes a failure's heading the page's own where the
+state stands in for a whole page, as a detail page whose record failed to load, so `routeKey` has a
+heading to focus. `Surface` sets content on a card's ground, a panel's (`well`) or the page's (`inset`) and
 clips nothing, so a focus ring at its edge shows whole; unpadded, its first and last children take
 its corners.
 

@@ -122,9 +122,9 @@ export function AccountMenu({
     )
     const signedIn = !local && onSignOut !== undefined
     const leave = signedIn
-        ? { label: words.signOut, icon: LogOut, run: onSignOut }
+        ? { label: words.signOut, icon: LogOut, onSelect: onSignOut }
         : onSignIn !== undefined && (local || onSignOut === undefined)
-          ? { label: words.signIn, icon: LogIn, run: onSignIn }
+          ? { label: words.signIn, icon: LogIn, onSelect: onSignIn }
           : undefined
     const schemes = [
         { value: 'light', label: words.light, icon: Sun },
@@ -213,7 +213,7 @@ export function AccountMenu({
                         {leave !== undefined && (
                             <>
                                 <Separator />
-                                <Row icon={leave.icon} label={leave.label} onSelect={leave.run} />
+                                <Row {...leave} />
                             </>
                         )}
                     </Menu.Popup>

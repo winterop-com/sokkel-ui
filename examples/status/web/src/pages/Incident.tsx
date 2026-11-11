@@ -44,7 +44,7 @@ export function Incident({ id, me, options }: { id: string; me: Person; options:
     const rows = useRows()
     const incident = rows.incidents?.find((one) => one.id === id)
     return (
-        <PageState loading={rows.incidents === undefined && rows.error === undefined} error={rows.error}>
+        <PageState loading={rows.incidents === undefined && rows.error === undefined} error={rows.error} headingLevel="h1">
             {incident === undefined ? (
                 <Empty>
                     <EmptyHeader>

@@ -17,7 +17,7 @@ import {
 
 import { cn } from '../lib/cn'
 import { CommandRegistry, useCommandRegistry } from '../hooks/use-commands'
-import { useIsMobile } from '../hooks/use-mobile'
+import { useIsMobile, useMedia } from '../hooks/use-mobile'
 import { useOverlay } from '../hooks/use-overlay'
 import { ShortcutRegistry } from '../hooks/use-shortcuts'
 import { trafficLightsStyle, useTrafficLights, windowPressHandler, type DesktopWindow } from '../lib/desktop'
@@ -122,20 +122,33 @@ export interface ShellProps {
     contentKey?: Key
     /**
      * The route shown, such as its path. Given, each change moves the focus to the new page's main
-     * heading (its first `h1`), so a reader who opened a search result or ran a command starts on
-     * the page rather than in the field they left. Off when not given.
+     * heading (its first shown `h1`), so a reader who opened a search result or ran a command starts
+     * on the page rather than in the field they left. A page still loading is waited for, up to 3
+     * seconds and until the reader presses a key or the pointer. Off when not given.
      */
     routeKey?: Key
     children: ReactNode
     words?: Partial<ShellWords>
 }
 
+/** The `h1`s a page's area holds, each with its words. */
+export type HeadingMarks = readonly (readonly [HTMLElement, string | null])[]
+
+/** The `h1`s in a page's area now, each with its words. */
+export const headingMarks = (area: ParentNode | null): HeadingMarks =>
+    [...(area?.querySelectorAll('h1') ?? [])].map((h) => [h, h.textContent])
+
 /**
- * Moves the focus to the first `h1` in a page's area, focusable only until the focus leaves it
- * unless it was already; false when the area has none.
+ * Moves the focus to the first `h1` in a page's area a reader can see (laid out, outside any inert
+ * or `aria-hidden` part) that is none of `before`, the headings shown before the route changed,
+ * unless its words changed. It is focusable only until the focus leaves it unless it was already;
+ * false when the area has none.
  */
-export function focusHeading(area: ParentNode | null): boolean {
-    const heading = area?.querySelector('h1')
+export function focusHeading(area: ParentNode | null, before: HeadingMarks = []): boolean {
+    const heading = headingMarks(area).find(
+        ([h, words]) =>
+            h.getClientRects().length > 0 && !h.closest('[inert],[aria-hidden=true]') && !before.some(([b, w]) => b === h && w === words),
+    )?.[0]
     if (!heading) return false
     if (!heading.hasAttribute('tabindex')) {
         heading.tabIndex = -1
@@ -143,6 +156,22 @@ export function focusHeading(area: ParentNode | null): boolean {
     }
     heading.focus()
     return true
+}
+
+/**
+ * Focuses a new page's heading (`focusHeading`) once it shows, looking again every 50 ms while the
+ * page loads, for `wait` ms at most and until the reader presses a key or the pointer. Returns the
+ * way to stop looking.
+ */
+export function awaitHeading(area: HTMLElement, before?: HeadingMarks, wait = 3000): () => void {
+    const done = new AbortController()
+    const stop = () => done.abort()
+    const look = () => (focusHeading(area, before) || (wait -= 50) < 0) && stop()
+    const timer = setInterval(look, 50)
+    done.signal.onabort = () => clearInterval(timer)
+    for (const type of ['keydown', 'pointerdown']) addEventListener(type, stop, { capture: true, signal: done.signal })
+    look()
+    return stop
 }
 
 /**
@@ -210,7 +239,8 @@ export function focusHeading(area: ParentNode | null): boolean {
  * palette row that opens it does. A screen inside opens either with `useShell`. `useScrollMemory`
  * keeps the content's place per screen, and a new `contentKey` mounts the content afresh, as after
  * the server has come back. Given `routeKey`, each new route moves the focus to the page's main
- * heading (`focusHeading`), out of the search field or the palette it was opened from.
+ * heading (`awaitHeading`), out of the search field or the palette it was opened from, once the page
+ * shows it.
  *
  * `railMode` narrows the rail to its icons or hides it whatever the app holds, for a work page with
  * list and detail panes of its own, and a screen asks the same while it is mounted with
@@ -288,10 +318,10 @@ export function Shell({
         if (drawer) setDrawer(false)
     }, [route, drawer, setDrawer])
     const [footCell, setFootCell] = useState<HTMLDivElement | null>(null)
-    const wide = useWide()
+    const wide = useMedia(WIDE)
     const [ownOpen, setOwnOpen] = useState<boolean | null>(null)
     const open = panelOpen ?? ownOpen ?? wide
-    const roomy = useMatch(ROOMY)
+    const roomy = useMedia(ROOMY)
     const crowded = panel !== undefined && open && wide && !roomy
     const setOpen = (next: boolean) => {
         if (panelOpen === undefined) setOwnOpen(next)
@@ -312,16 +342,8 @@ export function Shell({
     const lights = useTrafficLights(desktop)
     useDesktopFullscreen(desktop)
     const [shortcutRegistry] = useState(() => createShortcutRegistry())
-    const [ownPaletteOpen, setOwnPaletteOpen] = useState(defaultPaletteOpen)
-    const paletteIsOpen = paletteOpen ?? ownPaletteOpen
-    // Drawn from its first opening on, so it can close with its own animation.
-    const [paletteShown, setPaletteShown] = useState(defaultPaletteOpen)
-    if (paletteIsOpen && !paletteShown) setPaletteShown(true)
-    const [ownShortcutsOpen, setOwnShortcutsOpen] = useState(defaultShortcutsOpen)
-    const shortcutsIsOpen = shortcutsOpen ?? ownShortcutsOpen
-    // Drawn from its first opening on, as the palette is.
-    const [shortcutsShown, setShortcutsShown] = useState(defaultShortcutsOpen)
-    if (shortcutsIsOpen && !shortcutsShown) setShortcutsShown(true)
+    const [paletteIsOpen, paletteShown, setOwnPaletteOpen] = useOpened(paletteOpen, defaultPaletteOpen)
+    const [shortcutsIsOpen, shortcutsShown, setOwnShortcutsOpen] = useOpened(shortcutsOpen, defaultShortcutsOpen)
     const held = {
         palette: paletteOpen !== undefined,
         isOpen: paletteIsOpen,
@@ -411,11 +433,10 @@ export function Shell({
     const drawerRef = useOverlay(drawer && (mobile || railHidden), { onClose: closeDrawer })
     const panelRef = useOverlay(panel !== undefined && !wide && open, { onClose: () => setOpen(false), inert: false })
     const [main, setMain] = useState<HTMLElement | null>(null)
-    const shownRoute = useRef(routeKey)
-    useEffect(() => {
-        if (shownRoute.current !== routeKey) focusHeading(main)
-        shownRoute.current = routeKey
-    }, [routeKey, main])
+    // The headings shown as the route changes are read before the new page draws, so none is taken for the new one's.
+    const [moved, setMoved] = useState<[Key | undefined, HeadingMarks?]>([routeKey])
+    if (moved[0] !== routeKey) setMoved([routeKey, headingMarks(main)])
+    useEffect(() => (main && moved[1] ? awaitHeading(main, moved[1]) : undefined), [moved, main])
 
     const toggle = panel !== undefined && !stripping && (
         <button
@@ -530,27 +551,19 @@ export function Shell({
                         className={cn('absolute inset-0 bg-scrim transition-opacity duration-200', open ? 'opacity-100' : 'opacity-0')}
                         onClick={() => setOpen(false)}
                     />
-                    {stripping ? (
-                        <div
-                            data-overlay
-                            className={cn(
-                                'absolute inset-x-0 top-[calc(env(safe-area-inset-top)+var(--spacing-shell-top))] bottom-0 flex overflow-hidden rounded-t-surface bg-sidebar pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)] shadow-pop transition-transform duration-200 ease-out',
-                                open ? 'translate-y-0' : 'translate-y-full shadow-none',
-                            )}
-                        >
-                            {panel}
-                        </div>
-                    ) : (
-                        <div
-                            data-overlay
-                            className={cn(
-                                'absolute inset-y-0 right-0 flex max-w-[calc(100vw-3rem)] bg-sidebar pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] shadow-pop transition-transform duration-200 ease-out [&>*]:max-w-full',
-                                open ? 'translate-x-0' : 'translate-x-full shadow-none',
-                            )}
-                        >
-                            {panel}
-                        </div>
-                    )}
+                    <div
+                        data-overlay
+                        className={cn(
+                            'absolute flex bg-sidebar pr-[env(safe-area-inset-right)] shadow-pop transition-transform duration-200 ease-out',
+                            stripping
+                                ? 'inset-x-0 top-[calc(env(safe-area-inset-top)+var(--spacing-shell-top))] bottom-0 overflow-hidden rounded-t-surface pl-[env(safe-area-inset-left)]'
+                                : 'inset-y-0 right-0 max-w-[calc(100vw-3rem)] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] [&>*]:max-w-full',
+                            !open && 'shadow-none',
+                            open ? 'translate-0' : stripping ? 'translate-y-full' : 'translate-x-full',
+                        )}
+                    >
+                        {panel}
+                    </div>
                 </div>
             )}
         </>
@@ -567,14 +580,13 @@ export function Shell({
     }
     const tabStrip = (inGrid: boolean) =>
         stripping &&
-        stripTabs !== null && (
+        stripTabs !== null &&
+        stripContext && (
             <PanelTabStrip
-                tabs={stripTabs.tabs}
-                active={stripTabs.active}
+                {...stripTabs}
+                {...stripContext}
                 open={open}
                 label={words.panelTabs}
-                tabId={(id) => `${stripBase}-tab-${id}`}
-                panelId={`${stripBase}-panel`}
                 onPress={pressTab}
                 className={inGrid ? 'col-span-full row-start-4' : undefined}
             />
@@ -702,6 +714,18 @@ export function useShell(): ShellControls {
     return useMemo(() => ({ openPalette, openShortcuts }), [openPalette, openShortcuts])
 }
 
+/**
+ * A dialog of the shell's, open as `held` says or else as the shell keeps it, and whether it is
+ * drawn: from its first opening on, so it can close with its own animation.
+ */
+function useOpened(held: boolean | undefined, initial: boolean) {
+    const [own, setOwn] = useState(initial)
+    const open = held ?? own
+    const [shown, setShown] = useState(initial)
+    if (open && !shown) setShown(true)
+    return [open, shown, setOwn] as const
+}
+
 /** A layout effect in the browser, so an asked rail is drawn before the page paints; a plain one on a server. */
 const useBeforePaint = typeof document === 'undefined' ? useEffect : useLayoutEffect
 
@@ -725,24 +749,6 @@ const WIDE = '(min-width: 64rem)'
 
 /** The `xl` breakpoint, from which the rail stays open beside an open panel. */
 const ROOMY = '(min-width: 80rem)'
-
-/** Whether the window matches a media query, followed as it is resized. */
-function useMatch(media: string): boolean {
-    const [matches, setMatches] = useState(() => typeof window === 'undefined' || window.matchMedia(media).matches)
-    useEffect(() => {
-        const query = window.matchMedia(media)
-        const change = () => setMatches(query.matches)
-        change()
-        query.addEventListener('change', change)
-        return () => query.removeEventListener('change', change)
-    }, [media])
-    return matches
-}
-
-/** Whether the window is at least `lg` wide, followed as it is resized. */
-function useWide(): boolean {
-    return useMatch(WIDE)
-}
 
 export interface PageProps {
     children: ReactNode
