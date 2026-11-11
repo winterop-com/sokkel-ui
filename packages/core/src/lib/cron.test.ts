@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { describeCron, nextRuns, parseCron } from './cron'
+import { describeCron, nextRuns, parseCron, zoneOffset, zonedTime } from './cron'
 
 const FROM = new Date('2026-11-05T10:17:00Z')
 const iso = (dates: Date[]) => dates.map((date) => date.toISOString().slice(0, 16))
@@ -46,6 +46,62 @@ describe('nextRuns', () => {
 
     it('returns nothing for an expression that is not one', () => {
         expect(nextRuns('nope', FROM)).toEqual([])
+    })
+})
+
+describe('nextRuns in a zone', () => {
+    const OSLO = 'Europe/Oslo'
+
+    it('reads the hours in the zone', () => {
+        expect(iso(nextRuns('0 2 * * *', new Date('2027-01-10T12:00:00Z'), 2, OSLO))).toEqual(['2027-01-11T01:00', '2027-01-12T01:00'])
+        expect(iso(nextRuns('0 2 * * *', new Date('2027-06-10T12:00:00Z'), 1, OSLO))).toEqual(['2027-06-11T00:00'])
+    })
+
+    it('counts from the day it is in the zone, not in UTC', () => {
+        expect(iso(nextRuns('30 0 * * *', new Date('2027-01-10T23:10:00Z'), 1, OSLO))).toEqual(['2027-01-10T23:30'])
+    })
+
+    it('moves a time the clock skips in spring to the instant it jumps', () => {
+        expect(iso(nextRuns('0 2 * * *', new Date('2027-03-25T12:00:00Z'), 5, OSLO))).toEqual([
+            '2027-03-26T01:00',
+            '2027-03-27T01:00',
+            '2027-03-28T01:00',
+            '2027-03-29T00:00',
+            '2027-03-30T00:00',
+        ])
+        expect(iso(nextRuns('30 2 * * *', new Date('2027-03-27T12:00:00Z'), 1, OSLO))).toEqual(['2027-03-28T01:00'])
+    })
+
+    it('runs the skipped times once between them', () => {
+        expect(iso(nextRuns('*/30 1-3 * * *', new Date('2027-03-27T23:00:00Z'), 4, OSLO))).toEqual([
+            '2027-03-28T00:00',
+            '2027-03-28T00:30',
+            '2027-03-28T01:00',
+            '2027-03-28T01:30',
+        ])
+    })
+
+    it('runs a time the clock passes twice in autumn once, at its first pass', () => {
+        expect(iso(nextRuns('30 2 * * *', new Date('2027-10-30T12:00:00Z'), 2, OSLO))).toEqual(['2027-10-31T00:30', '2027-11-01T01:30'])
+        expect(iso(nextRuns('0 * * * *', new Date('2027-10-30T23:30:00Z'), 3, OSLO))).toEqual([
+            '2027-10-31T00:00',
+            '2027-10-31T02:00',
+            '2027-10-31T03:00',
+        ])
+    })
+
+    it('takes UTC as no zone', () => {
+        expect(nextRuns('0 2 * * 1-5', FROM, 5, 'UTC')).toEqual(nextRuns('0 2 * * 1-5', FROM))
+    })
+})
+
+describe('zonedTime and zoneOffset', () => {
+    it('read an instant on the wall clock of a zone', () => {
+        const at = new Date('2027-03-28T01:00:00Z')
+        expect(zonedTime(at, 'Europe/Oslo')).toEqual({ year: 2027, month: 3, day: 28, hour: 3, minute: 0, weekday: 0 })
+        expect(zoneOffset(at, 'Europe/Oslo')).toBe(2 * 3_600_000)
+        expect(zoneOffset(new Date('2027-03-28T00:59:00Z'), 'Europe/Oslo')).toBe(3_600_000)
+        expect(zoneOffset(at)).toBe(0)
     })
 })
 

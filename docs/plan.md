@@ -440,6 +440,18 @@ it. The display format is a prop (`format`, `clock`, a number's `format` and `pa
 the calendar, loaded on first use; `SchemaForm` draws numbers with `NumberField` and keeps the
 browser's own date input, since the calendar would put the forms page past its budget.
 
+`CronField` takes a five-field cron expression, reads it back in words and lists its next runs
+after `from`. The expression is wall-clock time in `timeZone`, an IANA name, UTC by default; the
+runs are counted and drawn in that zone, each with its offset outside UTC, from the zone's offsets
+as `Intl.DateTimeFormat` gives them, with no time-zone library. Across a change of clocks it does
+what Vixie cron and cronie do: a time the clock skips in spring runs once, at the instant the clock
+jumps (02:00 and 02:30 in Europe/Oslo on the last Sunday of March run at 03:00), and a time it passes
+twice in autumn runs once, at its first pass. `nextRuns(expression, from, count, timeZone)` and
+`zonedTime` in `lib/cron` are the same reading for an app's own use. An app whose server reads the
+runs back passes them as `runs`, in place of the field's own; `runsPending` shows the field's own
+reading muted beside "Checking" while it asks, and `invalid` is the server's refusal in its words,
+shown as the field's issue with no runs listed.
+
 `SecretField` takes a secret a form sets and never reads back, such as a connection's token. With
 one already set (`sealed`) it says so, masked, and when (`setAt`), and stays as it is unless Replace
 opens an empty input for a new one, Cancel or Escape sealing it again; its value is the new secret

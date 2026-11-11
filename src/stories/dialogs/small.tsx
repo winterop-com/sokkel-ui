@@ -32,7 +32,7 @@ import { TreeSelect } from '@winterop-com/sokkel-ui/TreeSelect'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { NativeSelect, NativeSelectOption } from '@winterop-com/sokkel-ui/primitives/native-select'
 import { Textarea } from '@winterop-com/sokkel-ui/primitives/textarea'
-import { describeCron } from '@winterop-com/sokkel-ui/lib/cron'
+import { describeCron, nextRuns } from '@winterop-com/sokkel-ui/lib/cron'
 import { Behind, wait } from './parts'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { pictureOf } from '../fixtures/portraits'
@@ -555,6 +555,98 @@ export function Schedule() {
             </DialogShell>
         </Behind>
     )
+}
+
+const OSLO = 'Europe/Oslo'
+/** The Thursday before Europe moves its clocks forward on 28 March 2027. */
+const BEFORE_SPRING = new Date('2027-03-25T12:00:00Z')
+
+/** What Tidevann's scheduler says of an expression: its next runs, or why it will not take it. */
+function scheduler(cron: string): { runs: Date[]; refused?: string } {
+    const runs = nextRuns(cron, BEFORE_SPRING, 5, OSLO)
+    if (runs.length > 1 && runs[1].getTime() - runs[0].getTime() < 5 * 60_000)
+        return { runs: [], refused: 'The scheduler runs a job at most once every 5 minutes.' }
+    return { runs }
+}
+
+/** The schedule dialog for nightly-export, its field read in Europe/Oslo and checked with the scheduler as it changes. */
+function ZonedSchedule({ initial, checking = false }: { initial: string; checking?: boolean }) {
+    const [open, setOpen] = useState(true)
+    const [cron, setCron] = useState(initial)
+    const [pending, setPending] = useState(checking)
+    const [answer, setAnswer] = useState(() => scheduler(initial))
+    const [cronOpen, setCronOpen] = useState(false)
+    const asked = useRef(0)
+    const change = (next: string) => {
+        setCron(next)
+        setPending(true)
+        const ask = ++asked.current
+        void wait(900).then(() => {
+            if (ask !== asked.current) return
+            setAnswer(scheduler(next))
+            setPending(false)
+        })
+    }
+    const valid = describeCron(cron) !== null && (pending || answer.refused === undefined)
+    return (
+        <Behind action="Edit schedule" onAction={() => setOpen(true)}>
+            <DialogShell
+                open={open}
+                onOpenChange={setOpen}
+                title="Schedule for nightly-export"
+                description="Read in Oslo time, so a run keeps its hour when the clocks change."
+                count={
+                    <IssueCount
+                        critical={valid ? 0 : 1}
+                        list={[
+                            {
+                                label: 'Schedule',
+                                issue: { tone: 'critical', text: answer.refused ?? 'Not a schedule this field can read' },
+                                onGo: () => setCronOpen(true),
+                            },
+                        ]}
+                    />
+                }
+                confirm={{
+                    label: 'Save schedule',
+                    onConfirm: () => setOpen(false),
+                    why: pending ? 'The scheduler is still checking.' : valid ? undefined : 'Fix the expression first.',
+                }}
+            >
+                <CronField
+                    id="schedule-zone-cron"
+                    value={cron}
+                    onChange={change}
+                    from={BEFORE_SPRING}
+                    timeZone={OSLO}
+                    runs={answer.runs}
+                    runsPending={pending}
+                    invalid={answer.refused}
+                    presets={PRESETS}
+                    issueOpen={cronOpen}
+                    onIssueOpenChange={setCronOpen}
+                />
+            </DialogShell>
+        </Behind>
+    )
+}
+
+/**
+ * nightly-export at 02:00 Oslo time over the March change of clocks: on Sunday 28 March 02:00 does
+ * not happen, so that run goes at 03:00, the moment the clock jumps, and the offset moves to +02:00.
+ */
+export function ScheduleZone() {
+    return <ZonedSchedule initial="0 2 * * *" />
+}
+
+/** The scheduler is still reading the runs back: the field's own reading shows muted beside Checking. */
+export function ScheduleChecking() {
+    return <ZonedSchedule initial="30 2 * * 1-5" checking />
+}
+
+/** The scheduler refused the expression: its words are the field's issue, and no runs are listed. */
+export function ScheduleRefused() {
+    return <ZonedSchedule initial="*/2 * * * *" />
 }
 
 const NOTES = `Tidevann 2.4 brings retries you can see, and a faster run list.
