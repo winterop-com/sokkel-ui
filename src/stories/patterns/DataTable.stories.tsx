@@ -36,6 +36,7 @@ import { FileTypeIcon, formatSize } from '@winterop-com/sokkel-ui/FileList'
 import { InlineCode } from '@winterop-com/sokkel-ui/InlineCode'
 import { ItemHeading } from '@winterop-com/sokkel-ui/ItemHeading'
 import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
+import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { Section } from '@winterop-com/sokkel-ui/Section'
 import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
@@ -1089,6 +1090,40 @@ function TaskList() {
  * takes a moment. Wide, it is a list with the same cells edited in place.
  */
 export const CompactList: StoryObj = { name: 'Compact list', render: () => <TaskList /> }
+
+const SHOWN_RUNS = makeRuns(40)
+
+/** The runs of one state, picked by a switch that counts each: the bar's only tool, with no search. */
+function RunsByState() {
+    const [shown, setShown] = useState<'all' | 'running' | 'failed'>('all')
+    const count = (state: string) => SHOWN_RUNS.filter((run) => run.state === state).length
+    const rows = shown === 'all' ? SHOWN_RUNS : SHOWN_RUNS.filter((run) => run.state === shown)
+    return (
+        <DataTable
+            columns={COLUMNS}
+            rows={rows}
+            rowKey={(run) => run.id}
+            toolbar={
+                <Segmented
+                    label="State"
+                    value={shown}
+                    onValueChange={setShown}
+                    options={[
+                        { value: 'all', label: 'All', count: SHOWN_RUNS.length },
+                        { value: 'running', label: 'Running', count: count('running') },
+                        { value: 'failed', label: 'Failed', count: count('failed') },
+                    ]}
+                />
+            }
+        />
+    )
+}
+
+/**
+ * A switch as the bar's only tool, with no search: beside the count on a wide table, on a line of its
+ * own under the count on a narrow one, so its options stay in one row.
+ */
+export const SwitchOnly: StoryObj = { name: 'Switch only', render: () => <RunsByState /> }
 
 /** A hundred runs: the whole table at a size that needs no scrolling to see its parts. */
 export const Hundred: StoryObj = { parameters: { frame: 'none' }, name: '100 rows', render: () => <Runs count={100} /> }
