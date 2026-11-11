@@ -235,6 +235,33 @@ describe('an empty table', () => {
     })
 })
 
+describe('a table’s head', () => {
+    const html = renderToStaticMarkup(
+        <DataTable
+            columns={[
+                { id: 'job', header: 'Job', band: 'Run', width: '1fr', cell: (row: { id: string }) => row.id },
+                { id: 'state', header: 'State', band: 'Run', width: '8rem', cell: () => 'queued' },
+            ]}
+            rows={[{ id: 'nightly-export' }]}
+            rowKey={(row) => row.id}
+        />,
+    )
+
+    it('stands in the grid above the rows’ scroller, so the scroll bar starts under it', () => {
+        const grid = html.indexOf('role="grid"')
+        const scroller = html.indexOf('overflow-auto', grid)
+        expect(grid).toBeGreaterThan(-1)
+        expect(html.indexOf('role="columnheader"', grid)).toBeLessThan(scroller)
+        expect(html.indexOf('role="columnheader"', scroller)).toBe(-1)
+        expect(html.indexOf('data-row="nightly-export"')).toBeGreaterThan(scroller)
+    })
+
+    it('is not sticky, its bands and heads drawn in turn', () => {
+        expect(html).not.toMatch(/role="row"[^>]*class="[^"]*sticky top-/)
+        expect(html.indexOf('aria-colspan="2"')).toBeLessThan(html.indexOf('aria-rowindex="1"'))
+    })
+})
+
 describe('loading more', () => {
     const table = (loadMore?: 'end' | 'button') =>
         renderToStaticMarkup(
