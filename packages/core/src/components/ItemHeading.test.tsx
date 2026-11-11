@@ -20,7 +20,7 @@ describe('ItemHeading', () => {
     it('sets the code under the name when stacked, and beside it in the name row when inline', () => {
         const stacked = renderToStaticMarkup(<ItemHeading name="Nightly export" code="nightly-export" />)
         const inline = renderToStaticMarkup(<ItemHeading name="Nightly export" code="nightly-export" variant="inline" />)
-        expect(stacked).toMatch(/<\/h2><\/div><div[^>]*><span[^>]*>nightly-export<\/span>/)
+        expect(stacked).toMatch(/<\/h2><\/div><div[^>]*><span[^>]*>nightly-<wbr\/>export<\/span>/)
         expect(inline).toMatch(/<\/h2><span[^>]*>nightly-export<\/span><\/div>/)
     })
 
@@ -63,5 +63,19 @@ describe('ItemHeading', () => {
     it("says a lead word before the name in the heading's face, the code alone in the code face", () => {
         const html = renderToStaticMarkup(<ItemHeading code="nightly-export" lead="Edit" size="dialog" />)
         expect(html).toMatch(/<span class="[^"]*text-detail-title[^"]*">Edit <span class="font-mono">nightly-export<\/span><\/span>/)
+    })
+})
+
+describe('a stacked code', () => {
+    it('wraps at its own breaks and is never cut', () => {
+        const html = renderToStaticMarkup(<ItemHeading name="Nightly export" code="nightly-export.harbor_archive" variant="stacked" />)
+        expect(html).toContain('nightly-<wbr/>export.<wbr/>harbor_<wbr/>archive')
+        expect(html).not.toMatch(/font-mono[^"]*truncate/)
+    })
+
+    it('keeps to one line beside the name, cut short with its whole in the title', () => {
+        const html = renderToStaticMarkup(<ItemHeading name="Nightly export" code="nightly-export" variant="inline" />)
+        expect(html).toContain('title="nightly-export"')
+        expect(html).toMatch(/font-mono[^"]*truncate/)
     })
 })

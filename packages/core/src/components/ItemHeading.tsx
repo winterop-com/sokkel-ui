@@ -13,6 +13,11 @@ export interface Identity {
     codeIsHeading: boolean
 }
 
+/** A code with a place to wrap after each of its own breaks (`-`, `.`, `_`, `/`, `:`), so a long one wraps there rather than mid-word. */
+export function codeBreaks(code: string): ReactNode[] {
+    return code.split(/(?<=[-._/:])/).flatMap((part, index) => (index === 0 ? [part] : [<wbr key={index} />, part]))
+}
+
 /** A thing's heading and the code shown apart from it: the name where there is one, else the code, the code shown once. */
 export function identityOf(name: ReactNode, code: string | undefined): Identity {
     const codeIsHeading = code !== undefined && (name === undefined || name === null || name === code)
@@ -85,16 +90,17 @@ export function ItemHeading({
     // Beside a glyph every line after the first starts where the name starts.
     const after = glyph !== undefined && 'col-start-2'
     const hasChips = chips !== undefined && chips !== null && chips !== false
+    // Inline the code keeps to one line, cut short with its whole on hover; stacked it is never cut, wrapping at its own breaks.
     const codeLine = code !== undefined && (
         <span
-            title={code}
+            title={inline ? code : undefined}
             className={cn(
-                'min-w-0 truncate font-mono font-normal text-muted-foreground',
+                'min-w-0 font-mono font-normal text-muted-foreground',
                 SMALL[size],
-                inline && 'max-w-[max(50%,100%_-_--spacing(32))] shrink-0',
+                inline ? 'max-w-[max(50%,100%_-_--spacing(32))] shrink-0 truncate' : 'break-words',
             )}
         >
-            {code}
+            {inline ? code : codeBreaks(code)}
         </span>
     )
     const whole = hasLead && typeof lead === 'string' && typeof heading === 'string' ? `${lead} ${heading}` : heading
