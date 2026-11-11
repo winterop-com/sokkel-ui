@@ -4,6 +4,9 @@ import { useState } from 'react'
 
 import { CodeEditor, languageForMediaType } from '@winterop-com/sokkel-ui/CodeEditor'
 import { DialogShell } from '@winterop-com/sokkel-ui/DialogShell'
+import { Columns } from '@winterop-com/sokkel-ui/Layout'
+import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
+import { Badge } from '@winterop-com/sokkel-ui/primitives/badge'
 import type { JsonSchema } from '@winterop-com/sokkel-ui/schema/read'
 import {
     SchemaForm,
@@ -65,6 +68,8 @@ function NewJob({
     open,
     requiredMark,
     fallbacks,
+    fold,
+    quiet = false,
 }: {
     initial?: unknown
     issues?: readonly ServerIssue[]
@@ -72,6 +77,9 @@ function NewJob({
     open?: Path
     requiredMark?: 'star' | 'word'
     fallbacks?: boolean
+    fold?: boolean
+    /** Shuts Create, with its reason, while the value would be refused, before any issue is shown. */
+    quiet?: boolean
 }) {
     const form = useSchemaForm(JOB, { initial, issues, defaultSubmitted: submitted, defaultOpen: open })
     const [created, setCreated] = useState(false)
@@ -82,9 +90,13 @@ function NewJob({
             title="New job"
             description="Calls the endpoint on its schedule, in the larkspur project."
             count={<SchemaIssueCount form={form} />}
-            confirm={{ label: created ? 'Created' : 'Create', onConfirm: () => setCreated(form.submit()) }}
+            confirm={{
+                label: created ? 'Created' : 'Create',
+                onConfirm: () => setCreated(form.submit()),
+                why: quiet && form.blocking ? 'Fill in the required fields first' : undefined,
+            }}
         >
-            <SchemaForm form={form} requiredMark={requiredMark} fallbacks={fallbacks} />
+            <SchemaForm form={form} requiredMark={requiredMark} fallbacks={fallbacks} fold={fold} />
         </DialogShell>
     )
 }
@@ -174,6 +186,18 @@ function RunSettings() {
  * choosing a default explicitly holds it. A `null` default says nothing.
  */
 export const Defaults: StoryObj = { render: () => <RunSettings /> }
+
+/**
+ * `fold` shows the required fields and those already set, here Priority, and puts the rest behind
+ * one disclosure that says how many it holds. A folded field with an issue to show opens it.
+ */
+export const Folded: StoryObj = { render: () => <NewJob fold initial={{ priority: 'high' }} /> }
+
+/**
+ * Create is shut quietly, its reason on hover, while `blocking` says the value would be refused,
+ * before any field has said why: nothing is marked until a field is left or Create is pressed.
+ */
+export const QuietVerb: StoryObj = { name: 'Quiet verb', render: () => <NewJob quiet initial={{ code: 'send-digest' }} /> }
 
 /** Values typed in and Create pressed: the marks, the count beside the verb, and the first mark open with its fix. */
 export const AfterCreate: StoryObj = {
@@ -408,23 +432,31 @@ const STEP: JsonSchema = {
     },
 }
 
-/** A field that names the media type it holds is edited as code in that language; every other field is the form's own. */
+/**
+ * A field that names the media type it holds is edited as code in that language, with the language
+ * beside its label and its size under it; every other field is the form's own.
+ */
 const codeFields: SchemaFieldRenderer = (field) => {
     const type = field.schema.contentMediaType
     if (typeof type !== 'string') return undefined
-    return (
-        <CodeEditor
-            label={field.label ?? String(field.path[field.path.length - 1])}
-            id={field.id}
-            onBlur={field.touch}
-            language={languageForMediaType(type)}
-            value={typeof field.value === 'string' ? field.value : ''}
-            onChange={field.set}
-            readOnly={field.readOnly}
-            invalid={field.invalid}
-            className="h-32"
-        />
-    )
+    const text = typeof field.value === 'string' ? field.value : ''
+    return {
+        note: <Badge variant="secondary">{languageForMediaType(type)}</Badge>,
+        below: <MetaLine items={[`${String(text.split('\n').length)} lines`, `${String(text.length)} characters`]} />,
+        control: (
+            <CodeEditor
+                label={field.label ?? String(field.path[field.path.length - 1])}
+                id={field.id}
+                onBlur={field.touch}
+                language={languageForMediaType(type)}
+                value={typeof field.value === 'string' ? field.value : ''}
+                onChange={field.set}
+                readOnly={field.readOnly}
+                invalid={field.invalid}
+                className="h-32"
+            />
+        ),
+    }
 }
 
 function NewStep() {
@@ -452,9 +484,53 @@ function NewStep() {
 /**
  * The app's own control for some fields through `field`: a string whose schema names its
  * `contentMediaType` is edited in `CodeEditor` in that language, here shell and SQL, while the
- * form keeps the label, the help and the issue marks around it.
+ * form keeps the label, the help and the issue marks around it. The hook answers in parts: the
+ * language as a `note` beside the label, the size as a row `below` the editor, and the `control`
+ * the issue mark sits on.
  */
 export const OwnControls: StoryObj = { name: 'Own controls', render: () => <NewStep /> }
+
+const SCHEDULE: JsonSchema = {
+    type: 'object',
+    required: ['job', 'cron'],
+    properties: {
+        job: { type: 'string', title: 'Job', enum: ['nightly-export', 'sync-inventory', 'rebuild-index'] },
+        cron: { type: 'string', title: 'Schedule', pattern: '^(\\S+\\s){4}\\S+$', description: 'Five cron fields, in UTC.' },
+        paused: { type: 'boolean', title: 'Paused' },
+    },
+}
+
+function ScheduleDocument() {
+    const [text, setText] = useState('{\n  "job": "nightly-export",\n  "cron": "0 2 * * *"\n}\n')
+    let parsed: unknown
+    try {
+        parsed = JSON.parse(text)
+    } catch {
+        parsed = undefined
+    }
+    // The form follows the last document that parsed, and writes its changes back into the text.
+    const [value, setValue] = useState<unknown>(parsed)
+    if (parsed !== undefined && JSON.stringify(parsed) !== JSON.stringify(value)) setValue(parsed)
+    const form = useSchemaForm(SCHEDULE, {
+        value,
+        onChange: (next) => {
+            setValue(next)
+            setText(`${JSON.stringify(next, null, 2)}\n`)
+        },
+    })
+    return (
+        <Columns>
+            <CodeEditor label="Schedule document" language="json" value={text} onChange={setText} className="h-64" />
+            <SchemaForm form={form} />
+        </Columns>
+    )
+}
+
+/**
+ * A form held from outside with `value` and `onChange`: the document is edited as JSON on the left
+ * and in the form on the right, each following the other with no adapter between them.
+ */
+export const HeldFromOutside: StoryObj = { name: 'Held from outside', render: () => <ScheduleDocument /> }
 
 const BROKEN: JsonSchema = {
     type: 'object',
