@@ -373,7 +373,7 @@ describe("an app's own field in parts", () => {
             )
         }
         const html = renderToStaticMarkup(<Parts />)
-        expect(html).toMatch(/<\/label><span data-note="">SQL<\/span>/)
+        expect(html).toMatch(/<\/label><span class="[^"]*text-faint[^"]*"><span data-note="">SQL<\/span><\/span>/)
         expect(html).toMatch(/<div class="relative min-w-0"><input[^>]*data-own=""\/><button[^>]*aria-label="Error: Enter a value"/)
         expect(html).toMatch(/<\/div><p data-below="">/)
     })

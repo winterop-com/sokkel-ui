@@ -1281,7 +1281,7 @@ function Fields({ form, path, schema: raw, fold = false }: { form: SchemaFormSta
                         variant="ghost"
                         size="sm"
                         aria-expanded={opened}
-                        className="-ml-2.5 justify-self-start @lg:col-span-2"
+                        className="-ml-2.5 justify-self-start max-md:min-h-finger @lg:col-span-2"
                         onClick={() => setOpen(!opened)}
                     >
                         {opened ? form.words.fewer : form.words.more(folded.length)}

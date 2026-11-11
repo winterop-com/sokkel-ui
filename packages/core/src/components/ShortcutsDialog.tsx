@@ -14,7 +14,8 @@ export interface ShortcutsDialogWords {
     /** The heading over bound keys that name no group. */
     general: string
     /** Between the two keys of a sequence, as G then D. */
-    sequence: string
+    /** The word between the keys of a sequence; "then" when absent. */
+    sequence?: string
 }
 
 const WORDS: ShortcutsDialogWords = {
