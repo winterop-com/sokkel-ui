@@ -32,7 +32,7 @@ import { TreeSelect } from '@winterop-com/sokkel-ui/TreeSelect'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { NativeSelect, NativeSelectOption } from '@winterop-com/sokkel-ui/primitives/native-select'
 import { Textarea } from '@winterop-com/sokkel-ui/primitives/textarea'
-import { describeCron, nextRuns } from '@winterop-com/sokkel-ui/lib/cron'
+import { describeCron, nextRuns, parseCron } from '@winterop-com/sokkel-ui/lib/cron'
 import { Behind, wait } from './parts'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { pictureOf } from '../fixtures/portraits'
@@ -548,6 +548,7 @@ export function Schedule() {
                     value={cron}
                     onChange={setCron}
                     from={new Date('2026-11-05T10:17:00Z')}
+                    placeholder="0 2 * * *"
                     presets={PRESETS}
                     issueOpen={cronOpen}
                     onIssueOpenChange={setCronOpen}
@@ -561,8 +562,26 @@ const OSLO = 'Europe/Oslo'
 /** The Thursday before Europe moves its clocks forward on 28 March 2027. */
 const BEFORE_SPRING = new Date('2027-03-25T12:00:00Z')
 
-/** What Tidevann's scheduler says of an expression: its next runs, or why it will not take it. */
+/** The first run on the last day of each month, for `L` in the day field, from March 2027 on. */
+function lastDays(minute: string, hour: string): Date[] {
+    const runs: Date[] = []
+    for (let month = 2; month < 14 && runs.length < 5; month++) {
+        const last = new Date(Date.UTC(2027, month + 1, 0)).getUTCDate()
+        runs.push(...nextRuns(`${minute} ${hour} ${String(last)} ${String((month % 12) + 1)} *`, BEFORE_SPRING, 1, OSLO))
+    }
+    return runs
+}
+
+/**
+ * What Tidevann's scheduler says of an expression: its next runs, or why it will not take it. It
+ * reads `L` in the day of the month as its last day, and `?` as any weekday.
+ */
 function scheduler(cron: string): { runs: Date[]; refused?: string } {
+    const fields = cron.trim().split(/\s+/)
+    if (cron.trim() === '') return { runs: [] }
+    if (fields.length === 5 && fields[2] === 'L' && fields[3] === '*' && (fields[4] === '?' || fields[4] === '*'))
+        return { runs: lastDays(fields[0], fields[1]) }
+    if (parseCron(cron) === null) return { runs: [], refused: 'The scheduler cannot read this expression.' }
     const runs = nextRuns(cron, BEFORE_SPRING, 5, OSLO)
     if (runs.length > 1 && runs[1].getTime() - runs[0].getTime() < 5 * 60_000)
         return { runs: [], refused: 'The scheduler runs a job at most once every 5 minutes.' }
@@ -570,7 +589,15 @@ function scheduler(cron: string): { runs: Date[]; refused?: string } {
 }
 
 /** The schedule dialog for nightly-export, its field read in Europe/Oslo and checked with the scheduler as it changes. */
-function ZonedSchedule({ initial, checking = false }: { initial: string; checking?: boolean }) {
+function ZonedSchedule({
+    initial,
+    checking = false,
+    title = 'Schedule for nightly-export',
+}: {
+    initial: string
+    checking?: boolean
+    title?: string
+}) {
     const [open, setOpen] = useState(true)
     const [cron, setCron] = useState(initial)
     const [pending, setPending] = useState(checking)
@@ -587,13 +614,14 @@ function ZonedSchedule({ initial, checking = false }: { initial: string; checkin
             setPending(false)
         })
     }
-    const valid = describeCron(cron) !== null && (pending || answer.refused === undefined)
+    const empty = cron.trim() === ''
+    const valid = pending || answer.refused === undefined
     return (
         <Behind action="Edit schedule" onAction={() => setOpen(true)}>
             <DialogShell
                 open={open}
                 onOpenChange={setOpen}
-                title="Schedule for nightly-export"
+                title={title}
                 description="Read in Oslo time, so a run keeps its hour when the clocks change."
                 count={
                     <IssueCount
@@ -610,7 +638,13 @@ function ZonedSchedule({ initial, checking = false }: { initial: string; checkin
                 confirm={{
                     label: 'Save schedule',
                     onConfirm: () => setOpen(false),
-                    why: pending ? 'The scheduler is still checking.' : valid ? undefined : 'Fix the expression first.',
+                    why: empty
+                        ? 'Write an expression or pick a preset.'
+                        : pending
+                          ? 'The scheduler is still checking.'
+                          : valid
+                            ? undefined
+                            : 'Fix the expression first.',
                 }}
             >
                 <CronField
@@ -622,6 +656,7 @@ function ZonedSchedule({ initial, checking = false }: { initial: string; checkin
                     runs={answer.runs}
                     runsPending={pending}
                     invalid={answer.refused}
+                    placeholder="0 2 * * *"
                     presets={PRESETS}
                     issueOpen={cronOpen}
                     onIssueOpenChange={setCronOpen}
@@ -629,6 +664,11 @@ function ZonedSchedule({ initial, checking = false }: { initial: string; checkin
             </DialogShell>
         </Behind>
     )
+}
+
+/** A new schedule, its field empty with an example in it: no issue, no reading and no runs until something is written. */
+export function NewSchedule() {
+    return <ZonedSchedule initial="" title="New schedule for nightly-export" />
 }
 
 /**
@@ -647,6 +687,38 @@ export function ScheduleChecking() {
 /** The scheduler refused the expression: its words are the field's issue, and no runs are listed. */
 export function ScheduleRefused() {
     return <ZonedSchedule initial="*/2 * * * *" />
+}
+
+/**
+ * The last day of each month, in syntax the scheduler reads and the field's own reading does not:
+ * the scheduler's runs are drawn, and the field puts no words to it.
+ */
+export function ScheduleServerSyntax() {
+    return <ZonedSchedule initial="0 2 L * ?" />
+}
+
+/** The schedule of nightly-export as saved: the expression, its reading and its next runs, with nothing to type in. */
+export function ScheduleReadOnly() {
+    const [open, setOpen] = useState(true)
+    return (
+        <Behind action="Show schedule" onAction={() => setOpen(true)}>
+            <DialogShell
+                open={open}
+                onOpenChange={setOpen}
+                title="Schedule for nightly-export"
+                description="Set by ada on 2 November 2026."
+            >
+                <CronField
+                    id="schedule-read-cron"
+                    value="30 2 * * 1-5"
+                    onChange={() => undefined}
+                    from={BEFORE_SPRING}
+                    timeZone={OSLO}
+                    readOnly
+                />
+            </DialogShell>
+        </Behind>
+    )
 }
 
 const NOTES = `Tidevann 2.4 brings retries you can see, and a faster run list.

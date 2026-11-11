@@ -123,5 +123,19 @@ describe('describeCron', () => {
 
     it('is null for what is not an expression', () => {
         expect(describeCron('every day')).toBeNull()
+        expect(describeCron('0 2 L * ?')).toBeNull()
+    })
+
+    it('reads in the words it is given, English where it is given none', () => {
+        const words = {
+            dayNames: ['søndag', 'mandag', 'tirsdag', 'onsdag', 'torsdag', 'fredag', 'lørdag'],
+            list: (items: readonly string[]) => items.join(' og '),
+            at: (times: readonly string[]) => `kl. ${times.join(' og ')}`,
+            onWeekdays: (days: readonly string[]) => `på ${days.join(' og ')}`,
+            weekdays: 'på hverdager',
+        }
+        expect(describeCron('30 6,18 * * mon,fri', words)).toBe('Kl. 06:30 og 18:30 på mandag og fredag')
+        expect(describeCron('0 2 * * 1-5', words)).toBe('Kl. 02:00 på hverdager')
+        expect(describeCron('0 0 * jan *', words)).toBe('Every day kl. 00:00 in January')
     })
 })

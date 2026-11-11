@@ -190,27 +190,84 @@ export function nextRuns(expression: string | Cron, from: Date, count = 5, timeZ
     return runs
 }
 
-const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-const MONTH_NAMES = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-]
-
 const pad = (number: number) => String(number).padStart(2, '0')
 
 function list(words: readonly string[]): string {
     if (words.length <= 1) return words.join('')
     return `${words.slice(0, -1).join(', ')} and ${words[words.length - 1]}`
+}
+
+function ordinal(number: number): string {
+    const tens = number % 100
+    if (tens >= 11 && tens <= 13) return `${String(number)}th`
+    return `${String(number)}${['th', 'st', 'nd', 'rd'][number % 10] ?? 'th'}`
+}
+
+/**
+ * The words `describeCron` reads an expression back in, a phrase at a time. Times come to them as
+ * `02:00`, and days of the week and months by their names in `dayNames` and `monthNames`.
+ */
+export interface CronWords {
+    /** The days of the week, Sunday first. */
+    dayNames: readonly string[]
+    monthNames: readonly string[]
+    /** Joins a list: "Monday, Tuesday and Friday". */
+    list: (items: readonly string[]) => string
+    everyMinute: string
+    everyMinutes: (step: number) => string
+    /** Once an hour, at a minute past it, 0 being on the hour. */
+    everyHour: (minute: number) => string
+    /** Every few hours from midnight, at a minute past each. */
+    everyHours: (step: number, minute: number) => string
+    /** Once an hour between two times. */
+    hourly: (from: string, to: string) => string
+    /** At a few times of day. */
+    at: (times: readonly string[]) => string
+    /** Every few minutes between two times. */
+    minutesBetween: (step: number, from: string, to: string) => string
+    /** Any other set of minutes and hours. */
+    minutesOfHours: (minutes: readonly number[], hours: readonly number[]) => string
+    /** Times of day, on every day: "every day at 02:00". */
+    daily: (time: string) => string
+    /** Days of the month: "on the 1st and 15th". */
+    onDays: (days: readonly number[]) => string
+    weekdays: string
+    weekends: string
+    /** A run of days of the week: "on Monday to Thursday". */
+    weekdayRange: (from: string, to: string) => string
+    onWeekdays: (days: readonly string[]) => string
+    /** Days of the month or days of the week, when the expression names both. */
+    either: (days: string, weekdays: string) => string
+    inMonths: (months: readonly string[]) => string
+    /** Puts the parts that apply together as a sentence. */
+    sentence: (parts: readonly string[]) => string
+}
+
+/** The English words `describeCron` uses when given none. */
+export const CRON_WORDS: CronWords = {
+    dayNames: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+    monthNames: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+    list,
+    everyMinute: 'every minute',
+    everyMinutes: (step) => `every ${String(step)} minutes`,
+    everyHour: (minute) => (minute === 0 ? 'every hour, on the hour' : `every hour at ${String(minute)} minutes past`),
+    everyHours: (step, minute) => `every ${String(step)} hours${minute === 0 ? '' : ` at ${String(minute)} minutes past`}`,
+    hourly: (from, to) => `every hour from ${from} to ${to}`,
+    at: (times) => `at ${list(times)}`,
+    minutesBetween: (step, from, to) => `every ${String(step)} minutes from ${from} to ${to}`,
+    minutesOfHours: (minutes, hours) => `at minute ${list(minutes.map(String))} of hour ${list(hours.map(String))}`,
+    daily: (time) => `every day ${time}`,
+    onDays: (days) => `on the ${list(days.map(ordinal))}`,
+    weekdays: 'on weekdays',
+    weekends: 'on weekends',
+    weekdayRange: (from, to) => `on ${from} to ${to}`,
+    onWeekdays: (days) => `on ${list(days)}`,
+    either: (days, weekdays) => `${days} or ${weekdays}`,
+    inMonths: (months) => `in ${list(months)}`,
+    sentence: (parts) => {
+        const full = parts.join(' ')
+        return full.charAt(0).toUpperCase() + full.slice(1)
+    },
 }
 
 /** A run of whole numbers with an even step from the field's start, as `*` or `a-b/n` writes it. */
@@ -225,55 +282,54 @@ function contiguous(values: readonly number[]): boolean {
     return values.length > 2 && values.every((v, index) => index === 0 || v === values[index - 1] + 1)
 }
 
-function weekdays(days: readonly number[]): string {
-    if (days.length === 5 && days.join() === '1,2,3,4,5') return 'on weekdays'
-    if (days.length === 2 && days.join() === '0,6') return 'on weekends'
+function weekdays(days: readonly number[], words: CronWords): string {
+    if (days.length === 5 && days.join() === '1,2,3,4,5') return words.weekdays
+    if (days.length === 2 && days.join() === '0,6') return words.weekends
     const order = [...days].sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7))
-    if (contiguous(order.map((d) => (d + 6) % 7))) return `on ${DAY_NAMES[order[0]]} to ${DAY_NAMES[order[order.length - 1]]}`
-    return `on ${list(order.map((d) => DAY_NAMES[d]))}`
-}
-
-function ordinal(number: number): string {
-    const tens = number % 100
-    if (tens >= 11 && tens <= 13) return `${String(number)}th`
-    return `${String(number)}${['th', 'st', 'nd', 'rd'][number % 10] ?? 'th'}`
+    if (contiguous(order.map((d) => (d + 6) % 7)))
+        return words.weekdayRange(words.dayNames[order[0]], words.dayNames[order[order.length - 1]])
+    return words.onWeekdays(order.map((d) => words.dayNames[d]))
 }
 
 /**
- * The expression read back in plain English: "Every weekday at 02:00". Null when it is not a cron
- * expression. An app in another language passes its own reader where this one is offered.
+ * The expression read back in words, English by default: "At 02:00 on weekdays". Null when it is
+ * not a five-field cron expression. `words` puts it in another language, a phrase at a time.
  */
-export function describeCron(expression: string): string | null {
+export function describeCron(expression: string, words?: Partial<CronWords>): string | null {
     const cron = parseCron(expression)
     if (cron === null) return null
+    const said: CronWords = { ...CRON_WORDS, ...words }
     const everyMinute = cron.minutes.length === 60
     const everyHour = cron.hours.length === 24
     const minuteStep = stepOf(cron.minutes, 0, 59)
     const hourStep = stepOf(cron.hours, 0, 23)
+    const clock = (hour: number, minute: number) => `${pad(hour)}:${pad(minute)}`
+    const first = cron.hours[0]
+    const last = cron.hours[cron.hours.length - 1]
+    const times = cron.hours.length * cron.minutes.length
 
     let time: string
-    if (everyMinute && everyHour) time = 'every minute'
-    else if (minuteStep !== null && everyHour) time = `every ${String(minuteStep)} minutes`
-    else if (cron.minutes.length === 1 && everyHour)
-        time = cron.minutes[0] === 0 ? 'every hour, on the hour' : `every hour at ${String(cron.minutes[0])} minutes past`
-    else if (cron.minutes.length === 1 && hourStep !== null)
-        time = `every ${String(hourStep)} hours${cron.minutes[0] === 0 ? '' : ` at ${String(cron.minutes[0])} minutes past`}`
+    let recurs = true
+    if (everyMinute && everyHour) time = said.everyMinute
+    else if (minuteStep !== null && everyHour) time = said.everyMinutes(minuteStep)
+    else if (cron.minutes.length === 1 && everyHour) time = said.everyHour(cron.minutes[0])
+    else if (cron.minutes.length === 1 && hourStep !== null) time = said.everyHours(hourStep, cron.minutes[0])
     else if (cron.minutes.length === 1 && contiguous(cron.hours))
-        time = `every hour from ${pad(cron.hours[0])}:${pad(cron.minutes[0])} to ${pad(cron.hours[cron.hours.length - 1])}:${pad(cron.minutes[0])}`
-    else if (cron.hours.length * cron.minutes.length <= 4)
-        time = `at ${list(cron.hours.flatMap((hour) => cron.minutes.map((minute) => `${pad(hour)}:${pad(minute)}`)))}`
-    else if (minuteStep !== null && contiguous(cron.hours))
-        time = `every ${String(minuteStep)} minutes from ${pad(cron.hours[0])}:00 to ${pad(cron.hours[cron.hours.length - 1])}:59`
-    else time = `at minute ${list(cron.minutes.map(String))} of hour ${list(cron.hours.map(String))}`
+        time = said.hourly(clock(first, cron.minutes[0]), clock(last, cron.minutes[0]))
+    else if (times > 4 && minuteStep !== null && contiguous(cron.hours))
+        time = said.minutesBetween(minuteStep, clock(first, 0), clock(last, 59))
+    else {
+        recurs = false
+        time =
+            times <= 4
+                ? said.at(cron.hours.flatMap((hour) => cron.minutes.map((minute) => clock(hour, minute))))
+                : said.minutesOfHours(cron.minutes, cron.hours)
+    }
 
-    const parts: string[] = []
-    if (!cron.anyDay) parts.push(`on the ${list(cron.days.map(ordinal))}`)
-    if (!cron.anyWeekday) parts.push(weekdays(cron.weekdays))
-    let day = parts.join(' or ')
-    if (day === '' && !time.startsWith('every')) day = 'every day'
-    const month = cron.months.length === 12 ? '' : `in ${list(cron.months.map((m) => MONTH_NAMES[m - 1]))}`
-
-    const sentence = day === 'every day' ? `every day ${time}` : [time, day, month].filter((part) => part !== '').join(' ')
-    const full = day === 'every day' && month !== '' ? `${sentence} ${month}` : sentence
-    return full.charAt(0).toUpperCase() + full.slice(1)
+    const days = cron.anyDay ? '' : said.onDays(cron.days)
+    const week = cron.anyWeekday ? '' : weekdays(cron.weekdays, said)
+    const day = days !== '' && week !== '' ? said.either(days, week) : days + week
+    const month = cron.months.length === 12 ? '' : said.inMonths(cron.months.map((m) => said.monthNames[m - 1]))
+    const lead = day === '' && !recurs ? said.daily(time) : time
+    return said.sentence([lead, day, month].filter((part) => part !== ''))
 }

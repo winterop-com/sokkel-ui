@@ -1,7 +1,7 @@
 import { useId } from 'react'
 
 import { cn } from '../lib/cn'
-import { describeCron, nextRuns, zonedTime, zoneOffset } from '../lib/cron'
+import { describeCron, nextRuns, parseCron, zonedTime, zoneOffset } from '../lib/cron'
 import { ISSUE_EDGE, IssueMark } from './IssueMark'
 import { Input } from './ui/input'
 
@@ -27,6 +27,8 @@ const WORDS: CronFieldWords = {
     never: 'Never runs',
     checking: 'Checking',
 }
+
+const defaultDescribe = (expression: string) => describeCron(expression)
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const pad = (number: number) => String(number).padStart(2, '0')
@@ -66,10 +68,21 @@ export interface CronFieldProps {
     runs?: readonly Date[] | null
     /** The app is reading the runs back: the field's own reading shows muted, and the words say it is checking. */
     runsPending?: boolean
-    /** The app's server refused the expression: its words, shown as the field's issue. */
+    /**
+     * The app's server refused the expression: its words, shown as the field's issue. Once the app
+     * passes `runs` or `invalid`, its verdict is the field's: an expression its server takes, in a
+     * syntax the field's own five-field reading does not know (`L`, `#`, `W`, `?`), is valid.
+     */
     invalid?: string
+    /** An example expression shown in the empty input, such as `0 2 * * *`. */
+    placeholder?: string
+    /** Draws the expression, its reading and its next runs, with no input and no presets. */
+    readOnly?: boolean
     presets?: readonly { label: string; value: string }[]
-    /** Reads an expression back in words, its hours on the wall clock of the zone; English by default. */
+    /**
+     * Reads an expression back in words, its hours on the wall clock of the zone; `describeCron` in
+     * English by default, which takes words for another language. Null leaves the line empty.
+     */
     describe?: (expression: string, timeZone: string) => string | null
     /** Draws a run's time, given the zone it is read in. */
     format?: (date: Date, timeZone: string) => string
@@ -85,7 +98,9 @@ export interface CronFieldProps {
  * after a given time, in a time zone. Presets fill the expression in one press. An expression that
  * does not read, or that the app's server refuses, gets the issue mark, and the list keeps its rows,
  * so the field never changes height. An app whose server reads the runs back passes them in, and
- * says when it is still asking.
+ * says when it is still asking; from then on the server's verdict is the field's, and the field's
+ * own reading only puts the expression in words. An empty field says nothing yet. `readOnly` draws
+ * a saved schedule with no input.
  */
 export function CronField({
     id: given,
@@ -97,8 +112,10 @@ export function CronField({
     runs: told,
     runsPending = false,
     invalid,
+    placeholder,
+    readOnly = false,
     presets,
-    describe = describeCron,
+    describe = defaultDescribe,
     format = formatRun,
     issueOpen,
     onIssueOpenChange,
@@ -108,39 +125,55 @@ export function CronField({
     const words = { ...WORDS, zone: timeZone, ...said }
     const own = useId()
     const id = given ?? own
-    const reading = describe(value, timeZone)
-    const refused = reading !== null && invalid !== undefined && !runsPending
-    const bad = reading === null || refused
-    const runs = bad ? [] : told != null && !runsPending ? told : nextRuns(value, from, count, timeZone)
-    const issues =
-        reading === null
-            ? [{ tone: 'critical' as const, text: words.invalid, detail: words.invalidDetail }]
-            : refused
-              ? [{ tone: 'critical' as const, text: invalid }]
-              : []
+    const empty = value.trim() === ''
+    const reading = empty ? null : describe(value, timeZone)
+    const appVerdict = told != null || invalid !== undefined
+    const refused = !empty && invalid !== undefined && !runsPending
+    const unread = !empty && !appVerdict && parseCron(value) === null
+    const bad = refused || unread
+    const runs = empty || bad ? [] : told != null && !runsPending ? told : nextRuns(value, from, count, timeZone)
+    const issues = unread
+        ? [{ tone: 'critical' as const, text: words.invalid, detail: words.invalidDetail }]
+        : refused
+          ? [{ tone: 'critical' as const, text: invalid }]
+          : []
+    const line = empty ? '' : !bad && !runsPending && runs.length === 0 ? words.never : (reading ?? '')
     return (
         <div className={cn('flex flex-col gap-3', className)}>
             <div className="flex flex-col gap-1.5">
                 <div className="flex items-baseline gap-2">
-                    <label htmlFor={id} className="text-sm leading-5 font-medium">
-                        {words.label}
-                    </label>
+                    {readOnly ? (
+                        <span id={`${id}-label`} className="text-sm leading-5 font-medium">
+                            {words.label}
+                        </span>
+                    ) : (
+                        <label htmlFor={id} className="text-sm leading-5 font-medium">
+                            {words.label}
+                        </label>
+                    )}
                     <span className="font-mono text-xs text-muted-foreground">{words.zone}</span>
                 </div>
-                <div className="relative">
-                    <Input
-                        id={id}
-                        value={value}
-                        onChange={(event) => onChange(event.target.value)}
-                        spellCheck={false}
-                        autoCapitalize="off"
-                        autoComplete="off"
-                        aria-invalid={bad || undefined}
-                        className={cn('font-mono', bad && cn('pr-9', ISSUE_EDGE.critical))}
-                    />
-                    <IssueMark issues={issues} open={issueOpen} onOpenChange={onIssueOpenChange} />
-                </div>
-                {presets !== undefined && presets.length > 0 && (
+                {readOnly ? (
+                    <p id={id} aria-labelledby={`${id}-label`} className="min-h-5 font-mono text-sm leading-5 break-all">
+                        {empty ? <span className="text-faint">—</span> : value}
+                    </p>
+                ) : (
+                    <div className="relative">
+                        <Input
+                            id={id}
+                            value={value}
+                            onChange={(event) => onChange(event.target.value)}
+                            placeholder={placeholder}
+                            spellCheck={false}
+                            autoCapitalize="off"
+                            autoComplete="off"
+                            aria-invalid={bad || undefined}
+                            className={cn('font-mono', bad && cn('pr-9', ISSUE_EDGE.critical))}
+                        />
+                        <IssueMark issues={issues} open={issueOpen} onOpenChange={onIssueOpenChange} />
+                    </div>
+                )}
+                {!readOnly && presets !== undefined && presets.length > 0 && (
                     <div className="flex flex-wrap gap-1.5">
                         {presets.map((preset) => (
                             <button
@@ -156,8 +189,8 @@ export function CronField({
                     </div>
                 )}
             </div>
-            <p className={cn('min-h-5 text-sm leading-5', reading === null ? 'text-faint' : 'text-foreground')} aria-live="polite">
-                {reading === null ? '—' : runs.length === 0 && !refused ? words.never : `${reading} (${words.zone})`}
+            <p className="min-h-5 text-sm leading-5 text-foreground" aria-live="polite">
+                {line}
             </p>
             <div className="flex flex-col gap-1.5">
                 <div className="flex items-baseline gap-2 text-xs">
