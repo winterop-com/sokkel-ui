@@ -9,6 +9,7 @@ import {
     initialValue,
     loadSchemaChecks,
     SchemaForm,
+    unsetChoice,
     useSchemaForm,
     type SchemaFieldRenderer,
     type SchemaFormState,
@@ -153,7 +154,11 @@ describe('a map of scalars', () => {
         const html = render(schema, { headers: { 'x-team': 'harbor', accept: 'text/csv' }, limits: { worker: 4 } })
         expect(html).toMatch(/<input[^>]*value="x-team"/)
         expect(html).toMatch(/<input[^>]*value="text\/csv"/)
-        expect(html).toContain('aria-label="Remove x-team"')
+        expect(html).toContain('aria-label="Remove Headers x-team"')
+        expect(html).toContain('aria-label="Headers key 1"')
+        expect(html).toContain('aria-label="Headers value 2"')
+        expect(html).toContain('aria-label="Limits key 1"')
+        expect(html).not.toContain('aria-label="Key 1"')
         expect(html).toContain('>Key</span>')
         // The integer map's value is a number field; only the map of objects is edited as JSON.
         expect(html).toMatch(/<input[^>]*value="4"/)
@@ -254,6 +259,16 @@ describe('a field left at its default', () => {
         expect(html).toMatch(/aria-checked="true"/)
         expect(html).toContain('>default</span>')
         expect(html).not.toContain('null (default)')
+    })
+
+    it('offers a select a choice back to its default, named by it, while it is optional', () => {
+        const words = { none: 'None', useDefault: (value: string) => `Default (${value})` }
+        const method: JsonSchema = { type: 'string', enum: ['GET', 'POST'], default: 'GET' }
+        expect(unsetChoice(method, false, words)).toBe('Default (GET)')
+        expect(unsetChoice({ type: 'integer', enum: [1, 2], default: 2 }, false, words)).toBe('Default (2)')
+        expect(unsetChoice(method, true, words)).toBeUndefined()
+        expect(unsetChoice({ type: 'string', enum: ['GET', 'POST'] }, false, words)).toBe('None')
+        expect(unsetChoice({ type: ['string', 'null'], enum: ['GET', null], default: null }, false, words)).toBe('None')
     })
 
     it('shows a value chosen in place of the default as any other', () => {

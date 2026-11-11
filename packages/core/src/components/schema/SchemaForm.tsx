@@ -71,9 +71,16 @@ export interface SchemaFormWords {
     fallback: (value: unknown) => string
     /** Marks the value an unset field shows as its schema `default`, which applies until one is chosen. */
     default: string
-    /** A map's column heads, and its rows' names by place. */
+    /** A map's column heads. */
     key: string
     value: string
+    /** A map row's key box and value box, named by the map's label and the row's place from 1. */
+    mapKey: (field: string, row: number) => string
+    mapValue: (field: string, row: number) => string
+    /** A map row's Remove, named by the map's label and the row's key, or its place from 1 while it has none. */
+    removeEntry: (field: string, row: string | number) => string
+    /** The choice that clears a select back to its schema default, given the default as shown. */
+    useDefault: (value: string) => string
     /** Said at a map that has a key twice; the second is not taken. */
     repeatedKey: string
     /** The disclosure of a folded form's other fields, and its words once open. */
@@ -111,6 +118,10 @@ const WORDS: SchemaFormWords = {
     default: 'default',
     key: 'Key',
     value: 'Value',
+    mapKey: (field, row) => `${field} key ${String(row)}`,
+    mapValue: (field, row) => `${field} value ${String(row)}`,
+    removeEntry: (field, row) => (typeof row === 'number' ? `Remove ${field} row ${String(row)}` : `Remove ${field} ${row}`),
+    useDefault: (value) => `Default (${value})`,
     repeatedKey: 'Each key only once',
     more: (count) => `${String(count)} more ${count === 1 ? 'field' : 'fields'}`,
     fewer: 'Fewer fields',
@@ -632,6 +643,16 @@ function showsDefault(at: JsonSchema, kind: Kind, value: unknown): boolean {
     return kind === 'enum' || kind === 'number' || kind === 'longtext' || kind === 'scalars' || kind === 'text'
 }
 
+/**
+ * The words of a select's empty choice, which unsets the field: named by the default it then shows
+ * on an optional field with one, else None where unset is allowed, else undefined for no such choice.
+ */
+export function unsetChoice(at: JsonSchema, required: boolean, words: Pick<SchemaFormWords, 'none' | 'useDefault'>): string | undefined {
+    const fallback = at.default === null ? undefined : at.default
+    if (fallback !== undefined && !required) return words.useDefault(typeof fallback === 'string' ? fallback : literal(fallback))
+    return types(at).nullable || at.default === undefined ? words.none : undefined
+}
+
 /** What an app's own control for a schema field is given: where it is, what it holds, and how to change it. */
 export interface SchemaFieldControl {
     path: Path
@@ -745,8 +766,9 @@ function Control({
     }
     switch (kind) {
         case 'enum': {
+            const unset = unsetChoice(at, required, form.words)
             const items = [
-                ...(types(at).nullable || at.default === undefined ? [{ value: '', label: form.words.none }] : []),
+                ...(unset === undefined ? [] : [{ value: '', label: unset }]),
                 ...(at.enum ?? []).map((one) => ({ value: JSON.stringify(one), label: typeof one === 'string' ? one : literal(one) })),
             ]
             return (
@@ -1143,6 +1165,7 @@ function Property({
                     form={form}
                     path={path}
                     at={at}
+                    label={label}
                     readOnly={locked}
                     head={head}
                     control={(where, held, name) => <Control form={form} path={where} at={itemSchema} label={name} held={held} />}
