@@ -917,7 +917,8 @@ export interface DataTableProps<T> {
     search?: ReactNode
     /**
      * What the bar holds when nothing is selected, such as filters. With a `search` they take a line
-     * of their own under it and wrap from the left edge; without one they sit before the count.
+     * of their own under it and wrap from the left edge; without one they sit before the count, and
+     * take a line of their own under it on a narrow table.
      */
     toolbar?: ReactNode
     /** The count the bar shows, when the rows given are not all there are. */
@@ -2338,7 +2339,8 @@ export function DataTable<T>({
             >
                 {barShown && (
                     // With a search, the search and the count share the first line and the tools take a line of their own
-                    // under it, wrapping from the left edge; without one, the tools sit before the count.
+                    // under it, wrapping from the left edge; without one, the tools sit before the count, and under it on a
+                    // narrow table.
                     <div className="@container/bar shrink-0 border-b border-border px-(--density-panel-pad) text-sm">
                         <div className="flex min-h-(--density-panel-head) min-w-0 flex-wrap items-center gap-2 gap-y-1.5 py-2">
                             {selection.size > 0 ? (
@@ -2375,7 +2377,9 @@ export function DataTable<T>({
                                         <div
                                             className={cn(
                                                 'flex min-w-0 flex-wrap items-center gap-2',
-                                                search === undefined ? 'flex-1' : 'order-last basis-full',
+                                                search === undefined
+                                                    ? 'flex-1 @max-md/bar:order-last @max-md/bar:basis-full'
+                                                    : 'order-last basis-full',
                                             )}
                                         >
                                             {toolbar}
