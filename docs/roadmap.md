@@ -6,8 +6,8 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.19.2** is the latest release (2026-11-11): a table's tools take a line of their own under the
-  search.
+- **0.19.3** is the latest release (2026-11-11): a narrow table's tools take a line of their own without
+  a search too.
 - **0.18.3** (2026-11-11): route focus waits for the new page's visible heading,
   `PageState` takes `headingLevel`, and a cleared search keeps no results.
 - **0.18.2** (2026-11-11): `CronField` reads its runs in a time zone and takes
