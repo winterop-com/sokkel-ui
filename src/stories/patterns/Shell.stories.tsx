@@ -15,6 +15,7 @@ import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import { PaneHeader } from '@winterop-com/sokkel-ui/PaneHeader'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
+import { Search as SiteSearch, type SearchSource } from '@winterop-com/sokkel-ui/Search'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { SidePanel } from '@winterop-com/sokkel-ui/SidePanel'
 import { Page, Shell, useRailMode, type RailMode } from '@winterop-com/sokkel-ui/Shell'
@@ -223,12 +224,22 @@ function WorkPage({ mode }: { mode: RailMode }) {
  * plain page, so leaving Runs brings the rail back as the app holds it. `strip` gives the frame a
  * run's side panel with its tabs in the shell's strip on a phone, the sheet `down` or `up`.
  */
+/** The jobs whose name holds the query, as the top bar's search answers. */
+const searchJobs: SearchSource = (query) => [
+    {
+        kind: 'jobs',
+        title: 'Jobs',
+        results: JOBS.filter((job) => job.includes(query.trim())).map((job) => ({ id: job, title: job, detail: 'harbor', icon: Workflow })),
+    },
+]
+
 function Frame({
     banner,
     contentKey,
     collapsed: start = false,
     drawer = false,
     search = false,
+    results = false,
     overlay = false,
     work,
     strip,
@@ -238,6 +249,7 @@ function Frame({
     collapsed?: boolean
     drawer?: boolean
     search?: boolean
+    results?: boolean
     overlay?: boolean
     work?: RailMode
     strip?: 'down' | 'up'
@@ -292,7 +304,13 @@ function Frame({
                 }
                 top={
                     <TopBar
-                        search={search ? <SearchField value={query} onChange={setQuery} placeholder="Search" /> : undefined}
+                        search={
+                            results ? (
+                                <SiteSearch search={searchJobs} onOpen={() => setPlace('jobs')} defaultQuery="export" defaultOpen />
+                            ) : search ? (
+                                <SearchField value={query} onChange={setQuery} placeholder="Search" />
+                            ) : undefined
+                        }
                         trail={[{ label: 'harbor', href: '#' }, { label: labelOf(place) }]}
                         actions={
                             overlay ? (
@@ -330,6 +348,13 @@ function Frame({
  * field gives way to the palette's button, drawn as an icon.
  */
 export const SearchAndPalette: StoryObj = { name: 'Search field', render: () => <Frame search /> }
+
+/**
+ * The top bar's `Search` with its results open. ⌘K or Ctrl+K opens the palette in the results'
+ * place, closing them, with no rule of the app's: the shell lets its palette over a search's
+ * results and over nothing else that stands over the page.
+ */
+export const SearchResultsStory: StoryObj = { name: 'Search results', render: () => <Frame results /> }
 
 /**
  * A banner between the top bar and the content, for the app's news rather than one screen's: the

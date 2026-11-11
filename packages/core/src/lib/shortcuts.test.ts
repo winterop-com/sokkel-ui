@@ -1,15 +1,18 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { KeyTarget } from './keys'
+import { shortcutGroups } from './shortcut-groups'
 import { openOverlay } from './overlay'
 import {
     createShortcutRegistry,
     heard,
     layerOpen,
     matchesChord,
+    overSearch,
+    paletteMayOpen,
     pickBinding,
     pressPlace,
-    shortcutGroups,
+    openLayers,
     topLayer,
     type KeyBinding,
     type KeyPress,
@@ -292,6 +295,210 @@ describe('createShortcutRegistry', () => {
     })
 })
 
+describe('key sequences', () => {
+    beforeEach(() => {
+        vi.useFakeTimers()
+    })
+    afterEach(() => {
+        vi.useRealTimers()
+    })
+
+    const handle = (registry: ReturnType<typeof createShortcutRegistry>, event: ReturnType<typeof keydown>) =>
+        registry.handle(event as unknown as KeyboardEvent)
+
+    const goKeys = (ran: string[]) => [
+        bind({ id: 'go-dashboard', key: 'g', next: 'd', run: () => ran.push('dashboard') }),
+        bind({ id: 'go-runs', key: 'g', next: { key: 'r' }, run: () => ran.push('runs') }),
+    ]
+
+    it('runs a sequence when its second key follows the first in time', () => {
+        const ran: string[] = []
+        const registry = createShortcutRegistry({ apple: false })
+        registry.set('page', goKeys(ran))
+        const first = keydown('g')
+        expect(handle(registry, first)).toBe(true)
+        expect(first.defaultPrevented).toBe(true)
+        expect(ran).toEqual([])
+        vi.advanceTimersByTime(900)
+        const second = keydown('r')
+        expect(handle(registry, second)).toBe(true)
+        expect(second.defaultPrevented).toBe(true)
+        expect(ran).toEqual(['runs'])
+        // The wait is over: a second d alone is nothing.
+        expect(handle(registry, keydown('d'))).toBe(false)
+        expect(ran).toEqual(['runs'])
+    })
+
+    it('drops a pending first key once the time runs out', () => {
+        const ran: string[] = []
+        const registry = createShortcutRegistry({ apple: false, sequenceTimeout: 1000 })
+        registry.set('page', goKeys(ran))
+        handle(registry, keydown('g'))
+        vi.advanceTimersByTime(1001)
+        expect(handle(registry, keydown('d'))).toBe(false)
+        expect(ran).toEqual([])
+    })
+
+    it('drops a pending first key on Escape, leaving Escape to others', () => {
+        const ran: string[] = []
+        const registry = createShortcutRegistry({ apple: false })
+        registry.set('page', [...goKeys(ran), bind({ id: 'alone', key: 'g', run: () => ran.push('alone') })])
+        handle(registry, keydown('g'))
+        const escape = keydown('Escape')
+        expect(handle(registry, escape)).toBe(false)
+        expect(escape.defaultPrevented).toBe(false)
+        expect(handle(registry, keydown('d'))).toBe(false)
+        vi.advanceTimersByTime(2000)
+        expect(ran).toEqual([])
+    })
+
+    it('drops a pending first key on any other key, which is then heard as itself', () => {
+        const ran: string[] = []
+        const registry = createShortcutRegistry({ apple: false })
+        registry.set('page', [...goKeys(ran), bind({ id: 'log', key: 'l', run: () => ran.push('log') })])
+        handle(registry, keydown('g'))
+        expect(handle(registry, keydown('l'))).toBe(true)
+        expect(handle(registry, keydown('d'))).toBe(false)
+        expect(ran).toEqual(['log'])
+    })
+
+    it('waits through a modifier and a held first key', () => {
+        const ran: string[] = []
+        const registry = createShortcutRegistry({ apple: false })
+        registry.set('page', [bind({ id: 'go-help', key: 'g', next: { key: '?' }, run: () => ran.push('help') })])
+        handle(registry, keydown('g'))
+        handle(registry, { ...keydown('g'), repeat: true })
+        handle(registry, keydown('Shift', { shiftKey: true }))
+        handle(registry, keydown('?', { shiftKey: true }))
+        expect(ran).toEqual(['help'])
+    })
+
+    it('runs a single-key binding on the first key once no second key comes', () => {
+        const ran: string[] = []
+        const registry = createShortcutRegistry({ apple: false })
+        registry.set('page', [...goKeys(ran), bind({ id: 'alone', key: 'g', run: () => ran.push('alone') })])
+        handle(registry, keydown('g'))
+        expect(ran).toEqual([])
+        vi.advanceTimersByTime(1000)
+        expect(ran).toEqual(['alone'])
+        // A second key that ends no sequence runs it at once, then is heard itself.
+        handle(registry, keydown('g'))
+        handle(registry, keydown('x'))
+        expect(ran).toEqual(['alone', 'alone'])
+        // A sequence that does follow leaves it unrun.
+        handle(registry, keydown('g'))
+        handle(registry, keydown('d'))
+        vi.advanceTimersByTime(2000)
+        expect(ran).toEqual(['alone', 'alone', 'dashboard'])
+    })
+
+    it('runs a key that starts no sequence at once', () => {
+        const ran: string[] = []
+        const registry = createShortcutRegistry({ apple: false })
+        registry.set('page', [...goKeys(ran), bind({ id: 'log', key: 'l', run: () => ran.push('log') })])
+        handle(registry, keydown('l'))
+        expect(ran).toEqual(['log'])
+    })
+
+    it('never starts a sequence while typing in a field, even one that asks for fields', () => {
+        const ran: string[] = []
+        const registry = createShortcutRegistry({ apple: false })
+        registry.set('page', [bind({ id: 'go', key: 'g', next: 'd', inFields: true, run: () => ran.push('go') })])
+        const field = element('INPUT')
+        expect(handle(registry, keydown('g', {}, field))).toBe(false)
+        expect(handle(registry, keydown('d', {}, field))).toBe(false)
+        // Nor ends one there.
+        handle(registry, keydown('g'))
+        expect(handle(registry, keydown('d', {}, field))).toBe(false)
+        expect(ran).toEqual([])
+    })
+
+    it('stays quiet under a dialog like any key', () => {
+        const ran: string[] = []
+        const registry = createShortcutRegistry({ apple: false })
+        registry.set('page', goKeys(ran))
+        registry.surface('palette', true)
+        expect(handle(registry, keydown('g'))).toBe(false)
+        registry.surface('palette', false)
+    })
+})
+
+describe('overSearch', () => {
+    it("tells a search's results, or what is inside them, from any other layer", () => {
+        const results = { closest: (selector: string) => (selector === '[data-slot="search-results"]' ? ({} as Element) : null) }
+        const dialog = { closest: () => null }
+        expect(overSearch(results)).toBe(true)
+        expect(overSearch(dialog)).toBe(false)
+        expect(overSearch(null)).toBe(false)
+    })
+})
+
+describe('paletteMayOpen', () => {
+    const stubbed = (layers: Element[]) => {
+        const doc = {
+            querySelector: () => layers.at(0) ?? null,
+            querySelectorAll: () => layers as unknown as NodeListOf<Element>,
+        }
+        vi.stubGlobal('document', doc)
+    }
+    const results = { closest: () => ({}) as Element } as unknown as Element
+    const settings = { closest: () => null } as unknown as Element
+    afterEach(() => {
+        vi.unstubAllGlobals()
+    })
+
+    it('opens where nothing stands over the page', () => {
+        stubbed([])
+        expect(paletteMayOpen(createShortcutRegistry())).toBe(true)
+    })
+
+    it("opens over a search's results alone, which it replaces", () => {
+        stubbed([results])
+        const registry = createShortcutRegistry()
+        expect(registry.covered()).toBe(true)
+        expect(registry.covered(true)).toBe(false)
+        expect(paletteMayOpen(registry)).toBe(true)
+    })
+
+    it("stays closed over a dialog, a dialog under a search's results, or a surface of the app", () => {
+        stubbed([settings])
+        expect(paletteMayOpen(createShortcutRegistry())).toBe(false)
+        stubbed([settings, results])
+        expect(paletteMayOpen(createShortcutRegistry())).toBe(false)
+        stubbed([results])
+        const registry = createShortcutRegistry()
+        registry.surface('shortcuts', true)
+        expect(paletteMayOpen(registry)).toBe(false)
+        const layer = openOverlay()
+        registry.surface('shortcuts', false)
+        expect(paletteMayOpen(registry)).toBe(false)
+        layer.close()
+    })
+
+    it("asks the app's own rule in its place, with the layer on top", () => {
+        stubbed([settings, results])
+        const asked: (Element | null)[] = []
+        expect(
+            paletteMayOpen(createShortcutRegistry(), (over) => {
+                asked.push(over)
+                return overSearch(over)
+            }),
+        ).toBe(true)
+        expect(asked).toEqual([results])
+        stubbed([])
+        expect(paletteMayOpen(createShortcutRegistry(), () => false)).toBe(false)
+    })
+})
+
+describe('openLayers', () => {
+    it('gives the open layers in the order they were opened, and none without a page', () => {
+        const one = {} as Element
+        const two = {} as Element
+        expect(openLayers({ querySelectorAll: () => [one, two] as unknown as NodeListOf<Element> })).toEqual([one, two])
+        expect(openLayers(undefined)).toEqual([])
+    })
+})
+
 describe('layerOpen', () => {
     it('sees an open dialog or a menu by its role or slot, and nothing where none is', () => {
         const page = (found: string[]) => ({
@@ -383,5 +590,28 @@ describe('shortcutGroups', () => {
             true,
         )
         expect(groups).toEqual([{ title: 'General', shortcuts: [{ id: 'search', action: 'Search', keys: ['/'] }] }])
+    })
+})
+
+describe('shortcutGroups with sequences', () => {
+    it('lists a sequence with its second keys apart, and as its own shortcut beside a single key of the same id', () => {
+        const groups = shortcutGroups(
+            [
+                bind({ id: 'go-dashboard', key: 'g', next: 'd', label: 'Go to the dashboard', group: 'Go to' }),
+                bind({ id: 'go-dashboard', key: 'd', label: 'Go to the dashboard', group: 'Go to' }),
+            ],
+            [],
+            'General',
+            false,
+        )
+        expect(groups).toEqual([
+            {
+                title: 'Go to',
+                shortcuts: [
+                    { id: 'go-dashboard', action: 'Go to the dashboard', keys: ['G'], next: ['D'] },
+                    { id: 'go-dashboard', action: 'Go to the dashboard', keys: ['D'] },
+                ],
+            },
+        ])
     })
 })

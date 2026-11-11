@@ -84,6 +84,8 @@ export const PRIVATE: Record<PackageDir, Record<string, string>> = {
         'lib/percent': 'how the library writes a share as a percent',
         'lib/scroll-memory': "where `useScrollMemory` keeps a scroller's place",
         'lib/shortcuts': 'the key registry `useShortcuts` binds in; its types are exported by `hooks/use-shortcuts` and `ShortcutsDialog`',
+        'lib/shortcut-groups':
+            'what the shortcuts dialog lists, kept apart from the registry so only the dialog carries it; its types are exported by `ShortcutsDialog` and `Shell`',
         'lib/table': "the head text every table shares, a layout constant, and the columns' order, which `lib/list-views` exports",
         'lib/theme-list': 'the theme list `lib/appearance` exports as `THEMES`',
         'lib/uploads': 'the store behind `useUploads`, which exports its types',

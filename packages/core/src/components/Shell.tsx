@@ -22,7 +22,10 @@ import { useOverlay } from '../hooks/use-overlay'
 import { ShortcutRegistry } from '../hooks/use-shortcuts'
 import { trafficLightsStyle, useTrafficLights, windowPressHandler, type DesktopWindow } from '../lib/desktop'
 import { useDesktopFullscreen } from '../lib/fullscreen'
-import { createShortcutRegistry, topLayer, type KeyBinding, type ShortcutGroup } from '../lib/shortcuts'
+import type { ShortcutGroup } from '../lib/shortcut-groups'
+import { createShortcutRegistry, paletteMayOpen, type KeyBinding } from '../lib/shortcuts'
+
+export { overSearch } from '../lib/shortcuts'
 import type { CommandPaletteWords, PaletteFilter, PaletteFoot, PaletteGroup, PaletteSearch } from './CommandPalette'
 import type { ShortcutsDialogWords } from './ShortcutsDialog'
 import { PanelTabStrip, type PanelStrip, type PanelTabs } from './panel-strip'
@@ -31,6 +34,7 @@ import {
     ShellDrawer,
     ShellFootCell,
     ShellPalette,
+    ShellPaletteOpen,
     ShellPanelStrip,
     ShellRailAsk,
     ShellRailMode,
@@ -39,7 +43,7 @@ import {
     type RailMode,
 } from './shell-context'
 
-export type { ShortcutGroup } from '../lib/shortcuts'
+export type { ShortcutGroup } from '../lib/shortcut-groups'
 export type { RailMode } from './shell-context'
 
 // The palette and the shortcuts load when they first open, so an app's start carries neither.
@@ -89,7 +93,9 @@ export interface ShellProps {
      * `openPalette`), with the layer standing over the page: the dialog, sheet or menu open on top,
      * or an overlay from `useOverlay`, and null where nothing does. True opens it, over that layer
      * too, as over an app's own search the palette replaces; false keeps it closed, as over an app's
-     * own full-screen view. Without it the palette opens only where nothing stands over the page.
+     * own full-screen view. `overSearch(over)` says whether the layer is a `Search`'s results.
+     * Without it the palette opens where nothing stands over the page, and over a `Search`'s
+     * results alone, which close as it opens.
      */
     mayOpenPalette?: (over: Element | null) => boolean
     paletteWords?: Partial<CommandPaletteWords>
@@ -164,9 +170,11 @@ export interface ShellProps {
  * With `palette`, the shell holds the app's command palette: ⌘K on a Mac and Ctrl+K elsewhere open
  * it, from a field too, and close it again; so does the top bar's palette button, unless the app
  * gives `TopBar` its own `onSearch`. Left to itself it does not open over a dialog, a menu or an
- * overlay; `mayOpenPalette`, asked first with the layer on top, decides in its place: no over an
- * app's own full-screen view, yes over an app's own search that the palette replaces (the app
- * closes that in `onPaletteOpenChange`). `paletteOpen` with `onPaletteOpenChange` holds it from
+ * overlay, but it does open over a `Search`'s results, such as the top bar's, which close as it
+ * opens, the palette taking the search's place. `mayOpenPalette`, asked first with the layer on
+ * top, decides in its place: no over an app's own full-screen view, yes over an app's own search
+ * that the palette replaces (the app closes that in `onPaletteOpenChange`), and `overSearch` tells
+ * it a `Search`'s results. `paletteOpen` with `onPaletteOpenChange` holds it from
  * outside, and `paletteFilter` chooses how it matches its commands. `placeCommands` makes its
  * places from the rail's groups and `appearanceCommands` its scheme, density and theme, from
  * `useAppearance` or from callbacks of an app that keeps its look itself. A screen adds its own
@@ -303,13 +311,12 @@ export function Shell({
     useEffect(() => {
         latest.current = held
     })
-    // Opening asks `mayOpenPalette` with the layer on top, or else opens only where nothing stands over the page.
+    // Opening asks `mayOpenPalette` with the layer on top, or else opens where nothing but a search's results stands over the page.
     const setPalette = useCallback(
         (next: boolean) => {
             if (next) {
                 if (latest.current.isOpen) return
-                const may = latest.current.mayOpenPalette
-                if (may === undefined ? shortcutRegistry.covered() : !may(topLayer())) return
+                if (!paletteMayOpen(shortcutRegistry, latest.current.mayOpenPalette)) return
             }
             if (!latest.current.palette) setOwnPaletteOpen(next)
             latest.current.onPaletteOpenChange?.(next)
@@ -550,19 +557,21 @@ export function Shell({
     const provide = (node: ReactNode) => (
         <ShortcutRegistry value={shortcutRegistry}>
             <ShellPalette value={palette === undefined ? undefined : openPalette}>
-                <ShellShortcuts value={shortcuts === undefined ? undefined : openShortcuts}>
-                    <ShellDesktop value={desktop}>
-                        <ShellRailAsk value={askRail}>
-                            <ShellRailMode value={railMode ?? (crowded ? 'collapsed' : undefined)}>
-                                <ShellScroller value={main}>
-                                    <ShellPanelStrip value={stripContext}>
-                                        <CommandRegistry value={commandRegistry.registry}>{node}</CommandRegistry>
-                                    </ShellPanelStrip>
-                                </ShellScroller>
-                            </ShellRailMode>
-                        </ShellRailAsk>
-                    </ShellDesktop>
-                </ShellShortcuts>
+                <ShellPaletteOpen value={palette !== undefined && paletteIsOpen}>
+                    <ShellShortcuts value={shortcuts === undefined ? undefined : openShortcuts}>
+                        <ShellDesktop value={desktop}>
+                            <ShellRailAsk value={askRail}>
+                                <ShellRailMode value={railMode ?? (crowded ? 'collapsed' : undefined)}>
+                                    <ShellScroller value={main}>
+                                        <ShellPanelStrip value={stripContext}>
+                                            <CommandRegistry value={commandRegistry.registry}>{node}</CommandRegistry>
+                                        </ShellPanelStrip>
+                                    </ShellScroller>
+                                </ShellRailMode>
+                            </ShellRailAsk>
+                        </ShellDesktop>
+                    </ShellShortcuts>
+                </ShellPaletteOpen>
                 {commands}
                 {keys}
             </ShellPalette>
