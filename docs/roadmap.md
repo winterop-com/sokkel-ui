@@ -276,7 +276,10 @@ to `plan.md` when it ships.
     - A plain `DataTable` still brings `SelectionBar`, the pager's `NativeSelect` and the
       row menus' `primitives/context-menu` (about 1.2 kB), each drawn at once when used.
     - The palette's lazy chunk carries cmdk's `Command.Dialog` and the Radix dialog stack behind it
-      (about 21 kB), which cmdk attaches whether or not it is used. Replace or vendor cmdk.
+      (about 21 kB), which cmdk attaches whether or not it is used. Replace or vendor cmdk. The
+      forms sample's lazy budget is spent: the palette's search failure and Retry fit only after
+      trimming the command primitives, and a See all results row for `PaletteSearch` (`onSeeAll`,
+      as `Search` has) came to 78.065 of 78 kB, so it waits for this.
     - `styles.css` holds every component's classes, so each new part adds to every app's
       stylesheet. A Vite plugin that writes the `@source` list from the app's own imports would
       give every app the lean stylesheet without a hand-kept list. Leaving out the 27 primitives no
