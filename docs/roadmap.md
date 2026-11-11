@@ -6,7 +6,10 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.17.4** is the latest release (2026-11-11): dashboard panels pass the data view through, its
+- **0.18.0** is the latest release (2026-11-11): search results tied to their query, with failures and
+  Retry in `Search` and the palette; `DataTable` `reveal`; `Shell` `routeKey` moving focus to the new
+  page's heading.
+- **0.17.4** (2026-11-11): dashboard panels pass the data view through, its
   label columns fit their labels, and `dataColumns` is public.
 - **0.17.3** (2026-11-11): map rows named by their map, a select back to its
   default, palette rows drawing key sequences, `PageState` warning words, and `Search` opening on a
