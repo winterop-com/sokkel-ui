@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.18.2** is the latest release (2026-11-11): `CronField` reads its runs in a time zone and takes
+- **0.18.3** is the latest release (2026-11-11): route focus waits for the new page's visible heading,
+  `PageState` takes `headingLevel`, and a cleared search keeps no results.
+- **0.18.2** (2026-11-11): `CronField` reads its runs in a time zone and takes
   runs read back by the app.
 - **0.18.1** (2026-11-11): `Field` styles its note, the fold button takes a
   finger's height on a phone, and the `sequence` word is optional.
