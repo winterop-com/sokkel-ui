@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.18.0** is the latest release (2026-11-11): search results tied to their query, with failures and
+- **0.18.1** is the latest release (2026-11-11): `Field` styles its note, the fold button takes a
+  finger's height on a phone, and the `sequence` word is optional.
+- **0.18.0** (2026-11-11): search results tied to their query, with failures and
   Retry in `Search` and the palette; `DataTable` `reveal`; `Shell` `routeKey` moving focus to the new
   page's heading.
 - **0.17.4** (2026-11-11): dashboard panels pass the data view through, its
