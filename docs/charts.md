@@ -64,11 +64,18 @@ export function RunsPerDay() {
 ```
 
 **The data view.** A `Chart` or `ChartGrid` in a frame tells the frame what it draws, and the
-frame's Data button shows those rows as a table (`DataTable`, `variant="list"`) in the chart's
-place, until Chart brings it back. The columns are the fields the spec reads, from the outermost
-in (a grid's facet, `path`, `x`, `series`), then the figures (`y`, `value`, a fan's `bands`,
-`history`, `points`), headed by their `fieldNames` and written with the spec's `format` and
-`unit`. The table loads the first time the view opens, so no page carries it at start.
+frame's Data button shows those rows as a table (`DataTable`, unframed and with no bar) in the
+chart's place, until Chart brings it back. The columns are the fields the spec reads, from the
+outermost in (a grid's facet, `path`, `x`, `series`), then the figures (`y`, `value`, `history`,
+`points`), headed by their `fieldNames` and written with the spec's `format` and `unit`. A fan's
+`bands` stand around its `y` in quantile order: the bands' lows from the outermost in, the median,
+then their highs from the innermost out (`q10`, `q25`, `median`, `q75`, `q90`). The spec's
+`dataFields` add fields the chart does not draw but a reader needs beside it, such as the place the
+frame's title names or how far ahead a forecast reaches: after the drawn ones, headed by their
+`fieldNames` and written as they are. They live on the spec, beside the rows and `fieldNames` they
+read, so a `Chart`, a `ChartGrid` and a `ChartPanel` carry them to the frame alike. The first
+column stays pinned while the rest scroll sideways in a narrow frame, and a column of figures is
+only as narrow as its longest figure or head, so more of them fit. The table loads the first time the view opens, so no page carries it at start.
 `defaultView`, or `view` with `onViewChange`, opens it from the start or from outside; `data={false}`
 leaves the button out, and a gauge, a single figure, has none.
 
@@ -127,6 +134,7 @@ What a chart reads. Each kind reads some of these fields; its row in the tables 
 | `format`      | How a figure is written in tooltips and labels.                                                                                                                          |
 | `unit`        | A unit written after each figure, such as `s` or `%`, or one per `y` field.                                                                                              |
 | `fieldNames`  | What a field is called where the chart names it.                                                                                                                         |
+| `dataFields`  | Fields the chart does not draw, shown after its own in a frame's data view, written as they are.                                                                         |
 | `smooth`      | A line drawn smooth rather than straight between points.                                                                                                                 |
 | `labelEvery`  | Labels every nth category on the category axis.                                                                                                                          |
 | `gap`         | How far apart bars stand: `tight` draws a histogram's tall bars, nearly touching.                                                                                        |
