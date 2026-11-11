@@ -1,7 +1,7 @@
 # The common commands, as `make <target>`. Everything runs through bun; `make help` lists them.
 
 .DEFAULT_GOAL := help
-.PHONY: help install tokens storybook build size typecheck lint fmt fmt-check test check storybook-build baselines visual visual-update screenshots-ci layout examples examples-list examples-site clean
+.PHONY: help install tokens storybook build size typecheck lint fmt fmt-check test check storybook-build baselines visual visual-update screenshots-ci layout examples examples-web examples-list examples-site clean
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "} {printf "  %-16s %s\n", $$1, $$2}'
@@ -62,6 +62,13 @@ EXAMPLE_TARGETS := web dev electron tauri tauri-build
 
 examples: build ## Build every example's web app and check its desktop shells, as CI does
 	@for name in $(EXAMPLES); do $(MAKE) -C examples/$$name check || exit 1; done
+
+# Each example installs a copy of the packages, taken when it was installed, so each takes a fresh copy first.
+examples-web: build ## Build every example's web app against the packages as they are now, as CI does
+	@for app in examples/*/web; do \
+		echo "$$app"; \
+		(cd $$app && rm -rf node_modules/@winterop-com && bun install --frozen-lockfile >/dev/null && bun run build >/dev/null) || exit 1; \
+	done
 
 examples-site: build ## Build every example's web app into examples-static/, with an index and their stills, as Pages publishes them
 	bun scripts/examples-site.ts --shots
