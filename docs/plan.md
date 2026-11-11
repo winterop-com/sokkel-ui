@@ -449,10 +449,12 @@ with `aria-required`; `fallback` says under the control what applies when the fi
 `SchemaForm` takes both, `requiredMark` and `fallbacks` (a schema `default` said under its field,
 nothing for a `null` one, and only once a value is set, since an unset field shows it in its place). An optional field left unset with a schema `default` shows it, muted, as
 what applies ("normal (default)" in a select's or an input's place, the word beside a switch),
-without holding it in the value; choosing it holds it. `initialValue` writes only the defaults a
+without holding it in the value; choosing it holds it, and the select's first choice
+("Default (normal)", `words.useDefault`) or an emptied box goes back to unset. `initialValue` writes only the defaults a
 field cannot show so: a required field's, and an object's or a list's. An object of any keys whose
 values are each one scalar (headers, query parameters, environment variables) is a table of a key
-and a value per row (`schema/MapField`), with Add and Remove, a key given twice refused at the table
+and a value per row (`schema/MapField`), with Add and Remove, each row's boxes and Remove named by the map's label ("headers key 1", "Remove
+headers Accept": `words.mapKey`, `mapValue`, `removeEntry`), a key given twice refused at the table
 and left out of the value; a field that takes several scalar types (`anyOf` of a string and an
 integer, as "16KB" or 16384) is one text box, read as the narrowest type the text parses as
 (integer, number, boolean, then text) and checked against the schema. A field's own refusal of what
