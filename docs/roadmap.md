@@ -6,8 +6,8 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.19.0** is the latest release (2026-11-11): `CronField` waits on a pending app, reads nothing it
-  refused and drops an empty zone; `CronWords` takes joined strings, separators and `ordinal`.
+- **0.19.1** is the latest release (2026-11-11): `DiffView` with no title floats its counts and actions
+  instead of spending a row.
 - **0.18.3** (2026-11-11): route focus waits for the new page's visible heading,
   `PageState` takes `headingLevel`, and a cleared search keeps no results.
 - **0.18.2** (2026-11-11): `CronField` reads its runs in a time zone and takes
