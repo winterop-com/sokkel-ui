@@ -6,8 +6,8 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.19.3** is the latest release (2026-11-11): a narrow table's tools take a line of their own without
-  a search too.
+- **0.19.4** is the latest release (2026-11-11): cron reads `L`, `LW`, `15W`, `5#2`, `5L` and `?`, and a
+  chart's hover shadow lets the hovered bar show through.
 - **0.18.3** (2026-11-11): route focus waits for the new page's visible heading,
   `PageState` takes `headingLevel`, and a cleared search keeps no results.
 - **0.18.2** (2026-11-11): `CronField` reads its runs in a time zone and takes
