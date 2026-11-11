@@ -22,7 +22,7 @@ export function ChartDataTable({ data }: ChartDataTableProps) {
             dataColumns(kind, spec, facet).map((column) => ({
                 id: column.field,
                 header: column.header,
-                width: 'minmax(6rem,1fr)',
+                width: 'minmax(5rem,1fr)',
                 align: column.numeric ? 'end' : 'start',
                 cell: ({ row }) => dataCell(column, row, spec),
                 sortValue: ({ row }) =>
@@ -31,5 +31,16 @@ export function ChartDataTable({ data }: ChartDataTableProps) {
         [kind, spec, facet],
     )
     const rows = useMemo(() => spec.rows.map((row, at) => ({ at, row })), [spec.rows])
-    return <DataTable variant="list" framed={false} columns={columns} rows={rows} rowKey={(entry) => String(entry.at)} className="h-full" />
+    return (
+        <DataTable
+            variant="list"
+            framed={false}
+            stackBelow={false}
+            minWidth="auto"
+            columns={columns}
+            rows={rows}
+            rowKey={(entry) => String(entry.at)}
+            className="h-full"
+        />
+    )
 }
