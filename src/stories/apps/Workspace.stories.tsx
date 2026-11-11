@@ -365,6 +365,7 @@ function Workspace({
                                             <FilterChip facet="Job" options={JOB_OPTIONS} multiple />
                                             <FilterChip facet="Started by" options={PEOPLE_OPTIONS} multiple />
                                             <Segmented
+                                                size="md"
                                                 label="Group"
                                                 value={group}
                                                 options={
