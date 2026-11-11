@@ -74,11 +74,23 @@ export function coarse(span: Span, points = 24): Span {
     return { ...span, step, times }
 }
 
+const formats = new Map<string, Intl.DateTimeFormat>()
+
+/** One formatter per set of options, kept: building one costs far more than using it. */
+function formatter(options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
+    const key = JSON.stringify(options)
+    let format = formats.get(key)
+    if (format === undefined) {
+        format = new Intl.DateTimeFormat('en-US', options)
+        formats.set(key, format)
+    }
+    return format
+}
+
 /** A second written for an axis: with seconds for a short range, the day for one past a day. */
 export function timeLabel(second: number, span: Span, zone: Zone): string {
-    const date = new Date(second * 1000)
     const long = span.end - span.start > 2 * 86_400
-    const options: Intl.DateTimeFormatOptions = {
+    return formatter({
         hour: '2-digit',
         minute: '2-digit',
         second: span.end - span.start <= 600 ? '2-digit' : undefined,
@@ -86,13 +98,12 @@ export function timeLabel(second: number, span: Span, zone: Zone): string {
         day: long ? 'numeric' : undefined,
         hourCycle: 'h23',
         timeZone: zone === 'utc' ? 'UTC' : undefined,
-    }
-    return new Intl.DateTimeFormat('en-US', options).format(date)
+    }).format(new Date(second * 1000))
 }
 
 /** A moment written for a reader, with its seconds. */
 export function clockOf(second: number, zone: Zone): string {
-    return new Intl.DateTimeFormat('en-US', {
+    return formatter({
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
