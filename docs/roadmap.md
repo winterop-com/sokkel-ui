@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.15.7** is the latest release (2026-11-11): `useTableCell`, `DataTableGroup` and stacked labels
+- **0.15.8** is the latest release (2026-11-11): `DataTable` cells fill their track (`TableCellFill`),
+  read their column's room (`columnWidth`), stacked lines that do not clip, and `stackTitle="free"`.
+- **0.15.7** (2026-11-11): `useTableCell`, `DataTableGroup` and stacked labels
   that fit; the fan's history line bridged into its forecast; `SelectField`.
 - **0.15.6** (2026-11-11): `DataTable` content columns measured after fonts load,
   counted toward stacking, measured at their full width, with a `minWidth` floor.
