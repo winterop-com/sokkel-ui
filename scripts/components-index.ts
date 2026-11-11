@@ -65,6 +65,10 @@ export const PRIVATE: Record<PackageDir, Record<string, string>> = {
         'components/settings-parts':
             'what `SettingsDialog` and `SettingsView` share: the search, the sections, the rows and the reset; their types are exported by both',
         'components/shell-context': 'the contexts `Shell` hands the parts drawn inside it',
+        'components/table-deferred':
+            "what `DataTable` needs only after its first paint: Base UI's checkbox, the watch that measures its content cells again, and its menus' lists",
+        'components/ui/checkbox-look':
+            "the checkbox's look, which `primitives/checkbox` wears and `DataTable` draws its selection boxes in until it has loaded",
         'components/ui/context-menu-engine': "Base UI's context menu, which `primitives/context-menu` loads on first use",
         'components/ui/deferred-menu': "the stand-in triggers menus draw until Base UI's menu has loaded, and the loading",
         'components/ui/menu-engine': "Base UI's menu, which `primitives/dropdown-menu` and `AccountMenu` load on first use",

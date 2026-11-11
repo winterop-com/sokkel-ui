@@ -241,14 +241,19 @@ to `plan.md` when it ships.
   ignore a `::-webkit-scrollbar-track` offset. The fix moves the head out of the scrolling box and
   keeps it in step sideways (pinned columns, bands and resizing with it). Cosmetic; look into it.
 
-- **Size budgets are a ceiling.** `size/budget.json` stays at dashboard 200 kB and forms 192 kB
-  (2026-11-11), raised five times over two days; a change over them trims first, and they come
-  down as the trim pass below frees room.
+- **Size budgets are a ceiling.** `size/budget.json` holds the dashboard at 197.9 kB and forms at
+  191.8 kB (2026-11-11), each its start plus at most 0.5 kB; the dashboard's came down from 200 kB
+  once a plain `DataTable` stopped carrying Base UI's checkbox. A change over them trims first, and
+  they come down as the trim pass below frees room.
 
 - **Smaller start bundles, what is left.** Every library only some parts need is an optional peer,
   and the heavy ones, Base UI's menu among them, load on first use. Left:
     - On a dashboard, `chartLegend` still brings every chart kind with the page. Split each kind's
       shaping of rows, which the legend needs, from its option builder, which can load with ECharts.
+    - The forms page carries Base UI's checkbox for `CheckboxField` and `SchemaForm` (about 2 kB):
+      the box a `DataTable` draws until the checkbox loads (`ui/checkbox-look`) could stand in for
+      them too. A plain `DataTable` still brings `SelectionBar`, the pager's `NativeSelect` and the
+      row menus' `primitives/context-menu` (about 1.2 kB), each drawn at once when used.
     - The palette's lazy chunk carries cmdk's `Command.Dialog` and the Radix dialog stack behind it
       (about 21 kB), which cmdk attaches whether or not it is used. Replace or vendor cmdk.
     - `styles.css` holds every component's classes, so each new part adds to every app's
