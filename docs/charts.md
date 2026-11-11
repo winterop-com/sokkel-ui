@@ -63,6 +63,15 @@ export function RunsPerDay() {
 }
 ```
 
+**The data view.** A `Chart` or `ChartGrid` in a frame tells the frame what it draws, and the
+frame's Data button shows those rows as a table (`DataTable`, `variant="list"`) in the chart's
+place, until Chart brings it back. The columns are the fields the spec reads, from the outermost
+in (a grid's facet, `path`, `x`, `series`), then the figures (`y`, `value`, a fan's `bands`,
+`history`, `points`), headed by their `fieldNames` and written with the spec's `format` and
+`unit`. The table loads the first time the view opens, so no page carries it at start.
+`defaultView`, or `view` with `onViewChange`, opens it from the start or from outside; `data={false}`
+leaves the button out, and a gauge, a single figure, has none.
+
 **Small multiples.** `ChartGrid` draws the same kind and fields once per label of `facet`, each
 from that label's rows, on one shared scale and in one set of colors, so one frame legend (with
 `fit` on the frame) serves them all.

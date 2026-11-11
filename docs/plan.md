@@ -51,7 +51,9 @@ or a right click on it opening the menu as soon as the menu is there. A menu bar
 once (`primitives/menubar` imports it), as its keys need. `DataTable` loads Base UI's checkbox, the
 watch that measures its content cells again and its menus' lists once it is drawn, and only when it
 selects, has a content column or draws a column or sort menu, its selection boxes drawn the same
-until then and taking a press the same, so a plain table carries none of it. A module that only asks whether a node is a part tells it by a mark, so it
+until then and taking a press the same, so a plain table carries none of it. `CheckboxField` and
+`SchemaForm`'s sets of choices draw a plain box in the same look (`PlainCheckbox`, a button that
+ticks), so a forms page carries none of Base UI's checkbox either. A module that only asks whether a node is a part tells it by a mark, so it
 need not import the part (`isSoundVisualizer`), and `chartLegend` has a module of its own, since it
 reads every kind.
 
@@ -421,9 +423,10 @@ browser's own date input, since the calendar would put the forms page past its b
 `SecretField` takes a secret a form sets and never reads back, such as a connection's token. With
 one already set (`sealed`) it says so, masked, and when (`setAt`), and stays as it is unless Replace
 opens an empty input for a new one, Cancel or Escape sealing it again; its value is the new secret
-or undefined, so a form leaves an unchanged secret out of what it sends. `SchemaForm` draws a
-`writeOnly` property with it, sealed where `useSchemaForm`'s `sealed` names a secret as set, and a
-required secret that is set asks for nothing more. `RepeatedGroup` is marked as a field is: a star
+or undefined, so a form leaves an unchanged secret out of what it sends. Replace is named by the
+field's label (`words.replaceLabel`, "Replace password"), so two sealed secrets are told apart.
+`SchemaForm` draws a `writeOnly` property with it, sealed where `useSchemaForm`'s `sealed` names a
+secret as set, its label passed on, and a required secret that is set asks for nothing more. `RepeatedGroup` is marked as a field is: a star
 after its name when `required`, and the issue mark beside its name for what is wrong with the group
 as a whole; `SchemaForm` draws its lists of records with it.
 
@@ -443,7 +446,17 @@ and a warning mark before its title (`critical`). A section is labelled by its h
 A required `Field` is marked by a star in its label, or with `requiredMark="word"` by the word
 after the label and outside it, so the control is named by its label alone and says it is required
 with `aria-required`; `fallback` says under the control what applies when the field is left empty.
-`SchemaForm` takes both, `requiredMark` and `fallbacks` (a schema `default` said under its field).
+`SchemaForm` takes both, `requiredMark` and `fallbacks` (a schema `default` said under its field,
+nothing for a `null` one). An optional field left unset with a schema `default` shows it, muted, as
+what applies ("normal (default)" in a select's or an input's place, the word beside a switch),
+without holding it in the value; choosing it holds it. `initialValue` writes only the defaults a
+field cannot show so: a required field's, and an object's or a list's. An object of any keys whose
+values are each one scalar (headers, query parameters, environment variables) is a table of a key
+and a value per row (`schema/MapField`), with Add and Remove, a key given twice refused at the table
+and left out of the value; a field that takes several scalar types (`anyOf` of a string and an
+integer, as "16KB" or 16384) is one text box, read as the narrowest type the text parses as
+(integer, number, boolean, then text) and checked against the schema. A field's own refusal of what
+was typed is held with `hold`, which stops the submit as an issue does.
 `ItemHeading` is the heading `ItemCard` draws for one thing, on its own: the name, else the code,
 the code drawn once in the code face under the name (`stacked`) or beside it (`inline`), in a
 panel's or a dialog's size, with a leading `glyph`, `chips` and a one-line `description`.

@@ -1,6 +1,7 @@
 import { useMemo, useState, type Ref } from 'react'
 
 import { EChart, type ChartHandle } from './EChart'
+import { useFrameData } from './frame-data'
 import type { ChartKind, ChartSpec } from './kinds'
 import type { ChartLook } from './look'
 import { useKinds } from './use-kinds'
@@ -26,6 +27,7 @@ export type ChartProps = ChartSpec & {
  */
 export function Chart({ kind, label, hidden, hovered, handle, animate, className, ...spec }: ChartProps) {
     const kept = useSpec(spec)
+    useFrameData(kind, kept)
     const kinds = useKinds()
     const option = useMemo(
         () => (kinds === undefined ? null : (look: ChartLook) => kinds[kind].build(kept, look, hidden)),

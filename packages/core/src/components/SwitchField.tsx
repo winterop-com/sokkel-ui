@@ -9,6 +9,8 @@ export interface SwitchFieldProps {
     label: string
     /** What turning it on does, shown on hover or focus of the help mark. */
     explain?: string
+    /** A short word beside the label, muted, such as `default` for a setting left at its default. */
+    note?: ReactNode
     /** Why the setting cannot be changed now; given, the switch is disabled and the reason shows under the label in place of the help mark. */
     reason?: ReactNode
     checked?: boolean
@@ -23,7 +25,7 @@ export interface SwitchFieldProps {
  * a tooltip on a help mark beside the label rather than a line under it. `reason` disables the
  * switch and says why in a line under the label, where it can be read without hovering.
  */
-export function SwitchField({ id, label, explain, reason, checked, defaultChecked, onCheckedChange, disabled }: SwitchFieldProps) {
+export function SwitchField({ id, label, explain, note, reason, checked, defaultChecked, onCheckedChange, disabled }: SwitchFieldProps) {
     const held = reason !== undefined && reason !== null && reason !== false
     const reasonId = `${id}-reason`
     return (
@@ -34,6 +36,7 @@ export function SwitchField({ id, label, explain, reason, checked, defaultChecke
             <span className="flex min-w-0 flex-col">
                 <span className="flex items-center gap-1.5">
                     <span id={`${id}-label`}>{label}</span>
+                    {note !== undefined && <span className="text-xs text-faint">{note}</span>}
                     {explain !== undefined && !held && (
                         <Tooltip.Root>
                             <Tooltip.Trigger

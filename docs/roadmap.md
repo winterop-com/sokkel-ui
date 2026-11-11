@@ -6,7 +6,12 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.15.11** is the latest release (2026-11-11): a plain `DataTable` leaves the checkbox and its
+- **0.16.0** is the latest release (2026-11-11): `SchemaForm` draws maps of scalars as key/value rows
+  and scalar unions as one box, shows an unset default without writing it, and names a sealed
+  secret's Replace by its field.
+- **0.15.12** (2026-11-11): `ChartFrame` shows its chart's rows as a table in a
+  data view.
+- **0.15.11** (2026-11-11): a plain `DataTable` leaves the checkbox and its
   measuring watches out of the start bundle (budgets lowered), `Button` `busy`, `PageState` `onRetry`,
   and a `DropZone` that hands its refusals to `FileField`.
 - **0.15.10** (2026-11-11): a stacked `ItemHeading`'s code wraps at its own
@@ -244,18 +249,19 @@ to `plan.md` when it ships.
   ignore a `::-webkit-scrollbar-track` offset. The fix moves the head out of the scrolling box and
   keeps it in step sideways (pinned columns, bands and resizing with it). Cosmetic; look into it.
 
-- **Size budgets are a ceiling.** `size/budget.json` holds the dashboard at 197.9 kB and forms at
-  191.8 kB (2026-11-11), each its start plus at most 0.5 kB; the dashboard's came down from 200 kB
-  once a plain `DataTable` stopped carrying Base UI's checkbox. A change over them trims first, and
-  they come down as the trim pass below frees room.
+- **Size budgets are a ceiling.** `size/budget.json` holds the dashboard at 200.7 kB and forms at
+  191.8 kB (2026-11-11), each its start plus at most 0.5 kB. The dashboard's came down from 200 kB
+  to 197.9 once a plain `DataTable` stopped carrying Base UI's checkbox, then the owner raised it
+  to 200.7 for `ChartFrame`'s data view: its table loads on first use, but that dynamic import
+  splits modules the page already holds into extra start chunks, each compressed on its own. A
+  loader that lets `DataTable` register itself when it loads may win those 2.3 kB back. A change
+  over the budgets trims first, and they come down as room is freed.
 
 - **Smaller start bundles, what is left.** Every library only some parts need is an optional peer,
   and the heavy ones, Base UI's menu among them, load on first use. Left:
     - On a dashboard, `chartLegend` still brings every chart kind with the page. Split each kind's
       shaping of rows, which the legend needs, from its option builder, which can load with ECharts.
-    - The forms page carries Base UI's checkbox for `CheckboxField` and `SchemaForm` (about 2 kB):
-      the box a `DataTable` draws until the checkbox loads (`ui/checkbox-look`) could stand in for
-      them too. A plain `DataTable` still brings `SelectionBar`, the pager's `NativeSelect` and the
+    - A plain `DataTable` still brings `SelectionBar`, the pager's `NativeSelect` and the
       row menus' `primitives/context-menu` (about 1.2 kB), each drawn at once when used.
     - The palette's lazy chunk carries cmdk's `Command.Dialog` and the Radix dialog stack behind it
       (about 21 kB), which cmdk attaches whether or not it is used. Replace or vendor cmdk.

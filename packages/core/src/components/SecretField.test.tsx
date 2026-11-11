@@ -33,6 +33,15 @@ describe('a secret field', () => {
         expect(typed).toContain('value="tdv_0000"')
     })
 
+    it("names Replace by the field's label", () => {
+        expect(renderToStaticMarkup(<SecretField id="pw" label="Password" sealed />)).toContain('aria-label="Replace password"')
+        expect(renderToStaticMarkup(<SecretField id="token" label="API token" sealed />)).toContain('aria-label="Replace API token"')
+        const own = renderToStaticMarkup(
+            <SecretField id="pw" label="Password" sealed words={{ replaceLabel: (label) => `Change ${label}` }} />,
+        )
+        expect(own).toContain('aria-label="Change Password"')
+    })
+
     it('offers no Replace when read only', () => {
         const html = renderToStaticMarkup(<SecretField id="token" label="API token" sealed readOnly />)
         expect(html).not.toContain('Replace')
@@ -65,9 +74,29 @@ describe("a schema form's secrets", () => {
         expect(html.match(/data-slot="secret-field"/g)).toHaveLength(2)
         expect(html).toContain('>Replace<')
         expect(html.match(/type="password"/g)).toHaveLength(1)
+        expect(html).toContain('aria-label="Replace token"')
         expect(state?.value).toEqual({ host: 'api.example.org' })
         expect(state?.sealed(['token'])?.setAt).toBe(NOW)
         expect(state?.sealed(['signing'])).toBeUndefined()
+    })
+
+    it('gives each sealed secret a Replace of its own name', () => {
+        function Form() {
+            const form = useSchemaForm(
+                {
+                    type: 'object',
+                    properties: {
+                        token: { type: 'string', title: 'API token', writeOnly: true },
+                        signing: { type: 'string', title: 'Signing secret', writeOnly: true },
+                    },
+                },
+                { initial: {}, sealed: [{ path: ['token'] }, { path: ['signing'] }] },
+            )
+            return <SchemaForm form={form} marks={false} />
+        }
+        const html = renderToStaticMarkup(<Form />)
+        expect(html).toContain('aria-label="Replace API token"')
+        expect(html).toContain('aria-label="Replace signing secret"')
     })
 
     it('asks for nothing more of a required secret that is set', async () => {

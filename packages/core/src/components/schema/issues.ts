@@ -72,6 +72,39 @@ export function fieldSchema(schema: JsonSchema, root: JsonSchema): JsonSchema {
     return { ...resolve(real[0], root), ...rest }
 }
 
+const SCALARS = ['integer', 'number', 'boolean', 'string']
+
+/**
+ * The scalar types a field takes when it takes more than one and nothing else, as `anyOf` of
+ * `{type: string}` and `{type: integer}` with no `type` of its own, or `type: [string, integer]`;
+ * undefined for any other field. `null` is left out.
+ */
+export function scalarUnion(schema: JsonSchema, root: JsonSchema): string[] | undefined {
+    const variants = schema.anyOf ?? schema.oneOf
+    if (schema.enum !== undefined || (variants !== undefined && schema.type !== undefined)) return undefined
+    const all = (variants ?? [schema]).flatMap((variant) => {
+        const at = resolve(variant, root)
+        // A branch of set values counts as their types: `30` or `"none"`.
+        const values = at.const !== undefined ? [at.const] : at.enum
+        return values === undefined ? types(at).main : values.flatMap((one) => (one === null ? [] : [typeof one]))
+    })
+    const kinds = [...new Set(all)]
+    return kinds.length > 1 && kinds.every((type) => SCALARS.includes(type)) ? kinds : undefined
+}
+
+/**
+ * Text typed for a field that takes several scalar types, read as the narrowest it parses as: an
+ * integer, then a number, then true or false, else the text itself; undefined for nothing typed.
+ */
+export function readScalar(text: string, allowed: readonly string[]): unknown {
+    const trimmed = text.trim()
+    if (trimmed === '') return undefined
+    if (allowed.includes('integer') && /^[+-]?\d+$/.test(trimmed)) return Number(trimmed)
+    if (allowed.includes('number') && /^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i.test(trimmed)) return Number(trimmed)
+    if (allowed.includes('boolean') && (trimmed === 'true' || trimmed === 'false')) return trimmed === 'true'
+    return text
+}
+
 /** The value at a path, or undefined where the path runs out. */
 export function valueAt(value: unknown, path: Path): unknown {
     let current = value
