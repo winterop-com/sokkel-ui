@@ -42,6 +42,8 @@ export interface FieldProps {
     /** Whether the mark's message is open, for a form's count to open it. */
     issueOpen?: boolean
     onIssueOpenChange?: (open: boolean) => void
+    /** A part beside the label, after the hint: a badge, a link to the docs. */
+    note?: ReactNode
     /** The label names a key, so it is drawn in the code face. */
     mono?: boolean
     /** The hint is the setting's key, as a document or a command line writes it: drawn in the code face, never translated. */
@@ -97,6 +99,7 @@ export function Field({
     issues: issuesGiven = [],
     issueOpen,
     onIssueOpenChange,
+    note,
     mono = false,
     keyHint = false,
     children,
@@ -147,6 +150,7 @@ export function Field({
                 {hint !== undefined && (
                     <span className={cn('text-xs', keyHint ? 'font-mono text-muted-foreground' : 'text-faint')}>{hint}</span>
                 )}
+                {note}
             </div>
             {description !== undefined ? (
                 <p id={`${id}-description`} className={cn('text-body text-pretty text-muted-foreground', lined && 'pt-1.5')}>

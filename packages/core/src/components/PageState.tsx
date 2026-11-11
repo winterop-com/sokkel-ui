@@ -1,9 +1,12 @@
-import { CircleAlert, Loader2, RotateCw } from 'lucide-react'
+import { CircleAlert, Loader2, RotateCw, TriangleAlert } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { ProseText } from './ProseText'
 import { Button } from './ui/button'
+
+/** How a failed read is drawn: as the page's failure, or as a warning over data the page can do without. */
+export type PageStateTone = 'critical' | 'warning'
 
 /** How a read came back, when the caller kept it: an HTTP status, or no answer at all. */
 export type ReadOutcome = number | 'unreachable'
@@ -59,6 +62,11 @@ export interface PageStateProps {
     emptyRender?: ReactNode
     /** Reads again after a failure, from a button under the diagnostic. */
     onRetry?: () => void
+    /**
+     * How a failure is drawn: `critical`, the page's own read failing, or `warning`, a read of
+     * secondary data the page stands without, in the warning tone.
+     */
+    tone?: PageStateTone
     words?: Partial<PageStateWords>
     children: ReactNode
 }
@@ -67,7 +75,9 @@ export interface PageStateProps {
  * The states a read lands in, kept distinct all the way to the screen: loading, failed, empty, and
  * the content. A failure is headed by what the server answered, with its own diagnostic under the
  * heading; a string diagnostic has its backticked parts drawn in the code face. `onRetry` puts a
- * button that reads again under the diagnostic, as a dashboard panel's failure has one.
+ * button that reads again under the diagnostic, as a dashboard panel's failure has one. `tone`
+ * `warning` draws a failed read of secondary data, such as a side list beside the page's own
+ * content, as a warning rather than the page's failure, announced politely rather than as an alert.
  */
 export function PageState({
     loading,
@@ -77,6 +87,7 @@ export function PageState({
     emptyMessage,
     emptyRender,
     onRetry,
+    tone = 'critical',
     words: given,
     children,
 }: PageStateProps) {
@@ -90,11 +101,16 @@ export function PageState({
         )
     }
     if (error !== undefined && error !== null && error !== false) {
+        const warning = tone === 'warning'
         return (
-            <Frame>
-                <CircleAlert className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden />
+            <Frame className={cn(warning && 'border-warning/35 bg-warning/8')}>
+                {warning ? (
+                    <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warning-ink" aria-hidden />
+                ) : (
+                    <CircleAlert className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden />
+                )}
                 <div className="flex min-w-0 flex-col gap-3">
-                    <div role="alert" className="flex min-w-0 flex-col gap-1">
+                    <div role={warning ? 'status' : 'alert'} className="flex min-w-0 flex-col gap-1">
                         <p className="font-medium">{pageStateHeading(status, words)}</p>
                         <p className="text-xs break-words text-muted-foreground">
                             {typeof error === 'string' ? <ProseText text={error} /> : error}

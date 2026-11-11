@@ -5,7 +5,15 @@ import { describe, expect, it } from 'vitest'
 import { readScalar, scalarUnion } from './issues'
 import { objectOf, repeatedKeys, rowsOf } from './MapField'
 import type { JsonSchema } from './read'
-import { initialValue, SchemaForm, useSchemaForm, type SchemaFieldRenderer } from './SchemaForm'
+import {
+    initialValue,
+    loadSchemaChecks,
+    SchemaForm,
+    useSchemaForm,
+    type SchemaFieldRenderer,
+    type SchemaFormState,
+    type ServerIssue,
+} from './SchemaForm'
 import { validate } from './validate'
 
 function Form({ schema, initial, field }: { schema: JsonSchema; initial: unknown; field?: SchemaFieldRenderer }) {
@@ -246,5 +254,121 @@ describe('a field left at its default', () => {
         const html = render(schema, { priority: 'normal', paused: false })
         expect(html).not.toContain('normal (default)')
         expect(html).not.toContain('>default</span>')
+    })
+})
+
+describe('a folded form', () => {
+    const schema: JsonSchema = {
+        type: 'object',
+        required: ['code'],
+        properties: {
+            code: { type: 'string', title: 'Code' },
+            name: { type: 'string', title: 'Name' },
+            region: { type: 'string', title: 'Region' },
+            retries: { type: 'integer', title: 'Retries' },
+        },
+    }
+
+    function Folded({ initial, issues }: { initial: unknown; issues?: readonly ServerIssue[] }) {
+        const form = useSchemaForm(schema, { initial, issues })
+        return <SchemaForm form={form} marks={false} fold />
+    }
+
+    it('shows the required and set fields and puts the rest behind one disclosure', () => {
+        const html = renderToStaticMarkup(<Folded initial={{ name: 'Nightly export' }} />)
+        expect(html).toContain('>Code<')
+        expect(html).toContain('>Name<')
+        expect(html).not.toContain('>Region<')
+        expect(html).toMatch(/<button[^>]*aria-expanded="false"[^>]*>2 more fields<\/button>/)
+    })
+
+    it('opens by itself while a folded field has an issue to show', () => {
+        const html = renderToStaticMarkup(
+            <Folded initial={{ code: 'nightly-export' }} issues={[{ path: ['region'], text: 'No such region' }]} />,
+        )
+        expect(html).toContain('>Region<')
+        expect(html).toContain('>Fewer fields<')
+    })
+})
+
+describe('a form held from outside', () => {
+    const schema: JsonSchema = { type: 'object', properties: { code: { type: 'string' }, name: { type: 'string' } } }
+
+    it('draws the value it is given and says each change, keeping none of its own', () => {
+        const heard: unknown[] = []
+        let state: SchemaFormState | undefined
+        function Held() {
+            state = useSchemaForm(schema, { value: { code: 'sync-inventory' }, onChange: (value) => heard.push(value) })
+            return <SchemaForm form={state} marks={false} />
+        }
+        expect(renderToStaticMarkup(<Held />)).toMatch(/<input[^>]*value="sync-inventory"/)
+        state?.set(['name'], 'Sync inventory')
+        state?.set(['code'], 'sync-orders')
+        expect(heard).toEqual([
+            { code: 'sync-inventory', name: 'Sync inventory' },
+            { code: 'sync-orders', name: 'Sync inventory' },
+        ])
+        expect(state?.value).toEqual({ code: 'sync-inventory' })
+    })
+})
+
+describe('a quiet block', () => {
+    const schema: JsonSchema = { type: 'object', required: ['code'], properties: { code: { type: 'string' } } }
+
+    it('says whether the value would be refused before any issue is shown', async () => {
+        await loadSchemaChecks()
+        const read = (initial: unknown) => {
+            let state: SchemaFormState | undefined
+            function Quiet() {
+                state = useSchemaForm(schema, { initial })
+                return null
+            }
+            renderToStaticMarkup(<Quiet />)
+            return { blocking: state?.blocking, shown: state?.count.critical }
+        }
+        expect(read({})).toEqual({ blocking: true, shown: 0 })
+        expect(read({ code: 'send-digest' })).toEqual({ blocking: false, shown: 0 })
+    })
+})
+
+describe("an app's own field in parts", () => {
+    it('sets its note beside the label, its row under the control, and the mark on the control', async () => {
+        await loadSchemaChecks()
+        function Parts() {
+            const form = useSchemaForm(
+                { type: 'object', required: ['query'], properties: { query: { type: 'string', title: 'Query' } } },
+                { initial: {}, defaultSubmitted: true },
+            )
+            return (
+                <SchemaForm
+                    form={form}
+                    marks={false}
+                    field={(field) => ({
+                        control: <input id={field.id} data-own="" />,
+                        below: <p data-below="">Runs on the worker</p>,
+                        note: <span data-note="">SQL</span>,
+                    })}
+                />
+            )
+        }
+        const html = renderToStaticMarkup(<Parts />)
+        expect(html).toMatch(/<\/label><span data-note="">SQL<\/span>/)
+        expect(html).toMatch(/<div class="relative min-w-0"><input[^>]*data-own=""\/><button[^>]*aria-label="Error: Enter a value"/)
+        expect(html).toMatch(/<\/div><p data-below="">/)
+    })
+})
+
+describe("a schema form's secret words", () => {
+    it('reach the secret field', () => {
+        function Words() {
+            const form = useSchemaForm(
+                { type: 'object', properties: { token: { type: 'string', title: 'API token', writeOnly: true } } },
+                { initial: {}, sealed: [{ path: ['token'] }], words: { secret: { set: 'Kept', replace: 'Change' } } },
+            )
+            return <SchemaForm form={form} marks={false} />
+        }
+        const html = renderToStaticMarkup(<Words />)
+        expect(html).toContain('>Kept<')
+        expect(html).toContain('>Change<')
     })
 })

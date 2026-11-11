@@ -232,9 +232,17 @@ keeps its editing keys in a field for every other binding. Keys are quiet while 
 field, where a slider keeps its arrows and a button its Space, and while a dialog, a sheet, a menu,
 an overlay or the shell's palette is open, unless a binding asks (`inFields`, `inDialogs`); `scope`
 hears a binding only inside an element marked `data-shortcut-scope`, before the same key outside it.
-A later screen's binding comes before an earlier one's, and the shell's own (the palette's ⌘K or
-Ctrl K, which a second press closes; `?`) come last. `ShortcutsDialog` lists every binding with a
-`label` under its `group`, its keys written by `keyLabels` as the device writes them, then the
+A binding with `next` is a sequence, G then D (`key: 'g', next: 'd'`) for a two-key way to a
+place: the second key must come within a second, a sequence is never heard in a field, whatever
+`inFields` says, and a pending first key is dropped on Escape, on any other key and when the time
+runs out. A single-key binding on a sequence's first key still runs once it is clear no second key
+is coming: when the time runs out, or at once when another key follows, which is then heard as
+itself. Refusing the clash instead would leave a screen's key and a sequence bound elsewhere to
+fail where they meet; the wait falls only on a key that starts a sequence, and every other key runs
+at once. A later screen's binding comes before an earlier one's, and the shell's own (the palette's
+⌘K or Ctrl K, which a second press closes; `?`) come last. `ShortcutsDialog` lists every binding with a
+`label` under its `group`, its keys written by `keyLabels` as the device writes them, a sequence as
+its two keys with "then" between (the word `sequence`, which the app can give), then the
 groups an app gives for keys it answers itself, each shortcut known by its id and keys together: an
 app's on a bound one's id but other keys is listed beside it, and one on the same id and keys is
 listed once, in the app's words and group; `Shell`'s `shortcuts` makes the shell hold it,
@@ -245,10 +253,13 @@ is a binding too, on the field's own input, so no mark on the box finds it; an a
 itself turns `shortcut` off and can mark the input with a `data-*` attribute through `inputProps`,
 which passes any `aria-*` or `data-*` on. Its `label` names the field (as "Search jobs") where the
 placeholder stays Search, the page around it naming what is searched. The palette can be held from outside (`paletteOpen`, `onPaletteOpenChange`). Left
-to itself it opens only where nothing stands over the page; `mayOpenPalette(over)` is asked first
-with the layer on top (a dialog, a sheet, a menu or an overlay from `useOverlay`, or null) and
-decides in its place: no over an app's own full-screen view, yes over an app's own search, which
-the app closes as the palette opens. On a touch screen the palette has a Close button.
+to itself it opens where nothing stands over the page, and over a `Search`'s results, such as the
+top bar's, which close as it opens, the palette taking the search's place; over any other layer it
+stays closed. `mayOpenPalette(over)` is asked first with the layer on top (a dialog, a sheet, a
+menu, a search's results or an overlay from `useOverlay`, or null) and decides in its place: no
+over an app's own full-screen view, yes over an app's own search, which the app closes as the
+palette opens. `overSearch(over)`, from `Shell`, says whether the layer is a `Search`'s results, so
+an app's own rule never reads how the library marks them. On a touch screen the palette has a Close button.
 
 `useOverlay(open, { onClose })` makes an app's own overlay behave as a dialog: the page outside it
 inert, focus moved in, Escape closing the one on top, and focus back where it was; `Shell`'s drawer
@@ -390,7 +401,10 @@ them all.
 `Banner` is the strip at a screen's edge for a state that holds; `Callout` is a boxed note in the
 content beside what it is about, in five tones (neutral among them) with a hairline edge all the
 way round and no colored rule; `Problem` says what went wrong for a person, the raw message folded
-away. `Surface` sets content on a card's ground, a panel's (`well`) or the page's (`inset`) and
+away; `PageState` draws the states a read lands in (loading, failed, empty, the content), a failure
+headed by what the server answered, with `onRetry` for a way to read again, and `tone="warning"`
+for a failed read of secondary data the page stands without, drawn in the warning tone and
+announced as a status rather than as the page's failure. `Surface` sets content on a card's ground, a panel's (`well`) or the page's (`inset`) and
 clips nothing, so a focus ring at its edge shows whole; unpadded, its first and last children take
 its corners.
 
@@ -443,6 +457,15 @@ and left out of the value; a field that takes several scalar types (`anyOf` of a
 integer, as "16KB" or 16384) is one text box, read as the narrowest type the text parses as
 (integer, number, boolean, then text) and checked against the schema. A field's own refusal of what
 was typed is held with `hold`, which stops the submit as an issue does.
+`fold` shows the required fields and those set when the form is first drawn and puts the rest
+behind one disclosure ("3 more fields", `words.more`), which opens by itself while one of them has
+an issue to show. `useSchemaForm` holds its own value from `initial`, or follows one held from
+outside (`value`, `onChange`), as a document edited in an editor beside it; `blocking` says whether
+the value would be refused, shown yet or not, so a verb can be shut quietly. The `field` hook
+answers a control or its parts: the `control` the issue mark sits on, a row `below` it, and a `note`
+beside the label (`Field`'s `note`). `words.secret` reaches each `SecretField`. The words for each
+issue load with the checker (`schema/issue-words`), since nothing but a number that does not read and
+a checker that cannot be fetched is said before it.
 `ItemHeading` is the heading `ItemCard` draws for one thing, on its own: the name, else the code,
 the code drawn once in the code face under the name (`stacked`) or beside it (`inline`), in a
 panel's or a dialog's size, with a leading `glyph`, `chips` and a one-line `description`.

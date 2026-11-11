@@ -27,7 +27,8 @@ export function useShortcutRegistry(): ShortcutRegistryHandle {
  * Binds a screen's keys while the screen is mounted, and takes them away when it unmounts. Each
  * binding names its key by the character it types, with `mod` (⌘ on a Mac, Ctrl elsewhere), `shift`
  * and `alt`, and is quiet while typing in a field and while a dialog, a menu or an overlay is open,
- * unless it asks (`inFields`, `inDialogs`). A `label` lists it in the shortcuts dialog under its
+ * unless it asks (`inFields`, `inDialogs`). `next` makes it a two-key sequence (G then D), the
+ * second key pressed within a second and never in a field. A `label` lists it in the shortcuts dialog under its
  * `group`. `deps` are what the bindings are made from, as for `useMemo`: they are set again, in the
  * same place, when one changes. A screen's binding comes before the shell's own for the same keys.
  */

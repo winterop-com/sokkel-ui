@@ -62,6 +62,8 @@ export const PRIVATE: Record<PackageDir, Record<string, string>> = {
             "a model's thinking folded behind a line, which `AssistantReply` and `AnswerColumn` draw; `wordCount` is exported by `AssistantReply`",
         'components/schema/checker':
             '`validate` loaded on first use, for `SchemaForm` and `CodeEditor`; an app preloads it with `loadSchemaChecks`',
+        'components/schema/checks': 'what the checker loads in one fetch: `validate` and the words for its issues',
+        'components/schema/issue-words': "`SchemaForm`'s words for each issue, loaded with the checker",
         'components/schema/MapField': "`SchemaForm`'s key/value table for a map of scalars",
         'components/settings-parts':
             'what `SettingsDialog` and `SettingsView` share: the search, the sections, the rows and the reset; their types are exported by both',
@@ -85,6 +87,8 @@ export const PRIVATE: Record<PackageDir, Record<string, string>> = {
         'lib/percent': 'how the library writes a share as a percent',
         'lib/scroll-memory': "where `useScrollMemory` keeps a scroller's place",
         'lib/shortcuts': 'the key registry `useShortcuts` binds in; its types are exported by `hooks/use-shortcuts` and `ShortcutsDialog`',
+        'lib/shortcut-groups':
+            'what the shortcuts dialog lists, kept apart from the registry so only the dialog carries it; its types are exported by `ShortcutsDialog` and `Shell`',
         'lib/table': "the head text every table shares, a layout constant, and the columns' order, which `lib/list-views` exports",
         'lib/theme-list': 'the theme list `lib/appearance` exports as `THEMES`',
         'lib/uploads': 'the store behind `useUploads`, which exports its types',

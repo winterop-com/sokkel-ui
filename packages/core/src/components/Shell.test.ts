@@ -44,4 +44,12 @@ describe('Shell', () => {
     it('draws the rail in its drawer under the drawer context, so it draws expanded there', () => {
         expect(SOURCE).toContain('<ShellDrawer value={drawerContext}>{rail}</ShellDrawer>')
     })
+
+    it("opens its palette by the one rule, which lets it over a search's results, and tells a Search it opened", () => {
+        expect(SOURCE).toContain('if (!paletteMayOpen(shortcutRegistry, latest.current.mayOpenPalette)) return')
+        expect(SOURCE).toContain('<ShellPaletteOpen value={palette !== undefined && paletteIsOpen}>')
+        const search = readFileSync(join(import.meta.dirname, 'Search.tsx'), 'utf8')
+        expect(search).toContain('useContext(ShellPaletteOpen)')
+        expect(search).toMatch(/if \(paletteOpen && open\) setOpen\(false\)/)
+    })
 })

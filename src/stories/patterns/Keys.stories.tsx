@@ -23,22 +23,41 @@ import { TidevannMark } from '../fixtures/TidevannMark'
  * Keys a screen binds with `useShortcuts` while it is mounted, answered by the `Shell` around it:
  * matched by the character typed, so they work on any keyboard layout, quiet while typing in a field
  * and under a dialog, and listed by the shell's shortcuts dialog with the keys the shell binds itself
- * (⌘K or Ctrl+K for the palette, `?` for the dialog) and those the app answers on its own.
+ * (⌘K or Ctrl+K for the palette, `?` for the dialog) and those the app answers on its own. Two-key
+ * sequences (G then R) take the app to its places.
  */
 const meta: Meta = { title: 'Patterns/Keys' }
 export default meta
 
-const PLACES: RailGroup[] = [
+const ENTRIES = [
+    { id: 'runs', label: 'Runs', icon: Play, key: 'r' },
+    { id: 'schedules', label: 'Schedules', icon: CalendarClock, key: 's' },
+    { id: 'jobs', label: 'Jobs', icon: Workflow, key: 'j' },
+]
+
+const placesAt = (place: string): RailGroup[] => [
     {
         id: 'operate',
         title: 'Operate',
-        entries: [
-            { id: 'runs', label: 'Runs', icon: Play, href: '#', active: true },
-            { id: 'schedules', label: 'Schedules', icon: CalendarClock, href: '#' },
-            { id: 'jobs', label: 'Jobs', icon: Workflow, href: '#' },
-        ],
+        entries: ENTRIES.map(({ id, label, icon }) => ({ id, label, icon, href: '#', active: id === place })),
     },
 ]
+
+/** G then a place's letter goes there, from any screen, as a two-key sequence. */
+function PlaceKeys({ onGo }: { onGo: (place: string) => void }) {
+    useShortcuts(
+        ENTRIES.map((entry) => ({
+            id: `go-${entry.id}`,
+            key: 'g',
+            next: entry.key,
+            label: entry.label,
+            group: 'Go to',
+            run: () => onGo(entry.id),
+        })),
+        [onGo],
+    )
+    return null
+}
 
 /**
  * Keys the app answers itself, outside the registry, listed after the bound ones, and the search's
@@ -136,11 +155,13 @@ function RunScreen() {
 
 function KeysFrame({ dialog = false, palette = false }: { dialog?: boolean; palette?: boolean }) {
     const [keysOpen, setKeysOpen] = useState(dialog)
+    const [place, setPlace] = useState('runs')
+    const label = ENTRIES.find((entry) => entry.id === place)?.label ?? 'Runs'
     return (
         <TooltipProvider>
             <Shell
                 palette={[
-                    ...placeCommands(PLACES, () => undefined),
+                    ...placeCommands(placesAt(place), () => undefined),
                     {
                         title: 'Help',
                         commands: [
@@ -162,20 +183,31 @@ function KeysFrame({ dialog = false, palette = false }: { dialog?: boolean; pale
                     <Rail
                         mark={<TidevannMark />}
                         name="Tidevann"
-                        groups={PLACES}
+                        groups={placesAt(place)}
                         foot={<AccountMenu name="ada" where="tidevann.example.org" />}
                     />
                 }
                 top={
                     <TopBar
-                        trail={[
-                            { label: 'Runs', href: '#' },
-                            { label: '01a1a5c2', code: true },
-                        ]}
+                        trail={
+                            place === 'runs'
+                                ? [
+                                      { label: 'Runs', href: '#' },
+                                      { label: '01a1a5c2', code: true },
+                                  ]
+                                : [{ label }]
+                        }
                     />
                 }
             >
-                <RunScreen />
+                <PlaceKeys onGo={setPlace} />
+                {place === 'runs' ? (
+                    <RunScreen />
+                ) : (
+                    <Page>
+                        <PageHeader title={label} description="Every one in harbor." />
+                    </Page>
+                )}
             </Shell>
         </TooltipProvider>
     )
@@ -183,14 +215,15 @@ function KeysFrame({ dialog = false, palette = false }: { dialog?: boolean; pale
 
 /**
  * A run's page binds R (run again), Shift+R (from the failed step) and L (the log); its search takes
- * `/`. None of them fires while typing in the search. `?` opens the shortcuts, as the account menu's
- * Keyboard shortcuts does, and the page's Shortcuts button through `useShell`.
+ * `/`. None of them fires while typing in the search. G then R, S or J goes to Runs, Schedules or
+ * Jobs, the second key pressed within a second of the first. `?` opens the shortcuts, as the account
+ * menu's Keyboard shortcuts does, and the page's Shortcuts button through `useShell`.
  */
 export const ScreenKeys: StoryObj = { name: 'Screen keys', render: () => <KeysFrame /> }
 
 /**
- * The shell's shortcuts dialog over the page: the screen's keys under its group, the shell's own
- * under General with the keys the app lists itself, each written as this device writes it. The app
+ * The shell's shortcuts dialog over the page: the screen's keys under its group, the places'
+ * sequences under Go to, drawn as two keys with "then" between, the shell's own under General with the keys the app lists itself, each written as this device writes it. The app
  * lists the search's `/` on its id in its own words, which stand in the bound one's place.
  */
 export const Dialog: StoryObj = { name: 'Shortcuts dialog', render: () => <KeysFrame dialog /> }

@@ -1,11 +1,11 @@
 import { useMemo } from 'react'
 
 import { useRegisteredShortcuts } from '../hooks/use-shortcuts'
-import { shortcutGroups, type ShortcutGroup } from '../lib/shortcuts'
+import { shortcutGroups, type ShortcutGroup } from '../lib/shortcut-groups'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog'
 import { Kbd, KbdGroup } from './ui/kbd'
 
-export type { Shortcut, ShortcutGroup } from '../lib/shortcuts'
+export type { Shortcut, ShortcutGroup } from '../lib/shortcut-groups'
 export { applePlatform } from '../lib/keys'
 
 /** The words the shortcuts dialog says. */
@@ -13,14 +13,28 @@ export interface ShortcutsDialogWords {
     title: string
     /** The heading over bound keys that name no group. */
     general: string
+    /** Between the two keys of a sequence, as G then D. */
+    sequence: string
 }
 
 const WORDS: ShortcutsDialogWords = {
     title: 'Keyboard shortcuts',
     general: 'General',
+    sequence: 'then',
 }
 
 const NONE: readonly ShortcutGroup[] = []
+
+/** The keys of one press, held together. */
+function Keys({ keys }: { keys: readonly string[] }) {
+    return (
+        <KbdGroup>
+            {keys.map((key, index) => (
+                <Kbd key={`${index}-${key}`}>{key}</Kbd>
+            ))}
+        </KbdGroup>
+    )
+}
 
 export interface ShortcutsDialogProps {
     open: boolean
@@ -36,6 +50,7 @@ export interface ShortcutsDialogProps {
  * writes them, then the `groups` given for keys the app answers itself. Groups of one title are one.
  * A shortcut is known by its id and keys together: one of the app's on the same id as a bound one
  * but other keys is listed beside it, and one on the same id and keys is listed once, in the app's words.
+ * A sequence is drawn as its first keys, the word `sequence` (then), and its second keys.
  * `Shell` holds one, opened on `?` and from the account menu, when given `shortcuts`.
  */
 export function ShortcutsDialog({ open, onOpenChange, groups = NONE, words: given }: ShortcutsDialogProps) {
@@ -55,16 +70,18 @@ export function ShortcutsDialog({ open, onOpenChange, groups = NONE, words: give
                             <dl className="flex flex-col gap-1.5">
                                 {group.shortcuts.map((shortcut) => (
                                     <div
-                                        key={`${shortcut.id} ${shortcut.keys.join(' ')}`}
+                                        key={`${shortcut.id} ${shortcut.keys.join(' ')} ${(shortcut.next ?? []).join(' ')}`}
                                         className="flex items-center justify-between gap-4"
                                     >
                                         <dt className="text-sm">{shortcut.action}</dt>
-                                        <dd>
-                                            <KbdGroup>
-                                                {shortcut.keys.map((key, index) => (
-                                                    <Kbd key={`${index}-${key}`}>{key}</Kbd>
-                                                ))}
-                                            </KbdGroup>
+                                        <dd className="flex shrink-0 items-center gap-1.5">
+                                            <Keys keys={shortcut.keys} />
+                                            {shortcut.next !== undefined && (
+                                                <>
+                                                    <span className="text-xs text-muted-foreground">{words.sequence}</span>
+                                                    <Keys keys={shortcut.next} />
+                                                </>
+                                            )}
                                         </dd>
                                     </div>
                                 ))}
