@@ -1,9 +1,10 @@
-import { SearchIcon, type LucideIcon } from 'lucide-react'
+import { ArrowRight, SearchIcon, type LucideIcon } from 'lucide-react'
 import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import { useSearch } from '../hooks/use-search'
 import { activeRow, filterCommands, mergeCommands, termScore } from '../lib/commands'
 import { keyLabels } from '../lib/keys'
+import { cn } from '../lib/utils'
 import type { SearchGroup, SearchResult, SearchSource } from '../lib/search'
 import { SearchResultBody } from './Search'
 import { Button } from './ui/button'
@@ -89,6 +90,8 @@ export interface PaletteSearch {
     search: SearchSource
     /** Opens a result the person chose; the palette closes first. */
     onOpen: (result: SearchResult, group: SearchGroup) => void
+    /** Goes to the full results page for the query; the list ends in a row to it when given. The palette closes first. */
+    onSeeAll?: (query: string) => void
     /** Characters needed before the search is asked. */
     minQuery?: number
     /** Milliseconds of quiet typing before the search is asked again. */
@@ -103,6 +106,8 @@ export interface PaletteSearchWords {
     failed: (reason: string) => string
     /** The row that asks a failed search again. */
     retry: string
+    /** The row that goes to the full results page for the query. */
+    seeAll: (query: string) => string
 }
 
 /**
@@ -225,6 +230,9 @@ export function CommandPalette({
     // An earlier query's results stay while the next answer comes, dimmed and passed over.
     const stale = answer.state === 'loading'
     const said = search?.words
+    const trimmed = query.trim()
+    // The row to the full results page stays in sight under the scrolling rows.
+    const seeAll = search?.onSeeAll !== undefined && trimmed !== ''
     const verbs = useMemo(() => {
         const byValue = new Map<string, string>()
         for (const group of merged)
@@ -250,7 +258,7 @@ export function CommandPalette({
         <CommandDialog open={open} onOpenChange={onOpenChange} title={words.title} description={words.placeholder}>
             <Command shouldFilter={score === undefined} className="p-(--palette-inset)" value={chosen} onValueChange={setChosen}>
                 <CommandInput placeholder={words.placeholder} value={query} onValueChange={setQuery} />
-                <CommandList ref={list} className="max-h-[min(24rem,60svh)] scroll-fade-b pb-1.5">
+                <CommandList ref={list} className={cn('max-h-[min(24rem,60svh)]', seeAll ? 'scroll-pb-12' : 'scroll-fade-b pb-1.5')}>
                     {found.length === 0 && (answer.state === 'idle' || answer.state === 'done') && (
                         <CommandEmpty>{words.empty}</CommandEmpty>
                     )}
@@ -328,7 +336,7 @@ export function CommandPalette({
                                                 search.onOpen(result, group)
                                             }}
                                         >
-                                            <SearchResultBody result={result} query={query.trim()} />
+                                            <SearchResultBody result={result} query={trimmed} />
                                         </CommandItem>
                                     ))}
                                 </CommandGroup>
@@ -350,6 +358,25 @@ export function CommandPalette({
                         <CommandItem className={ROW} value="search retry" forceMount onSelect={answer.retry}>
                             <SearchIcon className="text-muted-foreground" aria-hidden />
                             {said?.retry ?? 'Retry'}
+                        </CommandItem>
+                    )}
+                    {seeAll && (
+                        <CommandItem
+                            className={cn(
+                                ROW,
+                                'sticky bottom-0 mt-1.5 bg-popover before:absolute before:inset-x-0 before:-top-1.5 before:h-1.5 before:border-b before:border-border before:bg-popover',
+                            )}
+                            value="search see-all"
+                            forceMount
+                            onSelect={() => {
+                                onOpenChange(false)
+                                search.onSeeAll?.(trimmed)
+                            }}
+                        >
+                            <span className="min-w-0 flex-1 truncate text-muted-foreground">
+                                {said?.seeAll?.(trimmed) ?? `See all results for “${trimmed}”`}
+                            </span>
+                            <ArrowRight className="text-muted-foreground" aria-hidden />
                         </CommandItem>
                     )}
                 </CommandList>
