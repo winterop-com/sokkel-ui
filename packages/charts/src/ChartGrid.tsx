@@ -5,6 +5,7 @@ import { Columns, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { useSpec } from './Chart'
 import { distinct, labelOf } from './data'
 import { EChart } from './EChart'
+import { useFrameData } from './frame-data'
 import type { ChartKind, ChartSpec } from './kinds'
 import { SERIES_ORDER, type ChartLook } from './look'
 import { shareScales } from './scales'
@@ -51,6 +52,7 @@ export function ChartGrid({
     ...spec
 }: ChartGridProps) {
     const kept = useSpec(spec)
+    useFrameData(kind, kept, facet)
     const panels = useMemo(() => {
         const field = kept.series ?? kept.path?.[0] ?? kept.x
         const named = field === undefined ? [] : distinct(kept.rows, field, field === kept.series ? kept.seriesOrder : kept.order)

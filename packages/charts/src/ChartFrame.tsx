@@ -1,5 +1,5 @@
 import { Download, Info, Maximize2, MoreHorizontal } from 'lucide-react'
-import { useRef, useState, type ReactNode, type RefObject } from 'react'
+import { Suspense, lazy, useRef, useState, type ReactNode, type RefObject } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { LoadingOverlay } from '@winterop-com/sokkel-ui/Loaders'
@@ -8,6 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Tooltip, TooltipContent, TooltipTrigger } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { ChartLegend, type LegendItem, type LegendStat, type LegendWords } from './ChartLegend'
 import type { ChartHandle } from './EChart'
+import { FrameDataContext, type FrameData } from './frame-data'
 import { PANEL_STATE_WORDS, PanelFailure, StaleMark } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
 
 /** What the frame hands its chart: the legend's state, the handle the chart fills for export, and where it is drawn. */
@@ -37,6 +38,10 @@ export interface ChartFrameWords {
     failed: string
     retry: string
     stale: string
+    /** The button that shows the chart's rows as a table in its place. */
+    data: string
+    /** The button that brings the chart back from its rows. */
+    chart: string
     legend?: Partial<LegendWords>
 }
 
@@ -51,8 +56,15 @@ const WORDS: ChartFrameWords = {
     away: WINDOWED_PANE_WORDS.away,
     empty: 'No data for this range.',
     loading: 'Loading',
+    data: 'Data',
+    chart: 'Chart',
     ...PANEL_STATE_WORDS,
 }
+
+const ChartDataTable = lazy(() => import('./ChartDataTable').then((module) => ({ default: module.ChartDataTable })))
+
+/** What a frame shows: the chart, or its rows as a table. */
+export type ChartFrameView = 'chart' | 'data'
 
 function save(name: string, href: string) {
     const link = document.createElement('a')
@@ -100,6 +112,13 @@ export interface ChartFrameProps {
     bodyClassName?: string
     /** The content sets the body's height, for content laid out in the page rather than drawn on a canvas. */
     fit?: boolean
+    /** Whether the head offers the chart's rows as a table in its place; on by default, for a `Chart` or `ChartGrid` drawn inside. */
+    data?: boolean
+    /** Shows the chart or its rows at first. */
+    defaultView?: ChartFrameView
+    /** Whether the chart or its rows show, held from outside with `onViewChange`. */
+    view?: ChartFrameView
+    onViewChange?: (view: ChartFrameView) => void
     words?: Partial<ChartFrameWords>
     className?: string
     children: (state: ChartState) => ReactNode
@@ -115,6 +134,9 @@ const SHORT_LEGEND = 6
  * screen through `WindowedPane`, as every expandable pane opens, with the frame keeping its place
  * until the window closes; `fullscreen` makes the page take the screen while it is open, and
  * `expanded` with `onExpandedChange` opens it from outside. The tools show on hover or focus where the pointer can hover.
+ * The Data button shows the rows of the `Chart` or `ChartGrid` inside as a table in the chart's place, in the
+ * columns its spec reads and written as the chart writes them; the table loads the first time it opens, and
+ * `data={false}` leaves the button out.
  * `children` draws the chart from the state.
  */
 export function ChartFrame({
@@ -142,6 +164,10 @@ export function ChartFrame({
     stale,
     bodyClassName = 'h-56',
     fit = false,
+    data = true,
+    defaultView = 'chart',
+    view: viewProp,
+    onViewChange,
     words: given,
     className,
     children,
@@ -156,6 +182,14 @@ export function ChartFrame({
     const setExpanded = (next: boolean) => {
         if (expandedProp === undefined) setOwnExpanded(next)
         onExpandedChange?.(next)
+    }
+
+    const [drawn, setDrawn] = useState<FrameData | null>(null)
+    const [ownView, setOwnView] = useState(defaultView)
+    const view = viewProp ?? ownView
+    const setView = (next: ChartFrameView) => {
+        if (viewProp === undefined) setOwnView(next)
+        onViewChange?.(next)
     }
 
     const toggle = (key: string) => {
@@ -183,8 +217,10 @@ export function ChartFrame({
         setTimeout(() => URL.revokeObjectURL(url), 1000)
     }
 
-    const head = title !== undefined || actions !== undefined || menu !== undefined || exportable || expandable
     const failed = error !== undefined && error !== false
+    const rows = data && drawn !== null && drawn.kind !== 'gauge' && !empty && !failed ? drawn : null
+    const tabled = rows !== null && view === 'data'
+    const head = title !== undefined || actions !== undefined || menu !== undefined || exportable || expandable || rows !== null
     const showLegend = legend !== undefined && legend.length > 0 && !empty && !failed
     const content = (
         <FrameBody
@@ -194,6 +230,7 @@ export function ChartFrame({
             fit={fit}
             bodyClassName={bodyClassName}
             words={words}
+            table={tabled ? rows : null}
             legend={
                 showLegend ? (
                     <ChartLegend
@@ -242,6 +279,19 @@ export function ChartFrame({
                     </div>
                     <div className="ml-auto flex items-center gap-1">
                         {actions}
+                        {rows !== null && (
+                            <button
+                                type="button"
+                                className={cn(
+                                    TOOL,
+                                    'w-auto px-1.5 text-xs transition-opacity group-focus-within/frame:opacity-100 group-hover/frame:opacity-100',
+                                    !tabled && '[@media(hover:hover)]:opacity-0',
+                                )}
+                                onClick={() => setView(tabled ? 'chart' : 'data')}
+                            >
+                                {tabled ? words.chart : words.data}
+                            </button>
+                        )}
                         <div className="flex items-center transition-opacity group-focus-within/frame:opacity-100 group-hover/frame:opacity-100 [@media(hover:hover)]:opacity-0">
                             {exportable && (
                                 <DropdownMenu>
@@ -294,10 +344,12 @@ export function ChartFrame({
                     words={{ expand: words.expand, close: words.close, away: words.away }}
                     className={cn('flex flex-col px-2 pb-2', !head && 'pt-2')}
                 >
-                    {content}
+                    <FrameDataContext value={setDrawn}>{content}</FrameDataContext>
                 </WindowedPane>
             ) : (
-                <div className={cn('flex min-h-0 flex-col px-2 pb-2', !head && 'pt-2')}>{content}</div>
+                <div className={cn('flex min-h-0 flex-col px-2 pb-2', !head && 'pt-2')}>
+                    <FrameDataContext value={setDrawn}>{content}</FrameDataContext>
+                </div>
             )}
         </section>
     )
@@ -312,8 +364,10 @@ function FrameBody({
     bodyClassName,
     legend,
     words,
+    table,
     children,
 }: {
+    table: FrameData | null
     loading: boolean
     empty: boolean
     failure?: ReactNode
@@ -338,7 +392,16 @@ function FrameBody({
                         {words.empty}
                     </p>
                 ) : (
-                    <div className={fit ? undefined : 'absolute inset-0'}>{children(windowed)}</div>
+                    <>
+                        <div className={cn(!fit && 'absolute inset-0', table !== null && 'invisible')}>{children(windowed)}</div>
+                        {table !== null && (
+                            <div className="absolute inset-0 overflow-auto">
+                                <Suspense>
+                                    <ChartDataTable data={table} />
+                                </Suspense>
+                            </div>
+                        )}
+                    </>
                 )}
             </LoadingOverlay>
             {legend}
