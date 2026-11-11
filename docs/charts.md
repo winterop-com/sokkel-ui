@@ -74,10 +74,25 @@ then their highs from the innermost out (`q10`, `q25`, `median`, `q75`, `q90`). 
 frame's title names or how far ahead a forecast reaches: after the drawn ones, headed by their
 `fieldNames` and written as they are. They live on the spec, beside the rows and `fieldNames` they
 read, so a `Chart`, a `ChartGrid` and a `ChartPanel` carry them to the frame alike. The first
-column stays pinned while the rest scroll sideways in a narrow frame, and a column of figures is
-only as narrow as its longest figure or head, so more of them fit. The table loads the first time the view opens, so no page carries it at start.
+column stays pinned while the rest scroll sideways in a narrow frame. Every column is as wide as its
+longest cell or head, so a period such as `2020-01` reads whole and more figures fit; a column of
+labels stops growing at 14rem. The table loads the first time the view opens, so no page carries it at start.
 `defaultView`, or `view` with `onViewChange`, opens it from the start or from outside; `data={false}`
-leaves the button out, and a gauge, a single figure, has none.
+leaves the button out, and a gauge, a single figure, has none. Every dashboard panel drawn in a frame
+(`ChartPanel`, `TimeSeriesPanel`, `BarPanel`, `ComboPanel`, `HeatmapPanel`, `RadarPanel`) takes
+`data`, `defaultView`, `view` and `onViewChange` and hands them to its frame, the view on by default.
+
+`dataColumns(kind, spec, facet?)` (`@winterop-com/sokkel-ui-charts/data-columns`) gives the data
+view's columns in order, each with its `field` and `header`, so an app's test can pin what its
+readers see:
+
+```ts
+import { dataColumns } from '@winterop-com/sokkel-ui-charts/data-columns'
+
+expect(dataColumns('fan', FORECAST).map((column) => column.header)).toEqual(['Week', 'q10', 'Median', 'q90', 'Project'])
+```
+
+`dataCell` writes a row's cell as the view writes it, and `dataTrack` gives a column's width.
 
 **Small multiples.** `ChartGrid` draws the same kind and fields once per label of `facet`, each
 from that label's rows, on one shared scale and in one set of colors, so one frame legend (with

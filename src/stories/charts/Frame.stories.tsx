@@ -6,6 +6,7 @@ import { ChartFrame } from '@winterop-com/sokkel-ui-charts/ChartFrame'
 import { ChartLegend } from '@winterop-com/sokkel-ui-charts/ChartLegend'
 import type { ChartSpec } from '@winterop-com/sokkel-ui-charts/kinds'
 import { JOB_STEP_ROWS, STEP_COLORS, STEP_ROWS } from '../fixtures/dayRows'
+import { MONTH_RUNS } from '../fixtures/monthRuns'
 import { FORECAST_START, HARBOR_ORDER_WEEKS } from '../fixtures/orderForecast'
 import { Ground } from './Ground'
 
@@ -31,6 +32,23 @@ const FORECAST: ChartSpec = {
     fieldNames: { week: 'Week', median: 'Median', observed: 'Observed', project: 'Project', ahead: 'Weeks ahead' },
 }
 const FORECAST_LEGEND = chartLegend('fan', FORECAST)
+const MONTHLY: ChartSpec = {
+    rows: MONTH_RUNS,
+    x: 'period',
+    series: 'project',
+    y: 'runs',
+    dataFields: ['failed', 'cancelled', 'skipped', 'seconds'],
+    fieldNames: {
+        period: 'Month',
+        project: 'Project',
+        runs: 'Runs',
+        failed: 'Failed',
+        cancelled: 'Cancelled',
+        skipped: 'Skipped',
+        seconds: 'Median seconds',
+    },
+}
+const MONTHLY_LEGEND = chartLegend('line', MONTHLY)
 
 /** The legend as a wrapped row, one series switched off. */
 export const LegendList: StoryObj = {
@@ -70,8 +88,9 @@ export const States: StoryObj = {
  * Frames with their data view open: the rows of the chart in its place as a table, in the columns
  * its spec reads and written as the chart writes them. The fan's bands stand in quantile order
  * around its median, and its `dataFields` add the project and how many weeks ahead each forecast
- * reaches; in a half-width frame the week stays pinned while the figures scroll. Chart brings the
- * chart back; the table loads the first time the view opens.
+ * reaches; in a half-width frame the week stays pinned while the figures scroll. The monthly runs
+ * show each period whole, its column as wide as its longest label. Chart brings the chart back; the
+ * table loads the first time the view opens.
  */
 export const DataView: StoryObj = {
     name: 'Data view',
@@ -82,6 +101,9 @@ export const DataView: StoryObj = {
             </ChartFrame>
             <ChartFrame title="Orders imported" subtitle="per week, import-orders in harbor" legend={FORECAST_LEGEND} defaultView="data">
                 {(state) => <Chart kind="fan" label="Orders imported per week, observed and forecast" {...FORECAST} {...state} />}
+            </ChartFrame>
+            <ChartFrame title="Runs per month" subtitle="by project" legend={MONTHLY_LEGEND} defaultView="data">
+                {(state) => <Chart kind="line" label="Runs per month by project" {...MONTHLY} {...state} />}
             </ChartFrame>
         </Ground>
     ),

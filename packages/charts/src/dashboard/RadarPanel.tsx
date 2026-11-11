@@ -1,7 +1,7 @@
 import { useMemo, type ReactNode } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
-import { ChartFrame, type ChartFrameWords } from '../ChartFrame'
+import { ChartFrame, type ChartFrameViewProps, type ChartFrameWords } from '../ChartFrame'
 import { Chart } from '../Chart'
 import type { ChartSpec } from '../kinds'
 import { SPAN, type PanelSpan } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
@@ -13,7 +13,7 @@ export interface RadarSpoke {
     max: number
 }
 
-export interface RadarPanelProps {
+export interface RadarPanelProps extends ChartFrameViewProps {
     title: ReactNode
     subtitle?: ReactNode
     info?: ReactNode
@@ -72,6 +72,10 @@ export function RadarPanel({
     expanded,
     onExpandedChange,
     words,
+    data,
+    defaultView,
+    view,
+    onViewChange,
     className,
 }: RadarPanelProps) {
     const spec = useMemo<ChartSpec>(
@@ -105,6 +109,10 @@ export function RadarPanel({
             empty={empty}
             bodyClassName={bodyClassName}
             words={words}
+            data={data}
+            defaultView={defaultView}
+            view={view}
+            onViewChange={onViewChange}
             className={cn(SPAN[span], className)}
         >
             {(state) => <Chart kind="radar" label={typeof title === 'string' ? title : 'Radar chart'} {...spec} {...state} />}

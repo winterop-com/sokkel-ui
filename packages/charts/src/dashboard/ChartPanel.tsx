@@ -3,7 +3,7 @@ import { useMemo, type ReactNode } from 'react'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { Chart, useSpec } from '../Chart'
 import { chartLegend } from '../chart-legend'
-import { ChartFrame, type ChartFrameWords } from '../ChartFrame'
+import { ChartFrame, type ChartFrameViewProps, type ChartFrameWords } from '../ChartFrame'
 import type { LegendStat } from '../ChartLegend'
 import type { ChartKind, ChartSpec } from '../kinds'
 import { written } from '../kinds/categories'
@@ -39,7 +39,7 @@ export type ChartPanelProps = ChartSpec & {
     /** The frame's words; the chart's own are the spec's `words`. */
     frameWords?: Partial<ChartFrameWords>
     className?: string
-}
+} & ChartFrameViewProps
 
 /**
  * A dashboard panel of a `Chart` drawn from rows, for what the other panels do not draw: a ring of
@@ -70,6 +70,10 @@ export function ChartPanel({
     expanded,
     onExpandedChange,
     frameWords,
+    data,
+    defaultView,
+    view,
+    onViewChange,
     className,
     ...rest
 }: ChartPanelProps) {
@@ -99,6 +103,10 @@ export function ChartPanel({
             stale={stale}
             bodyClassName={bodyClassName}
             words={frameWords}
+            data={data}
+            defaultView={defaultView}
+            view={view}
+            onViewChange={onViewChange}
             className={cn(SPAN[span], className)}
         >
             {(state) => <Chart kind={kind} label={label ?? (typeof title === 'string' ? title : 'Chart')} {...spec} {...state} />}

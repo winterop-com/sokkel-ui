@@ -76,6 +76,9 @@ function save(name: string, href: string) {
 const TOOL =
     'flex size-6 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-solid focus-visible:outline-ring data-popup-open:bg-hover'
 
+/** A frame's data view, as a dashboard panel passes it to its frame. */
+export type ChartFrameViewProps = Pick<ChartFrameProps, 'data' | 'defaultView' | 'view' | 'onViewChange'>
+
 export interface ChartFrameProps {
     title?: ReactNode
     subtitle?: ReactNode

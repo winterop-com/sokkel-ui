@@ -46,6 +46,10 @@
             "types": "./dist/data.d.ts",
             "import": "./dist/data.js"
         },
+        "./data-columns": {
+            "types": "./dist/data-columns.d.ts",
+            "import": "./dist/data-columns.js"
+        },
         "./kinds": {
             "types": "./dist/kinds/index.d.ts",
             "import": "./dist/kinds/index.js"

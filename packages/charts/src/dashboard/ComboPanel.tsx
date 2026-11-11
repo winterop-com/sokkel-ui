@@ -1,7 +1,7 @@
 import { useMemo, type ReactNode } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
-import { ChartFrame, type ChartFrameWords } from '../ChartFrame'
+import { ChartFrame, type ChartFrameViewProps, type ChartFrameWords } from '../ChartFrame'
 import type { LegendStat } from '../ChartLegend'
 import { Chart } from '../Chart'
 import type { ChartAxis, ChartSpec } from '../kinds'
@@ -32,7 +32,7 @@ function comboAxis(axis: ComboAxis = {}): ChartAxis {
     return { name: axis.name, unit: axis.unit ?? '', format, min: axis.min, max: axis.max }
 }
 
-export interface ComboPanelProps {
+export interface ComboPanelProps extends ChartFrameViewProps {
     title: ReactNode
     subtitle?: ReactNode
     info?: ReactNode
@@ -91,6 +91,10 @@ export function ComboPanel({
     expanded,
     onExpandedChange,
     words,
+    data,
+    defaultView,
+    view,
+    onViewChange,
     className,
 }: ComboPanelProps) {
     const spec = useMemo<ChartSpec>(
@@ -122,6 +126,10 @@ export function ComboPanel({
             empty={empty}
             bodyClassName={bodyClassName}
             words={words}
+            data={data}
+            defaultView={defaultView}
+            view={view}
+            onViewChange={onViewChange}
             className={cn(SPAN[span], className)}
         >
             {(state) => <Chart kind="dual" label={typeof title === 'string' ? title : 'Bars and lines'} {...spec} {...state} />}

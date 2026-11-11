@@ -1,7 +1,7 @@
 import { useMemo, type ReactNode } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
-import { ChartFrame, type ChartFrameWords } from '../ChartFrame'
+import { ChartFrame, type ChartFrameViewProps, type ChartFrameWords } from '../ChartFrame'
 import type { LegendStat } from '../ChartLegend'
 import { Chart } from '../Chart'
 import type { ChartSpec } from '../kinds'
@@ -12,7 +12,7 @@ import type { Threshold } from '@winterop-com/sokkel-ui/dashboard/thresholds'
 /** How a time series is drawn: lines alone, lines over a fading area, or lines over a solid area. */
 export type SeriesFill = 'none' | 'gradient' | 'solid'
 
-export interface TimeSeriesPanelProps {
+export interface TimeSeriesPanelProps extends ChartFrameViewProps {
     title: ReactNode
     subtitle?: ReactNode
     info?: ReactNode
@@ -84,6 +84,10 @@ export function TimeSeriesPanel({
     expanded,
     onExpandedChange,
     words,
+    data,
+    defaultView,
+    view,
+    onViewChange,
     className,
 }: TimeSeriesPanelProps) {
     const spec = useMemo<ChartSpec>(
@@ -122,6 +126,10 @@ export function TimeSeriesPanel({
             empty={empty}
             bodyClassName={bodyClassName}
             words={words}
+            data={data}
+            defaultView={defaultView}
+            view={view}
+            onViewChange={onViewChange}
             className={cn(SPAN[span], className)}
         >
             {(state) => <Chart kind={kind} label={typeof title === 'string' ? title : 'Time series'} {...spec} {...state} />}
