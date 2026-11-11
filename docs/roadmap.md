@@ -235,6 +235,16 @@ to `plan.md` when it ships.
     - **Not covered yet:** the Electron and Tauri shells, browsers other than Chromium, and real
       touch devices. Run that pass before calling the examples checked on every platform.
 
+- **A table's scroll track runs beside its sticky head.** In a scrolling `DataTable` the vertical
+  scrollbar starts at the head row, not under it, since the head is sticky inside the scrolling
+  box and the library styles scrollbars with the standard `scrollbar-color`, which makes Chrome
+  ignore a `::-webkit-scrollbar-track` offset. The fix moves the head out of the scrolling box and
+  keeps it in step sideways (pinned columns, bands and resizing with it). Cosmetic; look into it.
+
+- **Size budgets are a ceiling.** `size/budget.json` stays at dashboard 200 kB and forms 192 kB
+  (2026-11-11), raised five times over two days; a change over them trims first, and they come
+  down as the trim pass below frees room.
+
 - **Smaller start bundles, what is left.** Every library only some parts need is an optional peer,
   and the heavy ones, Base UI's menu among them, load on first use. Left:
     - On a dashboard, `chartLegend` still brings every chart kind with the page. Split each kind's
