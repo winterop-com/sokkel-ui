@@ -4,7 +4,6 @@ import { Columns, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Section } from '@winterop-com/sokkel-ui/Section'
-import type { ServerState } from '@winterop-com/sokkel-ui/ServerMenu'
 import { Page } from '@winterop-com/sokkel-ui/Shell'
 import { Stat } from '@winterop-com/sokkel-ui/Stat'
 import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
@@ -16,11 +15,14 @@ import { forwardAll, receipts, SERVER, STATE_WORDS, STATES } from '../data/backe
 import { FORMS, questionCount } from '../data/forms'
 import { count, KindBadge, STATE_DOT, useFoot } from '../ui'
 
+/** What the simulated server answers: the states this app knows, a subset of what ServerMenu takes. */
+export type ServerHealth = 'up' | 'down' | 'checking'
+
 const SERVER_STATE = { up: 'succeeded', down: 'failed', checking: 'queued' } as const
 const SERVER_WORDS = { up: 'answering', down: 'not answering', checking: 'checking' } as const
 
 /** What waits for review: the responses by state, the forms a record starts from, and the server behind both. */
-export function Overview({ serverState }: { serverState: ServerState }) {
+export function Overview({ serverState }: { serverState: ServerHealth }) {
     const { rows } = useCollection(receipts)
     const all = rows ?? []
     const waiting = all.filter((receipt) => receipt.state === 'received').length
