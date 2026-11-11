@@ -6,8 +6,8 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.19.4** is the latest release (2026-11-11): cron reads `L`, `LW`, `15W`, `5#2`, `5L` and `?`, and a
-  chart's hover shadow lets the hovered bar show through.
+- **0.19.5** is the latest release (2026-11-11): controls a finger tall on a phone, a table's scroll bar
+  under its head, `ListingBar`, and no count beside an empty table.
 - **0.18.3** (2026-11-11): route focus waits for the new page's visible heading,
   `PageState` takes `headingLevel`, and a cleared search keeps no results.
 - **0.18.2** (2026-11-11): `CronField` reads its runs in a time zone and takes
@@ -269,7 +269,7 @@ to `plan.md` when it ships.
       touch devices. Run that pass before calling the examples checked on every platform.
 
 - **Size budgets guide, they are not a wall.** `size/budget.json` holds the dashboard start at
-  201 kB and forms at 191.8 kB start and 78.4 kB lazy (2026-11-11); the forms lazy one is full. A
+  201.1 kB and forms at 191.8 kB start and 78.4 kB lazy (2026-11-11); the forms lazy one is full. A
   change trims what it adds itself; when it is worth its size, its PR raises the budget it needs
   with the reason, rather than reworking unrelated parts to fit. A loader that lets `DataTable`
   register itself when it loads may win back the 2.3 kB `ChartFrame`'s data view split into the
