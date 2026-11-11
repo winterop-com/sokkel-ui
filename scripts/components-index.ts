@@ -90,6 +90,9 @@ export const PRIVATE: Record<PackageDir, Record<string, string>> = {
         'lib/utils': '`cn` under the name the primitives import it by; an app uses `lib/cn`',
     },
     charts: {
+        ChartDataTable: "a chart's rows as a table, which `ChartFrame` loads the first time its data view opens",
+        'data-columns': "the columns and cells of a chart's data view, read from its spec",
+        'frame-data': "where a chart in a `ChartFrame` says what it draws, for the frame's data view",
         EChart: 'the raw ECharts wrapper `Chart` and the panels draw through; an app draws a chart with `Chart` and a kind, never with an ECharts option it builds',
         engine: 'the ECharts parts a chart loads on first use',
         'kinds/boxplot': KIND_BUILDER,
