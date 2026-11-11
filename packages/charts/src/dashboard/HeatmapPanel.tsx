@@ -1,7 +1,7 @@
 import { useMemo, type ReactNode } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
-import { ChartFrame, type ChartFrameWords } from '../ChartFrame'
+import { ChartFrame, type ChartFrameViewProps, type ChartFrameWords } from '../ChartFrame'
 import { Chart } from '../Chart'
 import type { ChartSpec } from '../kinds'
 import { SPAN, type PanelSpan } from '@winterop-com/sokkel-ui/dashboard/DashboardGrid'
@@ -10,7 +10,7 @@ import { CATEGORY, FIGURE, panelFormat, SERIES } from './series'
 /** One heatmap cell: the x index, the y index and its value. */
 export type HeatCell = readonly [x: number, y: number, value: number]
 
-export interface HeatmapPanelProps {
+export interface HeatmapPanelProps extends ChartFrameViewProps {
     title: ReactNode
     subtitle?: ReactNode
     info?: ReactNode
@@ -69,6 +69,10 @@ export function HeatmapPanel({
     expanded,
     onExpandedChange,
     words,
+    data,
+    defaultView,
+    view,
+    onViewChange,
     className,
 }: HeatmapPanelProps) {
     const spec = useMemo<ChartSpec>(
@@ -104,6 +108,10 @@ export function HeatmapPanel({
             empty={empty}
             bodyClassName={bodyClassName}
             words={words}
+            data={data}
+            defaultView={defaultView}
+            view={view}
+            onViewChange={onViewChange}
             className={cn(SPAN[span], className)}
         >
             {(state) => <Chart kind="heatmap" label={typeof title === 'string' ? title : 'Heatmap'} {...spec} {...state} />}

@@ -62,3 +62,21 @@ export function dataCell(column: DataViewColumn, row: Row, spec: ChartSpec): str
     if (figure === null) return value === null || value === undefined || value === '' ? '-' : labelOf(value)
     return `${(spec.format ?? formatNumber)(figure)}${unitAt(spec, column.unit)}`
 }
+
+/** The widest a column of labels grows to fit its longest label, in rem; a longer one is cut short. */
+const WIDEST_LABEL = 14
+
+/**
+ * The track of a data view's column, as wide as its longest cell or head: about 0.55rem a
+ * character of the cells' type (the head's smaller type at 0.85 of that), with the cell's padding,
+ * and wider where the frame has room. A column of labels, the pinned first one among them, stops
+ * growing at 14rem. In rem, so head and rows share the track whatever their type, and as one
+ * length, so the table counts it toward its least width and its pinned column holds as the rest
+ * scroll.
+ */
+export function dataTrack(column: DataViewColumn, spec: ChartSpec): string {
+    let widest = Math.ceil(column.header.length * 0.85)
+    for (const row of spec.rows) widest = Math.max(widest, dataCell(column, row, spec).length)
+    const rem = widest * 0.55 + 1.5
+    return `minmax(${(column.numeric ? rem : Math.min(rem, WIDEST_LABEL)).toFixed(2)}rem,1fr)`
+}

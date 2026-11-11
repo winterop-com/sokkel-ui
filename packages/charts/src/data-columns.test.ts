@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { dataCell, dataColumns } from './data-columns'
+import { dataCell, dataColumns, dataTrack } from './data-columns'
+import * as published from '@winterop-com/sokkel-ui-charts/data-columns'
 import type { ChartSpec } from './kinds'
 
 const RUNS = [
@@ -137,5 +138,53 @@ describe('dataCell', () => {
     it("takes the spec's format and unit", () => {
         const formatted: ChartSpec = { ...spec, format: (value) => value.toFixed(1), unit: '%' }
         expect(dataCell(runs, RUNS[0], formatted)).toBe('1200.0%')
+    })
+})
+
+describe('dataTrack', () => {
+    const MONTHS = [
+        { period: '2020-01', project: 'harbor', runs: 1200 },
+        { period: '2020-02', project: 'larkspur', runs: 98 },
+    ]
+    const spec: ChartSpec = { rows: MONTHS, x: 'period', series: 'project', y: 'runs', fieldNames: { period: 'Month' } }
+    const [period, project, runs] = dataColumns('line', spec)
+
+    it('sizes a column of labels, the pinned first one among them, to its longest label', () => {
+        expect(dataTrack(period, spec)).toBe('minmax(5.35rem,1fr)')
+        expect(dataTrack(project, spec)).toBe('minmax(5.90rem,1fr)')
+    })
+
+    it('sizes a column of figures to its longest figure or head', () => {
+        expect(dataTrack(runs, spec)).toBe('minmax(4.25rem,1fr)')
+    })
+
+    it('stops a column of labels growing at 14rem and lets figures grow on', () => {
+        const long = 'nightly-export of every project in harbor, juniper and larkspur'
+        const wide: ChartSpec = { rows: [{ job: long, runs: 10 ** 30 }], x: 'job', y: 'runs' }
+        const [job, figures] = dataColumns('bar', wide)
+        expect(dataTrack(job, wide)).toBe('minmax(14.00rem,1fr)')
+        expect(Number.parseFloat(dataTrack(figures, wide).slice('minmax('.length))).toBeGreaterThan(14)
+    })
+})
+
+describe('the public data-columns module', () => {
+    it("gives an app the data view's columns in order, to pin in its own tests", () => {
+        const spec: ChartSpec = {
+            rows: [],
+            x: 'week',
+            y: 'median',
+            bands: [{ low: 'q10', high: 'q90' }],
+            history: 'observed',
+            dataFields: ['project'],
+            fieldNames: { week: 'Week', median: 'Median', observed: 'Observed', project: 'Project' },
+        }
+        expect(published.dataColumns('fan', spec).map(({ field, header }) => [field, header])).toEqual([
+            ['week', 'Week'],
+            ['q10', 'q10'],
+            ['median', 'Median'],
+            ['q90', 'q90'],
+            ['observed', 'Observed'],
+            ['project', 'Project'],
+        ])
     })
 })

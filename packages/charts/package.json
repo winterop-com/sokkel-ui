@@ -1,6 +1,6 @@
 {
     "name": "@winterop-com/sokkel-ui-charts",
-    "version": "0.17.3",
+    "version": "0.17.4",
     "description": "Charts drawn from rows on ECharts, and dashboard panels, for sokkel-ui.",
     "license": "SEE LICENSE IN LICENSE",
     "repository": {
@@ -45,6 +45,10 @@
         "./data": {
             "types": "./dist/data.d.ts",
             "import": "./dist/data.js"
+        },
+        "./data-columns": {
+            "types": "./dist/data-columns.d.ts",
+            "import": "./dist/data-columns.js"
         },
         "./kinds": {
             "types": "./dist/kinds/index.d.ts",

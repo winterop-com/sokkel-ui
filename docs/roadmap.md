@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.17.3** is the latest release (2026-11-11): map rows named by their map, a select back to its
+- **0.17.4** is the latest release (2026-11-11): dashboard panels pass the data view through, its
+  label columns fit their labels, and `dataColumns` is public.
+- **0.17.3** (2026-11-11): map rows named by their map, a select back to its
   default, palette rows drawing key sequences, `PageState` warning words, and `Search` opening on a
   press, not on focus.
 - **0.17.2** (2026-11-11): `SchemaForm` says an unset default once, and a
