@@ -249,8 +249,9 @@ listed once, in the app's words and group; `Shell`'s `shortcuts` makes the shell
 opened on `?`, bound once, and from the account menu, and `shortcutsOpen` with
 `onShortcutsOpenChange` holds it from outside, as for a palette row built beside the shell.
 A palette row's `keys` take a sequence the same way: its second press in `next`, drawn after the
-first with the palette's `sequence` word between (`KbdSequence`, which the dialog draws with too),
-and `bindingKeys(binding)` gives both from the binding that runs the command, a chord as one press.
+first with the palette's `sequence` word between (`KbdSequence` from `primitives/kbd`, which the
+dialog draws with too), and `bindingKeys(binding)` from `lib/keys` gives both from the binding that
+runs the command, a chord as one press.
 `useShell()` gives a screen inside the shell `openPalette` and `openShortcuts`. `SearchField`'s `/`
 is a binding too, on the field's own input, so no mark on the box finds it; an app that answers `/`
 itself turns `shortcut` off and can mark the input with a `data-*` attribute through `inputProps`,
@@ -410,8 +411,8 @@ away; `PageState` draws the states a read lands in (loading, failed, empty, the 
 headed by what the server answered, with `onRetry` for a way to read again, and `tone="warning"`
 for a failed read of secondary data the page stands without, drawn in the warning tone and
 announced as a status rather than as the page's failure, its heading said of a part of the page
-(`partRefused`, "Part of this page could not be read"; `partMissing`) where the critical tone's
-says the server refused the page's read. `Surface` sets content on a card's ground, a panel's (`well`) or the page's (`inset`) and
+(`partRefused`, "Part of this page could not be read") where the critical tone's says the server
+refused the page's read. `Surface` sets content on a card's ground, a panel's (`well`) or the page's (`inset`) and
 clips nothing, so a focus ring at its edge shows whole; unpadded, its first and last children take
 its corners.
 

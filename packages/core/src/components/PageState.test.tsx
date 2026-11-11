@@ -55,7 +55,7 @@ describe('PageState tone', () => {
         const html = failed({ tone: 'warning' })
         expect(html).toContain('Part of this page could not be read')
         expect(html).not.toContain('The server refused this read')
-        expect(failed({ tone: 'warning', status: 404 })).toContain('Part of this page is not there')
+        expect(failed({ tone: 'warning', status: 404 })).toContain('Nothing is there')
         expect(failed({ tone: 'warning', status: 'unreachable' })).toContain('The server is not answering')
     })
 

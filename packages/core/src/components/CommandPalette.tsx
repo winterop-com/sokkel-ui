@@ -11,7 +11,6 @@ import { Kbd, KbdGroup, KbdSequence } from './ui/kbd'
 import { Spinner } from './ui/spinner'
 
 export { usePaletteShortcut } from '../hooks/use-palette-shortcut'
-export { bindingKeys } from '../lib/keys'
 import {
     Command,
     CommandDialog,
@@ -35,7 +34,7 @@ export interface PaletteCommand {
     code?: string
     /**
      * The keys that run it outside the palette, shown at the row's end, as `keyLabels` writes them;
-     * `bindingKeys` gives them, `next` with them, from the binding that runs it.
+     * `bindingKeys` from `lib/keys` gives them, `next` with them, from the binding that runs it.
      */
     keys?: readonly string[]
     /** The keys of a sequence's second press, drawn after `keys` with the word `sequence` between: G then D. */

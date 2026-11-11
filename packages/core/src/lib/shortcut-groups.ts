@@ -1,5 +1,5 @@
-import { bindingKeys, isApple } from './keys'
-import type { KeyBinding } from './shortcuts'
+import { isApple, keyLabels } from './keys'
+import { secondKey, type KeyBinding } from './shortcuts'
 
 /** One shortcut as the shortcuts dialog lists it: what it does and its keys, in the order they are pressed. */
 export interface Shortcut {
@@ -47,7 +47,9 @@ export function shortcutGroups(
     }
     const labeled = registered.filter((binding) => binding.label !== undefined)
     for (const binding of [...labeled.filter((one) => one.group !== undefined), ...labeled.filter((one) => one.group === undefined)]) {
-        const shortcut: Shortcut = { id: binding.id, action: binding.label ?? '', ...bindingKeys(binding, apple) }
+        const second = secondKey(binding)
+        const shortcut: Shortcut = { id: binding.id, action: binding.label ?? '', keys: keyLabels(binding, apple) }
+        if (second !== undefined) shortcut.next = keyLabels(second, apple)
         if (!appGives.has(identity(shortcut))) add(binding.group ?? general, shortcut)
     }
     for (const group of given) for (const shortcut of group.shortcuts) add(group.title, shortcut)

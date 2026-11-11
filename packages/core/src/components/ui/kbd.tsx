@@ -22,7 +22,7 @@ function KbdGroup({ className, ...props }: KbdGroupProps) {
 }
 
 export interface KbdSequenceProps {
-    /** The keys of the first press, held together. */
+    /** The keys of the first press, held together, as `keyLabels` writes them. */
     keys: readonly string[]
     /** The keys of a sequence's second press, pressed after the first let go. */
     next?: readonly string[]
@@ -31,7 +31,10 @@ export interface KbdSequenceProps {
     className?: string
 }
 
-/** The keys of a shortcut: one press held together, or a sequence as its two presses with a word between, G then D. */
+/**
+ * The keys of a shortcut drawn as keys: one press held together, or a sequence as its two presses
+ * with the word `sequence` between, G then D, as the shortcuts dialog and a palette row draw them.
+ */
 function KbdSequence({ keys, next, sequence = 'then', className }: KbdSequenceProps) {
     const press = (labels: readonly string[]) => (
         <KbdGroup>

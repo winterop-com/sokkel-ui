@@ -20,8 +20,6 @@ export interface PageStateWords {
     unreachable: string
     /** The heading over a refused read in the `warning` tone, of data the page stands without. */
     partRefused: string
-    /** The heading over a `warning` read that found nothing there. */
-    partMissing: string
     /** The button that reads again after a failure. */
     retry: string
 }
@@ -32,23 +30,21 @@ const WORDS: PageStateWords = {
     missing: 'Nothing is there',
     unreachable: 'The server is not answering',
     partRefused: 'Part of this page could not be read',
-    partMissing: 'Part of this page is not there',
     retry: 'Try again',
 }
 
 /**
  * The heading over a failed read: a 404 is an absence and no answer is silence, not a refusal. In
- * the `warning` tone a refusal or an absence is said of a part of the page, not of the page.
+ * the `warning` tone a refusal is said of a part of the page, not of the page.
  */
 export function pageStateHeading(
     outcome: ReadOutcome | null | undefined,
     words: PageStateWords = WORDS,
     tone: PageStateTone = 'critical',
 ): string {
-    const part = tone === 'warning'
     if (outcome === 'unreachable') return words.unreachable
-    if (outcome === 404) return part ? words.partMissing : words.missing
-    return part ? words.partRefused : words.refused
+    if (outcome === 404) return words.missing
+    return tone === 'warning' ? words.partRefused : words.refused
 }
 
 /** The frame the three states share: a box that keeps its height inside a flex column. */
@@ -93,7 +89,7 @@ export interface PageStateProps {
  * button that reads again under the diagnostic, as a dashboard panel's failure has one. `tone`
  * `warning` draws a failed read of secondary data, such as a side list beside the page's own
  * content, as a warning rather than the page's failure, announced politely rather than as an alert,
- * and headed as a part of the page that could not be read (`partRefused`, `partMissing`).
+ * and a refusal headed as a part of the page that could not be read (`partRefused`).
  */
 export function PageState({
     loading,
