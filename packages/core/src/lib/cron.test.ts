@@ -129,13 +129,16 @@ describe('describeCron', () => {
     it('reads in the words it is given, English where it is given none', () => {
         const words = {
             dayNames: ['søndag', 'mandag', 'tirsdag', 'onsdag', 'torsdag', 'fredag', 'lørdag'],
-            list: (items: readonly string[]) => items.join(' og '),
-            at: (times: readonly string[]) => `kl. ${times.join(' og ')}`,
-            onWeekdays: (days: readonly string[]) => `på ${days.join(' og ')}`,
+            lastSeparator: ' og ',
+            ordinal: (day: number) => `${String(day)}.`,
+            at: (times: string) => `kl. ${times}`,
+            onWeekdays: (days: string) => `på ${days}`,
+            onDays: (days: string) => `den ${days}`,
             weekdays: 'på hverdager',
         }
         expect(describeCron('30 6,18 * * mon,fri', words)).toBe('Kl. 06:30 og 18:30 på mandag og fredag')
         expect(describeCron('0 2 * * 1-5', words)).toBe('Kl. 02:00 på hverdager')
         expect(describeCron('0 0 * jan *', words)).toBe('Every day kl. 00:00 in January')
+        expect(describeCron('0 3 1,10,20 * *', words)).toBe('Kl. 03:00 den 1., 10. og 20.')
     })
 })

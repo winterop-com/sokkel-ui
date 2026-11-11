@@ -10,7 +10,7 @@ export interface CronFieldWords {
     invalid: string
     invalidDetail: string
     next: (count: number) => string
-    /** Names the zone the expression and its runs are read in; the `timeZone` itself by default. */
+    /** Names the zone the expression and its runs are read in; the `timeZone` itself by default, and none when empty. */
     zone: string
     /** Said when the expression never fires. */
     never: string
@@ -66,12 +66,16 @@ export interface CronFieldProps {
      * or left out, the field counts them itself.
      */
     runs?: readonly Date[] | null
-    /** The app is reading the runs back: the field's own reading shows muted, and the words say it is checking. */
+    /**
+     * The app is reading the runs back: the field's own runs show muted, the words say it is
+     * checking, and the field marks no issue of its own while it waits for the app's verdict.
+     */
     runsPending?: boolean
     /**
      * The app's server refused the expression: its words, shown as the field's issue. Once the app
      * passes `runs` or `invalid`, its verdict is the field's: an expression its server takes, in a
-     * syntax the field's own five-field reading does not know (`L`, `#`, `W`, `?`), is valid.
+     * syntax the field's own five-field reading does not know (`L`, `#`, `W`, `?`), is valid. A
+     * refused expression is not read back in words.
      */
     invalid?: string
     /** An example expression shown in the empty input, such as `0 2 * * *`. */
@@ -81,7 +85,9 @@ export interface CronFieldProps {
     presets?: readonly { label: string; value: string }[]
     /**
      * Reads an expression back in words, its hours on the wall clock of the zone; `describeCron` in
-     * English by default, which takes words for another language. Null leaves the line empty.
+     * English by default, which takes words for another language. Null leaves the line empty. For
+     * an expression `describeCron` cannot read (`L`, `#`, `W`), return the server's reading:
+     * `(expression) => describeCron(expression) ?? serverReading`.
      */
     describe?: (expression: string, timeZone: string) => string | null
     /** Draws a run's time, given the zone it is read in. */
@@ -127,7 +133,8 @@ export function CronField({
     const id = given ?? own
     const empty = value.trim() === ''
     const reading = empty ? null : describe(value, timeZone)
-    const appVerdict = told != null || invalid !== undefined
+    // Runs, a refusal or a pending answer from the app: the app decides, and the field's own parse only reads the expression in words.
+    const appVerdict = told != null || invalid !== undefined || runsPending
     const refused = !empty && invalid !== undefined && !runsPending
     const unread = !empty && !appVerdict && parseCron(value) === null
     const bad = refused || unread
@@ -137,7 +144,7 @@ export function CronField({
         : refused
           ? [{ tone: 'critical' as const, text: invalid }]
           : []
-    const line = empty ? '' : !bad && !runsPending && runs.length === 0 ? words.never : (reading ?? '')
+    const line = empty || refused ? '' : !bad && !runsPending && runs.length === 0 ? words.never : (reading ?? '')
     return (
         <div className={cn('flex flex-col gap-3', className)}>
             <div className="flex flex-col gap-1.5">
@@ -151,7 +158,7 @@ export function CronField({
                             {words.label}
                         </label>
                     )}
-                    <span className="font-mono text-xs text-muted-foreground">{words.zone}</span>
+                    {words.zone !== '' && <span className="font-mono text-xs text-muted-foreground">{words.zone}</span>}
                 </div>
                 {readOnly ? (
                     <p id={id} aria-labelledby={`${id}-label`} className="min-h-5 font-mono text-sm leading-5 break-all">

@@ -40,19 +40,26 @@ describe('CronField', () => {
         expect(html).toContain('Fri 2027-03-26 02:00<')
     })
 
-    it('marks the field with the words of a server that refused it, and lists no runs', () => {
-        const html = renderToStaticMarkup(
-            <CronField value="*/2 * * * *" onChange={noop} from={FROM} invalid="Runs at most every 5 minutes" />,
-        )
+    it('marks the field with the words of a server that refused it, and lists no runs and no reading', () => {
+        const html = renderToStaticMarkup(<CronField value="0 5 31 2 *" onChange={noop} from={FROM} invalid="February has no 31st" />)
         expect(html).toContain('aria-invalid="true"')
-        expect(html).toContain('Error: Runs at most every 5 minutes')
-        expect(html).toContain('>Every 2 minutes<')
-        expect(html).not.toContain('2027-03-25')
+        expect(html).toContain('Error: February has no 31st')
+        expect(html).not.toContain('31st in February')
+        expect(html).toContain('aria-live="polite"></p>')
     })
 
-    it('names the zone once, beside the label', () => {
+    it('marks no issue of its own while the app checks an expression it cannot read', () => {
+        const html = renderToStaticMarkup(<CronField value="0 2 L * ?" onChange={noop} from={FROM} runsPending />)
+        expect(html).not.toContain('aria-invalid="true"')
+        expect(html).not.toContain('Not a cron expression')
+        expect(html).toContain('aria-busy="true"')
+    })
+
+    it('names the zone once, beside the label, and none when its word is empty', () => {
         const html = renderToStaticMarkup(<CronField value="0 2 * * *" onChange={noop} from={FROM} timeZone="Europe/Oslo" />)
         expect(html.split('Europe/Oslo')).toHaveLength(2)
+        const bare = renderToStaticMarkup(<CronField value="0 2 * * *" onChange={noop} from={FROM} words={{ zone: '' }} />)
+        expect(bare).toMatch(/Schedule<\/label><\/div>/)
     })
 
     it('says an expression it cannot read is not one, while the app gives no verdict', () => {
@@ -113,9 +120,7 @@ describe('CronField', () => {
                 value="0 2 * * *"
                 onChange={noop}
                 from={FROM}
-                describe={(expression) =>
-                    describeCron(expression, { daily: (time) => `hver dag ${time}`, at: (times) => `kl. ${times.join(', ')}` })
-                }
+                describe={(expression) => describeCron(expression, { daily: (time) => `hver dag ${time}`, at: (times) => `kl. ${times}` })}
             />,
         )
         expect(html).toContain('>Hver dag kl. 02:00<')
