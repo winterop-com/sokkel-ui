@@ -15,9 +15,11 @@ import {
     rangeKeys,
     sortRows,
     stackColumns,
+    stackLabels,
     stacksAt,
     treeBranchKeys,
     watchFonts,
+    widestOf,
 } from './DataTable'
 
 describe('row groups', () => {
@@ -320,5 +322,24 @@ describe('watching fonts load', () => {
 
     it('does nothing where there are no fonts to watch', () => {
         expect(() => watchFonts(undefined, () => undefined)()).not.toThrow()
+    })
+})
+
+describe('shared content widths', () => {
+    it('takes the widest of each column across the tables', () => {
+        expect(widestOf([{ job: 180, step: 71 }, { job: 216 }, { service: 105 }])).toEqual({ job: 216, step: 71, service: 105 })
+        expect(widestOf([])).toEqual({})
+    })
+})
+
+describe('stacked line names', () => {
+    it('are as wide as the widest name, up to the most, and the cut ones are named', () => {
+        const names = [
+            { id: 'step', width: 28 },
+            { id: 'service', width: 101.4 },
+        ]
+        expect(stackLabels(192, names)).toEqual({ width: 102, cut: new Set() })
+        expect(stackLabels(80, names)).toEqual({ width: 80, cut: new Set(['service']) })
+        expect(stackLabels(192, [])).toEqual({ width: 0, cut: new Set() })
     })
 })

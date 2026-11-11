@@ -23,10 +23,12 @@ import {
     type DataColumn,
     type DataRowTone,
     DataTable,
+    DataTableGroup,
     type DataSort,
     findInTree,
     sortRows,
     treeBranchKeys,
+    useTableCell,
 } from '@winterop-com/sokkel-ui/DataTable'
 import { FileTypeIcon, formatSize } from '@winterop-com/sokkel-ui/FileList'
 import { ItemHeading } from '@winterop-com/sokkel-ui/ItemHeading'
@@ -544,6 +546,8 @@ interface Job {
     state: string
     runs: number
     about: string
+    service: string
+    projects: string[]
 }
 
 const JOBS: Job[] = [
@@ -554,6 +558,8 @@ const JOBS: Job[] = [
         state: 'failed',
         runs: 412,
         about: 'Writes the day’s orders to files.example.org.',
+        service: 'worker',
+        projects: ['harbor', 'juniper', 'larkspur'],
     },
     {
         id: 'sync-inventory',
@@ -562,6 +568,8 @@ const JOBS: Job[] = [
         state: 'running',
         runs: 1_208,
         about: 'Brings stock counts from every site.',
+        service: 'scheduler',
+        projects: ['juniper'],
     },
     {
         id: 'rebuild-index',
@@ -570,8 +578,19 @@ const JOBS: Job[] = [
         state: 'succeeded',
         runs: 96,
         about: 'Rebuilds the search index from scratch.',
+        service: 'worker',
+        projects: ['harbor', 'larkspur'],
     },
-    { id: 'send-digest', name: 'Send digest', step: 'notify', state: 'queued', runs: 52, about: 'Sends the weekly digest to its readers.' },
+    {
+        id: 'send-digest',
+        name: 'Send digest',
+        step: 'notify',
+        state: 'queued',
+        runs: 52,
+        about: 'Sends the weekly digest to its readers.',
+        service: 'api',
+        projects: ['larkspur', 'harbor'],
+    },
     {
         id: 'import-orders',
         name: 'Import orders',
@@ -579,6 +598,8 @@ const JOBS: Job[] = [
         state: 'succeeded',
         runs: 3_310,
         about: 'Takes in the orders of every region.',
+        service: 'api',
+        projects: ['harbor', 'juniper', 'larkspur'],
     },
 ]
 
@@ -596,6 +617,28 @@ const JOB_COLUMNS: DataColumn<Job>[] = [
     { id: 'runs', header: 'Runs', width: '5rem', align: 'end', cell: (job) => job.runs.toLocaleString('en-US') },
 ]
 
+/** A job's projects as chips, as many as a fifth of the table's width holds (half once stacked) and a count of the rest. */
+function JobProjects({ projects }: { projects: readonly string[] }) {
+    const { width, stacked } = useTableCell()
+    const fit = Math.max(1, Math.floor((stacked ? width / 2 : width / 5) / 88))
+    return (
+        <Row gap="2xs" inline>
+            {projects.slice(0, fit).map((project) => (
+                <Chip key={project}>{project}</Chip>
+            ))}
+            {projects.length > fit && <Chip>+{projects.length - fit}</Chip>}
+        </Row>
+    )
+}
+
+const DELIVERY_COLUMNS: DataColumn<Job>[] = [
+    JOB_COLUMNS[0],
+    JOB_COLUMNS[1],
+    { id: 'service', header: 'Delivers through', width: 'content', cell: (job) => <span className="font-mono">{job.service}</span> },
+    { id: 'projects', header: 'Projects', width: 'minmax(6rem,1fr)', cell: (job) => <JobProjects projects={job.projects} /> },
+    JOB_COLUMNS[2],
+]
+
 /**
  * Jobs whose heading and step are as wide as their widest cell (`width: 'content'`), measured again
  * once the fonts have loaded; the about line shares the rest. Once the content columns and the
@@ -604,6 +647,41 @@ const JOB_COLUMNS: DataColumn<Job>[] = [
 export const ContentWidths: StoryObj = {
     name: 'Content widths',
     render: () => <DataTable variant="list" columns={JOB_COLUMNS} rows={JOBS} rowKey={(job) => job.id} stackBelow="64rem" />,
+}
+
+/**
+ * Two sections of jobs in one `DataTableGroup`, so their content columns take the widest of both
+ * tables and line up. Each job's projects show as many chips as a share of the table's width holds
+ * (`useTableCell`); stacked, every line's name is as wide as the widest, "Delivers through" whole.
+ */
+export const SharedWidths: StoryObj = {
+    name: 'Shared widths',
+    render: () => (
+        <DataTableGroup>
+            <Stack gap="md">
+                <Section title="Scheduled" meta={3} flush>
+                    <DataTable
+                        variant="list"
+                        framed={false}
+                        columns={DELIVERY_COLUMNS}
+                        rows={JOBS.slice(0, 3)}
+                        rowKey={(job) => job.id}
+                        stackBelow="48rem"
+                    />
+                </Section>
+                <Section title="On demand" meta={2} flush>
+                    <DataTable
+                        variant="list"
+                        framed={false}
+                        columns={DELIVERY_COLUMNS}
+                        rows={JOBS.slice(3)}
+                        rowKey={(job) => job.id}
+                        stackBelow="48rem"
+                    />
+                </Section>
+            </Stack>
+        </DataTableGroup>
+    ),
 }
 
 const STATE_NAMES: Record<string, string> = { running: 'Running', queued: 'Queued', failed: 'Failed', succeeded: 'Succeeded' }
