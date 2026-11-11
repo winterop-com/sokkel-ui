@@ -6,7 +6,10 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.17.2** is the latest release (2026-11-11): `SchemaForm` says an unset default once, and a
+- **0.17.3** is the latest release (2026-11-11): map rows named by their map, a select back to its
+  default, palette rows drawing key sequences, `PageState` warning words, and `Search` opening on a
+  press, not on focus.
+- **0.17.2** (2026-11-11): `SchemaForm` says an unset default once, and a
   `SwitchField`'s long label and note wrap clear of its switch.
 - **0.17.1** (2026-11-11): a chart's data view takes `dataFields`, orders a fan's
   bands by quantile and pins its first column.
