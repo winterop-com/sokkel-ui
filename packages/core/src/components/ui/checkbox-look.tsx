@@ -7,6 +7,44 @@ export const CHECKBOX =
 /** The mark inside a checked or indeterminate box. */
 export const CHECKBOX_INDICATOR = 'grid place-content-center text-current transition-none [&>svg]:size-3.5'
 
+export interface PlainCheckboxProps {
+    checked: boolean
+    indeterminate?: boolean
+    onCheckedChange?: (checked: boolean) => void
+    disabled?: boolean
+    'aria-label'?: string
+    className?: string
+}
+
+/**
+ * A checkbox as a button, in the look of Base UI's, for a box that only ticks and unticks, as in a
+ * form's own label: a press on the label presses it, and Space or Enter does from the keyboard. It
+ * carries none of Base UI's checkbox, so a forms page that draws only these never loads it.
+ */
+export function PlainCheckbox({ checked, indeterminate = false, onCheckedChange, disabled, className, ...rest }: PlainCheckboxProps) {
+    // Base UI marks an indeterminate box as that alone, and a box as checked or unchecked otherwise.
+    const state = indeterminate ? { 'data-indeterminate': '' } : checked ? { 'data-checked': '' } : { 'data-unchecked': '' }
+    return (
+        <button
+            type="button"
+            role="checkbox"
+            aria-checked={indeterminate ? 'mixed' : checked}
+            disabled={disabled}
+            data-slot="checkbox"
+            {...state}
+            {...rest}
+            className={className === undefined ? CHECKBOX : `${CHECKBOX} ${className}`}
+            onClick={() => onCheckedChange?.(!checked)}
+        >
+            {(checked || indeterminate) && (
+                <span data-slot="checkbox-indicator" {...state} className={CHECKBOX_INDICATOR}>
+                    <CheckboxMarks />
+                </span>
+            )}
+        </button>
+    )
+}
+
 /** A check, or a dash when the box is indeterminate. */
 export function CheckboxMarks() {
     return (

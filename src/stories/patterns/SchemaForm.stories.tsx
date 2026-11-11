@@ -129,7 +129,10 @@ function SendingJob() {
     )
 }
 
-/** An empty form, each field drawn from its schema: text, a code in mono, a number, a choice and a switch. */
+/**
+ * An empty form, each field drawn from its schema: text, a code in mono, a number, a choice and a
+ * switch. Priority is left at its schema default, which it shows muted as what applies.
+ */
 export const Empty: StoryObj = { name: 'Empty', render: () => <NewJob /> }
 
 /**
@@ -137,6 +140,40 @@ export const Empty: StoryObj = { name: 'Empty', render: () => <NewJob /> }
  * and saying under Priority the default that applies when it is left empty.
  */
 export const RequiredWord: StoryObj = { name: 'Required word', render: () => <NewJob requiredMark="word" fallbacks /> }
+
+const RUN: JsonSchema = {
+    type: 'object',
+    properties: {
+        queue: { type: 'string', title: 'Queue', enum: ['standard', 'bulk', 'urgent'], default: 'standard' },
+        retries: { type: 'integer', title: 'Retries', minimum: 0, maximum: 10, default: 3 },
+        region: { type: 'string', title: 'Region', default: 'europe', description: 'Where the worker runs.' },
+        notify: { type: 'boolean', title: 'Notify on failure', default: true },
+        note: { type: ['string', 'null'], title: 'Note', default: null },
+    },
+}
+
+function RunSettings() {
+    const form = useSchemaForm(RUN, { initial: { retries: 5 } })
+    return (
+        <DialogShell
+            open
+            onOpenChange={() => undefined}
+            title="Run settings"
+            description="How send-digest runs in the juniper project."
+            count={<SchemaIssueCount form={form} />}
+            confirm={{ label: 'Save', onConfirm: () => form.submit() }}
+        >
+            <SchemaForm form={form} fallbacks />
+        </DialogShell>
+    )
+}
+
+/**
+ * Fields left at their schema default show it, muted and marked as the default, without holding it
+ * in the value: Queue, Region and the switch. Retries is set to 5, so it shows as any value does;
+ * choosing a default explicitly holds it. A `null` default says nothing.
+ */
+export const Defaults: StoryObj = { render: () => <RunSettings /> }
 
 /** Values typed in and Create pressed: the marks, the count beside the verb, and the first mark open with its fix. */
 export const AfterCreate: StoryObj = {
@@ -211,7 +248,7 @@ const PIPELINE: JsonSchema = {
             type: 'object',
             title: 'Headers',
             additionalProperties: { type: 'string' },
-            description: 'Sent with every call, as JSON.',
+            description: 'Sent with every call.',
         },
     },
 }
@@ -243,8 +280,74 @@ function NewPipeline() {
     )
 }
 
-/** A nested object, a set of choices, a list of values, a list of objects, and a map edited as JSON; the strip beside the body marks where each issue sits down the form. */
+/** A nested object, a set of choices, a list of values, a list of objects, and a map of headers; the strip beside the body marks where each issue sits down the form. */
 export const NestedAndLists: StoryObj = { name: 'Nested and lists', render: () => <NewPipeline /> }
+
+const REQUEST: JsonSchema = {
+    type: 'object',
+    required: ['url'],
+    properties: {
+        url: { type: 'string', title: 'Address', format: 'uri' },
+        query: { type: 'object', title: 'Query', additionalProperties: { type: 'string' }, description: 'Added to the address.' },
+        environment: {
+            type: 'object',
+            title: 'Environment',
+            additionalProperties: { type: 'string', pattern: '^[^\\s]*$' },
+            description: 'Set for the worker, by name.',
+        },
+        limits: { type: 'object', title: 'Limits', additionalProperties: { type: 'integer', minimum: 1 } },
+        buffer: {
+            title: 'Buffer',
+            anyOf: [
+                { type: 'string', pattern: '^\\d+(KB|MB)$' },
+                { type: 'integer', minimum: 1024 },
+            ],
+            description: 'In bytes, or as 16KB.',
+        },
+        timeout: {
+            title: 'Timeout',
+            anyOf: [
+                { type: 'integer', minimum: 1 },
+                { type: 'string', enum: ['none'] },
+            ],
+            default: 30,
+        },
+    },
+}
+
+function FetchStep() {
+    const form = useSchemaForm(REQUEST, {
+        initial: {
+            url: 'https://api.example.org/orders',
+            query: { project: 'harbor', state: 'succeeded' },
+            environment: { REGION: 'europe', TOKEN_FILE: '/run/secrets/token' },
+            limits: { rows: 5000, pages: 0 },
+            buffer: '16KB',
+        },
+        defaultSubmitted: true,
+    })
+    return (
+        <DialogShell
+            open
+            onOpenChange={() => undefined}
+            width="lg"
+            title="fetch step"
+            description="The request import-orders makes to the api."
+            count={<SchemaIssueCount form={form} />}
+            confirm={{ label: 'Save', onConfirm: () => form.submit() }}
+        >
+            <SchemaForm form={form} />
+        </DialogShell>
+    )
+}
+
+/**
+ * Maps of scalars as key and value tables (query parameters, environment variables, integer
+ * limits): Add puts a row in, each row has Remove, and a key given twice is refused at the table.
+ * Buffer takes text or a number in one box with no quotes: 16KB is held as text, 16384 as a number.
+ * A limit below its minimum is marked on its value.
+ */
+export const KeysAndValues: StoryObj = { name: 'Keys and values', render: () => <FetchStep /> }
 
 const CONNECTION: JsonSchema = {
     type: 'object',

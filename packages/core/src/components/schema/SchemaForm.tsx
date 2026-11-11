@@ -12,10 +12,11 @@ import { RepeatedGroup } from '../RepeatedGroup'
 import { SecretField } from '../SecretField'
 import { SwitchField } from '../SwitchField'
 import { Button } from '../ui/button'
-import { Checkbox } from '../ui/checkbox'
+import { PlainCheckbox } from '../ui/checkbox-look'
 import { Input } from '../ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
 import { Textarea } from '../ui/textarea'
+import { MapField } from './MapField'
 import { childSchema, literal, resolve, type JsonSchema } from './read'
 import { loadedValidate, loadValidate } from './checker'
 import {
@@ -24,6 +25,8 @@ import {
     pointer,
     shiftKey,
     shiftRecord,
+    readScalar,
+    scalarUnion,
     shiftSet,
     types,
     valueAt,
@@ -66,6 +69,13 @@ export interface SchemaFormWords {
     required: string
     /** What applies when a field with a schema `default` is left empty, for a form drawn with `fallbacks`. */
     fallback: (value: unknown) => string
+    /** Marks the value an unset field shows as its schema `default`, which applies until one is chosen. */
+    default: string
+    /** A map's column heads, and its rows' names by place. */
+    key: string
+    value: string
+    /** Said at a map that has a key twice; the second is not taken. */
+    repeatedKey: string
 }
 
 const FORMAT: Record<string, { text: string; detail?: string }> = {
@@ -143,17 +153,25 @@ const WORDS: SchemaFormWords = {
     moveDown: 'Move down',
     required: 'required',
     fallback: (value) => `Default is ${typeof value === 'string' ? value : literal(value)}`,
+    default: 'default',
+    key: 'Key',
+    value: 'Value',
+    repeatedKey: 'Each key only once',
 }
 
-/** A form's value with every schema default and every nested object in place. */
-export function initialValue(schema: JsonSchema, root: JsonSchema = schema): unknown {
+/**
+ * A form's value with every nested object in place, and the schema defaults a field cannot show
+ * itself: an object's or a list's, and a required field's. An optional field with a plain default
+ * is left unset and shows the default as what applies.
+ */
+export function initialValue(schema: JsonSchema, root: JsonSchema = schema, keep = true): unknown {
     const at = fieldSchema(schema, root)
-    if (at.default !== undefined) return structuredClone(at.default)
+    if (at.default !== undefined && (keep || (at.default !== null && typeof at.default === 'object'))) return structuredClone(at.default)
     if (at.const !== undefined) return at.const
     if (at.properties !== undefined) {
         const out: Record<string, unknown> = {}
         for (const [key, child] of Object.entries(at.properties)) {
-            const value = initialValue(child, root)
+            const value = initialValue(child, root, at.required?.includes(key))
             if (value !== undefined) out[key] = value
         }
         return out
@@ -230,6 +248,8 @@ export interface SchemaFormState {
     setDraft: (path: Path, text: string | undefined) => void
     /** Marks a number field whose typed text is not a number, which is said and stops the submit until it is one. */
     setUnread: (path: Path, unread: boolean) => void
+    /** A field's own refusal of what was typed, such as a map's key given twice: said at the field and stopping the submit until cleared with undefined. */
+    hold: (path: Path, text: string | undefined) => void
     /** Marks a field as left, so its issues show from now on. */
     touch: (path: Path) => void
     /** The issues a field shows now, worst first. */
@@ -313,6 +333,7 @@ export function useSchemaForm(
     const [value, setValue] = useState<unknown>(() => initial ?? initialValue(schema))
     const [drafts, setDrafts] = useState<Record<string, string>>({})
     const [unread, setUnread] = useState<ReadonlySet<string>>(new Set())
+    const [held, setHeld] = useState<Record<string, string>>({})
     const [touched, setTouched] = useState<ReadonlySet<string>>(new Set())
     const [submitted, setSubmitted] = useState(defaultSubmitted)
     const [open, setOpen] = useState<string | null>(defaultOpen === undefined ? null : pointer(defaultOpen))
@@ -361,6 +382,7 @@ export function useSchemaForm(
         setUnread((current) => shiftSet(current, at, map))
         setChanged((current) => new Set([...shiftSet(current, at, map), at]))
         setDrafts((current) => shiftRecord(current, at, map))
+        setHeld((current) => shiftRecord(current, at, map))
         setOpen((current) => (current === null ? null : shiftKey(current, at, map)))
     }
 
@@ -407,6 +429,7 @@ export function useSchemaForm(
         const field = schemaAt(schema, parsePointer(at))
         add(at, { tone: 'critical', ...words.say({ kind: 'type', expected: types(field).main[0], path: [], tone: 'critical' }, field) })
     }
+    for (const [at, text] of Object.entries(held)) add(at, { tone: 'critical', text })
     for (const [at, text] of Object.entries(drafts)) {
         if (text.trim() === '' || kindOf(schemaAt(schema, parsePointer(at)), schema) !== 'json') continue
         try {
@@ -473,6 +496,8 @@ export function useSchemaForm(
                 else next.delete(at)
                 return next
             }),
+        hold: (path, text) =>
+            setHeld(({ [pointer(path)]: _gone, ...rest }) => (text === undefined ? rest : { ...rest, [pointer(path)]: text })),
         touch: (path) => {
             const at = pointer(path)
             if (given(valueAt(value, path)) || drafts[at] !== undefined || unread.has(at)) setTouched((current) => new Set(current).add(at))
@@ -543,14 +568,17 @@ function parsePointer(at: string): Path {
 function schemaAt(schema: JsonSchema, path: Path, root: JsonSchema = schema): JsonSchema {
     let at = fieldSchema(schema, root)
     for (const part of path) {
-        const next = typeof part === 'number' ? at.items : at.properties?.[part]
+        const next =
+            typeof part === 'number'
+                ? at.items
+                : (at.properties?.[part] ?? (typeof at.additionalProperties === 'object' ? at.additionalProperties : undefined))
         if (next === undefined) return {}
         at = fieldSchema(next, root)
     }
     return at
 }
 
-type Kind = 'object' | 'records' | 'list' | 'choices' | 'enum' | 'boolean' | 'number' | 'text' | 'longtext' | 'json'
+type Kind = 'object' | 'records' | 'list' | 'choices' | 'map' | 'enum' | 'boolean' | 'number' | 'scalars' | 'text' | 'longtext' | 'json'
 
 function kindOf(at: JsonSchema, root: JsonSchema): Kind {
     const main = types(at).main
@@ -560,9 +588,15 @@ function kindOf(at: JsonSchema, root: JsonSchema): Kind {
         if (items.enum !== undefined) return 'choices'
         if (items.properties !== undefined) return 'records'
         const kind = kindOf(items, root)
-        return kind === 'json' || kind === 'object' ? 'json' : 'list'
+        return kind === 'json' || kind === 'object' || kind === 'map' ? 'json' : 'list'
+    }
+    // An object of any keys whose values are each one scalar, such as headers or environment variables.
+    if (typeof at.additionalProperties === 'object' && (main.length === 0 || main[0] === 'object')) {
+        const kind = kindOf(fieldSchema(at.additionalProperties, root), root)
+        return kind === 'enum' || kind === 'boolean' || kind === 'number' || kind === 'scalars' || kind === 'text' ? 'map' : 'json'
     }
     if (at.enum !== undefined) return 'enum'
+    if (scalarUnion(at, root) !== undefined) return 'scalars'
     if (main.length > 1) return 'json'
     switch (main[0]) {
         case 'boolean':
@@ -579,7 +613,7 @@ function kindOf(at: JsonSchema, root: JsonSchema): Kind {
 
 /** Whether a field takes half a row: numbers, choices, switches, dates and short text. */
 function short(at: JsonSchema, kind: Kind): boolean {
-    if (kind === 'number' || kind === 'enum' || kind === 'boolean') return true
+    if (kind === 'number' || kind === 'enum' || kind === 'boolean' || kind === 'scalars') return true
     if (kind !== 'text') return false
     return at.format === 'date' || at.format === 'email' || (at.maxLength !== undefined && at.maxLength <= 64) || at.pattern !== undefined
 }
@@ -605,7 +639,11 @@ function edge(form: SchemaFormState, path: Path): string | undefined {
     return tone === null ? undefined : cn('pr-9', ISSUE_EDGE[tone])
 }
 
-/** The control for one value that has no fields of its own. */
+/** The schema default an unset field shows as what applies, or undefined when it has none to show. */
+function shownDefault(at: JsonSchema, value: unknown): unknown {
+    return value === undefined && at.default !== null ? at.default : undefined
+}
+
 /** What an app's own control for a schema field is given: where it is, what it holds, and how to change it. */
 export interface SchemaFieldControl {
     path: Path
@@ -643,6 +681,8 @@ function Control({
     path,
     at,
     label,
+    name,
+    held,
     ask = true,
     required = false,
 }: {
@@ -650,13 +690,18 @@ function Control({
     path: Path
     at: JsonSchema
     label?: string
+    /** The field's name where its label is drawn apart, for a control that names a button by it (a secret's Replace). */
+    name?: string
+    /** The value and its setter where they are held outside the form's value, as a map's row is while its key is unsettled. */
+    held?: { value: unknown; set: (value: unknown) => void }
     /** The control says it is required, as its label's mark shows. */
     required?: boolean
     /** Whether to ask the app's `field` for this field, false where its property already did. */
     ask?: boolean
 }) {
     const kind = kindOf(at, form.schema)
-    const value = valueAt(form.value, path)
+    const value = held === undefined ? valueAt(form.value, path) : held.value
+    const set = held === undefined ? (next: unknown) => form.set(path, next) : held.set
     const id = form.id(path)
     const invalid = worst(form.shown(path)) === 'critical' || undefined
     const renderer = useContext(FieldRendererContext)
@@ -664,7 +709,7 @@ function Control({
         path,
         schema: at,
         value,
-        set: (next) => form.set(path, next),
+        set,
         touch: () => form.touch(path),
         id,
         invalid: invalid === true,
@@ -677,6 +722,10 @@ function Control({
                 {custom}
             </Marked>
         )
+    const fallback = shownDefault(at, value)
+    // An unset field with a default shows it, muted, as what applies: "normal (default)".
+    const placeholder =
+        fallback === undefined ? undefined : `${typeof fallback === 'string' ? fallback : literal(fallback)} (${form.words.default})`
     const common = {
         id,
         'aria-label': label,
@@ -684,6 +733,7 @@ function Control({
         'aria-required': required || undefined,
         onBlur: () => form.touch(path),
         readOnly: at.readOnly === true,
+        placeholder,
     }
     switch (kind) {
         case 'enum': {
@@ -695,9 +745,10 @@ function Control({
                 <Marked form={form} path={path}>
                     <Select
                         items={items}
-                        value={given(value) ? JSON.stringify(value) : ''}
+                        // Unset with a default, the trigger shows the default as its placeholder.
+                        value={given(value) ? JSON.stringify(value) : fallback === undefined ? '' : null}
                         onValueChange={(next) => {
-                            form.set(path, next === '' || next === null ? undefined : (JSON.parse(next as string) as unknown))
+                            set(next === '' || next === null ? undefined : (JSON.parse(next as string) as unknown))
                             form.touch(path)
                         }}
                         disabled={at.readOnly === true}
@@ -709,7 +760,7 @@ function Control({
                             aria-required={required || undefined}
                             className={cn('w-full', edge(form, path))}
                         >
-                            <SelectValue placeholder={form.words.choose} />
+                            <SelectValue placeholder={placeholder ?? form.words.choose} />
                         </SelectTrigger>
                         <SelectContent>
                             {items.map((item) => (
@@ -735,13 +786,14 @@ function Control({
                         required={required}
                         issues={form.shown(path)}
                         value={typeof value === 'number' ? value : null}
-                        onValueChange={(next) => form.set(path, next ?? undefined)}
+                        onValueChange={(next) => set(next ?? undefined)}
                         onIssueChange={(issue) => form.setUnread(path, issue !== null && unreadable.includes(issue.text))}
                         integer={types(at).main[0] === 'integer'}
                         min={at.minimum}
                         max={at.maximum}
                         step={typeof at.multipleOf === 'number' ? at.multipleOf : undefined}
                         readOnly={at.readOnly === true}
+                        placeholder={placeholder}
                         onBlur={() => form.touch(path)}
                         className={edge(form, path)}
                         words={{ unreadable: unreadable[0], whole: unreadable[1] }}
@@ -756,24 +808,42 @@ function Control({
                         {...common}
                         rows={4}
                         value={typeof value === 'string' ? value : ''}
-                        onChange={(event) => form.set(path, event.target.value === '' ? undefined : event.target.value)}
+                        onChange={(event) => set(event.target.value === '' ? undefined : event.target.value)}
                         className={edge(form, path)}
                     />
                 </Marked>
             )
+        case 'scalars': {
+            // Typed text is the narrowest value it reads as, kept as typed while that writes back otherwise ("1." for 1).
+            const allowed = scalarUnion(at, form.schema) ?? []
+            return (
+                <Marked form={form} path={path}>
+                    <Input
+                        {...common}
+                        value={form.draft(path) ?? (given(value) ? String(value) : '')}
+                        onChange={(event) => {
+                            set(readScalar(event.target.value, allowed))
+                            form.setDraft(path, event.target.value)
+                        }}
+                        className={edge(form, path)}
+                    />
+                </Marked>
+            )
+        }
         case 'json': {
             const text = form.draft(path) ?? (value === undefined ? '' : JSON.stringify(value, null, 2))
             return (
                 <Marked form={form} path={path} top>
                     <Textarea
                         {...common}
+                        placeholder={undefined}
                         rows={4}
                         spellCheck={false}
                         value={text}
                         onChange={(event) => {
                             const raw = event.target.value
                             try {
-                                form.set(path, raw.trim() === '' ? undefined : (JSON.parse(raw) as unknown))
+                                set(raw.trim() === '' ? undefined : (JSON.parse(raw) as unknown))
                             } catch {
                                 // The text stays as typed and says it does not parse.
                             }
@@ -792,10 +862,10 @@ function Control({
                         <SecretField
                             bare
                             id={id}
-                            label={label ?? ''}
+                            label={label ?? name ?? ''}
                             issues={form.shown(path)}
                             value={typeof value === 'string' && value !== '' ? value : undefined}
-                            onChange={(next) => form.set(path, next)}
+                            onChange={set}
                             sealed={secret !== undefined}
                             setAt={secret?.setAt}
                             now={form.now}
@@ -813,7 +883,7 @@ function Control({
                         {...common}
                         type={at.format === 'date' ? 'date' : 'text'}
                         value={typeof value === 'string' ? value : value === undefined || value === null ? '' : String(value)}
-                        onChange={(event) => form.set(path, event.target.value === '' ? undefined : event.target.value)}
+                        onChange={(event) => set(event.target.value === '' ? undefined : event.target.value)}
                         className={cn(mono && 'font-mono', edge(form, path))}
                     />
                 </Marked>
@@ -904,7 +974,7 @@ function Property({
     const value = valueAt(form.value, path)
     const locked = at.readOnly === true
     const look = useContext(FieldLookContext)
-    const fallback = look.fallbacks && at.default !== undefined ? form.words.fallback(at.default) : undefined
+    const fallback = look.fallbacks && at.default !== undefined && at.default !== null ? form.words.fallback(at.default) : undefined
 
     // The app's own control for any field, a whole object, list or choice among them, in the form's frame.
     const custom = useContext(FieldRendererContext)?.({
@@ -958,7 +1028,8 @@ function Property({
                         id={form.id(path)}
                         label={label}
                         explain={at.description}
-                        checked={value === true}
+                        checked={value === undefined ? at.default === true : value === true}
+                        note={value === undefined && typeof at.default === 'boolean' ? form.words.default : undefined}
                         onCheckedChange={(checked) => form.set(path, checked)}
                         disabled={at.readOnly === true}
                     />
@@ -977,7 +1048,8 @@ function Property({
         )
 
     const items = Array.isArray(value) ? value : []
-    const resolvedItem = at.items === undefined ? {} : fieldSchema(at.items, form.schema)
+    const item = kind === 'map' ? at.additionalProperties : at.items
+    const resolvedItem = typeof item === 'object' ? fieldSchema(item, form.schema) : {}
     const itemSchema = locked ? lock(resolvedItem) : resolvedItem
 
     if (kind === 'choices')
@@ -990,7 +1062,7 @@ function Property({
                         const on = items.some((item) => JSON.stringify(item) === key)
                         return (
                             <label key={key} className="flex items-center gap-2 text-sm">
-                                <Checkbox
+                                <PlainCheckbox
                                     checked={on}
                                     disabled={locked}
                                     onCheckedChange={(checked) => {
@@ -1037,6 +1109,32 @@ function Property({
             >
                 {(_, index) => <Fields form={form} path={[...path, index]} schema={itemSchema} />}
             </RepeatedGroup>
+        )
+    }
+
+    if (kind === 'map') {
+        const head = (onAdd?: () => void) => (
+            <>
+                <ListHead
+                    form={form}
+                    path={path}
+                    title={<Title label={label} mono={mono} hint={hint} required={required} />}
+                    onAdd={onAdd}
+                />
+                {at.description !== undefined && <p className="-mt-1 text-xs text-muted-foreground">{at.description}</p>}
+            </>
+        )
+        return (
+            <div className="flex min-w-0 flex-col gap-2 @lg:col-span-2">
+                <MapField
+                    form={form}
+                    path={path}
+                    at={at}
+                    readOnly={locked}
+                    head={head}
+                    control={(where, held, name) => <Control form={form} path={where} at={itemSchema} label={name} held={held} />}
+                />
+            </div>
         )
     }
 
@@ -1112,7 +1210,7 @@ function Property({
             className={span}
             words={{ required: form.words.required }}
         >
-            <Control form={form} path={path} at={at} ask={false} required={required} />
+            <Control form={form} path={path} at={at} name={label} ask={false} required={required} />
         </Field>
     )
 }
@@ -1154,7 +1252,9 @@ export interface SchemaFormProps {
  * A form drawn from a JSON Schema and held by `useSchemaForm`: a field for each property, in the
  * schema's order, labeled by its title with the key beside it (or by the key alone in mono), its
  * description as help. Strings, numbers, enums, booleans, nested objects, lists of values, lists of
- * objects and sets of choices each get their own control; anything else is edited as JSON.
+ * objects, sets of choices, maps of scalars (a key and a value per row) and choices of scalar types
+ * (one text box, read as the narrowest type it parses as) each get their own control; anything else
+ * is edited as JSON. An unset field with a schema `default` shows it, muted, as what applies.
  *
  * What is wrong is checked against the schema, and said the way every form here says it: a colored
  * edge and a mark at the end of the input, which opens the message and a fix when one is plain.
