@@ -1394,7 +1394,7 @@ export function DataTable<T>({
         setContentWidths((before) => ({ ...before, ...next }))
         setMeasuring(false)
     })
-    // A content cell whose own size changes, its value grown or its face loaded, is measured again once cut short.
+    // A content cell whose size or content changes, its value grown or its face loaded, is measured again once cut short.
     const drawnFrom = view.top
     useEffect(() => {
         const box = scroller.current
@@ -1410,9 +1410,18 @@ export function DataTable<T>({
                 .filter((cell) => outgrown([cell], EMPTY))
                 .map((cell) => cell.column),
         )
-        const observer = new ResizeObserver(() => outgrown(sizes(), capped.current ?? EMPTY) && setMeasuring(true))
-        for (const { element } of cells) observer.observe(element)
-        return () => observer.disconnect()
+        const check = () => outgrown(sizes(), capped.current ?? EMPTY) && setMeasuring(true)
+        const observer = new ResizeObserver(check)
+        // A cell that fills its track keeps its size when what it holds grows, such as a count loaded later.
+        const changes = typeof MutationObserver === 'undefined' ? undefined : new MutationObserver(check)
+        for (const { element } of cells) {
+            observer.observe(element)
+            changes?.observe(element, { childList: true, subtree: true, characterData: true })
+        }
+        return () => {
+            observer.disconnect()
+            changes?.disconnect()
+        }
     }, [measuring, contentKey, drawnFrom, rows])
 
     // A stacked line's name is as wide as the widest name, at most 12rem, its whole text on hover when cut.
