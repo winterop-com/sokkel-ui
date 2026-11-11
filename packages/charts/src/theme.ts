@@ -44,7 +44,8 @@ export function chartTheme(look: ChartLook): Record<string, unknown> {
             axisPointer: {
                 lineStyle: { color: look.muted, type: 'dashed', width: 1 },
                 crossStyle: { color: look.muted },
-                shadowStyle: { color: look.mix('var(--muted-foreground)', 14) },
+                // Translucent, as ECharts draws the shadow over the bars: the hovered one shows through.
+                shadowStyle: { color: look.muted, opacity: 0.14 },
                 label: { backgroundColor: look.popover, color: look.foreground, fontFamily: look.font },
             },
         },
