@@ -126,7 +126,8 @@ export interface CommandPaletteWords {
     /** The foot's word before the keys that open and close the palette. */
     palette: string
     /** Between the two presses of a row's sequence, as G then D. */
-    sequence: string
+    /** The word between the keys of a sequence; "then" when absent. */
+    sequence?: string
 }
 
 const WORDS: CommandPaletteWords = {

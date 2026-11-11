@@ -150,7 +150,7 @@ export function Field({
                 {hint !== undefined && (
                     <span className={cn('text-xs', keyHint ? 'font-mono text-muted-foreground' : 'text-faint')}>{hint}</span>
                 )}
-                {note}
+                {note !== undefined && <span className="min-w-0 text-xs text-faint">{note}</span>}
             </div>
             {description !== undefined ? (
                 <p id={`${id}-description`} className={cn('text-body text-pretty text-muted-foreground', lined && 'pt-1.5')}>
