@@ -51,6 +51,19 @@ function useLookKey(): string {
     return key
 }
 
+/** The hidden element colors are resolved on, kept in the page so a lookup restyles it alone, not the page around it. */
+let probe: HTMLSpanElement | undefined
+
+function probeElement(): HTMLSpanElement {
+    if (probe?.isConnected !== true) {
+        probe = document.createElement('span')
+        probe.style.display = 'none'
+        probe.setAttribute('aria-hidden', 'true')
+        document.body.append(probe)
+    }
+    return probe
+}
+
 /** Resolves a CSS color expression to hex by painting it on a one-pixel canvas. */
 function makeHex(): (css: string) => string {
     const context = document.createElement('canvas').getContext('2d', { willReadFrequently: true })
@@ -59,12 +72,9 @@ function makeHex(): (css: string) => string {
         const known = cache.get(css)
         if (known !== undefined) return known
         if (context === null) return '#888888'
-        const probe = document.createElement('span')
-        probe.style.color = css
-        probe.style.display = 'none'
-        document.body.append(probe)
-        const computed = getComputedStyle(probe).color
-        probe.remove()
+        const element = probeElement()
+        element.style.color = css
+        const computed = getComputedStyle(element).color
         context.clearRect(0, 0, 1, 1)
         context.fillStyle = computed
         context.fillRect(0, 0, 1, 1)
