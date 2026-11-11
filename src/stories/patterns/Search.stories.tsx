@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { CalendarClock, Download, FolderGit2, Play, Plus, Settings, Users, Workflow } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { CommandPalette, type PaletteGroup } from '@winterop-com/sokkel-ui/CommandPalette'
 import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
@@ -86,7 +86,10 @@ export const TooShort: StoryObj = {
     render: () => <Search search={quick} onOpen={open} minQuery={2} defaultQuery="h" defaultOpen className="max-w-md" />,
 }
 
-/** The app's search failed: the list says so in the server's own words, through `words.failed`. */
+/**
+ * The app's search failed: the list says so in the server's own words, through `words.failed`, over
+ * a Retry option that Enter takes, which asks the query again at once.
+ */
 export const Failed: StoryObj = {
     parameters: { frame: 'padded' },
     render: () => (
@@ -99,6 +102,49 @@ export const Failed: StoryObj = {
             className="max-w-md"
         />
     ),
+}
+
+/**
+ * Answers `harbor` at once, then never answers or fails what comes after it, as a server gone quiet
+ * or down after the first search.
+ */
+function laterSearch(later: 'wait' | 'fail') {
+    return (query: string) =>
+        query === 'harbor'
+            ? quick(query)
+            : later === 'wait'
+              ? new Promise<SearchGroup[]>(() => undefined)
+              : Promise.reject(new Error(`The search for “${query}” did not answer.`))
+}
+
+/** A search that answered `harbor` and is then given `juniper`, as if typed. */
+function Retyped({ later }: { later: 'wait' | 'fail' }) {
+    const [query, setQuery] = useState('harbor')
+    const search = useMemo(() => laterSearch(later), [later])
+    // The first answer lands as the search mounts; the next query follows it.
+    useEffect(() => setQuery('juniper'), [])
+    return <Search search={search} onOpen={open} onSeeAll={open} query={query} onQueryChange={setQuery} defaultOpen className="max-w-md" />
+}
+
+/**
+ * `harbor` answered, then `juniper` typed while its answer is still on the way: the harbor results
+ * stay in place so the list does not jump, but dimmed and out of reach, so none can be opened as a
+ * juniper result. Only the way to every result for juniper can be chosen.
+ */
+export const Stale: StoryObj = {
+    name: 'Stale results',
+    parameters: { frame: 'padded' },
+    render: () => <Retyped later="wait" />,
+}
+
+/**
+ * `harbor` answered, then the search for `juniper` failed: the failure and Retry take the list's
+ * place, and the harbor results are gone rather than shown as juniper's.
+ */
+export const FailedAfterResults: StoryObj = {
+    name: 'Failed after results',
+    parameters: { frame: 'padded' },
+    render: () => <Retyped later="fail" />,
 }
 
 /** Where the popover has room, the pane beside the list previews the highlighted result; the list ends in the way to every result. */

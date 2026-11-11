@@ -1,4 +1,4 @@
-import type { LucideIcon } from 'lucide-react'
+import { SearchIcon, type LucideIcon } from 'lucide-react'
 import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import { useSearch } from '../hooks/use-search'
@@ -93,7 +93,16 @@ export interface PaletteSearch {
     minQuery?: number
     /** Milliseconds of quiet typing before the search is asked again. */
     debounce?: number
-    words?: { searching: string }
+    words?: Partial<PaletteSearchWords>
+}
+
+/** The words the palette's search says. */
+export interface PaletteSearchWords {
+    searching: string
+    /** Says the search failed, given the message the app's search threw or rejected with. */
+    failed: (reason: string) => string
+    /** The row that asks a failed search again. */
+    retry: string
 }
 
 /**
@@ -173,7 +182,9 @@ export interface CommandPaletteProps {
  * on a tile at its start and its hint or code at its end, as a record found by a search is. The
  * groups are listed by their `rank`, one group to a title. With `search` the app's own results for
  * the query follow the commands, each with its thumbnail, artwork or icon and the query's words
- * marked. On a touch screen, which has no Escape, a Close button stands at its foot. `filter`
+ * marked; an earlier query's results stay dimmed and passed over until the query's own come, a
+ * failed search says so above a Retry row, and while the search waits or has failed the palette
+ * never says that no command matches. On a touch screen, which has no Escape, a Close button stands at its foot. `filter`
  * chooses how the commands are matched: by their letters (`fuzzy`), by every word typed (`terms`),
  * or by the app's own score. `foot` adds a strip with the app's mark and the keys it answers, its
  * verb beside Enter following the chosen row (`verb` on a row or its group: Open, Switch, Run). A
@@ -210,6 +221,9 @@ export function CommandPalette({
     const listed = useMemo(() => (score === undefined ? merged : filterCommands(merged, query, score)), [merged, query, score])
     const answer = useSearch(search?.search, query, { enabled: open, minQuery: search?.minQuery, debounce: search?.debounce })
     const found = answer.groups.filter((group) => group.results.length > 0)
+    // An earlier query's results stay while the next answer comes, dimmed and passed over.
+    const stale = answer.state === 'loading'
+    const said = search?.words
     const verbs = useMemo(() => {
         const byValue = new Map<string, string>()
         for (const group of merged)
@@ -236,7 +250,9 @@ export function CommandPalette({
             <Command shouldFilter={score === undefined} className="p-(--palette-inset)" value={chosen} onValueChange={setChosen}>
                 <CommandInput placeholder={words.placeholder} value={query} onValueChange={setQuery} />
                 <CommandList ref={list} className="max-h-[min(24rem,60svh)] scroll-fade-b pb-1.5">
-                    {found.length === 0 && answer.state !== 'loading' && <CommandEmpty>{words.empty}</CommandEmpty>}
+                    {found.length === 0 && (answer.state === 'idle' || answer.state === 'done') && (
+                        <CommandEmpty>{words.empty}</CommandEmpty>
+                    )}
                     {listed.map((group, index) => (
                         <div key={group.title}>
                             {index > 0 && <CommandSeparator className="-mx-(--palette-inset)" />}
@@ -274,7 +290,7 @@ export function CommandPalette({
                                                 </>
                                             )}
                                             {(kind !== undefined || command.keys !== undefined) && (
-                                                <CommandShortcut className="flex shrink-0 items-center gap-2 tracking-normal">
+                                                <CommandShortcut className="flex shrink-0 items-center gap-2">
                                                     {kind !== undefined && <span className="text-faint">{kind}</span>}
                                                     {command.keys !== undefined && (
                                                         <span className="flex items-center gap-1.5">
@@ -305,6 +321,7 @@ export function CommandPalette({
                                             className={ROW}
                                             value={`search ${group.kind} ${result.id}`}
                                             forceMount
+                                            disabled={stale}
                                             onSelect={() => {
                                                 onOpenChange(false)
                                                 search.onOpen(result, group)
@@ -316,11 +333,23 @@ export function CommandPalette({
                                 </CommandGroup>
                             </div>
                         ))}
-                    {search !== undefined && found.length === 0 && answer.state === 'loading' && (
+                    {((found.length === 0 && stale) || answer.state === 'failed') && (
                         <div role="status" className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
-                            <Spinner className="text-faint" />
-                            {search.words?.searching ?? 'Searching'}
+                            {answer.state === 'failed' ? (
+                                (said?.failed?.(answer.reason) ?? 'The search did not answer.')
+                            ) : (
+                                <>
+                                    <Spinner className="text-faint" />
+                                    {said?.searching ?? 'Searching'}
+                                </>
+                            )}
                         </div>
+                    )}
+                    {answer.state === 'failed' && (
+                        <CommandItem className={ROW} value="search retry" forceMount onSelect={answer.retry}>
+                            <SearchIcon className="text-muted-foreground" aria-hidden />
+                            {said?.retry ?? 'Retry'}
+                        </CommandItem>
                     )}
                 </CommandList>
                 {foot === undefined ? (

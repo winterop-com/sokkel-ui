@@ -6,7 +6,7 @@ import { Command as CommandPrimitive } from 'cmdk'
 import { cn } from '../../lib/utils'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './dialog'
 import { InputGroup, InputGroupAddon } from './input-group'
-import { SearchIcon, CheckIcon } from 'lucide-react'
+import { SearchIcon } from 'lucide-react'
 
 export type CommandProps = React.ComponentProps<typeof CommandPrimitive>
 
@@ -21,21 +21,16 @@ function Command({ className, ...props }: CommandProps) {
 }
 
 export type CommandDialogProps = Omit<React.ComponentProps<typeof Dialog>, 'children'> & {
-    title?: string
-    description?: string
+    /** What the dialog is called to a screen reader, as Command palette. */
+    title: string
+    /** What it is for, read after the title. */
+    description: string
     className?: string
     showCloseButton?: boolean
     children: React.ReactNode
 }
 
-function CommandDialog({
-    title = 'Command palette',
-    description = 'Search for a command',
-    children,
-    className,
-    showCloseButton = false,
-    ...props
-}: CommandDialogProps) {
+function CommandDialog({ title, description, children, className, showCloseButton = false, ...props }: CommandDialogProps) {
     return (
         <Dialog {...props}>
             <DialogHeader className="sr-only">
@@ -58,11 +53,7 @@ function CommandInput({ className, ...props }: CommandInputProps) {
     return (
         <div data-slot="command-input-wrapper" className="p-1 pb-0">
             <InputGroup className="h-8! rounded-control! border-input/30 bg-input/30 shadow-none! *:data-[slot=input-group-addon]:pl-2!">
-                <CommandPrimitive.Input
-                    data-slot="command-input"
-                    className={cn('w-full text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50', className)}
-                    {...props}
-                />
+                <CommandPrimitive.Input data-slot="command-input" className={cn('w-full text-sm outline-hidden', className)} {...props} />
                 <InputGroupAddon>
                     <SearchIcon className="size-4 shrink-0 opacity-50" />
                 </InputGroupAddon>
@@ -112,7 +103,7 @@ function CommandSeparator({ className, ...props }: CommandSeparatorProps) {
 
 export type CommandItemProps = React.ComponentProps<typeof CommandPrimitive.Item>
 
-function CommandItem({ className, children, ...props }: CommandItemProps) {
+function CommandItem({ className, ...props }: CommandItemProps) {
     return (
         <CommandPrimitive.Item
             data-slot="command-item"
@@ -121,10 +112,7 @@ function CommandItem({ className, children, ...props }: CommandItemProps) {
                 className,
             )}
             {...props}
-        >
-            {children}
-            <CheckIcon className="ml-auto opacity-0 group-has-data-[slot=command-shortcut]/command-item:hidden group-data-[checked=true]/command-item:opacity-100" />
-        </CommandPrimitive.Item>
+        />
     )
 }
 
@@ -134,10 +122,7 @@ function CommandShortcut({ className, ...props }: CommandShortcutProps) {
     return (
         <span
             data-slot="command-shortcut"
-            className={cn(
-                'ml-auto text-xs tracking-widest text-muted-foreground group-data-selected/command-item:text-foreground',
-                className,
-            )}
+            className={cn('ml-auto text-xs text-muted-foreground group-data-selected/command-item:text-foreground', className)}
             {...props}
         />
     )

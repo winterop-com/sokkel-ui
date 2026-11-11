@@ -42,12 +42,30 @@ export interface SearchGroup {
  */
 export type SearchSource = (query: string, signal: AbortSignal) => readonly SearchGroup[] | Promise<readonly SearchGroup[]>
 
-/** Where a search stands: not asked, waiting, answered, or failed. */
+/**
+ * Where a search for `query` stands: not asked, waiting, answered, or failed. Groups belong to the
+ * query they answer: `done` holds the query's own and `failed` none, while `loading` holds only an
+ * earlier query's, kept so the list does not jump while the answer comes, to be drawn as stale and
+ * never opened.
+ */
 export type SearchState =
-    | { state: 'idle'; groups: readonly SearchGroup[] }
-    | { state: 'loading'; groups: readonly SearchGroup[] }
-    | { state: 'done'; groups: readonly SearchGroup[] }
-    | { state: 'failed'; groups: readonly SearchGroup[]; reason: string }
+    | { state: 'idle'; query: string; groups: readonly SearchGroup[] }
+    | { state: 'loading'; query: string; groups: readonly SearchGroup[] }
+    | { state: 'done'; query: string; groups: readonly SearchGroup[] }
+    | { state: 'failed'; query: string; groups: readonly SearchGroup[]; reason: string }
+
+/** A search not asked yet. */
+export const SEARCH_IDLE: SearchState = { state: 'idle', query: '', groups: [] }
+
+/**
+ * What a search held so far stands as for `query`: itself when it is about that query, or else the
+ * query loading with the held groups kept as stale. So an older query's results, or a failure's,
+ * never stand as the query's own, not even while the next ask waits out the pause in typing.
+ * `asking` is the step as the query is asked: it keeps only an answer the query already has.
+ */
+export function searchFor(held: SearchState, query: string, asking = false): SearchState {
+    return held.query === query && (!asking || held.state === 'done') ? held : { state: 'loading', query, groups: held.groups }
+}
 
 /** A result in the order the keyboard moves through them, with its group and its place in the list. */
 export interface SearchEntry {
