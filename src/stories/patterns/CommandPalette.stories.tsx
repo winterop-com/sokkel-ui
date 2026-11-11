@@ -16,7 +16,7 @@ import {
     Users,
     Workflow,
 } from 'lucide-react'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import {
     CommandPalette,
@@ -267,6 +267,47 @@ export const SearchResults: StoryObj = {
         />
     ),
 }
+/**
+ * The palette opened on `harbor`, whose results come at once, then closed and opened again on
+ * `juniper`, whose search never answers or fails, as a server gone quiet or down after the first search.
+ */
+function Reopened({ later }: { later: 'wait' | 'fail' }) {
+    const [step, setStep] = useState<'harbor' | 'closed' | 'juniper'>('harbor')
+    // Each step follows the last as it lands: the first answer arrives as the palette mounts.
+    useEffect(() => {
+        if (step !== 'juniper') setStep(step === 'harbor' ? 'closed' : 'juniper')
+    }, [step])
+    return (
+        <CommandPalette
+            open={step !== 'closed'}
+            onOpenChange={() => undefined}
+            groups={GROUPS}
+            defaultQuery={step === 'harbor' ? 'harbor' : 'juniper'}
+            filter="terms"
+            search={{
+                search: (query) =>
+                    query === 'harbor'
+                        ? searchTidevann(query, 4)
+                        : later === 'wait'
+                          ? new Promise(() => undefined)
+                          : Promise.reject(new Error(`The search for “${query}” did not answer.`)),
+                onOpen: () => undefined,
+                words: { failed: (reason) => reason },
+            }}
+        />
+    )
+}
+/**
+ * `juniper` searched while `harbor`'s results are the last that came: they stay dimmed and passed
+ * over, so none opens as a juniper result, and the palette does not say that no command matches
+ * while the answer is on its way.
+ */
+export const SearchStale: StoryObj = { name: 'Search stale', render: () => <Reopened later="wait" /> }
+/**
+ * The search for `juniper` failed: the palette says so in the server's words (`words.failed`) over
+ * a Retry row that Enter takes, never that no command matches, and the harbor results are gone.
+ */
+export const SearchFailed: StoryObj = { name: 'Search failed', render: () => <Reopened later="fail" /> }
 /** Records as two lines, a drawn cover or a picture at the start, a person's round; one-line commands keep their height. */
 export const TwoLines: StoryObj = { name: 'Two lines', render: () => <Palette initial groups={TWO_LINES} /> }
 

@@ -174,6 +174,12 @@ export type DataAction =
       }
     | { id: string; separator: true }
 
+/** A row for `DataTable` to bring into view by its key, opening it when `open`. */
+export interface DataReveal {
+    key: string
+    open?: boolean
+}
+
 export interface DataSort {
     column: string
     direction: 'asc' | 'desc'
@@ -859,6 +865,14 @@ export interface DataTableProps<T> {
     expanded?: ReadonlySet<string>
     defaultExpanded?: ReadonlySet<string>
     onExpandedChange?: (expanded: ReadonlySet<string>) => void
+    /**
+     * Brings a row into view, such as one arriving from a search result: the branches above it
+     * open, its group unfolds, its page shows, and it is scrolled to and made the active row with
+     * the focus on the table. `open` opens the row itself too, its detail or its children. As
+     * `CodeEditor`'s `reveal`, each new object reveals once, so hold it (in state, or a constant)
+     * rather than writing it inline; a key no row has waits for the rows to bring it.
+     */
+    reveal?: DataReveal | null
     sort?: DataSort | null
     defaultSort?: DataSort | null
     onSortChange?: (sort: DataSort | null) => void
@@ -1089,6 +1103,10 @@ export interface DataTableProps<T> {
  * cards, an editable column's line is a field that opens on a press. A table that edits nothing
  * carries none of it.
  *
+ * `reveal` brings a row into view by its key, such as one chosen from a search: the branches above
+ * it open, its group unfolds and its page shows, then it is scrolled to, virtualized or not, and
+ * made the active row with the focus on the table; with `open` its own detail or children open too.
+ *
  * Sort, selection, open branches, folded groups, hidden columns, the columns' order and their
  * widths are each held by the table unless the app passes the value and hears the change; a saved
  * view (`SavedViews`) holds them from outside.
@@ -1123,6 +1141,7 @@ export function DataTable<T>({
     expanded: expandedValue,
     defaultExpanded = EMPTY,
     onExpandedChange,
+    reveal,
     sort: sortValue,
     defaultSort = null,
     onSortChange,
@@ -1758,7 +1777,33 @@ export function DataTable<T>({
     const sortMenu = barShown && gridView && sortable.length > 0
     // Base UI's checkbox and the menus' lists are fetched after the first paint, so they are here by the time a box is
     // pressed or a menu opens; until then a selection box is drawn the same without it.
-    const later = useDeferred(selectable || columnMenu || sortMenu)
+    const later = useDeferred(selectable || columnMenu || sortMenu || !!reveal)
+
+    // A row to reveal: its way opened once the code that finds it is here and the row is known, then shown, scrolled
+    // to and made active. Each reveal is done once.
+    const revealed = useRef<unknown>(undefined)
+    const revealing = useRef<string>(undefined)
+    useEffect(() => {
+        const found = reveal && reveal !== revealed.current && later?.rowPath(rows, rowKey, treeKids, reveal.key)
+        if (!found) return
+        revealed.current = reveal
+        const open = new Set([...expanded, ...found.above, ...(reveal.open ? [reveal.key] : [])])
+        if (open.size > expanded.size) setExpanded(open)
+        const into = groupOf?.(found.top)
+        if (into !== undefined && folded.has(into)) setFolded(new Set([...folded].filter((key) => key !== into)))
+        revealing.current = reveal.key
+        // oxlint-disable-next-line react-hooks/exhaustive-deps -- a reveal waits for its code and its row, then is done once
+    }, [reveal, later, rows, treeKids])
+    useEffect(() => {
+        if (revealing.current === undefined) return
+        const at = all.findIndex((entry) => entry.key === revealing.current)
+        const on = Math.floor(at / pageSize)
+        if (at < 0) return
+        if (paging === 'client' && on !== current) return setPage(on)
+        revealing.current = undefined
+        scroller.current?.focus({ preventScroll: true })
+        moveTo(flat.indexOf(all[at]))
+    })
     // A list pins nothing and sets its columns apart with a gap; a table pins its first and last columns and pads its cells.
     const pinned = list ? '' : 'sticky z-1 bg-inherit shadow-[1px_0_0_var(--border)]'
     const pinnedEnd = list ? '' : 'sticky z-1 bg-inherit shadow-[-1px_0_0_var(--border)]'

@@ -1,4 +1,4 @@
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, RotateCw } from 'lucide-react'
 import { useContext, useEffect, useId, useRef, useState, type ReactNode } from 'react'
 
 import { useSearch } from '../hooks/use-search'
@@ -22,6 +22,8 @@ export interface SearchWords {
     empty: (query: string) => string
     /** Says the search failed, given the message the app's search threw or rejected with. */
     failed: (reason: string) => string
+    /** The way to ask a failed search again. */
+    retry: string
     /** Says how many characters a search needs, shown once something shorter is typed. */
     tooShort: (minQuery: number) => string
     /** The way to the results page for the query. */
@@ -35,10 +37,14 @@ const WORDS: SearchWords = {
     searching: 'Searching',
     empty: (query) => `Nothing matches “${query}”.`,
     failed: () => 'The search did not answer.',
+    retry: 'Retry',
     tooShort: (minQuery) => `Type ${String(minQuery)} characters or more to search.`,
     seeAll: (query) => `See all results for “${query}”`,
     clear: 'Clear the search',
 }
+
+/** A row of the list a person can choose: a result, Retry, or the way to the results page. */
+const OPTION = 'flex cursor-default items-center rounded-md px-2 py-1.5 text-sm select-none aria-selected:bg-muted'
 
 const THUMB = {
     sm: 'size-8',
@@ -193,8 +199,11 @@ export interface SearchProps {
  * Inside a `Shell`, ⌘K or Ctrl+K opens the command palette over the results, which close as it opens.
  *
  * The search is the app's: it answers at once or with a promise, and the component never fetches.
- * The first query is asked at once and each change after a pause in typing; while an answer is
- * awaited the last results stay, and with none yet the list says it is searching.
+ * The first query is asked at once and each change after a pause in typing. Results belong to the
+ * query they answer: while the next answer is awaited the last results stay in place but dimmed,
+ * once the wait is long enough to see, and cannot be chosen; with none the list says it is
+ * searching. A failed search says so (`words.failed`) with a Retry option in the results' place,
+ * whatever was listed before, which Enter takes as it does a result.
  */
 export function Search({
     search,
@@ -241,10 +250,16 @@ export function Search({
     const optionId = (index: number) => `${id}-option-${String(index)}`
 
     const answer = useSearch(search, query, { debounce, minQuery, enabled: open })
-    const entries = searchEntries(answer.groups)
+    // An earlier query's results stay while the next answer comes, dimmed and out of reach.
+    const stale = answer.state === 'loading'
+    const failed = answer.state === 'failed'
+    const listed = answer.groups.filter((group) => group.results.length > 0)
+    const entries = stale ? [] : searchEntries(listed)
     const trimmed = query.trim()
     const seeAll = onSeeAll !== undefined && trimmed !== ''
-    const count = entries.length + (seeAll ? 1 : 0)
+    // The options before the way to the results page: the results, or Retry after a failure.
+    const lead = failed ? 1 : entries.length
+    const count = lead + (seeAll ? 1 : 0)
 
     // The highlight starts on the first result of each answer, so Enter opens the top match.
     const [highlight, setHighlight] = useState<{ groups: readonly SearchGroup[]; index: number }>({ groups: answer.groups, index: 0 })
@@ -262,7 +277,8 @@ export function Search({
 
     const choose = (index: number) => {
         const entry = entries.at(index)
-        if (index < entries.length && entry !== undefined) {
+        if (failed && index === 0) answer.retry()
+        else if (index < entries.length && entry !== undefined) {
             setOpen(false)
             onOpen(entry.result, entry.group)
         } else if (seeAll) {
@@ -346,47 +362,73 @@ export function Search({
                             id={listId}
                             role="listbox"
                             aria-label={words.results}
+                            aria-busy={stale}
                             className="flex min-w-0 flex-1 scroll-fade-b flex-col gap-1 overflow-y-auto p-1.5"
                         >
-                            {answer.groups
-                                .filter((group) => group.results.length > 0)
-                                .map((group) => (
-                                    <div key={group.kind} role="group" aria-label={group.title} className="flex flex-col">
-                                        <SearchGroupHeading group={group} className="px-2 pt-1.5 pb-1" />
-                                        {group.results.map((result) => {
-                                            const index = entries.findIndex((entry) => entry.result === result)
-                                            return (
-                                                <div
-                                                    key={result.id}
-                                                    id={optionId(index)}
-                                                    role="option"
-                                                    aria-selected={index === highlighted}
-                                                    className="flex cursor-default items-center rounded-md px-2 py-1.5 text-sm select-none aria-selected:bg-muted"
-                                                    onMouseDown={(event) => event.preventDefault()}
-                                                    onMouseMove={() => {
-                                                        if (index !== highlighted) move(index)
-                                                    }}
-                                                    onClick={() => choose(index)}
-                                                >
-                                                    <SearchResultBody result={result} query={trimmed} />
-                                                </div>
-                                            )
-                                        })}
-                                    </div>
-                                ))}
-                            {entries.length === 0 && (
-                                <div className="flex items-center justify-center gap-2 px-3 py-6 text-sm text-muted-foreground">
-                                    {answer.state === 'loading' || answer.state === 'idle' ? (
-                                        <>
-                                            <Spinner className="text-faint" />
-                                            {words.searching}
-                                        </>
-                                    ) : answer.state === 'failed' ? (
-                                        words.failed(answer.reason)
-                                    ) : (
-                                        words.empty(trimmed)
-                                    )}
+                            {listed.map((group) => (
+                                <div
+                                    key={group.kind}
+                                    role="group"
+                                    aria-label={group.title}
+                                    inert={stale}
+                                    // Dimmed only once an answer is slow, so a quick one never flickers.
+                                    className={cn('flex flex-col transition-opacity', stale && 'opacity-50 delay-300')}
+                                >
+                                    <SearchGroupHeading group={group} className="px-2 pt-1.5 pb-1" />
+                                    {group.results.map((result) => {
+                                        const index = entries.findIndex((entry) => entry.result === result)
+                                        return (
+                                            <div
+                                                key={result.id}
+                                                id={stale ? undefined : optionId(index)}
+                                                role="option"
+                                                aria-selected={!stale && index === highlighted}
+                                                className={OPTION}
+                                                onMouseDown={(event) => event.preventDefault()}
+                                                onMouseMove={() => {
+                                                    if (index !== highlighted) move(index)
+                                                }}
+                                                onClick={() => choose(index)}
+                                            >
+                                                <SearchResultBody result={result} query={trimmed} />
+                                            </div>
+                                        )
+                                    })}
                                 </div>
+                            ))}
+                            {failed ? (
+                                <>
+                                    <p role="alert" className="px-2 pt-2 pb-1 text-sm text-muted-foreground">
+                                        {words.failed(answer.reason)}
+                                    </p>
+                                    <div
+                                        id={optionId(0)}
+                                        role="option"
+                                        aria-selected={highlighted === 0}
+                                        className={cn(OPTION, 'gap-2.5')}
+                                        onMouseDown={(event) => event.preventDefault()}
+                                        onMouseMove={() => {
+                                            if (highlighted !== 0) move(0)
+                                        }}
+                                        onClick={() => choose(0)}
+                                    >
+                                        <RotateCw className="size-4 text-muted-foreground" aria-hidden />
+                                        {words.retry}
+                                    </div>
+                                </>
+                            ) : (
+                                listed.length === 0 && (
+                                    <div className="flex items-center justify-center gap-2 px-3 py-6 text-sm text-muted-foreground">
+                                        {answer.state === 'done' ? (
+                                            words.empty(trimmed)
+                                        ) : (
+                                            <>
+                                                <Spinner className="text-faint" />
+                                                {words.searching}
+                                            </>
+                                        )}
+                                    </div>
+                                )
                             )}
                         </div>
                         {hasPreview && (
@@ -399,18 +441,18 @@ export function Search({
                 {seeAll && !short && (
                     <div className="border-t border-border p-1.5">
                         <div
-                            id={optionId(entries.length)}
+                            id={optionId(lead)}
                             role="option"
-                            aria-selected={highlighted === entries.length}
+                            aria-selected={highlighted === lead}
                             className="flex cursor-default items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground select-none aria-selected:bg-muted aria-selected:text-foreground"
                             onMouseDown={(event) => event.preventDefault()}
                             onMouseMove={() => {
-                                if (highlighted !== entries.length) move(entries.length)
+                                if (highlighted !== lead) move(lead)
                             }}
-                            onClick={() => choose(entries.length)}
+                            onClick={() => choose(lead)}
                         >
                             <span className="min-w-0 flex-1 truncate">{words.seeAll(trimmed)}</span>
-                            {answer.state === 'loading' && entries.length > 0 && <Spinner className="text-faint" />}
+                            {stale && listed.length > 0 && <Spinner className="text-faint" />}
                             <ArrowRight className="size-4 shrink-0" aria-hidden />
                         </div>
                     </div>

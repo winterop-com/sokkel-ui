@@ -7,10 +7,13 @@ import {
     literalRanges,
     queryRanges,
     queryWords,
+    SEARCH_IDLE,
     searchEntries,
+    searchFor,
     searchKey,
     toggleChosen,
     type SearchGroup,
+    type SearchState,
 } from './search'
 
 const GROUPS: SearchGroup[] = [
@@ -137,5 +140,35 @@ describe('facets', () => {
         const on = toggleChosen({}, 'project', 'harbor')
         expect(on).toEqual({ project: ['harbor'] })
         expect(toggleChosen(on, 'project', 'harbor')).toEqual({ project: [] })
+    })
+})
+
+describe('searchFor', () => {
+    const LAOS: readonly SearchGroup[] = [{ kind: 'places', title: 'Places', results: [{ id: 'laos', title: 'Laos' }] }]
+    const done: SearchState = { state: 'done', query: 'Laos', groups: LAOS }
+    const failed: SearchState = { state: 'failed', query: 'Uganda', groups: [], reason: 'offline' }
+
+    it('stands as itself for the query it is about', () => {
+        expect(searchFor(done, 'Laos')).toBe(done)
+        expect(searchFor(failed, 'Uganda')).toBe(failed)
+    })
+
+    it('never shows an older query’s results as the query’s own: they wait as stale while it loads', () => {
+        // Typed while the next ask waits out the pause in typing, and while it is asked.
+        expect(searchFor(done, 'Uganda')).toEqual({ state: 'loading', query: 'Uganda', groups: LAOS })
+        expect(searchFor(done, 'Uganda', true)).toEqual({ state: 'loading', query: 'Uganda', groups: LAOS })
+    })
+
+    it('keeps no results after a failure, so nothing from an earlier query outlives it', () => {
+        expect(searchFor(failed, 'Kenya')).toEqual({ state: 'loading', query: 'Kenya', groups: [] })
+    })
+
+    it('asks a failed query again from nothing, and keeps an answer the query already has', () => {
+        expect(searchFor(failed, 'Uganda', true)).toEqual({ state: 'loading', query: 'Uganda', groups: [] })
+        expect(searchFor(done, 'Laos', true)).toBe(done)
+    })
+
+    it('starts from nothing', () => {
+        expect(searchFor(SEARCH_IDLE, 'Laos', true)).toEqual({ state: 'loading', query: 'Laos', groups: [] })
     })
 })

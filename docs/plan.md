@@ -265,6 +265,12 @@ palette opens. `overSearch(over)`, from `Shell`, says whether the layer is a `Se
 an app's own rule never reads how the library marks them. On a touch screen the palette has a Close button.
 A `Search`'s results open on typing, a press on the field or the down arrow, never on focus alone,
 so focus the palette or the shortcuts dialog gives back to the search as it closes leaves them closed.
+Results belong to the query they answer (`useSearch` tags each state with it): while the next answer
+comes an earlier query's results stay dimmed and out of reach, in `Search` and the palette alike, so
+the list does not jump yet nothing from the old query opens as the new one's; a failed search shows
+its failure (`words.failed`) over a Retry row, whatever was listed before, and the palette never says
+no command matches while its search waits or has failed. `Shell`'s `routeKey` moves the focus to a
+new page's first `h1` as the route changes, out of the field a result was opened from.
 
 `useOverlay(open, { onClose })` makes an app's own overlay behave as a dialog: the page outside it
 inert, focus moved in, Escape closing the one on top, and focus back where it was; `Shell`'s drawer
@@ -552,7 +558,10 @@ rows it says `empty`, a sentence or a node such as an `Empty` with an action, al
 heads unless a search or tools in the bar may have emptied it. A row opens into a `detail` of its own,
 such as its own nested `DataTable`; `hasDetail` says which rows have one, so `detail` is built only for
 the rows opened, and `expandLabel` names a row's disclosure, in its tooltip too ("Show the tokens of
-ada"). `rowTone` dims a row (`muted`, an account switched off, a token revoked) or tints it in a
+ada"). `reveal` (`{ key, open }`, a new object each time, as `CodeEditor`'s `reveal`) brings a
+row into view: the branches above it open, its group unfolds, its page shows, and it is scrolled to,
+virtualized or not, and made the active row with the focus on the table; `open` opens its own detail
+or children, and the search for its path loads with the deferred part. `rowTone` dims a row (`muted`, an account switched off, a token revoked) or tints it in a
 status's tone (`critical`, `warning`), from tokens, so an app sets no color of its own. A column of
 `width: 'content'` is as wide as its widest cell, up to its `maxWidth` and no narrower than its
 `minWidth`, the other columns sharing what is left, and a dragged width wins. Its cells are measured at
