@@ -6,10 +6,8 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.18.4** is the latest release (2026-11-11): `DiffView` leaves out a zero side, folds unchanged runs
-  and takes header actions; `ConsequenceList` passes props and labels its list; `CronField` takes the
-  app's verdict, names its zone once, reads empty as nothing yet, reads in given words and draws
-  read-only.
+- **0.18.5** is the latest release (2026-11-11): the palette's search ends in a See all results row
+  (`onSeeAll`).
 - **0.18.3** (2026-11-11): route focus waits for the new page's visible heading,
   `PageState` takes `headingLevel`, and a cleared search keeps no results.
 - **0.18.2** (2026-11-11): `CronField` reads its runs in a time zone and takes

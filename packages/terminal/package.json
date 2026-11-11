@@ -1,6 +1,6 @@
 {
     "name": "@winterop-com/sokkel-ui-terminal",
-    "version": "0.18.4",
+    "version": "0.18.5",
     "description": "Terminals on xterm.js, interactive and read-only, for sokkel-ui.",
     "license": "SEE LICENSE IN LICENSE",
     "repository": {
