@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.17.0** is the latest release (2026-11-11): `SchemaForm` folds, follows a value held from outside
+- **0.17.1** is the latest release (2026-11-11): a chart's data view takes `dataFields`, orders a fan's
+  bands by quantile and pins its first column.
+- **0.17.0** (2026-11-11): `SchemaForm` folds, follows a value held from outside
   (`value`/`onChange`), says when it would block, takes field parts with a note, and passes secret
   words; `CheckboxField` draws a plain checkbox button.
 - **0.16.1** (2026-11-11): key sequences (`next`), the palette over an open
