@@ -120,8 +120,29 @@ export interface ShellProps {
     desktop?: DesktopWindow
     /** Keys the content: a new value mounts the page afresh, its state let go, as after a reconnect. */
     contentKey?: Key
+    /**
+     * The route shown, such as its path. Given, each change moves the focus to the new page's main
+     * heading (its first `h1`), so a reader who opened a search result or ran a command starts on
+     * the page rather than in the field they left. Off when not given.
+     */
+    routeKey?: Key
     children: ReactNode
     words?: Partial<ShellWords>
+}
+
+/**
+ * Moves the focus to the first `h1` in a page's area, focusable only until the focus leaves it
+ * unless it was already; false when the area has none.
+ */
+export function focusHeading(area: ParentNode | null): boolean {
+    const heading = area?.querySelector('h1')
+    if (!heading) return false
+    if (!heading.hasAttribute('tabindex')) {
+        heading.tabIndex = -1
+        heading.addEventListener('blur', () => heading.removeAttribute('tabindex'), { once: true })
+    }
+    heading.focus()
+    return true
 }
 
 /**
@@ -188,7 +209,8 @@ export interface ShellProps {
  * app answers itself; `shortcutsOpen` with `onShortcutsOpenChange` holds it from outside, as a
  * palette row that opens it does. A screen inside opens either with `useShell`. `useScrollMemory`
  * keeps the content's place per screen, and a new `contentKey` mounts the content afresh, as after
- * the server has come back.
+ * the server has come back. Given `routeKey`, each new route moves the focus to the page's main
+ * heading (`focusHeading`), out of the search field or the palette it was opened from.
  *
  * `railMode` narrows the rail to its icons or hides it whatever the app holds, for a work page with
  * list and detail panes of its own, and a screen asks the same while it is mounted with
@@ -234,6 +256,7 @@ export function Shell({
     shortcutsWords,
     desktop,
     contentKey,
+    routeKey,
     children,
     words: given,
 }: ShellProps) {
@@ -388,6 +411,11 @@ export function Shell({
     const drawerRef = useOverlay(drawer && (mobile || railHidden), { onClose: closeDrawer })
     const panelRef = useOverlay(panel !== undefined && !wide && open, { onClose: () => setOpen(false), inert: false })
     const [main, setMain] = useState<HTMLElement | null>(null)
+    const shownRoute = useRef(routeKey)
+    useEffect(() => {
+        if (shownRoute.current !== routeKey) focusHeading(main)
+        shownRoute.current = routeKey
+    }, [routeKey, main])
 
     const toggle = panel !== undefined && !stripping && (
         <button
