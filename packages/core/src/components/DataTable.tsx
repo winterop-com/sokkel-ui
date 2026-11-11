@@ -911,13 +911,13 @@ export interface DataTableProps<T> {
     /** The menu button's icon. */
     actionIcon?: ReactNode
     /**
-     * The search field, first in the bar and sized by it: a fixed width beside the tools, and a line
-     * of its own across a narrow table.
+     * The search field, first in the bar and sized by it: a fixed width beside the count, and the
+     * whole width of a narrow table.
      */
     search?: ReactNode
     /**
-     * What the bar holds after the search when nothing is selected, such as filters. On a narrow
-     * table they wrap across its whole width, the count and the sort after them.
+     * What the bar holds when nothing is selected, such as filters. With a `search` they take a line
+     * of their own under it and wrap from the left edge; without one they sit before the count.
      */
     toolbar?: ReactNode
     /** The count the bar shows, when the rows given are not all there are. */
@@ -1112,8 +1112,8 @@ export interface DataTableProps<T> {
  * view (`SavedViews`) holds them from outside.
  *
  * The bar above the head holds `search` and the `toolbar`'s tools, then the count, the sort and the
- * view switch. On a narrow table the search takes a line of its own and the tools wrap across the
- * whole width, the count and the sort after them. Once the rows stack as cards, each column's
+ * view switch. With a search, the search and the count share the first line and the tools take a
+ * line of their own under it, wrapping from the left edge. Once the rows stack as cards, each column's
  * `stack` says how it shows: a line (named, or not with `stackLabel: false`), a primary value over
  * several lines under the title, a secondary fact on the card's last line, or a lead before the
  * title, such as a box that marks a row done. `stackLayout="compact"` draws a stacked row as its
@@ -2337,10 +2337,10 @@ export function DataTable<T>({
                 style={{ '--stack-label': `${String(labels.width)}px` } as CSSProperties}
             >
                 {barShown && (
-                    // Narrow, the search takes a line of its own and the tools wrap across the whole width, the count and the
-                    // sort after them; wide, the tools wrap in the room the search and the count leave.
+                    // With a search, the search and the count share the first line and the tools take a line of their own
+                    // under it, wrapping from the left edge; without one, the tools sit before the count.
                     <div className="@container/bar shrink-0 border-b border-border px-(--density-panel-pad) text-sm">
-                        <div className="flex min-h-(--density-panel-head) min-w-0 items-center gap-2 py-2 @max-2xl/bar:flex-wrap @max-2xl/bar:gap-y-1.5">
+                        <div className="flex min-h-(--density-panel-head) min-w-0 flex-wrap items-center gap-2 gap-y-1.5 py-2">
                             {selection.size > 0 ? (
                                 <SelectionBar
                                     count={selection.size}
@@ -2369,11 +2369,18 @@ export function DataTable<T>({
                                 </SelectionBar>
                             ) : (
                                 <>
-                                    {search !== undefined && <div className="w-64 min-w-0 shrink @max-2xl/bar:w-full">{search}</div>}
+                                    {search !== undefined && <div className="w-64 min-w-0 shrink @max-md/bar:w-full">{search}</div>}
                                     {/* The tools wrap onto more lines when the bar is too narrow for them, so none is hidden. */}
-                                    <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 py-0.5 @max-2xl/bar:contents">
-                                        {toolbar}
-                                    </div>
+                                    {toolbar !== undefined && (
+                                        <div
+                                            className={cn(
+                                                'flex min-w-0 flex-wrap items-center gap-2',
+                                                search === undefined ? 'flex-1' : 'order-last basis-full',
+                                            )}
+                                        >
+                                            {toolbar}
+                                        </div>
+                                    )}
                                 </>
                             )}
                             <div className="ml-auto flex shrink-0 items-center gap-2">
