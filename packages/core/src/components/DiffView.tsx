@@ -41,20 +41,29 @@ export function diffLines(before: string, after: string): DiffLine[] {
     return out
 }
 
+export interface DiffViewWords {
+    /** Said in the header in place of the counts when the two texts are the same. */
+    unchanged: string
+}
+
+const WORDS: DiffViewWords = { unchanged: 'No changes' }
+
 export interface DiffViewProps {
     before: string
     after: string
     title?: string
     size?: 'default' | 'sm'
     className?: string
+    words?: Partial<DiffViewWords>
 }
 
 /**
  * Two versions of a text as one list of lines, the removed ones marked `-` and the added ones `+`:
  * a job definition before and after an edit, a config against the one it replaces. A count of each heads
- * it beside the title.
+ * it beside the title, a side with none left out, and the words' `unchanged` said when nothing changed.
  */
-export function DiffView({ before, after, title, size = 'default', className }: DiffViewProps) {
+export function DiffView({ before, after, title, size = 'default', className, words: given }: DiffViewProps) {
+    const words = { ...WORDS, ...given }
     const lines = diffLines(before, after)
     const added = lines.filter((line) => line.kind === 'added').length
     const removed = lines.filter((line) => line.kind === 'removed').length
@@ -63,8 +72,9 @@ export function DiffView({ before, after, title, size = 'default', className }: 
             <CodeBlockHeader>
                 {title !== undefined && <CodeBlockTitle className="font-mono">{title}</CodeBlockTitle>}
                 <span className="ml-auto flex gap-2 font-mono text-xs tabular-nums">
-                    <span className="text-good">+{added}</span>
-                    <span className="text-critical">-{removed}</span>
+                    {added > 0 && <span className="text-good">+{added}</span>}
+                    {removed > 0 && <span className="text-critical">-{removed}</span>}
+                    {added === 0 && removed === 0 && <span className="font-sans">{words.unchanged}</span>}
                 </span>
             </CodeBlockHeader>
             <CodeBlockContent>
