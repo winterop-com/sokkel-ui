@@ -1,7 +1,7 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
-import { Checkbox } from './ui/checkbox'
+import { PlainCheckbox } from './ui/checkbox-look'
 
 export interface CheckboxFieldProps {
     label: ReactNode
@@ -33,6 +33,7 @@ export function CheckboxField({
     tone = 'plain',
     className,
 }: CheckboxFieldProps) {
+    const [own, setOwn] = useState(defaultChecked ?? false)
     return (
         <label
             className={cn(
@@ -41,10 +42,12 @@ export function CheckboxField({
                 className,
             )}
         >
-            <Checkbox
-                checked={checked}
-                defaultChecked={defaultChecked}
-                onCheckedChange={onCheckedChange}
+            <PlainCheckbox
+                checked={checked ?? own}
+                onCheckedChange={(next) => {
+                    setOwn(next)
+                    onCheckedChange?.(next)
+                }}
                 indeterminate={indeterminate}
                 disabled={disabled}
                 className="mt-0.5"

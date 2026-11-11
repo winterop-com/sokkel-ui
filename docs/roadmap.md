@@ -258,9 +258,7 @@ to `plan.md` when it ships.
   and the heavy ones, Base UI's menu among them, load on first use. Left:
     - On a dashboard, `chartLegend` still brings every chart kind with the page. Split each kind's
       shaping of rows, which the legend needs, from its option builder, which can load with ECharts.
-    - The forms page carries Base UI's checkbox for `CheckboxField` and `SchemaForm` (about 2 kB):
-      the box a `DataTable` draws until the checkbox loads (`ui/checkbox-look`) could stand in for
-      them too. A plain `DataTable` still brings `SelectionBar`, the pager's `NativeSelect` and the
+    - A plain `DataTable` still brings `SelectionBar`, the pager's `NativeSelect` and the
       row menus' `primitives/context-menu` (about 1.2 kB), each drawn at once when used.
     - The palette's lazy chunk carries cmdk's `Command.Dialog` and the Radix dialog stack behind it
       (about 21 kB), which cmdk attaches whether or not it is used. Replace or vendor cmdk.

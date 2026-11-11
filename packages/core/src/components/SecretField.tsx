@@ -16,6 +16,8 @@ export interface SecretFieldWords {
     /** Said of a secret set at a time, given that time said relative to now. */
     setWhen: (when: ReactNode) => ReactNode
     replace: string
+    /** Replace's name, given the field's label, so two sealed secrets are told apart: "Replace password". */
+    replaceLabel: (label: string) => string
     cancel: string
     show: string
     hide: string
@@ -25,6 +27,8 @@ export const SECRET_FIELD_WORDS: SecretFieldWords = {
     set: 'Set',
     setWhen: (when) => <>Set {when}</>,
     replace: 'Replace',
+    // A label that opens on a capitalized word is lowercased there, as mid-sentence; "API token" stays as it is.
+    replaceLabel: (label) => `Replace ${/^[A-Z][a-z]/.test(label) ? label.charAt(0).toLowerCase() + label.slice(1) : label}`,
     cancel: 'Cancel',
     show: 'Show',
     hide: 'Hide',
@@ -212,7 +216,7 @@ export function SecretField({
                             variant="ghost"
                             size="xs"
                             // Named for itself, not by the field's label, which points at it.
-                            aria-label={label === '' ? words.replace : `${words.replace}: ${label}`}
+                            aria-label={label === '' ? words.replace : words.replaceLabel(label)}
                             aria-describedby={statusId}
                             onClick={() => {
                                 moved.current = 'input'

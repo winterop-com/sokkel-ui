@@ -1,8 +1,12 @@
+import { useRef } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 
+import { readScalar, scalarUnion } from './issues'
+import { objectOf, repeatedKeys, rowsOf } from './MapField'
 import type { JsonSchema } from './read'
-import { SchemaForm, useSchemaForm, type SchemaFieldRenderer } from './SchemaForm'
+import { initialValue, SchemaForm, useSchemaForm, type SchemaFieldRenderer } from './SchemaForm'
+import { validate } from './validate'
 
 function Form({ schema, initial, field }: { schema: JsonSchema; initial: unknown; field?: SchemaFieldRenderer }) {
     const form = useSchemaForm(schema, { initial })
@@ -107,5 +111,140 @@ describe('how fields are marked', () => {
     it("says a field's default under it with fallbacks, and not without", () => {
         expect(renderToStaticMarkup(<Look fallbacks />)).toContain('Default is 3')
         expect(renderToStaticMarkup(<Look />)).not.toContain('Default is 3')
+    })
+
+    it('says nothing under a field whose default is null', () => {
+        function Nulls() {
+            const form = useSchemaForm(
+                { type: 'object', properties: { note: { type: ['string', 'null'], default: null } } },
+                { initial: {} },
+            )
+            return <SchemaForm form={form} marks={false} fallbacks />
+        }
+        expect(renderToStaticMarkup(<Nulls />)).not.toContain('Default is')
+    })
+})
+
+describe('a map of scalars', () => {
+    const schema: JsonSchema = {
+        type: 'object',
+        properties: {
+            headers: { type: 'object', title: 'Headers', additionalProperties: { type: 'string' } },
+            limits: { type: 'object', title: 'Limits', additionalProperties: { type: 'integer', minimum: 0 } },
+            nested: { type: 'object', additionalProperties: { type: 'object', properties: { a: { type: 'string' } } } },
+        },
+    }
+
+    it('draws a row of a key and a value for each entry, with Remove, not a JSON buffer', () => {
+        const html = render(schema, { headers: { 'x-team': 'harbor', accept: 'text/csv' }, limits: { worker: 4 } })
+        expect(html).toMatch(/<input[^>]*value="x-team"/)
+        expect(html).toMatch(/<input[^>]*value="text\/csv"/)
+        expect(html).toContain('aria-label="Remove x-team"')
+        expect(html).toContain('>Key</span>')
+        // The integer map's value is a number field; only the map of objects is edited as JSON.
+        expect(html).toMatch(/<input[^>]*value="4"/)
+        expect(html.match(/<textarea/g)).toHaveLength(1)
+    })
+
+    it('keeps the first of a repeated key and leaves out a row without a key', () => {
+        const rows = [
+            { id: 1, key: 'x-team', value: 'harbor' },
+            { id: 2, key: '', value: 'lost' },
+            { id: 3, key: 'x-team', value: 'juniper' },
+            { id: 4, key: 'accept', value: undefined },
+        ]
+        expect([...repeatedKeys(rows)]).toEqual([3])
+        expect(objectOf(rows, '')).toEqual({ 'x-team': 'harbor', accept: '' })
+        expect(objectOf(rows)).toEqual({ 'x-team': 'harbor' })
+        expect(rowsOf({ a: 1, b: 2 }).map((row) => [row.key, row.value])).toEqual([
+            ['a', 1],
+            ['b', 2],
+        ])
+        expect(rowsOf(undefined)).toEqual([])
+    })
+
+    it('stops the submit while a field holds its own refusal, such as a key given twice', () => {
+        let critical = -1
+        function Held() {
+            const form = useSchemaForm(schema, { initial: {}, defaultSubmitted: true })
+            const once = useRef(false)
+            if (!once.current) {
+                once.current = true
+                form.hold(['headers'], 'Each key only once')
+            }
+            critical = form.count.critical
+            return null
+        }
+        renderToStaticMarkup(<Held />)
+        expect(critical).toBe(1)
+    })
+})
+
+describe('a choice of scalar types', () => {
+    it('is told from other choices', () => {
+        expect(scalarUnion({ anyOf: [{ type: 'string' }, { type: 'integer' }] }, {})).toEqual(['string', 'integer'])
+        expect(scalarUnion({ type: ['integer', 'boolean', 'null'] }, {})).toEqual(['integer', 'boolean'])
+        expect(scalarUnion({ anyOf: [{ type: 'integer' }, { enum: ['none'] }] }, {})).toEqual(['integer', 'string'])
+        expect(scalarUnion({ anyOf: [{ type: 'string' }, { type: 'object' }] }, {})).toBeUndefined()
+        expect(scalarUnion({ anyOf: [{ type: 'string' }, { type: 'string', pattern: '^a' }] }, {})).toBeUndefined()
+        expect(scalarUnion({ type: 'string', anyOf: [{ minLength: 1 }, { maxLength: 0 }] }, {})).toBeUndefined()
+    })
+
+    it('reads typed text as the narrowest type it parses as', () => {
+        const sizes = ['string', 'integer']
+        expect(readScalar('16384', sizes)).toBe(16384)
+        expect(readScalar('16KB', sizes)).toBe('16KB')
+        expect(readScalar('1.5', sizes)).toBe('1.5')
+        expect(readScalar('1.5', ['string', 'number'])).toBe(1.5)
+        expect(readScalar('true', ['string', 'boolean'])).toBe(true)
+        expect(readScalar('true', sizes)).toBe('true')
+        expect(readScalar('  ', sizes)).toBeUndefined()
+    })
+
+    it('is one text box, without quotes, and what it reads passes the schema', () => {
+        const schema: JsonSchema = {
+            type: 'object',
+            properties: { buffer: { title: 'Buffer', anyOf: [{ type: 'string', pattern: '^\\d+KB$' }, { type: 'integer' }] } },
+        }
+        const html = render(schema, { buffer: 16384 })
+        expect(html).toMatch(/<input[^>]*value="16384"/)
+        expect(html).not.toContain('<textarea')
+        expect(validate(schema, { buffer: readScalar('16384', ['string', 'integer']) })).toEqual([])
+        expect(validate(schema, { buffer: readScalar('16KB', ['string', 'integer']) })).toEqual([])
+    })
+})
+
+describe('a field left at its default', () => {
+    const schema: JsonSchema = {
+        type: 'object',
+        required: ['code'],
+        properties: {
+            code: { type: 'string', default: 'nightly-export' },
+            priority: { type: 'string', title: 'Priority', enum: ['low', 'normal', 'high'], default: 'normal' },
+            region: { type: 'string', title: 'Region', default: 'europe' },
+            retries: { type: 'integer', title: 'Retries', default: 3 },
+            paused: { type: 'boolean', title: 'Paused', default: true },
+            note: { type: ['string', 'null'], title: 'Note', default: null },
+        },
+    }
+
+    it('is left out of the value unless it is required', () => {
+        expect(initialValue(schema)).toEqual({ code: 'nightly-export' })
+    })
+
+    it('shows the default, marked as the default, without holding it', () => {
+        const html = render(schema, {})
+        expect(html).toContain('normal (default)')
+        expect(html).toMatch(/<input[^>]*placeholder="europe \(default\)"/)
+        expect(html).toMatch(/<input[^>]*placeholder="3 \(default\)"/)
+        expect(html).toMatch(/aria-checked="true"/)
+        expect(html).toContain('>default</span>')
+        expect(html).not.toContain('null (default)')
+    })
+
+    it('shows a value chosen in place of the default as any other', () => {
+        const html = render(schema, { priority: 'normal', paused: false })
+        expect(html).not.toContain('normal (default)')
+        expect(html).not.toContain('>default</span>')
     })
 })
