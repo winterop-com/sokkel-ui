@@ -268,6 +268,21 @@ export const SearchResults: StoryObj = {
     ),
 }
 /**
+ * The app's search with a full results page (`onSeeAll`): the list ends in a row that goes there
+ * with what was typed, the way `Search` ends its list.
+ */
+export const SeeAll: StoryObj = {
+    name: 'See all',
+    render: () => (
+        <Palette
+            initial
+            query="nightly"
+            filter="terms"
+            search={{ search: (query) => searchTidevann(query, 4), onOpen: () => undefined, onSeeAll: () => undefined }}
+        />
+    ),
+}
+/**
  * The palette opened on `harbor`, whose results come at once, then closed and opened again on
  * `juniper`, whose search never answers or fails, as a server gone quiet or down after the first search.
  */
