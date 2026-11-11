@@ -29,10 +29,12 @@ const HARBOR: ChartSpec = {
 
 const BY_PROJECT: ChartSpec = { ...HARBOR, rows: ORDER_WEEKS, series: 'project' }
 
+const UNBRIDGED: ChartSpec = { ...HARBOR, bridge: false }
+
 /**
  * Harbor's orders imported per week: twelve weeks observed, then eight forecast as the median
  * within the 25th to 75th and the 10th to 90th percentiles, with the four weeks observed since as
- * dots against it.
+ * dots against it. The median is drawn from the last week observed, so the two read as one line.
  */
 export const Fan: StoryObj = {
     render: () => (
@@ -61,6 +63,23 @@ export const TwoProjects: StoryObj = {
                 subtitle="per week, import-orders by project"
                 label="Orders imported per week by import-orders in harbor and larkspur, observed and forecast"
                 bodyClassName="h-80"
+            />
+        </Ground>
+    ),
+}
+
+/** The forecast with `bridge` off: the line observed stops at the week before, and the median starts on its own at the first week forecast. */
+export const NoBridge: StoryObj = {
+    name: 'No bridge',
+    render: () => (
+        <Ground title="Orders" columns={1}>
+            <Framed
+                kind="fan"
+                spec={UNBRIDGED}
+                title="Orders imported"
+                subtitle="per week, import-orders in harbor"
+                label="Orders imported per week by import-orders in harbor, observed and forecast, the forecast not joined to the weeks before"
+                bodyClassName="h-72"
             />
         </Ground>
     ),

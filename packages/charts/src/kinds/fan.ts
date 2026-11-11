@@ -11,6 +11,8 @@ export interface Fan {
     /** The series' label, or the median's field where the chart draws one fan. */
     name: string
     median: Figures
+    /** The median as drawn: from the last history figure before the forecast where `bridge` joins them, the median elsewhere. */
+    line: Figures
     bands: { label: string; low: Figures; high: Figures }[]
     /** The history field on the rows before the forecast starts, null from there on. */
     history: Figures
@@ -64,9 +66,14 @@ export function fanShape(spec: ChartSpec): { categories: string[]; fans: Fan[] }
                 medians[index][at] !== null || bands.some((band) => band.low[index][at] !== null || band.high[index][at] !== null)
             const start = categories.findIndex((_, at) => forecast(at))
             const before = (at: number) => (start === -1 ? true : at < start)
+            const joint = spec.history === undefined || spec.bridge === false || start < 1 ? null : histories[index][start - 1]
+            const line = medians[index].map((value, at) =>
+                at === start - 1 && joint !== null && medians[index][start] !== null ? joint : value,
+            )
             return {
                 name,
                 median: medians[index],
+                line,
                 bands: bands.map((band) => ({ label: band.label, low: band.low[index], high: band.high[index] })),
                 history:
                     spec.history === undefined
@@ -100,10 +107,11 @@ const bandMix = (index: number, count: number) => Math.round(24 + (24 * index) /
  * A forecast against the truth, along `x`: per fan, `bands` from the outermost in as nested bands
  * deepening inward in the fan's color, the median (`y`) as a line through them, the `points` field
  * as dots in the foreground's color, and with `history`, that field as a solid line on the rows
- * before the forecast starts. `marks` draw a dashed line down at a category, such as where the
- * forecast starts. `series` draws a fan per label; rows may leave any field empty, and nothing is
+ * before the forecast starts, the median drawn from its last figure so the two read as one line
+ * (`bridge: false` starts the median on its own). `marks` draw a dashed line down at a category,
+ * such as where the forecast starts. `series` draws a fan per label; rows may leave any field empty, and nothing is
  * drawn or joined across a gap. Reads `aggregate`, `order`, `seriesOrder`, `colors`, `palette`,
- * `smooth`, `format`, `unit` and `words` (`median`, `observed`).
+ * `smooth`, `bridge`, `format`, `unit` and `words` (`median`, `observed`).
  */
 export const fan: ChartBuilder = (spec, look, hidden) => {
     const { categories, fans } = fanShape(spec)
@@ -140,7 +148,7 @@ export const fan: ChartBuilder = (spec, look, hidden) => {
             {
                 type: 'line',
                 name: names.median,
-                data: entry.median,
+                data: entry.line,
                 smooth,
                 symbol: 'none',
                 itemStyle: { color },

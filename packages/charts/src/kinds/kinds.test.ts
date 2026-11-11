@@ -304,7 +304,8 @@ describe('the chart kinds', () => {
         expect(innerGap.data).toEqual([null, null, 6, 8, 8])
         expect((innerGap.areaStyle?.opacity ?? 0) > (outerGap.areaStyle?.opacity ?? 0)).toBe(true)
         expect(outerLow.stack).not.toBe(innerLow.stack)
-        expect(median.data).toEqual([null, null, 14, 15, 16])
+        // The median is drawn from the last history figure, so history and forecast read as one line.
+        expect(median.data).toEqual([null, 12, 14, 15, 16])
         expect(history.data).toEqual([10, 12, null, null, null])
         expect(dots.data).toEqual([null, null, 13, null, null])
         expect(marks.data).toEqual([])
@@ -316,6 +317,18 @@ describe('the chart kinds', () => {
             ['25-75', 'color-mix(in oklab, var(--chart-2) 48%, var(--card))'],
             ['Observed', 'var(--foreground)'],
         ])
+    })
+
+    it('starts the median on its own with bridge off, with no history, or after a gap in the history', () => {
+        type Lines = { series: { name: string; data: (number | null)[] }[] }
+        const median = (spec: ChartSpec) =>
+            (KINDS.fan.build(spec, LOOK) as unknown as Lines).series.find((entry) => entry.name === 'Median')?.data
+        expect(median({ ...FAN, bridge: false })).toEqual([null, null, 14, 15, 16])
+        expect(median({ ...FAN, history: undefined })).toEqual([null, null, 14, 15, 16])
+        const gap = WEEKS.map((row) => (row.week === 'w2' ? { ...row, observed: null } : row))
+        expect(median({ ...FAN, rows: gap })).toEqual([null, null, 14, 15, 16])
+        // The median keeps its own figures for the tooltip and the legend.
+        expect(fanShape(FAN).fans[0].median).toEqual([null, null, 14, 15, 16])
     })
 
     it('draws dots on every observed row of a fan with no history, and a fan per series', () => {

@@ -404,6 +404,11 @@ app's bundler still resolves the import when it builds, so the app installs it a
 | Geist as a theme's typeface                                                      | `@fontsource-variable/geist` and `@fontsource-variable/geist-mono`                                                                                                                                                                                                                                               |
 | `hlsSource` (media package)                                                      | `hls.js`                                                                                                                                                                                                                                                                                                         |
 
+Schema checks (`schema/SchemaForm`, `schema/validate` and a `CodeEditor` given a `schema`) compile
+each schema to a function with ajv, which uses `new Function`. A page served with a Content Security
+Policy therefore needs `'unsafe-eval'` in its `script-src`; without it no schema compiles, and no
+value passes the check. A development build says so once per page, as a warning in the console.
+
 ## Working on it
 
 The repository is a Bun workspace: the packages are in `packages/core`, `packages/charts`,
