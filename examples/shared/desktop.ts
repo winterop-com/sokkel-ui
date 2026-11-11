@@ -14,18 +14,46 @@ interface ElectronWindow {
 }
 
 const electronWindow = () => (window as unknown as { tidevannWindow?: ElectronWindow }).tidevannWindow
-const followFullscreen = (listener: () => void) => electronWindow()?.onFullscreen(() => listener()) ?? (() => undefined)
-const inFullscreen = () => electronWindow()?.fullscreen() ?? false
+const tauriInternals = () => (window as unknown as { __TAURI_INTERNALS__?: TauriInternals }).__TAURI_INTERNALS__
+const tauriLabel = () => tauriInternals()?.metadata?.currentWindow?.label ?? 'main'
+
+/** Whether Tauri's window is in full screen, asked again on every resize, as entering and leaving it resizes the page. */
+let tauriFullscreen = false
+
+function followTauriFullscreen(listener: () => void): () => void {
+    const tauri = tauriInternals()
+    if (tauri === undefined) return () => undefined
+    let live = true
+    const ask = () => {
+        void tauri.invoke('plugin:window|is_fullscreen', { label: tauriLabel() }).then(
+            (on) => {
+                if (!live || on === tauriFullscreen) return
+                tauriFullscreen = on === true
+                listener()
+            },
+            () => undefined,
+        )
+    }
+    ask()
+    window.addEventListener('resize', ask)
+    return () => {
+        live = false
+        window.removeEventListener('resize', ask)
+    }
+}
+
+const followFullscreen = (listener: () => void) => electronWindow()?.onFullscreen(() => listener()) ?? followTauriFullscreen(listener)
+const inFullscreen = () => electronWindow()?.fullscreen() ?? tauriFullscreen
 
 /**
- * `desktopWindow()` followed as the window enters and leaves the system's full screen, which the
- * Electron shell's preload reports (its green button or ⌃⌘F), so the room for the window's buttons
- * goes while macOS hides them.
+ * `desktopWindow()` followed as the window enters and leaves the system's full screen (its green
+ * button or ⌃⌘F), which the Electron shell's preload reports and Tauri's window is asked on each
+ * resize, so the room for the window's buttons goes while macOS hides them.
  */
 export function useDesktopWindow(): DesktopWindow | undefined {
     const base = useMemo(desktopWindow, [])
     const fullscreen = useSyncExternalStore(followFullscreen, inFullscreen, () => false)
-    return useMemo(() => (base === undefined || electronWindow() === undefined ? base : { ...base, fullscreen }), [base, fullscreen])
+    return useMemo(() => (base === undefined ? base : { ...base, fullscreen }), [base, fullscreen])
 }
 
 /**
@@ -38,8 +66,8 @@ export function desktopWindow(): DesktopWindow | undefined {
     const mac = navigator.userAgent.includes('Mac')
     if (shell === 'electron') return { trafficLights: mac }
     if (shell !== 'tauri') return undefined
-    const tauri = (window as unknown as { __TAURI_INTERNALS__?: TauriInternals }).__TAURI_INTERNALS__
-    const label = tauri?.metadata?.currentWindow?.label ?? 'main'
+    const tauri = tauriInternals()
+    const label = tauriLabel()
     const call = (command: string, args: Record<string, unknown> = {}) => {
         void tauri?.invoke(`plugin:window|${command}`, { label, ...args }).catch(() => undefined)
     }
