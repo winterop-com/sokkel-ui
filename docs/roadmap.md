@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.15.11** is the latest release (2026-11-11): a plain `DataTable` leaves the checkbox and its
+- **0.15.12** is the latest release (2026-11-11): `ChartFrame` shows its chart's rows as a table in a
+  data view.
+- **0.15.11** (2026-11-11): a plain `DataTable` leaves the checkbox and its
   measuring watches out of the start bundle (budgets lowered), `Button` `busy`, `PageState` `onRetry`,
   and a `DropZone` that hands its refusals to `FileField`.
 - **0.15.10** (2026-11-11): a stacked `ItemHeading`'s code wraps at its own
