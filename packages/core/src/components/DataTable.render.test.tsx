@@ -2,12 +2,12 @@ import type { ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 
-import { DataTable, useTableCell } from './DataTable'
+import { DataTable, TableCellFill, useTableCell } from './DataTable'
 
 describe('a cell that reads its table', () => {
     function Seen() {
-        const { width, stacked } = useTableCell()
-        return <i data-seen>{`${String(width)} ${stacked ? 'stacked' : 'rows'}`}</i>
+        const { width, stacked, columnWidth } = useTableCell()
+        return <i data-seen>{`${String(width)} ${stacked ? 'stacked' : 'rows'} ${String(columnWidth)}`}</i>
     }
     const html = renderToStaticMarkup(
         <DataTable
@@ -17,12 +17,58 @@ describe('a cell that reads its table', () => {
         />,
     )
 
-    it('sees the table’s width and that its rows are not stacked', () => {
-        expect(html).toContain('<i data-seen="true">1200 rows</i>')
+    it('sees the table’s width, that its rows are not stacked, and no room for its column before one is measured', () => {
+        expect(html).toContain('<i data-seen="true">1200 rows 0</i>')
     })
 
     it('sees no table outside one', () => {
-        expect(renderToStaticMarkup(<Seen />)).toContain('0 rows')
+        expect(renderToStaticMarkup(<Seen />)).toContain('0 rows 0')
+    })
+
+    it('fills its column’s track, so its room is the track’s', () => {
+        expect(html).toMatch(/role="gridcell" data-track="job"[^>]*><span class="min-w-0 flex-1 truncate"/)
+    })
+})
+
+describe('a part of a cell left out of its column’s measure', () => {
+    const columns = (width: string) => [
+        {
+            id: 'job',
+            header: 'Job',
+            width,
+            minWidth: '16rem',
+            cell: (row: { id: string; about: string }) => (
+                <span>
+                    <code>{row.id}</code>
+                    <TableCellFill>{row.about}</TableCellFill>
+                </span>
+            ),
+        },
+    ]
+    const table = (width: string) =>
+        renderToStaticMarkup(
+            <DataTable
+                columns={columns(width)}
+                rows={[{ id: 'nightly-export', about: 'Writes the day’s orders to files.example.org.' }]}
+                rowKey={(row) => row.id}
+            />,
+        )
+
+    it('is marked to be skipped and takes its column’s width without adding to it', () => {
+        expect(renderToStaticMarkup(<TableCellFill>Writes</TableCellFill>)).toBe(
+            '<span data-measure="skip" class="block w-0 min-w-full truncate">Writes</span>',
+        )
+        expect(renderToStaticMarkup(<TableCellFill wrap>Writes</TableCellFill>)).toContain('break-words')
+    })
+
+    it('is left out of the rows while a content column is measured', () => {
+        const html = table('content')
+        expect(html).toMatch(/data-measuring="true" class="[^"]*data-measuring:\[&amp;_\[data-measure=skip\]\]:hidden/)
+        expect(html).toContain('data-measure="skip"')
+    })
+
+    it('stays in a table with nothing to measure', () => {
+        expect(table('1fr')).not.toContain('data-measuring="true"')
     })
 })
 

@@ -27,10 +27,12 @@ import {
     type DataSort,
     findInTree,
     sortRows,
+    TableCellFill,
     treeBranchKeys,
     useTableCell,
 } from '@winterop-com/sokkel-ui/DataTable'
 import { FileTypeIcon, formatSize } from '@winterop-com/sokkel-ui/FileList'
+import { InlineCode } from '@winterop-com/sokkel-ui/InlineCode'
 import { ItemHeading } from '@winterop-com/sokkel-ui/ItemHeading'
 import { MetaLine } from '@winterop-com/sokkel-ui/MetaLine'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
@@ -294,6 +296,75 @@ export const NoHover: StoryObj = {
 export const StackWidth: StoryObj = {
     name: 'Stack width',
     render: () => <DataTable variant="list" columns={LIST_COLUMNS} rows={LIST_RUNS} rowKey={(run) => run.id} stackBelow="64rem" />,
+}
+
+interface Delivery {
+    id: string
+    name: string
+    code: string
+    channel: string
+    via: string
+}
+
+const DELIVERIES: Delivery[] = [
+    {
+        id: 'd1',
+        name: 'Nightly export to the harbor archive',
+        code: 'nightly-export-harbor-archive',
+        channel: 'Email',
+        via: 'smtp-relay-harbor-primary-eu-north',
+    },
+    {
+        id: 'd2',
+        name: 'Inventory sync for juniper',
+        code: 'sync-inventory-juniper',
+        channel: 'Webhook',
+        via: 'hooks-juniper-inventory-updates',
+    },
+    { id: 'd3', name: 'Weekly digest', code: 'send-digest-weekly', channel: 'Chat', via: 'larkspur-team-digest' },
+]
+
+/** A delivery's name over its code once stacked, so the code is never cut; beside it in a row. */
+function DeliveryName({ delivery }: { delivery: Delivery }) {
+    const { stacked } = useTableCell()
+    return <ItemHeading name={delivery.name} code={delivery.code} variant={stacked ? 'stacked' : 'inline'} />
+}
+
+/**
+ * Stacked on a phone, each card's title takes `stackTitle="free"`, so the name stands over its code
+ * and the code is never cut; a line holding a chip and a long code keeps the chip and cuts the code.
+ */
+export const StackedNames: StoryObj = {
+    name: 'Stacked names',
+    render: () => (
+        <DataTable
+            variant="list"
+            stackBelow="40rem"
+            columns={[
+                {
+                    id: 'name',
+                    header: 'Delivery',
+                    width: 'minmax(16rem,2fr)',
+                    stackTitle: 'free',
+                    cell: (row) => <DeliveryName delivery={row} />,
+                },
+                {
+                    id: 'via',
+                    header: 'Delivers through',
+                    width: 'minmax(14rem,1fr)',
+                    stack: 'line',
+                    cell: (row) => (
+                        <Row gap="sm" className="min-w-0">
+                            <Chip>{row.channel}</Chip>
+                            <InlineCode value={row.via} bare />
+                        </Row>
+                    ),
+                },
+            ]}
+            rows={DELIVERIES}
+            rowKey={(row) => row.id}
+        />
+    ),
 }
 
 /** Rows that grow to fit a cell longer than one line, here each run's note. */
@@ -617,16 +688,20 @@ const JOB_COLUMNS: DataColumn<Job>[] = [
     { id: 'runs', header: 'Runs', width: '5rem', align: 'end', cell: (job) => job.runs.toLocaleString('en-US') },
 ]
 
-/** A job's projects as chips, as many as a fifth of the table's width holds (half once stacked) and a count of the rest. */
-function JobProjects({ projects }: { projects: readonly string[] }) {
-    const { width, stacked } = useTableCell()
-    const fit = Math.max(1, Math.floor((stacked ? width / 2 : width / 5) / 88))
+/** About how wide a chip of a short name is with the gap after it, and the chip that counts the rest, in pixels. */
+const CHIP = 88
+const MORE_CHIP = 40
+
+/** A job's tags as chips, as many as its own column's room holds (`useTableCell().columnWidth`) and a count of the rest. */
+function JobTags({ tags }: { tags: readonly string[] }) {
+    const { columnWidth } = useTableCell()
+    const fit = tags.length * CHIP <= columnWidth ? tags.length : Math.max(1, Math.floor((columnWidth - MORE_CHIP) / CHIP))
     return (
         <Row gap="2xs" inline>
-            {projects.slice(0, fit).map((project) => (
-                <Chip key={project}>{project}</Chip>
+            {tags.slice(0, fit).map((tag) => (
+                <Chip key={tag}>{tag}</Chip>
             ))}
-            {projects.length > fit && <Chip>+{projects.length - fit}</Chip>}
+            {tags.length > fit && <Chip>+{tags.length - fit}</Chip>}
         </Row>
     )
 }
@@ -635,7 +710,7 @@ const DELIVERY_COLUMNS: DataColumn<Job>[] = [
     JOB_COLUMNS[0],
     JOB_COLUMNS[1],
     { id: 'service', header: 'Delivers through', width: 'content', cell: (job) => <span className="font-mono">{job.service}</span> },
-    { id: 'projects', header: 'Projects', width: 'minmax(6rem,1fr)', cell: (job) => <JobProjects projects={job.projects} /> },
+    { id: 'projects', header: 'Projects', width: 'minmax(6rem,1fr)', cell: (job) => <JobTags tags={job.projects} /> },
     JOB_COLUMNS[2],
 ]
 
@@ -649,9 +724,45 @@ export const ContentWidths: StoryObj = {
     render: () => <DataTable variant="list" columns={JOB_COLUMNS} rows={JOBS} rowKey={(job) => job.id} stackBelow="64rem" />,
 }
 
+const FILLED_COLUMNS: DataColumn<Job>[] = [
+    {
+        id: 'job',
+        header: 'Job',
+        width: 'content',
+        minWidth: '14rem',
+        cell: (job) => (
+            <Stack gap="none">
+                <span className="font-mono">{job.id}</span>
+                <TableCellFill>
+                    <span className="text-xs text-muted-foreground">{job.about}</span>
+                </TableCellFill>
+            </Stack>
+        ),
+    },
+    JOB_COLUMNS[1],
+    JOB_COLUMNS[2],
+    {
+        id: 'service',
+        header: 'Delivers through',
+        width: 'minmax(8rem,1fr)',
+        cell: (job) => <span className="font-mono">{job.service}</span>,
+    },
+    JOB_COLUMNS[4],
+]
+
+/**
+ * Each job's code over its description in a content column: the codes set the column's width, no
+ * narrower than its `minWidth`, and the description (`TableCellFill`) takes that whole width
+ * without adding to it, cut short within it.
+ */
+export const CellFill: StoryObj = {
+    name: 'Cell fill',
+    render: () => <DataTable variant="list" rowHeight="auto" columns={FILLED_COLUMNS} rows={JOBS} rowKey={(job) => job.id} />,
+}
+
 /**
  * Two sections of jobs in one `DataTableGroup`, so their content columns take the widest of both
- * tables and line up. Each job's projects show as many chips as a share of the table's width holds
+ * tables and line up. Each job's projects show as many chips as their column's room holds
  * (`useTableCell`); stacked, every line's name is as wide as the widest, "Delivers through" whole.
  */
 export const SharedWidths: StoryObj = {
@@ -682,6 +793,28 @@ export const SharedWidths: StoryObj = {
             </Stack>
         </DataTableGroup>
     ),
+}
+
+const TAG_COLUMNS: DataColumn<Job>[] = [
+    JOB_COLUMNS[0],
+    {
+        id: 'tags',
+        header: 'Tags',
+        width: 'minmax(6rem,1fr)',
+        cell: (job) => <JobTags tags={[...job.projects, job.service, job.step]} />,
+    },
+    JOB_COLUMNS[2],
+    JOB_COLUMNS[4],
+]
+
+/**
+ * Each job's tags on a column that shares the table's room: as many chips as the column's own
+ * width holds (`useTableCell().columnWidth`) and a count of the rest, folding as the column
+ * narrows, and to its line's room once the rows stack.
+ */
+export const FoldingTags: StoryObj = {
+    name: 'Folding tags',
+    render: () => <DataTable variant="list" columns={TAG_COLUMNS} rows={JOBS} rowKey={(job) => job.id} stackBelow="40rem" />,
 }
 
 const STATE_NAMES: Record<string, string> = { running: 'Running', queued: 'Queued', failed: 'Failed', succeeded: 'Succeeded' }
