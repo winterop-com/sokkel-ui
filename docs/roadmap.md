@@ -6,7 +6,10 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.16.1** is the latest release (2026-11-11): key sequences (`next`), the palette over an open
+- **0.17.0** is the latest release (2026-11-11): `SchemaForm` folds, follows a value held from outside
+  (`value`/`onChange`), says when it would block, takes field parts with a note, and passes secret
+  words; `CheckboxField` draws a plain checkbox button.
+- **0.16.1** (2026-11-11): key sequences (`next`), the palette over an open
   search, and `PageState` `tone`.
 - **0.16.0** (2026-11-11): `SchemaForm` draws maps of scalars as key/value rows
   and scalar unions as one box, shows an unset default without writing it, and names a sealed
