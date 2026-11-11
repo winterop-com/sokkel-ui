@@ -18,6 +18,23 @@ describe('parseCron', () => {
         expect(parseCron('0 0 * * 7')?.weekdays).toEqual([0])
     })
 
+    it('reads ? as any, and the rules of the day fields beside their plain values', () => {
+        const cron = parseCron('0 9 1,L,15W * ?')
+        expect(cron?.days).toEqual([1])
+        expect(cron?.dayRules).toEqual([{ kind: 'last' }, { kind: 'nearestWeekday', day: 15 }])
+        expect(cron?.anyWeekday).toBe(true)
+        expect(parseCron('0 9 * * mon#1,5L')?.weekdayRules).toEqual([
+            { kind: 'nth', weekday: 1, nth: 1 },
+            { kind: 'last', weekday: 5 },
+        ])
+    })
+
+    it('refuses a rule out of range', () => {
+        for (const bad of ['0 2 32W * *', '0 2 0W * *', '0 2 * * 5#6', '0 2 * * 5#0', '0 2 * * 8L', '0 2 L-3 * *', '0 2 * * L']) {
+            expect(parseCron(bad)).toBeNull()
+        }
+    })
+
     it('refuses what is not five valid fields', () => {
         for (const bad of ['', '* * * *', '60 * * * *', '* * * * * *', '*/0 * * * *', '5-1 * * * *', 'a * * * *']) {
             expect(parseCron(bad)).toBeNull()
@@ -38,6 +55,23 @@ describe('nextRuns', () => {
 
     it('fires on either the day or the weekday when both are given', () => {
         expect(iso(nextRuns('0 0 1 * 0', FROM, 3))).toEqual(['2026-11-08T00:00', '2026-11-15T00:00', '2026-11-22T00:00'])
+    })
+
+    it('runs on the last day, the last weekday and the weekday nearest a day, within the month', () => {
+        const days = (expression: string, count = 4) => iso(nextRuns(expression, FROM, count)).map((at) => at.slice(0, 10))
+        expect(days('0 2 L * *')).toEqual(['2026-11-30', '2026-12-31', '2027-01-31', '2027-02-28'])
+        expect(days('0 2 L 2 *', 2)).toEqual(['2027-02-28', '2028-02-29'])
+        expect(days('0 2 LW * *')).toEqual(['2026-11-30', '2026-12-31', '2027-01-29', '2027-02-26'])
+        // Sunday the 15th runs Monday the 16th; Sunday the 31st runs Friday the 29th, never in the next month.
+        expect(days('0 2 15W * *', 1)).toEqual(['2026-11-16'])
+        expect(days('0 2 31W * *', 2)).toEqual(['2026-12-31', '2027-01-29'])
+        expect(iso(nextRuns('0 2 1W * *', new Date('2026-07-20T00:00:00Z'), 1))).toEqual(['2026-08-03T02:00'])
+    })
+
+    it('runs on the nth and the last of a weekday in the month', () => {
+        const days = (expression: string) => iso(nextRuns(expression, FROM, 3)).map((at) => at.slice(0, 10))
+        expect(days('0 9 * * 5#2')).toEqual(['2026-11-13', '2026-12-11', '2027-01-08'])
+        expect(days('0 9 * * friL')).toEqual(['2026-11-27', '2026-12-25', '2027-01-29'])
     })
 
     it('skips the current minute', () => {
@@ -117,13 +151,19 @@ describe('describeCron', () => {
         ['0 9 1 * *', 'At 09:00 on the 1st'],
         ['0 0 * jan *', 'Every day at 00:00 in January'],
         ['0 9-17 * * mon-thu', 'Every hour from 09:00 to 17:00 on Monday to Thursday'],
+        ['0 2 L * ?', 'At 02:00 on the last day of the month'],
+        ['0 2 LW * *', 'At 02:00 on the last weekday of the month'],
+        ['0 2 15W * *', 'At 02:00 on the weekday nearest the 15th'],
+        ['0 9 * * 5#2', 'At 09:00 on the 2nd Friday of the month'],
+        ['0 9 * * friL', 'At 09:00 on the last Friday of the month'],
+        ['0 9 1,L * *', 'At 09:00 on the 1st and on the last day of the month'],
     ])('reads %s as %s', (expression, said) => {
         expect(describeCron(expression)).toBe(said)
     })
 
     it('is null for what is not an expression', () => {
         expect(describeCron('every day')).toBeNull()
-        expect(describeCron('0 2 L * ?')).toBeNull()
+        expect(describeCron('0 2 L-3 * ?')).toBeNull()
     })
 
     it('reads in the words it is given, English where it is given none', () => {

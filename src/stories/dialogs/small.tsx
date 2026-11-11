@@ -562,25 +562,25 @@ const OSLO = 'Europe/Oslo'
 /** The Thursday before Europe moves its clocks forward on 28 March 2027. */
 const BEFORE_SPRING = new Date('2027-03-25T12:00:00Z')
 
-/** The first run on the last day of each month, for `L` in the day field, from March 2027 on. */
-function lastDays(minute: string, hour: string): Date[] {
+/** The first run a few days before the end of each month, for `L-3` in the day field, from March 2027 on. */
+function beforeLastDays(minute: string, hour: string, before: number): Date[] {
     const runs: Date[] = []
     for (let month = 2; month < 14 && runs.length < 5; month++) {
-        const last = new Date(Date.UTC(2027, month + 1, 0)).getUTCDate()
-        runs.push(...nextRuns(`${minute} ${hour} ${String(last)} ${String((month % 12) + 1)} *`, BEFORE_SPRING, 1, OSLO))
+        const day = new Date(Date.UTC(2027, month + 1, 0)).getUTCDate() - before
+        runs.push(...nextRuns(`${minute} ${hour} ${String(day)} ${String((month % 12) + 1)} *`, BEFORE_SPRING, 1, OSLO))
     }
     return runs
 }
 
 /**
- * What Tidevann's scheduler says of an expression: its next runs, or why it will not take it. It
- * reads `L` in the day of the month as its last day, and `?` as any weekday.
+ * What Tidevann's scheduler says of an expression: its next runs, or why it will not take it. Beyond
+ * what the field reads, it reads `L-3` in the day of the month as three days before its last.
  */
 function scheduler(cron: string): { runs: Date[]; refused?: string } {
     const fields = cron.trim().split(/\s+/)
     if (cron.trim() === '') return { runs: [] }
-    if (fields.length === 5 && fields[2] === 'L' && fields[3] === '*' && (fields[4] === '?' || fields[4] === '*'))
-        return { runs: lastDays(fields[0], fields[1]) }
+    const before = fields.length === 5 && fields[3] === '*' ? /^L-(\d+)$/.exec(fields[2]) : null
+    if (before !== null) return { runs: beforeLastDays(fields[0], fields[1], Number(before[1])) }
     if (parseCron(cron) === null) return { runs: [], refused: 'The scheduler cannot read this expression.' }
     const runs = nextRuns(cron, BEFORE_SPRING, 5, OSLO)
     if (runs.length > 1 && runs[1].getTime() - runs[0].getTime() < 5 * 60_000)
@@ -689,12 +689,17 @@ export function ScheduleRefused() {
     return <ZonedSchedule initial="*/2 * * * *" />
 }
 
+/** The last day of each month: the field reads `L` itself, in words and in runs. */
+export function ScheduleMonthRules() {
+    return <ZonedSchedule initial="0 2 L * ?" />
+}
+
 /**
- * The last day of each month, in syntax the scheduler reads and the field's own reading does not:
- * the scheduler's runs are drawn, and the field puts no words to it.
+ * Three days before the end of each month, in syntax the scheduler reads and the field's own reading
+ * does not: the scheduler's runs are drawn, and the field puts no words to it.
  */
 export function ScheduleServerSyntax() {
-    return <ZonedSchedule initial="0 2 L * ?" />
+    return <ZonedSchedule initial="0 2 L-3 * ?" />
 }
 
 /** The schedule of nightly-export as saved: the expression, its reading and its next runs, with nothing to type in. */

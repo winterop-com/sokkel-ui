@@ -49,7 +49,7 @@ describe('CronField', () => {
     })
 
     it('marks no issue of its own while the app checks an expression it cannot read', () => {
-        const html = renderToStaticMarkup(<CronField value="0 2 L * ?" onChange={noop} from={FROM} runsPending />)
+        const html = renderToStaticMarkup(<CronField value="0 2 L-3 * ?" onChange={noop} from={FROM} runsPending />)
         expect(html).not.toContain('aria-invalid="true"')
         expect(html).not.toContain('Not a cron expression')
         expect(html).toContain('aria-busy="true"')
@@ -63,7 +63,7 @@ describe('CronField', () => {
     })
 
     it('says an expression it cannot read is not one, while the app gives no verdict', () => {
-        const html = renderToStaticMarkup(<CronField value="0 2 L * *" onChange={noop} from={FROM} />)
+        const html = renderToStaticMarkup(<CronField value="0 2 L-3 * *" onChange={noop} from={FROM} />)
         expect(html).toContain('aria-invalid="true"')
         expect(html).toContain('Error: Not a cron expression')
     })
@@ -71,7 +71,7 @@ describe('CronField', () => {
     it('takes the app’s runs as its verdict on an expression it cannot read, with no words line', () => {
         const runs = [new Date('2027-03-31T00:00:00Z'), new Date('2027-04-30T00:00:00Z')]
         const html = renderToStaticMarkup(
-            <CronField value="0 2 L * ?" onChange={noop} from={FROM} timeZone="Europe/Oslo" runs={runs} count={2} />,
+            <CronField value="0 2 L-3 * ?" onChange={noop} from={FROM} timeZone="Europe/Oslo" runs={runs} count={2} />,
         )
         expect(html).not.toContain('aria-invalid="true"')
         expect(html).not.toContain('Not a cron expression')

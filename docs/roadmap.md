@@ -6,8 +6,8 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.19.3** is the latest release (2026-11-11): a narrow table's tools take a line of their own without
-  a search too.
+- **0.19.4** is the latest release (2026-11-11): cron reads `L`, `LW`, `15W`, `5#2`, `5L` and `?`, and a
+  chart's hover shadow lets the hovered bar show through.
 - **0.18.3** (2026-11-11): route focus waits for the new page's visible heading,
   `PageState` takes `headingLevel`, and a cleared search keeps no results.
 - **0.18.2** (2026-11-11): `CronField` reads its runs in a time zone and takes
@@ -274,11 +274,6 @@ to `plan.md` when it ships.
   with the reason, rather than reworking unrelated parts to fit. A loader that lets `DataTable`
   register itself when it loads may win back the 2.3 kB `ChartFrame`'s data view split into the
   dashboard's start chunks.
-
-- **`describeCron` and `CronField` read `L`, `#` and `W`.** The last day of the month (`L`), the
-  nth weekday (`5#2`) and the nearest weekday (`15W`) parse to nothing today, so they get no words
-  and no runs of the field's own; an app passes its server's runs and reading through `runs` and
-  `describe`. Reading them in the parser gives both.
 
 - **Smaller start bundles, what is left.** Every library only some parts need is an optional peer,
   and the heavy ones, Base UI's menu among them, load on first use. Left:

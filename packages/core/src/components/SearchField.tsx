@@ -96,7 +96,7 @@ export function SearchField({
             data-slot="search-field"
             data-disabled={disabled || undefined}
             className={cn(
-                'flex h-(--density-control) min-w-0 items-center gap-2 rounded-control border border-input bg-field px-2.5 text-sm transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring data-disabled:cursor-not-allowed data-disabled:opacity-50',
+                'flex h-(--density-control) min-w-0 items-center gap-2 rounded-control border border-input bg-field px-2.5 text-sm transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring max-md:min-h-finger data-disabled:cursor-not-allowed data-disabled:opacity-50',
                 className,
             )}
         >
