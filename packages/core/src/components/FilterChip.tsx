@@ -282,7 +282,7 @@ export function FilterChip({
             ref={chipRef}
             data-slot="filter-chip"
             className={cn(
-                'inline-flex h-(--density-control) max-w-full shrink-0 items-stretch overflow-hidden rounded-control border text-sm whitespace-nowrap',
+                'inline-flex h-(--density-control) max-w-full shrink-0 items-stretch overflow-hidden rounded-control border text-sm whitespace-nowrap max-md:min-h-finger',
                 set ? 'border-primary/40 bg-accent text-foreground' : 'border-input bg-field text-foreground',
                 className,
             )}
