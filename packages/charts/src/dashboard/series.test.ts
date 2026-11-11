@@ -21,6 +21,13 @@ describe('seriesSpec', () => {
         ])
     })
 
+    it('keeps a figure in its own place where a label repeats', () => {
+        const repeated = seriesSpec(['19:32', '19:32', '19:33'], [{ name: 'Requests', values: [1, 2, 3] }])
+        const { categories, series } = pivot({ ...repeated, x: repeated.x ?? '', y: repeated.y })
+        expect(categories.map((category) => category.replaceAll('\u200b', ''))).toEqual(['19:32', '19:32', '19:33'])
+        expect(series).toEqual([{ name: 'Requests', values: [1, 2, 3] }])
+    })
+
     it('keeps each series in its color, stack and dash', () => {
         expect(spec.colors).toEqual({ Runs: 'chart-2', Target: 'muted-foreground' })
         expect(spec.stacks).toEqual({ Runs: 'all' })

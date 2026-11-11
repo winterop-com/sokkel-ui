@@ -53,20 +53,35 @@ export const SERIES = 'series'
 export const FIGURE = 'value'
 
 /**
+ * The categories, each repeat of a label made its own by trailing zero-width spaces, which read the
+ * same. A chart finds a figure's place by its category's name, so times written coarser than their
+ * steps ("19:32" six times over a minute) would otherwise share one place and leave the rest empty.
+ */
+function distinctCategories(x: readonly string[]): string[] {
+    const seen = new Map<string, number>()
+    return x.map((category) => {
+        const times = seen.get(category) ?? 0
+        seen.set(category, times + 1)
+        return times === 0 ? category : `${category}${'\u200b'.repeat(times)}`
+    })
+}
+
+/**
  * A panel's series as the rows and fields a `Chart` reads: a row per category and series, the
  * categories and series in their order, each series in its color, its stack and dashed as it says.
  */
 export function seriesSpec(x: readonly string[], series: readonly PanelSeries[]): ChartSpec {
     const stacks = series.filter((entry) => entry.stack !== undefined).map((entry) => [entry.name, entry.stack ?? ''])
     const dashed = series.filter((entry) => entry.dashed === true).map((entry) => entry.name)
+    const categories = distinctCategories(x)
     return {
         rows: series.flatMap((entry) =>
-            x.map((category, index) => ({ [CATEGORY]: category, [SERIES]: entry.name, [FIGURE]: entry.values[index] ?? null })),
+            categories.map((category, index) => ({ [CATEGORY]: category, [SERIES]: entry.name, [FIGURE]: entry.values[index] ?? null })),
         ),
         x: CATEGORY,
         y: FIGURE,
         series: SERIES,
-        order: x,
+        order: categories,
         seriesOrder: series.map((entry) => entry.name),
         colors: Object.fromEntries(series.map((entry, index) => [entry.name, seriesToken(entry, index)])),
         ...(stacks.length === 0 ? {} : { stacks: Object.fromEntries(stacks) }),

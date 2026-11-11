@@ -213,6 +213,11 @@ export function EChart({ option, label, hidden = EMPTY, hovered = null, animate 
     const drawnOption = useRef<EChartsCoreOption | null>(null)
     const drawn = look !== null
 
+    // The engine loads while the fonts and the look are still on their way, not after them.
+    useEffect(() => {
+        void loadEngine()
+    }, [])
+
     useEffect(() => {
         if (!drawn) return
         let live = true
