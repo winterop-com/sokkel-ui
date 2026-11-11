@@ -274,13 +274,17 @@ to `plan.md` when it ships.
   ignore a `::-webkit-scrollbar-track` offset. The fix moves the head out of the scrolling box and
   keeps it in step sideways (pinned columns, bands and resizing with it). Cosmetic; look into it.
 
-- **Size budgets are a ceiling.** `size/budget.json` holds the dashboard at 200.7 kB and forms at
-  191.8 kB (2026-11-11), each its start plus at most 0.5 kB. The dashboard's came down from 200 kB
-  to 197.9 once a plain `DataTable` stopped carrying Base UI's checkbox, then the owner raised it
-  to 200.7 for `ChartFrame`'s data view: its table loads on first use, but that dynamic import
-  splits modules the page already holds into extra start chunks, each compressed on its own. A
-  loader that lets `DataTable` register itself when it loads may win those 2.3 kB back. A change
-  over the budgets trims first, and they come down as room is freed.
+- **Size budgets guide, they are not a wall.** `size/budget.json` holds the dashboard start at
+  200.8 kB and forms at 191.8 kB start and 78.4 kB lazy (2026-11-11); the forms lazy one is full. A
+  change trims what it adds itself; when it is worth its size, its PR raises the budget it needs
+  with the reason, rather than reworking unrelated parts to fit. A loader that lets `DataTable`
+  register itself when it loads may win back the 2.3 kB `ChartFrame`'s data view split into the
+  dashboard's start chunks.
+
+- **`describeCron` and `CronField` read `L`, `#` and `W`.** The last day of the month (`L`), the
+  nth weekday (`5#2`) and the nearest weekday (`15W`) parse to nothing today, so they get no words
+  and no runs of the field's own; an app passes its server's runs and reading through `runs` and
+  `describe`. Reading them in the parser gives both.
 
 - **Smaller start bundles, what is left.** Every library only some parts need is an optional peer,
   and the heavy ones, Base UI's menu among them, load on first use. Left:
