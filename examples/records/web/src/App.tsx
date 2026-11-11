@@ -11,7 +11,7 @@ import { Toaster } from '@winterop-com/sokkel-ui/primitives/sonner'
 import { Switch } from '@winterop-com/sokkel-ui/primitives/switch'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
-import { ServerMenu, type ServerState } from '@winterop-com/sokkel-ui/ServerMenu'
+import { ServerMenu } from '@winterop-com/sokkel-ui/ServerMenu'
 import { SettingsDialog, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsDialog'
 import { Shell } from '@winterop-com/sokkel-ui/Shell'
 import type { ShortcutGroup } from '@winterop-com/sokkel-ui/ShortcutsDialog'
@@ -47,7 +47,7 @@ import { Forms } from './pages/Forms'
 import { Health } from './pages/Health'
 import { Household } from './pages/Household'
 import { Households } from './pages/Households'
-import { Overview } from './pages/Overview'
+import { Overview, type ServerHealth } from './pages/Overview'
 import { Places } from './pages/Places'
 import { Playground } from './pages/Playground'
 import { ReceiptPage } from './pages/Receipt'
@@ -133,8 +133,8 @@ const SHORTCUTS: ShortcutGroup[] = [
 ]
 
 /** Whether the server answers, asked when the app opens, when the outage is turned on or off, and on Check again. */
-function useServerState(): { state: ServerState; check: () => void } {
-    const [state, setState] = useState<ServerState>('checking')
+function useServerState(): { state: ServerHealth; check: () => void } {
+    const [state, setState] = useState<ServerHealth>('checking')
     const check = useCallback(() => {
         setState('checking')
         probe().then(
