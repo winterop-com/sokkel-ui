@@ -123,7 +123,7 @@ export function DatasetPage({
     if (dataset === undefined)
         return (
             <Page>
-                <PageState loading={false} error="There is no such dataset here. It may have been deleted.">
+                <PageState loading={false} headingLevel="h1" error="There is no such dataset here. It may have been deleted.">
                     {null}
                 </PageState>
             </Page>

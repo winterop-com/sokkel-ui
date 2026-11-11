@@ -159,21 +159,16 @@ export function focusHeading(area: ParentNode | null, before: HeadingMarks = [])
 }
 
 /**
- * Focuses a new page's heading (`focusHeading`) as soon as it shows, watching the area while the
+ * Focuses a new page's heading (`focusHeading`) once it shows, looking again every 50 ms while the
  * page loads, for `wait` ms at most and until the reader presses a key or the pointer. Returns the
- * way to stop watching.
+ * way to stop looking.
  */
 export function awaitHeading(area: HTMLElement, before?: HeadingMarks, wait = 3000): () => void {
     const done = new AbortController()
     const stop = () => done.abort()
-    const look = () => focusHeading(area, before) && stop()
-    const observer = new MutationObserver(look)
-    const timer = setTimeout(stop, wait)
-    done.signal.onabort = () => {
-        observer.disconnect()
-        clearTimeout(timer)
-    }
-    observer.observe(area, { childList: true, subtree: true, attributes: true })
+    const look = () => (focusHeading(area, before) || (wait -= 50) < 0) && stop()
+    const timer = setInterval(look, 50)
+    done.signal.onabort = () => clearInterval(timer)
     for (const type of ['keydown', 'pointerdown']) addEventListener(type, stop, { capture: true, signal: done.signal })
     look()
     return stop

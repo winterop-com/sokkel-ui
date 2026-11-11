@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 
-import { SEARCH_IDLE, searchFor, searchKept, type SearchSource, type SearchState } from '../lib/search'
+import { SEARCH_IDLE, searchFor, type SearchSource, type SearchState } from '../lib/search'
 
 /** Where a search stands, and the way to ask its query again after a failure. */
 export type SearchAnswer = SearchState & { retry: () => void }
@@ -10,7 +10,7 @@ export type SearchAnswer = SearchState & { retry: () => void }
  * and each change after a pause in typing; an answer given at once lands without a wait. Older
  * answers are dropped and their signal aborted. Results belong to the query they answer: while
  * the next query waits, the last results stay only as stale (`loading`), and a failure keeps none;
- * emptying the query or closing the list (`enabled` false) drops them (`searchKept`).
+ * emptying the query or closing the list (`enabled` false) drops them, so the next query starts from nothing.
  * `retry` asks the query again at once. Below `minQuery` characters, or while `enabled` is false,
  * nothing is asked.
  */
@@ -29,13 +29,12 @@ export function useSearch(
 
     const trimmed = query.trim()
     const active = enabled && search !== undefined && trimmed.length >= minQuery
-    const kept = searchKept(held, active)
-    if (kept !== held) setHeld(kept)
 
     useEffect(() => {
         if (!active) {
             asked.current = -1
-            return
+            // Emptied or closed, the search lets its results go, so a query after it starts from nothing.
+            return setHeld(SEARCH_IDLE)
         }
         const controller = new AbortController()
         const land = (next: SearchState) => {
@@ -59,11 +58,8 @@ export function useSearch(
         // The first query, and one asked again, go at once; a changed one after a pause in typing.
         const now = asked.current !== tries
         asked.current = tries
-        if (now) {
-            ask()
-            return () => controller.abort()
-        }
-        const timer = setTimeout(ask, debounce)
+        if (now) ask()
+        const timer = now ? undefined : setTimeout(ask, debounce)
         return () => {
             clearTimeout(timer)
             controller.abort()

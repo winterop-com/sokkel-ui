@@ -10,7 +10,6 @@ import {
     SEARCH_IDLE,
     searchEntries,
     searchFor,
-    searchKept,
     searchKey,
     toggleChosen,
     type SearchGroup,
@@ -175,30 +174,16 @@ describe('searchFor', () => {
 
     it('keeps results stale while a query is refined in one open list', () => {
         // Laos answered, then Lao typed: Laos's results wait dimmed while Lao is asked.
-        expect(searchFor(searchKept(done, true), 'Lao', true)).toEqual({ state: 'loading', query: 'Lao', groups: LAOS })
+        expect(searchFor(done, 'Lao', true)).toEqual({ state: 'loading', query: 'Lao', groups: LAOS })
     })
 })
 
-describe('searchKept', () => {
-    const done: SearchState = {
-        state: 'done',
-        query: 'Laos',
-        groups: [{ kind: 'places', title: 'Places', results: [{ id: 'laos', title: 'Laos' }] }],
-    }
-
-    it('keeps what a search holds while it is asked', () => {
-        expect(searchKept(done, true)).toBe(done)
-    })
-
-    it('drops everything once the query is emptied or the list closed', () => {
-        expect(searchKept(done, false)).toBe(SEARCH_IDLE)
-    })
-
-    it('so a query typed after clearing, or in a list opened again, shows Searching, not the old results', () => {
-        const cleared = searchKept(done, false)
-        expect(searchFor(cleared, 'Uganda', true)).toEqual({ state: 'loading', query: 'Uganda', groups: [] })
-        expect(searchFor(cleared, 'Uganda')).toEqual({ state: 'loading', query: 'Uganda', groups: [] })
+describe('a cleared search', () => {
+    // `useSearch` holds SEARCH_IDLE once its query is emptied or its list closed, whatever it held before.
+    it('shows a query typed after clearing, or in a list opened again, as searching, not with old results', () => {
+        expect(searchFor(SEARCH_IDLE, 'Uganda', true)).toEqual({ state: 'loading', query: 'Uganda', groups: [] })
+        expect(searchFor(SEARCH_IDLE, 'Uganda')).toEqual({ state: 'loading', query: 'Uganda', groups: [] })
         // The same query asked again after reopening starts from nothing too.
-        expect(searchFor(cleared, 'Laos', true)).toEqual({ state: 'loading', query: 'Laos', groups: [] })
+        expect(searchFor(SEARCH_IDLE, 'Laos', true)).toEqual({ state: 'loading', query: 'Laos', groups: [] })
     })
 })

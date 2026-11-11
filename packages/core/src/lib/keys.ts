@@ -27,19 +27,20 @@ export interface KeyChord {
     alt?: boolean
 }
 
-const NAMED: Readonly<Record<string, readonly [apple: string, other: string]>> = {
-    ' ': ['Space', 'Space'],
-    Escape: ['Esc', 'Esc'],
+// One name for both, or a Mac's and another device's.
+const NAMED: Readonly<Record<string, string | readonly [apple: string, other: string]>> = {
+    ' ': 'Space',
+    Escape: 'Esc',
     Enter: ['↩', 'Enter'],
     Backspace: ['⌫', 'Backspace'],
     Delete: ['⌦', 'Del'],
     Tab: ['⇥', 'Tab'],
-    ArrowLeft: ['←', '←'],
-    ArrowRight: ['→', '→'],
-    ArrowUp: ['↑', '↑'],
-    ArrowDown: ['↓', '↓'],
-    PageUp: ['PgUp', 'PgUp'],
-    PageDown: ['PgDn', 'PgDn'],
+    ArrowLeft: '←',
+    ArrowRight: '→',
+    ArrowUp: '↑',
+    ArrowDown: '↓',
+    PageUp: 'PgUp',
+    PageDown: 'PgDn',
 }
 
 /** A key's name as `KeyboardEvent.key` gives it, from the ways a binding may write it. */
@@ -57,7 +58,8 @@ export function keyName(key: string): string {
 export function keyLabels(chord: KeyChord, apple: boolean = isApple()): string[] {
     const key = keyName(chord.key)
     const named = NAMED[key]
-    const last = named === undefined ? (key.length === 1 ? key.toUpperCase() : key) : named[apple ? 0 : 1]
+    const last =
+        named === undefined ? (key.length === 1 ? key.toUpperCase() : key) : typeof named === 'string' ? named : named[apple ? 0 : 1]
     const held = apple
         ? [chord.alt && '⌥', chord.shift && '⇧', chord.mod && '⌘']
         : [chord.mod && 'Ctrl', chord.alt && 'Alt', chord.shift && 'Shift']

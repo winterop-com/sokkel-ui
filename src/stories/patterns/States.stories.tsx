@@ -71,6 +71,23 @@ function ReadStates() {
     )
 }
 
+/** A run's page whose record failed to load: the failure stands for the page, headed as its h1. */
+function FailedPage() {
+    return (
+        <Ground>
+            <PageState
+                loading={false}
+                status={404}
+                headingLevel="h1"
+                error="No run of `nightly-export` has the number `4182`."
+                onRetry={() => undefined}
+            >
+                {null}
+            </PageState>
+        </Ground>
+    )
+}
+
 /** A run's page whose own read came back, beside a side list whose read failed. */
 function SecondaryRead() {
     return (
@@ -141,6 +158,12 @@ const meta: Meta = { title: 'Patterns/States', parameters: { frame: 'padded' } }
 export default meta
 
 export const Read: StoryObj = { name: 'Page state', render: () => <ReadStates /> }
+
+/**
+ * A detail page whose record failed to load, drawn with `headingLevel="h1"`: the failure's heading
+ * is the page's own, so `Shell`'s `routeKey` has a heading to move the focus to.
+ */
+export const Failed: StoryObj = { name: 'Failed page', render: () => <FailedPage /> }
 
 /**
  * A failed read of secondary data, drawn with `tone="warning"`: the page's own content stands, and

@@ -79,29 +79,11 @@ describe('focusHeading’s choice', () => {
 })
 
 describe('awaitHeading', () => {
-    let observers: { callback: () => void; observing: boolean }[]
     let listeners: Map<string, { listener: () => void; signal: AbortSignal }>
 
     beforeEach(() => {
         vi.useFakeTimers()
-        observers = []
         listeners = new Map()
-        vi.stubGlobal(
-            'MutationObserver',
-            class {
-                entry: { callback: () => void; observing: boolean }
-                constructor(callback: () => void) {
-                    this.entry = { callback, observing: false }
-                    observers.push(this.entry)
-                }
-                observe() {
-                    this.entry.observing = true
-                }
-                disconnect() {
-                    this.entry.observing = false
-                }
-            },
-        )
         vi.stubGlobal('addEventListener', (type: string, listener: () => void, options: { signal: AbortSignal }) =>
             listeners.set(type, { listener, signal: options.signal }),
         )
@@ -112,47 +94,50 @@ describe('awaitHeading', () => {
         vi.unstubAllGlobals()
     })
 
-    /** The page changing: every watcher still watching is told. */
-    const mutate = () => observers.filter((entry) => entry.observing).forEach((entry) => entry.callback())
+    /** The page drawing on for a moment, as the waiter looks again. */
+    const later = () => vi.advanceTimersByTime(50)
     const press = (type: string) => {
         const entry = listeners.get(type)
         if (entry && !entry.signal.aborted) entry.listener()
     }
 
-    it('focuses a heading already shown at once, watching nothing', () => {
+    it('focuses a heading already shown at once, and stops looking', () => {
         const h1 = heading()
         awaitHeading(area(h1))
         expect(h1.focused).toBe(true)
-        expect(observers.every((entry) => !entry.observing)).toBe(true)
+        expect(vi.getTimerCount()).toBe(0)
     })
 
     it('waits for a page still loading, then focuses its heading as it shows', () => {
         const h1 = heading({ shown: false })
         awaitHeading(area(h1))
+        later()
         expect(h1.focused).toBe(false)
         h1.shown = true
-        mutate()
+        later()
         expect(h1.focused).toBe(true)
-        expect(observers[0].observing).toBe(false)
+        expect(vi.getTimerCount()).toBe(0)
     })
 
     it('never takes the page before’s heading, still shown, for the new one’s', () => {
         const old = heading({ text: 'nightly-export' })
         const next = heading({ shown: false, text: 'sync-inventory' })
-        const page = area(old, next)
-        awaitHeading(page, headingMarks(area(old)))
+        awaitHeading(area(old, next), headingMarks(area(old)))
+        later()
         expect(old.focused).toBe(false)
         next.shown = true
-        mutate()
+        later()
         expect(next.focused).toBe(true)
+        expect(old.focused).toBe(false)
     })
 
     it('gives up after the wait', () => {
         const h1 = heading({ shown: false })
         awaitHeading(area(h1), undefined, 3000)
-        vi.advanceTimersByTime(3000)
+        vi.advanceTimersByTime(3100)
+        expect(vi.getTimerCount()).toBe(0)
         h1.shown = true
-        mutate()
+        later()
         expect(h1.focused).toBe(false)
     })
 
@@ -162,7 +147,7 @@ describe('awaitHeading', () => {
             awaitHeading(area(h1))
             press(type)
             h1.shown = true
-            mutate()
+            later()
             expect(h1.focused).toBe(false)
         }
     })
@@ -172,7 +157,7 @@ describe('awaitHeading', () => {
         const stop = awaitHeading(area(h1))
         stop()
         h1.shown = true
-        mutate()
+        later()
         expect(h1.focused).toBe(false)
     })
 })

@@ -67,13 +67,6 @@ export function searchFor(held: SearchState, query: string, asking = false): Sea
     return held.query === query && (!asking || held.state === 'done') ? held : { state: 'loading', query, groups: held.groups }
 }
 
-/**
- * What a search keeps while it is asked (`asking`), and nothing once it is not: its query emptied
- * or shorter than its shortest, or its list closed. So results stand as stale only while a query is
- * refined in one open list, never after it was cleared or the list was opened again.
- */
-export const searchKept = (held: SearchState, asking: boolean): SearchState => (asking ? held : SEARCH_IDLE)
-
 /** A result in the order the keyboard moves through them, with its group and its place in the list. */
 export interface SearchEntry {
     group: SearchGroup

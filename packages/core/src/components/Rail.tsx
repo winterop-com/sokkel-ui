@@ -518,9 +518,6 @@ function holdsActive(entry: RailEntry): boolean {
     return entry.entries?.some((child) => child.active === true) === true
 }
 
-/** Whether a parent drawn as one icon is lit: its own place or one of its entries' is shown. */
-const lit = (entry: RailEntry) => entry.active === true || holdsActive(entry)
-
 /** The dot of an entry with something new and no count, ringed in the rail's ground so it reads as cut out. */
 function UnreadDot({ label, className }: { label: string; className?: string }) {
     return (
@@ -778,7 +775,7 @@ function RailFlyout({ entry, unread, defaultOpen }: { entry: RailEntry; unread: 
                                 {...props}
                                 type="button"
                                 aria-label={entry.label}
-                                className={iconClass(lit(entry), 'data-popup-open:bg-hover')}
+                                className={iconClass(entry.active === true || holdsActive(entry), 'data-popup-open:bg-hover')}
                             />
                         }
                     >
@@ -853,8 +850,12 @@ function Strip({
                                     defaultOpen={flyout === entry.id}
                                     sideOffset={8}
                                     trigger={(props) => (
-                                        <button {...props} type="button" className={stripClass(lit(entry))}>
-                                            <StripFace entry={entry} active={lit(entry)} unread={unread} />
+                                        <button
+                                            {...props}
+                                            type="button"
+                                            className={stripClass(entry.active === true || holdsActive(entry))}
+                                        >
+                                            <StripFace entry={entry} active={entry.active === true || holdsActive(entry)} unread={unread} />
                                         </button>
                                     )}
                                 />
