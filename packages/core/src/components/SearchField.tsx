@@ -18,7 +18,10 @@ const WORDS: SearchFieldWords = {
 export type SearchFieldDataAttributes = { [name: `data-${string}`]: string | number | boolean | undefined }
 
 /** More for the text input: its id, role and handlers, and any `aria-*` or `data-*` attribute. */
-export type SearchFieldInputProps = Pick<ComponentProps<'input'>, 'id' | 'role' | 'autoComplete' | 'onFocus' | 'onBlur' | 'onKeyDown'> &
+export type SearchFieldInputProps = Pick<
+    ComponentProps<'input'>,
+    'id' | 'role' | 'autoComplete' | 'onClick' | 'onFocus' | 'onBlur' | 'onKeyDown'
+> &
     AriaAttributes &
     SearchFieldDataAttributes
 

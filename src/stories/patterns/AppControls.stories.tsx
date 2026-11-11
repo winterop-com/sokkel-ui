@@ -58,9 +58,9 @@ function Shortcuts() {
                     {
                         title: 'Go to',
                         shortcuts: [
-                            { id: 'runs', action: 'Runs', keys: ['G', 'R'] },
-                            { id: 'jobs', action: 'Jobs', keys: ['G', 'J'] },
-                            { id: 'services', action: 'Services', keys: ['G', 'S'] },
+                            { id: 'runs', action: 'Runs', keys: ['G'], next: ['R'] },
+                            { id: 'jobs', action: 'Jobs', keys: ['G'], next: ['J'] },
+                            { id: 'services', action: 'Services', keys: ['G'], next: ['S'] },
                         ],
                     },
                     {

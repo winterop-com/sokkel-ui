@@ -74,6 +74,7 @@ jobs:
             - run: bun install --frozen-lockfile
             - run: bun run build-storybook
             - run: bunx playwright test e2e/layout.spec.ts --shard=${{ matrix.shard }}/2
-            # The data-entry parts driven as a person would: submit, refusal, files, repeated rows.
+            # The data-entry parts and the frame's keys driven as a person would: submit, refusal,
+            # files, repeated rows, and focus the palette gives back to the search.
             - if: matrix.shard == 1
-              run: bunx playwright test e2e/forms.spec.ts
+              run: bunx playwright test e2e/forms.spec.ts e2e/keys.spec.ts

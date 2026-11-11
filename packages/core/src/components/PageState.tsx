@@ -14,9 +14,14 @@ export type ReadOutcome = number | 'unreachable'
 /** The headings a failed read is given, by what the server answered. */
 export interface PageStateWords {
     loading: string
+    /** The heading over a refused read of the page's own data. */
     refused: string
     missing: string
     unreachable: string
+    /** The heading over a refused read in the `warning` tone, of data the page stands without. */
+    partRefused: string
+    /** The heading over a `warning` read that found nothing there. */
+    partMissing: string
     /** The button that reads again after a failure. */
     retry: string
 }
@@ -26,14 +31,24 @@ const WORDS: PageStateWords = {
     refused: 'The server refused this read',
     missing: 'Nothing is there',
     unreachable: 'The server is not answering',
+    partRefused: 'Part of this page could not be read',
+    partMissing: 'Part of this page is not there',
     retry: 'Try again',
 }
 
-/** The heading over a failed read: a 404 is an absence and no answer is silence, not a refusal. */
-export function pageStateHeading(outcome: ReadOutcome | null | undefined, words: PageStateWords = WORDS): string {
+/**
+ * The heading over a failed read: a 404 is an absence and no answer is silence, not a refusal. In
+ * the `warning` tone a refusal or an absence is said of a part of the page, not of the page.
+ */
+export function pageStateHeading(
+    outcome: ReadOutcome | null | undefined,
+    words: PageStateWords = WORDS,
+    tone: PageStateTone = 'critical',
+): string {
+    const part = tone === 'warning'
     if (outcome === 'unreachable') return words.unreachable
-    if (outcome === 404) return words.missing
-    return words.refused
+    if (outcome === 404) return part ? words.partMissing : words.missing
+    return part ? words.partRefused : words.refused
 }
 
 /** The frame the three states share: a box that keeps its height inside a flex column. */
@@ -77,7 +92,8 @@ export interface PageStateProps {
  * heading; a string diagnostic has its backticked parts drawn in the code face. `onRetry` puts a
  * button that reads again under the diagnostic, as a dashboard panel's failure has one. `tone`
  * `warning` draws a failed read of secondary data, such as a side list beside the page's own
- * content, as a warning rather than the page's failure, announced politely rather than as an alert.
+ * content, as a warning rather than the page's failure, announced politely rather than as an alert,
+ * and headed as a part of the page that could not be read (`partRefused`, `partMissing`).
  */
 export function PageState({
     loading,
@@ -111,7 +127,7 @@ export function PageState({
                 )}
                 <div className="flex min-w-0 flex-col gap-3">
                     <div role={warning ? 'status' : 'alert'} className="flex min-w-0 flex-col gap-1">
-                        <p className="font-medium">{pageStateHeading(status, words)}</p>
+                        <p className="font-medium">{pageStateHeading(status, words, tone)}</p>
                         <p className="text-xs break-words text-muted-foreground">
                             {typeof error === 'string' ? <ProseText text={error} /> : error}
                         </p>

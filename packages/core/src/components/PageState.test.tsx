@@ -46,6 +46,25 @@ describe('PageState retry', () => {
 })
 
 describe('PageState tone', () => {
+    it('heads a refused read as the page failing in the critical tone', () => {
+        expect(failed()).toContain('The server refused this read')
+        expect(failed({ status: 404 })).toContain('Nothing is there')
+    })
+
+    it('heads a refused read in the warning tone as a part of the page, not the page', () => {
+        const html = failed({ tone: 'warning' })
+        expect(html).toContain('Part of this page could not be read')
+        expect(html).not.toContain('The server refused this read')
+        expect(failed({ tone: 'warning', status: 404 })).toContain('Part of this page is not there')
+        expect(failed({ tone: 'warning', status: 'unreachable' })).toContain('The server is not answering')
+    })
+
+    it("takes the warning tone's words from the app", () => {
+        expect(failed({ tone: 'warning', words: { partRefused: 'The activity list could not be read' } })).toContain(
+            'The activity list could not be read',
+        )
+    })
+
     it('draws a failure as the page failing by default, as an alert', () => {
         const html = failed()
         expect(html).toContain('role="alert"')

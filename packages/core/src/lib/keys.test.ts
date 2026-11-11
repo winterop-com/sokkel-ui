@@ -1,11 +1,22 @@
 import { describe, expect, it } from 'vitest'
 
-import { keyLabels, shortcutLabel, typing } from './keys'
+import { bindingKeys, keyLabels, shortcutLabel, typing } from './keys'
 
 describe('shortcutLabel', () => {
     it('writes the command key as the device does', () => {
         expect(shortcutLabel('k', true)).toBe('⌘K')
         expect(shortcutLabel('k', false)).toBe('Ctrl K')
+    })
+})
+
+describe('bindingKeys', () => {
+    it('writes a chord as one press, with no second', () => {
+        expect(bindingKeys({ key: 'k', mod: true }, true)).toEqual({ keys: ['⌘', 'K'] })
+    })
+
+    it("writes a sequence's second press apart, given as a key or a chord", () => {
+        expect(bindingKeys({ key: 'g', next: 'd' }, false)).toEqual({ keys: ['G'], next: ['D'] })
+        expect(bindingKeys({ key: 'g', next: { key: 'r', shift: true } }, true)).toEqual({ keys: ['G'], next: ['⇧', 'R'] })
     })
 })
 

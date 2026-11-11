@@ -248,6 +248,9 @@ app's on a bound one's id but other keys is listed beside it, and one on the sam
 listed once, in the app's words and group; `Shell`'s `shortcuts` makes the shell hold it,
 opened on `?`, bound once, and from the account menu, and `shortcutsOpen` with
 `onShortcutsOpenChange` holds it from outside, as for a palette row built beside the shell.
+A palette row's `keys` take a sequence the same way: its second press in `next`, drawn after the
+first with the palette's `sequence` word between (`KbdSequence`, which the dialog draws with too),
+and `bindingKeys(binding)` gives both from the binding that runs the command, a chord as one press.
 `useShell()` gives a screen inside the shell `openPalette` and `openShortcuts`. `SearchField`'s `/`
 is a binding too, on the field's own input, so no mark on the box finds it; an app that answers `/`
 itself turns `shortcut` off and can mark the input with a `data-*` attribute through `inputProps`,
@@ -260,6 +263,8 @@ menu, a search's results or an overlay from `useOverlay`, or null) and decides i
 over an app's own full-screen view, yes over an app's own search, which the app closes as the
 palette opens. `overSearch(over)`, from `Shell`, says whether the layer is a `Search`'s results, so
 an app's own rule never reads how the library marks them. On a touch screen the palette has a Close button.
+A `Search`'s results open on typing, a press on the field or the down arrow, never on focus alone,
+so focus the palette or the shortcuts dialog gives back to the search as it closes leaves them closed.
 
 `useOverlay(open, { onClose })` makes an app's own overlay behave as a dialog: the page outside it
 inert, focus moved in, Escape closing the one on top, and focus back where it was; `Shell`'s drawer
@@ -404,7 +409,9 @@ way round and no colored rule; `Problem` says what went wrong for a person, the 
 away; `PageState` draws the states a read lands in (loading, failed, empty, the content), a failure
 headed by what the server answered, with `onRetry` for a way to read again, and `tone="warning"`
 for a failed read of secondary data the page stands without, drawn in the warning tone and
-announced as a status rather than as the page's failure. `Surface` sets content on a card's ground, a panel's (`well`) or the page's (`inset`) and
+announced as a status rather than as the page's failure, its heading said of a part of the page
+(`partRefused`, "Part of this page could not be read"; `partMissing`) where the critical tone's
+says the server refused the page's read. `Surface` sets content on a card's ground, a panel's (`well`) or the page's (`inset`) and
 clips nothing, so a focus ring at its edge shows whole; unpadded, its first and last children take
 its corners.
 

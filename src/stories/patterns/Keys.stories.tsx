@@ -6,6 +6,7 @@ import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
 import { useShortcuts } from '@winterop-com/sokkel-ui/hooks/use-shortcuts'
 import { placeCommands } from '@winterop-com/sokkel-ui/lib/commands'
+import { bindingKeys } from '@winterop-com/sokkel-ui/lib/keys'
 import { LogView, type LogLine } from '@winterop-com/sokkel-ui/LogView'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
@@ -42,6 +43,16 @@ const placesAt = (place: string): RailGroup[] => [
         entries: ENTRIES.map(({ id, label, icon }) => ({ id, label, icon, href: '#', active: id === place })),
     },
 ]
+
+/** The palette's Go to rows, each with the sequence that goes there drawn at its end. */
+const placeRows = (place: string) =>
+    placeCommands(placesAt(place), () => undefined).map((group) => ({
+        ...group,
+        commands: group.commands.map((command) => {
+            const entry = ENTRIES.find((one) => `place-${one.id}` === command.id)
+            return entry === undefined ? command : { ...command, ...bindingKeys({ key: 'g', next: entry.key }) }
+        }),
+    }))
 
 /** G then a place's letter goes there, from any screen, as a two-key sequence. */
 function PlaceKeys({ onGo }: { onGo: (place: string) => void }) {
@@ -161,7 +172,7 @@ function KeysFrame({ dialog = false, palette = false }: { dialog?: boolean; pale
         <TooltipProvider>
             <Shell
                 palette={[
-                    ...placeCommands(placesAt(place), () => undefined),
+                    ...placeRows(place),
                     {
                         title: 'Help',
                         commands: [
@@ -169,7 +180,7 @@ function KeysFrame({ dialog = false, palette = false }: { dialog?: boolean; pale
                                 id: 'shortcuts',
                                 label: 'Keyboard shortcuts',
                                 icon: Keyboard,
-                                keys: ['?'],
+                                ...bindingKeys({ key: '?' }),
                                 onSelect: () => setKeysOpen(true),
                             },
                         ],
@@ -230,6 +241,8 @@ export const Dialog: StoryObj = { name: 'Shortcuts dialog', render: () => <KeysF
 
 /**
  * The palette's own row for the shortcuts: the app holds the dialog's state with `shortcutsOpen`
- * and `onShortcutsOpenChange`, so a row built beside the shell opens it.
+ * and `onShortcutsOpenChange`, so a row built beside the shell opens it. The Go to rows end in the
+ * sequence that goes there, G then R, built with `bindingKeys` from the binding and drawn as the
+ * shortcuts dialog draws it.
  */
 export const FromPalette: StoryObj = { name: 'From the palette', render: () => <KeysFrame palette /> }
