@@ -43,6 +43,19 @@ describe('the chart data', () => {
         })
     })
 
+    it('gives a category the order names twice a place for each, its rows in turn', () => {
+        const rows = [
+            { at: '19:32', v: 1 },
+            { at: '19:32', v: 2 },
+            { at: '19:33', v: 3 },
+        ]
+        expect(pivot({ rows, x: 'at', y: 'v', order: ['19:32', '19:32', '19:33'] })).toEqual({
+            categories: ['19:32', '19:32', '19:33'],
+            series: [{ name: 'v', values: [1, 2, 3] }],
+        })
+        expect(pivot({ rows, x: 'at', y: 'v' }).series).toEqual([{ name: 'v', values: [3, 3] }])
+    })
+
     it('splits by series and skips values that are not numbers', () => {
         const data = pivot({ rows: ROWS, x: 'job', y: 'duration', series: 'state', aggregate: 'avg' })
         expect(data.series).toEqual([

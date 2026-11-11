@@ -95,13 +95,24 @@ export function aggregateAt(how: Aggregate | readonly Aggregate[] | undefined, i
 export function pivot({ rows, x, y, series, aggregate: how, order, seriesOrder }: PivotSpec): Pivot {
     const categories = distinct(rows, x, order)
     const fields = y === undefined ? [] : typeof y === 'string' ? [y] : [...y]
-    const at = new Map(categories.map((name, index) => [name, index]))
+    // A category the order names more than once has a place for each: its nth row goes to its nth place, and any past the last join that one.
+    const places = new Map<string, number[]>()
+    categories.forEach((name, index) => {
+        const held = places.get(name)
+        if (held === undefined) places.set(name, [index])
+        else held.push(index)
+    })
     const collect = (pick: (row: Row) => boolean, field: string | undefined, combine: Aggregate = 'sum'): (number | null)[] => {
         const buckets: number[][] = categories.map(() => [])
+        const seen = new Map<string, number>()
         for (const row of rows) {
             if (!pick(row)) continue
-            const index = at.get(labelOf(row[x]))
-            if (index === undefined) continue
+            const name = labelOf(row[x])
+            const at = places.get(name)
+            if (at === undefined) continue
+            const times = seen.get(name) ?? 0
+            seen.set(name, times + 1)
+            const index = at[Math.min(times, at.length - 1)]
             if (field === undefined) buckets[index].push(1)
             else {
                 const value = numberOf(row[field])
