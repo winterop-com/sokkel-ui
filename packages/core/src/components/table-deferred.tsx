@@ -34,6 +34,32 @@ export function watchCells(cells: readonly Element[], check: () => void): () => 
     }
 }
 
+/**
+ * The way down to the row with `key`: its top-level row and the keys of the rows above it, top
+ * first, through the children `childRows` knows. Undefined when no row known has the key.
+ */
+export function rowPath<T>(
+    rows: readonly T[],
+    rowKey: (row: T) => string,
+    childRows: ((row: T) => readonly T[] | undefined) | undefined,
+    key: string,
+): { top: T; above: string[] } | undefined {
+    const find = (level: readonly T[], above: string[]): string[] | undefined => {
+        for (const row of level) {
+            const own = rowKey(row)
+            if (own === key) return above
+            const found = find(childRows?.(row) ?? [], [...above, own])
+            if (found !== undefined) return found
+        }
+        return undefined
+    }
+    for (const top of rows) {
+        const above = find([top], [])
+        if (above !== undefined) return { top, above }
+    }
+    return undefined
+}
+
 export interface ColumnChoicesProps {
     /** The columns the menu lists, every one but the first. */
     columns: readonly { id: string; header: string; hideable?: boolean }[]

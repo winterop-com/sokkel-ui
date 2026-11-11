@@ -21,6 +21,7 @@ import {
     type CellFocus,
     type DataAction,
     type DataColumn,
+    type DataReveal,
     type DataRowTone,
     DataTable,
     DataTableGroup,
@@ -436,6 +437,37 @@ export const RowDetail: StoryObj = {
                             }))}
                         />
                     </Stack>
+                )
+            }
+        />
+    ),
+}
+
+/** The digest run, to reveal and open. */
+const DIGEST_RUN: DataReveal = { key: 'r4', open: true }
+
+/**
+ * A run arriving from a search result, revealed and opened (`reveal` with `open`): the table
+ * scrolls to it, makes it the active row and opens its detail.
+ */
+export const RevealDetail: StoryObj = {
+    name: 'Reveal detail',
+    render: () => (
+        <DataTable
+            variant="list"
+            columns={LIST_COLUMNS}
+            rows={LIST_RUNS}
+            rowKey={(run) => run.id}
+            reveal={DIGEST_RUN}
+            detail={(run) =>
+                RUN_STEPS[run.id] === undefined ? undefined : (
+                    <DescriptionList
+                        termWidth="6rem"
+                        items={RUN_STEPS[run.id].map((step) => ({
+                            term: <span className="font-mono">{step.step}</span>,
+                            value: step.said,
+                        }))}
+                    />
                 )
             }
         />
@@ -1583,6 +1615,52 @@ export const LargeTree: StoryObj = {
     name: 'Large tree',
     render: () => <RunTree count={50_000} open={['harbor', 'harbor/nightly-export', 'juniper']} />,
 }
+
+/** The run in the middle of a job's runs, by the job's place in the tree: a row far down once its job is open. */
+function middleRun(rows: readonly TreeRow[], project: number, job: number): string {
+    const parent = children(rows[project])?.[job]
+    const runs = (parent === undefined ? undefined : children(parent)) ?? []
+    return runs[Math.floor(runs.length / 2)]?.id ?? rows[project].id
+}
+
+/** Fifty thousand runs, three branches open, and a run arriving from elsewhere, such as a search result, revealed. */
+function RevealedRun() {
+    const rows = makeRunTree(50_000)
+    const [reveal, setReveal] = useState<DataReveal>(() => ({ key: middleRun(rows, 2, 3) }))
+    const goTo = (label: string, next: DataReveal) => (
+        <Button variant="outline" size="sm" onClick={() => setReveal(next)}>
+            {label}
+        </Button>
+    )
+    return (
+        <Stack gap="none" className="h-svh bg-background p-4 text-foreground">
+            <DataTable
+                className="flex-1"
+                columns={TREE_COLUMNS}
+                rows={rows}
+                rowKey={(row) => row.id}
+                childRows={children}
+                defaultExpanded={new Set(['harbor', 'harbor/nightly-export', 'juniper'])}
+                reveal={reveal}
+                minWidth="44rem"
+                toolbar={
+                    <>
+                        {goTo('A harbor run', { key: middleRun(rows, 0, 0) })}
+                        {goTo('A larkspur run', { key: middleRun(rows, 2, 3) })}
+                        {goTo('Open juniper/rebuild-index', { key: 'juniper/rebuild-index', open: true })}
+                    </>
+                }
+            />
+        </Stack>
+    )
+}
+
+/**
+ * A run arriving from a search result (`reveal`): the project and job above it open, the table
+ * scrolls past the thousands of rows drawn only as they come into view, and the run is the active
+ * row with the focus on the table. The buttons reveal other rows; with `open` a branch opens too.
+ */
+export const Reveal: StoryObj = { parameters: { frame: 'none' }, render: () => <RevealedRun /> }
 
 const FOLDER_COLUMNS: DataColumn<FolderRow>[] = [
     {
