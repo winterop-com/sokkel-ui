@@ -185,7 +185,9 @@ export interface SearchProps {
  * asked, and its results open in a popover under the field, grouped by kind, each with its
  * thumbnail or icon, its title with the query's words marked and a line under it. Where the
  * popover has room, a pane beside the list previews the highlighted result through
- * `renderPreview`. The arrows move through the results, Enter opens the highlighted one through
+ * `renderPreview`. The list opens on typing, a press on the field or the down arrow, never on focus
+ * alone, so focus a closing dialog or the palette gives back leaves it closed. The arrows move
+ * through the results, Enter opens the highlighted one through
  * `onOpen`, and Escape closes the list (a second Escape clears the field). With `onSeeAll` the
  * list ends in a way to the full results page, which Enter also takes when nothing is highlighted.
  * Inside a `Shell`, ⌘K or Ctrl+K opens the command palette over the results, which close as it opens.
@@ -300,7 +302,8 @@ export function Search({
                         'aria-expanded': shown,
                         'aria-controls': shown ? listId : undefined,
                         'aria-activedescendant': shown && highlighted >= 0 ? optionId(highlighted) : undefined,
-                        onFocus: () => setOpen(true),
+                        // Focus alone opens nothing, as focus a closing dialog gives back must not reopen the list.
+                        onClick: () => setOpen(true),
                         onBlur: (event) => {
                             if (event.relatedTarget instanceof Node && popup.current?.contains(event.relatedTarget)) return
                             setOpen(false)

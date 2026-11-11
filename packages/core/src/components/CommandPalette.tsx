@@ -32,8 +32,13 @@ export interface PaletteCommand {
     hint?: string
     /** An addressable code after the label, in the code face, such as a record's or a job's id. */
     code?: string
-    /** The keys that run it outside the palette, shown at the row's end. */
+    /**
+     * The keys that run it outside the palette, shown at the row's end, as `keyLabels` writes them;
+     * `bindingKeys` from `lib/keys` gives them, `next` with them, from the binding that runs it.
+     */
     keys?: readonly string[]
+    /** The keys of a sequence's second press, drawn after `keys` with the word `sequence` between: G then D. */
+    next?: readonly string[]
     /** More words it is found by, beyond its label; never drawn. */
     keywords?: readonly string[]
     /** A second line under the label, such as who made it or where it lives; it is found by these words too. */
@@ -111,6 +116,8 @@ export interface CommandPaletteWords {
     open: string
     /** The foot's word before the keys that open and close the palette. */
     palette: string
+    /** Between the two presses of a row's sequence, as G then D. */
+    sequence: string
 }
 
 const WORDS: CommandPaletteWords = {
@@ -120,6 +127,7 @@ const WORDS: CommandPaletteWords = {
     close: 'Close',
     open: 'Open',
     palette: 'Command palette',
+    sequence: 'then',
 }
 
 /** The strip along the palette's foot: the app's mark and name at its start, the keys at its end. */
@@ -159,7 +167,8 @@ export interface CommandPaletteProps {
 
 /**
  * The command palette: one search over everything an app can do, grouped, each row with its
- * icon, a hint in words or a code, and the keys that run it directly. Choosing a row closes the
+ * icon, a hint in words or a code, and the keys that run it directly, a sequence's two presses with
+ * the word `sequence` between them as the shortcuts dialog draws them. Choosing a row closes the
  * palette and runs it. A row with a `detail` or `artwork` is two lines tall, a picture or its icon
  * on a tile at its start and its hint or code at its end, as a record found by a search is. The
  * groups are listed by their `rank`, one group to a title. With `search` the app's own results for
@@ -268,11 +277,15 @@ export function CommandPalette({
                                                 <CommandShortcut className="flex shrink-0 items-center gap-2 tracking-normal">
                                                     {kind !== undefined && <span className="text-faint">{kind}</span>}
                                                     {command.keys !== undefined && (
-                                                        <KbdGroup>
-                                                            {command.keys.map((key) => (
-                                                                <Kbd key={key}>{key}</Kbd>
-                                                            ))}
-                                                        </KbdGroup>
+                                                        <span className="flex items-center gap-1.5">
+                                                            <Keys keys={command.keys} />
+                                                            {command.next !== undefined && (
+                                                                <>
+                                                                    {words.sequence}
+                                                                    <Keys keys={command.next} />
+                                                                </>
+                                                            )}
+                                                        </span>
                                                     )}
                                                 </CommandShortcut>
                                             )}
@@ -326,11 +339,7 @@ export function CommandPalette({
                         </span>
                         <span className="flex shrink-0 items-center gap-1.5 max-sm:hidden pointer-coarse:hidden">
                             {words.palette}
-                            <KbdGroup>
-                                {(foot.keys ?? keyLabels({ key: 'k', mod: true })).map((key) => (
-                                    <Kbd key={key}>{key}</Kbd>
-                                ))}
-                            </KbdGroup>
+                            <Keys keys={foot.keys ?? keyLabels({ key: 'k', mod: true })} />
                         </span>
                         <Button
                             variant="ghost"
@@ -344,6 +353,17 @@ export function CommandPalette({
                 )}
             </Command>
         </CommandDialog>
+    )
+}
+
+/** The keys of one press, held together. */
+function Keys({ keys }: { keys: readonly string[] }) {
+    return (
+        <KbdGroup>
+            {keys.map((key) => (
+                <Kbd key={key}>{key}</Kbd>
+            ))}
+        </KbdGroup>
     )
 }
 

@@ -64,6 +64,24 @@ export function keyLabels(chord: KeyChord, apple: boolean = isApple()): string[]
     return [...held.filter((label): label is string => typeof label === 'string'), last]
 }
 
+/** The labels of a binding's keys: those of its first press, and of its second when it is a sequence. */
+export interface KeyLabels {
+    keys: string[]
+    /** The keys of a sequence's second press, pressed after `keys` let go. */
+    next?: string[]
+}
+
+/**
+ * The keys of a binding as this device writes them, a sequence (`next`, as `KeyBinding` takes it)
+ * with its second press apart, as the shortcuts dialog and a palette row draw them:
+ * `{ ...bindingKeys(binding) }` on a `PaletteCommand` shows the keys that run it.
+ */
+export function bindingKeys(binding: KeyChord & { next?: string | KeyChord }, apple: boolean = isApple()): KeyLabels {
+    const labels: KeyLabels = { keys: keyLabels(binding, apple) }
+    if (binding.next !== undefined) labels.next = keyLabels(typeof binding.next === 'string' ? { key: binding.next } : binding.next, apple)
+    return labels
+}
+
 /**
  * How a shortcut with the command key is written on this device: `⌘K` on a Mac, `Ctrl K` elsewhere,
  * matching what `usePaletteShortcut` listens for.

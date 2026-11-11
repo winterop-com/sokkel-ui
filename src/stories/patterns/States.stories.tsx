@@ -144,7 +144,8 @@ export const Read: StoryObj = { name: 'Page state', render: () => <ReadStates />
 
 /**
  * A failed read of secondary data, drawn with `tone="warning"`: the page's own content stands, and
- * the side read that failed says so in the warning tone rather than as the page's failure.
+ * the side read that failed says so in the warning tone rather than as the page's failure, headed as
+ * a part of the page that could not be read (`partRefused`) rather than as the server refusing the page.
  */
 export const Secondary: StoryObj = { name: 'Secondary read', render: () => <SecondaryRead /> }
 export const Unfold: StoryObj = { name: 'Unfoldable', render: () => <Unfolding /> }
