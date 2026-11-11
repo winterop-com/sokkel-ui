@@ -68,6 +68,15 @@ export const PickOne: StoryObj = { name: 'Pick one', render: () => <small.PickOn
 /** A cron expression with presets, read back in words, and the next five runs. */
 export const Schedule: StoryObj = { name: 'Schedule', render: () => <small.Schedule /> }
 
+/** nightly-export at 02:00 Europe/Oslo over the March change of clocks: the skipped 02:00 runs at 03:00, when the clock jumps. */
+export const ScheduleZone: StoryObj = { name: 'Time zone', render: () => <small.ScheduleZone /> }
+
+/** The app's scheduler is still reading the runs back: the field's own reading shows muted, beside Checking. */
+export const ScheduleChecking: StoryObj = { name: 'Schedule checking', render: () => <small.ScheduleChecking /> }
+
+/** The app's scheduler refused the expression: its words are the field's issue, and no runs are listed. */
+export const ScheduleRefused: StoryObj = { name: 'Schedule refused', render: () => <small.ScheduleRefused /> }
+
 /** The same change made to many jobs, every field starting at Leave as is. */
 export const BulkEdit: StoryObj = { name: 'Bulk edit', render: () => <forms.BulkEdit /> }
 

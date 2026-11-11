@@ -1,7 +1,7 @@
 import { useId } from 'react'
 
 import { cn } from '../lib/cn'
-import { describeCron, nextRuns } from '../lib/cron'
+import { describeCron, nextRuns, zonedTime, zoneOffset } from '../lib/cron'
 import { ISSUE_EDGE, IssueMark } from './IssueMark'
 import { Input } from './ui/input'
 
@@ -10,10 +10,12 @@ export interface CronFieldWords {
     invalid: string
     invalidDetail: string
     next: (count: number) => string
-    /** Names the zone the expression and its runs are read in. */
+    /** Names the zone the expression and its runs are read in; the `timeZone` itself by default. */
     zone: string
     /** Said when the expression never fires. */
     never: string
+    /** Said beside the runs while the app reads them back. */
+    checking: string
 }
 
 const WORDS: CronFieldWords = {
@@ -23,14 +25,26 @@ const WORDS: CronFieldWords = {
     next: (count) => `Next ${String(count)} runs`,
     zone: 'UTC',
     never: 'Never runs',
+    checking: 'Checking',
 }
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const pad = (number: number) => String(number).padStart(2, '0')
 
-/** A run's time as `Fri 2026-11-06 02:00`, in UTC. */
-function formatRun(date: Date): string {
-    return `${DAYS[date.getUTCDay()]} ${String(date.getUTCFullYear())}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())} ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}`
+function offsetOf(date: Date, timeZone: string): string {
+    const minutes = zoneOffset(date, timeZone) / 60_000
+    const size = Math.abs(minutes)
+    return `${minutes < 0 ? '-' : '+'}${pad(Math.floor(size / 60))}:${pad(size % 60)}`
+}
+
+/**
+ * A run's time as `Fri 2026-11-06 02:00`, on the wall clock of `timeZone`. Outside UTC it ends in
+ * the zone's offset at that time, `+02:00`, so a change of clocks shows.
+ */
+function formatRun(date: Date, timeZone: string): string {
+    const at = zonedTime(date, timeZone)
+    const time = `${DAYS[at.weekday]} ${String(at.year)}-${pad(at.month)}-${pad(at.day)} ${pad(at.hour)}:${pad(at.minute)}`
+    return timeZone === 'UTC' ? time : `${time} ${offsetOf(date, timeZone)}`
 }
 
 export interface CronFieldProps {
@@ -40,11 +54,25 @@ export interface CronFieldProps {
     /** The time the next runs are counted from: now, in an app. */
     from: Date
     count?: number
+    /**
+     * The IANA zone the expression is read in, such as Europe/Oslo; UTC by default. The runs are
+     * counted and drawn on its wall clock, changes of clocks included.
+     */
+    timeZone?: string
+    /**
+     * The next runs as the app's server reads them back, in place of the field's own reading. Null
+     * or left out, the field counts them itself.
+     */
+    runs?: readonly Date[] | null
+    /** The app is reading the runs back: the field's own reading shows muted, and the words say it is checking. */
+    runsPending?: boolean
+    /** The app's server refused the expression: its words, shown as the field's issue. */
+    invalid?: string
     presets?: readonly { label: string; value: string }[]
-    /** Reads an expression back in words; English by default. */
-    describe?: (expression: string) => string | null
-    /** Draws a run's time. */
-    format?: (date: Date) => string
+    /** Reads an expression back in words, its hours on the wall clock of the zone; English by default. */
+    describe?: (expression: string, timeZone: string) => string | null
+    /** Draws a run's time, given the zone it is read in. */
+    format?: (date: Date, timeZone: string) => string
     /** Whether the issue mark's message is open, for a form's count to open it. */
     issueOpen?: boolean
     onIssueOpenChange?: (open: boolean) => void
@@ -54,8 +82,10 @@ export interface CronFieldProps {
 
 /**
  * A cron expression typed in, read back in words under it, with the next runs it makes listed
- * after a given time. Presets fill the expression in one press. An expression that does not read
- * gets the issue mark, and the list keeps its rows, so the field never changes height.
+ * after a given time, in a time zone. Presets fill the expression in one press. An expression that
+ * does not read, or that the app's server refuses, gets the issue mark, and the list keeps its rows,
+ * so the field never changes height. An app whose server reads the runs back passes them in, and
+ * says when it is still asking.
  */
 export function CronField({
     id: given,
@@ -63,6 +93,10 @@ export function CronField({
     onChange,
     from,
     count = 5,
+    timeZone = 'UTC',
+    runs: told,
+    runsPending = false,
+    invalid,
     presets,
     describe = describeCron,
     format = formatRun,
@@ -71,12 +105,19 @@ export function CronField({
     className,
     words: said,
 }: CronFieldProps) {
-    const words = { ...WORDS, ...said }
+    const words = { ...WORDS, zone: timeZone, ...said }
     const own = useId()
     const id = given ?? own
-    const reading = describe(value)
-    const runs = reading === null ? [] : nextRuns(value, from, count)
-    const issues = reading === null ? [{ tone: 'critical' as const, text: words.invalid, detail: words.invalidDetail }] : []
+    const reading = describe(value, timeZone)
+    const refused = reading !== null && invalid !== undefined && !runsPending
+    const bad = reading === null || refused
+    const runs = bad ? [] : told != null && !runsPending ? told : nextRuns(value, from, count, timeZone)
+    const issues =
+        reading === null
+            ? [{ tone: 'critical' as const, text: words.invalid, detail: words.invalidDetail }]
+            : refused
+              ? [{ tone: 'critical' as const, text: invalid }]
+              : []
     return (
         <div className={cn('flex flex-col gap-3', className)}>
             <div className="flex flex-col gap-1.5">
@@ -94,8 +135,8 @@ export function CronField({
                         spellCheck={false}
                         autoCapitalize="off"
                         autoComplete="off"
-                        aria-invalid={reading === null || undefined}
-                        className={cn('font-mono', reading === null && cn('pr-9', ISSUE_EDGE.critical))}
+                        aria-invalid={bad || undefined}
+                        className={cn('font-mono', bad && cn('pr-9', ISSUE_EDGE.critical))}
                     />
                     <IssueMark issues={issues} open={issueOpen} onOpenChange={onIssueOpenChange} />
                 </div>
@@ -116,16 +157,25 @@ export function CronField({
                 )}
             </div>
             <p className={cn('min-h-5 text-sm leading-5', reading === null ? 'text-faint' : 'text-foreground')} aria-live="polite">
-                {reading === null ? '—' : runs.length === 0 ? words.never : `${reading} (${words.zone})`}
+                {reading === null ? '—' : runs.length === 0 && !refused ? words.never : `${reading} (${words.zone})`}
             </p>
             <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-medium text-muted-foreground">{words.next(count)}</span>
-                <ol className="flex flex-col divide-y divide-border rounded-control border border-border">
+                <div className="flex items-baseline gap-2 text-xs">
+                    <span className="font-medium text-muted-foreground">{words.next(count)}</span>
+                    {runsPending && <span className="animate-pulse text-faint">{words.checking}</span>}
+                </div>
+                <ol
+                    aria-busy={runsPending || undefined}
+                    className={cn(
+                        'flex flex-col divide-y divide-border rounded-control border border-border',
+                        runsPending && 'text-muted-foreground',
+                    )}
+                >
                     {Array.from({ length: count }, (_, index) => (
                         <li key={index} className="flex h-8 items-center gap-3 px-3 font-mono text-xs tabular-nums">
                             <span className="w-4 text-right text-faint">{index + 1}</span>
                             <span className={runs[index] === undefined ? 'text-faint' : undefined}>
-                                {runs[index] === undefined ? '—' : format(runs[index])}
+                                {runs[index] === undefined ? '—' : format(runs[index], timeZone)}
                             </span>
                         </li>
                     ))}
