@@ -70,6 +70,8 @@ export interface TableEditingContext<T> {
     words: Pick<DataTableWords, 'saving' | 'saveFailed' | 'notNumber'>
     /** How the active cell is marked while the table has the focus. */
     cellFocus: CellFocus
+    /** The columns whose name is cut short in a stacked line, so it says the whole of it on hover. */
+    labelCut: ReadonlySet<string>
 }
 
 /** How an editable table marks its active cell: a ring, a soft outline on a washed cell, a line under it, or its row washed. */
@@ -427,10 +429,8 @@ export const tableEditing: TableEditing = {
             >
                 {label && (
                     <span
-                        className={cn(
-                            'shrink-0 truncate text-muted-foreground',
-                            column.band !== undefined ? 'w-32' : listed ? 'w-20' : 'w-24',
-                        )}
+                        title={table.labelCut.has(column.id) ? columnName(column) : undefined}
+                        className="w-(--stack-label) shrink-0 truncate text-muted-foreground"
                     >
                         {columnName(column)}
                     </span>

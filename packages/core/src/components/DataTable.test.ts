@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import {
     branchKeys,
+    columnLeast,
+    contentTrack,
     findInTree,
     flattenRows,
     groupLines,
@@ -9,10 +11,15 @@ import {
     isGroupHead,
     movedColumn,
     orderColumns,
+    outgrown,
     rangeKeys,
     sortRows,
     stackColumns,
+    stackLabels,
+    stacksAt,
     treeBranchKeys,
+    watchFonts,
+    widestOf,
 } from './DataTable'
 
 describe('row groups', () => {
@@ -230,5 +237,109 @@ describe('stackColumns', () => {
     it('keeps the first column as the title when nothing leads', () => {
         const plain: { id: string; stack?: 'line' }[] = [{ id: 'job' }, { id: 'state' }]
         expect(stackColumns(plain, 'compact').title?.id).toBe('job')
+    })
+})
+
+describe('content widths', () => {
+    it('holds a measured need between its floor and its most', () => {
+        expect(contentTrack(71, {})).toBe('min(71px, 20rem)')
+        expect(contentTrack(71, { minWidth: '8rem', maxWidth: '12rem' })).toBe('min(max(71px, 8rem), 12rem)')
+        expect(contentTrack(undefined, { minWidth: '8rem' })).toBe('min(8rem, 20rem)')
+        expect(contentTrack(undefined, {})).toBe('0px')
+    })
+
+    it('counts a content column’s measured need in the least width, a dragged width over it', () => {
+        const step = { id: 'step', width: 'content' }
+        expect(columnLeast(step, undefined, { step: 71 })).toBe('min(71px, 20rem)')
+        expect(columnLeast(step, undefined, {})).toBe('0px')
+        expect(columnLeast(step, 120, { step: 71 })).toBe('120px')
+        expect(columnLeast({ id: 'about', width: 'minmax(8rem,1fr)' }, undefined, {})).toBe('8rem')
+        expect(columnLeast({ id: 'about', width: '1fr' }, undefined, {})).toBe('0px')
+    })
+
+    it('stacks a list once its columns no longer fit, even above its stack width', () => {
+        expect(stacksAt(900, 576, 1000, true)).toBe(true)
+        expect(stacksAt(900, 576, 800, true)).toBe(false)
+        expect(stacksAt(500, 576, 300, true)).toBe(true)
+    })
+
+    it('stacks a table below its stack width only once its columns no longer fit too', () => {
+        expect(stacksAt(900, 1024, 1000, false)).toBe(true)
+        expect(stacksAt(900, 1024, 768, false)).toBe(false)
+        expect(stacksAt(900, 576, 1000, false)).toBe(false)
+        expect(stacksAt(0, 576, 1000, false)).toBe(false)
+    })
+
+    it('measures again when a cell is cut short, unless its column was cut at its most', () => {
+        const cut = { column: 'step', clientWidth: 67, scrollWidth: 71 }
+        const whole = { column: 'job', clientWidth: 216, scrollWidth: 216 }
+        expect(outgrown([whole, cut], new Set())).toBe(true)
+        expect(outgrown([whole, cut], new Set(['step']))).toBe(false)
+        expect(outgrown([whole], new Set())).toBe(false)
+    })
+})
+
+describe('watching fonts load', () => {
+    const fonts = () => {
+        const target = new EventTarget()
+        let resolve = () => undefined as void
+        const ready = new Promise<void>((done) => {
+            resolve = done
+        })
+        return {
+            ready,
+            resolve: () => resolve(),
+            load: () => target.dispatchEvent(new Event('loadingdone')),
+            addEventListener: (type: 'loadingdone', listener: () => void) => target.addEventListener(type, listener),
+            removeEventListener: (type: 'loadingdone', listener: () => void) => target.removeEventListener(type, listener),
+        }
+    }
+
+    it('calls once the fonts are ready and on each later load, until stopped', async () => {
+        const set = fonts()
+        let calls = 0
+        const stop = watchFonts(set, () => calls++)
+        expect(calls).toBe(0)
+        set.resolve()
+        await set.ready
+        expect(calls).toBe(1)
+        set.load()
+        expect(calls).toBe(2)
+        stop()
+        set.load()
+        expect(calls).toBe(2)
+    })
+
+    it('never calls after being stopped before the fonts are ready', async () => {
+        const set = fonts()
+        let calls = 0
+        const stop = watchFonts(set, () => calls++)
+        stop()
+        set.resolve()
+        await set.ready
+        expect(calls).toBe(0)
+    })
+
+    it('does nothing where there are no fonts to watch', () => {
+        expect(() => watchFonts(undefined, () => undefined)()).not.toThrow()
+    })
+})
+
+describe('shared content widths', () => {
+    it('takes the widest of each column across the tables', () => {
+        expect(widestOf([{ job: 180, step: 71 }, { job: 216 }, { service: 105 }])).toEqual({ job: 216, step: 71, service: 105 })
+        expect(widestOf([])).toEqual({})
+    })
+})
+
+describe('stacked line names', () => {
+    it('are as wide as the widest name, up to the most, and the cut ones are named', () => {
+        const names = [
+            { id: 'step', width: 28 },
+            { id: 'service', width: 101.4 },
+        ]
+        expect(stackLabels(192, names)).toEqual({ width: 102, cut: new Set() })
+        expect(stackLabels(80, names)).toEqual({ width: 80, cut: new Set(['service']) })
+        expect(stackLabels(192, [])).toEqual({ width: 0, cut: new Set() })
     })
 })

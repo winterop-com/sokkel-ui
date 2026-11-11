@@ -503,8 +503,16 @@ such as its own nested `DataTable`; `hasDetail` says which rows have one, so `de
 the rows opened, and `expandLabel` names a row's disclosure, in its tooltip too ("Show the tokens of
 ada"). `rowTone` dims a row (`muted`, an account switched off, a token revoked) or tints it in a
 status's tone (`critical`, `warning`), from tokens, so an app sets no color of its own. A column of
-`width: 'content'` is as wide as its widest cell, up to its `maxWidth`, the other columns sharing what
-is left, and a dragged width wins. More rows load as the end comes near, or with `loadMore="button"`
+`width: 'content'` is as wide as its widest cell, up to its `maxWidth` and no narrower than its
+`minWidth`, the other columns sharing what is left, and a dragged width wins. Its cells are measured at
+their own width however narrow the box, and measured again once fonts load or a cell's value is cut
+short, so a code measured in a fallback face is never left cut. The measured width counts toward the
+row's least width, so a table stacks once its content columns and the rest no longer fit, and a list
+(`minWidth="auto"`) stacks then rather than scroll sideways. Tables of one shape in separate sections
+line up inside a `DataTableGroup`, each content column as wide as the widest of the group's tables. A
+cell reads its table through `useTableCell()`, the box's width and whether the rows are stacked, so
+its chips can fold to a share of the table rather than a fixed width. A stacked line's name is as
+wide as the table's widest, at most 12rem, and one still cut short says the whole of it on hover. More rows load as the end comes near, or with `loadMore="button"`
 from a Load more button that says how many come next, for a list whose reader decides. A titled
 listing with a count is a boxed `Section` with the count in its head around a `DataTable` with
 `framed={false}`, the section's head as tall as the list's head row. `QuickAdd` is the
