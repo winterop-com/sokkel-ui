@@ -27,7 +27,8 @@ const FORECAST: ChartSpec = {
     points: 'observed',
     history: 'observed',
     marks: [{ x: FORECAST_START, label: 'Forecast' }],
-    fieldNames: { week: 'Week', median: 'Median', observed: 'Observed' },
+    dataFields: ['project', 'ahead'],
+    fieldNames: { week: 'Week', median: 'Median', observed: 'Observed', project: 'Project', ahead: 'Weeks ahead' },
 }
 const FORECAST_LEGEND = chartLegend('fan', FORECAST)
 
@@ -67,7 +68,9 @@ export const States: StoryObj = {
 
 /**
  * Frames with their data view open: the rows of the chart in its place as a table, in the columns
- * its spec reads (a fan's bands included) and written as the chart writes them. Chart brings the
+ * its spec reads and written as the chart writes them. The fan's bands stand in quantile order
+ * around its median, and its `dataFields` add the project and how many weeks ahead each forecast
+ * reaches; in a half-width frame the week stays pinned while the figures scroll. Chart brings the
  * chart back; the table loads the first time the view opens.
  */
 export const DataView: StoryObj = {

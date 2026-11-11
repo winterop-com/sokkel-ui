@@ -27,7 +27,7 @@ describe('dataColumns', () => {
         expect(dataCell(columns[2], RUNS[0], spec)).toBe('3.25 s')
     })
 
-    it("reads a fan's bands, history and points, each field once", () => {
+    it("puts a fan's bands around its median in quantile order, history and points after, each field once", () => {
         const spec: ChartSpec = {
             rows: [],
             x: 'week',
@@ -39,7 +39,66 @@ describe('dataColumns', () => {
             history: 'observed',
             points: 'observed',
         }
-        expect(dataColumns('fan', spec).map((column) => column.field)).toEqual(['week', 'median', 'q10', 'q90', 'q25', 'q75', 'observed'])
+        expect(dataColumns('fan', spec).map((column) => column.field)).toEqual(['week', 'q10', 'q25', 'median', 'q75', 'q90', 'observed'])
+    })
+
+    it('orders any number of bands from the outermost low to the outermost high', () => {
+        const spec: ChartSpec = {
+            rows: [],
+            x: 'week',
+            series: 'project',
+            y: 'q50',
+            bands: [
+                { low: 'q05', high: 'q95' },
+                { low: 'q10', high: 'q90' },
+                { low: 'q25', high: 'q75' },
+            ],
+        }
+        expect(dataColumns('fan', spec).map((column) => column.field)).toEqual([
+            'week',
+            'project',
+            'q05',
+            'q10',
+            'q25',
+            'q50',
+            'q75',
+            'q90',
+            'q95',
+        ])
+    })
+
+    it('adds the fields of dataFields after the drawn ones, named through fieldNames and written as they are', () => {
+        const spec: ChartSpec = {
+            rows: RUNS,
+            x: 'time',
+            y: 'runs',
+            format: (value) => value.toFixed(1),
+            unit: ' runs',
+            dataFields: ['host', 'seconds', 'runs', 'missing'],
+            fieldNames: { host: 'Host' },
+        }
+        const columns = dataColumns('line', spec)
+        expect(fields(columns)).toEqual([
+            ['time', 'time', false],
+            ['runs', 'runs', true],
+            ['host', 'Host', false],
+            ['seconds', 'seconds', true],
+            ['missing', 'missing', false],
+        ])
+        expect(columns.slice(2).every((column) => column.plain)).toBe(true)
+        expect(dataCell(columns[1], RUNS[0], spec)).toBe('1200.0 runs')
+        expect(dataCell(columns[2], RUNS[0], spec)).toBe('api.example.org')
+        expect(dataCell(columns[3], RUNS[0], spec)).toBe('3.25')
+    })
+
+    it('shows every field once where the spec draws none, dataFields among them', () => {
+        expect(dataColumns('bar', { rows: RUNS, dataFields: ['host'] }).map((column) => column.field)).toEqual([
+            'time',
+            'job',
+            'runs',
+            'seconds',
+            'host',
+        ])
     })
 
     it("puts a grid's facet and a nesting path first", () => {
