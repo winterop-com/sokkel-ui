@@ -5,8 +5,8 @@ import { DiffView, diffLines, foldDiff, type DiffLine } from './DiffView'
 
 /** The header's counts and words, as text. */
 function header(before: string, after: string, words?: { unchanged: string }): string {
-    const html = renderToStaticMarkup(<DiffView before={before} after={after} words={words} />)
-    const head = /data-slot="code-block-header"[^>]*>(.*?)<pre/.exec(html)?.[1] ?? ''
+    const html = renderToStaticMarkup(<DiffView title="a.yaml" before={before} after={after} words={words} />)
+    const head = /data-slot="code-block-title"[^>]*>a\.yaml<\/div>(.*?)<pre/.exec(html)?.[1] ?? ''
     return head
         .replace(/<[^>]+>/g, ' ')
         .replace(/\s+/g, ' ')
@@ -26,6 +26,12 @@ describe('the header of a diff', () => {
     test('says there are no changes when the two are the same', () => {
         expect(header('a\nb', 'a\nb')).toBe('No changes')
         expect(header('', '', { unchanged: 'Same' })).toBe('Same')
+    })
+
+    test('takes no row without a title: the counts and actions float at the top end', () => {
+        const html = renderToStaticMarkup(<DiffView before="a" after={'a\nb'} actions={<button type="button">Copy</button>} />)
+        expect(html).not.toContain('data-slot="code-block-header"')
+        expect(html).toMatch(/data-slot="diff-view-counts"[^>]*>.*>\+1<.*Copy<\/button>.*<\/div><pre/)
     })
 })
 

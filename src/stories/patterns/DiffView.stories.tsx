@@ -160,6 +160,14 @@ export const Short: StoryObj = { name: 'Short', render: () => <ShortDiff /> }
  * copy button sits in the header's actions.
  */
 export const Long: StoryObj = { name: 'Long', render: () => <LongDiff /> }
+/**
+ * The same diff with no title, as in a window whose own title names the file: the counts and the copy
+ * button float at the block's top end instead of taking a row.
+ */
+export const Untitled: StoryObj = {
+    name: 'Untitled',
+    render: () => <DiffView before={PIPELINE_BEFORE} after={PIPELINE_AFTER} actions={<CodeBlockCopyButton value={PIPELINE_AFTER} />} />,
+}
 /** A pipeline saved without an edit: the header says No changes and every line folds into one row. */
 export const Unchanged: StoryObj = {
     name: 'Unchanged',
