@@ -58,6 +58,8 @@ export interface MapFieldProps {
     form: SchemaFormState
     path: Path
     at: JsonSchema
+    /** The map's label, which names each row's boxes and its Remove. */
+    label: string
     readOnly: boolean
     /** The map's head, with Add when rows can be added. */
     head: (onAdd?: () => void) => ReactNode
@@ -66,7 +68,7 @@ export interface MapFieldProps {
 }
 
 /** A map's rows, each a key and a value, with Add in its head and Remove on each row. */
-export function MapField({ form, path, at, readOnly, head, control }: MapFieldProps) {
+export function MapField({ form, path, at, label, readOnly, head, control }: MapFieldProps) {
     const item = typeof at.additionalProperties === 'object' ? fieldSchema(at.additionalProperties, form.schema) : {}
     const blank = types(item).main[0] === 'string' && item.anyOf === undefined && item.oneOf === undefined ? '' : undefined
     const current = valueAt(form.value, path)
@@ -104,12 +106,12 @@ export function MapField({ form, path, at, readOnly, head, control }: MapFieldPr
                     {rows.map((row, index) => {
                         const twice = repeated.has(row.id)
                         const settled = row.key !== '' && !twice
-                        const name = settled ? row.key : `${form.words.value} ${String(index + 1)}`
+                        const place = index + 1
                         return (
                             <Fragment key={row.id}>
                                 <Input
                                     id={`${base}-key${String(row.id)}`}
-                                    aria-label={`${form.words.key} ${String(index + 1)}`}
+                                    aria-label={form.words.mapKey(label, place)}
                                     aria-invalid={(twice && flagged) || undefined}
                                     value={row.key}
                                     readOnly={readOnly}
@@ -122,13 +124,13 @@ export function MapField({ form, path, at, readOnly, head, control }: MapFieldPr
                                     // A row whose key is not settled holds its value apart, at a place no issue reaches.
                                     settled ? [...path, row.key] : [...path, `#${String(row.id)}`],
                                     { value: row.value, set: (value) => change(row.id, { value }) },
-                                    name,
+                                    form.words.mapValue(label, place),
                                 )}
                                 {readOnly ? (
                                     <span />
                                 ) : (
                                     <IconButton
-                                        label={`${form.words.remove} ${name}`}
+                                        label={form.words.removeEntry(label, settled ? row.key : place)}
                                         type="button"
                                         size="icon"
                                         onClick={() => update(rows.filter((one) => one.id !== row.id))}

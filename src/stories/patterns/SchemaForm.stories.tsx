@@ -188,7 +188,8 @@ function RunSettings() {
  * in the value: Queue, Region and the switches, the long name and its note wrapping clear of its
  * switch. Retries is set to 5, so it shows as any value does, and `fallbacks` says under it what
  * clearing it gives; an unset field says its default only in its place. Choosing a default
- * explicitly holds it. A `null` default says nothing.
+ * explicitly holds it; Queue's first choice, "Default (standard)", and emptying a box go back to
+ * unset. A `null` default says nothing.
  */
 export const Defaults: StoryObj = { render: () => <RunSettings /> }
 
@@ -373,6 +374,8 @@ function FetchStep() {
 /**
  * Maps of scalars as key and value tables (query parameters, environment variables, integer
  * limits): Add puts a row in, each row has Remove, and a key given twice is refused at the table.
+ * Each row's boxes and Remove are named by the map ("Query key 1", "Remove Query project"), so two
+ * maps on one form are told apart.
  * Buffer takes text or a number in one box with no quotes: 16KB is held as text, 16384 as a number.
  * A limit below its minimum is marked on its value.
  */
