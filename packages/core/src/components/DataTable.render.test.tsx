@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 
 import { DataTable, TableCellFill, useTableCell } from './DataTable'
+import { Checkbox } from './ui/checkbox'
 
 describe('a cell that reads its table', () => {
     function Seen() {
@@ -260,5 +261,38 @@ describe('the width a table stacks below', () => {
             <DataTable columns={ACCOUNT_COLUMNS} rows={ACCOUNTS} rowKey={(row) => row.id} stackBelow="64rem" />,
         )
         expect(html).toContain('width:64rem')
+    })
+})
+
+describe('a selection box before the checkbox has loaded', () => {
+    /** Each checkbox's root and mark as drawn: their attributes, without Base UI's id. */
+    const boxes = (html: string) =>
+        [...html.matchAll(/<span[^>]*role="checkbox"[^>]*>(?:<span[^>]*>)?/g)].map((match) =>
+            [...match[0].matchAll(/<span([^>]*)>/g)].map((span) =>
+                [...span[1].matchAll(/([\w-]+)="([^"]*)"/g)]
+                    .filter(([, name]) => name !== 'id')
+                    .map(([, name, value]) => `${name}=${value}`)
+                    .sort(),
+            ),
+        )
+
+    it('is drawn as the checkbox draws it: some chosen, checked and unchecked', () => {
+        const table = renderToStaticMarkup(
+            <DataTable
+                selectable
+                defaultSelection={new Set(['a'])}
+                columns={[{ id: 'job', header: 'Job', width: '1fr', cell: (row: { id: string }) => row.id }]}
+                rows={[{ id: 'a' }, { id: 'b' }]}
+                rowKey={(row) => row.id}
+            />,
+        )
+        const checkboxes = renderToStaticMarkup(
+            <>
+                <Checkbox aria-label="Select all rows" checked={false} indeterminate />
+                <Checkbox aria-label="Select row" tabIndex={-1} checked />
+                <Checkbox aria-label="Select row" tabIndex={-1} checked={false} />
+            </>,
+        )
+        expect(boxes(table)).toEqual(boxes(checkboxes))
     })
 })

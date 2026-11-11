@@ -48,7 +48,10 @@ fullscreen view after the bar is drawn, and every menu (`primitives/dropdown-men
 `primitives/context-menu`, `AccountMenu` and the parts drawn with them) loads Base UI's menu once
 the page is drawn, its trigger drawn until then by a stand-in that looks and reads the same, a press
 or a right click on it opening the menu as soon as the menu is there. A menu bar has the menu at
-once (`primitives/menubar` imports it), as its keys need. A module that only asks whether a node is a part tells it by a mark, so it
+once (`primitives/menubar` imports it), as its keys need. `DataTable` loads Base UI's checkbox, the
+watch that measures its content cells again and its menus' lists once it is drawn, and only when it
+selects, has a content column or draws a column or sort menu, its selection boxes drawn the same
+until then and taking a press the same, so a plain table carries none of it. A module that only asks whether a node is a part tells it by a mark, so it
 need not import the part (`isSoundVisualizer`), and `chartLegend` has a module of its own, since it
 reads every kind.
 
@@ -515,7 +518,7 @@ is left out of the column's measure, so a description under a code takes the col
 `minWidth` or its group's widest, without adding to it. A cell reads its table through
 `useTableCell()`: the box's width, whether the rows are stacked, and `columnWidth`, the room its own
 column gives it (the track inside its padding, or the value's part of a stacked line), measured from
-one drawn cell a column by one observer for the table, so its chips fold to that room. A stacked line's name is as
+one drawn cell a column by one observer for the table once a cell reads it, so its chips fold to that room. A stacked line's name is as
 wide as the table's widest, at most 12rem, and one still cut short says the whole of it on hover. More rows load as the end comes near, or with `loadMore="button"`
 from a Load more button that says how many come next, for a list whose reader decides. A titled
 listing with a count is a boxed `Section` with the count in its head around a `DataTable` with

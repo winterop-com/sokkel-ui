@@ -3,10 +3,8 @@ import {
     ArrowDownIcon,
     ArrowUpDownIcon,
     ArrowUpIcon,
-    ChevronDownIcon,
     ChevronLeftIcon,
     ChevronRightIcon,
-    ChevronUpIcon,
     ChevronsLeftIcon,
     ChevronsRightIcon,
     Columns3Icon,
@@ -36,19 +34,9 @@ import { cn } from '../lib/cn'
 import { ResizeHandle } from './ResizeHandle'
 import { SelectionBar } from './SelectionBar'
 import { Button } from './ui/button'
-import { Checkbox } from './ui/checkbox'
+import { CHECKBOX, CHECKBOX_INDICATOR, CheckboxMarks } from './ui/checkbox-look'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from './ui/context-menu'
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuGroup,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from './ui/dropdown-menu'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu'
 import { NativeSelect, NativeSelectOption } from './ui/native-select'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { Skeleton } from './ui/skeleton'
@@ -590,6 +578,63 @@ export function watchFonts(fonts: FontLoads | undefined, onLoad: () => void): ()
         live = false
         fonts?.removeEventListener('loadingdone', loaded)
     }
+}
+
+type Deferred = typeof import('./table-deferred')
+let deferred: Deferred | undefined
+let deferredLoad: Promise<Deferred> | undefined
+
+/** Fetches `./table-deferred` once for every table; a failed fetch is tried again on the next ask. */
+function loadDeferred(): Promise<Deferred> {
+    deferredLoad ??= import('./table-deferred').then(
+        (module) => {
+            deferred = module
+            return module
+        },
+        (error: unknown) => {
+            deferredLoad = undefined
+            throw error
+        },
+    )
+    return deferredLoad
+}
+
+/**
+ * Starts a watch from `./table-deferred` once it has loaded, so a table with no content column
+ * never fetches it. Returns the function that stops the watch, or keeps it from starting.
+ */
+function watching(start: (watch: Deferred) => () => void): () => void {
+    let live = true
+    let stop: (() => void) | undefined
+    loadDeferred().then(
+        (watch) => {
+            if (live) stop = start(watch)
+        },
+        () => undefined,
+    )
+    return () => {
+        live = false
+        stop?.()
+    }
+}
+
+/** `./table-deferred` once it has loaded, fetched after the first paint once `wanted`; undefined until then. */
+function useDeferred(wanted: boolean): Deferred | undefined {
+    const [loaded, setLoaded] = useState(deferred)
+    useEffect(() => {
+        if (!wanted || loaded !== undefined) return
+        let live = true
+        loadDeferred().then(
+            (module) => {
+                if (live) setLoaded(module)
+            },
+            () => undefined,
+        )
+        return () => {
+            live = false
+        }
+    }, [wanted, loaded])
+    return loaded ?? deferred
 }
 
 /**
@@ -1376,7 +1421,15 @@ export function DataTable<T>({
     const capped = useRef<ReadonlySet<string> | undefined>(undefined)
     // Fonts that load after a measure change what the cells need, a fallback face being narrower or wider.
     const [fontLoads, setFontLoads] = useState(0)
-    useEffect(() => watchFonts(typeof document === 'undefined' ? undefined : document.fonts, () => setFontLoads((count) => count + 1)), [])
+    // Only widths measured from text call for it: a content column's or a stacked line's name.
+    const measuresText = contentKey !== '' || stacked
+    useEffect(
+        () =>
+            measuresText
+                ? watchFonts(typeof document === 'undefined' ? undefined : document.fonts, () => setFontLoads((count) => count + 1))
+                : undefined,
+        [measuresText],
+    )
     useLayoutEffect(() => setMeasuring(true), [rows, contentKey, rowHeight, columnHeads, fontLoads])
     const contentCells = (box: HTMLElement, column: string) =>
         box.querySelectorAll<HTMLElement>(`[role="gridcell"][data-track="${CSS.escape(column)}"] > :last-child`)
@@ -1410,18 +1463,15 @@ export function DataTable<T>({
                 .filter((cell) => outgrown([cell], EMPTY))
                 .map((cell) => cell.column),
         )
-        const check = () => outgrown(sizes(), capped.current ?? EMPTY) && setMeasuring(true)
-        const observer = new ResizeObserver(check)
-        // A cell that fills its track keeps its size when what it holds grows, such as a count loaded later.
-        const changes = typeof MutationObserver === 'undefined' ? undefined : new MutationObserver(check)
-        for (const { element } of cells) {
-            observer.observe(element)
-            changes?.observe(element, { childList: true, subtree: true, characterData: true })
+        const check = () => {
+            if (outgrown(sizes(), capped.current ?? EMPTY)) setMeasuring(true)
         }
-        return () => {
-            observer.disconnect()
-            changes?.disconnect()
-        }
+        return watching((watch) =>
+            watch.watchCells(
+                cells.map(({ element }) => element),
+                check,
+            ),
+        )
     }, [measuring, contentKey, drawnFrom, rows])
 
     // A stacked line's name is as wide as the widest name, at most 12rem, its whole text on hover when cut.
@@ -1442,14 +1492,16 @@ export function DataTable<T>({
     // While content columns are measured, the parts marked `data-measure="skip"` are left out of the rows.
     const measuringContent = measuring && contentColumns.length > 0
 
-    // Each column's room is read from one of its drawn cells, the first in the rows, by one observer for the table.
+    // Each column's room is read from one of its drawn cells, the first in the rows, by one observer for the table,
+    // once a cell has asked for its room.
     const [rooms, setRooms] = useState<Readonly<Record<string, number>>>(NO_WIDTHS)
+    const roomsAsked = useRef(false)
     const roomCells = useRef(new Map<Element, string>())
     const roomObserver = useRef<ResizeObserver>(undefined)
     useEffect(() => () => roomObserver.current?.disconnect(), [])
     const roomOf = (column: string) => (element: HTMLElement | null) => {
         const cells = roomCells.current
-        if (element === null || [...cells.values()].includes(column)) return
+        if (element === null || !roomsAsked.current || [...cells.values()].includes(column)) return
         const observer = (roomObserver.current ??= new ResizeObserver((entries) =>
             setRooms((before) =>
                 roomsWith(
@@ -1471,7 +1523,16 @@ export function DataTable<T>({
     const cell = useMemo(() => ({ ...NO_CELL, width: view.width, stacked }), [view.width, stacked])
     // A column's cells read the table and their column's room; they are drawn again with the table, so nothing is kept.
     const inColumn = (column: string, content: ReactNode) => (
-        <TableCellContext key={column} value={{ ...cell, columnWidth: rooms[column] ?? 0 }}>
+        <TableCellContext
+            key={column}
+            value={{
+                ...cell,
+                get columnWidth() {
+                    roomsAsked.current = true
+                    return rooms[column] ?? 0
+                },
+            }}
+        >
             {content}
         </TableCellContext>
     )
@@ -1691,6 +1752,13 @@ export function DataTable<T>({
     const menuColumns = reorder ? movable : hideable
     const move = (id: string, by: -1 | 1) => setColumnIds(movedColumn(ordered, id, by))
     const sortable = manualSort && onSortChange === undefined ? [] : columns.filter((column) => column.sortValue !== undefined)
+    // The bar over the rows, with the selection, the search, the tools, the count and the menus of columns and sorts.
+    const barShown = selection.size > 0 || (bar ?? (!list || search !== undefined || toolbar !== undefined))
+    const columnMenu = barShown && !gridView && (hideable.length > 0 || reorder)
+    const sortMenu = barShown && gridView && sortable.length > 0
+    // Base UI's checkbox and the menus' lists are fetched after the first paint, so they are here by the time a box is
+    // pressed or a menu opens; until then a selection box is drawn the same without it.
+    const later = useDeferred(selectable || columnMenu || sortMenu)
     // A list pins nothing and sets its columns apart with a gap; a table pins its first and last columns and pads its cells.
     const pinned = list ? '' : 'sticky z-1 bg-inherit shadow-[1px_0_0_var(--border)]'
     const pinnedEnd = list ? '' : 'sticky z-1 bg-inherit shadow-[-1px_0_0_var(--border)]'
@@ -1769,7 +1837,8 @@ export function DataTable<T>({
         const all = keys.length > 0 && keys.every((key) => selection.has(key))
         const some = !all && keys.some((key) => selection.has(key))
         return (
-            <Checkbox
+            <SelectBox
+                later={later}
                 aria-label={words.selectGroup}
                 tabIndex={-1}
                 checked={all}
@@ -1880,7 +1949,8 @@ export function DataTable<T>({
     /** A row's selection box in a stacked row or a card, or nothing when rows are not selected. */
     const boxFor = (entry: FlatRow<T>) =>
         selectable ? (
-            <Checkbox
+            <SelectBox
+                later={later}
                 aria-label={words.selectRow}
                 tabIndex={-1}
                 checked={selection.has(entry.key)}
@@ -2221,7 +2291,7 @@ export function DataTable<T>({
                 )}
                 style={{ '--stack-label': `${String(labels.width)}px` } as CSSProperties}
             >
-                {(selection.size > 0 || (bar ?? (!list || search !== undefined || toolbar !== undefined))) && (
+                {barShown && (
                     // Narrow, the search takes a line of its own and the tools wrap across the whole width, the count and the
                     // sort after them; wide, the tools wrap in the room the search and the count leave.
                     <div className="@container/bar shrink-0 border-b border-border px-(--density-panel-pad) text-sm">
@@ -2269,7 +2339,7 @@ export function DataTable<T>({
                                             : words.rows(total ?? allCount(rows, treeKids))}
                                     </span>
                                 )}
-                                {gridView && selection.size === 0 && sortable.length > 0 && (
+                                {sortMenu && selection.size === 0 && (
                                     <DropdownMenu>
                                         <DropdownMenuTrigger render={<Button variant="ghost" size="sm" />}>
                                             {sort === null ? (
@@ -2282,38 +2352,19 @@ export function DataTable<T>({
                                             {sortColumn?.header ?? words.sort}
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end" className="w-48">
-                                            <DropdownMenuGroup>
-                                                <DropdownMenuLabel>{words.sort}</DropdownMenuLabel>
-                                                <DropdownMenuRadioGroup
-                                                    value={sort?.column ?? ''}
-                                                    onValueChange={(value: string) => {
+                                            {later !== undefined && (
+                                                <later.SortChoices
+                                                    columns={sortable}
+                                                    sort={sort}
+                                                    onColumn={(value) => {
                                                         if (paging !== undefined) setPage(0)
                                                         setSort(
                                                             value === '' ? null : { column: value, direction: sort?.direction ?? 'asc' },
                                                         )
                                                     }}
-                                                >
-                                                    <DropdownMenuRadioItem value="">{words.unsorted}</DropdownMenuRadioItem>
-                                                    {sortable.map((column) => (
-                                                        <DropdownMenuRadioItem key={column.id} value={column.id}>
-                                                            {column.header}
-                                                        </DropdownMenuRadioItem>
-                                                    ))}
-                                                </DropdownMenuRadioGroup>
-                                            </DropdownMenuGroup>
-                                            {sort !== null && (
-                                                <>
-                                                    <DropdownMenuSeparator />
-                                                    <DropdownMenuRadioGroup
-                                                        value={sort.direction}
-                                                        onValueChange={(value: string) =>
-                                                            setSort({ column: sort.column, direction: value === 'desc' ? 'desc' : 'asc' })
-                                                        }
-                                                    >
-                                                        <DropdownMenuRadioItem value="asc">{words.ascending}</DropdownMenuRadioItem>
-                                                        <DropdownMenuRadioItem value="desc">{words.descending}</DropdownMenuRadioItem>
-                                                    </DropdownMenuRadioGroup>
-                                                </>
+                                                    onSortChange={setSort}
+                                                    words={words}
+                                                />
                                             )}
                                         </DropdownMenuContent>
                                     </DropdownMenu>
@@ -2337,7 +2388,7 @@ export function DataTable<T>({
                                         ))}
                                     </div>
                                 )}
-                                {!gridView && (hideable.length > 0 || reorder) && (
+                                {columnMenu && (
                                     <Popover>
                                         <PopoverTrigger render={<Button variant="ghost" size="icon-sm" aria-label={words.columns} />}>
                                             <Columns3Icon />
@@ -2348,50 +2399,15 @@ export function DataTable<T>({
                                             className="w-64 max-w-(--available-width) gap-0 p-1"
                                         >
                                             <p className="px-1.5 py-1 text-xs font-medium text-muted-foreground">{words.columns}</p>
-                                            <ul className="flex flex-col">
-                                                {menuColumns.map((column, index) => (
-                                                    <li
-                                                        key={column.id}
-                                                        className="flex min-h-8 items-center gap-0.5 rounded-md pl-1.5 hover:bg-hover"
-                                                    >
-                                                        <label className="flex min-w-0 flex-1 cursor-default items-center gap-2 py-1">
-                                                            <Checkbox
-                                                                checked={!hidden.has(column.id)}
-                                                                disabled={column.hideable === false}
-                                                                onCheckedChange={(on) => {
-                                                                    const next = new Set(hidden)
-                                                                    if (on) next.delete(column.id)
-                                                                    else next.add(column.id)
-                                                                    setHidden(next)
-                                                                }}
-                                                            />
-                                                            <span className="min-w-0 truncate">{column.header}</span>
-                                                        </label>
-                                                        {reorder && (
-                                                            <>
-                                                                <IconButton
-                                                                    label={words.moveUp(column.header)}
-                                                                    size="icon-xs"
-                                                                    side="left"
-                                                                    disabled={index === 0}
-                                                                    onClick={() => move(column.id, -1)}
-                                                                >
-                                                                    <ChevronUpIcon />
-                                                                </IconButton>
-                                                                <IconButton
-                                                                    label={words.moveDown(column.header)}
-                                                                    size="icon-xs"
-                                                                    side="left"
-                                                                    disabled={index === movable.length - 1}
-                                                                    onClick={() => move(column.id, 1)}
-                                                                >
-                                                                    <ChevronDownIcon />
-                                                                </IconButton>
-                                                            </>
-                                                        )}
-                                                    </li>
-                                                ))}
-                                            </ul>
+                                            {later !== undefined && (
+                                                <later.ColumnChoices
+                                                    columns={menuColumns}
+                                                    hidden={hidden}
+                                                    onHiddenChange={setHidden}
+                                                    onMove={reorder ? move : undefined}
+                                                    words={words}
+                                                />
+                                            )}
                                         </PopoverContent>
                                     </Popover>
                                 )}
@@ -2513,7 +2529,8 @@ export function DataTable<T>({
                         >
                             {selectable && (
                                 <span role="columnheader" className={cn(pinned, 'left-0 flex h-full items-center justify-center')}>
-                                    <Checkbox
+                                    <SelectBox
+                                        later={later}
                                         aria-label={words.selectAll}
                                         checked={headChosen}
                                         indeterminate={!headChosen && selection.size > 0}
@@ -2784,16 +2801,14 @@ export function DataTable<T>({
                                     >
                                         {selectable && (
                                             <span role="gridcell" className={cn(pinned, 'left-0 flex h-full items-center justify-center')}>
-                                                <Checkbox
+                                                <SelectBox
+                                                    later={later}
                                                     aria-label={words.selectRow}
                                                     tabIndex={-1}
                                                     checked={state === 'all'}
                                                     indeterminate={state === 'some'}
                                                     onClick={(event) => event.stopPropagation()}
-                                                    onCheckedChange={(_, details) => {
-                                                        const shift = (details.event as unknown as { shiftKey?: boolean }).shiftKey === true
-                                                        toggle(entry, shift)
-                                                    }}
+                                                    onCheckedChange={(event) => toggle(entry, event.shiftKey)}
                                                 />
                                             </span>
                                         )}
@@ -3013,6 +3028,58 @@ function allCount<T>(rows: readonly T[], childRows?: (row: T) => readonly T[] | 
     }
     walk(rows)
     return count
+}
+
+interface SelectBoxProps {
+    /** `./table-deferred`, once it has loaded. */
+    later: Deferred | undefined
+    checked: boolean
+    indeterminate?: boolean
+    'aria-label': string
+    tabIndex?: number
+    onClick?: (event: MouseEvent) => void
+    /** Called on a press, with whether Shift was held. */
+    onCheckedChange: (event: { shiftKey: boolean }) => void
+}
+
+/**
+ * A selection box: Base UI's checkbox once `./table-deferred` has loaded, and until then the same box
+ * drawn the same way, which takes a press the same, so a table that selects nothing never loads it.
+ */
+function SelectBox({ later, checked, indeterminate = false, onClick, onCheckedChange, ...rest }: SelectBoxProps) {
+    if (later !== undefined)
+        return (
+            <later.Checkbox
+                {...rest}
+                checked={checked}
+                indeterminate={indeterminate}
+                onClick={onClick}
+                onCheckedChange={(_, details) => onCheckedChange({ shiftKey: (details.event as { shiftKey?: boolean }).shiftKey === true })}
+            />
+        )
+    // Base UI marks an indeterminate box as that alone, and a box as checked or unchecked otherwise.
+    const state = indeterminate ? { 'data-indeterminate': '' } : checked ? { 'data-checked': '' } : { 'data-unchecked': '' }
+    return (
+        <span
+            role="checkbox"
+            aria-checked={indeterminate ? 'mixed' : checked}
+            tabIndex={0}
+            {...rest}
+            data-slot="checkbox"
+            {...state}
+            className={CHECKBOX}
+            onClick={(event) => {
+                onClick?.(event)
+                onCheckedChange({ shiftKey: event.shiftKey })
+            }}
+        >
+            {(checked || indeterminate) && (
+                <span data-slot="checkbox-indicator" {...state} className={CHECKBOX_INDICATOR}>
+                    <CheckboxMarks />
+                </span>
+            )}
+        </span>
+    )
 }
 
 /** A row's actions as the items of its button menu or its right-click menu. */
