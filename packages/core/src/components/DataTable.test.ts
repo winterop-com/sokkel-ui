@@ -13,6 +13,7 @@ import {
     orderColumns,
     outgrown,
     rangeKeys,
+    roomsWith,
     sortRows,
     stackColumns,
     stackLabels,
@@ -341,5 +342,15 @@ describe('stacked line names', () => {
         expect(stackLabels(192, names)).toEqual({ width: 102, cut: new Set() })
         expect(stackLabels(80, names)).toEqual({ width: 80, cut: new Set(['service']) })
         expect(stackLabels(192, [])).toEqual({ width: 0, cut: new Set() })
+    })
+})
+
+describe('column rooms', () => {
+    it('take the widths just measured, keeping the same object when none changed', () => {
+        const before = { tags: 240, job: 180 }
+        expect(roomsWith(before, [{ column: 'tags', width: 240 }])).toBe(before)
+        expect(roomsWith(before, [])).toBe(before)
+        expect(roomsWith(before, [{ column: 'tags', width: 312 }])).toEqual({ tags: 312, job: 180 })
+        expect(roomsWith({}, [{ column: 'job', width: 0 }])).toEqual({ job: 0 })
     })
 })

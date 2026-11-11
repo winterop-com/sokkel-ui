@@ -510,8 +510,12 @@ short, so a code measured in a fallback face is never left cut. The measured wid
 row's least width, so a table stacks once its content columns and the rest no longer fit, and a list
 (`minWidth="auto"`) stacks then rather than scroll sideways. Tables of one shape in separate sections
 line up inside a `DataTableGroup`, each content column as wide as the widest of the group's tables. A
-cell reads its table through `useTableCell()`, the box's width and whether the rows are stacked, so
-its chips can fold to a share of the table rather than a fixed width. A stacked line's name is as
+cell's content fills its track, and a part of it in `TableCellFill` (or marked `data-measure="skip"`)
+is left out of the column's measure, so a description under a code takes the column's width, its
+`minWidth` or its group's widest, without adding to it. A cell reads its table through
+`useTableCell()`: the box's width, whether the rows are stacked, and `columnWidth`, the room its own
+column gives it (the track inside its padding, or the value's part of a stacked line), measured from
+one drawn cell a column by one observer for the table, so its chips fold to that room. A stacked line's name is as
 wide as the table's widest, at most 12rem, and one still cut short says the whole of it on hover. More rows load as the end comes near, or with `loadMore="button"`
 from a Load more button that says how many come next, for a list whose reader decides. A titled
 listing with a count is a boxed `Section` with the count in its head around a `DataTable` with

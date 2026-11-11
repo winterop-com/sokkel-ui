@@ -156,6 +156,12 @@ export interface DataColumn<T> {
     stack?: 'lead' | 'line' | 'primary' | 'secondary' | 'none'
     /** The most lines a `primary` value takes in a stacked card; 2 by default. */
     stackLines?: number
+    /**
+     * How the title column draws as a stacked card's title: `line` (the default) keeps it to one line,
+     * cut short; `free` draws the cell as it is, as tall as it needs, so a name can stand over its code
+     * and the code is never cut. The cell reads `stacked` from `useTableCell` to choose its shape.
+     */
+    stackTitle?: 'line' | 'free'
     /** Whether the column's line in a stacked card starts with its name; without it the value takes the whole line. */
     stackLabel?: boolean
     /**
@@ -604,16 +610,57 @@ export interface TableCell {
     width: number
     /** Whether the rows are stacked as cards. */
     stacked: boolean
+    /**
+     * The room the cell's own content has, in pixels: its column's track inside the cell's padding
+     * in a table row, the value's part of its line on a stacked card. 0 until it is measured, and
+     * outside a column's cell.
+     */
+    columnWidth: number
 }
 
-const TableCellContext = createContext<TableCell>({ width: 0, stacked: false })
+const NO_CELL: TableCell = { width: 0, stacked: false, columnWidth: 0 }
+const TableCellContext = createContext<TableCell>(NO_CELL)
 
 /**
- * The table a cell is drawn in: its box's width and whether its rows are stacked, so a cell can fit
- * its content to a share of the table, such as how many chips it shows before a count of the rest.
+ * The table a cell is drawn in: its box's width, whether its rows are stacked and the room its own
+ * column gives it, so a cell can fit its content to that room, such as how many chips it shows
+ * before a count of the rest. The room is measured once a column, never once a cell.
  */
 export function useTableCell(): TableCell {
     return useContext(TableCellContext)
+}
+
+/**
+ * Each column's room with the widths just measured: the same object when none changed, so a measure
+ * that finds nothing new draws nothing again.
+ */
+export function roomsWith(
+    before: Readonly<Record<string, number>>,
+    measured: readonly { column: string; width: number }[],
+): Readonly<Record<string, number>> {
+    return measured.every(({ column, width }) => before[column] === width)
+        ? before
+        : { ...before, ...Object.fromEntries(measured.map(({ column, width }) => [column, width])) }
+}
+
+export interface TableCellFillProps {
+    children?: ReactNode
+    /** Whether its text wraps rather than being cut short on one line. */
+    wrap?: boolean
+}
+
+/**
+ * Part of a cell that takes its column's width without adding to it, such as a description under a
+ * code in a `content` column: the column is as wide as its other content, its `minWidth` or its
+ * group's widest, and this part fills that width and is cut short within it. A column's measure
+ * leaves out anything marked `data-measure="skip"`, as this part is.
+ */
+export function TableCellFill({ children, wrap = false }: TableCellFillProps) {
+    return (
+        <span data-measure="skip" className={cn('block w-0 min-w-full', wrap ? 'break-words' : 'truncate')}>
+            {children}
+        </span>
+    )
 }
 
 interface WidthGroup {
@@ -1383,7 +1430,42 @@ export function DataTable<T>({
             before.width === width && before.cut.size === cut.size && [...cut].every((id) => before.cut.has(id)) ? before : { width, cut },
         )
     }, [stacked, stackParts, fontLoads])
-    const cell = useMemo(() => ({ width: view.width, stacked }), [view.width, stacked])
+    // While content columns are measured, the parts marked `data-measure="skip"` are left out of the rows.
+    const measuringContent = measuring && contentColumns.length > 0
+
+    // Each column's room is read from one of its drawn cells, the first in the rows, by one observer for the table.
+    const [rooms, setRooms] = useState<Readonly<Record<string, number>>>(NO_WIDTHS)
+    const roomCells = useRef(new Map<Element, string>())
+    const roomObserver = useRef<ResizeObserver>(undefined)
+    useEffect(() => () => roomObserver.current?.disconnect(), [])
+    const roomOf = (column: string) => (element: HTMLElement | null) => {
+        const cells = roomCells.current
+        if (element === null || [...cells.values()].includes(column)) return
+        const observer = (roomObserver.current ??= new ResizeObserver((entries) =>
+            setRooms((before) =>
+                roomsWith(
+                    before,
+                    entries.flatMap(({ target, contentRect }) => {
+                        const id = cells.get(target)
+                        return id === undefined ? [] : [{ column: id, width: Math.round(contentRect.width) }]
+                    }),
+                ),
+            ),
+        ))
+        cells.set(element, column)
+        observer.observe(element)
+        return () => {
+            observer.unobserve(element)
+            cells.delete(element)
+        }
+    }
+    const cell = useMemo(() => ({ ...NO_CELL, width: view.width, stacked }), [view.width, stacked])
+    // A column's cells read the table and their column's room; they are drawn again with the table, so nothing is kept.
+    const inColumn = (column: string, content: ReactNode) => (
+        <TableCellContext key={column} value={{ ...cell, columnWidth: rooms[column] ?? 0 }}>
+            {content}
+        </TableCellContext>
+    )
 
     // A row with no actions, or only separators, has no menu at all: no button and no right-click menu.
     const actionsOf = (row: T): DataAction[] | undefined => {
@@ -1837,11 +1919,12 @@ export function DataTable<T>({
             return (
                 <div
                     key={column.id}
+                    ref={roomOf(column.id)}
                     role={listed ? 'gridcell' : undefined}
                     className="line-clamp-(--stack-lines) min-w-0 text-sm font-normal"
                     style={{ ...indent, '--stack-lines': column.stackLines ?? 2 } as CSSProperties}
                 >
-                    {value}
+                    {inColumn(column.id, value)}
                 </div>
             )
         })
@@ -1859,7 +1942,8 @@ export function DataTable<T>({
             <>
                 {primaryLines(entry, listed, indent)}
                 {stackParts.lines.map((column) => {
-                    if (column.edit !== undefined && edits !== undefined) return editing?.line(edits, entry, column, listed, indent)
+                    if (column.edit !== undefined && edits !== undefined)
+                        return inColumn(column.id, editing?.line(edits, entry, column, listed, indent))
                     const value = column.cell(entry.row)
                     if (!said(value)) return null
                     return (
@@ -1877,7 +1961,16 @@ export function DataTable<T>({
                                     {columnName(column)}
                                 </span>
                             )}
-                            <span className="min-w-0 truncate">{value}</span>
+                            {/* Text is cut short itself with the whole of it in its title; a part such as a chip and a code keeps its own shape. */}
+                            <span ref={roomOf(column.id)} className="flex min-w-0 flex-1">
+                                {typeof value === 'string' || typeof value === 'number' ? (
+                                    <span title={String(value)} className="min-w-0 truncate">
+                                        {value}
+                                    </span>
+                                ) : (
+                                    inColumn(column.id, value)
+                                )}
+                            </span>
                         </div>
                     )
                 })}
@@ -1917,9 +2010,14 @@ export function DataTable<T>({
                         ) : (
                             <div
                                 role={listed ? 'gridcell' : undefined}
-                                className={cn('flex min-w-0 items-center', titleEdits && !listed ? 'h-9' : 'h-6')}
+                                className={cn(
+                                    'flex min-w-0 items-center',
+                                    title.stackTitle === 'free' ? 'min-h-6 py-0.5' : titleEdits && !listed ? 'h-9' : 'h-6',
+                                )}
                             >
-                                <span className="min-w-0 truncate">{valueOf(title)}</span>
+                                <span className={cn('min-w-0', title.stackTitle === 'free' ? 'flex-1' : 'truncate')}>
+                                    {inColumn(title.id, valueOf(title))}
+                                </span>
                             </div>
                         ))}
                     {primaryLines(entry, listed)}
@@ -2033,7 +2131,9 @@ export function DataTable<T>({
                     compactRow(entry, false, box, menu)
                 ) : (
                     <>
-                        <div className="flex h-6 min-w-0 items-center gap-2">
+                        <div
+                            className={cn('flex min-w-0 gap-2', title?.stackTitle === 'free' ? 'min-h-6 items-start' : 'h-6 items-center')}
+                        >
                             {box !== null && (
                                 <span className="flex" onClick={keep}>
                                     {box}
@@ -2042,7 +2142,15 @@ export function DataTable<T>({
                             {opens && treeControl(entry)}
                             {leadsOf(entry, false)}
                             {/* The title keeps to its line: a cell of two lines, a name over its code, shows its first. */}
-                            <span className="h-6 min-w-0 flex-1 truncate text-sm leading-6 font-medium">{title?.cell(entry.row)}</span>
+                            {title?.stackTitle === 'free' ? (
+                                <span className="min-w-0 flex-1 py-0.5 text-sm font-medium">
+                                    {inColumn(title.id, title.cell(entry.row))}
+                                </span>
+                            ) : (
+                                <span className="h-6 min-w-0 flex-1 truncate text-sm leading-6 font-medium">
+                                    {title === undefined ? null : inColumn(title.id, title.cell(entry.row))}
+                                </span>
+                            )}
                             {menu}
                         </div>
                         {stackedLines(entry, false)}
@@ -2310,7 +2418,8 @@ export function DataTable<T>({
                             full: event.currentTarget.scrollHeight,
                         })
                     }
-                    className="group/table relative min-h-0 flex-1 overflow-auto outline-none"
+                    data-measuring={measuringContent || undefined}
+                    className="group/table relative min-h-0 flex-1 overflow-auto outline-none data-measuring:[&_[data-measure=skip]]:hidden"
                 >
                     {/* Measures the row and card sizes without adding to what scrolls. */}
                     <div aria-hidden className="pointer-events-none invisible absolute size-0 overflow-hidden">
@@ -2718,17 +2827,22 @@ export function DataTable<T>({
                                                     }
                                                 >
                                                     {index === 0 && opens && treeControl(entry)}
+                                                    {/* Fills its track, so a part that takes the column's width fills more than its measure. */}
                                                     <span
+                                                        ref={roomOf(column.id)}
                                                         className={cn(
-                                                            'min-w-0',
+                                                            'min-w-0 flex-1',
                                                             every ? 'break-words' : 'truncate',
                                                             column.align === 'end' && 'text-right',
                                                             column.align === 'center' && 'text-center',
                                                         )}
                                                     >
-                                                        {edits === undefined
-                                                            ? column.cell(entry.row)
-                                                            : editing?.content(edits, entry, column)}
+                                                        {inColumn(
+                                                            column.id,
+                                                            edits === undefined
+                                                                ? column.cell(entry.row)
+                                                                : editing?.content(edits, entry, column),
+                                                        )}
                                                     </span>
                                                 </span>
                                             )
