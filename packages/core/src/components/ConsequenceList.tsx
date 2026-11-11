@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useId, type ComponentProps, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 
@@ -21,13 +21,13 @@ export interface ConsequenceListWords {
 
 const WORDS: ConsequenceListWords = { heading: 'Also deleted', changed: 'What this changes' }
 
-export interface ConsequenceListProps {
+/** Other props, `data-*`, `aria-*` and `className` among them, go to the root. */
+export interface ConsequenceListProps extends Omit<ComponentProps<'div'>, 'children'> {
     items: readonly Consequence[]
     /** `critical` when they are lost, `neutral` when they are only moved or kept, or are facts. */
     tone?: 'critical' | 'neutral'
     /** The heading for this list alone, such as "Moves to grace"; the words' heading for the `tone` when absent. */
     heading?: ReactNode
-    className?: string
     words?: Partial<ConsequenceListWords>
 }
 
@@ -35,17 +35,19 @@ export interface ConsequenceListProps {
  * What goes with the thing an action removes or changes, a row per kind with its count, under a
  * heading that says what happens to them. A `critical` list is headed Also deleted and a
  * `neutral` one What this changes, which also reads right over facts, unless the list has its own
- * `heading`. It sits in a confirm's body, before the verb.
+ * `heading`, which labels the list. It sits in a confirm's body, before the verb.
  */
-export function ConsequenceList({ items, tone = 'critical', heading, className, words: given }: ConsequenceListProps) {
+export function ConsequenceList({ items, tone = 'critical', heading, className, words: given, ...props }: ConsequenceListProps) {
     const words = { ...WORDS, ...given }
+    const headingId = useId()
     if (items.length === 0) return null
     return (
-        <div className={cn('flex flex-col gap-1.5', className)}>
-            <p className={cn('text-xs font-medium', tone === 'critical' ? 'text-critical-ink' : 'text-muted-foreground')}>
+        <div className={cn('flex flex-col gap-1.5', className)} {...props}>
+            <p id={headingId} className={cn('text-xs font-medium', tone === 'critical' ? 'text-critical-ink' : 'text-muted-foreground')}>
                 {heading ?? (tone === 'critical' ? words.heading : words.changed)}
             </p>
             <ul
+                aria-labelledby={headingId}
                 className={cn(
                     'divide-y divide-border overflow-hidden rounded-control border',
                     tone === 'critical' ? 'border-critical/30 bg-critical/4' : 'border-border',

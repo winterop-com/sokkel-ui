@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, test } from 'vitest'
 
-import { DiffView, diffLines } from './DiffView'
+import { DiffView, diffLines, foldDiff, type DiffLine } from './DiffView'
 
 /** The header's counts and words, as text. */
 function header(before: string, after: string, words?: { unchanged: string }): string {
@@ -48,5 +48,62 @@ describe('a line diff', () => {
     test('finds an inserted step between unchanged lines', () => {
         const kinds = diffLines('fetch\nvalidate\nwrite', 'fetch\nclean\nvalidate\nwrite').map((line) => line.kind)
         expect(kinds).toEqual(['same', 'added', 'same', 'same'])
+    })
+})
+
+/** A diff of `count` unchanged lines with one changed line at each of `changed`, as kinds and fold sizes. */
+function shape(count: number, changed: number[], context?: number, opened?: Set<number>): string[] {
+    const lines: DiffLine[] = Array.from({ length: count }, (_, index) => ({
+        kind: changed.includes(index) ? 'added' : 'same',
+        text: String(index),
+    }))
+    return foldDiff(lines, context, opened).map((row) =>
+        row.kind === 'fold' ? `fold ${row.start}+${row.count}` : row.line.kind === 'same' ? row.line.text : `+${row.line.text}`,
+    )
+}
+
+describe('folding a diff', () => {
+    test('keeps three lines of context around a change and folds the rest', () => {
+        expect(shape(20, [10])).toEqual(['fold 0+7', '7', '8', '9', '+10', '11', '12', '13', 'fold 14+6'])
+    })
+
+    test('folds the run between two changes and keeps the context of each', () => {
+        expect(shape(20, [2, 15], 1)).toEqual(['0', '1', '+2', '3', 'fold 4+10', '14', '+15', '16', 'fold 17+3'])
+    })
+
+    test('draws a run of one line rather than folding it', () => {
+        expect(shape(9, [0, 8], 3)).toEqual(['+0', '1', '2', '3', '4', '5', '6', '7', '+8'])
+    })
+
+    test('draws an opened run whole', () => {
+        expect(shape(10, [9], 2, new Set([0]))).toEqual(['0', '1', '2', '3', '4', '5', '6', '7', '8', '+9'])
+    })
+
+    test('folds every line when nothing changed, and none with an endless context', () => {
+        expect(shape(5, [])).toEqual(['fold 0+5'])
+        expect(shape(5, [], Infinity)).toEqual(['0', '1', '2', '3', '4'])
+    })
+
+    test('keeps only the changes with no context', () => {
+        expect(shape(5, [2], 0)).toEqual(['fold 0+2', '+2', 'fold 3+2'])
+    })
+})
+
+describe('a folded diff', () => {
+    test('names each folded run in its words', () => {
+        const long = Array.from({ length: 30 }, (_, index) => `line ${index}`).join('\n')
+        const html = renderToStaticMarkup(<DiffView before={long} after={long.replace('line 15', 'line fifteen')} />)
+        expect(html).toContain('12 unchanged lines')
+        expect(html).toContain('11 unchanged lines')
+        const told = renderToStaticMarkup(
+            <DiffView
+                before={long}
+                after={long}
+                words={{ folded: (count) => `${count} hidden` }}
+                actions={<button type="button">Open</button>}
+            />,
+        )
+        expect(told).toContain('30 hidden')
+        expect(told).toContain('>Open</button>')
     })
 })

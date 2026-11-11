@@ -346,6 +346,15 @@ give an app a note's links, its tags and where a name is written unlinked, for b
 link opens in a new tab unless `onLink` takes it: the app's own routes and the times in an episode's
 notes stay in the page.
 
+`DiffView` draws two versions of a text as one list of lines, by the longest run of lines they
+share. Its header counts the lines added and removed, leaving out a side with none and saying "No
+changes" when the two are the same, and holds an app's `actions` after the counts. Unchanged lines
+further than `context` (3) from a change fold into a row that says how many it holds and opens them
+on a press, so a long document opens on its changes; `foldDiff` is that fold as a function, and
+`context={Infinity}` draws every line. An apply plan sets a `DiffView` beside a `ConsequenceList`,
+the rows of what an action takes or changes under a heading that labels the list, its other props
+going to its root.
+
 ## Typefaces
 
 Plex Sans and Plex Mono are the default. Geist and Geist Mono are the one alternative a theme sets,
