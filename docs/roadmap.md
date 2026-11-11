@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.19.5** is the latest release (2026-11-11): controls a finger tall on a phone, a table's scroll bar
+- **0.19.6** is the latest release (2026-11-11): charts share one theme look and draw sooner (a dashboard
+  switch in WebKit from 2.8 s to 0.12 s), and a time series keeps every point where its labels repeat.
+- **0.19.5** (2026-11-11): controls a finger tall on a phone, a table's scroll bar
   under its head, `ListingBar`, and no count beside an empty table.
 - **0.18.3** (2026-11-11): route focus waits for the new page's visible heading,
   `PageState` takes `headingLevel`, and a cleared search keeps no results.

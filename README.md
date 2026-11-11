@@ -105,12 +105,12 @@ them:
 ```
 
 ```
-bun add @winterop-com/sokkel-ui@0.19.5
-bun add @winterop-com/sokkel-ui-charts@0.19.5   # only for charts and chart panels
-bun add @winterop-com/sokkel-ui-maps@0.19.5     # only for maps
-bun add @winterop-com/sokkel-ui-graph@0.19.5    # only for graphs
-bun add @winterop-com/sokkel-ui-terminal@0.19.5 # only for terminals
-bun add @winterop-com/sokkel-ui-media@0.19.5    # only for the music and video parts
+bun add @winterop-com/sokkel-ui@0.19.6
+bun add @winterop-com/sokkel-ui-charts@0.19.6   # only for charts and chart panels
+bun add @winterop-com/sokkel-ui-maps@0.19.6     # only for maps
+bun add @winterop-com/sokkel-ui-graph@0.19.6    # only for graphs
+bun add @winterop-com/sokkel-ui-terminal@0.19.6 # only for terminals
+bun add @winterop-com/sokkel-ui-media@0.19.6    # only for the music and video parts
 ```
 
 The components are styled with Tailwind classes, so every app runs Tailwind CSS 4.1 or later and
