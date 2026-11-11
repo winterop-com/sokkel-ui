@@ -31,6 +31,10 @@ function ReadStates() {
             <PageState loading={false} status={403} error="The token for `api` may read `orders` but not `invoices`.">
                 {null}
             </PageState>
+            <Caption>refused, with a way to read again</Caption>
+            <PageState loading={false} status={503} error="The scheduler for `harbor` is restarting." onRetry={() => undefined}>
+                {null}
+            </PageState>
             <Caption>missing (404)</Caption>
             <PageState loading={false} status={404} error="No job has the code `import-ordres`.">
                 {null}
