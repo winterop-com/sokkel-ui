@@ -44,3 +44,41 @@ describe('PageState retry', () => {
         ).toBe('content')
     })
 })
+
+describe('PageState tone', () => {
+    it('draws a failure as the page failing by default, as an alert', () => {
+        const html = failed()
+        expect(html).toContain('role="alert"')
+        expect(html).toContain('text-destructive')
+        expect(html).not.toContain('warning')
+    })
+
+    it('draws a failed read of secondary data in the warning tone, announced as a status', () => {
+        const html = failed({ tone: 'warning', onRetry: () => undefined })
+        expect(html).toContain('role="status"')
+        expect(html).not.toContain('role="alert"')
+        expect(html).toContain('border-warning/35')
+        expect(html).toContain('bg-warning/8')
+        expect(html).toContain('text-warning-ink')
+        expect(html).not.toContain('border-border-strong')
+        expect(html).not.toContain('text-destructive')
+        expect(html).toContain('The scheduler is restarting.')
+        expect(html).toContain('Try again')
+    })
+
+    it('leaves the states that have not failed as they are', () => {
+        const loading = renderToStaticMarkup(
+            <PageState loading tone="warning">
+                content
+            </PageState>,
+        )
+        expect(loading).not.toContain('warning')
+        expect(
+            renderToStaticMarkup(
+                <PageState loading={false} tone="warning">
+                    content
+                </PageState>,
+            ),
+        ).toBe('content')
+    })
+})

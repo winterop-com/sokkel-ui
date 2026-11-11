@@ -1,4 +1,4 @@
-import { isApple, keyLabels, keyName, textEntry, type KeyChord, type KeyTarget } from './keys'
+import { isApple, keyName, textEntry, type KeyChord, type KeyTarget } from './keys'
 import { overlaysOpen, topOverlay } from './overlay'
 
 /**
@@ -29,7 +29,20 @@ export interface KeyBinding extends KeyChord {
     repeat?: boolean
     /** Kept and listed, but not heard. */
     disabled?: boolean
+    /**
+     * Makes the binding a sequence: `key` and then this key, pressed within a second, as G then D
+     * for a two-key way to a place. A sequence is never heard while typing in a field, whatever
+     * `inFields` says. A pending first key is dropped on Escape, on any other key, and when the
+     * time runs out; a single-key binding on the same first key runs then instead, once no second
+     * key has come.
+     */
+    next?: string | KeyChord
     run: (event: KeyboardEvent) => void
+}
+
+/** The second key of a sequence as a chord, or undefined for a single-key binding. */
+export function secondKey(binding: Pick<KeyBinding, 'next'>): KeyChord | undefined {
+    return typeof binding.next === 'string' ? { key: binding.next } : binding.next
 }
 
 /** One key press, reduced to what a binding is matched against. */
@@ -201,20 +214,28 @@ export function heard(binding: KeyBinding, press: Pick<KeyPress, 'repeat'>, plac
     if (press.repeat === true && binding.repeat !== true) return false
     const scoped = binding.scope !== undefined
     if (scoped && !place.scopes.includes(binding.scope as string)) return false
-    if (place.field && binding.inFields !== true) return false
+    if (place.field && (binding.inFields !== true || binding.next !== undefined)) return false
     if (place.dialog && binding.inDialogs !== true && !scoped) return false
     return true
 }
 
 /**
  * The binding a press calls, from bindings in the order they yield (the first before the rest):
- * one whose scope holds the focus before one bound outside it, the innermost scope first.
+ * one whose scope holds the focus before one bound outside it, the innermost scope first. `chord`
+ * says which of a binding's keys the press is matched against, its own by default.
  */
-export function pickBinding(bindings: readonly KeyBinding[], press: KeyPress, place: PressPlace, apple: boolean): KeyBinding | undefined {
+export function pickBinding(
+    bindings: readonly KeyBinding[],
+    press: KeyPress,
+    place: PressPlace,
+    apple: boolean,
+    chord: (binding: KeyBinding) => KeyChord | undefined = (binding) => binding,
+): KeyBinding | undefined {
     let best: KeyBinding | undefined
     let bestDepth = Number.POSITIVE_INFINITY
     for (const binding of bindings) {
-        if (!matchesChord(binding, press, apple) || !heard(binding, press, place)) continue
+        const want = chord(binding)
+        if (want === undefined || !matchesChord(want, press, apple) || !heard(binding, press, place)) continue
         const depth = binding.scope === undefined ? Number.POSITIVE_INFINITY : place.scopes.indexOf(binding.scope)
         if (best === undefined || depth < bestDepth) {
             best = binding
@@ -222,56 +243,6 @@ export function pickBinding(bindings: readonly KeyBinding[], press: KeyPress, pl
         }
     }
     return best
-}
-
-/** One shortcut as the shortcuts dialog lists it: what it does and its keys, in the order they are pressed. */
-export interface Shortcut {
-    id: string
-    action: string
-    keys: readonly string[]
-}
-
-/** Shortcuts under a heading: Navigation, Editing. */
-export interface ShortcutGroup {
-    title: string
-    shortcuts: readonly Shortcut[]
-}
-
-/**
- * The groups the shortcuts dialog lists: every registered binding with a label and its keys as this
- * device writes them, those with a group of their own first (a screen's), then those without under
- * `general`, then the groups given. Groups of one title are one, at the first one's place.
- *
- * A shortcut is known by its id and its keys together, so two of one id on different keys (a
- * field's `/` and an app's own key for its search) are both listed. Where the groups given name one
- * a binding already has, id and keys alike, the app's own words win: the binding is listed there,
- * in the app's group, and not again.
- */
-export function shortcutGroups(
-    registered: readonly KeyBinding[],
-    given: readonly ShortcutGroup[],
-    general: string,
-    apple: boolean = isApple(),
-): ShortcutGroup[] {
-    const identity = (shortcut: Pick<Shortcut, 'id' | 'keys'>) => `${shortcut.id}\u0000${shortcut.keys.join('\u0000')}`
-    const appGives = new Set(given.flatMap((group) => group.shortcuts.map(identity)))
-    const groups = new Map<string, Shortcut[]>()
-    const listed = new Set<string>()
-    const add = (title: string, shortcut: Shortcut) => {
-        const known = identity(shortcut)
-        if (listed.has(known)) return
-        listed.add(known)
-        const held = groups.get(title) ?? []
-        held.push(shortcut)
-        groups.set(title, held)
-    }
-    const labeled = registered.filter((binding) => binding.label !== undefined)
-    for (const binding of [...labeled.filter((one) => one.group !== undefined), ...labeled.filter((one) => one.group === undefined)]) {
-        const shortcut = { id: binding.id, action: binding.label ?? '', keys: keyLabels(binding, apple) }
-        if (!appGives.has(identity(shortcut))) add(binding.group ?? general, shortcut)
-    }
-    for (const group of given) for (const shortcut of group.shortcuts) add(group.title, shortcut)
-    return [...groups.entries()].map(([title, shortcuts]) => ({ title, shortcuts }))
 }
 
 /**
@@ -296,14 +267,27 @@ export function layerOpen(
 }
 
 /**
+ * Whether an element is a `Search`'s list of results, or inside one: the layer the command palette
+ * may open over and replace. An app that decides with `Shell`'s `mayOpenPalette` asks this of the
+ * layer it is given, rather than reading how the list is marked.
+ */
+export function overSearch(element: Pick<Element, 'closest'> | null | undefined): boolean {
+    return typeof element?.closest === 'function' && element.closest('[data-slot="search-results"]') !== null
+}
+
+/** The dialogs, sheets and menus open in `doc`, in the order they were opened. */
+export function openLayers(
+    doc: Pick<Document, 'querySelectorAll'> | undefined = typeof document === 'undefined' ? undefined : document,
+): Element[] {
+    return doc === undefined ? [] : Array.from(doc.querySelectorAll(OPEN_LAYERS))
+}
+
+/**
  * The layer standing on top of the page: the dialog, sheet or menu opened last in `doc`, or else the
  * overlay from `useOverlay` on top; null where nothing stands over the page.
  */
-export function topLayer(
-    doc: Pick<Document, 'querySelectorAll'> | undefined = typeof document === 'undefined' ? undefined : document,
-): Element | null {
-    const layers = doc === undefined ? [] : Array.from(doc.querySelectorAll(OPEN_LAYERS))
-    return layers.at(-1) ?? topOverlay()
+export function topLayer(doc?: Pick<Document, 'querySelectorAll'>): Element | null {
+    return openLayers(doc).at(-1) ?? topOverlay()
 }
 
 /** Where the keys screens bind are kept, and the one listener that answers them. */
@@ -330,9 +314,10 @@ export interface ShortcutRegistryHandle {
     surface: (name: string, open: boolean) => void
     /**
      * Whether anything stands over the page: a surface said open, an overlay from `useOverlay`, or
-     * a dialog, a sheet or a menu open in the document.
+     * a dialog, a sheet or a menu open in the document; with `besidesSearch`, anything but a
+     * search's list of results, which the palette replaces.
      */
-    covered: () => boolean
+    covered: (besidesSearch?: boolean) => boolean
 }
 
 interface Entry {
@@ -342,18 +327,53 @@ interface Entry {
 }
 
 /**
+ * Whether the command palette may open now. `may` (`Shell`'s `mayOpenPalette`) decides when given,
+ * asked with the layer on top; else the palette opens where nothing stands over the page, and where
+ * a search's results are all that does, since the palette takes the search's place.
+ */
+export function paletteMayOpen(registry: Pick<ShortcutRegistryHandle, 'covered'>, may?: (over: Element | null) => boolean): boolean {
+    return may === undefined ? !registry.covered(true) : may(topLayer())
+}
+
+/** Keys held with another one, which neither start nor break a sequence on their own. */
+const MODIFIERS = new Set(['Shift', 'Control', 'Alt', 'Meta', 'AltGraph'])
+
+/** How long a sequence waits for its second key, in milliseconds. */
+export const SEQUENCE_TIMEOUT = 1000
+
+/** A sequence's first key, pressed and waiting for its second. */
+interface Pending {
+    /** The sequences the first key started. */
+    sequences: readonly KeyBinding[]
+    /** The single-key binding on the same key, run if no second key comes. */
+    alone: KeyBinding | undefined
+    event: KeyboardEvent
+    timer: ReturnType<typeof setTimeout>
+}
+
+/**
  * A registry of key bindings. A later screen's binding yields before an earlier one's for the same
  * chord, since it is the screen just put in front; the fallback ones yield to all of them. A press
  * another handler has already taken (`defaultPrevented`) or an input method is composing is left
  * alone, and the binding that runs takes the press with `preventDefault`.
+ *
+ * A press that starts a sequence (a binding with `next`) is taken and waits `sequenceTimeout`
+ * milliseconds for the second key. The second key runs the sequence; Escape drops the wait; any
+ * other key, or the time running out, drops it too and runs the single-key binding on the first
+ * key, if there is one, before the other key is heard as itself. So a key that starts no sequence
+ * runs at once, and one that does runs only once it is clear no second key is coming.
  */
-export function createShortcutRegistry({ apple }: { apple?: boolean } = {}): ShortcutRegistryHandle {
+export function createShortcutRegistry({
+    apple,
+    sequenceTimeout = SEQUENCE_TIMEOUT,
+}: { apple?: boolean; sequenceTimeout?: number } = {}): ShortcutRegistryHandle {
     let entries: Entry[] = []
     let listed: readonly KeyBinding[] = []
     let order: readonly KeyBinding[] = []
     const listeners = new Set<() => void>()
     const surfaces = new Set<string>()
-    const covered = () => surfaces.size > 0 || overlaysOpen() || layerOpen()
+    const covered = (besidesSearch = false) =>
+        surfaces.size > 0 || overlaysOpen() || openLayers().some((layer) => !besidesSearch || !overSearch(layer))
     const changed = () => {
         const screens = entries.filter((entry) => !entry.fallback)
         const fallback = entries.filter((entry) => entry.fallback)
@@ -361,15 +381,40 @@ export function createShortcutRegistry({ apple }: { apple?: boolean } = {}): Sho
         order = [...screens.reverse(), ...fallback.reverse()].flatMap((entry) => entry.bindings)
         for (const listener of Array.from(listeners)) listener()
     }
+    let pending: Pending | undefined
+    const settle = (runAlone: boolean) => {
+        const was = pending
+        if (was === undefined) return
+        pending = undefined
+        clearTimeout(was.timer)
+        if (runAlone) was.alone?.run(was.event)
+    }
     const handle = (event: KeyboardEvent) => {
-        if (event.defaultPrevented || order.length === 0) return false
+        if (event.defaultPrevented) return false
         const press = keyPress(event)
-        if (press.composing === true) return false
+        if (press.composing === true || MODIFIERS.has(press.key)) return false
+        const mac = apple ?? isApple()
+        if (pending !== undefined) {
+            if (press.repeat === true) return true
+            if (keyName(press.key) === 'Escape') {
+                settle(false)
+                return false
+            }
+        }
         const place = pressPlace(event.target, press.key, covered())
-        const binding = pickBinding(order, press, place, apple ?? isApple())
-        if (binding === undefined) return false
+        const sequence = pending && pickBinding(pending.sequences, press, place, mac, secondKey)
+        settle(sequence === undefined)
+        if (sequence !== undefined) {
+            event.preventDefault()
+            sequence.run(event)
+            return true
+        }
+        const binding = pickBinding(order, press, place, mac, (one) => (one.next === undefined ? one : undefined))
+        const sequences = order.filter((one) => one.next !== undefined && matchesChord(one, press, mac) && heard(one, press, place))
+        if (sequences.length === 0 && binding === undefined) return false
         event.preventDefault()
-        binding.run(event)
+        if (sequences.length > 0) pending = { sequences, alone: binding, event, timer: setTimeout(() => settle(true), sequenceTimeout) }
+        else binding?.run(event)
         return true
     }
     const held = new Map<object, number>()
@@ -408,6 +453,7 @@ export function createShortcutRegistry({ apple }: { apple?: boolean } = {}): Sho
                 else {
                     held.delete(target)
                     target.removeEventListener('keydown', handle)
+                    settle(false)
                 }
             }
         },

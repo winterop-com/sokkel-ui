@@ -71,6 +71,31 @@ function ReadStates() {
     )
 }
 
+/** A run's page whose own read came back, beside a side list whose read failed. */
+function SecondaryRead() {
+    return (
+        <Ground>
+            <DescriptionList
+                items={[
+                    { term: 'job', value: 'nightly-export', code: true },
+                    { term: 'state', value: 'succeeded' },
+                    { term: 'took', value: '4m 12s' },
+                ]}
+            />
+            <Caption>the run's artifacts, read apart from the run</Caption>
+            <PageState
+                loading={false}
+                status={503}
+                tone="warning"
+                error="The artifact store for `harbor` is restarting."
+                onRetry={() => undefined}
+            >
+                {null}
+            </PageState>
+        </Ground>
+    )
+}
+
 function Unfolding() {
     return (
         <Ground>
@@ -116,5 +141,11 @@ const meta: Meta = { title: 'Patterns/States', parameters: { frame: 'padded' } }
 export default meta
 
 export const Read: StoryObj = { name: 'Page state', render: () => <ReadStates /> }
+
+/**
+ * A failed read of secondary data, drawn with `tone="warning"`: the page's own content stands, and
+ * the side read that failed says so in the warning tone rather than as the page's failure.
+ */
+export const Secondary: StoryObj = { name: 'Secondary read', render: () => <SecondaryRead /> }
 export const Unfold: StoryObj = { name: 'Unfoldable', render: () => <Unfolding /> }
 export const Text: StoryObj = { name: 'Prose text', render: () => <Prose /> }
