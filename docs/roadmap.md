@@ -6,7 +6,10 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.15.10** is the latest release (2026-11-11): a stacked `ItemHeading`'s code wraps at its own
+- **0.15.11** is the latest release (2026-11-11): a plain `DataTable` leaves the checkbox and its
+  measuring watches out of the start bundle (budgets lowered), `Button` `busy`, `PageState` `onRetry`,
+  and a `DropZone` that hands its refusals to `FileField`.
+- **0.15.10** (2026-11-11): a stacked `ItemHeading`'s code wraps at its own
   breaks rather than being cut.
 - **0.15.9** (2026-11-11): a `DataTable` content column measures again when what
   a cell holds changes.
