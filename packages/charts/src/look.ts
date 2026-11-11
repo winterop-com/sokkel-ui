@@ -75,8 +75,16 @@ function makeHex(): (css: string) => string {
     }
 }
 
-/** Resolves the chart look now, against the document as it is styled. */
+/** The look last read, which every chart shares until the key changes. */
+let latest: ChartLook | undefined
+
+/**
+ * Resolves the chart look against the document as it is styled, once per key: each color it
+ * resolves forces a style pass, so charts mounting together share one look rather than each
+ * reading its own.
+ */
 export function readLook(key = readKey()): ChartLook {
+    if (latest?.key === key) return latest
     const hex = makeHex()
     const style = getComputedStyle(document.documentElement)
     const token = (name: string) => hex(`var(--${name})`)
@@ -88,7 +96,7 @@ export function readLook(key = readKey()): ChartLook {
         if (Number.isNaN(number)) return fallback
         return value.endsWith('rem') ? number * rem : number
     }
-    return {
+    latest = {
         key,
         dark: document.documentElement.classList.contains('dark'),
         font: style.getPropertyValue('--typeface-sans').trim() || 'sans-serif',
@@ -114,6 +122,7 @@ export function readLook(key = readKey()): ChartLook {
         ramp: (name, steps = 6) =>
             Array.from({ length: steps }, (_, index) => mix(`var(--${name})`, Math.round(12 + (88 * index) / Math.max(1, steps - 1)))),
     }
+    return latest
 }
 
 /** The chart look, read again when the scheme, the theme or a token override changes, once fonts have loaded. */
