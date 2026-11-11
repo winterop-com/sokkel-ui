@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.15.6** is the latest release (2026-11-11): `DataTable` content columns measured after fonts load,
+- **0.15.7** is the latest release (2026-11-11): `useTableCell`, `DataTableGroup` and stacked labels
+  that fit; the fan's history line bridged into its forecast; `SelectField`.
+- **0.15.6** (2026-11-11): `DataTable` content columns measured after fonts load,
   counted toward stacking, measured at their full width, with a `minWidth` floor.
 - **0.15.5** (2026-11-10): the `fan` chart kind for forecasts against the truth,
   and `marks` down line, area and step charts.
