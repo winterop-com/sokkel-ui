@@ -1,9 +1,10 @@
 import { Button as ButtonPrimitive } from '@base-ui/react/button'
 import { cva, type VariantProps } from 'class-variance-authority'
 
-import type { ReactNode } from 'react'
+import { Children, isValidElement, type ReactNode } from 'react'
 
 import { cn } from '../../lib/utils'
+import { Spinner } from './spinner'
 import { Tooltip, TooltipContent, TooltipTrigger } from './tooltip'
 
 const buttonVariants = cva(
@@ -40,17 +41,28 @@ const buttonVariants = cva(
     },
 )
 
+/** A busy button keeps its look while it ignores presses. */
+const BUSY = 'cursor-progress opacity-100!'
+
+/** The spinner at the size of the icons a button of each size draws. */
+const SPINNER: Record<string, string | undefined> = { xs: 'size-3', 'icon-xs': 'size-3', sm: 'size-3.5' }
+
 export type ButtonProps = ButtonPrimitive.Props &
     VariantProps<typeof buttonVariants> & {
         /** Why the button cannot be pressed now; given, the button is disabled and shows it. */
         reason?: ReactNode
         /** Which side the reason opens on. */
         reasonSide?: 'top' | 'bottom' | 'left' | 'right'
+        /** Work a press started is under way: a spinner in place of a leading icon, or before the label, and presses ignored until it ends. */
+        busy?: boolean
     }
 
 /**
  * A button. `reason` disables it and says why: the reason shows on hover and on focus, and the
- * button stays in the tab order so a keyboard reaches the reason too.
+ * button stays in the tab order so a keyboard reaches the reason too. `busy` says the work a press
+ * started is under way: a spinner takes the place of a leading icon (an icon-only button's icon), or
+ * comes before the label, the label stays, and the button is shut, `aria-busy` and `aria-disabled`,
+ * keeping its focus and its look while it ignores presses.
  */
 function Button({
     className,
@@ -60,18 +72,33 @@ function Button({
     reasonSide = 'top',
     disabled,
     focusableWhenDisabled,
+    busy = false,
+    children,
     ...props
 }: ButtonProps) {
     const held = reason !== undefined && reason !== null && reason !== false
+    const parts = busy ? Children.toArray(children) : []
+    // The spinner stands in for a leading icon: an element before the label, or an icon-only button's icon.
+    const lead = isValidElement(parts[0]) && (parts.length > 1 || size?.startsWith('icon') === true)
     const button = (
         <ButtonPrimitive
             data-slot="button"
             data-button-size={size ?? 'default'}
-            className={cn(buttonVariants({ variant, size, className }))}
-            disabled={held || disabled}
-            focusableWhenDisabled={held || focusableWhenDisabled}
+            className={cn(buttonVariants({ variant, size, className }), busy && BUSY)}
+            disabled={held || busy || disabled}
+            focusableWhenDisabled={held || busy || focusableWhenDisabled}
+            aria-busy={busy || undefined}
             {...props}
-        />
+        >
+            {busy ? (
+                <>
+                    <Spinner aria-hidden role={undefined} aria-label={undefined} className={SPINNER[size ?? 'default']} />
+                    {lead ? parts.slice(1) : parts}
+                </>
+            ) : (
+                children
+            )}
+        </ButtonPrimitive>
     )
     if (!held) return button
     return (

@@ -457,7 +457,9 @@ carries no chip; `lib/status` holds the map's types, the run states and each col
 A button that cannot be pressed now says why: `reason` on `Button`, `IconButton` and `SplitButton`
 disables it and shows the reason on hover and focus, the button kept in the tab order so a keyboard
 reaches it; `SwitchField` takes `reason` too, said in a line under its label, and its whole row is
-the label. `IconButton`'s `tooltip` says a longer sentence than its name, `shortcut` draws the key
+the label. A button whose press is under way takes `busy`: a `Spinner` in place of its leading icon
+(an icon-only button's icon), or before a label with none, the label kept, and the button shut
+(`aria-busy`, `aria-disabled`) while it keeps its focus and its look. `IconButton`'s `tooltip` says a longer sentence than its name, `shortcut` draws the key
 that does the same as a `Kbd` in the tooltip, and `destructive` tints it in the critical tone under
 the pointer. `SplitButton` joins the main action to a menu of other ways, its main half named apart
 from a short face by `label` and `title`; `DownloadButton` goes from
@@ -663,7 +665,22 @@ Copy and Remove in its head.
 it (the types in `accept`, `maxSize`, `maxFiles`), each file refused said with why ("too large: 12
 MB, at most 10 MB"), sorted by `checkFiles`, which `useUploads` shares, and the files taken listed
 by `AttachmentList`, an image with its picture and a file the app says is going up (`progress`) with
-its ring. With `maxFiles` of 1 a file chosen takes the place of the one held. `useUnsavedChanges`
+its ring. With `maxFiles` of 1 a file chosen takes the place of the one held. A drop anywhere on a
+page reaches a field through a page-wide `DropZone` given the field's limits (`accept`, `maxSize`,
+`maxFiles`, and `held`, the files the field holds): it sorts the drop through the same
+`checkFiles` and calls `onFiles(files, refused)`, and the app adds the files to the field's `value`
+and hands what was refused to its `refused`, with `onRefusedChange` for the field's own picks and
+dismissals, so the field says each refused file with why as if it were dropped on the field:
+
+```tsx
+const LIMITS = { accept: '.csv,.yaml', maxSize: 10_000_000, maxFiles: 5 }
+
+<DropZone {...LIMITS} held={files.length} onFiles={(taken, out) => { setFiles([...files, ...taken]); setRefused(out) }}>
+    <FileField id="orders" label="Orders" {...LIMITS} value={files} onChange={setFiles} refused={refused} onRefusedChange={setRefused} />
+</DropZone>
+```
+
+`useUnsavedChanges`
 guards a page: while it is `dirty`, closing the tab or reloading asks through the browser's own
 warning, and since the library has no router, the app's blocker awaits `confirmLeave()`, which asks
 through `ConfirmDialog` (the hook's `dialog`, drawn once in the page) and answers whether to leave;

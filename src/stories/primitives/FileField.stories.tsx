@@ -1,12 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
-import { FileField, checkFiles } from '@winterop-com/sokkel-ui/FileField'
+import { FileField, checkFiles, type CheckedRefusal } from '@winterop-com/sokkel-ui/FileField'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { useAttachmentField } from '@winterop-com/sokkel-ui/hooks/use-attachment-field'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { TextField } from '@winterop-com/sokkel-ui/TextField'
 import { TooltipProvider } from '@winterop-com/sokkel-ui/primitives/tooltip'
+import { DropZone } from '@winterop-com/sokkel-ui/UploadTray'
 import { PICKED_FILES, PICKED_LIMIT, useFakeUploader } from '../fixtures/uploader'
 
 /**
@@ -171,6 +172,54 @@ export const InForm: StoryObj = {
                         onChange={setFiles}
                     />
                 </Stack>
+            </TooltipProvider>
+        )
+    },
+}
+
+/** The limits the page's drop zone and its field share, so a drop is sorted as the field sorts a pick. */
+const ORDER_LIMITS = { accept: '.csv,.yaml', maxSize: PICKED_LIMIT, maxFiles: 5 }
+
+/** The four picked files as a drop on the page hands them over: two taken and two refused. */
+const HANDED = checkFiles(PICKED_FILES, ORDER_LIMITS)
+
+/**
+ * A drop anywhere on the page going to the field: the `DropZone` around the page takes the field's
+ * limits, sorts the drop through `checkFiles` and hands the files to the field's `value` and what it
+ * refused to its `refused`, each said with why. It opens on a drop of the four picked files already
+ * handed over; files dragged anywhere on the page add to them.
+ */
+export const PageDrop: StoryObj = {
+    name: 'Page drop',
+    parameters: { frame: 'padded' },
+    render: function Render() {
+        const [files, setFiles] = useState<File[]>(HANDED.taken)
+        const [refused, setRefused] = useState<CheckedRefusal[]>(HANDED.refused)
+        return (
+            <TooltipProvider>
+                <DropZone
+                    {...ORDER_LIMITS}
+                    held={files.length}
+                    onFiles={(taken, out) => {
+                        setFiles([...files, ...taken])
+                        setRefused(out)
+                    }}
+                    words={{ title: 'Drop to add to Orders', detail: 'The files go into the import of import-orders.' }}
+                    className="min-h-[calc(100svh-3rem)]"
+                >
+                    <Stack gap="lg" className="max-w-xl">
+                        <TextField id="drop-job" label="Job" mono defaultValue="import-orders" />
+                        <FileField
+                            id="drop-orders"
+                            label="Orders"
+                            {...ORDER_LIMITS}
+                            value={files}
+                            onChange={setFiles}
+                            refused={refused}
+                            onRefusedChange={setRefused}
+                        />
+                    </Stack>
+                </DropZone>
             </TooltipProvider>
         )
     },

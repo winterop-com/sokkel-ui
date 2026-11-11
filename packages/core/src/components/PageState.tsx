@@ -1,8 +1,9 @@
-import { CircleAlert, Loader2 } from 'lucide-react'
+import { CircleAlert, Loader2, RotateCw } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { ProseText } from './ProseText'
+import { Button } from './ui/button'
 
 /** How a read came back, when the caller kept it: an HTTP status, or no answer at all. */
 export type ReadOutcome = number | 'unreachable'
@@ -13,6 +14,8 @@ export interface PageStateWords {
     refused: string
     missing: string
     unreachable: string
+    /** The button that reads again after a failure. */
+    retry: string
 }
 
 const WORDS: PageStateWords = {
@@ -20,6 +23,7 @@ const WORDS: PageStateWords = {
     refused: 'The server refused this read',
     missing: 'Nothing is there',
     unreachable: 'The server is not answering',
+    retry: 'Try again',
 }
 
 /** The heading over a failed read: a 404 is an absence and no answer is silence, not a refusal. */
@@ -53,6 +57,8 @@ export interface PageStateProps {
     emptyMessage?: ReactNode
     /** An empty state that is more than a sentence, such as a way to make the first one. */
     emptyRender?: ReactNode
+    /** Reads again after a failure, from a button under the diagnostic. */
+    onRetry?: () => void
     words?: Partial<PageStateWords>
     children: ReactNode
 }
@@ -60,9 +66,20 @@ export interface PageStateProps {
 /**
  * The states a read lands in, kept distinct all the way to the screen: loading, failed, empty, and
  * the content. A failure is headed by what the server answered, with its own diagnostic under the
- * heading; a string diagnostic has its backticked parts drawn in the code face.
+ * heading; a string diagnostic has its backticked parts drawn in the code face. `onRetry` puts a
+ * button that reads again under the diagnostic, as a dashboard panel's failure has one.
  */
-export function PageState({ loading, error, status, empty = false, emptyMessage, emptyRender, words: given, children }: PageStateProps) {
+export function PageState({
+    loading,
+    error,
+    status,
+    empty = false,
+    emptyMessage,
+    emptyRender,
+    onRetry,
+    words: given,
+    children,
+}: PageStateProps) {
     const words = { ...WORDS, ...given }
     if (loading) {
         return (
@@ -76,11 +93,19 @@ export function PageState({ loading, error, status, empty = false, emptyMessage,
         return (
             <Frame>
                 <CircleAlert className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden />
-                <div role="alert" className="flex min-w-0 flex-col gap-1">
-                    <p className="font-medium">{pageStateHeading(status, words)}</p>
-                    <p className="text-xs break-words text-muted-foreground">
-                        {typeof error === 'string' ? <ProseText text={error} /> : error}
-                    </p>
+                <div className="flex min-w-0 flex-col gap-3">
+                    <div role="alert" className="flex min-w-0 flex-col gap-1">
+                        <p className="font-medium">{pageStateHeading(status, words)}</p>
+                        <p className="text-xs break-words text-muted-foreground">
+                            {typeof error === 'string' ? <ProseText text={error} /> : error}
+                        </p>
+                    </div>
+                    {onRetry !== undefined && (
+                        <Button size="sm" variant="outline" className="self-start" onClick={onRetry}>
+                            <RotateCw aria-hidden />
+                            {words.retry}
+                        </Button>
+                    )}
                 </div>
             </Frame>
         )
