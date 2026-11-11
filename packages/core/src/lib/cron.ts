@@ -192,11 +192,6 @@ export function nextRuns(expression: string | Cron, from: Date, count = 5, timeZ
 
 const pad = (number: number) => String(number).padStart(2, '0')
 
-function list(words: readonly string[]): string {
-    if (words.length <= 1) return words.join('')
-    return `${words.slice(0, -1).join(', ')} and ${words[words.length - 1]}`
-}
-
 function ordinal(number: number): string {
     const tens = number % 100
     if (tens >= 11 && tens <= 13) return `${String(number)}th`
@@ -205,14 +200,20 @@ function ordinal(number: number): string {
 
 /**
  * The words `describeCron` reads an expression back in, a phrase at a time. Times come to them as
- * `02:00`, and days of the week and months by their names in `dayNames` and `monthNames`.
+ * `02:00`, and days of the week and months by their names in `dayNames` and `monthNames`. A list
+ * comes to a phrase already joined with `separator` and `lastSeparator`, so every word is a string
+ * an app's catalogue holds.
  */
 export interface CronWords {
     /** The days of the week, Sunday first. */
     dayNames: readonly string[]
     monthNames: readonly string[]
-    /** Joins a list: "Monday, Tuesday and Friday". */
-    list: (items: readonly string[]) => string
+    /** Between the items of a list but the last two: the ", " of "Monday, Tuesday and Friday". */
+    separator: string
+    /** Between the last two items of a list: the " and " of "Monday, Tuesday and Friday". */
+    lastSeparator: string
+    /** A day of the month as an ordinal: "1st". */
+    ordinal: (day: number) => string
     everyMinute: string
     everyMinutes: (step: number) => string
     /** Once an hour, at a minute past it, 0 being on the hour. */
@@ -221,24 +222,26 @@ export interface CronWords {
     everyHours: (step: number, minute: number) => string
     /** Once an hour between two times. */
     hourly: (from: string, to: string) => string
-    /** At a few times of day. */
-    at: (times: readonly string[]) => string
+    /** At a few times of day, joined: "02:00 and 14:00". */
+    at: (times: string) => string
     /** Every few minutes between two times. */
     minutesBetween: (step: number, from: string, to: string) => string
-    /** Any other set of minutes and hours. */
-    minutesOfHours: (minutes: readonly number[], hours: readonly number[]) => string
+    /** Any other set of minutes and hours, each joined. */
+    minutesOfHours: (minutes: string, hours: string) => string
     /** Times of day, on every day: "every day at 02:00". */
     daily: (time: string) => string
-    /** Days of the month: "on the 1st and 15th". */
-    onDays: (days: readonly number[]) => string
+    /** Days of the month as ordinals, joined: "1st and 15th". */
+    onDays: (days: string) => string
     weekdays: string
     weekends: string
     /** A run of days of the week: "on Monday to Thursday". */
     weekdayRange: (from: string, to: string) => string
-    onWeekdays: (days: readonly string[]) => string
+    /** Days of the week by name, joined. */
+    onWeekdays: (days: string) => string
     /** Days of the month or days of the week, when the expression names both. */
     either: (days: string, weekdays: string) => string
-    inMonths: (months: readonly string[]) => string
+    /** Months by name, joined. */
+    inMonths: (months: string) => string
     /** Puts the parts that apply together as a sentence. */
     sentence: (parts: readonly string[]) => string
 }
@@ -247,23 +250,25 @@ export interface CronWords {
 export const CRON_WORDS: CronWords = {
     dayNames: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
     monthNames: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-    list,
+    separator: ', ',
+    lastSeparator: ' and ',
+    ordinal,
     everyMinute: 'every minute',
     everyMinutes: (step) => `every ${String(step)} minutes`,
     everyHour: (minute) => (minute === 0 ? 'every hour, on the hour' : `every hour at ${String(minute)} minutes past`),
     everyHours: (step, minute) => `every ${String(step)} hours${minute === 0 ? '' : ` at ${String(minute)} minutes past`}`,
     hourly: (from, to) => `every hour from ${from} to ${to}`,
-    at: (times) => `at ${list(times)}`,
+    at: (times) => `at ${times}`,
     minutesBetween: (step, from, to) => `every ${String(step)} minutes from ${from} to ${to}`,
-    minutesOfHours: (minutes, hours) => `at minute ${list(minutes.map(String))} of hour ${list(hours.map(String))}`,
+    minutesOfHours: (minutes, hours) => `at minute ${minutes} of hour ${hours}`,
     daily: (time) => `every day ${time}`,
-    onDays: (days) => `on the ${list(days.map(ordinal))}`,
+    onDays: (days) => `on the ${days}`,
     weekdays: 'on weekdays',
     weekends: 'on weekends',
     weekdayRange: (from, to) => `on ${from} to ${to}`,
-    onWeekdays: (days) => `on ${list(days)}`,
+    onWeekdays: (days) => `on ${days}`,
     either: (days, weekdays) => `${days} or ${weekdays}`,
-    inMonths: (months) => `in ${list(months)}`,
+    inMonths: (months) => `in ${months}`,
     sentence: (parts) => {
         const full = parts.join(' ')
         return full.charAt(0).toUpperCase() + full.slice(1)
@@ -282,13 +287,24 @@ function contiguous(values: readonly number[]): boolean {
     return values.length > 2 && values.every((v, index) => index === 0 || v === values[index - 1] + 1)
 }
 
+/** A list joined in the words' separators. */
+function joined(items: readonly string[], words: CronWords): string {
+    if (items.length <= 1) return items.join('')
+    return items.slice(0, -1).join(words.separator) + words.lastSeparator + items[items.length - 1]
+}
+
 function weekdays(days: readonly number[], words: CronWords): string {
     if (days.length === 5 && days.join() === '1,2,3,4,5') return words.weekdays
     if (days.length === 2 && days.join() === '0,6') return words.weekends
     const order = [...days].sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7))
     if (contiguous(order.map((d) => (d + 6) % 7)))
         return words.weekdayRange(words.dayNames[order[0]], words.dayNames[order[order.length - 1]])
-    return words.onWeekdays(order.map((d) => words.dayNames[d]))
+    return words.onWeekdays(
+        joined(
+            order.map((d) => words.dayNames[d]),
+            words,
+        ),
+    )
 }
 
 /**
@@ -322,14 +338,27 @@ export function describeCron(expression: string, words?: Partial<CronWords>): st
         recurs = false
         time =
             times <= 4
-                ? said.at(cron.hours.flatMap((hour) => cron.minutes.map((minute) => clock(hour, minute))))
-                : said.minutesOfHours(cron.minutes, cron.hours)
+                ? said.at(
+                      joined(
+                          cron.hours.flatMap((hour) => cron.minutes.map((minute) => clock(hour, minute))),
+                          said,
+                      ),
+                  )
+                : said.minutesOfHours(joined(cron.minutes.map(String), said), joined(cron.hours.map(String), said))
     }
 
-    const days = cron.anyDay ? '' : said.onDays(cron.days)
+    const days = cron.anyDay ? '' : said.onDays(joined(cron.days.map(said.ordinal), said))
     const week = cron.anyWeekday ? '' : weekdays(cron.weekdays, said)
     const day = days !== '' && week !== '' ? said.either(days, week) : days + week
-    const month = cron.months.length === 12 ? '' : said.inMonths(cron.months.map((m) => said.monthNames[m - 1]))
+    const month =
+        cron.months.length === 12
+            ? ''
+            : said.inMonths(
+                  joined(
+                      cron.months.map((m) => said.monthNames[m - 1]),
+                      said,
+                  ),
+              )
     const lead = day === '' && !recurs ? said.daily(time) : time
     return said.sentence([lead, day, month].filter((part) => part !== ''))
 }
