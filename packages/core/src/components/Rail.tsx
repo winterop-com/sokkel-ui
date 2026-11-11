@@ -389,28 +389,17 @@ export function Rail({
                                       head,
                                       'flex min-w-0 items-center gap-2 rounded-md pe-1.5 outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
                                   )}
-                            {drawer !== undefined ? (
+                            {/* In the drawer it closes the drawer; in the frame it narrows the rail. */}
+                            {(drawer !== undefined || collapsible) && (
                                 <button
                                     type="button"
-                                    aria-label={drawer.label}
-                                    title={drawer.label}
+                                    aria-label={drawer?.label ?? words.collapse}
+                                    title={drawer?.label ?? words.collapse}
                                     className={HEAD_BUTTON}
-                                    onClick={drawer.close}
+                                    onClick={drawer?.close ?? (() => setCollapsed(true))}
                                 >
-                                    <X className="size-4" aria-hidden />
+                                    {drawer ? <X className="size-4" aria-hidden /> : <PanelLeftClose className="size-4" aria-hidden />}
                                 </button>
-                            ) : (
-                                collapsible && (
-                                    <button
-                                        type="button"
-                                        aria-label={words.collapse}
-                                        title={words.collapse}
-                                        className={HEAD_BUTTON}
-                                        onClick={() => setCollapsed(true)}
-                                    >
-                                        <PanelLeftClose className="size-4" aria-hidden />
-                                    </button>
-                                )
                             )}
                         </>
                     )}
@@ -529,6 +518,9 @@ function holdsActive(entry: RailEntry): boolean {
     return entry.entries?.some((child) => child.active === true) === true
 }
 
+/** Whether a parent drawn as one icon is lit: its own place or one of its entries' is shown. */
+const lit = (entry: RailEntry) => entry.active === true || holdsActive(entry)
+
 /** The dot of an entry with something new and no count, ringed in the rail's ground so it reads as cut out. */
 function UnreadDot({ label, className }: { label: string; className?: string }) {
     return (
@@ -581,13 +573,36 @@ function RowFace({ entry, active, unread, end = true }: { entry: RailEntry; acti
     )
 }
 
-/** What a collapsed rail's tooltip says for an entry: its label, then its description. */
-function TipText({ entry }: { entry: RailEntry }) {
+/** A collapsed rail's tooltip for an entry, beside it: its label, then its description. */
+function Tip({ entry }: { entry: RailEntry }) {
     return (
-        <>
-            {entry.label}
-            {entry.description !== undefined && <span className="text-muted-foreground"> {entry.description}</span>}
-        </>
+        <Tooltip.Portal>
+            <Tooltip.Positioner side="right" sideOffset={8}>
+                <Tooltip.Popup className="rounded-md bg-popover px-2 py-1 text-xs text-popover-foreground shadow-pop">
+                    {entry.label}
+                    {entry.description !== undefined && <span className="text-muted-foreground"> {entry.description}</span>}
+                </Tooltip.Popup>
+            </Tooltip.Positioner>
+        </Tooltip.Portal>
+    )
+}
+
+/** What stands at an icon's corner: the entry's count, or else its unread dot, placed by `dot`. */
+function Corner({ entry, unread, dot = 'top-1 right-1' }: { entry: RailEntry; unread: string; dot?: string }) {
+    return entry.count !== undefined && entry.count > 0 ? (
+        <Count value={entry.count} size="sm" shape="round" className="absolute -top-1 -right-1.5 ring-2 ring-sidebar" />
+    ) : (
+        entry.unread === true && <UnreadDot label={unread} className={cn('absolute', dot)} />
+    )
+}
+
+/** A collapsed rail's icon entry: a square tile, washed while its place is shown. */
+function iconClass(active: boolean, extra?: string): string {
+    return cn(
+        'relative mx-auto flex h-(--density-row) w-9 items-center justify-center rounded-md',
+        active
+            ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+            : cn('text-muted-foreground hover:bg-hover hover:text-foreground', extra),
     )
 }
 
@@ -749,8 +764,6 @@ function Flyout({
 
 /** A parent in the collapsed rail: its icon opens its entries in a flyout, and its tooltip names it. */
 function RailFlyout({ entry, unread, defaultOpen }: { entry: RailEntry; unread: string; defaultOpen: boolean }) {
-    const active = entry.active === true || holdsActive(entry)
-    const counted = entry.count !== undefined && entry.count > 0
     return (
         <Flyout
             entry={entry}
@@ -765,34 +778,14 @@ function RailFlyout({ entry, unread, defaultOpen }: { entry: RailEntry; unread: 
                                 {...props}
                                 type="button"
                                 aria-label={entry.label}
-                                className={cn(
-                                    'relative mx-auto flex h-(--density-row) w-9 items-center justify-center rounded-md',
-                                    active
-                                        ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                                        : 'text-muted-foreground hover:bg-hover hover:text-foreground data-popup-open:bg-hover',
-                                )}
+                                className={iconClass(lit(entry), 'data-popup-open:bg-hover')}
                             />
                         }
                     >
                         <EntryMark entry={entry} initial />
-                        {counted ? (
-                            <Count
-                                value={entry.count ?? 0}
-                                size="sm"
-                                shape="round"
-                                className="absolute -top-1 -right-1.5 ring-2 ring-sidebar"
-                            />
-                        ) : (
-                            entry.unread === true && <UnreadDot label={unread} className="absolute top-1 right-1" />
-                        )}
+                        <Corner entry={entry} unread={unread} />
                     </Tooltip.Trigger>
-                    <Tooltip.Portal>
-                        <Tooltip.Positioner side="right" sideOffset={8}>
-                            <Tooltip.Popup className="rounded-md bg-popover px-2 py-1 text-xs text-popover-foreground shadow-pop">
-                                <TipText entry={entry} />
-                            </Tooltip.Popup>
-                        </Tooltip.Positioner>
-                    </Tooltip.Portal>
+                    <Tip entry={entry} />
                 </Tooltip.Root>
             )}
         />
@@ -860,12 +853,8 @@ function Strip({
                                     defaultOpen={flyout === entry.id}
                                     sideOffset={8}
                                     trigger={(props) => (
-                                        <button
-                                            {...props}
-                                            type="button"
-                                            className={stripClass(entry.active === true || holdsActive(entry))}
-                                        >
-                                            <StripFace entry={entry} active={entry.active === true || holdsActive(entry)} unread={unread} />
+                                        <button {...props} type="button" className={stripClass(lit(entry))}>
+                                            <StripFace entry={entry} active={lit(entry)} unread={unread} />
                                         </button>
                                     )}
                                 />
@@ -890,7 +879,6 @@ function stripClass(active: boolean): string {
 
 /** A strip entry's face: its icon on a tile, a count or dot at the tile's corner, and its short label under it. */
 function StripFace({ entry, active, unread }: { entry: RailEntry; active: boolean; unread: string }) {
-    const counted = entry.count !== undefined && entry.count > 0
     return (
         <>
             <span
@@ -902,11 +890,7 @@ function StripFace({ entry, active, unread }: { entry: RailEntry; active: boolea
                 )}
             >
                 {entry.dot === undefined ? <EntryMark entry={entry} initial className="size-5" /> : <Dot color={entry.dot} />}
-                {counted ? (
-                    <Count value={entry.count ?? 0} size="sm" shape="round" className="absolute -top-1 -right-1.5 ring-2 ring-sidebar" />
-                ) : (
-                    entry.unread === true && <UnreadDot label={unread} className="absolute top-0.5 right-0.5" />
-                )}
+                <Corner entry={entry} unread={unread} dot="top-0.5 right-0.5" />
             </span>
             <span className="max-w-full truncate px-0.5 text-2xs">{entry.label}</span>
         </>
@@ -919,8 +903,6 @@ function StripLink({ entry, unread }: { entry: RailEntry; unread: string }) {
 }
 
 function RailLink({ entry, collapsed, unread }: { entry: RailEntry; collapsed: boolean; unread: string }) {
-    const counted = entry.count !== undefined && entry.count > 0
-    const dotted = !counted && entry.unread === true
     if (collapsed) {
         return (
             <Tooltip.Root>
@@ -932,33 +914,14 @@ function RailLink({ entry, collapsed, unread }: { entry: RailEntry; collapsed: b
                             href={entry.href}
                             aria-label={entry.label}
                             aria-current={entry.active ? 'page' : undefined}
-                            className={cn(
-                                'relative mx-auto flex h-(--density-row) w-9 items-center justify-center rounded-md',
-                                entry.active
-                                    ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                                    : 'text-muted-foreground hover:bg-hover hover:text-foreground',
-                            )}
+                            className={iconClass(entry.active === true)}
                         >
                             <EntryMark entry={entry} initial />
-                            {counted && (
-                                <Count
-                                    value={entry.count ?? 0}
-                                    size="sm"
-                                    shape="round"
-                                    className="absolute -top-1 -right-1.5 ring-2 ring-sidebar"
-                                />
-                            )}
-                            {dotted && <UnreadDot label={unread} className="absolute top-1 right-1" />}
+                            <Corner entry={entry} unread={unread} />
                         </Link>
                     )}
                 />
-                <Tooltip.Portal>
-                    <Tooltip.Positioner side="right" sideOffset={8}>
-                        <Tooltip.Popup className="rounded-md bg-popover px-2 py-1 text-xs text-popover-foreground shadow-pop">
-                            <TipText entry={entry} />
-                        </Tooltip.Popup>
-                    </Tooltip.Positioner>
-                </Tooltip.Portal>
+                <Tip entry={entry} />
             </Tooltip.Root>
         )
     }

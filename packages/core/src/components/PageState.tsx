@@ -78,9 +78,18 @@ export interface PageStateProps {
      * secondary data the page stands without, in the warning tone.
      */
     tone?: PageStateTone
+    /**
+     * The element a failure's heading is: `h1` where the state stands in for a whole page, such as a
+     * detail page whose record failed to load, so the page still has its heading; `h2` for a part
+     * under the page's own; a plain line (`p`) otherwise.
+     */
+    headingLevel?: PageStateHeadingLevel
     words?: Partial<PageStateWords>
     children: ReactNode
 }
+
+/** The element a failed read's heading is drawn as. */
+export type PageStateHeadingLevel = 'h1' | 'h2' | 'p'
 
 /**
  * The states a read lands in, kept distinct all the way to the screen: loading, failed, empty, and
@@ -90,6 +99,8 @@ export interface PageStateProps {
  * `warning` draws a failed read of secondary data, such as a side list beside the page's own
  * content, as a warning rather than the page's failure, announced politely rather than as an alert,
  * and a refusal headed as a part of the page that could not be read (`partRefused`).
+ * `headingLevel="h1"` makes a failure's heading the page's own where the state stands in for the
+ * whole page, so `Shell`'s `routeKey` has a heading to move the focus to.
  */
 export function PageState({
     loading,
@@ -100,6 +111,7 @@ export function PageState({
     emptyRender,
     onRetry,
     tone = 'critical',
+    headingLevel: Heading = 'p',
     words: given,
     children,
 }: PageStateProps) {
@@ -123,7 +135,7 @@ export function PageState({
                 )}
                 <div className="flex min-w-0 flex-col gap-3">
                     <div role={warning ? 'status' : 'alert'} className="flex min-w-0 flex-col gap-1">
-                        <p className="font-medium">{pageStateHeading(status, words, tone)}</p>
+                        <Heading className="font-medium">{pageStateHeading(status, words, tone)}</Heading>
                         <p className="text-xs break-words text-muted-foreground">
                             {typeof error === 'string' ? <ProseText text={error} /> : error}
                         </p>

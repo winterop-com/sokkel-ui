@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 
-import { SEARCH_IDLE, searchFor, type SearchSource, type SearchState } from '../lib/search'
+import { SEARCH_IDLE, searchFor, searchKept, type SearchSource, type SearchState } from '../lib/search'
 
 /** Where a search stands, and the way to ask its query again after a failure. */
 export type SearchAnswer = SearchState & { retry: () => void }
@@ -9,7 +9,8 @@ export type SearchAnswer = SearchState & { retry: () => void }
  * Runs an app's `search` for a query and keeps where it stands. The first query is asked at once
  * and each change after a pause in typing; an answer given at once lands without a wait. Older
  * answers are dropped and their signal aborted. Results belong to the query they answer: while
- * the next query waits, the last results stay only as stale (`loading`), and a failure keeps none.
+ * the next query waits, the last results stay only as stale (`loading`), and a failure keeps none;
+ * emptying the query or closing the list (`enabled` false) drops them (`searchKept`).
  * `retry` asks the query again at once. Below `minQuery` characters, or while `enabled` is false,
  * nothing is asked.
  */
@@ -28,6 +29,8 @@ export function useSearch(
 
     const trimmed = query.trim()
     const active = enabled && search !== undefined && trimmed.length >= minQuery
+    const kept = searchKept(held, active)
+    if (kept !== held) setHeld(kept)
 
     useEffect(() => {
         if (!active) {

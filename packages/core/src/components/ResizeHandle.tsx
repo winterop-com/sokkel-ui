@@ -68,8 +68,8 @@ export function ResizeHandle({
         if (onReset !== undefined) onReset()
         else if (reset !== undefined) onSize(clamp(reset))
     }
-    const forward = axis === 'x' ? (grows === 1 ? 'ArrowRight' : 'ArrowLeft') : grows === 1 ? 'ArrowDown' : 'ArrowUp'
-    const back = axis === 'x' ? (grows === 1 ? 'ArrowLeft' : 'ArrowRight') : grows === 1 ? 'ArrowUp' : 'ArrowDown'
+    const keys = axis === 'x' ? ['ArrowRight', 'ArrowLeft'] : ['ArrowDown', 'ArrowUp']
+    const [forward, back] = grows === 1 ? keys : keys.reverse()
     return (
         <div
             role="separator"
