@@ -459,7 +459,15 @@ twice in autumn runs once, at its first pass. `nextRuns(expression, from, count,
 `zonedTime` in `lib/cron` are the same reading for an app's own use. An app whose server reads the
 runs back passes them as `runs`, in place of the field's own; `runsPending` shows the field's own
 reading muted beside "Checking" while it asks, and `invalid` is the server's refusal in its words,
-shown as the field's issue with no runs listed.
+shown as the field's issue with no runs listed. Once an app passes `runs` or `invalid`, the server's
+verdict is the field's: an expression the server takes in a syntax the field's own five-field reading
+does not know (`L`, `#`, `W`, `?`) is valid and shows the server's runs, the field's reading only
+putting it in words, and leaving the words line empty when it cannot. The zone is named once, beside
+the label. An empty field says nothing yet: no issue, no words, dashed runs, with `placeholder` as an
+example in the input. `readOnly` draws a saved schedule, the expression in the code face with its
+reading and runs, and no input. `describeCron(expression, words)` takes `CronWords`, a phrase at a
+time with English defaults (`CRON_WORDS`), so an app reads schedules back in its own language through
+`describe`.
 
 `SecretField` takes a secret a form sets and never reads back, such as a connection's token. With
 one already set (`sealed`) it says so, masked, and when (`setAt`), and stays as it is unless Replace

@@ -68,6 +68,9 @@ export const PickOne: StoryObj = { name: 'Pick one', render: () => <small.PickOn
 /** A cron expression with presets, read back in words, and the next five runs. */
 export const Schedule: StoryObj = { name: 'Schedule', render: () => <small.Schedule /> }
 
+/** A new schedule, its field empty with an example in it: no issue, no reading and no runs yet. */
+export const NewSchedule: StoryObj = { name: 'New schedule', render: () => <small.NewSchedule /> }
+
 /** nightly-export at 02:00 Europe/Oslo over the March change of clocks: the skipped 02:00 runs at 03:00, when the clock jumps. */
 export const ScheduleZone: StoryObj = { name: 'Time zone', render: () => <small.ScheduleZone /> }
 
@@ -76,6 +79,12 @@ export const ScheduleChecking: StoryObj = { name: 'Schedule checking', render: (
 
 /** The app's scheduler refused the expression: its words are the field's issue, and no runs are listed. */
 export const ScheduleRefused: StoryObj = { name: 'Schedule refused', render: () => <small.ScheduleRefused /> }
+
+/** `0 2 L * ?`, the last day of each month, read by the app's scheduler and not by the field: the scheduler's runs, no issue, no words. */
+export const ScheduleServerSyntax: StoryObj = { name: 'Server syntax', render: () => <small.ScheduleServerSyntax /> }
+
+/** A saved schedule shown with no input: the expression, its reading and its next runs. */
+export const ScheduleReadOnly: StoryObj = { name: 'Schedule read only', render: () => <small.ScheduleReadOnly /> }
 
 /** The same change made to many jobs, every field starting at Leave as is. */
 export const BulkEdit: StoryObj = { name: 'Bulk edit', render: () => <forms.BulkEdit /> }
