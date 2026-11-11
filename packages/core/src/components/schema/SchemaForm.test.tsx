@@ -104,8 +104,8 @@ describe('how fields are marked', () => {
         properties: { job: { type: 'string', title: 'Job' }, retries: { type: 'integer', title: 'Retries', default: 3 } },
     }
 
-    function Look({ requiredMark, fallbacks }: { requiredMark?: 'star' | 'word'; fallbacks?: boolean }) {
-        const form = useSchemaForm(schema, { initial: {} })
+    function Look({ requiredMark, fallbacks, initial = {} }: { requiredMark?: 'star' | 'word'; fallbacks?: boolean; initial?: unknown }) {
+        const form = useSchemaForm(schema, { initial })
         return <SchemaForm form={form} marks={false} requiredMark={requiredMark} fallbacks={fallbacks} />
     }
 
@@ -116,9 +116,15 @@ describe('how fields are marked', () => {
         expect(html).toMatch(/<input[^>]*aria-required="true"/)
     })
 
-    it("says a field's default under it with fallbacks, and not without", () => {
-        expect(renderToStaticMarkup(<Look fallbacks />)).toContain('Default is 3')
-        expect(renderToStaticMarkup(<Look />)).not.toContain('Default is 3')
+    it("says a set field's default under it with fallbacks, and not without", () => {
+        expect(renderToStaticMarkup(<Look fallbacks initial={{ retries: 5 }} />)).toContain('Default is 3')
+        expect(renderToStaticMarkup(<Look initial={{ retries: 5 }} />)).not.toContain('Default is 3')
+    })
+
+    it('says the default once while the field is unset: in its control, not under it', () => {
+        const html = renderToStaticMarkup(<Look fallbacks />)
+        expect(html).toMatch(/<input[^>]*placeholder="3 \(default\)"/)
+        expect(html).not.toContain('Default is 3')
     })
 
     it('says nothing under a field whose default is null', () => {

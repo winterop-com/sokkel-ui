@@ -34,9 +34,12 @@ export function SwitchField({ id, label, explain, note, reason, checked, default
             className="flex min-h-(--density-control) cursor-pointer items-center justify-between gap-4 text-sm has-disabled:cursor-not-allowed"
         >
             <span className="flex min-w-0 flex-col">
-                <span className="flex items-center gap-1.5">
-                    <span id={`${id}-label`}>{label}</span>
-                    {note !== undefined && <span className="text-xs text-faint">{note}</span>}
+                {/* A long label breaks within its room, and the note and help mark wrap under it, never running under the switch. */}
+                <span className="flex min-w-0 flex-wrap items-center gap-x-1.5">
+                    <span id={`${id}-label`} className="min-w-0 wrap-anywhere">
+                        {label}
+                    </span>
+                    {note !== undefined && <span className="min-w-0 text-xs wrap-anywhere text-faint">{note}</span>}
                     {explain !== undefined && !held && (
                         <Tooltip.Root>
                             <Tooltip.Trigger
