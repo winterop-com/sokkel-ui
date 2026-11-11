@@ -83,19 +83,106 @@ function dayMatches(cron: Cron, date: Date): boolean {
     return day || weekday
 }
 
-/** The next times the expression fires after `from`, in UTC; fewer when none come within eight years. */
-export function nextRuns(expression: string | Cron, from: Date, count = 5): Date[] {
+/** A wall-clock time in a zone: the month counts from 1, the weekday from Sunday as 0. */
+export interface ZonedTime {
+    year: number
+    month: number
+    day: number
+    hour: number
+    minute: number
+    weekday: number
+}
+
+const MINUTE = 60_000
+const DAY = 86_400_000
+const formats = new Map<string, Intl.DateTimeFormat>()
+
+function formatFor(timeZone: string): Intl.DateTimeFormat {
+    let format = formats.get(timeZone)
+    if (format === undefined) {
+        format = new Intl.DateTimeFormat('en-US', {
+            timeZone,
+            hourCycle: 'h23',
+            year: 'numeric',
+            month: 'numeric',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+        })
+        formats.set(timeZone, format)
+    }
+    return format
+}
+
+/** The wall-clock time of an instant in an IANA zone; UTC when no zone is given. */
+export function zonedTime(date: Date, timeZone?: string): ZonedTime {
+    if (timeZone === undefined || timeZone === 'UTC') {
+        return {
+            year: date.getUTCFullYear(),
+            month: date.getUTCMonth() + 1,
+            day: date.getUTCDate(),
+            hour: date.getUTCHours(),
+            minute: date.getUTCMinutes(),
+            weekday: date.getUTCDay(),
+        }
+    }
+    const parts: Record<string, number> = {}
+    for (const part of formatFor(timeZone).formatToParts(date)) if (part.type !== 'literal') parts[part.type] = Number(part.value)
+    const weekday = new Date(Date.UTC(parts.year, parts.month - 1, parts.day)).getUTCDay()
+    return { year: parts.year, month: parts.month, day: parts.day, hour: parts.hour, minute: parts.minute, weekday }
+}
+
+/** How far a zone's wall clock is ahead of UTC at an instant, in milliseconds, to the minute. */
+export function zoneOffset(date: Date, timeZone?: string): number {
+    if (timeZone === undefined || timeZone === 'UTC') return 0
+    const at = zonedTime(date, timeZone)
+    return Date.UTC(at.year, at.month - 1, at.day, at.hour, at.minute) - Math.floor(date.getTime() / MINUTE) * MINUTE
+}
+
+/**
+ * The instant a wall-clock time, written as a UTC timestamp, names in a zone whose offset is
+ * `before` on the day before and `after` on the day after. A time the clock skips is moved to the
+ * instant the clock jumps; a time the clock passes twice is its first pass.
+ */
+function instantOf(wall: number, before: number, after: number, timeZone: string): number {
+    if (before === after) return wall - before
+    const passes = [wall - before, wall - after].filter((at) => at + zoneOffset(new Date(at), timeZone) === wall)
+    if (passes.length > 0) return Math.min(...passes)
+    let low = Math.min(wall - before, wall - after)
+    let high = Math.max(wall - before, wall - after)
+    while (high - low > MINUTE) {
+        const middle = low + Math.floor((high - low) / 2 / MINUTE) * MINUTE
+        if (zoneOffset(new Date(middle), timeZone) === after) high = middle
+        else low = middle
+    }
+    return high
+}
+
+/**
+ * The next times the expression fires after `from`, fewer when none come within eight years. The
+ * expression is read as wall-clock time in `timeZone`, an IANA name such as Europe/Oslo, and in UTC
+ * without one. Across a change of clocks it does what Vixie cron and cronie do: a time the clock
+ * skips in spring runs once, at the instant the clock jumps (02:30 runs at 03:00), and a time the
+ * clock passes twice in autumn runs once, at its first pass.
+ */
+export function nextRuns(expression: string | Cron, from: Date, count = 5, timeZone?: string): Date[] {
     const cron = typeof expression === 'string' ? parseCron(expression) : expression
     if (cron === null) return []
+    const zone = timeZone === 'UTC' ? undefined : timeZone
     const runs: Date[] = []
-    const start = Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate())
+    const local = zonedTime(from, zone)
+    const start = Date.UTC(local.year, local.month - 1, local.day)
     for (let offset = 0; offset < 366 * 8 && runs.length < count; offset++) {
-        const day = new Date(start + offset * 86_400_000)
-        if (!dayMatches(cron, day)) continue
+        const day = start + offset * DAY
+        if (!dayMatches(cron, new Date(day))) continue
+        const before = zoneOffset(new Date(day - DAY / 2), zone)
+        const after = zoneOffset(new Date(day + DAY * 1.5), zone)
         for (const hour of cron.hours) {
             for (const minute of cron.minutes) {
-                const at = new Date(day.getTime() + hour * 3_600_000 + minute * 60_000)
-                if (at.getTime() > from.getTime()) runs.push(at)
+                const wall = day + hour * 3_600_000 + minute * MINUTE
+                const at = zone === undefined ? wall : instantOf(wall, before, after, zone)
+                const last = runs.at(-1)
+                if (at > from.getTime() && (last === undefined || at > last.getTime())) runs.push(new Date(at))
                 if (runs.length === count) return runs
             }
         }
