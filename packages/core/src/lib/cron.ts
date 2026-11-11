@@ -1,3 +1,9 @@
+/** A day of the month named by a rule: the last (`L`), the last weekday (`LW`), the weekday nearest a day (`15W`). */
+export type CronDayRule = { kind: 'last' } | { kind: 'lastWeekday' } | { kind: 'nearestWeekday'; day: number }
+
+/** A day of the week named by its place in the month: the second Friday (`5#2`), the last Friday (`5L`). */
+export type CronWeekdayRule = { kind: 'nth'; weekday: number; nth: number } | { kind: 'last'; weekday: number }
+
 /** A five-field cron expression, each field read into the values it allows. */
 export interface Cron {
     minutes: readonly number[]
@@ -5,7 +11,11 @@ export interface Cron {
     days: readonly number[]
     months: readonly number[]
     weekdays: readonly number[]
-    /** Whether the day of the month and the weekday were each written as `*`. */
+    /** The days of the month named by a rule, beside the numbered `days`. */
+    dayRules?: readonly CronDayRule[]
+    /** The days of the week named by their place in the month, beside the plain `weekdays`. */
+    weekdayRules?: readonly CronWeekdayRule[]
+    /** Whether the day of the month and the weekday were each written as `*` (or `?`). */
     anyDay: boolean
     anyWeekday: boolean
 }
@@ -55,28 +65,100 @@ function field(text: string, at: (typeof FIELDS)[number]): number[] | null {
     return [...out].sort((a, b) => a - b)
 }
 
-/** Reads a five-field cron expression, or null when it is not one. Names such as `mon` and `jan` are allowed. */
+/** A day-of-the-month part read as a rule; undefined when it is a plain one, null when it is a rule out of range. */
+function dayRule(part: string): CronDayRule | null | undefined {
+    const text = part.toUpperCase()
+    if (text === 'L') return { kind: 'last' }
+    if (text === 'LW') return { kind: 'lastWeekday' }
+    const near = /^(\d+)W$/.exec(text)
+    if (near === null) return undefined
+    const day = Number(near[1])
+    return day >= 1 && day <= 31 ? { kind: 'nearestWeekday', day } : null
+}
+
+/** A day-of-the-week part read as a rule (`5#2`, `friL`); undefined when it is a plain one, null when out of range. */
+function weekdayRule(part: string): CronWeekdayRule | null | undefined {
+    const ruled = /^([a-z]+|\d)(?:#(\d)|L)$/i.exec(part)
+    if (ruled === null) return undefined
+    const weekday = value(ruled[1], FIELDS[4])
+    if (weekday === null) return null
+    if (ruled[2] === undefined) return { kind: 'last', weekday: weekday % 7 }
+    const nth = Number(ruled[2])
+    return nth >= 1 && nth <= 5 ? { kind: 'nth', weekday: weekday % 7, nth } : null
+}
+
+/** Splits the rules out of a field's parts, leaving the plain parts joined; null when a rule is out of range. */
+function rules<T>(text: string, read: (part: string) => T | null | undefined): { plain: string; rules: T[] } | null {
+    const plain: string[] = []
+    const found: T[] = []
+    for (const part of text.split(',')) {
+        const rule = read(part)
+        if (rule === null) return null
+        if (rule === undefined) plain.push(part)
+        else found.push(rule)
+    }
+    return { plain: plain.join(','), rules: found }
+}
+
+/**
+ * Reads a five-field cron expression, or null when it is not one. Names such as `mon` and `jan` are
+ * allowed, and the day fields take `?` for any, `L`, `LW` and `15W` for the day of the month, and
+ * `5#2` and `5L` for the day of the week.
+ */
 export function parseCron(expression: string): Cron | null {
-    const parts = expression.trim().split(/\s+/)
+    const parts = expression
+        .trim()
+        .split(/\s+/)
+        .map((part, index) => ((index === 2 || index === 4) && part === '?' ? '*' : part))
     if (parts.length !== 5) return null
-    const read = parts.map((part, index) => field(part, FIELDS[index]))
+    const days = rules(parts[2], dayRule)
+    const weekdays = rules(parts[4], weekdayRule)
+    if (days === null || weekdays === null) return null
+    const texts = [parts[0], parts[1], days.plain, parts[3], weekdays.plain]
+    // A day field of rules alone has no plain values.
+    const read = texts.map((part, index) => (part === '' && (index === 2 || index === 4) ? [] : field(part, FIELDS[index])))
     if (read.some((one) => one === null)) return null
-    const [minutes, hours, days, months, weekdays] = read as number[][]
+    const [minutes, hours, dayValues, months, weekdayValues] = read as number[][]
     return {
         minutes,
         hours,
-        days,
+        days: dayValues,
         months,
-        weekdays: [...new Set(weekdays.map((day) => day % 7))].sort((a, b) => a - b),
+        weekdays: [...new Set(weekdayValues.map((day) => day % 7))].sort((a, b) => a - b),
+        dayRules: days.rules,
+        weekdayRules: weekdays.rules,
         anyDay: parts[2] === '*',
         anyWeekday: parts[4] === '*',
     }
 }
 
+/** Whether a day of the month, `date` of `length` days falling on `weekday`, is one a rule names. */
+function dayRuleMatches(rule: CronDayRule, date: number, weekday: number, length: number): boolean {
+    const weekdayOf = (day: number) => (((weekday + day - date) % 7) + 7) % 7
+    if (rule.kind === 'last') return date === length
+    if (rule.kind === 'lastWeekday') {
+        const last = weekdayOf(length)
+        return date === length - (last === 6 ? 1 : last === 0 ? 2 : 0)
+    }
+    if (rule.day > length) return false
+    // The weekday nearest the day, never leaving the month: Saturday the 1st runs Monday the 3rd.
+    const on = weekdayOf(rule.day)
+    const target =
+        on === 6 ? (rule.day === 1 ? 3 : rule.day - 1) : on === 0 ? (rule.day === length ? rule.day - 2 : rule.day + 1) : rule.day
+    return date === target
+}
+
 function dayMatches(cron: Cron, date: Date): boolean {
     if (!cron.months.includes(date.getUTCMonth() + 1)) return false
-    const day = cron.days.includes(date.getUTCDate())
-    const weekday = cron.weekdays.includes(date.getUTCDay())
+    const at = date.getUTCDate()
+    const on = date.getUTCDay()
+    const length = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0)).getUTCDate()
+    const day = cron.days.includes(at) || (cron.dayRules ?? []).some((rule) => dayRuleMatches(rule, at, on, length))
+    const weekday =
+        cron.weekdays.includes(on) ||
+        (cron.weekdayRules ?? []).some(
+            (rule) => rule.weekday === on && (rule.kind === 'last' ? at + 7 > length : Math.ceil(at / 7) === rule.nth),
+        )
     if (cron.anyDay && cron.anyWeekday) return true
     if (cron.anyDay) return weekday
     if (cron.anyWeekday) return day
@@ -234,6 +316,16 @@ export interface CronWords {
     onDays: (days: string) => string
     weekdays: string
     weekends: string
+    /** `L`: "on the last day of the month". */
+    lastDay: string
+    /** `LW`: "on the last weekday of the month". */
+    lastWeekday: string
+    /** `15W`, given the day as an ordinal: "on the weekday nearest the 15th". */
+    nearestWeekday: (day: string) => string
+    /** `5#2`, given the place as an ordinal and the day's name: "on the 2nd Friday of the month". */
+    nthOf: (nth: string, day: string) => string
+    /** `5L`, given the day's name: "on the last Friday of the month". */
+    lastOf: (day: string) => string
     /** A run of days of the week: "on Monday to Thursday". */
     weekdayRange: (from: string, to: string) => string
     /** Days of the week by name, joined. */
@@ -265,6 +357,11 @@ export const CRON_WORDS: CronWords = {
     onDays: (days) => `on the ${days}`,
     weekdays: 'on weekdays',
     weekends: 'on weekends',
+    lastDay: 'on the last day of the month',
+    lastWeekday: 'on the last weekday of the month',
+    nearestWeekday: (day) => `on the weekday nearest the ${day}`,
+    nthOf: (nth, day) => `on the ${nth} ${day} of the month`,
+    lastOf: (day) => `on the last ${day} of the month`,
     weekdayRange: (from, to) => `on ${from} to ${to}`,
     onWeekdays: (days) => `on ${days}`,
     either: (days, weekdays) => `${days} or ${weekdays}`,
@@ -308,8 +405,8 @@ function weekdays(days: readonly number[], words: CronWords): string {
 }
 
 /**
- * The expression read back in words, English by default: "At 02:00 on weekdays". Null when it is
- * not a five-field cron expression. `words` puts it in another language, a phrase at a time.
+ * The expression read back in words, English by default: "At 02:00 on weekdays", "At 09:00 on the
+ * 2nd Friday of the month". Null when it is not a five-field cron expression. `words` puts it in another language, a phrase at a time.
  */
 export function describeCron(expression: string, words?: Partial<CronWords>): string | null {
     const cron = parseCron(expression)
@@ -347,8 +444,26 @@ export function describeCron(expression: string, words?: Partial<CronWords>): st
                 : said.minutesOfHours(joined(cron.minutes.map(String), said), joined(cron.hours.map(String), said))
     }
 
-    const days = cron.anyDay ? '' : said.onDays(joined(cron.days.map(said.ordinal), said))
-    const week = cron.anyWeekday ? '' : weekdays(cron.weekdays, said)
+    const dayParts = [
+        ...(cron.days.length > 0 ? [said.onDays(joined(cron.days.map(said.ordinal), said))] : []),
+        ...(cron.dayRules ?? []).map((rule) =>
+            rule.kind === 'last'
+                ? said.lastDay
+                : rule.kind === 'lastWeekday'
+                  ? said.lastWeekday
+                  : said.nearestWeekday(said.ordinal(rule.day)),
+        ),
+    ]
+    const weekParts = [
+        ...(cron.weekdays.length > 0 ? [weekdays(cron.weekdays, said)] : []),
+        ...(cron.weekdayRules ?? []).map((rule) =>
+            rule.kind === 'last'
+                ? said.lastOf(said.dayNames[rule.weekday])
+                : said.nthOf(said.ordinal(rule.nth), said.dayNames[rule.weekday]),
+        ),
+    ]
+    const days = cron.anyDay ? '' : joined(dayParts, said)
+    const week = cron.anyWeekday ? '' : joined(weekParts, said)
     const day = days !== '' && week !== '' ? said.either(days, week) : days + week
     const month =
         cron.months.length === 12

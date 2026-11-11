@@ -281,11 +281,6 @@ to `plan.md` when it ships.
   register itself when it loads may win back the 2.3 kB `ChartFrame`'s data view split into the
   dashboard's start chunks.
 
-- **`describeCron` and `CronField` read `L`, `#` and `W`.** The last day of the month (`L`), the
-  nth weekday (`5#2`) and the nearest weekday (`15W`) parse to nothing today, so they get no words
-  and no runs of the field's own; an app passes its server's runs and reading through `runs` and
-  `describe`. Reading them in the parser gives both.
-
 - **Smaller start bundles, what is left.** Every library only some parts need is an optional peer,
   and the heavy ones, Base UI's menu among them, load on first use. Left:
     - On a dashboard, `chartLegend` still brings every chart kind with the page. Split each kind's

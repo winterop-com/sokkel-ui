@@ -74,7 +74,7 @@ export interface CronFieldProps {
     /**
      * The app's server refused the expression: its words, shown as the field's issue. Once the app
      * passes `runs` or `invalid`, its verdict is the field's: an expression its server takes, in a
-     * syntax the field's own five-field reading does not know (`L`, `#`, `W`, `?`), is valid. A
+     * syntax the field's own reading does not know (an offset from the month's end, `L-3`), is valid. A
      * refused expression is not read back in words.
      */
     invalid?: string
@@ -86,7 +86,7 @@ export interface CronFieldProps {
     /**
      * Reads an expression back in words, its hours on the wall clock of the zone; `describeCron` in
      * English by default, which takes words for another language. Null leaves the line empty. For
-     * an expression `describeCron` cannot read (`L`, `#`, `W`), return the server's reading:
+     * an expression `describeCron` cannot read (`L-3`), return the server's reading:
      * `(expression) => describeCron(expression) ?? serverReading`.
      */
     describe?: (expression: string, timeZone: string) => string | null

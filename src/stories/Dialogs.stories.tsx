@@ -80,7 +80,10 @@ export const ScheduleChecking: StoryObj = { name: 'Schedule checking', render: (
 /** The app's scheduler refused the expression: its words are the field's issue, and no runs are listed. */
 export const ScheduleRefused: StoryObj = { name: 'Schedule refused', render: () => <small.ScheduleRefused /> }
 
-/** `0 2 L * ?`, the last day of each month, read by the app's scheduler and not by the field: the scheduler's runs, no issue, no words. */
+/** `0 2 L * ?`, the last day of each month: the field reads it in words and counts its runs itself. */
+export const ScheduleMonthRules: StoryObj = { name: 'Month rules', render: () => <small.ScheduleMonthRules /> }
+
+/** `0 2 L-3 * ?`, three days before each month's end, read by the app's scheduler and not by the field: the scheduler's runs, no issue, no words. */
 export const ScheduleServerSyntax: StoryObj = { name: 'Server syntax', render: () => <small.ScheduleServerSyntax /> }
 
 /** A saved schedule shown with no input: the expression, its reading and its next runs. */
