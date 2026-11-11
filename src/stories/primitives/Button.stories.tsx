@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { Loader2, MoreHorizontal, Play, Plus, RotateCcw, Trash2 } from 'lucide-react'
+import { MoreHorizontal, Play, Plus, RotateCcw, Save, Trash2 } from 'lucide-react'
 
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
@@ -94,10 +94,40 @@ export const States: StoryObj = {
                     Apply
                 </Button>
             </Specimen>
-            <Specimen label="loading">
-                <Button disabled>
-                    <Loader2 data-icon="inline-start" className="animate-spin" />
+            <Specimen label="busy">
+                <Button busy>
+                    <Play data-icon="inline-start" />
                     Starting run
+                </Button>
+            </Specimen>
+        </Row>
+    ),
+}
+
+/**
+ * Buttons whose press is under way: the spinner takes a leading icon's place, or an icon-only
+ * button's, and comes before a label with none; the label stays, and the button keeps its focus
+ * while it ignores presses.
+ */
+export const Busy: StoryObj = {
+    render: () => (
+        <Row gap="md" align="end" wrap>
+            {SIZES.map((size) => (
+                <Specimen key={size} label={size}>
+                    <Button size={size} busy>
+                        <Save data-icon="inline-start" />
+                        Save
+                    </Button>
+                </Specimen>
+            ))}
+            <Specimen label="no icon">
+                <Button variant="outline" busy>
+                    Retry failed
+                </Button>
+            </Specimen>
+            <Specimen label="icon-sm">
+                <Button variant="outline" size="icon-sm" aria-label="Delete job" busy>
+                    <Trash2 />
                 </Button>
             </Specimen>
         </Row>
