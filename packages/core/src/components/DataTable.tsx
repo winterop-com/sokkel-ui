@@ -32,6 +32,7 @@ import {
 
 import { cn } from '../lib/cn'
 import { ResizeHandle } from './ResizeHandle'
+import { ListingBar } from './ListingBar'
 import { SelectionBar } from './SelectionBar'
 import { Button } from './ui/button'
 import { CHECKBOX, CHECKBOX_INDICATOR, CheckboxMarks } from './ui/checkbox-look'
@@ -2358,12 +2359,11 @@ export function DataTable<T>({
                 style={{ '--stack-label': `${String(labels.width)}px` } as CSSProperties}
             >
                 {barShown && (
-                    // With a search, the search and the count share the first line and the tools take a line of their own
-                    // under it, wrapping from the left edge; without one, the tools sit before the count, and under it on a
-                    // narrow table.
-                    <div className="@container/bar shrink-0 border-b border-border px-(--density-panel-pad) text-sm">
-                        <div className="flex min-h-(--density-panel-head) min-w-0 flex-wrap items-center gap-2 gap-y-1.5 py-2">
-                            {selection.size > 0 ? (
+                    <ListingBar
+                        search={search}
+                        toolbar={toolbar}
+                        selection={
+                            selection.size > 0 ? (
                                 <SelectionBar
                                     count={selection.size}
                                     onClear={clear}
@@ -2389,32 +2389,18 @@ export function DataTable<T>({
                                 >
                                     {bulkActions?.(selection, clear)}
                                 </SelectionBar>
-                            ) : (
-                                <>
-                                    {search !== undefined && <div className="w-64 min-w-0 shrink @max-md/bar:w-full">{search}</div>}
-                                    {/* The tools wrap onto more lines when the bar is too narrow for them, so none is hidden. */}
-                                    {toolbar !== undefined && (
-                                        <div
-                                            className={cn(
-                                                'flex min-w-0 flex-wrap items-center gap-2',
-                                                search === undefined
-                                                    ? 'flex-1 @max-md/bar:order-last @max-md/bar:basis-full'
-                                                    : 'order-last basis-full',
-                                            )}
-                                        >
-                                            {toolbar}
-                                        </div>
-                                    )}
-                                </>
-                            )}
-                            <div className="ml-auto flex shrink-0 items-center gap-2">
-                                {selection.size === 0 && (
-                                    <span className="shrink-0 font-mono text-xs text-muted-foreground tabular-nums">
-                                        {hasMore && total === undefined
-                                            ? words.loaded(allCount(rows, treeKids))
-                                            : words.rows(total ?? allCount(rows, treeKids))}
-                                    </span>
-                                )}
+                            ) : undefined
+                        }
+                        // An empty table says so in its own words, so the bar adds no count of nothing.
+                        count={
+                            selection.size > 0 || (drawn.length === 0 && !loading)
+                                ? undefined
+                                : hasMore && total === undefined
+                                  ? words.loaded(allCount(rows, treeKids))
+                                  : words.rows(total ?? allCount(rows, treeKids))
+                        }
+                        end={
+                            <>
                                 {sortMenu && selection.size === 0 && (
                                     <DropdownMenu>
                                         <DropdownMenuTrigger render={<Button variant="ghost" size="sm" />}>
@@ -2487,9 +2473,9 @@ export function DataTable<T>({
                                         </PopoverContent>
                                     </Popover>
                                 )}
-                            </div>
-                        </div>
-                    </div>
+                            </>
+                        }
+                    />
                 )}
                 <div
                     ref={gridBox}

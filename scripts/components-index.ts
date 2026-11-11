@@ -295,6 +295,7 @@ const CORE_AREAS: Record<string, string> = {
     RelativeTime: 'Data display',
     ApiLink: 'Data display',
     TagChips: 'Data display',
+    ListingBar: 'Data display',
     SelectionBar: 'Data display',
     Stat: 'Data display',
     StatusChip: 'Data display',
