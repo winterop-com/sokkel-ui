@@ -62,10 +62,11 @@ function InputGroupAddon({ className, align = 'inline-start', ...props }: InputG
 const inputGroupButtonVariants = cva('flex items-center gap-2 text-sm shadow-none', {
     variants: {
         size: {
-            xs: "h-6 gap-1 rounded-[calc(var(--radius)-3px)] px-1.5 [&>svg:not([class*='size-'])]:size-3.5",
-            sm: '',
-            'icon-xs': 'size-6 rounded-[calc(var(--radius)-3px)] p-0 has-[>svg]:p-0',
-            'icon-sm': 'size-8 p-0 has-[>svg]:p-0',
+            // Below md a finger-tall group's buttons take its height, so each is as easy to press.
+            xs: "h-6 gap-1 rounded-[calc(var(--radius)-3px)] px-1.5 max-md:h-10 max-md:min-h-0! [&>svg:not([class*='size-'])]:size-3.5",
+            sm: 'max-md:h-10 max-md:min-h-0!',
+            'icon-xs': 'size-6 rounded-[calc(var(--radius)-3px)] p-0 has-[>svg]:p-0 max-md:size-10 max-md:min-h-0!',
+            'icon-sm': 'size-8 p-0 has-[>svg]:p-0 max-md:size-10 max-md:min-h-0!',
         },
     },
     defaultVariants: {

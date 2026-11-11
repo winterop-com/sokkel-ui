@@ -49,13 +49,20 @@ const WORDS: FilterChipWords = {
 /** Past this many values a chip's menu holds a search over them. */
 const SEARCH_PAST = 8
 
-/** The chosen options said for the chip: one or two labels, or the first and how many more. */
+/**
+ * The chosen options said for the chip: one or two labels, or the first and how many more. In the
+ * options' order, or with `picked` in the order of `chosen`.
+ */
 export function saidOptions(
     options: readonly FilterOption[],
     chosen: readonly string[],
     more: (count: number) => string = WORDS.more,
+    picked = false,
 ): string | undefined {
-    const labels = options.filter((option) => chosen.includes(option.value)).map((option) => option.label ?? option.value)
+    const ordered = picked
+        ? chosen.flatMap((value) => options.filter((option) => option.value === value))
+        : options.filter((option) => chosen.includes(option.value))
+    const labels = ordered.map((option) => option.label ?? option.value)
     if (labels.length === 0) return undefined
     if (labels.length <= 2) return labels.join(', ')
     return `${labels[0]} ${more(labels.length - 1)}`
@@ -86,6 +93,11 @@ export interface FilterChipProps {
     /** The chosen values the chip starts from when it holds them itself. */
     defaultSelected?: readonly string[]
     onSelectedChange?: (selected: string[]) => void
+    /**
+     * The order of the chosen values, in `onSelectedChange` and on the chip: the options' order, or
+     * `picked`, the order they were ticked in.
+     */
+    order?: 'options' | 'picked'
     /**
      * What a press opens in a popover under the chip, in place of a menu of options: the app's own
      * editor of the filter. A field in it marked `data-autofocus` takes focus as it opens.
@@ -133,6 +145,7 @@ export function FilterChip({
     selected,
     defaultSelected,
     onSelectedChange,
+    order = 'options',
     editor,
     editorLabel,
     open,
@@ -155,11 +168,14 @@ export function FilterChip({
         onOpenChange?.(next)
     }
     const chosen = selected ?? own
-    const choose = (next: string[]) => {
+    const choose = (given: string[]) => {
+        // In pick order, the ones kept stay where they were and a new one goes last.
+        const next =
+            order === 'picked' ? [...chosen.filter((one) => given.includes(one)), ...given.filter((one) => !chosen.includes(one))] : given
         if (selected === undefined) setOwn(next)
         onSelectedChange?.(next)
     }
-    const shown = value ?? (options === undefined ? undefined : saidOptions(options, chosen, words.more))
+    const shown = value ?? (options === undefined ? undefined : saidOptions(options, chosen, words.more, order === 'picked'))
     const set = shown !== undefined && shown !== null && shown !== ''
     const clear =
         options === undefined
