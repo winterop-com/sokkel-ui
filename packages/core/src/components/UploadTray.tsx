@@ -3,6 +3,7 @@ import { useState, type ReactNode } from 'react'
 
 import { useFileDrop } from '../hooks/use-file-drop'
 import { cn } from '../lib/cn'
+import { checkFiles, type CheckedRefusal, type UploadOptions } from '../lib/uploads'
 import { formatSize } from './FileList'
 
 /** One file on its way up. */
@@ -225,8 +226,11 @@ export interface DropZoneWords {
 
 const DROP_WORDS: DropZoneWords = { title: 'Drop to upload', detail: 'The files go into this folder.' }
 
-export interface DropZoneProps {
-    onFiles: (files: File[]) => void
+export interface DropZoneProps extends Pick<UploadOptions, 'accept' | 'maxSize' | 'maxFiles'> {
+    /** The files dropped, those that break `accept`, `maxSize` or `maxFiles` sorted out by `checkFiles` into `refused`, each with why. */
+    onFiles: (files: File[], refused: CheckedRefusal[]) => void
+    /** How many files are held already, counted against `maxFiles`, as the `FileField` the drop goes to holds them. */
+    held?: number
     /** Shows the drop frame whether or not files are being dragged. */
     open?: boolean
     children: ReactNode
@@ -237,11 +241,16 @@ export interface DropZoneProps {
 /**
  * An area that takes files dragged onto it from the desktop. While files are over it, a dashed
  * frame and a line on where they go cover it; on the drop, `onFiles` gets them. `open` shows the
- * frame without a drag.
+ * frame without a drag. Given `accept`, `maxSize` or `maxFiles`, the drop is sorted as a `FileField`
+ * sorts what it takes, so a drop anywhere on a page can go to a field with what it refused: give
+ * both the same limits, hand the files to the field's `value` and the refused to its `refused`.
  */
-export function DropZone({ onFiles, open, children, className, words: given }: DropZoneProps) {
+export function DropZone({ onFiles, accept, maxSize, maxFiles, held = 0, open, children, className, words: given }: DropZoneProps) {
     const words = { ...DROP_WORDS, ...given }
-    const drop = useFileDrop(onFiles)
+    const drop = useFileDrop((files) => {
+        const checked = checkFiles(files, { accept, maxSize, maxFiles }, held)
+        onFiles(checked.taken, checked.refused)
+    })
     const shown = open ?? drop.over
     return (
         <div className={cn('relative', className)} {...drop.handlers}>

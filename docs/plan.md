@@ -665,7 +665,22 @@ Copy and Remove in its head.
 it (the types in `accept`, `maxSize`, `maxFiles`), each file refused said with why ("too large: 12
 MB, at most 10 MB"), sorted by `checkFiles`, which `useUploads` shares, and the files taken listed
 by `AttachmentList`, an image with its picture and a file the app says is going up (`progress`) with
-its ring. With `maxFiles` of 1 a file chosen takes the place of the one held. `useUnsavedChanges`
+its ring. With `maxFiles` of 1 a file chosen takes the place of the one held. A drop anywhere on a
+page reaches a field through a page-wide `DropZone` given the field's limits (`accept`, `maxSize`,
+`maxFiles`, and `held`, the files the field holds): it sorts the drop through the same
+`checkFiles` and calls `onFiles(files, refused)`, and the app adds the files to the field's `value`
+and hands what was refused to its `refused`, with `onRefusedChange` for the field's own picks and
+dismissals, so the field says each refused file with why as if it were dropped on the field:
+
+```tsx
+const LIMITS = { accept: '.csv,.yaml', maxSize: 10_000_000, maxFiles: 5 }
+
+<DropZone {...LIMITS} held={files.length} onFiles={(taken, out) => { setFiles([...files, ...taken]); setRefused(out) }}>
+    <FileField id="orders" label="Orders" {...LIMITS} value={files} onChange={setFiles} refused={refused} onRefusedChange={setRefused} />
+</DropZone>
+```
+
+`useUnsavedChanges`
 guards a page: while it is `dirty`, closing the tab or reloading asks through the browser's own
 warning, and since the library has no router, the app's blocker awaits `confirmLeave()`, which asks
 through `ConfirmDialog` (the hook's `dialog`, drawn once in the page) and answers whether to leave;

@@ -99,10 +99,16 @@ export function refusal(
     return undefined
 }
 
+/** A file `checkFiles` refused, and why. */
+export interface CheckedRefusal<F = File> {
+    file: F
+    reason: RefusalReason
+}
+
 /** Files sorted into those taken and those refused, each refused one with why. */
 export interface CheckedFiles<F> {
     taken: F[]
-    refused: { file: F; reason: RefusalReason }[]
+    refused: CheckedRefusal<F>[]
 }
 
 /**

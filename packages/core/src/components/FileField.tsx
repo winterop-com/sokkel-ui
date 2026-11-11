@@ -3,14 +3,14 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 
 import { useFileDrop } from '../hooks/use-file-drop'
 import { cn } from '../lib/cn'
-import { acceptList, checkFiles, type RefusalReason } from '../lib/uploads'
+import { acceptList, checkFiles, type CheckedRefusal, type RefusalReason } from '../lib/uploads'
 import { AttachmentList, type AttachmentListWords } from './AttachmentList'
 import { Field, describedBy } from './Field'
 import { formatSize } from './FileList'
 import type { Issue } from './IssueMark'
 import { Button } from './ui/button'
 
-export { checkFiles, type CheckedFiles, type RefusalReason } from '../lib/uploads'
+export { checkFiles, type CheckedFiles, type CheckedRefusal, type RefusalReason } from '../lib/uploads'
 
 /** A file the field did not take, and why. */
 export interface FileRefusal {
@@ -214,7 +214,14 @@ export interface FileFieldProps {
     /** Why a file failed to go up, said in place of its size; nothing while it has not. */
     failed?: (file: File) => string | undefined
     /** Files said as refused on the first render, for a still view of a refusal. */
-    defaultRefused?: readonly { file: File; reason: RefusalReason }[]
+    defaultRefused?: readonly CheckedRefusal[]
+    /**
+     * The files said as refused, held from outside with `onRefusedChange`, as when a page-wide
+     * `DropZone` hands the field a drop with what it refused.
+     */
+    refused?: readonly CheckedRefusal[]
+    /** Hears the refused files change: a pick or a drop on the field, or one dismissed. */
+    onRefusedChange?: (refused: CheckedRefusal[]) => void
     disabled?: boolean
     /** Classes for the field, such as its span in a grid. */
     className?: string
@@ -235,7 +242,8 @@ export interface FileFieldProps {
  * each has got through `progress`, and the list draws a ring for it, its button then cancelling
  * (`onCancel`); `useUploads` runs such uploads, and `useAttachmentField` ties both to the field.
  * Files held already, as when a record is edited, come as `stored`, listed first and removed
- * through `onRemoveStored`.
+ * through `onRemoveStored`. `refused` with `onRefusedChange` holds the refused files from outside,
+ * so files dropped on a page-wide `DropZone` with the field's limits reach it with what it refused.
  */
 export function FileField({
     id,
@@ -262,13 +270,20 @@ export function FileField({
     onCancel,
     failed,
     defaultRefused = [],
+    refused: refusedProp,
+    onRefusedChange,
     disabled = false,
     className,
     words: given,
 }: FileFieldProps) {
     const words = { ...FILE_FIELD_WORDS, ...given }
     const picker = useRef<HTMLInputElement>(null)
-    const [refused, setRefused] = useState<readonly { file: File; reason: RefusalReason }[]>(defaultRefused)
+    const [ownRefused, setOwnRefused] = useState<readonly CheckedRefusal[]>(defaultRefused)
+    const refused = refusedProp ?? ownRefused
+    const setRefused = (next: CheckedRefusal[]) => {
+        if (refusedProp === undefined) setOwnRefused(next)
+        onRefusedChange?.(next)
+    }
     const previews = usePreviews(value, showPreviews)
     const idOf = useFileIds()
     const many = maxFiles !== 1
@@ -375,7 +390,7 @@ export function FileField({
                                 type="button"
                                 aria-label={words.dismiss(one.file.name)}
                                 title={words.dismiss(one.file.name)}
-                                onClick={() => setRefused((current) => current.filter((other) => other !== one))}
+                                onClick={() => setRefused(refused.filter((other) => other !== one))}
                                 className="-my-0.5 flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
                             >
                                 <X aria-hidden className="size-3.5" />
