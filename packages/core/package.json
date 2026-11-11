@@ -346,6 +346,10 @@
             "types": "./dist/components/Link.d.ts",
             "import": "./dist/components/Link.js"
         },
+        "./ListingBar": {
+            "types": "./dist/components/ListingBar.d.ts",
+            "import": "./dist/components/ListingBar.js"
+        },
         "./Loaders": {
             "types": "./dist/components/Loaders.d.ts",
             "import": "./dist/components/Loaders.js"
