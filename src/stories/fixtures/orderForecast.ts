@@ -19,6 +19,8 @@ export interface OrderWeek {
     q25: number | null
     q75: number | null
     q90: number | null
+    /** How many weeks ahead of the last observed week the forecast reaches, null for a week before the forecast. */
+    ahead: number | null
 }
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -69,7 +71,8 @@ export const ORDER_WEEKS: OrderWeek[] = (Object.keys(SHAPES) as (keyof typeof SH
     return Array.from({ length: HISTORY + AHEAD }, (_, week): OrderWeek => {
         const middle = typical(shape, week)
         const observed = week < shape.off.length ? middle + shape.off[week] : null
-        if (week < HISTORY) return { week: weekLabel(week), project, observed, median: null, q10: null, q25: null, q75: null, q90: null }
+        if (week < HISTORY)
+            return { week: weekLabel(week), project, observed, median: null, q10: null, q25: null, q75: null, q90: null, ahead: null }
         const spread = shape.spread + 45 * (week - HISTORY + 1)
         return {
             week: weekLabel(week),
@@ -80,6 +83,7 @@ export const ORDER_WEEKS: OrderWeek[] = (Object.keys(SHAPES) as (keyof typeof SH
             q25: Math.round(middle - Z25 * spread),
             q75: Math.round(middle + Z25 * spread),
             q90: Math.round(middle + Z10 * spread),
+            ahead: week - HISTORY + 1,
         }
     })
 })

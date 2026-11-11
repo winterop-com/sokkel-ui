@@ -44,6 +44,11 @@ export interface ChartSpec {
     unit?: string | readonly string[]
     /** What a field is called where the chart names it, such as a scatter's axes and tooltip; the field's own name where none is given. */
     fieldNames?: Readonly<Record<string, string>>
+    /**
+     * Fields of the rows the chart does not draw, shown in a frame's data view after the ones it
+     * does, such as the place a frame's title names; named through `fieldNames`, written as they are.
+     */
+    dataFields?: readonly string[]
     /** A line drawn smooth rather than straight between points. */
     smooth?: boolean
     /** Labels every nth category on the category axis, such as every hour of fifteen-minute steps; ECharts picks when omitted. */
