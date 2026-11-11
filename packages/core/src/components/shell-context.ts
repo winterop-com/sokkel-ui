@@ -13,6 +13,9 @@ export const ShellFootCell = createContext<HTMLElement | null>(null)
 /** Opens the shell's command palette, for the top bar's search; undefined where the shell has none. */
 export const ShellPalette = createContext<(() => void) | undefined>(undefined)
 
+/** Whether the shell's command palette is open, for a `Search`, whose results close as it opens; false outside a shell. */
+export const ShellPaletteOpen = createContext(false)
+
 /** The desktop window the shell stands in, for the parts drawn in its top strip; undefined in a browser. */
 export const ShellDesktop = createContext<DesktopWindow | undefined>(undefined)
 

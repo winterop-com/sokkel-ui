@@ -1,5 +1,5 @@
 import { ArrowRight } from 'lucide-react'
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { useContext, useEffect, useId, useRef, useState, type ReactNode } from 'react'
 
 import { useSearch } from '../hooks/use-search'
 import { cn } from '../lib/cn'
@@ -7,6 +7,7 @@ import { queryRanges, searchEntries, searchKey, type SearchGroup, type SearchRes
 import { GroupLabel } from './GroupLabel'
 import { Highlight } from './Highlight'
 import { SearchField } from './SearchField'
+import { ShellPaletteOpen } from './shell-context'
 import { Popover, PopoverContent } from './ui/popover'
 import { Spinner } from './ui/spinner'
 
@@ -187,6 +188,7 @@ export interface SearchProps {
  * `renderPreview`. The arrows move through the results, Enter opens the highlighted one through
  * `onOpen`, and Escape closes the list (a second Escape clears the field). With `onSeeAll` the
  * list ends in a way to the full results page, which Enter also takes when nothing is highlighted.
+ * Inside a `Shell`, ⌘K or Ctrl+K opens the command palette over the results, which close as it opens.
  *
  * The search is the app's: it answers at once or with a promise, and the component never fetches.
  * The first query is asked at once and each change after a pause in typing; while an answer is
@@ -222,6 +224,13 @@ export function Search({
         if (openGiven === undefined) setOpenHeld(next)
         onOpenChange?.(next)
     }
+
+    // The shell's palette opens in the results' place, so they close as it opens.
+    const paletteOpen = useContext(ShellPaletteOpen)
+    useEffect(() => {
+        if (paletteOpen && open) setOpen(false)
+        // oxlint-disable-next-line react-hooks/exhaustive-deps -- only the palette's opening closes the results
+    }, [paletteOpen])
 
     const anchor = useRef<HTMLDivElement | null>(null)
     const popup = useRef<HTMLDivElement | null>(null)
