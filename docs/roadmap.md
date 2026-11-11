@@ -6,7 +6,9 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.16.0** is the latest release (2026-11-11): `SchemaForm` draws maps of scalars as key/value rows
+- **0.16.1** is the latest release (2026-11-11): key sequences (`next`), the palette over an open
+  search, and `PageState` `tone`.
+- **0.16.0** (2026-11-11): `SchemaForm` draws maps of scalars as key/value rows
   and scalar unions as one box, shows an unset default without writing it, and names a sealed
   secret's Replace by its field.
 - **0.15.12** (2026-11-11): `ChartFrame` shows its chart's rows as a table in a
