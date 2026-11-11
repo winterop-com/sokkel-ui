@@ -268,14 +268,8 @@ to `plan.md` when it ships.
     - **Not covered yet:** the Electron and Tauri shells, browsers other than Chromium, and real
       touch devices. Run that pass before calling the examples checked on every platform.
 
-- **A table's scroll track runs beside its sticky head.** In a scrolling `DataTable` the vertical
-  scrollbar starts at the head row, not under it, since the head is sticky inside the scrolling
-  box and the library styles scrollbars with the standard `scrollbar-color`, which makes Chrome
-  ignore a `::-webkit-scrollbar-track` offset. The fix moves the head out of the scrolling box and
-  keeps it in step sideways (pinned columns, bands and resizing with it). Cosmetic; look into it.
-
 - **Size budgets guide, they are not a wall.** `size/budget.json` holds the dashboard start at
-  200.8 kB and forms at 191.8 kB start and 78.4 kB lazy (2026-11-11); the forms lazy one is full. A
+  201 kB and forms at 191.8 kB start and 78.4 kB lazy (2026-11-11); the forms lazy one is full. A
   change trims what it adds itself; when it is worth its size, its PR raises the budget it needs
   with the reason, rather than reworking unrelated parts to fit. A loader that lets `DataTable`
   register itself when it loads may win back the 2.3 kB `ChartFrame`'s data view split into the

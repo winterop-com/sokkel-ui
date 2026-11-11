@@ -116,8 +116,8 @@ export interface TableEditing {
     value<T>(table: TableEditingContext<T>, entry: FlatRow<T>, column: DataColumn<T>): ReactNode
     /** Whether a cell's editor is open. */
     isOpen<T>(table: TableEditingContext<T>, entry: FlatRow<T>, column: DataColumn<T>): boolean
-    /** After the table has drawn: the focus back from a closed editor, and the active cell in view. */
-    settle<T>(table: TableEditingContext<T>, box: HTMLElement | null): void
+    /** After the table has drawn: the focus back to the grid from a closed editor, and the active cell in view in the rows' scroller. */
+    settle<T>(table: TableEditingContext<T>, grid: HTMLElement | null, box: HTMLElement | null): void
 }
 
 const cellId = (row: string, column: string) => `${row}\u0000${column}`
@@ -487,14 +487,14 @@ export const tableEditing: TableEditing = {
 
     isOpen,
 
-    settle(table, box) {
-        if (box === null) return
+    settle(table, grid, box) {
+        if (grid === null || box === null) return
         // Closed by a key or a choice, the table takes the focus back once the editor, and a select's list, have
         // gone, unless the focus has moved on elsewhere meanwhile.
         if (table.open === undefined && table.held.current.refocus) {
             table.held.current.refocus = false
             const now = document.activeElement
-            if (now === null || now === document.body || box.contains(now)) box.focus({ preventScroll: true })
+            if (now === null || now === document.body || grid.contains(now)) grid.focus({ preventScroll: true })
         }
         // The active cell scrolled into view sideways, clear of the pinned first column.
         if (table.active === undefined || table.activeColumn === undefined) return
