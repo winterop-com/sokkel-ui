@@ -148,8 +148,9 @@ function SendingJob() {
 export const Empty: StoryObj = { name: 'Empty', render: () => <NewJob /> }
 
 /**
- * The same form marking each required field by the word after its label rather than a star in it,
- * and saying under Priority the default that applies when it is left empty.
+ * The same form marking each required field by the word after its label rather than a star in it.
+ * With `fallbacks` a field's default is said under it once a value is set; Priority, left unset,
+ * shows its default in its place and says it only there.
  */
 export const RequiredWord: StoryObj = { name: 'Required word', render: () => <NewJob requiredMark="word" fallbacks /> }
 
@@ -160,6 +161,7 @@ const RUN: JsonSchema = {
         retries: { type: 'integer', title: 'Retries', minimum: 0, maximum: 10, default: 3 },
         region: { type: 'string', title: 'Region', default: 'europe', description: 'Where the worker runs.' },
         notify: { type: 'boolean', title: 'Notify on failure', default: true },
+        follow_redirects_with_auth_to_other_hosts: { type: 'boolean', default: false },
         note: { type: ['string', 'null'], title: 'Note', default: null },
     },
 }
@@ -170,6 +172,7 @@ function RunSettings() {
         <DialogShell
             open
             onOpenChange={() => undefined}
+            width="lg"
             title="Run settings"
             description="How send-digest runs in the juniper project."
             count={<SchemaIssueCount form={form} />}
@@ -182,8 +185,10 @@ function RunSettings() {
 
 /**
  * Fields left at their schema default show it, muted and marked as the default, without holding it
- * in the value: Queue, Region and the switch. Retries is set to 5, so it shows as any value does;
- * choosing a default explicitly holds it. A `null` default says nothing.
+ * in the value: Queue, Region and the switches, the long name and its note wrapping clear of its
+ * switch. Retries is set to 5, so it shows as any value does, and `fallbacks` says under it what
+ * clearing it gives; an unset field says its default only in its place. Choosing a default
+ * explicitly holds it. A `null` default says nothing.
  */
 export const Defaults: StoryObj = { render: () => <RunSettings /> }
 

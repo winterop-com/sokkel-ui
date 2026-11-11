@@ -626,6 +626,12 @@ function shownDefault(at: JsonSchema, value: unknown): unknown {
     return value === undefined && at.default !== null ? at.default : undefined
 }
 
+/** Whether the form's own control shows an unset field's default in its place, so it need not be said again under it. */
+function showsDefault(at: JsonSchema, kind: Kind, value: unknown): boolean {
+    if (shownDefault(at, value) === undefined || at.writeOnly === true) return false
+    return kind === 'enum' || kind === 'number' || kind === 'longtext' || kind === 'scalars' || kind === 'text'
+}
+
 /** What an app's own control for a schema field is given: where it is, what it holds, and how to change it. */
 export interface SchemaFieldControl {
     path: Path
@@ -1213,7 +1219,8 @@ function Property({
             required={required}
             requiredMark={look.requiredMark}
             help={at.description}
-            fallback={fallback}
+            // Said once: the control shows the default while the field is unset, the line once a value is set.
+            fallback={showsDefault(at, kind, value) ? undefined : fallback}
             className={span}
             words={{ required: form.words.required }}
         >

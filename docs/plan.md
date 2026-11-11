@@ -447,7 +447,7 @@ A required `Field` is marked by a star in its label, or with `requiredMark="word
 after the label and outside it, so the control is named by its label alone and says it is required
 with `aria-required`; `fallback` says under the control what applies when the field is left empty.
 `SchemaForm` takes both, `requiredMark` and `fallbacks` (a schema `default` said under its field,
-nothing for a `null` one). An optional field left unset with a schema `default` shows it, muted, as
+nothing for a `null` one, and only once a value is set, since an unset field shows it in its place). An optional field left unset with a schema `default` shows it, muted, as
 what applies ("normal (default)" in a select's or an input's place, the word beside a switch),
 without holding it in the value; choosing it holds it. `initialValue` writes only the defaults a
 field cannot show so: a required field's, and an object's or a list's. An object of any keys whose
@@ -493,7 +493,8 @@ carries no chip; `lib/status` holds the map's types, the run states and each col
 A button that cannot be pressed now says why: `reason` on `Button`, `IconButton` and `SplitButton`
 disables it and shows the reason on hover and focus, the button kept in the tab order so a keyboard
 reaches it; `SwitchField` takes `reason` too, said in a line under its label, and its whole row is
-the label. A button whose press is under way takes `busy`: a `Spinner` in place of its leading icon
+the label, a long label breaking within its room and its note wrapping under it, never under the
+switch. A button whose press is under way takes `busy`: a `Spinner` in place of its leading icon
 (an icon-only button's icon), or before a label with none, the label kept, and the button shut
 (`aria-busy`, `aria-disabled`) while it keeps its focus and its look. `IconButton`'s `tooltip` says a longer sentence than its name, `shortcut` draws the key
 that does the same as a `Kbd` in the tooltip, and `destructive` tints it in the critical tone under

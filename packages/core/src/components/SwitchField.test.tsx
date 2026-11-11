@@ -19,4 +19,10 @@ describe('SwitchField', () => {
         expect(html).toContain('aria-disabled="true"')
         expect(html).not.toContain('aria-label="Steps run on the worker."')
     })
+
+    it('breaks a long label and wraps its note within the label room, the switch kept apart', () => {
+        const html = renderToStaticMarkup(<SwitchField id="follow" label="follow_redirects_with_auth" note="default" />)
+        expect(html).toMatch(/<span class="flex min-w-0 flex-wrap[^"]*"><span id="follow-label" class="min-w-0 wrap-anywhere">/)
+        expect(html).toMatch(/<span class="min-w-0 text-xs wrap-anywhere text-faint">default<\/span>/)
+    })
 })
