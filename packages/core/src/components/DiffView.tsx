@@ -112,6 +112,8 @@ export interface DiffViewProps {
  * Two versions of a text as one list of lines, the removed ones marked `-` and the added ones `+`:
  * a job definition before and after an edit, a config against the one it replaces. A count of each heads
  * it beside the title, a side with none left out, and the words' `unchanged` said when nothing changed.
+ * With no `title`, as in a window whose own title names the text, the counts and actions take no row of
+ * their own: they float at the block's top end.
  * Unchanged lines further than `context` from a change fold into a row that opens them on a press,
  * so a long text opens on its changes.
  */
@@ -123,17 +125,31 @@ export function DiffView({ before, after, title, size = 'default', context = 3, 
     const rows = foldDiff(lines, context, opened)
     const added = lines.filter((line) => line.kind === 'added').length
     const removed = lines.filter((line) => line.kind === 'removed').length
+    const counts = (
+        <span className="ml-auto flex gap-2 font-mono text-xs tabular-nums">
+            {added > 0 && <span className="text-good">+{added}</span>}
+            {removed > 0 && <span className="text-critical">-{removed}</span>}
+            {added === 0 && removed === 0 && <span className="font-sans">{words.unchanged}</span>}
+        </span>
+    )
     return (
         <CodeBlock size={size} className={className} data-plain="">
-            <CodeBlockHeader>
-                {title !== undefined && <CodeBlockTitle className="font-mono">{title}</CodeBlockTitle>}
-                <span className="ml-auto flex gap-2 font-mono text-xs tabular-nums">
-                    {added > 0 && <span className="text-good">+{added}</span>}
-                    {removed > 0 && <span className="text-critical">-{removed}</span>}
-                    {added === 0 && removed === 0 && <span className="font-sans">{words.unchanged}</span>}
-                </span>
-                {actions !== undefined && <CodeBlockActions className="ms-0">{actions}</CodeBlockActions>}
-            </CodeBlockHeader>
+            {title === undefined ? (
+                // With no title, the counts and actions float at the block's top end rather than spend a row.
+                <div
+                    data-slot="diff-view-counts"
+                    className="absolute end-2 top-2 z-10 flex items-center gap-2 rounded-control bg-background/90 py-0.5 ps-2 pe-0.5 text-muted-foreground ring-1 ring-foreground/10 group-data-[size=sm]/code-block:end-1.5 group-data-[size=sm]/code-block:top-1.5"
+                >
+                    {counts}
+                    {actions !== undefined && <span className="flex shrink-0 items-center gap-1">{actions}</span>}
+                </div>
+            ) : (
+                <CodeBlockHeader>
+                    <CodeBlockTitle className="font-mono">{title}</CodeBlockTitle>
+                    {counts}
+                    {actions !== undefined && <CodeBlockActions className="ms-0">{actions}</CodeBlockActions>}
+                </CodeBlockHeader>
+            )}
             <CodeBlockContent>
                 {rows.map((row) =>
                     row.kind === 'fold' ? (
