@@ -20,4 +20,18 @@ describe('ConsequenceList', () => {
     it('draws nothing with nothing to say', () => {
         expect(renderToStaticMarkup(<ConsequenceList items={[]} />)).toBe('')
     })
+
+    it('passes other props to its root', () => {
+        const list = renderToStaticMarkup(<ConsequenceList items={ITEMS} data-testid="goes" aria-describedby="note" className="mt-2" />)
+        expect(list).toMatch(/^<div[^>]*data-testid="goes"/)
+        expect(list).toMatch(/^<div[^>]*aria-describedby="note"/)
+        expect(list).toMatch(/^<div[^>]*class="[^"]*mt-2/)
+    })
+
+    it('labels its list by its heading', () => {
+        const list = renderToStaticMarkup(<ConsequenceList items={ITEMS} />)
+        const id = /<p id="([^"]+)"/.exec(list)?.[1]
+        expect(id).toBeTruthy()
+        expect(list).toContain(`<ul aria-labelledby="${id}"`)
+    })
 })

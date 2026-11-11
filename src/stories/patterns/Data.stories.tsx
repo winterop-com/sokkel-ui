@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
-import { DiffView } from '@winterop-com/sokkel-ui/DiffView'
 import { JsonTree } from '@winterop-com/sokkel-ui/JsonTree'
 import { LogView, type LogLine } from '@winterop-com/sokkel-ui/LogView'
 import { Section } from '@winterop-com/sokkel-ui/Section'
@@ -9,7 +8,7 @@ import { Sparkline, Stat } from '@winterop-com/sokkel-ui/Stat'
 import { Timeline } from '@winterop-com/sokkel-ui/Timeline'
 import { Columns, Stack } from '@winterop-com/sokkel-ui/Layout'
 
-/** The ways a record's facts are shown: terms and values, numbers, events, logs, JSON and diffs. */
+/** The ways a record's facts are shown: terms and values, numbers, events, logs and JSON. */
 function Ground({ children }: { children: React.ReactNode }) {
     return <Stack gap="xl">{children}</Stack>
 }
@@ -230,37 +229,6 @@ function LongJson() {
     )
 }
 
-function Diff() {
-    return (
-        <Ground>
-            <DiffView
-                title="import-orders.yaml"
-                before={`code: import-orders
-schedule: every day at 02:00
-steps:
-  fetch:
-    uses: http.get
-  validate:
-    uses: rows.check
-    with: { rules: orders, on_invalid: fail }
-`}
-                after={`code: import-orders
-schedule: every hour
-steps:
-  fetch:
-    uses: http.get
-  transform:
-    uses: rows.filter
-    with: { where: "try_cast(amount as double) is not null" }
-  validate:
-    uses: rows.check
-    with: { rules: orders, on_invalid: warn }
-`}
-            />
-        </Ground>
-    )
-}
-
 const meta: Meta = { title: 'Patterns/Data', parameters: { frame: 'padded' } }
 export default meta
 
@@ -301,4 +269,3 @@ export const LogIcons: StoryObj = { name: 'Log icons', render: () => <LogView li
 export const Tree: StoryObj = { name: 'JSON tree', render: () => <Json /> }
 /** A list of 240 runs, opened: the first 100 drawn and a step under them that shows 100 more. */
 export const LongTree: StoryObj = { name: 'Long JSON', render: () => <LongJson /> }
-export const Diffs: StoryObj = { name: 'Diff view', render: () => <Diff /> }
