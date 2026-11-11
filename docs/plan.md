@@ -457,6 +457,15 @@ and left out of the value; a field that takes several scalar types (`anyOf` of a
 integer, as "16KB" or 16384) is one text box, read as the narrowest type the text parses as
 (integer, number, boolean, then text) and checked against the schema. A field's own refusal of what
 was typed is held with `hold`, which stops the submit as an issue does.
+`fold` shows the required fields and those set when the form is first drawn and puts the rest
+behind one disclosure ("3 more fields", `words.more`), which opens by itself while one of them has
+an issue to show. `useSchemaForm` holds its own value from `initial`, or follows one held from
+outside (`value`, `onChange`), as a document edited in an editor beside it; `blocking` says whether
+the value would be refused, shown yet or not, so a verb can be shut quietly. The `field` hook
+answers a control or its parts: the `control` the issue mark sits on, a row `below` it, and a `note`
+beside the label (`Field`'s `note`). `words.secret` reaches each `SecretField`. The words for each
+issue load with the checker (`schema/issue-words`), since nothing but a number that does not read and
+a checker that cannot be fetched is said before it.
 `ItemHeading` is the heading `ItemCard` draws for one thing, on its own: the name, else the code,
 the code drawn once in the code face under the name (`stacked`) or beside it (`inline`), in a
 panel's or a dialog's size, with a leading `glyph`, `chips` and a one-line `description`.

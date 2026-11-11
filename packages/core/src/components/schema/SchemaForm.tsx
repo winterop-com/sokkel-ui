@@ -9,7 +9,7 @@ import { IssueMarks } from '../IssueMarks'
 import { ISSUE_EDGE, IssueCount, IssueMark, worst, type Issue, type IssueAction, type IssueEntry } from '../IssueMark'
 import { NumberField } from '../NumberField'
 import { RepeatedGroup } from '../RepeatedGroup'
-import { SecretField } from '../SecretField'
+import { SecretField, type SecretFieldWords } from '../SecretField'
 import { SwitchField } from '../SwitchField'
 import { Button } from '../ui/button'
 import { PlainCheckbox } from '../ui/checkbox-look'
@@ -18,7 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Textarea } from '../ui/textarea'
 import { MapField } from './MapField'
 import { childSchema, literal, resolve, type JsonSchema } from './read'
-import { loadedValidate, loadValidate } from './checker'
+import { loadedSay, loadedValidate, loadValidate } from './checker'
 import {
     fieldSchema,
     given,
@@ -76,68 +76,23 @@ export interface SchemaFormWords {
     value: string
     /** Said at a map that has a key twice; the second is not taken. */
     repeatedKey: string
+    /** The disclosure of a folded form's other fields, and its words once open. */
+    more: (count: number) => string
+    fewer: string
+    /** The words of a `writeOnly` field's `SecretField`: Set, Replace and the rest. */
+    secret?: Partial<SecretFieldWords>
 }
 
-const FORMAT: Record<string, { text: string; detail?: string }> = {
-    email: { text: 'Enter an email address', detail: 'As in ada@example.org.' },
-    uri: { text: 'Enter a full address', detail: 'Starting with https://.' },
-    url: { text: 'Enter a full address', detail: 'Starting with https://.' },
-    date: { text: 'Enter a date', detail: 'As in 2026-11-05.' },
-    'date-time': { text: 'Enter a date and time', detail: 'As in 2026-11-05T09:30:00Z.' },
-    time: { text: 'Enter a time', detail: 'As in 09:30:00.' },
-    uuid: { text: 'Enter a UUID', detail: 'As in 0b6f4c1e-2f6a-4c9e-9d3b-6f1d2e8a7c55.' },
-    hostname: { text: 'Enter a host name', detail: 'As in hooks.example.org.' },
-    ipv4: { text: 'Enter an IPv4 address', detail: 'As in 192.0.2.10.' },
-}
-
-/** An issue in plain English. */
+/**
+ * An issue in plain English, from `./issue-words` once the checker has loaded with it; until then
+ * only the issues known without it are said: text that does not read as a number, and a checker
+ * that cannot be fetched.
+ */
 function say(issue: SchemaIssue, schema: JsonSchema): { text: string; detail?: string } {
-    const plural = (count: number, unit: string) => `${String(count)} ${count === 1 ? unit : `${unit}s`}`
-    switch (issue.kind) {
-        case 'required':
-            return { text: schema.enum !== undefined ? 'Choose a value' : 'Enter a value' }
-        case 'type':
-            return {
-                text:
-                    issue.expected === 'integer'
-                        ? 'Enter a whole number'
-                        : issue.expected === 'number'
-                          ? 'Enter a number'
-                          : `Enter a value of type ${issue.expected}`,
-            }
-        case 'enum':
-            return { text: 'Choose one of the values', detail: issue.values.map(literal).join(', ') }
-        case 'const':
-            return { text: `Must be ${literal(issue.value)}` }
-        case 'minimum':
-            return { text: issue.exclusive ? `Must be more than ${String(issue.limit)}` : `Must be at least ${String(issue.limit)}` }
-        case 'maximum':
-            return { text: issue.exclusive ? `Must be less than ${String(issue.limit)}` : `Must be at most ${String(issue.limit)}` }
-        case 'minLength':
-            return { text: `Use at least ${plural(issue.limit, 'character')}` }
-        case 'maxLength':
-            return { text: `Use at most ${plural(issue.limit, 'character')}` }
-        case 'pattern':
-            return { text: 'Not in the expected form', detail: schema.description ?? `It must match ${issue.pattern}.` }
-        case 'format':
-            return issue.phrase !== undefined
-                ? { text: issue.phrase }
-                : (FORMAT[issue.format] ?? { text: `Enter a value in the ${issue.format} format` })
-        case 'minItems':
-            return { text: `Add at least ${plural(issue.limit, 'item')}` }
-        case 'maxItems':
-            return { text: `Keep at most ${plural(issue.limit, 'item')}` }
-        case 'uniqueItems':
-            return { text: 'Each value only once' }
-        case 'deprecated':
-            return { text: 'Deprecated', detail: 'Still accepted, and may be removed in a later version.' }
-        case 'additional':
-            return { text: `No field ${issue.property} is allowed here` }
-        case 'unchecked':
-            return { text: 'The values cannot be checked, so the form cannot be sent', detail: issue.reason }
-        case 'other':
-            return { text: issue.message.charAt(0).toUpperCase() + issue.message.slice(1) }
-    }
+    const later = loadedSay()
+    if (later !== undefined) return later(issue, schema)
+    if (issue.kind === 'unchecked') return { text: 'The values cannot be checked, so the form cannot be sent', detail: issue.reason }
+    return { text: issue.kind === 'type' && issue.expected === 'integer' ? 'Enter a whole number' : 'Enter a number' }
 }
 
 const WORDS: SchemaFormWords = {
@@ -157,6 +112,8 @@ const WORDS: SchemaFormWords = {
     key: 'Key',
     value: 'Value',
     repeatedKey: 'Each key only once',
+    more: (count) => `${String(count)} more ${count === 1 ? 'field' : 'fields'}`,
+    fewer: 'Fewer fields',
 }
 
 /**
@@ -263,6 +220,11 @@ export interface SchemaFormState {
     submit: () => boolean
     /** Whether the schema checker is still loading, so no issue is known yet. */
     checking: boolean
+    /**
+     * Whether the value has an issue that stops the submit, shown yet or not, or the checker is
+     * still loading: a verb can be shut quietly while it is true.
+     */
+    blocking: boolean
     /** Focuses the first field with an issue and opens what it says. */
     goToFirst: () => void
     /** Every shown issue with its field's title, in the order the fields are drawn, for the count's list. */
@@ -305,8 +267,18 @@ export function useSchemaForm(
         sealed = NO_SECRETS,
         now,
         words: given_,
+        value: outside,
+        onChange,
     }: {
         initial?: unknown
+        /**
+         * Holds the value from outside, as a document edited elsewhere too: the form draws it and
+         * says each change through `onChange` rather than keeping its own. Leave it undefined for a
+         * form that holds its own value from `initial`.
+         */
+        value?: unknown
+        /** Hears each change to the value, held from outside or not. */
+        onChange?: (value: unknown) => void
         issues?: readonly ServerIssue[]
         /** Starts as if submitted once, every issue shown. */
         defaultSubmitted?: boolean
@@ -330,7 +302,16 @@ export function useSchemaForm(
 ): SchemaFormState {
     const words = { ...WORDS, ...given_ }
     const base = useId()
-    const [value, setValue] = useState<unknown>(() => initial ?? initialValue(schema))
+    const [own, setOwn] = useState<unknown>(() => initial ?? initialValue(schema))
+    const value = outside === undefined ? own : outside
+    // The value as of the last change, so changes made in one event build on each other.
+    const latest = useRef(value)
+    latest.current = value
+    const setValue = (next: unknown) => {
+        latest.current = typeof next === 'function' ? (next as (current: unknown) => unknown)(latest.current) : next
+        if (outside === undefined) setOwn(latest.current)
+        onChange?.(latest.current)
+    }
     const [drafts, setDrafts] = useState<Record<string, string>>({})
     const [unread, setUnread] = useState<ReadonlySet<string>>(new Set())
     const [held, setHeld] = useState<Record<string, string>>({})
@@ -530,6 +511,7 @@ export function useSchemaForm(
             setOpen(at)
         },
         checking: checked === undefined,
+        blocking: checked === undefined || places.some((at) => critical(pending(at))),
         open,
         setOpen,
         id,
@@ -661,8 +643,23 @@ export interface SchemaFieldControl {
     label?: string
 }
 
-/** An app's own control for a field, or undefined to draw the form's own. */
-export type SchemaFieldRenderer = (field: SchemaFieldControl) => ReactNode | undefined
+/**
+ * An app's own field in parts: the `control` the issue mark sits at the end of, a row `below` it
+ * (a preview, a hint the app draws), and a `note` beside the label.
+ */
+export interface SchemaFieldParts {
+    control: ReactNode
+    below?: ReactNode
+    note?: ReactNode
+}
+
+/** An app's own control for a field, or its parts, or undefined to draw the form's own. */
+export type SchemaFieldRenderer = (field: SchemaFieldControl) => ReactNode | SchemaFieldParts | undefined
+
+/** An app's answer as parts, a bare control taken as the control alone. */
+function partsOf(answer: ReactNode | SchemaFieldParts): SchemaFieldParts {
+    return answer !== null && typeof answer === 'object' && 'control' in answer ? answer : { control: answer }
+}
 
 const FieldRendererContext = createContext<SchemaFieldRenderer | undefined>(undefined)
 
@@ -716,12 +713,17 @@ function Control({
         readOnly: at.readOnly === true,
         label,
     })
-    if (custom !== undefined && custom !== null)
+    if (custom !== undefined && custom !== null) {
+        const { control, below } = partsOf(custom)
         return (
-            <Marked form={form} path={path}>
-                {custom}
-            </Marked>
+            <>
+                <Marked form={form} path={path}>
+                    {control}
+                </Marked>
+                {below}
+            </>
         )
+    }
     const fallback = shownDefault(at, value)
     // An unset field with a default shows it, muted, as what applies: "normal (default)".
     const placeholder =
@@ -872,6 +874,7 @@ function Control({
                             readOnly={at.readOnly === true}
                             onBlur={() => form.touch(path)}
                             className={edge(form, path)}
+                            words={form.words.secret}
                         />
                     </Marked>
                 )
@@ -988,7 +991,8 @@ function Property({
         readOnly: locked,
         label,
     })
-    if (custom !== undefined && custom !== null)
+    if (custom !== undefined && custom !== null) {
+        const { control, below, note } = partsOf(custom)
         return (
             <Field
                 id={form.id(path)}
@@ -996,6 +1000,7 @@ function Property({
                 mono={mono}
                 hint={hint}
                 keyHint={hint !== undefined}
+                note={note}
                 required={required}
                 requiredMark={look.requiredMark}
                 help={at.description}
@@ -1004,10 +1009,12 @@ function Property({
                 words={{ required: form.words.required }}
             >
                 <Marked form={form} path={path}>
-                    {custom}
+                    {control}
                 </Marked>
+                {below}
             </Field>
         )
+    }
 
     if (kind === 'object')
         return (
@@ -1216,16 +1223,40 @@ function Property({
 }
 
 /** An object's properties laid out in rows: half-width fields pair up when the form is wide enough. */
-function Fields({ form, path, schema: given }: { form: SchemaFormState; path: Path; schema: JsonSchema }) {
+function Fields({ form, path, schema: raw, fold = false }: { form: SchemaFormState; path: Path; schema: JsonSchema; fold?: boolean }) {
     // A read-only object, the form's root or a list's item among them, locks every field it holds.
-    const schema = given.readOnly === true ? lock(given) : given
+    const schema = raw.readOnly === true ? lock(raw) : raw
     const required = new Set(schema.required ?? [])
+    const entries = Object.entries(schema.properties ?? {})
+    // Folded, the fields that are neither required nor set when the form is first drawn wait behind one disclosure.
+    const [folded] = useState(() =>
+        fold ? entries.map(([name]) => name).filter((name) => !required.has(name) && !given(valueAt(form.value, [...path, name]))) : [],
+    )
+    const [open, setOpen] = useState(false)
+    const at = (name: string) => form.id([...path, name])
+    // A folded field with an issue to show opens the fold, so the count and a submit can reach it.
+    const opened =
+        open || form.list.some(({ target = '' }) => folded.some((name) => target === at(name) || target.startsWith(`${at(name)}_`)))
     return (
         <div className="@container">
             <div className="grid gap-x-5 gap-y-4 @lg:grid-cols-2">
-                {Object.entries(schema.properties ?? {}).map(([name, child]) => (
-                    <Property key={name} form={form} path={[...path, name]} schema={child} name={name} required={required.has(name)} />
-                ))}
+                {entries
+                    .filter(([name]) => opened || !folded.includes(name))
+                    .map(([name, child]) => (
+                        <Property key={name} form={form} path={[...path, name]} schema={child} name={name} required={required.has(name)} />
+                    ))}
+                {folded.length > 0 && (
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        aria-expanded={opened}
+                        className="-ml-2.5 justify-self-start @lg:col-span-2"
+                        onClick={() => setOpen(!opened)}
+                    >
+                        {opened ? form.words.fewer : form.words.more(folded.length)}
+                    </Button>
+                )}
             </div>
         </div>
     )
@@ -1245,6 +1276,12 @@ export interface SchemaFormProps {
     requiredMark?: RequiredMark
     /** Says a field's schema `default` under it, as what applies when it is left empty (`words.fallback`). */
     fallbacks?: boolean
+    /**
+     * Shows the required fields and those already set when the form is first drawn, and puts the
+     * rest behind one disclosure ("3 more fields", `words.more`), opened by itself when one of them
+     * has an issue to show.
+     */
+    fold?: boolean
     className?: string
 }
 
@@ -1266,7 +1303,15 @@ export interface SchemaFormProps {
  * in it, and `fallbacks` says each field's schema `default` under it, as what applies when it is
  * left empty.
  */
-export function SchemaForm({ form, marks = true, field, requiredMark = 'star', fallbacks = false, className }: SchemaFormProps) {
+export function SchemaForm({
+    form,
+    marks = true,
+    field,
+    requiredMark = 'star',
+    fallbacks = false,
+    fold = false,
+    className,
+}: SchemaFormProps) {
     const root = fieldSchema(form.schema, form.schema)
     const whole = form.shown([])
     const look = useMemo(() => ({ requiredMark, fallbacks, required: form.words.required }), [requiredMark, fallbacks, form.words.required])
@@ -1285,7 +1330,7 @@ export function SchemaForm({ form, marks = true, field, requiredMark = 'star', f
             )}
             <FieldLookContext value={look}>
                 <FieldRendererContext value={field}>
-                    <Fields form={form} path={[]} schema={root} />
+                    <Fields form={form} path={[]} schema={root} fold={fold} />
                 </FieldRendererContext>
             </FieldLookContext>
         </div>

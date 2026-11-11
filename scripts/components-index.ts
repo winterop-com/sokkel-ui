@@ -62,6 +62,8 @@ export const PRIVATE: Record<PackageDir, Record<string, string>> = {
             "a model's thinking folded behind a line, which `AssistantReply` and `AnswerColumn` draw; `wordCount` is exported by `AssistantReply`",
         'components/schema/checker':
             '`validate` loaded on first use, for `SchemaForm` and `CodeEditor`; an app preloads it with `loadSchemaChecks`',
+        'components/schema/checks': 'what the checker loads in one fetch: `validate` and the words for its issues',
+        'components/schema/issue-words': "`SchemaForm`'s words for each issue, loaded with the checker",
         'components/schema/MapField': "`SchemaForm`'s key/value table for a map of scalars",
         'components/settings-parts':
             'what `SettingsDialog` and `SettingsView` share: the search, the sections, the rows and the reset; their types are exported by both',
