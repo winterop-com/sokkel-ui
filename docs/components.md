@@ -61,7 +61,7 @@ in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second 
 | --- | --- | --- | --- |
 | **Button** | `@winterop-com/sokkel-ui/primitives/button` | A button. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-actions-button--playground) |
 | **ButtonGroup**, ButtonGroupText, ButtonGroupSeparator | `@winterop-com/sokkel-ui/primitives/button-group` |  | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-actions-buttongroup--variants) |
-| **Kbd**, KbdGroup, KbdSequence | `@winterop-com/sokkel-ui/primitives/kbd` |  | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-actions-kbd--variants) |
+| **Kbd**, KbdGroup | `@winterop-com/sokkel-ui/primitives/kbd` |  | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-actions-kbd--variants) |
 | **Toggle** | `@winterop-com/sokkel-ui/primitives/toggle` |  | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-actions-toggle--variants) |
 | **ToggleGroup**, ToggleGroupItem | `@winterop-com/sokkel-ui/primitives/toggle-group` |  | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/primitives-actions-togglegroup--variants) |
 

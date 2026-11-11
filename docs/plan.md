@@ -249,9 +249,8 @@ listed once, in the app's words and group; `Shell`'s `shortcuts` makes the shell
 opened on `?`, bound once, and from the account menu, and `shortcutsOpen` with
 `onShortcutsOpenChange` holds it from outside, as for a palette row built beside the shell.
 A palette row's `keys` take a sequence the same way: its second press in `next`, drawn after the
-first with the palette's `sequence` word between (`KbdSequence` from `primitives/kbd`, which the
-dialog draws with too), and `bindingKeys(binding)` from `lib/keys` gives both from the binding that
-runs the command, a chord as one press.
+first with the palette's `sequence` word between, as the dialog draws it, and `bindingKeys(binding)`
+from `lib/keys` gives both from the binding that runs the command, a chord as one press.
 `useShell()` gives a screen inside the shell `openPalette` and `openShortcuts`. `SearchField`'s `/`
 is a binding too, on the field's own input, so no mark on the box finds it; an app that answers `/`
 itself turns `shortcut` off and can mark the input with a `data-*` attribute through `inputProps`,

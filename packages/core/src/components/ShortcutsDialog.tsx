@@ -3,7 +3,7 @@ import { useMemo } from 'react'
 import { useRegisteredShortcuts } from '../hooks/use-shortcuts'
 import { shortcutGroups, type ShortcutGroup } from '../lib/shortcut-groups'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog'
-import { KbdSequence } from './ui/kbd'
+import { Kbd, KbdGroup } from './ui/kbd'
 
 export type { Shortcut, ShortcutGroup } from '../lib/shortcut-groups'
 export { applePlatform } from '../lib/keys'
@@ -24,6 +24,17 @@ const WORDS: ShortcutsDialogWords = {
 }
 
 const NONE: readonly ShortcutGroup[] = []
+
+/** The keys of one press, held together. */
+function Keys({ keys }: { keys: readonly string[] }) {
+    return (
+        <KbdGroup>
+            {keys.map((key, index) => (
+                <Kbd key={`${index}-${key}`}>{key}</Kbd>
+            ))}
+        </KbdGroup>
+    )
+}
 
 export interface ShortcutsDialogProps {
     open: boolean
@@ -63,8 +74,14 @@ export function ShortcutsDialog({ open, onOpenChange, groups = NONE, words: give
                                         className="flex items-center justify-between gap-4"
                                     >
                                         <dt className="text-sm">{shortcut.action}</dt>
-                                        <dd className="flex shrink-0 items-center">
-                                            <KbdSequence keys={shortcut.keys} next={shortcut.next} sequence={words.sequence} />
+                                        <dd className="flex shrink-0 items-center gap-1.5">
+                                            <Keys keys={shortcut.keys} />
+                                            {shortcut.next !== undefined && (
+                                                <>
+                                                    <span className="text-xs text-muted-foreground">{words.sequence}</span>
+                                                    <Keys keys={shortcut.next} />
+                                                </>
+                                            )}
                                         </dd>
                                     </div>
                                 ))}

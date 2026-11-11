@@ -7,7 +7,7 @@ import { keyLabels } from '../lib/keys'
 import type { SearchGroup, SearchResult, SearchSource } from '../lib/search'
 import { SearchResultBody } from './Search'
 import { Button } from './ui/button'
-import { Kbd, KbdGroup, KbdSequence } from './ui/kbd'
+import { Kbd, KbdGroup } from './ui/kbd'
 import { Spinner } from './ui/spinner'
 
 export { usePaletteShortcut } from '../hooks/use-palette-shortcut'
@@ -277,7 +277,15 @@ export function CommandPalette({
                                                 <CommandShortcut className="flex shrink-0 items-center gap-2 tracking-normal">
                                                     {kind !== undefined && <span className="text-faint">{kind}</span>}
                                                     {command.keys !== undefined && (
-                                                        <KbdSequence keys={command.keys} next={command.next} sequence={words.sequence} />
+                                                        <span className="flex items-center gap-1.5">
+                                                            <Keys keys={command.keys} />
+                                                            {command.next !== undefined && (
+                                                                <>
+                                                                    {words.sequence}
+                                                                    <Keys keys={command.next} />
+                                                                </>
+                                                            )}
+                                                        </span>
                                                     )}
                                                 </CommandShortcut>
                                             )}
@@ -331,11 +339,7 @@ export function CommandPalette({
                         </span>
                         <span className="flex shrink-0 items-center gap-1.5 max-sm:hidden pointer-coarse:hidden">
                             {words.palette}
-                            <KbdGroup>
-                                {(foot.keys ?? keyLabels({ key: 'k', mod: true })).map((key) => (
-                                    <Kbd key={key}>{key}</Kbd>
-                                ))}
-                            </KbdGroup>
+                            <Keys keys={foot.keys ?? keyLabels({ key: 'k', mod: true })} />
                         </span>
                         <Button
                             variant="ghost"
@@ -349,6 +353,17 @@ export function CommandPalette({
                 )}
             </Command>
         </CommandDialog>
+    )
+}
+
+/** The keys of one press, held together. */
+function Keys({ keys }: { keys: readonly string[] }) {
+    return (
+        <KbdGroup>
+            {keys.map((key) => (
+                <Kbd key={key}>{key}</Kbd>
+            ))}
+        </KbdGroup>
     )
 }
 

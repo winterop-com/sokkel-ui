@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Command, CornerDownLeft } from 'lucide-react'
 
-import { Kbd, KbdGroup, KbdSequence } from '@winterop-com/sokkel-ui/primitives/kbd'
+import { Kbd, KbdGroup } from '@winterop-com/sokkel-ui/primitives/kbd'
 import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { Specimen } from '../fixtures/Specimen'
 
@@ -37,17 +37,14 @@ export const Variants: StoryObj = {
                     </Kbd>
                 </KbdGroup>
             </Specimen>
-            <Specimen label="sequence">
-                <KbdSequence keys={['G']} next={['R']} />
-            </Specimen>
         </Row>
     ),
 }
 
-const SHORTCUTS: { keys: string[]; next?: string[]; does: string }[] = [
+const SHORTCUTS = [
     { keys: ['Ctrl', 'K'], does: 'Search jobs, runs and services' },
-    { keys: ['G'], next: ['R'], does: 'Go to runs' },
-    { keys: ['G'], next: ['J'], does: 'Go to jobs' },
+    { keys: ['G', 'R'], does: 'Go to runs' },
+    { keys: ['G', 'J'], does: 'Go to jobs' },
     { keys: ['Ctrl', 'Enter'], does: 'Run the open job' },
     { keys: ['Esc'], does: 'Close the side panel' },
 ]
@@ -60,7 +57,11 @@ export const Shortcuts: StoryObj = {
                 {SHORTCUTS.map((shortcut) => (
                     <Row key={shortcut.does} as="li" gap="md" justify="between" className="px-3 py-2 text-sm">
                         <span>{shortcut.does}</span>
-                        <KbdSequence keys={shortcut.keys} next={shortcut.next} />
+                        <KbdGroup>
+                            {shortcut.keys.map((key) => (
+                                <Kbd key={key}>{key}</Kbd>
+                            ))}
+                        </KbdGroup>
                     </Row>
                 ))}
             </ul>
