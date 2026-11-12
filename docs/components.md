@@ -40,7 +40,7 @@ viewer's caption settings through `useStored` or an app's store, with the option
 in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second by `useVideoStats`
 (`@winterop-com/sokkel-ui/media/video-stats`) for `VideoStatsOverlay`.
 
-- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 251 modules
+- [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 250 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules
 - [`@winterop-com/sokkel-ui-maps`](#winterop-com-sokkel-ui-maps): 10 modules
 - [`@winterop-com/sokkel-ui-graph`](#winterop-com-sokkel-ui-graph): 15 modules
@@ -211,7 +211,6 @@ in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second 
 | **PageHeader** | `@winterop-com/sokkel-ui/PageHeader` | A page's title, its code under it in the code face, and its actions at the right with the primary one last. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-page-header--title) |
 | **PaneHeader** | `@winterop-com/sokkel-ui/PaneHeader` | The strip across the top of a pane, with a rule under it: the pane's title, controls before it such as a back button, and actions at its right end. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-pane-header--plain) |
 | **Section**, Surface | `@winterop-com/sokkel-ui/Section` | A titled part of a page. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-sections--flat) |
-| **SettingsView** | `@winterop-com/sokkel-ui/SettingsView` | Settings as a page of the app, inside `Shell`: the same groups, search, reset and words as `SettingsDialog`, laid out as a page. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/apps-settings--with-nav-bar) |
 | **SplitPane** | `@winterop-com/sokkel-ui/SplitPane` | Two panes side by side (`across`) or one over the other (`down`), filling the box they are given, with a rule between them. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-split-pane--across) |
 | **Stack**, Row, Center, Columns, Split, Fill | `@winterop-com/sokkel-ui/Layout` | Cells one under the other, each as wide as the stack. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/media-audio-player--slider) |
 | **Toolbar**, ToolbarTitle | `@winterop-com/sokkel-ui/Toolbar` | The row of tools above a page's or a pane's content: a search, filters, a `Segmented`, a sort, a count. | [story](https://winterop-com.github.io/sokkel-ui/?path=/story/patterns-toolbar--page) |

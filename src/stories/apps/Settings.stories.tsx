@@ -4,29 +4,13 @@ import { TextField } from '@winterop-com/sokkel-ui/TextField'
 import { IconButton } from '@winterop-com/sokkel-ui/IconButton'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import {
-    FolderGit2,
-    Keyboard,
-    LayoutDashboard,
-    ListChecks,
-    Palette,
-    Play,
-    Search as SearchIcon,
-    Server,
-    Settings2,
-    User,
-} from 'lucide-react'
+import { Keyboard, Palette, Search as SearchIcon, Server, Settings2, User } from 'lucide-react'
 import { useState } from 'react'
 
 import { NavBar } from '@winterop-com/sokkel-ui/NavBar'
 import { Section } from '@winterop-com/sokkel-ui/Section'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
 import { SettingsDialog, type SettingsGroup } from '@winterop-com/sokkel-ui/SettingsDialog'
-import { SettingsView } from '@winterop-com/sokkel-ui/SettingsView'
-import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
-import { Rail, type RailGroup } from '@winterop-com/sokkel-ui/Rail'
-import { Shell } from '@winterop-com/sokkel-ui/Shell'
-import { TopBar } from '@winterop-com/sokkel-ui/TopBar'
 import { SwitchField } from '@winterop-com/sokkel-ui/SwitchField'
 import { ThemeToggle } from '@winterop-com/sokkel-ui/ThemeToggle'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
@@ -570,70 +554,6 @@ function SettingsApp({ opening }: { opening?: Opening }) {
     )
 }
 
-/** Tidevann's places, Settings among them. */
-const PLACES: RailGroup[] = [
-    {
-        id: 'work',
-        entries: [
-            { id: 'overview', label: 'Overview', icon: LayoutDashboard, href: '#' },
-            { id: 'runs', label: 'Runs', icon: Play, href: '#' },
-            { id: 'jobs', label: 'Jobs', icon: ListChecks, href: '#' },
-            { id: 'projects', label: 'Projects', icon: FolderGit2, href: '#' },
-        ],
-    },
-    { id: 'system', title: 'System', entries: [{ id: 'settings', label: 'Settings', icon: Settings2, href: '#', active: true }] },
-]
-
-/**
- * The same preferences as a page of the app inside its shell: the sections down the side with the
- * search over them, the chosen section's rows under its title, and the footer across the foot with
- * Reset to defaults, the note that changes are kept as they are made, and Done back to where the
- * person came from. A phone puts the search and a row of the sections on top of the page.
- */
-function SettingsPage({ search: initialSearch = '', synced = false, open }: { search?: string; synced?: boolean; open?: string }) {
-    const preferences = usePreferences()
-    const [collapsed, setCollapsed] = useState(false)
-    const [active, setActive] = useState(open ?? (synced ? 'theme' : 'general'))
-    const [search, setSearch] = useState(initialSearch)
-    return (
-        <TooltipProvider>
-            <Shell
-                rail={
-                    <Rail
-                        mark={<TidevannMark />}
-                        name="Tidevann"
-                        groups={PLACES}
-                        collapsed={collapsed}
-                        onCollapsedChange={setCollapsed}
-                        foot={
-                            <AccountMenu
-                                name="grace"
-                                image={pictureOf('grace')}
-                                where="tidevann.example.org"
-                                collapsed={collapsed}
-                                onSignOut={() => undefined}
-                            />
-                        }
-                    />
-                }
-                top={<TopBar trail={[{ label: 'Tidevann', href: '#' }, { label: 'Settings' }]} />}
-            >
-                <SettingsView
-                    groups={preferences.groups}
-                    active={active}
-                    onActiveChange={setActive}
-                    search={search}
-                    onSearchChange={setSearch}
-                    footer={synced ? 'Synced to your account at 09:52' : undefined}
-                    onReset={preferences.reset}
-                    resetScope={synced ? 'all' : 'section'}
-                    onDone={() => undefined}
-                />
-            </Shell>
-        </TooltipProvider>
-    )
-}
-
 const meta: Meta = { title: 'Apps/Settings' }
 export default meta
 
@@ -677,24 +597,7 @@ export const Synced: StoryObj = {
 }
 
 /**
- * The preferences as a page in the app's shell, open on General: the sections down the side with
- * the search over them, General's rows under its title, and the footer across the foot with Reset
- * to defaults for General, the note that changes are kept, and Done. A phone puts the search and a
- * row of the sections on top.
+ * The preferences dialog open on Account, a section with nothing to put back (`reset: false` on the
+ * section): its footer leaves Reset to defaults out and keeps the note and Done.
  */
-export const Page: StoryObj = { render: () => <SettingsPage /> }
-
-/**
- * The page open on Account, a section with nothing to put back (`reset: false` on the section): its
- * footer leaves Reset to defaults out and keeps the note and Done.
- */
-export const NoReset: StoryObj = { name: 'No reset', render: () => <SettingsPage open="account" /> }
-
-/** The page with "run" typed into its search: the sections narrowed to those with a matching setting, and General to its matching rows. */
-export const PageSearch: StoryObj = { name: 'Page search', render: () => <SettingsPage search="run" /> }
-
-/** The page with "theme" typed into its search: the section's own name, so Theme is shown whole. */
-export const SectionSearch: StoryObj = { name: 'Section search', render: () => <SettingsPage search="theme" /> }
-
-/** The page with the app's own note in its footer and a reset that puts back every setting. */
-export const PageSynced: StoryObj = { name: 'Page synced', render: () => <SettingsPage synced /> }
+export const NoReset: StoryObj = { name: 'No reset', render: () => <SettingsApp opening={{ active: 'account', phoneStart: 'section' }} /> }
