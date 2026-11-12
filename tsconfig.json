@@ -23,7 +23,8 @@
             "@winterop-com/sokkel-ui-maps/*": ["./packages/maps/src/*"],
             "@winterop-com/sokkel-ui-graph/*": ["./packages/graph/src/*"],
             "@winterop-com/sokkel-ui-terminal/*": ["./packages/terminal/src/*"],
-            "@winterop-com/sokkel-ui-media/*": ["./packages/media/src/*"]
+            "@winterop-com/sokkel-ui-media/*": ["./packages/media/src/*"],
+            "@winterop-com/sokkel-ui-fhir/*": ["./packages/fhir/src/*"]
         }
     },
     "include": [

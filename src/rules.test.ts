@@ -3,7 +3,7 @@ import { dirname, join, relative, resolve } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
-import { exportedComponents, exportProblems, importPath, manifestOf, type PackageDir } from '../scripts/components-index'
+import { ADDONS, exportedComponents, exportProblems, importPath, manifestOf, PACKAGES, type PackageDir } from '../scripts/components-index'
 
 /**
  * The library's rules, checked on every source file: sizes and colors come from tokens, and the
@@ -22,10 +22,12 @@ function files(dir: string): string[] {
     })
 }
 
-/** The packages: the core one, and an add-on per engine that stands on it. */
+/**
+ * The packages, as `scripts/components-index.ts` lists them: the core, the engine add-ons (and media),
+ * and the domain add-ons, each of which stands on the core alone. A new domain package is one more
+ * name in its `DOMAIN_ADDONS`.
+ */
 const CORE = 'core'
-const ADDONS = ['charts', 'maps', 'graph', 'terminal', 'media']
-const PACKAGES = [CORE, ...ADDONS]
 const NAMES: Record<string, string> = Object.fromEntries(
     PACKAGES.map((name) => [name, name === CORE ? '@winterop-com/sokkel-ui' : `@winterop-com/sokkel-ui-${name}`]),
 )
@@ -103,8 +105,8 @@ const RULES: Rule[] = [
     },
     ...ADDONS.map((addon) => ({
         name: `${addon} importing another add-on package`,
-        // An add-on carries one engine and stands on the core alone, so an app installs only the engines
-        // it draws with. The dashboard's chart panels sit in the charts package beside the charts they use.
+        // An add-on carries one engine or one domain and stands on the core alone, so an app installs only
+        // what it uses. The dashboard's chart panels sit in the charts package beside the charts they use.
         pattern: new RegExp(`(?:from|import)\\s*\\(?\\s*'@winterop-com/sokkel-ui-(?!${addon}/)`),
         in: SOURCES[addon],
     })),
@@ -186,6 +188,11 @@ const DOCS = ['llms.txt', 'README.md', 'examples/README.md', ...readdirSync(join
     .map((file) => join(ROOT, file))
 
 describe('the packages', () => {
+    it('are every folder in packages/', () => {
+        const folders = readdirSync(join(ROOT, 'packages')).filter((name) => existsSync(join(ROOT, 'packages', name, 'package.json')))
+        expect(folders.sort()).toEqual([...PACKAGES].sort())
+    })
+
     it('import one another by name, never by a path out of their own folder', () => {
         const found: string[] = []
         for (const name of PACKAGES) {

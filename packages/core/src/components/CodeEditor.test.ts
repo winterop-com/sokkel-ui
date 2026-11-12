@@ -52,6 +52,23 @@ describe('languages by name', () => {
         expect(languageForMediaType(undefined)).toBe('text')
     })
 
+    it("knows an installed plugin's language by its name and its media types", async () => {
+        const { registerPlugins, pluginLanguage } = await import('../lib/plugins')
+        const { languageForMediaType } = await import('./CodeEditor')
+        const steps = { name: 'steps', token: (stream: { skipToEnd: () => void }) => (stream.skipToEnd(), null) }
+        expect(languageForMediaType('text/x-steps')).toBe('text')
+        registerPlugins([
+            {
+                name: 'pipelines',
+                languages: [{ name: 'steps', language: steps, mediaTypes: ['text/x-steps', /^application\/(?:[\w.-]+\+)?steps$/] }],
+            },
+        ])
+        expect(pluginLanguage('steps')?.language).toBe(steps)
+        expect(languageForMediaType('text/x-steps')).toBe('steps')
+        expect(languageForMediaType('application/nightly-export+steps')).toBe('steps')
+        expect(languageForMediaType('application/json')).toBe('json')
+    })
+
     it('loads SQL, shell and Jinja on first use', async () => {
         const { loadCodeLanguage } = await import('./CodeEditor')
         await Promise.all([loadCodeLanguage('sql'), loadCodeLanguage('shell'), loadCodeLanguage('jinja'), loadCodeLanguage('json')])

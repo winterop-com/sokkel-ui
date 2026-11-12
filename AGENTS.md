@@ -31,16 +31,23 @@ and ask before acting.
 
 - Apps install these packages and never copy from them. A component an app needs to differ gets an
   option here, never a local edit in the app.
-- Six packages in `packages/`: `core` (`@winterop-com/sokkel-ui`, everything without an engine of
-  its own, the tokens and the themes), an add-on per engine: `charts` (ECharts: `Chart`, its
-  kinds and the dashboard's chart panels), `maps` (maplibre), `graph` (React Flow and elk) and
-  `terminal` (xterm.js: `Terminal` and `TerminalView`), and `media`, the music and video app parts
-  (`MediaBar` and its fullscreen view, `TrackList`, `MediaCard`, `Artwork`, `useMediaSession`). An
-  add-on imports the core by its name (`@winterop-com/sokkel-ui/...`), never by a path; the core
-  never imports an add-on, and no add-on imports another. A part that needs no engine goes in the
-  core, save the music and video app parts; what a core part plays through (`AudioPlayer`,
-  `VideoPlayer`, the controls and `SoundVisualizer`) stays in the core. `src/rules.test.ts` holds
-  those lines.
+- Seven packages in `packages/`: `core` (`@winterop-com/sokkel-ui`, everything without an engine
+  of its own, the tokens and the themes) and two kinds of add-on on it.
+    - Engine add-ons, one per engine: `charts` (ECharts: `Chart`, its kinds and the dashboard's
+      chart panels), `maps` (maplibre), `graph` (React Flow and elk) and `terminal` (xterm.js:
+      `Terminal` and `TerminalView`); and `media`, the music and video app parts (`MediaBar` and its
+      fullscreen view, `TrackList`, `MediaCard`, `Artwork`, `useMediaSession`).
+    - Domain add-ons, one per domain, each holding that domain's parts: `fhir`
+      (`@winterop-com/sokkel-ui-fhir`), the health-data standards' languages, FHIRPath and CQL, for
+      the code editor. A domain add-on plugs into the core as a plugin an app installs once with
+      `registerPlugins` from `@winterop-com/sokkel-ui/lib/plugins`; a new kind of contribution goes
+      into that module when a domain needs one, never before.
+      The same lines hold for both kinds: an add-on imports the core by its name
+      (`@winterop-com/sokkel-ui/...`), never by a path; the core never imports an add-on, and no add-on
+      imports another. A part that needs no engine and belongs to no domain goes in the core, save the
+      music and video app parts; what a core part plays through (`AudioPlayer`, `VideoPlayer`, the
+      controls and `SoundVisualizer`) stays in the core. `src/rules.test.ts` holds those lines, and a new
+      domain package is one more name in `DOMAIN_ADDONS` in `scripts/components-index.ts`.
 - `packages/core/tokens/tokens.json` is the only place a token is defined. Run `bun run tokens`
   after editing it; `tokens.css`, `themes.css` and the theme files in `themes/`, all under
   `packages/core/src/styles/`, are generated and never edited by hand.
@@ -151,7 +158,7 @@ and ask before acting.
 - No tags and no releases unless the owner asks for one. A release is a PR that moves the version
   in every `packages/*/package.json` to the same one; once it is merged, the tag `vX.Y.Z` on that
   commit runs `.github/workflows/release.yaml`, which checks the tag against each package's version,
-  runs the gates, builds, and publishes all six packages to GitHub Packages. Then a GitHub release
+  runs the gates, builds, and publishes every package to GitHub Packages. Then a GitHub release
   with the notes.
 - Ask before any outward or hard-to-undo action: publishing, changing repository settings,
   rewriting history, force-pushing, deleting.

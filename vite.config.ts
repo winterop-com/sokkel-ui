@@ -16,7 +16,7 @@ export const alias = [
     { find: /^@winterop-com\/sokkel-ui\/hooks\/(.+)$/, replacement: `${packages}/core/src/hooks/$1` },
     { find: /^@winterop-com\/sokkel-ui\/lib\/(.+)$/, replacement: `${packages}/core/src/lib/$1` },
     { find: /^@winterop-com\/sokkel-ui\/([^.]+)$/, replacement: `${packages}/core/src/components/$1` },
-    { find: /^@winterop-com\/sokkel-ui-(charts|maps|graph|terminal|media)\/([^.]+)$/, replacement: `${packages}/$1/src/$2` },
+    { find: /^@winterop-com\/sokkel-ui-([a-z]+)\/([^.]+)$/, replacement: `${packages}/$1/src/$2` },
     { find: '@', replacement: `${packages}/core/src` },
 ]
 

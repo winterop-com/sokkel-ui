@@ -5,7 +5,8 @@ with real-shaped data, rendered by CI at every narrow width, failing one that th
 
 ## Distribution
 
-The library is six packages, built from one Bun workspace and released together at one version:
+The library is seven packages, built from one Bun workspace and released together at one version:
+the core, the engine add-ons (and media), and the domain add-ons.
 
 - `@winterop-com/sokkel-ui` (`packages/core`): the tokens and themes, the primitives, the patterns,
   layout, forms, tables, the shell, the players chat uses, board, calendar, schema, `CodeEditor`,
@@ -23,12 +24,15 @@ The library is six packages, built from one Bun workspace and released together 
   `Lyrics`, `Transcript`, `SleepTimerMenu`, `MediaCard`, `Artwork`, `useMediaSession`, `useQueue`,
   `VideoStatsOverlay`, `UpNext`, `ChannelRow`, `MediaActions`, `WatchLayout`, and `hlsSource`, which
   plays an HTTP live stream in `VideoPlayer` through hls.js, an optional peer.
+- `@winterop-com/sokkel-ui-fhir` (`packages/fhir`), the first domain add-on: the health-data
+  standards' languages, FHIRPath and CQL, for `CodeEditor`, as the plugin `fhir`.
 
 An app installs the core and the add-ons it draws with, so an engine is installed only by an app
 that uses it, and the music and video parts only by an app that plays music or video. Each add-on
 stands on the core as a peer dependency at the same version and imports it by its name; the core
 never imports an add-on and no add-on imports another, which `src/rules.test.ts` holds. A part that
-needs no engine belongs in the core, save the music and video app parts in the media package. The
+needs no engine and belongs to no domain goes in the core, save the music and video app parts in
+the media package. The
 core's own dependencies are what every app's frame draws with (Base UI, lucide, cmdk for the
 palette, the class helpers, the Plex fonts); every library only some parts need is an optional peer
 dependency: the engines left in the core (Mermaid, KaTeX, CodeMirror), Shiki, react-markdown and its
@@ -58,7 +62,7 @@ need not import the part (`isSoundVisualizer`), and `chartLegend` has a module o
 reads every kind.
 
 `dist/` is built, not committed, so an install from a repository URL gets no compiled code (bun also
-blocks such a dependency's install scripts). The tag workflow publishes the six packages to GitHub
+blocks such a dependency's install scripts). The tag workflow publishes the seven packages to GitHub
 Packages, and apps pin that version.
 
 Each package's `exports` map names every module an app may import, one entry per module with its
@@ -937,6 +941,22 @@ scaled to its box, as a still SVG with no React Flow under it. React Flow is the
 interactive graph; a mini graph has nothing to press, pan or zoom, and a canvas with its own store
 and observers per row would make a list of fifty rows heavy, so it is drawn as a sparkline is.
 Placements are kept by shape, so many rows of one pipeline ask elk once.
+
+## Plugins
+
+Domain packages extend the core through plugins. A domain add-on holds one domain's parts and
+exports a plugin, a `SokkelPlugin` from `@winterop-com/sokkel-ui/lib/plugins`: a name and what it
+contributes. An app installs its plugins once as it starts, before it draws, with
+`registerPlugins([...])`; the core's parts then know those contributions by name. One way to
+install, a plain call rather than a provider, because the parts read a registry the module holds,
+as `CodeEditor` already did its languages. The only kind of contribution so far is a `CodeEditor`
+language (`languages`: a name, a stream parser or `LanguageSupport`, and the media types
+`languageForMediaType` reads as it); the language names are typed through `PluginLanguageNames`,
+which the plugin's package adds its names to. A new kind (a block kind, a chip kind, a schema
+format) is added to the interface when a domain package needs one, never ahead of it. The first
+domain package, `@winterop-com/sokkel-ui-fhir`, gives the editor FHIRPath and CQL, the HL7
+health-data standards' expression and query languages, as stream parsers: keywords, strings, date
+and time literals, functions, members after a dot, `%` variables and comments across lines.
 
 ## Terminals
 
