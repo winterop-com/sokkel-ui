@@ -7,9 +7,12 @@ import { DataTable, type DataColumn } from '@winterop-com/sokkel-ui/DataTable'
 import { Fill, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { LogView, type LogLine } from '@winterop-com/sokkel-ui/LogView'
 import { PaneHeader } from '@winterop-com/sokkel-ui/PaneHeader'
+import { Section } from '@winterop-com/sokkel-ui/Section'
 import { Segmented } from '@winterop-com/sokkel-ui/Segmented'
+import { SelectField } from '@winterop-com/sokkel-ui/SelectField'
 import { SplitPane, useSplitPane } from '@winterop-com/sokkel-ui/SplitPane'
 import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
+import { TextField } from '@winterop-com/sokkel-ui/TextField'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 
 /**
@@ -103,6 +106,51 @@ export const Down: StoryObj = { render: () => <SplitPane direction="down" defaul
 
 /** A split that does not resize: the job keeps a third of the room and the edge does not drag. */
 export const Fixed: StoryObj = { render: () => <SplitPane resizable={false} defaultShare={1 / 3} first={config} second={log} /> }
+
+const PROJECTS = [
+    { value: 'harbor', label: 'harbor' },
+    { value: 'juniper', label: 'juniper' },
+    { value: 'larkspur', label: 'larkspur' },
+]
+
+const SCHEDULES = [
+    { value: 'nightly', label: 'Every night at 02:00' },
+    { value: 'hourly', label: 'Every hour' },
+    { value: 'manual', label: 'Only when started' },
+]
+
+/**
+ * A job's file beside its settings, the settings as tall as their fields. On a phone the split
+ * flows: the file and the settings stack at their own heights, and the two scroll as one column
+ * rather than each in half the screen.
+ */
+export const FormBeside: StoryObj = {
+    name: 'Form beside',
+    render: () => (
+        <SplitPane
+            defaultShare={0.55}
+            first={config}
+            second={
+                <Section title="Settings" flush>
+                    <Stack gap="md" className="p-3">
+                        <TextField id="split-job" label="Job" defaultValue="import-orders" mono />
+                        <SelectField id="split-project" label="Project" options={PROJECTS} value="harbor" />
+                        <SelectField id="split-schedule" label="Schedule" options={SCHEDULES} value="nightly" />
+                        <TextField id="split-notify" label="Notify" defaultValue="#harbor" description="Posted to when a run fails." />
+                        <TextField id="split-retries" label="Retries" defaultValue="2" numeric />
+                        <TextField
+                            id="split-note"
+                            label="Note"
+                            multiline
+                            rows={3}
+                            defaultValue="Orders for the month before, fetched as CSV and checked against the orders rules."
+                        />
+                    </Stack>
+                </Section>
+            }
+        />
+    ),
+}
 
 /** The log alone at every width, as when the reader turns the job off; the job stays mounted, hidden. */
 export const SecondAlone: StoryObj = { name: 'Second alone', render: () => <SplitPane only="second" first={config} second={log} /> }
