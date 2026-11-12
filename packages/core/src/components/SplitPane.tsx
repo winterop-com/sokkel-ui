@@ -10,6 +10,7 @@ import {
     type ReactNode,
 } from 'react'
 
+import { useIsMobile } from '../hooks/use-mobile'
 import { cn } from '../lib/cn'
 import { parseStored, readStored, storedKey, subscribeStored, writeStored } from '../lib/stored'
 import { ResizeHandle } from './ResizeHandle'
@@ -34,6 +35,8 @@ export interface SplitPaneState {
     narrow: boolean
     /** The pane shown alone, by `only` or while the split is narrow, or null while both are shown. */
     alone: 'first' | 'second' | null
+    /** Whether the panes are stacked at their own heights on a phone, the split scrolling as one column. */
+    flowing: boolean
 }
 
 const SplitPaneContext = createContext<SplitPaneState | null>(null)
@@ -52,6 +55,29 @@ export function clampShare(share: number, min = 0, max = 1): number {
     const high = Math.max(low, Math.min(1, max))
     if (Number.isNaN(share)) return low
     return Math.min(high, Math.max(low, share))
+}
+
+/**
+ * How a split lays its panes out: which pane it shows alone, whether they stand side by side, and
+ * whether they flow, stacked at their own heights in one column that scrolls. A split flows when it
+ * stacks while narrow on a phone, so two small panes that each scroll never share a phone's height.
+ */
+export function splitLayout({
+    direction,
+    narrow,
+    whenNarrow,
+    only,
+    phone,
+}: {
+    direction: SplitPaneDirection
+    narrow: boolean
+    whenNarrow: SplitPaneNarrow
+    only?: 'first' | 'second'
+    phone: boolean
+}): { alone: 'first' | 'second' | null; across: boolean; flowing: boolean } {
+    const alone = only ?? (narrow && whenNarrow !== 'stack' ? whenNarrow : null)
+    const stacked = narrow && whenNarrow === 'stack'
+    return { alone, across: direction === 'across' && !stacked, flowing: alone === null && stacked && phone }
 }
 
 /** The key a split's share is kept under: the app's prefix, then `split-pane.` and the split's id. */
@@ -159,7 +185,10 @@ export interface SplitPaneProps {
  * Narrower than `narrowBelow` pixels, measured on the split itself rather than the window so it
  * holds in any container, a split across stacks its panes one over the other with the same share
  * of the height (`narrow="stack"`), or shows only the pane `narrow` names, as a phone shows a list
- * or the message opened from it. `only` shows one pane alone at any width, as a reader turns the
+ * or the message opened from it. On a phone a stacked split flows: each pane takes its own height,
+ * at least its share of the screen's so a pane that fills its box (a map, an editor) keeps room, and
+ * the panes scroll together as one column, the split's own box scrolling where it is held to a
+ * height and the page otherwise; the edge does not drag there. `only` shows one pane alone at any width, as a reader turns the
  * other off; the hidden pane stays mounted, so it comes back as it was left. `useSplitPane` tells a
  * pane whether it is shown alone.
  *
@@ -202,23 +231,33 @@ export function SplitPane({
 
     const { root, room } = useRoom()
     const firstPane = useRef<HTMLDivElement>(null)
+    const phone = useIsMobile()
+    const outer = useSplitPane()
     const narrow = room !== null && room.width < narrowBelow
-    const alone = only ?? (narrow && whenNarrow !== 'stack' ? whenNarrow : null)
-    const across = direction === 'across' && !(narrow && whenNarrow === 'stack')
+    const { alone, across, flowing } = splitLayout({ direction, narrow, whenNarrow, only, phone })
     const length = room === null ? 0 : across ? room.width : room.height
     const pixels = (value: number) => Math.round(value * length)
-    const size: CSSProperties | undefined = alone === null ? { [across ? 'width' : 'height']: `${current * 100}%` } : undefined
+    const size: CSSProperties | undefined =
+        alone !== null ? undefined : flowing ? { minHeight: `${current * 100}svh` } : { [across ? 'width' : 'height']: `${current * 100}%` }
 
-    // A pane's one child fills its height, as a cell of a row stretches; what overflows it scrolls in the pane.
-    const pane = 'min-h-0 min-w-0 flex-col overflow-auto [&>:only-child]:min-h-0 [&>:only-child]:flex-1'
+    // A pane's one child fills its height, as a cell of a row stretches; what overflows it scrolls in
+    // the pane, or, while the split flows, the pane grows to hold it.
+    const pane = cn('min-h-0 min-w-0 flex-col [&>:only-child]:min-h-0 [&>:only-child]:flex-1', !flowing && 'overflow-auto')
+    // A flowing split scrolls as one column, unless a flowing split around it already does.
+    const box = !flowing
+        ? 'h-full min-h-0 w-full min-w-0 flex-1'
+        : outer?.flowing === true
+          ? 'w-full min-w-0 flex-none'
+          : 'h-full min-h-0 w-full min-w-0 flex-1 overflow-y-auto'
     return (
-        <SplitPaneContext.Provider value={{ narrow, alone }}>
+        <SplitPaneContext.Provider value={{ narrow, alone, flowing }}>
             <div
                 ref={root}
                 data-slot="split-pane"
                 data-direction={across ? 'across' : 'down'}
                 data-narrow={narrow || undefined}
-                className={cn('flex h-full min-h-0 w-full min-w-0 flex-1', across ? 'flex-row' : 'flex-col', className)}
+                data-flowing={flowing || undefined}
+                className={cn('flex', box, across ? 'flex-row' : 'flex-col', className)}
             >
                 <div
                     ref={firstPane}
@@ -236,7 +275,7 @@ export function SplitPane({
                         className={cn('z-1 shrink-0 bg-border-strong', across ? '-ml-px w-px' : '-mt-px h-px')}
                     />
                 )}
-                {alone === null && resizable && changeable && room !== null && (
+                {alone === null && !flowing && resizable && changeable && room !== null && (
                     <ResizeHandle
                         target={firstPane}
                         size={pixels(current)}
@@ -249,7 +288,11 @@ export function SplitPane({
                         label={words.resize}
                     />
                 )}
-                <div data-slot="split-pane-second" className={cn(pane, 'flex-1', alone === 'first' ? 'hidden' : 'flex')}>
+                <div
+                    data-slot="split-pane-second"
+                    style={flowing ? { minHeight: `${(1 - current) * 100}svh` } : undefined}
+                    className={cn(pane, flowing ? 'shrink-0' : 'flex-1', alone === 'first' ? 'hidden' : 'flex')}
+                >
                     {second}
                 </div>
             </div>

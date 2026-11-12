@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { setStoredPrefix } from '../lib/stored'
-import { SplitPane, clampShare, keepShare, keptShare, parseShare, shareKey } from './SplitPane'
+import { SplitPane, clampShare, keepShare, keptShare, parseShare, shareKey, splitLayout } from './SplitPane'
 
 class FakeStorage {
     items = new Map<string, string>()
@@ -118,5 +118,37 @@ describe('SplitPane', () => {
         expect(html).toContain('preview')
         expect(html).not.toContain('split-pane-rule')
         expect(html).not.toContain('style="width')
+    })
+})
+
+describe('splitLayout', () => {
+    const base = { direction: 'across', narrow: false, whenNarrow: 'stack', phone: false } as const
+
+    it('keeps a wide split side by side, on a phone too', () => {
+        expect(splitLayout(base)).toEqual({ alone: null, across: true, flowing: false })
+        expect(splitLayout({ ...base, phone: true })).toEqual({ alone: null, across: true, flowing: false })
+    })
+
+    it('stacks a narrow split with shares of the height on a wide screen', () => {
+        expect(splitLayout({ ...base, narrow: true })).toEqual({ alone: null, across: false, flowing: false })
+        expect(splitLayout({ ...base, direction: 'down', narrow: true })).toEqual({ alone: null, across: false, flowing: false })
+    })
+
+    it('flows a stacked split on a phone, panes at their own heights', () => {
+        expect(splitLayout({ ...base, narrow: true, phone: true })).toEqual({ alone: null, across: false, flowing: true })
+        expect(splitLayout({ ...base, direction: 'down', narrow: true, phone: true }).flowing).toBe(true)
+    })
+
+    it('never flows a split showing one pane alone', () => {
+        expect(splitLayout({ ...base, narrow: true, phone: true, whenNarrow: 'second' })).toEqual({
+            alone: 'second',
+            across: true,
+            flowing: false,
+        })
+        expect(splitLayout({ ...base, narrow: true, phone: true, only: 'first' })).toEqual({
+            alone: 'first',
+            across: false,
+            flowing: false,
+        })
     })
 })

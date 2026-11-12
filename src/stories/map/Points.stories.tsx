@@ -2,6 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { Feature } from 'geojson'
 import { useState } from 'react'
 
+import { Columns } from '@winterop-com/sokkel-ui/Layout'
+
 import { BoundaryLayer } from '@winterop-com/sokkel-ui-maps/BoundaryLayer'
 import { MapLegend } from '@winterop-com/sokkel-ui-maps/MapLegend'
 import { MapPopup } from '@winterop-com/sokkel-ui-maps/MapPopup'
@@ -81,6 +83,43 @@ function Sized({ cluster }: { cluster: boolean }) {
     )
 }
 
+/** A small map of one region's sites by status, its legend collapsed while the map is narrow. */
+function RegionMap({ region }: { region: Feature }) {
+    const name = regionName[String(region.id)]
+    const inRegion = { ...places, features: places.features.filter((place) => place.properties.region === String(region.id)) }
+    const counts = classCounts(
+        status,
+        inRegion.features.map((place) => statusOf(place)),
+    )
+    return (
+        <MapView label={`Sites in ${name}`} className="h-96">
+            <BoundaryLayer id="region" data={{ ...regions, features: [region] }} interactive={false} />
+            <PointLayer id="sites" data={inRegion} scale={status} value={statusOf} radius={4} />
+            <MapOverlay corner="bottom-left">
+                <MapLegend
+                    title={name}
+                    description={`${inRegion.features.length} sites`}
+                    scale={status}
+                    shape="point"
+                    counts={counts.counts}
+                />
+            </MapOverlay>
+        </MapView>
+    )
+}
+
+function RegionMaps() {
+    return (
+        <Page title="Sites" period="By region and status, November 2026">
+            <Columns count={3} gap="lg">
+                {regions.features.slice(0, 3).map((region) => (
+                    <RegionMap key={String(region.id)} region={region} />
+                ))}
+            </Columns>
+        </Page>
+    )
+}
+
 const meta: Meta = { title: 'Maps/Points' }
 export default meta
 
@@ -90,3 +129,8 @@ export const Categorical: StoryObj = { name: 'Categories', render: () => <Status
 export const SizedByValue: StoryObj = { name: 'Sized', render: () => <Sized cluster={false} /> }
 /** The same sites gathered into counted clusters, which zoom in when clicked. */
 export const Clustered: StoryObj = { name: 'Clustered', render: () => <Sized cluster /> }
+/**
+ * Three small maps side by side, one region's sites each. Each map is narrower than its legend's
+ * `collapseBelow`, so each legend starts collapsed to a button with its title, which opens it.
+ */
+export const SmallMaps: StoryObj = { name: 'Small maps', render: () => <RegionMaps /> }

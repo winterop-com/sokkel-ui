@@ -1,6 +1,6 @@
 import { distinct, labelOf, numberOf } from '../data'
 import { tooltipMarkup } from '../look'
-import { written } from './categories'
+import { tickWriter, written } from './categories'
 import { colorOf, type ChartBuilder, type ChartSpec } from './spec'
 
 /** The fields a parallel chart draws an axis for, in order. */
@@ -30,6 +30,7 @@ export const parallel: ChartBuilder = (spec, look) => {
     )
     const groups = spec.series === undefined ? ['All'] : distinct(spec.rows, spec.series, spec.seriesOrder)
     const text = { color: look.muted, fontFamily: look.font, fontSize: look.size.label }
+    const tickText = { ...text, textBorderColor: look.card, textBorderWidth: 3 }
     const valueOf = (value: unknown, index: number) => (kinds[index] ? numberOf(value) : labelOf(value))
     return {
         tooltip: {
@@ -54,13 +55,20 @@ export const parallel: ChartBuilder = (spec, look) => {
                 nameTextStyle: { ...text, color: look.foreground },
                 axisLine: { show: true, lineStyle: { color: look.border } },
                 axisTick: { show: false },
-                axisLabel: { ...text, textBorderColor: look.card, textBorderWidth: 3 },
+                axisLabel: tickText,
                 splitLine: { show: false },
             },
         },
         parallelAxis: fields.map((field, index) =>
             kinds[index]
-                ? { dim: index, name: field, type: 'value', scale: true, z: 3 }
+                ? {
+                      dim: index,
+                      name: field,
+                      type: 'value',
+                      scale: true,
+                      z: 3,
+                      axisLabel: { ...tickText, formatter: tickWriter(spec.format) },
+                  }
                 : { dim: index, name: field, type: 'category', data: labels[index], z: 3 },
         ),
         series: groups.map((name, index) => ({

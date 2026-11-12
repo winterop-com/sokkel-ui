@@ -38,7 +38,10 @@ export interface ChartSpec {
      * also a heatmap's scale.
      */
     palette?: readonly string[]
-    /** How a figure is written in tooltips and labels. */
+    /**
+     * How a figure is written in tooltips and labels, and on the value axis' ticks, short there:
+     * the figure it writes for a tick is swapped for a compact one, so `1,500 GB` reads `1.5K GB`.
+     */
     format?: (value: number) => string
     /** A unit written after each figure, on the value axis too, such as `s` or `%`, or one for each `y` field in order. */
     unit?: string | readonly string[]
@@ -105,7 +108,7 @@ export interface ChartSpec {
     layers?: Readonly<Record<string, ChartLayer>>
     /**
      * A two-axis chart's value axes: each one's name, unit, format and range. A chart of one value
-     * axis reads the unit of `left` for its ticks, whichever way the axis runs.
+     * axis writes its ticks with the unit of `left` in place of the spec's, whichever way the axis runs.
      */
     axes?: Readonly<{ left?: ChartAxis; right?: ChartAxis }>
     /** Where each spoke of a radar ends, by its category's name, in place of the one scale `max` sets. */
@@ -171,9 +174,9 @@ export interface ChartLayer {
 export interface ChartAxis {
     /** What the axis measures, written over it. */
     name?: string
-    /** A unit written after its ticks, in place of the spec's, and after its figures where its `format` does not write them. */
+    /** A unit written after its ticks and figures, in place of the spec's, where it has no `format` of its own. */
     unit?: string
-    /** How its figures are written in tooltips, unit and all, in place of the spec's `format`. */
+    /** How its figures are written in tooltips and, short, on its ticks, unit and all, in place of the spec's `format`. */
     format?: (value: number) => string
     min?: number
     max?: number

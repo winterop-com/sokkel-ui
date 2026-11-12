@@ -1,6 +1,5 @@
-import { formatTick } from '../data'
 import { tooltipMarkup } from '../look'
-import { endsStack, farCorners, shaped, written } from './categories'
+import { compactWritten, endsStack, farCorners, shaped, tickWriter, written } from './categories'
 import { colorOf, fieldsOf, isDashed, stackOf, unitAt, type ChartBuilder, type ChartLayer, type ChartSpec } from './spec'
 
 type Side = 'left' | 'right'
@@ -41,6 +40,10 @@ export const dual: ChartBuilder = (spec, look) => {
         return {
             name: own.name ?? (bySeries || first < 0 ? undefined : series[first].name),
             unit,
+            tick:
+                own.format === undefined
+                    ? tickWriter(spec.format, unit)
+                    : (value: number) => compactWritten(own.format?.(value) ?? '', value),
             min: own.min,
             max: own.max,
             write: (value: number | null) =>
@@ -60,7 +63,7 @@ export const dual: ChartBuilder = (spec, look) => {
             max: own.max,
             alignTicks: side === 'right' && own.min === undefined && own.max === undefined,
             splitNumber: 4,
-            axisLabel: { formatter: (value: number) => `${formatTick(value)}${own.unit}`, hideOverlap: true },
+            axisLabel: { formatter: own.tick, hideOverlap: true },
             splitLine: side === 'right' ? { show: false } : undefined,
         }
     }

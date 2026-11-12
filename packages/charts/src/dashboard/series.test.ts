@@ -36,10 +36,10 @@ describe('seriesSpec', () => {
 })
 
 describe('panelFormat', () => {
-    it('writes to the decimals with the unit after, or by the format alone', () => {
+    it('writes to the decimals with the unit after, or by the format alone, ticks too', () => {
         const fixed = panelFormat('%', 1)
         expect([fixed.format?.(42), fixed.unit]).toEqual(['42.0', '%'])
         const own = panelFormat('%', 1, (value) => `${String(value)} runs`)
-        expect([own.format?.(3), own.unit, own.axes?.left?.unit]).toEqual(['3 runs', undefined, '%'])
+        expect([own.format?.(3), own.unit, own.axes]).toEqual(['3 runs', undefined, undefined])
     })
 })

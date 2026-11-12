@@ -1,7 +1,6 @@
-import { formatCompact } from '../data'
 import { textWidth, tooltipMarkup, withAlpha, type ChartLook } from '../look'
 import { niceExtent } from '../scales'
-import { farCorners, fading, shaped, written } from './categories'
+import { farCorners, fading, shaped, tickWriter, written } from './categories'
 import { colorOf, unitAt, type ChartBuilder, type LinkedPanel } from './spec'
 
 /** The height the fixed parts of a linked chart are laid out against, in pixels; a taller chart widens its gaps in proportion. */
@@ -76,7 +75,7 @@ export const linked: ChartBuilder = (spec, look, hidden) => {
 
     const last = panels.length - 1
     const layout = linkedLayout(panels.map((panel) => Math.max(0, panel.style.weight ?? 1)))
-    const ticks = (unit: number) => (value: number) => `${formatCompact(value)}${unitAt(spec, unit)}`
+    const ticks = (unit: number) => tickWriter(spec.format, unitAt(spec, unit))
     // One measure split into panels shares a scale, so their heights compare; separate fields keep their own.
     const shared = (spec.scales ?? (spec.series === undefined ? 'own' : 'shared')) === 'shared'
     const figures = panels.flatMap((panel) => panel.values).filter((value): value is number => value !== null)

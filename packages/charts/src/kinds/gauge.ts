@@ -1,7 +1,7 @@
-import { aggregate, aggregateAt, formatCompact, numberOf } from '../data'
+import { aggregate, aggregateAt, numberOf } from '../data'
 import { SERIES_ORDER, type ChartLook } from '../look'
 import { stepAt } from '../stats'
-import { written } from './categories'
+import { tickWriter, written } from './categories'
 import { fieldsOf, type ChartBuilder, type ChartSpec, type ChartStep, type GaugeDial } from './spec'
 
 /** Where a dial's arc runs and sits: its angles, its center, and the radius of its band and of its thick arc. */
@@ -47,6 +47,7 @@ function dial(
         steps,
         tone,
         write,
+        tick,
         label,
         shape = 'arc',
         small = false,
@@ -59,6 +60,8 @@ function dial(
         /** The arc's and the figure's color, resolved. */
         tone: string
         write: (value: number) => string
+        /** Writes a needle dial's ticks. */
+        tick: (value: number) => string
         label?: string
         shape?: GaugeDial
         /** Writes the figure at the small chart figure size, for a dial in a small box. */
@@ -125,7 +128,7 @@ function dial(
                     color: look.muted,
                     fontFamily: look.font,
                     fontSize: look.size.small,
-                    formatter: (tick: number) => formatCompact(tick),
+                    formatter: tick,
                 },
                 progress: { show: false },
                 pointer: { show: true, length: '66%', width: 5, itemStyle: { color: look.foreground } },
@@ -201,6 +204,7 @@ export const gauge: ChartBuilder = (spec, look) => {
             steps: steps.length === 0 ? [{ color: tone }] : steps.map((step) => ({ value: step.value, color: tokenOf(spec, step) })),
             tone: look.token(tone),
             write: (shown) => written(spec, shown),
+            tick: tickWriter(spec.format),
             label: spec.total,
             shape: spec.dial,
             small: spec.small,

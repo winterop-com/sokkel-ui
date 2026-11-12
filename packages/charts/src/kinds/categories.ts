@@ -9,6 +9,28 @@ export function written(spec: ChartSpec, value: number | null | undefined, field
     return `${(spec.format ?? formatNumber)(value)}${unitAt(spec, field)}`
 }
 
+const FIGURE = /\d[\d,]*(?:\.\d+)?/
+
+/**
+ * A tick written by a chart's `format`, short: the figure `format` writes for the tick's value is
+ * swapped for `formatTick`'s, keeping the words around it, so `1,500 GB` reads `1.5K GB`. Where
+ * `format` writes another figure, as one that changes the unit does (`1.5 TB`), its text is kept.
+ */
+export function compactWritten(text: string, value: number): string {
+    const match = FIGURE.exec(text)
+    if (match === null) return text
+    const figure = Number(match[0].replaceAll(',', ''))
+    const size = Math.abs(value)
+    if (Math.abs(figure - size) > Math.max(0.5, size * 0.01)) return text
+    return `${text.slice(0, match.index)}${formatTick(size)}${text.slice(match.index + match[0].length)}`
+}
+
+/** How a value axis writes its ticks: through the chart's `format` where it has one, short, then the unit. */
+export function tickWriter(format: ((value: number) => string) | undefined, unit = ''): (value: number) => string {
+    if (format === undefined) return (value) => `${formatTick(value)}${unit}`
+    return (value) => `${compactWritten(format(value), value)}${unit}`
+}
+
 /** The rows as categories and series, as shares when the spec stacks them to 100%. */
 export function shaped(spec: ChartSpec) {
     if (spec.x === undefined) throw new Error('This chart needs an x field.')
@@ -33,11 +55,18 @@ function categoryAxis(spec: ChartSpec, categories: string[]) {
     }
 }
 
-/** The value axis' labels: written short, with the spec's unit where it has one, or `%` where the figures stack to 100%. */
+/**
+ * The value axis' labels: written by the spec's `format`, short, with its unit where it has one,
+ * or `%` where the figures stack to 100%.
+ */
 export function valueLabels(spec: ChartSpec) {
     if (spec.stack === 'percent') return { axisLabel: { formatter: (value: number) => `${formatNumber(value)}%` } }
-    const unit = spec.axes?.left?.unit ?? unitAt(spec)
-    return { axisLabel: { formatter: (value: number) => `${formatTick(value)}${unit}` } }
+    return valueTicks(spec)
+}
+
+/** A value axis' ticks, written as the tooltips write its figures, short: by the spec's `format`, then the unit of `left` or the spec's. */
+export function valueTicks(spec: ChartSpec) {
+    return { axisLabel: { formatter: tickWriter(spec.format, spec.axes?.left?.unit ?? unitAt(spec)) } }
 }
 
 /** The value axis' range: from `min` to `max`, or 0 to 100% in quarters where the figures stack to 100%. */
@@ -349,7 +378,7 @@ export const heatmap: ChartBuilder = (spec, look) => {
             itemHeight: 100,
             min: low,
             max: high,
-            text: [`${formatTick(high)}${unitAt(spec)}`, `${formatTick(low)}${unitAt(spec)}`],
+            text: [high, low].map(tickWriter(spec.format, unitAt(spec))),
             textGap: 4,
             inRange: { color: scaleColors(look, scale) },
         },

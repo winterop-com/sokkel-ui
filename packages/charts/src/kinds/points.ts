@@ -1,6 +1,6 @@
 import { distinct, labelOf, numberOf } from '../data'
 import { SERIES_ORDER, tooltipMarkup } from '../look'
-import { valueLabels, written } from './categories'
+import { tickWriter, valueLabels, written } from './categories'
 import { colorOf, legendColor, type ChartBuilder, type ChartSpec } from './spec'
 import type { LegendItem } from '../ChartLegend'
 
@@ -36,6 +36,7 @@ export const scatter: ChartBuilder = (spec, look) => {
             type: 'value',
             scale: spec.fit === true,
             splitLine: { show: true, lineStyle: { color: look.grid } },
+            axisLabel: { formatter: tickWriter(spec.format) },
             ...(xName === undefined ? {} : { name: xName, nameLocation: 'middle', nameGap: 22 }),
         },
         yAxis: { type: 'value', scale: spec.fit === true, ...valueLabels(spec), ...(yName === undefined ? {} : { name: yName }) },

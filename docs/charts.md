@@ -146,7 +146,7 @@ What a chart reads. Each kind reads some of these fields; its row in the tables 
 | `seriesOrder` | Series in this order first.                                                                                                                                              |
 | `colors`      | A color token for a series or a category by its name, such as `status-failed`.                                                                                           |
 | `palette`     | The color tokens series and categories take in turn where `colors` names none, in place of the theme's order.                                                            |
-| `format`      | How a figure is written in tooltips and labels.                                                                                                                          |
+| `format`      | How a figure is written in tooltips, labels and the value axis' ticks; a tick's figure is written short, so `1,500 GB` reads `1.5K GB`.                                  |
 | `unit`        | A unit written after each figure, such as `s` or `%`, or one per `y` field.                                                                                              |
 | `fieldNames`  | What a field is called where the chart names it.                                                                                                                         |
 | `dataFields`  | Fields the chart does not draw, shown after its own in a frame's data view, written as they are.                                                                         |
@@ -180,6 +180,16 @@ What a chart reads. Each kind reads some of these fields; its row in the tables 
 | `history`     | The field drawn as a solid line on the rows before a fan's forecast starts.                                                                                              |
 | `bridge`      | Whether a fan's median is drawn from the last `history` figure, so history and forecast read as one line; true by default.                                               |
 | `marks`       | Lines down the chart at categories of `x`, each dashed, with a `label` at its top and a `color` token: where a forecast starts.                                          |
+
+**Ticks.** A value axis writes its ticks as the tooltips write its figures: by `format`, then the
+unit, so ticks and tooltips never disagree on a unit. Ticks are short: the figure `format` writes
+for a tick's value is swapped for a compact one (`1.5K` for 1,500, up to two decimals below ten),
+keeping the words around it, so `1,500 GB` reads `1.5K GB`. A `format` that writes another figure,
+as one that moves to a larger unit does (`1.50 TB`), is kept as it writes it. `axes.left.unit` is
+the ticks' unit in place of the spec's on a chart of one value axis, and an axis with a `format` of
+its own in `axes` writes its ticks with it, unit and all. Figures stacked to 100% are written in
+percent; a needle gauge's ticks and a heatmap's scale follow `format` too. A builder that draws a
+value axis writes its ticks with `tickWriter` from `kinds/categories.ts`.
 
 ## The kinds
 
