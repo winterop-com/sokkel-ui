@@ -6,7 +6,11 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.22.0** is the latest release (2026-11-12): plugins (`@winterop-com/sokkel-ui/lib/plugins`,
+- **0.22.1** is the latest release (2026-11-12): a second domain add-on,
+  `@winterop-com/sokkel-ui-dhis2`, with DHIS2's expression and program rule languages for
+  CodeEditor, their known names passed as data; a graph badge measured with its drawn padding;
+  `ServerMenu` `relative`; a split button's hint as a tooltip; an unreadable time shown as given.
+- **0.22.0** (2026-11-12): plugins (`@winterop-com/sokkel-ui/lib/plugins`,
   `registerPlugins`) through which domain add-ons extend the core, and the first domain add-on,
   `@winterop-com/sokkel-ui-fhir`, with FHIRPath and CQL for CodeEditor; an unknown language name
   falls back to plain text.

@@ -11,7 +11,8 @@ async function highlightCode(code: string, language: string) {
 const html = (lines: React.ReactNode[] | null) => renderToStaticMarkup(<>{lines}</>)
 
 describe('the highlighter', () => {
-    it('colors code from the code tokens', async () => {
+    // The first test loads the grammars cold, which under a full parallel run can take longer than the default 5 s.
+    it('colors code from the code tokens', { timeout: 20_000 }, async () => {
         const out = html(await highlightCode('const total = 42 // rows', 'ts'))
         expect(out).toContain('color:var(--code-keyword)')
         expect(out).toContain('color:var(--code-number)')
