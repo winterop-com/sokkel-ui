@@ -82,7 +82,7 @@ stays (`make screenshots-ci`, `scripts/baselines.sh`) for when it returns near 1
 
 ## Using it
 
-The library is seven packages on GitHub Packages, released together at one version: the core, the
+The library is eight packages on GitHub Packages, released together at one version: the core, the
 engine add-ons (and media), and the domain add-ons, each holding one domain's parts.
 
 | Package                            | Holds                                                                                      |
@@ -94,6 +94,7 @@ engine add-ons (and media), and the domain add-ons, each holding one domain's pa
 | `@winterop-com/sokkel-ui-terminal` | `TerminalView`, an interactive terminal, and `Terminal`, on xterm.js                       |
 | `@winterop-com/sokkel-ui-media`    | `MediaBar` and its fullscreen view, `TrackList`, `MediaCard`, `Artwork`, `useMediaSession` |
 | `@winterop-com/sokkel-ui-fhir`     | a domain add-on: FHIRPath and CQL, the health-data standards' languages, for `CodeEditor`  |
+| `@winterop-com/sokkel-ui-dhis2`    | a domain add-on: DHIS2's expression languages, for `CodeEditor`                            |
 
 Every app installs the core package; an app that draws charts, maps, graphs or terminals adds that
 package too, which brings its engine with it, and a music or video app adds the media package (the
@@ -115,6 +116,7 @@ bun add @winterop-com/sokkel-ui-graph@0.22.0    # only for graphs
 bun add @winterop-com/sokkel-ui-terminal@0.22.0 # only for terminals
 bun add @winterop-com/sokkel-ui-media@0.22.0    # only for the music and video parts
 bun add @winterop-com/sokkel-ui-fhir@0.22.0     # only for FHIRPath and CQL in the code editor
+bun add @winterop-com/sokkel-ui-dhis2@0.22.0    # only for DHIS2's expression languages in the code editor
 ```
 
 The components are styled with Tailwind classes, so every app runs Tailwind CSS 4.1 or later and
@@ -399,6 +401,25 @@ registerPlugins([fhir])
 <CodeEditor label="Library" language={languageForMediaType('text/cql')} value={library} onChange={setLibrary} />
 ```
 
+The DHIS2 one gives it two: `dhis2-expression` (`text/x-dhis2-expression`), the language of
+indicators, validation rules and predictors, and `dhis2-rule` (`text/x-dhis2-rule`), that of program
+rules and program indicators. It never calls a server. The functions and program variables a server
+version knows are data: `dhis2` knows the latest server's (`DHIS2_FUNCTIONS`, `DHIS2_VARIABLES` in
+`@winterop-com/sokkel-ui-dhis2/names`), and `dhis2Plugin` takes the names an app's data layer says
+its server has. A name the editor was not given is read as a plain name, never as an error:
+
+```tsx
+import { dhis2, dhis2Plugin } from '@winterop-com/sokkel-ui-dhis2/plugin'
+import { DHIS2_FUNCTIONS, DHIS2_VARIABLES } from '@winterop-com/sokkel-ui-dhis2/names'
+
+registerPlugins([dhis2])
+// or, for a server without some of the latest names:
+registerPlugins([dhis2Plugin({ functions: DHIS2_FUNCTIONS.filter((name) => name !== 'd2:inUserGroup'), variables: DHIS2_VARIABLES })])
+
+<CodeEditor label="Numerator" language="dhis2-expression" value={numerator} onChange={setNumerator} />
+<CodeEditor label="Condition" language={languageForMediaType('text/x-dhis2-rule')} value={condition} onChange={setCondition} />
+```
+
 The core's own dependencies are what every app's frame draws with: Base UI, lucide, cmdk (the
 command palette `Shell` opens), the class helpers and the IBM Plex fonts. Every other library is an
 optional peer dependency, installed by an app that uses a part needing it. A part that needs one
@@ -431,7 +452,7 @@ value passes the check. A development build says so once per page, as a warning 
 ## Working on it
 
 The repository is a Bun workspace: the packages are in `packages/core`, `packages/charts`,
-`packages/maps`, `packages/graph`, `packages/terminal`, `packages/media` and `packages/fhir`, and
+`packages/maps`, `packages/graph`, `packages/terminal`, `packages/media`, `packages/fhir` and `packages/dhis2`, and
 the stories in `src/stories/` import them by their names, as an app does. `bun run build` builds them all,
 `bun run test` runs every package's tests and the library rules, and `bun run size` holds the apps
 in `size/` to their budgets.
