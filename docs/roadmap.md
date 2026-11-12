@@ -6,7 +6,12 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.19.16** is the latest release (2026-11-12): the studio example edits a pipeline on its
+- **0.20.0** is the latest release (2026-11-12): an Escape on a chosen graph node keeps the
+  choice; `cyclePath`/`wouldCycle` move to `@winterop-com/sokkel-ui-graph/cycles` (breaking);
+  `GraphControlButton` takes `tooltip` instead of `title` (breaking); view button hints; a badge's
+  critical or warning tone gives its box that edge; `Chip` and block badges take a category `hue`;
+  `BlockPicker width`; the count's line gap measured as drawn; a fitted frame keeps a fixed ground.
+- **0.19.16** (2026-11-12): the studio example edits a pipeline on its
   graph in step with its text (`SharedDocument.replace`, `canUndo`/`canRedo`, `useHistoryKeys`,
   `GraphControls.direction`, `GraphToolbar zoom={false}`); cards fill their grid cell, the foot
   strip cuts its note first, a narrow media bar moves fullscreen, dashboard variables stand a finger
