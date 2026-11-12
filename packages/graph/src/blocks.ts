@@ -23,7 +23,7 @@ export interface PipelineBlockBadge {
     label: string
     /** Neutral by default. */
     tone?: ChipTone
-    /** The hue of the block's category, from the chart palette, worn in place of the tone: the same hue for every block of one category. */
+    /** The hue of the block's category, from the chart palette or a kind color, worn in place of the tone: the same hue for every block of one category. */
     hue?: ChipHue
     /** What pointing at the badge says. */
     title?: string

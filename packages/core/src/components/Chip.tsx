@@ -2,6 +2,7 @@ import { X } from 'lucide-react'
 import type { KeyboardEvent, MouseEvent, ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
+import { KIND_WASH, type KindColor } from '../lib/kind'
 
 /**
  * A chip's tone: neutral, a semantic color drawn as a faint wash with its own ink, or `absent`, a
@@ -19,10 +20,12 @@ const TONE: Record<ChipTone, string> = {
 }
 
 /**
- * A category's hue, one of the chart palette's five, for a chip that tells kinds apart rather than
- * says how something is: a block's category, a tag's group. A theme sets the hues with the charts'.
+ * A category's hue, for a chip that tells kinds apart rather than says how something is: a block's
+ * category, a tag's group. One of the chart palette's five (1 to 5), set by a theme with the
+ * charts', or a kind color by name (`blue`, `violet`, `green`, `pink`, `teal`, `jade`), the one a
+ * label, a calendar or a person wears.
  */
-export type ChipHue = 1 | 2 | 3 | 4 | 5
+export type ChipHue = 1 | 2 | 3 | 4 | 5 | KindColor
 
 const HUE: Record<ChipHue, string> = {
     1: 'bg-chart-1/15 text-chart-1',
@@ -30,6 +33,7 @@ const HUE: Record<ChipHue, string> = {
     3: 'bg-chart-3/15 text-chart-3',
     4: 'bg-chart-4/15 text-chart-4',
     5: 'bg-chart-5/15 text-chart-5',
+    ...KIND_WASH,
 }
 
 const RING = 'focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring focus-visible:outline-solid'
@@ -57,7 +61,7 @@ export interface ChipProps {
     children: ReactNode
     /** Neutral by default. */
     tone?: ChipTone
-    /** A category's hue from the chart palette, worn in place of the tone's wash and ink. */
+    /** A category's hue, from the chart palette or a kind color, worn in place of the tone's wash and ink. */
     hue?: ChipHue
     /** The words in the code face, for an id, a tag or a key. */
     mono?: boolean
@@ -81,7 +85,7 @@ export interface ChipProps {
 /**
  * A short value as a chip: a tag on a job, a state that has no run color, a value that is absent.
  * Its tone is neutral, a semantic color's wash with its own ink, or `absent`, dashed; `hue` gives
- * it a category's color from the chart palette instead. `mono` sets
+ * it a category's color instead, from the chart palette or a kind color. `mono` sets
  * the words in the code face and `icon` goes before them. With `onSelect` the chip is a button,
  * named by `selectLabel` where a press does more than its words say; with `onRemove` it ends in a
  * remove button, its own stop in the tab order with its own focus ring. Neither press reaches a

@@ -536,7 +536,9 @@ keyboard reaches with `focusable`, `say` writes the word beside it where the sta
 `outline` draws it hollow in the tone's ink for a state not known. Its sizes are 6px, 8px (`md`, the
 status dot, which `StatusChip`'s `dot` draws too) and 10px (`lg`, the default). `Chip` says any
 other short value: neutral, good, critical, warning or info in its own ink, or `absent`, dashed;
-`mono` and `icon` set its face, `onSelect` makes it a button and `onRemove` ends it in a named
+`hue` gives it a category's color instead, one of the chart palette's five (1 to 5) or a kind color
+by name (`blue`, `violet`, `green`, `pink`, `teal`, `jade`), each a wash with its ink, and a block
+badge passes its `hue` on; `mono` and `icon` set its face, `onSelect` makes it a button and `onRemove` ends it in a named
 remove button.
 `StatusProvider` and `useStatus` are a module of their own, so a part that draws a state's color
 carries no chip; `lib/status` holds the map's types, the run states and each color as a CSS color.
