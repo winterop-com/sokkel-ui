@@ -6,7 +6,12 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.19.11** is the latest release (2026-11-12): a graph fills a section (`frame="filled"`), hands
+- **0.19.12** is the latest release (2026-11-12): a filled graph takes the floor it is given
+  (`fillFloor`) and wraps to its canvas's width (`wrapToCanvas`, held to `wrapWidth`), a layout menu
+  takes the app's trigger or glyph and can close on a choice, the wheel's step is exported
+  (`GRAPH_WHEEL_STEP_MS`), and controls a finger tall no longer push a phone calendar or nav bar
+  past a folded foldable's width.
+- **0.19.11** (2026-11-12): a graph fills a section (`frame="filled"`), hands
   its zoom and fit to a section's head (`onControls`), takes a `GraphLayoutMenu`, holds its fit as
   told (`fitMinZoom`, `narrowFit`) and wraps a graph too wide into rows (`wrapWidth`); a
   handover's pulse ends on time in a live run, and the edge keyframes reach every app; a pipeline
