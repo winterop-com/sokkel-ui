@@ -112,6 +112,11 @@ export function RunGraph({
     minNodeWidth,
     maxNodeWidth,
     zoomOnDoubleClick,
+    fitMinZoom,
+    narrowFit,
+    onControls,
+    controls,
+    wrapWidth,
     words,
     className,
 }: RunGraphProps) {
@@ -153,7 +158,7 @@ export function RunGraph({
             })),
         )
     }, [steps, handing, reduced])
-    const graph = useNodeGraph(items, links, { direction, selected, routing, spacing, minNodeWidth, maxNodeWidth })
+    const graph = useNodeGraph(items, links, { direction, selected, routing, spacing, wrapWidth, minNodeWidth, maxNodeWidth })
     return (
         <GraphCanvas
             nodes={graph.nodes}
@@ -164,6 +169,11 @@ export function RunGraph({
             frame={frame}
             onSelect={onSelect}
             zoomOnDoubleClick={zoomOnDoubleClick}
+            narrowFit={narrowFit}
+            onControls={onControls}
+            controls={controls}
+            fitMinZoom={fitMinZoom}
+            layoutKey={`${String(routing)}|${String(spacing)}|${String(wrapWidth)}`}
             words={words}
             className={className}
         />

@@ -50,12 +50,16 @@ import {
 } from './layout'
 import type { GraphSizing } from './use-node-graph'
 
+export type { GraphControls } from './context'
+
 /**
  * Where a canvas stands. A `stage` fills its box and the wheel zooms it. A `fitted` canvas is as
  * tall as its drawing at the width it has, the wheel scrolls the page past it, and the wheel with
- * ctrl or cmd held, or a pinch, zooms it.
+ * ctrl or cmd held, or a pinch, zooms it. A `filled` canvas fills its box on the panel's own ground,
+ * with no dots, at least as tall as its drawing up to a floor; each notch of the wheel zooms one
+ * step about the pointer, a pinch zooms smoothly, and on a phone a finger scrolls the page past it.
  */
-export type GraphFrame = 'stage' | 'fitted'
+export type GraphFrame = 'stage' | 'fitted' | 'filled'
 
 /** The words a canvas says. */
 export interface GraphWords {
@@ -145,8 +149,17 @@ export interface GraphViewProps extends GraphLayoutStyle, GraphSizing {
     selected?: string | null
     /** Called with the node chosen, or null when the ground was clicked. */
     onSelect?: (id: string | null) => void
+    /** Given, the graph runs this way at every width; left out, it runs down below 560px and right above. */
     direction?: GraphDirection
     frame?: GraphFrame
+    /** The least zoom a fit goes to: 0.75 when left out. */
+    fitMinZoom?: number
+    /** False keeps a narrow canvas's fit at `fitMinZoom`, rather than letting it go to 0.6 so the width fits. */
+    narrowFit?: boolean
+    /** False hides the canvas's own zoom buttons, for controls drawn elsewhere through `onControls`. */
+    controls?: boolean
+    /** Called with what moves the view once the canvas is drawn, and null as it goes, so a section's head can zoom and fit it. */
+    onControls?: (controls: GraphControls | null) => void
     /** A double click or tap zooms in a step about the point, on a stage; off when left out. */
     zoomOnDoubleClick?: boolean
     words?: Partial<GraphWords>
@@ -178,6 +191,9 @@ const THEME = {
 /** The height the zoom buttons take in a fitted frame, laid out in a row. */
 const BUTTON_ROW = 36
 
+/** The tallest a filled frame insists on for its drawing; past it the drawing fits its box. */
+const FILLED_FLOOR = 360
+
 /** What every fit is made with; the least zoom is the canvas's own. */
 const FIT_OPTIONS = { padding: FIT_PADDING, maxZoom: FIT_MAX_ZOOM, duration: 0 }
 
@@ -191,13 +207,18 @@ function nodeAt(clientX: number, clientY: number): string | null {
 /** The least zoom a narrow canvas goes to so a graph's width fits it, its words still readable. */
 const NARROW_FIT_MIN_ZOOM = 0.6
 
-async function fitGraph(flow: ReactFlowInstance, canvas: { width: number; height: number }, minZoom: number): Promise<void> {
+async function fitGraph(
+    flow: ReactFlowInstance,
+    canvas: { width: number; height: number },
+    minZoom: number,
+    narrowFit = true,
+): Promise<void> {
     const nodes = flow.getNodes()
     if (nodes.length === 0) return
     // On a narrow canvas the width fits first, a little under the usual least zoom if it must; a
     // tall graph then reads down and scrolls rather than hanging off the side.
     let least = minZoom
-    if (canvas.width > 0 && canvas.width < NARROW_GRAPH) {
+    if (narrowFit && canvas.width > 0 && canvas.width < NARROW_GRAPH) {
         const across = flow.getNodesBounds(nodes).width
         const fitsAcross = across > 0 ? (canvas.width * (1 - 2 * FIT_PADDING)) / across : minZoom
         least = Math.min(minZoom, Math.max(NARROW_FIT_MIN_ZOOM, fitsAcross))
@@ -247,6 +268,12 @@ export interface GraphCanvasProps<N extends Node = Node, E extends Edge = Edge> 
      * box's words stay legible, lower for a view of small marks that should be seen whole.
      */
     fitMinZoom?: number
+    /** False keeps a narrow canvas's fit at `fitMinZoom`, rather than letting it go to 0.6 so the width fits. */
+    narrowFit?: boolean
+    /** Called with what moves the view once the canvas is drawn, and null as it goes. */
+    onControls?: (controls: GraphControls | null) => void
+    /** A value that changes with the layout chosen (routing, spacing): the view fits again, even after the reader moved it. */
+    layoutKey?: string
     /** A double click or tap zooms in a step about the point, on a stage; off when left out. */
     zoomOnDoubleClick?: boolean
     words?: Partial<GraphWords>
@@ -280,6 +307,9 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
     controls = true,
     toolbar,
     fitMinZoom = FIT_MIN_ZOOM,
+    narrowFit = true,
+    onControls,
+    layoutKey = '',
     zoomOnDoubleClick = false,
     onWidth,
     emptyAction,
@@ -295,6 +325,14 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
     const gesture = useRef<Viewport | null>(null)
     const mobile = useIsMobile()
     const fitted = frame === 'fitted'
+    const filled = frame === 'filled'
+    // A new layout chosen fits the view again, even one the reader had moved.
+    const laidOut = `${direction}|${layoutKey}`
+    const [fitLayout, setFitLayout] = useState(laidOut)
+    if (fitLayout !== laidOut) {
+        setFitLayout(laidOut)
+        setMoved(false)
+    }
     const editable = editing !== undefined
     const [dragged, setDragged] = useState<Record<string, { x: number; y: number }>>({})
     const [chosenEdge, setChosenEdge] = useState<string | null>(null)
@@ -352,15 +390,18 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
 
     useEffect(() => {
         const element = box.current
-        if (element === null || !fitted) return
+        if (element === null || (!fitted && !filled)) return
         const observer = new ResizeObserver(() => setWidth(element.clientWidth))
         observer.observe(element)
         return () => observer.disconnect()
-    }, [fitted])
+    }, [fitted, filled])
 
     const drawing = boundsOf(nodes.map((node) => ({ ...node.position, width: node.width ?? 0, height: node.height ?? 0 })))
     // A fitted frame keeps a row under the drawing for its buttons.
     const height = fitted ? (empty ? undefined : fittedHeight(drawing, width) + BUTTON_ROW) : undefined
+    // A filled frame is at least as tall as its drawing would be fitted, up to its floor.
+    const floor = filled && !empty && width > 0 ? Math.min(fittedHeight(drawing, width), FILLED_FLOOR) : undefined
+    const ground = fitted || filled
 
     const onNodesChange = (changes: NodeChange<N>[]) => {
         if (editable) {
@@ -407,10 +448,17 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
                         data-graph-connecting={connecting ? '' : undefined}
                         data-graph-dropping={dropping ? '' : undefined}
                         data-graph-settled={settled && (empty || moved || fittedFor === key) ? '' : undefined}
-                        style={{ ...THEME, ...(fitted ? { '--xy-background-color': 'transparent' } : {}), height } as CSSProperties}
+                        style={
+                            {
+                                ...THEME,
+                                ...(ground ? { '--xy-background-color': 'transparent' } : {}),
+                                height,
+                                minHeight: floor,
+                            } as CSSProperties
+                        }
                         className={cn(
                             'group/graph relative w-full overflow-hidden',
-                            fitted ? (empty ? 'h-30' : undefined) : 'h-full min-h-0 rounded-surface bg-canvas',
+                            fitted ? (empty ? 'h-30' : undefined) : filled ? 'h-full' : 'h-full min-h-0 rounded-surface bg-canvas',
                             'data-graph-dropping:outline-2 data-graph-dropping:-outline-offset-2 data-graph-dropping:outline-ring data-graph-dropping:outline-dashed',
                             className,
                         )}
@@ -541,9 +589,9 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
                                       }
                                     : undefined
                             }
-                            panOnDrag={!fitted || !mobile}
-                            zoomOnScroll={!fitted}
-                            preventScrolling={!fitted}
+                            panOnDrag={!ground || !mobile}
+                            zoomOnScroll={!ground}
+                            preventScrolling={!fitted && !(filled && mobile)}
                             zoomOnPinch
                             zoomOnDoubleClick={zoomOnDoubleClick && !fitted}
                             onNodesChange={onNodesChange}
@@ -567,11 +615,19 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
                                 settled={settled}
                                 direction={direction}
                                 minZoom={fitMinZoom}
+                                narrowFit={narrowFit}
                                 onFitted={(fittedKey) => setFittedFor(fittedKey)}
                             />
                             {fitted && <ModifierWheel onZoomed={() => setMoved(true)} />}
-                            {!fitted && <Background variant={BackgroundVariant.Dots} gap={18} size={1} />}
-                            <ViewControls empty={empty} onMoved={setMoved} minZoom={fitMinZoom}>
+                            {filled && <StepWheel onZoomed={() => setMoved(true)} />}
+                            {!ground && <Background variant={BackgroundVariant.Dots} gap={18} size={1} />}
+                            <ViewControls
+                                empty={empty}
+                                onMoved={setMoved}
+                                minZoom={fitMinZoom}
+                                narrowFit={narrowFit}
+                                onControls={onControls}
+                            >
                                 {controls && !empty && (
                                     <Panel position="bottom-right" className="m-2!">
                                         <ZoomButtons words={said} row={fitted} />
@@ -604,28 +660,41 @@ function ViewControls({
     empty,
     onMoved,
     minZoom,
+    narrowFit,
+    onControls,
     children,
 }: {
     empty: boolean
     onMoved: (moved: boolean) => void
     minZoom: number
+    narrowFit: boolean
+    onControls?: (controls: GraphControls | null) => void
     children: ReactNode
 }) {
     const flow = useReactFlow()
     const store = useStoreApi()
     const controls = useMemo<GraphControls>(() => {
-        const step = (way: 'in' | 'out') => () => void flow.zoomTo(steppedZoom(flow.getZoom(), way), { duration: 120 })
+        const step = (way: 'in' | 'out') => () => {
+            onMoved(true)
+            void flow.zoomTo(steppedZoom(flow.getZoom(), way), { duration: 120 })
+        }
         return {
             zoomIn: step('in'),
             zoomOut: step('out'),
             fit: () => {
                 onMoved(false)
                 const { width, height } = store.getState()
-                void fitGraph(flow, { width, height }, minZoom)
+                void fitGraph(flow, { width, height }, minZoom, narrowFit)
             },
             empty,
         }
-    }, [flow, store, onMoved, empty, minZoom])
+    }, [flow, store, onMoved, empty, minZoom, narrowFit])
+    const report = useRef(onControls)
+    report.current = onControls
+    useEffect(() => {
+        report.current?.(controls)
+    }, [controls])
+    useEffect(() => () => report.current?.(null), [])
     return <GraphControlsContext value={controls}>{children}</GraphControlsContext>
 }
 
@@ -690,6 +759,7 @@ function FitToGraph({
     settled,
     direction,
     minZoom,
+    narrowFit,
     onFitted,
 }: {
     placement: string
@@ -697,6 +767,7 @@ function FitToGraph({
     settled: boolean
     direction: GraphDirection
     minZoom: number
+    narrowFit: boolean
     onFitted: (placement: string) => void
 }) {
     const flow = useReactFlow()
@@ -716,12 +787,30 @@ function FitToGraph({
         return () => cancelAnimationFrame(frame)
     }, [direction, flow, updateInternals])
 
+    // A view the reader moved keeps its zoom as the canvas is resized, and brings the chosen node back into it.
+    useEffect(() => {
+        if (!moved) return
+        return store.subscribe((state, before) => {
+            if (state.width === before.width && state.height === before.height) return
+            const chosen = flow.getNodes().find((node) => node.selected === true)
+            if (chosen === undefined) return
+            const view = flow.getViewport()
+            const width = chosen.width ?? 0
+            const height = chosen.height ?? 0
+            const left = chosen.position.x * view.zoom + view.x
+            const top = chosen.position.y * view.zoom + view.y
+            const inside = left >= 0 && top >= 0 && left + width * view.zoom <= state.width && top + height * view.zoom <= state.height
+            if (!inside)
+                void flow.setCenter(chosen.position.x + width / 2, chosen.position.y + height / 2, { zoom: view.zoom, duration: 0 })
+        })
+    }, [flow, store, moved])
+
     useEffect(() => {
         if (moved || placement === '') return
         let current = true
         const fit = () => {
             const { width, height } = store.getState()
-            void fitGraph(flow, { width, height }, minZoom).then(() => {
+            void fitGraph(flow, { width, height }, minZoom, narrowFit).then(() => {
                 if (current && settled) done.current(placement)
             })
         }
@@ -734,8 +823,53 @@ function FitToGraph({
             cancelAnimationFrame(frame)
             unsubscribe()
         }
-    }, [flow, store, moved, placement, settled, minZoom])
+    }, [flow, store, moved, placement, settled, minZoom, narrowFit])
 
+    return null
+}
+
+/** How long one notch of a filled canvas's wheel holds before the next zooms, so a trackpad's stream is one step. */
+const STEP_WHEEL_MS = 160
+
+/**
+ * On a filled canvas, each notch of the wheel zooms one button's step about the pointer, and a
+ * pinch (a wheel with ctrl) or a wheel with cmd zooms smoothly.
+ */
+function StepWheel({ onZoomed }: { onZoomed: () => void }) {
+    const flow = useReactFlow()
+    const store = useStoreApi()
+    const zoomed = useRef(onZoomed)
+    useEffect(() => {
+        zoomed.current = onZoomed
+    }, [onZoomed])
+    useEffect(() => {
+        const element = store.getState().domNode
+        if (element === null) return
+        let last = 0
+        const onWheel = (event: WheelEvent) => {
+            event.preventDefault()
+            event.stopPropagation()
+            const view = flow.getViewport()
+            let zoom: number
+            if (event.ctrlKey || event.metaKey) {
+                zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, view.zoom * wheelZoomFactor(event.deltaY, event.deltaMode)))
+            } else {
+                if (event.deltaY === 0 || event.timeStamp - last < STEP_WHEEL_MS) return
+                last = event.timeStamp
+                zoom = steppedZoom(view.zoom, event.deltaY < 0 ? 'in' : 'out')
+            }
+            if (zoom === view.zoom) return
+            const bounds = element.getBoundingClientRect()
+            const at = { x: event.clientX - bounds.left, y: event.clientY - bounds.top }
+            void flow.setViewport(
+                { x: at.x - ((at.x - view.x) * zoom) / view.zoom, y: at.y - ((at.y - view.y) * zoom) / view.zoom, zoom },
+                { duration: 0 },
+            )
+            zoomed.current()
+        }
+        element.addEventListener('wheel', onWheel, { capture: true, passive: false })
+        return () => element.removeEventListener('wheel', onWheel, { capture: true })
+    }, [flow, store])
     return null
 }
 

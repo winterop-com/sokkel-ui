@@ -71,6 +71,10 @@ export function PipelineGraph({
     direction: given,
     frame = 'stage',
     zoomOnDoubleClick,
+    fitMinZoom,
+    narrowFit,
+    onControls,
+    wrapWidth,
     editing,
     positions,
     controls,
@@ -101,6 +105,7 @@ export function PipelineGraph({
         positions,
         routing,
         spacing,
+        wrapWidth,
         minNodeWidth,
         maxNodeWidth,
     })
@@ -113,6 +118,10 @@ export function PipelineGraph({
             onWidth={setWidth}
             frame={frame}
             zoomOnDoubleClick={zoomOnDoubleClick}
+            narrowFit={narrowFit}
+            onControls={onControls}
+            fitMinZoom={fitMinZoom}
+            layoutKey={`${String(routing)}|${String(spacing)}|${String(wrapWidth)}`}
             onSelect={onSelect}
             onSelectionChange={onSelectionChange}
             editing={editing}

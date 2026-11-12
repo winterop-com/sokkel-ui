@@ -74,6 +74,11 @@ export function StateMachine({
     direction = 'right',
     frame = 'stage',
     zoomOnDoubleClick,
+    fitMinZoom,
+    narrowFit,
+    onControls,
+    controls,
+    wrapWidth,
     routing,
     spacing,
     minNodeWidth,
@@ -105,7 +110,7 @@ export function StateMachine({
         ],
         [transitions, finals, initial],
     )
-    const graph = useNodeGraph(items, links, { direction, selected, routing, spacing, minNodeWidth, maxNodeWidth })
+    const graph = useNodeGraph(items, links, { direction, selected, routing, spacing, wrapWidth, minNodeWidth, maxNodeWidth })
     return (
         <GraphCanvas
             nodes={graph.nodes}
@@ -115,6 +120,11 @@ export function StateMachine({
             direction={direction}
             frame={frame}
             zoomOnDoubleClick={zoomOnDoubleClick}
+            narrowFit={narrowFit}
+            onControls={onControls}
+            controls={controls}
+            fitMinZoom={fitMinZoom}
+            layoutKey={`${String(routing)}|${String(spacing)}|${String(wrapWidth)}`}
             onSelect={onSelect}
             words={words}
             className={className}

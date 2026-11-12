@@ -68,6 +68,18 @@ export interface GraphLayoutStyle {
     routing?: GraphRouting
     /** `normal` when left out. */
     spacing?: GraphSpacing
+    /**
+     * A graph running right that would be wider than this many pixels is cut into rows stacked
+     * down, each carrying on from the one above; left out, it is never cut.
+     */
+    wrapWidth?: number
+}
+
+/** What elk is told to cut a graph too wide into rows by. */
+const WRAP_OPTIONS: Record<string, string> = {
+    'elk.layered.wrapping.strategy': 'MULTI_EDGE',
+    'elk.aspectRatio': '2.0',
+    'elk.layered.wrapping.additionalEdgeSpacing': '24',
 }
 
 /** The gaps one spacing keeps, in pixels: between ranks, between nodes of a rank, and around edges. */
@@ -234,9 +246,13 @@ export function elkOptions(
 
 /** The graph elk is handed for a shape. */
 export function toElk(shape: GraphShape, direction: GraphDirection = 'right', style: GraphLayoutStyle = {}): ElkGraph {
+    const wraps =
+        direction === 'right' &&
+        style.wrapWidth !== undefined &&
+        boundsOf(rankLayout(shape, 'right', style.spacing).nodes).width > style.wrapWidth
     return {
         id: 'root',
-        layoutOptions: elkOptions(direction, style),
+        layoutOptions: wraps ? { ...elkOptions(direction, style), ...WRAP_OPTIONS } : elkOptions(direction, style),
         children: shape.nodes.map((node) => ({ id: node.id, width: node.width, height: node.height })),
         edges: knownEdges(shape).map((edge) => ({
             id: edge.id,
@@ -392,6 +408,7 @@ export function shapeSignature(shape: GraphShape, direction: GraphDirection, sty
         direction,
         style.routing ?? 'orthogonal',
         style.spacing ?? 'normal',
+        style.wrapWidth ?? '',
         shape.nodes.map((node) => `${node.id}:${String(node.width)}x${String(node.height)}`).join(','),
         shape.edges
             .map((edge) => `${edge.source}>${edge.target}${edge.label === undefined ? '' : `:${String(edge.label.width)}`}`)
