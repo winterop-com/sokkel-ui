@@ -265,7 +265,15 @@ export function MetricsApp({ frame }: { frame: Frame }) {
                         markHref="#/dashboards"
                         name="Metrics"
                         groups={groups}
-                        foot={<AccountMenu name="ada" where="tidevann.example.org" onSettings={() => go('/settings')} />}
+                        foot={
+                            <AccountMenu
+                                name="ada"
+                                where="tidevann.example.org"
+                                onSettings={() => go('/settings')}
+                                scheme={frame.appearance.settings.scheme}
+                                onSchemeChange={(scheme) => frame.appearance.setSettings({ ...frame.appearance.settings, scheme })}
+                            />
+                        }
                     />
                 }
                 top={

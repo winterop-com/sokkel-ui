@@ -42,25 +42,23 @@ export function Incidents({ me, onReport }: { me: Person; onReport: () => void }
                     </Button>
                 }
             />
-            <Toolbar
-                search={<SearchField value={search} onChange={setSearch} placeholder="Search" />}
-                end={
-                    <Segmented
-                        label="Incidents shown"
-                        value={shown}
-                        onValueChange={setShown}
-                        options={[
-                            { value: 'open', label: 'Open', count: open.length, dot: healthCss('outage') },
-                            { value: 'resolved', label: 'Resolved', count: all.length - open.length, dot: healthCss('operational') },
-                            { value: 'all', label: 'All', count: all.length },
-                        ]}
-                    />
-                }
-            />
+            <Toolbar>
+                <Segmented
+                    label="Incidents shown"
+                    value={shown}
+                    onValueChange={setShown}
+                    options={[
+                        { value: 'open', label: 'Open', count: open.length, dot: healthCss('outage') },
+                        { value: 'resolved', label: 'Resolved', count: all.length - open.length, dot: healthCss('operational') },
+                        { value: 'all', label: 'All', count: all.length },
+                    ]}
+                />
+            </Toolbar>
             <PageState loading={rows.incidents === undefined && rows.error === undefined} error={rows.error}>
                 <IncidentTable
                     rows={listed}
                     className="min-h-0 flex-1"
+                    search={<SearchField value={search} onChange={setSearch} placeholder="Search" />}
                     actions={(incident) => incidentActions(incident, me, rows.onCall?.person)}
                     empty={
                         <Empty>

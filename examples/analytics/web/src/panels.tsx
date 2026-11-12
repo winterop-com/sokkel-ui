@@ -84,7 +84,7 @@ export function KpiPanels() {
             <StatPanel
                 title="Sign-ups"
                 value={now.signups}
-                color="chart-5"
+                color="chart-4"
                 sparkline={now.trend.signups}
                 delta={before === undefined ? undefined : change(now.signups, before.signups)}
                 good={before === undefined ? undefined : now.signups >= before.signups}

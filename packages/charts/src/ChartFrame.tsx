@@ -268,7 +268,8 @@ export function ChartFrame({
             {head && (
                 <header className={cn('flex min-h-8 shrink-0 items-center gap-1 pr-1.5 pl-3', actions !== undefined && 'flex-wrap')}>
                     <div className={cn('flex min-h-8 min-w-0 items-center gap-1.5', actions !== undefined ? 'grow basis-40' : 'flex-1')}>
-                        {title !== undefined && <h3 className="truncate text-xs font-medium">{title}</h3>}
+                        {/* The title keeps its whole width while the subtitle gives up room, and truncates only past the head's. */}
+                        {title !== undefined && <h3 className="max-w-full shrink-0 truncate text-xs font-medium">{title}</h3>}
                         {stale !== undefined && stale !== false && !failed && <StaleMark stale={stale} words={words} />}
                         {info !== undefined && (
                             <Tooltip>

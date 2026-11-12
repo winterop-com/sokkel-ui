@@ -131,6 +131,7 @@ export function IncidentTable({
     compact = false,
     actions,
     empty,
+    search,
     toolbar,
     className,
 }: {
@@ -138,6 +139,7 @@ export function IncidentTable({
     compact?: boolean
     actions?: (incident: Incident) => DataAction[]
     empty?: ReactNode
+    search?: ReactNode
     toolbar?: ReactNode
     className?: string
 }) {
@@ -153,6 +155,7 @@ export function IncidentTable({
             rowActions={actions}
             defaultSort={{ column: 'opened', direction: 'desc' }}
             empty={empty}
+            search={search}
             toolbar={toolbar}
         />
     )

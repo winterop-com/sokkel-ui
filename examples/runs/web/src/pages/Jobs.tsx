@@ -16,17 +16,18 @@ import { When } from '../parts'
 import { nextFire, saySchedule } from '../schedule'
 import { useConsole, type LiveRun } from '../state'
 
-const DAY = 86_400_000
+/** The sparkline's step: twelve of them span the two days of runs the console starts with. */
+const STEP = 4 * 3_600_000
 
 interface JobRow extends Job {
     last: LiveRun | undefined
     next: number | null
-    /** Runs a day for the last week, oldest first. */
-    week: number[]
+    /** Runs every four hours over the last two days, oldest first. */
+    recent: number[]
     success: number | null
 }
 
-/** Every job: its schedule and next run, its last run and how the week went; a job opens on its page. */
+/** Every job: its schedule and next run, its last run and how the last two days went; a job opens on its page. */
 export function Jobs() {
     const { jobs, runs, now, prefs, loading } = useConsole()
     const actions = useActions()
@@ -35,7 +36,6 @@ export function Jobs() {
     const [making, setMaking] = useState(false)
 
     const rows = useMemo((): JobRow[] => {
-        const today = Math.floor(now / DAY) * DAY
         return jobs.map((job) => {
             const own = runs.filter((run) => run.job === job.id)
             const done = own.filter((run) => run.at.state === 'succeeded' || run.at.state === 'failed')
@@ -43,10 +43,10 @@ export function Jobs() {
                 ...job,
                 last: own[0],
                 next: job.schedule === null || job.paused ? null : nextFire(job.schedule, now),
-                week: Array.from(
-                    { length: 7 },
-                    (_, index) => own.filter((run) => Math.floor(run.created / DAY) * DAY === today - (6 - index) * DAY).length,
-                ),
+                recent: Array.from({ length: 12 }, (_, index) => {
+                    const from = now - (12 - index) * STEP
+                    return own.filter((run) => run.created > from && run.created <= from + STEP).length
+                }),
                 success: done.length === 0 ? null : done.filter((run) => run.at.state === 'succeeded').length / done.length,
             }
         })
@@ -110,10 +110,10 @@ export function Jobs() {
             sortValue: (job) => job.last?.created ?? 0,
         },
         {
-            id: 'week',
-            header: 'Week',
+            id: 'recent',
+            header: '2 days',
             width: '6rem',
-            cell: (job) => <Sparkline values={job.week} height={16} label={`${job.name}, runs a day this week`} />,
+            cell: (job) => <Sparkline values={job.recent} height={16} label={`${job.name}, runs every four hours over two days`} />,
         },
         {
             id: 'success',
