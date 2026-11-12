@@ -681,11 +681,8 @@ start, for the shown section or for every setting, asked once more before it run
 nothing to put back (an account, sample data) says `reset: false` and shows none. On a phone the
 dialog is a full-screen sheet with the footer at its foot, clear of the home indicator.
 
-`SettingsView` lays the same groups, search, reset and words out as a page inside `Shell`, on the
-parts the dialog draws with (`settings-parts`): the sections down the side in a `SubNav` with the
-search over them, the chosen section's rows under its title, and a `FormBar` across the foot with
-Reset to defaults at its start (`FormBar`'s `start`), the note, and Done when the app gives
-`onDone`. Below `lg` the search and a `ChipBar` of the sections stand on top of the page.
+Settings are only ever this dialog, opened over the page the person is on; the library has no
+settings page to embed.
 `WizardView` lays `WizardDialog`'s steps out on a page the same way, the two sharing their moves
 (`wizardMoves`): the steps down the side, each with its description (`StepIndicator`'s `vertical`),
 or along the top with `layout="top"` and always below `lg`; the step's body under the page's title;

@@ -66,7 +66,7 @@ export const PRIVATE: Record<PackageDir, Record<string, string>> = {
         'components/schema/issue-words': "`SchemaForm`'s words for each issue, loaded with the checker",
         'components/schema/MapField': "`SchemaForm`'s key/value table for a map of scalars",
         'components/settings-parts':
-            'what `SettingsDialog` and `SettingsView` share: the search, the sections, the rows and the reset; their types are exported by both',
+            'the search, the sections, the rows and the reset `SettingsDialog` draws with; their types are exported by it',
         'components/shell-context': 'the contexts `Shell` hands the parts drawn inside it',
         'components/table-deferred':
             "what `DataTable` needs only after its first paint: Base UI's checkbox, the watch that measures its content cells again, and its menus' lists",
@@ -318,7 +318,6 @@ const CORE_AREAS: Record<string, string> = {
     PageState: 'Actions, dialogs and feedback',
     Problem: 'Actions, dialogs and feedback',
     SettingsDialog: 'Actions, dialogs and feedback',
-    SettingsView: 'Page layout',
     ShortcutsDialog: 'Actions, dialogs and feedback',
     StarButton: 'Actions, dialogs and feedback',
     TypedConfirmDialog: 'Actions, dialogs and feedback',

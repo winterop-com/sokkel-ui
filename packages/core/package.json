@@ -510,10 +510,6 @@
             "types": "./dist/components/SettingsDialog.d.ts",
             "import": "./dist/components/SettingsDialog.js"
         },
-        "./SettingsView": {
-            "types": "./dist/components/SettingsView.d.ts",
-            "import": "./dist/components/SettingsView.js"
-        },
         "./Shell": {
             "types": "./dist/components/Shell.d.ts",
             "import": "./dist/components/Shell.js"
