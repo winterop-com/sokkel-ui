@@ -99,6 +99,10 @@ describe('wrapping', () => {
         const room = wrapFor(1120, true, { width: 1000, height: 400 }, 0.8).wrapRoom
         expect(room).toEqual({ width: 912, height: 336 })
         expect(wrapFor(1120, true, { width: 1005, height: 395 }, 0.8).wrapRoom).toEqual(room)
+        // A fit goes under its least zoom only for height, so tallFit gives the room height and never width.
+        expect(wrapFor(1120, true, { width: 1000, height: 400 }, 0.8, { tallFit: 0.7 }).wrapRoom).toEqual({ width: 912, height: 432 })
+        expect(wrapFor(1120, true, { width: 390, height: 400 }, 0.8).wrapRoom?.width).toBe(480)
+        expect(wrapFor(1120, true, { width: 390, height: 400 }, 0.8, { narrowFit: false }).wrapRoom?.width).toBe(336)
     })
 
     test('keeps a graph whole when cutting it only adds height, and cuts one too wide for its room', async () => {

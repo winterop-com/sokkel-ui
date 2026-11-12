@@ -3,6 +3,7 @@ import { describe, expect, test } from 'vitest'
 import {
     FIT_MAX_ZOOM,
     FIT_MIN_ZOOM,
+    NARROW_FIT_MIN_ZOOM,
     fittedHeight,
     fittedZoom,
     fromElk,
@@ -135,7 +136,13 @@ describe('the fit', () => {
     test('a fitted frame is the drawing at its fit zoom with ground around it, and never a sliver', () => {
         expect(fittedHeight({ width: 400, height: 100 }, 1000)).toBe(140)
         expect(fittedHeight({ width: 0, height: 0 }, 1000)).toBe(120)
-        expect(fittedHeight({ width: 4000, height: 400 }, 400)).toBe(400 * FIT_MIN_ZOOM + 40)
+        expect(fittedHeight({ width: 4000, height: 400 }, 800)).toBe(400 * FIT_MIN_ZOOM + 40)
+    })
+
+    test("a fitted frame is sized at the fit's own floor: the view's least zoom, or a narrow canvas's", () => {
+        expect(fittedHeight({ width: 4000, height: 400 }, 800, 0.8)).toBe(400 * 0.8 + 40)
+        expect(fittedHeight({ width: 4000, height: 400 }, 400, 0.8, false)).toBe(400 * 0.8 + 40)
+        expect(fittedHeight({ width: 4000, height: 400 }, 400, 0.8)).toBe(400 * NARROW_FIT_MIN_ZOOM + 40)
     })
 
     test('hangs what does not fit off the far edge with its start in view, and leaves what fits centered', () => {

@@ -108,7 +108,8 @@ export function PipelineGraph({
         wrapWidth,
         wrapToCanvas,
         size === undefined ? undefined : { width: size.width, height: frame === 'fitted' ? 0 : size.height },
-        Math.min(fitMinZoom ?? FIT_MIN_ZOOM, tallFit ?? Infinity),
+        fitMinZoom ?? FIT_MIN_ZOOM,
+        { tallFit, narrowFit },
     )
     const items = useMemo<GraphItem[]>(() => steps.map(({ needs: _needs, ...step }) => ({ id: step.code, data: step })), [steps])
     const links = useMemo(() => stepLinks(steps), [steps])

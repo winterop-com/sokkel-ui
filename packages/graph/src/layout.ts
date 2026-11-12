@@ -383,10 +383,10 @@ export async function layoutGraph(
 /**
  * A graph cut into rows, judged by elk's own layout, its edges' bends included. Given a room, it
  * stays in one row when that fits across the room. Otherwise it is cut into rows that fit across
- * the room, laid out in the room's shape when that fits and searched for when not (the room's
- * shape when no cut fits), and the cut or the whole graph is kept by which fits the room at the
- * larger zoom, so a cut that only adds height is not. Rows are never wider than `wrapWidth`; when no
- * cut gets under it, the graph stays whole.
+ * the room, laid out in the room's shape when that fits and searched for when not, and the cut or
+ * the whole graph is kept by which fits the room at the larger zoom, so a cut that only adds height
+ * is not. Rows are kept under `wrapWidth` and the room's width; when no cut gets under them, the
+ * narrowest one found is kept.
  */
 async function wrapped(
     shape: GraphShape,
@@ -408,17 +408,16 @@ async function wrapped(
     const zoomOf = (drawn: { width: number; height: number }) =>
         Math.min(room.width / Math.max(1, drawn.width), room.height / Math.max(1, drawn.height))
     const shaped = await lay(room.width / room.height)
-    const cut = shaped.width <= limit ? shaped : ((await cutTo(limit, size, lay)) ?? (shaped.width <= cap ? shaped : null))
+    const searched = shaped.width <= limit ? shaped : await cutTo(limit, size, lay)
+    const cut = searched === null || shaped.width < searched.width ? shaped : searched
     const whole = size.width <= cap ? { placed: flat, ...size } : null
-    const kept = [cut, whole].filter((each) => each !== null)
-    if (kept.length === 0) return flat
-    return kept.reduce((best, each) => (zoomOf(each) > zoomOf(best) ? each : best)).placed
+    return [cut, whole].filter((each) => each !== null).reduce((best, each) => (zoomOf(each) > zoomOf(best) ? each : best)).placed
 }
 
 /**
- * The cut whose rows are as wide as `limit` lets them be, or null when none gets under it. elk aims
- * at a shape rather than a count of rows, so the shape is searched for: wider while the rows fit,
- * narrower while they do not.
+ * The cut whose rows are as wide as `limit` lets them be, or when none gets under it the narrowest
+ * cut found, if narrower than the graph whole. elk aims at a shape rather than a count of rows, so
+ * the shape is searched for: wider while the rows fit, narrower while they do not.
  */
 async function cutTo<Laid extends { placed: PlacedGraph; width: number }>(
     limit: number,
@@ -433,8 +432,10 @@ async function cutTo<Laid extends { placed: PlacedGraph; width: number }>(
     let high = guess * 16
     let aspect = guess
     let best: Laid | null = null
+    let narrowest: Laid | null = null
     for (let tries = 0; tries < WRAP_TRIES; tries += 1) {
         const laid = await lay(aspect)
+        if (narrowest === null || laid.width < narrowest.width) narrowest = laid
         if (laid.width <= limit) {
             if (best === null || laid.width > best.width) best = laid
             if (laid.width >= limit * 0.9) break
@@ -442,7 +443,7 @@ async function cutTo<Laid extends { placed: PlacedGraph; width: number }>(
         } else high = aspect
         aspect = Math.sqrt(low * high)
     }
-    return best
+    return best ?? (narrowest !== null && narrowest.width < size.width ? narrowest : null)
 }
 
 /** How long elk tries to keep each edge of a network, center to center. */
@@ -661,8 +662,24 @@ export const FITTED_GROUND = 40
 export const FITTED_MIN_HEIGHT = 120
 
 /** A zoom held between the two bounds a fit is allowed. */
-export function fittedZoom(zoom: number): number {
-    return Math.min(FIT_MAX_ZOOM, Math.max(FIT_MIN_ZOOM, zoom))
+export function fittedZoom(zoom: number, minZoom: number = FIT_MIN_ZOOM): number {
+    return Math.min(FIT_MAX_ZOOM, Math.max(minZoom, zoom))
+}
+
+/** Below this width a flow reads top to bottom, so its later steps stay on a phone's screen. */
+export const NARROW_GRAPH = 560
+
+/** The least zoom a narrow canvas goes to so a graph's width fits it, its words still readable. */
+export const NARROW_FIT_MIN_ZOOM = 0.6
+
+/**
+ * The least zoom a fit goes to on a canvas this wide: `minZoom`, or on a narrow canvas with
+ * `narrowFit` as little as fits the drawing's width, down to 0.6.
+ */
+export function fitFloor(canvasWidth: number, drawingWidth: number, minZoom: number = FIT_MIN_ZOOM, narrowFit = true): number {
+    if (!narrowFit || canvasWidth >= NARROW_GRAPH) return minZoom
+    const fitsAcross = drawingWidth > 0 ? (canvasWidth * (1 - 2 * FIT_PADDING)) / drawingWidth : minZoom
+    return Math.min(minZoom, Math.max(NARROW_FIT_MIN_ZOOM, fitsAcross))
 }
 
 /** Where one press of a zoom button lands. */
@@ -695,12 +712,17 @@ export function boundsOf(nodes: readonly { x: number; y: number; width: number; 
 }
 
 /**
- * How tall a fitted frame is at the width it has: the drawing at the zoom a fit would settle at,
- * with its ground around it.
+ * How tall a fitted frame is at the width it has: the drawing, its edges' bends included, at the
+ * zoom a fit with the same floor would settle at, with its ground around it.
  */
-export function fittedHeight(drawing: { width: number; height: number }, width: number): number {
+export function fittedHeight(
+    drawing: { width: number; height: number },
+    width: number,
+    minZoom: number = FIT_MIN_ZOOM,
+    narrowFit = true,
+): number {
     if (drawing.width <= 0 || drawing.height <= 0 || width <= 0) return FITTED_MIN_HEIGHT
-    const zoom = fittedZoom(width / (drawing.width * (1 + FIT_PADDING)))
+    const zoom = fittedZoom(width / (drawing.width * (1 + FIT_PADDING)), fitFloor(width, drawing.width, minZoom, narrowFit))
     const tall = Math.max(drawing.height * zoom + FITTED_GROUND, drawing.height * zoom * (1 + FIT_PADDING))
     return Math.max(FITTED_MIN_HEIGHT, Math.ceil(tall))
 }
