@@ -6,7 +6,11 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.20.0** is the latest release (2026-11-12): an Escape on a chosen graph node keeps the
+- **0.21.0** is the latest release (2026-11-12): settings are only a dialog (`SettingsView`
+  removed, breaking); chart ticks follow the chart's `format`; a stacked `SplitPane` flows on a
+  phone; a `MapLegend` starts collapsed on a narrow map; every example follows one rule for
+  settings and trails, and tasks has a Settings dialog.
+- **0.20.0** (2026-11-12): an Escape on a chosen graph node keeps the
   choice; `cyclePath`/`wouldCycle` move to `@winterop-com/sokkel-ui-graph/cycles` (breaking);
   `GraphControlButton` takes `tooltip` instead of `title` (breaking); view button hints; a badge's
   critical or warning tone gives its box that edge; `Chip` and block badges take a category `hue`;
