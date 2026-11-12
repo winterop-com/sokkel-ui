@@ -91,3 +91,33 @@ export const Histogram: StoryObj = {
         </Ground>
     ),
 }
+
+const STORED_GB: Record<'harbor' | 'juniper' | 'larkspur', number[]> = {
+    harbor: [820, 910, 1040, 1180, 1260, 1395],
+    juniper: [410, 450, 470, 530, 610, 640],
+    larkspur: [150, 190, 240, 300, 380, 455],
+}
+const STORED: ChartSpec = {
+    rows: MONTHS.flatMap((month, index) =>
+        (['harbor', 'juniper', 'larkspur'] as const).map((project) => ({ month, project, stored: STORED_GB[project][index] })),
+    ),
+    x: 'month',
+    y: 'stored',
+    series: 'project',
+    stack: 'stacked',
+    format: (value) => `${value.toLocaleString('en-US')} GB`,
+}
+
+/**
+ * What each project keeps in storage at the end of each month, written by the spec's `format`:
+ * the tooltips write `1,395 GB`, and the value axis the same figure short, `1.5K GB`.
+ */
+export const Formatted: StoryObj = {
+    render: () => (
+        <Ground title="Storage, first half" columns={1}>
+            <ChartFrame title="Stored" subtitle="per project, month end" legend={chartLegend('bar', STORED)} file="stored">
+                {(state) => <Chart kind="bar" label="Storage per project at each month's end" {...STORED} {...state} />}
+            </ChartFrame>
+        </Ground>
+    ),
+}

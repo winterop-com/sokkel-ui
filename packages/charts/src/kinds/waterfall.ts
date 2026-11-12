@@ -1,6 +1,6 @@
 import { tooltipMarkup } from '../look'
 import { runningTotals } from '../stats'
-import { shaped, written } from './categories'
+import { shaped, valueTicks, written } from './categories'
 import { wordsOf, type ChartBuilder, type ChartSpec } from './spec'
 import type { LegendItem } from '../ChartLegend'
 
@@ -94,7 +94,7 @@ export const waterfall: ChartBuilder = (spec, look) => {
         },
         grid: { left: 4, right: 10, top: 10, bottom: 4 },
         xAxis: { type: 'category', data: names },
-        yAxis: { type: 'value' },
+        yAxis: { type: 'value', ...valueTicks(spec) },
         series: [
             series(words.rise, tone.rise, (bar) => bar.index < steps.length && bar.change >= 0),
             series(words.fall, tone.fall, (bar) => bar.index < steps.length && bar.change < 0),

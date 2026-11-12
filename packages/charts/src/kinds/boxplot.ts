@@ -1,7 +1,7 @@
 import { distinct, formatNumber, labelOf, numberOf } from '../data'
 import { tooltipMarkup } from '../look'
 import { spreadOf } from '../stats'
-import { written } from './categories'
+import { valueTicks, written } from './categories'
 import { fieldsOf, wordsOf, type ChartBuilder } from './spec'
 
 /**
@@ -28,7 +28,7 @@ export const boxplot: ChartBuilder = (spec, look) => {
     const token = spec.colors?.[y]
     const color = token === undefined ? look.series[0] : look.token(token)
     const categoryAxis = { type: 'category', data: categories }
-    const valueAxis = { type: 'value', scale: true }
+    const valueAxis = { type: 'value', scale: true, ...valueTicks(spec) }
     return {
         tooltip: {
             trigger: 'item',

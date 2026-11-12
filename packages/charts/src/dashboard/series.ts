@@ -33,8 +33,8 @@ export function valueWriter(unit = '', decimals?: number, format?: (value: numbe
 }
 
 /**
- * How a panel's figures are written, as a chart's spec says it: by `format` alone when given, or to
- * `decimals` with the unit after; the value axis' ticks carry the unit either way.
+ * How a panel's figures are written, as a chart's spec says it: by `format` alone when given, unit
+ * and all, or to `decimals` with the unit after. The value axis' ticks are written the same way, short.
  */
 export function panelFormat(
     unit?: string,
@@ -42,7 +42,7 @@ export function panelFormat(
     format?: (value: number) => string,
 ): Pick<ChartSpec, 'format' | 'unit' | 'axes'> {
     if (format === undefined) return { format: (value) => formatValue(value, decimals), unit }
-    return { format, ...(unit === undefined ? {} : { axes: { left: { unit } } }) }
+    return { format }
 }
 
 /** The field of a panel's rows each category is in. */

@@ -1,7 +1,7 @@
 import { pivot } from '../data'
 import { SERIES_ORDER, tooltipMarkup } from '../look'
 import { niceCeil } from '../stats'
-import { written } from './categories'
+import { valueTicks, written } from './categories'
 import { fieldsOf, wordsOf, type ChartBuilder, type ChartSpec, type ChartStep } from './spec'
 import type { LegendItem } from '../ChartLegend'
 
@@ -61,7 +61,7 @@ export const bullet: ChartBuilder = (spec, look) => {
     const bands = bandColors(steps)
     const token = spec.colors?.[field]
     const tone = token === undefined ? look.series[0] : look.token(token)
-    const valueAxis = { type: 'value', min, max, splitLine: { show: false } }
+    const valueAxis = { type: 'value', min, max, splitLine: { show: false }, ...valueTicks(spec) }
     const categoryAxes = [
         { type: 'category', data: categories, inverse: sideways },
         { type: 'category', data: categories, inverse: sideways, show: false },

@@ -401,6 +401,53 @@ describe('the chart kinds', () => {
         expect(option.series.every((entry) => entry.areaStyle === undefined)).toBe(true)
     })
 
+    it("writes every value axis' ticks by the spec's format, short, then its unit", () => {
+        type Axis = { axisLabel?: { formatter?: (value: number) => string } }
+        type Grid = { xAxis?: Axis | Axis[]; yAxis?: Axis | Axis[] }
+        const gb = (value: number) => `${value.toLocaleString('en-US')} GB`
+        const tick = (axis: Axis | Axis[] | undefined) => (Array.isArray(axis) ? axis[0] : axis)?.axisLabel?.formatter?.(1500)
+        const base: ChartSpec = { rows: ROWS, x: 'job', y: 'duration', format: gb }
+        for (const kind of ['bar', 'line', 'area', 'range', 'boxplot', 'waterfall', 'scatter'] as const) {
+            const option = KINDS[kind].build(base, LOOK) as unknown as Grid
+            expect(tick(option.yAxis), kind).toBe('1.5K GB')
+        }
+        const sideways = KINDS.bar.build({ ...base, horizontal: true, unit: '/s' }, LOOK) as unknown as Grid
+        expect(tick(sideways.xAxis)).toBe('1.5K GB/s')
+        const bullet = KINDS.bullet.build({ ...SPECS.bullet, format: gb }, LOOK) as unknown as Grid
+        expect(tick(bullet.xAxis)).toBe('1.5K GB')
+        const left = KINDS.line.build({ ...base, format: undefined, unit: ' x', axes: { left: { unit: ' GB' } } }, LOOK) as unknown as Grid
+        expect(tick(left.yAxis)).toBe('1.5K GB')
+        const percent = KINDS.bar.build({ ...base, series: 'state', stack: 'percent' }, LOOK) as unknown as Grid
+        expect(tick(percent.yAxis)).toBe('1,500%')
+    })
+
+    it("writes a dual chart's ticks by each axis' own format, or the spec's", () => {
+        type Dual = { yAxis: { axisLabel: { formatter: (value: number) => string } }[] }
+        const spec: ChartSpec = { ...SPECS.dual, unit: undefined, format: (value) => `${value.toLocaleString('en-US')} runs` }
+        const option = KINDS.dual.build(
+            { ...spec, axes: { right: { format: (value) => `${value.toFixed(1)}%` } } },
+            LOOK,
+        ) as unknown as Dual
+        expect(option.yAxis.map((axis) => axis.axisLabel.formatter(1500))).toEqual(['1.5K runs', '1.5K%'])
+    })
+
+    it('writes linked, parallel and needle ticks by the format', () => {
+        const gb = (value: number) => `${value.toLocaleString('en-US')} GB`
+        type Linked = { yAxis: { axisLabel: { formatter: (value: number) => string } }[] }
+        const linked = KINDS.linked.build({ ...SPECS.linked, format: gb }, LOOK) as unknown as Linked
+        expect(linked.yAxis.map((axis) => axis.axisLabel.formatter(1500))).toEqual(['1.5K GB s', '1.5K GB'])
+        type Parallel = { parallelAxis: { axisLabel?: { formatter: (value: number) => string } }[] }
+        const parallel = KINDS.parallel.build({ rows: ROWS, y: ['duration', 'target'], format: gb }, LOOK) as unknown as Parallel
+        expect(parallel.parallelAxis[0].axisLabel?.formatter(1500)).toBe('1.5K GB')
+        type Dial = { series: { axisLabel?: { formatter?: (value: number) => string } }[] }
+        const needle = KINDS.gauge.build(
+            { ...SPECS.gauge, dial: 'needle', format: (value) => `${String(value)}%` },
+            LOOK,
+        ) as unknown as Dial
+        const scale = needle.series.find((entry) => entry.axisLabel?.formatter !== undefined)
+        expect(scale?.axisLabel?.formatter?.(40)).toBe('40%')
+    })
+
     it('writes a small gauge figure at the small size', () => {
         type Dial = { series: { detail?: { fontSize: number } }[] }
         const option = KINDS.gauge.build({ ...SPECS.gauge, small: true }, LOOK) as unknown as Dial
