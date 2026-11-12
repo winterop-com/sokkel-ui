@@ -40,10 +40,13 @@ import {
     FIT_MAX_ZOOM,
     FIT_MIN_ZOOM,
     FIT_PADDING,
+    fitFloor,
     fittedHeight,
     GRAPH_WHEEL_STEP_MS,
     MAX_ZOOM,
     MIN_ZOOM,
+    NARROW_FIT_MIN_ZOOM,
+    NARROW_GRAPH,
     startOfOverflow,
     steppedZoom,
     wheelZoomFactor,
@@ -141,23 +144,23 @@ const ROOM_STEP = 48
 
 /**
  * What a view wraps a graph running right by: `wrapWidth` alone, or with `toCanvas` the canvas's
- * room too, in the graph's own pixels at the least zoom a fit goes to (the lower of `fitMinZoom`
- * and `tallFit`), so a graph that fits there stays whole. A canvas as tall as its drawing, `fitted`,
- * gives no height to wrap by.
+ * room too, in the graph's own pixels at the least zoom a fit goes to: across at `leastZoom` (on a
+ * narrow canvas with `narrowFit`, the narrow fit's floor), since a fit goes under it only for height,
+ * and down at the lower of it and `tallFit`. A graph that fits there stays whole. A canvas as tall
+ * as its drawing, `fitted`, gives no height to wrap by.
  */
 export function wrapFor(
     wrapWidth: number | undefined,
     toCanvas: boolean | undefined,
     canvas: { width: number; height: number } | undefined,
     leastZoom: number = FIT_MIN_ZOOM,
+    { tallFit = leastZoom, narrowFit = true }: { tallFit?: number; narrowFit?: boolean } = {},
 ): Pick<GraphLayoutStyle, 'wrapWidth' | 'wrapRoom'> {
     if (toCanvas !== true || canvas === undefined || canvas.width <= 0) return { wrapWidth }
-    const across = (length: number) => Math.floor((length * (1 - 2 * FIT_PADDING)) / leastZoom / ROOM_STEP) * ROOM_STEP
-    return { wrapWidth, wrapRoom: { width: across(canvas.width), height: across(canvas.height) } }
+    const across = narrowFit && canvas.width < NARROW_GRAPH ? Math.min(leastZoom, NARROW_FIT_MIN_ZOOM) : leastZoom
+    const room = (length: number, zoom: number) => Math.floor((length * (1 - 2 * FIT_PADDING)) / zoom / ROOM_STEP) * ROOM_STEP
+    return { wrapWidth, wrapRoom: { width: room(canvas.width, across), height: room(canvas.height, Math.min(leastZoom, tallFit)) } }
 }
-
-/** Below this width a flow reads top to bottom, so its later steps stay on a phone's screen. */
-const NARROW_GRAPH = 560
 
 /** The direction a flow is laid out in for the width its canvas has: down when narrow, else right. */
 export function fitDirection(width: number | undefined): GraphDirection {
@@ -239,8 +242,6 @@ function nodeAt(clientX: number, clientY: number): string | null {
 }
 
 /** Fit the graph within the fit's zoom bounds, then hang what does not fit off the far edges, start first. */
-/** The least zoom a narrow canvas goes to so a graph's width fits it, its words still readable. */
-const NARROW_FIT_MIN_ZOOM = 0.6
 
 async function fitGraph(
     flow: ReactFlowInstance,
@@ -255,10 +256,9 @@ async function fitGraph(
     const room = 1 - 2 * FIT_PADDING
     const fitsAcross = drawing.width > 0 ? (canvas.width * room) / drawing.width : minZoom
     const fitsDown = drawing.height > 0 ? (canvas.height * room) / drawing.height : minZoom
-    let least = minZoom
     // On a narrow canvas the width fits first, a little under the usual least zoom if it must; a
     // tall graph then reads down and scrolls rather than hanging off the side.
-    if (narrowFit && canvas.width < NARROW_GRAPH) least = Math.min(minZoom, Math.max(NARROW_FIT_MIN_ZOOM, fitsAcross))
+    let least = fitFloor(canvas.width, drawing.width, minZoom, narrowFit)
     // A drawing as wide as the canvas holds and only a little too tall goes under the least zoom to be seen whole.
     if (tallFit < least && fitsAcross >= least && fitsDown < least) least = Math.max(tallFit, fitsDown)
     const fitted = getViewportForBounds(drawing, canvas.width, canvas.height, least, FIT_MAX_ZOOM, FIT_PADDING)
@@ -266,12 +266,15 @@ async function fitGraph(
     await flow.setViewport(placed, { duration: 0 })
 }
 
+/** The bends of routed edges. */
+function edgePoints(edges: readonly Edge[]): readonly GraphPoint[] {
+    return edges.flatMap((edge) => ((edge.data as { points?: readonly GraphPoint[] } | undefined)?.points ?? []) as readonly GraphPoint[])
+}
+
 /** Where the nodes and the bends of their edges are drawn, so a fit keeps an edge that runs round the outside in view. */
 function drawingBounds(flow: ReactFlowInstance): { x: number; y: number; width: number; height: number } {
     const nodes = flow.getNodesBounds(flow.getNodes())
-    const points = flow
-        .getEdges()
-        .flatMap((edge) => ((edge.data as { points?: readonly GraphPoint[] } | undefined)?.points ?? []) as readonly GraphPoint[])
+    const points = edgePoints(flow.getEdges())
     return boundsOf([nodes, ...points.map((point) => ({ ...point, width: 0, height: 0 }))])
 }
 
@@ -452,11 +455,15 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
         return () => observer.disconnect()
     }, [fitted, filled])
 
-    const drawing = boundsOf(nodes.map((node) => ({ ...node.position, width: node.width ?? 0, height: node.height ?? 0 })))
+    const drawing = boundsOf([
+        ...nodes.map((node) => ({ ...node.position, width: node.width ?? 0, height: node.height ?? 0 })),
+        ...edgePoints(edges).map((point) => ({ ...point, width: 0, height: 0 })),
+    ])
+    const fittedTall = width > 0 && !empty ? fittedHeight(drawing, width, fitMinZoom, narrowFit) : 0
     // A fitted frame keeps a row under the drawing for its buttons, when it draws them.
-    const height = fitted ? (empty ? undefined : fittedHeight(drawing, width) + (controls ? BUTTON_ROW : 0)) : undefined
+    const height = fitted ? (empty ? undefined : fittedTall + (controls ? BUTTON_ROW : 0)) : undefined
     // A filled frame is at least as tall as its drawing would be fitted, up to its floor.
-    const floor = filled && !empty && width > 0 ? Math.min(fittedHeight(drawing, width), fillFloor) : undefined
+    const floor = filled && !empty && width > 0 ? Math.min(fittedTall, fillFloor) : undefined
     const ground = fitted || filled
 
     const onNodesChange = (changes: NodeChange<N>[]) => {

@@ -119,7 +119,8 @@ export function StateMachine({
         wrapWidth,
         wrapToCanvas,
         size === undefined ? undefined : { width: size.width, height: frame === 'fitted' ? 0 : size.height },
-        Math.min(fitMinZoom ?? FIT_MIN_ZOOM, tallFit ?? Infinity),
+        fitMinZoom ?? FIT_MIN_ZOOM,
+        { tallFit, narrowFit },
     )
     const graph = useNodeGraph(items, links, { direction, selected, routing, spacing, ...wrap, minNodeWidth, maxNodeWidth })
     return (

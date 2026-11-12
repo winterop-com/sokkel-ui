@@ -134,7 +134,8 @@ export function RunGraph({
         wrapWidth,
         wrapToCanvas,
         size === undefined ? undefined : { width: size.width, height: frame === 'fitted' ? 0 : size.height },
-        Math.min(fitMinZoom ?? FIT_MIN_ZOOM, tallFit ?? Infinity),
+        fitMinZoom ?? FIT_MIN_ZOOM,
+        { tallFit, narrowFit },
     )
     const reduced = useReducedMotion()
     const handing = useHandovers(steps)
