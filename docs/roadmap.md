@@ -6,7 +6,11 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.21.0** is the latest release (2026-11-12): settings are only a dialog (`SettingsView`
+- **0.21.1** is the latest release (2026-11-12): `LogView` `onSource` and an empty slot;
+  `Unfoldable` held from outside, a `summary` while shut, and static rows; `AsyncSelect`
+  `itemMark`; `ShellTop` for a screen's own top bar; split button choices (`checked`) and a chevron
+  hint; graph boxes measured part by part; chips and block badges take a kind color as `hue`.
+- **0.21.0** (2026-11-12): settings are only a dialog (`SettingsView`
   removed, breaking); chart ticks follow the chart's `format`; a stacked `SplitPane` flows on a
   phone; a `MapLegend` starts collapsed on a narrow map; every example follows one rule for
   settings and trails, and tasks has a Settings dialog.
@@ -314,6 +318,10 @@ to `plan.md` when it ships.
   take a still of each.
 
 ## Next
+
+- A graph running down whose rank is too wide for a phone (five or six sources side by side) is
+  cut into rows the way a long chain running right is, so neither direction hangs off a 358px
+  canvas.
 
 - **The reviews of 2026-11-09.** A visual review of the published catalog and a review of the
   twelve example apps on the web; every round of fixes from them shipped in 0.10.13 to 0.10.16.
