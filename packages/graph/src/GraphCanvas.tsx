@@ -278,6 +278,16 @@ function drawingBounds(flow: ReactFlowInstance): { x: number; y: number; width: 
     return boundsOf([nodes, ...points.map((point) => ({ ...point, width: 0, height: 0 }))])
 }
 
+/**
+ * The node a batch of React Flow's changes chooses, or undefined when it chooses none. A batch that
+ * only lets a node go, such as React Flow's own Escape on a focused node, is not reported: the choice
+ * is let go of by a press on the ground, so an Escape meant for the window around the canvas keeps it.
+ */
+export function pickedNode(changes: readonly NodeChange[]): string | undefined {
+    for (const change of changes) if (change.type === 'select' && change.selected) return change.id
+    return undefined
+}
+
 /** The nodes' ids, places and sizes as one string, which is what a fit is redone on. */
 function placementKey(nodes: readonly Node[]): string {
     return nodes
@@ -503,9 +513,8 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
             const ids = nodes.map((node) => node.id).filter((id) => now.has(id))
             if (ids.join('|') !== before) onSelectionChange(ids)
         }
-        if (onSelect === undefined) return
-        const picked = chosen.find((change) => change.selected)
-        onSelect(picked === undefined ? null : picked.id)
+        const picked = pickedNode(chosen)
+        if (picked !== undefined) onSelect?.(picked)
     }
 
     // Asks the app, so a refusal is said while the connection is drawn rather than after it.
