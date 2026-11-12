@@ -204,7 +204,8 @@ describe('node width from words', () => {
         const whole: Measure = (text, font) => Math.ceil(fractional(text, font))
         const data = { code: 'archive', badge: { label: 'not installed', tone: 'critical' as const } }
         expect(graphNodeSize(data, fractional)).toEqual(graphNodeSize(data, whole))
-        expect(graphNodeSize(data, fractional).width).toBe(22 + 50 + 6 + 10 + 71)
+        // The badge's own padding is 12 across, as its px-1.5 draws it.
+        expect(graphNodeSize(data, fractional).width).toBe(22 + 50 + 6 + 12 + 71)
     })
 
     test('keeps room for the badges and the issue mark a box may come to wear', () => {

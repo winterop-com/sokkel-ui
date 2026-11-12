@@ -29,13 +29,16 @@ describe('SplitButton', () => {
         expect(html).not.toMatch(/\sdisabled=""/)
     })
 
-    it('says on hover what its chevron chooses', () => {
+    it("says its chevron's hint in the library's tooltip, never a native title", () => {
         const html = renderToStaticMarkup(
-            <SplitButton items={[]} words={{ more: 'Refresh on its own', moreHint: 'How often this refreshes on its own' }}>
-                Refresh
-            </SplitButton>,
+            <TooltipProvider>
+                <SplitButton items={[]} words={{ more: 'Refresh on its own', moreHint: 'How often this refreshes on its own' }}>
+                    Refresh
+                </SplitButton>
+            </TooltipProvider>,
         )
-        expect(html).toContain('title="How often this refreshes on its own"')
+        expect(html).toContain('aria-label="Refresh on its own"')
+        expect(html).not.toContain('title="How often this refreshes on its own"')
     })
 
     it('mixes its separator in oklab, so a warm primary never turns it green', () => {

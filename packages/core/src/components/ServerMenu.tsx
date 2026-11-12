@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 import { cn } from '../lib/cn'
 import type { StatusColor, StatusMap } from '../lib/status'
 import { Dot } from './Dot'
-import { relativeTime } from './RelativeTime'
+import { relativeTime, type RelativeTimeOptions } from './RelativeTime'
 import { useStatus } from './StatusProvider'
 import { Badge } from './ui/badge'
 import { Button } from './ui/button'
@@ -90,6 +90,8 @@ export interface ServerMenuProps {
     now?: Date
     /** The locale the time is said in; without it, the reader's. */
     locale?: string
+    /** How the time is said, as `RelativeTime` takes it, so it reads as the app's other times do. */
+    relative?: Omit<RelativeTimeOptions, 'locale'>
     /**
      * Called as the tooltip opens, while the server is not being asked already, so the app can ask
      * again and the tooltip shows a fresh answer.
@@ -136,6 +138,7 @@ export function ServerMenu({
     checkedAt,
     now,
     locale,
+    relative,
     recheck,
     onPress,
     facts = [],
@@ -197,6 +200,7 @@ export function ServerMenu({
                         checkedAt={checkedAt}
                         now={now}
                         locale={locale}
+                        relative={relative}
                         words={words}
                     />
                     {checks.length > 0 && <CheckList checks={checks} states={known} />}
@@ -262,6 +266,7 @@ function TipHead({
     checkedAt,
     now,
     locale,
+    relative,
     words,
 }: {
     name: string
@@ -270,6 +275,7 @@ function TipHead({
     checkedAt?: Date | number
     now?: Date
     locale?: string
+    relative?: Omit<RelativeTimeOptions, 'locale'>
     words: ServerMenuWords
 }) {
     const when = checkedAt === undefined ? undefined : new Date(checkedAt)
@@ -282,7 +288,9 @@ function TipHead({
             </p>
             {when !== undefined && !Number.isNaN(when.getTime()) && (
                 <p className="opacity-80">
-                    <time dateTime={when.toISOString()}>{words.checkedAt(relativeTime(when, now ?? new Date(), { locale }))}</time>
+                    <time dateTime={when.toISOString()}>
+                        {words.checkedAt(relativeTime(when, now ?? new Date(), { ...relative, locale }))}
+                    </time>
                 </p>
             )}
         </div>
