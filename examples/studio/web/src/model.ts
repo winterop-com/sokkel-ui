@@ -70,6 +70,9 @@ export interface Run {
 
 export type TextSize = 'sm' | 'md' | 'lg'
 
+/** How a pipeline is edited: as text, on its graph, or both side by side. */
+export type PipelineView = 'text' | 'graph' | 'split'
+
 /** The reader's settings and where they left the work area. */
 export interface Prefs {
     id: string
@@ -82,6 +85,7 @@ export interface Prefs {
     folding: boolean
     indentGuides: boolean
     bracketColors: boolean
+    pipelineView: PipelineView
 }
 
 export const DEFAULT_PREFS: Prefs = {
@@ -94,6 +98,7 @@ export const DEFAULT_PREFS: Prefs = {
     folding: true,
     indentGuides: true,
     bracketColors: false,
+    pipelineView: 'split',
 }
 
 /** The person every edit and run is made as. */

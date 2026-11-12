@@ -10,13 +10,12 @@ import { useCommands } from '@winterop-com/sokkel-ui/hooks/use-commands'
 import { keyLabels } from '@winterop-com/sokkel-ui/lib/keys'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@winterop-com/sokkel-ui/primitives/empty'
-import { PipelineGraph } from '@winterop-com/sokkel-ui-graph/PipelineGraph'
 import { RunGraph } from '@winterop-com/sokkel-ui-graph/RunGraph'
-import { History, Maximize2, Play, Save, Square } from 'lucide-react'
+import { Columns2, FileText, History, Maximize2, Play, Save, Square, Workflow } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 
 import { go } from 'tidevann-shared/router'
-import { counted, type WorkFile } from '../model'
+import { counted, type PipelineView, type WorkFile } from '../model'
 import {
     describeWord,
     holdsReference,
@@ -30,10 +29,18 @@ import {
 } from '../pipeline'
 import { useStudio } from '../state'
 import { EditorPane, Pane, RunLog } from './parts'
+import { PipelineCanvas } from './PipelineCanvas'
 import { Problems } from './Problems'
+import { StepSettings } from './StepSettings'
 
 type GraphView = 'steps' | 'run'
-type Below = 'problems' | 'log'
+type Below = 'step' | 'problems' | 'log'
+
+const VIEWS: { value: PipelineView; label: string }[] = [
+    { value: 'text', label: 'Text' },
+    { value: 'split', label: 'Both' },
+    { value: 'graph', label: 'Graph' },
+]
 
 /** What a pipeline is written with: the kinds of step, and what a reference can name. */
 function PipelineReference() {
@@ -54,11 +61,12 @@ function PipelineReference() {
 
 /**
  * A pipeline: its YAML checked and completed against the pipeline schema as it is typed, the
- * references checked beside it, the problems listed, the steps drawn as a graph that follows each
- * edit, and a run with its graph and log.
+ * references checked beside it, the problems listed, and a run with its graph and log. The steps
+ * are edited as text, on a graph, or both side by side: each edit on the graph is written into the
+ * YAML, each edit of the YAML redraws the graph, and one undo serves both.
  */
 export function PipelineEditor({ file }: { file: WorkFile }) {
-    const { docFor, prefs, dirty, save, run, cancel, runs } = useStudio()
+    const { docFor, prefs, setPrefs, dirty, save, run, cancel, runs } = useStudio()
     const doc = docFor(file)
     const text = useSharedText(doc)
     const pipeline = useMemo(() => readPipeline(text), [text])
@@ -68,6 +76,11 @@ export function PipelineEditor({ file }: { file: WorkFile }) {
     const [graph, setGraph] = useState<GraphView>('steps')
     const [below, setBelow] = useState<Below>('problems')
     const [selected, setSelected] = useState<string | null>(null)
+
+    const view = prefs.pipelineView
+    const setView = (next: PipelineView) => void setPrefs({ pipelineView: next })
+    // A step is chosen on the graph, so the text alone has no step to set.
+    const shownBelow: Below = view === 'text' && below === 'step' ? 'problems' : below
 
     const latest = runs.find((one) => one.file === file.id)
     const going = latest?.state === 'running'
@@ -82,18 +95,26 @@ export function PipelineEditor({ file }: { file: WorkFile }) {
     }, [pipeline, latest, text])
 
     const words = useMemo(() => referenceWords(pipeline), [pipeline])
-    const steps = useMemo(
-        () =>
-            pipeline.steps.map((step) => ({
-                code: step.id,
-                kind: step.kind,
-                needs: step.needs,
-                issues: problems
-                    .filter((problem) => problem.from >= step.from && problem.from < step.to)
-                    .map((problem): Issue => ({ tone: problem.tone === 'error' ? 'critical' : 'warning', text: problem.message })),
-            })),
-        [pipeline, problems],
-    )
+    // What the checks found within each step's lines, marked on its box.
+    const issues = useMemo(() => {
+        const found = new Map<string, Issue[]>()
+        for (const step of pipeline.steps) {
+            const within = problems
+                .filter((problem) => problem.from >= step.from && problem.from < step.to)
+                .map((problem): Issue => ({ tone: problem.tone === 'error' ? 'critical' : 'warning', text: problem.message }))
+            if (within.length > 0) found.set(step.id, within)
+        }
+        return found
+    }, [pipeline, problems])
+
+    const revealStep = (id: string) => {
+        const step = pipeline.steps.find((one) => one.id === id)
+        if (step !== undefined) setReveal({ from: step.from, to: step.from })
+    }
+    const choose = (id: string | null) => {
+        setSelected(id)
+        if (id !== null && view !== 'graph') revealStep(id)
+    }
 
     const start = () => {
         if (errors > 0 || going) return
@@ -127,6 +148,27 @@ export function PipelineEditor({ file }: { file: WorkFile }) {
                               onSelect: start,
                           },
                     { id: 'pipeline-pop', label: 'Pop out the editor', icon: Maximize2, onSelect: () => setPopped(true) },
+                    {
+                        id: 'pipeline-text',
+                        label: 'Edit as text',
+                        icon: FileText,
+                        disabled: view === 'text',
+                        onSelect: () => setView('text'),
+                    },
+                    {
+                        id: 'pipeline-split',
+                        label: 'Edit as text and graph',
+                        icon: Columns2,
+                        disabled: view === 'split',
+                        onSelect: () => setView('split'),
+                    },
+                    {
+                        id: 'pipeline-graph',
+                        label: 'Edit on the graph',
+                        icon: Workflow,
+                        disabled: view === 'graph',
+                        onSelect: () => setView('graph'),
+                    },
                     ...(latest === undefined
                         ? []
                         : [
@@ -140,7 +182,7 @@ export function PipelineEditor({ file }: { file: WorkFile }) {
                 ],
             },
         ],
-        [file.name, going, runReason, latest?.id],
+        [file.name, going, runReason, latest?.id, view],
     )
 
     // A run that ends while its graph is shown keeps it; a new file starts on its steps.
@@ -195,20 +237,68 @@ export function PipelineEditor({ file }: { file: WorkFile }) {
             onSelect={setSelected}
         />
     ) : (
-        <PipelineGraph
-            steps={steps}
+        <PipelineCanvas
+            fileId={file.id}
+            doc={doc}
+            pipeline={pipeline}
+            issues={issues}
             selected={selected}
-            onSelect={(code) => {
-                setSelected(code)
-                const step = pipeline.steps.find((one) => one.id === code)
-                if (step !== undefined) setReveal({ from: step.from, to: step.from })
+            onSelect={choose}
+            onShowText={(id) => {
+                if (view === 'graph') setView('split')
+                setSelected(id)
+                revealStep(id)
             }}
+            onSettings={(id) => {
+                setSelected(id)
+                setBelow('step')
+            }}
+            shown={view !== 'text'}
+        />
+    )
+
+    const viewSwitch = <Segmented<PipelineView> size="sm" label="Edit as" value={view} onValueChange={setView} options={VIEWS} />
+    const fileActions = (
+        <>
+            <Button size="sm" variant="ghost" disabled={!dirty.has(file.id)} onClick={() => void save(file.id)}>
+                <Save aria-hidden />
+                Save
+            </Button>
+            {going ? (
+                <Button size="sm" variant="outline" onClick={() => latest && cancel(latest)}>
+                    <Square aria-hidden />
+                    Cancel
+                </Button>
+            ) : (
+                <Button size="sm" reason={runReason} onClick={start}>
+                    <Play aria-hidden />
+                    Run
+                </Button>
+            )}
+        </>
+    )
+    const graphSwitch = (
+        <Segmented<GraphView>
+            size="sm"
+            label="Show"
+            value={graph}
+            onValueChange={setGraph}
+            options={[
+                { value: 'steps', label: 'Steps' },
+                {
+                    value: 'run',
+                    label: 'Last run',
+                    disabled: latest === undefined,
+                    hint: latest === undefined ? 'Not run yet' : undefined,
+                },
+            ]}
         />
     )
 
     return (
         <SplitPane
             id="studio-pipeline"
+            only={view === 'graph' ? 'second' : undefined}
             defaultShare={0.55}
             minShare={0.3}
             maxShare={0.75}
@@ -221,21 +311,8 @@ export function PipelineEditor({ file }: { file: WorkFile }) {
                     reference={<PipelineReference />}
                     actions={
                         <>
-                            <Button size="sm" variant="ghost" disabled={!dirty.has(file.id)} onClick={() => void save(file.id)}>
-                                <Save aria-hidden />
-                                Save
-                            </Button>
-                            {going ? (
-                                <Button size="sm" variant="outline" onClick={() => latest && cancel(latest)}>
-                                    <Square aria-hidden />
-                                    Cancel
-                                </Button>
-                            ) : (
-                                <Button size="sm" reason={runReason} onClick={start}>
-                                    <Play aria-hidden />
-                                    Run
-                                </Button>
-                            )}
+                            {viewSwitch}
+                            {fileActions}
                         </>
                     }
                 >
@@ -246,7 +323,8 @@ export function PipelineEditor({ file }: { file: WorkFile }) {
                 <SplitPane
                     id="studio-pipeline-side"
                     direction="down"
-                    defaultShare={0.5}
+                    only={view === 'text' ? 'second' : undefined}
+                    defaultShare={0.6}
                     first={
                         <Pane
                             title="Steps"
@@ -258,21 +336,15 @@ export function PipelineEditor({ file }: { file: WorkFile }) {
                                 )
                             }
                             actions={
-                                <Segmented<GraphView>
-                                    size="sm"
-                                    label="Show"
-                                    value={graph}
-                                    onValueChange={setGraph}
-                                    options={[
-                                        { value: 'steps', label: 'Steps' },
-                                        {
-                                            value: 'run',
-                                            label: 'Last run',
-                                            disabled: latest === undefined,
-                                            hint: latest === undefined ? 'Not run yet' : undefined,
-                                        },
-                                    ]}
-                                />
+                                view === 'graph' ? (
+                                    <>
+                                        {graphSwitch}
+                                        {viewSwitch}
+                                        {fileActions}
+                                    </>
+                                ) : (
+                                    graphSwitch
+                                )
                             }
                         >
                             {graphPane}
@@ -284,9 +356,10 @@ export function PipelineEditor({ file }: { file: WorkFile }) {
                                 <Segmented<Below>
                                     size="sm"
                                     label="Show"
-                                    value={below}
+                                    value={shownBelow}
                                     onValueChange={setBelow}
                                     options={[
+                                        ...(view === 'text' ? [] : [{ value: 'step' as const, label: 'Step' }]),
                                         { value: 'problems', label: 'Problems', count: problems.length },
                                         {
                                             value: 'log',
@@ -317,10 +390,24 @@ export function PipelineEditor({ file }: { file: WorkFile }) {
                         >
                             {below === 'log' && latest !== undefined ? (
                                 <RunLog run={latest} />
+                            ) : shownBelow === 'step' ? (
+                                <StepSettings
+                                    fileId={file.id}
+                                    doc={doc}
+                                    text={text}
+                                    pipeline={pipeline}
+                                    selected={selected}
+                                    onRenamed={setSelected}
+                                />
                             ) : (
                                 <Problems
                                     problems={problems}
-                                    onReveal={(problem) => setReveal({ from: problem.from, to: problem.to })}
+                                    onReveal={(problem) => {
+                                        // On the graph alone, a problem chooses the step it is in.
+                                        const step = pipeline.steps.find((one) => problem.from >= one.from && problem.from < one.to)
+                                        if (view === 'graph' && step !== undefined) setSelected(step.id)
+                                        else setReveal({ from: problem.from, to: problem.to })
+                                    }}
                                     empty="No problems: the pipeline is ready to run."
                                 />
                             )}

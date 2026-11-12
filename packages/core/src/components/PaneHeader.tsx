@@ -49,7 +49,8 @@ export interface PaneHeaderProps {
  * on a line under it. `inset={false}` drops the side padding, for a head on the page's own edge.
  * `description` is a sentence under the title saying what the pane holds; the strip grows to hold it.
  * A `meta` too long to stand beside the title on a narrow head goes under it, so it never runs
- * into the actions, and actions too wide to leave the title its room go under the title, as on a phone.
+ * into the actions, and actions too wide to leave the title its room go under the title, as on a phone,
+ * wrapping onto more lines when they are wider than the strip itself.
  */
 export function PaneHeader({
     title,
@@ -99,7 +100,10 @@ export function PaneHeader({
                     {children !== undefined && <div className="flex flex-wrap items-center gap-1.5">{children}</div>}
                 </div>
             )}
-            {actions !== undefined && <div className="ml-auto flex shrink-0 items-center gap-1">{actions}</div>}
+            {/* Actions wider than the whole strip wrap onto lines of their own, from the end, rather than run past its edge. */}
+            {actions !== undefined && (
+                <div className="ml-auto flex max-w-full shrink-0 flex-wrap items-center justify-end gap-1">{actions}</div>
+            )}
         </header>
     )
 }

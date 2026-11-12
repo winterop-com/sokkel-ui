@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { BROKEN_DOC, EMPTY_DOC, NIGHTLY_DOC, SCATTERED_DOC, UNCONNECTED_DOC, WITHOUT_DEDUPE } from './editor/documents'
 import { PipelineEditorStory } from './editor/Editor'
 import { EditorPage as FullEditor } from './editor/EditorPage'
+import { TextAndGraph as BothWays } from './editor/TextAndGraph'
 
 const meta: Meta = { title: 'Graphs/Pipeline editor' }
 export default meta
@@ -126,6 +127,15 @@ export const AutoLayout: Story = {
     name: 'Auto-layout',
     render: () => <PipelineEditorStory initial={SCATTERED_DOC} meta="harbor, placed by hand" />,
 }
+
+/**
+ * The pipeline as text and as a graph at once, one document: a gesture on the graph is written into
+ * the text as an edit to undo (`SharedDocument.replace`), a keystroke in the text redraws the graph,
+ * and the text's history is the only undo, from the toolbar, from Cmd or Ctrl with Z on the graph
+ * (`useHistoryKeys`) or in the editor. The toolbar leaves zoom to the corner (`zoom={false}`), whose
+ * cluster carries the add button.
+ */
+export const TextAndGraph: Story = { name: 'Text and graph', render: () => <BothWays /> }
 
 /** The whole editor in the shell, as an app ships it, with Save and Run in the page's header. */
 export const EditorPage: Story = { name: 'Editor page', render: () => <FullEditor /> }

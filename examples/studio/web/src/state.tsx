@@ -73,7 +73,8 @@ export function StudioProvider({ children }: { children: ReactNode }) {
     // A change to the settings stands at once, before the backend answers, so a second change made meanwhile builds on it.
     const [pending, setPending] = useState<Partial<Prefs>>({})
     const stored = prefList.rows?.[0] ?? DEFAULT_PREFS
-    const prefs = useMemo(() => ({ ...stored, ...pending }), [stored, pending])
+    // Settings kept before a setting was added take its default.
+    const prefs = useMemo(() => ({ ...DEFAULT_PREFS, ...stored, ...pending }), [stored, pending])
     const prefsRef = useRef(prefs)
     prefsRef.current = prefs
     const [asking, ask] = useState<Asking | null>(null)

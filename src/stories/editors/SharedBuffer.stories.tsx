@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import { Chip } from '@winterop-com/sokkel-ui/Chip'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { CodeEditor, useSharedDocument, useSharedText } from '@winterop-com/sokkel-ui/CodeEditor'
 import { Fill, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { PaneHeader } from '@winterop-com/sokkel-ui/PaneHeader'
@@ -85,6 +86,17 @@ function SharedBuffer({ open = false }: { open?: boolean }) {
                         <PaneHeader
                             title="import-orders.yaml"
                             meta={changed ? <Chip tone="warning">edited</Chip> : `${String(lines)} lines`}
+                            actions={
+                                // An edit made outside the editors, as a form or a graph makes one: undone in either view.
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    disabled={!text.includes('on_invalid: warn')}
+                                    onClick={() => doc.replace(text.replace('on_invalid: warn', 'on_invalid: fail'))}
+                                >
+                                    Fail on invalid rows
+                                </Button>
+                            }
                         />
                         <Fill>
                             <CodeEditor doc={doc} label="Job" language="yaml" variant="pane" size="sm" schema={JOB_SCHEMA} folding />
@@ -121,7 +133,8 @@ export default meta
  * One job in two editors over a shared document (`useSharedDocument`), as two views of one file: an
  * edit in either shows in the other and both check it against the job schema, one undo history serves
  * both, and each keeps its own caret, selection and folds. The second view opens near full screen from
- * its expand button and goes on at the caret it left.
+ * its expand button and goes on at the caret it left. The button over the first view changes the text
+ * from outside the editors with `replace`, as a form or a graph would, and either view undoes it.
  */
 export const Shared: StoryObj = { name: 'Shared buffer', render: () => <SharedBuffer /> }
 

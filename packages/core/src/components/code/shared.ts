@@ -1,4 +1,4 @@
-import { history, redo, undo } from '@codemirror/commands'
+import { history, isolateHistory, redo, redoDepth, undo, undoDepth } from '@codemirror/commands'
 import { Annotation, EditorSelection, EditorState, Transaction, type ChangeSet } from '@codemirror/state'
 import type { EditorView } from '@codemirror/view'
 import { useEffect, useLayoutEffect, useState, useSyncExternalStore } from 'react'
@@ -19,6 +19,16 @@ export interface SharedDocument {
     readonly length: number
     /** Replaces the whole text, such as with a file loaded again; it cannot be undone. */
     setText: (text: string) => void
+    /**
+     * Puts in `text` as an edit to undo, as a form or a graph drawn from the text writes its change
+     * back: only the span that differs changes, so the carets and folds elsewhere stay. It is a step
+     * of its own unless `join` lets it join the edit just before, as typed keys join.
+     */
+    replace: (text: string, options?: { join?: boolean }) => void
+    /** Whether there is an edit to undo. */
+    readonly canUndo: boolean
+    /** Whether there is an undone edit to do again. */
+    readonly canRedo: boolean
     /** Called with the text after every change; returns the way to stop. */
     subscribe: (listener: (text: string) => void) => () => void
     /** Undoes the last edit made in any of its editors; false when there is none. */
@@ -37,6 +47,17 @@ export interface SharedDocumentLink {
     forward: (transactions: readonly Transaction[], view: EditorView) => void
     /** Runs undo or redo for a view, which takes the selection the history restores. */
     history: (which: 'undo' | 'redo', view: EditorView | null) => boolean
+}
+
+/** The one change that turns `from` into `to`: the span between their common start and common end. */
+export function differingSpan(from: string, to: string): { from: number; to: number; insert: string } | null {
+    if (from === to) return null
+    const most = Math.min(from.length, to.length)
+    let start = 0
+    while (start < most && from.charCodeAt(start) === to.charCodeAt(start)) start += 1
+    let end = 0
+    while (end < most - start && from.charCodeAt(from.length - 1 - end) === to.charCodeAt(to.length - 1 - end)) end += 1
+    return { from: start, to: from.length - end, insert: to.slice(start, to.length - end) }
 }
 
 const links = new WeakMap<SharedDocument, SharedDocumentLink>()
@@ -146,6 +167,25 @@ export function createSharedDocument(text = ''): SharedDocument {
             state = state.update({ changes, annotations: Transaction.addToHistory.of(false) }).state
             spread(changes, null)
             tell()
+        },
+        replace: (next, options) => {
+            const span = differingSpan(state.doc.toString(), next)
+            if (span === null) return
+            // Undo puts the caret back where the last editor left it.
+            state = state.update({ selection, annotations: Transaction.addToHistory.of(false) }).state
+            const transaction = state.update({
+                changes: span,
+                annotations: [Transaction.time.of(Date.now()), ...(options?.join === true ? [] : [isolateHistory.of('full')])],
+            })
+            state = transaction.state
+            spread(transaction.changes, null)
+            tell()
+        },
+        get canUndo() {
+            return undoDepth(state) > 0
+        },
+        get canRedo() {
+            return redoDepth(state) > 0
         },
         subscribe: (listener) => {
             listeners.add(listener)

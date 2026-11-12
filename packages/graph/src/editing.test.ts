@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { blockBadge, blockMatches, groupBlocks, type PipelineBlock } from './blocks'
 import { cyclePath, wouldCycle, type PipelineStep } from './PipelineGraph'
-import { historyStep, type HistoryState } from './use-graph-history'
+import { historyKey, historyStep, type HistoryState } from './use-graph-history'
 
 const STEPS: PipelineStep[] = [
     { code: 'fetch', needs: [] },
@@ -119,5 +119,28 @@ describe('historyStep', () => {
     it('does nothing to undo or redo at either end', () => {
         expect(historyStep(start, { type: 'undo' })).toBe(start)
         expect(historyStep(start, { type: 'redo' })).toBe(start)
+    })
+})
+
+describe('historyKey', () => {
+    const press = (key: string, held: Partial<{ metaKey: boolean; ctrlKey: boolean; shiftKey: boolean; altKey: boolean }> = {}) => ({
+        key,
+        metaKey: false,
+        ctrlKey: false,
+        shiftKey: false,
+        altKey: false,
+        ...held,
+    })
+    it('undoes on Cmd or Ctrl with Z, and redoes with Shift too or on Ctrl with Y', () => {
+        expect(historyKey(press('z', { metaKey: true }))).toBe('undo')
+        expect(historyKey(press('z', { ctrlKey: true }))).toBe('undo')
+        expect(historyKey(press('Z', { metaKey: true, shiftKey: true }))).toBe('redo')
+        expect(historyKey(press('y', { ctrlKey: true }))).toBe('redo')
+    })
+    it('leaves every other press alone', () => {
+        expect(historyKey(press('z'))).toBeNull()
+        expect(historyKey(press('z', { metaKey: true, altKey: true }))).toBeNull()
+        expect(historyKey(press('y', { metaKey: true }))).toBeNull()
+        expect(historyKey(press('s', { metaKey: true }))).toBeNull()
     })
 })
