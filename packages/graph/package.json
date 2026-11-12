@@ -58,6 +58,10 @@
             "types": "./dist/GraphToolbar.d.ts",
             "import": "./dist/GraphToolbar.js"
         },
+        "./GraphLayoutMenu": {
+            "types": "./dist/GraphLayoutMenu.d.ts",
+            "import": "./dist/GraphLayoutMenu.js"
+        },
         "./layout": {
             "types": "./dist/layout.d.ts",
             "import": "./dist/layout.js"

@@ -1,5 +1,5 @@
 import { CircleAlert, CircleCheck, Maximize, Minus, Network, Plus, Redo2, Undo2 } from 'lucide-react'
-import { Children, type ReactNode } from 'react'
+import { Children, type ComponentProps, type ReactNode } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { useGraphControls } from './context'
@@ -43,17 +43,18 @@ export const GRAPH_TOOLBAR_WORDS: GraphToolbarWords = {
 const BUTTON =
     'flex size-7 shrink-0 items-center justify-center rounded-chip text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-40 [&_svg]:size-3.5'
 
-export interface GraphToolbarButtonProps {
+export interface GraphToolbarButtonProps extends Omit<ComponentProps<'button'>, 'children'> {
     label: string
-    onClick?: () => void
-    disabled?: boolean
     children: ReactNode
 }
 
-/** A button of the app's in a graph toolbar, drawn as the toolbar's own: a glyph, named by `label`. */
-export function GraphToolbarButton({ label, onClick, disabled, children }: GraphToolbarButtonProps) {
+/**
+ * A button of the app's in a graph toolbar, drawn as the toolbar's own: a glyph, named by `label`.
+ * It takes a ref and any button attribute, so it can be a menu's trigger.
+ */
+export function GraphToolbarButton({ label, className, children, ...rest }: GraphToolbarButtonProps) {
     return (
-        <button type="button" className={BUTTON} aria-label={label} title={label} disabled={disabled} onClick={onClick}>
+        <button type="button" {...rest} className={cn(BUTTON, className)} aria-label={label} title={rest.title ?? label}>
             {children}
         </button>
     )

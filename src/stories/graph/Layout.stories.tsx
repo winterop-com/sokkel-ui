@@ -1,11 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import { Maximize, Minus, Plus } from 'lucide-react'
 import { useState } from 'react'
 
+import { Section } from '@winterop-com/sokkel-ui/Section'
+import type { GraphControls } from '@winterop-com/sokkel-ui-graph/GraphCanvas'
+import { GraphLayoutMenu, type GraphLayoutChoice } from '@winterop-com/sokkel-ui-graph/GraphLayoutMenu'
+import { GraphToolbarButton } from '@winterop-com/sokkel-ui-graph/GraphToolbar'
 import type { GraphRouting, GraphSpacing } from '@winterop-com/sokkel-ui-graph/layout'
 import { PipelineGraph, type PipelineStep } from '@winterop-com/sokkel-ui-graph/PipelineGraph'
 import { RunGraph } from '@winterop-com/sokkel-ui-graph/RunGraph'
 import { Stage } from './Frame'
-import { FAILED, LONG_NAMES, NIGHTLY_EXPORT } from './data'
+import { FAILED, FAN_OUT_RUN, LARGE, LONG_NAMES, NIGHTLY_EXPORT } from './data'
 
 function Laid({
     steps,
@@ -15,12 +20,14 @@ function Laid({
     spacing,
     minNodeWidth,
     maxNodeWidth,
+    wrapWidth,
 }: {
     steps: PipelineStep[]
     title: string
     meta: string
     routing?: GraphRouting
     spacing?: GraphSpacing
+    wrapWidth?: number
     minNodeWidth?: number
     maxNodeWidth?: number
 }) {
@@ -35,8 +42,50 @@ function Laid({
                 spacing={spacing}
                 minNodeWidth={minNodeWidth}
                 maxNodeWidth={maxNodeWidth}
+                wrapWidth={wrapWidth}
                 words={{ label: title }}
             />
+        </Stage>
+    )
+}
+
+/** A run in a section whose head carries the layout menu and the zoom buttons, the graph filling the section. */
+function InSection() {
+    const [layout, setLayout] = useState<GraphLayoutChoice>({ direction: 'right', routing: 'orthogonal', spacing: 'normal' })
+    const [controls, setControls] = useState<GraphControls | null>(null)
+    return (
+        <Stage title="import-orders" meta="Run 01a1a5f8, running">
+            <Section
+                title="Steps"
+                fill
+                flush
+                className="min-w-0 flex-1"
+                actions={
+                    <>
+                        <GraphLayoutMenu value={layout} onValueChange={setLayout} />
+                        <GraphToolbarButton label="Zoom out" onClick={controls?.zoomOut} disabled={controls === null || controls.empty}>
+                            <Minus aria-hidden />
+                        </GraphToolbarButton>
+                        <GraphToolbarButton label="Zoom in" onClick={controls?.zoomIn} disabled={controls === null || controls.empty}>
+                            <Plus aria-hidden />
+                        </GraphToolbarButton>
+                        <GraphToolbarButton label="Fit the graph" onClick={controls?.fit} disabled={controls === null || controls.empty}>
+                            <Maximize aria-hidden />
+                        </GraphToolbarButton>
+                    </>
+                }
+            >
+                <RunGraph
+                    steps={FAN_OUT_RUN}
+                    frame="filled"
+                    controls={false}
+                    onControls={setControls}
+                    direction={layout.direction}
+                    routing={layout.routing}
+                    spacing={layout.spacing}
+                    words={{ label: 'import-orders run' }}
+                />
+            </Section>
         </Stage>
     )
 }
@@ -97,3 +146,15 @@ export const RunInSplines: Story = {
         </Stage>
     ),
 }
+
+/** `wrapWidth={1120}`: rebuild-index, too wide for one row, cut into rows stacked down, each carrying on from the one above. */
+export const Wrapped: Story = {
+    render: () => <Laid steps={LARGE} title="rebuild-index" meta="harbor, 57 steps wrapped at 1120px" wrapWidth={1120} />,
+}
+
+/**
+ * A run filling a section (`frame="filled"`: the section's own ground, no dots, each wheel notch one
+ * zoom step), its head carrying a `GraphLayoutMenu` and zoom buttons reached through `onControls`.
+ * Choosing another layout fits the graph again, even after it was moved.
+ */
+export const InASection: Story = { name: 'In a section', render: () => <InSection /> }

@@ -36,6 +36,11 @@ export function DependencyGraph({
     direction: given,
     frame = 'stage',
     zoomOnDoubleClick,
+    fitMinZoom,
+    narrowFit,
+    onControls,
+    controls,
+    wrapWidth,
     routing,
     spacing,
     minNodeWidth,
@@ -61,7 +66,7 @@ export function DependencyGraph({
         [nodes],
     )
     const links = useMemo<GraphLink[]>(() => edges.map((edge) => ({ source: edge.from, target: edge.to, arrow: true })), [edges])
-    const graph = useNodeGraph(items, links, { direction, selected, routing, spacing, minNodeWidth, maxNodeWidth })
+    const graph = useNodeGraph(items, links, { direction, selected, routing, spacing, wrapWidth, minNodeWidth, maxNodeWidth })
     return (
         <GraphCanvas
             nodes={graph.nodes}
@@ -71,6 +76,11 @@ export function DependencyGraph({
             onWidth={setWidth}
             frame={frame}
             zoomOnDoubleClick={zoomOnDoubleClick}
+            narrowFit={narrowFit}
+            onControls={onControls}
+            controls={controls}
+            fitMinZoom={fitMinZoom}
+            layoutKey={`${String(routing)}|${String(spacing)}|${String(wrapWidth)}`}
             onSelect={onSelect}
             words={words}
             className={className}
