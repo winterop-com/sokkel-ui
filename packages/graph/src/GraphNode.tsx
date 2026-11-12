@@ -30,6 +30,33 @@ export interface GraphNodeData extends Record<string, unknown> {
     /** What is wrong with the node, as a form field says it: the box takes the worst issue's edge, and a mark opens the list. */
     issues?: readonly Issue[]
     formatDuration?: (ms: number) => string
+    /** What pointing at the box says, such as what the step is doing now; it follows each word's own title too. */
+    hint?: string
+    /** Where data enters rather than a step that runs: the box is dashed on the canvas's ground. */
+    source?: boolean
+    /** A count before the status dot, such as how many items a fan-out has. */
+    count?: string
+    /**
+     * A fan-out's items as chips under the two lines, each with its state's dot, its label and an
+     * optional note; they wrap onto more lines and the box grows taller.
+     */
+    items?: readonly GraphNodeItem[]
+    /** One line in place of the chips, such as counts by state once there are too many, or what the fan-out waits for. */
+    itemsSummary?: string
+    /**
+     * Other words the code line may come to say, or an item's note at its widest: the box keeps room
+     * for the widest, so it does not grow, and the graph is not laid out again, as a run goes on.
+     */
+    reserve?: readonly string[]
+}
+
+/** One item of a fan-out, drawn as a chip inside its node. */
+export interface GraphNodeItem {
+    id: string
+    label: string
+    status?: Status | (string & {})
+    /** A short word after the label, such as a retry's countdown. */
+    note?: string
 }
 
 /** The node kind React Flow draws a node box for. */
@@ -52,6 +79,18 @@ export const NODE_MAX_WIDTH = 280
 /** How tall a node box is with its code line, and without one. */
 export const NODE_HEIGHT = 44
 export const NODE_HEIGHT_SHORT = 30
+
+/** How tall one line of a fan-out's chips or its summary is, with the gap above it. */
+const STRIP_LINE = 18
+/** The widest a fan-out's chips widen a box before they wrap. */
+const STRIP_ROOM = 240
+/** The gap between two chips, and inside one between its parts. */
+const CHIP_GAP = 8
+const CHIP_INNER = 4
+/** A chip's status dot. */
+const CHIP_DOT = 6
+/** The duration a box with a state keeps room for, so it does not widen when its step ends. */
+const DURATION_ROOM = '59m 59s'
 
 /** A node box's padding and border across, and the room a dot, a glyph and a gap take. */
 const CHROME = 22
@@ -95,12 +134,51 @@ export function graphNodeSize(
         measure(title, named ? 'title' : 'title-mono') +
         (data.status === undefined ? 0 : GAP + DOT) +
         (hasIssues(data) ? GAP + MARK - 4 : 0)
-    const foot = (line === '' ? 0 : measure(line, 'small-mono')) + (duration === null ? 0 : GAP + 2 + measure(duration, 'small-mono'))
-    const width = Math.min(
-        Math.max(min, max),
-        Math.max(min, Math.ceil(Math.max(head, foot) + CHROME + (data.shape === 'round' ? ROUND_PAD : 0))),
+    const said = Math.max(
+        line === '' ? 0 : measure(line, 'small-mono'),
+        ...(data.reserve ?? []).map((words) => measure(words, 'small-mono')),
     )
-    return { width, height: line === '' && duration === null ? NODE_HEIGHT_SHORT : NODE_HEIGHT }
+    // A box with a state keeps room for a duration, so its step ending does not widen it.
+    const timed = duration !== null || data.status !== undefined
+    const took = timed
+        ? GAP + 2 + Math.max(duration === null ? 0 : measure(duration, 'small-mono'), measure(DURATION_ROOM, 'small-mono'))
+        : 0
+    const foot = said + took
+    const counted = data.count === undefined ? 0 : GAP + measure(data.count, 'small-mono')
+    const chips = (data.items ?? []).map((item) => chipWidth(item, measure))
+    const strip = data.itemsSummary !== undefined ? measure(data.itemsSummary, 'small') : Math.min(STRIP_ROOM, rowWidth(chips))
+    const widest = Math.max(head + counted, foot, strip, ...chips)
+    const pad = CHROME + (data.shape === 'round' ? ROUND_PAD : 0)
+    const width = Math.min(Math.max(min, max), Math.max(min, Math.ceil(widest + pad)))
+    const lines = data.itemsSummary !== undefined ? 1 : chips.length === 0 ? 0 : wrappedLines(chips, width - pad)
+    const twoLines = line !== '' || timed || (data.reserve ?? []).length > 0
+    return { width, height: (twoLines ? NODE_HEIGHT : NODE_HEIGHT_SHORT) + lines * STRIP_LINE }
+}
+
+/** How wide one chip of a fan-out is drawn: its dot, its label in the code face, and its note. */
+function chipWidth(item: GraphNodeItem, measure: Measure): number {
+    return (
+        CHIP_DOT + CHIP_INNER + measure(item.label, 'small-mono') + (item.note === undefined ? 0 : CHIP_INNER + measure(item.note, 'small'))
+    )
+}
+
+/** How wide a row of chips is, side by side. */
+function rowWidth(chips: readonly number[]): number {
+    return chips.reduce((sum, chip, index) => sum + chip + (index === 0 ? 0 : CHIP_GAP), 0)
+}
+
+/** How many lines chips wrap onto across a width. */
+function wrappedLines(chips: readonly number[], room: number): number {
+    let lines = 1
+    let used = 0
+    for (const chip of chips) {
+        const next = used === 0 ? chip : used + CHIP_GAP + chip
+        if (used > 0 && next > room) {
+            lines += 1
+            used = chip
+        } else used = next
+    }
+    return lines
 }
 
 function hasIssues(data: GraphNodeData): boolean {
@@ -113,14 +191,22 @@ const ISSUE_BOX = {
     warning: 'border-warning/80 hover:border-warning',
 } as const
 
-/** The border and ground each status gives a box: only a failure, a run in progress and a skip mark the box itself. */
+/**
+ * The border and ground each status gives a box: an ended state its ink, a live one its hue, a
+ * failure a heavier edge over a wash, and a skip dashed on no ground. Nothing else takes a color.
+ */
 const BOX: Partial<Record<Status, string>> = {
-    failed: 'border-status-failed-ink bg-[color-mix(in_oklab,var(--status-failed)_10%,var(--node))]',
-    running: 'border-status-running-ink',
+    succeeded: 'border-status-succeeded-ink',
+    failed: 'border-[1.5px] border-status-failed-ink bg-[color-mix(in_oklab,var(--status-failed)_12%,var(--node))]',
+    running: 'border-status-running',
+    waiting: 'border-status-waiting',
     completed_with_errors: 'border-status-completed-with-errors-ink',
-    skipped: 'border-dashed text-muted-foreground',
+    skipped: 'border-dashed bg-transparent text-muted-foreground shadow-none',
     cancelled: 'text-muted-foreground',
 }
+
+/** A source's box: dashed on the canvas's own ground. */
+const SOURCE = 'border-dashed bg-canvas shadow-none'
 
 const DOT_TONE: Record<Status, string> = {
     succeeded: 'bg-status-succeeded',
@@ -132,11 +218,6 @@ const DOT_TONE: Record<Status, string> = {
     cancelled: 'bg-status-cancelled',
     skipped: 'bg-status-skipped',
     completed_with_errors: 'bg-status-completed-with-errors',
-}
-
-const PROGRESS_TONE: Partial<Record<Status, string>> = {
-    failed: 'bg-status-failed',
-    succeeded: 'bg-status-succeeded',
 }
 
 const isRunStatus = (value: string): value is RunStatus => (RUN_STATUSES as readonly string[]).includes(value)
@@ -220,15 +301,21 @@ export function GraphNodeBox({ data, selected = false, className }: GraphNodeBox
     const edge = run === undefined && (look.color === 'critical' || look.color === 'warning') ? ISSUE_BOX[look.color] : undefined
     const progress = data.progress === undefined ? null : Math.min(1, Math.max(0, data.progress))
     const issue = data.issues === undefined ? null : worst(data.issues)
+    const hint = data.hint === undefined || data.hint === '' ? undefined : data.hint
+    // What the box is doing has no line of its own, so it follows whichever word is pointed at.
+    const titled = (words: string) => (hint === undefined ? words : `${words}\n${hint}`)
     return (
         <div
             data-slot="graph-node"
             data-status={status}
+            data-source={data.source === true || undefined}
             data-issue={issue ?? undefined}
             data-selected={selected}
+            title={hint}
             className={cn(
                 'relative flex h-full w-full flex-col justify-center gap-0.5 overflow-hidden border border-node-line bg-node px-2.5 text-left text-foreground shadow-node transition-[border-color,box-shadow] duration-100 hover:border-muted-foreground',
                 data.shape === 'round' ? 'rounded-[calc(var(--radius-node)*3)] px-3.5' : 'rounded-node',
+                data.source === true && SOURCE,
                 run !== undefined && BOX[run],
                 edge,
                 issue !== null && ISSUE_BOX[issue],
@@ -238,14 +325,29 @@ export function GraphNodeBox({ data, selected = false, className }: GraphNodeBox
         >
             <div className="flex min-w-0 items-center gap-1.5">
                 {Icon !== undefined && <Icon className="size-3 shrink-0 text-muted-foreground" aria-hidden />}
-                <span title={title} className={cn('min-w-0 truncate text-graph-title font-semibold', !named && 'font-mono')}>
+                <span
+                    data-slot="graph-node-title"
+                    title={titled(title)}
+                    className={cn('min-w-0 truncate text-graph-title font-semibold', !named && 'font-mono')}
+                >
                     {title}
                 </span>
+                {data.count !== undefined && (
+                    <span data-slot="graph-node-count" className="ml-auto shrink-0 font-mono text-graph-small text-faint">
+                        {data.count}
+                    </span>
+                )}
                 {status !== undefined && (
                     <span
-                        className={cn('ml-auto size-2 shrink-0 rounded-full', run !== undefined && DOT_TONE[run])}
+                        role="img"
+                        aria-label={look.label}
+                        title={look.label}
+                        className={cn(
+                            'size-2 shrink-0 rounded-full',
+                            data.count === undefined && 'ml-auto',
+                            run !== undefined && DOT_TONE[run],
+                        )}
                         style={run === undefined ? { background: look.css } : undefined}
-                        aria-hidden
                     />
                 )}
                 {issue !== null && data.issues !== undefined && (
@@ -255,23 +357,83 @@ export function GraphNodeBox({ data, selected = false, className }: GraphNodeBox
                     />
                 )}
             </div>
-            {(line !== '' || duration !== null) && (
-                <div className="flex min-w-0 items-baseline gap-2 font-mono text-graph-small text-muted-foreground">
-                    <span title={line} className="min-w-0 truncate">
+            {(line !== '' || duration !== null || status !== undefined || (data.reserve ?? []).length > 0) && (
+                <div
+                    data-slot="graph-node-line"
+                    className="flex min-h-4 min-w-0 items-baseline gap-2 font-mono text-graph-small text-muted-foreground"
+                >
+                    <span title={titled(line)} className="min-w-0 truncate">
                         {line}
                     </span>
                     {duration !== null && <span className="ml-auto shrink-0 text-faint">{duration}</span>}
                 </div>
             )}
+            {data.itemsSummary !== undefined ? (
+                <span
+                    data-slot="graph-node-strip"
+                    title={titled(data.itemsSummary)}
+                    className="truncate text-graph-small text-muted-foreground"
+                >
+                    {data.itemsSummary}
+                </span>
+            ) : (
+                data.items !== undefined &&
+                data.items.length > 0 && (
+                    <div data-slot="graph-node-strip" className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
+                        {data.items.map((item) => (
+                            <GraphNodeChip key={item.id} item={item} />
+                        ))}
+                    </div>
+                )
+            )}
             {progress !== null && (
-                <span className="absolute inset-x-0 bottom-0 h-0.5 bg-border" aria-hidden>
+                <span
+                    role="progressbar"
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={Math.round(progress * 100)}
+                    aria-label={look.label === '' ? undefined : look.label}
+                    className="absolute inset-x-0 bottom-0 h-0.5"
+                    style={{
+                        background: `color-mix(in oklab, ${status === undefined ? 'var(--status-running)' : look.css} 18%, transparent)`,
+                    }}
+                >
                     <span
-                        className={cn('block h-full', (run !== undefined && PROGRESS_TONE[run]) || 'bg-status-running')}
-                        style={{ width: `${String(progress * 100)}%` }}
+                        className="block h-full transition-[width] duration-300"
+                        style={{
+                            width: `${String(progress * 100)}%`,
+                            background: status === undefined ? 'var(--status-running)' : look.css,
+                        }}
                     />
                 </span>
             )}
         </div>
+    )
+}
+
+/** One item of a fan-out: its state's dot, its label in the code face, and its note. */
+function GraphNodeChip({ item }: { item: GraphNodeItem }) {
+    const look = useStatus(item.status ?? '')
+    return (
+        <span
+            data-slot="graph-node-item"
+            data-status={item.status}
+            className="flex h-4 max-w-full min-w-0 items-center gap-1 text-graph-small text-muted-foreground"
+        >
+            {item.status !== undefined && (
+                <span
+                    role="img"
+                    aria-label={look.label}
+                    title={look.label}
+                    className="size-1.5 shrink-0 rounded-full"
+                    style={{ background: look.css }}
+                />
+            )}
+            <span title={item.label} className="min-w-0 truncate font-mono">
+                {item.label}
+            </span>
+            {item.note !== undefined && <span className="shrink-0 text-faint">{item.note}</span>}
+        </span>
     )
 }
 

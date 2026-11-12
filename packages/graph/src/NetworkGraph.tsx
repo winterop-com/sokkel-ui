@@ -140,6 +140,7 @@ export function NetworkGraph({
     selected = null,
     onSelect,
     frame = 'stage',
+    zoomOnDoubleClick,
     words,
     className,
 }: NetworkGraphProps) {
@@ -241,6 +242,7 @@ export function NetworkGraph({
                 settled={placed.settled}
                 fitMinZoom={NETWORK_FIT_ZOOM}
                 frame={frame}
+                zoomOnDoubleClick={zoomOnDoubleClick}
                 onSelect={onSelect}
                 words={words}
                 className={className}

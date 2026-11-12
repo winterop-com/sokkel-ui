@@ -6,8 +6,10 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.19.10** is the latest release (2026-11-12): a map whose engine fails to load says why and
-  offers to try again, and an empty paused word in `CronField` draws nothing.
+- **0.19.10** is the latest release (2026-11-12): `RunGraph` edges carry the state their source
+  settled in and move while data travels them, a fan-out's items show inside its box, boxes keep
+  their size as a run goes on, and every state marks its box; a map whose engine fails to load says
+  why and offers to try again, and an empty paused word in `CronField` draws nothing.
 - **0.19.9** (2026-11-12): graph layouts can run in an app's worker
   (`setElkEngine`, `elkInWorker`), `CronField` says a schedule is paused, a mini graph keeps a
   floor, and `FilePreview` caps its height and what it reads.

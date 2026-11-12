@@ -114,6 +114,24 @@ describe('node width from words', () => {
         expect(graphNodeSize({ code: 'x'.repeat(60) }, tens).width).toBe(NODE_MAX_WIDTH)
     })
 
+    test('keeps the same size as a step runs, ends, and says its other words', () => {
+        const queued = graphNodeSize({ code: 'reply', kind: 'email', status: 'queued', reserve: ['email · not sent'] }, tens)
+        const done = graphNodeSize(
+            { code: 'reply', kind: 'email · sent', status: 'succeeded', duration_ms: 1840, reserve: ['email · not sent'] },
+            tens,
+        )
+        expect(done).toEqual(queued)
+    })
+
+    test('grows a fan-out taller as its chips wrap, and wider only up to the strip', () => {
+        const items = Array.from({ length: 12 }, (_, at) => ({ id: String(at), label: `region-${String(at)}`, status: 'succeeded' }))
+        const one = graphNodeSize({ code: 'fetch', status: 'running', items: items.slice(0, 1) }, tens)
+        const many = graphNodeSize({ code: 'fetch', status: 'running', items }, tens)
+        expect(many.height).toBeGreaterThan(one.height)
+        expect(many.width).toBeLessThanOrEqual(240 + 22)
+        expect(graphNodeSize({ code: 'fetch', status: 'running', itemsSummary: '9 succeeded · 3 failed' }, tens).height).toBe(one.height)
+    })
+
     test('holds to the bounds it is given, and draws every box at one width when they meet', () => {
         const long = { code: 'x'.repeat(60) }
         expect(graphNodeSize(long, tens, { max: 360 }).width).toBe(360)

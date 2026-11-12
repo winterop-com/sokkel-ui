@@ -33,6 +33,12 @@ export interface GraphLink {
     target: string
     label?: string
     tone?: GraphEdgeData['tone']
+    /** The state whose hue the line takes. */
+    tint?: GraphEdgeData['tint']
+    /** What travels the edge now. */
+    motion?: GraphEdgeData['motion']
+    /** Dashed, apart from the tone. */
+    dashed?: boolean
     arrow?: boolean
 }
 
@@ -143,6 +149,9 @@ export function useNodeGraph(
                 ...(edge.labelAt === undefined || !routed ? {} : { labelAt: edge.labelAt }),
                 ...(link.label === undefined ? {} : { label: link.label }),
                 ...(link.tone === undefined ? {} : { tone: link.tone }),
+                ...(link.tint === undefined ? {} : { tint: link.tint }),
+                ...(link.motion === undefined ? {} : { motion: link.motion }),
+                ...(link.dashed === undefined ? {} : { dashed: link.dashed }),
                 ...(link.arrow === undefined ? {} : { arrow: link.arrow }),
                 ...(link.source === link.target ? { loop: true } : {}),
             }

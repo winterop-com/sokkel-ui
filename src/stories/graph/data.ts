@@ -26,6 +26,53 @@ export const IMPORT_ORDERS: MiniGraphStep[] = [
     { code: 'notify', needs: ['orders', 'fetch', 'split', 'transform'], hint: 'notify · webhook' },
 ]
 
+/**
+ * A run of import-orders partway through: the orders source has fired, fetch is done, split fans
+ * out per region with one region retrying, transform waits for it, and archive has its items
+ * counted rather than named. A box keeps room for the reply's other words, so it does not grow.
+ */
+export const FAN_OUT_RUN: RunStep[] = [
+    { code: 'orders', kind: 'webhook', needs: [], status: 'succeeded', source: true, duration_ms: 40, hint: 'Listens for new orders' },
+    { code: 'fetch', name: 'Fetch orders', kind: 'http', needs: ['orders'], status: 'succeeded', duration_ms: 1840 },
+    {
+        code: 'split',
+        name: 'Split by region',
+        kind: 'python',
+        needs: ['fetch'],
+        status: 'running',
+        duration_ms: 12_400,
+        progress: 0.6,
+        count: '5 items',
+        hint: 'Sending each region on (60%)',
+        items: [
+            { id: 'north', label: 'north', status: 'succeeded' },
+            { id: 'south', label: 'south', status: 'succeeded' },
+            { id: 'east', label: 'east', status: 'running' },
+            { id: 'west', label: 'west', status: 'failed', note: 'retry in 12s' },
+            { id: 'central', label: 'central', status: 'queued' },
+        ],
+        reserve: ['retry in 99s'],
+    },
+    {
+        code: 'transform',
+        kind: 'sql',
+        needs: ['split'],
+        status: 'waiting',
+        itemsSummary: 'Waits for split',
+        hint: 'Waits for split to finish',
+    },
+    {
+        code: 'archive',
+        kind: 's3',
+        needs: ['fetch'],
+        status: 'running',
+        duration_ms: 4200,
+        count: '64 items',
+        itemsSummary: '41 succeeded · 3 failed · 20 queued',
+    },
+    { code: 'reply', kind: 'email', needs: ['transform', 'archive'], status: 'queued', reserve: ['email · not sent'] },
+]
+
 /** Three steps in a row, each named only by its code. */
 export const SHORT: PipelineStep[] = [
     { code: 'fetch', needs: [] },

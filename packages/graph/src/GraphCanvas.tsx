@@ -147,6 +147,8 @@ export interface GraphViewProps extends GraphLayoutStyle, GraphSizing {
     onSelect?: (id: string | null) => void
     direction?: GraphDirection
     frame?: GraphFrame
+    /** A double click or tap zooms in a step about the point, on a stage; off when left out. */
+    zoomOnDoubleClick?: boolean
     words?: Partial<GraphWords>
     className?: string
 }
@@ -245,6 +247,8 @@ export interface GraphCanvasProps<N extends Node = Node, E extends Edge = Edge> 
      * box's words stay legible, lower for a view of small marks that should be seen whole.
      */
     fitMinZoom?: number
+    /** A double click or tap zooms in a step about the point, on a stage; off when left out. */
+    zoomOnDoubleClick?: boolean
     words?: Partial<GraphWords>
     className?: string
     /** What the canvas holds over the drawing. */
@@ -256,7 +260,8 @@ export interface GraphCanvasProps<N extends Node = Node, E extends Edge = Edge> 
  * whole graph whenever its nodes or its own size change, until the reader pans or zooms it; the fit
  * button gives the view back. A canvas selects and does nothing else: nodes are not dragged,
  * connected or deleted. `settled` says the nodes stand where they will stay; once they do and the
- * view has fitted them, the frame carries `data-graph-settled`.
+ * view has fitted them (or the reader has moved it), the frame carries `data-graph-settled`, which a
+ * test waits on before it reads where a node stands.
  *
  * Given `onSelectionChange`, several nodes are chosen at once: Shift and a drag on the ground draws
  * a box around them, and Shift, Cmd or Ctrl with a click adds one or takes it out.
@@ -275,6 +280,7 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
     controls = true,
     toolbar,
     fitMinZoom = FIT_MIN_ZOOM,
+    zoomOnDoubleClick = false,
     onWidth,
     emptyAction,
     words,
@@ -539,7 +545,7 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
                             zoomOnScroll={!fitted}
                             preventScrolling={!fitted}
                             zoomOnPinch
-                            zoomOnDoubleClick={false}
+                            zoomOnDoubleClick={zoomOnDoubleClick && !fitted}
                             onNodesChange={onNodesChange}
                             onPaneClick={() => {
                                 onSelect?.(null)

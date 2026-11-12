@@ -8,7 +8,7 @@ import { Inspector, InspectorSection } from '@winterop-com/sokkel-ui/Inspector'
 import { Fill } from '@winterop-com/sokkel-ui/Layout'
 import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 import { Stage } from './Frame'
-import { FAILED, RUNNING } from './data'
+import { FAILED, FAN_OUT_RUN, RUNNING } from './data'
 
 function Run({ steps, meta }: { steps: RunStep[]; meta: string }) {
     const [selected, setSelected] = useState<string | null>(null)
@@ -64,6 +64,20 @@ export const Running: Story = { render: () => <Run steps={RUNNING} meta="Run 01a
 
 /** A run that failed at validate: the failure is the one box drawn in its color, and the steps after it were skipped. */
 export const Failed: Story = { render: () => <Run steps={FAILED} meta="Run 01a1a5c2, failed" /> }
+
+/**
+ * A run with a source and a fan-out: the source dashed on the ground, split's regions as chips with
+ * their states and a retry's countdown, archive's items counted, and the edge from fetch into the
+ * running archive flowing (standing lit with motion reduced). Pointing at a box says what it is doing.
+ */
+export const FanOut: Story = {
+    name: 'Fan-out',
+    render: () => (
+        <Stage title="import-orders" meta="Run 01a1a5f8, running">
+            <RunGraph steps={FAN_OUT_RUN} words={{ label: 'import-orders run' }} />
+        </Stage>
+    ),
+}
 
 /** The run beside an inspector on the chosen step; choosing another box changes the panel, and the ground clears it. */
 export const WithInspector: Story = { name: 'With inspector', render: () => <Inspected /> }
