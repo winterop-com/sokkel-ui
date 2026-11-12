@@ -43,7 +43,6 @@ export function ShowPage({ id }: { id: string }) {
     return (
         <Stack gap="section">
             <PageHeader
-                trail={[{ label: 'Shows', href: '#/shows' }]}
                 title={show.title}
                 meta={<MetaLine size="sm" items={[hostsOf(show), categoryLabel(show.category), `${String(out.length)} episodes`]} />}
                 actions={

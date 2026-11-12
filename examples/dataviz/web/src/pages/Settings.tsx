@@ -7,7 +7,6 @@ import { SettingsDialog, type SettingsGroup } from '@winterop-com/sokkel-ui/Sett
 import { ThemePicker } from '@winterop-com/sokkel-ui/ThemePicker'
 import { ChartColumn, Database, Hash, Palette } from 'lucide-react'
 import { useState } from 'react'
-import { toast } from 'sonner'
 import { resetAll } from 'tidevann-shared/backend'
 import type { Frame } from 'tidevann-shared/frame'
 
@@ -207,7 +206,6 @@ export function SettingsPage({
                 onActiveChange={setActive}
                 search={search}
                 onSearchChange={setSearch}
-                footer="Saved as each is changed"
                 onReset={(section) => {
                     if (section === 'charts')
                         set({
@@ -216,8 +214,7 @@ export function SettingsPage({
                             suggestions: DEFAULT_PREFERENCES.suggestions,
                         })
                     if (section === 'numbers') set({ numbers: DEFAULT_PREFERENCES.numbers, decimals: DEFAULT_PREFERENCES.decimals })
-                    if (section === 'appearance') setSettings({ ...DEFAULT_APPEARANCE, scheme: settings.scheme })
-                    toast.success('Back to the defaults')
+                    if (section === 'appearance') setSettings({ ...DEFAULT_APPEARANCE })
                 }}
             />
             <ConfirmDialog

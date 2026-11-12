@@ -397,6 +397,7 @@ export function Settings({
                 {
                     id: 'subscribers',
                     label: 'Subscribers',
+                    reset: false,
                     icon: Mail,
                     heading: `Subscribers (${String(rows.subscribers?.length ?? 0)})`,
                     settings: [
@@ -476,7 +477,7 @@ export function Settings({
                 onReset={(section) => {
                     const keys = section === undefined ? [] : (SECTION_KEYS[section] ?? [])
                     setSettings(Object.fromEntries(keys.map((key) => [key, DEFAULT_SETTINGS[key]])) as Partial<Options>)
-                    if (section === 'appearance') appearance.setSettings({ ...DEFAULT_APPEARANCE, scheme: appearance.settings.scheme })
+                    if (section === 'appearance') appearance.setSettings({ ...DEFAULT_APPEARANCE })
                 }}
             />
             <ConfirmDialog

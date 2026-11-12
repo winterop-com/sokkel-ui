@@ -17,8 +17,12 @@ import { DEFAULT_PREFS, RATES, type Currency, type Pace, type Prefs } from '../m
 import { useLoaded } from '../state'
 import { PRESETS } from '../view'
 
-/** What Reset to defaults puts back; the feed's read mark stays. */
-const HELD: (keyof Omit<Prefs, 'id' | 'feedSeen'>)[] = ['pace', 'currency', 'range', 'compare', 'bigOrder', 'notifyChurn', 'workspace']
+/** The preferences each section holds, which its Reset to defaults puts back; the feed's read mark stays. */
+const HELD: Record<string, (keyof Omit<Prefs, 'id' | 'feedSeen'>)[]> = {
+    general: ['workspace', 'currency', 'range', 'compare'],
+    live: ['pace'],
+    notifications: ['bigOrder', 'notifyChurn'],
+}
 
 /** A switch named for the setting it turns. */
 function Toggle({ label, on, onChange }: { label: string; on: boolean; onChange: (on: boolean) => void }) {
@@ -192,6 +196,7 @@ export function Settings({ frame, open, onClose }: { frame: Frame; open: boolean
                 {
                     id: 'demo',
                     label: 'Demo data',
+                    reset: false,
                     icon: Database,
                     settings: [
                         {
@@ -223,11 +228,10 @@ export function Settings({ frame, open, onClose }: { frame: Frame; open: boolean
                 onActiveChange={setActive}
                 search={search}
                 onSearchChange={setSearch}
-                footer="Saved as each is changed"
-                resetScope="all"
-                onReset={() => {
-                    setLook({ ...DEFAULT_APPEARANCE })
-                    void setPrefs(Object.fromEntries(HELD.map((key) => [key, DEFAULT_PREFS[key]])))
+                onReset={(section) => {
+                    if (section === 'appearance') setLook({ ...DEFAULT_APPEARANCE })
+                    const keys = section === undefined ? [] : (HELD[section] ?? [])
+                    if (keys.length > 0) void setPrefs(Object.fromEntries(keys.map((key) => [key, DEFAULT_PREFS[key]])))
                 }}
             />
             <ConfirmDialog

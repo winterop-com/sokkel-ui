@@ -18,13 +18,14 @@ import { placeCommands } from '@winterop-com/sokkel-ui/lib/commands'
 import { Checkbox } from '@winterop-com/sokkel-ui/primitives/checkbox'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@winterop-com/sokkel-ui/primitives/empty'
-import { CalendarDays, CheckIcon, Folder, Inbox, type LucideIcon, Plus, Sun, Trash2, Undo2 } from 'lucide-react'
-import { useMemo, useRef, useState } from 'react'
+import { CalendarDays, CheckIcon, Folder, Inbox, type LucideIcon, Plus, Settings as SettingsIcon, Sun, Trash2, Undo2 } from 'lucide-react'
+import { useMemo, useRef } from 'react'
 
 import { useCollection } from 'tidevann-shared/backend'
-import { dateOf, day, PEOPLE, PROJECTS, type Project, type Task, tasks } from './data'
+import { dateOf, day, DEFAULT_PREFS, PEOPLE, type Prefs, prefs as prefRows, PROJECTS, type Project, type Task, tasks } from './data'
+import { Settings } from './Settings'
 import type { Frame } from 'tidevann-shared/frame'
-import { go } from 'tidevann-shared/router'
+import { go, useOverlayRoute } from 'tidevann-shared/router'
 import { TidevannMark } from 'tidevann-shared/mark'
 
 interface List {
@@ -33,8 +34,8 @@ interface List {
     icon: LucideIcon
     /** What a task needs to be in the list. */
     holds: (task: Task, today: string) => boolean
-    /** What a task added here starts with. */
-    adds: (today: string) => Pick<Task, 'due' | 'project'>
+    /** What a task added here starts with, given the project a task outside a project's list goes into. */
+    adds: (today: string, project: Project) => Pick<Task, 'due' | 'project'>
 }
 
 const PROJECT_LISTS: List[] = PROJECTS.map((project) => ({
@@ -46,20 +47,20 @@ const PROJECT_LISTS: List[] = PROJECTS.map((project) => ({
 }))
 
 const LISTS: List[] = [
-    { id: 'inbox', label: 'Inbox', icon: Inbox, holds: () => true, adds: () => ({ due: null, project: 'harbor' }) },
+    { id: 'inbox', label: 'Inbox', icon: Inbox, holds: () => true, adds: (_today, project) => ({ due: null, project }) },
     {
         id: 'today',
         label: 'Today',
         icon: Sun,
         holds: (task, today) => task.due !== null && task.due <= today,
-        adds: (today) => ({ due: today, project: 'harbor' }),
+        adds: (today, project) => ({ due: today, project }),
     },
     {
         id: 'upcoming',
         label: 'Upcoming',
         icon: CalendarDays,
         holds: (task, today) => task.due !== null && task.due > today,
-        adds: () => ({ due: day(1), project: 'harbor' }),
+        adds: (_today, project) => ({ due: day(1), project }),
     },
     ...PROJECT_LISTS,
 ]
@@ -151,9 +152,14 @@ function columns(now: Date): DataColumn<Task>[] {
 export function TasksDemo({ frame }: { frame: Frame }) {
     const today = day(0)
     const now = useMemo(() => dateOf(today), [today])
-    const list = LISTS.find((one) => one.id === frame.route[0]) ?? LISTS[0]
+    // Settings open as a dialog over the list they were opened from.
+    const settings = useOverlayRoute(frame.route, 'settings', [])
+    const { rows: prefList } = useCollection(prefRows)
+    const mine = prefList?.[0] ?? DEFAULT_PREFS
+    const setPrefs = (patch: Partial<Omit<Prefs, 'id'>>) => void prefRows.update(mine.id, patch)
+    const showDone = mine.showDone
+    const list = LISTS.find((one) => one.id === settings.route[0]) ?? LISTS.find((one) => one.id === mine.startList) ?? LISTS[0]
     const { rows, error } = useCollection(tasks)
-    const [showDone, setShowDone] = useState(false)
     const quickAdd = useRef<HTMLInputElement>(null)
 
     const all = rows ?? []
@@ -174,6 +180,11 @@ export function TasksDemo({ frame }: { frame: Frame }) {
     const groups: RailGroup[] = [
         { id: 'lists', entries: LISTS.slice(0, 3).map(entry) },
         { id: 'projects', title: 'Projects', entries: PROJECT_LISTS.map(entry) },
+        {
+            id: 'system',
+            title: 'System',
+            entries: [{ id: 'settings', label: 'Settings', icon: SettingsIcon, href: '#/settings', active: settings.open }],
+        },
     ]
 
     const focusQuickAdd = () => {
@@ -184,11 +195,14 @@ export function TasksDemo({ frame }: { frame: Frame }) {
     const palette: PaletteGroup[] = [
         { title: 'Tasks', commands: [{ id: 'task-new', label: 'New task', icon: Plus, onSelect: focusQuickAdd }] },
         ...placeCommands(groups.slice(0, 2), (href) => go(href.slice(1)), { title: 'Lists' }),
+        ...placeCommands(groups.slice(2), (href) => go(href.slice(1))),
         ...frame.palette,
     ]
 
     const add = (title: string) =>
-        list === undefined ? undefined : tasks.create({ title, assignee: 'ada', done: false, ...list.adds(today) }).then(() => undefined)
+        list === undefined
+            ? undefined
+            : tasks.create({ title, assignee: mine.assignee, done: false, ...list.adds(today, mine.project) }).then(() => undefined)
 
     const actions = (task: Task): DataAction[] => [
         {
@@ -218,6 +232,7 @@ export function TasksDemo({ frame }: { frame: Frame }) {
                         <AccountMenu
                             name="ada"
                             where="tidevann.example.org"
+                            onSettings={() => go('/settings')}
                             scheme={frame.appearance.settings.scheme}
                             onSchemeChange={(scheme) => frame.appearance.setSettings({ ...frame.appearance.settings, scheme })}
                         />
@@ -235,7 +250,14 @@ export function TasksDemo({ frame }: { frame: Frame }) {
                 <PageHeader title={label} count={`${String(open)} open`} />
                 <Toolbar
                     search={<QuickAdd inputRef={quickAdd} placeholder="Add a task" onAdd={add} />}
-                    end={<SwitchField id="show-done" label="Show done" checked={showDone} onCheckedChange={setShowDone} />}
+                    end={
+                        <SwitchField
+                            id="show-done"
+                            label="Show done"
+                            checked={showDone}
+                            onCheckedChange={(next) => setPrefs({ showDone: next })}
+                        />
+                    }
                 />
                 <PageState loading={rows === undefined && error === undefined} error={error}>
                     <DataTable
@@ -261,7 +283,7 @@ export function TasksDemo({ frame }: { frame: Frame }) {
                                 </EmptyHeader>
                                 {hiddenDone > 0 && (
                                     <EmptyContent>
-                                        <Button variant="outline" size="sm" onClick={() => setShowDone(true)}>
+                                        <Button variant="outline" size="sm" onClick={() => setPrefs({ showDone: true })}>
                                             Show done
                                         </Button>
                                     </EmptyContent>
@@ -271,6 +293,15 @@ export function TasksDemo({ frame }: { frame: Frame }) {
                     />
                 </PageState>
             </Page>
+            {settings.open && (
+                <Settings
+                    frame={frame}
+                    prefs={mine}
+                    setPrefs={setPrefs}
+                    lists={LISTS.map((one) => ({ id: one.id, label: one.label }))}
+                    onClose={settings.close}
+                />
+            )}
         </Shell>
     )
 }

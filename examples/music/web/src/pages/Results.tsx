@@ -20,7 +20,7 @@ export function Results({ query }: { query: string }) {
     const total = found.artists.length + found.albums.length + found.songs.length
     return (
         <Stack gap="page">
-            <PageHeader title={`“${query}”`} trail={[{ label: 'Search' }]} count={`${String(total)} found`} />
+            <PageHeader title={`“${query}”`} count={`${String(total)} found`} />
             {total === 0 && (
                 <Nothing icon={Search} title="Nothing answers to that">
                     No artist, album or song in the library is called “{query}”.

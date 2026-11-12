@@ -59,3 +59,20 @@ function seed(): Task[] {
 }
 
 export const tasks = collection<Task>('tasks', seed)
+
+/** What the person chose in Settings, kept by the backend as one row. */
+export interface Prefs {
+    id: string
+    /** The list the app opens on. */
+    startList: string
+    /** Whether lists show the tasks already done. */
+    showDone: boolean
+    /** Who a task added from the quick add is given to. */
+    assignee: Person
+    /** The project a task added outside a project's list goes into. */
+    project: Project
+}
+
+export const DEFAULT_PREFS: Prefs = { id: 'me', startList: 'inbox', showDone: false, assignee: 'ada', project: 'harbor' }
+
+export const prefs = collection<Prefs>('prefs', () => [{ ...DEFAULT_PREFS }])

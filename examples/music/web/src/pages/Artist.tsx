@@ -45,7 +45,6 @@ export function Artist({ id }: { id: string }) {
         <Stack gap="page">
             <PageHeader
                 onBack={() => window.history.back()}
-                trail={[{ label: 'Artists', href: '#/artists' }]}
                 title={artist.name}
                 description={artist.about}
                 meta={

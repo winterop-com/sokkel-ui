@@ -127,7 +127,6 @@ export function PlaylistPage({ id }: { id: string }) {
         <Stack gap="page">
             <PageHeader
                 onBack={() => window.history.back()}
-                trail={[{ label: 'Playlists', href: '#/playlists' }]}
                 title={
                     <InlineEdit
                         label="Name"

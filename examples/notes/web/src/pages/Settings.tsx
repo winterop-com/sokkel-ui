@@ -190,6 +190,7 @@ export function SettingsPage({ frame, open, onClose }: { frame: Frame; open: boo
                 },
                 {
                     id: 'vault',
+                    reset: false,
                     label: 'Vault',
                     icon: Database,
                     settings: [
@@ -252,18 +253,16 @@ export function SettingsPage({ frame, open, onClose }: { frame: Frame; open: boo
                 onActiveChange={setActive}
                 search={search}
                 onSearchChange={setSearch}
-                footer="Saved as each is changed"
-                resetScope="all"
-                onReset={() => {
-                    setLook({ ...DEFAULT_APPEARANCE })
-                    void setPrefs({
-                        fontSize: DEFAULT_PREFS.fontSize,
-                        wrap: DEFAULT_PREFS.wrap,
-                        lineNumbers: DEFAULT_PREFS.lineNumbers,
-                        defaultView: DEFAULT_PREFS.defaultView,
-                        dailyFolder: DEFAULT_PREFS.dailyFolder,
-                        template: TEMPLATE,
-                    })
+                onReset={(section) => {
+                    if (section === 'appearance') setLook({ ...DEFAULT_APPEARANCE })
+                    if (section === 'editor')
+                        void setPrefs({
+                            fontSize: DEFAULT_PREFS.fontSize,
+                            wrap: DEFAULT_PREFS.wrap,
+                            lineNumbers: DEFAULT_PREFS.lineNumbers,
+                            defaultView: DEFAULT_PREFS.defaultView,
+                        })
+                    if (section === 'daily') void setPrefs({ dailyFolder: DEFAULT_PREFS.dailyFolder, template: TEMPLATE })
                 }}
             />
             <ConfirmDialog

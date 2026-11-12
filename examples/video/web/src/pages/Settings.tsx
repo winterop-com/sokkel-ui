@@ -25,12 +25,19 @@ import { resetAll } from 'tidevann-shared/backend'
 import type { Frame } from 'tidevann-shared/frame'
 import { go } from 'tidevann-shared/router'
 import { forgetClips, keptClipsSize, RENDITIONS, useClipCache } from '../clips'
-import { DEFAULT_PREFS, downloads, setPrefs, usePrefs, useRows, watched, type Quality } from '../data'
+import { DEFAULT_PREFS, downloads, setPrefs, usePrefs, useRows, watched, type Prefs, type Quality } from '../data'
 import { bytesOf, plural } from '../format'
 
 const COLOR_NAMES: Record<CaptionColor, string> = { white: 'White', yellow: 'Yellow', green: 'Green', cyan: 'Cyan', magenta: 'Magenta' }
 const BACKGROUND_NAMES: Record<CaptionBackground, string> = { none: 'None', translucent: 'Translucent', solid: 'Solid' }
 const EDGE_NAMES: Record<CaptionEdge, string> = { outline: 'Outline', shadow: 'Drop shadow', none: 'None' }
+
+/** The preferences each section holds, which its Reset to defaults puts back. */
+const HELD: Record<string, (keyof Omit<Prefs, 'id'>)[]> = {
+    playback: ['autoplay', 'theater', 'rate', 'quality', 'stats'],
+    captions: ['captions'],
+    history: ['history'],
+}
 
 /** A switch named for the setting it turns. */
 function Toggle({ label, on, onChange }: { label: string; on: boolean; onChange: (on: boolean) => void }) {
@@ -270,6 +277,7 @@ export function Settings({ frame, open, onClose }: { frame: Frame; open: boolean
                 {
                     id: 'storage',
                     label: 'Storage',
+                    reset: false,
                     icon: HardDrive,
                     settings: [
                         {
@@ -311,6 +319,7 @@ export function Settings({ frame, open, onClose }: { frame: Frame; open: boolean
                 {
                     id: 'demo',
                     label: 'Demo data',
+                    reset: false,
                     icon: Database,
                     settings: [
                         {
@@ -342,13 +351,10 @@ export function Settings({ frame, open, onClose }: { frame: Frame; open: boolean
                 onActiveChange={setActive}
                 search={search}
                 onSearchChange={setSearch}
-                footer="Saved as each is changed"
-                resetScope="all"
-                onReset={() => {
-                    setLook({ ...DEFAULT_APPEARANCE })
-                    const { id: _id, ...defaults } = DEFAULT_PREFS
-                    setPrefs(defaults)
-                    toast.add({ title: 'Settings put back' })
+                onReset={(section) => {
+                    if (section === 'appearance') setLook({ ...DEFAULT_APPEARANCE })
+                    const keys = section === undefined ? [] : (HELD[section] ?? [])
+                    if (keys.length > 0) setPrefs(Object.fromEntries(keys.map((key) => [key, DEFAULT_PREFS[key]])))
                 }}
             />
             <ConfirmDialog

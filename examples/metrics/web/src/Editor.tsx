@@ -443,11 +443,7 @@ export function EditorPage({
 
     return (
         <Page className="h-full">
-            <PageHeader
-                title={original === undefined ? 'New panel' : `Edit ${original.title}`}
-                trail={[{ label: dashboard.title, href: `#/d/${dashboard.id}` }]}
-                onBack={leave}
-            />
+            <PageHeader title={original === undefined ? 'New panel' : `Edit ${original.title}`} onBack={leave} />
             <SplitPane
                 className="min-h-0 flex-1"
                 id="metrics-editor"

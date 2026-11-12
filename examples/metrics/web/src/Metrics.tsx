@@ -235,7 +235,8 @@ export function MetricsApp({ frame }: { frame: Frame }) {
         ...frame.palette,
     ]
 
-    const trail = (label: string) => [{ label: 'Metrics', href: '#/dashboards' }, { label }]
+    const home = { label: 'Metrics', href: '#/dashboards' }
+    const trail = (label: string) => [home, { label }]
     const page = route(place, {
         board,
         mode,
@@ -278,7 +279,11 @@ export function MetricsApp({ frame }: { frame: Frame }) {
                 }
                 top={
                     <TopBar
-                        trail={page === 'editor' && board !== undefined ? [...trail(board.title), { label: 'Edit panel' }] : trail(title)}
+                        trail={
+                            page === 'editor' && board !== undefined
+                                ? [home, { label: board.title, href: `#/d/${board.id}` }, { label: 'Edit panel' }]
+                                : trail(title)
+                        }
                     />
                 }
                 foot={<Foot zone={prefs.zone} firing={firing} paused={paused} refresh={refresh} />}
