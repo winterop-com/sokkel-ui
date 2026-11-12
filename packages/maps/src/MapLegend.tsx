@@ -1,4 +1,8 @@
+import { List, X } from 'lucide-react'
+import { useLayoutEffect, useState } from 'react'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
+import { Button } from '@winterop-com/sokkel-ui/primitives/button'
+import { useOptionalMapContext } from './context'
 import { NO_DATA_BACKGROUND, NO_DATA_POINT_COLOR, classLabels, scaleColors, type ColorScale } from './scale'
 
 /** One line of a legend that keys something other than a scale, such as the selection's emphasis. */
@@ -35,6 +39,47 @@ function Count({ value }: { value: number | undefined }) {
     return <span className="ml-auto pl-3 text-muted-foreground tabular-nums">{value.toLocaleString('en-US')}</span>
 }
 
+/** The words a legend says. */
+export interface MapLegendWords {
+    /** What the button a collapsed legend shows says where the legend has no title. */
+    legend: string
+    /** The name of the button that collapses the legend again. */
+    hide: string
+}
+
+const WORDS: MapLegendWords = { legend: 'Legend', hide: 'Hide the legend' }
+
+/** The width a legend's map is narrow below: about a phone's, where a legend open at first would cover much of it. */
+export const LEGEND_COLLAPSE_BELOW = 480
+
+/**
+ * Whether a legend is drawn open: always on a map at least `collapseBelow` wide, and on a narrower
+ * one only once it is opened, so a narrow map starts with its legend collapsed.
+ */
+export function legendOpen(width: number | null, collapseBelow: number | false, opened: boolean): boolean {
+    return !legendNarrow(width, collapseBelow) || opened
+}
+
+/** Whether a legend's map is narrower than `collapseBelow`, so the legend collapses; never before the map is measured. */
+export function legendNarrow(width: number | null, collapseBelow: number | false): boolean {
+    return collapseBelow !== false && width !== null && width < collapseBelow
+}
+
+/** The width of the map an element is in, followed as it resizes; null outside a map or before it is measured. */
+function useMapWidth(scope: HTMLElement | null): number | null {
+    const [width, setWidth] = useState<number | null>(null)
+    useLayoutEffect(() => {
+        if (scope === null) return
+        const measure = () => setWidth(scope.clientWidth)
+        measure()
+        if (typeof ResizeObserver === 'undefined') return
+        const observer = new ResizeObserver(measure)
+        observer.observe(scope)
+        return () => observer.disconnect()
+    }, [scope])
+    return scope === null ? null : width
+}
+
 export interface MapLegendProps {
     title?: string
     /** A line under the title, such as the period or the unit. */
@@ -55,7 +100,13 @@ export interface MapLegendProps {
     noDataCount?: number
     /** Draws the legend in its own card. */
     framed?: boolean
+    /**
+     * The width in pixels of the map a framed legend is in below which it starts collapsed to a
+     * button that opens it, so it does not cover a phone's map; `false` keeps it open at any width.
+     */
+    collapseBelow?: number | false
     className?: string
+    words?: Partial<MapLegendWords>
 }
 
 /**
@@ -68,6 +119,10 @@ export interface MapLegendProps {
  *
  * Without a scale, `entries` lists what the map's colors mean line by line, each swatch with its
  * own fill and edge: the selected area, the areas under it and the rest, from `AREA_EMPHASIS`.
+ *
+ * On a map narrower than `collapseBelow` pixels, as on a phone, a framed legend starts collapsed to
+ * a button with its title, which opens it; the open legend then has a button that collapses it
+ * again. On a wider map, or outside one, it is always open, with neither button.
  */
 export function MapLegend({
     title,
@@ -81,8 +136,28 @@ export function MapLegend({
     counts,
     noDataCount,
     framed = true,
+    collapseBelow = LEGEND_COLLAPSE_BELOW,
     className,
+    words: given,
 }: MapLegendProps) {
+    const words = { ...WORDS, ...given }
+    const map = useOptionalMapContext()
+    const width = useMapWidth(framed ? (map?.scope ?? null) : null)
+    const [opened, setOpened] = useState(false)
+    const narrow = legendNarrow(width, collapseBelow)
+    if (!legendOpen(width, collapseBelow, opened))
+        return (
+            <Button
+                variant="outline"
+                size="sm"
+                aria-expanded={false}
+                className={cn('self-start bg-card text-foreground shadow-xs hover:bg-hover dark:bg-card', className)}
+                onClick={() => setOpened(true)}
+            >
+                <List aria-hidden />
+                {title ?? words.legend}
+            </Button>
+        )
     const colors = scale === undefined ? [] : scaleColors(scale)
     const labels = scale === undefined ? [] : classLabels(scale)
     const list = scale === undefined || scale.kind === 'categorical' || layout === 'list'
@@ -99,6 +174,18 @@ export function MapLegend({
                 className,
             )}
         >
+            {narrow && (
+                <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    aria-expanded
+                    aria-label={words.hide}
+                    className="float-right -mt-1 -mr-1.5 ml-1 text-muted-foreground"
+                    onClick={() => setOpened(false)}
+                >
+                    <X aria-hidden />
+                </Button>
+            )}
             {title !== undefined && <h3 className="leading-snug font-medium">{title}</h3>}
             {description !== undefined && <p className="leading-snug text-muted-foreground">{description}</p>}
             {scale !== undefined && !list && (
