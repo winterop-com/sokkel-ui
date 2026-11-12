@@ -16,7 +16,7 @@ export interface CronFieldWords {
     never: string
     /** Said beside the runs while the app reads them back. */
     checking: string
-    /** Said in place of the runs while the schedule is paused. */
+    /** Said in place of the runs while the schedule is paused; empty says nothing. */
     paused: string
 }
 
@@ -207,34 +207,32 @@ export function CronField({
             <p className="min-h-5 text-sm leading-5 text-foreground" aria-live="polite">
                 {line}
             </p>
-            {paused ? (
-                <p className="text-xs leading-5 text-muted-foreground">{words.paused}</p>
-            ) : (
-                count > 0 && (
-                    <div className="flex flex-col gap-1.5">
-                        <div className="flex items-baseline gap-2 text-xs">
-                            <span className="font-medium text-muted-foreground">{words.next(count)}</span>
-                            {runsPending && <span className="animate-pulse text-faint">{words.checking}</span>}
-                        </div>
-                        <ol
-                            aria-busy={runsPending || undefined}
-                            className={cn(
-                                'flex flex-col divide-y divide-border rounded-control border border-border',
-                                runsPending && 'text-muted-foreground',
-                            )}
-                        >
-                            {Array.from({ length: count }, (_, index) => (
-                                <li key={index} className="flex h-8 items-center gap-3 px-3 font-mono text-xs tabular-nums">
-                                    <span className="w-4 text-right text-faint">{index + 1}</span>
-                                    <span className={runs[index] === undefined ? 'text-faint' : undefined}>
-                                        {runs[index] === undefined ? '—' : format(runs[index], timeZone)}
-                                    </span>
-                                </li>
-                            ))}
-                        </ol>
-                    </div>
-                )
-            )}
+            {paused
+                ? words.paused !== '' && <p className="text-xs leading-5 text-muted-foreground">{words.paused}</p>
+                : count > 0 && (
+                      <div className="flex flex-col gap-1.5">
+                          <div className="flex items-baseline gap-2 text-xs">
+                              <span className="font-medium text-muted-foreground">{words.next(count)}</span>
+                              {runsPending && <span className="animate-pulse text-faint">{words.checking}</span>}
+                          </div>
+                          <ol
+                              aria-busy={runsPending || undefined}
+                              className={cn(
+                                  'flex flex-col divide-y divide-border rounded-control border border-border',
+                                  runsPending && 'text-muted-foreground',
+                              )}
+                          >
+                              {Array.from({ length: count }, (_, index) => (
+                                  <li key={index} className="flex h-8 items-center gap-3 px-3 font-mono text-xs tabular-nums">
+                                      <span className="w-4 text-right text-faint">{index + 1}</span>
+                                      <span className={runs[index] === undefined ? 'text-faint' : undefined}>
+                                          {runs[index] === undefined ? '—' : format(runs[index], timeZone)}
+                                      </span>
+                                  </li>
+                              ))}
+                          </ol>
+                      </div>
+                  )}
         </div>
     )
 }

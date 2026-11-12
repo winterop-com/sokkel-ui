@@ -53,6 +53,8 @@ export interface MapWords {
     unavailable: string
     /** Said when the map engine could not be fetched. */
     failed: string
+    /** The button under `failed` that fetches the engine again. */
+    retry: string
     /** The note under the map when its layers left out features whose geometry they could not read. */
     unreadable: (count: number) => string
 }
@@ -69,6 +71,7 @@ const WORDS: MapWords = {
     loading: 'Loading the map',
     unavailable: 'This browser cannot draw the map, because WebGL is not available.',
     failed: 'The map could not be loaded.',
+    retry: 'Try again',
     unreadable: (count) =>
         count === 1
             ? '1 geometry could not be read and is not drawn.'
@@ -486,7 +489,8 @@ export function MapView({
             (module) => {
                 if (live) setMaplibre(module)
             },
-            () => {
+            (reason: unknown) => {
+                console.error('The map engine could not be loaded.', reason)
                 if (live) setMaplibre('failed')
             },
         )
@@ -862,9 +866,14 @@ export function MapView({
                 )}
                 {waited && <Spinner aria-label={said.loading} className="absolute inset-0 m-auto text-muted-foreground" />}
                 {(!supported || maplibre === 'failed') && (
-                    <p className="absolute inset-0 flex items-center justify-center p-6 text-center text-sm text-muted-foreground">
-                        {supported ? said.failed : said.unavailable}
-                    </p>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center text-sm text-muted-foreground">
+                        <p>{supported ? said.failed : said.unavailable}</p>
+                        {supported && (
+                            <Button variant="outline" size="sm" onClick={() => setMaplibre(undefined)}>
+                                {said.retry}
+                            </Button>
+                        )}
+                    </div>
                 )}
             </div>
             {lines.length > 0 && (

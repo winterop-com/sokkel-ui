@@ -30,6 +30,13 @@ describe('CronField', () => {
         expect(html).not.toContain('<ol')
     })
 
+    it('paused with no word for it, draws nothing in place of the runs', () => {
+        const html = renderToStaticMarkup(
+            <CronField value="0 2 * * *" onChange={noop} from={FROM} readOnly paused words={{ paused: '' }} />,
+        )
+        expect(html).not.toContain('<p class="text-xs')
+    })
+
     it('with a count of 0, draws no runs heading or list', () => {
         const html = renderToStaticMarkup(<CronField value="0 2 * * *" onChange={noop} from={FROM} count={0} />)
         expect(html).not.toContain('Next 0 runs')
