@@ -741,7 +741,8 @@ export function boundsOf(nodes: readonly { x: number; y: number; width: number; 
 
 /**
  * How tall a fitted frame is at the width it has: the drawing, its edges' bends included, at the
- * zoom a fit with the same floor would settle at, with its ground around it.
+ * zoom a fit with the same floor would settle at, with its ground above and below, the same however
+ * tall the drawing is.
  */
 export function fittedHeight(
     drawing: { width: number; height: number },
@@ -751,8 +752,7 @@ export function fittedHeight(
 ): number {
     if (drawing.width <= 0 || drawing.height <= 0 || width <= 0) return FITTED_MIN_HEIGHT
     const zoom = fittedZoom(width / (drawing.width * (1 + FIT_PADDING)), fitFloor(width, drawing.width, minZoom, narrowFit))
-    const tall = Math.max(drawing.height * zoom + FITTED_GROUND, drawing.height * zoom * (1 + FIT_PADDING))
-    return Math.max(FITTED_MIN_HEIGHT, Math.ceil(tall))
+    return Math.max(FITTED_MIN_HEIGHT, Math.ceil(drawing.height * zoom + FITTED_GROUND))
 }
 
 /** A pan and a zoom, as React Flow holds them. */
