@@ -12,6 +12,9 @@ import {
 import { Plus } from 'lucide-react'
 import { useContext } from 'react'
 
+import type { Status } from '@winterop-com/sokkel-ui/StatusChip'
+import { useStatus } from '@winterop-com/sokkel-ui/StatusProvider'
+
 import { GraphEditingContext } from './context'
 import { edgePath, midpointOf, type GraphPoint, type GraphRouting } from './layout'
 
@@ -24,11 +27,26 @@ export interface GraphEdgeData extends Record<string, unknown> {
     label?: string
     /** `quiet` is dashed, for a way not taken yet; `strong` is drawn darker, for the way in use. A chosen edge is drawn in the foreground. */
     tone?: 'plain' | 'quiet' | 'strong'
+    /** A state whose hue the line takes, mixed well toward the resting stroke: the state its source settled in. */
+    tint?: Status | (string & {})
+    /**
+     * What travels the edge now: `flowing` dashes moving toward the target, `lit` the same stroke
+     * standing still (for reduced motion), `pulse` one brighter handover that settles.
+     */
+    motion?: GraphEdgeMotion
+    /** Draws the line dashed, apart from its tone; left out, a `quiet` edge is dashed. */
+    dashed?: boolean
     /** An arrowhead at the target end. */
     arrow?: boolean
     /** The edge leaves and returns to one node, drawn as a loop beside it. */
     loop?: boolean
 }
+
+/** What travels an edge now. */
+export type GraphEdgeMotion = 'flowing' | 'lit' | 'pulse'
+
+/** The stroke of an edge data travels: the ink, over whatever it carries. */
+const MOVING = 'color-mix(in oklab, var(--foreground) 75%, var(--graph-edge))'
 
 /** The edge kind React Flow draws a graph edge for. */
 export type GraphEdgeKind = Edge<GraphEdgeData, 'graph'>
@@ -117,16 +135,36 @@ export function GraphEdge({
         data?.label === undefined && data?.loop !== true && (selected === true || context?.hovered === id)
             ? context?.editing.onInsert
             : undefined
-    const stroke = selected === true ? 'var(--foreground)' : tone === 'strong' ? 'var(--muted-foreground)' : 'var(--xy-edge-stroke)'
+    const tint = useStatus(data?.tint ?? '')
+    const motion = data?.motion
+    const moving = motion === 'flowing' || motion === 'lit'
+    const resting =
+        tone === 'strong'
+            ? 'var(--muted-foreground)'
+            : data?.tint === undefined
+              ? 'var(--xy-edge-stroke)'
+              : `color-mix(in oklab, ${tint.css} 35%, var(--xy-edge-stroke))`
+    const stroke = selected === true ? 'var(--foreground)' : moving ? MOVING : resting
+    const dashed = data?.dashed ?? tone === 'quiet'
     return (
         <>
             <BaseEdge
                 id={id}
                 path={path}
+                data-slot="graph-edge"
+                data-tint={data?.tint}
+                data-motion={motion}
+                data-dashed={dashed || undefined}
                 style={{
                     stroke,
-                    strokeWidth: selected === true ? 2.25 : tone === 'strong' ? 1.75 : 1.4,
-                    strokeDasharray: tone === 'quiet' ? '4 4' : undefined,
+                    strokeWidth: selected === true ? 2.25 : moving ? 2 : tone === 'strong' ? 1.75 : 1.4,
+                    strokeDasharray: motion === 'flowing' ? '6 5' : dashed ? '4 4' : undefined,
+                    animation:
+                        motion === 'flowing'
+                            ? 'graph-edge-flow 700ms linear infinite'
+                            : motion === 'pulse'
+                              ? 'graph-edge-pulse 600ms ease-out 1'
+                              : undefined,
                 }}
             />
             {data?.arrow === true && <path d={arrowPath(tip, from)} style={{ fill: stroke }} aria-hidden />}

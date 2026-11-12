@@ -70,6 +70,7 @@ export function PipelineGraph({
     onSelectionChange,
     direction: given,
     frame = 'stage',
+    zoomOnDoubleClick,
     editing,
     positions,
     controls,
@@ -111,6 +112,7 @@ export function PipelineGraph({
             direction={direction}
             onWidth={setWidth}
             frame={frame}
+            zoomOnDoubleClick={zoomOnDoubleClick}
             onSelect={onSelect}
             onSelectionChange={onSelectionChange}
             editing={editing}

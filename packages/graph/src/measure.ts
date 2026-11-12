@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
-/** The faces a node's words are set in: its title in the sans or the code face, and its small line in the code face. */
-export type TextFace = 'title' | 'title-mono' | 'small-mono'
+/** The faces a node's words are set in: its title in the sans or the code face, its small line in the code face, and a fan-out's notes in the small sans. */
+export type TextFace = 'title' | 'title-mono' | 'small-mono' | 'small'
 
 /** How wide a run of text is drawn in one face, in pixels. */
 export type Measure = (text: string, face: TextFace) => number
@@ -11,11 +11,12 @@ export const FACE_CLASS: Record<TextFace, string> = {
     title: 'font-sans text-graph-title font-semibold',
     'title-mono': 'font-mono text-graph-title font-semibold',
     'small-mono': 'font-mono text-graph-small',
+    small: 'font-sans text-graph-small',
 }
 
 /** A width read off the characters, for where no font can be measured. */
 export const measureByCharacters: Measure = (text, face) =>
-    text.length * (face === 'small-mono' ? 11 : 12) * (face === 'title' ? 0.62 : 0.6)
+    text.length * (face === 'small-mono' || face === 'small' ? 11 : 12) * (face === 'title' || face === 'small' ? 0.62 : 0.6)
 
 /** The font shorthand each face resolves to on this page, read from a probe drawn with its classes. */
 function fontsOf(): Record<TextFace, string> {

@@ -35,6 +35,7 @@ export function DependencyGraph({
     onSelect,
     direction: given,
     frame = 'stage',
+    zoomOnDoubleClick,
     routing,
     spacing,
     minNodeWidth,
@@ -69,6 +70,7 @@ export function DependencyGraph({
             direction={direction}
             onWidth={setWidth}
             frame={frame}
+            zoomOnDoubleClick={zoomOnDoubleClick}
             onSelect={onSelect}
             words={words}
             className={className}

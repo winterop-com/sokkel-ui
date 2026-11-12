@@ -73,6 +73,7 @@ export function StateMachine({
     onSelect,
     direction = 'right',
     frame = 'stage',
+    zoomOnDoubleClick,
     routing,
     spacing,
     minNodeWidth,
@@ -113,6 +114,7 @@ export function StateMachine({
             nodeTypes={MARKERS}
             direction={direction}
             frame={frame}
+            zoomOnDoubleClick={zoomOnDoubleClick}
             onSelect={onSelect}
             words={words}
             className={className}
