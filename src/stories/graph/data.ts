@@ -1,4 +1,5 @@
 import type { PipelineStep } from '@winterop-com/sokkel-ui-graph/PipelineGraph'
+import type { MiniGraphStep } from '@winterop-com/sokkel-ui-graph/MiniGraph'
 import type { RunStep } from '@winterop-com/sokkel-ui-graph/RunGraph'
 
 /** The nightly-export job of the harbor project: fetch from two places, transform, validate, upload, notify. */
@@ -10,6 +11,19 @@ export const NIGHTLY_EXPORT: PipelineStep[] = [
     { code: 'upload', name: 'Upload to storage', kind: 's3', needs: ['validate'] },
     { code: 'send-digest', name: 'Send digest', kind: 'email', needs: ['upload'] },
     { code: 'notify', kind: 'webhook', needs: ['validate'] },
+]
+
+/**
+ * The import-orders job as a mini graph draws it: a source listening for orders, a fetch, a split
+ * that fans out per order, a transform, and a notify that waits on every step before it. Each step
+ * says its code and what it runs when pointed at.
+ */
+export const IMPORT_ORDERS: MiniGraphStep[] = [
+    { code: 'orders', needs: [], source: true, hint: 'orders · webhook' },
+    { code: 'fetch', needs: ['orders'], hint: 'fetch · http' },
+    { code: 'split', needs: ['fetch'], fanOut: true, hint: 'split · python' },
+    { code: 'transform', needs: ['split'], hint: 'transform · sql' },
+    { code: 'notify', needs: ['orders', 'fetch', 'split', 'transform'], hint: 'notify · webhook' },
 ]
 
 /** Three steps in a row, each named only by its code. */
