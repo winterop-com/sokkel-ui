@@ -135,6 +135,8 @@ describe('the fit', () => {
 
     test('a fitted frame is the drawing at its fit zoom with ground around it, and never a sliver', () => {
         expect(fittedHeight({ width: 400, height: 100 }, 1000)).toBe(140)
+        // A tall drawing keeps the same ground, not a share of its height.
+        expect(fittedHeight({ width: 400, height: 3000 }, 1000)).toBe(3040)
         expect(fittedHeight({ width: 0, height: 0 }, 1000)).toBe(120)
         expect(fittedHeight({ width: 4000, height: 400 }, 800)).toBe(400 * FIT_MIN_ZOOM + 40)
     })
