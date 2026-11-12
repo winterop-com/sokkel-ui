@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { relativeTime, tickFor } from './RelativeTime'
+import { exactTime, relativeTime, tickFor } from './RelativeTime'
 
 const NOW = new Date('2026-11-04T14:02:00Z')
 const MINUTE = 60_000
@@ -44,5 +44,42 @@ describe('tickFor', () => {
         expect(tickFor(-3 * MINUTE)).toBe(15_000)
         expect(tickFor(-5 * HOUR)).toBe(MINUTE)
         expect(tickFor(3 * DAY)).toBe(HOUR)
+    })
+})
+
+describe("an app's own conventions", () => {
+    const own = {
+        locale: 'en',
+        length: 'narrow',
+        numeric: 'always',
+        rounding: 'round',
+        nowWithin: 45_000,
+        now: 'just now',
+        horizon: 30 * DAY,
+    } as const
+
+    it('keeps to numbers and rounds to the nearest unit', () => {
+        expect(relativeTime(at(-DAY), NOW, own)).not.toMatch(/yesterday/)
+        expect(relativeTime(at(-90 * MINUTE), NOW, { locale: 'en', rounding: 'round' })).toBe('2 hours ago')
+        expect(relativeTime(at(-89 * MINUTE), NOW, { locale: 'en' })).toBe('1 hour ago')
+    })
+
+    it('says its own word for now, within its own window', () => {
+        expect(relativeTime(at(-44_000), NOW, own)).toBe('just now')
+        expect(relativeTime(at(-46_000), NOW, own)).not.toBe('just now')
+    })
+
+    it('says the date past the horizon, spelled as asked', () => {
+        const iso = (date: Date) => date.toISOString().slice(0, 10)
+        expect(relativeTime(at(-70 * DAY), NOW, { ...own, horizonDate: iso })).toBe('2026-08-26')
+        expect(relativeTime(at(-29 * DAY), NOW, { ...own, horizonDate: iso })).not.toBe('2026-10-06')
+    })
+})
+
+describe('exactTime', () => {
+    it("spells the instant with Intl options or the app's own function", () => {
+        expect(exactTime(NOW, { locale: 'en', timeZone: 'UTC', exact: { year: 'numeric' } })).toBe('2026')
+        const own = (date: Date) => `${date.toISOString().slice(0, 19).replace('T', ' ')} UTC`
+        expect(exactTime(NOW, { exact: own })).toBe('2026-11-04 14:02:00 UTC')
     })
 })

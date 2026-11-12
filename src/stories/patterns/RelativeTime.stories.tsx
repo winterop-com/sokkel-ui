@@ -58,3 +58,33 @@ export const InLine: StoryObj = {
         />
     ),
 }
+
+/** The instant spelled the app's own way, in UTC with the zone said. */
+const utc = (date: Date) => `${date.toISOString().slice(0, 19).replace('T', ' ')} UTC`
+
+/**
+ * An app's own conventions: numbers only, rounded to the nearest unit, "just now" within 45 seconds,
+ * the date itself past 30 days, and the instant on hover spelled its own way.
+ */
+export const Conventions: StoryObj = {
+    render: () => (
+        <Stack gap="sm" align="start">
+            {[20_000, 89 * MINUTE, DAY, 9 * DAY, 70 * DAY, -2 * HOUR].map((ms) => (
+                <RelativeTime
+                    key={ms}
+                    date={ago(ms)}
+                    now={NOW}
+                    timeZone="UTC"
+                    length="narrow"
+                    numeric="always"
+                    rounding="round"
+                    nowWithin={45_000}
+                    horizon={30 * DAY}
+                    horizonDate={(date) => date.toISOString().slice(0, 10)}
+                    exact={utc}
+                    words={{ now: 'just now' }}
+                />
+            ))}
+        </Stack>
+    ),
+}
