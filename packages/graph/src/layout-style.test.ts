@@ -108,6 +108,27 @@ describe('wrapping', () => {
         const tall = await layoutGraph(long, 'right', undefined, { wrapRoom: { width: flat.width / 3, height: flat.height * 6 } })
         expect(placedBounds(tall).width).toBeLessThan(flat.width)
     })
+
+    test('a cut fits across its room, down to one column when the room holds no more', async () => {
+        const fan: GraphShape = {
+            nodes: ['fetch', 'transform', 'a', 'b', 'c', 'validate', 'upload', 'notify', 'done'].map(box),
+            edges: [
+                edge('fetch', 'transform'),
+                ...['a', 'b', 'c'].flatMap((part) => [edge('transform', part), edge(part, 'validate')]),
+                edge('validate', 'upload'),
+                edge('upload', 'notify'),
+                edge('notify', 'done'),
+            ],
+        }
+        for (const shape of [long, fan]) {
+            const one = placedBounds(await layoutGraph({ nodes: [shape.nodes[0]], edges: [] }, 'right'))
+            for (const width of [one.width * 2.5, one.width * 4]) {
+                const room = { width, height: placedBounds(await layoutGraph(shape, 'right')).height * 8 }
+                const cut = await layoutGraph(shape, 'right', undefined, { wrapWidth: 1120, wrapRoom: room })
+                expect(placedBounds(cut).width).toBeLessThanOrEqual(room.width)
+            }
+        }
+    })
 })
 
 describe('edge paths', () => {
