@@ -6,7 +6,10 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.19.10** is the latest release (2026-11-12): `RunGraph` edges carry the state their source
+- **0.19.11** is the latest release (2026-11-12): a graph fills a section (`frame="filled"`), hands
+  its zoom and fit to a section's head (`onControls`), takes a `GraphLayoutMenu`, holds its fit as
+  told (`fitMinZoom`, `narrowFit`) and wraps a graph too wide into rows (`wrapWidth`).
+- **0.19.10** (2026-11-12): `RunGraph` edges carry the state their source
   settled in and move while data travels them, a fan-out's items show inside its box, boxes keep
   their size as a run goes on, and every state marks its box; a map whose engine fails to load says
   why and offers to try again, and an empty paused word in `CronField` draws nothing.
