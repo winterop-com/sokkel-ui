@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { literalRanges } from '../lib/search'
@@ -23,6 +23,14 @@ const LEVEL: Record<LogLevel, string> = {
     error: 'text-terminal-critical',
 }
 
+/** The words a log says, each with an English default. */
+export interface LogViewWords {
+    /** Said while the log has no lines. */
+    empty: string
+}
+
+const WORDS: LogViewWords = { empty: 'Nothing logged yet.' }
+
 export interface LogViewProps {
     lines: readonly LogLine[]
     follow?: boolean
@@ -31,7 +39,12 @@ export interface LogViewProps {
     numbered?: boolean
     /** Rounds the log's corners; off for a log set edge to edge. */
     framed?: boolean
+    /** Makes each line's source a button that hands it here, as a step's name opens that step. */
+    onSource?: (source: string, line: LogLine) => void
+    /** What the log shows while it has no lines, in place of `words.empty`. */
+    empty?: ReactNode
     className?: string
+    words?: Partial<LogViewWords>
 }
 
 /**
@@ -41,8 +54,22 @@ export interface LogViewProps {
  * wrapped in a narrow log, as on a phone, a line's time, level and source stand over its text.
  * It is set in the terminal face, `--typeface-terminal`, whose Nerd Font icons a line can carry.
  * `framed={false}` drops its rounded corners, for a log set edge to edge in a dock or a panel.
+ * `onSource` makes each line's source a button, so a step's name opens that step. With no lines it
+ * says `words.empty`, or shows `empty` in its place.
  */
-export function LogView({ lines, follow = false, wrap = false, query = '', numbered = true, framed = true, className }: LogViewProps) {
+export function LogView({
+    lines,
+    follow = false,
+    wrap = false,
+    query = '',
+    numbered = true,
+    framed = true,
+    onSource,
+    empty,
+    className,
+    words: given,
+}: LogViewProps) {
+    const words = { ...WORDS, ...given }
     const scroller = useRef<HTMLDivElement>(null)
     const pinned = useRef(true)
     useEffect(() => {
@@ -64,6 +91,7 @@ export function LogView({ lines, follow = false, wrap = false, query = '', numbe
                 className,
             )}
         >
+            {lines.length === 0 && <div className="px-3 text-terminal-muted">{empty ?? words.empty}</div>}
             {/* Wrapped in a narrow log, each line's time, level and source fold onto a line of their own over its text. */}
             <table className={cn('border-separate border-spacing-0', wrap ? 'w-full @max-lg:block' : 'min-w-full')}>
                 <tbody className={cn(wrap && '@max-lg:block')}>
@@ -86,7 +114,21 @@ export function LogView({ lines, follow = false, wrap = false, query = '', numbe
                                     {line.level === 'warning' ? 'warn' : line.level}
                                 </td>
                             )}
-                            {line.source !== undefined && <td className="pr-3 whitespace-nowrap text-terminal-accent">{line.source}</td>}
+                            {line.source !== undefined && (
+                                <td className="pr-3 whitespace-nowrap text-terminal-accent">
+                                    {onSource === undefined ? (
+                                        line.source
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() => onSource(line.source as string, line)}
+                                            className="cursor-pointer rounded-sm underline-offset-2 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+                                        >
+                                            {line.source}
+                                        </button>
+                                    )}
+                                </td>
+                            )}
                             <td
                                 className={cn(
                                     'w-full pr-3',

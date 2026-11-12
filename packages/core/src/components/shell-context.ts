@@ -49,3 +49,11 @@ export const RailCollapsed = createContext<boolean | undefined>(undefined)
 
 /** The shell's tab strip, for the side panel inside; undefined where the shell draws none. */
 export const ShellPanelStrip = createContext<PanelStrip | undefined>(undefined)
+
+/**
+ * The shell's top bar as a screen fills it: the element a `ShellTop` draws into, which of them is
+ * drawn (the latest mounted), and how one claims the bar while it is mounted; undefined outside a shell.
+ */
+export const ShellTopSlot = createContext<
+    { target: HTMLElement | null; shown: string | undefined; claim: (id: string) => () => void } | undefined
+>(undefined)

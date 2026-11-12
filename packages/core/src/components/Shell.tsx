@@ -14,6 +14,7 @@ import {
     type Key,
     type ReactNode,
 } from 'react'
+import { createPortal } from 'react-dom'
 
 import { cn } from '../lib/cn'
 import { CommandRegistry, useCommandRegistry } from '../hooks/use-commands'
@@ -40,6 +41,7 @@ import {
     ShellRailMode,
     ShellScroller,
     ShellShortcuts,
+    ShellTopSlot,
     type RailMode,
 } from './shell-context'
 
@@ -58,7 +60,10 @@ export interface ShellProps {
      * inside with `useRailMode`. Left off, the rail is as the app holds it.
      */
     railMode?: RailMode
-    /** What the top bar holds: a search, the version, the theme control. */
+    /**
+     * What the top bar holds: a search, the version, the theme control. A screen draws its own in
+     * its place while it is mounted with `ShellTop`.
+     */
     top?: ReactNode
     /** What the foot strip holds to the right of the rail's foot cell, if anything. */
     foot?: ReactNode
@@ -298,6 +303,15 @@ export function Shell({
         return () => setRailAsks((asks) => asks.filter((ask) => ask.id !== id))
     }, [])
     const railMode = railAsks.at(-1)?.mode ?? givenRailMode
+    // The screens that draw the top bar while they are mounted, the latest last.
+    const [topClaims, setTopClaims] = useState<readonly string[]>([])
+    const claimTop = useCallback((id: string) => {
+        setTopClaims((claims) => [...claims.filter((claim) => claim !== id), id])
+        return () => setTopClaims((claims) => claims.filter((claim) => claim !== id))
+    }, [])
+    const [topTarget, setTopTarget] = useState<HTMLDivElement | null>(null)
+    const topShown = topClaims.at(-1)
+    const topSlot = useMemo(() => ({ target: topTarget, shown: topShown, claim: claimTop }), [topTarget, topShown, claimTop])
     const railHidden = railMode === 'hidden'
     const [ownDrawer, setOwnDrawer] = useState(false)
     const drawer = drawerOpen ?? ownDrawer
@@ -480,7 +494,7 @@ export function Shell({
     )
     const content = (
         <div className="flex min-w-0 flex-1 flex-col">
-            {top !== undefined && (
+            {(top !== undefined || topShown !== undefined) && (
                 <header
                     data-window-drag={desktop === undefined ? undefined : ''}
                     className={cn(
@@ -505,7 +519,9 @@ export function Shell({
                     >
                         <Menu className="size-4" aria-hidden />
                     </button>
-                    {top}
+                    {/* A screen's `ShellTop` draws into this box, in place of `top`, while it is mounted. */}
+                    <div ref={setTopTarget} className="contents" />
+                    {topShown === undefined && top}
                 </header>
             )}
             {banner !== undefined && banner !== null && banner !== false && <div className="shrink-0">{banner}</div>}
@@ -604,7 +620,9 @@ export function Shell({
                                 <ShellRailMode value={railMode ?? (crowded ? 'collapsed' : undefined)}>
                                     <ShellScroller value={main}>
                                         <ShellPanelStrip value={stripContext}>
-                                            <CommandRegistry value={commandRegistry.registry}>{node}</CommandRegistry>
+                                            <ShellTopSlot value={topSlot}>
+                                                <CommandRegistry value={commandRegistry.registry}>{node}</CommandRegistry>
+                                            </ShellTopSlot>
                                         </ShellPanelStrip>
                                     </ShellScroller>
                                 </ShellRailMode>
@@ -766,4 +784,24 @@ export function Page({ children, className }: PageProps) {
             {children}
         </div>
     )
+}
+
+export interface ShellTopProps {
+    /** The top bar's content, such as a `TopBar` with the screen's trail and actions. */
+    children: ReactNode
+}
+
+/**
+ * Draws a screen's own top bar in the shell's, in place of `Shell`'s `top`, while the screen is
+ * mounted: the screen keeps its head with its state, such as a trail naming the record it shows or
+ * actions on it, rather than handing it up to where the shell is built. The latest screen to draw
+ * one goes before an earlier one, and `top` is back once none is mounted. Outside a `Shell` it
+ * draws nothing.
+ */
+export function ShellTop({ children }: ShellTopProps) {
+    const slot = useContext(ShellTopSlot)
+    const claim = slot?.claim
+    const id = useId()
+    useBeforePaint(() => claim?.(id), [claim, id])
+    return slot?.target && slot.shown === id ? createPortal(children, slot.target) : null
 }

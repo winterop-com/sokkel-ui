@@ -122,8 +122,13 @@ interface AsyncSelectBase<T> {
     itemLabel: (item: T) => string
     /** How an option is drawn in the list; its label alone otherwise. */
     renderItem?: (item: T) => ReactNode
-    /** A second word for an option, such as its code, beside its label, or under it where the list is narrow. */
+    /**
+     * A second word for an option, such as its code, beside its label, or under it where the list is
+     * narrow; in the code face, in the list and beside the chosen value.
+     */
     itemDetail?: (item: T) => ReactNode
+    /** A mark before an option's label, such as its kind's icon, in the list, the chosen value and its chip. */
+    itemMark?: (item: T) => ReactNode
     /** A figure at the option's end, such as how many rows it holds. */
     itemMeta?: (item: T) => ReactNode
     /**
@@ -178,6 +183,7 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
         itemLabel,
         renderItem,
         itemDetail,
+        itemMark,
         itemMeta,
         onCreate,
         debounce = 250,
@@ -317,6 +323,7 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
                                 <span className="min-w-0 flex-1">{renderItem(item)}</span>
                             ) : (
                                 <>
+                                    {itemMark !== undefined && <Mark>{itemMark(item)}</Mark>}
                                     <span className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2">
                                         <span className="min-w-0 truncate">{itemLabel(item)}</span>
                                         {itemDetail !== undefined && (
@@ -410,6 +417,7 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
                                 aria-label={itemLabel(item)}
                                 className="flex h-6 max-w-full min-w-0 items-center gap-0.5 rounded-sm bg-muted pr-0.5 pl-2 outline-none focus-within:bg-accent data-highlighted:bg-accent"
                             >
+                                {itemMark !== undefined && <Mark>{itemMark(item)}</Mark>}
                                 <span className="min-w-0 truncate">{itemLabel(item)}</span>
                                 <Combobox.ChipRemove
                                     aria-label={words.remove(itemLabel(item))}
@@ -469,9 +477,17 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
                     className,
                 )}
             >
-                <span className={cn('min-w-0 flex-1 truncate', value === null && 'text-muted-foreground')}>
-                    {value === null ? words.placeholder : itemLabel(value)}
-                </span>
+                {value === null ? (
+                    <span className="min-w-0 flex-1 truncate text-muted-foreground">{words.placeholder}</span>
+                ) : (
+                    <span className="flex min-w-0 flex-1 items-center gap-2">
+                        {itemMark !== undefined && <Mark>{itemMark(value)}</Mark>}
+                        <span className="min-w-0 shrink truncate">{itemLabel(value)}</span>
+                        {itemDetail !== undefined && (
+                            <span className="min-w-0 shrink-[2] truncate font-mono text-xs text-muted-foreground">{itemDetail(value)}</span>
+                        )}
+                    </span>
+                )}
                 <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" aria-hidden />
             </Combobox.Trigger>
             <Combobox.Portal>
@@ -494,6 +510,11 @@ export function AsyncSelect<T>(props: AsyncSelectProps<T>) {
             </Combobox.Portal>
         </Combobox.Root>
     )
+}
+
+/** An option's mark before its label, an icon sized as the rest of the field's. */
+function Mark({ children }: { children: ReactNode }) {
+    return <span className="flex shrink-0 items-center text-muted-foreground [&_svg]:size-4">{children}</span>
 }
 
 /** The line under the list: what to type, that a search runs, that nothing matched, that more load, or that it failed. */

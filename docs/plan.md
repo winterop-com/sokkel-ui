@@ -180,7 +180,10 @@ as after the server has come back, without a wrapper of the app's. A work page w
 panes of its own narrows the rail to its icons or hides it while it is shown, with `useRailMode`
 (or `Shell`'s `railMode`): the latest screen's ask wins, the rail is as the app holds it once none
 asks, a narrowed rail's mark still widens it for the reader with the account following, and a
-hidden rail opens as the drawer from the top bar at every width.
+hidden rail opens as the drawer from the top bar at every width. A screen that knows its own head,
+such as a run page whose trail ends at the run, draws the top bar with `ShellTop` while it is
+mounted, in place of `Shell`'s `top`, the latest screen's winning; the shell's own is back once none
+draws one.
 
 Every link the library draws is a `Link`: the rail's places, the top bar's and a page header's
 trail, a nav bar's places, a stat, a stat panel, a card, a profile, a channel, a link in text, a
@@ -625,7 +628,9 @@ A column's `head` draws a node in its head (a lock, a second line), `align: 'cen
 and `fill` puts a color under a row's cell, tinted or solid; `bar={false}` drops the bar from a
 table that only shows its rows. On these the scorecard (`ScoreTable`), the permission matrix, the
 file listing, a CSV preview and a chart legend's table are all `DataTable`s; only `LogView` draws a
-table of its own, a log's lines rather than a listing.
+table of its own, a log's lines rather than a listing. Its `onSource` makes each line's source a
+button, so a step's name opens that step, and a log with no lines says `words.empty` or shows the
+app's `empty`.
 
 A listing filters from a `FilterBar` in its table's bar: Filter adds a filter from a menu of the
 fields with a search over them, each filter is a chip saying its field, how it compares and its
@@ -646,7 +651,9 @@ the views; the part takes them and its callbacks and keeps nothing itself.
 `AsyncSelect` takes several values with `multiple`: chips in the field, each with its remove button,
 the search typed after them and the list open while values are picked. A loader that answers a page
 at a time (`{ items, next }`) gets the next page as the list nears its end, and `onCreate` offers
-typed text no option is called as a new one at the list's end.
+typed text no option is called as a new one at the list's end. `itemMark` sets a mark before an
+option's label, such as its kind's icon, and with `itemDetail` (its code in the code face) it is
+drawn in the list, the chosen value and a chip alike.
 
 A value is edited in place on one cycle, shared by `InlineEdit` and `DataTable`'s cells (`lib/edit`,
 pure and tested): it opens on a press, Enter or F2, Escape drops what was typed, and the app's save
