@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import { useState } from 'react'
 
 import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
 import { JsonTree } from '@winterop-com/sokkel-ui/JsonTree'
@@ -6,7 +7,8 @@ import { LogView, type LogLine } from '@winterop-com/sokkel-ui/LogView'
 import { Section } from '@winterop-com/sokkel-ui/Section'
 import { Sparkline, Stat } from '@winterop-com/sokkel-ui/Stat'
 import { Timeline } from '@winterop-com/sokkel-ui/Timeline'
-import { Columns, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { Columns, Row, Stack } from '@winterop-com/sokkel-ui/Layout'
+import { Spinner } from '@winterop-com/sokkel-ui/primitives/spinner'
 
 /** The ways a record's facts are shown: terms and values, numbers, events, logs and JSON. */
 function Ground({ children }: { children: React.ReactNode }) {
@@ -183,6 +185,44 @@ function Logs() {
     )
 }
 
+/** A log whose step names open their step: the chosen step's facts stand under it. */
+function SourceLog() {
+    const [step, setStep] = useState('validate')
+    const lines = LOG.filter((line) => line.source === step)
+    return (
+        <Ground>
+            <LogView lines={LOG} onSource={setStep} />
+            <Section title={`Step ${step}`}>
+                <DescriptionList
+                    columns={2}
+                    items={[
+                        { term: 'Step', value: step, code: true },
+                        { term: 'Lines', value: lines.length, numeric: true },
+                        { term: 'Last line', value: lines.at(-1)?.text ?? null, wide: true },
+                    ]}
+                />
+            </Section>
+        </Ground>
+    )
+}
+
+function EmptyLogs() {
+    return (
+        <Ground>
+            <LogView lines={[]} />
+            <LogView
+                lines={[]}
+                empty={
+                    <Row as="span">
+                        <Spinner className="size-3.5" />
+                        Waiting for a worker to take import-orders
+                    </Row>
+                }
+            />
+        </Ground>
+    )
+}
+
 function Json() {
     return (
         <Ground>
@@ -266,6 +306,10 @@ export const Timelines: StoryObj = { name: 'Timeline', render: () => <Events /> 
 export const Log: StoryObj = { name: 'Log view', render: () => <Logs /> }
 /** A log in the terminal face, its lines carrying Nerd Font icons: a Powerline prompt, git and run states. */
 export const LogIcons: StoryObj = { name: 'Log icons', render: () => <LogView lines={ICON_LOG} /> }
+/** A log whose sources are buttons (`onSource`): a press on a step's name opens that step under the log. */
+export const LogSources: StoryObj = { name: 'Log sources', render: () => <SourceLog /> }
+/** A log with no lines: its own words first, then the app's `empty`, a run still waiting for a worker. */
+export const EmptyLog: StoryObj = { name: 'Empty log', render: () => <EmptyLogs /> }
 export const Tree: StoryObj = { name: 'JSON tree', render: () => <Json /> }
 /** A list of 240 runs, opened: the first 100 drawn and a step under them that shows 100 more. */
 export const LongTree: StoryObj = { name: 'Long JSON', render: () => <LongJson /> }

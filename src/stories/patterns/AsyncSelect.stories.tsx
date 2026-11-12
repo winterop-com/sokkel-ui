@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import { CalendarClock, Play } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
 import { AsyncSelect, type AsyncPage } from '@winterop-com/sokkel-ui/AsyncSelect'
@@ -90,6 +91,54 @@ export const NoMatch: StoryObj = { name: 'No match', render: () => <Picker open 
 export const Failed: StoryObj = { name: 'Failed', render: () => <Picker open query="harbor" load={refuse} /> }
 
 export const TypeMore: StoryObj = { name: 'Type more', render: () => <Picker open minQuery={2} /> }
+
+interface Job {
+    code: string
+    name: string
+    scheduled: boolean
+}
+
+const JOB_OPTIONS: Job[] = [
+    { code: 'nightly-export', name: 'Nightly export', scheduled: true },
+    { code: 'sync-inventory', name: 'Sync inventory', scheduled: true },
+    { code: 'rebuild-index', name: 'Rebuild index', scheduled: false },
+    { code: 'send-digest', name: 'Send digest', scheduled: true },
+    { code: 'import-orders', name: 'Import orders', scheduled: false },
+]
+
+const jobs = (query: string) =>
+    Promise.resolve(JOB_OPTIONS.filter((job) => `${job.code} ${job.name.toLowerCase()}`.includes(query.toLowerCase())))
+
+/** A job picker whose options carry a mark for how the job starts and its code beside its name. */
+function JobPicker() {
+    const [value, setValue] = useState<Job | null>(JOB_OPTIONS[0] ?? null)
+    return (
+        <Ground>
+            <Field label="Job" id="job">
+                <AsyncSelect
+                    id="job"
+                    value={value}
+                    onValueChange={setValue}
+                    load={jobs}
+                    itemKey={(job) => job.code}
+                    itemLabel={(job) => job.name}
+                    itemDetail={(job) => job.code}
+                    itemMark={(job) => (job.scheduled ? <CalendarClock aria-hidden /> : <Play aria-hidden />)}
+                    defaultOpen
+                    debounce={0}
+                    words={{ placeholder: 'Choose a job' }}
+                />
+            </Field>
+        </Ground>
+    )
+}
+
+/**
+ * Options with a mark before the name (`itemMark`), here a calendar for a scheduled job and a play
+ * mark for one started by hand, and the job's code beside it (`itemDetail`), in the list and in the
+ * chosen value alike.
+ */
+export const Marks: StoryObj = { name: 'Marks', render: () => <JobPicker /> }
 
 /** Places to run in: each country's parts, 240 in all, too many to send at once. */
 const PLACES = REGIONS.flatMap((country) =>

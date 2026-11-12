@@ -1,13 +1,16 @@
 import { Empty, EmptyContent, EmptyHeader, EmptyTitle } from '@winterop-com/sokkel-ui/primitives/empty'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Plus } from 'lucide-react'
+import { useState } from 'react'
 
 import { DescriptionList } from '@winterop-com/sokkel-ui/DescriptionList'
+import { LogView, type LogLine } from '@winterop-com/sokkel-ui/LogView'
 import { PageState } from '@winterop-com/sokkel-ui/PageState'
 import { ProseText } from '@winterop-com/sokkel-ui/ProseText'
+import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 import { Unfoldable } from '@winterop-com/sokkel-ui/Unfoldable'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
-import { Stack } from '@winterop-com/sokkel-ui/Layout'
+import { Row, Stack } from '@winterop-com/sokkel-ui/Layout'
 
 /** The states a read lands in, and the small text pieces that carry a server's words. */
 function Ground({ children }: { children: React.ReactNode }) {
@@ -138,6 +141,70 @@ function Unfolding() {
     )
 }
 
+/** A run's steps, each with the lines it wrote; a step that wrote none has nothing to unfold. */
+const STEP_ROWS: { step: string; state: 'succeeded' | 'failed' | 'skipped'; took: string; lines: LogLine[] }[] = [
+    {
+        step: 'fetch',
+        state: 'succeeded',
+        took: '0.7s',
+        lines: [
+            { at: '14:02:11.204', level: 'info', text: 'GET /v1/exports/orders-2026-10.csv?project=larkspur' },
+            { at: '14:02:11.902', level: 'info', text: 'read 2,184 rows in 0.7s' },
+        ],
+    },
+    {
+        step: 'transform',
+        state: 'succeeded',
+        took: '0.1s',
+        lines: [
+            { at: '14:02:12.010', level: 'debug', text: 'map: amount = try_cast(amount as double)' },
+            { at: '14:02:12.115', level: 'warning', text: '37 rows carry an amount that does not parse' },
+        ],
+    },
+    {
+        step: 'validate',
+        state: 'failed',
+        took: '1.3s',
+        lines: [{ at: '14:02:13.420', level: 'error', text: 'rules orders: field amount must be a number (37 rows)' }],
+    },
+    { step: 'upload', state: 'skipped', took: '', lines: [] },
+    { step: 'notify', state: 'skipped', took: '', lines: [] },
+]
+
+function StepList() {
+    const [open, setOpen] = useState<readonly string[]>(['validate'])
+    const unfolding = STEP_ROWS.filter((row) => row.lines.length > 0).map((row) => row.step)
+    const all = open.length === unfolding.length
+    return (
+        <Ground>
+            <Row>
+                <Button size="sm" variant="outline" onClick={() => setOpen(all ? [] : unfolding)}>
+                    {all ? 'Close all' : 'Open all'}
+                </Button>
+            </Row>
+            <Stack gap="xs">
+                {STEP_ROWS.map((row) => (
+                    <Unfoldable
+                        key={row.step}
+                        heading={<span className="font-mono">{row.step}</span>}
+                        aside={
+                            <>
+                                {row.took}
+                                <StatusChip status={row.state} />
+                            </>
+                        }
+                        summary={row.lines.at(-1)?.text}
+                        open={open.includes(row.step)}
+                        onOpenChange={(next) => setOpen(next ? [...open, row.step] : open.filter((step) => step !== row.step))}
+                    >
+                        {row.lines.length > 0 && <LogView lines={row.lines} numbered={false} />}
+                    </Unfoldable>
+                ))}
+            </Stack>
+        </Ground>
+    )
+}
+
 function Prose() {
     return (
         <Ground>
@@ -172,4 +239,10 @@ export const Failed: StoryObj = { name: 'Failed page', render: () => <FailedPage
  */
 export const Secondary: StoryObj = { name: 'Secondary read', render: () => <SecondaryRead /> }
 export const Unfold: StoryObj = { name: 'Unfoldable', render: () => <Unfolding /> }
+/**
+ * A run's steps as a list of mixed rows, held from outside (`open`, `onOpenChange`) so Open all
+ * opens every one. A shut step says its last line (`summary`); a skipped step wrote nothing, so its
+ * row is static, with no chevron and no button, its name lined up with the rest.
+ */
+export const Steps: StoryObj = { name: 'Unfoldable steps', render: () => <StepList /> }
 export const Text: StoryObj = { name: 'Prose text', render: () => <Prose /> }

@@ -75,3 +75,40 @@ describe('several values', () => {
         expect(html).not.toContain('Remove')
     })
 })
+
+describe('marks', () => {
+    const mark = (item: string) => <i data-mark={item} />
+
+    it('draws the chosen value with its mark before its label and its detail after it', () => {
+        const html = renderToStaticMarkup(
+            <AsyncSelect
+                value="nightly-export"
+                onValueChange={() => undefined}
+                load={() => Promise.resolve([])}
+                itemKey={key}
+                itemLabel={(item) => item.replace('-', ' ')}
+                itemDetail={(item) => `code:${item}`}
+                itemMark={mark}
+            />,
+        )
+        expect(html.indexOf('data-mark="nightly-export"')).toBeLessThan(html.indexOf('nightly export'))
+        expect(html.indexOf('nightly export')).toBeLessThan(html.indexOf('code:nightly-export'))
+        expect(html).toMatch(/class="[^"]*font-mono[^"]*">code:nightly-export/)
+    })
+
+    it('puts the mark in each chosen chip', () => {
+        const html = renderToStaticMarkup(
+            <AsyncSelect
+                multiple
+                value={['fetch', 'upload']}
+                onValueChange={() => undefined}
+                load={() => Promise.resolve([])}
+                itemKey={key}
+                itemLabel={key}
+                itemMark={mark}
+            />,
+        )
+        expect(html).toContain('data-mark="fetch"')
+        expect(html).toContain('data-mark="upload"')
+    })
+})
