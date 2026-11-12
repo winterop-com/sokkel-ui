@@ -118,6 +118,7 @@ export function RunGraph({
     zoomOnDoubleClick,
     fitMinZoom,
     narrowFit,
+    tallFit,
     onControls,
     fillFloor,
     wrapToCanvas,
@@ -178,6 +179,7 @@ export function RunGraph({
             onSelect={onSelect}
             zoomOnDoubleClick={zoomOnDoubleClick}
             narrowFit={narrowFit}
+            tallFit={tallFit}
             onControls={onControls}
             fillFloor={fillFloor}
             controls={controls}

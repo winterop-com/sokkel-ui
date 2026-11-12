@@ -17,6 +17,7 @@ import {
     type NodeTypes,
     type ReactFlowInstance,
     type Viewport,
+    getViewportForBounds,
 } from '@xyflow/react'
 import { CircleAlert, Maximize, Minus, Plus } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type DragEvent, type ReactNode } from 'react'
@@ -40,6 +41,7 @@ import {
     FIT_MIN_ZOOM,
     FIT_PADDING,
     fittedHeight,
+    GRAPH_WHEEL_STEP_MS,
     MAX_ZOOM,
     MIN_ZOOM,
     startOfOverflow,
@@ -47,6 +49,7 @@ import {
     wheelZoomFactor,
     type GraphDirection,
     type GraphLayoutStyle,
+    type GraphPoint,
 } from './layout'
 import type { GraphSizing } from './use-node-graph'
 
@@ -173,6 +176,12 @@ export interface GraphViewProps extends GraphLayoutStyle, GraphSizing {
     fitMinZoom?: number
     /** False keeps a narrow canvas's fit at `fitMinZoom`, rather than letting it go to 0.6 so the width fits. */
     narrowFit?: boolean
+    /**
+     * The least zoom a fit goes to when the drawing is as wide as the canvas holds and only its height
+     * is short, so a drawing a little too tall is seen whole rather than hung off the foot; `fitMinZoom`
+     * when left out.
+     */
+    tallFit?: number
     /** False hides the canvas's own zoom buttons, for controls drawn elsewhere through `onControls`. */
     controls?: boolean
     /** The tallest a `filled` frame insists on for its drawing, which is less when the drawing is: 360 when left out. */
@@ -218,9 +227,6 @@ const BUTTON_ROW = 36
 /** The tallest a filled frame insists on for its drawing when not told; past it the drawing fits its box. */
 const FILLED_FLOOR = 360
 
-/** What every fit is made with; the least zoom is the canvas's own. */
-const FIT_OPTIONS = { padding: FIT_PADDING, maxZoom: FIT_MAX_ZOOM, duration: 0 }
-
 /** The id of the node under a point on the screen, if any. */
 function nodeAt(clientX: number, clientY: number): string | null {
     const found = document.elementFromPoint(clientX, clientY)?.closest('.react-flow__node')
@@ -236,21 +242,32 @@ async function fitGraph(
     canvas: { width: number; height: number },
     minZoom: number,
     narrowFit = true,
+    tallFit = minZoom,
 ): Promise<void> {
     const nodes = flow.getNodes()
-    if (nodes.length === 0) return
+    if (nodes.length === 0 || canvas.width <= 0 || canvas.height <= 0) return
+    const drawing = drawingBounds(flow)
+    const room = 1 - 2 * FIT_PADDING
+    const fitsAcross = drawing.width > 0 ? (canvas.width * room) / drawing.width : minZoom
+    const fitsDown = drawing.height > 0 ? (canvas.height * room) / drawing.height : minZoom
+    let least = minZoom
     // On a narrow canvas the width fits first, a little under the usual least zoom if it must; a
     // tall graph then reads down and scrolls rather than hanging off the side.
-    let least = minZoom
-    if (narrowFit && canvas.width > 0 && canvas.width < NARROW_GRAPH) {
-        const across = flow.getNodesBounds(nodes).width
-        const fitsAcross = across > 0 ? (canvas.width * (1 - 2 * FIT_PADDING)) / across : minZoom
-        least = Math.min(minZoom, Math.max(NARROW_FIT_MIN_ZOOM, fitsAcross))
-    }
-    await flow.fitView({ ...FIT_OPTIONS, minZoom: least })
-    const view = flow.getViewport()
-    const placed = startOfOverflow(view, flow.getNodesBounds(nodes), canvas)
-    if (placed.x !== view.x || placed.y !== view.y) await flow.setViewport(placed, { duration: 0 })
+    if (narrowFit && canvas.width < NARROW_GRAPH) least = Math.min(minZoom, Math.max(NARROW_FIT_MIN_ZOOM, fitsAcross))
+    // A drawing as wide as the canvas holds and only a little too tall goes under the least zoom to be seen whole.
+    if (tallFit < least && fitsAcross >= least && fitsDown < least) least = Math.max(tallFit, fitsDown)
+    const fitted = getViewportForBounds(drawing, canvas.width, canvas.height, least, FIT_MAX_ZOOM, FIT_PADDING)
+    const placed = startOfOverflow(fitted, drawing, canvas)
+    await flow.setViewport(placed, { duration: 0 })
+}
+
+/** Where the nodes and the bends of their edges are drawn, so a fit keeps an edge that runs round the outside in view. */
+function drawingBounds(flow: ReactFlowInstance): { x: number; y: number; width: number; height: number } {
+    const nodes = flow.getNodesBounds(flow.getNodes())
+    const points = flow
+        .getEdges()
+        .flatMap((edge) => ((edge.data as { points?: readonly GraphPoint[] } | undefined)?.points ?? []) as readonly GraphPoint[])
+    return boundsOf([nodes, ...points.map((point) => ({ ...point, width: 0, height: 0 }))])
 }
 
 /** The nodes' ids, places and sizes as one string, which is what a fit is redone on. */
@@ -296,6 +313,8 @@ export interface GraphCanvasProps<N extends Node = Node, E extends Edge = Edge> 
     fitMinZoom?: number
     /** False keeps a narrow canvas's fit at `fitMinZoom`, rather than letting it go to 0.6 so the width fits. */
     narrowFit?: boolean
+    /** The least zoom a fit goes to when only the drawing's height is short of the room; `fitMinZoom` when left out. */
+    tallFit?: number
     /** Called with what moves the view once the canvas is drawn, and null as it goes. */
     onControls?: (controls: GraphControls | null) => void
     /** The tallest a `filled` frame insists on for its drawing, which is less when the drawing is: 360 when left out. */
@@ -337,6 +356,7 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
     toolbar,
     fitMinZoom = FIT_MIN_ZOOM,
     narrowFit = true,
+    tallFit,
     onControls,
     fillFloor = FILLED_FLOOR,
     layoutKey = '',
@@ -654,6 +674,7 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
                                 direction={direction}
                                 minZoom={fitMinZoom}
                                 narrowFit={narrowFit}
+                                tallFit={Math.min(tallFit ?? fitMinZoom, fitMinZoom)}
                                 onFitted={(fittedKey) => setFittedFor(fittedKey)}
                             />
                             {fitted && <ModifierWheel onZoomed={() => setMoved(true)} />}
@@ -664,6 +685,7 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
                                 onMoved={setMoved}
                                 minZoom={fitMinZoom}
                                 narrowFit={narrowFit}
+                                tallFit={Math.min(tallFit ?? fitMinZoom, fitMinZoom)}
                                 onControls={onControls}
                             >
                                 {controls && !empty && (
@@ -699,6 +721,7 @@ function ViewControls({
     onMoved,
     minZoom,
     narrowFit,
+    tallFit,
     onControls,
     children,
 }: {
@@ -706,6 +729,7 @@ function ViewControls({
     onMoved: (moved: boolean) => void
     minZoom: number
     narrowFit: boolean
+    tallFit: number
     onControls?: (controls: GraphControls | null) => void
     children: ReactNode
 }) {
@@ -722,11 +746,11 @@ function ViewControls({
             fit: () => {
                 onMoved(false)
                 const { width, height } = store.getState()
-                void fitGraph(flow, { width, height }, minZoom, narrowFit)
+                void fitGraph(flow, { width, height }, minZoom, narrowFit, tallFit)
             },
             empty,
         }
-    }, [flow, store, onMoved, empty, minZoom, narrowFit])
+    }, [flow, store, onMoved, empty, minZoom, narrowFit, tallFit])
     const report = useRef(onControls)
     report.current = onControls
     useEffect(() => {
@@ -801,6 +825,7 @@ function FitToGraph({
     direction,
     minZoom,
     narrowFit,
+    tallFit,
     onFitted,
 }: {
     placement: string
@@ -809,6 +834,7 @@ function FitToGraph({
     direction: GraphDirection
     minZoom: number
     narrowFit: boolean
+    tallFit: number
     onFitted: (placement: string) => void
 }) {
     const flow = useReactFlow()
@@ -851,7 +877,7 @@ function FitToGraph({
         let current = true
         const fit = () => {
             const { width, height } = store.getState()
-            void fitGraph(flow, { width, height }, minZoom, narrowFit).then(() => {
+            void fitGraph(flow, { width, height }, minZoom, narrowFit, tallFit).then(() => {
                 if (current && settled) done.current(placement)
             })
         }
@@ -864,13 +890,10 @@ function FitToGraph({
             cancelAnimationFrame(frame)
             unsubscribe()
         }
-    }, [flow, store, moved, placement, settled, minZoom, narrowFit])
+    }, [flow, store, moved, placement, settled, minZoom, narrowFit, tallFit])
 
     return null
 }
-
-/** How long one notch of a filled canvas's wheel holds before the next zooms, so a trackpad's stream is one step. */
-export const GRAPH_WHEEL_STEP_MS = 160
 
 /**
  * On a filled canvas, each notch of the wheel zooms one button's step about the pointer, and a

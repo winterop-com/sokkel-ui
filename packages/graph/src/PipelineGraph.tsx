@@ -82,6 +82,7 @@ export function PipelineGraph({
     zoomOnDoubleClick,
     fitMinZoom,
     narrowFit,
+    tallFit,
     onControls,
     fillFloor,
     wrapToCanvas,
@@ -125,6 +126,7 @@ export function PipelineGraph({
             frame={frame}
             zoomOnDoubleClick={zoomOnDoubleClick}
             narrowFit={narrowFit}
+            tallFit={tallFit}
             onControls={onControls}
             fillFloor={fillFloor}
             fitMinZoom={fitMinZoom}

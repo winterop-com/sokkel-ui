@@ -82,19 +82,22 @@ const WRAP_OPTIONS: Record<string, string> = {
     'elk.layered.wrapping.additionalEdgeSpacing': '24',
 }
 
-/**
- * How many rows a graph running right is cut into so each is no wider than `wrapWidth`, and the
- * shape elk aims for to get them: one row when it is narrow enough, or runs down, or has no width
- * to wrap at.
- */
-export function wrapRows(shape: GraphShape, direction: GraphDirection, style: GraphLayoutStyle = {}): { rows: number; aspect: number } {
-    if (direction !== 'right' || style.wrapWidth === undefined || style.wrapWidth <= 0 || shape.nodes.length < 2)
-        return { rows: 1, aspect: 0 }
-    const bounds = boundsOf(rankLayout(shape, 'right', style.spacing).nodes)
-    const rows = Math.min(shape.nodes.length, Math.ceil(bounds.width / style.wrapWidth))
-    if (rows <= 1) return { rows: 1, aspect: 0 }
-    // n rows of a graph W wide and H tall stand about W/n wide and n·H tall.
-    return { rows, aspect: bounds.width / (rows * rows * Math.max(1, bounds.height)) }
+/** How finely a wrap's width is told apart: a width that moves less lays nothing out again. */
+const WRAP_STEP = 48
+
+/** How many layouts a wrap tries to find the shape whose rows are as wide as it lets them be. */
+const WRAP_TRIES = 6
+
+/** Whether a graph may need cutting into rows at all, from the rank layout, which is never narrower than elk's. */
+function mayWrap(shape: GraphShape, direction: GraphDirection, style: GraphLayoutStyle): boolean {
+    if (direction !== 'right' || style.wrapWidth === undefined || style.wrapWidth <= 0 || shape.nodes.length < 2) return false
+    return boundsOf(rankLayout(shape, 'right', style.spacing).nodes).width > style.wrapWidth
+}
+
+/** How wide and tall a placed graph is drawn, its edges' bends included. */
+export function placedBounds(placed: PlacedGraph): { x: number; y: number; width: number; height: number } {
+    const points = placed.edges.flatMap((each) => each.points ?? [])
+    return boundsOf([...placed.nodes, ...points.map((point) => ({ ...point, width: 0, height: 0 }))])
 }
 
 /** The gaps one spacing keeps, in pixels: between ranks, between nodes of a rank, and around edges. */
@@ -259,15 +262,14 @@ export function elkOptions(
     }
 }
 
-/** The graph elk is handed for a shape. */
-export function toElk(shape: GraphShape, direction: GraphDirection = 'right', style: GraphLayoutStyle = {}): ElkGraph {
-    const wrap = wrapRows(shape, direction, style)
+/** The graph elk is handed for a shape, cut into rows aiming at `wrapAspect` when given one. */
+export function toElk(shape: GraphShape, direction: GraphDirection = 'right', style: GraphLayoutStyle = {}, wrapAspect?: number): ElkGraph {
     return {
         id: 'root',
         layoutOptions:
-            wrap.rows > 1
-                ? { ...elkOptions(direction, style), ...WRAP_OPTIONS, 'elk.aspectRatio': wrap.aspect.toFixed(3) }
-                : elkOptions(direction, style),
+            wrapAspect === undefined
+                ? elkOptions(direction, style)
+                : { ...elkOptions(direction, style), ...WRAP_OPTIONS, 'elk.aspectRatio': wrapAspect.toFixed(4) },
         children: shape.nodes.map((node) => ({ id: node.id, width: node.width, height: node.height })),
         edges: knownEdges(shape).map((edge) => ({
             id: edge.id,
@@ -358,7 +360,46 @@ export async function layoutGraph(
 ): Promise<PlacedGraph> {
     if (shape.nodes.length === 0) return { nodes: [], edges: [] }
     const using = elk ?? (await loadElk())
-    return fromElk(shape, await using.layout(toElk(shape, direction, style)))
+    const flat = fromElk(shape, await using.layout(toElk(shape, direction, style)))
+    if (!mayWrap(shape, direction, style)) return flat
+    return wrapped(shape, direction, style, using, flat)
+}
+
+/**
+ * A graph cut into rows no wider than its wrap width, judged by elk's own layout: kept in one row
+ * when that fits, else in the fewest rows that do. elk aims at a shape rather than a count of rows,
+ * so the shape is searched for, wider while the rows fit and narrower while they do not.
+ */
+async function wrapped(
+    shape: GraphShape,
+    direction: GraphDirection,
+    style: GraphLayoutStyle,
+    using: ElkEngine,
+    flat: PlacedGraph,
+): Promise<PlacedGraph> {
+    const limit = style.wrapWidth as number
+    const size = placedBounds(flat)
+    if (size.width <= limit) return flat
+    const rows = Math.min(shape.nodes.length, Math.ceil(size.width / limit))
+    // n rows of a graph W wide and H tall stand about W/n wide and n·H tall.
+    const guess = size.width / (rows * rows * Math.max(1, size.height))
+    let low = guess / 16
+    let high = guess * 16
+    let aspect = guess
+    let best: { placed: PlacedGraph; width: number } | null = null
+    let narrowest: { placed: PlacedGraph; width: number } | null = null
+    for (let tries = 0; tries < WRAP_TRIES; tries += 1) {
+        const placed = fromElk(shape, await using.layout(toElk(shape, direction, style, aspect)))
+        const width = placedBounds(placed).width
+        if (narrowest === null || width < narrowest.width) narrowest = { placed, width }
+        if (width <= limit) {
+            if (best === null || width > best.width) best = { placed, width }
+            if (width >= limit * 0.9) break
+            low = aspect
+        } else high = aspect
+        aspect = Math.sqrt(low * high)
+    }
+    return (best ?? narrowest ?? { placed: flat }).placed
 }
 
 /** How long elk tries to keep each edge of a network, center to center. */
@@ -423,8 +464,8 @@ export function shapeSignature(shape: GraphShape, direction: GraphDirection, sty
         direction,
         style.routing ?? 'orthogonal',
         style.spacing ?? 'normal',
-        // The rows a wrap cuts into, not the width it was asked at, so a width that moves without changing them lays nothing out again.
-        wrapRows(shape, direction, style).rows,
+        // A width that cannot cut the graph, or moves less than a step, lays nothing out again.
+        mayWrap(shape, direction, style) ? Math.floor((style.wrapWidth as number) / WRAP_STEP) : '',
         shape.nodes.map((node) => `${node.id}:${String(node.width)}x${String(node.height)}`).join(','),
         shape.edges
             .map((edge) => `${edge.source}>${edge.target}${edge.label === undefined ? '' : `:${String(edge.label.width)}`}`)
@@ -561,6 +602,9 @@ export const MAX_ZOOM = 2
 
 /** One press of a zoom button, as a factor. */
 export const ZOOM_STEP = 1.4
+
+/** How long one notch of a filled canvas's wheel holds before the next zooms, so a trackpad's stream is one step. */
+export const GRAPH_WHEEL_STEP_MS = 160
 
 /** How far from the canvas's edge a graph too big to fit at the floor starts, in pixels. */
 export const OVERFLOW_MARGIN = 24

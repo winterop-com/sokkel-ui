@@ -143,6 +143,7 @@ export function NetworkGraph({
     zoomOnDoubleClick,
     fitMinZoom,
     narrowFit,
+    tallFit,
     onControls,
     fillFloor,
     controls,
@@ -249,6 +250,7 @@ export function NetworkGraph({
                 frame={frame}
                 zoomOnDoubleClick={zoomOnDoubleClick}
                 narrowFit={narrowFit}
+                tallFit={tallFit}
                 onControls={onControls}
                 fillFloor={fillFloor}
                 controls={controls}
