@@ -6,7 +6,10 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.19.12** is the latest release (2026-11-12): a filled graph takes the floor it is given
+- **0.19.13** is the latest release (2026-11-12): a graph wraps only when elk's own layout is too
+  wide, into rows that fit; a fit keeps edges in view and may go under its least zoom for a drawing
+  a little too tall (`tallFit`); `GRAPH_WHEEL_STEP_MS` comes from `layout`.
+- **0.19.12** (2026-11-12): a filled graph takes the floor it is given
   (`fillFloor`) and wraps to its canvas's width (`wrapToCanvas`, held to `wrapWidth`), a layout menu
   takes the app's trigger or glyph and can close on a choice, the wheel's step is exported
   (`GRAPH_WHEEL_STEP_MS`), and controls a finger tall no longer push a phone calendar or nav bar
