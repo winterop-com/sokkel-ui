@@ -1,6 +1,6 @@
 {
     "name": "@winterop-com/sokkel-ui-maps",
-    "version": "0.21.1",
+    "version": "0.21.2",
     "description": "Maps on maplibre, with layers, legends, popups and basemaps, for sokkel-ui.",
     "license": "SEE LICENSE IN LICENSE",
     "repository": {
