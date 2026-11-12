@@ -6,7 +6,10 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.19.13** is the latest release (2026-11-12): a graph wraps only when elk's own layout is too
+- **0.19.14** is the latest release (2026-11-12): a graph wrapped to its canvas weighs the
+  canvas's height too, stays whole when a cut would only add height, and counts its edges in the
+  cut.
+- **0.19.13** (2026-11-12): a graph wraps only when elk's own layout is too
   wide, into rows that fit; a fit keeps edges in view and may go under its least zoom for a drawing
   a little too tall (`tallFit`); `GRAPH_WHEEL_STEP_MS` comes from `layout`.
 - **0.19.12** (2026-11-12): a filled graph takes the floor it is given
