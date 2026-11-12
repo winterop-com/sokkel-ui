@@ -1,4 +1,5 @@
 import { SlidersHorizontal } from 'lucide-react'
+import type { ReactElement, ReactNode } from 'react'
 
 import {
     DropdownMenu,
@@ -63,6 +64,15 @@ export interface GraphLayoutMenuProps {
     omit?: readonly (keyof GraphLayoutChoice)[]
     /** The routings offered, in this order; all three when left out. */
     routings?: readonly GraphRouting[]
+    /** The glyph on the toolbar's button, in place of the sliders. */
+    icon?: ReactNode
+    /**
+     * The button that opens the menu, in place of the toolbar's own, such as one wearing the app's
+     * tooltip; it takes a ref and spreads the props it is given.
+     */
+    trigger?: ReactElement
+    /** Closes the menu once a choice is made; it stays open for another when left out. */
+    closeOnChoice?: boolean
     words?: Partial<GraphLayoutMenuWords>
     className?: string
 }
@@ -72,7 +82,17 @@ export interface GraphLayoutMenuProps {
  * and how much room it keeps, each a choice of one. It is drawn as a graph toolbar's own button, so
  * it stands in a `GraphToolbar` or a section's head alike; a view handed the choice fits again.
  */
-export function GraphLayoutMenu({ value, onValueChange, omit = [], routings = ROUTINGS, words: given, className }: GraphLayoutMenuProps) {
+export function GraphLayoutMenu({
+    value,
+    onValueChange,
+    omit = [],
+    routings = ROUTINGS,
+    icon,
+    trigger,
+    closeOnChoice = false,
+    words: given,
+    className,
+}: GraphLayoutMenuProps) {
     const words = { ...GRAPH_LAYOUT_MENU_WORDS, ...given }
     const groups = (
         [
@@ -85,9 +105,11 @@ export function GraphLayoutMenu({ value, onValueChange, omit = [], routings = RO
         <DropdownMenu>
             <DropdownMenuTrigger
                 render={
-                    <GraphToolbarButton label={words.label} className={className}>
-                        <SlidersHorizontal aria-hidden />
-                    </GraphToolbarButton>
+                    trigger ?? (
+                        <GraphToolbarButton label={words.label} className={className}>
+                            {icon ?? <SlidersHorizontal aria-hidden />}
+                        </GraphToolbarButton>
+                    )
                 }
             />
             <DropdownMenuContent align="end" className="w-48">
@@ -100,7 +122,7 @@ export function GraphLayoutMenu({ value, onValueChange, omit = [], routings = RO
                             onValueChange={(next: string) => onValueChange({ ...value, [key]: next })}
                         >
                             {options.map((option) => (
-                                <DropdownMenuRadioItem key={option} value={option}>
+                                <DropdownMenuRadioItem key={option} value={option} closeOnClick={closeOnChoice}>
                                     {words[option]}
                                 </DropdownMenuRadioItem>
                             ))}

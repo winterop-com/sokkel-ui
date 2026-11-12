@@ -144,6 +144,7 @@ export function NetworkGraph({
     fitMinZoom,
     narrowFit,
     onControls,
+    fillFloor,
     controls,
     words,
     className,
@@ -249,6 +250,7 @@ export function NetworkGraph({
                 zoomOnDoubleClick={zoomOnDoubleClick}
                 narrowFit={narrowFit}
                 onControls={onControls}
+                fillFloor={fillFloor}
                 controls={controls}
                 onSelect={onSelect}
                 words={words}

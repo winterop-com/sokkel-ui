@@ -1,7 +1,7 @@
 import { useMemo, useState, type ComponentType, type ReactNode } from 'react'
 
 import type { Issue } from '@winterop-com/sokkel-ui/IssueMark'
-import { fitDirection, GraphCanvas, type GraphEditing, type GraphViewProps } from './GraphCanvas'
+import { fitDirection, GraphCanvas, wrapWidthFor, type GraphEditing, type GraphViewProps } from './GraphCanvas'
 import type { GraphNodeData } from './GraphNode'
 import { useNodeGraph, type GraphItem, type GraphLink } from './use-node-graph'
 
@@ -83,6 +83,8 @@ export function PipelineGraph({
     fitMinZoom,
     narrowFit,
     onControls,
+    fillFloor,
+    wrapToCanvas,
     wrapWidth,
     editing,
     positions,
@@ -100,6 +102,7 @@ export function PipelineGraph({
 }: PipelineGraphProps) {
     const [width, setWidth] = useState<number>()
     const direction = given ?? fitDirection(width)
+    const wrapAt = wrapWidthFor(wrapWidth, wrapToCanvas, width, fitMinZoom)
     const items = useMemo<GraphItem[]>(() => steps.map(({ needs: _needs, ...step }) => ({ id: step.code, data: step })), [steps])
     const links = useMemo(() => stepLinks(steps), [steps])
     const graph = useNodeGraph(items, links, {
@@ -108,7 +111,7 @@ export function PipelineGraph({
         positions,
         routing,
         spacing,
-        wrapWidth,
+        wrapWidth: wrapAt,
         minNodeWidth,
         maxNodeWidth,
     })
@@ -123,8 +126,9 @@ export function PipelineGraph({
             zoomOnDoubleClick={zoomOnDoubleClick}
             narrowFit={narrowFit}
             onControls={onControls}
+            fillFloor={fillFloor}
             fitMinZoom={fitMinZoom}
-            layoutKey={`${String(routing)}|${String(spacing)}|${String(wrapWidth)}`}
+            layoutKey={`${String(routing)}|${String(spacing)}|${String(wrapWidth)}|${String(wrapToCanvas)}`}
             onSelect={onSelect}
             onSelectionChange={onSelectionChange}
             editing={editing}

@@ -133,6 +133,21 @@ export interface GraphEditing {
     onDropItem?: (item: string, at: GraphPointer) => void
 }
 
+/**
+ * The width a view cuts a graph running right into rows at: the canvas's width at the least fit
+ * zoom when `toCanvas`, held to `wrapWidth` when that is given too, or `wrapWidth` alone.
+ */
+export function wrapWidthFor(
+    wrapWidth: number | undefined,
+    toCanvas: boolean | undefined,
+    canvas: number | undefined,
+    fitMinZoom: number = FIT_MIN_ZOOM,
+): number | undefined {
+    if (toCanvas !== true || canvas === undefined || canvas <= 0) return wrapWidth
+    const holds = Math.floor((canvas * (1 - 2 * FIT_PADDING)) / fitMinZoom)
+    return wrapWidth === undefined ? holds : Math.min(wrapWidth, holds)
+}
+
 /** Below this width a flow reads top to bottom, so its later steps stay on a phone's screen. */
 const NARROW_GRAPH = 560
 
@@ -160,6 +175,13 @@ export interface GraphViewProps extends GraphLayoutStyle, GraphSizing {
     narrowFit?: boolean
     /** False hides the canvas's own zoom buttons, for controls drawn elsewhere through `onControls`. */
     controls?: boolean
+    /** The tallest a `filled` frame insists on for its drawing, which is less when the drawing is: 360 when left out. */
+    fillFloor?: number
+    /**
+     * Cuts a graph running right into rows as wide as its canvas holds at the least fit zoom, so it
+     * fits without hanging off the edges; `wrapWidth`, given too, is the widest a row is let be.
+     */
+    wrapToCanvas?: boolean
     /** Called with what moves the view once the canvas is drawn, and null as it goes, so a section's head can zoom and fit it. */
     onControls?: (controls: GraphControls | null) => void
     /** A double click or tap zooms in a step about the point, on a stage; off when left out. */
@@ -193,7 +215,7 @@ const THEME = {
 /** The height the zoom buttons take in a fitted frame, laid out in a row. */
 const BUTTON_ROW = 36
 
-/** The tallest a filled frame insists on for its drawing; past it the drawing fits its box. */
+/** The tallest a filled frame insists on for its drawing when not told; past it the drawing fits its box. */
 const FILLED_FLOOR = 360
 
 /** What every fit is made with; the least zoom is the canvas's own. */
@@ -276,6 +298,8 @@ export interface GraphCanvasProps<N extends Node = Node, E extends Edge = Edge> 
     narrowFit?: boolean
     /** Called with what moves the view once the canvas is drawn, and null as it goes. */
     onControls?: (controls: GraphControls | null) => void
+    /** The tallest a `filled` frame insists on for its drawing, which is less when the drawing is: 360 when left out. */
+    fillFloor?: number
     /** A value that changes with the layout chosen (routing, spacing): the view fits again, even after the reader moved it. */
     layoutKey?: string
     /** A double click or tap zooms in a step about the point, on a stage; off when left out. */
@@ -314,6 +338,7 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
     fitMinZoom = FIT_MIN_ZOOM,
     narrowFit = true,
     onControls,
+    fillFloor = FILLED_FLOOR,
     layoutKey = '',
     zoomOnDoubleClick = false,
     onWidth,
@@ -405,7 +430,7 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
     // A fitted frame keeps a row under the drawing for its buttons, when it draws them.
     const height = fitted ? (empty ? undefined : fittedHeight(drawing, width) + (controls ? BUTTON_ROW : 0)) : undefined
     // A filled frame is at least as tall as its drawing would be fitted, up to its floor.
-    const floor = filled && !empty && width > 0 ? Math.min(fittedHeight(drawing, width), FILLED_FLOOR) : undefined
+    const floor = filled && !empty && width > 0 ? Math.min(fittedHeight(drawing, width), fillFloor) : undefined
     const ground = fitted || filled
 
     const onNodesChange = (changes: NodeChange<N>[]) => {
@@ -845,7 +870,7 @@ function FitToGraph({
 }
 
 /** How long one notch of a filled canvas's wheel holds before the next zooms, so a trackpad's stream is one step. */
-const STEP_WHEEL_MS = 160
+export const GRAPH_WHEEL_STEP_MS = 160
 
 /**
  * On a filled canvas, each notch of the wheel zooms one button's step about the pointer, and a
@@ -870,7 +895,7 @@ function StepWheel({ onZoomed }: { onZoomed: () => void }) {
             if (event.ctrlKey || event.metaKey) {
                 zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, view.zoom * wheelZoomFactor(event.deltaY, event.deltaMode)))
             } else {
-                if (event.deltaY === 0 || event.timeStamp - last < STEP_WHEEL_MS) return
+                if (event.deltaY === 0 || event.timeStamp - last < GRAPH_WHEEL_STEP_MS) return
                 last = event.timeStamp
                 zoom = steppedZoom(view.zoom, event.deltaY < 0 ? 'in' : 'out')
             }

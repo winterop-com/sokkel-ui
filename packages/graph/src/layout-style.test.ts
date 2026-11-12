@@ -13,8 +13,10 @@ import {
     shapeSignature,
     splinePath,
     toElk,
+    wrapRows,
     type GraphShape,
 } from './layout'
+import { wrapWidthFor } from './GraphCanvas'
 import { miniGraphShape, placeMiniGraph, MINI_NODE } from './MiniGraph'
 import type { Measure } from './measure'
 
@@ -24,6 +26,12 @@ const edge = (source: string, target: string) => ({ id: `${source}->${target}`, 
 const PIPELINE: GraphShape = {
     nodes: [box('fetch'), box('transform'), box('validate'), box('upload'), box('notify')],
     edges: [edge('fetch', 'transform'), edge('transform', 'validate'), edge('validate', 'upload'), edge('validate', 'notify')],
+}
+
+/** How wide a shape is laid out in one row. */
+const boundsWidth = (shape: GraphShape) => {
+    const nodes = rankLayout(shape, 'right').nodes
+    return Math.max(...nodes.map((node) => node.x + node.width)) - Math.min(...nodes.map((node) => node.x))
 }
 
 /** Ten pixels a character, in every face. */
@@ -64,6 +72,36 @@ describe('routing and spacing', () => {
         const right = async (spacing: 'compact' | 'roomy') =>
             Math.max(...(await layoutGraph(PIPELINE, 'right', undefined, { spacing })).nodes.map((node) => node.x))
         expect(await right('roomy')).toBeGreaterThan(await right('compact'))
+    })
+})
+
+describe('wrapping', () => {
+    const long: GraphShape = {
+        nodes: Array.from({ length: 12 }, (_, at) => box(`s${String(at)}`)),
+        edges: Array.from({ length: 11 }, (_, at) => edge(`s${String(at)}`, `s${String(at + 1)}`)),
+    }
+
+    test('cuts a graph running right into as many rows as keep each within the width', () => {
+        const wide = boundsWidth(long)
+        expect(wrapRows(long, 'right', {}).rows).toBe(1)
+        expect(wrapRows(long, 'down', { wrapWidth: 100 }).rows).toBe(1)
+        expect(wrapRows(long, 'right', { wrapWidth: wide + 1 }).rows).toBe(1)
+        expect(wrapRows(long, 'right', { wrapWidth: Math.ceil(wide / 3) }).rows).toBe(3)
+        expect(toElk(long, 'right', { wrapWidth: Math.ceil(wide / 3) }).layoutOptions['elk.layered.wrapping.strategy']).toBe('MULTI_EDGE')
+    })
+
+    test('lays out again only when the rows change, not with every width', () => {
+        const wide = boundsWidth(long)
+        const at = (wrapWidth: number) => shapeSignature(long, 'right', { wrapWidth })
+        expect(at(Math.ceil(wide / 3))).toBe(at(Math.ceil(wide / 3) + 5))
+        expect(at(Math.ceil(wide / 3))).not.toBe(at(Math.ceil(wide / 2)))
+    })
+
+    test('wraps at what the canvas holds at the least fit zoom, held to a given width', () => {
+        expect(wrapWidthFor(1120, undefined, 800)).toBe(1120)
+        expect(wrapWidthFor(undefined, true, undefined)).toBeUndefined()
+        expect(wrapWidthFor(undefined, true, 760, 0.8)).toBe(Math.floor((760 * 0.76) / 0.8))
+        expect(wrapWidthFor(500, true, 2000, 0.8)).toBe(500)
     })
 })
 

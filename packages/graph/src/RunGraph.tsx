@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { useReducedMotion } from '@winterop-com/sokkel-ui/hooks/use-reduced-motion'
 import type { Status } from '@winterop-com/sokkel-ui/StatusChip'
-import { fitDirection, GraphCanvas, type GraphViewProps } from './GraphCanvas'
+import { fitDirection, GraphCanvas, wrapWidthFor, type GraphViewProps } from './GraphCanvas'
 import type { GraphEdgeData } from './GraphEdge'
 import { formatDuration as sayDuration, type GraphNodeData } from './GraphNode'
 import type { PipelineStep } from './PipelineGraph'
@@ -119,6 +119,8 @@ export function RunGraph({
     fitMinZoom,
     narrowFit,
     onControls,
+    fillFloor,
+    wrapToCanvas,
     controls,
     wrapWidth,
     words,
@@ -126,6 +128,7 @@ export function RunGraph({
 }: RunGraphProps) {
     const [width, setWidth] = useState<number>()
     const direction = given ?? fitDirection(width)
+    const wrapAt = wrapWidthFor(wrapWidth, wrapToCanvas, width, fitMinZoom)
     const reduced = useReducedMotion()
     const handing = useHandovers(steps)
     const items = useMemo<GraphItem[]>(
@@ -163,7 +166,7 @@ export function RunGraph({
             })),
         )
     }, [steps, handing, reduced])
-    const graph = useNodeGraph(items, links, { direction, selected, routing, spacing, wrapWidth, minNodeWidth, maxNodeWidth })
+    const graph = useNodeGraph(items, links, { direction, selected, routing, spacing, wrapWidth: wrapAt, minNodeWidth, maxNodeWidth })
     return (
         <GraphCanvas
             nodes={graph.nodes}
@@ -176,9 +179,10 @@ export function RunGraph({
             zoomOnDoubleClick={zoomOnDoubleClick}
             narrowFit={narrowFit}
             onControls={onControls}
+            fillFloor={fillFloor}
             controls={controls}
             fitMinZoom={fitMinZoom}
-            layoutKey={`${String(routing)}|${String(spacing)}|${String(wrapWidth)}`}
+            layoutKey={`${String(routing)}|${String(spacing)}|${String(wrapWidth)}|${String(wrapToCanvas)}`}
             words={words}
             className={className}
         />

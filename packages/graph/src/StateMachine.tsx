@@ -1,7 +1,7 @@
 import type { NodeTypes } from '@xyflow/react'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 
-import { GraphCanvas, type GraphViewProps } from './GraphCanvas'
+import { GraphCanvas, wrapWidthFor, type GraphViewProps } from './GraphCanvas'
 import { GraphHandles } from './GraphNode'
 import { useNodeGraph, type GraphItem, type GraphLink } from './use-node-graph'
 
@@ -77,6 +77,8 @@ export function StateMachine({
     fitMinZoom,
     narrowFit,
     onControls,
+    fillFloor,
+    wrapToCanvas,
     controls,
     wrapWidth,
     routing,
@@ -86,6 +88,7 @@ export function StateMachine({
     words,
     className,
 }: StateMachineProps) {
+    const [width, setWidth] = useState<number>()
     const finals = useMemo(() => states.filter((state) => state.final === true), [states])
     const items = useMemo<GraphItem[]>(
         () => [
@@ -110,7 +113,8 @@ export function StateMachine({
         ],
         [transitions, finals, initial],
     )
-    const graph = useNodeGraph(items, links, { direction, selected, routing, spacing, wrapWidth, minNodeWidth, maxNodeWidth })
+    const wrapAt = wrapWidthFor(wrapWidth, wrapToCanvas, width, fitMinZoom)
+    const graph = useNodeGraph(items, links, { direction, selected, routing, spacing, wrapWidth: wrapAt, minNodeWidth, maxNodeWidth })
     return (
         <GraphCanvas
             nodes={graph.nodes}
@@ -122,9 +126,11 @@ export function StateMachine({
             zoomOnDoubleClick={zoomOnDoubleClick}
             narrowFit={narrowFit}
             onControls={onControls}
+            fillFloor={fillFloor}
+            onWidth={wrapToCanvas === true ? setWidth : undefined}
             controls={controls}
             fitMinZoom={fitMinZoom}
-            layoutKey={`${String(routing)}|${String(spacing)}|${String(wrapWidth)}`}
+            layoutKey={`${String(routing)}|${String(spacing)}|${String(wrapWidth)}|${String(wrapToCanvas)}`}
             onSelect={onSelect}
             words={words}
             className={className}
