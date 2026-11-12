@@ -12,6 +12,7 @@ import {
     DropdownMenuRadioItem,
     DropdownMenuTrigger,
 } from './ui/dropdown-menu'
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 
 /** One other way to do the action, in the split button's menu. */
 export interface SplitButtonItem {
@@ -32,7 +33,7 @@ export interface SplitButtonItem {
 export interface SplitButtonWords {
     /** The name of the button that opens the menu. */
     more: string
-    /** What the chevron says on hover, beside its name: how its menu's choices differ. */
+    /** What the chevron's tooltip says on hover and focus: how its menu's choices differ. */
     moreHint?: string
 }
 
@@ -98,6 +99,7 @@ export function SplitButton({
     const held = reason !== undefined && reason !== null && reason !== false
     const separator = SEPARATOR[variant]
     const choices = items.some((item) => item.checked !== undefined)
+    const chevron = <Button variant={variant} size={ICON_SIZE[size]} aria-label={words.more} disabled={disabled} />
     const body = (item: SplitButtonItem) => (
         <>
             {item.icon}
@@ -115,24 +117,23 @@ export function SplitButton({
             {separator !== undefined && <ButtonGroupSeparator className={cn('data-vertical:my-0', separator)} />}
             {held ? (
                 // Shut as the face is: reachable, saying why, with no menu to open.
-                <Button variant={variant} size={ICON_SIZE[size]} aria-label={words.more} title={words.moreHint} reason={reason}>
+                <Button variant={variant} size={ICON_SIZE[size]} aria-label={words.more} reason={reason}>
                     <ChevronDown aria-hidden />
                 </Button>
             ) : (
                 <DropdownMenu open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
-                    <DropdownMenuTrigger
-                        render={
-                            <Button
-                                variant={variant}
-                                size={ICON_SIZE[size]}
-                                aria-label={words.more}
-                                title={words.moreHint}
-                                disabled={disabled}
-                            />
-                        }
-                    >
-                        <ChevronDown aria-hidden />
-                    </DropdownMenuTrigger>
+                    {words.moreHint === undefined ? (
+                        <DropdownMenuTrigger render={chevron}>
+                            <ChevronDown aria-hidden />
+                        </DropdownMenuTrigger>
+                    ) : (
+                        <Tooltip>
+                            <TooltipTrigger render={<DropdownMenuTrigger render={chevron} />}>
+                                <ChevronDown aria-hidden />
+                            </TooltipTrigger>
+                            <TooltipContent>{words.moreHint}</TooltipContent>
+                        </Tooltip>
+                    )}
                     <DropdownMenuContent anchor={group} align="end" className="w-auto min-w-(--anchor-width)">
                         {choices ? (
                             <DropdownMenuRadioGroup value={String(items.findIndex((item) => item.checked === true))}>

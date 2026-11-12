@@ -134,8 +134,8 @@ const GLYPH = 12
 const MARK = 20
 /** The gap between a count's glyph and its words. */
 const COUNT_GAP = 2
-/** A badge's padding across. */
-const BADGE_PAD = 10
+/** A badge's padding across, both sides of its `px-1.5`. */
+const BADGE_PAD = 12
 /** The extra padding across a round box. */
 const ROUND_PAD = 8
 

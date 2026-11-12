@@ -146,7 +146,9 @@ export function RelativeTime({
         return () => clearTimeout(timer)
     }, [given, distance])
 
-    if (Number.isNaN(when.getTime())) return null
+    // A date that cannot be read is shown as it was given, so a reader still sees what the app had.
+    if (Number.isNaN(when.getTime()))
+        return typeof date === 'string' && date !== '' ? <span className={cn('whitespace-nowrap', className)}>{date}</span> : null
     const exact = exactTime(when, { locale, timeZone, exact: exactFormat })
     const text = relativeTime(when, now, { ...options, locale, timeZone, now: words?.now })
     if (!focusable)
