@@ -76,6 +76,7 @@ export function StateMachine({
     zoomOnDoubleClick,
     fitMinZoom,
     narrowFit,
+    tallFit,
     onControls,
     fillFloor,
     wrapToCanvas,
@@ -125,6 +126,7 @@ export function StateMachine({
             frame={frame}
             zoomOnDoubleClick={zoomOnDoubleClick}
             narrowFit={narrowFit}
+            tallFit={tallFit}
             onControls={onControls}
             fillFloor={fillFloor}
             onWidth={wrapToCanvas === true ? setWidth : undefined}
