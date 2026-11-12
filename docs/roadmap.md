@@ -6,7 +6,12 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.19.15** is the latest release (2026-11-12): a graph's cut fits across its room, down to
+- **0.19.16** is the latest release (2026-11-12): the studio example edits a pipeline on its
+  graph in step with its text (`SharedDocument.replace`, `canUndo`/`canRedo`, `useHistoryKeys`,
+  `GraphControls.direction`, `GraphToolbar zoom={false}`); cards fill their grid cell, the foot
+  strip cuts its note first, a narrow media bar moves fullscreen, dashboard variables stand a finger
+  tall on a phone, a chart's title keeps its width; every example touched up.
+- **0.19.15** (2026-11-12): a graph's cut fits across its room, down to
   one column, and fans can be cut; fitted frames and the wrap room use the fit's real floor and
   edge bends; a box's count takes a glyph, tooltip and place; block badges take a tone; the block
   picker's words split; `cyclePath`; `GraphViewButtons` and `GraphControlButton`; screen, element
