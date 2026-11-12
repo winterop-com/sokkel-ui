@@ -9,7 +9,8 @@ import type { PipelineStep } from './PipelineGraph'
 import { useNodeGraph, type GraphItem, type GraphLink } from './use-node-graph'
 
 /** One step of a run: the pipeline's step, with how far it got. */
-export interface RunStep extends PipelineStep, Pick<GraphNodeData, 'hint' | 'source' | 'count' | 'items' | 'itemsSummary' | 'reserve'> {
+export interface RunStep
+    extends PipelineStep, Pick<GraphNodeData, 'hint' | 'lineHint' | 'source' | 'count' | 'items' | 'itemsSummary' | 'reserve'> {
     /** A run state, or a state the app names in the status map. */
     status: Status | (string & {})
     duration_ms?: number
@@ -73,6 +74,7 @@ export function runLink(
  */
 function useHandovers(steps: readonly RunStep[]): ReadonlySet<string> {
     const before = useRef<Map<string, string> | null>(null)
+    const timer = useRef<number | undefined>(undefined)
     const [handing, setHanding] = useState<ReadonlySet<string>>(() => new Set())
     useEffect(() => {
         const held = before.current
@@ -86,9 +88,11 @@ function useHandovers(steps: readonly RunStep[]): ReadonlySet<string> {
             .map((step) => step.code)
         if (now.length === 0) return
         setHanding(new Set(now))
-        const timer = window.setTimeout(() => setHanding(new Set()), PULSE_MS)
-        return () => window.clearTimeout(timer)
+        // The reset outlives the steps changing again, as a live run's do every second; only a new handover restarts it.
+        window.clearTimeout(timer.current)
+        timer.current = window.setTimeout(() => setHanding(new Set()), PULSE_MS)
     }, [steps])
+    useEffect(() => () => window.clearTimeout(timer.current), [])
     return handing
 }
 
@@ -138,6 +142,7 @@ export function RunGraph({
                     duration_ms: step.duration_ms,
                     progress: step.progress,
                     hint: step.hint,
+                    lineHint: step.lineHint,
                     source: step.source,
                     count: step.count,
                     items: step.items,

@@ -32,6 +32,8 @@ export interface GraphNodeData extends Record<string, unknown> {
     formatDuration?: (ms: number) => string
     /** What pointing at the box says, such as what the step is doing now; it follows each word's own title too. */
     hint?: string
+    /** What pointing at the code line says in place of its words, such as what a source listens to. */
+    lineHint?: string
     /** Where data enters rather than a step that runs: the box is dashed on the canvas's ground. */
     source?: boolean
     /** A count before the status dot, such as how many items a fan-out has. */
@@ -57,6 +59,8 @@ export interface GraphNodeItem {
     status?: Status | (string & {})
     /** A short word after the label, such as a retry's countdown. */
     note?: string
+    /** The note at its widest, such as a countdown's longest; the chip keeps room for it, so a changing note moves nothing. */
+    reserve?: string
 }
 
 /** The node kind React Flow draws a node box for. */
@@ -157,9 +161,9 @@ export function graphNodeSize(
 
 /** How wide one chip of a fan-out is drawn: its dot, its label in the code face, and its note. */
 function chipWidth(item: GraphNodeItem, measure: Measure): number {
-    return (
-        CHIP_DOT + CHIP_INNER + measure(item.label, 'small-mono') + (item.note === undefined ? 0 : CHIP_INNER + measure(item.note, 'small'))
-    )
+    const notes = [item.note, item.reserve].filter((words): words is string => words !== undefined)
+    const note = notes.length === 0 ? 0 : CHIP_INNER + Math.max(...notes.map((words) => measure(words, 'small')))
+    return CHIP_DOT + CHIP_INNER + measure(item.label, 'small-mono') + note
 }
 
 /** How wide a row of chips is, side by side. */
@@ -362,7 +366,7 @@ export function GraphNodeBox({ data, selected = false, className }: GraphNodeBox
                     data-slot="graph-node-line"
                     className="flex min-h-4 min-w-0 items-baseline gap-2 font-mono text-graph-small text-muted-foreground"
                 >
-                    <span title={titled(line)} className="min-w-0 truncate">
+                    <span title={titled(data.lineHint ?? line)} className="min-w-0 truncate">
                         {line}
                     </span>
                     {duration !== null && <span className="ml-auto shrink-0 text-faint">{duration}</span>}
