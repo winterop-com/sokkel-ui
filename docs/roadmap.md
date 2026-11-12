@@ -6,7 +6,10 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.19.8** is the latest release (2026-11-12): `MiniGraph` draws at a natural scale from the start
+- **0.19.9** is the latest release (2026-11-12): graph layouts can run in an app's worker
+  (`setElkEngine`, `elkInWorker`), `CronField` says a schedule is paused, a mini graph keeps a
+  floor, and `FilePreview` caps its height and what it reads.
+- **0.19.8** (2026-11-12): `MiniGraph` draws at a natural scale from the start
   of its box, marks sources and fan-outs, can leave out implied edges and says a hint on hover; a
   boxed `Section` no longer collapses in a scrolling column.
 - **0.19.7** (2026-11-11): `FilterChip` keeps pick order on request, and an input
