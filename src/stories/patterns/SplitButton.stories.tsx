@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { LayoutTemplate, ListStart, Play, Plus, SlidersHorizontal, Upload } from 'lucide-react'
+import { LayoutTemplate, ListStart, Play, Plus, RefreshCw, SlidersHorizontal, Upload } from 'lucide-react'
 
 import { Row } from '@winterop-com/sokkel-ui/Layout'
 import { SplitButton, type SplitButtonItem } from '@winterop-com/sokkel-ui/SplitButton'
@@ -79,6 +79,30 @@ export const Open: StoryObj = {
             <SplitButton items={WAYS} defaultOpen>
                 <Play data-icon="inline-start" aria-hidden />
                 Run now
+            </SplitButton>
+        </Row>
+    ),
+}
+
+/**
+ * A refresh beside how often it refreshes on its own: the cadences are one set of choices, read out
+ * as such, the chosen one checked; the chevron says on hover what its menu chooses.
+ */
+export const Choices: StoryObj = {
+    render: () => (
+        <Row>
+            <SplitButton
+                variant="outline"
+                items={['Off', 'Every 5 s', 'Every 30 s', 'Every 1 min', 'Every 5 min'].map((label) => ({
+                    label,
+                    checked: label === 'Every 30 s',
+                    onSelect: () => undefined,
+                }))}
+                words={{ more: 'Refresh on its own', moreHint: 'How often this refreshes on its own' }}
+                defaultOpen
+            >
+                <RefreshCw data-icon="inline-start" aria-hidden />
+                Every 30 s
             </SplitButton>
         </Row>
     ),
