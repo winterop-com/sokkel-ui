@@ -726,6 +726,31 @@ export function ScheduleReadOnly() {
     )
 }
 
+/** The schedule of send-digest, paused: the expression still read in words, and no runs listed. */
+export function SchedulePaused() {
+    const [open, setOpen] = useState(true)
+    return (
+        <Behind action="Show schedule" onAction={() => setOpen(true)}>
+            <DialogShell
+                open={open}
+                onOpenChange={setOpen}
+                title="Schedule for send-digest"
+                description="Paused by grace on 4 November 2026."
+            >
+                <CronField
+                    id="schedule-paused-cron"
+                    value="0 7 * * 1"
+                    onChange={() => undefined}
+                    from={BEFORE_SPRING}
+                    timeZone={OSLO}
+                    readOnly
+                    paused
+                />
+            </DialogShell>
+        </Behind>
+    )
+}
+
 const NOTES = `Tidevann 2.4 brings retries you can see, and a faster run list.
 
 ## Retries

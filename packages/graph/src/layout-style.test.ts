@@ -6,6 +6,7 @@ import {
     elkOptions,
     GRAPH_SPACING,
     layoutGraph,
+    setElkEngine,
     polylinePath,
     rankLayout,
     roughRoute,
@@ -119,6 +120,25 @@ describe('node width from words', () => {
         expect(graphNodeSize({ code: 'ab' }, tens, { min: 140 }).width).toBe(140)
         expect(graphNodeSize({ code: 'ab' }, tens, { min: 160, max: 160 }).width).toBe(160)
         expect(graphNodeSize(long, tens, { min: 160, max: 160 }).width).toBe(160)
+    })
+})
+
+describe('the elk an app sets', () => {
+    test('places every graph after it is set, and the bundled one again once cleared', async () => {
+        let asked = 0
+        setElkEngine(() => ({
+            layout: (graph: { children: { id: string }[] }) => {
+                asked += 1
+                return Promise.resolve({ children: graph.children.map((child, index) => ({ id: child.id, x: index * 10, y: 0 })) })
+            },
+        }))
+        try {
+            const placed = await layoutGraph({ nodes: [box('a'), box('b')], edges: [] })
+            expect(asked).toBe(1)
+            expect(placed.nodes.map((node) => node.x)).toEqual([0, 10])
+        } finally {
+            setElkEngine(null)
+        }
     })
 })
 
