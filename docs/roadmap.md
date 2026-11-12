@@ -6,7 +6,10 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.21.1** is the latest release (2026-11-12): `LogView` `onSource` and an empty slot;
+- **0.21.2** is the latest release (2026-11-12): `RelativeTime` carries an app's own
+  conventions (`numeric`, `rounding`, `nowWithin`, `words.now`, `horizon`, `horizonDate`, `exact`,
+  `focusable`), and `relativeTime` and `exactTime` spell the same in a sentence.
+- **0.21.1** (2026-11-12): `LogView` `onSource` and an empty slot;
   `Unfoldable` held from outside, a `summary` while shut, and static rows; `AsyncSelect`
   `itemMark`; `ShellTop` for a screen's own top bar; split button choices (`checked`) and a chevron
   hint; graph boxes measured part by part; chips and block badges take a kind color as `hue`.
