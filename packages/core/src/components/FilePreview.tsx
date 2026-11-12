@@ -6,20 +6,28 @@ import { DataTable, type DataColumn } from './DataTable'
 import { FileTypeIcon, type FileKind } from './FileList'
 import { JsonTree } from './JsonTree'
 
+export type { FileKind } from './FileList'
+
 export interface FilePreviewWords {
     rows: (shown: number, total: number) => string
+    /** Said under a table cut off at `maxRows` before the end was counted. */
+    firstRows: (shown: number) => string
     unreadable: string
     none: string
+    /** Said over a file longer than `maxLength`, of which only the start is shown. */
+    cut: string
 }
 
 const WORDS: FilePreviewWords = {
     rows: (shown, total) => (shown === total ? `${total} rows` : `First ${shown} of ${total} rows`),
+    firstRows: (shown) => `First ${shown} rows`,
     unreadable: 'This JSON does not parse; its text is shown.',
     none: 'No preview for this kind of file.',
+    cut: 'Only the start of this file is shown.',
 }
 
-/** The cells of a CSV text: commas split, double quotes hold commas and doubled quotes. */
-export function parseCsv(text: string): string[][] {
+/** The cells of a CSV text: commas split, double quotes hold commas and doubled quotes. With `limit`, it stops after that many rows. */
+export function parseCsv(text: string, limit = Infinity): string[][] {
     const rows: string[][] = []
     let row: string[] = []
     let cell = ''
@@ -42,6 +50,7 @@ export function parseCsv(text: string): string[][] {
             rows.push(row)
             row = []
             cell = ''
+            if (rows.length >= limit) return rows
         } else cell += char
     }
     if (cell !== '' || row.length > 0) {
@@ -59,8 +68,12 @@ interface CsvLine {
     cells: readonly string[]
 }
 
-function CsvTable({ text, maxRows, words }: { text: string; maxRows: number; words: FilePreviewWords }) {
-    const [head = [], ...body] = parseCsv(text)
+function CsvTable({ text, cut, maxRows, words }: { text: string; cut: boolean; maxRows: number; words: FilePreviewWords }) {
+    // One row past the head and the rows shown says whether more follow, without reading the rest.
+    const parsed = parseCsv(text, maxRows + 2)
+    const read = cut && parsed.length < maxRows + 2 ? parsed.slice(0, -1) : parsed
+    const [head = [], ...body] = read
+    const more = body.length > maxRows || cut
     const shown: CsvLine[] = body.slice(0, maxRows).map((cells, at) => ({ at, cells }))
     // A column whose every filled cell is a number lines up at its end.
     const columns: DataColumn<CsvLine>[] = head.map((name, index) => ({
@@ -81,29 +94,34 @@ function CsvTable({ text, maxRows, words }: { text: string; maxRows: number; wor
             rowKey={(line) => String(line.at)}
             variant="list"
             stackBelow={false}
-            foot={<span className="font-mono text-xs">{words.rows(shown.length, body.length)}</span>}
+            foot={<span className="font-mono text-xs">{more ? words.firstRows(shown.length) : words.rows(shown.length, body.length)}</span>}
         />
     )
 }
 
-function Json({ text, words }: { text: string; words: FilePreviewWords }) {
+function Json({ text, cut, room, words }: { text: string; cut: boolean; room: string; words: FilePreviewWords }) {
     let value: unknown
     try {
+        if (cut) throw new Error('cut')
         value = JSON.parse(text)
     } catch {
         return (
-            <div className="flex flex-col gap-2">
-                <p className="text-xs text-muted-foreground">{words.unreadable}</p>
-                <Code value={text} size="sm" />
+            <div className={cn('flex flex-col gap-2', room === FILL && FILL)}>
+                {!cut && <p className="text-xs text-muted-foreground">{words.unreadable}</p>}
+                <Code value={text} language={cut ? 'json' : undefined} size="sm" className={room} />
             </div>
         )
     }
     return (
-        <div className="overflow-x-auto rounded-surface border border-border-strong bg-card p-3 font-mono text-xs">
+        <div className={cn('overflow-auto rounded-surface border border-border-strong bg-card p-3 font-mono text-xs', room)}>
             <JsonTree value={value} />
         </div>
     )
 }
+
+/** The room a JSON or text body takes: up to 28rem, scrolling past it, or its container's height. */
+const CAPPED = 'max-h-[28rem]'
+const FILL = 'min-h-0 flex-1'
 
 export interface FilePreviewProps {
     name: string
@@ -114,8 +132,15 @@ export interface FilePreviewProps {
     text?: string
     /** The highlighting for text or code; read from the name's extension when absent. */
     language?: string
-    /** How many rows of a CSV the table shows. */
+    /** How many rows of a CSV the table shows; the rest of the file is not read. */
     maxRows?: number
+    /**
+     * The most characters of `text` read: 1,000,000 when left out. A longer file shows its start,
+     * JSON as text, and says it is cut.
+     */
+    maxLength?: number
+    /** JSON, text and code fill the container's height and scroll in it, in place of stopping at 28rem. */
+    fill?: boolean
     /** What shows for a kind with no preview. */
     fallback?: ReactNode
     className?: string
@@ -124,11 +149,27 @@ export interface FilePreviewProps {
 
 /**
  * What a file holds, drawn for its kind: an image whole on a checkered ground, a CSV as a small
- * table of its first rows, JSON as a tree to open, and text or code highlighted. Any other kind
- * shows its icon and says it has no preview.
+ * table of its first rows, JSON as a tree to open, and text or code highlighted, both up to 28rem
+ * tall and scrolling past it (or filling the container with `fill`). Only the first `maxLength`
+ * characters are read. Any other kind shows its icon and says it has no preview.
  */
-export function FilePreview({ name, kind, src, text, language, maxRows = 12, fallback, className, words: given }: FilePreviewProps) {
+export function FilePreview({
+    name,
+    kind,
+    src,
+    text: whole,
+    language,
+    maxRows = 12,
+    maxLength = 1_000_000,
+    fill = false,
+    fallback,
+    className,
+    words: given,
+}: FilePreviewProps) {
     const words = { ...WORDS, ...given }
+    const cut = whole !== undefined && whole.length > maxLength
+    const text = cut ? whole.slice(0, maxLength) : whole
+    const room = fill ? FILL : CAPPED
     const body = (() => {
         if (kind === 'image' && src !== undefined) {
             return (
@@ -137,10 +178,19 @@ export function FilePreview({ name, kind, src, text, language, maxRows = 12, fal
                 </div>
             )
         }
-        if (kind === 'table' && text !== undefined) return <CsvTable text={text} maxRows={maxRows} words={words} />
-        if (kind === 'json' && text !== undefined) return <Json text={text} words={words} />
+        if (kind === 'table' && text !== undefined) return <CsvTable text={text} cut={cut} maxRows={maxRows} words={words} />
+        if (kind === 'json' && text !== undefined) return <Json text={text} cut={cut} room={room} words={words} />
         if ((kind === 'text' || kind === 'code') && text !== undefined) {
-            return <Code value={text} language={language ?? /\.(\w+)$/.exec(name)?.[1] ?? 'text'} title={name} size="sm" lineNumbers />
+            return (
+                <Code
+                    value={text}
+                    language={language ?? /\.(\w+)$/.exec(name)?.[1] ?? 'text'}
+                    title={name}
+                    size="sm"
+                    lineNumbers
+                    className={room}
+                />
+            )
         }
         return (
             fallback ?? (
@@ -151,5 +201,10 @@ export function FilePreview({ name, kind, src, text, language, maxRows = 12, fal
             )
         )
     })()
-    return <div className={cn('min-w-0', className)}>{body}</div>
+    return (
+        <div className={cn('min-w-0', fill && 'flex h-full min-h-0 flex-col', className)}>
+            {cut && kind !== 'table' && <p className="mb-2 text-xs text-muted-foreground">{words.cut}</p>}
+            {body}
+        </div>
+    )
 }

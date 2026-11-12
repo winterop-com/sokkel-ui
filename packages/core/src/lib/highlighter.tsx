@@ -18,6 +18,7 @@ const languages: Record<string, LanguageInput> = {
     sql: () => import('shiki/langs/sql.mjs'),
     tsx: () => import('shiki/langs/tsx.mjs'),
     typescript: () => import('shiki/langs/typescript.mjs'),
+    xml: () => import('shiki/langs/xml.mjs'),
     yaml: () => import('shiki/langs/yaml.mjs'),
 }
 
@@ -28,6 +29,7 @@ const aliases: Record<string, string> = {
     sh: 'bash',
     shell: 'bash',
     shellscript: 'bash',
+    svg: 'xml',
     ts: 'typescript',
     yml: 'yaml',
     zsh: 'bash',
