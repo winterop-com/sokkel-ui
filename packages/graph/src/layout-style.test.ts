@@ -133,6 +133,23 @@ describe('the mini graph', () => {
         expect(shape.edges.map((each) => each.id)).toEqual(['fetch->transform', 'transform->upload'])
     })
 
+    test('reduced, an edge another path implies is left out', () => {
+        const steps = [
+            { code: 'fetch', needs: [] },
+            { code: 'split', needs: ['fetch'] },
+            { code: 'transform', needs: ['split'] },
+            { code: 'notify', needs: ['fetch', 'split', 'transform'] },
+            { code: 'audit', needs: ['fetch'] },
+        ]
+        expect(miniGraphShape(steps).edges).toHaveLength(6)
+        expect(miniGraphShape(steps, true).edges.map((each) => each.id)).toEqual([
+            'fetch->split',
+            'split->transform',
+            'transform->notify',
+            'fetch->audit',
+        ])
+    })
+
     test('asks elk once for many graphs of one shape', async () => {
         let asked = 0
         const fake = {

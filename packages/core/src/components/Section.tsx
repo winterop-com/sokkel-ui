@@ -74,7 +74,7 @@ export function Section({
                 className={cn(
                     'overflow-hidden rounded-surface border border-border-strong bg-card',
                     critical && 'border-t-2 border-t-critical',
-                    fill && 'flex min-h-0 min-w-0 flex-col',
+                    fill ? 'flex min-h-0 min-w-0 flex-col' : 'shrink-0',
                     className,
                 )}
             >

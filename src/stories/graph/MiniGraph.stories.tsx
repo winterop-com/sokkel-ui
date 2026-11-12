@@ -7,7 +7,7 @@ import { Columns, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 import { MiniGraph } from '@winterop-com/sokkel-ui-graph/MiniGraph'
-import { FAILED, JOB_RUNS, NIGHTLY_EXPORT, RUNNING, type JobRun } from './data'
+import { FAILED, IMPORT_ORDERS, JOB_RUNS, NIGHTLY_EXPORT, RUNNING, SHORT, type JobRun } from './data'
 
 const COLUMNS: DataColumn<JobRun>[] = [
     { id: 'run', header: 'Run', width: '6rem', cell: (run) => <span className="font-mono">{run.id}</span> },
@@ -16,7 +16,7 @@ const COLUMNS: DataColumn<JobRun>[] = [
         id: 'steps',
         header: 'Steps',
         width: 'minmax(8rem,12rem)',
-        cell: (run) => <MiniGraph steps={run.steps} label={`${run.job} steps`} />,
+        cell: (run) => <MiniGraph steps={run.steps} scale="natural" align="start" label={`${run.job} steps`} />,
         stack: 'primary',
     },
     { id: 'status', header: 'Status', width: '8rem', cell: (run) => <StatusChip status={run.status} />, stack: 'secondary' },
@@ -100,6 +100,28 @@ export const DownInSplines: Story = {
     render: () => (
         <Cell>
             <MiniGraph steps={FAILED} direction="down" routing="splines" label="nightly-export run" className="h-40" />
+        </Cell>
+    ),
+}
+
+/** Three pipelines at their natural scale from the start of 12rem cells: one step, three, and seven, so a longer strip is a longer pipeline. */
+export const Natural: Story = {
+    render: () => (
+        <Cell>
+            <Stack>
+                <MiniGraph steps={SHORT.slice(0, 1)} scale="natural" align="start" label="one step" />
+                <MiniGraph steps={SHORT} scale="natural" align="start" label="three steps" />
+                <MiniGraph steps={NIGHTLY_EXPORT} scale="natural" align="start" label="nightly-export steps" />
+            </Stack>
+        </Cell>
+    ),
+}
+
+/** A source drawn dashed and unfilled, a step that fans out with a box behind it, and the edges notify would draw from every step before it reduced to one; pointing at a step says its code and what it runs. */
+export const Marks: Story = {
+    render: () => (
+        <Cell>
+            <MiniGraph steps={IMPORT_ORDERS} scale="natural" align="start" reduce label="import-orders steps" />
         </Cell>
     ),
 }

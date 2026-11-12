@@ -25,10 +25,22 @@ export interface MiniGraphStep {
     needs: readonly string[]
     /** A run state, or a state the app names in the status map, filling the step's box in its color. */
     status?: Status | (string & {})
+    /** The step fans out into many runs: a second box is drawn behind its own. */
+    fanOut?: boolean
+    /** The step is where the pipeline's data comes from: its box is drawn dashed and unfilled, apart from any state. */
+    source?: boolean
+    /** What pointing at the step says in place of its name, such as its code and what it runs. */
+    hint?: string
 }
 
 /** The size every step of a mini graph is laid out at, before the drawing is scaled to its box. */
 export const MINI_NODE = { width: 24, height: 12 }
+
+/** How many pixels one unit of the drawing takes at its natural scale. */
+export const MINI_SCALE = 0.6
+
+/** How far the box behind a step that fans out stands from the step's own, in the drawing's units. */
+const MINI_FAN = 3
 
 /** The ground kept around the drawing, in the drawing's own units, so the strokes at its edges show whole. */
 const MINI_PAD = 2
@@ -36,8 +48,12 @@ const MINI_PAD = 2
 /** The states a run has not reached, drawn as an outline in their color rather than filled. */
 const AHEAD: ReadonlySet<string> = new Set(['queued', 'pending', 'waiting', 'skipped', 'cancelled'])
 
-/** The shape of a mini graph: a box of one size per step, and an edge from each step a step needs, to it. */
-export function miniGraphShape(steps: readonly MiniGraphStep[]): GraphShape {
+/**
+ * The shape of a mini graph: a box of one size per step, and an edge from each step a step needs, to
+ * it. With `reduce`, an edge another path already implies is left out, so a step that waits for
+ * everything before it draws one line rather than a fan.
+ */
+export function miniGraphShape(steps: readonly MiniGraphStep[], reduce = false): GraphShape {
     const known = new Set(steps.map((step) => step.code))
     const seen = new Set<string>()
     const edges = steps.flatMap((step) =>
@@ -48,7 +64,26 @@ export function miniGraphShape(steps: readonly MiniGraphStep[]): GraphShape {
             return [{ id, source: need, target: step.code }]
         }),
     )
-    return { nodes: steps.map((step) => ({ id: step.code, ...MINI_NODE })), edges }
+    return { nodes: steps.map((step) => ({ id: step.code, ...MINI_NODE })), edges: reduce ? reduced(edges) : edges }
+}
+
+/** The edges whose target cannot be reached from their source by any other path. */
+function reduced<Edge extends { source: string; target: string }>(edges: readonly Edge[]): Edge[] {
+    const after = new Map<string, string[]>()
+    for (const edge of edges) after.set(edge.source, [...(after.get(edge.source) ?? []), edge.target])
+    const implied = (edge: Edge): boolean => {
+        const seen = new Set<string>()
+        const stack = (after.get(edge.source) ?? []).filter((next) => next !== edge.target)
+        while (stack.length > 0) {
+            const next = stack.pop() as string
+            if (next === edge.target) return true
+            if (seen.has(next)) continue
+            seen.add(next)
+            stack.push(...(after.get(next) ?? []))
+        }
+        return false
+    }
+    return edges.filter((edge) => !implied(edge))
 }
 
 /** The most placements kept; a list of many pipelines of one shape asks elk once. */
@@ -122,6 +157,16 @@ export interface MiniGraphProps {
     direction?: GraphDirection
     /** How the edges are routed, as on the full graph: `orthogonal` when left out. */
     routing?: GraphRouting
+    /**
+     * `fill` (the default) scales the drawing to fill its box, small pipelines drawn large. `natural`
+     * draws every pipeline at one scale, so a longer strip is a longer pipeline, and only shrinks one
+     * too large for the box.
+     */
+    scale?: 'fill' | 'natural'
+    /** Where the drawing stands in its box across the direction it reads: `center` when left out, or `start`. */
+    align?: 'center' | 'start'
+    /** Leave out an edge another path already implies. */
+    reduce?: boolean
     /** The drawing's accessible name, such as the pipeline's. */
     label?: string
     className?: string
@@ -134,23 +179,39 @@ export interface MiniGraphProps {
  * of one layout per shape; pointing at a step names it. It is a box as wide as its container and
  * `h-8` tall unless a class sizes it.
  */
-export function MiniGraph({ steps, direction = 'right', routing = 'orthogonal', label, className }: MiniGraphProps) {
-    const shape = useMemo(() => miniGraphShape(steps), [steps])
+export function MiniGraph({
+    steps,
+    direction = 'right',
+    routing = 'orthogonal',
+    scale = 'fill',
+    align = 'center',
+    reduce = false,
+    label,
+    className,
+}: MiniGraphProps) {
+    const shape = useMemo(() => miniGraphShape(steps, reduce), [steps, reduce])
     const placed = useMiniPlacement(shape, direction, routing)
     const byId = useMemo(() => new Map(placed.nodes.map((node) => [node.id, node])), [placed])
     const bounds = boundsOf(placed.nodes)
+    const fan = steps.some((step) => step.fanOut === true) ? MINI_FAN : 0
+    const width = bounds.width + MINI_PAD * 2 + fan
+    const height = bounds.height + MINI_PAD * 2 + fan
     const viewBox =
         placed.nodes.length === 0
             ? undefined
-            : `${String(bounds.x - MINI_PAD)} ${String(bounds.y - MINI_PAD)} ${String(bounds.width + MINI_PAD * 2)} ${String(bounds.height + MINI_PAD * 2)}`
-    return (
+            : `${String(bounds.x - MINI_PAD)} ${String(bounds.y - MINI_PAD)} ${String(width)} ${String(height)}`
+    const start = align === 'start'
+    const natural = scale === 'natural'
+    const drawing = (
         <svg
-            data-slot="mini-graph"
+            data-slot={natural ? undefined : 'mini-graph'}
             role="img"
             aria-label={label}
             viewBox={viewBox}
-            preserveAspectRatio="xMidYMid meet"
-            className={cn('block h-8 w-full min-w-0', className)}
+            width={natural && viewBox !== undefined ? width * MINI_SCALE : undefined}
+            height={natural && viewBox !== undefined ? height * MINI_SCALE : undefined}
+            preserveAspectRatio={start ? (direction === 'down' ? 'xMidYMin meet' : 'xMinYMid meet') : 'xMidYMid meet'}
+            className={natural ? 'block max-h-full max-w-full min-w-0 shrink' : cn('block h-8 w-full min-w-0', className)}
         >
             <g fill="none" style={EDGE}>
                 {placed.edges.map((edge) => {
@@ -167,6 +228,20 @@ export function MiniGraph({ steps, direction = 'right', routing = 'orthogonal', 
             })}
         </svg>
     )
+    if (!natural) return drawing
+    return (
+        <div
+            data-slot="mini-graph"
+            className={cn(
+                'flex h-8 w-full min-w-0',
+                direction === 'down' ? 'flex-col items-center' : 'items-center',
+                start ? 'justify-start' : 'justify-center',
+                className,
+            )}
+        >
+            {drawing}
+        </div>
+    )
 }
 
 /** How a mini graph's edges are stroked, in the edge color the full graph draws them in. */
@@ -175,21 +250,36 @@ const EDGE: CSSProperties = {
     strokeWidth: 1,
 }
 
-/** One step's box: filled in its state's color, outlined in it for a state not reached, plain without one. */
+/**
+ * One step's box: filled in its state's color, outlined in it for a state not reached, plain without
+ * one. A source is dashed and unfilled; a step that fans out has a second box behind it.
+ */
 function MiniStep({ step, node }: { step: MiniGraphStep; node: PlacedNode }) {
     const look = useStatus(step.status ?? '')
     const has = step.status !== undefined
     const ahead = has && AHEAD.has(step.status as string)
+    const source = step.source === true
     const style = {
-        fill: !has || ahead ? 'var(--node)' : look.css,
+        fill: source ? 'var(--card)' : !has || ahead ? 'var(--node)' : look.css,
         stroke: !has ? 'var(--node-line)' : look.css,
         strokeWidth: 1,
-        strokeDasharray: step.status === 'skipped' ? '2 2' : undefined,
+        strokeDasharray: source ? '3 2' : step.status === 'skipped' ? '2 2' : undefined,
         rx: 'calc(var(--radius-node) / 2)',
     } as CSSProperties
+    const name = step.hint ?? step.name ?? step.code
     return (
-        <g data-status={step.status}>
-            <title>{has ? `${step.name ?? step.code}: ${look.label}` : (step.name ?? step.code)}</title>
+        <g data-status={step.status} data-source={source || undefined} data-fan-out={step.fanOut === true || undefined}>
+            <title>{has ? `${name}: ${look.label}` : name}</title>
+            {step.fanOut === true && (
+                <rect
+                    x={node.x + MINI_FAN}
+                    y={node.y + MINI_FAN}
+                    width={node.width}
+                    height={node.height}
+                    style={{ ...style, strokeDasharray: undefined }}
+                    vectorEffect="non-scaling-stroke"
+                />
+            )}
             <rect x={node.x} y={node.y} width={node.width} height={node.height} style={style} vectorEffect="non-scaling-stroke" />
         </g>
     )
