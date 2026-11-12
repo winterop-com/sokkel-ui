@@ -87,9 +87,13 @@ export interface GraphLayoutStyle {
 const WRAP_OPTIONS: Record<string, string> = {
     'elk.layered.wrapping.strategy': 'MULTI_EDGE',
     'elk.layered.wrapping.additionalEdgeSpacing': '24',
-    // elk's moving of a cut to where fewer edges cross it leaves a fan-out with no cut at all.
-    'elk.layered.wrapping.multiEdge.improveCuts': 'false',
 }
+
+/**
+ * What elk is told when it found no cut: not to move a cut to where fewer edges cross it, which
+ * leaves a graph whose ranks fan out with no cut at all.
+ */
+const LOOSE_WRAP_OPTIONS: Record<string, string> = { 'elk.layered.wrapping.multiEdge.improveCuts': 'false' }
 
 /** How finely a wrap's width is told apart: a width that moves less lays nothing out again. */
 const WRAP_STEP = 48
@@ -277,14 +281,28 @@ export function elkOptions(
     }
 }
 
-/** The graph elk is handed for a shape, cut into rows aiming at `wrapAspect` when given one. */
-export function toElk(shape: GraphShape, direction: GraphDirection = 'right', style: GraphLayoutStyle = {}, wrapAspect?: number): ElkGraph {
+/**
+ * The graph elk is handed for a shape, cut into rows aiming at `wrapAspect` when given one; `loose`
+ * lets elk cut where more edges cross, for a graph it would otherwise not cut.
+ */
+export function toElk(
+    shape: GraphShape,
+    direction: GraphDirection = 'right',
+    style: GraphLayoutStyle = {},
+    wrapAspect?: number,
+    loose = false,
+): ElkGraph {
     return {
         id: 'root',
         layoutOptions:
             wrapAspect === undefined
                 ? elkOptions(direction, style)
-                : { ...elkOptions(direction, style), ...WRAP_OPTIONS, 'elk.aspectRatio': wrapAspect.toFixed(4) },
+                : {
+                      ...elkOptions(direction, style),
+                      ...WRAP_OPTIONS,
+                      ...(loose ? LOOSE_WRAP_OPTIONS : {}),
+                      'elk.aspectRatio': wrapAspect.toFixed(4),
+                  },
         children: shape.nodes.map((node) => ({ id: node.id, width: node.width, height: node.height })),
         edges: knownEdges(shape).map((edge) => ({
             id: edge.id,
@@ -400,15 +418,25 @@ async function wrapped(
     const room = style.wrapRoom
     const size = placedBounds(flat)
     if (size.width <= limit) return flat
-    const lay = async (aspect: number) => {
-        const placed = fromElk(shape, await using.layout(toElk(shape, direction, style, aspect)))
+    const layWith = (loose: boolean) => async (aspect: number) => {
+        const placed = fromElk(shape, await using.layout(toElk(shape, direction, style, aspect, loose)))
         return { placed, ...placedBounds(placed) }
     }
-    if (room === undefined || room.height <= 0) return (await cutTo(limit, size, lay))?.placed ?? flat
+    const lay = layWith(false)
+    // Cuts where fewest edges cross first; only a graph elk will not cut that way is cut loosely.
+    const search = async () => {
+        const strict = await cutTo(limit, size, lay)
+        if (strict !== null && strict.width <= limit) return strict
+        const loose = await cutTo(limit, size, layWith(true))
+        if (loose === null) return strict
+        if (strict === null) return loose
+        return loose.width <= limit || loose.width < strict.width ? loose : strict
+    }
+    if (room === undefined || room.height <= 0) return (await search())?.placed ?? flat
     const zoomOf = (drawn: { width: number; height: number }) =>
         Math.min(room.width / Math.max(1, drawn.width), room.height / Math.max(1, drawn.height))
     const shaped = await lay(room.width / room.height)
-    const searched = shaped.width <= limit ? shaped : await cutTo(limit, size, lay)
+    const searched = shaped.width <= limit ? shaped : await search()
     const cut = searched === null || shaped.width < searched.width ? shaped : searched
     const whole = size.width <= cap ? { placed: flat, ...size } : null
     return [cut, whole].filter((each) => each !== null).reduce((best, each) => (zoomOf(each) > zoomOf(best) ? each : best)).placed
