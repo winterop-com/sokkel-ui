@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronUp } from 'lucide-react'
-import { useRef, type ReactNode } from 'react'
+import { useRef, type ComponentProps, type ReactNode } from 'react'
 
 import { cn } from '../lib/cn'
 import { usePanelSize } from '../hooks/use-panel-size'
@@ -18,7 +18,7 @@ const WORDS: DockWords = {
     resize: 'Resize the panel',
 }
 
-export interface DockProps {
+export interface DockProps extends Omit<ComponentProps<'section'>, 'title' | 'children' | 'ref' | 'style'> {
     title: ReactNode
     tools?: ReactNode
     open?: boolean
@@ -47,6 +47,8 @@ export interface DockProps {
  * While open, its top edge drags to resize it, and a double click on the edge puts it back. Left
  * to itself it holds its own height, starting at `defaultSize`, or at `height` when that is given
  * alone; `size` with `onSizeChange` holds it from outside, and `resizable={false}` keeps it fixed.
+ * Its head wraps when its tools need more room than one line, and the section takes the rest of a
+ * section's props, an `aria-label` among them.
  */
 export function Dock({
     title,
@@ -63,6 +65,7 @@ export function Dock({
     className,
     words: given,
     children,
+    ...props
 }: DockProps) {
     const words = { ...WORDS, ...given }
     const dock = useRef<HTMLElement>(null)
@@ -90,12 +93,15 @@ export function Dock({
                 />
             )}
             <section
+                {...props}
                 ref={dock}
                 className={cn('flex shrink-0 flex-col border-t border-border-strong bg-sidebar', className)}
                 style={open ? { height: held.style } : undefined}
             >
-                <div className="flex h-9 shrink-0 items-center gap-2 border-b border-border px-3">
-                    <h2 className="min-w-0 flex-1 truncate text-xs font-medium tracking-wide text-muted-foreground uppercase">{title}</h2>
+                <div className="flex min-h-9 shrink-0 flex-wrap items-center gap-x-2 gap-y-1 border-b border-border px-3 py-1">
+                    <h2 className="min-w-0 flex-1 basis-32 truncate text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                        {title}
+                    </h2>
                     {tools}
                     {onOpenChange !== undefined && (
                         <button

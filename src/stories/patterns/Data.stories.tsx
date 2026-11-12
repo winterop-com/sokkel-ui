@@ -206,6 +206,22 @@ function SourceLog() {
     )
 }
 
+/** A run's lines with their fan-out item, extras in muted ink, and run-level lines whose source stays plain. */
+const ITEM_LOG: LogLine[] = [
+    { at: '14:02:11.204', level: 'info', source: 'run', sourceLink: false, text: 'started nightly-export on worker-3' },
+    { at: '14:02:11.902', level: 'info', source: 'fetch', item: 'harbor', text: 'read 2,184 rows', fields: { rows: 2184, took: '0.7s' } },
+    { at: '14:02:12.010', level: 'info', source: 'fetch', item: 'juniper', text: 'read 812 rows', fields: { rows: 812, took: '0.3s' } },
+    {
+        at: '14:02:12.115',
+        level: 'warning',
+        source: 'transform',
+        item: 'juniper',
+        text: 'amount does not parse',
+        fields: 'rows=37 first=412',
+    },
+    { at: '14:02:13.421', level: 'info', source: 'run', sourceLink: false, text: 'succeeded after 2.2s' },
+]
+
 function EmptyLogs() {
     return (
         <Ground>
@@ -308,6 +324,11 @@ export const Log: StoryObj = { name: 'Log view', render: () => <Logs /> }
 export const LogIcons: StoryObj = { name: 'Log icons', render: () => <LogView lines={ICON_LOG} /> }
 /** A log whose sources are buttons (`onSource`): a press on a step's name opens that step under the log. */
 export const LogSources: StoryObj = { name: 'Log sources', render: () => <SourceLog /> }
+/**
+ * Lines of a fan-out: each line's item marks its text, its extras follow in muted ink, and the
+ * run's own lines keep their source plain while the steps' open their step.
+ */
+export const LogFields: StoryObj = { name: 'Log fields', render: () => <LogView lines={ITEM_LOG} onSource={() => undefined} /> }
 /** A log with no lines: its own words first, then the app's `empty`, a run still waiting for a worker. */
 export const EmptyLog: StoryObj = { name: 'Empty log', render: () => <EmptyLogs /> }
 export const Tree: StoryObj = { name: 'JSON tree', render: () => <Json /> }

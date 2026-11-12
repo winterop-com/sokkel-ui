@@ -51,12 +51,26 @@ describe('Unfoldable', () => {
         expect(shut).toContain('aria-expanded="false"')
     })
 
-    it('stays open while forced, whatever the app holds', () => {
+    it('stays open while forced, whatever the app holds, its row static meanwhile', () => {
         const html = renderToStaticMarkup(
             <Unfoldable heading="validate" open={false} forced>
                 lines
             </Unfoldable>,
         )
-        expect(html).toContain('aria-expanded="true"')
+        expect(html).toContain('lines')
+        expect(html).not.toContain('<button')
+        expect(html).toContain('data-open="true"')
+    })
+
+    it('marks its parts by slot, stands a finger tall on a phone, and can wrap its summary', () => {
+        const html = renderToStaticMarkup(
+            <Unfoldable heading="fetch" summary="harbor, juniper, larkspur" wrapSummary>
+                lines
+            </Unfoldable>,
+        )
+        expect(html).toContain('data-slot="unfoldable"')
+        expect(html).toContain('data-slot="unfoldable-row"')
+        expect(html).toMatch(/data-slot="unfoldable-summary" class="(?![^"]*truncate)/)
+        expect(html).toContain('max-md:min-h-finger')
     })
 })
