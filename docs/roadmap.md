@@ -6,7 +6,11 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.22.1** is the latest release (2026-11-12): a second domain add-on,
+- **0.22.2** is the latest release (2026-11-13): `LogView` follow state (`onFollowChange`,
+  a jump to the newest line), line `item` and `fields`, `sourceLink`, kept columns and slots;
+  `Dock` section props and a wrapping head; `Unfoldable` finger-tall rows on a phone, static while
+  forced, slots and `wrapSummary`.
+- **0.22.1** (2026-11-12): a second domain add-on,
   `@winterop-com/sokkel-ui-dhis2`, with DHIS2's expression and program rule languages for
   CodeEditor, their known names passed as data; a graph badge measured with its drawn padding;
   `ServerMenu` `relative`; a split button's hint as a tooltip; an unreadable time shown as given.
