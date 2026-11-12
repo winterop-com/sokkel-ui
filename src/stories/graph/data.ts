@@ -14,6 +14,34 @@ export const NIGHTLY_EXPORT: PipelineStep[] = [
 ]
 
 /**
+ * The import-orders job open in an editor: a source listening for orders, a split that fans out, a
+ * transform edited since it was last saved and an upload whose block is not installed. Every box
+ * keeps room for either badge and an issue mark, so one arriving moves nothing.
+ */
+export const EDITED_PIPELINE: PipelineStep[] = (
+    [
+        { code: 'orders', kind: 'webhook', needs: [], source: true, lineHint: 'Listens to orders.example.org' },
+        { code: 'fetch', name: 'Fetch order', kind: 'http', needs: ['orders'] },
+        { code: 'split', name: 'Split by region', kind: 'python', needs: ['fetch'], count: '×4', hint: 'One run per region' },
+        {
+            code: 'transform',
+            name: 'Join and reshape',
+            kind: 'sql',
+            needs: ['split'],
+            badge: { label: 'edited', title: 'Changed since it was saved' },
+        },
+        {
+            code: 'upload',
+            name: 'Upload to storage',
+            kind: 's3',
+            needs: ['transform'],
+            badge: { label: 'not installed', tone: 'critical', title: 'The s3 block is not installed on worker' },
+        },
+        { code: 'notify', kind: 'webhook', needs: ['upload'] },
+    ] satisfies PipelineStep[]
+).map((step) => ({ ...step, reserveBadges: ['edited', 'not installed'], reserveIssue: true }))
+
+/**
  * The import-orders job as a mini graph draws it: a source listening for orders, a fetch, a split
  * that fans out per order, a transform, and a notify that waits on every step before it. Each step
  * says its code and what it runs when pointed at.

@@ -4,6 +4,7 @@ import { useState, type DragEvent } from 'react'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
 import { GRAPH_DRAG_TYPE, groupBlocks, type BlockGroup, type PipelineBlock } from './blocks'
+import { Chip } from '@winterop-com/sokkel-ui/Chip'
 import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
 
 /** The words a palette says. */
@@ -29,12 +30,18 @@ export const BLOCK_PALETTE_WORDS: BlockPaletteWords = {
 export interface BlockRowProps {
     block: PipelineBlock
     active?: boolean
+    /** Draws the description as a line of its own under the title, in place of the kind. */
+    showDescription?: boolean
 }
 
-/** One block as a row: its glyph, the title (the name, or else the kind in the code face), and the kind under a name. */
-export function BlockRow({ block, active = false }: BlockRowProps) {
+/**
+ * One block as a row: its glyph, the title (the name, or else the kind in the code face), the kind
+ * under a name, or the description given `showDescription`, and its badge at the end.
+ */
+export function BlockRow({ block, active = false, showDescription = false }: BlockRowProps) {
     const Icon = block.icon ?? Box
     const named = block.name !== undefined && block.name !== ''
+    const described = showDescription && block.description !== undefined && block.description !== ''
     return (
         <span className="flex min-w-0 items-center gap-2.5">
             <span
@@ -46,10 +53,15 @@ export function BlockRow({ block, active = false }: BlockRowProps) {
             >
                 <Icon className="size-3.5" />
             </span>
-            <span className="flex min-w-0 flex-col">
+            <span className="flex min-w-0 flex-1 flex-col">
                 <span className={cn('truncate text-sm leading-5', !named && 'font-mono')}>{named ? block.name : block.kind}</span>
-                {named && <span className="truncate font-mono text-xs leading-4 text-muted-foreground">{block.kind}</span>}
+                {described ? (
+                    <span className="line-clamp-2 text-xs leading-4 text-muted-foreground">{block.description}</span>
+                ) : (
+                    named && <span className="truncate font-mono text-xs leading-4 text-muted-foreground">{block.kind}</span>
+                )}
             </span>
+            {block.badge !== undefined && block.badge !== '' && <Chip className="self-start">{block.badge}</Chip>}
         </span>
     )
 }

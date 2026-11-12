@@ -50,6 +50,21 @@ export interface GraphNodeData extends Record<string, unknown> {
      * for the widest, so it does not grow, and the graph is not laid out again, as a run goes on.
      */
     reserve?: readonly string[]
+    /** A short word at the end of the title line, such as "edited", in a quiet tone or an issue's. */
+    badge?: GraphNodeBadge
+    /** The badges the box may come to wear: the title line keeps room for the widest, so one arriving moves nothing. */
+    reserveBadges?: readonly string[]
+    /** Keeps room for an issue mark while the box has none, so an issue arriving moves nothing. */
+    reserveIssue?: boolean
+}
+
+/** A short word on a node box's title line. */
+export interface GraphNodeBadge {
+    label: string
+    /** Neutral by default. */
+    tone?: 'neutral' | 'critical' | 'warning'
+    /** What pointing at the badge says. */
+    title?: string
 }
 
 /** One item of a fan-out, drawn as a chip inside its node. */
@@ -103,6 +118,8 @@ const DOT = 8
 const GLYPH = 12
 /** The room an issue mark takes. */
 const MARK = 20
+/** A badge's padding across. */
+const BADGE_PAD = 10
 /** The extra padding across a round box. */
 const ROUND_PAD = 8
 
@@ -137,7 +154,8 @@ export function graphNodeSize(
         (data.icon === undefined ? 0 : GLYPH + GAP) +
         measure(title, named ? 'title' : 'title-mono') +
         (data.status === undefined ? 0 : GAP + DOT) +
-        (hasIssues(data) ? GAP + MARK - 4 : 0)
+        (hasIssues(data) || data.reserveIssue === true ? GAP + MARK - 4 : 0) +
+        badgeRoom(data, measure)
     const said = Math.max(
         line === '' ? 0 : measure(line, 'small-mono'),
         ...(data.reserve ?? []).map((words) => measure(words, 'small-mono')),
@@ -157,6 +175,12 @@ export function graphNodeSize(
     const lines = data.itemsSummary !== undefined ? 1 : chips.length === 0 ? 0 : wrappedLines(chips, width - pad)
     const twoLines = line !== '' || timed || (data.reserve ?? []).length > 0
     return { width, height: (twoLines ? NODE_HEIGHT : NODE_HEIGHT_SHORT) + lines * STRIP_LINE }
+}
+
+/** The room a box's badge takes, or the widest it may come to wear. */
+function badgeRoom(data: GraphNodeData, measure: Measure): number {
+    const words = [...(data.badge === undefined ? [] : [data.badge.label]), ...(data.reserveBadges ?? [])]
+    return words.length === 0 ? 0 : GAP + BADGE_PAD + Math.max(...words.map((each) => measure(each, 'small')))
 }
 
 /** How wide one chip of a fan-out is drawn: its dot, its label in the code face, and its note. */
@@ -208,6 +232,13 @@ const BOX: Partial<Record<Status, string>> = {
     skipped: 'border-dashed bg-transparent text-muted-foreground shadow-none',
     cancelled: 'text-muted-foreground',
 }
+
+/** A badge's tone, as a chip wears it. */
+const BADGE_TONE = {
+    neutral: 'bg-faint/15 text-muted-foreground',
+    critical: 'bg-critical/15 text-critical-ink',
+    warning: 'bg-warning/15 text-warning-ink',
+} as const
 
 /** A source's box: dashed on the canvas's own ground. */
 const SOURCE = 'border-dashed bg-canvas shadow-none'
@@ -336,29 +367,39 @@ export function GraphNodeBox({ data, selected = false, className }: GraphNodeBox
                 >
                     {title}
                 </span>
-                {data.count !== undefined && (
-                    <span data-slot="graph-node-count" className="ml-auto shrink-0 font-mono text-graph-small text-faint">
-                        {data.count}
-                    </span>
-                )}
-                {status !== undefined && (
-                    <span
-                        role="img"
-                        aria-label={look.label}
-                        title={look.label}
-                        className={cn(
-                            'size-2 shrink-0 rounded-full',
-                            data.count === undefined && 'ml-auto',
-                            run !== undefined && DOT_TONE[run],
+                {(data.badge !== undefined || data.count !== undefined || status !== undefined || issue !== null) && (
+                    <span className="ml-auto flex shrink-0 items-center gap-1.5">
+                        {data.badge !== undefined && (
+                            <span
+                                data-slot="graph-node-badge"
+                                data-tone={data.badge.tone ?? 'neutral'}
+                                title={data.badge.title}
+                                className={cn(
+                                    'rounded-chip px-1.5 text-graph-small leading-4 whitespace-nowrap',
+                                    BADGE_TONE[data.badge.tone ?? 'neutral'],
+                                )}
+                            >
+                                {data.badge.label}
+                            </span>
                         )}
-                        style={run === undefined ? { background: look.css } : undefined}
-                    />
-                )}
-                {issue !== null && data.issues !== undefined && (
-                    <IssueMark
-                        issues={data.issues}
-                        className={cn('nodrag nopan static -my-1 -mr-1.5 size-5 shrink-0', status === undefined && 'ml-auto')}
-                    />
+                        {data.count !== undefined && (
+                            <span data-slot="graph-node-count" className="font-mono text-graph-small text-faint">
+                                {data.count}
+                            </span>
+                        )}
+                        {status !== undefined && (
+                            <span
+                                role="img"
+                                aria-label={look.label}
+                                title={look.label}
+                                className={cn('size-2 rounded-full', run !== undefined && DOT_TONE[run])}
+                                style={run === undefined ? { background: look.css } : undefined}
+                            />
+                        )}
+                        {issue !== null && data.issues !== undefined && (
+                            <IssueMark issues={data.issues} className="nodrag nopan static -my-1 -mr-1.5 size-5 shrink-0" />
+                        )}
+                    </span>
                 )}
             </div>
             {(line !== '' || duration !== null || status !== undefined || (data.reserve ?? []).length > 0) && (

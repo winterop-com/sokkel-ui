@@ -129,6 +129,16 @@ describe('node width from words', () => {
         expect(chip('retry in 9s')).toEqual(chip('retry in 12s'))
     })
 
+    test('keeps room for the badges and the issue mark a box may come to wear', () => {
+        const room = { reserveBadges: ['edited', 'not installed'], reserveIssue: true }
+        const plain = graphNodeSize({ code: 'transform', ...room }, tens)
+        const edited = graphNodeSize({ code: 'transform', ...room, badge: { label: 'not installed', tone: 'critical' } }, tens)
+        const flagged = graphNodeSize({ code: 'transform', ...room, issues: [{ tone: 'critical' as const, text: 'needs a query' }] }, tens)
+        expect(edited).toEqual(plain)
+        expect(flagged).toEqual(plain)
+        expect(graphNodeSize({ code: 'transform' }, tens).width).toBeLessThan(plain.width)
+    })
+
     test('grows a fan-out taller as its chips wrap, and wider only up to the strip', () => {
         const items = Array.from({ length: 12 }, (_, at) => ({ id: String(at), label: `region-${String(at)}`, status: 'succeeded' }))
         const one = graphNodeSize({ code: 'fetch', status: 'running', items: items.slice(0, 1) }, tens)

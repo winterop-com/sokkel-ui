@@ -10,6 +10,10 @@ export interface PipelineBlock {
     /** The id of the group it is listed under. */
     group: string
     icon?: ComponentType<{ className?: string }>
+    /** A short word at the row's end, such as what sort of block it is. */
+    badge?: string
+    /** Other words a search finds the block by. */
+    keywords?: readonly string[]
 }
 
 /** A heading blocks are listed under, in the order given. */
@@ -21,11 +25,13 @@ export interface BlockGroup {
 /** The type a dragged block's kind travels under, from a palette to a canvas. */
 export const GRAPH_DRAG_TYPE = 'application/x-graph-item'
 
-/** Whether a block matches what was typed: every word found in its kind, name or description. */
+/** Whether a block matches what was typed: every word found in its kind, name, description, badge or keywords. */
 export function blockMatches(block: PipelineBlock, query: string): boolean {
     const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean)
     if (words.length === 0) return true
-    const text = [block.kind, block.name ?? '', block.description ?? ''].join(' ').toLowerCase()
+    const text = [block.kind, block.name ?? '', block.description ?? '', block.badge ?? '', ...(block.keywords ?? [])]
+        .join(' ')
+        .toLowerCase()
     return words.every((word) => text.includes(word))
 }
 
