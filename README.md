@@ -82,7 +82,8 @@ stays (`make screenshots-ci`, `scripts/baselines.sh`) for when it returns near 1
 
 ## Using it
 
-The library is six packages on GitHub Packages, released together at one version:
+The library is seven packages on GitHub Packages, released together at one version: the core, the
+engine add-ons (and media), and the domain add-ons, each holding one domain's parts.
 
 | Package                            | Holds                                                                                      |
 | ---------------------------------- | ------------------------------------------------------------------------------------------ |
@@ -92,10 +93,12 @@ The library is six packages on GitHub Packages, released together at one version
 | `@winterop-com/sokkel-ui-graph`    | the graphs and the graph editor on React Flow, laid out by elk                             |
 | `@winterop-com/sokkel-ui-terminal` | `TerminalView`, an interactive terminal, and `Terminal`, on xterm.js                       |
 | `@winterop-com/sokkel-ui-media`    | `MediaBar` and its fullscreen view, `TrackList`, `MediaCard`, `Artwork`, `useMediaSession` |
+| `@winterop-com/sokkel-ui-fhir`     | a domain add-on: FHIRPath and CQL, the health-data standards' languages, for `CodeEditor`  |
 
 Every app installs the core package; an app that draws charts, maps, graphs or terminals adds that
 package too, which brings its engine with it, and a music or video app adds the media package (the
-players chat uses, `AudioPlayer` and `VideoPlayer`, stay in the core). An app points the scope at
+players chat uses, `AudioPlayer` and `VideoPlayer`, stay in the core); an app that works in one
+domain adds that domain's package. An app points the scope at
 the registry in its `.npmrc`, with a token that can read packages, and pins one version for all of
 them:
 
@@ -111,6 +114,7 @@ bun add @winterop-com/sokkel-ui-maps@0.21.2     # only for maps
 bun add @winterop-com/sokkel-ui-graph@0.21.2    # only for graphs
 bun add @winterop-com/sokkel-ui-terminal@0.21.2 # only for terminals
 bun add @winterop-com/sokkel-ui-media@0.21.2    # only for the music and video parts
+bun add @winterop-com/sokkel-ui-fhir@0.21.2     # only for FHIRPath and CQL in the code editor
 ```
 
 The components are styled with Tailwind classes, so every app runs Tailwind CSS 4.1 or later and
@@ -380,6 +384,21 @@ Components import by path: `@winterop-com/sokkel-ui/DialogShell`,
 `@winterop-com/sokkel-ui-maps/MapView`, `@winterop-com/sokkel-ui-graph/PipelineGraph`,
 `@winterop-com/sokkel-ui-terminal/TerminalView` or `@winterop-com/sokkel-ui-media/MediaBar`.
 
+A domain add-on plugs into the core as a plugin, installed once as the app starts and before it
+draws. The health-data one gives `CodeEditor` its languages by name and by media type
+(`text/fhirpath` and `application/fhirpath`; `text/cql`, `text/cql-expression` and
+`application/cql`):
+
+```tsx
+import { registerPlugins } from '@winterop-com/sokkel-ui/lib/plugins'
+import { fhir } from '@winterop-com/sokkel-ui-fhir/plugin'
+
+registerPlugins([fhir])
+
+<CodeEditor label="Expression" language="fhirpath" value={expression} onChange={setExpression} />
+<CodeEditor label="Library" language={languageForMediaType('text/cql')} value={library} onChange={setLibrary} />
+```
+
 The core's own dependencies are what every app's frame draws with: Base UI, lucide, cmdk (the
 command palette `Shell` opens), the class helpers and the IBM Plex fonts. Every other library is an
 optional peer dependency, installed by an app that uses a part needing it. A part that needs one
@@ -412,8 +431,8 @@ value passes the check. A development build says so once per page, as a warning 
 ## Working on it
 
 The repository is a Bun workspace: the packages are in `packages/core`, `packages/charts`,
-`packages/maps`, `packages/graph`, `packages/terminal` and `packages/media`, and the stories in
-`src/stories/` import them by their names, as an app does. `bun run build` builds all six,
+`packages/maps`, `packages/graph`, `packages/terminal`, `packages/media` and `packages/fhir`, and
+the stories in `src/stories/` import them by their names, as an app does. `bun run build` builds them all,
 `bun run test` runs every package's tests and the library rules, and `bun run size` holds the apps
 in `size/` to their budgets.
 

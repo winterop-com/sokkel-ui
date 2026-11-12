@@ -1,0 +1,45 @@
+{
+    "name": "@winterop-com/sokkel-ui-fhir",
+    "version": "0.21.2",
+    "description": "The health-data standards' languages, FHIRPath and CQL, for sokkel-ui's code editor.",
+    "license": "SEE LICENSE IN LICENSE",
+    "repository": {
+        "type": "git",
+        "url": "git+ssh://git@github.com/winterop-com/sokkel-ui.git",
+        "directory": "packages/fhir"
+    },
+    "files": [
+        "LICENSE",
+        "THIRD_PARTY_NOTICES.md",
+        "dist",
+        "src",
+        "!src/**/*.test.*"
+    ],
+    "type": "module",
+    "sideEffects": false,
+    "exports": {
+        "./plugin": {
+            "types": "./dist/plugin.d.ts",
+            "import": "./dist/plugin.js"
+        },
+        "./fhirpath": {
+            "types": "./dist/fhirpath.d.ts",
+            "import": "./dist/fhirpath.js"
+        },
+        "./cql": {
+            "types": "./dist/cql.d.ts",
+            "import": "./dist/cql.js"
+        }
+    },
+    "publishConfig": {
+        "registry": "https://npm.pkg.github.com"
+    },
+    "scripts": {
+        "build": "vite build && tsc -p tsconfig.build.json",
+        "prepack": "cp ../../LICENSE ../../THIRD_PARTY_NOTICES.md ."
+    },
+    "peerDependencies": {
+        "@codemirror/language": "^6.13.1",
+        "@winterop-com/sokkel-ui": "workspace:*"
+    }
+}

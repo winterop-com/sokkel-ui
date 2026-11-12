@@ -42,6 +42,7 @@ import { flushSync } from 'react-dom'
 import { createRoot } from 'react-dom/client'
 
 import { cn } from '../lib/cn'
+import { pluginLanguage, pluginLanguageForMediaType, type PluginLanguageNames } from '../lib/plugins'
 import { bracketColors as colorBrackets, indentGuides as drawGuides } from './code/guides'
 import { jq } from './code/jq'
 import { markdown } from './code/markdown'
@@ -64,8 +65,11 @@ import type { JsonSchema } from './schema/read'
 export type { CodeSchemaWords } from './code/schema'
 export { createSharedDocument, useControlledDocument, useSharedDocument, useSharedText, type SharedDocument } from './code/shared'
 
-/** The languages the editor carries by name. */
-export type CodeLanguageName = 'json' | 'yaml' | 'jq' | 'markdown' | 'sql' | 'shell' | 'jinja' | 'text'
+/** The languages the editor carries itself. */
+type BuiltInLanguage = 'json' | 'yaml' | 'jq' | 'markdown' | 'sql' | 'shell' | 'jinja' | 'text'
+
+/** The languages the editor knows by name: its own, and those the installed plugins give it (see `lib/plugins`). */
+export type CodeLanguageName = BuiltInLanguage | Extract<keyof PluginLanguageNames, string>
 
 /** A language described by its tokens: a CodeMirror stream parser with a name. */
 export type CodeLanguageSpec = StreamParser<unknown> & { name: string }
@@ -166,7 +170,7 @@ export function defineLanguage<State>(spec: StreamParser<State> & { name: string
     return new LanguageSupport(StreamLanguage.define(spec))
 }
 
-const NAMED: Record<Exclude<CodeLanguageName, LazyLanguage>, () => Extension> = {
+const NAMED: Record<Exclude<BuiltInLanguage, LazyLanguage>, () => Extension> = {
     json: () => json(),
     yaml: () => yaml(),
     jq: () => jq(),
@@ -204,19 +208,24 @@ const MEDIA_TYPES: [RegExp, CodeLanguageName][] = [
 ]
 
 /**
- * The language a media type is written in, such as a JSON Schema's `contentMediaType`: JSON and
- * YAML with any `+json` or `+yaml` suffix, jq, markdown, SQL, shell and Jinja; anything else is text.
+ * The language a media type is written in, such as a JSON Schema's `contentMediaType`: an installed
+ * plugin's language by the media types it names, JSON and YAML with any `+json` or `+yaml` suffix,
+ * jq, markdown, SQL, shell and Jinja; anything else is text.
  */
 export function languageForMediaType(mediaType: string | null | undefined): CodeLanguageName {
     const type = mediaType?.split(';')[0].trim().toLowerCase() ?? ''
+    const installed = pluginLanguageForMediaType(type)
+    if (installed !== undefined) return installed as CodeLanguageName
     return MEDIA_TYPES.find(([pattern]) => pattern.test(type))?.[1] ?? 'text'
 }
 
 const built = new WeakMap<CodeLanguageSpec, LanguageSupport>()
 
-function languageExtension(language: CodeLanguage): Extension {
-    if (isLazy(language)) return loaded.get(language) ?? []
-    if (typeof language === 'string') return NAMED[language]()
+function languageExtension(given: CodeLanguage): Extension {
+    if (isLazy(given)) return loaded.get(given) ?? []
+    if (typeof given === 'string' && given in NAMED) return NAMED[given as keyof typeof NAMED]()
+    const language = typeof given === 'string' ? pluginLanguage(given)?.language : given
+    if (language === undefined) return []
     if (language instanceof LanguageSupport) return language
     let support = built.get(language)
     if (support === undefined) {
@@ -616,8 +625,9 @@ export interface CodeEditorProps {
 }
 
 /**
- * A code editor on CodeMirror: JSON, YAML, jq or plain text by name, or any language given as a
- * CodeMirror `LanguageSupport` or a stream parser (`defineLanguage` builds one). Highlighted in the
+ * A code editor on CodeMirror: JSON, YAML, jq or plain text by name, a language an installed plugin
+ * gives by its name (`lib/plugins`), or any language given as a CodeMirror `LanguageSupport` or a
+ * stream parser (`defineLanguage` builds one). Highlighted in the
  * theme's colors, with line numbers, bracket matching, undo, and Tab indenting (Escape then Tab
  * leaves the editor). `marks` wash whole lines or underline ranges, a message on hover. `completions`
  * offers words while typing, `hover` says what a word is, `onRun` runs on Mod-Enter and `keys` binds

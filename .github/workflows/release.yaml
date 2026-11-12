@@ -38,10 +38,11 @@ jobs:
             # The size budgets, as CI checks them: a release never ships over budget while main is red on it.
             - run: bun run size
             # bun packs each package with its `workspace:` dependency on the core written as the version,
-            # and npm publishes the tarballs, core first, since the add-ons name it as a peer.
+            # and npm publishes the tarballs, core first, since the add-ons name it as a peer. Every folder in
+            # packages/ is packed, so a new add-on ships without a change here.
             - name: Pack the packages
-              run: for package in core charts maps graph terminal media; do (cd "packages/$package" && bun pm pack --destination ../../packed); done
+              run: for package in packages/*/; do (cd "$package" && bun pm pack --destination ../../packed); done
             - name: Publish the packages
-              run: for tarball in packed/winterop-com-sokkel-ui-0*.tgz packed/winterop-com-sokkel-ui-charts-*.tgz packed/winterop-com-sokkel-ui-maps-*.tgz packed/winterop-com-sokkel-ui-graph-*.tgz packed/winterop-com-sokkel-ui-terminal-*.tgz packed/winterop-com-sokkel-ui-media-*.tgz; do npm publish "./$tarball"; done
+              run: for tarball in packed/winterop-com-sokkel-ui-[0-9]*.tgz packed/winterop-com-sokkel-ui-[a-z]*.tgz; do npm publish "./$tarball"; done
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

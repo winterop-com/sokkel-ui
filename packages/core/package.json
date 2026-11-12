@@ -1262,6 +1262,10 @@
             "types": "./dist/lib/periods.d.ts",
             "import": "./dist/lib/periods.js"
         },
+        "./lib/plugins": {
+            "types": "./dist/lib/plugins.d.ts",
+            "import": "./dist/lib/plugins.js"
+        },
         "./lib/search": {
             "types": "./dist/lib/search.d.ts",
             "import": "./dist/lib/search.js"

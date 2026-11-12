@@ -19,6 +19,8 @@ import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { build, type Rolldown } from 'vite'
 
+import { PACKAGES } from './components-index'
+
 const ROOT = join(import.meta.dirname, '..')
 const APPS = join(ROOT, 'size')
 
@@ -42,7 +44,7 @@ type Budget = Record<Measure, number> & {
     engines: string[]
 }
 
-const unbuilt = ['core', 'charts', 'maps', 'graph', 'terminal', 'media'].filter((name) => !existsSync(join(ROOT, 'packages', name, 'dist')))
+const unbuilt = PACKAGES.filter((name) => !existsSync(join(ROOT, 'packages', name, 'dist')))
 if (unbuilt.length > 0) {
     console.error(`No dist/ to build against in ${unbuilt.join(', ')}: run \`bun run build\` first.`)
     process.exit(1)
