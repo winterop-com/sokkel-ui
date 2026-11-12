@@ -24,7 +24,8 @@ export interface StatusLineProps {
 
 /**
  * What the shell's foot strip says for the screen: a short note at the left and identifiers at the
- * right, on one row of fixed height. It holds short facts, never a sentence, so it never grows.
+ * right, on one row of fixed height. It holds short facts, never a sentence, so it never grows; where
+ * the row is too narrow, the note is cut short first, and the facts, kept to most of the row, after it.
  */
 export function StatusLine({ note, tone = 'quiet', live = false, children }: StatusLineProps) {
     return (
@@ -41,7 +42,11 @@ export function StatusLine({ note, tone = 'quiet', live = false, children }: Sta
                 </span>
             )}
             <div className="flex-1" />
-            {children !== undefined && <div className="flex shrink-0 items-center gap-3 text-page-foot-ink">{children}</div>}
+            {children !== undefined && (
+                <div className="flex max-w-[70%] min-w-0 shrink-0 items-center justify-end gap-3 overflow-hidden text-page-foot-ink">
+                    {children}
+                </div>
+            )}
         </div>
     )
 }
@@ -55,9 +60,9 @@ export interface StatusItemProps {
 /** One fact at the foot strip's right end, an identifier in the code face when `code` is set. */
 export function StatusItem({ label, children, code = false }: StatusItemProps) {
     return (
-        <span className="flex items-center gap-1.5 whitespace-nowrap">
-            {label !== undefined && <span className="text-faint">{label}</span>}
-            <span className={cn(code && 'font-mono text-foreground')}>{children}</span>
+        <span className="flex min-w-0 items-center gap-1.5 whitespace-nowrap">
+            {label !== undefined && <span className="shrink-0 text-faint">{label}</span>}
+            <span className={cn('min-w-0 truncate', code && 'font-mono text-foreground')}>{children}</span>
         </span>
     )
 }

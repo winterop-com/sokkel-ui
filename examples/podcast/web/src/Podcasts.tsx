@@ -272,7 +272,7 @@ export function Podcasts({ frame }: { frame: Frame }) {
               ? (episode?.title ?? 'Not found')
               : (TITLES[page] ?? 'Not found')
     const trail: Crumb[] = [{ label: 'Podcasts', href: '#/home' }]
-    if (page === 'show') trail.push({ label: 'Shows', href: '#/shows' })
+    if (page === 'show' || page === 'episode') trail.push({ label: 'Shows', href: '#/shows' })
     if (page === 'episode' && episodeShow !== undefined) trail.push({ label: episodeShow.title, href: `#/show/${episodeShow.id}` })
     trail.push({ label })
 
