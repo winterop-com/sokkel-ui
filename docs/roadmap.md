@@ -6,7 +6,12 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.19.14** is the latest release (2026-11-12): a graph wrapped to its canvas weighs the
+- **0.19.15** is the latest release (2026-11-12): a graph's cut fits across its room, down to
+  one column, and fans can be cut; fitted frames and the wrap room use the fit's real floor and
+  edge bends; a box's count takes a glyph, tooltip and place; block badges take a tone; the block
+  picker's words split; `cyclePath`; `GraphViewButtons` and `GraphControlButton`; screen, element
+  and center anchors for `GraphOverlay`; `nodeBox` and `toGraph` on the controls.
+- **0.19.14** (2026-11-12): a graph wrapped to its canvas weighs the
   canvas's height too, stays whole when a cut would only add height, and counts its edges in the
   cut.
 - **0.19.13** (2026-11-12): a graph wraps only when elk's own layout is too
