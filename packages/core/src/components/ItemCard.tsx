@@ -49,7 +49,7 @@ export interface ItemCardProps {
  * The card for one thing: a project, a job, an album, a plan. Its title is the thing's name, or its
  * code when it has none; the code is drawn once, in the code face, as `ItemHeading` draws it. An icon on a tile may lead the
  * title; a description, a status and facts at the foot follow, and media, such as artwork, may sit
- * on top.
+ * on top. In a box of fixed height, such as a table's grid of cards, the media gives up height first.
  *
  * Given `href` or `onSelect` the whole card is one control, washing on hover and drawing the
  * focus outline when reached by keyboard; `selected` marks the chosen card of a set, as a plan
@@ -96,7 +96,7 @@ export function ItemCard({
                 </Cover>
             )}
             {media !== undefined && (
-                <div className="pointer-events-none aspect-[16/9] overflow-hidden bg-muted [&>*]:size-full">{media}</div>
+                <div className="pointer-events-none aspect-[16/9] min-h-0 overflow-hidden bg-muted [&>*]:size-full">{media}</div>
             )}
             <div className="pointer-events-none flex flex-1 flex-col gap-2 p-4">
                 <header className="flex items-start gap-2">

@@ -2312,7 +2312,7 @@ export function DataTable<T>({
                 data-active={entry.key === active || undefined}
                 onClick={(event) => press(entry, event)}
                 className={cn(
-                    'group/card relative min-w-0 overflow-hidden rounded-surface',
+                    'group/card relative min-w-0 overflow-hidden rounded-surface [&>*:first-child]:h-full',
                     pressable && 'cursor-pointer',
                     chosen ? 'ring-2 ring-primary' : isOpened && 'ring-2 ring-ring/60',
                     'group-focus-visible/table:data-active:ring-2 group-focus-visible/table:data-active:ring-ring',
