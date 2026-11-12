@@ -1,5 +1,7 @@
 import type { ComponentType } from 'react'
 
+import type { ChipTone } from '@winterop-com/sokkel-ui/Chip'
+
 /** A kind of step a pipeline can be built from, as a palette or a picker offers it. */
 export interface PipelineBlock {
     /** The block's key, drawn in the code face: the kind a step made from it carries. */
@@ -10,10 +12,25 @@ export interface PipelineBlock {
     /** The id of the group it is listed under. */
     group: string
     icon?: ComponentType<{ className?: string }>
-    /** A short word at the row's end, such as what sort of block it is. */
-    badge?: string
+    /** A short word at the row's end, such as what sort of block it is: plain words in a neutral chip, or a label in a tone. */
+    badge?: string | PipelineBlockBadge
     /** Other words a search finds the block by. */
     keywords?: readonly string[]
+}
+
+/** A block's badge in a tone of its own, as a chip wears it. */
+export interface PipelineBlockBadge {
+    label: string
+    /** Neutral by default. */
+    tone?: ChipTone
+    /** What pointing at the badge says. */
+    title?: string
+}
+
+/** A block's badge as a label, a tone and a title; null when it has none. */
+export function blockBadge(block: PipelineBlock): PipelineBlockBadge | null {
+    const badge = typeof block.badge === 'string' ? { label: block.badge } : block.badge
+    return badge === undefined || badge.label === '' ? null : badge
 }
 
 /** A heading blocks are listed under, in the order given. */
@@ -29,7 +46,7 @@ export const GRAPH_DRAG_TYPE = 'application/x-graph-item'
 export function blockMatches(block: PipelineBlock, query: string): boolean {
     const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean)
     if (words.length === 0) return true
-    const text = [block.kind, block.name ?? '', block.description ?? '', block.badge ?? '', ...(block.keywords ?? [])]
+    const text = [block.kind, block.name ?? '', block.description ?? '', blockBadge(block)?.label ?? '', ...(block.keywords ?? [])]
         .join(' ')
         .toLowerCase()
     return words.every((word) => text.includes(word))

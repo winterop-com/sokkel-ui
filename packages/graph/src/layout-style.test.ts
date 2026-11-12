@@ -207,6 +207,19 @@ describe('node width from words', () => {
         expect(graphNodeSize({ code: 'transform' }, tens).width).toBeLessThan(plain.width)
     })
 
+    test('keeps room for a count and its glyph on the line it is placed on', () => {
+        const Glyph = () => null
+        const titled = graphNodeSize({ code: 'split', kind: 'python', count: '×4' }, tens)
+        const glyphed = graphNodeSize({ code: 'split', kind: 'python', count: '×4', countIcon: Glyph }, tens)
+        expect(glyphed.width).toBe(titled.width + 12 + 2)
+        const short = graphNodeSize({ code: 'split', count: '×4' }, tens)
+        const onLine = graphNodeSize({ code: 'split', count: '×4', countPlacement: 'line' }, tens)
+        expect(short.height).toBe(30)
+        expect(onLine.height).toBe(44)
+        const wide = { code: 'split', kind: 'python', status: 'running', count: '64 items' }
+        expect(graphNodeSize({ ...wide, countPlacement: 'line' }, tens).width).toBeGreaterThan(graphNodeSize(wide, tens).width)
+    })
+
     test('grows a fan-out taller as its chips wrap, and wider only up to the strip', () => {
         const items = Array.from({ length: 12 }, (_, at) => ({ id: String(at), label: `region-${String(at)}`, status: 'succeeded' }))
         const one = graphNodeSize({ code: 'fetch', status: 'running', items: items.slice(0, 1) }, tens)

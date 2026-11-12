@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react'
 import type { Issue } from '@winterop-com/sokkel-ui/IssueMark'
 import type { GraphEditing } from '@winterop-com/sokkel-ui-graph/GraphCanvas'
 import type { GraphAnchor } from '@winterop-com/sokkel-ui-graph/GraphOverlay'
-import { wouldCycle, type PipelineStep } from '@winterop-com/sokkel-ui-graph/PipelineGraph'
+import { cyclePath, type PipelineStep } from '@winterop-com/sokkel-ui-graph/PipelineGraph'
 import { useGraphHistory } from '@winterop-com/sokkel-ui-graph/use-graph-history'
 import { initialValue } from '@winterop-com/sokkel-ui/schema/SchemaForm'
 import { validate } from '@winterop-com/sokkel-ui/schema/validate'
@@ -142,7 +142,8 @@ export function usePipelineEditor(
         const into = blockAt(target)
         if (from === undefined || to === undefined || into === undefined) return null
         if (to.needs.includes(source)) return `${target} already follows ${source}.`
-        if (wouldCycle(doc.steps, source, target)) return `That would make a loop: ${target} already leads to ${source}.`
+        const loop = cyclePath(doc.steps, source, target)
+        if (loop !== null) return `That would make a loop: ${[...loop, target].join(' → ')}.`
         return cannotFollow(from, into)
     }
 

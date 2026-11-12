@@ -38,6 +38,12 @@ export interface GraphNodeData extends Record<string, unknown> {
     source?: boolean
     /** A count before the status dot, such as how many items a fan-out has. */
     count?: string
+    /** A glyph ahead of the count, such as one that says it is a fan-out. */
+    countIcon?: ComponentType<{ className?: string }>
+    /** What pointing at the count says, in place of the box's `hint`. */
+    countTitle?: string
+    /** Where the count sits: on the title line before the status dot (the default), or at the end of the code line. */
+    countPlacement?: 'title' | 'line'
     /**
      * A fan-out's items as chips under the two lines, each with its state's dot, its label and an
      * optional note; they wrap onto more lines and the box grows taller.
@@ -118,6 +124,8 @@ const DOT = 8
 const GLYPH = 12
 /** The room an issue mark takes. */
 const MARK = 20
+/** The gap between a count's glyph and its words. */
+const COUNT_GAP = 2
 /** A badge's padding across. */
 const BADGE_PAD = 10
 /** The extra padding across a round box. */
@@ -150,6 +158,8 @@ export function graphNodeSize(
     { min = NODE_MIN_WIDTH, max = NODE_MAX_WIDTH }: NodeWidthBounds = {},
 ): { width: number; height: number } {
     const { title, named, line, duration } = linesOf(data)
+    const counted = data.count === undefined ? 0 : GAP + countWidth(data, measure)
+    const onLine = data.countPlacement === 'line'
     const head =
         (data.icon === undefined ? 0 : GLYPH + GAP) +
         measure(title, named ? 'title' : 'title-mono') +
@@ -165,16 +175,20 @@ export function graphNodeSize(
     const took = timed
         ? GAP + 2 + Math.max(duration === null ? 0 : measure(duration, 'small-mono'), measure(DURATION_ROOM, 'small-mono'))
         : 0
-    const foot = said + took
-    const counted = data.count === undefined ? 0 : GAP + measure(data.count, 'small-mono')
+    const foot = said + took + (onLine ? counted : 0)
     const chips = (data.items ?? []).map((item) => chipWidth(item, measure))
     const strip = data.itemsSummary !== undefined ? measure(data.itemsSummary, 'small') : Math.min(STRIP_ROOM, rowWidth(chips))
-    const widest = Math.max(head + counted, foot, strip, ...chips)
+    const widest = Math.max(head + (onLine ? 0 : counted), foot, strip, ...chips)
     const pad = CHROME + (data.shape === 'round' ? ROUND_PAD : 0)
     const width = Math.min(Math.max(min, max), Math.max(min, Math.ceil(widest + pad)))
     const lines = data.itemsSummary !== undefined ? 1 : chips.length === 0 ? 0 : wrappedLines(chips, width - pad)
-    const twoLines = line !== '' || timed || (data.reserve ?? []).length > 0
+    const twoLines = line !== '' || timed || (data.reserve ?? []).length > 0 || (onLine && data.count !== undefined)
     return { width, height: (twoLines ? NODE_HEIGHT : NODE_HEIGHT_SHORT) + lines * STRIP_LINE }
+}
+
+/** How wide a box's count is drawn, with its glyph. */
+function countWidth(data: GraphNodeData, measure: Measure): number {
+    return (data.countIcon === undefined ? 0 : GLYPH + COUNT_GAP) + measure(data.count ?? '', 'small-mono')
 }
 
 /** The room a box's badge takes, or the widest it may come to wear. */
@@ -339,6 +353,8 @@ export function GraphNodeBox({ data, selected = false, className }: GraphNodeBox
     const hint = data.hint === undefined || data.hint === '' ? undefined : data.hint
     // What the box is doing has no line of its own, so it follows whichever word is pointed at.
     const titled = (words: string) => (hint === undefined ? words : `${words}\n${hint}`)
+    const countOnLine = data.countPlacement === 'line' && data.count !== undefined
+    const count = data.count === undefined ? null : <GraphNodeCount data={data} />
     return (
         <div
             data-slot="graph-node"
@@ -367,7 +383,7 @@ export function GraphNodeBox({ data, selected = false, className }: GraphNodeBox
                 >
                     {title}
                 </span>
-                {(data.badge !== undefined || data.count !== undefined || status !== undefined || issue !== null) && (
+                {(data.badge !== undefined || (count !== null && !countOnLine) || status !== undefined || issue !== null) && (
                     <span className="ml-auto flex shrink-0 items-center gap-1.5">
                         {data.badge !== undefined && (
                             <span
@@ -382,11 +398,7 @@ export function GraphNodeBox({ data, selected = false, className }: GraphNodeBox
                                 {data.badge.label}
                             </span>
                         )}
-                        {data.count !== undefined && (
-                            <span data-slot="graph-node-count" className="font-mono text-graph-small text-faint">
-                                {data.count}
-                            </span>
-                        )}
+                        {!countOnLine && count}
                         {status !== undefined && (
                             <span
                                 role="img"
@@ -402,7 +414,7 @@ export function GraphNodeBox({ data, selected = false, className }: GraphNodeBox
                     </span>
                 )}
             </div>
-            {(line !== '' || duration !== null || status !== undefined || (data.reserve ?? []).length > 0) && (
+            {(line !== '' || duration !== null || status !== undefined || countOnLine || (data.reserve ?? []).length > 0) && (
                 <div
                     data-slot="graph-node-line"
                     className="flex min-h-4 min-w-0 items-baseline gap-2 font-mono text-graph-small text-muted-foreground"
@@ -410,7 +422,12 @@ export function GraphNodeBox({ data, selected = false, className }: GraphNodeBox
                     <span title={titled(data.lineHint ?? line)} className="min-w-0 truncate">
                         {line}
                     </span>
-                    {duration !== null && <span className="ml-auto shrink-0 text-faint">{duration}</span>}
+                    {(duration !== null || countOnLine) && (
+                        <span className="ml-auto flex shrink-0 items-center gap-1.5 self-center">
+                            {duration !== null && <span className="text-faint">{duration}</span>}
+                            {countOnLine && count}
+                        </span>
+                    )}
                 </div>
             )}
             {data.itemsSummary !== undefined ? (
@@ -453,6 +470,25 @@ export function GraphNodeBox({ data, selected = false, className }: GraphNodeBox
                 </span>
             )}
         </div>
+    )
+}
+
+/**
+ * A box's count, after its glyph. Its title is its own: pointing at it says `countTitle` alone, and
+ * without one the box's hint.
+ */
+function GraphNodeCount({ data }: { data: GraphNodeData }) {
+    const Icon = data.countIcon
+    return (
+        <span
+            data-slot="graph-node-count"
+            data-placement={data.countPlacement ?? 'title'}
+            title={data.countTitle}
+            className="flex shrink-0 items-center gap-0.5 font-mono text-graph-small text-faint"
+        >
+            {Icon !== undefined && <Icon className="size-3 shrink-0" aria-hidden />}
+            {data.count}
+        </span>
     )
 }
 

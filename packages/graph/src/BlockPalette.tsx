@@ -3,7 +3,7 @@ import { useState, type DragEvent } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { SearchField } from '@winterop-com/sokkel-ui/SearchField'
-import { GRAPH_DRAG_TYPE, groupBlocks, type BlockGroup, type PipelineBlock } from './blocks'
+import { blockBadge, GRAPH_DRAG_TYPE, groupBlocks, type BlockGroup, type PipelineBlock } from './blocks'
 import { Chip } from '@winterop-com/sokkel-ui/Chip'
 import { GroupLabel } from '@winterop-com/sokkel-ui/GroupLabel'
 
@@ -42,6 +42,7 @@ export function BlockRow({ block, active = false, showDescription = false }: Blo
     const Icon = block.icon ?? Box
     const named = block.name !== undefined && block.name !== ''
     const described = showDescription && block.description !== undefined && block.description !== ''
+    const badge = blockBadge(block)
     return (
         <span className="flex min-w-0 items-center gap-2.5">
             <span
@@ -61,7 +62,11 @@ export function BlockRow({ block, active = false, showDescription = false }: Blo
                     named && <span className="truncate font-mono text-xs leading-4 text-muted-foreground">{block.kind}</span>
                 )}
             </span>
-            {block.badge !== undefined && block.badge !== '' && <Chip className="self-start">{block.badge}</Chip>}
+            {badge !== null && (
+                <Chip tone={badge.tone} title={badge.title} className="self-start">
+                    {badge.label}
+                </Chip>
+            )}
         </span>
     )
 }

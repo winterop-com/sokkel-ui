@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { blockMatches, groupBlocks, type PipelineBlock } from './blocks'
-import { wouldCycle, type PipelineStep } from './PipelineGraph'
+import { blockBadge, blockMatches, groupBlocks, type PipelineBlock } from './blocks'
+import { cyclePath, wouldCycle, type PipelineStep } from './PipelineGraph'
 import { historyStep, type HistoryState } from './use-graph-history'
 
 const STEPS: PipelineStep[] = [
@@ -23,6 +23,20 @@ describe('wouldCycle', () => {
     it('allows an edge forward or to an unconnected step', () => {
         expect(wouldCycle(STEPS, 'fetch', 'upload')).toBe(false)
         expect(wouldCycle(STEPS, 'validate', 'notify')).toBe(false)
+    })
+})
+
+describe('cyclePath', () => {
+    it('names the steps from the target along to the source, the shortest way', () => {
+        expect(cyclePath(STEPS, 'upload', 'fetch')).toEqual(['fetch', 'transform', 'validate', 'upload'])
+        expect(cyclePath(STEPS, 'validate', 'transform')).toEqual(['transform', 'validate'])
+        const shortcut = STEPS.map((step) => (step.code === 'upload' ? { ...step, needs: ['validate', 'transform'] } : step))
+        expect(cyclePath(shortcut, 'upload', 'fetch')).toEqual(['fetch', 'transform', 'upload'])
+    })
+    it('names the step alone for an edge to itself, and nothing when no loop closes', () => {
+        expect(cyclePath(STEPS, 'fetch', 'fetch')).toEqual(['fetch'])
+        expect(cyclePath(STEPS, 'fetch', 'upload')).toBeNull()
+        expect(cyclePath(STEPS, 'validate', 'notify')).toBeNull()
     })
 })
 
@@ -50,6 +64,18 @@ describe('blocks', () => {
         expect(blockMatches(sensor, 'operator')).toBe(false)
         expect(blockMatches(BLOCKS[1] as PipelineBlock, 'CSV')).toBe(true)
         expect(blockMatches(BLOCKS[1] as PipelineBlock, '  ')).toBe(true)
+    })
+    it('reads a badge as plain words or a label in a tone, and finds a block by either', () => {
+        const plain: PipelineBlock = { kind: 'wait-file', group: 'io', badge: 'sensor' }
+        const toned: PipelineBlock = {
+            kind: 'upload.s3',
+            group: 'output',
+            badge: { label: 'beta', tone: 'warning', title: 'Still changing' },
+        }
+        expect(blockBadge(plain)).toEqual({ label: 'sensor' })
+        expect(blockBadge(toned)).toEqual({ label: 'beta', tone: 'warning', title: 'Still changing' })
+        expect(blockBadge({ kind: 'dedupe', group: 'transform', badge: '' })).toBeNull()
+        expect(blockMatches(toned, 'beta')).toBe(true)
     })
     it('lists matching blocks under their groups in order, leaving empty groups out', () => {
         expect(groupBlocks(BLOCKS, GROUPS).map((entry) => entry.group.id)).toEqual(['source', 'transform', 'output'])

@@ -61,7 +61,7 @@ export const OnAPage: Story = { name: 'On a page', render: () => <Fitted /> }
 
 /**
  * Steps as an editor shows them: a source dashed on the ground with what it listens to on its line,
- * a fan-out's count, and badges for a step edited since it was saved and one whose block is not
+ * a fan-out's count after a glyph, with a tooltip of its own, and badges for a step edited since it was saved and one whose block is not
  * installed. Every box keeps room for either badge and an issue mark.
  */
 export const Badges: Story = { render: () => <Pipeline steps={EDITED_PIPELINE} title="import-orders" meta="harbor" /> }
