@@ -43,11 +43,11 @@ export function NavBar({ mark, name, links, end, className, words: given }: NavB
     const words = { ...WORDS, ...given }
     return (
         <header className={cn('flex h-shell-top shrink-0 items-stretch gap-4 border-b border-border-strong bg-sidebar px-3', className)}>
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="flex min-w-0 items-center gap-2">
                 <Menu.Root>
                     <Menu.Trigger
                         aria-label={words.menu}
-                        className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-hover md:hidden"
+                        className="flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-hover md:hidden"
                     >
                         <MenuIcon className="size-4" aria-hidden />
                     </Menu.Trigger>
@@ -78,7 +78,9 @@ export function NavBar({ mark, name, links, end, className, words: given }: NavB
                         </Menu.Positioner>
                     </Menu.Portal>
                 </Menu.Root>
-                <span className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">{mark}</span>
+                <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
+                    {mark}
+                </span>
                 <span className="truncate text-title font-semibold tracking-tight">{name}</span>
             </div>
             <nav aria-label={words.navigation} className="hidden min-w-0 items-stretch gap-1 md:flex">

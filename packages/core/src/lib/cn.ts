@@ -3,10 +3,12 @@ import { extendTailwindMerge } from 'tailwind-merge'
 
 /**
  * Tailwind's merge, told the text sizes and type roles the tokens add, so a size such as `text-page` is not taken
- * for a color and dropped beside `text-muted-foreground`.
+ * for a color and dropped beside `text-muted-foreground`, and the spacings they add, so a later `min-w-*`
+ * overrides `min-w-finger`.
  */
 const merge = extendTailwindMerge({
     extend: {
+        theme: { spacing: ['finger'] },
         classGroups: {
             'font-size': [
                 {
