@@ -1,7 +1,7 @@
 import { TextField } from '@winterop-com/sokkel-ui/TextField'
 import { useState } from 'react'
 
-import type { GraphPointer } from '@winterop-com/sokkel-ui-graph/GraphCanvas'
+import type { GraphControls, GraphPointer } from '@winterop-com/sokkel-ui-graph/GraphCanvas'
 import { PipelineGraph, type PipelineStep } from '@winterop-com/sokkel-ui-graph/PipelineGraph'
 import { Fill, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem } from '@winterop-com/sokkel-ui/primitives/dropdown-menu'
@@ -31,6 +31,7 @@ export function Editor() {
     const [menuOpen, setMenuOpen] = useState(false)
     const [said, setSaid] = useState('Drag from a port to connect, select and press Delete to remove, right-click a box for its menu.')
     const [added, setAdded] = useState(0)
+    const [controls, setControls] = useState<GraphControls | null>(null)
     const chosen = steps.find((step) => step.code === selected)
 
     const remove = (code: string) => {
@@ -61,6 +62,7 @@ export function Editor() {
                         setMenuOpen(false)
                     }}
                     words={{ label: 'nightly-export' }}
+                    onControls={setControls}
                     editing={{
                         onConnect: (source, target) => {
                             setSteps((held) =>
@@ -102,7 +104,9 @@ export function Editor() {
                     <DropdownMenuContent anchor={menu === null ? undefined : pointAt(menu.at)} side="bottom" align="start" className="w-44">
                         <DropdownMenuItem
                             onClick={() => {
-                                if (menu !== null) add(menu.step)
+                                // The new step stands to the right of the box it follows, read from the canvas.
+                                const box = menu === null ? null : (controls?.nodeBox(menu.step) ?? null)
+                                if (menu !== null) add(menu.step, box === null ? undefined : { x: box.x + box.width + 64, y: box.y })
                                 setMenuOpen(false)
                             }}
                         >

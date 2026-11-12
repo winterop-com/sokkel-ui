@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react'
 
 import type { GraphEditing, GraphWords } from './GraphCanvas'
-import type { GraphDirection } from './layout'
+import type { GraphDirection, GraphPoint } from './layout'
 
 /** The direction the canvas a node stands on is laid out in. */
 export const GraphDirectionContext = createContext<GraphDirection>('right')
@@ -27,7 +27,18 @@ export interface GraphEditingState {
 /** The gestures of the editable canvas a node or edge stands on, or null on a view. */
 export const GraphEditingContext = createContext<GraphEditingState | null>(null)
 
-/** What moves the view of a canvas: what its zoom buttons do, for a toolbar of the app's. */
+/** A box in the graph's own pixels: its top-left corner and its size. */
+export interface GraphBox {
+    x: number
+    y: number
+    width: number
+    height: number
+}
+
+/**
+ * What moves the view of a canvas: what its zoom buttons do, for a toolbar of the app's, and where
+ * things stand on it, for placing what the app adds.
+ */
 export interface GraphControls {
     zoomIn: () => void
     zoomOut: () => void
@@ -35,6 +46,10 @@ export interface GraphControls {
     fit: () => void
     /** The canvas has nothing on it to zoom or fit. */
     empty: boolean
+    /** Where a node's box stands as drawn, in the graph's pixels, or null for a node not on the canvas. */
+    nodeBox: (id: string) => GraphBox | null
+    /** A point on the screen, such as a pointer's, as a point in the graph's coordinates. */
+    toGraph: (point: { clientX: number; clientY: number }) => GraphPoint
 }
 
 export const GraphControlsContext = createContext<GraphControls | null>(null)
