@@ -88,13 +88,20 @@ function GridAnswers({ form, receipt }: { form: Form; receipt: Receipt }) {
     )
 }
 
+/** How many questions a receipt answers, as its answers list counts them. */
+function answeredIn(form: Form | undefined, receipt: Receipt): number {
+    if (form === undefined) return 0
+    return form.grid === undefined
+        ? answerRows(form, receipt).length
+        : Object.values(receipt.answers).filter((value) => value !== null).length
+}
+
 /** A receipt's body, the same on its page and in the sheet over the list: what arrived, what it is for, every answer and where it went. */
 export function ReceiptBody({ receipt }: { receipt: Receipt }) {
     const form = formOf(receipt.formId)
     const { rows: homes } = useCollection(households)
     const household = homes?.find((home) => home.id === receipt.householdId)
-    const rows = form === undefined ? [] : answerRows(form, receipt)
-    const answered = form?.grid === undefined ? rows.length : Object.values(receipt.answers).filter((value) => value !== null).length
+    const answered = answeredIn(form, receipt)
     return (
         <Stack gap="page">
             {receipt.state === 'rejected' && receipt.refusal !== null && (
@@ -166,7 +173,7 @@ export function ReceiptBody({ receipt }: { receipt: Receipt }) {
                     <DataTable
                         variant="list"
                         columns={ANSWER_COLUMNS}
-                        rows={rows}
+                        rows={answerRows(form, receipt)}
                         rowKey={(row) => row.id}
                         rowHeight="auto"
                         minWidth="auto"
@@ -262,9 +269,7 @@ export function ReceiptPage({ code }: { code: string }) {
     const [raw, setRaw] = useState(false)
     const [sourceWidth, setSourceWidth] = useStored('source-sheet-width', 576)
     useFoot(
-        receipt === undefined
-            ? undefined
-            : `${count(Object.keys(receipt.answers).length, 'answer')} · received ${when(receipt.receivedAt)}`,
+        receipt === undefined ? undefined : `${count(answeredIn(form, receipt), 'answer')} · received ${when(receipt.receivedAt)}`,
         undefined,
         [receipt?.receipt, receipt?.state],
     )

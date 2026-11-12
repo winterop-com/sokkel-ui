@@ -214,7 +214,14 @@ export function TasksDemo({ frame }: { frame: Frame }) {
                     markHref="#/"
                     name="Tasks"
                     groups={groups}
-                    foot={<AccountMenu name="ada" where="tidevann.example.org" />}
+                    foot={
+                        <AccountMenu
+                            name="ada"
+                            where="tidevann.example.org"
+                            scheme={frame.appearance.settings.scheme}
+                            onSchemeChange={(scheme) => frame.appearance.setSettings({ ...frame.appearance.settings, scheme })}
+                        />
+                    }
                 />
             }
             top={<TopBar trail={[{ label: 'Tasks', href: '#/inbox' }, { label }]} />}

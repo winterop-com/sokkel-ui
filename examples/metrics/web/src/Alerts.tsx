@@ -123,11 +123,11 @@ function firedColumns(zone: Zone, now: number): DataColumn<AlertEvent>[] {
         {
             id: 'fired',
             header: 'When',
-            width: '10rem',
+            width: '12rem',
             cell: (event) => (
                 <span className="flex gap-2">
                     <span className="font-mono tabular-nums">{clockOf(event.firedAt, zone)}</span>
-                    <RelativeTime date={event.firedAt * 1000} className="text-muted-foreground" />
+                    <RelativeTime date={event.firedAt * 1000} length="short" className="text-muted-foreground" />
                 </span>
             ),
             sortValue: (event) => event.firedAt,
