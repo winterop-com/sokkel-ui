@@ -279,11 +279,37 @@ export function fromElk(shape: GraphShape, laid: ElkLaidOut): PlacedGraph {
 }
 
 let engine: Promise<ElkEngine> | null = null
+let makeEngine: (() => ElkEngine | Promise<ElkEngine>) | null = null
 
-/** elk, imported the first time a graph is placed and kept for the life of the page. */
+/**
+ * Sets how every graph's elk is made, before the first graph is placed: an app passes
+ * `() => elkInWorker(() => new Worker(...))` to run layouts off the main thread. Left unset, elk
+ * runs on the main thread, bundled. Null goes back to that.
+ */
+export function setElkEngine(make: (() => ElkEngine | Promise<ElkEngine>) | null): void {
+    makeEngine = make
+    engine = null
+}
+
+/**
+ * An elk that lays out in the worker the factory starts: the factory makes a worker running
+ * `elkjs/lib/elk-worker.min.js`, such as Vite's `new ElkWorker()` from
+ * `import ElkWorker from 'elkjs/lib/elk-worker.min.js?worker'`. Only elk's small promise wrapper
+ * loads on the main thread.
+ */
+export function elkInWorker(workerFactory: () => Worker): Promise<ElkEngine> {
+    return import('elkjs/lib/elk-api.js').then((module) => new module.default({ workerFactory }) as unknown as ElkEngine)
+}
+
+/** elk, made the first time a graph is placed and kept for the life of the page: the app's, or the bundled one. */
 export function loadElk(): Promise<ElkEngine> {
-    engine ??= import('elkjs/lib/elk.bundled.js').then(
-        (module) => new module.default() as unknown as ElkEngine,
+    const make = makeEngine
+    engine ??= (
+        make === null
+            ? import('elkjs/lib/elk.bundled.js').then((module) => new module.default() as unknown as ElkEngine)
+            : Promise.resolve().then(make)
+    ).then(
+        (made) => made,
         (reason: unknown) => {
             engine = null
             throw reason

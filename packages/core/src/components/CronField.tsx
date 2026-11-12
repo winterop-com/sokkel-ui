@@ -1,4 +1,4 @@
-import { useId } from 'react'
+import { useId, type HTMLAttributes } from 'react'
 
 import { cn } from '../lib/cn'
 import { describeCron, nextRuns, parseCron, zonedTime, zoneOffset } from '../lib/cron'
@@ -16,6 +16,8 @@ export interface CronFieldWords {
     never: string
     /** Said beside the runs while the app reads them back. */
     checking: string
+    /** Said in place of the runs while the schedule is paused. */
+    paused: string
 }
 
 const WORDS: CronFieldWords = {
@@ -26,6 +28,7 @@ const WORDS: CronFieldWords = {
     zone: 'UTC',
     never: 'Never runs',
     checking: 'Checking',
+    paused: 'Paused, so no runs are coming',
 }
 
 const defaultDescribe = (expression: string) => describeCron(expression)
@@ -49,7 +52,7 @@ function formatRun(date: Date, timeZone: string): string {
     return timeZone === 'UTC' ? time : `${time} ${offsetOf(date, timeZone)}`
 }
 
-export interface CronFieldProps {
+export interface CronFieldProps extends Omit<HTMLAttributes<HTMLDivElement>, 'id' | 'onChange' | 'className' | 'children'> {
     id?: string
     value: string
     onChange: (value: string) => void
@@ -82,6 +85,8 @@ export interface CronFieldProps {
     placeholder?: string
     /** Draws the expression, its reading and its next runs, with no input and no presets. */
     readOnly?: boolean
+    /** The schedule is paused: the expression is still read in words, and the runs give way to `words.paused`. */
+    paused?: boolean
     presets?: readonly { label: string; value: string }[]
     /**
      * Reads an expression back in words, its hours on the wall clock of the zone; `describeCron` in
@@ -106,7 +111,8 @@ export interface CronFieldProps {
  * so the field never changes height. An app whose server reads the runs back passes them in, and
  * says when it is still asking; from then on the server's verdict is the field's, and the field's
  * own reading only puts the expression in words. An empty field says nothing yet. `readOnly` draws
- * a saved schedule with no input.
+ * a saved schedule with no input, `paused` one that will not run, and `count={0}` lists no runs.
+ * Other attributes go on the root.
  */
 export function CronField({
     id: given,
@@ -120,6 +126,7 @@ export function CronField({
     invalid,
     placeholder,
     readOnly = false,
+    paused = false,
     presets,
     describe = defaultDescribe,
     format = formatRun,
@@ -127,6 +134,7 @@ export function CronField({
     onIssueOpenChange,
     className,
     words: said,
+    ...rest
 }: CronFieldProps) {
     const words = { ...WORDS, zone: timeZone, ...said }
     const own = useId()
@@ -144,9 +152,9 @@ export function CronField({
         : refused
           ? [{ tone: 'critical' as const, text: invalid }]
           : []
-    const line = empty || refused ? '' : !bad && !runsPending && runs.length === 0 ? words.never : (reading ?? '')
+    const line = empty || refused ? '' : !paused && !bad && !runsPending && runs.length === 0 ? words.never : (reading ?? '')
     return (
-        <div className={cn('flex flex-col gap-3', className)}>
+        <div {...rest} className={cn('flex flex-col gap-3', className)}>
             <div className="flex flex-col gap-1.5">
                 <div className="flex items-baseline gap-2">
                     {readOnly ? (
@@ -199,28 +207,34 @@ export function CronField({
             <p className="min-h-5 text-sm leading-5 text-foreground" aria-live="polite">
                 {line}
             </p>
-            <div className="flex flex-col gap-1.5">
-                <div className="flex items-baseline gap-2 text-xs">
-                    <span className="font-medium text-muted-foreground">{words.next(count)}</span>
-                    {runsPending && <span className="animate-pulse text-faint">{words.checking}</span>}
-                </div>
-                <ol
-                    aria-busy={runsPending || undefined}
-                    className={cn(
-                        'flex flex-col divide-y divide-border rounded-control border border-border',
-                        runsPending && 'text-muted-foreground',
-                    )}
-                >
-                    {Array.from({ length: count }, (_, index) => (
-                        <li key={index} className="flex h-8 items-center gap-3 px-3 font-mono text-xs tabular-nums">
-                            <span className="w-4 text-right text-faint">{index + 1}</span>
-                            <span className={runs[index] === undefined ? 'text-faint' : undefined}>
-                                {runs[index] === undefined ? '—' : format(runs[index], timeZone)}
-                            </span>
-                        </li>
-                    ))}
-                </ol>
-            </div>
+            {paused ? (
+                <p className="text-xs leading-5 text-muted-foreground">{words.paused}</p>
+            ) : (
+                count > 0 && (
+                    <div className="flex flex-col gap-1.5">
+                        <div className="flex items-baseline gap-2 text-xs">
+                            <span className="font-medium text-muted-foreground">{words.next(count)}</span>
+                            {runsPending && <span className="animate-pulse text-faint">{words.checking}</span>}
+                        </div>
+                        <ol
+                            aria-busy={runsPending || undefined}
+                            className={cn(
+                                'flex flex-col divide-y divide-border rounded-control border border-border',
+                                runsPending && 'text-muted-foreground',
+                            )}
+                        >
+                            {Array.from({ length: count }, (_, index) => (
+                                <li key={index} className="flex h-8 items-center gap-3 px-3 font-mono text-xs tabular-nums">
+                                    <span className="w-4 text-right text-faint">{index + 1}</span>
+                                    <span className={runs[index] === undefined ? 'text-faint' : undefined}>
+                                        {runs[index] === undefined ? '—' : format(runs[index], timeZone)}
+                                    </span>
+                                </li>
+                            ))}
+                        </ol>
+                    </div>
+                )
+            )}
         </div>
     )
 }

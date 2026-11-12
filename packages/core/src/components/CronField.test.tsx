@@ -22,6 +22,27 @@ describe('CronField', () => {
         expect(html).toContain('Mon 2027-03-29 02:00 +02:00')
     })
 
+    it('paused, reads the expression in words and lists no runs', () => {
+        const html = renderToStaticMarkup(<CronField value="0 2 * * *" onChange={noop} from={FROM} runs={[]} readOnly paused />)
+        expect(html).toContain('>Every day at 02:00<')
+        expect(html).toContain('Paused, so no runs are coming')
+        expect(html).not.toContain('Never runs')
+        expect(html).not.toContain('<ol')
+    })
+
+    it('with a count of 0, draws no runs heading or list', () => {
+        const html = renderToStaticMarkup(<CronField value="0 2 * * *" onChange={noop} from={FROM} count={0} />)
+        expect(html).not.toContain('Next 0 runs')
+        expect(html).not.toContain('<ol')
+    })
+
+    it('puts other attributes on its root', () => {
+        const html = renderToStaticMarkup(
+            <CronField value="0 2 * * *" onChange={noop} from={FROM} data-testid="cron" aria-describedby="note" />,
+        )
+        expect(html.startsWith('<div data-testid="cron" aria-describedby="note"')).toBe(true)
+    })
+
     it('draws the runs the app reads back in place of its own', () => {
         const runs = [new Date('2027-04-01T00:00:00Z')]
         const html = renderToStaticMarkup(

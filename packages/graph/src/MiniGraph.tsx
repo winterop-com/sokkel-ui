@@ -163,6 +163,12 @@ export interface MiniGraphProps {
      * too large for the box.
      */
     scale?: 'fill' | 'natural'
+    /**
+     * At the natural scale, the least a drawing is shrunk to along the way it reads, as a share of
+     * its natural size: 0.5 when left out. A pipeline longer than that leaves its box with its end
+     * cut off, rather than drawing boxes too small to see.
+     */
+    minScale?: number
     /** Where the drawing stands in its box across the direction it reads: `center` when left out, or `start`. */
     align?: 'center' | 'start'
     /** Leave out an edge another path already implies. */
@@ -177,7 +183,8 @@ export interface MiniGraphProps {
  * color, and the edges between them, laid out by elk as the full graph is and scaled to fit its box.
  * It is a still drawing in SVG with nothing to pan, zoom or press, so a list draws many at the cost
  * of one layout per shape; pointing at a step names it. It is a box as wide as its container and
- * `h-8` tall unless a class sizes it.
+ * `h-8` tall unless a class sizes it. Its root carries `data-slot="mini-graph"` and the class: the
+ * drawing itself at the fill scale, and a box holding the drawing at the natural one.
  */
 export function MiniGraph({
     steps,
@@ -186,6 +193,7 @@ export function MiniGraph({
     scale = 'fill',
     align = 'center',
     reduce = false,
+    minScale = 0.5,
     label,
     className,
 }: MiniGraphProps) {
@@ -196,12 +204,20 @@ export function MiniGraph({
     const fan = steps.some((step) => step.fanOut === true) ? MINI_FAN : 0
     const width = bounds.width + MINI_PAD * 2 + fan
     const height = bounds.height + MINI_PAD * 2 + fan
+    const natural = scale === 'natural'
     const viewBox =
         placed.nodes.length === 0
             ? undefined
             : `${String(bounds.x - MINI_PAD)} ${String(bounds.y - MINI_PAD)} ${String(width)} ${String(height)}`
+    const sources = new Set(steps.filter((step) => step.source === true).map((step) => step.code))
     const start = align === 'start'
-    const natural = scale === 'natural'
+    const down = direction === 'down'
+    const floor =
+        natural && viewBox !== undefined
+            ? down
+                ? { minHeight: height * MINI_SCALE * minScale }
+                : { minWidth: width * MINI_SCALE * minScale }
+            : undefined
     const drawing = (
         <svg
             data-slot={natural ? undefined : 'mini-graph'}
@@ -210,15 +226,17 @@ export function MiniGraph({
             viewBox={viewBox}
             width={natural && viewBox !== undefined ? width * MINI_SCALE : undefined}
             height={natural && viewBox !== undefined ? height * MINI_SCALE : undefined}
-            preserveAspectRatio={start ? (direction === 'down' ? 'xMidYMin meet' : 'xMinYMid meet') : 'xMidYMid meet'}
-            className={natural ? 'block max-h-full max-w-full min-w-0 shrink' : cn('block h-8 w-full min-w-0', className)}
+            preserveAspectRatio={start ? (down ? 'xMidYMin meet' : 'xMinYMid meet') : 'xMidYMid meet'}
+            style={floor}
+            className={natural ? 'block max-h-full max-w-full min-w-0 shrink-0' : cn('block h-8 w-full min-w-0', className)}
         >
             <g fill="none" style={EDGE}>
                 {placed.edges.map((edge) => {
                     const source = byId.get(edge.source)
                     const target = byId.get(edge.target)
                     if (source === undefined || target === undefined) return null
-                    const points = edge.points ?? roughRoute(source, target, direction, routing)
+                    const routed = edge.points ?? roughRoute(source, target, direction, routing)
+                    const points = sources.has(edge.source) ? leaving(routed, MINI_PAD) : routed
                     return <path key={edge.id} d={edgePath(points, routing)} vectorEffect="non-scaling-stroke" />
                 })}
             </g>
@@ -233,8 +251,8 @@ export function MiniGraph({
         <div
             data-slot="mini-graph"
             className={cn(
-                'flex h-8 w-full min-w-0',
-                direction === 'down' ? 'flex-col items-center' : 'items-center',
+                'flex h-8 w-full min-w-0 overflow-hidden',
+                down ? 'flex-col items-center' : 'items-center',
                 start ? 'justify-start' : 'justify-center',
                 className,
             )}
@@ -242,6 +260,16 @@ export function MiniGraph({
             {drawing}
         </div>
     )
+}
+
+/** An edge's route with its first stretch drawn back from where it leaves its box, so no end shows through a dashed outline. */
+function leaving(points: readonly { x: number; y: number }[], by: number): { x: number; y: number }[] {
+    const [first, next] = points
+    if (first === undefined || next === undefined) return [...points]
+    const length = Math.hypot(next.x - first.x, next.y - first.y)
+    if (length <= by * 2) return [...points]
+    const share = by / length
+    return [{ x: first.x + (next.x - first.x) * share, y: first.y + (next.y - first.y) * share }, ...points.slice(1)]
 }
 
 /** How a mini graph's edges are stroked, in the edge color the full graph draws them in. */

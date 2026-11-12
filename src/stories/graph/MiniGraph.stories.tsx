@@ -7,7 +7,7 @@ import { Columns, Stack } from '@winterop-com/sokkel-ui/Layout'
 import { PageHeader } from '@winterop-com/sokkel-ui/PageHeader'
 import { StatusChip } from '@winterop-com/sokkel-ui/StatusChip'
 import { MiniGraph } from '@winterop-com/sokkel-ui-graph/MiniGraph'
-import { FAILED, IMPORT_ORDERS, JOB_RUNS, NIGHTLY_EXPORT, RUNNING, SHORT, type JobRun } from './data'
+import { FAILED, IMPORT_ORDERS, JOB_RUNS, LARGE, NIGHTLY_EXPORT, RUNNING, SHORT, type JobRun } from './data'
 
 const COLUMNS: DataColumn<JobRun>[] = [
     { id: 'run', header: 'Run', width: '6rem', cell: (run) => <span className="font-mono">{run.id}</span> },
@@ -104,7 +104,7 @@ export const DownInSplines: Story = {
     ),
 }
 
-/** Three pipelines at their natural scale from the start of 12rem cells: one step, three, and seven, so a longer strip is a longer pipeline. */
+/** Pipelines at their natural scale from the start of 12rem cells: one step, three and seven, so a longer strip is a longer pipeline, and 57, shrunk to half and cut off at the cell's end. */
 export const Natural: Story = {
     render: () => (
         <Cell>
@@ -112,6 +112,7 @@ export const Natural: Story = {
                 <MiniGraph steps={SHORT.slice(0, 1)} scale="natural" align="start" label="one step" />
                 <MiniGraph steps={SHORT} scale="natural" align="start" label="three steps" />
                 <MiniGraph steps={NIGHTLY_EXPORT} scale="natural" align="start" label="nightly-export steps" />
+                <MiniGraph steps={LARGE} scale="natural" align="start" reduce label="rebuild-index steps" />
             </Stack>
         </Cell>
     ),
