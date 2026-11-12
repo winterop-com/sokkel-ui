@@ -15,6 +15,8 @@ export interface UnfoldableProps {
     /** Called with the open state the reader asked for. */
     onOpenChange?: (open: boolean) => void
     forced?: boolean
+    /** Lets a long summary wrap onto more lines instead of being cut to one. */
+    wrapSummary?: boolean
     className?: string
     /** What opens under the heading. Without it the row is static: no chevron and no button, its heading lined up with the rest. */
     children?: ReactNode
@@ -30,7 +32,8 @@ export interface UnfoldableProps {
  * a list of mixed rows lines up.
  *
  * `forced` holds it open whatever the reader chose, as a filter does while it is being typed; the
- * reader's own choice returns when it is let go.
+ * row is static meanwhile, having nothing to do, and the reader's own choice returns when it is let
+ * go. On a phone an unfolding row is a finger tall. `wrapSummary` lets a long summary wrap.
  */
 export function Unfoldable({
     heading,
@@ -40,6 +43,7 @@ export function Unfoldable({
     defaultOpen = false,
     onOpenChange,
     forced = false,
+    wrapSummary = false,
     className,
     children,
 }: UnfoldableProps) {
@@ -53,16 +57,16 @@ export function Unfoldable({
     }
     const row = '-mx-1 flex min-w-0 flex-1 items-center gap-2 rounded-md px-1 py-1 text-left text-sm font-medium'
     return (
-        <div className={cn('flex flex-col gap-2', className)}>
-            <div className="flex items-center gap-2">
-                {unfolds ? (
+        <div data-slot="unfoldable" data-open={open || undefined} className={cn('flex flex-col gap-2', className)}>
+            <div data-slot="unfoldable-row" className="flex items-center gap-2">
+                {unfolds && !forced ? (
                     <button
                         type="button"
                         aria-expanded={open}
                         onClick={toggle}
                         className={cn(
                             row,
-                            'cursor-pointer outline-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                            'cursor-pointer outline-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset max-md:min-h-finger',
                         )}
                     >
                         <ChevronRight
@@ -73,16 +77,29 @@ export function Unfoldable({
                     </button>
                 ) : (
                     <div className={row}>
-                        <span className="size-3.5 shrink-0" aria-hidden />
+                        {forced && unfolds ? (
+                            <ChevronRight className="size-3.5 shrink-0 rotate-90 text-faint" aria-hidden />
+                        ) : (
+                            <span className="size-3.5 shrink-0" aria-hidden />
+                        )}
                         <span className="min-w-0 truncate">{heading}</span>
                     </div>
                 )}
                 {aside !== undefined && <div className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">{aside}</div>}
             </div>
             {!open && summary !== undefined && summary !== null && (
-                <div className="-mt-1.5 truncate pl-5.5 text-xs text-muted-foreground">{summary}</div>
+                <div
+                    data-slot="unfoldable-summary"
+                    className={cn('-mt-1.5 pl-5.5 text-xs text-muted-foreground', !wrapSummary && 'truncate')}
+                >
+                    {summary}
+                </div>
             )}
-            {open && <div className="pl-5.5">{children}</div>}
+            {open && (
+                <div data-slot="unfoldable-content" className="pl-5.5">
+                    {children}
+                </div>
+            )}
         </div>
     )
 }
