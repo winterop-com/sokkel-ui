@@ -25,7 +25,14 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, 
 import { useIsMobile } from '@winterop-com/sokkel-ui/hooks/use-mobile'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { GRAPH_DRAG_TYPE } from './blocks'
-import { GraphControlsContext, GraphDirectionContext, GraphEditableContext, GraphEditingContext, type GraphControls } from './context'
+import {
+    GraphControlsContext,
+    GraphDirectionContext,
+    GraphEditableContext,
+    GraphEditingContext,
+    useGraphDirection,
+    type GraphControls,
+} from './context'
 import { GraphEdge } from './GraphEdge'
 import { GraphNode } from './GraphNode'
 import {
@@ -230,16 +237,20 @@ function nodeAt(clientX: number, clientY: number): string | null {
     return found?.getAttribute('data-id') ?? null
 }
 
-/** Fit the graph within the fit's zoom bounds, then hang what does not fit off the far edges, start first. */
-
+/**
+ * Fit the graph within the fit's zoom bounds, then hang what does not fit off the far edges, start
+ * first. `top` keeps that many pixels at the top clear, for a toolbar over the canvas.
+ */
 async function fitGraph(
     flow: ReactFlowInstance,
-    canvas: { width: number; height: number },
+    whole: { width: number; height: number },
     minZoom: number,
     narrowFit = true,
     tallFit = minZoom,
+    top = 0,
 ): Promise<void> {
     const nodes = flow.getNodes()
+    const canvas = { width: whole.width, height: whole.height - top }
     if (nodes.length === 0 || canvas.width <= 0 || canvas.height <= 0) return
     const drawing = drawingBounds(flow)
     const room = 1 - 2 * FIT_PADDING
@@ -252,7 +263,7 @@ async function fitGraph(
     if (tallFit < least && fitsAcross >= least && fitsDown < least) least = Math.max(tallFit, fitsDown)
     const fitted = getViewportForBounds(drawing, canvas.width, canvas.height, least, FIT_MAX_ZOOM, FIT_PADDING)
     const placed = startOfOverflow(fitted, drawing, canvas)
-    await flow.setViewport(placed, { duration: 0 })
+    await flow.setViewport({ ...placed, y: placed.y + top }, { duration: 0 })
 }
 
 /** The bends of routed edges. */
@@ -373,6 +384,20 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
     const mobile = useIsMobile()
     const fitted = frame === 'fitted'
     const filled = frame === 'filled'
+    // A fit keeps the toolbar's height clear at the top, so the bar never covers the first boxes.
+    const [toolbarBox, setToolbarBox] = useState<HTMLDivElement | null>(null)
+    const [toolbarRoom, setToolbarRoom] = useState(0)
+    useEffect(() => {
+        if (toolbarBox === null) {
+            setToolbarRoom(0)
+            return
+        }
+        const measure = () => setToolbarRoom(Math.ceil(toolbarBox.offsetTop + toolbarBox.offsetHeight))
+        measure()
+        const observer = new ResizeObserver(measure)
+        observer.observe(toolbarBox)
+        return () => observer.disconnect()
+    }, [toolbarBox])
     // A new layout chosen fits the view again, even one the reader had moved.
     const laidOut = `${direction}|${layoutKey}`
     const [fitLayout, setFitLayout] = useState(laidOut)
@@ -677,6 +702,7 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
                                 minZoom={fitMinZoom}
                                 narrowFit={narrowFit}
                                 tallFit={Math.min(tallFit ?? fitMinZoom, fitMinZoom)}
+                                top={fitted ? 0 : toolbarRoom}
                                 onFitted={(fittedKey) => setFittedFor(fittedKey)}
                             />
                             {fitted && <ModifierWheel onZoomed={() => setMoved(true)} />}
@@ -688,6 +714,7 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
                                 minZoom={fitMinZoom}
                                 narrowFit={narrowFit}
                                 tallFit={Math.min(tallFit ?? fitMinZoom, fitMinZoom)}
+                                top={fitted ? 0 : toolbarRoom}
                                 onControls={onControls}
                             >
                                 {empty && (
@@ -704,7 +731,7 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
                                     </Panel>
                                 )}
                                 {toolbar !== undefined && (
-                                    <Panel position="top-left" className="m-2! max-w-[calc(100%-1rem)]">
+                                    <Panel ref={setToolbarBox} position="top-left" className="m-2! max-w-[calc(100%-1rem)]">
                                         {toolbar}
                                     </Panel>
                                 )}
@@ -726,6 +753,7 @@ function ViewControls({
     minZoom,
     narrowFit,
     tallFit,
+    top,
     onControls,
     children,
 }: {
@@ -734,11 +762,13 @@ function ViewControls({
     minZoom: number
     narrowFit: boolean
     tallFit: number
+    top: number
     onControls?: (controls: GraphControls | null) => void
     children: ReactNode
 }) {
     const flow = useReactFlow()
     const store = useStoreApi()
+    const direction = useGraphDirection()
     const controls = useMemo<GraphControls>(() => {
         const step = (way: 'in' | 'out') => () => {
             onMoved(true)
@@ -750,9 +780,10 @@ function ViewControls({
             fit: () => {
                 onMoved(false)
                 const { width, height } = store.getState()
-                void fitGraph(flow, { width, height }, minZoom, narrowFit, tallFit)
+                void fitGraph(flow, { width, height }, minZoom, narrowFit, tallFit, top)
             },
             empty,
+            direction,
             nodeBox: (id) => {
                 const node = flow.getInternalNode(id)
                 if (node === undefined) return null
@@ -761,7 +792,7 @@ function ViewControls({
             },
             toGraph: (point) => flow.screenToFlowPosition({ x: point.clientX, y: point.clientY }),
         }
-    }, [flow, store, onMoved, empty, minZoom, narrowFit, tallFit])
+    }, [flow, store, onMoved, empty, direction, minZoom, narrowFit, tallFit, top])
     const report = useRef(onControls)
     report.current = onControls
     useEffect(() => {
@@ -807,9 +838,12 @@ function FitToGraph({
     minZoom,
     narrowFit,
     tallFit,
+    top,
     onFitted,
 }: {
     placement: string
+    /** The height kept clear at the top, under a toolbar. */
+    top: number
     moved: boolean
     settled: boolean
     direction: GraphDirection
@@ -858,7 +892,7 @@ function FitToGraph({
         let current = true
         const fit = () => {
             const { width, height } = store.getState()
-            void fitGraph(flow, { width, height }, minZoom, narrowFit, tallFit).then(() => {
+            void fitGraph(flow, { width, height }, minZoom, narrowFit, tallFit, top).then(() => {
                 if (current && settled) done.current(placement)
             })
         }
@@ -871,7 +905,7 @@ function FitToGraph({
             cancelAnimationFrame(frame)
             unsubscribe()
         }
-    }, [flow, store, moved, placement, settled, minZoom, narrowFit, tallFit])
+    }, [flow, store, moved, placement, settled, minZoom, narrowFit, tallFit, top])
 
     return null
 }

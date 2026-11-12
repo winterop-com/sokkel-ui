@@ -46,6 +46,8 @@ export interface GraphControls {
     fit: () => void
     /** The canvas has nothing on it to zoom or fit. */
     empty: boolean
+    /** Which way the graph runs, so a box the app adds after another goes on the side its edges leave from. */
+    direction: GraphDirection
     /** Where a node's box stands as drawn, in the graph's pixels, or null for a node not on the canvas. */
     nodeBox: (id: string) => GraphBox | null
     /** A point on the screen, such as a pointer's, as a point in the graph's coordinates. */

@@ -83,6 +83,47 @@ function typing(target: EventTarget | null): boolean {
     return target instanceof HTMLElement && target.closest('input, textarea, select, [contenteditable="true"]') !== null
 }
 
+/** The keys of a press, as a keyboard event carries them. */
+export interface HistoryKeyPress {
+    key: string
+    metaKey: boolean
+    ctrlKey: boolean
+    shiftKey: boolean
+    altKey: boolean
+}
+
+/** What a key press asks of a history: Cmd or Ctrl with Z undoes, with Shift and Z or Ctrl with Y redoes; null for anything else. */
+export function historyKey(press: HistoryKeyPress): 'undo' | 'redo' | null {
+    if (!(press.metaKey || press.ctrlKey) || press.altKey) return null
+    const key = press.key.toLowerCase()
+    if (key === 'z') return press.shiftKey ? 'redo' : 'undo'
+    if (key === 'y' && press.ctrlKey && !press.shiftKey) return 'redo'
+    return null
+}
+
+/**
+ * The undo and redo keys for a history kept elsewhere, such as the text a graph is drawn from:
+ * Cmd or Ctrl with Z calls `undo`, and with Shift and Z, or Ctrl with Y, `redo`, anywhere on the
+ * page but in a field, which keeps its own undo. Off while `enabled` is false.
+ */
+export function useHistoryKeys(undo: () => void, redo: () => void, { enabled = true }: { enabled?: boolean } = {}): void {
+    const calls = useRef({ undo, redo })
+    useEffect(() => {
+        calls.current = { undo, redo }
+    })
+    useEffect(() => {
+        if (!enabled) return
+        const onKey = (event: KeyboardEvent) => {
+            const which = historyKey(event)
+            if (which === null || event.defaultPrevented || typing(event.target)) return
+            event.preventDefault()
+            calls.current[which]()
+        }
+        window.addEventListener('keydown', onKey)
+        return () => window.removeEventListener('keydown', onKey)
+    }, [enabled])
+}
+
 /**
  * The value an editor works on, with undo and redo. Cmd or Ctrl with Z undoes, and with Shift and
  * Z, or Ctrl with Y, redoes, unless `keys` is false or the key is pressed in a field, which keeps
@@ -129,22 +170,7 @@ export function useGraphHistory<T>(
     const redo = useCallback(() => dispatch({ type: 'redo' }), [])
     const reset = useCallback((value: T) => dispatch({ type: 'reset', value }), [])
 
-    useEffect(() => {
-        if (!keys) return
-        const onKey = (event: KeyboardEvent) => {
-            if (!(event.metaKey || event.ctrlKey) || event.altKey || typing(event.target)) return
-            const key = event.key.toLowerCase()
-            if (key === 'z') {
-                event.preventDefault()
-                dispatch({ type: event.shiftKey ? 'redo' : 'undo' })
-            } else if (key === 'y' && event.ctrlKey && !event.shiftKey) {
-                event.preventDefault()
-                dispatch({ type: 'redo' })
-            }
-        }
-        window.addEventListener('keydown', onKey)
-        return () => window.removeEventListener('keydown', onKey)
-    }, [keys])
+    useHistoryKeys(undo, redo, { enabled: keys })
 
     return {
         value: state.present,

@@ -2,7 +2,7 @@ import { EditorSelection, EditorState, type TransactionSpec } from '@codemirror/
 import type { EditorView } from '@codemirror/view'
 import { describe, expect, it } from 'vitest'
 
-import { controlDocument, createSharedDocument, sharedLink, type SharedDocument } from './shared'
+import { controlDocument, createSharedDocument, differingSpan, sharedLink, type SharedDocument } from './shared'
 
 /** A stand-in for an editor view: its own state, joined to the document as `CodeEditor` joins one. */
 function viewOf(doc: SharedDocument) {
@@ -117,5 +117,42 @@ describe('a shared document held by a controlled value', () => {
         // The two quick edits are one undo step, and undoing it reports once too.
         expect(doc.undo()).toBe(true)
         expect(owner.calls).toEqual(['steps: []\na', 'steps: []\nab', 'steps: []\n'])
+    })
+})
+
+describe('an edit put in from outside the editors', () => {
+    it('changes only the span that differs', () => {
+        expect(differingSpan('needs: [fetch]\n', 'needs: [fetch, transform]\n')).toEqual({ from: 13, to: 13, insert: ', transform' })
+        expect(differingSpan('id: fetch\n', 'id: read\n')).toEqual({ from: 4, to: 9, insert: 'read' })
+        expect(differingSpan('same', 'same')).toBeNull()
+    })
+
+    it('shows in every editor, keeps a caret before it where it was, and is undone as one step', () => {
+        const doc = createSharedDocument('steps:\n  - id: fetch\n')
+        const pane = viewOf(doc)
+        pane.dispatch({ selection: EditorSelection.cursor(3) })
+        expect(doc.canUndo).toBe(false)
+        doc.replace('steps:\n  - id: fetch\n  - id: upload\n')
+        expect(pane.state.doc.toString()).toBe('steps:\n  - id: fetch\n  - id: upload\n')
+        expect(pane.state.selection.main.head).toBe(3)
+        expect(doc.canUndo).toBe(true)
+        expect(pane.undo()).toBe(true)
+        expect(pane.state.doc.toString()).toBe('steps:\n  - id: fetch\n')
+        expect(doc.canRedo).toBe(true)
+        expect(doc.redo()).toBe(true)
+        expect(doc.text).toBe('steps:\n  - id: fetch\n  - id: upload\n')
+    })
+
+    it('is a step of its own beside typing, unless told to join', () => {
+        const doc = createSharedDocument('retries: 1\n')
+        const pane = viewOf(doc)
+        type(pane, 10, '0')
+        doc.replace('retries: 100\n')
+        expect(doc.undo()).toBe(true)
+        expect(doc.text).toBe('retries: 10\n')
+        doc.replace('retries: 12\n', { join: true })
+        doc.replace('retries: 123\n', { join: true })
+        expect(doc.undo()).toBe(true)
+        expect(doc.text).toBe('retries: 10\n')
     })
 })

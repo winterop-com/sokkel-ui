@@ -36,8 +36,8 @@ examples/
                  a library with history and playlists, search, and player settings that stick
   studio/        an editor for pipelines, schemas and queries: a workspace of files in the rail's
                  tree, opened in tabs; pipelines checked and completed against their schema as typed,
-                 their problems listed, their steps drawn live and run with the log marked where they
-                 failed; JSON Schemas edited against the 2020-12 meta-schema beside a value tried
+                 their problems listed, their steps edited as text, on a graph or both with one undo,
+                 and run with the log marked where they failed; JSON Schemas edited against the 2020-12 meta-schema beside a value tried
                  against them; SQL over the runs; any editor popped out into a window
   podcast/       podcasts that really play: episodes spoken in the page with a transcript that
                  follows, chapters, speed, a sleep timer, the queue, New as an inbox, downloads,

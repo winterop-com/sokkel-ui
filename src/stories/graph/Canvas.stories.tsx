@@ -153,8 +153,15 @@ function Adding({ initial, opened }: { initial: PipelineStep[]; opened: 'button'
         const code = freeCode(steps, block.kind)
         const after = selected === null ? undefined : controls?.nodeBox(selected)
         setSteps((held) => [...held, { code, name: block.name, kind: block.kind, needs: selected === null ? [] : [selected] }])
-        if (after !== null && after !== undefined)
-            setPositions((held) => ({ ...held, [code]: { x: after.x + after.width + 64, y: after.y } }))
+        // The new box goes on the side the chosen one's edges leave from.
+        if (after !== null && after !== undefined && controls !== null)
+            setPositions((held) => ({
+                ...held,
+                [code]:
+                    controls.direction === 'down'
+                        ? { x: after.x, y: after.y + after.height + 48 }
+                        : { x: after.x + after.width + 64, y: after.y },
+            }))
         setSelected(code)
         setAt(null)
     }
@@ -221,6 +228,6 @@ export const AppStates: Story = { name: 'App states', render: () => <Health /> }
 /**
  * `/` opens the picker in the middle of the canvas (`at="center"`), and the add button beside the
  * zoom buttons opens it beside itself. The step picked goes after the chosen one, placed beside its
- * box from `nodeBox` on the canvas's controls.
+ * box from `nodeBox` on the canvas's controls, on the side its `direction` runs to.
  */
 export const KeyboardPicker: Story = { name: 'Keyboard picker', render: () => <Adding initial={NIGHTLY_EXPORT} opened="center" /> }

@@ -11,4 +11,6 @@ export const runs = collection<Run>('runs', () => [])
 export const samples = collection<{ id: string; text: string }>('samples', () =>
     Object.entries(SAMPLES).map(([id, text]) => ({ id, text })),
 )
+/** Where the boxes of each pipeline's graph were moved to, by the pipeline file's id and then by step. */
+export const layouts = collection<{ id: string; positions: Record<string, { x: number; y: number }> }>('layouts', () => [])
 export const prefs = collection<Prefs>('prefs', () => [{ ...DEFAULT_PREFS }])

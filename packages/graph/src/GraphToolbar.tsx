@@ -76,6 +76,8 @@ export interface GraphToolbarProps {
     issues?: number
     /** The count was pressed, to go to the first problem. */
     onIssues?: () => void
+    /** False leaves zoom and fit out, for a canvas that keeps its own zoom buttons in its corner. */
+    zoom?: boolean
     /** The app's own buttons, after the tools. */
     children?: ReactNode
     words?: Partial<GraphToolbarWords>
@@ -86,7 +88,8 @@ export interface GraphToolbarProps {
  * The tools of a graph editor in one bar: undo and redo, a tidy layout, the view's zoom and fit,
  * and how many steps have a problem, with the app's own buttons after them. Each group shows only
  * when it is given something to do; zoom and fit show when the bar is drawn over a canvas, as its
- * `toolbar`, and while the canvas has nothing on it the view's buttons step aside. The canvas's own zoom buttons can then be hidden with `controls={false}`.
+ * `toolbar`, and while the canvas has nothing on it the view's buttons step aside. The canvas's own zoom buttons can then be hidden with `controls={false}`,
+ * or these left out with `zoom={false}`, as when the corner's cluster carries the app's buttons too.
  */
 export function GraphToolbar({
     onUndo,
@@ -96,6 +99,7 @@ export function GraphToolbar({
     onLayout,
     issues,
     onIssues,
+    zoom = true,
     children,
     words: given,
     className,
@@ -104,7 +108,7 @@ export function GraphToolbar({
     const controls = useGraphControls()
     const history = onUndo !== undefined || onRedo !== undefined
     // An empty canvas has nothing to zoom, fit or tidy, so the view's buttons step aside.
-    const view = controls !== null && !controls.empty
+    const view = zoom && controls !== null && !controls.empty
     const tidies = onLayout !== undefined && controls?.empty !== true
     const groups: ReactNode[] = []
     if (history)
