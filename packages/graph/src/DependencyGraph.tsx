@@ -2,7 +2,8 @@ import { Cog, Database } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 import type { Status } from '@winterop-com/sokkel-ui/StatusChip'
-import { fitDirection, GraphCanvas, wrapWidthFor, type GraphViewProps } from './GraphCanvas'
+import { fitDirection, GraphCanvas, wrapFor, type GraphViewProps } from './GraphCanvas'
+import { FIT_MIN_ZOOM } from './layout'
 import { useNodeGraph, type GraphItem, type GraphLink } from './use-node-graph'
 
 /** One thing in a lineage: a dataset, or a job that reads datasets and writes others. */
@@ -51,9 +52,14 @@ export function DependencyGraph({
     words,
     className,
 }: DependencyGraphProps) {
-    const [width, setWidth] = useState<number>()
-    const direction = given ?? fitDirection(width)
-    const wrapAt = wrapWidthFor(wrapWidth, wrapToCanvas, width, fitMinZoom)
+    const [size, setSize] = useState<{ width: number; height: number }>()
+    const direction = given ?? fitDirection(size?.width)
+    const wrap = wrapFor(
+        wrapWidth,
+        wrapToCanvas,
+        size === undefined ? undefined : { width: size.width, height: frame === 'fitted' ? 0 : size.height },
+        Math.min(fitMinZoom ?? FIT_MIN_ZOOM, tallFit ?? Infinity),
+    )
     const items = useMemo<GraphItem[]>(
         () =>
             nodes.map((node) => ({
@@ -70,14 +76,14 @@ export function DependencyGraph({
         [nodes],
     )
     const links = useMemo<GraphLink[]>(() => edges.map((edge) => ({ source: edge.from, target: edge.to, arrow: true })), [edges])
-    const graph = useNodeGraph(items, links, { direction, selected, routing, spacing, wrapWidth: wrapAt, minNodeWidth, maxNodeWidth })
+    const graph = useNodeGraph(items, links, { direction, selected, routing, spacing, ...wrap, minNodeWidth, maxNodeWidth })
     return (
         <GraphCanvas
             nodes={graph.nodes}
             edges={graph.edges}
             settled={graph.settled}
             direction={direction}
-            onWidth={setWidth}
+            onSize={setSize}
             frame={frame}
             zoomOnDoubleClick={zoomOnDoubleClick}
             narrowFit={narrowFit}

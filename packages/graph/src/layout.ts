@@ -74,6 +74,13 @@ export interface GraphLayoutStyle {
      * it is never cut.
      */
     wrapWidth?: number
+    /**
+     * The room the graph is fitted into, in its own pixels at the least zoom a fit goes to, such as
+     * its canvas's: a graph running right that fits across it stays in one row, and one that does
+     * not is cut into the rows that fit the room at the larger zoom, or kept whole when cutting only
+     * adds height. A height of 0 cuts by the width alone.
+     */
+    wrapRoom?: { width: number; height: number }
 }
 
 /** What elk is told to cut a graph too wide into rows by. */
@@ -88,10 +95,16 @@ const WRAP_STEP = 48
 /** How many layouts a wrap tries to find the shape whose rows are as wide as it lets them be. */
 const WRAP_TRIES = 6
 
+/** The widest a graph running right is let be before it is cut, from its wrap width and its room. */
+function wrapLimit(style: GraphLayoutStyle): number {
+    return Math.min(style.wrapWidth ?? Infinity, style.wrapRoom?.width ?? Infinity)
+}
+
 /** Whether a graph may need cutting into rows at all, from the rank layout, which is never narrower than elk's. */
 function mayWrap(shape: GraphShape, direction: GraphDirection, style: GraphLayoutStyle): boolean {
-    if (direction !== 'right' || style.wrapWidth === undefined || style.wrapWidth <= 0 || shape.nodes.length < 2) return false
-    return boundsOf(rankLayout(shape, 'right', style.spacing).nodes).width > style.wrapWidth
+    const limit = wrapLimit(style)
+    if (direction !== 'right' || !(limit > 0) || limit === Infinity || shape.nodes.length < 2) return false
+    return boundsOf(rankLayout(shape, 'right', style.spacing).nodes).width > limit
 }
 
 /** How wide and tall a placed graph is drawn, its edges' bends included. */
@@ -366,9 +379,11 @@ export async function layoutGraph(
 }
 
 /**
- * A graph cut into rows no wider than its wrap width, judged by elk's own layout: kept in one row
- * when that fits, else in the fewest rows that do. elk aims at a shape rather than a count of rows,
- * so the shape is searched for, wider while the rows fit and narrower while they do not.
+ * A graph cut into rows, judged by elk's own layout, its edges' bends included. Given a room, it
+ * stays in one row when that fits across the room, and otherwise is laid out once in the room's
+ * shape: the one of the two that fits the room at the larger zoom is kept, so a cut that only adds
+ * height is not. Rows are never wider than `wrapWidth`; when no cut gets under it, the graph stays
+ * whole.
  */
 async function wrapped(
     shape: GraphShape,
@@ -377,29 +392,51 @@ async function wrapped(
     using: ElkEngine,
     flat: PlacedGraph,
 ): Promise<PlacedGraph> {
-    const limit = style.wrapWidth as number
+    const cap = style.wrapWidth ?? Infinity
+    const room = style.wrapRoom
     const size = placedBounds(flat)
-    if (size.width <= limit) return flat
-    const rows = Math.min(shape.nodes.length, Math.ceil(size.width / limit))
+    if (size.width <= wrapLimit(style)) return flat
+    const lay = async (aspect: number) => {
+        const placed = fromElk(shape, await using.layout(toElk(shape, direction, style, aspect)))
+        return { placed, ...placedBounds(placed) }
+    }
+    if (room === undefined || room.height <= 0) return (await cutTo(wrapLimit(style), size, lay)) ?? flat
+    const zoomOf = (drawn: { width: number; height: number }) =>
+        Math.min(room.width / Math.max(1, drawn.width), room.height / Math.max(1, drawn.height))
+    const shaped = await lay(room.width / room.height)
+    const fitting = [{ placed: flat, ...size }, shaped].filter((each) => each.width <= cap)
+    if (fitting.length === 0) return (await cutTo(cap, size, lay)) ?? flat
+    return fitting.reduce((best, each) => (zoomOf(each) > zoomOf(best) ? each : best)).placed
+}
+
+/**
+ * The cut whose rows are as wide as `limit` lets them be, or null when none gets under it. elk aims
+ * at a shape rather than a count of rows, so the shape is searched for: wider while the rows fit,
+ * narrower while they do not.
+ */
+async function cutTo(
+    limit: number,
+    size: { width: number; height: number },
+    lay: (aspect: number) => Promise<{ placed: PlacedGraph; width: number }>,
+): Promise<PlacedGraph | null> {
+    if (limit === Infinity) return null
+    const rows = Math.max(2, Math.ceil(size.width / limit))
     // n rows of a graph W wide and H tall stand about W/n wide and n·H tall.
     const guess = size.width / (rows * rows * Math.max(1, size.height))
     let low = guess / 16
     let high = guess * 16
     let aspect = guess
     let best: { placed: PlacedGraph; width: number } | null = null
-    let narrowest: { placed: PlacedGraph; width: number } | null = null
     for (let tries = 0; tries < WRAP_TRIES; tries += 1) {
-        const placed = fromElk(shape, await using.layout(toElk(shape, direction, style, aspect)))
-        const width = placedBounds(placed).width
-        if (narrowest === null || width < narrowest.width) narrowest = { placed, width }
-        if (width <= limit) {
-            if (best === null || width > best.width) best = { placed, width }
-            if (width >= limit * 0.9) break
+        const laid = await lay(aspect)
+        if (laid.width <= limit) {
+            if (best === null || laid.width > best.width) best = laid
+            if (laid.width >= limit * 0.9) break
             low = aspect
         } else high = aspect
         aspect = Math.sqrt(low * high)
     }
-    return (best ?? narrowest ?? { placed: flat }).placed
+    return best?.placed ?? null
 }
 
 /** How long elk tries to keep each edge of a network, center to center. */
@@ -465,7 +502,11 @@ export function shapeSignature(shape: GraphShape, direction: GraphDirection, sty
         style.routing ?? 'orthogonal',
         style.spacing ?? 'normal',
         // A width that cannot cut the graph, or moves less than a step, lays nothing out again.
-        mayWrap(shape, direction, style) ? Math.floor((style.wrapWidth as number) / WRAP_STEP) : '',
+        mayWrap(shape, direction, style)
+            ? [style.wrapWidth, style.wrapRoom?.width, style.wrapRoom?.height]
+                  .map((each) => (each === undefined ? '-' : String(Math.floor(each / WRAP_STEP))))
+                  .join(':')
+            : '',
         shape.nodes.map((node) => `${node.id}:${String(node.width)}x${String(node.height)}`).join(','),
         shape.edges
             .map((edge) => `${edge.source}>${edge.target}${edge.label === undefined ? '' : `:${String(edge.label.width)}`}`)

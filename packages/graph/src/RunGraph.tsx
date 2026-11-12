@@ -2,10 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { useReducedMotion } from '@winterop-com/sokkel-ui/hooks/use-reduced-motion'
 import type { Status } from '@winterop-com/sokkel-ui/StatusChip'
-import { fitDirection, GraphCanvas, wrapWidthFor, type GraphViewProps } from './GraphCanvas'
+import { fitDirection, GraphCanvas, wrapFor, type GraphViewProps } from './GraphCanvas'
 import type { GraphEdgeData } from './GraphEdge'
 import { formatDuration as sayDuration, type GraphNodeData } from './GraphNode'
 import type { PipelineStep } from './PipelineGraph'
+import { FIT_MIN_ZOOM } from './layout'
 import { useNodeGraph, type GraphItem, type GraphLink } from './use-node-graph'
 
 /** One step of a run: the pipeline's step, with how far it got. */
@@ -127,9 +128,14 @@ export function RunGraph({
     words,
     className,
 }: RunGraphProps) {
-    const [width, setWidth] = useState<number>()
-    const direction = given ?? fitDirection(width)
-    const wrapAt = wrapWidthFor(wrapWidth, wrapToCanvas, width, fitMinZoom)
+    const [size, setSize] = useState<{ width: number; height: number }>()
+    const direction = given ?? fitDirection(size?.width)
+    const wrap = wrapFor(
+        wrapWidth,
+        wrapToCanvas,
+        size === undefined ? undefined : { width: size.width, height: frame === 'fitted' ? 0 : size.height },
+        Math.min(fitMinZoom ?? FIT_MIN_ZOOM, tallFit ?? Infinity),
+    )
     const reduced = useReducedMotion()
     const handing = useHandovers(steps)
     const items = useMemo<GraphItem[]>(
@@ -167,14 +173,14 @@ export function RunGraph({
             })),
         )
     }, [steps, handing, reduced])
-    const graph = useNodeGraph(items, links, { direction, selected, routing, spacing, wrapWidth: wrapAt, minNodeWidth, maxNodeWidth })
+    const graph = useNodeGraph(items, links, { direction, selected, routing, spacing, ...wrap, minNodeWidth, maxNodeWidth })
     return (
         <GraphCanvas
             nodes={graph.nodes}
             edges={graph.edges}
             settled={graph.settled}
             direction={direction}
-            onWidth={setWidth}
+            onSize={setSize}
             frame={frame}
             onSelect={onSelect}
             zoomOnDoubleClick={zoomOnDoubleClick}

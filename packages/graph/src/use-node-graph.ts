@@ -60,6 +60,7 @@ export function useNodeGraph(
         routing,
         spacing,
         wrapWidth,
+        wrapRoom,
         minNodeWidth,
         maxNodeWidth,
     }: {
@@ -107,7 +108,17 @@ export function useNodeGraph(
         [items, links, ids, measure, minNodeWidth, maxNodeWidth],
     )
 
-    const style = useMemo<GraphLayoutStyle>(() => ({ routing, spacing, wrapWidth }), [routing, spacing, wrapWidth])
+    const roomWidth = wrapRoom?.width
+    const roomHeight = wrapRoom?.height
+    const style = useMemo<GraphLayoutStyle>(
+        () => ({
+            routing,
+            spacing,
+            wrapWidth,
+            wrapRoom: roomWidth === undefined || roomHeight === undefined ? undefined : { width: roomWidth, height: roomHeight },
+        }),
+        [routing, spacing, wrapWidth, roomWidth, roomHeight],
+    )
     const placed = useGraphLayout(shape, direction, ready, style)
 
     const nodes = useMemo<Node[]>(() => {
