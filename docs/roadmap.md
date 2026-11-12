@@ -6,7 +6,10 @@ to `plan.md` when it ships.
 
 ## Where it stands
 
-- **0.19.7** is the latest release (2026-11-11): `FilterChip` keeps pick order on request, and an input
+- **0.19.8** is the latest release (2026-11-12): `MiniGraph` draws at a natural scale from the start
+  of its box, marks sources and fan-outs, can leave out implied edges and says a hint on hover; a
+  boxed `Section` no longer collapses in a scrolling column.
+- **0.19.7** (2026-11-11): `FilterChip` keeps pick order on request, and an input
   group's buttons fill it on a phone.
 - **0.19.6** (2026-11-11): charts share one theme look and draw sooner (a dashboard
   switch in WebKit from 2.8 s to 0.12 s), and a time series keeps every point where its labels repeat.
