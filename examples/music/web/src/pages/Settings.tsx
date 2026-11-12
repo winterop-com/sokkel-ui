@@ -8,7 +8,6 @@ import { CORNERS, DEFAULT_APPEARANCE, THEMES } from '@winterop-com/sokkel-ui/lib
 import { MEDIA_RATES } from '@winterop-com/sokkel-ui/media/MediaControls'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
 import { Switch } from '@winterop-com/sokkel-ui/primitives/switch'
-import { toast } from '@winterop-com/sokkel-ui/primitives/toast'
 import { AudioLines, Library, PanelBottom, Palette, Play } from 'lucide-react'
 import { useState } from 'react'
 
@@ -277,6 +276,7 @@ export function Settings({ appearance, open, onClose }: { appearance: Appearance
                 {
                     id: 'library',
                     label: 'On this device',
+                    reset: false,
                     icon: Library,
                     settings: [
                         {
@@ -383,8 +383,7 @@ export function Settings({ appearance, open, onClose }: { appearance: Appearance
                 onReset={(section) => {
                     const keys = section === undefined ? [] : (SECTION_KEYS[section] ?? [])
                     setSettings(Object.fromEntries(keys.map((key) => [key, DEFAULT_SETTINGS[key]])) as Partial<Options>)
-                    if (section === 'appearance') appearance.setSettings({ ...DEFAULT_APPEARANCE, scheme: appearance.settings.scheme })
-                    toast.add({ title: 'Put back to the defaults', timeout: 2000 })
+                    if (section === 'appearance') appearance.setSettings({ ...DEFAULT_APPEARANCE })
                 }}
             />
             <ConfirmDialog

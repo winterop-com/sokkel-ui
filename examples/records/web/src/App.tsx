@@ -2,7 +2,7 @@ import { AccountMenu } from '@winterop-com/sokkel-ui/AccountMenu'
 import { Banner } from '@winterop-com/sokkel-ui/Banner'
 import type { PaletteGroup } from '@winterop-com/sokkel-ui/CommandPalette'
 import { useStored } from '@winterop-com/sokkel-ui/hooks/use-stored'
-import { THEMES } from '@winterop-com/sokkel-ui/lib/appearance'
+import { DEFAULT_APPEARANCE, THEMES } from '@winterop-com/sokkel-ui/lib/appearance'
 import { placeCommands } from '@winterop-com/sokkel-ui/lib/commands'
 import type { SearchGroup, SearchSource } from '@winterop-com/sokkel-ui/lib/search'
 import { Button } from '@winterop-com/sokkel-ui/primitives/button'
@@ -38,7 +38,7 @@ import { toast } from 'sonner'
 import { resetAll, useCollection } from 'tidevann-shared/backend'
 import { useFrame } from 'tidevann-shared/frame'
 import { TidevannMark } from 'tidevann-shared/mark'
-import { go } from 'tidevann-shared/router'
+import { go, useOverlayRoute } from 'tidevann-shared/router'
 
 import { forwardAll, households, ME, onServerDownChange, probe, receipts, SERVER, serverDown, setServerDown } from './data/backend'
 import { FORMS, KIND } from './data/forms'
@@ -152,7 +152,9 @@ function useServerState(): { state: ServerHealth; check: () => void } {
 /** The Records example: forms filled in sections, responses and receipts, households and their visits, places on a map, the API and the metadata's health. */
 export function App() {
     const frame = useFrame()
-    const route = frame.route
+    // Settings open as a dialog over the page they were opened from.
+    const settingsRoute = useOverlayRoute(frame.route, 'settings')
+    const route = settingsRoute.route
     const place = PLACES_BY_ROUTE[route[0] ?? ''] ?? 'overview'
     const { rows: all } = useCollection(receipts)
     const { rows: homes } = useCollection(households)
@@ -160,7 +162,6 @@ export function App() {
     const groups = railGroups(place, waiting)
     const server = useServerState()
     const [foot, setFoot] = useState<Foot>({})
-    const [settingsOpen, setSettingsOpen] = useState(false)
     const [section, setSection] = useState('appearance')
     const [settingsQuery, setSettingsQuery] = useState('')
     const [keepPlace, setKeepPlace] = useStored('keep-place', true)
@@ -169,7 +170,7 @@ export function App() {
 
     const openSettings = (at = 'appearance') => {
         setSection(at)
-        setSettingsOpen(true)
+        if (!settingsRoute.open) go('/settings')
     }
 
     const sendOn = () => {
@@ -282,6 +283,7 @@ export function App() {
                 {
                     id: 'demo',
                     label: 'Demo server',
+                    reset: false,
                     settings: [
                         {
                             id: 'answers',
@@ -424,13 +426,19 @@ export function App() {
                         {page}
                     </Shell>
                     <SettingsDialog
-                        open={settingsOpen}
-                        onOpenChange={setSettingsOpen}
+                        open={settingsRoute.open}
+                        onOpenChange={(open) => {
+                            if (!open) settingsRoute.close()
+                        }}
                         groups={settingsGroups}
                         active={section}
                         onActiveChange={setSection}
                         search={settingsQuery}
                         onSearchChange={setSettingsQuery}
+                        onReset={(at) => {
+                            if (at === 'appearance') setSettings({ ...DEFAULT_APPEARANCE })
+                            if (at === 'forms') setKeepPlace(true)
+                        }}
                     />
                     <Toaster position="bottom-right" />
                 </FootContext.Provider>

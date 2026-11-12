@@ -13,7 +13,7 @@ import type { Frame } from 'tidevann-shared/frame'
 import { DEFAULT_PREFS, type Prefs } from '../model'
 import { useConsole } from '../state'
 
-/** The preferences each section holds; Reset to defaults puts back all of them and the look, never who is signed in. */
+/** The preferences each section holds, which its Reset to defaults puts back. */
 const HELD: Record<string, (keyof Omit<Prefs, 'id' | 'user'>)[]> = {
     general: ['openRuns', 'times', 'confirmCancel'],
     notifications: ['notifyFailures', 'notifyMine'],
@@ -192,6 +192,7 @@ export function Settings({ frame, open, onClose }: { frame: Frame; open: boolean
                 {
                     id: 'account',
                     label: 'Account',
+                    reset: false,
                     icon: UserRound,
                     settings: [
                         {
@@ -209,6 +210,7 @@ export function Settings({ frame, open, onClose }: { frame: Frame; open: boolean
                 {
                     id: 'demo',
                     label: 'Demo data',
+                    reset: false,
                     icon: Database,
                     settings: [
                         {
@@ -239,17 +241,10 @@ export function Settings({ frame, open, onClose }: { frame: Frame; open: boolean
                 onActiveChange={setActive}
                 search={search}
                 onSearchChange={setSearch}
-                footer="Saved as each is changed"
-                resetScope="all"
-                onReset={() => {
-                    setLook({ ...DEFAULT_APPEARANCE })
-                    void setPrefs(
-                        Object.fromEntries(
-                            Object.values(HELD)
-                                .flat()
-                                .map((key) => [key, DEFAULT_PREFS[key]]),
-                        ),
-                    )
+                onReset={(section) => {
+                    if (section === 'appearance') setLook({ ...DEFAULT_APPEARANCE })
+                    const keys = section === undefined ? [] : (HELD[section] ?? [])
+                    if (keys.length > 0) void setPrefs(Object.fromEntries(keys.map((key) => [key, DEFAULT_PREFS[key]])))
                 }}
             />
             <ConfirmDialog

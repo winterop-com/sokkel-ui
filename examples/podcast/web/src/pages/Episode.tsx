@@ -52,10 +52,6 @@ export function EpisodePage({ id }: { id: string }) {
     return (
         <Stack gap="section">
             <PageHeader
-                trail={[
-                    { label: 'Shows', href: '#/shows' },
-                    { label: show.title, href: `#/show/${show.id}` },
-                ]}
                 title={episode.title}
                 meta={<MetaLine size="sm" items={[`Episode ${String(episode.number)}`, ago(row.outAt), spoken(script.duration), status]} />}
                 actions={

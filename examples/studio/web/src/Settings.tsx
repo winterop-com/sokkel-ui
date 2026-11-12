@@ -107,6 +107,7 @@ export function Settings({ frame, open, onClose }: { frame: Frame; open: boolean
                 },
                 {
                     id: 'workspace',
+                    reset: false,
                     label: 'Workspace',
                     icon: Database,
                     settings: [
@@ -152,18 +153,17 @@ export function Settings({ frame, open, onClose }: { frame: Frame; open: boolean
                 onActiveChange={setActive}
                 search={search}
                 onSearchChange={setSearch}
-                footer="Saved as each is changed"
-                resetScope="all"
-                onReset={() => {
-                    setLook({ ...DEFAULT_APPEARANCE })
-                    void setPrefs({
-                        wrap: DEFAULT_PREFS.wrap,
-                        lineNumbers: DEFAULT_PREFS.lineNumbers,
-                        size: DEFAULT_PREFS.size,
-                        folding: DEFAULT_PREFS.folding,
-                        indentGuides: DEFAULT_PREFS.indentGuides,
-                        bracketColors: DEFAULT_PREFS.bracketColors,
-                    })
+                onReset={(section) => {
+                    if (section === 'appearance') setLook({ ...DEFAULT_APPEARANCE })
+                    if (section === 'editor')
+                        void setPrefs({
+                            wrap: DEFAULT_PREFS.wrap,
+                            lineNumbers: DEFAULT_PREFS.lineNumbers,
+                            size: DEFAULT_PREFS.size,
+                            folding: DEFAULT_PREFS.folding,
+                            indentGuides: DEFAULT_PREFS.indentGuides,
+                            bracketColors: DEFAULT_PREFS.bracketColors,
+                        })
                 }}
             />
             <ConfirmDialog

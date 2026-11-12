@@ -269,6 +269,7 @@ export function SettingsPage({ frame, open, onClose }: { frame: Frame; open: boo
                 {
                     id: 'demo',
                     label: 'Demo data',
+                    reset: false,
                     icon: Database,
                     settings: [
                         {
@@ -300,13 +301,12 @@ export function SettingsPage({ frame, open, onClose }: { frame: Frame; open: boo
                 onActiveChange={setActive}
                 search={search}
                 onSearchChange={setSearch}
-                footer="Saved as each is changed"
                 onReset={(section) => {
                     if (section === 'appearance') {
                         setLook({ ...DEFAULT_APPEARANCE })
                         return
                     }
-                    const keys = section === undefined ? Object.values(HELD).flat() : (HELD[section] ?? [])
+                    const keys = section === undefined ? [] : (HELD[section] ?? [])
                     if (keys.length > 0) save(Object.fromEntries(keys.map((key) => [key, DEFAULT_PREFS[key]])))
                 }}
             />

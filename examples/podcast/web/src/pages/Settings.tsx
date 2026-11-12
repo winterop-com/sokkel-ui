@@ -150,6 +150,7 @@ export function SettingsPage({ frame, open, onClose }: { frame: Frame; open: boo
                 },
                 {
                     id: 'data',
+                    reset: false,
                     label: 'Data',
                     icon: Database,
                     settings: [
@@ -198,12 +199,16 @@ export function SettingsPage({ frame, open, onClose }: { frame: Frame; open: boo
                 onActiveChange={setActive}
                 search={search}
                 onSearchChange={setSearch}
-                footer="Saved as each is changed"
-                resetScope="all"
-                onReset={() => {
-                    setLook({ ...DEFAULT_APPEARANCE })
-                    const { id: _id, ...defaults } = DEFAULT_PREFS
-                    setPrefs(defaults)
+                onReset={(section) => {
+                    if (section === 'appearance') setLook({ ...DEFAULT_APPEARANCE })
+                    if (section === 'playback')
+                        setPrefs({ speed: DEFAULT_PREFS.speed, skip: DEFAULT_PREFS.skip, continueQueue: DEFAULT_PREFS.continueQueue })
+                    if (section === 'episodes')
+                        setPrefs({
+                            inbox: DEFAULT_PREFS.inbox,
+                            autoDownload: DEFAULT_PREFS.autoDownload,
+                            archivePlayed: DEFAULT_PREFS.archivePlayed,
+                        })
                 }}
             />
             <ConfirmDialog

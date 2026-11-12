@@ -7,7 +7,6 @@ import { SettingsDialog, type SettingsGroup } from '@winterop-com/sokkel-ui/Sett
 import { ThemePicker } from '@winterop-com/sokkel-ui/ThemePicker'
 import { Bell, Database, LayoutDashboard, Palette } from 'lucide-react'
 import { useState } from 'react'
-import { toast } from 'sonner'
 
 import { resetAll } from 'tidevann-shared/backend'
 import type { Frame } from 'tidevann-shared/frame'
@@ -203,14 +202,12 @@ export function SettingsPage({ prefs, frame, open, onClose }: { prefs: Preferenc
                 onActiveChange={setActive}
                 search={search}
                 onSearchChange={setSearch}
-                footer="Saved as each is changed"
                 onReset={(section) => {
                     if (section === 'dashboards')
                         set({ range: DEFAULT_PREFERENCES.range, refresh: DEFAULT_PREFERENCES.refresh, zone: DEFAULT_PREFERENCES.zone })
                     if (section === 'alerts')
                         set({ evaluate: DEFAULT_PREFERENCES.evaluate, notify: DEFAULT_PREFERENCES.notify, keep: DEFAULT_PREFERENCES.keep })
-                    if (section === 'appearance') setSettings({ ...DEFAULT_APPEARANCE, scheme: settings.scheme })
-                    toast.success('Back to the defaults')
+                    if (section === 'appearance') setSettings({ ...DEFAULT_APPEARANCE })
                 }}
             />
             <ConfirmDialog

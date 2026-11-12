@@ -21,7 +21,7 @@ import { AlbumCard, AlbumMenuItems, asTrack, Nothing, playAlbum, useNowPlaying }
 import { playSongs, setPlaying } from '../player'
 
 /**
- * One album: back and the trail through Albums and its artist, the title, the artist, year and
+ * One album: back, the title, the artist, year and
  * length, and Download, the star, Add to playlist and More; the cover with Play and Shuffle beside
  * the songs, the one playing marked, and more by the artist under them.
  */
@@ -48,10 +48,6 @@ export function Album({ id }: { id: string }) {
         <Stack gap="page">
             <PageHeader
                 onBack={() => window.history.back()}
-                trail={[
-                    { label: 'Albums', href: '#/albums' },
-                    { label: artist?.name ?? album.artist, href: `#/artists/${album.artist}` },
-                ]}
                 title={album.title}
                 meta={
                     <MetaLine

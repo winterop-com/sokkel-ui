@@ -338,8 +338,23 @@ export function Music({ frame }: { frame: Frame }) {
         ...frame.palette,
     ]
 
-    // A page of one album, artist, playlist or search carries its own trail in its header.
-    const trail: Crumb[] = second !== undefined ? [] : [{ label: LABELS[place] }]
+    const up: Crumb = { label: LABELS[place], href: `#/${place}` }
+    const trail: Crumb[] =
+        second === undefined
+            ? [{ label: LABELS[place] }]
+            : album !== undefined
+              ? [
+                    up,
+                    { label: ARTIST_BY_ID.get(album.artist)?.name ?? album.artist, href: `#/artists/${album.artist}` },
+                    { label: album.title },
+                ]
+              : artist !== undefined
+                ? [up, { label: artist.name }]
+                : playlist !== undefined
+                  ? [up, { label: playlist.name }]
+                  : place === 'search'
+                    ? [{ label: LABELS.search }, { label: `“${decodeURIComponent(second)}”` }]
+                    : [up]
 
     const page =
         place === 'albums' ? (
