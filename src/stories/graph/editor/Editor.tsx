@@ -101,6 +101,7 @@ export function EditorCanvas({
                         blocks={editor.offered}
                         groups={GROUPS}
                         title={editor.pickerTitle}
+                        words={{ placeholder: 'Name, kind or keyword' }}
                         onPick={(block) => editor.pick(block as BlockSpec)}
                         onClose={() => editor.setPicker(null)}
                     />

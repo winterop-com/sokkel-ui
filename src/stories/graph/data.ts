@@ -1,3 +1,5 @@
+import { Layers, Split } from 'lucide-react'
+
 import type { PipelineStep } from '@winterop-com/sokkel-ui-graph/PipelineGraph'
 import type { MiniGraphStep } from '@winterop-com/sokkel-ui-graph/MiniGraph'
 import type { RunStep } from '@winterop-com/sokkel-ui-graph/RunGraph'
@@ -14,7 +16,8 @@ export const NIGHTLY_EXPORT: PipelineStep[] = [
 ]
 
 /**
- * The import-orders job open in an editor: a source listening for orders, a split that fans out, a
+ * The import-orders job open in an editor: a source listening for orders, a split that fans out (its
+ * count after a glyph of its own, with a tooltip of its own), a
  * transform edited since it was last saved and an upload whose block is not installed. Every box
  * keeps room for either badge and an issue mark, so one arriving moves nothing.
  */
@@ -22,7 +25,16 @@ export const EDITED_PIPELINE: PipelineStep[] = (
     [
         { code: 'orders', kind: 'webhook', needs: [], source: true, lineHint: 'Listens to orders.example.org' },
         { code: 'fetch', name: 'Fetch order', kind: 'http', needs: ['orders'] },
-        { code: 'split', name: 'Split by region', kind: 'python', needs: ['fetch'], count: '×4', hint: 'One run per region' },
+        {
+            code: 'split',
+            name: 'Split by region',
+            kind: 'python',
+            needs: ['fetch'],
+            count: '4',
+            countIcon: Split,
+            countTitle: 'Fans out into 4 runs, one per region',
+            hint: 'One run per region',
+        },
         {
             code: 'transform',
             name: 'Join and reshape',
@@ -57,7 +69,7 @@ export const IMPORT_ORDERS: MiniGraphStep[] = [
 /**
  * A run of import-orders partway through: the orders source has fired, fetch is done, split fans
  * out per region with one region retrying, transform waits for it, and archive has its items
- * counted rather than named. A box keeps room for the reply's other words, so it does not grow.
+ * counted rather than named, the count after a glyph at the end of its code line. A box keeps room for the reply's other words, so it does not grow.
  */
 export const FAN_OUT_RUN: RunStep[] = [
     {
@@ -102,7 +114,10 @@ export const FAN_OUT_RUN: RunStep[] = [
         needs: ['fetch'],
         status: 'running',
         duration_ms: 4200,
-        count: '64 items',
+        count: '64',
+        countIcon: Layers,
+        countTitle: '64 items, one run each',
+        countPlacement: 'line',
         itemsSummary: '41 succeeded · 3 failed · 20 queued',
     },
     { code: 'reply', kind: 'email', needs: ['transform', 'archive'], status: 'queued', reserve: ['email · not sent'] },

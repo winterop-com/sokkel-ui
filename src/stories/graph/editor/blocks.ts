@@ -63,6 +63,7 @@ export const BLOCKS: BlockSpec[] = [
     {
         kind: 'csv.read',
         name: 'Read CSV',
+        badge: 'legacy',
         description: 'Read records from a CSV file in storage.',
         group: 'source',
         icon: FileSpreadsheet,
@@ -114,6 +115,7 @@ export const BLOCKS: BlockSpec[] = [
     {
         kind: 'dedupe',
         name: 'Remove duplicates',
+        badge: { label: 'new', tone: 'info', title: 'Added in this version' },
         description: 'Keep the first record of each key.',
         group: 'transform',
         icon: CopyMinus,
@@ -205,6 +207,7 @@ export const BLOCKS: BlockSpec[] = [
     {
         kind: 'sql.insert',
         name: 'Insert rows',
+        badge: { label: 'beta', tone: 'warning', title: 'Its settings may still change' },
         description: 'Insert records into a table.',
         group: 'output',
         icon: TableProperties,

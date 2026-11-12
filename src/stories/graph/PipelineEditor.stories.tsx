@@ -15,7 +15,8 @@ export const Empty: Story = {
 }
 
 /**
- * The palette of blocks, grouped as sources, transforms, checks and outputs, with a search. Drag a
+ * The palette of blocks, grouped as sources, transforms, checks and outputs, with a search, a
+ * block's badge plain or in a tone. Drag a
  * block onto the canvas to add it where it is let go, or click it to add it after the chosen step,
  * validate here.
  */

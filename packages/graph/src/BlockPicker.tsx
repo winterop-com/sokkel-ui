@@ -9,7 +9,12 @@ import { Input } from '@winterop-com/sokkel-ui/primitives/input'
 
 /** The words a block picker says. */
 export interface BlockPickerWords {
+    /** The search field's name. */
     search: string
+    /** What the empty search field shows; the search field's name when left out. */
+    placeholder?: string
+    /** The list's name. */
+    list: string
     /** What it says when no block matches the search. */
     none: string
     /** What it says when no block fits where the step would go. */
@@ -20,6 +25,7 @@ export interface BlockPickerWords {
 
 export const BLOCK_PICKER_WORDS: BlockPickerWords = {
     search: 'Find a block',
+    list: 'Blocks',
     none: 'No block matches',
     nothing: 'No block fits here',
     loading: 'Reading the blocks',
@@ -106,7 +112,7 @@ export function BlockPicker({
                     aria-controls={`${base}-list`}
                     aria-activedescendant={flat.length > 0 ? optionId(at) : undefined}
                     aria-label={words.search}
-                    placeholder={words.search}
+                    placeholder={words.placeholder ?? words.search}
                     value={query}
                     onChange={(event) => {
                         setQuery(event.target.value)
@@ -116,7 +122,7 @@ export function BlockPicker({
                     className="flex-1 text-sm placeholder:text-faint"
                 />
             </label>
-            <div id={`${base}-list`} role="listbox" aria-label={words.search} className="min-h-0 flex-1 overflow-y-auto p-1">
+            <div id={`${base}-list`} role="listbox" aria-label={words.list} className="min-h-0 flex-1 overflow-y-auto p-1">
                 {flat.length === 0 && (
                     <p role={loading ? 'status' : undefined} className="px-2 py-5 text-center text-sm text-muted-foreground">
                         {loading ? words.loading : blocks.length === 0 ? words.nothing : words.none}

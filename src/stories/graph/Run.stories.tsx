@@ -67,7 +67,7 @@ export const Failed: Story = { render: () => <Run steps={FAILED} meta="Run 01a1a
 
 /**
  * A run with a source and a fan-out: the source dashed on the ground, split's regions as chips with
- * their states and a retry's countdown, archive's items counted, and the edge from fetch into the
+ * their states and a retry's countdown, archive's items counted at the end of its code line, and the edge from fetch into the
  * running archive flowing (standing lit with motion reduced). Pointing at a box says what it is doing.
  */
 export const FanOut: Story = {
