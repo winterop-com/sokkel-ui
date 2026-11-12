@@ -6,7 +6,7 @@ import { Section } from '@winterop-com/sokkel-ui/Section'
 import type { GraphDirection } from '@winterop-com/sokkel-ui-graph/layout'
 import { Editor } from './Editing'
 import { Stage } from './Frame'
-import { LARGE, NIGHTLY_EXPORT, SHORT } from './data'
+import { EDITED_PIPELINE, LARGE, NIGHTLY_EXPORT, SHORT } from './data'
 import { Stack } from '@winterop-com/sokkel-ui/Layout'
 
 function Pipeline({ steps, title, meta, direction }: { steps: PipelineStep[]; title: string; meta: string; direction?: GraphDirection }) {
@@ -58,6 +58,13 @@ export const Down: Story = {
 
 /** The pipeline on a page, in a section as tall as its drawing, with one step chosen. */
 export const OnAPage: Story = { name: 'On a page', render: () => <Fitted /> }
+
+/**
+ * Steps as an editor shows them: a source dashed on the ground with what it listens to on its line,
+ * a fan-out's count, and badges for a step edited since it was saved and one whose block is not
+ * installed. Every box keeps room for either badge and an issue mark.
+ */
+export const Badges: Story = { render: () => <Pipeline steps={EDITED_PIPELINE} title="import-orders" meta="harbor" /> }
 
 /** 57 steps: too wide to fit at a readable zoom, so the fit stops at its floor and the graph starts at the left edge. */
 export const Large: Story = { render: () => <Pipeline steps={LARGE} title="rebuild-index" meta="larkspur, 57 steps" /> }

@@ -85,7 +85,7 @@ export function GraphOverlay({ at, link, onClose, children, className }: GraphOv
 
     useEffect(() => {
         const onKey = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') close.current?.()
+            if (event.key === 'Escape' && !event.defaultPrevented) close.current?.()
         }
         const onDown = (event: PointerEvent) => {
             if (box.current !== null && event.target instanceof globalThis.Node && !box.current.contains(event.target)) close.current?.()

@@ -44,6 +44,10 @@ describe('blocks', () => {
     it('matches every word against the kind, name and description', () => {
         expect(blockMatches(BLOCKS[0] as PipelineBlock, 'fetch endpoint')).toBe(true)
         expect(blockMatches(BLOCKS[0] as PipelineBlock, 'fetch file')).toBe(false)
+        const sensor: PipelineBlock = { kind: 'wait-file', group: 'io', badge: 'sensor', keywords: ['poll', 'watch'] }
+        expect(blockMatches(sensor, 'sensor')).toBe(true)
+        expect(blockMatches(sensor, 'watch file')).toBe(true)
+        expect(blockMatches(sensor, 'operator')).toBe(false)
         expect(blockMatches(BLOCKS[1] as PipelineBlock, 'CSV')).toBe(true)
         expect(blockMatches(BLOCKS[1] as PipelineBlock, '  ')).toBe(true)
     })

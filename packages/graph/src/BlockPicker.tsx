@@ -14,12 +14,15 @@ export interface BlockPickerWords {
     none: string
     /** What it says when no block fits where the step would go. */
     nothing: string
+    /** What it says while the blocks are still being read. */
+    loading: string
 }
 
 export const BLOCK_PICKER_WORDS: BlockPickerWords = {
     search: 'Find a block',
     none: 'No block matches',
     nothing: 'No block fits here',
+    loading: 'Reading the blocks',
 }
 
 export interface BlockPickerProps {
@@ -29,6 +32,10 @@ export interface BlockPickerProps {
     onClose?: () => void
     /** Where the step would go, said over the search: "After validate". */
     title?: string
+    /** The blocks are still being read: it says so, and Enter picks nothing. */
+    loading?: boolean
+    /** Draws each block's description as a line of its own under its title. */
+    showDescription?: boolean
     words?: Partial<BlockPickerWords>
     className?: string
 }
@@ -36,14 +43,24 @@ export interface BlockPickerProps {
 /**
  * A searchable list of blocks to choose one from, for a step about to be added: after a step,
  * between two, or at the end of a connection. The search takes the focus; the arrow keys move
- * through the list, Enter picks, and Escape closes. Hand it only the blocks that fit where the
+ * through the list, Enter picks, and Escape clears the search, or closes once it is empty. Hand it only the blocks that fit where the
  * step would go. Place it with `GraphOverlay` to open it on a canvas.
  */
-export function BlockPicker({ blocks, groups, onPick, onClose, title, words: given, className }: BlockPickerProps) {
+export function BlockPicker({
+    blocks,
+    groups,
+    onPick,
+    onClose,
+    title,
+    loading = false,
+    showDescription = false,
+    words: given,
+    className,
+}: BlockPickerProps) {
     const words = { ...BLOCK_PICKER_WORDS, ...given }
     const [query, setQuery] = useState('')
     const [active, setActive] = useState(0)
-    const listed = groupBlocks(blocks, groups, query)
+    const listed = loading ? [] : groupBlocks(blocks, groups, query)
     const flat = listed.flatMap((entry) => entry.blocks)
     const at = Math.min(active, Math.max(0, flat.length - 1))
     const base = useId()
@@ -62,7 +79,10 @@ export function BlockPicker({ blocks, groups, onPick, onClose, title, words: giv
         } else if (event.key === 'Escape') {
             event.preventDefault()
             event.stopPropagation()
-            onClose?.()
+            if (query !== '') {
+                setQuery('')
+                setActive(0)
+            } else onClose?.()
         }
     }
 
@@ -98,8 +118,8 @@ export function BlockPicker({ blocks, groups, onPick, onClose, title, words: giv
             </label>
             <div id={`${base}-list`} role="listbox" aria-label={words.search} className="min-h-0 flex-1 overflow-y-auto p-1">
                 {flat.length === 0 && (
-                    <p className="px-2 py-5 text-center text-sm text-muted-foreground">
-                        {blocks.length === 0 ? words.nothing : words.none}
+                    <p role={loading ? 'status' : undefined} className="px-2 py-5 text-center text-sm text-muted-foreground">
+                        {loading ? words.loading : blocks.length === 0 ? words.nothing : words.none}
                     </p>
                 )}
                 {listed.map(({ group, blocks: inGroup }) => (
@@ -114,12 +134,12 @@ export function BlockPicker({ blocks, groups, onPick, onClose, title, words: giv
                                     id={optionId(mine)}
                                     role="option"
                                     aria-selected={mine === at}
-                                    title={block.description}
+                                    title={showDescription ? undefined : block.description}
                                     onPointerMove={() => setActive(mine)}
                                     onClick={() => onPick(block)}
                                     className={cn('cursor-pointer rounded-chip px-1.5 py-1', mine === at && 'bg-muted')}
                                 >
-                                    <BlockRow block={block} active={mine === at} />
+                                    <BlockRow block={block} active={mine === at} showDescription={showDescription} />
                                 </div>
                             )
                         })}

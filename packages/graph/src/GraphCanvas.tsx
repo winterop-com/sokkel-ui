@@ -112,6 +112,8 @@ export interface GraphEditing {
     onMove?: (node: string, position: { x: number; y: number }) => void
     /** A box was right-clicked. */
     onNodeMenu?: (node: string, at: GraphPointer) => void
+    /** The ground was right-clicked, such as to add a step where the pointer is. */
+    onPaneMenu?: (at: GraphPointer) => void
     /** A connection drawn from a node's output was let go over empty ground. */
     onDrop?: (source: string, at: GraphPointer) => void
     /**
@@ -261,6 +263,8 @@ export interface GraphCanvasProps<N extends Node = Node, E extends Edge = Edge> 
     editing?: GraphEditing
     /** False hides the zoom buttons, for a toolbar that carries them. */
     controls?: boolean
+    /** The app's own buttons after the zoom buttons, in their cluster, such as `GraphToolbarButton`s. */
+    extraControls?: ReactNode
     /** A bar over the canvas's top-left corner; inside it, `useGraphControls` reaches the view. */
     toolbar?: ReactNode
     /**
@@ -305,6 +309,7 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
     onSelectionChange,
     editing,
     controls = true,
+    extraControls,
     toolbar,
     fitMinZoom = FIT_MIN_ZOOM,
     narrowFit = true,
@@ -397,8 +402,8 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
     }, [fitted, filled])
 
     const drawing = boundsOf(nodes.map((node) => ({ ...node.position, width: node.width ?? 0, height: node.height ?? 0 })))
-    // A fitted frame keeps a row under the drawing for its buttons.
-    const height = fitted ? (empty ? undefined : fittedHeight(drawing, width) + BUTTON_ROW) : undefined
+    // A fitted frame keeps a row under the drawing for its buttons, when it draws them.
+    const height = fitted ? (empty ? undefined : fittedHeight(drawing, width) + (controls ? BUTTON_ROW : 0)) : undefined
     // A filled frame is at least as tall as its drawing would be fitted, up to its floor.
     const floor = filled && !empty && width > 0 ? Math.min(fittedHeight(drawing, width), FILLED_FLOOR) : undefined
     const ground = fitted || filled
@@ -558,6 +563,14 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
                                       }
                                     : undefined
                             }
+                            onPaneContextMenu={
+                                editable && editing.onPaneMenu !== undefined
+                                    ? (event) => {
+                                          event.preventDefault()
+                                          editing.onPaneMenu?.(pointer(event))
+                                      }
+                                    : undefined
+                            }
                             selectionKeyCode={multiple ? 'Shift' : null}
                             multiSelectionKeyCode={multiple ? MULTI_KEYS : null}
                             onDragOver={
@@ -630,7 +643,7 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
                             >
                                 {controls && !empty && (
                                     <Panel position="bottom-right" className="m-2!">
-                                        <ZoomButtons words={said} row={fitted} />
+                                        <ZoomButtons words={said} row={fitted} extra={extraControls} />
                                     </Panel>
                                 )}
                                 {toolbar !== undefined && (
@@ -699,7 +712,7 @@ function ViewControls({
 }
 
 /** Zoom in, zoom out and fit, drawn as the library's own buttons. */
-function ZoomButtons({ words, row }: { words: GraphWords; row: boolean }) {
+function ZoomButtons({ words, row, extra }: { words: GraphWords; row: boolean; extra?: ReactNode }) {
     const controls = useGraphControls()
     const button =
         'flex size-7 items-center justify-center text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring [&_svg]:size-3.5'
@@ -721,6 +734,9 @@ function ZoomButtons({ words, row }: { words: GraphWords; row: boolean }) {
             <button type="button" className={button} aria-label={words.fit} title={words.fit} onClick={controls.fit}>
                 <Maximize aria-hidden />
             </button>
+            {extra !== undefined && extra !== null && (
+                <span className={cn('flex', row ? 'border-l border-border' : 'flex-col border-t border-border')}>{extra}</span>
+            )}
         </div>
     )
 }

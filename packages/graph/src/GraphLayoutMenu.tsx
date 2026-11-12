@@ -61,6 +61,8 @@ export interface GraphLayoutMenuProps {
     onValueChange: (value: GraphLayoutChoice) => void
     /** Leaves a choice out of the menu, such as the direction where the app decides it. */
     omit?: readonly (keyof GraphLayoutChoice)[]
+    /** The routings offered, in this order; all three when left out. */
+    routings?: readonly GraphRouting[]
     words?: Partial<GraphLayoutMenuWords>
     className?: string
 }
@@ -70,12 +72,12 @@ export interface GraphLayoutMenuProps {
  * and how much room it keeps, each a choice of one. It is drawn as a graph toolbar's own button, so
  * it stands in a `GraphToolbar` or a section's head alike; a view handed the choice fits again.
  */
-export function GraphLayoutMenu({ value, onValueChange, omit = [], words: given, className }: GraphLayoutMenuProps) {
+export function GraphLayoutMenu({ value, onValueChange, omit = [], routings = ROUTINGS, words: given, className }: GraphLayoutMenuProps) {
     const words = { ...GRAPH_LAYOUT_MENU_WORDS, ...given }
     const groups = (
         [
             ['direction', DIRECTIONS],
-            ['routing', ROUTINGS],
+            ['routing', routings],
             ['spacing', SPACINGS],
         ] as const
     ).filter(([key]) => !omit.includes(key))

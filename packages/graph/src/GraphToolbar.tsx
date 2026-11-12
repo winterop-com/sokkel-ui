@@ -85,7 +85,7 @@ export interface GraphToolbarProps {
  * The tools of a graph editor in one bar: undo and redo, a tidy layout, the view's zoom and fit,
  * and how many steps have a problem, with the app's own buttons after them. Each group shows only
  * when it is given something to do; zoom and fit show when the bar is drawn over a canvas, as its
- * `toolbar`, and the canvas's own zoom buttons can then be hidden with `controls={false}`.
+ * `toolbar`, and while the canvas has nothing on it the view's buttons step aside. The canvas's own zoom buttons can then be hidden with `controls={false}`.
  */
 export function GraphToolbar({
     onUndo,
@@ -102,7 +102,9 @@ export function GraphToolbar({
     const words = { ...GRAPH_TOOLBAR_WORDS, ...given }
     const controls = useGraphControls()
     const history = onUndo !== undefined || onRedo !== undefined
-    const view = controls !== null
+    // An empty canvas has nothing to zoom, fit or tidy, so the view's buttons step aside.
+    const view = controls !== null && !controls.empty
+    const tidies = onLayout !== undefined && controls?.empty !== true
     const groups: ReactNode[] = []
     if (history)
         groups.push(
@@ -129,18 +131,11 @@ export function GraphToolbar({
                 </button>
             </span>,
         )
-    if (onLayout !== undefined || view)
+    if (tidies || view)
         groups.push(
             <span key="view" className="flex items-center">
-                {onLayout !== undefined && (
-                    <button
-                        type="button"
-                        className={BUTTON}
-                        aria-label={words.layout}
-                        title={words.layout}
-                        disabled={controls?.empty === true}
-                        onClick={onLayout}
-                    >
+                {tidies && (
+                    <button type="button" className={BUTTON} aria-label={words.layout} title={words.layout} onClick={onLayout}>
                         <Network aria-hidden />
                     </button>
                 )}
@@ -151,29 +146,14 @@ export function GraphToolbar({
                             className={BUTTON}
                             aria-label={words.zoomOut}
                             title={words.zoomOut}
-                            disabled={controls.empty}
                             onClick={controls.zoomOut}
                         >
                             <Minus aria-hidden />
                         </button>
-                        <button
-                            type="button"
-                            className={BUTTON}
-                            aria-label={words.zoomIn}
-                            title={words.zoomIn}
-                            disabled={controls.empty}
-                            onClick={controls.zoomIn}
-                        >
+                        <button type="button" className={BUTTON} aria-label={words.zoomIn} title={words.zoomIn} onClick={controls.zoomIn}>
                             <Plus aria-hidden />
                         </button>
-                        <button
-                            type="button"
-                            className={BUTTON}
-                            aria-label={words.fit}
-                            title={words.fit}
-                            disabled={controls.empty}
-                            onClick={controls.fit}
-                        >
+                        <button type="button" className={BUTTON} aria-label={words.fit} title={words.fit} onClick={controls.fit}>
                             <Maximize aria-hidden />
                         </button>
                     </>

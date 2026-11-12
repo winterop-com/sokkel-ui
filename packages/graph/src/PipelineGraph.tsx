@@ -2,10 +2,17 @@ import { useMemo, useState, type ComponentType, type ReactNode } from 'react'
 
 import type { Issue } from '@winterop-com/sokkel-ui/IssueMark'
 import { fitDirection, GraphCanvas, type GraphEditing, type GraphViewProps } from './GraphCanvas'
+import type { GraphNodeData } from './GraphNode'
 import { useNodeGraph, type GraphItem, type GraphLink } from './use-node-graph'
 
-/** One step of a pipeline: its code, an optional name and kind, and the codes of the steps it needs. */
-export interface PipelineStep {
+/**
+ * One step of a pipeline: its code, an optional name and kind, and the codes of the steps it needs,
+ * with any other words its box says.
+ */
+export interface PipelineStep extends Pick<
+    GraphNodeData,
+    'hint' | 'lineHint' | 'source' | 'count' | 'reserve' | 'badge' | 'reserveBadges' | 'reserveIssue'
+> {
     code: string
     name?: string
     kind?: string
@@ -49,6 +56,8 @@ export type PipelineGraphProps = GraphViewProps & {
     positions?: Readonly<Record<string, { x: number; y: number }>>
     /** False hides the zoom buttons, for a toolbar that carries them. */
     controls?: boolean
+    /** The app's own buttons after the zoom buttons, in their cluster, such as one that adds a step. */
+    extraControls?: ReactNode
     /** A bar over the canvas's top-left corner, such as a `GraphToolbar`. */
     toolbar?: ReactNode
     /** What the canvas offers while it has no steps, such as a button that adds the first. */
@@ -78,6 +87,7 @@ export function PipelineGraph({
     editing,
     positions,
     controls,
+    extraControls,
     toolbar,
     emptyAction,
     routing,
@@ -90,14 +100,7 @@ export function PipelineGraph({
 }: PipelineGraphProps) {
     const [width, setWidth] = useState<number>()
     const direction = given ?? fitDirection(width)
-    const items = useMemo<GraphItem[]>(
-        () =>
-            steps.map((step) => ({
-                id: step.code,
-                data: { code: step.code, name: step.name, kind: step.kind, icon: step.icon, issues: step.issues },
-            })),
-        [steps],
-    )
+    const items = useMemo<GraphItem[]>(() => steps.map(({ needs: _needs, ...step }) => ({ id: step.code, data: step })), [steps])
     const links = useMemo(() => stepLinks(steps), [steps])
     const graph = useNodeGraph(items, links, {
         direction,
@@ -126,6 +129,7 @@ export function PipelineGraph({
             onSelectionChange={onSelectionChange}
             editing={editing}
             controls={controls}
+            extraControls={extraControls}
             toolbar={toolbar}
             emptyAction={emptyAction}
             words={words}
