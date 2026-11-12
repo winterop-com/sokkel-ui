@@ -19,20 +19,13 @@ import {
     type Viewport,
     getViewportForBounds,
 } from '@xyflow/react'
-import { CircleAlert, Maximize, Minus, Plus } from 'lucide-react'
+import { CircleAlert } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type DragEvent, type ReactNode } from 'react'
 
 import { useIsMobile } from '@winterop-com/sokkel-ui/hooks/use-mobile'
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
 import { GRAPH_DRAG_TYPE } from './blocks'
-import {
-    GraphControlsContext,
-    GraphDirectionContext,
-    GraphEditableContext,
-    GraphEditingContext,
-    useGraphControls,
-    type GraphControls,
-} from './context'
+import { GraphControlsContext, GraphDirectionContext, GraphEditableContext, GraphEditingContext, type GraphControls } from './context'
 import { GraphEdge } from './GraphEdge'
 import { GraphNode } from './GraphNode'
 import {
@@ -52,8 +45,9 @@ import {
     type GraphPoint,
 } from './layout'
 import type { GraphSizing } from './use-node-graph'
+import { GRAPH_VIEW_WORDS, GraphViewButtons, type GraphViewWords } from './GraphViewButtons'
 
-export type { GraphControls } from './context'
+export type { GraphBox, GraphControls } from './context'
 
 /**
  * Where a canvas stands. A `stage` fills its box and the wheel zooms it. A `fitted` canvas is as
@@ -65,12 +59,9 @@ export type { GraphControls } from './context'
 export type GraphFrame = 'stage' | 'fitted' | 'filled'
 
 /** The words a canvas says. */
-export interface GraphWords {
+export interface GraphWords extends GraphViewWords {
     /** The canvas's accessible name. */
     label: string
-    zoomIn: string
-    zoomOut: string
-    fit: string
     /** What an empty canvas says. */
     empty: string
     /** What a node tells a keyboard reader. */
@@ -83,9 +74,7 @@ export interface GraphWords {
 
 export const GRAPH_WORDS: GraphWords = {
     label: 'Graph',
-    zoomIn: 'Zoom in',
-    zoomOut: 'Zoom out',
-    fit: 'Fit the graph',
+    ...GRAPH_VIEW_WORDS,
     empty: 'Nothing to show',
     select: 'Press enter or space to select it.',
     append: 'Add a step after this one',
@@ -307,7 +296,7 @@ export interface GraphCanvasProps<N extends Node = Node, E extends Edge = Edge> 
     editing?: GraphEditing
     /** False hides the zoom buttons, for a toolbar that carries them. */
     controls?: boolean
-    /** The app's own buttons after the zoom buttons, in their cluster, such as `GraphToolbarButton`s. */
+    /** The app's own buttons after the zoom buttons, in their cluster, such as `GraphControlButton`s; they stay while the canvas is empty. */
     extraControls?: ReactNode
     /** A bar over the canvas's top-left corner; inside it, `useGraphControls` reaches the view. */
     toolbar?: ReactNode
@@ -694,9 +683,17 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
                                 tallFit={Math.min(tallFit ?? fitMinZoom, fitMinZoom)}
                                 onControls={onControls}
                             >
-                                {controls && !empty && (
+                                {empty && (
+                                    <div className="pointer-events-none absolute inset-0 z-5 flex flex-col items-center justify-center gap-3 px-6 text-center">
+                                        <p className="text-sm text-muted-foreground">{said.empty}</p>
+                                        {emptyAction !== undefined && <div className="pointer-events-auto">{emptyAction}</div>}
+                                    </div>
+                                )}
+                                {controls && (
                                     <Panel position="bottom-right" className="m-2!">
-                                        <ZoomButtons words={said} row={fitted} extra={extraControls} />
+                                        <GraphViewButtons orientation={fitted ? 'row' : 'column'} whenEmpty="hide" words={said}>
+                                            {extraControls}
+                                        </GraphViewButtons>
                                     </Panel>
                                 )}
                                 {toolbar !== undefined && (
@@ -708,12 +705,6 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
                                 {children}
                             </ViewControls>
                         </ReactFlow>
-                        {empty && (
-                            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center">
-                                <p className="text-sm text-muted-foreground">{said.empty}</p>
-                                {emptyAction !== undefined && <div className="pointer-events-auto">{emptyAction}</div>}
-                            </div>
-                        )}
                     </div>
                 </GraphEditingContext>
             </GraphEditableContext>
@@ -755,6 +746,13 @@ function ViewControls({
                 void fitGraph(flow, { width, height }, minZoom, narrowFit, tallFit)
             },
             empty,
+            nodeBox: (id) => {
+                const node = flow.getInternalNode(id)
+                if (node === undefined) return null
+                const { x, y } = node.internals.positionAbsolute
+                return { x, y, width: node.measured.width ?? node.width ?? 0, height: node.measured.height ?? node.height ?? 0 }
+            },
+            toGraph: (point) => flow.screenToFlowPosition({ x: point.clientX, y: point.clientY }),
         }
     }, [flow, store, onMoved, empty, minZoom, narrowFit, tallFit])
     const report = useRef(onControls)
@@ -764,36 +762,6 @@ function ViewControls({
     }, [controls])
     useEffect(() => () => report.current?.(null), [])
     return <GraphControlsContext value={controls}>{children}</GraphControlsContext>
-}
-
-/** Zoom in, zoom out and fit, drawn as the library's own buttons. */
-function ZoomButtons({ words, row, extra }: { words: GraphWords; row: boolean; extra?: ReactNode }) {
-    const controls = useGraphControls()
-    const button =
-        'flex size-7 items-center justify-center text-muted-foreground outline-none hover:bg-hover hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring [&_svg]:size-3.5'
-    if (controls === null) return null
-    return (
-        <div className={cn('flex overflow-hidden rounded-control border border-border bg-card shadow-node', !row && 'flex-col')}>
-            <button type="button" className={button} aria-label={words.zoomIn} title={words.zoomIn} onClick={controls.zoomIn}>
-                <Plus aria-hidden />
-            </button>
-            <button
-                type="button"
-                className={cn(button, row ? 'border-x border-border' : 'border-y border-border')}
-                aria-label={words.zoomOut}
-                title={words.zoomOut}
-                onClick={controls.zoomOut}
-            >
-                <Minus aria-hidden />
-            </button>
-            <button type="button" className={button} aria-label={words.fit} title={words.fit} onClick={controls.fit}>
-                <Maximize aria-hidden />
-            </button>
-            {extra !== undefined && extra !== null && (
-                <span className={cn('flex', row ? 'border-l border-border' : 'flex-col border-t border-border')}>{extra}</span>
-            )}
-        </div>
-    )
 }
 
 /** While a connection is drawn over a node it may not join, why not, beside the pointer. */

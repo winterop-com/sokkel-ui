@@ -1,4 +1,4 @@
-import { CircleAlert, CircleCheck, Maximize, Minus, Network, Plus, Redo2, Undo2 } from 'lucide-react'
+import { CircleAlert, CircleCheck, Network, Redo2, Scan, Undo2, ZoomIn, ZoomOut } from 'lucide-react'
 import { Children, type ComponentProps, type ReactNode } from 'react'
 
 import { cn } from '@winterop-com/sokkel-ui/lib/cn'
@@ -50,7 +50,8 @@ export interface GraphToolbarButtonProps extends Omit<ComponentProps<'button'>, 
 
 /**
  * A button of the app's in a graph toolbar, drawn as the toolbar's own: a glyph, named by `label`.
- * It takes a ref and any button attribute, so it can be a menu's trigger.
+ * It takes a ref and any button attribute, so it can be a menu's trigger. In the zoom cluster, a
+ * canvas's `extraControls`, use `GraphControlButton`, which is drawn flush as the cluster's own.
  */
 export function GraphToolbarButton({ label, className, children, ...rest }: GraphToolbarButtonProps) {
     return (
@@ -148,13 +149,13 @@ export function GraphToolbar({
                             title={words.zoomOut}
                             onClick={controls.zoomOut}
                         >
-                            <Minus aria-hidden />
+                            <ZoomOut aria-hidden />
                         </button>
                         <button type="button" className={BUTTON} aria-label={words.zoomIn} title={words.zoomIn} onClick={controls.zoomIn}>
-                            <Plus aria-hidden />
+                            <ZoomIn aria-hidden />
                         </button>
                         <button type="button" className={BUTTON} aria-label={words.fit} title={words.fit} onClick={controls.fit}>
-                            <Maximize aria-hidden />
+                            <Scan aria-hidden />
                         </button>
                     </>
                 )}

@@ -1,11 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { Maximize, Minus, Plus } from 'lucide-react'
 import { useState } from 'react'
 
 import { Section } from '@winterop-com/sokkel-ui/Section'
 import type { GraphControls } from '@winterop-com/sokkel-ui-graph/GraphCanvas'
 import { GraphLayoutMenu, type GraphLayoutChoice } from '@winterop-com/sokkel-ui-graph/GraphLayoutMenu'
-import { GraphToolbarButton } from '@winterop-com/sokkel-ui-graph/GraphToolbar'
+import { GraphViewButtons } from '@winterop-com/sokkel-ui-graph/GraphViewButtons'
 import type { GraphRouting, GraphSpacing } from '@winterop-com/sokkel-ui-graph/layout'
 import { PipelineGraph, type PipelineStep } from '@winterop-com/sokkel-ui-graph/PipelineGraph'
 import { RunGraph } from '@winterop-com/sokkel-ui-graph/RunGraph'
@@ -52,7 +51,7 @@ function Laid({
     )
 }
 
-/** A run in a section whose head carries the layout menu and the zoom buttons, the graph filling the section. */
+/** A run in a section whose head carries the layout menu and the canvas's own zoom cluster, the graph filling the section. */
 function InSection() {
     const [layout, setLayout] = useState<GraphLayoutChoice>({ direction: 'right', routing: 'orthogonal', spacing: 'normal' })
     const [controls, setControls] = useState<GraphControls | null>(null)
@@ -66,15 +65,7 @@ function InSection() {
                 actions={
                     <>
                         <GraphLayoutMenu value={layout} onValueChange={setLayout} closeOnChoice />
-                        <GraphToolbarButton label="Zoom out" onClick={controls?.zoomOut} disabled={controls === null || controls.empty}>
-                            <Minus aria-hidden />
-                        </GraphToolbarButton>
-                        <GraphToolbarButton label="Zoom in" onClick={controls?.zoomIn} disabled={controls === null || controls.empty}>
-                            <Plus aria-hidden />
-                        </GraphToolbarButton>
-                        <GraphToolbarButton label="Fit the graph" onClick={controls?.fit} disabled={controls === null || controls.empty}>
-                            <Maximize aria-hidden />
-                        </GraphToolbarButton>
+                        <GraphViewButtons controls={controls} />
                     </>
                 }
             >
