@@ -136,19 +136,24 @@ export interface GraphEditing {
     onDropItem?: (item: string, at: GraphPointer) => void
 }
 
+/** How finely a canvas's room is told apart for wrapping, so a resize lays the graph out again only past a step. */
+const ROOM_STEP = 48
+
 /**
- * The width a view cuts a graph running right into rows at: the canvas's width at the least fit
- * zoom when `toCanvas`, held to `wrapWidth` when that is given too, or `wrapWidth` alone.
+ * What a view wraps a graph running right by: `wrapWidth` alone, or with `toCanvas` the canvas's
+ * room too, in the graph's own pixels at the least zoom a fit goes to (the lower of `fitMinZoom`
+ * and `tallFit`), so a graph that fits there stays whole. A canvas as tall as its drawing, `fitted`,
+ * gives no height to wrap by.
  */
-export function wrapWidthFor(
+export function wrapFor(
     wrapWidth: number | undefined,
     toCanvas: boolean | undefined,
-    canvas: number | undefined,
-    fitMinZoom: number = FIT_MIN_ZOOM,
-): number | undefined {
-    if (toCanvas !== true || canvas === undefined || canvas <= 0) return wrapWidth
-    const holds = Math.floor((canvas * (1 - 2 * FIT_PADDING)) / fitMinZoom)
-    return wrapWidth === undefined ? holds : Math.min(wrapWidth, holds)
+    canvas: { width: number; height: number } | undefined,
+    leastZoom: number = FIT_MIN_ZOOM,
+): Pick<GraphLayoutStyle, 'wrapWidth' | 'wrapRoom'> {
+    if (toCanvas !== true || canvas === undefined || canvas.width <= 0) return { wrapWidth }
+    const across = (length: number) => Math.floor((length * (1 - 2 * FIT_PADDING)) / leastZoom / ROOM_STEP) * ROOM_STEP
+    return { wrapWidth, wrapRoom: { width: across(canvas.width), height: across(canvas.height) } }
 }
 
 /** Below this width a flow reads top to bottom, so its later steps stay on a phone's screen. */
@@ -290,8 +295,8 @@ export interface GraphCanvasProps<N extends Node = Node, E extends Edge = Edge> 
     direction?: GraphDirection
     frame?: GraphFrame
     settled?: boolean
-    /** Called with the canvas's width as it changes, so a view can lay its graph out to fit. */
-    onWidth?: (width: number) => void
+    /** Called with the canvas's size as it changes, so a view can lay its graph out to fit. */
+    onSize?: (size: { width: number; height: number }) => void
     /** What an empty canvas offers under its words, such as a button that adds the first step. */
     emptyAction?: ReactNode
     /** Called with the node chosen, or null when the ground was clicked. */
@@ -361,7 +366,7 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
     fillFloor = FILLED_FLOOR,
     layoutKey = '',
     zoomOnDoubleClick = false,
-    onWidth,
+    onSize,
     emptyAction,
     words,
     className,
@@ -426,14 +431,15 @@ export function GraphCanvas<N extends Node = Node, E extends Edge = Edge>({
         return { clientX: event.clientX, clientY: event.clientY, ...at }
     }
 
-    const reportWidth = useRef(onWidth)
-    reportWidth.current = onWidth
-    const reporting = onWidth !== undefined
+    const reportSize = useRef(onSize)
+    reportSize.current = onSize
+    const reporting = onSize !== undefined
     useEffect(() => {
         const element = box.current
         if (element === null || !reporting) return
-        reportWidth.current?.(element.clientWidth)
-        const observer = new ResizeObserver(() => reportWidth.current?.(element.clientWidth))
+        const report = () => reportSize.current?.({ width: element.clientWidth, height: element.clientHeight })
+        report()
+        const observer = new ResizeObserver(report)
         observer.observe(element)
         return () => observer.disconnect()
     }, [reporting])

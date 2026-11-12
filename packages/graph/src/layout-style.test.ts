@@ -16,7 +16,7 @@ import {
     placedBounds,
     type GraphShape,
 } from './layout'
-import { wrapWidthFor } from './GraphCanvas'
+import { wrapFor } from './GraphCanvas'
 import { miniGraphShape, placeMiniGraph, MINI_NODE } from './MiniGraph'
 import type { Measure } from './measure'
 
@@ -93,11 +93,20 @@ describe('wrapping', () => {
         expect(at(100_000)).toBe(at(200_000))
     })
 
-    test('wraps at what the canvas holds at the least fit zoom, held to a given width', () => {
-        expect(wrapWidthFor(1120, undefined, 800)).toBe(1120)
-        expect(wrapWidthFor(undefined, true, undefined)).toBeUndefined()
-        expect(wrapWidthFor(undefined, true, 760, 0.8)).toBe(Math.floor((760 * 0.76) / 0.8))
-        expect(wrapWidthFor(500, true, 2000, 0.8)).toBe(500)
+    test('wraps to the room the canvas holds at the least zoom, in steps, beside a given width', () => {
+        expect(wrapFor(1120, undefined, { width: 800, height: 400 })).toEqual({ wrapWidth: 1120 })
+        expect(wrapFor(undefined, true, undefined)).toEqual({ wrapWidth: undefined })
+        const room = wrapFor(1120, true, { width: 1000, height: 400 }, 0.8).wrapRoom
+        expect(room).toEqual({ width: 912, height: 336 })
+        expect(wrapFor(1120, true, { width: 1005, height: 395 }, 0.8).wrapRoom).toEqual(room)
+    })
+
+    test('keeps a graph whole when cutting it only adds height, and cuts one too wide for its room', async () => {
+        const flat = placedBounds(await layoutGraph(long, 'right'))
+        const short = await layoutGraph(long, 'right', undefined, { wrapRoom: { width: flat.width - 50, height: flat.height + 10 } })
+        expect(placedBounds(short).width).toBe(flat.width)
+        const tall = await layoutGraph(long, 'right', undefined, { wrapRoom: { width: flat.width / 3, height: flat.height * 6 } })
+        expect(placedBounds(tall).width).toBeLessThan(flat.width)
     })
 })
 

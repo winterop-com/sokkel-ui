@@ -1,8 +1,9 @@
 import { useMemo, useState, type ComponentType, type ReactNode } from 'react'
 
 import type { Issue } from '@winterop-com/sokkel-ui/IssueMark'
-import { fitDirection, GraphCanvas, wrapWidthFor, type GraphEditing, type GraphViewProps } from './GraphCanvas'
+import { fitDirection, GraphCanvas, wrapFor, type GraphEditing, type GraphViewProps } from './GraphCanvas'
 import type { GraphNodeData } from './GraphNode'
+import { FIT_MIN_ZOOM } from './layout'
 import { useNodeGraph, type GraphItem, type GraphLink } from './use-node-graph'
 
 /**
@@ -101,9 +102,14 @@ export function PipelineGraph({
     className,
     children,
 }: PipelineGraphProps) {
-    const [width, setWidth] = useState<number>()
-    const direction = given ?? fitDirection(width)
-    const wrapAt = wrapWidthFor(wrapWidth, wrapToCanvas, width, fitMinZoom)
+    const [size, setSize] = useState<{ width: number; height: number }>()
+    const direction = given ?? fitDirection(size?.width)
+    const wrap = wrapFor(
+        wrapWidth,
+        wrapToCanvas,
+        size === undefined ? undefined : { width: size.width, height: frame === 'fitted' ? 0 : size.height },
+        Math.min(fitMinZoom ?? FIT_MIN_ZOOM, tallFit ?? Infinity),
+    )
     const items = useMemo<GraphItem[]>(() => steps.map(({ needs: _needs, ...step }) => ({ id: step.code, data: step })), [steps])
     const links = useMemo(() => stepLinks(steps), [steps])
     const graph = useNodeGraph(items, links, {
@@ -112,7 +118,7 @@ export function PipelineGraph({
         positions,
         routing,
         spacing,
-        wrapWidth: wrapAt,
+        ...wrap,
         minNodeWidth,
         maxNodeWidth,
     })
@@ -122,7 +128,7 @@ export function PipelineGraph({
             edges={graph.edges}
             settled={graph.settled}
             direction={direction}
-            onWidth={setWidth}
+            onSize={setSize}
             frame={frame}
             zoomOnDoubleClick={zoomOnDoubleClick}
             narrowFit={narrowFit}

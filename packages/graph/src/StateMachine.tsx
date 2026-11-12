@@ -1,8 +1,9 @@
 import type { NodeTypes } from '@xyflow/react'
 import { useMemo, useState } from 'react'
 
-import { GraphCanvas, wrapWidthFor, type GraphViewProps } from './GraphCanvas'
+import { GraphCanvas, wrapFor, type GraphViewProps } from './GraphCanvas'
 import { GraphHandles } from './GraphNode'
+import { FIT_MIN_ZOOM } from './layout'
 import { useNodeGraph, type GraphItem, type GraphLink } from './use-node-graph'
 
 /** One state of a machine. A final state leads to the final marker. */
@@ -89,7 +90,7 @@ export function StateMachine({
     words,
     className,
 }: StateMachineProps) {
-    const [width, setWidth] = useState<number>()
+    const [size, setSize] = useState<{ width: number; height: number }>()
     const finals = useMemo(() => states.filter((state) => state.final === true), [states])
     const items = useMemo<GraphItem[]>(
         () => [
@@ -114,8 +115,13 @@ export function StateMachine({
         ],
         [transitions, finals, initial],
     )
-    const wrapAt = wrapWidthFor(wrapWidth, wrapToCanvas, width, fitMinZoom)
-    const graph = useNodeGraph(items, links, { direction, selected, routing, spacing, wrapWidth: wrapAt, minNodeWidth, maxNodeWidth })
+    const wrap = wrapFor(
+        wrapWidth,
+        wrapToCanvas,
+        size === undefined ? undefined : { width: size.width, height: frame === 'fitted' ? 0 : size.height },
+        Math.min(fitMinZoom ?? FIT_MIN_ZOOM, tallFit ?? Infinity),
+    )
+    const graph = useNodeGraph(items, links, { direction, selected, routing, spacing, ...wrap, minNodeWidth, maxNodeWidth })
     return (
         <GraphCanvas
             nodes={graph.nodes}
@@ -129,7 +135,7 @@ export function StateMachine({
             tallFit={tallFit}
             onControls={onControls}
             fillFloor={fillFloor}
-            onWidth={wrapToCanvas === true ? setWidth : undefined}
+            onSize={wrapToCanvas === true ? setSize : undefined}
             controls={controls}
             fitMinZoom={fitMinZoom}
             layoutKey={`${String(routing)}|${String(spacing)}|${String(wrapWidth)}|${String(wrapToCanvas)}`}
