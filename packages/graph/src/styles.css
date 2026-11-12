@@ -4,18 +4,3 @@
  */
 @source './';
 @source not './**/*.test.*';
-
-/* An edge carrying data: its dashes travel toward the reader, one dash period a cycle. */
-@keyframes graph-edge-flow {
-    to {
-        stroke-dashoffset: -11;
-    }
-}
-
-/* One handover along an edge, brighter and thicker, settling into the stroke it rests in. */
-@keyframes graph-edge-pulse {
-    from {
-        stroke: var(--foreground);
-        stroke-width: 3;
-    }
-}

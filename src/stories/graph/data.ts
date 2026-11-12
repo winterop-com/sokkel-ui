@@ -32,7 +32,15 @@ export const IMPORT_ORDERS: MiniGraphStep[] = [
  * counted rather than named. A box keeps room for the reply's other words, so it does not grow.
  */
 export const FAN_OUT_RUN: RunStep[] = [
-    { code: 'orders', kind: 'webhook', needs: [], status: 'succeeded', source: true, duration_ms: 40, hint: 'Listens for new orders' },
+    {
+        code: 'orders',
+        kind: 'webhook',
+        needs: [],
+        status: 'succeeded',
+        source: true,
+        duration_ms: 40,
+        lineHint: 'Listens to orders.example.org',
+    },
     { code: 'fetch', name: 'Fetch orders', kind: 'http', needs: ['orders'], status: 'succeeded', duration_ms: 1840 },
     {
         code: 'split',
@@ -48,10 +56,9 @@ export const FAN_OUT_RUN: RunStep[] = [
             { id: 'north', label: 'north', status: 'succeeded' },
             { id: 'south', label: 'south', status: 'succeeded' },
             { id: 'east', label: 'east', status: 'running' },
-            { id: 'west', label: 'west', status: 'failed', note: 'retry in 12s' },
+            { id: 'west', label: 'west', status: 'failed', note: 'retry in 12s', reserve: 'retry in 99s' },
             { id: 'central', label: 'central', status: 'queued' },
         ],
-        reserve: ['retry in 99s'],
     },
     {
         code: 'transform',

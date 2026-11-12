@@ -123,6 +123,12 @@ describe('node width from words', () => {
         expect(done).toEqual(queued)
     })
 
+    test('keeps room in a chip for its widest note, so a countdown moves nothing', () => {
+        const chip = (note: string) =>
+            graphNodeSize({ code: 'split', status: 'running', items: [{ id: 'west', label: 'west', note, reserve: 'retry in 99s' }] }, tens)
+        expect(chip('retry in 9s')).toEqual(chip('retry in 12s'))
+    })
+
     test('grows a fan-out taller as its chips wrap, and wider only up to the strip', () => {
         const items = Array.from({ length: 12 }, (_, at) => ({ id: String(at), label: `region-${String(at)}`, status: 'succeeded' }))
         const one = graphNodeSize({ code: 'fetch', status: 'running', items: items.slice(0, 1) }, tens)
