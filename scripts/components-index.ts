@@ -17,7 +17,7 @@ const STORYBOOK = 'https://winterop-com.github.io/sokkel-ui/'
 /** The add-ons that each carry one engine, and media, the music and video app parts. */
 export const ENGINE_ADDONS = ['charts', 'maps', 'graph', 'terminal', 'media'] as const
 /** The add-ons that each hold one domain's parts; a new domain package is one more name here. */
-export const DOMAIN_ADDONS = ['fhir'] as const
+export const DOMAIN_ADDONS = ['fhir', 'dhis2'] as const
 /** Every add-on: each stands on the core alone. */
 export const ADDONS = [...ENGINE_ADDONS, ...DOMAIN_ADDONS] as const
 /** Every package, by its folder in `packages/`: the core, then the add-ons. */
@@ -152,6 +152,9 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
     },
     fhir: {
         program: 'the tokens FHIRPath and CQL share; `ProgramState` is exported by `fhirpath` and `cql`',
+    },
+    dhis2: {
+        tokens: 'the tokens both expression languages share; `ExpressionState` is exported by `expression` and `rule`',
     },
 }
 
@@ -708,7 +711,8 @@ export function render(entries: Entry[]): string {
         '(`@winterop-com/sokkel-ui/media/video-stats`) for `VideoStatsOverlay`.',
         'A domain package plugs into the core as a plugin an app installs once with `registerPlugins`',
         '(`@winterop-com/sokkel-ui/lib/plugins`): `fhir` (`@winterop-com/sokkel-ui-fhir/plugin`) gives',
-        '`CodeEditor` FHIRPath and CQL by name and by media type.',
+        '`CodeEditor` FHIRPath and CQL by name and by media type, and `dhis2`',
+        "(`@winterop-com/sokkel-ui-dhis2/plugin`) gives it DHIS2's expression languages.",
         '',
     ]
     const packages = [...new Set(entries.map((entry) => entry.pkg))]

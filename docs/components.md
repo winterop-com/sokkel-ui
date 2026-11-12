@@ -41,7 +41,8 @@ in `@winterop-com/sokkel-ui/media/captions`, and its stats are read each second 
 (`@winterop-com/sokkel-ui/media/video-stats`) for `VideoStatsOverlay`.
 A domain package plugs into the core as a plugin an app installs once with `registerPlugins`
 (`@winterop-com/sokkel-ui/lib/plugins`): `fhir` (`@winterop-com/sokkel-ui-fhir/plugin`) gives
-`CodeEditor` FHIRPath and CQL by name and by media type.
+`CodeEditor` FHIRPath and CQL by name and by media type, and `dhis2`
+(`@winterop-com/sokkel-ui-dhis2/plugin`) gives it DHIS2's expression languages.
 
 - [`@winterop-com/sokkel-ui`](#winterop-com-sokkel-ui): 250 modules
 - [`@winterop-com/sokkel-ui-charts`](#winterop-com-sokkel-ui-charts): 12 modules

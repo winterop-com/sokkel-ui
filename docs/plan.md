@@ -5,7 +5,7 @@ with real-shaped data, rendered by CI at every narrow width, failing one that th
 
 ## Distribution
 
-The library is seven packages, built from one Bun workspace and released together at one version:
+The library is eight packages, built from one Bun workspace and released together at one version:
 the core, the engine add-ons (and media), and the domain add-ons.
 
 - `@winterop-com/sokkel-ui` (`packages/core`): the tokens and themes, the primitives, the patterns,
@@ -26,6 +26,8 @@ the core, the engine add-ons (and media), and the domain add-ons.
   plays an HTTP live stream in `VideoPlayer` through hls.js, an optional peer.
 - `@winterop-com/sokkel-ui-fhir` (`packages/fhir`), the first domain add-on: the health-data
   standards' languages, FHIRPath and CQL, for `CodeEditor`, as the plugin `fhir`.
+- `@winterop-com/sokkel-ui-dhis2` (`packages/dhis2`), a domain add-on for the DHIS2 platform: its
+  expression languages for `CodeEditor`, as the plugin `dhis2`.
 
 An app installs the core and the add-ons it draws with, so an engine is installed only by an app
 that uses it, and the music and video parts only by an app that plays music or video. Each add-on
@@ -62,7 +64,7 @@ need not import the part (`isSoundVisualizer`), and `chartLegend` has a module o
 reads every kind.
 
 `dist/` is built, not committed, so an install from a repository URL gets no compiled code (bun also
-blocks such a dependency's install scripts). The tag workflow publishes the seven packages to GitHub
+blocks such a dependency's install scripts). The tag workflow publishes the eight packages to GitHub
 Packages, and apps pin that version.
 
 Each package's `exports` map names every module an app may import, one entry per module with its
@@ -957,6 +959,22 @@ format) is added to the interface when a domain package needs one, never ahead o
 domain package, `@winterop-com/sokkel-ui-fhir`, gives the editor FHIRPath and CQL, the HL7
 health-data standards' expression and query languages, as stream parsers: keywords, strings, date
 and time literals, functions, members after a dot, `%` variables and comments across lines.
+
+The second, `@winterop-com/sokkel-ui-dhis2`, serves the DHIS2 platform, and is UI only: it never
+calls a server, checks no server version and depends on no DHIS2 client library. Its plugin `dhis2`
+gives the editor the platform's two expression languages, one grammar read two ways:
+`dhis2-expression` (`text/x-dhis2-expression`), for indicators, validation rules and predictors, with
+data items in braces (`#{dataElement.categoryOptionCombo.attributeOptionCombo}` and its `*`
+wildcards, `I{}`, `R{}`, `D{}`, `A{}`, `C{}`, `N{}`, `OUG{}`), `[days]`, functions such as `if`,
+`orgUnit.group`, `sum` and `.periodOffset(-1)`; and `dhis2-rule` (`text/x-dhis2-rule`), for program
+rules and program indicators, adding program rule variables whose names hold spaces, `V{}` program
+variables, `PS_EVENTDATE:` and the `d2:` functions. Which functions and variables a server knows
+changes between versions, so the names are data the languages take, the latest server's by default
+(`DHIS2_FUNCTIONS`, `DHIS2_VARIABLES`); an app passes what its server has through
+`dhis2Plugin({ functions, variables })`, and a name it was not given is read as a plain name rather
+than an error, so an older or newer server never breaks the editor. The grammars follow the
+platform's ANTLR expression grammar and its manual, and the tests read real expressions a demo
+server holds.
 
 ## Terminals
 

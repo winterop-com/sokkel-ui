@@ -1,0 +1,49 @@
+{
+    "name": "@winterop-com/sokkel-ui-dhis2",
+    "version": "0.22.0",
+    "description": "DHIS2's expression languages, for indicators, validation rules, predictors, program rules and program indicators, for sokkel-ui's code editor.",
+    "license": "SEE LICENSE IN LICENSE",
+    "repository": {
+        "type": "git",
+        "url": "git+ssh://git@github.com/winterop-com/sokkel-ui.git",
+        "directory": "packages/dhis2"
+    },
+    "files": [
+        "LICENSE",
+        "THIRD_PARTY_NOTICES.md",
+        "dist",
+        "src",
+        "!src/**/*.test.*"
+    ],
+    "type": "module",
+    "sideEffects": false,
+    "exports": {
+        "./plugin": {
+            "types": "./dist/plugin.d.ts",
+            "import": "./dist/plugin.js"
+        },
+        "./expression": {
+            "types": "./dist/expression.d.ts",
+            "import": "./dist/expression.js"
+        },
+        "./rule": {
+            "types": "./dist/rule.d.ts",
+            "import": "./dist/rule.js"
+        },
+        "./names": {
+            "types": "./dist/names.d.ts",
+            "import": "./dist/names.js"
+        }
+    },
+    "publishConfig": {
+        "registry": "https://npm.pkg.github.com"
+    },
+    "scripts": {
+        "build": "vite build && tsc -p tsconfig.build.json",
+        "prepack": "cp ../../LICENSE ../../THIRD_PARTY_NOTICES.md ."
+    },
+    "peerDependencies": {
+        "@codemirror/language": "^6.13.1",
+        "@winterop-com/sokkel-ui": "workspace:*"
+    }
+}

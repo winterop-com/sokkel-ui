@@ -4,7 +4,7 @@
 
 ## Packages
 
-All seven are published to GitHub Packages and released together at one version: the core, the engine add-ons (and media), and the domain add-ons, each holding one domain's parts.
+All eight are published to GitHub Packages and released together at one version: the core, the engine add-ons (and media), and the domain add-ons, each holding one domain's parts.
 
 - `@winterop-com/sokkel-ui` (core): the tokens and themes, the primitives and every pattern without an engine of its own. Every app installs it.
 - `@winterop-com/sokkel-ui-charts`: `Chart` and its kinds on ECharts, and the dashboard's chart panels.
@@ -13,6 +13,7 @@ All seven are published to GitHub Packages and released together at one version:
 - `@winterop-com/sokkel-ui-terminal`: terminals on xterm.js: `TerminalView`, an interactive terminal whose connection the app owns, and `Terminal`, commands and their output.
 - `@winterop-com/sokkel-ui-media`: the music and video app parts: `MediaBar` (the player along the foot of a screen) and its fullscreen view, `TrackList`, `MediaCard`, `Artwork` (a cover, or one drawn from a seed), `useMediaSession` (media keys and the lock screen), `VideoStatsOverlay` (how a video plays, from `useVideoStats`, over the picture through `VideoPlayer`'s `overlay`), `UpNext` (what plays next with a countdown, over the whole picture through `VideoPlayer`'s `cover`), `ChannelRow` and `MediaActions` (the channel with Follow, and like, share and save, under a video), `WatchLayout` (a watch page with what plays next beside it, and theater mode) and `hlsSource` (an HTTP live stream for `VideoPlayer`'s `source`, through hls.js, an optional peer the app installs). The players chat uses, `AudioPlayer` and `VideoPlayer`, and `SoundVisualizer` stay in the core.
 - `@winterop-com/sokkel-ui-fhir`, a domain add-on: FHIRPath and CQL, the health-data standards' languages, for `CodeEditor`, as the plugin `fhir`. An app installs it once with `registerPlugins([fhir])` from `@winterop-com/sokkel-ui/lib/plugins`, after which `language="fhirpath"` and `language="cql"` work, and `languageForMediaType` reads `text/fhirpath`, `application/fhirpath`, `text/cql`, `text/cql-expression` and `application/cql` as them.
+- `@winterop-com/sokkel-ui-dhis2`, a domain add-on for the DHIS2 platform, UI only (it never calls a server): its expression languages for `CodeEditor`, as the plugin `dhis2`. Installed with `registerPlugins([dhis2])`, `language="dhis2-expression"` (indicators, validation rules, predictors; `text/x-dhis2-expression`) and `language="dhis2-rule"` (program rules, program indicators; `text/x-dhis2-rule`) work. The function and `V{}` variable names a server version knows are data: `dhis2Plugin({ functions, variables })` takes the names the app's server has, the latest (`DHIS2_FUNCTIONS`, `DHIS2_VARIABLES` from `/names`) by default, and an unknown name is read as a plain name.
 
 ## Install and import
 
