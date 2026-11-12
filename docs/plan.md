@@ -353,7 +353,12 @@ inside code. `Markdown`'s `links` draws them as links the app follows (`onOpen`,
 `exists` denies drawn faint, `onTag` for the tags), and `wikiLinksIn`, `tagsIn` and `mentionsOf`
 give an app a note's links, its tags and where a name is written unlinked, for backlinks. Any other
 link opens in a new tab unless `onLink` takes it: the app's own routes and the times in an episode's
-notes stay in the page.
+notes stay in the page. Text other people wrote is held to what the app allows: `images={false}` draws an
+image as its alt text and address and fetches nothing, `linkSchemes` lists the schemes a link may
+have to be live (`relative` for a path, a query or a fragment) and draws any other as its words, and
+a `javascript:` link is never live. `headingOffset` sets such a text's headings under the page's,
+and `inline` draws it as one line of help. Raw HTML is shown as typed unless `allowHtml` is set, and
+rehype-raw and rehype-sanitize load only then.
 
 `DiffView` draws two versions of a text as one list of lines, by the longest run of lines they
 share. Its header counts the lines added and removed, leaving out a side with none and saying "No

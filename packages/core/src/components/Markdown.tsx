@@ -3,7 +3,7 @@ import { memo, useEffect, useState } from 'react'
 import { MarkdownView, type MarkdownProps, type MathEngine } from './markdown-view'
 import { MermaidDiagram } from './MermaidDiagram'
 
-export { headingId, markdownHeadings } from './markdown-view'
+export { headingId, loadHtml, markdownHeadings } from './markdown-view'
 export type {
     CalloutKind,
     MarkdownInlineCode,
@@ -59,7 +59,8 @@ function useMathEngine(needed: boolean): MathEngine | undefined {
  * GitHub-flavored markdown, as an assistant or a description writes it: fenced code highlighted
  * with a copy button, mermaid fences drawn as diagrams, links opening in a new tab, and a quote
  * whose first line is `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]` or `[!CAUTION]` drawn as
- * a callout. Raw HTML is dropped unless `allowHtml` is set, and then it is sanitized. While
+ * a callout. Raw HTML is escaped and shown as typed unless `allowHtml` is set; then it is read and
+ * sanitized, with rehype-raw and rehype-sanitize loaded the first time a text allows it. While
  * `streaming`, a mermaid fence shows its source until the message completes.
  *
  * `math` (on by default) draws LaTeX with KaTeX: `$…$` and `\(…\)` inline, `$$…$$`, `\[…\]` and a
@@ -94,6 +95,15 @@ function useMathEngine(needed: boolean): MathEngine | undefined {
  *
  * `onLink` keeps the links the app answers for in the page, such as the times in a podcast's show
  * notes, which seek the player; a press with a modifier key, or on a link it declines, opens a new tab.
+ *
+ * For text other people wrote, `images={false}` draws each image as its alt text and address, so
+ * nothing is fetched, and `linkSchemes` lists the schemes a link may have to be live, `relative`
+ * standing for a path, a query or a fragment: any other link is drawn as its words, with no anchor.
+ * An address starting with `//` leaves the app on the page's scheme, so it is live only without a
+ * list, and a `javascript:`, `vbscript:` or `data:` link never is. `headingOffset` moves headings
+ * down, so `#` in a text set under the page's own headings is no second h1, and `inline` draws only
+ * the content of paragraphs, for one line of help, laying out any block as its text. A table whose
+ * header cells are all empty, as a key/value table written `| | |` has, is drawn without the header.
  */
 export const Markdown = memo(function Markdown(props: MarkdownProps) {
     return <MarkdownView {...props} useMath={useMathEngine} Diagram={MermaidDiagram} />

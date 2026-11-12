@@ -7,7 +7,8 @@ import remarkRehype from 'remark-rehype'
 import { unified } from 'unified'
 import { describe, expect, it } from 'vitest'
 
-import { hasMath, markdownSchema, normalizeMath } from './math'
+import { markdownSchema } from './markdown-html'
+import { hasMath, normalizeMath } from './math'
 
 describe('normalizeMath', () => {
     it('turns \\(…\\) into inline dollars', () => {

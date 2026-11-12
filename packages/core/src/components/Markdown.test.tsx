@@ -1,7 +1,9 @@
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
 
-import { Markdown } from './Markdown'
+import { loadHtml, Markdown } from './Markdown'
+
+beforeAll(loadHtml)
 
 const PAGE = [
     '## Schedule',

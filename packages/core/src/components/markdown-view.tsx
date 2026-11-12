@@ -1,12 +1,10 @@
 import { CircleAlert, Info, Lightbulb, MessageSquareWarning, TriangleAlert, type LucideIcon } from 'lucide-react'
-import { memo, useMemo, useRef, type ComponentType, type ReactNode } from 'react'
-import ReactMarkdown, { type Components, type Options } from 'react-markdown'
-import rehypeRaw from 'rehype-raw'
-import rehypeSanitize from 'rehype-sanitize'
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from 'react'
+import ReactMarkdown, { defaultUrlTransform, type Components, type Options, type UrlTransform } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
 import { cn } from '../lib/cn'
-import { hasMath, markdownSchema, normalizeMath } from '../lib/math'
+import { hasMath, normalizeMath } from '../lib/math'
 import { TABLE_HEAD_TEXT } from '../lib/table'
 import { tagMatches, wikiLinksIn } from '../lib/wiki-links'
 import { Code } from './Code'
@@ -245,6 +243,205 @@ function rehypeDocument(anchors: boolean) {
     }
 }
 
+/** The schemes a link may have when `linkSchemes` is not given: those react-markdown keeps, relative links among them. */
+const DEFAULT_SCHEMES: readonly string[] = ['http', 'https', 'irc', 'ircs', 'mailto', 'xmpp', 'relative']
+
+/** Schemes that run code or carry a document of their own where they open; a link to one is never live. */
+const NEVER = new Set(['javascript', 'vbscript', 'data'])
+
+/**
+ * The scheme a link's address names, lowercased, read as a browser reads it once it has dropped
+ * spaces and control characters: `relative` for a path, a query or a fragment, and `//` for an
+ * address that starts with two slashes and takes only the page's scheme.
+ */
+function schemeOf(href: string): string {
+    // oxlint-disable-next-line no-control-regex -- a browser skips these before it reads the scheme.
+    const bare = href.replace(/[\u0000-\u0020\u007f]/g, '')
+    if (/^[/\\]{2}/.test(bare)) return '//'
+    const match = /^([a-z][a-z\d+.-]*):/i.exec(bare)
+    return match === null ? 'relative' : match[1].toLowerCase()
+}
+
+/**
+ * Whether a link with this address is drawn live under `linkSchemes`: its scheme is listed, or it is
+ * relative and `relative` is listed. Without a list, react-markdown's safe schemes and relative links
+ * are. An empty address, and a `javascript:`, `vbscript:` or `data:` one, never is; an address that
+ * starts with `//` is only without a list.
+ */
+export function linkAllowed(href: string, schemes?: readonly string[]): boolean {
+    if (href.trim() === '') return false
+    const scheme = schemeOf(href)
+    if (NEVER.has(scheme)) return false
+    if (scheme === '//') return schemes === undefined
+    return (schemes ?? DEFAULT_SCHEMES).some((listed) => listed.toLowerCase() === scheme)
+}
+
+/** Whether a link is one of the links between notes or a tag, which the app follows and which go nowhere themselves. */
+function ownLink(properties: Record<string, unknown> | undefined): boolean {
+    return properties?.href === '#' && (properties.dataWikiLink !== undefined || properties.dataTag !== undefined)
+}
+
+/** The elements that hold a block of their own, which `inline` lays out as their text. */
+const BLOCKS = new Set([
+    'address',
+    'article',
+    'aside',
+    'blockquote',
+    'dd',
+    'details',
+    'div',
+    'dl',
+    'dt',
+    'figcaption',
+    'figure',
+    'footer',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'header',
+    'hr',
+    'li',
+    'ol',
+    'p',
+    'pre',
+    'section',
+    'summary',
+    'table',
+    'tbody',
+    'td',
+    'tfoot',
+    'th',
+    'thead',
+    'tr',
+    'ul',
+])
+
+/** The content of blocks as one run of text and inline elements, each block's content parted from the next by a space. */
+function phrasing(nodes: HastNode[]): HastNode[] {
+    const blocks = nodes.some((node) => node.type === 'element' && BLOCKS.has(node.tagName ?? ''))
+    const out: HastNode[] = []
+    for (const node of nodes) {
+        if (blocks && node.type === 'text' && (node.value ?? '').trim() === '') continue
+        if (node.type !== 'element' || !BLOCKS.has(node.tagName ?? '')) {
+            out.push(node)
+            continue
+        }
+        if (node.tagName === 'div' && node.properties?.dataPart !== undefined) {
+            out.push({ ...node, tagName: 'span' })
+            continue
+        }
+        const inner = node.tagName === 'pre' ? [{ type: 'text', value: hastText(node).replace(/\n$/, '') }] : phrasing(node.children ?? [])
+        if (inner.length === 0) continue
+        if (out.length > 0) out.push({ type: 'text', value: ' ' })
+        out.push(...inner)
+    }
+    return out
+}
+
+/** Whether a table row's cells are all empty: no text and no image. */
+function emptyRow(row: HastNode): boolean {
+    const cells = (row.children ?? []).filter((cell) => cell.type === 'element')
+    const holdsImage = (node: HastNode): boolean => node.tagName === 'img' || (node.children ?? []).some(holdsImage)
+    return cells.every((cell) => hastText(cell).trim() === '' && !holdsImage(cell))
+}
+
+/** What `rehypeText` changes, from the view's props. */
+interface TextRules {
+    images: boolean
+    schemes: readonly string[] | undefined
+    inline: boolean
+    headingOffset: number
+}
+
+/**
+ * Holds a text to what the app lets it draw: a link whose scheme is not allowed becomes its words,
+ * an image its alt text and address when images are off, headings move down by `headingOffset`, a
+ * table's header row of empty cells is dropped, and with `inline` every block is laid out as its text.
+ */
+function rehypeText({ images, schemes, inline, headingOffset }: TextRules) {
+    const replace = (node: HastNode): HastNode[] => {
+        if (node.type !== 'element') return [node]
+        const tag = node.tagName ?? ''
+        if (tag === 'a' && !ownLink(node.properties) && !linkAllowed(String(node.properties?.href ?? ''), schemes)) {
+            return node.children ?? []
+        }
+        if (!images && tag === 'img') {
+            const alt = String(node.properties?.alt ?? '').trim()
+            const src = String(node.properties?.src ?? '').trim()
+            const value = alt !== '' && src !== '' ? `${alt} (${src})` : alt || src
+            return value === '' ? [] : [{ type: 'text', value }]
+        }
+        if (!images && tag === 'source') return []
+        if (!images && tag === 'picture') return node.children ?? []
+        if (headingOffset > 0 && /^h[1-6]$/.test(tag)) node.tagName = `h${Math.min(6, Number(tag[1]) + headingOffset)}`
+        if (tag === 'table') {
+            node.children = node.children?.filter((part) => {
+                if (part.tagName !== 'thead') return true
+                return !(part.children ?? []).filter((row) => row.tagName === 'tr').every(emptyRow)
+            })
+        }
+        return [node]
+    }
+    const visit = (node: HastNode) => {
+        if (node.children === undefined) return
+        node.children = node.children.flatMap((child) => {
+            visit(child)
+            return replace(child)
+        })
+    }
+    return () => (tree: HastNode) => {
+        visit(tree)
+        if (inline) tree.children = phrasing(tree.children ?? [])
+    }
+}
+
+/** What `allowHtml` reads and cleans raw HTML with, loaded the first time a text allows it. */
+type HtmlEngine = typeof import('../lib/markdown-html')
+
+let html: Promise<HtmlEngine> | undefined
+let htmlReady: HtmlEngine | undefined
+
+/**
+ * Loads what `allowHtml` reads raw HTML with (rehype-raw and rehype-sanitize), once, and resolves
+ * when it is ready. A text with `allowHtml` loads it itself and draws its words without the tags
+ * until then; an app that knows such a text is coming can call it ahead, so it draws whole at once.
+ */
+export function loadHtml(): Promise<void> {
+    html ??= import('../lib/markdown-html').then(
+        (module) => {
+            htmlReady = module
+            return module
+        },
+        (error: unknown) => {
+            html = undefined
+            throw error
+        },
+    )
+    return html.then(() => undefined)
+}
+
+/** The HTML engine once a text has allowed HTML, loaded on the first such text and shared by the rest. */
+function useHtmlEngine(needed: boolean): HtmlEngine | undefined {
+    const [loaded, setLoaded] = useState<HtmlEngine | undefined>(htmlReady)
+    useEffect(() => {
+        if (!needed || loaded !== undefined) return
+        let live = true
+        loadHtml().then(
+            () => {
+                if (live) setLoaded(htmlReady)
+            },
+            () => undefined,
+        )
+        return () => {
+            live = false
+        }
+    }, [needed, loaded])
+    return needed ? (loaded ?? htmlReady) : undefined
+}
+
 /** The math engine `Markdown` draws formulas with, handed to the view so this module never names it. */
 export type MathEngine = Pick<typeof import('../lib/katex'), 'remarkMath' | 'rehypeKatex'>
 
@@ -270,8 +467,11 @@ const HEADINGS = {
     ),
 } as const
 
+/** The type of a block of text; an `inline` line takes its container's instead. */
+const PROSE_TYPE = 'text-sm leading-relaxed text-foreground'
+
 const PROSE = cn(
-    'min-w-0 text-sm leading-relaxed break-words text-foreground',
+    'min-w-0 break-words',
     '[&>*:first-child]:mt-0 [&>*:last-child]:mb-0',
     '[&_li]:my-0.5 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-2 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5',
     '[&_a]:text-primary-ink [&_a]:underline [&_a]:underline-offset-2',
@@ -311,7 +511,23 @@ const CARET =
 export interface MarkdownProps {
     content: string
     streaming?: boolean
+    /** Reads raw HTML in the text and sanitizes it; off, it is shown as typed. */
     allowHtml?: boolean
+    /** Draws images; off, an image is its alt text and address as plain text, and nothing is fetched. On by default. */
+    images?: boolean
+    /**
+     * The schemes a link may have to be drawn live, such as `['https', 'mailto']`, with `relative`
+     * for a path, a query or a fragment. Any other link is drawn as its words. By default http,
+     * https, irc, ircs, mailto, xmpp and relative links are live. A `javascript:` link never is.
+     */
+    linkSchemes?: readonly string[]
+    /**
+     * Draws only the content of paragraphs, for one line of help, in a span that takes its container's
+     * type and color: a block in the text is laid out as its text.
+     */
+    inline?: boolean
+    /** Moves every heading down this many levels, to h6 at most, so a `#` in a text set under a page's own headings is no second h1. */
+    headingOffset?: number
     /** Gives every heading an id made from its text. */
     anchors?: boolean
     /** How code inside a sentence is drawn: filled chips by default. */
@@ -342,7 +558,8 @@ export interface MarkdownProps {
  * GitHub-flavored markdown, as an assistant or a description writes it: fenced code highlighted
  * with a copy button, mermaid fences drawn as diagrams, links opening in a new tab, and a quote
  * whose first line is `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]` or `[!CAUTION]` drawn as
- * a callout. Raw HTML is dropped unless `allowHtml` is set, and then it is sanitized. While
+ * a callout. Raw HTML is escaped and shown as typed unless `allowHtml` is set; then it is read and
+ * sanitized, with rehype-raw and rehype-sanitize loaded the first time a text allows it. While
  * `streaming`, a mermaid fence shows its source until the message completes.
  *
  * `math` (on by default) draws LaTeX with KaTeX: `$…$` and `\(…\)` inline, `$$…$$`, `\[…\]` and a
@@ -377,6 +594,15 @@ export interface MarkdownProps {
  *
  * `onLink` keeps the links the app answers for in the page, such as the times in a podcast's show
  * notes, which seek the player; a press with a modifier key, or on a link it declines, opens a new tab.
+ *
+ * For text other people wrote, `images={false}` draws each image as its alt text and address, so
+ * nothing is fetched, and `linkSchemes` lists the schemes a link may have to be live, `relative`
+ * standing for a path, a query or a fragment: any other link is drawn as its words, with no anchor.
+ * An address starting with `//` leaves the app on the page's scheme, so it is live only without a
+ * list, and a `javascript:`, `vbscript:` or `data:` link never is. `headingOffset` moves headings
+ * down, so `#` in a text set under the page's own headings is no second h1, and `inline` draws only
+ * the content of paragraphs, for one line of help, laying out any block as its text. A table whose
+ * header cells are all empty, as a key/value table written `| | |` has, is drawn without the header.
  */
 export type MarkdownViewProps = MarkdownProps & {
     /** Loads the math engine when a text needs it, called on every render of the view. */
@@ -396,6 +622,10 @@ export const MarkdownView = memo(function MarkdownView({
     content,
     streaming = false,
     allowHtml = false,
+    images = true,
+    linkSchemes,
+    inline = false,
+    headingOffset = 0,
     anchors = false,
     inlineCode = 'chip',
     caret = false,
@@ -498,6 +728,7 @@ export const MarkdownView = memo(function MarkdownView({
                         </a>
                     )
                 }
+                if (typeof props.href !== 'string' || props.href === '') return <>{children}</>
                 return (
                     <Link
                         {...props}
@@ -545,22 +776,45 @@ export const MarkdownView = memo(function MarkdownView({
         if (linked) plugins.push(remarkWikiLinks(tagged))
         return plugins
     }, [katex, math, word, linked, tagged])
+    const htmlEngine = useHtmlEngine(allowHtml)
+    // The schemes are held by their text, so a list made anew each render keeps the plugins.
+    const schemesKey = JSON.stringify(linkSchemes ?? null)
+    const schemes = useMemo(() => (JSON.parse(schemesKey) as readonly string[] | null) ?? undefined, [schemesKey])
+    const offset = Math.max(0, Math.floor(headingOffset))
     const rehype = useMemo(() => {
         const plugins: NonNullable<Options['rehypePlugins']> = []
-        if (allowHtml) plugins.push(rehypeRaw, [rehypeSanitize, markdownSchema])
+        if (allowHtml && htmlEngine !== undefined) {
+            plugins.push(htmlEngine.rehypeRaw, [htmlEngine.rehypeSanitize, htmlEngine.schemaWithSchemes(schemes)])
+        }
         // After sanitizing, so KaTeX's own markup is kept.
         if (katex !== undefined && math) plugins.push([katex.rehypeKatex, { throwOnError: false, errorColor: 'var(--status-failed-ink)' }])
+        plugins.push(rehypeText({ images, schemes, inline, headingOffset: offset }))
         plugins.push(rehypeDocument(anchors))
         return plugins
-    }, [allowHtml, anchors, katex, math])
+    }, [allowHtml, htmlEngine, anchors, katex, math, images, schemes, inline, offset])
+    const urlTransform = useCallback<UrlTransform>(
+        (url, key, node) => {
+            if (key !== 'href' || node.tagName !== 'a') return defaultUrlTransform(url)
+            return ownLink(node.properties) || linkAllowed(url, schemes) ? url : ''
+        },
+        [schemes],
+    )
+    const Root = inline ? 'span' : 'div'
     return (
-        <div
-            data-settling={needsMath && katex === undefined ? '' : undefined}
-            className={cn(PROSE, HEADINGS[scale], INLINE_CODE[inlineCode], caret && streaming && CARET, className)}
+        <Root
+            data-settling={(needsMath && katex === undefined) || (allowHtml && htmlEngine === undefined) ? '' : undefined}
+            className={cn(PROSE, !inline && PROSE_TYPE, HEADINGS[scale], INLINE_CODE[inlineCode], caret && streaming && CARET, className)}
         >
-            <ReactMarkdown remarkPlugins={remark} rehypePlugins={rehype} components={components}>
+            <ReactMarkdown
+                remarkPlugins={remark}
+                rehypePlugins={rehype}
+                components={components}
+                urlTransform={urlTransform}
+                // Until the HTML engine loads, the tags are left out rather than shown as typed.
+                skipHtml={allowHtml && htmlEngine === undefined}
+            >
                 {source}
             </ReactMarkdown>
-        </div>
+        </Root>
     )
 })

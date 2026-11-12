@@ -1,5 +1,3 @@
-import { defaultSchema, type Options as SanitizeSchema } from 'rehype-sanitize'
-
 /** A fence line: its indent, then a run of three or more backticks or tildes. */
 const FENCE = /^(\s*)(`{3,}|~{3,})(.*)$/
 
@@ -193,24 +191,4 @@ export function hasMath(source: string): boolean {
         if (/(^|[^\\])(\\\\)*\$/.test(line.replace(/(`+)[^`]*?\1/g, ''))) return true
     }
     return false
-}
-
-const codeClasses = (defaultSchema.attributes?.code ?? []).filter((entry) => !(Array.isArray(entry) && entry[0] === 'className'))
-
-/**
- * The sanitize schema `Markdown` uses with `allowHtml`: GitHub's, with the classes remark-math puts
- * on its math (`language-math`, `math-inline`, `math-display`) kept, so KaTeX, which runs after it,
- * finds them.
- */
-export const markdownSchema: SanitizeSchema = {
-    ...defaultSchema,
-    attributes: {
-        ...defaultSchema.attributes,
-        code: [...codeClasses, ['className', /^language-./, 'math-inline', 'math-display']],
-        // The links between notes and the tags Markdown draws with `links`.
-        a: [...(defaultSchema.attributes?.a ?? []), 'dataWikiLink', 'dataHeading', 'dataTag'],
-        // The placeholder of a part an app embeds, which Markdown fills.
-        div: [...(defaultSchema.attributes?.div ?? []), 'dataPart'],
-        span: [...(defaultSchema.attributes?.span ?? []), 'dataPart'],
-    },
 }

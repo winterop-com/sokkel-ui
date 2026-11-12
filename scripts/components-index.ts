@@ -82,6 +82,8 @@ export const PRIVATE: Partial<Record<PackageDir, Record<string, string>>> = {
         'lib/focus': 'where focus goes when a popup closes',
         'lib/jq-grammar': 'the jq grammar the highlighter loads',
         'lib/katex': "`Markdown`'s math engine, loaded the first time a message holds math",
+        'lib/markdown-html':
+            'what `Markdown` and `PlainMarkdown` read raw HTML with under `allowHtml`, loaded the first time a text allows it; an app preloads it with `loadHtml`',
         'lib/math': 'how `Markdown` reads math',
         'lib/overlay': 'the open overlays `useOverlay` keeps',
         'lib/percent': 'how the library writes a share as a percent',
