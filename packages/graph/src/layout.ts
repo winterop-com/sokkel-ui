@@ -87,6 +87,8 @@ export interface GraphLayoutStyle {
 const WRAP_OPTIONS: Record<string, string> = {
     'elk.layered.wrapping.strategy': 'MULTI_EDGE',
     'elk.layered.wrapping.additionalEdgeSpacing': '24',
+    // elk's moving of a cut to where fewer edges cross it leaves a fan-out with no cut at all.
+    'elk.layered.wrapping.multiEdge.improveCuts': 'false',
 }
 
 /** How finely a wrap's width is told apart: a width that moves less lays nothing out again. */
@@ -380,10 +382,11 @@ export async function layoutGraph(
 
 /**
  * A graph cut into rows, judged by elk's own layout, its edges' bends included. Given a room, it
- * stays in one row when that fits across the room, and otherwise is laid out once in the room's
- * shape: the one of the two that fits the room at the larger zoom is kept, so a cut that only adds
- * height is not. Rows are never wider than `wrapWidth`; when no cut gets under it, the graph stays
- * whole.
+ * stays in one row when that fits across the room. Otherwise it is cut into rows that fit across
+ * the room, laid out in the room's shape when that fits and searched for when not (the room's
+ * shape when no cut fits), and the cut or the whole graph is kept by which fits the room at the
+ * larger zoom, so a cut that only adds height is not. Rows are never wider than `wrapWidth`; when no
+ * cut gets under it, the graph stays whole.
  */
 async function wrapped(
     shape: GraphShape,
@@ -392,21 +395,24 @@ async function wrapped(
     using: ElkEngine,
     flat: PlacedGraph,
 ): Promise<PlacedGraph> {
+    const limit = wrapLimit(style)
     const cap = style.wrapWidth ?? Infinity
     const room = style.wrapRoom
     const size = placedBounds(flat)
-    if (size.width <= wrapLimit(style)) return flat
+    if (size.width <= limit) return flat
     const lay = async (aspect: number) => {
         const placed = fromElk(shape, await using.layout(toElk(shape, direction, style, aspect)))
         return { placed, ...placedBounds(placed) }
     }
-    if (room === undefined || room.height <= 0) return (await cutTo(wrapLimit(style), size, lay)) ?? flat
+    if (room === undefined || room.height <= 0) return (await cutTo(limit, size, lay))?.placed ?? flat
     const zoomOf = (drawn: { width: number; height: number }) =>
         Math.min(room.width / Math.max(1, drawn.width), room.height / Math.max(1, drawn.height))
     const shaped = await lay(room.width / room.height)
-    const fitting = [{ placed: flat, ...size }, shaped].filter((each) => each.width <= cap)
-    if (fitting.length === 0) return (await cutTo(cap, size, lay)) ?? flat
-    return fitting.reduce((best, each) => (zoomOf(each) > zoomOf(best) ? each : best)).placed
+    const cut = shaped.width <= limit ? shaped : ((await cutTo(limit, size, lay)) ?? (shaped.width <= cap ? shaped : null))
+    const whole = size.width <= cap ? { placed: flat, ...size } : null
+    const kept = [cut, whole].filter((each) => each !== null)
+    if (kept.length === 0) return flat
+    return kept.reduce((best, each) => (zoomOf(each) > zoomOf(best) ? each : best)).placed
 }
 
 /**
@@ -414,11 +420,11 @@ async function wrapped(
  * at a shape rather than a count of rows, so the shape is searched for: wider while the rows fit,
  * narrower while they do not.
  */
-async function cutTo(
+async function cutTo<Laid extends { placed: PlacedGraph; width: number }>(
     limit: number,
     size: { width: number; height: number },
-    lay: (aspect: number) => Promise<{ placed: PlacedGraph; width: number }>,
-): Promise<PlacedGraph | null> {
+    lay: (aspect: number) => Promise<Laid>,
+): Promise<Laid | null> {
     if (limit === Infinity) return null
     const rows = Math.max(2, Math.ceil(size.width / limit))
     // n rows of a graph W wide and H tall stand about W/n wide and n·H tall.
@@ -426,7 +432,7 @@ async function cutTo(
     let low = guess / 16
     let high = guess * 16
     let aspect = guess
-    let best: { placed: PlacedGraph; width: number } | null = null
+    let best: Laid | null = null
     for (let tries = 0; tries < WRAP_TRIES; tries += 1) {
         const laid = await lay(aspect)
         if (laid.width <= limit) {
@@ -436,7 +442,7 @@ async function cutTo(
         } else high = aspect
         aspect = Math.sqrt(low * high)
     }
-    return best?.placed ?? null
+    return best
 }
 
 /** How long elk tries to keep each edge of a network, center to center. */
